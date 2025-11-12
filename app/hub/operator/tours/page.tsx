@@ -13,9 +13,11 @@ import {
   Column
 } from '@/components/admin/shared';
 import { OperatorTour } from '@/types/operator';
+import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 
 export default function ToursManagement() {
+  const { user } = useAuth();
   const [tours, setTours] = useState<OperatorTour[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
@@ -24,8 +26,7 @@ export default function ToursManagement() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('');
 
-  // TODO: Получить из сессии
-  const operatorId = 'mock-operator-id';
+  const operatorId = user?.id;
 
   useEffect(() => {
     fetchTours();
@@ -350,6 +351,7 @@ export default function ToursManagement() {
     </Protected>
   );
 }
+
 
 
 

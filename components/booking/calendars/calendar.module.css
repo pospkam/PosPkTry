@@ -6,17 +6,7 @@
 /* Базовые стили React-DatePicker */
 @import 'react-datepicker/dist/react-datepicker.css';
 
-/* Переменные проекта */
-:root {
-  --calendar-bg: #0b0b0b;
-  --calendar-border: #222222;
-  --calendar-text: #ffffff;
-  --calendar-text-muted: #999999;
-  
-  --date-default: #ffffff;
-  --date-hover: #E6C149;
-  --date-disabled: #333333;
-  --date-past: #555555;
+/* Переменные проекта - используются через CSS классы */
   
   --date-checkin: #3B82F6;
   --date-range: #FCD34D;

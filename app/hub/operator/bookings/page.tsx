@@ -13,8 +13,10 @@ import {
   Column
 } from '@/components/admin/shared';
 import { OperatorBooking } from '@/types/operator';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function BookingsManagement() {
+  const { user } = useAuth();
   const [bookings, setBookings] = useState<OperatorBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
@@ -23,8 +25,7 @@ export default function BookingsManagement() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedBooking, setSelectedBooking] = useState<OperatorBooking | null>(null);
 
-  // TODO: Получить из сессии
-  const operatorId = 'mock-operator-id';
+  const operatorId = user?.id;
 
   useEffect(() => {
     fetchBookings();

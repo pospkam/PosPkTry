@@ -1,56 +1,72 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse } from '@/types';
+import { requireAdmin } from '@/lib/auth/check-admin';
+import { query } from '@/lib/database';
 
 // GET /api/admin/stats - Получение статистики для админ-панели
 export async function GET(request: NextRequest) {
   try {
-    // TODO: Проверка прав администратора
-    // TODO: Реальные запросы к БД для получения статистики
+    // Проверка прав администратора
+    const adminError = await requireAdmin(request);
+    if (adminError) return adminError;
 
-    // Моковые данные
+    // Реальные запросы к БД для получения статистики
+    
+    // Общая статистика
+    const totalUsersResult = await query('SELECT COUNT(*) as count FROM users');
+    const totalToursResult = await query('SELECT COUNT(*) as count FROM tours WHERE is_active = true');
+    const totalBookingsResult = await query('SELECT COUNT(*) as count FROM bookings');
+    const totalRevenueResult = await query('SELECT COALESCE(SUM(total_price), 0) as revenue FROM bookings WHERE payment_status = \'paid\'');
+    const activeTransfersResult = await query('SELECT COUNT(*) as count FROM transfer_bookings WHERE status = \'active\'');
+    const todayBookingsResult = await query('SELECT COUNT(*) as count FROM bookings WHERE DATE(created_at) = CURRENT_DATE');
+    
+    // Рост за месяц
+    const lastMonthBookingsResult = await query(`
+      SELECT COUNT(*) as count 
+      FROM bookings 
+      WHERE created_at >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')
+      AND created_at < DATE_TRUNC('month', CURRENT_DATE)
+    `);
+    const currentMonthBookingsResult = await query(`
+      SELECT COUNT(*) as count 
+      FROM bookings 
+      WHERE created_at >= DATE_TRUNC('month', CURRENT_DATE)
+    `);
+    
+    const lastMonthCount = parseInt(lastMonthBookingsResult.rows[0]?.count || '0');
+    const currentMonthCount = parseInt(currentMonthBookingsResult.rows[0]?.count || '0');
+    const monthlyGrowth = lastMonthCount > 0 
+      ? Math.round(((currentMonthCount - lastMonthCount) / lastMonthCount) * 100)
+      : 0;
+
     const stats = {
-      totalUsers: 1547,
-      totalTours: 234,
-      totalBookings: 892,
-      totalRevenue: 15730000,
-      activeTransfers: 45,
-      todayBookings: 12,
-      monthlyGrowth: 24,
+      totalUsers: parseInt(totalUsersResult.rows[0]?.count || '0'),
+      totalTours: parseInt(totalToursResult.rows[0]?.count || '0'),
+      totalBookings: parseInt(totalBookingsResult.rows[0]?.count || '0'),
+      totalRevenue: parseFloat(totalRevenueResult.rows[0]?.revenue || '0'),
+      activeTransfers: parseInt(activeTransfersResult.rows[0]?.count || '0'),
+      todayBookings: parseInt(todayBookingsResult.rows[0]?.count || '0'),
+      monthlyGrowth,
       
       // Распределение по ролям
-      usersByRole: {
-        tourist: 1234,
-        operator: 156,
-        guide: 89,
-        transfer: 45,
-        agent: 18,
-        admin: 5,
-      },
+      usersByRole: await getUsersByRole(),
 
-      // Статистика за период
-      dailyBookings: [12, 15, 8, 22, 18, 25, 12], // Последние 7 дней
-      dailyRevenue: [45000, 67000, 34000, 89000, 76000, 123000, 56000],
+      // Статистика за период (последние 7 дней)
+      dailyBookings: await getDailyBookings(),
+      dailyRevenue: await getDailyRevenue(),
 
       // Топ туры
-      topTours: [
-        { id: '1', name: 'Восхождение на Авачинский вулкан', bookings: 45 },
-        { id: '2', name: 'Долина гейзеров', bookings: 38 },
-        { id: '3', name: 'Халактырский пляж', bookings: 32 },
-      ],
+      topTours: await getTopTours(),
 
       // Топ операторы
-      topOperators: [
-        { id: '1', name: 'Камчатка Тревел', revenue: 3450000, bookings: 156 },
-        { id: '2', name: 'Вулкан Тур', revenue: 2890000, bookings: 128 },
-        { id: '3', name: 'Дикая природа', revenue: 2340000, bookings: 98 },
-      ],
+      topOperators: await getTopOperators(),
 
       // Системные метрики
       system: {
-        uptime: 99.8,
-        avgResponseTime: 145, // мс
-        errorRate: 0.2, // %
-        activeConnections: 234,
+        uptime: Math.round(process.uptime() / 3600 * 100) / 100, // Часы работы
+        avgResponseTime: 145, // TODO: Интегрировать с APM
+        errorRate: 0.2, // TODO: Интегрировать с Sentry
+        activeConnections: 234, // TODO: Получать из PM2 metrics
       },
     };
 
@@ -66,6 +82,97 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+// Вспомогательные функции для получения статистики
+
+async function getUsersByRole() {
+  const result = await query(`
+    SELECT role, COUNT(*) as count
+    FROM users
+    GROUP BY role
+  `);
+  
+  const roleMap: Record<string, number> = {
+    tourist: 0,
+    operator: 0,
+    guide: 0,
+    transfer: 0,
+    agent: 0,
+    admin: 0,
+  };
+  
+  result.rows.forEach(row => {
+    roleMap[row.role] = parseInt(row.count);
+  });
+  
+  return roleMap;
+}
+
+async function getDailyBookings() {
+  const result = await query(`
+    SELECT DATE(created_at) as date, COUNT(*) as count
+    FROM bookings
+    WHERE created_at >= CURRENT_DATE - INTERVAL '7 days'
+    GROUP BY DATE(created_at)
+    ORDER BY date ASC
+  `);
+  
+  return result.rows.map(row => parseInt(row.count));
+}
+
+async function getDailyRevenue() {
+  const result = await query(`
+    SELECT DATE(created_at) as date, COALESCE(SUM(total_price), 0) as revenue
+    FROM bookings
+    WHERE created_at >= CURRENT_DATE - INTERVAL '7 days'
+    AND payment_status = 'paid'
+    GROUP BY DATE(created_at)
+    ORDER BY date ASC
+  `);
+  
+  return result.rows.map(row => parseFloat(row.revenue));
+}
+
+async function getTopTours() {
+  const result = await query(`
+    SELECT t.id, t.name, COUNT(b.id) as bookings
+    FROM tours t
+    LEFT JOIN bookings b ON t.id = b.tour_id
+    GROUP BY t.id, t.name
+    ORDER BY bookings DESC
+    LIMIT 5
+  `);
+  
+  return result.rows.map(row => ({
+    id: row.id,
+    name: row.name,
+    bookings: parseInt(row.bookings),
+  }));
+}
+
+async function getTopOperators() {
+  const result = await query(`
+    SELECT 
+      p.id, 
+      p.name,
+      COUNT(b.id) as bookings,
+      COALESCE(SUM(b.total_price), 0) as revenue
+    FROM partners p
+    LEFT JOIN tours t ON p.id = t.operator_id
+    LEFT JOIN bookings b ON t.id = b.tour_id AND b.payment_status = 'paid'
+    WHERE p.type = 'operator'
+    GROUP BY p.id, p.name
+    ORDER BY revenue DESC
+    LIMIT 5
+  `);
+  
+  return result.rows.map(row => ({
+    id: row.id,
+    name: row.name,
+    revenue: parseFloat(row.revenue),
+    bookings: parseInt(row.bookings),
+  }));
 }
 
 

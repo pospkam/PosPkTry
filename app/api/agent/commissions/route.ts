@@ -103,8 +103,10 @@ export async function GET(request: NextRequest) {
  */
 export async function GET_PAYOUTS(request: NextRequest) {
   try {
-    // TODO: Получить ID агента из сессии/токена
-    const agentId = 'agent-1';
+    const userOrResponse = await requireAgent(request);
+    if (userOrResponse instanceof NextResponse) return userOrResponse;
+
+    const agentId = userOrResponse.userId;
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status') || 'all'; // all, pending, processing, completed, failed
@@ -203,8 +205,10 @@ export async function GET_PAYOUTS(request: NextRequest) {
  */
 export async function POST_REQUEST_PAYOUT(request: NextRequest) {
   try {
-    // TODO: Получить ID агента из сессии/токена
-    const agentId = 'agent-1';
+    const userOrResponse = await requireAgent(request);
+    if (userOrResponse instanceof NextResponse) return userOrResponse;
+
+    const agentId = userOrResponse.userId;
 
     const body = await request.json();
     const { paymentMethod = 'bank_transfer' } = body;

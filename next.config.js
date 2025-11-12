@@ -1,32 +1,130 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = { 
+const nextConfig = {
+  // Включить React Strict Mode
   reactStrictMode: true,
-  experimental: {
-    serverComponentsExternalPackages: ['pg'],
-  },
-  // Optimize for smaller build
-  compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
-  },
-  // Enable standalone for Docker build
-  output: 'standalone',
-  // Optimize images
+  
+  // Оптимизация изображений
   images: {
-    unoptimized: true,
-    domains: [],
+    domains: [
+      's3.twcstorage.ru',
+      'kamhub.ru',
+      'www.kamhub.ru',
+      'localhost',
+    ],
+    formats: ['image/avif', 'image/webp'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    minimumCacheTTL: 31536000, // 1 год
   },
-  // Disable x-powered-by header
-  poweredByHeader: false,
-  // Disable Sentry in build to reduce size
+
+  // CDN и статические файлы
+  assetPrefix: process.env.NODE_ENV === 'production' 
+    ? process.env.CDN_URL 
+    : undefined,
+
+  // Заголовки для безопасности и кеширования
+  async headers() {
+    return [
+      // Cache для статических файлов
+      {
+        source: '/_next/static/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/images/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      // Security headers
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'X-DNS-Prefetch-Control',
+            value: 'on',
+          },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=(self)',
+          },
+        ],
+      },
+    ];
+  },
+
+  // Сжатие
+  compress: true,
+
+  // Webpack конфигурация
   webpack: (config, { isServer }) => {
+    // Игнорировать предупреждения о размере бандла для определенных пакетов
+    config.externals = config.externals || [];
+    
     if (!isServer) {
-      config.resolve.alias = {
-        ...config.resolve.alias,
-        '@sentry/nextjs': false,
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
       };
     }
+
     return config;
   },
-};
-module.exports = nextConfig;
 
+  // Переменные окружения для клиента
+  env: {
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+    NEXT_PUBLIC_CDN_URL: process.env.NEXT_PUBLIC_CDN_URL || '',
+  },
+
+  // Experimental features
+  experimental: {
+    // Оптимизация пакетов
+    optimizePackageImports: ['@/components', '@/lib'],
+  },
+
+  // Production optimizations
+  ...(process.env.NODE_ENV === 'production' && {
+    // Минификация
+    swcMinify: true,
+    
+    // Удаление console.log в production
+    compiler: {
+      removeConsole: {
+        exclude: ['error', 'warn'],
+      },
+    },
+  }),
+};
+
+module.exports = nextConfig;

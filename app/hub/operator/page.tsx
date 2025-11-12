@@ -9,16 +9,19 @@ import { TopToursTable } from '@/components/operator/Dashboard/TopToursTable';
 import { SimpleChart } from '@/components/admin/Dashboard/SimpleChart';
 import { LoadingSpinner, EmptyState } from '@/components/admin/shared';
 import { OperatorDashboardData, OperatorBooking } from '@/types/operator';
+import { useAuth } from '@/contexts/AuthContext';
+import { AlertTriangleIcon, BarChartIcon, MountainIcon, CalendarIcon } from '@/components/icons';
+import { WeatherWidget } from '@/components/WeatherWidget';
 
 export default function OperatorDashboard() {
+  const { user } = useAuth();
   const [data, setData] = useState<OperatorDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [period, setPeriod] = useState('30');
   const [selectedBooking, setSelectedBooking] = useState<OperatorBooking | null>(null);
 
-  // TODO: Получить реальный ID оператора из сессии
-  const operatorId = 'mock-operator-id';
+  const operatorId = user?.id;
 
   useEffect(() => {
     fetchDashboardData();
@@ -58,18 +61,18 @@ export default function OperatorDashboard() {
       <main className="min-h-screen bg-premium-black text-white">
         <OperatorNav />
 
-        {/* Header */}
+      {/* Header */}
         <div className="bg-white/5 border-b border-white/10 p-6">
           <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between">
-              <div>
+          <div className="flex items-center justify-between">
+            <div>
                 <h1 className="text-3xl font-black text-premium-gold">
                   Панель оператора
                 </h1>
                 <p className="text-white/70 mt-1">
                   Управление турами, бронированиями и аналитика
                 </p>
-              </div>
+      </div>
 
               {/* Period Selector */}
               <select
@@ -82,19 +85,19 @@ export default function OperatorDashboard() {
                 <option value="90">Последние 90 дней</option>
                 <option value="365">Последний год</option>
               </select>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
         {/* Content */}
         <div className="max-w-7xl mx-auto p-6">
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <LoadingSpinner size="lg" message="Загрузка данных..." />
-            </div>
+                    </div>
           ) : error ? (
             <EmptyState
-              icon="⚠️"
+              icon={<AlertTriangleIcon className="w-12 h-12 text-yellow-500" />}
               title="Ошибка загрузки"
               description={error}
               action={{
@@ -104,7 +107,7 @@ export default function OperatorDashboard() {
             />
           ) : !data ? (
             <EmptyState
-              icon="📊"
+              icon={<BarChartIcon className="w-12 h-12 text-purple-500" />}
               title="Нет данных"
               description="Данные не найдены"
             />
@@ -143,7 +146,7 @@ export default function OperatorDashboard() {
                     color="#60A5FA"
                   />
                 </section>
-              </div>
+            </div>
 
               {/* Top Tours */}
               <section>
@@ -154,7 +157,7 @@ export default function OperatorDashboard() {
                   <TopToursTable tours={data.topTours} />
                 ) : (
                   <EmptyState
-                    icon="🏔️"
+                    icon={<MountainIcon className="w-12 h-12 text-green-500" />}
                     title="Нет туров"
                     description="Создайте свой первый тур"
                   />
@@ -183,23 +186,27 @@ export default function OperatorDashboard() {
                             year: 'numeric'
                           })}
                         </p>
-                        <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between">
                           <span className="text-white/80">
-                            <span className="text-xl mr-1">👥</span>
-                            {tour.bookingsCount} / {tour.capacity}
+                            <span className="text-xl mr-1 inline-flex items-center">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                              </svg>
                           </span>
+                            {tour.bookingsCount} / {tour.capacity}
+                    </span>
                           <div className="w-20 bg-white/10 rounded-full h-2">
-                            <div
-                              className="bg-premium-gold h-2 rounded-full"
+                          <div 
+                            className="bg-premium-gold h-2 rounded-full" 
                               style={{
                                 width: `${(tour.bookingsCount / tour.capacity) * 100}%`
                               }}
                             />
-                          </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
+                </div>
                 </section>
               )}
 
@@ -215,15 +222,15 @@ export default function OperatorDashboard() {
                   />
                 ) : (
                   <EmptyState
-                    icon="📅"
+                    icon={<CalendarIcon className="w-12 h-12 text-blue-500" />}
                     title="Нет бронирований"
                     description="Бронирования появятся здесь"
                   />
                 )}
               </section>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
+      </div>
       </main>
     </Protected>
   );

@@ -5,14 +5,15 @@ import { Protected } from '@/components/Protected';
 import { OperatorNav } from '@/components/operator/OperatorNav';
 import { LoadingSpinner, EmptyState } from '@/components/admin/shared';
 import { AvailabilitySlot } from '@/types/operator';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function CalendarPage() {
+  const { user } = useAuth();
   const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(new Date());
 
-  // TODO: Получить из сессии
-  const operatorId = 'mock-operator-id';
+  const operatorId = user?.id;
 
   useEffect(() => {
     fetchCalendar();

@@ -191,8 +191,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Рассчитываем комиссию агента (стандартная ставка 10%, или индивидуальная)
-    const agentCommission = totalPrice * 0.10; // TODO: взять из настроек агента
+    // Рассчитываем комиссию агента (стандартная ставка 10%, или индивидуальная из настроек)
+    const agentCommissionRate = tour.commission_rate || 0.10; // Из настроек партнера или 10%
+    const agentCommission = totalPrice * agentCommissionRate;
 
     // Создаем бронирование
     const bookingId = `booking-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;

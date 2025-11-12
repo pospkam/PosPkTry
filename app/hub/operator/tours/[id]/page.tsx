@@ -7,18 +7,19 @@ import { OperatorNav } from '@/components/operator/OperatorNav';
 import { TourForm } from '@/components/operator/Tours/TourForm';
 import { LoadingSpinner, EmptyState } from '@/components/admin/shared';
 import { TourFormData, OperatorTour } from '@/types/operator';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function EditTour() {
+  const { user } = useAuth();
   const router = useRouter();
   const params = useParams();
   const tourId = params.id as string;
-  
+
   const [tour, setTour] = useState<OperatorTour | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // TODO: Получить из сессии
-  const operatorId = 'mock-operator-id';
+  const operatorId = user?.id;
 
   useEffect(() => {
     fetchTour();

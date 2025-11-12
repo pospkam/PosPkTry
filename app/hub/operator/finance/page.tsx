@@ -5,14 +5,15 @@ import { Protected } from '@/components/Protected';
 import { OperatorNav } from '@/components/operator/OperatorNav';
 import { MetricCard, DataTable, LoadingSpinner, EmptyState, Column } from '@/components/admin/shared';
 import { FinanceData, Transaction } from '@/types/operator';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function FinancePage() {
+  const { user } = useAuth();
   const [data, setData] = useState<FinanceData | null>(null);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('30');
 
-  // TODO: Получить из сессии
-  const operatorId = 'mock-operator-id';
+  const operatorId = user?.id;
 
   useEffect(() => {
     fetchFinanceData();

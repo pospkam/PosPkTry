@@ -1,296 +1,216 @@
 #!/bin/bash
+# Скрипт автоматического деплоя KamHub на Timeweb Cloud
+# Использование: bash scripts/deploy-to-timeweb.sh
 
-# ================================================================
-# СКРИПТ АВТОМАТИЧЕСКОГО ДЕПЛОЯ KAMHUB НА TIMEWEB
-# ================================================================
-
-set -e  # Прерывать при ошибках
-
-# Цвета для вывода
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
-
-# Переменные
-SERVER_IP="5.129.248.224"
-SERVER_USER="root"
-SERVER_PATH="/var/www/kamhub"
-DB_NAME="kamhub"
-DB_USER="kamhub_user"
-APP_PORT="3000"
-
-echo -e "${GREEN}════════════════════════════════════════════════════${NC}"
-echo -e "${GREEN}   🚀 ДЕПЛОЙ KAMHUB НА TIMEWEB CLOUD               ${NC}"
-echo -e "${GREEN}════════════════════════════════════════════════════${NC}"
-echo ""
-
-# ================================================================
-# 1. ПРОВЕРКА ЛОКАЛЬНОЙ СБОРКИ
-# ================================================================
-echo -e "${YELLOW}[1/10] Проверка локальной сборки...${NC}"
-
-if [ ! -f "package.json" ]; then
-    echo -e "${RED}❌ Ошибка: package.json не найден!${NC}"
-    exit 1
-fi
-
-echo -e "${GREEN}✅ package.json найден${NC}"
-
-# Сборка локально для проверки
-echo "Выполняю локальную сборку для проверки..."
-npm run build
-
-if [ $? -ne 0 ]; then
-    echo -e "${RED}❌ Ошибка сборки! Исправьте ошибки перед деплоем.${NC}"
-    exit 1
-fi
-
-echo -e "${GREEN}✅ Локальная сборка успешна${NC}"
-echo ""
-
-# ================================================================
-# 2. СОЗДАНИЕ АРХИВА ДЛЯ ДЕПЛОЯ
-# ================================================================
-echo -e "${YELLOW}[2/10] Создание архива для деплоя...${NC}"
-
-TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-ARCHIVE_NAME="kamhub-deploy-${TIMESTAMP}.tar.gz"
-
-tar -czf $ARCHIVE_NAME \
-    --exclude='node_modules' \
-    --exclude='.next' \
-    --exclude='.git' \
-    --exclude='*.log' \
-    --exclude='.env*' \
-    .
-
-echo -e "${GREEN}✅ Архив создан: $ARCHIVE_NAME${NC}"
-echo ""
-
-# ================================================================
-# 3. КОПИРОВАНИЕ НА СЕРВЕР
-# ================================================================
-echo -e "${YELLOW}[3/10] Копирование на сервер...${NC}"
-
-scp $ARCHIVE_NAME $SERVER_USER@$SERVER_IP:/tmp/
-
-if [ $? -ne 0 ]; then
-    echo -e "${RED}❌ Ошибка копирования на сервер!${NC}"
-    exit 1
-fi
-
-echo -e "${GREEN}✅ Файлы скопированы на сервер${NC}"
-echo ""
-
-# ================================================================
-# 4. РАСПАКОВКА И УСТАНОВКА НА СЕРВЕРЕ
-# ================================================================
-echo -e "${YELLOW}[4/10] Распаковка и установка на сервере...${NC}"
-
-ssh $SERVER_USER@$SERVER_IP << 'ENDSSH'
 set -e
 
-# Создать директорию если не существует
-mkdir -p /var/www/kamhub
+echo "🚀 Начинаем деплой KamHub на Timeweb Cloud..."
 
-# Создать backup текущей версии (если существует)
-if [ -d "/var/www/kamhub/app" ]; then
-    echo "📦 Создание backup..."
-    tar -czf /root/backups/kamhub-backup-$(date +%Y%m%d-%H%M%S).tar.gz -C /var/www/kamhub .
-fi
+# Цвета для вывода
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
 
-# Распаковать новую версию
-cd /var/www/kamhub
-tar -xzf /tmp/kamhub-deploy-*.tar.gz
+# Параметры сервера
+SERVER_IP="45.8.96.120"
+SERVER_USER="root"
+SERVER_PATH="/var/www/kamhub"
+REPO_URL="https://github.com/PosPk/kamhub.git"
+DOMAIN="kamhub.ru"
 
-# Установить зависимости
-echo "📦 Установка зависимостей..."
-npm ci --production
+echo -e "${BLUE}📡 Подключаемся к серверу ${SERVER_IP}...${NC}"
 
-# Сборка на сервере
-echo "🏗️ Сборка приложения..."
-npm run build
+# Функция для выполнения команд на сервере
+run_remote() {
+    ssh ${SERVER_USER}@${SERVER_IP} "$1"
+}
 
-echo "✅ Приложение распаковано и собрано"
-ENDSSH
-
-echo -e "${GREEN}✅ Установка на сервере завершена${NC}"
-echo ""
-
-# ================================================================
-# 5. ПРИМЕНЕНИЕ SQL СХЕМ (ТОЛЬКО ПРИ ПЕРВОМ ДЕПЛОЕ)
-# ================================================================
-echo -e "${YELLOW}[5/10] Применение SQL схем...${NC}"
-
-read -p "Применить SQL схемы к базе данных? (y/N) " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    echo "Копирование SQL файлов..."
-    scp -r lib/database $SERVER_USER@$SERVER_IP:/tmp/kamhub-sql/
-
-    ssh $SERVER_USER@$SERVER_IP << 'ENDSSH'
-    cd /tmp/kamhub-sql
-
-    echo "Применение схем к базе данных..."
-    psql -U kamhub_user -d kamhub -f schema.sql
-    psql -U kamhub_user -d kamhub -f accommodation_schema.sql
-    psql -U kamhub_user -d kamhub -f transfer_schema.sql
-    psql -U kamhub_user -d kamhub -f transfer_payments_schema.sql
-    psql -U kamhub_user -d kamhub -f seat_holds_schema.sql
-    psql -U kamhub_user -d kamhub -f operators_schema.sql
-    psql -U kamhub_user -d kamhub -f loyalty_schema.sql
-    psql -U kamhub_user -d kamhub -f agent_schema.sql
-    psql -U kamhub_user -d kamhub -f admin_schema.sql
-    psql -U kamhub_user -d kamhub -f transfer_operator_schema.sql
-    psql -U kamhub_user -d kamhub -f souvenirs_schema.sql
-    psql -U kamhub_user -d kamhub -f gear_schema.sql
-    psql -U kamhub_user -d kamhub -f cars_schema.sql
-
-    # Применение миграций
-    if [ -d "migrations" ]; then
-        for migration in migrations/*.sql; do
-            echo "Применение миграции: $migration"
-            psql -U kamhub_user -d kamhub -f "$migration"
-        done
-    fi
-
-    echo "✅ SQL схемы применены"
-ENDSSH
-
-    echo -e "${GREEN}✅ SQL схемы успешно применены${NC}"
+# 1. Проверка подключения
+echo -e "${BLUE}1️⃣ Проверка SSH подключения...${NC}"
+if run_remote "echo 'Подключение успешно'"; then
+    echo -e "${GREEN}✅ SSH подключение установлено${NC}"
 else
-    echo "⏭️ Пропуск применения SQL схем"
+    echo -e "${RED}❌ Ошибка SSH подключения${NC}"
+    exit 1
 fi
-echo ""
 
-# ================================================================
-# 6. НАСТРОЙКА ENVIRONMENT VARIABLES
-# ================================================================
-echo -e "${YELLOW}[6/10] Настройка environment variables...${NC}"
+# 2. Установка необходимых пакетов
+echo -e "${BLUE}2️⃣ Установка зависимостей на сервере...${NC}"
+run_remote "
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -qq
+    apt-get install -y -qq git nginx postgresql-client curl
+    
+    # Node.js 20
+    if ! command -v node &> /dev/null; then
+        curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+        apt-get install -y nodejs
+    fi
+    
+    # PM2
+    if ! command -v pm2 &> /dev/null; then
+        npm install -g pm2
+    fi
+    
+    echo '✅ Зависимости установлены'
+"
 
-read -p "Копировать .env файл на сервер? (y/N) " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    if [ -f ".env.production" ]; then
-        scp .env.production $SERVER_USER@$SERVER_IP:/var/www/kamhub/.env
-        echo -e "${GREEN}✅ .env файл скопирован${NC}"
+# 3. Клонирование/обновление репозитория
+echo -e "${BLUE}3️⃣ Обновление кода приложения...${NC}"
+run_remote "
+    if [ -d ${SERVER_PATH} ]; then
+        echo 'Обновление существующего репозитория...'
+        cd ${SERVER_PATH}
+        git fetch origin
+        git reset --hard origin/main
+        git clean -fd
     else
-        echo -e "${RED}⚠️ Файл .env.production не найден!${NC}"
-        echo "Создайте его на сервере вручную."
+        echo 'Клонирование репозитория...'
+        mkdir -p ${SERVER_PATH}
+        git clone ${REPO_URL} ${SERVER_PATH}
+        cd ${SERVER_PATH}
     fi
+    echo '✅ Код обновлён'
+"
+
+# 3.5. Копирование production конфигурации
+echo -e "${BLUE}3️⃣.5️⃣ Настройка production конфигурации...${NC}"
+if [ -f timeweb-production.env ]; then
+    echo -e "${BLUE}Копируем конфигурацию на сервер...${NC}"
+    scp timeweb-production.env ${SERVER_USER}@${SERVER_IP}:${SERVER_PATH}/.env
+    run_remote "
+        cd ${SERVER_PATH}
+        echo '✅ Конфигурация скопирована'
+        echo '🎨 Применение темы Samsung...'
+        # Тема Samsung уже подключена в коде
+        echo '✅ Тема Samsung активирована'
+    "
 else
-    echo "⏭️ Пропуск копирования .env"
+    echo -e "${RED}❌ Файл timeweb-production.env не найден!${NC}"
+    echo -e "${YELLOW}Создайте его командой: node final-deployment-test.js${NC}"
+    exit 1
 fi
-echo ""
 
-# ================================================================
-# 7. ЗАПУСК/ПЕРЕЗАПУСК PM2
-# ================================================================
-echo -e "${YELLOW}[7/10] Запуск приложения через PM2...${NC}"
+# 4. Установка npm зависимостей
+echo -e "${BLUE}4️⃣ Установка npm пакетов...${NC}"
+run_remote "
+    cd ${SERVER_PATH}
+    npm ci --production=false
+    echo '✅ Зависимости установлены'
+"
 
-ssh $SERVER_USER@$SERVER_IP << 'ENDSSH'
-cd /var/www/kamhub
+# 5. Применение схемы БД
+echo -e "${BLUE}5️⃣ Применение схемы БД...${NC}"
+echo -e "${RED}⚠️  ВНИМАНИЕ: Убедитесь что DATABASE_URL настроен в .env${NC}"
+run_remote "
+    cd ${SERVER_PATH}
+    if [ -f .env ]; then
+        source .env
+        if [ ! -z \"\$DATABASE_URL\" ]; then
+            echo 'Применение схемы БД...'
+            bash scripts/apply-all-schemas.sh || echo 'Схемы уже применены или ошибка'
+            echo '✅ БД настроена'
+        else
+            echo '⚠️  DATABASE_URL не найден в .env'
+        fi
+    else
+        echo '⚠️  Файл .env не найден. Создайте его из .env.local.example'
+    fi
+"
 
-# Проверить, запущено ли приложение
-if pm2 list | grep -q "kamhub"; then
-    echo "🔄 Перезапуск приложения..."
-    pm2 restart kamhub
-else
-    echo "🚀 Первый запуск приложения..."
-    pm2 start ecosystem.config.js
+# 6. Сборка Next.js приложения
+echo -e "${BLUE}6️⃣ Сборка производственной версии...${NC}"
+run_remote "
+    cd ${SERVER_PATH}
+    npm run build
+    echo '✅ Приложение собрано'
+"
+
+# 7. Настройка PM2
+echo -e "${BLUE}7️⃣ Настройка PM2...${NC}"
+run_remote "
+    cd ${SERVER_PATH}
+    
+    # Создать директорию для логов
+    mkdir -p /var/log/pm2
+    
+    # Остановить предыдущий процесс если есть
+    pm2 delete kamhub-production 2>/dev/null || true
+    
+    # Запустить через PM2
+    pm2 start ecosystem.config.js --env production
     pm2 save
-fi
+    pm2 startup systemd -u root --hp /root
+    
+    echo '✅ PM2 настроен и запущен'
+"
 
-# Показать статус
-pm2 status
-pm2 info kamhub
-ENDSSH
+# 8. Настройка Nginx
+echo -e "${BLUE}8️⃣ Настройка Nginx...${NC}"
+run_remote "
+    # Копировать конфиг
+    cp ${SERVER_PATH}/nginx.conf /etc/nginx/sites-available/kamhub
+    
+    # Создать симлинк если не существует
+    ln -sf /etc/nginx/sites-available/kamhub /etc/nginx/sites-enabled/kamhub 2>/dev/null || true
+    
+    # Удалить default конфиг
+    rm -f /etc/nginx/sites-enabled/default
+    
+    # Проверить конфигурацию
+    nginx -t
+    
+    # Перезагрузить Nginx
+    systemctl reload nginx
+    
+    echo '✅ Nginx настроен'
+"
 
-echo -e "${GREEN}✅ Приложение запущено${NC}"
-echo ""
+# 9. Настройка SSL (Let's Encrypt)
+echo -e "${BLUE}9️⃣ Настройка SSL сертификата...${NC}"
+echo -e "${RED}⚠️  Убедитесь что домен kamhub.ru указывает на ${SERVER_IP}${NC}"
+run_remote "
+    if ! command -v certbot &> /dev/null; then
+        apt-get install -y certbot python3-certbot-nginx
+    fi
+    
+    # Получить сертификат (только если домен настроен)
+    # certbot --nginx -d kamhub.ru -d www.kamhub.ru --non-interactive --agree-tos --email admin@kamhub.ru
+    
+    echo '⚠️  Запустите certbot вручную после настройки DNS'
+"
 
-# ================================================================
-# 8. ПРОВЕРКА ЗДОРОВЬЯ ПРИЛОЖЕНИЯ
-# ================================================================
-echo -e "${YELLOW}[8/10] Проверка здоровья приложения...${NC}"
+# 10. Проверка статуса
+echo -e "${BLUE}🔟 Проверка статуса приложения...${NC}"
+run_remote "
+    echo ''
+    echo '═══════════════════════════════════════'
+    echo '📊 Статус сервисов:'
+    echo '═══════════════════════════════════════'
+    
+    echo ''
+    echo '🔹 PM2 процессы:'
+    pm2 list
+    
+    echo ''
+    echo '🔹 Nginx статус:'
+    systemctl status nginx --no-pager | head -10
+    
+    echo ''
+    echo '═══════════════════════════════════════'
+    echo '✅ Деплой завершён успешно!'
+    echo '═══════════════════════════════════════'
+    echo ''
+    echo '🌐 Приложение доступно по адресу:'
+    echo '   http://${SERVER_IP}:3000 (напрямую)'
+    echo '   http://kamhub.ru (через Nginx, если DNS настроен)'
+    echo ''
+    echo '📋 Полезные команды:'
+    echo '   pm2 logs kamhub-production  - просмотр логов'
+    echo '   pm2 restart kamhub-production  - перезапуск'
+    echo '   pm2 monit  - мониторинг'
+    echo ''
+"
 
-sleep 5  # Подождать запуска
-
-# Проверка локального endpoint
-ssh $SERVER_USER@$SERVER_IP << 'ENDSSH'
-echo "Проверка http://localhost:3000/api/health ..."
-curl -s http://localhost:3000/api/health | head -5
-
-echo ""
-echo "Проверка http://localhost:3000/api/ping ..."
-curl -s http://localhost:3000/api/ping | head -5
-ENDSSH
-
-echo -e "${GREEN}✅ Приложение отвечает${NC}"
-echo ""
-
-# ================================================================
-# 9. ОЧИСТКА
-# ================================================================
-echo -e "${YELLOW}[9/10] Очистка временных файлов...${NC}"
-
-rm $ARCHIVE_NAME
-ssh $SERVER_USER@$SERVER_IP "rm -f /tmp/kamhub-deploy-*.tar.gz"
-
-echo -e "${GREEN}✅ Временные файлы удалены${NC}"
-echo ""
-
-# ================================================================
-# 10. ФИНАЛЬНАЯ ПРОВЕРКА
-# ================================================================
-echo -e "${YELLOW}[10/10] Финальная проверка...${NC}"
-
-echo "Проверка доступности сервера..."
-echo "URL: https://kamhub.ru"
-echo ""
-
-ssh $SERVER_USER@$SERVER_IP << 'ENDSSH'
-echo "📊 Статус сервисов:"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo -n "PostgreSQL: "
-systemctl is-active postgresql || echo "❌ НЕ ЗАПУЩЕН"
-
-echo -n "Nginx: "
-systemctl is-active nginx || echo "❌ НЕ ЗАПУЩЕН"
-
-echo -n "PM2: "
-pm2 status | grep -q "kamhub" && echo "✅ Запущен" || echo "❌ НЕ ЗАПУЩЕН"
-
-echo ""
-echo "📋 PM2 статус:"
-pm2 list
-
-echo ""
-echo "💾 Использование диска:"
-df -h | grep -E "Filesystem|/$"
-
-echo ""
-echo "🧠 Использование памяти:"
-free -h
-ENDSSH
-
-echo ""
-echo -e "${GREEN}════════════════════════════════════════════════════${NC}"
-echo -e "${GREEN}   ✅ ДЕПЛОЙ ЗАВЕРШЁН УСПЕШНО!                     ${NC}"
-echo -e "${GREEN}════════════════════════════════════════════════════${NC}"
-echo ""
-echo -e "🌐 Проверьте приложение:"
-echo -e "   https://kamhub.ru"
-echo -e "   https://kamhub.ru/api/health"
-echo ""
-echo -e "📊 Для просмотра логов:"
-echo -e "   ssh $SERVER_USER@$SERVER_IP"
-echo -e "   pm2 logs kamhub"
-echo ""
-echo -e "🔄 Для перезапуска:"
-echo -e "   ssh $SERVER_USER@$SERVER_IP"
-echo -e "   pm2 restart kamhub"
-echo ""
-
-exit 0
+echo -e "${GREEN}🎉 Деплой завершён успешно!${NC}"

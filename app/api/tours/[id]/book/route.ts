@@ -129,9 +129,15 @@ export async function POST(
     const childPrice = adultPrice * 0.5; // Дети со скидкой 50%
     const totalPrice = (adults * adultPrice) + (children * childPrice);
 
-    // TODO: Получить user_id из сессии/токена
-    // Для демонстрации используем null (нужно добавить аутентификацию)
-    const userId = null; // request.user?.id
+    // Получаем userId из заголовка (middleware должен установить)
+    const userId = request.headers.get('x-user-id');
+
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, error: 'Пользователь не авторизован' },
+        { status: 401 }
+      );
+    }
 
     // Создаем бронирование
     const bookingResult = await query(
@@ -168,9 +174,40 @@ export async function POST(
     const bookingId = bookingResult.rows[0].id;
 
     // Получаем email пользователя
-    const userResult = await query('SELECT email, name FROM users WHERE id = $1', ['user-temp']);
+    const userResult = await query('SELECT email, name FROM users WHERE id = $1', [userId]);
     const userEmail = userResult.rows[0]?.email || 'user@example.com';
     const userName = userResult.rows[0]?.name || 'Гость';
+
+    // Создаем платеж через CloudPayments
+    let paymentData = null;
+    try {
+      const paymentResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/payments/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': userId,
+        },
+        body: JSON.stringify({
+          bookingId,
+          bookingType: 'tour',
+          amount: totalPrice,
+          currency: 'RUB',
+          userId,
+          userEmail,
+          description: `Оплата тура: ${tour.name}`,
+        }),
+      });
+
+      if (paymentResponse.ok) {
+        const paymentResult = await paymentResponse.json();
+        if (paymentResult.success) {
+          paymentData = paymentResult.data;
+        }
+      }
+    } catch (paymentError) {
+      console.error('Error creating payment:', paymentError);
+      // Не прерываем выполнение при ошибке платежа
+    }
 
     // Отправляем email подтверждение бронирования
     try {
@@ -193,8 +230,6 @@ export async function POST(
       // Не прерываем выполнение при ошибке email
     }
 
-    // TODO: Создать платёж через CloudPayments
-
     return NextResponse.json({
       success: true,
       message: 'Бронирование создано успешно!',
@@ -214,8 +249,14 @@ export async function POST(
         },
         status: 'pending',
         paymentStatus: 'pending',
-        // TODO: Добавить payment URL
         paymentUrl: `/hub/tours/bookings/${bookingId}/payment`,
+        payment: paymentData ? {
+          paymentId: paymentData.paymentId,
+          amount: paymentData.amount,
+          currency: paymentData.currency,
+          description: paymentData.description,
+          invoiceId: paymentData.invoiceId,
+        } : null,
       },
     });
 

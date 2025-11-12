@@ -6,12 +6,13 @@ import { Protected } from '@/components/Protected';
 import { OperatorNav } from '@/components/operator/OperatorNav';
 import { TourForm } from '@/components/operator/Tours/TourForm';
 import { TourFormData } from '@/types/operator';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function NewTour() {
+  const { user } = useAuth();
   const router = useRouter();
-  
-  // TODO: Получить из сессии
-  const operatorId = 'mock-operator-id';
+
+  const operatorId = user?.id;
 
   const handleSubmit = async (formData: TourFormData) => {
     try {

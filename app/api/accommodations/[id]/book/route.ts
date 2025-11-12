@@ -159,9 +159,15 @@ export async function POST(
     const pricePerNight = parseFloat(room.price_per_night);
     const totalPrice = pricePerNight * nights;
     
-    // TODO: Получить user_id из сессии/токена
-    // Для демонстрации используем null (нужно добавить аутентификацию)
-    const userId = null; // request.user?.id
+    // Получаем userId из заголовка (middleware должен установить)
+    const userId = request.headers.get('x-user-id');
+
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, error: 'Пользователь не авторизован' },
+        { status: 401 }
+      );
+    }
     
     // Создаём бронирование
     const bookingResult = await query(
@@ -215,7 +221,7 @@ export async function POST(
     // Отправляем email подтверждение бронирования
     try {
       await emailService.sendEmail({
-        to: userEmail
+        to: userEmail,
         subject: `Подтверждение бронирования: ${room.accommodation_name}`,
         html: `
           <h2>Ваше бронирование подтверждено!</h2>
@@ -234,8 +240,37 @@ export async function POST(
       // Не прерываем выполнение при ошибке email
     }
 
-    // TODO: Создать платёж через CloudPayments
-    
+    // Создаем платеж через CloudPayments
+    let paymentData = null;
+    try {
+      const paymentResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/payments/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': userId,
+        },
+        body: JSON.stringify({
+          bookingId,
+          bookingType: 'accommodation',
+          amount: totalPrice,
+          currency: 'RUB',
+          userId,
+          userEmail,
+          description: `Оплата размещения: ${accommodation.name}`,
+        }),
+      });
+
+      if (paymentResponse.ok) {
+        const paymentResult = await paymentResponse.json();
+        if (paymentResult.success) {
+          paymentData = paymentResult.data;
+        }
+      }
+    } catch (paymentError) {
+      console.error('Error creating payment:', paymentError);
+      // Не прерываем выполнение при ошибке платежа
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Бронирование создано успешно!',
@@ -256,8 +291,14 @@ export async function POST(
         },
         status: 'pending',
         paymentStatus: 'pending',
-        // TODO: Добавить payment URL
         paymentUrl: `/hub/stay/bookings/${bookingId}/payment`,
+        payment: paymentData ? {
+          paymentId: paymentData.paymentId,
+          amount: paymentData.amount,
+          currency: paymentData.currency,
+          description: paymentData.description,
+          invoiceId: paymentData.invoiceId,
+        } : null,
       },
     });
     

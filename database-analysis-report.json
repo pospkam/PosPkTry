@@ -1,0 +1,23 @@
+{
+  "timestamp": "2025-11-12T02:36:46.464Z",
+  "stats": {
+    "tables": 27,
+    "views": 0,
+    "functions": 0,
+    "triggers": 0,
+    "indexes": 0,
+    "constraints": 55,
+    "foreignKeys": 56,
+    "totalRecords": 16
+  },
+  "issues": [
+    {
+      "type": "indexes",
+      "severity": "medium",
+      "message": "Ошибка анализа индексов: column \"indexrelid\" does not exist",
+      "recommendation": "Проверить права доступа"
+    }
+  ],
+  "recommendations": [],
+  "healthScore": 75
+}
