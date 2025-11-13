@@ -14,18 +14,18 @@ export default function TransferOperatorDashboard() {
       <main className="min-h-screen bg-premium-black text-white">
         <TransferOperatorNav />
 
-        {/* Header */}
+      {/* Header */}
         <div className="bg-white/5 border-b border-white/10 p-6">
           <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between">
-              <div>
+          <div className="flex items-center justify-between">
+            <div>
                 <h1 className="text-3xl font-black text-premium-gold">
                   Панель транспортного оператора
                 </h1>
                 <p className="text-white/70 mt-1">
                   Управление транспортом, водителями и трансферами
                 </p>
-              </div>
+            </div>
 
               {/* Period selector */}
               <div className="flex items-center space-x-2">
@@ -40,10 +40,10 @@ export default function TransferOperatorDashboard() {
                   <option value="90">90 дней</option>
                   <option value="365">Год</option>
                 </select>
-              </div>
             </div>
           </div>
         </div>
+      </div>
 
         {/* Content */}
         <div className="max-w-7xl mx-auto p-6">
@@ -62,31 +62,31 @@ export default function TransferOperatorDashboard() {
                   <div className="text-3xl mb-2">🚗</div>
                   <p className="text-sm font-semibold">Добавить транспорт</p>
                 </button>
-                <button
+              <button
                   onClick={() => window.location.href = '/hub/transfer-operator/drivers'}
                   className="p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-center"
                 >
                   <div className="text-3xl mb-2">👨‍🚗</div>
                   <p className="text-sm font-semibold">Добавить водителя</p>
-                </button>
+              </button>
                 <button
                   onClick={() => window.location.href = '/hub/transfer-operator/transfers'}
                   className="p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-center"
                 >
                   <div className="text-3xl mb-2">🚐</div>
                   <p className="text-sm font-semibold">Создать трансфер</p>
-                </button>
+                        </button>
                 <button
                   onClick={() => window.location.href = '/hub/transfer-operator/requests'}
                   className="p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-center"
                 >
                   <div className="text-3xl mb-2">📋</div>
                   <p className="text-sm font-semibold">Заявки</p>
-                </button>
+                        </button>
+                      </div>
               </div>
             </div>
           </div>
-        </div>
       </main>
     </Protected>
   );

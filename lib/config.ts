@@ -280,9 +280,3 @@ export function getClientConfig() {
     },
   };
 }
-        dsn: config.monitoring.sentry.dsn,
-        environment: config.monitoring.sentry.environment,
-      },
-    },
-  };
-}

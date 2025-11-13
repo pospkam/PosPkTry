@@ -7,20 +7,6 @@
 @import 'react-datepicker/dist/react-datepicker.css';
 
 /* Переменные проекта - используются через CSS классы */
-  
-  --date-checkin: #3B82F6;
-  --date-range: #FCD34D;
-  --date-checkout: #10B981;
-  
-  --available-many: #10B981;
-  --available-enough: #FFFFFF;
-  --available-few: #F59E0B;
-  --available-sold: #EF4444;
-  
-  --accent-gold: #E6C149;
-  --accent-blue: #3B82F6;
-  --accent-green: #10B981;
-}
 
 /* =================== БАЗОВЫЙ КОНТЕЙНЕР =================== */
 
@@ -467,7 +453,7 @@
 
 /* Уменьшенная анимация */
 @media (prefers-reduced-motion: reduce) {
-  * {
+  .calendarContainer * {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

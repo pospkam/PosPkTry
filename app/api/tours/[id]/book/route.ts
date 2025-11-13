@@ -212,7 +212,7 @@ export async function POST(
     // Отправляем email подтверждение бронирования
     try {
       await emailService.sendEmail({
-        to: userEmail
+        to: userEmail,
         subject: `Подтверждение бронирования: ${tour.name}`,
         html: `
           <h2>Ваше бронирование подтверждено!</h2>
