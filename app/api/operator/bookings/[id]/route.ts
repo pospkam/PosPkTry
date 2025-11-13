@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
+import { verifyBookingOwnership } from '@/lib/auth/operator-helpers';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * PATCH /api/operator/bookings/[id]
- * Update booking status (confirm/complete with owner check)
+ * PUT /api/operator/bookings/[id]
+ * Update booking status with ownership verification
  */
-export async function PATCH(
+export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
@@ -23,32 +24,10 @@ export async function PATCH(
       } as ApiResponse<null>, { status: 403 });
     }
 
-    // Get operator's partner ID
-    const partnerResult = await query(
-      `SELECT id FROM partners WHERE category = 'operator' 
-       AND contact->>'email' = (SELECT email FROM users WHERE id = $1)
-       LIMIT 1`,
-      [userId]
-    );
-
-    if (partnerResult.rows.length === 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'Партнёр не найден'
-      } as ApiResponse<null>, { status: 404 });
-    }
-
-    const operatorId = partnerResult.rows[0].id;
-
-    // Verify ownership through tour
-    const checkResult = await query(
-      `SELECT b.id, b.status FROM bookings b
-       JOIN tours t ON b.tour_id = t.id
-       WHERE b.id = $1 AND t.operator_id = $2`,
-      [params.id, operatorId]
-    );
-
-    if (checkResult.rows.length === 0) {
+    // Verify ownership
+    const isOwner = await verifyBookingOwnership(userId, params.id);
+    
+    if (!isOwner) {
       return NextResponse.json({
         success: false,
         error: 'Бронирование не найдено или у вас нет прав на его изменение'
@@ -56,7 +35,7 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { status, paymentStatus } = body;
+    const { status, paymentStatus, notes } = body;
 
     // Validate status change
     const validStatuses = ['pending', 'confirmed', 'completed', 'cancelled'];
@@ -90,6 +69,11 @@ export async function PATCH(
       updateValues.push(paymentStatus);
     }
 
+    if (notes !== undefined) {
+      updateFields.push(`special_requests = $${paramIndex++}`);
+      updateValues.push(notes);
+    }
+
     if (updateFields.length === 0) {
       return NextResponse.json({
         success: false,
@@ -102,15 +86,32 @@ export async function PATCH(
     const result = await query(
       `UPDATE bookings 
        SET ${updateFields.join(', ')}
-       WHERE id = $${paramIndex++}
+       WHERE id = $${paramIndex}
        RETURNING *`,
       updateValues
     );
 
+    // Create notification for status change
+    if (status) {
+      const booking = result.rows[0];
+      await query(
+        `INSERT INTO notifications (user_id, type, title, message, priority, action_url)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [
+          booking.user_id,
+          'booking_status_changed',
+          'Статус бронирования изменён',
+          `Статус вашего бронирования изменён на: ${status}`,
+          status === 'cancelled' ? 'high' : 'normal',
+          `/hub/tourist/bookings/${params.id}`
+        ]
+      );
+    }
+
     return NextResponse.json({
       success: true,
       data: result.rows[0],
-      message: 'Бронирование обновлено'
+      message: 'Бронирование успешно обновлено'
     } as ApiResponse<any>);
 
   } catch (error) {

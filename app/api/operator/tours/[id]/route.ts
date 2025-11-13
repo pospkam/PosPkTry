@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
+import { getOperatorPartnerId, verifyTourOwnership } from '@/lib/auth/operator-helpers';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/operator/tours/[id]
- * Get specific tour (with owner check)
+ * Get specific tour with ownership verification
  */
 export async function GET(
   request: NextRequest,
@@ -23,39 +24,38 @@ export async function GET(
       } as ApiResponse<null>, { status: 403 });
     }
 
-    // Get operator's partner ID
-    const partnerResult = await query(
-      `SELECT id FROM partners WHERE category = 'operator' 
-       AND contact->>'email' = (SELECT email FROM users WHERE id = $1)
-       LIMIT 1`,
-      [userId]
-    );
-
-    if (partnerResult.rows.length === 0) {
+    // Verify ownership
+    const isOwner = await verifyTourOwnership(userId, params.id);
+    
+    if (!isOwner) {
       return NextResponse.json({
         success: false,
-        error: 'Партнёр не найден'
+        error: 'Тур не найден или у вас нет прав на его просмотр'
       } as ApiResponse<null>, { status: 404 });
     }
 
-    const operatorId = partnerResult.rows[0].id;
-
-    // Get tour with owner verification
+    // Get tour with full details
     const result = await query(
-      `SELECT t.*,
-        array_agg(DISTINCT a.url) as images
-       FROM tours t
-       LEFT JOIN tour_assets ta ON t.id = ta.tour_id
-       LEFT JOIN assets a ON ta.asset_id = a.id
-       WHERE t.id = $1 AND t.operator_id = $2
-       GROUP BY t.id`,
-      [params.id, operatorId]
+      `SELECT 
+        t.*,
+        COALESCE(array_agg(DISTINCT a.url) FILTER (WHERE a.url IS NOT NULL), '{}') as images,
+        COALESCE(array_agg(DISTINCT jsonb_build_object(
+          'id', a.id,
+          'url', a.url,
+          'alt', a.alt
+        )) FILTER (WHERE a.id IS NOT NULL), '[]') as image_details
+      FROM tours t
+      LEFT JOIN tour_assets ta ON t.id = ta.tour_id
+      LEFT JOIN assets a ON ta.asset_id = a.id
+      WHERE t.id = $1
+      GROUP BY t.id`,
+      [params.id]
     );
 
     if (result.rows.length === 0) {
       return NextResponse.json({
         success: false,
-        error: 'Тур не найден или у вас нет прав на его просмотр'
+        error: 'Тур не найден'
       } as ApiResponse<null>, { status: 404 });
     }
 
@@ -74,10 +74,10 @@ export async function GET(
 }
 
 /**
- * PATCH /api/operator/tours/[id]
- * Update tour (with owner check)
+ * PUT /api/operator/tours/[id]
+ * Update tour with ownership verification
  */
-export async function PATCH(
+export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
@@ -92,30 +92,10 @@ export async function PATCH(
       } as ApiResponse<null>, { status: 403 });
     }
 
-    // Get operator's partner ID
-    const partnerResult = await query(
-      `SELECT id FROM partners WHERE category = 'operator' 
-       AND contact->>'email' = (SELECT email FROM users WHERE id = $1)
-       LIMIT 1`,
-      [userId]
-    );
-
-    if (partnerResult.rows.length === 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'Партнёр не найден'
-      } as ApiResponse<null>, { status: 404 });
-    }
-
-    const operatorId = partnerResult.rows[0].id;
-
     // Verify ownership
-    const checkResult = await query(
-      'SELECT id FROM tours WHERE id = $1 AND operator_id = $2',
-      [params.id, operatorId]
-    );
-
-    if (checkResult.rows.length === 0) {
+    const isOwner = await verifyTourOwnership(userId, params.id);
+    
+    if (!isOwner) {
       return NextResponse.json({
         success: false,
         error: 'Тур не найден или у вас нет прав на его редактирование'
@@ -126,9 +106,9 @@ export async function PATCH(
 
     // Build dynamic update query
     const allowedFields = [
-      'name', 'description', 'short_description', 'difficulty', 'duration', 
-      'price', 'season', 'max_group_size', 'min_group_size', 
-      'requirements', 'included', 'not_included', 'is_active'
+      'name', 'description', 'short_description', 'category', 'difficulty', 
+      'duration', 'price', 'currency', 'season', 'max_group_size', 'min_group_size', 
+      'requirements', 'included', 'not_included', 'coordinates', 'is_active'
     ];
 
     const updateFields = [];
@@ -136,12 +116,13 @@ export async function PATCH(
     let paramIndex = 1;
 
     for (const [key, value] of Object.entries(body)) {
-      if (allowedFields.includes(key)) {
-        const dbKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+      const dbKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+      
+      if (allowedFields.includes(dbKey)) {
         updateFields.push(`${dbKey} = $${paramIndex++}`);
         
         // Handle JSON fields
-        if (['season', 'requirements', 'included', 'not_included'].includes(key)) {
+        if (['season', 'requirements', 'included', 'not_included', 'coordinates'].includes(dbKey)) {
           updateValues.push(JSON.stringify(value));
         } else {
           updateValues.push(value);
@@ -156,12 +137,12 @@ export async function PATCH(
       } as ApiResponse<null>, { status: 400 });
     }
 
-    updateValues.push(params.id, operatorId);
+    updateValues.push(params.id);
 
     const result = await query(
       `UPDATE tours 
        SET ${updateFields.join(', ')}
-       WHERE id = $${paramIndex++} AND operator_id = $${paramIndex++}
+       WHERE id = $${paramIndex}
        RETURNING *`,
       updateValues
     );
@@ -169,7 +150,7 @@ export async function PATCH(
     return NextResponse.json({
       success: true,
       data: result.rows[0],
-      message: 'Тур обновлён успешно'
+      message: 'Тур успешно обновлён'
     } as ApiResponse<any>);
 
   } catch (error) {
@@ -183,7 +164,7 @@ export async function PATCH(
 
 /**
  * DELETE /api/operator/tours/[id]
- * Delete tour (with owner check)
+ * Delete tour with safety checks
  */
 export async function DELETE(
   request: NextRequest,
@@ -200,24 +181,17 @@ export async function DELETE(
       } as ApiResponse<null>, { status: 403 });
     }
 
-    // Get operator's partner ID
-    const partnerResult = await query(
-      `SELECT id FROM partners WHERE category = 'operator' 
-       AND contact->>'email' = (SELECT email FROM users WHERE id = $1)
-       LIMIT 1`,
-      [userId]
-    );
-
-    if (partnerResult.rows.length === 0) {
+    // Verify ownership
+    const isOwner = await verifyTourOwnership(userId, params.id);
+    
+    if (!isOwner) {
       return NextResponse.json({
         success: false,
-        error: 'Партнёр не найден'
+        error: 'Тур не найден или у вас нет прав на его удаление'
       } as ApiResponse<null>, { status: 404 });
     }
 
-    const operatorId = partnerResult.rows[0].id;
-
-    // Check for existing bookings
+    // Check for active bookings
     const bookingsCheck = await query(
       `SELECT COUNT(*) as count FROM bookings 
        WHERE tour_id = $1 AND status IN ('pending', 'confirmed')`,
@@ -227,26 +201,17 @@ export async function DELETE(
     if (parseInt(bookingsCheck.rows[0].count) > 0) {
       return NextResponse.json({
         success: false,
-        error: 'Невозможно удалить тур с активными бронированиями. Деактивируйте тур вместо удаления.'
+        error: 'Невозможно удалить тур с активными бронированиями',
+        message: 'Сначала отмените или завершите все активные бронирования, либо деактивируйте тур вместо удаления.'
       } as ApiResponse<null>, { status: 400 });
     }
 
-    // Delete tour (with owner verification)
-    const result = await query(
-      'DELETE FROM tours WHERE id = $1 AND operator_id = $2 RETURNING id',
-      [params.id, operatorId]
-    );
-
-    if (result.rows.length === 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'Тур не найден или у вас нет прав на его удаление'
-      } as ApiResponse<null>, { status: 404 });
-    }
+    // Delete tour (CASCADE will delete related records)
+    await query('DELETE FROM tours WHERE id = $1', [params.id]);
 
     return NextResponse.json({
       success: true,
-      message: 'Тур удалён успешно'
+      message: 'Тур успешно удалён'
     } as ApiResponse<null>);
 
   } catch (error) {

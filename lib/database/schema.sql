@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS users (
 -- Таблица партнеров
 CREATE TABLE IF NOT EXISTS partners (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
     category VARCHAR(50) NOT NULL CHECK (category IN ('operator', 'guide', 'transfer', 'stay', 'souvenir', 'gear', 'cars', 'restaurant')),
     description TEXT,
@@ -103,7 +104,9 @@ CREATE TABLE IF NOT EXISTS bookings (
     user_id UUID REFERENCES users(id),
     tour_id UUID REFERENCES tours(id),
     date DATE NOT NULL,
+    start_date DATE,
     participants INTEGER NOT NULL,
+    guests_count INTEGER,
     total_price DECIMAL(10,2) NOT NULL,
     status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'cancelled', 'completed')),
     payment_status VARCHAR(20) DEFAULT 'pending' CHECK (payment_status IN ('pending', 'paid', 'refunded')),
@@ -120,6 +123,8 @@ CREATE TABLE IF NOT EXISTS reviews (
     rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
     comment TEXT,
     is_verified BOOLEAN DEFAULT FALSE,
+    operator_reply TEXT,
+    operator_reply_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -285,6 +290,8 @@ CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
 CREATE INDEX IF NOT EXISTS idx_partners_category ON partners(category);
 CREATE INDEX IF NOT EXISTS idx_partners_verified ON partners(is_verified);
+CREATE INDEX IF NOT EXISTS idx_partners_user_id ON partners(user_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_partners_user_category ON partners(user_id, category);
 CREATE INDEX IF NOT EXISTS idx_tours_operator ON tours(operator_id);
 CREATE INDEX IF NOT EXISTS idx_tours_guide ON tours(guide_id);
 CREATE INDEX IF NOT EXISTS idx_tours_difficulty ON tours(difficulty);
@@ -294,6 +301,7 @@ CREATE INDEX IF NOT EXISTS idx_tours_created_at ON tours(created_at);
 CREATE INDEX IF NOT EXISTS idx_bookings_user ON bookings(user_id);
 CREATE INDEX IF NOT EXISTS idx_bookings_tour ON bookings(tour_id);
 CREATE INDEX IF NOT EXISTS idx_bookings_date ON bookings(date);
+CREATE INDEX IF NOT EXISTS idx_bookings_start_date ON bookings(start_date);
 CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status);
 CREATE INDEX IF NOT EXISTS idx_reviews_tour ON reviews(tour_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_rating ON reviews(rating);
@@ -427,3 +435,171 @@ LEFT JOIN assets l ON p.logo_asset_id = l.id
 LEFT JOIN partner_assets pa ON p.id = pa.partner_id
 LEFT JOIN assets a ON pa.asset_id = a.id
 GROUP BY p.id, l.url;
+
+-- ============================================
+-- OPERATOR-SPECIFIC TABLES
+-- ============================================
+
+-- Таблица настроек оператора
+CREATE TABLE IF NOT EXISTS operator_settings (
+    user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    auto_confirm_bookings BOOLEAN DEFAULT FALSE,
+    booking_lead_time INTEGER DEFAULT 24,
+    cancellation_policy TEXT,
+    refund_policy TEXT,
+    min_group_size INTEGER DEFAULT 1,
+    max_advance_booking_days INTEGER DEFAULT 365,
+    timezone VARCHAR(50) DEFAULT 'Asia/Kamchatka',
+    currency VARCHAR(3) DEFAULT 'RUB',
+    commission_rate DECIMAL(5,2) DEFAULT 10.00,
+    settings JSONB DEFAULT '{}',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Таблица доступности туров
+CREATE TABLE IF NOT EXISTS tour_availability (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tour_id UUID NOT NULL REFERENCES tours(id) ON DELETE CASCADE,
+    date DATE NOT NULL,
+    available_spots INTEGER NOT NULL DEFAULT 0,
+    is_blocked BOOLEAN DEFAULT FALSE,
+    block_reason TEXT,
+    price_override DECIMAL(10,2),
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(tour_id, date)
+);
+
+-- Таблица переписки с клиентами
+CREATE TABLE IF NOT EXISTS client_communications (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    booking_id UUID NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
+    sender_id UUID NOT NULL REFERENCES users(id),
+    recipient_id UUID NOT NULL REFERENCES users(id),
+    message TEXT NOT NULL,
+    is_read BOOLEAN DEFAULT FALSE,
+    is_system_message BOOLEAN DEFAULT FALSE,
+    attachments JSONB DEFAULT '[]',
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    read_at TIMESTAMPTZ
+);
+
+-- Таблица шаблонов сообщений
+CREATE TABLE IF NOT EXISTS message_templates (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    subject VARCHAR(255),
+    content TEXT NOT NULL,
+    template_type VARCHAR(50),
+    variables JSONB DEFAULT '[]',
+    is_active BOOLEAN DEFAULT TRUE,
+    usage_count INTEGER DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Таблица кэша статистики оператора
+CREATE TABLE IF NOT EXISTS operator_stats_cache (
+    operator_id UUID PRIMARY KEY REFERENCES partners(id) ON DELETE CASCADE,
+    total_tours INTEGER DEFAULT 0,
+    active_tours INTEGER DEFAULT 0,
+    total_bookings INTEGER DEFAULT 0,
+    total_revenue DECIMAL(12,2) DEFAULT 0,
+    avg_rating DECIMAL(3,2) DEFAULT 0,
+    total_reviews INTEGER DEFAULT 0,
+    completion_rate DECIMAL(5,2) DEFAULT 0,
+    last_calculated TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================
+-- NOTIFICATION SYSTEM TABLES
+-- ============================================
+
+-- Таблица уведомлений
+CREATE TABLE IF NOT EXISTS notifications (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    type VARCHAR(50) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    data JSONB DEFAULT '{}',
+    is_read BOOLEAN DEFAULT FALSE,
+    is_archived BOOLEAN DEFAULT FALSE,
+    priority VARCHAR(20) DEFAULT 'normal' CHECK (priority IN ('low', 'normal', 'high', 'urgent')),
+    action_url TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    read_at TIMESTAMPTZ,
+    expires_at TIMESTAMPTZ
+);
+
+-- Таблица настроек уведомлений
+CREATE TABLE IF NOT EXISTS notification_preferences (
+    user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    email_enabled BOOLEAN DEFAULT TRUE,
+    push_enabled BOOLEAN DEFAULT TRUE,
+    sms_enabled BOOLEAN DEFAULT FALSE,
+    new_booking BOOLEAN DEFAULT TRUE,
+    booking_confirmed BOOLEAN DEFAULT TRUE,
+    booking_cancelled BOOLEAN DEFAULT TRUE,
+    new_review BOOLEAN DEFAULT TRUE,
+    payment_received BOOLEAN DEFAULT TRUE,
+    system_updates BOOLEAN DEFAULT TRUE,
+    marketing BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Таблица лога уведомлений
+CREATE TABLE IF NOT EXISTS notification_log (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    notification_id UUID REFERENCES notifications(id) ON DELETE CASCADE,
+    channel VARCHAR(20) NOT NULL CHECK (channel IN ('email', 'push', 'sms', 'in_app')),
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'sent', 'failed', 'delivered', 'bounced')),
+    sent_at TIMESTAMPTZ,
+    delivered_at TIMESTAMPTZ,
+    error_message TEXT,
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Индексы для operator tables
+CREATE INDEX IF NOT EXISTS idx_tour_availability_tour_id ON tour_availability(tour_id);
+CREATE INDEX IF NOT EXISTS idx_tour_availability_date ON tour_availability(date);
+CREATE INDEX IF NOT EXISTS idx_tour_availability_blocked ON tour_availability(is_blocked);
+CREATE INDEX IF NOT EXISTS idx_client_comms_booking_id ON client_communications(booking_id);
+CREATE INDEX IF NOT EXISTS idx_client_comms_sender_id ON client_communications(sender_id);
+CREATE INDEX IF NOT EXISTS idx_client_comms_recipient_id ON client_communications(recipient_id);
+CREATE INDEX IF NOT EXISTS idx_client_comms_created_at ON client_communications(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_message_templates_user_id ON message_templates(user_id);
+CREATE INDEX IF NOT EXISTS idx_message_templates_type ON message_templates(template_type);
+
+-- Индексы для notifications
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications(is_read);
+CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_notifications_type ON notifications(type);
+CREATE INDEX IF NOT EXISTS idx_notifications_priority ON notifications(priority);
+CREATE INDEX IF NOT EXISTS idx_notification_log_notification_id ON notification_log(notification_id);
+CREATE INDEX IF NOT EXISTS idx_notification_log_status ON notification_log(status);
+CREATE INDEX IF NOT EXISTS idx_notification_log_sent_at ON notification_log(sent_at);
+
+-- Триггеры для operator tables
+CREATE TRIGGER update_tour_availability_updated_at 
+    BEFORE UPDATE ON tour_availability
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_operator_settings_updated_at 
+    BEFORE UPDATE ON operator_settings
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_message_templates_updated_at 
+    BEFORE UPDATE ON message_templates
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_notification_preferences_updated_at 
+    BEFORE UPDATE ON notification_preferences
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
