@@ -112,12 +112,23 @@ export const config = {
       baseUrl: 'https://api.open-meteo.com/v1',
       timeout: 10000,
     },
+    openWeatherMap: {
+      apiKey: process.env.OPENWEATHERMAP_API_KEY || '',
+      baseUrl: 'https://api.openweathermap.org/data/2.5',
+      timeout: 10000,
+    },
+    weatherApi: {
+      apiKey: process.env.WEATHERAPI_KEY || '',
+      baseUrl: 'https://api.weatherapi.com/v1',
+      timeout: 10000,
+    },
     yandex: {
       apiKey: process.env.YANDEX_WEATHER_API_KEY || '',
       baseUrl: 'https://api.weather.yandex.ru/v2',
       timeout: 10000,
     },
     cacheTimeout: 30 * 60 * 1000, // 30 минут
+    defaultProvider: 'yandex', // 'openMeteo' | 'openWeatherMap' | 'weatherApi' | 'yandex' - Используем Yandex для максимальной точности на Камчатке
   },
 
   // Настройки платежей

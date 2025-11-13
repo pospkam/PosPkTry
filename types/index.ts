@@ -126,17 +126,30 @@ export interface Review {
 export interface Weather {
   location: string;
   temperature: number;
+  feelsLike: number; // Ощущается как
   condition: string;
+  conditionText: string; // Описание на русском
   humidity: number;
   windSpeed: number;
   windDirection: number;
+  windGust?: number; // Порывы ветра
   pressure: number;
   visibility: number;
   uvIndex: number;
+  cloudCover: number; // Облачность %
+  dewPoint?: number; // Точка росы
+  sunrise?: string; // Время восхода
+  sunset?: string; // Время заката
+  moonPhase?: string; // Фаза луны
   forecast: WeatherForecast[];
+  hourlyForecast?: WeatherHourly[]; // Почасовой прогноз
+  alerts?: WeatherAlert[]; // Метеоалерты
   lastUpdated: Date;
-  safetyLevel: 'excellent' | 'good' | 'difficult' | 'dangerous';
+  safetyLevel: 'excellent' | 'good' | 'moderate' | 'difficult' | 'dangerous';
   recommendations: string[];
+  clothingAdvice: string[]; // Рекомендации по одежде
+  tourAdvice: string; // Совет для туристов
+  comfortIndex: number; // Индекс комфорта 0-100
 }
 
 export interface WeatherForecast {
@@ -146,9 +159,32 @@ export interface WeatherForecast {
     max: number;
   };
   condition: string;
+  conditionText: string;
+  precipitation: number;
+  precipitationProbability: number; // Вероятность осадков %
+  windSpeed: number;
+  humidity: number;
+  sunrise?: string;
+  sunset?: string;
+}
+
+export interface WeatherHourly {
+  time: string;
+  temperature: number;
+  feelsLike: number;
+  condition: string;
   precipitation: number;
   windSpeed: number;
   humidity: number;
+}
+
+export interface WeatherAlert {
+  event: string; // Тип события
+  severity: 'minor' | 'moderate' | 'severe' | 'extreme';
+  urgency: 'immediate' | 'expected' | 'future';
+  description: string;
+  start: Date;
+  end: Date;
 }
 
 export type Season = 'spring' | 'summer' | 'autumn' | 'winter';
