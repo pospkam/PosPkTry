@@ -1,12 +1,16 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 import { Protected } from '@/components/Protected';
 import { LoadingSpinner } from '@/components/admin/shared';
 import { Booking } from '@/types';
 
 export default function BookingHistoryPage() {
-  const [bookings, setBookings] = useState<Booking[]>([]);
+  const router = useRouter();
+  const { user } = useAuth();
+  const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'past' | 'cancelled'>('all');
 
@@ -15,18 +19,51 @@ export default function BookingHistoryPage() {
   }, []);
 
   const fetchBookings = async () => {
+    if (!user) return;
+    
     try {
       setLoading(true);
-      const response = await fetch('/api/bookings');
+      const response = await fetch('/api/bookings/my', {
+        headers: {
+          'Authorization': `Bearer ${user.token}`
+        }
+      });
       const result = await response.json();
 
       if (result.success) {
-        setBookings(result.data || []);
+        setBookings(result.data.bookings || []);
       }
     } catch (err) {
       console.error('Error fetching bookings:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCancelBooking = async (bookingId: string) => {
+    if (!confirm('Вы уверены, что хотите отменить бронирование?')) return;
+
+    try {
+      const response = await fetch(`/api/bookings/${bookingId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user?.token}`
+        },
+        body: JSON.stringify({ status: 'cancelled' })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert('Бронирование отменено');
+        fetchBookings(); // Refresh list
+      } else {
+        alert(result.error || 'Ошибка при отмене бронирования');
+      }
+    } catch (error) {
+      console.error('Cancel booking error:', error);
+      alert('Ошибка при отмене бронирования');
     }
   };
 
@@ -175,10 +212,11 @@ export default function BookingHistoryPage() {
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h3 className="text-xl font-bold mb-2">{booking.tour?.title || 'Тур'}</h3>
+                      <h3 className="text-xl font-bold mb-2">{booking.tour?.name || 'Тур'}</h3>
                       <div className="flex items-center gap-4 text-sm text-white/70">
                         <span>  {new Date(booking.date).toLocaleDateString('ru-RU')}</span>
                         <span>  {booking.participants} чел</span>
+                        {booking.tour?.duration && <span>  {booking.tour.duration}</span>}
                       </div>
                     </div>
                     <div className="text-right">
@@ -201,16 +239,25 @@ export default function BookingHistoryPage() {
 
                   {/* Действия */}
                   <div className="mt-4 pt-4 border-t border-white/10 flex gap-3">
-                    <button className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm transition-colors">
+                    <button 
+                      onClick={() => router.push(`/hub/tourist/bookings/${booking.id}`)}
+                      className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm transition-colors"
+                    >
                       Подробнее
                     </button>
                     {booking.status === 'pending' && (
-                      <button className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-sm transition-colors">
+                      <button 
+                        onClick={() => handleCancelBooking(booking.id)}
+                        className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-sm transition-colors"
+                      >
                         Отменить
                       </button>
                     )}
                     {booking.status === 'completed' && booking.paymentStatus === 'paid' && (
-                      <button className="px-4 py-2 bg-premium-gold/20 hover:bg-premium-gold/30 text-premium-gold rounded-lg text-sm transition-colors">
+                      <button 
+                        onClick={() => router.push(`/tours/${booking.tour.id}?review=true`)}
+                        className="px-4 py-2 bg-premium-gold/20 hover:bg-premium-gold/30 text-premium-gold rounded-lg text-sm transition-colors"
+                      >
                         Оставить отзыв
                       </button>
                     )}

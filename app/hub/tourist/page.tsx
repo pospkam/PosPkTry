@@ -1,11 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { Tour, Weather } from '@/types';
 import { AIChatWidget } from '@/components/AIChatWidget';
 import { TransferSearchWidget } from '@/components/TransferSearchWidget';
 
 export default function TouristDashboard() {
+  const router = useRouter();
   const [tours, setTours] = useState<Tour[]>([]);
   const [weather, setWeather] = useState<Weather | null>(null);
   const [loading, setLoading] = useState(true);
@@ -16,11 +18,38 @@ export default function TouristDashboard() {
     difficulty: '',
   });
   const [transferResults, setTransferResults] = useState<any[]>([]);
+  const [favorites, setFavorites] = useState<string[]>([]);
 
   useEffect(() => {
     fetchTours();
     fetchWeather();
+    loadFavorites();
   }, []);
+
+  const loadFavorites = () => {
+    try {
+      const saved = localStorage.getItem('tourist_favorites');
+      if (saved) {
+        setFavorites(JSON.parse(saved));
+      }
+    } catch (error) {
+      console.error('Error loading favorites:', error);
+    }
+  };
+
+  const toggleFavorite = (tourId: string) => {
+    setFavorites(prev => {
+      const newFavorites = prev.includes(tourId)
+        ? prev.filter(id => id !== tourId)
+        : [...prev, tourId];
+      localStorage.setItem('tourist_favorites', JSON.stringify(newFavorites));
+      return newFavorites;
+    });
+  };
+
+  const handleBookTour = (tourId: string) => {
+    router.push(`/hub/tourist/bookings/new?tourId=${tourId}`);
+  };
 
   const fetchTours = async () => {
     try {
@@ -93,6 +122,32 @@ export default function TouristDashboard() {
     };
     return colors[level] || 'text-gray-400';
   };
+
+  // Apply filters to tours
+  const filteredTours = useMemo(() => {
+    return tours.filter(tour => {
+      // Activity filter
+      if (filters.activity && tour.activity !== filters.activity) {
+        return false;
+      }
+      
+      // Difficulty filter
+      if (filters.difficulty && tour.difficulty !== filters.difficulty) {
+        return false;
+      }
+      
+      // Price filter
+      if (tour.priceFrom > filters.priceRange[1]) {
+        return false;
+      }
+      
+      return true;
+    });
+  }, [tours, filters]);
+
+  const favoriteTours = useMemo(() => {
+    return tours.filter(tour => favorites.includes(tour.id));
+  }, [tours, favorites]);
 
   const tabs = [
     { id: 'tours', name: 'Туры', icon: ' ' },
@@ -207,8 +262,15 @@ export default function TouristDashboard() {
             </div>
 
             {/* Tours Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {tours.map((tour) => (
+            {filteredTours.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4"> </div>
+                <h3 className="text-2xl font-bold text-white mb-2">Туры не найдены</h3>
+                <p className="text-white/70">Попробуйте изменить фильтры</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredTours.map((tour) => (
                 <div key={tour.id} className="bg-white/5 rounded-2xl overflow-hidden border border-white/10 hover:border-premium-gold/50 transition-colors">
                   <div className="aspect-video bg-gradient-to-br from-premium-gold/20 to-premium-black relative">
                     {tour.images && tour.images.length > 0 ? (
@@ -230,10 +292,18 @@ export default function TouristDashboard() {
                   <div className="p-6">
                     <div className="flex items-start justify-between mb-3">
                       <h3 className="text-xl font-bold text-white">{tour.title}</h3>
-                      <div className="flex items-center space-x-1">
-                        <span className="text-premium-gold">★</span>
-                        <span className="text-white font-bold">{tour.rating}</span>
-                        <span className="text-white/50">({tour.reviewsCount})</span>
+                      <div className="flex items-center space-x-3">
+                        <button
+                          onClick={() => toggleFavorite(tour.id)}
+                          className="text-2xl hover:scale-110 transition-transform"
+                        >
+                          {favorites.includes(tour.id) ? '❤️' : '🤍'}
+                        </button>
+                        <div className="flex items-center space-x-1">
+                          <span className="text-premium-gold">★</span>
+                          <span className="text-white font-bold">{tour.rating}</span>
+                          <span className="text-white/50">({tour.reviewsCount})</span>
+                        </div>
                       </div>
                     </div>
                     
@@ -260,14 +330,18 @@ export default function TouristDashboard() {
                       <div className="text-sm text-white/70">
                         <span>  {tour.minParticipants}-{tour.maxParticipants} чел.</span>
                       </div>
-                      <button className="px-6 py-2 bg-premium-gold text-premium-black rounded-xl hover:bg-premium-gold/90 transition-colors font-bold">
+                      <button 
+                        onClick={() => handleBookTour(tour.id)}
+                        className="px-6 py-2 bg-premium-gold text-premium-black rounded-xl hover:bg-premium-gold/90 transition-colors font-bold"
+                      >
                         Забронировать
                       </button>
                     </div>
                   </div>
                 </div>
               ))}
-            </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -374,10 +448,64 @@ export default function TouristDashboard() {
 
         {/* Favorites Tab */}
         {selectedTab === 'favorites' && (
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">❤️</div>
-            <h3 className="text-2xl font-bold text-white mb-2">Избранные туры</h3>
-            <p className="text-white/70">Здесь будут ваши избранные туры</p>
+          <div className="space-y-6">
+            {favoriteTours.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">❤️</div>
+                <h3 className="text-2xl font-bold text-white mb-2">Избранные туры</h3>
+                <p className="text-white/70 mb-4">У вас пока нет избранных туров</p>
+                <button
+                  onClick={() => setSelectedTab('tours')}
+                  className="px-6 py-3 bg-premium-gold text-premium-black rounded-xl hover:bg-premium-gold/90 transition-colors font-bold"
+                >
+                  Посмотреть все туры
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {favoriteTours.map((tour) => (
+                  <div key={tour.id} className="bg-white/5 rounded-2xl overflow-hidden border border-white/10 hover:border-premium-gold/50 transition-colors">
+                    <div className="aspect-video bg-gradient-to-br from-premium-gold/20 to-premium-black relative">
+                      {tour.images && tour.images.length > 0 ? (
+                        <img
+                          src={tour.images[0]}
+                          alt={tour.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <span className="text-6xl">{getActivityIcon(tour.activity)}</span>
+                        </div>
+                      )}
+                      <div className="absolute top-4 right-4 bg-premium-gold text-premium-black px-3 py-1 rounded-full text-sm font-bold">
+                        {tour.priceFrom.toLocaleString()}₽
+                      </div>
+                    </div>
+                    
+                    <div className="p-6">
+                      <div className="flex items-start justify-between mb-3">
+                        <h3 className="text-xl font-bold text-white">{tour.title}</h3>
+                        <button
+                          onClick={() => toggleFavorite(tour.id)}
+                          className="text-2xl hover:scale-110 transition-transform"
+                        >
+                          ❤️
+                        </button>
+                      </div>
+                      
+                      <p className="text-white/70 text-sm mb-4 line-clamp-2">{tour.description}</p>
+                      
+                      <button 
+                        onClick={() => handleBookTour(tour.id)}
+                        className="w-full px-6 py-3 bg-premium-gold text-premium-black rounded-xl hover:bg-premium-gold/90 transition-colors font-bold"
+                      >
+                        Забронировать
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

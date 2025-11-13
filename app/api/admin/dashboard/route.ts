@@ -1,290 +1,164 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
-import { DashboardData, DashboardMetrics, DashboardCharts, RecentActivity, AdminAlert } from '@/types/admin';
 import { ApiResponse } from '@/types';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/admin/dashboard
- * Получение данных для административной панели
+ * Get complete dashboard statistics
  */
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const period = searchParams.get('period') || '30'; // дней назад
-
-    // Вычисляем даты для сравнения
-    const now = new Date();
-    const periodDays = parseInt(period);
-    const currentPeriodStart = new Date(now.getTime() - periodDays * 24 * 60 * 60 * 1000);
-    const previousPeriodStart = new Date(currentPeriodStart.getTime() - periodDays * 24 * 60 * 60 * 1000);
-
-    // 1. МЕТРИКИ
-    const metricsQuery = `
-      WITH current_period AS (
-        SELECT
-          COUNT(DISTINCT b.id) as bookings_count,
-          COALESCE(SUM(b.total_price), 0) as total_revenue,
-          COUNT(DISTINCT b.user_id) as unique_users
-        FROM bookings b
-        WHERE b.created_at >= $1
-      ),
-      previous_period AS (
-        SELECT
-          COUNT(DISTINCT b.id) as bookings_count,
-          COALESCE(SUM(b.total_price), 0) as total_revenue,
-          COUNT(DISTINCT b.user_id) as unique_users
-        FROM bookings b
-        WHERE b.created_at >= $2 AND b.created_at < $1
-      ),
-      users_stats AS (
-        SELECT COUNT(*) as total_users
-        FROM users
-        WHERE created_at >= $1
-      ),
-      conversion AS (
-        SELECT 
-          COUNT(DISTINCT user_id) as users_with_bookings
-        FROM bookings
-        WHERE created_at >= $1
-      )
-      SELECT
-        cp.bookings_count as current_bookings,
-        pp.bookings_count as previous_bookings,
-        cp.total_revenue as current_revenue,
-        pp.total_revenue as previous_revenue,
-        cp.unique_users as current_users,
-        pp.unique_users as previous_users,
-        us.total_users,
-        c.users_with_bookings,
-        CASE 
-          WHEN us.total_users > 0 THEN (c.users_with_bookings::float / us.total_users::float * 100)
-          ELSE 0
-        END as conversion_rate
-      FROM current_period cp, previous_period pp, users_stats us, conversion c
-    `;
-
-    const metricsResult = await query(metricsQuery, [currentPeriodStart, previousPeriodStart]);
-    const metricsRow = metricsResult.rows[0];
-
-    // Вычисляем изменения и тренды
-    const calculateChange = (current: number, previous: number): { change: number; trend: 'up' | 'down' | 'neutral' } => {
-      if (previous === 0) return { change: 0, trend: 'neutral' };
-      const change = ((current - previous) / previous) * 100;
-      const trend = change > 0 ? 'up' : change < 0 ? 'down' : 'neutral';
-      return { change, trend };
-    };
-
-    const revenueChange = calculateChange(
-      parseFloat(metricsRow.current_revenue),
-      parseFloat(metricsRow.previous_revenue)
-    );
-
-    const bookingsChange = calculateChange(
-      parseInt(metricsRow.current_bookings),
-      parseInt(metricsRow.previous_bookings)
-    );
-
-    const usersChange = calculateChange(
-      parseInt(metricsRow.current_users),
-      parseInt(metricsRow.previous_users)
-    );
-
-    const averageOrderValue = metricsRow.current_bookings > 0
-      ? parseFloat(metricsRow.current_revenue) / parseInt(metricsRow.current_bookings)
-      : 0;
-
-    const previousAverageOrderValue = metricsRow.previous_bookings > 0
-      ? parseFloat(metricsRow.previous_revenue) / parseInt(metricsRow.previous_bookings)
-      : 0;
-
-    const aovChange = calculateChange(averageOrderValue, previousAverageOrderValue);
-
-    const metrics: DashboardMetrics = {
-      totalRevenue: {
-        value: parseFloat(metricsRow.current_revenue),
-        change: revenueChange.change,
-        trend: revenueChange.trend
-      },
-      totalBookings: {
-        value: parseInt(metricsRow.current_bookings),
-        change: bookingsChange.change,
-        trend: bookingsChange.trend
-      },
-      activeUsers: {
-        value: parseInt(metricsRow.total_users),
-        change: usersChange.change,
-        trend: usersChange.trend
-      },
-      conversionRate: {
-        value: parseFloat(metricsRow.conversion_rate),
-        change: 0, // Для упрощения, можно добавить позже
-        trend: 'neutral'
-      },
-      averageOrderValue: {
-        value: averageOrderValue,
-        change: aovChange.change,
-        trend: aovChange.trend
-      },
-      growthRate: {
-        value: revenueChange.change,
-        change: 0,
-        trend: revenueChange.trend
-      }
-    };
-
-    // 2. ГРАФИКИ - Выручка по месяцам
-    const revenueChartQuery = `
-      SELECT
-        DATE_TRUNC('month', created_at) as month,
-        COALESCE(SUM(total_price), 0) as revenue
-      FROM bookings
-      WHERE created_at >= DATE_TRUNC('month', NOW()) - INTERVAL '5 months'
-      GROUP BY month
-      ORDER BY month
-    `;
-
-    const revenueChartResult = await query(revenueChartQuery, []);
-    const revenueByMonth = revenueChartResult.rows.map(row => ({
-      date: new Date(row.month).toISOString().substring(0, 7), // YYYY-MM
-      value: parseFloat(row.revenue)
-    }));
-
-    // 3. Бронирования по категориям
-    const bookingsByCategoryQuery = `
-      SELECT
-        COALESCE(p.category, 'other') as category,
-        COUNT(b.id) as count
-      FROM bookings b
-      LEFT JOIN tours t ON b.tour_id = t.id
-      LEFT JOIN partners p ON t.operator_id = p.id
-      WHERE b.created_at >= $1
-      GROUP BY p.category
-      ORDER BY count DESC
-    `;
-
-    const categoryResult = await query(bookingsByCategoryQuery, [currentPeriodStart]);
+    const userId = request.headers.get('X-User-Id');
+    const userRole = request.headers.get('X-User-Role');
     
-    const categoryColors: Record<string, string> = {
-      operator: '#E6C149',
-      guide: '#10B981',
-      transfer: '#3B82F6',
-      stay: '#F59E0B',
-      other: '#6B7280'
-    };
+    if (!userId || userRole !== 'admin') {
+      return NextResponse.json({
+        success: false,
+        error: 'Недостаточно прав'
+      } as ApiResponse<null>, { status: 403 });
+    }
 
-    const bookingsByCategory = categoryResult.rows.map(row => ({
-      category: row.category,
-      value: parseInt(row.count),
-      color: categoryColors[row.category] || '#6B7280'
-    }));
-
-    // 4. Рост пользователей
-    const userGrowthQuery = `
-      SELECT
-        DATE_TRUNC('day', created_at) as date,
-        COUNT(*) as count
+    // Get users statistics
+    const usersStats = await query(`
+      SELECT 
+        COUNT(*) as total,
+        SUM(CASE WHEN role = 'tourist' THEN 1 ELSE 0 END) as tourists,
+        SUM(CASE WHEN role = 'operator' THEN 1 ELSE 0 END) as operators,
+        SUM(CASE WHEN role = 'guide' THEN 1 ELSE 0 END) as guides,
+        SUM(CASE WHEN role = 'transfer' THEN 1 ELSE 0 END) as transfer_operators,
+        SUM(CASE WHEN role = 'agent' THEN 1 ELSE 0 END) as agents,
+        SUM(CASE WHEN role = 'admin' THEN 1 ELSE 0 END) as admins
       FROM users
-      WHERE created_at >= $1
-      GROUP BY date
-      ORDER BY date
-    `;
+    `);
 
-    const userGrowthResult = await query(userGrowthQuery, [currentPeriodStart]);
-    const userGrowth = userGrowthResult.rows.map(row => ({
-      date: new Date(row.date).toISOString().substring(0, 10), // YYYY-MM-DD
-      value: parseInt(row.count)
-    }));
+    // Get tours statistics
+    const toursStats = await query(`
+      SELECT 
+        COUNT(*) as total,
+        SUM(CASE WHEN is_active THEN 1 ELSE 0 END) as active,
+        AVG(rating) as avg_rating,
+        SUM(review_count) as total_reviews
+      FROM tours
+    `);
 
-    // 5. Топ туры
-    const topToursQuery = `
-      SELECT
-        t.id,
-        t.name as title,
-        COUNT(b.id) as bookings,
-        COALESCE(SUM(b.total_price), 0) as revenue
-      FROM tours t
-      LEFT JOIN bookings b ON t.id = b.tour_id AND b.created_at >= $1
-      WHERE t.is_active = true
-      GROUP BY t.id, t.name
-      ORDER BY bookings DESC, revenue DESC
-      LIMIT 5
-    `;
+    // Get bookings statistics
+    const bookingsStats = await query(`
+      SELECT 
+        COUNT(*) as total,
+        SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+        SUM(CASE WHEN status = 'confirmed' THEN 1 ELSE 0 END) as confirmed,
+        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
+        SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled,
+        SUM(CASE WHEN payment_status = 'paid' THEN total_price ELSE 0 END) as total_revenue,
+        SUM(CASE WHEN payment_status = 'pending' THEN total_price ELSE 0 END) as pending_revenue
+      FROM bookings
+    `);
 
-    const topToursResult = await query(topToursQuery, [currentPeriodStart]);
-    const topTours = topToursResult.rows.map(row => ({
-      id: row.id,
-      title: row.title,
-      bookings: parseInt(row.bookings),
-      revenue: parseFloat(row.revenue)
-    }));
+    // Get partners statistics
+    const partnersStats = await query(`
+      SELECT 
+        COUNT(*) as total,
+        SUM(CASE WHEN is_verified THEN 1 ELSE 0 END) as verified,
+        AVG(rating) as avg_rating,
+        category,
+        COUNT(*) as count
+      FROM partners
+      GROUP BY category
+    `);
 
-    const charts: DashboardCharts = {
-      revenueByMonth,
-      bookingsByCategory,
-      userGrowth,
-      topTours
-    };
-
-    // 6. ПОСЛЕДНИЕ АКТИВНОСТИ
-    const activitiesQuery = `
-      SELECT
+    // Get recent activity
+    const recentBookings = await query(`
+      SELECT 
         b.id,
-        'booking' as type,
-        'Новое бронирование' as title,
-        t.name as description,
-        b.created_at as timestamp,
-        u.id as user_id,
-        u.name as user_name,
-        NULL as user_avatar
+        b.date,
+        b.total_price,
+        b.status,
+        b.created_at,
+        t.name as tour_name,
+        u.name as user_name
       FROM bookings b
       JOIN tours t ON b.tour_id = t.id
       JOIN users u ON b.user_id = u.id
-      WHERE b.created_at >= NOW() - INTERVAL '24 hours'
       ORDER BY b.created_at DESC
       LIMIT 10
-    `;
+    `);
 
-    const activitiesResult = await query(activitiesQuery, []);
-    const recentActivities: RecentActivity[] = activitiesResult.rows.map(row => ({
-      id: row.id,
-      type: row.type,
-      title: row.title,
-      description: row.description,
-      timestamp: new Date(row.timestamp),
-      user: row.user_id ? {
-        id: row.user_id,
-        name: row.user_name,
-        avatar: row.user_avatar
-      } : undefined
-    }));
+    // Get monthly revenue trend (last 6 months)
+    const revenueResult = await query(`
+      SELECT 
+        DATE_TRUNC('month', date) as month,
+        SUM(total_price) as revenue,
+        COUNT(*) as bookings_count
+      FROM bookings
+      WHERE payment_status = 'paid'
+        AND date >= CURRENT_DATE - INTERVAL '6 months'
+      GROUP BY DATE_TRUNC('month', date)
+      ORDER BY month DESC
+    `);
 
-    // 7. АЛЕРТЫ (пока заглушка, можно добавить логику позже)
-    const alerts: AdminAlert[] = [];
-
-    // Собираем все данные
-    const dashboardData: DashboardData = {
-      metrics,
-      charts,
-      recentActivities,
-      alerts
+    const dashboard = {
+      users: {
+        total: parseInt(usersStats.rows[0].total),
+        tourists: parseInt(usersStats.rows[0].tourists),
+        operators: parseInt(usersStats.rows[0].operators),
+        guides: parseInt(usersStats.rows[0].guides),
+        transferOperators: parseInt(usersStats.rows[0].transfer_operators),
+        agents: parseInt(usersStats.rows[0].agents),
+        admins: parseInt(usersStats.rows[0].admins)
+      },
+      tours: {
+        total: parseInt(toursStats.rows[0].total),
+        active: parseInt(toursStats.rows[0].active),
+        avgRating: parseFloat(toursStats.rows[0].avg_rating || 0).toFixed(2),
+        totalReviews: parseInt(toursStats.rows[0].total_reviews)
+      },
+      bookings: {
+        total: parseInt(bookingsStats.rows[0].total),
+        pending: parseInt(bookingsStats.rows[0].pending),
+        confirmed: parseInt(bookingsStats.rows[0].confirmed),
+        completed: parseInt(bookingsStats.rows[0].completed),
+        cancelled: parseInt(bookingsStats.rows[0].cancelled)
+      },
+      revenue: {
+        total: parseFloat(bookingsStats.rows[0].total_revenue || 0),
+        pending: parseFloat(bookingsStats.rows[0].pending_revenue || 0),
+        monthlyTrend: revenueResult.rows.map(row => ({
+          month: row.month,
+          revenue: parseFloat(row.revenue),
+          bookingsCount: parseInt(row.bookings_count)
+        }))
+      },
+      partners: {
+        total: partnersStats.rows.reduce((acc, row) => acc + parseInt(row.count), 0),
+        verified: partnersStats.rows.reduce((acc, row) => acc + parseInt(row.is_verified || 0), 0),
+        byCategory: partnersStats.rows.map(row => ({
+          category: row.category,
+          count: parseInt(row.count)
+        }))
+      },
+      recentActivity: recentBookings.rows.map(row => ({
+        id: row.id,
+        date: row.date,
+        totalPrice: parseFloat(row.total_price),
+        status: row.status,
+        createdAt: row.created_at,
+        tourName: row.tour_name,
+        userName: row.user_name
+      }))
     };
 
     return NextResponse.json({
       success: true,
-      data: dashboardData
-    } as ApiResponse<DashboardData>);
+      data: dashboard
+    } as ApiResponse<any>);
 
   } catch (error) {
-    console.error('Error fetching admin dashboard data:', error);
+    console.error('Get admin dashboard error:', error);
     return NextResponse.json({
       success: false,
-      error: 'Failed to fetch dashboard data',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      error: 'Ошибка при получении статистики'
     } as ApiResponse<null>, { status: 500 });
   }
 }
-
-
-

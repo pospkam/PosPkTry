@@ -9,11 +9,23 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { jwtVerify } from 'jose';
 
-export function middleware(request: NextRequest) {
-  const response = NextResponse.next();
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET || 'kamchatour-hub-secret-key-change-in-production'
+);
+
+// Protected routes that require authentication
+const PROTECTED_ROUTES = ['/hub', '/profile'];
+
+// Public API routes (no auth needed)
+const PUBLIC_API_ROUTES = ['/api/auth', '/api/tours', '/api/weather', '/api/eco-points'];
+
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
   
-  // Добавляем security headers
+  // Security headers for all responses
+  const response = NextResponse.next();
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-XSS-Protection', '1; mode=block');
@@ -27,10 +39,90 @@ export function middleware(request: NextRequest) {
     );
   }
   
+  // Check if route requires authentication
+  const isProtectedRoute = PROTECTED_ROUTES.some(route => pathname.startsWith(route));
+  const isPublicApiRoute = PUBLIC_API_ROUTES.some(route => pathname.startsWith(route));
+  const isApiRoute = pathname.startsWith('/api');
+  
+  // Skip auth check for public routes
+  if (!isProtectedRoute && (isPublicApiRoute || !isApiRoute)) {
+    return response;
+  }
+  
+  // Get token from cookie or Authorization header
+  const token = request.cookies.get('auth_token')?.value || 
+                request.headers.get('Authorization')?.replace('Bearer ', '');
+  
+  if (!token) {
+    // Redirect to login for protected pages
+    if (isProtectedRoute) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/auth/login';
+      url.searchParams.set('from', pathname);
+      return NextResponse.redirect(url);
+    }
+    
+    // Return 401 for protected API routes
+    if (isApiRoute && !isPublicApiRoute) {
+      return NextResponse.json(
+        { success: false, error: 'Не авторизован' },
+        { status: 401 }
+      );
+    }
+  }
+  
+  // Verify JWT token
+  if (token) {
+    try {
+      const { payload } = await jwtVerify(token, JWT_SECRET);
+      
+      // Add user info to headers for API routes
+      if (isApiRoute) {
+        const newHeaders = new Headers(request.headers);
+        newHeaders.set('X-User-Id', payload.userId as string);
+        newHeaders.set('X-User-Role', payload.role as string);
+        newHeaders.set('X-User-Email', payload.email as string);
+        
+        return NextResponse.next({
+          request: {
+            headers: newHeaders,
+          },
+        });
+      }
+      
+      return response;
+      
+    } catch (error) {
+      console.error('JWT verification failed:', error);
+      
+      // Clear invalid token
+      if (isProtectedRoute) {
+        const url = request.nextUrl.clone();
+        url.pathname = '/auth/login';
+        url.searchParams.set('from', pathname);
+        url.searchParams.set('error', 'session_expired');
+        const redirect = NextResponse.redirect(url);
+        redirect.cookies.delete('auth_token');
+        return redirect;
+      }
+      
+      if (isApiRoute && !isPublicApiRoute) {
+        return NextResponse.json(
+          { success: false, error: 'Неверный или истекший токен' },
+          { status: 401 }
+        );
+      }
+    }
+  }
+  
   return response;
 }
 
-// Применяем middleware только к API routes
+// Apply middleware to specific routes
 export const config = {
-  matcher: '/api/:path*',
+  matcher: [
+    '/api/:path*',
+    '/hub/:path*',
+    '/profile/:path*'
+  ],
 };

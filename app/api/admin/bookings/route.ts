@@ -5,8 +5,8 @@ import { ApiResponse } from '@/types';
 export const dynamic = 'force-dynamic';
 
 /**
- * GET /api/admin/users
- * Get all users
+ * GET /api/admin/bookings
+ * Get all bookings (admin view)
  */
 export async function GET(request: NextRequest) {
   try {
@@ -21,49 +21,59 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const role = searchParams.get('role');
+    const status = searchParams.get('status');
     const limit = parseInt(searchParams.get('limit') || '100');
     const offset = parseInt(searchParams.get('offset') || '0');
 
     let queryStr = `
       SELECT 
-        id, email, name, role, preferences, created_at, updated_at
-      FROM users
+        b.*,
+        t.name as tour_name,
+        u.name as user_name,
+        u.email as user_email
+      FROM bookings b
+      JOIN tours t ON b.tour_id = t.id
+      JOIN users u ON b.user_id = u.id
     `;
 
     const params = [];
     let paramIndex = 1;
 
-    if (role) {
-      queryStr += ` WHERE role = $${paramIndex++}`;
-      params.push(role);
+    if (status) {
+      queryStr += ` WHERE b.status = $${paramIndex++}`;
+      params.push(status);
     }
 
-    queryStr += ` ORDER BY created_at DESC LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
+    queryStr += ` ORDER BY b.created_at DESC LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
     params.push(limit, offset);
 
     const result = await query(queryStr, params);
 
-    const users = result.rows.map(row => ({
+    const bookings = result.rows.map(row => ({
       id: row.id,
-      email: row.email,
-      name: row.name,
-      role: row.role,
-      preferences: row.preferences,
+      date: row.date,
+      participants: row.participants,
+      totalPrice: parseFloat(row.total_price),
+      status: row.status,
+      paymentStatus: row.payment_status,
+      specialRequests: row.special_requests,
       createdAt: row.created_at,
-      updatedAt: row.updated_at
+      updatedAt: row.updated_at,
+      tourName: row.tour_name,
+      userName: row.user_name,
+      userEmail: row.user_email
     }));
 
     // Get total count
     const countResult = await query(
-      role ? 'SELECT COUNT(*) FROM users WHERE role = $1' : 'SELECT COUNT(*) FROM users',
-      role ? [role] : []
+      status ? 'SELECT COUNT(*) FROM bookings WHERE status = $1' : 'SELECT COUNT(*) FROM bookings',
+      status ? [status] : []
     );
 
     return NextResponse.json({
       success: true,
       data: {
-        users,
+        bookings,
         total: parseInt(countResult.rows[0].count),
         limit,
         offset
@@ -71,10 +81,10 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<any>);
 
   } catch (error) {
-    console.error('Get users error:', error);
+    console.error('Get admin bookings error:', error);
     return NextResponse.json({
       success: false,
-      error: 'Ошибка при получении пользователей'
+      error: 'Ошибка при получении бронирований'
     } as ApiResponse<null>, { status: 500 });
   }
 }

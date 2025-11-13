@@ -5,39 +5,20 @@ import { ApiResponse } from '@/types';
 export const dynamic = 'force-dynamic';
 
 /**
- * GET /api/operator/bookings
- * Get bookings for operator's tours
+ * GET /api/bookings/my
+ * Get current user's bookings
  */
 export async function GET(request: NextRequest) {
   try {
     const userId = request.headers.get('X-User-Id');
-    const userRole = request.headers.get('X-User-Role');
     
-    if (!userId || userRole !== 'operator') {
+    if (!userId) {
       return NextResponse.json({
         success: false,
-        error: 'Недостаточно прав'
-      } as ApiResponse<null>, { status: 403 });
+        error: 'Не авторизован'
+      } as ApiResponse<null>, { status: 401 });
     }
 
-    // Get operator's partner ID
-    const partnerResult = await query(
-      `SELECT id FROM partners WHERE category = 'operator' 
-       AND contact->>'email' = (SELECT email FROM users WHERE id = $1)
-       LIMIT 1`,
-      [userId]
-    );
-
-    if (partnerResult.rows.length === 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'Партнёр не найден'
-      } as ApiResponse<null>, { status: 404 });
-    }
-
-    const operatorId = partnerResult.rows[0].id;
-
-    // Get bookings for operator's tours
     const result = await query(
       `SELECT 
         b.id,
@@ -51,23 +32,28 @@ export async function GET(request: NextRequest) {
         b.updated_at,
         t.id as tour_id,
         t.name as tour_name,
+        t.description as tour_description,
+        t.difficulty as tour_difficulty,
         t.duration as tour_duration,
-        u.id as user_id,
-        u.name as user_name,
-        u.email as user_email
+        array_agg(DISTINCT a.url) as tour_images,
+        p.name as operator_name,
+        p.contact as operator_contact
        FROM bookings b
        JOIN tours t ON b.tour_id = t.id
-       JOIN users u ON b.user_id = u.id
-       WHERE t.operator_id = $1
-       ORDER BY b.date DESC, b.created_at DESC`,
-      [operatorId]
+       LEFT JOIN partners p ON t.operator_id = p.id
+       LEFT JOIN tour_assets ta ON t.id = ta.tour_id
+       LEFT JOIN assets a ON ta.asset_id = a.id
+       WHERE b.user_id = $1
+       GROUP BY b.id, t.id, p.id
+       ORDER BY b.date DESC`,
+      [userId]
     );
 
     const bookings = result.rows.map(row => ({
       id: row.id,
       date: row.date,
       participants: row.participants,
-      totalPrice: parseFloat(row.total_price),
+      totalPrice: row.total_price,
       status: row.status,
       paymentStatus: row.payment_status,
       specialRequests: row.special_requests,
@@ -76,12 +62,14 @@ export async function GET(request: NextRequest) {
       tour: {
         id: row.tour_id,
         name: row.tour_name,
-        duration: row.tour_duration
+        description: row.tour_description,
+        difficulty: row.tour_difficulty,
+        duration: row.tour_duration,
+        images: row.tour_images.filter(Boolean)
       },
-      user: {
-        id: row.user_id,
-        name: row.user_name,
-        email: row.user_email
+      operator: {
+        name: row.operator_name,
+        contact: row.operator_contact
       }
     }));
 
@@ -91,7 +79,7 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<any>);
 
   } catch (error) {
-    console.error('Get operator bookings error:', error);
+    console.error('Get bookings error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при получении бронирований'

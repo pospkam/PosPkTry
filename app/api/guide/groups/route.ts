@@ -1,78 +1,84 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
-import { requireAuth } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * GET /api/guide/groups - Получение групп гида
+ * GET /api/guide/groups
+ * Get guide's groups
  */
 export async function GET(request: NextRequest) {
   try {
-    const userOrResponse = await requireAuth(request);
-    if (userOrResponse instanceof NextResponse) {
-      return userOrResponse;
+    const userId = request.headers.get('X-User-Id');
+    const userRole = request.headers.get('X-User-Role');
+    
+    if (!userId || userRole !== 'guide') {
+      return NextResponse.json({
+        success: false,
+        error: 'Недостаточно прав'
+      } as ApiResponse<null>, { status: 403 });
     }
 
-    const guideId = userOrResponse.userId;
-    const { searchParams } = new URL(request.url);
-    const scheduleId = searchParams.get('scheduleId');
-
-    let groupsQuery = `
-      SELECT
-        gg.id,
-        gg.schedule_id,
-        gg.group_name,
-        gg.participants,
-        gg.emergency_contacts,
-        gg.experience_levels,
-        gg.special_needs,
-        gg.equipment_checklist,
-        gg.status,
-        gg.created_at,
+    const result = await query(
+      `SELECT 
+        gg.*,
         gs.tour_date,
         gs.start_time,
         t.name as tour_name
       FROM guide_groups gg
       JOIN guide_schedule gs ON gg.schedule_id = gs.id
-      LEFT JOIN tours t ON gs.tour_id = t.id
+      JOIN tours t ON gs.tour_id = t.id
       WHERE gs.guide_id = $1
-    `;
+      ORDER BY gs.tour_date DESC, gs.start_time DESC`,
+      [userId]
+    );
 
-    const params = [guideId];
-
-    if (scheduleId) {
-      groupsQuery += ` AND gg.schedule_id = $2`;
-      params.push(scheduleId);
-    }
-
-    groupsQuery += ` ORDER BY gs.tour_date DESC, gs.start_time ASC`;
-
-    const result = await query(groupsQuery, params);
+    const groups = result.rows.map(row => ({
+      id: row.id,
+      scheduleId: row.schedule_id,
+      groupName: row.group_name,
+      participants: row.participants,
+      emergencyContacts: row.emergency_contacts,
+      experienceLevels: row.experience_levels,
+      specialNeeds: row.special_needs,
+      equipmentChecklist: row.equipment_checklist,
+      status: row.status,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      tourDate: row.tour_date,
+      startTime: row.start_time,
+      tourName: row.tour_name
+    }));
 
     return NextResponse.json({
       success: true,
-      data: { groups: result.rows }
+      data: { groups }
     } as ApiResponse<any>);
 
   } catch (error) {
-    console.error('Error fetching groups:', error);
-    return NextResponse.json(
-      { success: false, error: 'Ошибка загрузки групп' } as ApiResponse<null>,
-      { status: 500 }
-    );
+    console.error('Get guide groups error:', error);
+    return NextResponse.json({
+      success: false,
+      error: 'Ошибка при получении групп'
+    } as ApiResponse<null>, { status: 500 });
   }
 }
 
 /**
- * POST /api/guide/groups - Создание группы
+ * POST /api/guide/groups
+ * Create new group
  */
 export async function POST(request: NextRequest) {
   try {
-    const userOrResponse = await requireAuth(request);
-    if (userOrResponse instanceof NextResponse) {
-      return userOrResponse;
+    const userId = request.headers.get('X-User-Id');
+    const userRole = request.headers.get('X-User-Role');
+    
+    if (!userId || userRole !== 'guide') {
+      return NextResponse.json({
+        success: false,
+        error: 'Недостаточно прав'
+      } as ApiResponse<null>, { status: 403 });
     }
 
     const body = await request.json();
@@ -86,64 +92,48 @@ export async function POST(request: NextRequest) {
       equipmentChecklist
     } = body;
 
-    const insertQuery = `
-      INSERT INTO guide_groups (
-        id, schedule_id, group_name, participants, emergency_contacts,
-        experience_levels, special_needs, equipment_checklist, status, created_at
-      ) VALUES (
-        gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, 'forming', NOW()
-      ) RETURNING id
-    `;
+    // Verify schedule belongs to guide
+    const scheduleCheck = await query(
+      'SELECT id FROM guide_schedule WHERE id = $1 AND guide_id = $2',
+      [scheduleId, userId]
+    );
 
-    const result = await query(insertQuery, [
-      scheduleId,
-      groupName,
-      JSON.stringify(participants || []),
-      JSON.stringify(emergencyContacts || []),
-      JSON.stringify(experienceLevels || {}),
-      specialNeeds,
-      JSON.stringify(equipmentChecklist || [])
-    ]);
+    if (scheduleCheck.rows.length === 0) {
+      return NextResponse.json({
+        success: false,
+        error: 'Расписание не найдено'
+      } as ApiResponse<null>, { status: 404 });
+    }
+
+    // Create group
+    const result = await query(
+      `INSERT INTO guide_groups (
+        schedule_id, group_name, participants, emergency_contacts,
+        experience_levels, special_needs, equipment_checklist, status
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'forming')
+      RETURNING *`,
+      [
+        scheduleId,
+        groupName,
+        JSON.stringify(participants || []),
+        JSON.stringify(emergencyContacts || []),
+        JSON.stringify(experienceLevels || {}),
+        specialNeeds,
+        JSON.stringify(equipmentChecklist || [])
+      ]
+    );
 
     return NextResponse.json({
       success: true,
-      data: { groupId: result.rows[0].id }
+      data: result.rows[0],
+      message: 'Группа создана'
     } as ApiResponse<any>);
 
   } catch (error) {
-    console.error('Error creating group:', error);
-    return NextResponse.json(
-      { success: false, error: 'Ошибка создания группы' } as ApiResponse<null>,
-      { status: 500 }
-    );
+    console.error('Create group error:', error);
+    return NextResponse.json({
+      success: false,
+      error: 'Ошибка при создании группы'
+    } as ApiResponse<null>, { status: 500 });
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
