@@ -1,0 +1,9 @@
+# Игнорируем для Timeweb Apps
+node_modules/
+.git/
+.next/
+*.log
+.env
+.env.local
+coverage/
+dist/

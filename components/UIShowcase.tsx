@@ -70,7 +70,7 @@ export function UIShowcase() {
 
         {/* 3. Input поля */}
         <section className="card-premium space-y-4">
-          <h2 className="text-2xl font-bold text-premium-gold">3. Улучшенные Input'ы</h2>
+          <h2 className="text-2xl font-bold text-premium-gold">3. Улучшенные Input&apos;ы</h2>
           <div className="grid md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm mb-2">Обычный input</label>

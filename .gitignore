@@ -100,3 +100,40 @@ dist/
 *.log
 npm-debug.log*
 
+# Временные и резервные файлы
+*.bak
+*.backup
+*.old
+*-backup.*
+*-old.*
+*backup*
+*-copy.*
+*.tmp
+*.temp
+.tmp/
+temp/
+
+# Временная документация (использовать docs/ вместо этого)
+TEMP_*.md
+TODO_*.md
+DRAFT_*.md
+WIP_*.md
+*_TEMP.md
+*_TODO.md
+*_DRAFT.md
+*_WIP.md
+
+# Временные скрипты
+temp_*.sh
+test_*.sh
+debug_*.sh
+*_temp.sh
+*_test.sh
+*_debug.sh
+
+# Временные HTML/демо файлы
+demo-*.html
+test-*.html
+temp-*.html
+*-demo-standalone.html
+

@@ -4,7 +4,7 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  role: 'tourist' | 'operator' | 'guide' | 'provider';
+  role: 'tourist' | 'operator' | 'guide' | 'transfer' | 'agent' | 'admin';
   preferences: UserPreferences;
   createdAt: Date;
   updatedAt: Date;
@@ -254,6 +254,55 @@ export interface ChatSession {
   };
   createdAt: Date;
   updatedAt: Date;
+}
+
+// GUIDE TYPES
+export interface GuideSchedule {
+  id: string;
+  guideId: string;
+  tourId: string;
+  tourDate: Date;
+  startTime: string;
+  endTime?: string;
+  meetingPoint?: string;
+  participantsCount: number;
+  maxParticipants?: number;
+  status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
+  weatherConditions?: any;
+  safetyNotes?: string;
+  specialRequirements?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  tour?: Tour;
+  group?: GuideGroup;
+}
+
+export interface GuideGroup {
+  id: string;
+  scheduleId: string;
+  groupName?: string;
+  participants: any[];
+  emergencyContacts: any[];
+  experienceLevels: any;
+  specialNeeds?: string;
+  equipmentChecklist: any[];
+  status: 'forming' | 'ready' | 'departed' | 'returned';
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface GuideEarnings {
+  id: string;
+  guideId: string;
+  scheduleId?: string;
+  tourId?: string;
+  amount: number;
+  commissionRate: number;
+  commissionAmount?: number;
+  paymentStatus: 'pending' | 'paid' | 'cancelled';
+  paymentDate?: Date;
+  notes?: string;
+  createdAt: Date;
 }
 
 // Импорт типов для трансферов

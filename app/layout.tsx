@@ -4,7 +4,9 @@ export const metadata = {
 }
 
 import './globals.css'
+import './minimal-header.css'
 import React from 'react'
+import Link from 'next/link'
 import { RoleProvider } from '@/contexts/RoleContext'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { OrdersProvider } from '@/contexts/OrdersContext'
@@ -16,17 +18,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AuthProvider>
           <RoleProvider>
             <OrdersProvider>
-              <header className="sticky top-0 z-50 border-b border-white/10 bg-premium-black/80 backdrop-blur">
-                <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-7 h-7 rounded-lg bg-gold-gradient" />
-                    <b className="text-premium-gold">Kamchatour Hub</b>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <a href="/auth/login" className="text-gold hover:text-gold/80 transition-colors">Войти</a>
-                    <a href="/operator" className="text-gold hover:text-gold/80 transition-colors">CRM</a>
-                    <a href="/tg" className="button-gold">Витрина</a>
-                  </div>
+              <header className="minimal-header">
+                <div className="minimal-header-container">
+                  {/* Left: User Profile Icon */}
+                  <Link href="/auth/login" className="profile-icon-btn" title="Личный кабинет">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                  </Link>
+
+                  {/* Right: Logo */}
+                  <Link href="/" className="logo-link" title="На главную">
+                    <img src="/logo-kamchatour.png" alt="Kamchatour" className="main-logo" />
+                  </Link>
                 </div>
               </header>
               <main className="max-w-6xl mx-auto px-4">{children}</main>

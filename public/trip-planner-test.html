@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Тест Планировщика Камчатки</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+    
+    .container {
+      background: white;
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    
+    h1 {
+      color: #1a202c;
+      margin-bottom: 10px;
+      font-size: 2em;
+    }
+    
+    .subtitle {
+      color: #718096;
+      margin-bottom: 30px;
+      font-size: 1.1em;
+    }
+    
+    label {
+      display: block;
+      margin: 20px 0 8px;
+      color: #2d3748;
+      font-weight: 600;
+    }
+    
+    textarea, input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 16px;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    
+    textarea {
+      height: 120px;
+      resize: vertical;
+    }
+    
+    textarea:focus, input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    button {
+      width: 100%;
+      padding: 16px;
+      margin-top: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    .result {
+      margin-top: 30px;
+      padding: 20px;
+      background: #f7fafc;
+      border-radius: 12px;
+      border: 2px solid #e2e8f0;
+    }
+    
+    .loading {
+      color: #667eea;
+      text-align: center;
+      font-size: 18px;
+      padding: 40px;
+    }
+    
+    .loading::before {
+      content: '⏳';
+      display: block;
+      font-size: 48px;
+      margin-bottom: 20px;
+      animation: spin 2s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .error {
+      color: #e53e3e;
+      background: #fff5f5;
+      padding: 20px;
+      border-radius: 8px;
+      border: 2px solid #feb2b2;
+    }
+    
+    .success {
+      color: #38a169;
+      background: #f0fff4;
+      padding: 12px 20px;
+      border-radius: 8px;
+      border: 2px solid #9ae6b4;
+      margin-bottom: 20px;
+      font-weight: 600;
+    }
+    
+    .plan-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+    
+    .plan-stat {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      border: 2px solid #e2e8f0;
+      text-align: center;
+    }
+    
+    .plan-stat-label {
+      color: #718096;
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+    
+    .plan-stat-value {
+      color: #1a202c;
+      font-size: 24px;
+      font-weight: 700;
+    }
+    
+    .day-card {
+      background: white;
+      margin: 15px 0;
+      padding: 20px;
+      border-radius: 10px;
+      border: 2px solid #e2e8f0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .day-card h4 {
+      color: #667eea;
+      margin-bottom: 15px;
+      font-size: 1.3em;
+    }
+    
+    .activity {
+      padding: 12px 0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .activity:last-child {
+      border-bottom: none;
+    }
+    
+    .activity-time {
+      color: #667eea;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    
+    .activity-title {
+      color: #2d3748;
+      font-weight: 600;
+      margin: 5px 0;
+    }
+    
+    .logistics {
+      color: #718096;
+      font-size: 14px;
+      margin-left: 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    
+    .logistics span {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .accommodation {
+      margin-top: 15px;
+      padding: 12px;
+      background: #f7fafc;
+      border-radius: 6px;
+      border-left: 4px solid #667eea;
+    }
+    
+    h3 {
+      color: #2d3748;
+      margin: 25px 0 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    
+    li {
+      padding: 8px 0;
+      padding-left: 25px;
+      position: relative;
+    }
+    
+    li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: #667eea;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🗺️ Планировщик Поездок на Камчатку</h1>
+    <p class="subtitle">Интеллектуальная система с AI-генерацией маршрутов</p>
+    
+    <form id="planForm">
+      <label for="query">📝 Опишите вашу поездку:</label>
+      <textarea 
+        id="query" 
+        placeholder="Например: Я планирую поездку на 5 дней. Хочу увидеть вулканы, медведей и термальные источники. Подбери туры, место проживания и логистику между точками."
+        required
+      >Я планирую поездку на КАМЧАТКУ на 5 дней. Хочу увидеть вулканы, медведей и термальные источники. Подбери туры, место проживания и логистику между точками.</textarea>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+        <div>
+          <label for="days">📅 Количество дней:</label>
+          <input type="number" id="days" min="1" max="30" value="5" required>
+        </div>
+        
+        <div>
+          <label for="budget">💰 Бюджет (₽):</label>
+          <input type="number" id="budget" placeholder="60000">
+        </div>
+      </div>
+      
+      <button type="submit" id="submitBtn">🚀 Спланировать поездку</button>
+    </form>
+    
+    <div id="result" style="display: none;"></div>
+  </div>
+  
+  <script>
+    const form = document.getElementById('planForm');
+    const result = document.getElementById('result');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    // Используем текущий домен или можно указать явно
+    const API_BASE = window.location.hostname === 'localhost' 
+      ? 'http://localhost:3002'
+      : 'https://pospk-kamhub-70c4.twc1.net';
+    
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const query = document.getElementById('query').value;
+      const days = parseInt(document.getElementById('days').value);
+      const budget = document.getElementById('budget').value;
+      
+      if (!query || !days) {
+        alert('Заполните запрос и количество дней');
+        return;
+      }
+      
+      result.style.display = 'block';
+      result.innerHTML = '<div class="loading">Генерируем ваш идеальный план поездки...<br><small>Это может занять 5-15 секунд</small></div>';
+      submitBtn.disabled = true;
+      submitBtn.textContent = '⏳ Генерируем план...';
+      
+      try {
+        const startTime = Date.now();
+        
+        const response = await fetch(`${API_BASE}/api/trip/plan`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query,
+            days,
+            budget: budget ? parseInt(budget) : undefined,
+            interests: ['hiking', 'wildlife', 'nature', 'photography']
+          })
+        });
+        
+        const data = await response.json();
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+        
+        if (data.success) {
+          const plan = data.data;
+          
+          let html = `
+            <div class="success">
+              ✅ План успешно сгенерирован за ${elapsed} секунд!
+            </div>
+            
+            <div class="plan-summary">
+              <div class="plan-stat">
+                <div class="plan-stat-label">Дней</div>
+                <div class="plan-stat-value">${plan.summary.total_days}</div>
+              </div>
+              <div class="plan-stat">
+                <div class="plan-stat-label">Стоимость</div>
+                <div class="plan-stat-value">${plan.summary.total_cost.toLocaleString()} ₽</div>
+              </div>
+              <div class="plan-stat">
+                <div class="plan-stat-label">Сложность</div>
+                <div class="plan-stat-value">${plan.summary.difficulty_level}</div>
+              </div>
+            </div>
+            
+            <h3>🎯 Основные моменты поездки</h3>
+            <ul>${plan.summary.highlights.map(h => `<li>${h}</li>`).join('')}</ul>
+            
+            <h3>📅 Детальный маршрут</h3>
+          `;
+          
+          plan.days.forEach(day => {
+            html += `
+              <div class="day-card">
+                <h4>День ${day.day}${day.date ? ` (${day.date})` : ''} — ${day.total_cost.toLocaleString()} ₽</h4>
+            `;
+            
+            day.activities.forEach(act => {
+              html += `
+                <div class="activity">
+                  <div class="activity-time">${act.time}</div>
+                  <div class="activity-title">${act.title}</div>
+              `;
+              
+              if (act.description) {
+                html += `<p style="color: #718096; margin: 5px 0;">${act.description}</p>`;
+              }
+              
+              if (act.logistics) {
+                const icons = {
+                  walk: '🚶',
+                  car: '🚗',
+                  bus: '🚌',
+                  taxi: '🚕',
+                  transfer: '🚐',
+                  helicopter: '🚁'
+                };
+                
+                html += `
+                  <div class="logistics">
+                    <span>${icons[act.logistics.transport] || '🚗'} ${act.logistics.transport}</span>
+                    <span>⏱️ ${act.logistics.duration_minutes} мин</span>
+                    <span>📍 ${act.logistics.distance_km} км</span>
+                    ${act.logistics.notes ? `<span style="font-style: italic;">💡 ${act.logistics.notes}</span>` : ''}
+                  </div>
+                `;
+              }
+              
+              html += `</div>`;
+            });
+            
+            if (day.accommodation) {
+              html += `
+                <div class="accommodation">
+                  <strong>🏨 Ночлег:</strong> ${day.accommodation.name || 'Размещение'} 
+                  (${day.accommodation.price_per_night ? day.accommodation.price_per_night.toLocaleString() + ' ₽/ночь' : ''})
+                </div>
+              `;
+            }
+            
+            html += `</div>`;
+          });
+          
+          if (plan.recommendations && plan.recommendations.length > 0) {
+            html += `<h3>💡 Рекомендации</h3><ul>`;
+            plan.recommendations.forEach(r => {
+              html += `<li>${r}</li>`;
+            });
+            html += `</ul>`;
+          }
+          
+          if (plan.important_notes && plan.important_notes.length > 0) {
+            html += `<h3>⚠️ Важно знать</h3><ul>`;
+            plan.important_notes.forEach(n => {
+              html += `<li>${n}</li>`;
+            });
+            html += `</ul>`;
+          }
+          
+          result.innerHTML = html;
+          
+        } else {
+          result.innerHTML = `
+            <div class="error">
+              <strong>❌ Ошибка генерации плана</strong><br><br>
+              ${data.error || 'Неизвестная ошибка'}<br>
+              ${data.message ? `<small>${data.message}</small>` : ''}
+            </div>
+          `;
+        }
+        
+      } catch (error) {
+        result.innerHTML = `
+          <div class="error">
+            <strong>❌ Ошибка подключения</strong><br><br>
+            ${error.message}<br><br>
+            <small>Проверьте что сервер запущен: ${API_BASE}</small>
+          </div>
+        `;
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '🚀 Спланировать поездку';
+      }
+    });
+  </script>
+</body>
+</html>

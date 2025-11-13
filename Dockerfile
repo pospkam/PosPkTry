@@ -44,9 +44,9 @@ COPY --from=builder /app/scripts ./scripts
 
 USER nextjs
 
-EXPOSE 3002
+EXPOSE 8080
 
-ENV PORT 3002
+ENV PORT 8080
 ENV HOSTNAME "0.0.0.0"
 
 CMD ["node", "server.js"]

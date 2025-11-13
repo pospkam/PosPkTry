@@ -1,0 +1,56 @@
+# =============================================
+# KAMHUB PRODUCTION ENVIRONMENT
+# Timeweb Cloud - Production Configuration
+# =============================================
+# ИНСТРУКЦИЯ: Скопируйте этот файл в .env.production на сервере
+
+# DATABASE
+DATABASE_URL=postgresql://kamhub_user:KamHub2025!SecurePassword@localhost:5432/kamhub_production
+DATABASE_SSL=false
+
+# APPLICATION
+NODE_ENV=production
+NEXT_PUBLIC_API_URL=https://kamhub.ru
+PORT=3000
+
+# AUTHENTICATION
+JWT_SECRET=KamHub_Super_Secret_Key_2025_Production_XYZ123
+JWT_EXPIRES_IN=7d
+
+# CLOUDPAYMENTS (заполните свои ключи!)
+CLOUDPAYMENTS_PUBLIC_KEY=pk_YOUR_PUBLIC_KEY
+CLOUDPAYMENTS_API_SECRET=YOUR_API_SECRET
+
+# AI PROVIDERS (заполните свои ключи!)
+GROQ_API_KEY=YOUR_GROQ_KEY
+DEEPSEEK_API_KEY=YOUR_DEEPSEEK_KEY
+OPENROUTER_API_KEY=YOUR_OPENROUTER_KEY
+
+# EMAIL (заполните пароль!)
+SMTP_HOST=smtp.yandex.ru
+SMTP_PORT=465
+SMTP_SECURE=true
+SMTP_USER=noreply@kamhub.ru
+SMTP_PASSWORD=YOUR_EMAIL_PASSWORD
+SMTP_FROM="KamHub <noreply@kamhub.ru>"
+
+# YANDEX MAPS (заполните ключ!)
+NEXT_PUBLIC_YANDEX_MAPS_KEY=YOUR_YANDEX_MAPS_KEY
+
+# TELEGRAM (заполните токен!)
+TELEGRAM_BOT_TOKEN=YOUR_TELEGRAM_BOT_TOKEN
+
+# S3 STORAGE (TIMEWEB) - УЖЕ НАСТРОЕНО
+S3_ENDPOINT=https://s3.twcstorage.ru
+S3_BUCKET=d9542536-676ee691-7f59-46bb-bf0e-ab64230eec50
+S3_ACCESS_KEY=F2CP4X3X17GVQ1YH5I5D
+S3_SECRET_KEY=72iAsYR4QQCIdaDI9e9AzXnzVvvP8bvPELmrBVzX
+S3_REGION=ru-1
+
+# TIMEWEB API - УЖЕ НАСТРОЕНО
+TIMEWEB_API_TOKEN=eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCIsImtpZCI6IjFrYnhacFJNQGJSI0tSbE1xS1lqIn0.eyJ1c2VyIjoicGE0MjIxMDgiLCJ0eXBlIjoiYXBpX2tleSIsImFwaV9rZXlfaWQiOiI0MmZmZTY1MC02OWI4LTRmZmQtYTFkOC02OWRkMjMwM2QyY2MiLCJpYXQiOjE3NjE3ODUzNDl9.SFHpwgy9kr-EH2CwN6K1REkOl7KCpiUnMk5ivTRljEaWl8iE-B-BMjaJxaFhpdB2dqcb33ky2oyfwxkU1Sszrbo-8UINnFO5SothY4P6WC8kSSHxFlLI2i0xGCa3YzgyYZ1Wgn2a0jf__ZcyZi7ZsaJkuold9NAeeGCCrAUbdVsr39-fLDL_EKh0iekq_tuO59f_BCmg7Poe7xKlmNYzu2hy3GnfNp3ueKW52H6kFkGwibixS3tWKCHkPpyTAjRztWKCnDZOOG6xDk4sSiPPMlZOEfFzzkpKkizQ9CykBC06SXwmT2uPRR2NyZJIY-PZd4AVZ34H1jXQ-NGquRPi_aYiywt3LtOVDRarpVErBdk6I0qO0Yf33zICvMN-yFpXuY_oSlE8v3C-02XHnYLsMXcHTsUB4ISkJrhglBkv-hTzuiQxwAEZp0eHOEq8YNz6qOLU3RcaNgg0DWGXMDrMzObYx2NknrZUCMbRFftIU-C1Ilo8Ayy98MwI3J77X62p
+
+# FEATURES
+ENABLE_AI_CHAT=true
+ENABLE_LOYALTY_SYSTEM=true
+

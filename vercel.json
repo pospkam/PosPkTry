@@ -1,5 +1,5 @@
 {
-  "_comment": "Этот файл для Vercel, но проект теперь на Timeweb Cloud",
+  "_comment": "УСТАРЕЛО: Этот файл больше не используется. Проект теперь деплоится на Timeweb Cloud",
   "_note": "Для Timeweb используется ecosystem.config.js (PM2)",
   "version": 2,
   "builds": [

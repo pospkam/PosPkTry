@@ -10,6 +10,11 @@ const pool = new Pool({
   connectionTimeoutMillis: 2000, // Таймаут установки соединения
 });
 
+// Экспортируем функцию для получения пула (для миграционных скриптов)
+export function getPool(): Pool {
+  return pool;
+}
+
 // Интерфейс для результата запроса
 export interface QueryResult<T = any> {
   rows: T[];

@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
 
-export type AppRole = 'traveler' | 'operator' | 'guide' | 'transfer' | 'agent' | 'admin';
+export type AppRole = 'tourist' | 'operator' | 'guide' | 'transfer' | 'agent' | 'admin';
 
 interface RoleState {
   roles: AppRole[];
@@ -14,7 +14,7 @@ interface RoleState {
 const RoleContext = createContext<RoleState | undefined>(undefined);
 
 export const RoleProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [roles, setRoles] = useState<AppRole[]>(['traveler']);
+  const [roles, setRoles] = useState<AppRole[]>(['tourist']);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
