@@ -18,15 +18,15 @@ const publicKeyBuffer = Buffer.from(publicKey.split('\n').slice(1, -2).join(''),
 const publicKeySSH = `ssh-ed25519 ${publicKeyBuffer.toString('base64')} kamhub-deploy@timeweb`;
 
 console.log('\n========================================');
-console.log('🔑 SSH КЛЮЧ ДЛЯ TIMEWEB CLOUD СГЕНЕРИРОВАН!');
+console.log(' SSH КЛЮЧ ДЛЯ TIMEWEB CLOUD СГЕНЕРИРОВАН!');
 console.log('========================================\n');
 
-console.log('📋 ПУБЛИЧНЫЙ КЛЮЧ (скопируйте и добавьте на https://timeweb.cloud/my/servers/5898003/ssh-keys):\n');
+console.log(' ПУБЛИЧНЫЙ КЛЮЧ (скопируйте и добавьте на https://timeweb.cloud/my/servers/5898003/ssh-keys):\n');
 console.log(publicKeySSH);
 console.log('\n');
 
 console.log('========================================');
-console.log('✅ Инструкция:');
+console.log('[OK] Инструкция:');
 console.log('1. Скопируйте публичный ключ выше');
 console.log('2. Откройте https://timeweb.cloud/my/servers/5898003/ssh-keys');
 console.log('3. Нажмите "Добавить SSH ключ"');
@@ -39,8 +39,8 @@ console.log('========================================\n');
 fs.writeFileSync('kamhub_deploy_key', privateKey);
 fs.writeFileSync('kamhub_deploy_key.pub', publicKeySSH);
 
-console.log('✅ Ключи сохранены:');
+console.log('[OK] Ключи сохранены:');
 console.log('   - Приватный: kamhub_deploy_key');
 console.log('   - Публичный: kamhub_deploy_key.pub');
-console.log('\n⚠️  ВАЖНО: Не делитесь приватным ключом!\n');
+console.log('\n!  ВАЖНО: Не делитесь приватным ключом!\n');
 

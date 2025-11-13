@@ -16,7 +16,7 @@ interface Partner {
 
 const ROLE_INFO = {
   operator: { name: 'Туры', icon: '🎣', color: 'blue' },
-  transfer: { name: 'Трансфер', icon: '🚗', color: 'green' },
+  transfer: { name: 'Трансфер', icon: '', color: 'green' },
   stay: { name: 'Размещение', icon: '🏠', color: 'purple' },
   gear: { name: 'Аренда снаряжения', icon: '🎣', color: 'orange' },
 };
@@ -101,7 +101,7 @@ export default function PartnerDashboard() {
   if (loading) {
     return (
       <div className="min-h-screen bg-premium-black flex items-center justify-center">
-        <div className="text-white text-xl">⏳ Загрузка...</div>
+        <div className="text-white text-xl"> Загрузка...</div>
       </div>
     );
   }
@@ -129,7 +129,7 @@ export default function PartnerDashboard() {
           {/* Verification Status */}
           <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
             <div className="flex items-center gap-3">
-              <span className="text-3xl">⏳</span>
+              <span className="text-3xl"></span>
               <div>
                 <div className="font-bold text-yellow-400">Ожидает верификации</div>
                 <div className="text-sm text-white/70">
@@ -177,7 +177,7 @@ export default function PartnerDashboard() {
               </div>
 
               <div className="text-center py-12 text-white/50">
-                <div className="text-4xl mb-2">📋</div>
+                <div className="text-4xl mb-2"></div>
                 <p>Туров пока нет. Добавьте первый тур!</p>
               </div>
             </div>
@@ -188,7 +188,7 @@ export default function PartnerDashboard() {
             <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <span className="text-3xl">🚗</span>
+                  <span className="text-3xl"></span>
                   <div>
                     <h2 className="text-2xl font-bold">Трансфер</h2>
                     <p className="text-sm text-white/70">Транспортные услуги</p>
@@ -203,7 +203,7 @@ export default function PartnerDashboard() {
               </div>
 
               <div className="text-center py-12 text-white/50">
-                <div className="text-4xl mb-2">📋</div>
+                <div className="text-4xl mb-2"></div>
                 <p>Маршрутов пока нет</p>
               </div>
             </div>
@@ -229,7 +229,7 @@ export default function PartnerDashboard() {
               </div>
 
               <div className="text-center py-12 text-white/50">
-                <div className="text-4xl mb-2">📋</div>
+                <div className="text-4xl mb-2"></div>
                 <p>Объектов размещения пока нет</p>
               </div>
             </div>
@@ -255,7 +255,7 @@ export default function PartnerDashboard() {
               </div>
 
               <div className="text-center py-12 text-white/50">
-                <div className="text-4xl mb-2">📋</div>
+                <div className="text-4xl mb-2"></div>
                 <p>Снаряжения пока нет</p>
               </div>
             </div>
@@ -265,7 +265,7 @@ export default function PartnerDashboard() {
         {/* Help Section */}
         <div className="mt-8 p-6 bg-blue-500/10 border border-blue-500/30 rounded-xl">
           <div className="flex items-start gap-4">
-            <span className="text-3xl">💡</span>
+            <span className="text-3xl"></span>
             <div>
               <h3 className="font-bold text-blue-400 mb-2">Следующие шаги:</h3>
               <ul className="space-y-1 text-sm text-white/70">

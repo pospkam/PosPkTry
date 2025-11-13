@@ -42,7 +42,7 @@ export const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
   if (slots.length === 0) {
     return (
       <div className={clsx('text-center py-12', className)}>
-        <div className="text-white/50 text-lg mb-2">😔</div>
+        <div className="text-white/50 text-lg mb-2"></div>
         <div className="text-white/70">Нет доступных слотов времени</div>
       </div>
     );

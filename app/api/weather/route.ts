@@ -651,23 +651,23 @@ function getWeatherRecommendations(
   }
 
   if (condition === 'rain' || condition === 'showers') {
-    recommendations.push('🌧️ Дождь - возьмите непромокаемую одежду');
+    recommendations.push('  Дождь - возьмите непромокаемую одежду');
   } else if (condition === 'snow') {
-    recommendations.push('❄️ Снег - теплая одежда обязательна');
+    recommendations.push('  Снег - теплая одежда обязательна');
   } else if (condition === 'drizzle') {
-    recommendations.push('🌦️ Морось - легкий дождевик пригодится');
+    recommendations.push('  Морось - легкий дождевик пригодится');
   }
 
   if (temp < -10) {
     recommendations.push('🧊 Сильный мороз - теплая зимняя одежда');
   } else if (temp > 30) {
-    recommendations.push('🔥 Жара - не забывайте пить воду');
+    recommendations.push('  Жара - не забывайте пить воду');
   }
 
   // Благоприятные условия
   if (recommendations.length === 0) {
     if (condition === 'clear') {
-      recommendations.push('☀️ Отличная погода для всех видов туров!');
+      recommendations.push('  Отличная погода для всех видов туров!');
     } else if (condition === 'mostly_clear') {
       recommendations.push('🌤️ Хорошая погода для туризма');
     } else {
@@ -733,7 +733,7 @@ function getTourAdvice(condition: string, windSpeed: number, temp: number): stri
   }
 
   if (condition === 'showers' || windSpeed > 40 || temp < -20) {
-    return '⚠️ Ограниченная туристическая активность, только опытные группы';
+    return '! Ограниченная туристическая активность, только опытные группы';
   }
 
   if (condition === 'rain' || condition === 'snow' || windSpeed > 25) {
@@ -741,7 +741,7 @@ function getTourAdvice(condition: string, windSpeed: number, temp: number): stri
   }
 
   if (condition === 'clear' || condition === 'mostly_clear') {
-    return '✅ Идеальные условия для всех видов туров!';
+    return '[✓] Идеальные условия для всех видов туров!';
   }
 
   return '👍 Хорошие условия для большинства туристических маршрутов';

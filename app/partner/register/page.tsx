@@ -4,8 +4,8 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 const ROLES = [
-  { id: 'operator', name: 'Туроператор', icon: '🎯', description: 'Организация и продажа туров' },
-  { id: 'transfer', name: 'Трансфер', icon: '🚗', description: 'Транспортные услуги' },
+  { id: 'operator', name: 'Туроператор', icon: '', description: 'Организация и продажа туров' },
+  { id: 'transfer', name: 'Трансфер', icon: '', description: 'Транспортные услуги' },
   { id: 'stay', name: 'Размещение', icon: '🏠', description: 'Отели, базы, домики' },
   { id: 'gear', name: 'Аренда снаряжения', icon: '🎣', description: 'Прокат оборудования' },
 ];
@@ -92,7 +92,7 @@ export default function PartnerRegisterPage() {
     return (
       <div className="min-h-screen bg-premium-black flex items-center justify-center p-6">
         <div className="max-w-md w-full bg-white/5 border border-white/10 rounded-2xl p-8 text-center">
-          <div className="text-6xl mb-4">✅</div>
+          <div className="text-6xl mb-4">[OK]</div>
           <h1 className="text-2xl font-bold text-white mb-2">Успешно!</h1>
           <p className="text-white/70 mb-4">
             Ваша заявка отправлена. Ожидайте подтверждения администратора.
@@ -119,7 +119,7 @@ export default function PartnerRegisterPage() {
         {/* Error Message */}
         {error && (
           <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400">
-            ❌ {error}
+            [X] {error}
           </div>
         )}
 
@@ -262,7 +262,7 @@ export default function PartnerRegisterPage() {
                 </div>
               ) : (
                 <div className="w-32 h-32 rounded-xl border-2 border-dashed border-white/20 flex items-center justify-center bg-white/5">
-                  <span className="text-4xl">📷</span>
+                  <span className="text-4xl"></span>
                 </div>
               )}
 

@@ -123,9 +123,9 @@ export default function AccommodationDetailsPage() {
           </button>
           <h1 className="text-4xl font-black text-premium-gold mb-2">{accommodation.name}</h1>
           <div className="flex items-center gap-4 text-white/70">
-            <span>⭐ {accommodation.rating.toFixed(1)} ({accommodation.reviewCount} отзывов)</span>
+            <span>★ {accommodation.rating.toFixed(1)} ({accommodation.reviewCount} отзывов)</span>
             <span>• {getTypeText(accommodation.type)}</span>
-            <span>• 👥 До {accommodation.maxGuests} гостей</span>
+            <span>•   До {accommodation.maxGuests} гостей</span>
           </div>
         </div>
       </div>
@@ -205,7 +205,7 @@ export default function AccommodationDetailsPage() {
                     <div className="grid grid-cols-2 gap-3">
                       {accommodation.amenities.map((amenity, idx) => (
                         <div key={idx} className="flex items-center gap-2">
-                          <span className="text-green-400">✓</span>
+                          <span className="text-green-400">[✓]</span>
                           <span className="text-white/80">{amenity}</span>
                         </div>
                       ))}
@@ -297,7 +297,7 @@ export default function AccommodationDetailsPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-white/70">Рейтинг</span>
                   <span className="text-yellow-400 font-semibold">
-                    ⭐ {accommodation.rating.toFixed(1)}
+                    ★ {accommodation.rating.toFixed(1)}
                   </span>
                 </div>
               </div>
@@ -310,7 +310,7 @@ export default function AccommodationDetailsPage() {
                 <div className="space-y-2">
                   {accommodation.amenities.slice(0, 6).map((amenity, idx) => (
                     <div key={idx} className="flex items-center gap-2">
-                      <span className="text-green-400">✓</span>
+                      <span className="text-green-400">[✓]</span>
                       <span className="text-white/80 text-sm">{amenity}</span>
                     </div>
                   ))}

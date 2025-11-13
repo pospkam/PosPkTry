@@ -11,9 +11,9 @@ const DIFFICULTY_LEVELS = [
 
 const SEASONS = [
   { id: 'spring', name: 'Весна', icon: '🌸' },
-  { id: 'summer', name: 'Лето', icon: '☀️' },
+  { id: 'summer', name: 'Лето', icon: '' },
   { id: 'autumn', name: 'Осень', icon: '🍂' },
-  { id: 'winter', name: 'Зима', icon: '❄️' },
+  { id: 'winter', name: 'Зима', icon: '' },
 ];
 
 export default function AddTourPage() {
@@ -122,7 +122,7 @@ export default function AddTourPage() {
     return (
       <div className="min-h-screen bg-premium-black flex items-center justify-center p-6">
         <div className="max-w-md w-full bg-white/5 border border-white/10 rounded-2xl p-8 text-center">
-          <div className="text-6xl mb-4">✅</div>
+          <div className="text-6xl mb-4">[OK]</div>
           <h1 className="text-2xl font-bold text-white mb-2">Тур добавлен!</h1>
           <p className="text-white/70 mb-4">
             Тур успешно создан и доступен для бронирования.
@@ -144,7 +144,7 @@ export default function AddTourPage() {
 
         {error && (
           <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400">
-            ❌ {error}
+            [X] {error}
           </div>
         )}
 
@@ -315,7 +315,7 @@ export default function AddTourPage() {
             <div className="flex flex-wrap gap-2">
               {formData.included.map((item, index) => (
                 <span key={index} className="px-3 py-1 bg-green-500/20 text-green-400 border border-green-500/30 rounded-lg text-sm flex items-center gap-2">
-                  ✅ {item}
+                  [OK] {item}
                   <button
                     type="button"
                     onClick={() => removeItem('included', index)}
@@ -351,7 +351,7 @@ export default function AddTourPage() {
             <div className="flex flex-wrap gap-2">
               {formData.notIncluded.map((item, index) => (
                 <span key={index} className="px-3 py-1 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-sm flex items-center gap-2">
-                  ❌ {item}
+                  [X] {item}
                   <button
                     type="button"
                     onClick={() => removeItem('notIncluded', index)}

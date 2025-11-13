@@ -53,8 +53,8 @@ export default function Home() {
   const roles = [
     {
       id: 'tourist',
-      name: '🧳 Турист',
-      icon: '🧳',
+      name: 'Турист',
+      icon: 'User',
       color: 'blue',
       shortDesc: 'Ищете приключения на Камчатке?',
       features: ['Поиск туров', 'AI-помощник', 'Бронирование онлайн', 'Отзывы и рейтинги', 'Система лояльности'],
@@ -62,8 +62,8 @@ export default function Home() {
     },
     {
       id: 'operator',
-      name: '🎯 Туроператор',
-      icon: '🎯',
+      name: 'Туроператор',
+      icon: 'Target',
       color: 'gold',
       shortDesc: 'Организуете туры по Камчатке?',
       features: ['Управление турами', 'CRM система', 'Аналитика продаж', 'Финансы и отчеты', 'Календарь бронирований'],
@@ -71,8 +71,8 @@ export default function Home() {
     },
     {
       id: 'guide',
-      name: '🎓 Гид',
-      icon: '🎓',
+      name: 'Гид',
+      icon: 'GraduationCap',
       color: 'green',
       shortDesc: 'Проводите туры по Камчатке?',
       features: ['Расписание туров', 'Управление группами', 'Учет заработка', 'Рейтинг и отзывы', 'История экскурсий'],
@@ -80,8 +80,8 @@ export default function Home() {
     },
     {
       id: 'transfer',
-      name: '🚗 Трансфер',
-      icon: '🚗',
+      name: 'Трансфер',
+      icon: 'Car',
       color: 'purple',
       shortDesc: 'Предоставляете трансферы?',
       features: ['Автопарк', 'Водители', 'Маршруты', 'Бронирования', 'Финансовая статистика'],
@@ -89,8 +89,8 @@ export default function Home() {
     },
     {
       id: 'agent',
-      name: '🎫 Агент',
-      icon: '🎫',
+      name: 'Агент',
+      icon: 'Ticket',
       color: 'orange',
       shortDesc: 'Продаете туры за комиссию?',
       features: ['База клиентов', 'Ваучеры и скидки', 'Комиссионные', 'CRM', 'Статистика продаж'],
@@ -98,8 +98,8 @@ export default function Home() {
     },
     {
       id: 'admin',
-      name: '👨‍💼 Админ',
-      icon: '👨‍💼',
+      name: 'Админ',
+      icon: 'Shield',
       color: 'red',
       shortDesc: 'Управляете платформой?',
       features: ['Управление пользователями', 'Модерация контента', 'Финансовая панель', 'Настройки системы', 'Аналитика'],
@@ -108,12 +108,12 @@ export default function Home() {
   ];
 
   const platformStats = [
-    { icon: '🏔️', value: '100+', label: 'Туров' },
-    { icon: '🤝', value: '50+', label: 'Партнеров' },
-    { icon: '📅', value: '500+', label: 'Бронирований' },
-    { icon: '🧳', value: '1000+', label: 'Туристов' },
-    { icon: '⭐', value: '4.9', label: 'Рейтинг' },
-    { icon: '🌿', value: '5000+', label: 'Eco-points' }
+    { icon: 'Mountain', value: '100+', label: 'Туров' },
+    { icon: 'Handshake', value: '50+', label: 'Партнеров' },
+    { icon: 'Calendar', value: '500+', label: 'Бронирований' },
+    { icon: 'Users', value: '1000+', label: 'Туристов' },
+    { icon: 'Star', value: '4.9', label: 'Рейтинг' },
+    { icon: 'Leaf', value: '5000+', label: 'Eco-points' }
   ];
 
   return (
@@ -154,19 +154,19 @@ export default function Home() {
               href="#tours" 
               className="px-8 py-4 bg-premium-gold hover:bg-premium-gold/90 text-premium-black font-bold text-lg rounded-xl transition-all hover:scale-105 shadow-lg"
             >
-              🏔️ Найти тур
+              Найти тур
             </a>
             <a 
               href="#roles" 
               className="px-8 py-4 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white font-bold text-lg rounded-xl border border-white/20 transition-all hover:scale-105"
             >
-              🤝 Стать партнером
+              Стать партнером
             </a>
             <a 
               href="/auth/demo" 
               className="px-8 py-4 bg-white/5 hover:bg-white/10 backdrop-blur-sm text-white/90 font-bold text-lg rounded-xl border border-white/10 transition-all hover:scale-105"
             >
-              ✨ Попробовать демо
+              Попробовать демо
             </a>
           </div>
 
@@ -186,7 +186,7 @@ export default function Home() {
           <div className="grid md:grid-cols-3 gap-8">
             {/* Pillar 1: Для туристов */}
             <div className="bg-white/5 border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all hover:scale-105">
-              <div className="text-5xl mb-4">🧭</div>
+              <div className="text-5xl mb-4">✓</div>
               <h3 className="text-2xl font-bold mb-4">Для путешественников</h3>
               <ul className="space-y-3 text-white/80">
                 <li className="flex items-start gap-2">
@@ -220,7 +220,7 @@ export default function Home() {
 
             {/* Pillar 2: Для бизнеса */}
             <div className="bg-gradient-to-br from-premium-gold/20 to-premium-gold/5 border border-premium-gold/30 rounded-2xl p-8 hover:scale-105 transition-all">
-              <div className="text-5xl mb-4">🏢</div>
+              <div className="text-5xl mb-4">◆</div>
               <h3 className="text-2xl font-bold mb-4 text-premium-gold">Для туроператоров</h3>
               <ul className="space-y-3 text-white/80">
                 <li className="flex items-start gap-2">
@@ -254,7 +254,7 @@ export default function Home() {
 
             {/* Pillar 3: Для партнеров */}
             <div className="bg-white/5 border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all hover:scale-105">
-              <div className="text-5xl mb-4">👥</div>
+              <div className="text-5xl mb-4">≡</div>
               <h3 className="text-2xl font-bold mb-4">Для партнеров</h3>
               <ul className="space-y-3 text-white/80">
                 <li className="flex items-start gap-2">
@@ -370,7 +370,7 @@ export default function Home() {
             </div>
           ) : (
             <div className="text-center text-white/70 py-12">
-              <div className="text-6xl mb-4">🏔️</div>
+              <div className="text-6xl mb-4">▲</div>
               <p className="text-xl">Туры скоро появятся</p>
             </div>
           )}
@@ -394,7 +394,7 @@ export default function Home() {
               />
               
               <div className="bg-gradient-to-br from-premium-gold/20 to-premium-gold/5 border border-premium-gold/30 rounded-2xl p-8">
-                <h3 className="text-2xl font-bold mb-6 text-premium-gold">📊 Статистика платформы</h3>
+                <h3 className="text-2xl font-bold mb-6 text-premium-gold">Статистика платформы</h3>
                 <div className="grid grid-cols-2 gap-4">
                   {platformStats.map((stat, idx) => (
                     <div key={idx} className="text-center p-4 bg-white/5 rounded-xl">
@@ -464,22 +464,22 @@ export default function Home() {
             {/* Safety */}
             <div className="relative bg-red-900/20 border border-red-500/30 rounded-2xl p-8 overflow-hidden">
               <div className="relative z-10">
-                <h3 className="text-3xl font-bold mb-4">🆘 Безопасность</h3>
+                <h3 className="text-3xl font-bold mb-4">Безопасность</h3>
                 <p className="text-white/80 mb-6">
                   Ваша безопасность — наш приоритет. SOS, МЧС, сейсмика — всё в одном месте.
                 </p>
                 <div className="grid grid-cols-2 gap-4 mb-6">
                   <a href="/hub/safety" className="p-4 bg-red-600 hover:bg-red-700 rounded-xl text-center font-bold transition-colors">
-                    🚨 SOS кнопка
+                    SOS кнопка
                   </a>
                   <a href="/hub/safety" className="p-4 bg-white/10 hover:bg-white/20 rounded-xl text-center font-bold transition-colors">
-                    🏔️ МЧС Камчатка
+                    МЧС Камчатка
                   </a>
                   <a href="/hub/safety" className="p-4 bg-white/10 hover:bg-white/20 rounded-xl text-center font-bold transition-colors">
-                    📡 Сейсмомониторинг
+                    Сейсмомониторинг
                   </a>
                   <a href="/hub/safety" className="p-4 bg-white/10 hover:bg-white/20 rounded-xl text-center font-bold transition-colors">
-                    🌋 Вулканы онлайн
+                    Вулканы онлайн
                   </a>
                 </div>
                 <a 
@@ -497,23 +497,23 @@ export default function Home() {
             {/* Ecology */}
             <div className="relative bg-green-900/20 border border-green-500/30 rounded-2xl p-8 overflow-hidden">
               <div className="relative z-10">
-                <h3 className="text-3xl font-bold mb-4">🌿 Экология</h3>
+                <h3 className="text-3xl font-bold mb-4">Экология</h3>
                 <p className="text-white/80 mb-6">
                   Собирайте Eco-points за бережное поведение и получайте скидки на туры.
                 </p>
                 <div className="grid grid-cols-3 gap-4 mb-6">
                   <div className="text-center p-4 bg-white/5 rounded-xl">
-                    <div className="text-2xl mb-1">🌿</div>
+                    <div className="text-2xl mb-1">◆</div>
                     <div className="text-2xl font-bold text-green-400">5000+</div>
                     <div className="text-xs text-white/60">Points собрано</div>
                   </div>
                   <div className="text-center p-4 bg-white/5 rounded-xl">
-                    <div className="text-2xl mb-1">♻️</div>
+                    <div className="text-2xl mb-1">↻</div>
                     <div className="text-2xl font-bold text-green-400">200+</div>
                     <div className="text-xs text-white/60">Эко-туристов</div>
                   </div>
                   <div className="text-center p-4 bg-white/5 rounded-xl">
-                    <div className="text-2xl mb-1">🗑️</div>
+                    <div className="text-2xl mb-1">□</div>
                     <div className="text-2xl font-bold text-green-400">500кг</div>
                     <div className="text-xs text-white/60">Мусора собрано</div>
                   </div>
@@ -556,7 +556,7 @@ export default function Home() {
               href="/auth/demo"
               className="p-6 bg-gradient-to-br from-premium-gold/20 to-premium-gold/5 border border-premium-gold/30 rounded-xl transition-all hover:scale-105 group"
             >
-              <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">✨</div>
+              <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">★</div>
               <div className="font-bold text-premium-gold">Демо</div>
               <div className="text-sm text-white/60 mt-1">Попробовать →</div>
             </a>

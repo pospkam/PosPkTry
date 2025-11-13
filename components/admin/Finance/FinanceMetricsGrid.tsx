@@ -76,7 +76,7 @@ export function FinanceMetricsGrid({ period = '30', type = 'all' }: FinanceMetri
         title="Общий доход"
         value={`${metrics.totalRevenue.toLocaleString('ru-RU')} ₽`}
         subtitle={`за ${metrics.period} дней`}
-        icon="💰"
+        icon=""
         trend={metrics.totalRevenue > 0 ? 'up' : 'neutral'}
       />
 
@@ -84,7 +84,7 @@ export function FinanceMetricsGrid({ period = '30', type = 'all' }: FinanceMetri
         title="Количество транзакций"
         value={metrics.totalTransactions.toString()}
         subtitle={`за ${metrics.period} дней`}
-        icon="💳"
+        icon=""
         trend={metrics.totalTransactions > 0 ? 'up' : 'neutral'}
       />
 
@@ -92,7 +92,7 @@ export function FinanceMetricsGrid({ period = '30', type = 'all' }: FinanceMetri
         title="Средний чек"
         value={`${metrics.avgTransaction.toLocaleString('ru-RU')} ₽`}
         subtitle="на транзакцию"
-        icon="📊"
+        icon=""
         trend={metrics.avgTransaction > 1000 ? 'up' : 'neutral'}
       />
 
@@ -100,7 +100,7 @@ export function FinanceMetricsGrid({ period = '30', type = 'all' }: FinanceMetri
         title="Уникальных клиентов"
         value={metrics.uniqueCustomers.toString()}
         subtitle={`за ${metrics.period} дней`}
-        icon="👥"
+        icon=""
         trend={metrics.uniqueCustomers > 0 ? 'up' : 'neutral'}
       />
     </div>

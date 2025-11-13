@@ -19,10 +19,10 @@ const colors = {
 };
 
 const log = {
-  success: (msg) => console.log(`${colors.green}✅ ${msg}${colors.reset}`),
-  error: (msg) => console.log(`${colors.red}❌ ${msg}${colors.reset}`),
-  warning: (msg) => console.log(`${colors.yellow}⚠️  ${msg}${colors.reset}`),
-  info: (msg) => console.log(`${colors.blue}ℹ️  ${msg}${colors.reset}`),
+  success: (msg) => console.log(`${colors.green}[OK] ${msg}${colors.reset}`),
+  error: (msg) => console.log(`${colors.red}[X] ${msg}${colors.reset}`),
+  warning: (msg) => console.log(`${colors.yellow}!  ${msg}${colors.reset}`),
+  info: (msg) => console.log(`${colors.blue}i  ${msg}${colors.reset}`),
   step: (msg) => console.log(`${colors.cyan}▶️  ${msg}${colors.reset}`),
 };
 
@@ -94,7 +94,7 @@ async function testDatabaseConnection() {
     } else {
       log.success(`Найдено таблиц: ${tablesResult.rows.length}`);
       console.log('');
-      console.log('📋 Список таблиц:');
+      console.log(' Список таблиц:');
       console.log('─────────────────────────────────────────');
 
       const tables = {
@@ -118,22 +118,22 @@ async function testDatabaseConnection() {
       });
 
       if (tables.auth.length > 0) {
-        console.log(`\n🔐 Аутентификация (${tables.auth.length}):`);
+        console.log(`\n Аутентификация (${tables.auth.length}):`);
         tables.auth.forEach(t => console.log(`   • ${t}`));
       }
 
       if (tables.business.length > 0) {
-        console.log(`\n💼 Бизнес-логика (${tables.business.length}):`);
+        console.log(`\n Бизнес-логика (${tables.business.length}):`);
         tables.business.forEach(t => console.log(`   • ${t}`));
       }
 
       if (tables.core.length > 0) {
-        console.log(`\n⚙️  Основные (${tables.core.length}):`);
+        console.log(`\n  Основные (${tables.core.length}):`);
         tables.core.forEach(t => console.log(`   • ${t}`));
       }
 
       if (tables.other.length > 0) {
-        console.log(`\n📦 Прочие (${tables.other.length}):`);
+        console.log(`\n Прочие (${tables.other.length}):`);
         tables.other.forEach(t => console.log(`   • ${t}`));
       }
 
@@ -157,12 +157,12 @@ async function testDatabaseConnection() {
     console.log('');
 
     console.log('═══════════════════════════════════════════════════════');
-    log.success('ВСЕ ТЕСТЫ ПРОЙДЕНЫ УСПЕШНО! 🎉');
+    log.success('ВСЕ ТЕСТЫ ПРОЙДЕНЫ УСПЕШНО! ');
     console.log('═══════════════════════════════════════════════════════');
     console.log('');
 
     if (tablesResult.rows.length === 0) {
-      console.log('📝 СЛЕДУЮЩИЕ ШАГИ:');
+      console.log(' СЛЕДУЮЩИЕ ШАГИ:');
       console.log('   1. Применить схемы БД:');
       console.log('      bash scripts/apply-all-schemas.sh');
       console.log('');
@@ -170,9 +170,9 @@ async function testDatabaseConnection() {
       console.log('      node scripts/seed-database.js');
       console.log('');
     } else {
-      console.log('✨ База данных готова к использованию!');
+      console.log(' База данных готова к использованию!');
       console.log('');
-      console.log('🚀 Можно запускать приложение:');
+      console.log(' Можно запускать приложение:');
       console.log('   npm run dev     (разработка)');
       console.log('   npm run build   (сборка)');
       console.log('   npm start       (production)');

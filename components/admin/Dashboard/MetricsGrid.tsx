@@ -33,7 +33,7 @@ export function MetricsGrid({ metrics, loading = false }: MetricsGridProps) {
         value={formatCurrency(metrics.totalRevenue.value)}
         change={metrics.totalRevenue.change}
         trend={metrics.totalRevenue.trend}
-        icon="💰"
+        icon=""
         loading={loading}
       />
       
@@ -42,7 +42,7 @@ export function MetricsGrid({ metrics, loading = false }: MetricsGridProps) {
         value={formatNumber(metrics.totalBookings.value)}
         change={metrics.totalBookings.change}
         trend={metrics.totalBookings.trend}
-        icon="📅"
+        icon=""
         loading={loading}
       />
       
@@ -51,7 +51,7 @@ export function MetricsGrid({ metrics, loading = false }: MetricsGridProps) {
         value={formatNumber(metrics.activeUsers.value)}
         change={metrics.activeUsers.change}
         trend={metrics.activeUsers.trend}
-        icon="👥"
+        icon=""
         loading={loading}
       />
       
@@ -60,7 +60,7 @@ export function MetricsGrid({ metrics, loading = false }: MetricsGridProps) {
         value={formatPercent(metrics.conversionRate.value)}
         change={metrics.conversionRate.change}
         trend={metrics.conversionRate.trend}
-        icon="📊"
+        icon=""
         loading={loading}
       />
       
@@ -69,7 +69,7 @@ export function MetricsGrid({ metrics, loading = false }: MetricsGridProps) {
         value={formatCurrency(metrics.averageOrderValue.value)}
         change={metrics.averageOrderValue.change}
         trend={metrics.averageOrderValue.trend}
-        icon="💳"
+        icon=""
         loading={loading}
       />
       
@@ -78,7 +78,7 @@ export function MetricsGrid({ metrics, loading = false }: MetricsGridProps) {
         value={formatPercent(metrics.growthRate.value)}
         change={metrics.growthRate.change}
         trend={metrics.growthRate.trend}
-        icon="📈"
+        icon=""
         loading={loading}
       />
     </div>

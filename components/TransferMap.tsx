@@ -214,10 +214,10 @@ export function TransferMap({
   // Получение иконки транспорта
   const getVehicleIcon = (status: string) => {
     switch (status) {
-      case 'available': return '🚗';
-      case 'busy': return '🚕';
-      case 'offline': return '🚙';
-      default: return '🚗';
+      case 'available': return ' ';
+      case 'busy': return '';
+      case 'offline': return '';
+      default: return ' ';
     }
   };
 
@@ -238,10 +238,10 @@ export function TransferMap({
   // Получение иконки бронирования
   const getBookingIcon = (status: string) => {
     switch (status) {
-      case 'pending': return '⏳';
-      case 'confirmed': return '✅';
-      case 'in_progress': return '🚌';
-      default: return '📋';
+      case 'pending': return ' ';
+      case 'confirmed': return '[]';
+      case 'in_progress': return ' ';
+      default: return ' ';
     }
   };
 
@@ -295,15 +295,15 @@ export function TransferMap({
         {showVehicles && (
           <div className="space-y-1">
             <div className="flex items-center">
-              <span className="mr-2">🚗</span>
+              <span className="mr-2"> </span>
               <span>Доступен</span>
             </div>
             <div className="flex items-center">
-              <span className="mr-2">🚕</span>
+              <span className="mr-2"></span>
               <span>Занят</span>
             </div>
             <div className="flex items-center">
-              <span className="mr-2">🚙</span>
+              <span className="mr-2"></span>
               <span>Офлайн</span>
             </div>
           </div>
@@ -311,15 +311,15 @@ export function TransferMap({
         {showBookings && (
           <div className="space-y-1 mt-2">
             <div className="flex items-center">
-              <span className="mr-2">⏳</span>
+              <span className="mr-2"> </span>
               <span>Ожидает</span>
             </div>
             <div className="flex items-center">
-              <span className="mr-2">✅</span>
+              <span className="mr-2">[]</span>
               <span>Подтверждено</span>
             </div>
             <div className="flex items-center">
-              <span className="mr-2">🚌</span>
+              <span className="mr-2"> </span>
               <span>В пути</span>
             </div>
           </div>
@@ -366,7 +366,7 @@ export function MapControls({ onCenterChange, onZoomChange, onLocationRequest }:
         onClick={requestUserLocation}
         className="px-3 py-2 bg-premium-gold text-premium-black rounded-lg hover:bg-premium-gold/90 transition-colors"
       >
-        📍 Мое местоположение
+         Мое местоположение
       </button>
     </div>
   );

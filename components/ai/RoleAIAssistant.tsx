@@ -92,7 +92,7 @@ export function RoleAIAssistant({ roleContext, className = '', compact = false }
       console.error('AI Error:', error);
       const errorMessage: Message = {
         role: 'assistant',
-        content: '❌ Извините, произошла ошибка. Попробуйте ещё раз.',
+        content: '[] Извините, произошла ошибка. Попробуйте ещё раз.',
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -126,7 +126,7 @@ export function RoleAIAssistant({ roleContext, className = '', compact = false }
           className="fixed bottom-6 right-6 w-16 h-16 bg-premium-gold hover:bg-premium-gold/80 rounded-full shadow-2xl flex items-center justify-center text-2xl transition-all z-50"
           aria-label="AI Помощник"
         >
-          {isOpen ? '✕' : '🤖'}
+          {isOpen ? '' : ''}
         </button>
 
         {/* Чат окно */}
@@ -136,7 +136,7 @@ export function RoleAIAssistant({ roleContext, className = '', compact = false }
             <div className="bg-gradient-to-r from-premium-gold/20 to-premium-gold/10 px-6 py-4 border-b border-white/10">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">🤖</span>
+                  <span className="text-2xl"></span>
                   <div>
                     <h3 className="text-white font-semibold">AI Помощник</h3>
                     <p className="text-xs text-white/50">Всегда готов помочь</p>
@@ -147,7 +147,7 @@ export function RoleAIAssistant({ roleContext, className = '', compact = false }
                   className="text-white/50 hover:text-white text-sm"
                   title="Очистить чат"
                 >
-                  🗑️
+                   
                 </button>
               </div>
             </div>
@@ -227,7 +227,7 @@ export function RoleAIAssistant({ roleContext, className = '', compact = false }
                   disabled={!input.trim() || isLoading}
                   className="px-4 py-3 bg-premium-gold hover:bg-premium-gold/80 text-premium-black font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  ➤
+                  
                 </button>
               </form>
             </div>
@@ -244,7 +244,7 @@ export function RoleAIAssistant({ roleContext, className = '', compact = false }
       <div className="bg-gradient-to-r from-premium-gold/20 to-premium-gold/10 px-6 py-4 border-b border-white/10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">🤖</span>
+            <span className="text-2xl"></span>
             <div>
               <h3 className="text-white font-semibold">AI Помощник</h3>
               <p className="text-xs text-white/50">Умный ассистент для вашей работы</p>
@@ -297,7 +297,7 @@ export function RoleAIAssistant({ roleContext, className = '', compact = false }
       {/* Быстрые вопросы */}
       {messages.length === 1 && quickQuestions.length > 0 && (
         <div className="px-6 pb-4 space-y-3">
-          <p className="text-sm text-white/50">💡 Популярные вопросы:</p>
+          <p className="text-sm text-white/50">  Популярные вопросы:</p>
           <div className="grid grid-cols-1 gap-2">
             {quickQuestions.map((question, index) => (
               <button
@@ -334,7 +334,7 @@ export function RoleAIAssistant({ roleContext, className = '', compact = false }
             disabled={!input.trim() || isLoading}
             className="px-6 py-3 bg-premium-gold hover:bg-premium-gold/80 text-premium-black font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? '⏳' : 'Отправить'}
+            {isLoading ? ' ' : 'Отправить'}
           </button>
         </form>
       </div>

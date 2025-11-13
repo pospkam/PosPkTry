@@ -105,7 +105,7 @@ export function TransferSearchWidget({ className, onSearchResults }: TransferSea
     <div className={`bg-premium-black/90 backdrop-blur-sm rounded-2xl p-6 border border-premium-gold/20 ${className}`}>
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-premium-gold mb-2">
-          🚌 Поиск трансферов
+            Поиск трансферов
         </h2>
         <p className="text-white/70">
           Найдите подходящий трансфер для вашей поездки
@@ -356,13 +356,13 @@ function TransferCard({ transfer }: { transfer: TransferOption }) {
 
   const getVehicleTypeIcon = (type: string) => {
     const icons: Record<string, string> = {
-      economy: '🚗',
+      economy: ' ',
       comfort: '🚙',
       business: '🚘',
       minibus: '🚐',
-      bus: '🚌'
+      bus: ' '
     };
-    return icons[type] || '🚗';
+    return icons[type] || ' ';
   };
 
   return (
@@ -397,11 +397,11 @@ function TransferCard({ transfer }: { transfer: TransferOption }) {
           </span>
         </div>
         <div className="flex items-center gap-2 text-white/80">
-          <span>👨‍💼</span>
+          <span> </span>
           <span className="text-sm">{transfer.driver.name}</span>
         </div>
         <div className="flex items-center gap-2 text-white/80">
-          <span>⭐</span>
+          <span>★</span>
           <span className="text-sm">{transfer.driver.rating}/5</span>
         </div>
       </div>

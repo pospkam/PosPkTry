@@ -62,10 +62,10 @@ export default function TransferOperatorPage() {
   };
 
   const tabs = [
-    { id: 'dashboard' as ActiveTab, name: 'Панель управления', icon: '📊' },
-    { id: 'drivers' as ActiveTab, name: 'Водители', icon: '🚗' },
-    { id: 'routes' as ActiveTab, name: 'Маршруты', icon: '🗺️' },
-    { id: 'bookings' as ActiveTab, name: 'Бронирования', icon: '📅' },
+    { id: 'dashboard' as ActiveTab, name: 'Панель управления', icon: ' ' },
+    { id: 'drivers' as ActiveTab, name: 'Водители', icon: ' ' },
+    { id: 'routes' as ActiveTab, name: 'Маршруты', icon: ' ' },
+    { id: 'bookings' as ActiveTab, name: 'Бронирования', icon: ' ' },
   ];
 
   return (

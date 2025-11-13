@@ -18,37 +18,37 @@ export function TransferOperatorMetricsGrid({ metrics }: TransferOperatorMetrics
     {
       label: 'Всего бронирований',
       value: metrics.totalBookings,
-      icon: '📅',
+      icon: ' ',
       color: 'text-premium-gold'
     },
     {
       label: 'Активные',
       value: metrics.activeBookings,
-      icon: '🚀',
+      icon: ' ',
       color: 'text-blue-400'
     },
     {
       label: 'Доступно водителей',
       value: metrics.availableDrivers,
-      icon: '🚗',
+      icon: ' ',
       color: 'text-green-400'
     },
     {
       label: 'Активные маршруты',
       value: metrics.activeRoutes,
-      icon: '🗺️',
+      icon: ' ',
       color: 'text-purple-400'
     },
     {
       label: 'Завершено',
       value: metrics.completedTransfers,
-      icon: '✅',
+      icon: '[]',
       color: 'text-green-400'
     },
     {
       label: 'Общий доход',
       value: `${metrics.totalRevenue.toLocaleString('ru-RU')} ₽`,
-      icon: '💰',
+      icon: ' ',
       color: 'text-premium-gold'
     },
   ];

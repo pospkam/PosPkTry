@@ -215,7 +215,7 @@ export default function PartnersManagement() {
             </div>
           ) : partners.length === 0 ? (
             <EmptyState
-              icon="🤝"
+              icon=" "
               title="Партнёры не найдены"
               description="Попробуйте изменить фильтры или условия поиска"
             />

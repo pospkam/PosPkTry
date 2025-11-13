@@ -75,7 +75,7 @@ export function RecentBookingsTable({ bookings, onViewDetails }: RecentBookingsT
       title: 'Гости',
       render: (booking) => (
         <span className="text-white/80">
-          <span className="text-xl mr-1">👥</span>
+          <span className="text-xl mr-1"></span>
           {booking.guestsCount}
         </span>
       )

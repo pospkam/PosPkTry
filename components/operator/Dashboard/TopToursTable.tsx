@@ -31,7 +31,7 @@ export function TopToursTable({ tours }: TopToursTableProps) {
       sortable: true,
       render: (tour) => (
         <div className="flex items-center">
-          <span className="text-2xl mr-2">📅</span>
+          <span className="text-2xl mr-2"></span>
           <span className="font-semibold text-white">{tour.bookingsCount}</span>
         </div>
       )
@@ -52,7 +52,7 @@ export function TopToursTable({ tours }: TopToursTableProps) {
       sortable: true,
       render: (tour) => (
         <div className="flex items-center">
-          <span className="text-yellow-400 mr-1">★</span>
+          <span className="text-yellow-400 mr-1"></span>
           <span className="text-white">{tour.averageRating.toFixed(1)}</span>
           <span className="text-white/50 text-xs ml-1">
             ({tour.reviewCount})

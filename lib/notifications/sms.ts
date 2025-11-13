@@ -84,7 +84,7 @@ export class SMSNotificationService {
     passengers: number;
     price: number;
   }): Promise<SMSResponse> {
-    const text = `🚌 Новая заявка на трансфер\n` +
+    const text = `  Новая заявка на трансфер\n` +
       `Маршрут: ${bookingDetails.route}\n` +
       `Дата: ${bookingDetails.date}\n` +
       `Время: ${bookingDetails.time}\n` +
@@ -108,7 +108,7 @@ export class SMSNotificationService {
     driverName: string;
     driverPhone: string;
   }): Promise<SMSResponse> {
-    const text = `✅ Бронирование подтверждено\n` +
+    const text = `[✓] Бронирование подтверждено\n` +
       `Код: ${confirmationDetails.confirmationCode}\n` +
       `Маршрут: ${confirmationDetails.route}\n` +
       `Дата: ${confirmationDetails.date}\n` +
@@ -152,7 +152,7 @@ export class SMSNotificationService {
     reason: string;
     refundAmount?: number;
   }): Promise<SMSResponse> {
-    let text = `❌ Поездка отменена\n` +
+    let text = `[✗] Поездка отменена\n` +
       `Маршрут: ${cancellationDetails.route}\n` +
       `Дата: ${cancellationDetails.date}\n` +
       `Причина: ${cancellationDetails.reason}`;
@@ -177,7 +177,7 @@ export class SMSNotificationService {
     price: number;
     bookingId: string;
   }): Promise<SMSResponse> {
-    const text = `🚗 Новая заявка для водителя\n` +
+    const text = `  Новая заявка для водителя\n` +
       `Маршрут: ${bookingDetails.route}\n` +
       `Дата: ${bookingDetails.date}\n` +
       `Время: ${bookingDetails.time}\n` +
@@ -200,7 +200,7 @@ export class SMSNotificationService {
     totalRevenue: number;
     completedTrips: number;
   }): Promise<SMSResponse> {
-    const text = `📊 Статистика за ${stats.date}\n` +
+    const text = `  Статистика за ${stats.date}\n` +
       `Заявок: ${stats.totalBookings}\n` +
       `Выполнено: ${stats.completedTrips}\n` +
       `Доход: ${stats.totalRevenue} ₽`;

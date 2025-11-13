@@ -167,7 +167,7 @@ export const TransferDateTimePicker: React.FC<TransferDateTimePickerProps> = ({
 
         {!selectedDate ? (
           <div className="text-center py-12">
-            <div className="text-4xl mb-4">📅</div>
+            <div className="text-4xl mb-4"> </div>
             <div className="text-white/70">
               Выберите дату чтобы увидеть расписание
             </div>
@@ -179,7 +179,7 @@ export const TransferDateTimePicker: React.FC<TransferDateTimePickerProps> = ({
           </div>
         ) : schedules.length === 0 ? (
           <div className="text-center py-12">
-            <div className="text-4xl mb-4">😔</div>
+            <div className="text-4xl mb-4"></div>
             <div className="text-white/70">
               Нет доступных рейсов на эту дату
             </div>
@@ -199,7 +199,7 @@ export const TransferDateTimePicker: React.FC<TransferDateTimePickerProps> = ({
 
         {error && (
           <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-sm text-red-200">
-            ⚠️ {error}
+            ! {error}
           </div>
         )}
       </div>
@@ -298,7 +298,7 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
           'text-sm font-medium',
           isSelected ? 'text-premium-black' : 'text-premium-gold'
         )}>
-          ⭐ {schedule.driver.rating}
+           {schedule.driver.rating}
         </span>
       </div>
 
@@ -324,7 +324,7 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
       {/* Предупреждение о погоде */}
       {schedule.weatherDependent && (
         <div className="mb-3 text-xs text-yellow-400">
-          ⚠️ Зависит от погоды
+          ! Зависит от погоды
         </div>
       )}
 
@@ -346,7 +346,7 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
 
       {isSelected && (
         <div className="mt-3 text-center text-sm font-medium text-premium-black">
-          ✓ Рейс выбран
+          [] Рейс выбран
         </div>
       )}
     </button>
@@ -356,11 +356,11 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
 // Утилиты
 const getVehicleIcon = (type: string): string => {
   switch (type) {
-    case 'bus': return '🚌';
-    case 'minibus': return '🚐';
-    case 'helicopter': return '🚁';
-    case 'car': return '🚗';
-    default: return '🚌';
+    case 'bus': return ' ';
+    case 'minibus': return '';
+    case 'helicopter': return '';
+    case 'car': return ' ';
+    default: return ' ';
   }
 };
 
@@ -376,11 +376,11 @@ const getVehicleLabel = (type: string): string => {
 
 const getFeatureLabel = (feature: string): string => {
   switch (feature) {
-    case 'wifi': return '📶 WiFi';
-    case 'ac': return '❄️ Кондиционер';
-    case 'comfort': return '✨ Комфорт';
-    case 'vip': return '👑 VIP';
-    case 'panoramic': return '🌄 Панорамный вид';
+    case 'wifi': return ' WiFi';
+    case 'ac': return '  Кондиционер';
+    case 'comfort': return '  Комфорт';
+    case 'vip': return ' VIP';
+    case 'panoramic': return ' Панорамный вид';
     default: return feature;
   }
 };

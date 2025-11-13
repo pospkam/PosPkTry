@@ -10,11 +10,11 @@ interface RecentActivitiesProps {
 }
 
 const activityIcons: Record<RecentActivity['type'], string> = {
-  booking: '📅',
-  user: '👤',
-  review: '⭐',
-  payment: '💳',
-  system: '⚙️'
+  booking: '',
+  user: '',
+  review: '',
+  payment: '',
+  system: ''
 };
 
 const activityColors: Record<RecentActivity['type'], string> = {
@@ -63,7 +63,7 @@ export function RecentActivities({ activities, loading = false }: RecentActiviti
       <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
         <h3 className="text-lg font-bold text-white mb-4">Последние активности</h3>
         <div className="text-center py-8 text-white/50">
-          <div className="text-4xl mb-2">📋</div>
+          <div className="text-4xl mb-2"></div>
           <p>Пока нет активностей</p>
         </div>
       </div>
@@ -105,7 +105,7 @@ export function RecentActivities({ activities, loading = false }: RecentActiviti
               
               {activity.user && (
                 <div className="flex items-center mt-2 text-xs text-white/60">
-                  <span className="mr-1">👤</span>
+                  <span className="mr-1"></span>
                   {activity.user.name}
                 </div>
               )}

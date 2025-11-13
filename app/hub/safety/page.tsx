@@ -42,7 +42,7 @@ export default function SafetyHub() {
         {activeTab === 'sos' && (
           <div className="space-y-6">
             <div className="bg-red-500/20 border border-red-500/50 rounded-2xl p-6 text-center">
-              <div className="text-6xl mb-4">🚨</div>
+              <div className="text-6xl mb-4"> </div>
               <h2 className="text-2xl font-bold text-red-400 mb-2">ЭКСТРЕННЫЙ ВЫЗОВ</h2>
               <p className="text-white/70 mb-4">В случае экстренной ситуации</p>
               <button className="bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-8 rounded-xl text-xl">
@@ -97,7 +97,7 @@ export default function SafetyHub() {
             <h2 className="text-xl font-bold">Сейсмическая активность</h2>
             <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
               <div className="text-center text-white/70 py-8">
-                <div className="text-4xl mb-2">🌋</div>
+                <div className="text-4xl mb-2"> </div>
                 <p>Данные сейсмики загружаются...</p>
               </div>
             </div>

@@ -55,7 +55,7 @@ const migration001: Migration = {
     // Выполняем схему
     await query(schema);
     
-    console.log('✅ Migration 001: Base schema created');
+    console.log('[✓] Migration 001: Base schema created');
   },
   down: async () => {
     // Удаляем все таблицы в обратном порядке
@@ -86,7 +86,7 @@ const migration001: Migration = {
       await query(`DROP TABLE IF EXISTS ${table} CASCADE`);
     }
     
-    console.log('✅ Migration 001: Base schema dropped');
+    console.log('[✓] Migration 001: Base schema dropped');
   }
 };
 
@@ -112,7 +112,7 @@ const migration002: Migration = {
       await query(indexQuery);
     }
     
-    console.log('✅ Migration 002: Performance indexes added');
+    console.log('[✓] Migration 002: Performance indexes added');
   },
   down: async () => {
     const indexes = [
@@ -132,7 +132,7 @@ const migration002: Migration = {
       await query(`DROP INDEX IF EXISTS ${indexName}`);
     }
     
-    console.log('✅ Migration 002: Performance indexes dropped');
+    console.log('[✓] Migration 002: Performance indexes dropped');
   }
 };
 
@@ -202,7 +202,7 @@ const migration003: Migration = {
       $$ LANGUAGE plpgsql;
     `);
     
-    console.log('✅ Migration 003: Fulltext search added');
+    console.log('[✓] Migration 003: Fulltext search added');
   },
   down: async () => {
     await query('DROP FUNCTION IF EXISTS search_tours(TEXT)');
@@ -211,7 +211,7 @@ const migration003: Migration = {
     await query('DROP INDEX IF EXISTS idx_partners_search');
     await query('DROP INDEX IF EXISTS idx_eco_points_search');
     
-    console.log('✅ Migration 003: Fulltext search dropped');
+    console.log('[✓] Migration 003: Fulltext search dropped');
   }
 };
 
@@ -240,11 +240,11 @@ const migration004: Migration = {
       CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created_at);
     `);
     
-    console.log('✅ Migration 004: Notifications added');
+    console.log('[✓] Migration 004: Notifications added');
   },
   down: async () => {
     await query('DROP TABLE IF EXISTS notifications CASCADE');
-    console.log('✅ Migration 004: Notifications dropped');
+    console.log('[✓] Migration 004: Notifications dropped');
   }
 };
 
@@ -273,11 +273,11 @@ const migration005: Migration = {
       CREATE INDEX IF NOT EXISTS idx_analytics_created_at ON analytics_events(created_at);
     `);
     
-    console.log('✅ Migration 005: Analytics added');
+    console.log('[✓] Migration 005: Analytics added');
   },
   down: async () => {
     await query('DROP TABLE IF EXISTS analytics_events CASCADE');
-    console.log('✅ Migration 005: Analytics dropped');
+    console.log('[✓] Migration 005: Analytics dropped');
   }
 };
 
@@ -296,24 +296,24 @@ export async function runMigrations(): Promise<void> {
     await createMigrationsTable();
     const executedMigrations = await getExecutedMigrations();
     
-    console.log('🚀 Starting database migrations...');
+    console.log('  Starting database migrations...');
     console.log(`Executed migrations: ${executedMigrations.join(', ')}`);
     
     for (const migration of migrations) {
       if (!executedMigrations.includes(migration.version)) {
-        console.log(`⏳ Running migration ${migration.version}: ${migration.name}`);
+        console.log(`  Running migration ${migration.version}: ${migration.name}`);
         await migration.up();
         await markMigrationAsExecuted(migration.version, migration.name);
-        console.log(`✅ Migration ${migration.version} completed`);
+        console.log(`[✓] Migration ${migration.version} completed`);
       } else {
         console.log(`⏭️  Migration ${migration.version} already executed`);
       }
     }
     
-    console.log('🎉 All migrations completed successfully!');
+    console.log('  All migrations completed successfully!');
     
   } catch (error) {
-    console.error('❌ Migration failed:', error);
+    console.error('[✗] Migration failed:', error);
     throw error;
   }
 }
@@ -333,16 +333,16 @@ export async function rollbackMigrations(targetVersion?: string): Promise<void> 
       : migrations.filter(m => executedMigrations.includes(m.version)).reverse();
     
     for (const migration of migrationsToRollback) {
-      console.log(`⏳ Rolling back migration ${migration.version}: ${migration.name}`);
+      console.log(`  Rolling back migration ${migration.version}: ${migration.name}`);
       await migration.down();
       await markMigrationAsRolledBack(migration.version);
-      console.log(`✅ Migration ${migration.version} rolled back`);
+      console.log(`[✓] Migration ${migration.version} rolled back`);
     }
     
-    console.log('🎉 Rollback completed successfully!');
+    console.log('  Rollback completed successfully!');
     
   } catch (error) {
-    console.error('❌ Rollback failed:', error);
+    console.error('[✗] Rollback failed:', error);
     throw error;
   }
 }
@@ -373,7 +373,7 @@ export async function createBackup(): Promise<string> {
   // Здесь можно добавить логику создания резервной копии
   // Например, использование pg_dump или экспорт в файл
   
-  console.log(`📦 Backup created: ${backupName}`);
+  console.log(`  Backup created: ${backupName}`);
   return backupName;
 }
 

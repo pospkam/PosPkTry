@@ -14,8 +14,8 @@ export default function AdminFinance() {
   const [period, setPeriod] = useState('30');
 
   const tabs = [
-    { id: 'overview' as TabType, name: 'Обзор', icon: '📊' },
-    { id: 'payouts' as TabType, name: 'Выплаты', icon: '💸' },
+    { id: 'overview' as TabType, name: 'Обзор', icon: ' ' },
+    { id: 'payouts' as TabType, name: 'Выплаты', icon: ' ' },
   ];
 
   return (

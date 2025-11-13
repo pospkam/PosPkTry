@@ -12,7 +12,7 @@ export default function AdminSettings() {
   const [activeTab, setActiveTab] = useState<TabType>('system');
 
   const tabs = [
-    { id: 'system' as TabType, name: 'Системные настройки', icon: '⚙️' },
+    { id: 'system' as TabType, name: 'Системные настройки', icon: '⚙' },
     { id: 'email' as TabType, name: 'Email шаблоны', icon: '📧' },
   ];
 

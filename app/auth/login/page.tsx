@@ -264,7 +264,7 @@ export default function AuthPage() {
         {error && (
           <div className="max-w-4xl mx-auto mb-6 p-4 bg-red-500/10 backdrop-blur-xl border border-red-500/30 rounded-2xl text-red-400 animate-shake">
             <div className="flex items-center gap-3">
-              <span className="text-2xl">⚠️</span>
+              <span className="text-2xl">!</span>
               <span>{error}</span>
             </div>
           </div>
@@ -312,13 +312,13 @@ export default function AuthPage() {
                 disabled={loading}
                 className="w-full py-4 bg-gradient-to-r from-premium-gold to-yellow-600 text-premium-black font-bold rounded-xl hover:shadow-lg hover:shadow-premium-gold/50 disabled:opacity-50 transition-all transform hover:scale-105"
               >
-                {loading ? '⏳ Вход...' : '→ Войти'}
+                {loading ? 'Вход...' : 'Войти →'}
               </button>
             </form>
 
             <div className="text-center mt-6">
               <a href="/demo" className="text-blue-400 hover:text-blue-300 text-sm transition-colors">
-                🚀 Демо-режим (без регистрации)
+                Демо-режим (без регистрации)
               </a>
             </div>
           </div>
@@ -330,7 +330,7 @@ export default function AuthPage() {
             {/* Основная информация */}
             <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
               <h2 className="text-3xl font-bold mb-8 bg-gradient-to-r from-premium-gold to-yellow-300 bg-clip-text text-transparent">
-                📋 Основная информация
+                Основная информация
               </h2>
               
               <div className="grid gap-6">
@@ -450,7 +450,7 @@ export default function AuthPage() {
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                         className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors"
                       >
-                        {showConfirmPassword ? '👁️' : '👁️‍🗨️'}
+                        {showConfirmPassword ? '●' : '○'}
                       </button>
                     </div>
                     {formData.confirmPassword && formData.password !== formData.confirmPassword && (
@@ -490,7 +490,7 @@ export default function AuthPage() {
             {/* Направления деятельности */}
             <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
               <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-premium-gold to-yellow-300 bg-clip-text text-transparent">
-                🎯 Направления деятельности <span className="text-red-400">*</span>
+                Направления деятельности <span className="text-red-400">*</span>
               </h2>
               <p className="text-white/70 mb-8">
                 Выберите все подходящие направления
@@ -521,7 +521,7 @@ export default function AuthPage() {
                       
                       {formData.roles.includes(role.id) && (
                         <div className="mt-4 flex items-center gap-2 text-premium-gold font-bold text-sm">
-                          <span className="text-xl">✓</span>
+                          <span className="text-xl">[✓]</span>
                           Выбрано
                         </div>
                       )}
@@ -533,7 +533,7 @@ export default function AuthPage() {
               {formData.roles.length > 0 && (
                 <div className="mt-6 p-4 bg-green-500/10 border border-green-500/30 rounded-xl">
                   <p className="text-green-400 text-sm flex items-center gap-2">
-                    <span className="text-xl">✓</span>
+                    <span className="text-xl">[✓]</span>
                     Выбрано направлений: <strong className="text-lg">{formData.roles.length}</strong>
                   </p>
                 </div>
@@ -543,7 +543,7 @@ export default function AuthPage() {
             {/* Логотип */}
             <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
               <h2 className="text-3xl font-bold mb-8 bg-gradient-to-r from-premium-gold to-yellow-300 bg-clip-text text-transparent">
-                📸 Логотип компании
+                Логотип компании
               </h2>
 
               <div className="flex flex-col md:flex-row items-center gap-8">
@@ -555,7 +555,7 @@ export default function AuthPage() {
                   ) : (
                     <div className="w-48 h-48 rounded-2xl border-4 border-dashed border-white/20 flex items-center justify-center bg-white/5 group-hover:border-white/40 transition-all">
                       <div className="text-center">
-                        <span className="text-6xl">📷</span>
+                        <span className="text-6xl">□</span>
                         <p className="text-xs text-white/50 mt-3">Загрузите лого</p>
                       </div>
                     </div>
@@ -565,7 +565,7 @@ export default function AuthPage() {
                 <div className="flex-1 w-full">
                   <label className="block">
                     <span className="px-8 py-4 bg-gradient-to-r from-premium-gold to-yellow-600 text-premium-black font-bold rounded-xl cursor-pointer hover:shadow-lg hover:shadow-premium-gold/50 transition-all inline-flex items-center gap-2 transform hover:scale-105">
-                      <span className="text-xl">📁</span>
+                      <span className="text-xl">□</span>
                       Выбрать файл
                     </span>
                     <input
@@ -590,7 +590,7 @@ export default function AuthPage() {
                   {logoFile && (
                     <div className="mt-4 p-4 bg-green-500/10 border border-green-500/30 rounded-xl">
                       <p className="text-green-400 text-sm flex items-center gap-2">
-                        <span className="text-xl">✓</span>
+                        <span className="text-xl">[✓]</span>
                         {logoFile.name} ({(logoFile.size / 1024).toFixed(1)} КБ)
                       </p>
                     </div>
@@ -614,7 +614,7 @@ export default function AuthPage() {
                   disabled={loading || formData.roles.length === 0 || formData.password !== formData.confirmPassword}
                   className="flex-1 px-8 py-5 bg-gradient-to-r from-premium-gold to-yellow-600 text-premium-black rounded-2xl hover:shadow-xl hover:shadow-premium-gold/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-bold text-lg transform hover:scale-105"
                 >
-                  {loading ? '⏳ Регистрация...' : '✓ Зарегистрироваться'}
+                  {loading ? 'Регистрация...' : 'Зарегистрироваться'}
                 </button>
               </div>
             </div>
@@ -623,7 +623,7 @@ export default function AuthPage() {
 
         {/* Footer */}
         <div className="text-center mt-16 text-white/50 text-sm">
-          <p>🏔️ Kamchatour Hub — экосистема туризма Камчатки</p>
+          <p>Kamchatour Hub — экосистема туризма Камчатки</p>
         </div>
       </div>
     </main>

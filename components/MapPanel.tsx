@@ -20,9 +20,9 @@ const activities = [
 ];
 
 const categoryIcons: Record<string, string> = {
-  volcano: '🌋',
+  volcano: '',
   wildlife: '🐻',
-  nature: '🏔️',
+  nature: '',
   ocean: '🌊',
   'hot-springs': '♨️'
 };

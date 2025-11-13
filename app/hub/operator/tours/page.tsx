@@ -131,7 +131,7 @@ export default function ToursManagement() {
             />
           ) : (
             <div className="w-12 h-12 rounded-lg mr-3 bg-white/10 flex items-center justify-center">
-              <span className="text-2xl">🏔️</span>
+              <span className="text-2xl"> </span>
             </div>
           )}
           <div>
@@ -167,7 +167,7 @@ export default function ToursManagement() {
       title: 'Макс. группа',
       render: (tour) => (
         <span className="text-white/80">
-          <span className="text-xl mr-1">👥</span>
+          <span className="text-xl mr-1"> </span>
           {tour.maxGroupSize}
         </span>
       )
@@ -316,7 +316,7 @@ export default function ToursManagement() {
             </div>
           ) : tours.length === 0 ? (
             <EmptyState
-              icon="🏔️"
+              icon=" "
               title="Туры не найдены"
               description={
                 search || categoryFilter || statusFilter !== 'all'

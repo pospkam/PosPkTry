@@ -254,7 +254,7 @@ export default function StayHub() {
               <h2 className="text-xl font-bold">Мои бронирования</h2>
               <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
                 <div className="text-center text-white/70 py-8">
-                  <div className="text-4xl mb-2">📋</div>
+                  <div className="text-4xl mb-2"> </div>
                   <p>Здесь будут отображаться ваши бронирования</p>
                 </div>
               </div>
@@ -293,7 +293,7 @@ export default function StayHub() {
               <h2 className="text-xl font-bold">Отзывы</h2>
               <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
                 <div className="text-center text-white/70 py-8">
-                  <div className="text-4xl mb-2">⭐</div>
+                  <div className="text-4xl mb-2">★</div>
                   <p>Здесь будут ваши отзывы об объектах</p>
                 </div>
               </div>

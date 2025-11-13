@@ -12,13 +12,13 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { name: 'Dashboard', path: '/hub/admin', icon: '📊' },
-  { name: 'Пользователи', path: '/hub/admin/users', icon: '👥' },
-  { name: 'Туры', path: '/hub/admin/content/tours', icon: '🏔️' },
-  { name: 'Партнёры', path: '/hub/admin/content/partners', icon: '🤝' },
-  { name: 'Отзывы', path: '/hub/admin/content/reviews', icon: '💬' },
-  { name: 'Финансы', path: '/hub/admin/finance', icon: '💰' },
-  { name: 'Настройки', path: '/hub/admin/settings', icon: '⚙️' },
+  { name: 'Dashboard', path: '/hub/admin', icon: '' },
+  { name: 'Пользователи', path: '/hub/admin/users', icon: '' },
+  { name: 'Туры', path: '/hub/admin/content/tours', icon: '' },
+  { name: 'Партнёры', path: '/hub/admin/content/partners', icon: '' },
+  { name: 'Отзывы', path: '/hub/admin/content/reviews', icon: '' },
+  { name: 'Финансы', path: '/hub/admin/finance', icon: '' },
+  { name: 'Настройки', path: '/hub/admin/settings', icon: '' },
 ];
 
 export function AdminNav() {

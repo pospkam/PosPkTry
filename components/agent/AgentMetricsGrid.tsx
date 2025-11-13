@@ -18,37 +18,37 @@ export function AgentMetricsGrid({ metrics }: AgentMetricsGridProps) {
     {
       label: 'Всего клиентов',
       value: metrics.totalClients,
-      icon: '👥',
+      icon: ' ',
       color: 'text-premium-gold'
     },
     {
       label: 'Активные брони',
       value: metrics.activeBookings,
-      icon: '📅',
+      icon: ' ',
       color: 'text-blue-400'
     },
     {
       label: 'Комиссия (всего)',
       value: `${metrics.totalCommission.toLocaleString('ru-RU')} ₽`,
-      icon: '💰',
+      icon: ' ',
       color: 'text-green-400'
     },
     {
       label: 'Комиссия (месяц)',
       value: `${metrics.monthlyCommission.toLocaleString('ru-RU')} ₽`,
-      icon: '📈',
+      icon: ' ',
       color: 'text-premium-gold'
     },
     {
       label: 'Конверсия',
       value: `${metrics.conversionRate.toFixed(1)}%`,
-      icon: '🎯',
+      icon: ' ',
       color: 'text-purple-400'
     },
     {
       label: 'Средний чек',
       value: `${metrics.avgDealValue.toLocaleString('ru-RU')} ₽`,
-      icon: '💎',
+      icon: '',
       color: 'text-yellow-400'
     },
   ];

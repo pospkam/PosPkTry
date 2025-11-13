@@ -157,7 +157,7 @@ export default function BookingHistoryPage() {
           {/* Bookings List */}
           {filteredBookings.length === 0 ? (
             <div className="bg-white/5 border border-white/10 rounded-2xl p-12 text-center">
-              <div className="text-6xl mb-4">📅</div>
+              <div className="text-6xl mb-4"> </div>
               <p className="text-white/70 text-lg">У вас пока нет бронирований</p>
               <button
                 onClick={() => window.location.href = '/hub/tourist'}
@@ -177,8 +177,8 @@ export default function BookingHistoryPage() {
                     <div>
                       <h3 className="text-xl font-bold mb-2">{booking.tour?.title || 'Тур'}</h3>
                       <div className="flex items-center gap-4 text-sm text-white/70">
-                        <span>📅 {new Date(booking.date).toLocaleDateString('ru-RU')}</span>
-                        <span>👥 {booking.participants} чел</span>
+                        <span>  {new Date(booking.date).toLocaleDateString('ru-RU')}</span>
+                        <span>  {booking.participants} чел</span>
                       </div>
                     </div>
                     <div className="text-right">

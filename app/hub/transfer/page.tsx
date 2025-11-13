@@ -30,12 +30,12 @@ export default function TransferDashboard() {
 
   const tabs = [
     { id: 'search', name: 'Поиск', icon: '🔍' },
-    { id: 'routes', name: 'Маршруты', icon: '🗺️' },
-    { id: 'vehicles', name: 'Транспорт', icon: '🚌' },
+    { id: 'routes', name: 'Маршруты', icon: ' ' },
+    { id: 'vehicles', name: 'Транспорт', icon: ' ' },
     { id: 'drivers', name: 'Водители', icon: '👨‍✈️' },
-    { id: 'schedule', name: 'Расписание', icon: '📅' },
-    { id: 'bookings', name: 'Бронирования', icon: '🎫' },
-    { id: 'analytics', name: 'Аналитика', icon: '📊' },
+    { id: 'schedule', name: 'Расписание', icon: ' ' },
+    { id: 'bookings', name: 'Бронирования', icon: ' ' },
+    { id: 'analytics', name: 'Аналитика', icon: ' ' },
   ];
 
   const mockRoutes = [
@@ -405,7 +405,7 @@ export default function TransferDashboard() {
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-white/70">Рейтинг:</span>
-                      <span className="text-white">{driver.rating} ⭐</span>
+                      <span className="text-white">{driver.rating} ★</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-white/70">Телефон:</span>
@@ -498,7 +498,7 @@ export default function TransferDashboard() {
                     <p className="text-white/70 text-sm">Всего маршрутов</p>
                     <p className="text-3xl font-bold text-white">{mockRoutes.length}</p>
                   </div>
-                  <div className="text-3xl">🗺️</div>
+                  <div className="text-3xl"> </div>
                 </div>
               </div>
               
@@ -508,7 +508,7 @@ export default function TransferDashboard() {
                     <p className="text-white/70 text-sm">Активных бронирований</p>
                     <p className="text-3xl font-bold text-white">{mockBookings.length}</p>
                   </div>
-                  <div className="text-3xl">🎫</div>
+                  <div className="text-3xl"> </div>
                 </div>
               </div>
               
@@ -518,7 +518,7 @@ export default function TransferDashboard() {
                     <p className="text-white/70 text-sm">Доход за месяц</p>
                     <p className="text-3xl font-bold text-white">54000₽</p>
                   </div>
-                  <div className="text-3xl">💰</div>
+                  <div className="text-3xl"> </div>
                 </div>
               </div>
               
@@ -528,7 +528,7 @@ export default function TransferDashboard() {
                     <p className="text-white/70 text-sm">Загрузка транспорта</p>
                     <p className="text-3xl font-bold text-white">85%</p>
                   </div>
-                  <div className="text-3xl">📊</div>
+                  <div className="text-3xl"> </div>
                 </div>
               </div>
             </div>

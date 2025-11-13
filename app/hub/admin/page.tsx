@@ -100,7 +100,7 @@ export default function AdminDashboard() {
 
           {error && (
             <div className="bg-red-500/20 border border-red-500/50 rounded-2xl p-6 text-center">
-              <div className="text-4xl mb-2">⚠️</div>
+              <div className="text-4xl mb-2">!</div>
               <h3 className="text-lg font-bold text-red-400 mb-2">Ошибка загрузки</h3>
               <p className="text-white/70">{error}</p>
               <button
@@ -181,19 +181,19 @@ export default function AdminDashboard() {
                 <h3 className="text-lg font-bold text-white mb-4">Быстрые действия</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <button className="p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-center">
-                    <div className="text-3xl mb-2">👥</div>
+                    <div className="text-3xl mb-2"> </div>
                     <p className="text-sm font-semibold">Пользователи</p>
                   </button>
                   <button className="p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-center">
-                    <div className="text-3xl mb-2">🏔️</div>
+                    <div className="text-3xl mb-2"> </div>
                     <p className="text-sm font-semibold">Туры</p>
                   </button>
                   <button className="p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-center">
-                    <div className="text-3xl mb-2">💳</div>
+                    <div className="text-3xl mb-2"> </div>
                     <p className="text-sm font-semibold">Транзакции</p>
                   </button>
                   <button className="p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-center">
-                    <div className="text-3xl mb-2">⚙️</div>
+                    <div className="text-3xl mb-2">⚙</div>
                     <p className="text-sm font-semibold">Настройки</p>
                   </button>
                 </div>

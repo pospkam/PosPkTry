@@ -52,13 +52,13 @@ export default function TouristDashboard() {
   const getActivityIcon = (activity: string) => {
     const icons: { [key: string]: string } = {
       hiking: '🥾',
-      sightseeing: '👁️',
+      sightseeing: '○',
       wildlife: '🐻',
       fishing: '🎣',
       skiing: '🎿',
       diving: '🤿',
     };
-    return icons[activity] || '🏔️';
+    return icons[activity] || ' ';
   };
 
   const getDifficultyColor = (difficulty: string) => {
@@ -72,12 +72,12 @@ export default function TouristDashboard() {
 
   const getWeatherIcon = (condition: string) => {
     const icons: { [key: string]: string } = {
-      clear: '☀️',
+      clear: ' ',
       mostly_clear: '🌤️',
       partly_cloudy: '⛅',
       overcast: '☁️',
-      rain: '🌧️',
-      snow: '❄️',
+      rain: ' ',
+      snow: ' ',
       thunderstorm: '⛈️',
       fog: '🌫️',
     };
@@ -95,8 +95,8 @@ export default function TouristDashboard() {
   };
 
   const tabs = [
-    { id: 'tours', name: 'Туры', icon: '🏔️' },
-    { id: 'transfers', name: 'Трансферы', icon: '🚌' },
+    { id: 'tours', name: 'Туры', icon: ' ' },
+    { id: 'transfers', name: 'Трансферы', icon: ' ' },
     { id: 'weather', name: 'Погода', icon: '🌤️' },
     { id: 'ai', name: 'AI-помощник', icon: '🤖' },
     { id: 'favorites', name: 'Избранное', icon: '❤️' },
@@ -231,7 +231,7 @@ export default function TouristDashboard() {
                     <div className="flex items-start justify-between mb-3">
                       <h3 className="text-xl font-bold text-white">{tour.title}</h3>
                       <div className="flex items-center space-x-1">
-                        <span className="text-premium-gold">⭐</span>
+                        <span className="text-premium-gold">★</span>
                         <span className="text-white font-bold">{tour.rating}</span>
                         <span className="text-white/50">({tour.reviewsCount})</span>
                       </div>
@@ -250,7 +250,7 @@ export default function TouristDashboard() {
                           <span className="capitalize">{tour.difficulty}</span>
                         </span>
                         <span className="flex items-center space-x-1">
-                          <span>⏱️</span>
+                          <span> </span>
                           <span>{tour.duration}</span>
                         </span>
                       </div>
@@ -258,7 +258,7 @@ export default function TouristDashboard() {
                     
                     <div className="flex items-center justify-between">
                       <div className="text-sm text-white/70">
-                        <span>👥 {tour.minParticipants}-{tour.maxParticipants} чел.</span>
+                        <span>  {tour.minParticipants}-{tour.maxParticipants} чел.</span>
                       </div>
                       <button className="px-6 py-2 bg-premium-gold text-premium-black rounded-xl hover:bg-premium-gold/90 transition-colors font-bold">
                         Забронировать
@@ -307,7 +307,7 @@ export default function TouristDashboard() {
                 </div>
                 
                 <div className="text-center">
-                  <div className="text-2xl mb-2">👁️</div>
+                  <div className="text-2xl mb-2">○</div>
                   <div className="text-xl font-bold text-white">{weather.visibility} км</div>
                   <div className="text-white/70">Видимость</div>
                 </div>

@@ -27,9 +27,9 @@ export default function GuideDashboard() {
   };
 
   const tabs = [
-    { id: 'schedule', name: 'Расписание', icon: '📅' },
-    { id: 'groups', name: 'Группы', icon: '👥' },
-    { id: 'earnings', name: 'Доходы', icon: '💰' },
+    { id: 'schedule', name: 'Расписание', icon: ' ' },
+    { id: 'groups', name: 'Группы', icon: ' ' },
+    { id: 'earnings', name: 'Доходы', icon: ' ' },
     { id: 'weather', name: 'Погода', icon: '🌤️' },
     { id: 'profile', name: 'Профиль', icon: '👤' },
   ];
@@ -116,7 +116,7 @@ export default function GuideDashboard() {
             <div className="flex items-center space-x-4">
               <div className="text-right">
                 <div className="text-white text-sm">Рейтинг гида</div>
-                <div className="text-premium-gold text-lg font-bold">4.9 ⭐</div>
+                <div className="text-premium-gold text-lg font-bold">4.9 ★</div>
               </div>
               {weather && (
                 <div className="text-right">
@@ -255,7 +255,7 @@ export default function GuideDashboard() {
                       <div className="space-y-2">
                         {group.specialRequirements.map((req, index) => (
                           <div key={index} className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
-                            <p className="text-yellow-400 text-sm">⚠️ {req}</p>
+                            <p className="text-yellow-400 text-sm">! {req}</p>
                           </div>
                         ))}
                       </div>
@@ -265,7 +265,7 @@ export default function GuideDashboard() {
                   <div>
                     <h5 className="text-lg font-bold text-white mb-3">Экстренные контакты</h5>
                     <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-                      <p className="text-red-400 text-sm">🚨 {group.emergencyContact}</p>
+                      <p className="text-red-400 text-sm">  {group.emergencyContact}</p>
                     </div>
                   </div>
                 </div>
@@ -286,7 +286,7 @@ export default function GuideDashboard() {
                     <p className="text-white/70 text-sm">Этот месяц</p>
                     <p className="text-3xl font-bold text-white">{mockEarnings.thisMonth.toLocaleString()}₽</p>
                   </div>
-                  <div className="text-3xl">💰</div>
+                  <div className="text-3xl"> </div>
                 </div>
               </div>
               
@@ -296,7 +296,7 @@ export default function GuideDashboard() {
                     <p className="text-white/70 text-sm">Прошлый месяц</p>
                     <p className="text-3xl font-bold text-white">{mockEarnings.lastMonth.toLocaleString()}₽</p>
                   </div>
-                  <div className="text-3xl">📊</div>
+                  <div className="text-3xl"> </div>
                 </div>
               </div>
               
@@ -306,7 +306,7 @@ export default function GuideDashboard() {
                     <p className="text-white/70 text-sm">Этот год</p>
                     <p className="text-3xl font-bold text-white">{mockEarnings.thisYear.toLocaleString()}₽</p>
                   </div>
-                  <div className="text-3xl">📈</div>
+                  <div className="text-3xl"> </div>
                 </div>
               </div>
               
@@ -387,7 +387,7 @@ export default function GuideDashboard() {
                 </div>
                 
                 <div className="text-center">
-                  <div className="text-2xl mb-2">👁️</div>
+                  <div className="text-2xl mb-2">○</div>
                   <div className="text-xl font-bold text-white">{weather.visibility} км</div>
                   <div className="text-white/70">Видимость</div>
                 </div>

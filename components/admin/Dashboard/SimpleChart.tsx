@@ -41,7 +41,7 @@ export function SimpleChart({
         <h3 className="text-lg font-bold text-white mb-4">{title}</h3>
         <div className="h-64 flex items-center justify-center text-white/50">
           <div className="text-center">
-            <div className="text-4xl mb-2">📊</div>
+            <div className="text-4xl mb-2"></div>
             <p>Нет данных</p>
           </div>
         </div>

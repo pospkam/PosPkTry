@@ -67,28 +67,28 @@ export default function AgentDashboard() {
                   onClick={() => window.location.href = '/hub/agent/clients'}
                   className="p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-center"
                 >
-                  <div className="text-3xl mb-2">👥</div>
+                  <div className="text-3xl mb-2"> </div>
                   <p className="text-sm font-semibold">Добавить клиента</p>
                 </button>
                 <button
                   onClick={() => window.location.href = '/hub/agent/bookings'}
                   className="p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-center"
                 >
-                  <div className="text-3xl mb-2">📅</div>
+                  <div className="text-3xl mb-2"> </div>
                   <p className="text-sm font-semibold">Создать бронирование</p>
                 </button>
                 <button
                   onClick={() => window.location.href = '/hub/agent/vouchers'}
                   className="p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-center"
                 >
-                  <div className="text-3xl mb-2">🎫</div>
+                  <div className="text-3xl mb-2"> </div>
                   <p className="text-sm font-semibold">Создать ваучер</p>
                 </button>
                 <button
                   onClick={() => window.location.href = '/hub/agent/commissions'}
                   className="p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-center"
                 >
-                  <div className="text-3xl mb-2">💰</div>
+                  <div className="text-3xl mb-2"> </div>
                   <p className="text-sm font-semibold">Комиссионные</p>
                 </button>
               </div>

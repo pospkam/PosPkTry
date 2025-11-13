@@ -45,7 +45,7 @@ export default function DriversPage() {
       header: 'Рейтинг',
       render: (d: any) => (
         <div className="flex items-center gap-1">
-          <span>⭐</span>
+          <span>★</span>
           <span className="text-premium-gold">{d.rating?.toFixed(1)}</span>
         </div>
       )

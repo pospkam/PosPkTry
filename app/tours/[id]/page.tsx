@@ -130,11 +130,11 @@ export default function TourDetailsPage() {
           </button>
           <h1 className="text-4xl font-black text-premium-gold mb-2">{tour.title}</h1>
           <div className="flex items-center gap-4 text-white/70">
-            <span>⭐ {tour.rating.toFixed(1)} ({tour.reviewsCount} отзывов)</span>
+            <span>★ {tour.rating.toFixed(1)} ({tour.reviewsCount} отзывов)</span>
             <span className={getDifficultyColor(tour.difficulty)}>
               • {getDifficultyText(tour.difficulty)}
             </span>
-            <span>• ⏱️ {tour.duration}</span>
+            <span>• {tour.duration}</span>
           </div>
         </div>
       </div>
@@ -240,7 +240,7 @@ export default function TourDetailsPage() {
                 {/* Требования безопасности */}
                 {tour.safetyRequirements && (
                   <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-6">
-                    <h2 className="text-2xl font-bold mb-4 text-red-400">⚠️ Требования безопасности</h2>
+                    <h2 className="text-2xl font-bold mb-4 text-red-400">Требования безопасности</h2>
                     <p className="text-white/80">{tour.safetyRequirements}</p>
                   </div>
                 )}
@@ -269,7 +269,7 @@ export default function TourDetailsPage() {
                             </div>
                             {review.isVerified && (
                               <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">
-                                ✓ Проверен
+                                [✓] Проверен
                               </span>
                             )}
                           </div>
@@ -335,7 +335,7 @@ export default function TourDetailsPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-white/70">Рейтинг</span>
                   <span className="text-yellow-400 font-semibold">
-                    ⭐ {tour.rating.toFixed(1)}
+                    ★ {tour.rating.toFixed(1)}
                   </span>
                 </div>
               </div>
@@ -348,20 +348,20 @@ export default function TourDetailsPage() {
                 <div className="space-y-2">
                   <p className="text-white font-semibold">{tour.operator.name}</p>
                   <p className="text-white/70 text-sm">
-                    ⭐ Рейтинг: {tour.operator.rating.toFixed(1)}
+                    ★ Рейтинг: {tour.operator.rating.toFixed(1)}
                   </p>
                   <div className="pt-4 space-y-2">
                     <a
                       href={`tel:${tour.operator.phone}`}
                       className="block text-premium-gold hover:underline text-sm"
                     >
-                      📞 {tour.operator.phone}
+                      {tour.operator.phone}
                     </a>
                     <a
                       href={`mailto:${tour.operator.email}`}
                       className="block text-premium-gold hover:underline text-sm"
                     >
-                      ✉️ {tour.operator.email}
+                      {tour.operator.email}
                     </a>
                   </div>
                 </div>

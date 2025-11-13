@@ -27,7 +27,7 @@ export default function CarRentalPage() {
       <div className="bg-white/5 border-b border-white/10">
         <div className="max-w-7xl mx-auto px-6 py-8">
           <h1 className="text-4xl font-black text-premium-gold mb-2">
-            🚗 Прокат автомобилей
+              Прокат автомобилей
           </h1>
           <p className="text-white/70">
             Аренда автомобилей для путешествий по Камчатке
@@ -38,12 +38,12 @@ export default function CarRentalPage() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         {loading ? (
           <div className="text-center py-20">
-            <div className="text-4xl mb-4">⏳</div>
+            <div className="text-4xl mb-4"> </div>
             <p className="text-white/70">Загрузка автомобилей...</p>
           </div>
         ) : cars.length === 0 ? (
           <div className="text-center py-20">
-            <div className="text-4xl mb-4">🚗</div>
+            <div className="text-4xl mb-4"> </div>
             <p className="text-white/70 mb-4">Автомобили скоро появятся</p>
           </div>
         ) : (
@@ -54,7 +54,7 @@ export default function CarRentalPage() {
                 className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:bg-white/10 transition-colors"
               >
                 <div className="aspect-video bg-white/5 flex items-center justify-center">
-                  <div className="text-6xl">🚗</div>
+                  <div className="text-6xl"> </div>
                 </div>
                 
                 <div className="p-4">

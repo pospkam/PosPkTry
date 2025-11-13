@@ -233,10 +233,10 @@ export function TransferBookingForm({
         {departureDate && (
           <div className="mt-4 p-4 bg-green-500/10 border border-green-500/30 rounded-xl">
             <p className="text-green-400">
-              ✓ Дата: {departureDate.toLocaleDateString('ru-RU')}
+              [] Дата: {departureDate.toLocaleDateString('ru-RU')}
             </p>
             <p className="text-green-400">
-              ✓ Время: {departureTime}
+              [] Время: {departureTime}
             </p>
             {availableSeats > 0 && (
               <p className="text-white/70 text-sm mt-2">
@@ -347,7 +347,7 @@ export function TransferBookingForm({
         >
           {submitting ? (
             <span className="flex items-center justify-center">
-              <span className="animate-spin mr-2">⏳</span>
+              <span className="animate-spin mr-2"> </span>
               Оформление...
             </span>
           ) : (

@@ -192,11 +192,11 @@ export function PremiumSearchBar({ onSearch, placeholder = 'Что ищете?' 
     if (query.length > 1) {
       // Simulate API call with mock data
       const mockSuggestions: SearchSuggestion[] = [
-        { id: '1', type: 'suggestion', text: 'Авачинский вулкан', icon: 'mountain', meta: '⭐ 4.9 · 8500₽ · 30 км' },
-        { id: '2', type: 'suggestion', text: 'Долина гейзеров', icon: 'helicopter', meta: '⭐ 5.0 · 35000₽ · 200 км' },
-        { id: '3', type: 'suggestion', text: 'Курильское озеро медведи', icon: 'paw', meta: '⭐ 4.8 · 45000₽ · 150 км' },
-        { id: '4', type: 'location', text: 'Термальные источники', icon: 'droplet', meta: '⭐ 4.7 · 5000₽ · 12 км' },
-        { id: '5', type: 'suggestion', text: 'Рыбалка на реке', icon: 'fish', meta: '⭐ 4.6 · 12000₽ · 50 км' },
+        { id: '1', type: 'suggestion', text: 'Авачинский вулкан', icon: 'mountain', meta: '★ 4.9 · 8500₽ · 30 км' },
+        { id: '2', type: 'suggestion', text: 'Долина гейзеров', icon: 'helicopter', meta: '★ 5.0 · 35000₽ · 200 км' },
+        { id: '3', type: 'suggestion', text: 'Курильское озеро медведи', icon: 'paw', meta: '★ 4.8 · 45000₽ · 150 км' },
+        { id: '4', type: 'location', text: 'Термальные источники', icon: 'droplet', meta: '★ 4.7 · 5000₽ · 12 км' },
+        { id: '5', type: 'suggestion', text: 'Рыбалка на реке', icon: 'fish', meta: '★ 4.6 · 12000₽ · 50 км' },
       ];
       
       setSuggestions(mockSuggestions.filter(s => 

@@ -36,10 +36,10 @@ const colors = {
 };
 
 const log = {
-  success: (msg) => console.log(`${colors.green}✅ ${msg}${colors.reset}`),
-  error: (msg) => console.log(`${colors.red}❌ ${msg}${colors.reset}`),
-  warning: (msg) => console.log(`${colors.yellow}⚠️  ${msg}${colors.reset}`),
-  info: (msg) => console.log(`${colors.blue}ℹ️  ${msg}${colors.reset}`),
+  success: (msg) => console.log(`${colors.green}[OK] ${msg}${colors.reset}`),
+  error: (msg) => console.log(`${colors.red}[X] ${msg}${colors.reset}`),
+  warning: (msg) => console.log(`${colors.yellow}!  ${msg}${colors.reset}`),
+  info: (msg) => console.log(`${colors.blue}i  ${msg}${colors.reset}`),
   step: (msg) => console.log(`${colors.cyan}▶️  ${msg}${colors.reset}`),
 };
 
@@ -122,7 +122,7 @@ async function downloadSSLCert(url, outputPath) {
 async function main() {
   console.log('═══════════════════════════════════════════════════════');
   console.log('🌐 ТЕСТИРОВАНИЕ ПОДКЛЮЧЕНИЯ К POSTGRESQL');
-  console.log('🚀 ЧЕРЕЗ ПУБЛИЧНЫЙ IP TIMEWEB CLOUD');
+  console.log(' ЧЕРЕЗ ПУБЛИЧНЫЙ IP TIMEWEB CLOUD');
   console.log('═══════════════════════════════════════════════════════');
   console.log('');
 
@@ -174,7 +174,7 @@ async function main() {
           console.log('');
 
           if (result3.success) {
-            log.success('✅ ПОДКЛЮЧЕНИЕ С СЕРТИФИКАТОМ УСПЕШНО!');
+            log.success('[OK] ПОДКЛЮЧЕНИЕ С СЕРТИФИКАТОМ УСПЕШНО!');
             return;
           }
         }
@@ -185,7 +185,7 @@ async function main() {
 
       // Финальный отчет
       console.log('═══════════════════════════════════════════════════════');
-      log.error('❌ ВСЕ МЕТОДЫ ПОДКЛЮЧЕНИЯ ПРОВАЛИЛИСЬ');
+      log.error('[X] ВСЕ МЕТОДЫ ПОДКЛЮЧЕНИЯ ПРОВАЛИЛИСЬ');
       console.log('═══════════════════════════════════════════════════════');
       console.log('');
 
@@ -199,25 +199,25 @@ async function main() {
       console.log('🛠️  РЕШЕНИЯ:');
 
       console.log('');
-      console.log('1. 📊 ПРОВЕРЬТЕ СТАТУС СЕРВЕРА:');
+      console.log('1.  ПРОВЕРЬТЕ СТАТУС СЕРВЕРА:');
       console.log('   • Зайдите в панель Timeweb Cloud');
       console.log('   • Проверьте статус PostgreSQL сервера');
       console.log('   • Перезапустите сервис если он остановлен');
 
       console.log('');
-      console.log('2. 🔒 ПРОВЕРЬТЕ FIREWALL:');
+      console.log('2.  ПРОВЕРЬТЕ FIREWALL:');
       console.log('   • Убедитесь что порт 5432 открыт');
       console.log('   • Проверьте белый список IP адресов');
       console.log('   • Возможно нужно добавить ваш IP в исключения');
 
       console.log('');
-      console.log('3. 🔐 ПРОВЕРЬТЕ УЧЕТНЫЕ ДАННЫЕ:');
+      console.log('3.  ПРОВЕРЬТЕ УЧЕТНЫЕ ДАННЫЕ:');
       console.log('   • Проверьте пароль в панели Timeweb');
       console.log('   • Убедитесь что пользователь gen_user активен');
       console.log('   • Проверьте права доступа пользователя');
 
       console.log('');
-      console.log('4. 📞 ОБРАТИТЕСЬ В ПОДДЕРЖКУ:');
+      console.log('4.  ОБРАТИТЕСЬ В ПОДДЕРЖКУ:');
       console.log('   • Свяжитесь с Timeweb Cloud support');
       console.log('   • Предоставьте коды ошибок и логи');
       console.log('   • Запросите помощь с настройкой PostgreSQL');
@@ -225,24 +225,24 @@ async function main() {
       process.exit(1);
 
     } else {
-      log.success('✅ ПОДКЛЮЧЕНИЕ УСТАНОВЛЕНО ЧЕРЕЗ CONNECTION STRING!');
+      log.success('[OK] ПОДКЛЮЧЕНИЕ УСТАНОВЛЕНО ЧЕРЕЗ CONNECTION STRING!');
       console.log('Используйте эту конфигурацию для приложения.');
     }
 
   } else {
-    log.success('✅ ПОДКЛЮЧЕНИЕ УСТАНОВЛЕНО!');
+    log.success('[OK] ПОДКЛЮЧЕНИЕ УСТАНОВЛЕНО!');
     console.log('Прямая конфигурация работает корректно.');
   }
 
   // Успешное завершение
   console.log('');
   console.log('═══════════════════════════════════════════════════════');
-  log.success('🎉 POSTGRESQL ГОТОВ К РАБОТЕ!');
+  log.success(' POSTGRESQL ГОТОВ К РАБОТЕ!');
   console.log('═══════════════════════════════════════════════════════');
   console.log('');
-  console.log('🚀 ГОТОВ К ДЕПЛОЮ НА TIMEWEB CLOUD!');
+  console.log(' ГОТОВ К ДЕПЛОЮ НА TIMEWEB CLOUD!');
   console.log('');
-  console.log('📋 КОНФИГУРАЦИЯ ДЛЯ ПРИЛОЖЕНИЯ:');
+  console.log(' КОНФИГУРАЦИЯ ДЛЯ ПРИЛОЖЕНИЯ:');
   console.log('DATABASE_URL=postgresql://gen_user:q;3U+PY7XCz@Br@45.8.96.120:5432/default_db');
   console.log('DATABASE_SSL=true (или rejectUnauthorized: false для тестирования)');
 }
