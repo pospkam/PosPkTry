@@ -174,14 +174,21 @@ export default function SamsungWeatherDynamic() {
       {renderWind()}
       {renderThunder()}
 
-      {/* Информация о погоде (для отладки - можно удалить) */}
+      {/* ВИДЖЕТ ПОГОДЫ - ВИДИМЫЙ */}
       {weather && (
         <div
-          className="fixed bottom-4 right-4 bg-white/10 backdrop-blur-lg px-4 py-2 rounded-xl text-white text-sm z-50"
+          className="fixed top-24 right-6 bg-white/20 backdrop-blur-xl px-6 py-4 rounded-2xl text-white z-50 border border-white/30 shadow-2xl"
         >
-          <div>{weather.condition}</div>
-          <div>{weather.temperature}°C</div>
-          <div>Ветер: {weather.windSpeed} м/с</div>
+          <div className="text-center space-y-2">
+            <div className="text-5xl font-bold">{weather.temperature}°C</div>
+            <div className="text-lg">{weather.condition}</div>
+            <div className="text-sm opacity-80">Ощущается: {weather.feelsLike}°C</div>
+            <div className="flex items-center justify-center gap-4 text-sm pt-2 border-t border-white/20">
+              <div>💨 {weather.windSpeed} м/с</div>
+              <div>💧 {weather.humidity}%</div>
+            </div>
+            <div className="text-xs opacity-60 pt-1">Петропавловск-Камчатский</div>
+          </div>
         </div>
       )}
     </>

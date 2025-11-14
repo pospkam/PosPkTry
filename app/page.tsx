@@ -49,25 +49,7 @@ export default function Home() {
       {/* SAMSUNG WEATHER - Динамический фон с анимациями */}
       <SamsungWeatherDynamic />
 
-      {/* Header */}
-      <header className="weather-header fixed top-0 left-0 right-0 z-50 px-4 py-4">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
-              <span className="text-2xl font-bold text-white">K</span>
-            </div>
-            <span className="text-xl font-bold text-white">KamHub</span>
-          </Link>
-          <Link 
-            href="/auth/login" 
-            className="weather-btn"
-          >
-            Войти
-          </Link>
-        </div>
-      </header>
-
-      <main className="relative min-h-screen pt-24 pb-20">
+      <main className="relative min-h-screen pt-12 pb-20">
         {/* Hero Section */}
         <section className="max-w-7xl mx-auto px-4 py-20 text-center fade-in">
           <h1 className="weather-title">
