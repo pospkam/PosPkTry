@@ -55,3 +55,17 @@ export function extractToken(authHeader: string | null): string | null {
   }
   return authHeader.substring(7);
 }
+
+/**
+ * Get user from NextRequest
+ */
+export async function getUserFromRequest(request: any): Promise<JWTPayload | null> {
+  const authHeader = request.headers.get('authorization');
+  const token = extractToken(authHeader);
+  
+  if (!token) {
+    return null;
+  }
+  
+  return await verifyToken(token);
+}
