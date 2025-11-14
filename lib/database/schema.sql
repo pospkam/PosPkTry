@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS tours (
     name VARCHAR(255) NOT NULL,
     description TEXT NOT NULL,
     short_description TEXT,
+    category VARCHAR(50) DEFAULT 'adventure',
     difficulty VARCHAR(20) NOT NULL CHECK (difficulty IN ('easy', 'medium', 'hard')),
     duration INTEGER NOT NULL, -- в часах
     price DECIMAL(10,2) NOT NULL,

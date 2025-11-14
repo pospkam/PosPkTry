@@ -42,12 +42,13 @@ export async function GET(request: NextRequest) {
 
     // Build query
     let queryStr = `
-      SELECT 
-        t.id,
-        t.name,
-        t.description,
-        t.short_description,
-        t.difficulty,
+        SELECT 
+          t.id,
+          t.name,
+          t.description,
+          t.short_description,
+          t.category,
+          t.difficulty,
         t.duration,
         t.price,
         t.currency,
@@ -127,11 +128,12 @@ export async function GET(request: NextRequest) {
     const countResult = await query(countQuery, countParams);
     const totalCount = parseInt(countResult.rows[0].count);
 
-    const tours = result.rows.map(row => ({
+      const tours = result.rows.map(row => ({
       id: row.id,
       name: row.name,
       description: row.description,
       shortDescription: row.short_description,
+        category: row.category || 'adventure',
       difficulty: row.difficulty,
       duration: row.duration,
       price: parseFloat(row.price),
