@@ -6,8 +6,8 @@ import { getTransferPartnerId } from '@/lib/auth/transfer-helpers';
 export const dynamic = 'force-dynamic';
 
 /**
- * GET /api/transfer/vehicles
- * Get transfer operator's vehicles
+ * GET /api/transfer/drivers
+ * Get transfer operator's drivers
  */
 export async function GET(request: NextRequest) {
   try {
@@ -32,112 +32,81 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status') || 'all';
-    const type = searchParams.get('type') || 'all';
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = (page - 1) * limit;
 
     let queryStr = `
       SELECT 
-        v.*,
+        d.*,
+        v.name as vehicle_name,
+        v.license_plate as vehicle_plate,
         COUNT(DISTINCT t.id) FILTER (WHERE t.status = 'completed') as completed_trips,
         COUNT(DISTINCT t.id) FILTER (WHERE t.status IN ('pending', 'assigned', 'confirmed', 'in_progress')) as active_trips
-      FROM vehicles v
-      LEFT JOIN transfers t ON v.id = t.vehicle_id
-      WHERE v.operator_id = $1
+      FROM drivers d
+      LEFT JOIN vehicles v ON d.vehicle_id = v.id
+      LEFT JOIN transfers t ON d.id = t.driver_id
+      WHERE d.operator_id = $1
     `;
 
     const params: any[] = [operatorId];
     let paramIndex = 2;
 
     if (status !== 'all') {
-      queryStr += ` AND v.status = $${paramIndex}`;
+      queryStr += ` AND d.status = $${paramIndex}`;
       params.push(status);
       paramIndex++;
     }
 
-    if (type !== 'all') {
-      queryStr += ` AND v.type = $${paramIndex}`;
-      params.push(type);
-      paramIndex++;
-    }
-
     queryStr += `
-      GROUP BY v.id
-      ORDER BY v.created_at DESC
+      GROUP BY d.id, v.name, v.license_plate
+      ORDER BY d.created_at DESC
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
     params.push(limit, offset);
 
     const result = await query(queryStr, params);
 
-    // Get total count
-    let countQuery = `SELECT COUNT(*) FROM vehicles WHERE operator_id = $1`;
-    const countParams: any[] = [operatorId];
-    let countIndex = 2;
-
-    if (status !== 'all') {
-      countQuery += ` AND status = $${countIndex}`;
-      countParams.push(status);
-      countIndex++;
-    }
-
-    if (type !== 'all') {
-      countQuery += ` AND type = $${countIndex}`;
-      countParams.push(type);
-    }
-
-    const countResult = await query(countQuery, countParams);
-    const totalCount = parseInt(countResult.rows[0].count);
-
-    const vehicles = result.rows.map(row => ({
+    const drivers = result.rows.map(row => ({
       id: row.id,
-      name: row.name,
-      type: row.type,
-      licensePlate: row.license_plate,
-      capacity: row.capacity,
-      category: row.category,
-      status: row.status,
-      location: row.location,
-      features: row.features,
-      images: row.images,
-      year: row.year,
-      color: row.color,
-      mileage: row.mileage,
-      fuelType: row.fuel_type,
-      lastServiceDate: row.last_service_date,
-      nextServiceDate: row.next_service_date,
+      firstName: row.first_name,
+      lastName: row.last_name,
+      phone: row.phone,
+      email: row.email,
+      licenseNumber: row.license_number,
+      licenseExpiry: row.license_expiry,
+      experience: row.experience,
+      languages: row.languages,
+      rating: parseFloat(row.rating),
+      totalTrips: row.total_trips,
       completedTrips: parseInt(row.completed_trips || 0),
       activeTrips: parseInt(row.active_trips || 0),
+      status: row.status,
+      vehicleId: row.vehicle_id,
+      vehicleName: row.vehicle_name,
+      vehiclePlate: row.vehicle_plate,
+      hireDate: row.hire_date,
       createdAt: row.created_at,
       updatedAt: row.updated_at
     }));
 
     return NextResponse.json({
       success: true,
-      data: {
-        vehicles,
-        pagination: {
-          page,
-          limit,
-          totalCount,
-          totalPages: Math.ceil(totalCount / limit)
-        }
-      }
+      data: { drivers }
     } as ApiResponse<any>);
 
   } catch (error) {
-    console.error('Get vehicles error:', error);
+    console.error('Get drivers error:', error);
     return NextResponse.json({
       success: false,
-      error: 'Ошибка при получении транспорта'
+      error: 'Ошибка при получении водителей'
     } as ApiResponse<null>, { status: 500 });
   }
 }
 
 /**
- * POST /api/transfer/vehicles
- * Create new vehicle
+ * POST /api/transfer/drivers
+ * Create new driver
  */
 export async function POST(request: NextRequest) {
   try {
@@ -162,74 +131,59 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const {
-      name,
-      type,
-      licensePlate,
-      capacity,
-      category,
-      location,
-      features,
-      year,
-      color,
-      fuelType,
-      vin
+      firstName,
+      lastName,
+      phone,
+      email,
+      licenseNumber,
+      licenseExpiry,
+      experience,
+      languages,
+      vehicleId,
+      emergencyContact
     } = body;
 
     // Validation
-    if (!name || !type || !licensePlate || !capacity) {
+    if (!firstName || !lastName || !phone || !licenseNumber || !licenseExpiry) {
       return NextResponse.json({
         success: false,
-        error: 'Заполните обязательные поля: название, тип, госномер, вместимость'
+        error: 'Заполните обязательные поля'
       } as ApiResponse<null>, { status: 400 });
     }
 
-    // Check unique license plate
-    const existingResult = await query(
-      'SELECT id FROM vehicles WHERE license_plate = $1',
-      [licensePlate]
-    );
-
-    if (existingResult.rows.length > 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'Транспорт с таким госномером уже существует'
-      } as ApiResponse<null>, { status: 400 });
-    }
-
-    // Create vehicle
     const result = await query(
-      `INSERT INTO vehicles (
-        operator_id, name, type, license_plate, capacity, category,
-        location, features, year, color, fuel_type, vin, status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'active')
+      `INSERT INTO drivers (
+        operator_id, first_name, last_name, phone, email,
+        license_number, license_expiry, experience, languages,
+        vehicle_id, emergency_contact, status
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'active')
       RETURNING *`,
       [
         operatorId,
-        name,
-        type,
-        licensePlate,
-        capacity,
-        category || 'economy',
-        location || 'Петропавловск-Камчатский',
-        JSON.stringify(features || []),
-        year,
-        color,
-        fuelType,
-        vin
+        firstName,
+        lastName,
+        phone,
+        email,
+        licenseNumber,
+        licenseExpiry,
+        experience || 0,
+        JSON.stringify(languages || []),
+        vehicleId,
+        JSON.stringify(emergencyContact || {})
       ]
     );
 
     return NextResponse.json({
       success: true,
       data: result.rows[0],
-      message: 'Транспорт успешно добавлен'
+      message: 'Водитель успешно добавлен'
     } as ApiResponse<any>);
 
   } catch (error) {
-    console.error('Create vehicle error:', error);
+    console.error('Create driver error:', error);
     return NextResponse.json({
       success: false,
-      error: 'Ошибка при создании транспорта'
+      error: 'Ошибка при создании водителя'
     } as ApiResponse<null>, { status: 500 });
   }
 }
