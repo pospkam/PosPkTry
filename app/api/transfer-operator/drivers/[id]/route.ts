@@ -1,1 +1,1 @@
-export { dynamic, GET, PUT, DELETE } from '../../../../transfer/drivers/[id]/route';
+export { dynamic, GET, PUT, DELETE } from '@/app/api/transfer/drivers/[id]/route';

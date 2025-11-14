@@ -1,1 +1,1 @@
-export { GET, POST } from '../../../../../transfer/drivers/[id]/documents/route';
+export { GET, POST } from '@/app/api/transfer/drivers/[id]/documents/route';
