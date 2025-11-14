@@ -898,3 +898,123 @@ CREATE TRIGGER update_driver_schedules_updated_at
 CREATE TRIGGER update_transfer_reviews_updated_at 
   BEFORE UPDATE ON transfer_reviews
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================
+-- GUIDE SYSTEM TABLES
+-- Added: 2025-11-10
+-- ============================================
+
+-- Note: Guide-specific fields added to partners table via migration 010:
+-- experience_years, languages, specializations, bio, location, 
+-- total_earnings, is_available
+
+-- Guide schedule with conflict detection
+CREATE TABLE IF NOT EXISTS guide_schedule (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  guide_id UUID NOT NULL REFERENCES partners(id) ON DELETE CASCADE,
+  start_time TIMESTAMPTZ NOT NULL,
+  end_time TIMESTAMPTZ NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT,
+  tour_id UUID REFERENCES tours(id) ON DELETE SET NULL,
+  booking_id UUID REFERENCES bookings(id) ON DELETE SET NULL,
+  max_participants INTEGER DEFAULT 10 CHECK (max_participants > 0),
+  current_participants INTEGER DEFAULT 0 CHECK (current_participants >= 0),
+  location GEOGRAPHY(POINT),
+  location_name TEXT,
+  status VARCHAR(20) DEFAULT 'scheduled' CHECK (status IN ('scheduled', 'in_progress', 'completed', 'cancelled')),
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT no_overlap EXCLUDE USING GIST (
+    guide_id WITH =,
+    tstzrange(start_time, end_time) WITH &&
+  ) WHERE (status != 'cancelled')
+);
+
+-- Guide reviews and ratings
+CREATE TABLE IF NOT EXISTS guide_reviews (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  guide_id UUID NOT NULL REFERENCES partners(id) ON DELETE CASCADE,
+  tourist_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  booking_id UUID REFERENCES bookings(id) ON DELETE SET NULL,
+  rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  professionalism_rating INTEGER CHECK (professionalism_rating BETWEEN 1 AND 5),
+  knowledge_rating INTEGER CHECK (knowledge_rating BETWEEN 1 AND 5),
+  communication_rating INTEGER CHECK (communication_rating BETWEEN 1 AND 5),
+  comment TEXT,
+  guide_reply TEXT,
+  guide_reply_at TIMESTAMPTZ,
+  is_verified BOOLEAN DEFAULT FALSE,
+  is_public BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(booking_id, tourist_id)
+);
+
+-- Guide certifications and licenses
+CREATE TABLE IF NOT EXISTS guide_certifications (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  guide_id UUID NOT NULL REFERENCES partners(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  issuing_authority TEXT NOT NULL,
+  issue_date DATE,
+  expiry_date DATE,
+  certificate_number TEXT,
+  document_url TEXT,
+  is_verified BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Guide weekly availability patterns
+CREATE TABLE IF NOT EXISTS guide_availability (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  guide_id UUID NOT NULL REFERENCES partners(id) ON DELETE CASCADE,
+  day_of_week INTEGER NOT NULL CHECK (day_of_week BETWEEN 0 AND 6),
+  start_time TIME NOT NULL,
+  end_time TIME NOT NULL,
+  is_available BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(guide_id, day_of_week, start_time)
+);
+
+-- Guide earnings tracking (10% commission)
+CREATE TABLE IF NOT EXISTS guide_earnings (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  guide_id UUID NOT NULL REFERENCES partners(id) ON DELETE CASCADE,
+  booking_id UUID REFERENCES bookings(id) ON DELETE SET NULL,
+  tour_id UUID REFERENCES tours(id) ON DELETE SET NULL,
+  amount DECIMAL(10,2) NOT NULL,
+  commission_rate DECIMAL(5,2) DEFAULT 10.0,
+  date DATE NOT NULL,
+  status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'cancelled')),
+  payment_method VARCHAR(50),
+  payment_reference TEXT,
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexes for guide tables
+CREATE INDEX IF NOT EXISTS idx_guide_schedule_guide_id ON guide_schedule(guide_id);
+CREATE INDEX IF NOT EXISTS idx_guide_schedule_start_time ON guide_schedule(start_time);
+CREATE INDEX IF NOT EXISTS idx_guide_schedule_status ON guide_schedule(status);
+CREATE INDEX IF NOT EXISTS idx_guide_reviews_guide_id ON guide_reviews(guide_id);
+CREATE INDEX IF NOT EXISTS idx_guide_reviews_rating ON guide_reviews(rating);
+CREATE INDEX IF NOT EXISTS idx_guide_certifications_guide_id ON guide_certifications(guide_id);
+CREATE INDEX IF NOT EXISTS idx_guide_availability_guide_id ON guide_availability(guide_id);
+CREATE INDEX IF NOT EXISTS idx_guide_earnings_guide_id ON guide_earnings(guide_id);
+CREATE INDEX IF NOT EXISTS idx_guide_earnings_status ON guide_earnings(status);
+
+-- Triggers for guide tables
+CREATE TRIGGER update_guide_schedule_updated_at
+  BEFORE UPDATE ON guide_schedule
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_guide_reviews_updated_at
+  BEFORE UPDATE ON guide_reviews
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_guide_certifications_updated_at
+  BEFORE UPDATE ON guide_certifications
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

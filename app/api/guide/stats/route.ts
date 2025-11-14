@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
+import { getGuidePartnerId, getGuideStats } from '@/lib/auth/guide-helpers';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/guide/stats
- * Get guide statistics
+ * Get comprehensive guide statistics and analytics
  */
 export async function GET(request: NextRequest) {
   try {
@@ -20,96 +21,153 @@ export async function GET(request: NextRequest) {
       } as ApiResponse<null>, { status: 403 });
     }
 
-    // Get schedule stats
-    const scheduleStats = await query(
+    const guideId = await getGuidePartnerId(userId);
+    
+    if (!guideId) {
+      return NextResponse.json({
+        success: false,
+        error: 'Профиль гида не найден'
+      } as ApiResponse<null>, { status: 404 });
+    }
+
+    // Get basic stats
+    const stats = await getGuideStats(userId);
+
+    // Get daily schedule load (next 30 days)
+    const scheduleLoadResult = await query(
       `SELECT 
-        COUNT(*) as total,
-        SUM(CASE WHEN status = 'scheduled' THEN 1 ELSE 0 END) as scheduled,
-        SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) as in_progress,
-        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
-        SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled
+        DATE(start_time) as date,
+        COUNT(*) as events_count,
+        SUM(max_participants) as total_capacity,
+        SUM(current_participants) as total_participants
       FROM guide_schedule
-      WHERE guide_id = $1`,
-      [userId]
+      WHERE guide_id = $1 
+        AND start_time >= CURRENT_DATE
+        AND start_time < CURRENT_DATE + INTERVAL '30 days'
+        AND status != 'cancelled'
+      GROUP BY DATE(start_time)
+      ORDER BY date ASC`,
+      [guideId]
     );
 
-    // Get upcoming tours
-    const upcomingTours = await query(
+    const scheduleLoad = scheduleLoadResult.rows.map(row => ({
+      date: row.date,
+      eventsCount: parseInt(row.events_count),
+      totalCapacity: parseInt(row.total_capacity),
+      totalParticipants: parseInt(row.total_participants),
+      loadPercentage: Math.round((parseInt(row.total_participants) / parseInt(row.total_capacity)) * 100)
+    }));
+
+    // Popular times analysis
+    const popularTimesResult = await query(
       `SELECT 
-        gs.*,
-        t.name as tour_name,
-        t.difficulty as tour_difficulty
-      FROM guide_schedule gs
-      JOIN tours t ON gs.tour_id = t.id
-      WHERE gs.guide_id = $1 
-        AND gs.tour_date >= CURRENT_DATE
-        AND gs.status NOT IN ('cancelled', 'completed')
-      ORDER BY gs.tour_date ASC, gs.start_time ASC
-      LIMIT 5`,
-      [userId]
+        EXTRACT(DOW FROM start_time) as day_of_week,
+        EXTRACT(HOUR FROM start_time) as hour,
+        COUNT(*) as count
+      FROM guide_schedule
+      WHERE guide_id = $1 
+        AND status = 'completed'
+        AND start_time >= CURRENT_DATE - INTERVAL '90 days'
+      GROUP BY EXTRACT(DOW FROM start_time), EXTRACT(HOUR FROM start_time)
+      ORDER BY count DESC
+      LIMIT 10`,
+      [guideId]
     );
 
-    // Get groups stats
-    const groupsStats = await query(
-      `SELECT 
-        COUNT(*) as total_groups,
-        SUM(CASE WHEN gg.status = 'forming' THEN 1 ELSE 0 END) as forming,
-        SUM(CASE WHEN gg.status = 'ready' THEN 1 ELSE 0 END) as ready,
-        SUM(CASE WHEN gg.status = 'departed' THEN 1 ELSE 0 END) as departed,
-        SUM(CASE WHEN gg.status = 'returned' THEN 1 ELSE 0 END) as returned
-      FROM guide_groups gg
-      JOIN guide_schedule gs ON gg.schedule_id = gs.id
-      WHERE gs.guide_id = $1`,
-      [userId]
-    );
+    const popularTimes = popularTimesResult.rows.map(row => ({
+      dayOfWeek: parseInt(row.day_of_week),
+      hour: parseInt(row.hour),
+      count: parseInt(row.count)
+    }));
 
-    // Get earnings summary
-    const earningsStats = await query(
+    // Earnings breakdown
+    const earningsBreakdownResult = await query(
       `SELECT 
-        COALESCE(SUM(amount), 0) as total_earned,
-        COALESCE(SUM(CASE WHEN payment_status = 'paid' THEN amount ELSE 0 END), 0) as total_paid,
-        COALESCE(SUM(CASE WHEN payment_status = 'pending' THEN amount ELSE 0 END), 0) as total_pending
+        DATE_TRUNC('week', date) as week,
+        COUNT(*) as bookings_count,
+        SUM(amount) as total_amount,
+        AVG(amount) as avg_amount,
+        SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END) as paid_amount,
+        SUM(CASE WHEN status = 'pending' THEN amount ELSE 0 END) as pending_amount
       FROM guide_earnings
-      WHERE guide_id = $1`,
-      [userId]
+      WHERE guide_id = $1 
+        AND date >= CURRENT_DATE - INTERVAL '12 weeks'
+      GROUP BY DATE_TRUNC('week', date)
+      ORDER BY week DESC`,
+      [guideId]
     );
 
-    const stats = {
-      schedule: {
-        total: parseInt(scheduleStats.rows[0].total),
-        scheduled: parseInt(scheduleStats.rows[0].scheduled),
-        inProgress: parseInt(scheduleStats.rows[0].in_progress),
-        completed: parseInt(scheduleStats.rows[0].completed),
-        cancelled: parseInt(scheduleStats.rows[0].cancelled)
-      },
-      groups: {
-        total: parseInt(groupsStats.rows[0].total_groups),
-        forming: parseInt(groupsStats.rows[0].forming),
-        ready: parseInt(groupsStats.rows[0].ready),
-        departed: parseInt(groupsStats.rows[0].departed),
-        returned: parseInt(groupsStats.rows[0].returned)
-      },
-      earnings: {
-        totalEarned: parseFloat(earningsStats.rows[0].total_earned),
-        totalPaid: parseFloat(earningsStats.rows[0].total_paid),
-        totalPending: parseFloat(earningsStats.rows[0].total_pending)
-      },
-      upcomingTours: upcomingTours.rows.map(row => ({
-        id: row.id,
-        tourDate: row.tour_date,
-        startTime: row.start_time,
-        endTime: row.end_time,
-        tourName: row.tour_name,
-        tourDifficulty: row.tour_difficulty,
-        participantsCount: row.participants_count,
-        maxParticipants: row.max_participants,
-        status: row.status
-      }))
-    };
+    const earningsBreakdown = earningsBreakdownResult.rows.map(row => ({
+      week: row.week,
+      bookingsCount: parseInt(row.bookings_count),
+      totalAmount: parseFloat(row.total_amount || 0),
+      avgAmount: parseFloat(row.avg_amount || 0),
+      paidAmount: parseFloat(row.paid_amount || 0),
+      pendingAmount: parseFloat(row.pending_amount || 0)
+    }));
+
+    // Client repeat rate
+    const repeatClientsResult = await query(
+      `SELECT 
+        COUNT(DISTINCT tourist_id) as total_clients,
+        COUNT(DISTINCT CASE WHEN booking_count > 1 THEN tourist_id END) as repeat_clients
+      FROM (
+        SELECT 
+          gr.tourist_id,
+          COUNT(*) as booking_count
+        FROM guide_reviews gr
+        WHERE gr.guide_id = $1
+          AND gr.tourist_id IS NOT NULL
+        GROUP BY gr.tourist_id
+      ) as client_bookings`,
+      [guideId]
+    );
+
+    const repeatStats = repeatClientsResult.rows[0];
+    const totalClients = parseInt(repeatStats.total_clients || 0);
+    const repeatClients = parseInt(repeatStats.repeat_clients || 0);
+    const repeatRate = totalClients > 0 ? Math.round((repeatClients / totalClients) * 100) : 0;
+
+    // Recent certifications
+    const certificationsResult = await query(
+      `SELECT 
+        id,
+        name,
+        issuing_authority,
+        issue_date,
+        expiry_date,
+        is_verified
+      FROM guide_certifications
+      WHERE guide_id = $1
+      ORDER BY issue_date DESC NULLS LAST
+      LIMIT 5`,
+      [guideId]
+    );
+
+    const certifications = certificationsResult.rows.map(row => ({
+      id: row.id,
+      name: row.name,
+      issuingAuthority: row.issuing_authority,
+      issueDate: row.issue_date,
+      expiryDate: row.expiry_date,
+      isVerified: row.is_verified,
+      isExpiringSoon: row.expiry_date && new Date(row.expiry_date) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+    }));
 
     return NextResponse.json({
       success: true,
-      data: stats
+      data: {
+        ...stats,
+        scheduleLoad,
+        popularTimes,
+        earningsBreakdown,
+        clientRetention: {
+          totalClients,
+          repeatClients,
+          repeatRate
+        },
+        certifications
+      }
     } as ApiResponse<any>);
 
   } catch (error) {

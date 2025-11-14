@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
+import { verifyScheduleOwnership, checkScheduleConflicts } from '@/lib/auth/guide-helpers';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * PATCH /api/guide/schedule/[id]
- * Update schedule entry (with owner check)
+ * GET /api/guide/schedule/[id]
+ * Get specific schedule entry
  */
-export async function PATCH(
+export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
@@ -23,43 +24,160 @@ export async function PATCH(
       } as ApiResponse<null>, { status: 403 });
     }
 
-    // Verify ownership
-    const checkResult = await query(
-      'SELECT id, status FROM guide_schedule WHERE id = $1 AND guide_id = $2',
-      [params.id, userId]
-    );
-
-    if (checkResult.rows.length === 0) {
+    const isOwner = await verifyScheduleOwnership(userId, params.id);
+    
+    if (!isOwner) {
       return NextResponse.json({
         success: false,
-        error: 'Расписание не найдено'
+        error: 'Запись расписания не найдена или у вас нет прав'
+      } as ApiResponse<null>, { status: 404 });
+    }
+
+    const result = await query(
+      `SELECT 
+        gs.*,
+        t.title as tour_title,
+        b.status as booking_status,
+        ST_X(gs.location::geometry) as longitude,
+        ST_Y(gs.location::geometry) as latitude
+      FROM guide_schedule gs
+      LEFT JOIN tours t ON gs.tour_id = t.id
+      LEFT JOIN bookings b ON gs.booking_id = b.id
+      WHERE gs.id = $1`,
+      [params.id]
+    );
+
+    if (result.rows.length === 0) {
+      return NextResponse.json({
+        success: false,
+        error: 'Запись расписания не найдена'
+      } as ApiResponse<null>, { status: 404 });
+    }
+
+    const row = result.rows[0];
+    
+    return NextResponse.json({
+      success: true,
+      data: {
+        id: row.id,
+        guideId: row.guide_id,
+        startTime: row.start_time,
+        endTime: row.end_time,
+        title: row.title,
+        description: row.description,
+        tourId: row.tour_id,
+        tourTitle: row.tour_title,
+        bookingId: row.booking_id,
+        bookingStatus: row.booking_status,
+        maxParticipants: row.max_participants,
+        currentParticipants: row.current_participants,
+        location: row.latitude && row.longitude ? {
+          lat: parseFloat(row.latitude),
+          lng: parseFloat(row.longitude)
+        } : null,
+        locationName: row.location_name,
+        status: row.status,
+        notes: row.notes,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+      }
+    } as ApiResponse<any>);
+
+  } catch (error) {
+    console.error('Get schedule entry error:', error);
+    return NextResponse.json({
+      success: false,
+      error: 'Ошибка при получении записи расписания'
+    } as ApiResponse<null>, { status: 500 });
+  }
+}
+
+/**
+ * PUT /api/guide/schedule/[id]
+ * Update schedule entry
+ */
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const userId = request.headers.get('X-User-Id');
+    const userRole = request.headers.get('X-User-Role');
+    
+    if (!userId || userRole !== 'guide') {
+      return NextResponse.json({
+        success: false,
+        error: 'Недостаточно прав'
+      } as ApiResponse<null>, { status: 403 });
+    }
+
+    const isOwner = await verifyScheduleOwnership(userId, params.id);
+    
+    if (!isOwner) {
+      return NextResponse.json({
+        success: false,
+        error: 'Запись расписания не найдена или у вас нет прав'
       } as ApiResponse<null>, { status: 404 });
     }
 
     const body = await request.json();
 
-    // Build update query
-    const allowedFields = [
-      'status', 'meeting_point', 'participants_count', 'max_participants',
-      'weather_conditions', 'safety_notes', 'special_requirements'
-    ];
+    // Check for time conflicts if time is being updated
+    if (body.startTime && body.endTime) {
+      // Get guide_id for this schedule
+      const scheduleResult = await query(
+        'SELECT guide_id FROM guide_schedule WHERE id = $1',
+        [params.id]
+      );
+      
+      const guideId = scheduleResult.rows[0]?.guide_id;
+      
+      if (guideId) {
+        const noConflicts = await checkScheduleConflicts(
+          guideId,
+          body.startTime,
+          body.endTime,
+          params.id // Exclude current entry
+        );
+        
+        if (!noConflicts) {
+          return NextResponse.json({
+            success: false,
+            error: 'Конфликт расписания! Новое время пересекается с другим мероприятием.'
+          } as ApiResponse<null>, { status: 409 });
+        }
+      }
+    }
 
     const updateFields = [];
     const updateValues = [];
     let paramIndex = 1;
 
+    const allowedFields = [
+      'startTime', 'endTime', 'title', 'description', 'status',
+      'maxParticipants', 'currentParticipants', 'locationName', 'notes'
+    ];
+
+    const dbFieldMap: Record<string, string> = {
+      startTime: 'start_time',
+      endTime: 'end_time',
+      maxParticipants: 'max_participants',
+      currentParticipants: 'current_participants',
+      locationName: 'location_name'
+    };
+
     for (const [key, value] of Object.entries(body)) {
       if (allowedFields.includes(key)) {
-        const dbKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+        const dbKey = dbFieldMap[key] || key.replace(/([A-Z])/g, '_$1').toLowerCase();
         updateFields.push(`${dbKey} = $${paramIndex++}`);
-        
-        // Handle JSON fields
-        if (key === 'weatherConditions') {
-          updateValues.push(JSON.stringify(value));
-        } else {
-          updateValues.push(value);
-        }
+        updateValues.push(value);
       }
+    }
+
+    if (body.location && body.location.lat && body.location.lng) {
+      updateFields.push(`location = ST_SetSRID(ST_MakePoint($${paramIndex}, $${paramIndex + 1}), 4326)::geography`);
+      updateValues.push(body.location.lng, body.location.lat);
+      paramIndex += 2;
     }
 
     if (updateFields.length === 0) {
@@ -69,12 +187,12 @@ export async function PATCH(
       } as ApiResponse<null>, { status: 400 });
     }
 
-    updateValues.push(params.id, userId);
+    updateValues.push(params.id);
 
     const result = await query(
       `UPDATE guide_schedule 
-       SET ${updateFields.join(', ')}
-       WHERE id = $${paramIndex++} AND guide_id = $${paramIndex++}
+       SET ${updateFields.join(', ')}, updated_at = NOW()
+       WHERE id = $${paramIndex}
        RETURNING *`,
       updateValues
     );
@@ -82,7 +200,7 @@ export async function PATCH(
     return NextResponse.json({
       success: true,
       data: result.rows[0],
-      message: 'Расписание обновлено'
+      message: 'Расписание успешно обновлено'
     } as ApiResponse<any>);
 
   } catch (error) {
@@ -96,7 +214,7 @@ export async function PATCH(
 
 /**
  * DELETE /api/guide/schedule/[id]
- * Delete schedule entry (with owner check)
+ * Delete schedule entry
  */
 export async function DELETE(
   request: NextRequest,
@@ -113,42 +231,49 @@ export async function DELETE(
       } as ApiResponse<null>, { status: 403 });
     }
 
-    // Check if has groups
-    const groupsCheck = await query(
-      'SELECT id FROM guide_groups WHERE schedule_id = $1',
-      [params.id]
-    );
-
-    if (groupsCheck.rows.length > 0) {
+    const isOwner = await verifyScheduleOwnership(userId, params.id);
+    
+    if (!isOwner) {
       return NextResponse.json({
         success: false,
-        error: 'Невозможно удалить расписание с группами. Отмените его вместо удаления.'
-      } as ApiResponse<null>, { status: 400 });
-    }
-
-    // Delete (with owner verification)
-    const result = await query(
-      'DELETE FROM guide_schedule WHERE id = $1 AND guide_id = $2 RETURNING id',
-      [params.id, userId]
-    );
-
-    if (result.rows.length === 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'Расписание не найдено'
+        error: 'Запись расписания не найдена или у вас нет прав'
       } as ApiResponse<null>, { status: 404 });
     }
 
-    return NextResponse.json({
-      success: true,
-      message: 'Расписание удалено'
-    } as ApiResponse<null>);
+    // Instead of hard delete, mark as cancelled if has bookings
+    const checkResult = await query(
+      'SELECT booking_id FROM guide_schedule WHERE id = $1',
+      [params.id]
+    );
+
+    if (checkResult.rows[0]?.booking_id) {
+      // Has associated booking, mark as cancelled
+      await query(
+        `UPDATE guide_schedule 
+         SET status = 'cancelled', updated_at = NOW()
+         WHERE id = $1`,
+        [params.id]
+      );
+      
+      return NextResponse.json({
+        success: true,
+        message: 'Мероприятие отменено (связанное бронирование сохранено)'
+      } as ApiResponse<null>);
+    } else {
+      // No booking, safe to delete
+      await query('DELETE FROM guide_schedule WHERE id = $1', [params.id]);
+      
+      return NextResponse.json({
+        success: true,
+        message: 'Запись расписания удалена'
+      } as ApiResponse<null>);
+    }
 
   } catch (error) {
     console.error('Delete schedule error:', error);
     return NextResponse.json({
       success: false,
-      error: 'Ошибка при удалении расписания'
+      error: 'Ошибка при удалении записи расписания'
     } as ApiResponse<null>, { status: 500 });
   }
 }

@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
+import { getGuidePartnerId, checkScheduleConflicts } from '@/lib/auth/guide-helpers';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/guide/schedule
- * Get guide's schedule
+ * Get guide's schedule with conflict detection
  */
 export async function GET(request: NextRequest) {
   try {
@@ -20,71 +21,80 @@ export async function GET(request: NextRequest) {
       } as ApiResponse<null>, { status: 403 });
     }
 
+    const guideId = await getGuidePartnerId(userId);
+    
+    if (!guideId) {
+      return NextResponse.json({
+        success: false,
+        error: 'Профиль гида не найден'
+      } as ApiResponse<null>, { status: 404 });
+    }
+
     const { searchParams } = new URL(request.url);
-    const startDate = searchParams.get('startDate');
-    const endDate = searchParams.get('endDate');
+    const dateFrom = searchParams.get('dateFrom');
+    const dateTo = searchParams.get('dateTo');
+    const status = searchParams.get('status') || 'all';
 
     let queryStr = `
       SELECT 
-        gs.id,
-        gs.tour_date,
-        gs.start_time,
-        gs.end_time,
-        gs.meeting_point,
-        gs.participants_count,
-        gs.max_participants,
-        gs.status,
-        gs.weather_conditions,
-        gs.safety_notes,
-        gs.special_requirements,
-        gs.created_at,
-        gs.updated_at,
-        t.id as tour_id,
-        t.name as tour_name,
-        t.difficulty as tour_difficulty,
-        t.duration as tour_duration
+        gs.*,
+        t.title as tour_title,
+        b.status as booking_status,
+        ST_X(gs.location::geometry) as longitude,
+        ST_Y(gs.location::geometry) as latitude
       FROM guide_schedule gs
-      JOIN tours t ON gs.tour_id = t.id
+      LEFT JOIN tours t ON gs.tour_id = t.id
+      LEFT JOIN bookings b ON gs.booking_id = b.id
       WHERE gs.guide_id = $1
     `;
 
-    const params = [userId];
+    const params: any[] = [guideId];
     let paramIndex = 2;
 
-    if (startDate) {
-      queryStr += ` AND gs.tour_date >= $${paramIndex++}`;
-      params.push(startDate);
+    if (dateFrom) {
+      queryStr += ` AND gs.start_time >= $${paramIndex}`;
+      params.push(dateFrom);
+      paramIndex++;
     }
 
-    if (endDate) {
-      queryStr += ` AND gs.tour_date <= $${paramIndex++}`;
-      params.push(endDate);
+    if (dateTo) {
+      queryStr += ` AND gs.start_time <= $${paramIndex}`;
+      params.push(dateTo + ' 23:59:59');
+      paramIndex++;
     }
 
-    queryStr += ' ORDER BY gs.tour_date ASC, gs.start_time ASC';
+    if (status !== 'all') {
+      queryStr += ` AND gs.status = $${paramIndex}`;
+      params.push(status);
+      paramIndex++;
+    }
+
+    queryStr += ` ORDER BY gs.start_time ASC`;
 
     const result = await query(queryStr, params);
 
     const schedule = result.rows.map(row => ({
       id: row.id,
-      tourDate: row.tour_date,
+      guideId: row.guide_id,
       startTime: row.start_time,
       endTime: row.end_time,
-      meetingPoint: row.meeting_point,
-      participantsCount: row.participants_count,
+      title: row.title,
+      description: row.description,
+      tourId: row.tour_id,
+      tourTitle: row.tour_title,
+      bookingId: row.booking_id,
+      bookingStatus: row.booking_status,
       maxParticipants: row.max_participants,
+      currentParticipants: row.current_participants,
+      location: row.latitude && row.longitude ? {
+        lat: parseFloat(row.latitude),
+        lng: parseFloat(row.longitude)
+      } : null,
+      locationName: row.location_name,
       status: row.status,
-      weatherConditions: row.weather_conditions,
-      safetyNotes: row.safety_notes,
-      specialRequirements: row.special_requirements,
+      notes: row.notes,
       createdAt: row.created_at,
-      updatedAt: row.updated_at,
-      tour: {
-        id: row.tour_id,
-        name: row.tour_name,
-        difficulty: row.tour_difficulty,
-        duration: row.tour_duration
-      }
+      updatedAt: row.updated_at
     }));
 
     return NextResponse.json({
@@ -93,7 +103,7 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<any>);
 
   } catch (error) {
-    console.error('Get guide schedule error:', error);
+    console.error('Get schedule error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при получении расписания'
@@ -103,7 +113,7 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/guide/schedule
- * Create schedule entry
+ * Create new schedule entry with conflict detection
  */
 export async function POST(request: NextRequest) {
   try {
@@ -117,72 +127,103 @@ export async function POST(request: NextRequest) {
       } as ApiResponse<null>, { status: 403 });
     }
 
+    const guideId = await getGuidePartnerId(userId);
+    
+    if (!guideId) {
+      return NextResponse.json({
+        success: false,
+        error: 'Профиль гида не найден'
+      } as ApiResponse<null>, { status: 404 });
+    }
+
     const body = await request.json();
     const {
-      tourId,
-      tourDate,
       startTime,
       endTime,
-      meetingPoint,
+      title,
+      description,
+      tourId,
+      bookingId,
       maxParticipants,
-      specialRequirements
+      location,
+      locationName,
+      notes
     } = body;
 
     // Validation
-    if (!tourId || !tourDate || !startTime) {
+    if (!startTime || !endTime || !title) {
       return NextResponse.json({
         success: false,
-        error: 'Заполните все обязательные поля'
+        error: 'Заполните обязательные поля: startTime, endTime, title'
+      } as ApiResponse<null>, { status: 400 });
+    }
+
+    // Check time logic
+    if (new Date(startTime) >= new Date(endTime)) {
+      return NextResponse.json({
+        success: false,
+        error: 'Время окончания должно быть позже времени начала'
       } as ApiResponse<null>, { status: 400 });
     }
 
     // Check for conflicts
-    const conflictCheck = await query(
-      `SELECT id FROM guide_schedule 
-       WHERE guide_id = $1 AND tour_date = $2 
-       AND status NOT IN ('cancelled', 'completed')
-       AND (
-         (start_time <= $3 AND end_time >= $3) OR
-         (start_time <= $4 AND end_time >= $4) OR
-         (start_time >= $3 AND end_time <= $4)
-       )`,
-      [userId, tourDate, startTime, endTime || startTime]
-    );
-
-    if (conflictCheck.rows.length > 0) {
+    const noConflicts = await checkScheduleConflicts(guideId, startTime, endTime);
+    
+    if (!noConflicts) {
       return NextResponse.json({
         success: false,
-        error: 'В это время уже запланирован другой тур'
+        error: 'Конфликт расписания! У вас уже запланировано мероприятие в это время.',
+        message: 'Выберите другое время или отмените существующее мероприятие.'
       } as ApiResponse<null>, { status: 409 });
     }
 
     // Create schedule entry
-    const result = await query(
-      `INSERT INTO guide_schedule (
-        guide_id, tour_id, tour_date, start_time, end_time,
-        meeting_point, max_participants, special_requirements, status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'scheduled')
-      RETURNING *`,
-      [
-        userId,
-        tourId,
-        tourDate,
-        startTime,
-        endTime,
-        meetingPoint,
-        maxParticipants,
-        specialRequirements
-      ]
-    );
+    let insertQuery = `
+      INSERT INTO guide_schedule (
+        guide_id, start_time, end_time, title, description,
+        tour_id, booking_id, max_participants, location, location_name, notes, status
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, `;
+    
+    const insertParams: any[] = [
+      guideId,
+      startTime,
+      endTime,
+      title,
+      description,
+      tourId,
+      bookingId,
+      maxParticipants || 10
+    ];
+
+    if (location && location.lat && location.lng) {
+      insertQuery += `ST_SetSRID(ST_MakePoint($9, $10), 4326)::geography, $11, $12, 'scheduled')`;
+      insertParams.push(location.lng, location.lat, locationName, notes);
+    } else {
+      insertQuery += `NULL, $9, $10, 'scheduled')`;
+      insertParams.push(locationName, notes);
+    }
+
+    insertQuery += ` RETURNING *`;
+
+    const result = await query(insertQuery, insertParams);
 
     return NextResponse.json({
       success: true,
       data: result.rows[0],
-      message: 'Расписание создано'
+      message: 'Мероприятие успешно добавлено в расписание'
     } as ApiResponse<any>);
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Create schedule error:', error);
+    
+    // Handle exclusion constraint violation (overlapping schedules)
+    if (error.code === '23P01') {
+      return NextResponse.json({
+        success: false,
+        error: 'Конфликт расписания! Время пересекается с существующим мероприятием.'
+      } as ApiResponse<null>, { status: 409 });
+    }
+    
     return NextResponse.json({
       success: false,
       error: 'Ошибка при создании расписания'
