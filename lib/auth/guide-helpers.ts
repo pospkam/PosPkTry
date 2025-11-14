@@ -185,7 +185,7 @@ export async function checkScheduleConflicts(
 ): Promise<boolean> {
   try {
     const params: any[] = [guideId, startTime, endTime];
-    let paramIndex = 4;
+    const paramIndex = 4;
     
     let queryStr = `
       SELECT check_schedule_conflicts($1, $2, $3`;
