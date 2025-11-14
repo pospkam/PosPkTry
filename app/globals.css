@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* SAMSUNG WEATHER THEME - ОСНОВНАЯ ТЕМА */
+@import './samsung-weather-theme.css';
+
+/* SAMSUNG WEATHER DYNAMIC - ДИНАМИЧЕСКАЯ ТЕМА С АНИМАЦИЯМИ */
+@import './samsung-weather-dynamic.css';
+
 /* Import UI improvements */
 @import './ui-improvements.css';
 
