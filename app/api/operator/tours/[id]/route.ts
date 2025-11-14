@@ -35,34 +35,61 @@ export async function GET(
     }
 
     // Get tour with full details
-    const result = await query(
-      `SELECT 
-        t.*,
-        COALESCE(array_agg(DISTINCT a.url) FILTER (WHERE a.url IS NOT NULL), '{}') as images,
-        COALESCE(array_agg(DISTINCT jsonb_build_object(
-          'id', a.id,
-          'url', a.url,
-          'alt', a.alt
-        )) FILTER (WHERE a.id IS NOT NULL), '[]') as image_details
-      FROM tours t
-      LEFT JOIN tour_assets ta ON t.id = ta.tour_id
-      LEFT JOIN assets a ON ta.asset_id = a.id
-      WHERE t.id = $1
-      GROUP BY t.id`,
-      [params.id]
-    );
+      const result = await query(
+        `SELECT 
+          t.*,
+          COALESCE(array_agg(DISTINCT a.url) FILTER (WHERE a.url IS NOT NULL), '{}') as images,
+          COALESCE(array_agg(DISTINCT jsonb_build_object(
+            'id', a.id,
+            'url', a.url,
+            'alt', a.alt
+          )) FILTER (WHERE a.id IS NOT NULL), '[]') as image_details
+        FROM tours t
+        LEFT JOIN tour_assets ta ON t.id = ta.tour_id
+        LEFT JOIN assets a ON ta.asset_id = a.id
+        WHERE t.id = $1
+        GROUP BY t.id`,
+        [params.id]
+      );
 
-    if (result.rows.length === 0) {
+      if (result.rows.length === 0) {
+        return NextResponse.json({
+          success: false,
+          error: 'Тур не найден'
+        } as ApiResponse<null>, { status: 404 });
+      }
+
+      const row = result.rows[0];
+      const tour = {
+        id: row.id,
+        name: row.name,
+        description: row.description,
+        shortDescription: row.short_description,
+        category: row.category || 'adventure',
+        difficulty: row.difficulty,
+        duration: row.duration,
+        price: parseFloat(row.price),
+        currency: row.currency,
+        season: row.season || [],
+        requirements: row.requirements || [],
+        includes: row.included || [],
+        excludes: row.not_included || [],
+        coordinates: row.coordinates || [],
+        maxGroupSize: row.max_group_size,
+        minGroupSize: row.min_group_size,
+        isActive: row.is_active,
+        rating: row.rating,
+        reviewCount: row.review_count,
+        images: row.images,
+        imageDetails: row.image_details,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+      };
+
       return NextResponse.json({
-        success: false,
-        error: 'Тур не найден'
-      } as ApiResponse<null>, { status: 404 });
-    }
-
-    return NextResponse.json({
-      success: true,
-      data: result.rows[0]
-    } as ApiResponse<any>);
+        success: true,
+        data: tour
+      } as ApiResponse<any>);
 
   } catch (error) {
     console.error('Get tour error:', error);

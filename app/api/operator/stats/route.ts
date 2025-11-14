@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
+import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,24 +21,14 @@ export async function GET(request: NextRequest) {
       } as ApiResponse<null>, { status: 403 });
     }
 
-    // Get operator's partner ID
-    const partnerResult = await query(
-      `SELECT id, name, rating, review_count FROM partners 
-       WHERE category = 'operator' 
-       AND contact->>'email' = (SELECT email FROM users WHERE id = $1)
-       LIMIT 1`,
-      [userId]
-    );
-
-    if (partnerResult.rows.length === 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'Партнёр не найден'
-      } as ApiResponse<null>, { status: 404 });
-    }
-
-    const operator = partnerResult.rows[0];
-    const operatorId = operator.id;
+      const operatorId = await getOperatorPartnerId(userId);
+      
+      if (!operatorId) {
+        return NextResponse.json({
+          success: false,
+          error: 'Партнёр не найден'
+        } as ApiResponse<null>, { status: 404 });
+      }
 
     // Get tours count
     const toursResult = await query(
@@ -92,13 +83,19 @@ export async function GET(request: NextRequest) {
       [operatorId]
     );
 
+    const partnerInfoResult = await query(
+      'SELECT id, name, rating, review_count FROM partners WHERE id = $1',
+      [operatorId]
+    );
+    const operatorInfo = partnerInfoResult.rows[0];
+
     const stats = {
-      operator: {
-        id: operator.id,
-        name: operator.name,
-        rating: parseFloat(operator.rating),
-        reviewCount: operator.review_count
-      },
+        operator: {
+          id: operatorId,
+          name: operatorInfo?.name || '',
+          rating: parseFloat(operatorInfo?.rating || 0),
+          reviewCount: parseInt(operatorInfo?.review_count || 0),
+        },
       tours: {
         total: parseInt(toursResult.rows[0].total),
         active: parseInt(toursResult.rows[0].active)
