@@ -1,0 +1,405 @@
+/**
+ * SAMSUNG WEATHER - ДИНАМИЧЕСКАЯ ТЕМА
+ * С анимациями погоды и изменением по времени суток
+ */
+
+/* ================================================
+   БАЗОВЫЕ ПЕРЕМЕННЫЕ (динамически меняются через JS)
+   ================================================ */
+:root {
+  --sw-bg-gradient: linear-gradient(135deg, #B3D9F5 0%, #4A90E2 50%, #7FB4E8 100%);
+  --sw-primary: #4A90E2;
+  --sw-secondary: #B3D9F5;
+  --sw-text: #ffffff;
+  --sw-cloud-opacity: 0.4;
+  --sw-cloud-speed: 30s;
+}
+
+/* ================================================
+   ФОНЫ ПО ВРЕМЕНИ СУТОК
+   ================================================ */
+.weather-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  background: var(--sw-bg-gradient);
+  transition: background 2s ease-in-out;
+}
+
+/* Утро (06:00 - 12:00) */
+.weather-background[data-time="morning"] {
+  background: linear-gradient(135deg, #B3D9F5 0%, #4A90E2 50%, #7FB4E8 100%);
+}
+
+/* День (12:00 - 18:00) */
+.weather-background[data-time="day"] {
+  background: linear-gradient(135deg, #4A90E2 0%, #7FB4E8 50%, #B3D9F5 100%);
+}
+
+/* Вечер (18:00 - 22:00) */
+.weather-background[data-time="evening"] {
+  background: linear-gradient(135deg, #FF6B6B 0%, #9B59B6 50%, #3F51B5 100%);
+}
+
+/* Ночь (22:00 - 06:00) */
+.weather-background[data-time="night"] {
+  background: linear-gradient(135deg, #1a2332 0%, #2d3e50 50%, #34495e 100%);
+}
+
+/* ================================================
+   АНИМАЦИЯ ДОЖДЯ
+   ================================================ */
+.rain-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.rain-drop {
+  position: absolute;
+  width: 2px;
+  height: 20px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.2));
+  animation: rain-fall linear infinite;
+  opacity: 0.6;
+}
+
+@keyframes rain-fall {
+  0% {
+    transform: translateY(-100px);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(100vh);
+    opacity: 0.2;
+  }
+}
+
+/* Легкий дождь */
+.rain-light .rain-drop {
+  animation-duration: 0.6s;
+}
+
+/* Сильный дождь */
+.rain-heavy .rain-drop {
+  animation-duration: 0.3s;
+  height: 30px;
+}
+
+/* ================================================
+   АНИМАЦИЯ СНЕГА
+   ================================================ */
+.snow-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.snowflake {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: white;
+  border-radius: 50%;
+  animation: snow-fall linear infinite, snow-swing ease-in-out infinite;
+  opacity: 0.8;
+}
+
+@keyframes snow-fall {
+  0% {
+    transform: translateY(-100px);
+  }
+  100% {
+    transform: translateY(100vh);
+  }
+}
+
+@keyframes snow-swing {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(20px);
+  }
+}
+
+.snowflake:nth-child(odd) {
+  animation-duration: 4s, 2s;
+  width: 8px;
+  height: 8px;
+}
+
+.snowflake:nth-child(even) {
+  animation-duration: 6s, 3s;
+  width: 12px;
+  height: 12px;
+}
+
+/* ================================================
+   АНИМАЦИЯ ВЕТРА
+   ================================================ */
+.wind-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.wind-line {
+  position: absolute;
+  height: 2px;
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.4), transparent);
+  animation: wind-blow ease-in-out infinite;
+}
+
+@keyframes wind-blow {
+  0% {
+    transform: translateX(-200px);
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateX(100vw);
+    opacity: 0;
+  }
+}
+
+/* Слабый ветер */
+.wind-light .wind-line {
+  animation-duration: 3s;
+  width: 100px;
+}
+
+/* Сильный ветер */
+.wind-strong .wind-line {
+  animation-duration: 1s;
+  width: 200px;
+}
+
+/* ================================================
+   АНИМАЦИЯ ГРОЗЫ
+   ================================================ */
+.thunder-flash {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.8);
+  opacity: 0;
+  animation: thunder-strike 0.3s ease-out;
+  pointer-events: none;
+  z-index: 20;
+}
+
+@keyframes thunder-strike {
+  0%, 20%, 40%, 100% {
+    opacity: 0;
+  }
+  10%, 30% {
+    opacity: 0.8;
+  }
+}
+
+/* ================================================
+   СОЛНЦЕ (день)
+   ================================================ */
+.sun {
+  position: absolute;
+  top: 10%;
+  right: 15%;
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle, #FFD700 0%, #FFA500 50%, transparent 70%);
+  border-radius: 50%;
+  animation: sun-rays 3s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 3;
+}
+
+@keyframes sun-rays {
+  0%, 100% {
+    box-shadow: 0 0 40px 20px rgba(255, 215, 0, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 60px 30px rgba(255, 215, 0, 0.5);
+  }
+}
+
+/* ================================================
+   ЛУНА (ночь)
+   ================================================ */
+.moon {
+  position: absolute;
+  top: 15%;
+  right: 20%;
+  width: 80px;
+  height: 80px;
+  background: radial-gradient(circle at 30% 30%, #f0f0f0 0%, #d0d0d0 50%, transparent 70%);
+  border-radius: 50%;
+  box-shadow: 0 0 30px 10px rgba(240, 240, 240, 0.3);
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* ================================================
+   ЗВЕЗДЫ (ночь)
+   ================================================ */
+.stars-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: white;
+  border-radius: 50%;
+  animation: star-twinkle ease-in-out infinite;
+}
+
+@keyframes star-twinkle {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.5);
+  }
+}
+
+/* ================================================
+   ОБЛАКА (статические из старой темы, улучшены)
+   ================================================ */
+.cloud {
+  position: absolute;
+  background: rgba(255, 255, 255, var(--sw-cloud-opacity));
+  border-radius: 100px;
+  animation: float-clouds var(--sw-cloud-speed) linear infinite;
+  pointer-events: none;
+}
+
+.cloud::before,
+.cloud::after {
+  content: '';
+  position: absolute;
+  background: inherit;
+  border-radius: inherit;
+}
+
+.cloud-1 {
+  top: 15%;
+  left: -200px;
+  width: 200px;
+  height: 60px;
+  animation-delay: 0s;
+  z-index: 4;
+}
+
+.cloud-1::before {
+  top: -30px;
+  left: 30px;
+  width: 100px;
+  height: 60px;
+}
+
+.cloud-1::after {
+  top: -20px;
+  right: 30px;
+  width: 80px;
+  height: 50px;
+}
+
+.cloud-2 {
+  top: 40%;
+  left: -300px;
+  width: 250px;
+  height: 70px;
+  animation-delay: 10s;
+  z-index: 4;
+}
+
+.cloud-2::before {
+  top: -35px;
+  left: 40px;
+  width: 120px;
+  height: 70px;
+}
+
+.cloud-2::after {
+  top: -25px;
+  right: 40px;
+  width: 100px;
+  height: 60px;
+}
+
+.cloud-3 {
+  top: 70%;
+  left: -250px;
+  width: 220px;
+  height: 65px;
+  animation-delay: 20s;
+  z-index: 4;
+}
+
+.cloud-3::before {
+  top: -32px;
+  left: 35px;
+  width: 110px;
+  height: 65px;
+}
+
+.cloud-3::after {
+  top: -22px;
+  right: 35px;
+  width: 90px;
+  height: 55px;
+}
+
+@keyframes float-clouds {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(calc(100vw + 300px));
+  }
+}
+
+/* ================================================
+   АДАПТАЦИЯ ОБЛАКОВ ПО ВРЕМЕНИ СУТОК
+   ================================================ */
+.weather-background[data-time="evening"] .cloud,
+.weather-background[data-time="night"] .cloud {
+  --sw-cloud-opacity: 0.2;
+}
+
+.weather-background[data-time="morning"] .cloud,
+.weather-background[data-time="day"] .cloud {
+  --sw-cloud-opacity: 0.6;
+}

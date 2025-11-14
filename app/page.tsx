@@ -3,6 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { TourCard } from '@/components/TourCard';
+import SamsungWeatherDynamic from '@/components/SamsungWeatherDynamic';
+import AIKamSmartSearch from '@/components/AIKamSmartSearch';
+import RegistrationButtons from '@/components/RegistrationButtons';
 
 interface Tour {
   id: number;
@@ -43,13 +46,8 @@ export default function Home() {
 
   return (
     <>
-      {/* Samsung Weather Background */}
-      <div className="weather-background">
-        <div className="cloud cloud-1"></div>
-        <div className="cloud cloud-2"></div>
-        <div className="cloud cloud-3"></div>
-        <div className="gradient-overlay-top"></div>
-      </div>
+      {/* SAMSUNG WEATHER - Динамический фон с анимациями */}
+      <SamsungWeatherDynamic />
 
       {/* Header */}
       <header className="weather-header fixed top-0 left-0 right-0 z-50 px-4 py-4">
@@ -79,17 +77,11 @@ export default function Home() {
             Откройте для себя удивительный мир вулканов, гейзеров и дикой природы
           </p>
           
-          <div className="flex flex-wrap gap-4 justify-center fade-in-delay-1">
-            <Link href="/hub/tours" className="weather-btn weather-btn-primary text-lg px-8 py-4">
-              Найти тур
-            </Link>
-            <Link href="/hub/tourist" className="weather-btn text-lg px-8 py-4">
-              Узнать больше
-            </Link>
-          </div>
+          {/* AI KAM - УМНЫЙ ПОИСК */}
+          <AIKamSmartSearch />
         </section>
 
-        {/* Features Grid */}
+        {/* Features Grid - БЕЗ ЭМОДЗИ */}
         <section className="max-w-7xl mx-auto px-4 py-16">
           <div className="grid md:grid-cols-3 gap-6 fade-in-delay-2">
             {/* Feature 1 */}
@@ -118,8 +110,13 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Popular Tours */}
+        {/* ДВЕ ИЗЫСКАННЫЕ КНОПКИ - ТУРИСТ И БИЗНЕС */}
         <section className="max-w-7xl mx-auto px-4 py-16 fade-in-delay-3">
+          <RegistrationButtons />
+        </section>
+
+        {/* Popular Tours */}
+        <section className="max-w-7xl mx-auto px-4 py-16">
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-4xl font-bold text-white text-shadow-soft">
               Популярные туры
@@ -166,14 +163,14 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Roles Section */}
+        {/* Roles Section - БЕЗ ЭМОДЗИ */}
         <section className="max-w-7xl mx-auto px-4 py-16">
           <h2 className="text-4xl font-bold text-white text-center mb-12 text-shadow-soft">
             Выберите свою роль
           </h2>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {            [
+            {[
               { name: 'Турист', desc: 'Ищете приключения?', href: '/hub/tourist' },
               { name: 'Туроператор', desc: 'Организуете туры?', href: '/hub/operator' },
               { name: 'Гид', desc: 'Проводите экскурсии?', href: '/hub/guide' },
@@ -197,12 +194,9 @@ export default function Home() {
         </section>
       </main>
 
-      {/* Footer */}
       <footer className="relative py-8 px-4 backdrop-blur-xl bg-white/5 border-t border-white/10">
         <div className="max-w-7xl mx-auto text-center">
-          <p className="text-white/70">
-            © 2025 KamHub. Экосистема туризма Камчатки
-          </p>
+          <p className="text-white/70">© 2025 KamHub. Экосистема туризма Камчатки</p>
         </div>
       </footer>
     </>

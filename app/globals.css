@@ -5,6 +5,9 @@
 /* SAMSUNG WEATHER THEME - ОСНОВНАЯ ТЕМА */
 @import './samsung-weather-theme.css';
 
+/* SAMSUNG WEATHER DYNAMIC - ДИНАМИЧЕСКАЯ ТЕМА С АНИМАЦИЯМИ */
+@import './samsung-weather-dynamic.css';
+
 /* Legacy theme compatibility */
 :root {
   --premium-black: #4A90E2;
