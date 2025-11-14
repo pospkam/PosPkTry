@@ -24,11 +24,11 @@
 /* Import Final Homepage */
 @import './final-homepage.css';
 
-/* Premium Black & Gold Theme */
+/* Samsung Weather Theme - Голубая/Ледяная */
 :root {
-  --premium-black: #0a0a0a;
-  --premium-gold: #d4af37;
-  --gold-gradient: linear-gradient(135deg, #d4af37 0%, #ffd700 50%, #b8860b 100%);
+  --premium-black: #1a2a4e;
+  --premium-gold: #a2d2ff;
+  --gold-gradient: linear-gradient(135deg, #a2d2ff 0%, #7eb3ff 50%, #5a9eff 100%);
 }
 
 .bg-premium-black {
@@ -779,19 +779,19 @@ html, body {
    ================================================ */
 
 :root {
-  /* Dark Theme (default) - Черная + Золото */
-  --bg-primary: #0a0a0a;
-  --bg-secondary: #1a1a1a;
-  --bg-tertiary: #2a2a2a;
+  /* Dark Theme (default) - Samsung Weather (Синяя + Голубая) */
+  --bg-primary: #1a2a4e;
+  --bg-secondary: #243354;
+  --bg-tertiary: #2e3c5a;
   --text-primary: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.7);
-  --text-tertiary: rgba(255, 255, 255, 0.5);
-  --accent-primary: #e6c149;
-  --accent-secondary: #d4af37;
-  --accent-gradient: linear-gradient(135deg, #e6c149 0%, #f4d479 100%);
-  --glass-bg: rgba(255, 255, 255, 0.05);
-  --glass-border: rgba(255, 255, 255, 0.18);
-  --shadow-color: rgba(0, 0, 0, 0.37);
+  --text-secondary: rgba(255, 255, 255, 0.8);
+  --text-tertiary: rgba(255, 255, 255, 0.6);
+  --accent-primary: #a2d2ff;
+  --accent-secondary: #7eb3ff;
+  --accent-gradient: linear-gradient(135deg, #a2d2ff 0%, #7eb3ff 100%);
+  --glass-bg: rgba(162, 210, 255, 0.08);
+  --glass-border: rgba(162, 210, 255, 0.25);
+  --shadow-color: rgba(26, 42, 78, 0.5);
 }
 
 [data-theme="light"] {
