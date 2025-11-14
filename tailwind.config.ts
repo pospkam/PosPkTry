@@ -1,6 +1,7 @@
 import type { Config } from 'tailwindcss'
 
 export default {
+  darkMode: 'class', // Включаем dark mode через класс
   content: [
     './app/**/*.{ts,tsx}',
     './components/**/*.{ts,tsx}',
@@ -8,6 +9,7 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Старые цвета (совместимость)
         premium: {
           black: '#000000',
           border: '#222222',
@@ -15,6 +17,22 @@ export default {
           ice: '#A2D2FF',
         },
         gold: '#E6C149',
+        'ultramarine': '#0047AB',
+        'deep-blue': '#003366',
+        'light-blue': '#4A90E2',
+        'sky-blue': '#87CEEB',
+        
+        // Новые цвета 2025
+        primary: {
+          DEFAULT: '#6366f1',
+          dark: '#4f46e5',
+        },
+        secondary: {
+          DEFAULT: '#ec4899',
+        },
+        accent: {
+          DEFAULT: '#14b8a6',
+        },
       },
       boxShadow: {
         gold: '0 8px 24px rgba(230,193,73,0.25)',

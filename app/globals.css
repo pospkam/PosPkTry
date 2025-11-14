@@ -2,56 +2,317 @@
 @tailwind components;
 @tailwind utilities;
 
-/* === ОСНОВНЫЕ СТИЛИ === */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+/* Современная цветовая палитра 2025 */
+:root {
+  /* Главные цвета */
+  --primary: #6366f1;
+  --primary-dark: #4f46e5;
+  --secondary: #ec4899;
+  --accent: #14b8a6;
+  
+  /* Градиенты */
+  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-mesh: radial-gradient(at 40% 20%, #667eea 0px, transparent 50%),
+                   radial-gradient(at 80% 0%, #764ba2 0px, transparent 50%),
+                   radial-gradient(at 0% 50%, #ec4899 0px, transparent 50%),
+                   radial-gradient(at 80% 50%, #14b8a6 0px, transparent 50%);
+  
+  /* Glassmorphism */
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  
+  /* Неоморфизм */
+  --neo-light: #ffffff;
+  --neo-dark: #d1d5db;
+  --neo-shadow: 20px 20px 60px #bebebe, -20px -20px 60px #ffffff;
 }
 
-html {
-  scroll-behavior: smooth;
+.dark {
+  --glass-bg: rgba(0, 0, 0, 0.3);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --neo-light: #1f2937;
+  --neo-dark: #111827;
+  --neo-shadow: 20px 20px 60px #0a0a0a, -20px -20px 60px #2a2a2a;
 }
 
-body {
-  background-color: #0a0a0a;
+/* Продвинутые анимации 2025 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes glow {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.2); }
+}
+
+@keyframes meshMove {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-glow {
+  animation: glow 3s ease-in-out infinite;
+}
+
+.animate-mesh {
+  background-size: 200% 200%;
+  animation: meshMove 15s ease infinite;
+}
+
+/* Glassmorphism карточки */
+.card-glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  @apply rounded-3xl transition-all duration-500;
+}
+
+.card-glass:hover {
+  transform: translateY(-8px) scale(1.02);
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 16px 64px 0 rgba(31, 38, 135, 0.5);
+}
+
+/* Неоморфизм карточки */
+.card-neo {
+  background: var(--neo-light);
+  box-shadow: var(--neo-shadow);
+  @apply rounded-3xl transition-all duration-300;
+}
+
+.card-neo:hover {
+  box-shadow: inset 5px 5px 10px var(--neo-dark),
+              inset -5px -5px 10px var(--neo-light);
+}
+
+/* Bento Grid карточки */
+.card-bento {
+  @apply rounded-3xl p-6 transition-all duration-500;
+  @apply bg-gradient-to-br from-white/90 to-white/70;
+  @apply dark:from-gray-900/90 dark:to-gray-800/70;
+  @apply border border-gray-200/50 dark:border-white/10;
+  @apply backdrop-blur-xl;
+  @apply hover:scale-[1.02] hover:-translate-y-1;
+  @apply hover:shadow-2xl;
+}
+
+/* Старый стиль (совместимость) */
+.card-modern {
+  @apply card-glass;
+}
+
+/* Градиенты */
+.gradient-modern {
+  background: linear-gradient(135deg, 
+    rgba(0, 71, 171, 0.1) 0%, 
+    rgba(74, 144, 226, 0.05) 50%, 
+    rgba(135, 206, 235, 0.1) 100%);
+}
+
+.dark .gradient-modern {
+  background: linear-gradient(135deg, 
+    rgba(212, 175, 55, 0.1) 0%, 
+    rgba(255, 215, 0, 0.05) 50%, 
+    rgba(184, 134, 11, 0.1) 100%);
+}
+
+/* Кнопки */
+.btn-primary {
+  @apply px-8 py-4 rounded-2xl font-bold text-lg;
+  @apply bg-gradient-to-r from-ultramarine to-light-blue dark:from-premium-gold dark:to-yellow-400;
+  @apply text-white dark:text-premium-black;
+  @apply shadow-lg shadow-ultramarine/30 dark:shadow-premium-gold/30;
+  @apply hover:shadow-xl hover:shadow-ultramarine/50 dark:hover:shadow-premium-gold/50;
+  @apply hover:scale-105 transition-all duration-300;
+  @apply active:scale-95;
+}
+
+/* Import UI improvements */
+@import './ui-improvements.css';
+
+/* Premium Black & Gold Theme */
+:root {
+  --premium-black: #0a0a0a;
+  --premium-gold: #d4af37;
+  --gold-gradient: linear-gradient(135deg, #d4af37 0%, #ffd700 50%, #b8860b 100%);
+}
+
+.bg-premium-black {
+  background-color: var(--premium-black);
+}
+
+.text-premium-gold {
+  color: var(--premium-gold);
+}
+
+.bg-premium-gold {
+  background-color: var(--premium-gold);
+}
+
+.text-premium-black {
+  color: var(--premium-black);
+}
+
+.bg-gold-gradient {
+  background: var(--gold-gradient);
+}
+
+.gradient-gold-aurora {
+  background: linear-gradient(45deg, 
+    rgba(212, 175, 55, 0.1) 0%, 
+    rgba(255, 215, 0, 0.2) 25%, 
+    rgba(184, 134, 11, 0.1) 50%, 
+    rgba(212, 175, 55, 0.2) 75%, 
+    rgba(255, 215, 0, 0.1) 100%);
+}
+
+.animate-aurora {
+  animation: aurora 8s ease-in-out infinite;
+}
+
+@keyframes aurora {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.05); }
+}
+
+.text-gold {
+  color: var(--premium-gold);
+}
+
+.gold-glow {
+  text-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+}
+
+.button-gold {
+  @apply bg-premium-gold text-premium-black px-4 py-2 rounded-lg font-bold hover:bg-yellow-400 transition-colors;
+}
+
+.map-button-glow {
+  box-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
+  transition: all 0.3s ease;
+}
+
+.map-button-glow:hover {
+  box-shadow: 0 0 40px rgba(212, 175, 55, 0.5);
+  transform: scale(1.02);
+}
+
+.kamchatka-button {
+  filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.3));
+}
+
+/* Floating UI Styles */
+
+:root {
+  --gold: #E6C149;
+  --black: #000000;
+}
+
+html, body {
+  background: var(--black);
   color: #ffffff;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
-/* === УТИЛИТЫ === */
-.text-shadow-soft {
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+.button-gold {
+  @apply bg-[color:var(--gold)] text-black font-bold rounded-lg px-4 py-2 shadow-gold;
 }
 
-/* === АДАПТИВНОСТЬ === */
-@media (max-width: 768px) {
-  body {
-    font-size: 14px;
-  }
-  
-  h1 {
-    font-size: 2.5rem !important;
-  }
-  
-  h2 {
-    font-size: 2rem !important;
-  }
-  
-  h3 {
-    font-size: 1.5rem !important;
-  }
+.card-dark {
+  @apply bg-neutral-900 border border-neutral-800 rounded-xl;
 }
 
-@media (max-width: 480px) {
-  h1 {
-    font-size: 2rem !important;
-  }
-  
-  h2 {
-    font-size: 1.75rem !important;
-  }
+/* Custom classes for the full site */
+.gradient-gold-aurora {
+  background: radial-gradient(1200px 600px at 20% 80%, rgba(230,193,73,0.18), transparent 60%), 
+              radial-gradient(1000px 500px at 80% 20%, rgba(162,210,255,0.12), transparent 60%);
+}
+
+.animate-aurora {
+  animation: aurora 20s ease-in-out infinite;
+}
+
+@keyframes aurora {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+
+.text-gold {
+  color: var(--gold);
+}
+
+.gold-glow {
+  text-shadow: 0 0 20px rgba(230,193,73,0.5);
+}
+
+.map-button-glow {
+  box-shadow: 0 0 40px rgba(230,193,73,0.25);
+  transition: box-shadow 0.3s ease;
+}
+
+.map-button-glow:hover {
+  box-shadow: 0 0 60px rgba(230,193,73,0.35);
+}
+
+.kamchatka-button {
+  transition: transform 0.3s ease;
+}
+
+.kamchatka-button:hover {
+  transform: scale(1.05);
 }
