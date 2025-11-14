@@ -281,6 +281,83 @@ const migration005: Migration = {
   }
 };
 
+// Миграция 006: Добавление password_hash в users
+const migration006: Migration = {
+  version: '006',
+  name: 'add_password_hash_to_users',
+  up: async () => {
+    // Добавляем поле password_hash
+    await query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255)
+    `);
+    
+    // Обновляем существующих пользователей (временный хеш)
+    await query(`
+      UPDATE users 
+      SET password_hash = '$2a$10$temporary.hash.for.migration'
+      WHERE password_hash IS NULL
+    `);
+    
+    // Создаем индекс
+    await query(`
+      CREATE INDEX IF NOT EXISTS idx_users_email_password ON users(email, password_hash)
+    `);
+    
+    console.log('✅ Migration 006: password_hash added to users');
+  },
+  down: async () => {
+    await query('DROP INDEX IF EXISTS idx_users_email_password');
+    await query('ALTER TABLE users DROP COLUMN IF EXISTS password_hash');
+    console.log('✅ Migration 006: password_hash removed from users');
+  }
+};
+
+// Миграция 007: Добавление user_id в partners
+const migration007: Migration = {
+  version: '007',
+  name: 'add_user_id_to_partners',
+  up: async () => {
+    // Добавляем поле user_id
+    await query(`
+      ALTER TABLE partners ADD COLUMN IF NOT EXISTS user_id UUID
+    `);
+    
+    // Добавляем внешний ключ
+    await query(`
+      ALTER TABLE partners 
+      DROP CONSTRAINT IF EXISTS fk_partners_user_id
+    `);
+    
+    await query(`
+      ALTER TABLE partners 
+      ADD CONSTRAINT fk_partners_user_id 
+      FOREIGN KEY (user_id) 
+      REFERENCES users(id) 
+      ON DELETE CASCADE
+    `);
+    
+    // Создаем индексы
+    await query(`
+      CREATE INDEX IF NOT EXISTS idx_partners_user_id ON partners(user_id)
+    `);
+    
+    await query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_partners_user_category 
+      ON partners(user_id, category)
+      WHERE user_id IS NOT NULL
+    `);
+    
+    console.log('✅ Migration 007: user_id added to partners');
+  },
+  down: async () => {
+    await query('DROP INDEX IF EXISTS idx_partners_user_category');
+    await query('DROP INDEX IF EXISTS idx_partners_user_id');
+    await query('ALTER TABLE partners DROP CONSTRAINT IF EXISTS fk_partners_user_id');
+    await query('ALTER TABLE partners DROP COLUMN IF EXISTS user_id');
+    console.log('✅ Migration 007: user_id removed from partners');
+  }
+};
+
 // Список всех миграций
 const migrations: Migration[] = [
   migration001,
@@ -288,6 +365,8 @@ const migrations: Migration[] = [
   migration003,
   migration004,
   migration005,
+  migration006,
+  migration007,
 ];
 
 // Выполнение миграций

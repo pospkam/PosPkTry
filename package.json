@@ -11,7 +11,7 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
     "db:setup": "bash scripts/setup-database.sh",
-    "db:migrate": "psql $DATABASE_URL -f scripts/apply-new-schemas.sql",
+    "db:migrate": "npx ts-node scripts/run-migrations.ts",
     "sentry:sourcemaps": "sentry-cli sourcemaps upload --org kamhub --project nextjs .next",
     "postbuild": "npm run sentry:sourcemaps",
     "ai:update-knowledge": "node scripts/update-knowledge-base.js",
@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.927.0",
+    "bcryptjs": "^2.4.3",
     "clsx": "^2.1.0",
     "dotenv": "^16.6.1",
     "jose": "^5.2.0",
@@ -33,6 +34,7 @@
   "devDependencies": {
     "@testing-library/jest-dom": "^6.4.2",
     "@testing-library/react": "^14.2.1",
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20.11.25",
     "@types/nodemailer": "^6.4.14",
     "@types/pg": "^8.11.2",

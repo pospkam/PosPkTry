@@ -1,11 +1,21 @@
 /**
  * API endpoint для регистрации нового партнера
  * POST /api/partners/register
+ * 
+ * ИСПРАВЛЕНО:
+ * - Добавлено хеширование пароля с bcrypt
+ * - Создание пользователя в таблице users
+ * - Создание партнера в таблице partners со связью user_id
+ * - Генерация JWT токена для автоматической авторизации
+ * - Улучшенная обработка ошибок
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/database';
+import { query, transaction } from '@/lib/database';
 import { z } from 'zod';
+import bcrypt from 'bcryptjs';
+import { SignJWT } from 'jose';
+import { config } from '@/lib/config';
 
 // Валидация входных данных
 const registerSchema = z.object({
@@ -41,96 +51,188 @@ export async function POST(request: NextRequest) {
 
     const { name, email, phone, password, description, address, website, roles, logoUrl } = validationResult.data;
 
-    // TODO: В production хешировать пароль с bcrypt
-    // const passwordHash = await bcrypt.hash(password, 10);
-    // Для демо сохраняем как есть (НЕ ДЕЛАЙТЕ ТАК В PRODUCTION!)
-    const passwordHash = password;
-
-    // Проверяем, не существует ли уже партнер с таким email
-    const existingPartner = await query(
-      'SELECT id FROM partners WHERE contact->>\'email\' = $1',
-      [email]
-    );
-
-    if (existingPartner.rows.length > 0) {
-      return NextResponse.json(
-        { success: false, error: 'Партнер с таким email уже зарегистрирован' },
-        { status: 400 }
+    // Используем транзакцию для обеспечения целостности данных
+    const result = await transaction(async (client) => {
+      // Проверяем, не существует ли уже пользователь с таким email
+      const existingUser = await client.query(
+        'SELECT id FROM users WHERE email = $1',
+        [email]
       );
-    }
 
-    // Создаем контактную информацию
-    const contact = {
-      email,
-      phone,
-      address: address || '',
-      website: website || '',
-    };
+      if (existingUser.rows.length > 0) {
+        throw new Error('Пользователь с таким email уже зарегистрирован');
+      }
 
-    // Создаем партнера для каждой роли
-    // (в текущей структуре БД партнер может иметь только одну категорию)
-    const partnerIds: string[] = [];
-    
-    for (const role of roles) {
-      const result = await query(
-        `INSERT INTO partners (name, category, description, contact, is_verified, created_at, updated_at)
+      // Хешируем пароль
+      const passwordHash = await bcrypt.hash(password, 10);
+
+      // Создаем пользователя
+      // Роль пользователя определяется по первой выбранной роли партнера
+      const userRole = roles[0]; // 'operator', 'transfer', 'stay', или 'gear'
+      
+      const userResult = await client.query(
+        `INSERT INTO users (email, name, role, password_hash, preferences, created_at, updated_at)
          VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
-         RETURNING id`,
+         RETURNING id, email, name, role`,
         [
-          `${name}${roles.length > 1 ? ` (${getRoleName(role)})` : ''}`,
-          role,
-          description || `${name} - ${getRoleName(role)}`,
-          JSON.stringify(contact),
-          false, // Требуется верификация
+          email,
+          name,
+          userRole,
+          passwordHash,
+          JSON.stringify({
+            phone,
+            address: address || '',
+            website: website || '',
+          })
         ]
       );
 
-      const partnerId = result.rows[0].id;
-      partnerIds.push(partnerId);
+      const user = userResult.rows[0];
+      const userId = user.id;
 
-      // Если есть логотип, сохраняем его как asset
-      if (logoUrl) {
-        const assetResult = await query(
-          `INSERT INTO assets (url, mime_type, sha256, size, alt, created_at)
-           VALUES ($1, $2, $3, $4, $5, NOW())
-           RETURNING id`,
+      // Создаем контактную информацию
+      const contact = {
+        email,
+        phone,
+        address: address || '',
+        website: website || '',
+      };
+
+      // Создаем партнеров для каждой роли
+      const partnerIds: string[] = [];
+      
+      for (const role of roles) {
+        const partnerResult = await client.query(
+          `INSERT INTO partners (
+            name, 
+            category, 
+            description, 
+            contact, 
+            is_verified, 
+            user_id,
+            created_at, 
+            updated_at
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+          RETURNING id`,
           [
-            logoUrl,
-            'image/png',
-            `logo-${partnerId}-${Date.now()}`,
-            0,
-            `Логотип ${name}`,
+            `${name}${roles.length > 1 ? ` (${getRoleName(role)})` : ''}`,
+            role,
+            description || `${name} - ${getRoleName(role)}`,
+            JSON.stringify(contact),
+            false, // Требуется верификация
+            userId,
           ]
         );
 
-        const assetId = assetResult.rows[0].id;
+        const partnerId = partnerResult.rows[0].id;
+        partnerIds.push(partnerId);
 
-        // Связываем логотип с партнером
-        await query(
-          `INSERT INTO partner_assets (partner_id, asset_id)
-           VALUES ($1, $2)`,
-          [partnerId, assetId]
+        // Если есть логотип, сохраняем его как asset
+        if (logoUrl) {
+          const assetResult = await client.query(
+            `INSERT INTO assets (url, mime_type, sha256, size, alt, created_at)
+             VALUES ($1, $2, $3, $4, $5, NOW())
+             RETURNING id`,
+            [
+              logoUrl,
+              'image/png',
+              `logo-${partnerId}-${Date.now()}`,
+              0,
+              `Логотип ${name}`,
+            ]
+          );
+
+          const assetId = assetResult.rows[0].id;
+
+          // Связываем логотип с партнером
+          await client.query(
+            `INSERT INTO partner_assets (partner_id, asset_id)
+             VALUES ($1, $2)`,
+            [partnerId, assetId]
+          );
+
+          // Обновляем logo_asset_id
+          await client.query(
+            `UPDATE partners SET logo_asset_id = $1 WHERE id = $2`,
+            [assetId, partnerId]
+          );
+        }
+      }
+
+      return {
+        user,
+        partnerIds,
+        roles,
+      };
+    });
+
+    // Создаем JWT токен для автоматической авторизации
+    const secret = new TextEncoder().encode(config.auth.jwtSecret);
+    const token = await new SignJWT({ 
+      userId: result.user.id,
+      email: result.user.email,
+      role: result.user.role,
+      name: result.user.name,
+    })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setIssuedAt()
+      .setExpirationTime(config.auth.jwtExpiresIn)
+      .sign(secret);
+
+    // Создаем ответ с токеном в cookie
+    const response = NextResponse.json({
+      success: true,
+      message: 'Партнер успешно зарегистрирован! Ожидайте подтверждения администратора.',
+      data: {
+        user: {
+          id: result.user.id,
+          email: result.user.email,
+          name: result.user.name,
+          role: result.user.role,
+        },
+        partnerIds: result.partnerIds,
+        roles: result.roles,
+      },
+    });
+
+    // Устанавливаем токен в HTTP-only cookie
+    response.cookies.set('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7, // 7 дней
+      path: '/',
+    });
+
+    return response;
+
+  } catch (error) {
+    console.error('Error registering partner:', error);
+    
+    // Обработка известных ошибок
+    if (error instanceof Error) {
+      if (error.message.includes('уже зарегистрирован')) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: error.message,
+          },
+          { status: 400 }
         );
-
-        // Обновляем logo_asset_id
-        await query(
-          `UPDATE partners SET logo_asset_id = $1 WHERE id = $2`,
-          [assetId, partnerId]
+      }
+      
+      if (error.message.includes('duplicate key')) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: 'Партнер с такими данными уже существует',
+          },
+          { status: 400 }
         );
       }
     }
 
-    return NextResponse.json({
-      success: true,
-      message: 'Партнер успешно зарегистрирован! Ожидайте подтверждения администратора.',
-      data: {
-        partnerIds,
-        roles,
-      },
-    });
-
-  } catch (error) {
-    console.error('Error registering partner:', error);
     return NextResponse.json(
       { 
         success: false, 
