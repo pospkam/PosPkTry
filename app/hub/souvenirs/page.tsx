@@ -50,10 +50,11 @@ export default function SouvenirsHub() {
       const response = await fetch('/api/souvenirs?limit=50');
       const result = await response.json();
 
-      if (result.success) {
+      if (result.success && Array.isArray(result.data)) {
         setSouvenirs(result.data);
       } else {
-        throw new Error(result.error || 'Failed to fetch souvenirs');
+        setSouvenirs([]);
+        console.error('No souvenirs data:', result);
       }
     } catch (err) {
       console.error('Error fetching souvenirs:', err);
@@ -160,7 +161,7 @@ export default function SouvenirsHub() {
     return filtered;
   };
 
-  const categories = ['all', ...Array.from(new Set(souvenirs.map(s => s.category)))];
+  const categories = ['all', ...Array.from(new Set((souvenirs || []).map(s => s.category)))];
   const filteredSouvenirs = getFilteredAndSortedSouvenirs();
 
   if (loading) {

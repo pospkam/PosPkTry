@@ -43,10 +43,11 @@ export default function GearHub() {
       const response = await fetch('/api/gear?limit=50');
       const result = await response.json();
 
-      if (result.success) {
+      if (result.success && Array.isArray(result.data)) {
         setGearItems(result.data);
       } else {
-        throw new Error(result.error || 'Failed to fetch gear');
+        setGearItems([]);
+        console.error('No gear data:', result);
       }
     } catch (err) {
       console.error('Error fetching gear:', err);
@@ -114,7 +115,7 @@ export default function GearHub() {
     return filtered;
   };
 
-  const categories = ['all', ...Array.from(new Set(gearItems.map(g => g.category)))];
+  const categories = ['all', ...Array.from(new Set((gearItems || []).map(g => g.category)))];
   const filteredGear = getFilteredAndSortedGear();
 
   if (loading) {

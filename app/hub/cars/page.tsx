@@ -50,10 +50,11 @@ export default function CarsHub() {
       const response = await fetch('/api/cars?limit=50');
       const result = await response.json();
 
-      if (result.success) {
+      if (result.success && Array.isArray(result.data)) {
         setCars(result.data);
       } else {
-        throw new Error(result.error || 'Failed to fetch cars');
+        setCars([]);
+        console.error('No cars data:', result);
       }
     } catch (err) {
       console.error('Error fetching cars:', err);

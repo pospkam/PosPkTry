@@ -22,8 +22,11 @@ export default function Home() {
       setLoading(true);
       const toursResponse = await fetch('/api/tours?limit=6');
       const toursData = await toursResponse.json();
-      if (toursData.success) {
-        setTours(toursData.data.data);
+      if (toursData.success && toursData.data) {
+        const tours = Array.isArray(toursData.data) ? toursData.data : (toursData.data.data || []);
+        setTours(tours);
+      } else {
+        setTours([]);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -358,7 +361,7 @@ export default function Home() {
                 <div key={i} className="bg-white/5 rounded-2xl h-80 animate-pulse"></div>
               ))}
             </div>
-          ) : tours.length > 0 ? (
+          ) : (tours || []).length > 0 ? (
             <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
               {tours.map((tour) => (
                 <TourCard
