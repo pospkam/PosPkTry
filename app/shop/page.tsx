@@ -160,7 +160,7 @@ export default function ShopPage() {
             <div className="text-4xl"> </div>
             <div>
               <h3 className="font-bold text-white mb-1">
-                Официальный партнёр: "Дар Севера"
+                Официальный партнёр: &ldquo;Дар Севера&rdquo;
               </h3>
               <p className="text-white/70 text-sm">
                 Авторские этнические изделия от потомственных мастеров Камчатки
