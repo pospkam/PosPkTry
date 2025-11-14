@@ -19,7 +19,13 @@ const JWT_SECRET = new TextEncoder().encode(
 const PROTECTED_ROUTES = ['/hub', '/profile'];
 
 // Public API routes (no auth needed)
-const PUBLIC_API_ROUTES = ['/api/auth', '/api/tours', '/api/weather', '/api/eco-points'];
+const PUBLIC_API_ROUTES = [
+  '/api/auth',
+  '/api/tours',
+  '/api/weather',
+  '/api/eco-points',
+  '/api/partners',
+];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
