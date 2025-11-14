@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
-import { getGuidePartnerId, checkScheduleConflicts } from '@/lib/auth/guide-helpers';
+import { getGuidePartnerId, checkScheduleConflicts, hasTourDayConflict } from '@/lib/auth/guide-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -137,45 +137,77 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const {
-      startTime,
-      endTime,
-      title,
-      description,
-      tourId,
-      bookingId,
-      maxParticipants,
-      location,
-      locationName,
-      notes
-    } = body;
+      const {
+        startTime,
+        endTime,
+        title,
+        description,
+        tourId,
+        bookingId,
+        maxParticipants,
+        location,
+        locationName,
+        notes
+      } = body;
 
-    // Validation
-    if (!startTime || !endTime || !title) {
-      return NextResponse.json({
-        success: false,
-        error: 'Заполните обязательные поля: startTime, endTime, title'
-      } as ApiResponse<null>, { status: 400 });
-    }
+      // Validation
+      if (!startTime || !endTime || !title) {
+        return NextResponse.json({
+          success: false,
+          error: 'Заполните обязательные поля: startTime, endTime, title'
+        } as ApiResponse<null>, { status: 400 });
+      }
 
-    // Check time logic
-    if (new Date(startTime) >= new Date(endTime)) {
-      return NextResponse.json({
-        success: false,
-        error: 'Время окончания должно быть позже времени начала'
-      } as ApiResponse<null>, { status: 400 });
-    }
+      const parsedStart = new Date(startTime);
+      const parsedEnd = new Date(endTime);
 
-    // Check for conflicts
-    const noConflicts = await checkScheduleConflicts(guideId, startTime, endTime);
-    
-    if (!noConflicts) {
-      return NextResponse.json({
-        success: false,
-        error: 'Конфликт расписания! У вас уже запланировано мероприятие в это время.',
-        message: 'Выберите другое время или отмените существующее мероприятие.'
-      } as ApiResponse<null>, { status: 409 });
-    }
+      if (Number.isNaN(parsedStart.getTime()) || Number.isNaN(parsedEnd.getTime())) {
+        return NextResponse.json({
+          success: false,
+          error: 'Некорректный формат даты/времени'
+        } as ApiResponse<null>, { status: 400 });
+      }
+
+      // Check time logic
+      if (parsedStart >= parsedEnd) {
+        return NextResponse.json({
+          success: false,
+          error: 'Время окончания должно быть позже времени начала'
+        } as ApiResponse<null>, { status: 400 });
+      }
+
+      if (maxParticipants && (typeof maxParticipants !== 'number' || maxParticipants <= 0)) {
+        return NextResponse.json({
+          success: false,
+          error: 'maxParticipants должно быть положительным числом'
+        } as ApiResponse<null>, { status: 400 });
+      }
+
+      // Check for conflicts
+      const noConflicts = await checkScheduleConflicts(guideId, startTime, endTime);
+      
+      if (!noConflicts) {
+        return NextResponse.json({
+          success: false,
+          error: 'Конфликт расписания! У вас уже запланировано мероприятие в это время.',
+          message: 'Выберите другое время или отмените существующее мероприятие.'
+        } as ApiResponse<null>, { status: 409 });
+      }
+
+      if (tourId) {
+        const hasSameDaySlot = await hasTourDayConflict({
+          guideId,
+          tourId,
+          startTime,
+        });
+
+        if (hasSameDaySlot) {
+          return NextResponse.json({
+            success: false,
+            error: 'У вас уже есть слот для этого тура на выбранный день'
+          } as ApiResponse<null>, { status: 409 });
+        }
+      }
 
     // Create schedule entry
     let insertQuery = `

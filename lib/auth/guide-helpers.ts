@@ -208,6 +208,44 @@ export async function checkScheduleConflicts(
   }
 }
 
+export async function hasTourDayConflict(params: {
+  guideId: string;
+  tourId?: string | null;
+  startTime?: string;
+  excludeId?: string;
+}): Promise<boolean> {
+  const { guideId, tourId, startTime, excludeId } = params;
+
+  if (!guideId || !tourId || !startTime) {
+    return false;
+  }
+
+  try {
+    const queryParams: any[] = [guideId, tourId, startTime];
+    let queryStr = `
+      SELECT 1
+      FROM guide_schedule
+      WHERE guide_id = $1
+        AND tour_id = $2
+        AND DATE(start_time) = DATE($3::timestamptz)
+        AND status != 'cancelled'
+    `;
+
+    if (excludeId) {
+      queryStr += ' AND id != $4';
+      queryParams.push(excludeId);
+    }
+
+    queryStr += ' LIMIT 1';
+
+    const result = await query(queryStr, queryParams);
+    return result.rows.length > 0;
+  } catch (error) {
+    console.error('Error checking tour day conflict:', error);
+    return false;
+  }
+}
+
 /**
  * Calculate guide earnings from booking
  * Default commission: 10%

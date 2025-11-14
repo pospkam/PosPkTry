@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
-import { verifyScheduleOwnership, checkScheduleConflicts } from '@/lib/auth/guide-helpers';
+import { verifyScheduleOwnership, checkScheduleConflicts, hasTourDayConflict } from '@/lib/auth/guide-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -111,33 +111,66 @@ export async function PUT(
       } as ApiResponse<null>, { status: 403 });
     }
 
-    const isOwner = await verifyScheduleOwnership(userId, params.id);
-    
-    if (!isOwner) {
-      return NextResponse.json({
-        success: false,
-        error: 'Запись расписания не найдена или у вас нет прав'
-      } as ApiResponse<null>, { status: 404 });
-    }
+      const isOwner = await verifyScheduleOwnership(userId, params.id);
+      
+      if (!isOwner) {
+        return NextResponse.json({
+          success: false,
+          error: 'Запись расписания не найдена или у вас нет прав'
+        } as ApiResponse<null>, { status: 404 });
+      }
 
-    const body = await request.json();
+      const body = await request.json();
 
-    // Check for time conflicts if time is being updated
-    if (body.startTime && body.endTime) {
-      // Get guide_id for this schedule
       const scheduleResult = await query(
-        'SELECT guide_id FROM guide_schedule WHERE id = $1',
+        'SELECT guide_id, start_time, end_time, tour_id FROM guide_schedule WHERE id = $1',
         [params.id]
       );
-      
-      const guideId = scheduleResult.rows[0]?.guide_id;
-      
+
+      const scheduleRow = scheduleResult.rows[0];
+
+      if (!scheduleRow) {
+        return NextResponse.json({
+          success: false,
+          error: 'Запись расписания не найдена'
+        } as ApiResponse<null>, { status: 404 });
+      }
+
+      const nextStartTime = body.startTime ?? scheduleRow.start_time;
+      const nextEndTime = body.endTime ?? scheduleRow.end_time;
+
+      if (!nextStartTime || !nextEndTime) {
+        return NextResponse.json({
+          success: false,
+          error: 'startTime и endTime не могут быть пустыми'
+        } as ApiResponse<null>, { status: 400 });
+      }
+
+      const parsedStart = new Date(nextStartTime);
+      const parsedEnd = new Date(nextEndTime);
+
+      if (Number.isNaN(parsedStart.getTime()) || Number.isNaN(parsedEnd.getTime())) {
+        return NextResponse.json({
+          success: false,
+          error: 'Некорректный формат даты/времени'
+        } as ApiResponse<null>, { status: 400 });
+      }
+
+      if (parsedStart >= parsedEnd) {
+        return NextResponse.json({
+          success: false,
+          error: 'Время окончания должно быть позже времени начала'
+        } as ApiResponse<null>, { status: 400 });
+      }
+
+      const guideId = scheduleRow.guide_id;
+
       if (guideId) {
         const noConflicts = await checkScheduleConflicts(
           guideId,
-          body.startTime,
-          body.endTime,
-          params.id // Exclude current entry
+          nextStartTime,
+          nextEndTime,
+          params.id
         );
         
         if (!noConflicts) {
@@ -146,28 +179,55 @@ export async function PUT(
             error: 'Конфликт расписания! Новое время пересекается с другим мероприятием.'
           } as ApiResponse<null>, { status: 409 });
         }
+
+        const nextTourId = body.tourId ?? scheduleRow.tour_id;
+        if (await hasTourDayConflict({
+          guideId,
+          tourId: nextTourId,
+          startTime: nextStartTime,
+          excludeId: params.id,
+        })) {
+          return NextResponse.json({
+            success: false,
+            error: 'У вас уже есть слот для этого тура на выбранный день'
+          } as ApiResponse<null>, { status: 409 });
+        }
       }
-    }
 
     const updateFields = [];
     const updateValues = [];
     let paramIndex = 1;
 
-    const allowedFields = [
-      'startTime', 'endTime', 'title', 'description', 'status',
-      'maxParticipants', 'currentParticipants', 'locationName', 'notes'
-    ];
+      const allowedFields = [
+        'startTime', 'endTime', 'title', 'description', 'status',
+        'maxParticipants', 'currentParticipants', 'locationName', 'notes', 'tourId'
+      ];
 
-    const dbFieldMap: Record<string, string> = {
-      startTime: 'start_time',
-      endTime: 'end_time',
-      maxParticipants: 'max_participants',
-      currentParticipants: 'current_participants',
-      locationName: 'location_name'
-    };
+      const dbFieldMap: Record<string, string> = {
+        startTime: 'start_time',
+        endTime: 'end_time',
+        maxParticipants: 'max_participants',
+        currentParticipants: 'current_participants',
+        locationName: 'location_name',
+        tourId: 'tour_id'
+      };
 
     for (const [key, value] of Object.entries(body)) {
-      if (allowedFields.includes(key)) {
+        if (allowedFields.includes(key)) {
+          if (key === 'maxParticipants' && (typeof value !== 'number' || value <= 0)) {
+            return NextResponse.json({
+              success: false,
+              error: 'maxParticipants должно быть положительным числом'
+            } as ApiResponse<null>, { status: 400 });
+          }
+
+          if (key === 'currentParticipants' && (typeof value !== 'number' || value < 0)) {
+            return NextResponse.json({
+              success: false,
+              error: 'currentParticipants не может быть отрицательным'
+            } as ApiResponse<null>, { status: 400 });
+          }
+
         const dbKey = dbFieldMap[key] || key.replace(/([A-Z])/g, '_$1').toLowerCase();
         updateFields.push(`${dbKey} = $${paramIndex++}`);
         updateValues.push(value);
