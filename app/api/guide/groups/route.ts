@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
+import { getGuidePartnerId, verifyScheduleOwnership } from '@/lib/auth/guide-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,6 +21,15 @@ export async function GET(request: NextRequest) {
       } as ApiResponse<null>, { status: 403 });
     }
 
+    const guideId = await getGuidePartnerId(userId);
+
+    if (!guideId) {
+      return NextResponse.json({
+        success: false,
+        error: 'Профиль гида не найден'
+      } as ApiResponse<null>, { status: 404 });
+    }
+
     const result = await query(
       `SELECT 
         gg.*,
@@ -31,18 +41,18 @@ export async function GET(request: NextRequest) {
       JOIN tours t ON gs.tour_id = t.id
       WHERE gs.guide_id = $1
       ORDER BY gs.tour_date DESC, gs.start_time DESC`,
-      [userId]
+      [guideId]
     );
 
     const groups = result.rows.map(row => ({
       id: row.id,
       scheduleId: row.schedule_id,
       groupName: row.group_name,
-      participants: row.participants,
-      emergencyContacts: row.emergency_contacts,
-      experienceLevels: row.experience_levels,
+      participants: row.participants ?? [],
+      emergencyContacts: row.emergency_contacts ?? [],
+      experienceLevels: row.experience_levels ?? {},
       specialNeeds: row.special_needs,
-      equipmentChecklist: row.equipment_checklist,
+      equipmentChecklist: row.equipment_checklist ?? [],
       status: row.status,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
@@ -81,6 +91,15 @@ export async function POST(request: NextRequest) {
       } as ApiResponse<null>, { status: 403 });
     }
 
+    const guideId = await getGuidePartnerId(userId);
+
+    if (!guideId) {
+      return NextResponse.json({
+        success: false,
+        error: 'Профиль гида не найден'
+      } as ApiResponse<null>, { status: 404 });
+    }
+
     const body = await request.json();
     const {
       scheduleId,
@@ -92,20 +111,23 @@ export async function POST(request: NextRequest) {
       equipmentChecklist
     } = body;
 
-    // Verify schedule belongs to guide
-    const scheduleCheck = await query(
-      'SELECT id FROM guide_schedule WHERE id = $1 AND guide_id = $2',
-      [scheduleId, userId]
-    );
-
-    if (scheduleCheck.rows.length === 0) {
+    if (!scheduleId) {
       return NextResponse.json({
         success: false,
-        error: 'Расписание не найдено'
-      } as ApiResponse<null>, { status: 404 });
+        error: 'Не указан scheduleId'
+      } as ApiResponse<null>, { status: 400 });
     }
 
-    // Create group
+    // Verify schedule belongs to current guide
+    const ownsSchedule = await verifyScheduleOwnership(userId, scheduleId);
+
+    if (!ownsSchedule) {
+      return NextResponse.json({
+        success: false,
+        error: 'Расписание не найдено или недоступно'
+      } as ApiResponse<null>, { status: 403 });
+    }
+
     const result = await query(
       `INSERT INTO guide_groups (
         schedule_id, group_name, participants, emergency_contacts,
@@ -123,9 +145,23 @@ export async function POST(request: NextRequest) {
       ]
     );
 
+    const row = result.rows[0];
+
     return NextResponse.json({
       success: true,
-      data: result.rows[0],
+      data: {
+        id: row.id,
+        scheduleId: row.schedule_id,
+        groupName: row.group_name,
+        participants: row.participants ?? [],
+        emergencyContacts: row.emergency_contacts ?? [],
+        experienceLevels: row.experience_levels ?? {},
+        specialNeeds: row.special_needs,
+        equipmentChecklist: row.equipment_checklist ?? [],
+        status: row.status,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+      },
       message: 'Группа создана'
     } as ApiResponse<any>);
 
