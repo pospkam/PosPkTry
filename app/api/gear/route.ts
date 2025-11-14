@@ -1,89 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
+import { findAvailableGear } from '@/lib/auth/gear-helpers';
 
-// Mock данные снаряжения (временно, до реализации БД)
-const mockGear = [
-  {
-    id: '1',
-    name: 'Горные лыжи Rossignol',
-    description: 'Профессиональные горные лыжи для катания по склонам Камчатки',
-    category: 'Лыжи',
-    pricePerDay: 1500,
-    pricePerWeek: 8000,
-    isAvailable: true,
-    condition: 'Отличное',
-    images: ['/gear/skis-rossignol.jpg'],
-    features: ['Карвинг', 'Графитовая конструкция', 'Усиленные края'],
-    rating: 4.7,
-    reviewCount: 23,
-    location: 'База в Петропавловске',
-    size: '170-185 см',
-    weight: '3.2 кг'
-  },
-  {
-    id: '2',
-    name: 'Снегоход Yamaha VK540',
-    description: 'Мощный снегоход для передвижения по заснеженной местности',
-    category: 'Снегоходы',
-    pricePerDay: 8000,
-    pricePerWeek: 40000,
-    isAvailable: true,
-    condition: 'Отличное',
-    images: ['/gear/snowmobile-yamaha.jpg'],
-    features: ['540cc двигатель', 'Электрический стартер', 'Теплая кабина'],
-    rating: 4.9,
-    reviewCount: 15,
-    location: 'Аренда в Елизово',
-    size: 'Одноместный',
-    weight: '280 кг'
-  },
-  {
-    id: '3',
-    name: 'Рюкзак туристический Deuter',
-    description: 'Легкий и прочный рюкзак для многодневных походов',
-    category: 'Рюкзаки',
-    pricePerDay: 300,
-    pricePerWeek: 1500,
-    isAvailable: false,
-    condition: 'Хорошее',
-    images: ['/gear/backpack-deuter.jpg'],
-    features: ['60 л объём', 'Водонепроницаемая ткань', 'Эргономичные лямки'],
-    rating: 4.5,
-    reviewCount: 31,
-    location: 'База в Петропавловске',
-    size: 'M/L',
-    weight: '1.8 кг'
-  }
-];
+export const dynamic = 'force-dynamic';
 
-// GET /api/gear - Получить список снаряжения
+/**
+ * GET /api/gear - Public endpoint to get available gear items
+ */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
+    const category = searchParams.get('category') || undefined;
     const available = searchParams.get('available') === 'true';
-    const category = searchParams.get('category');
+    const startDate = searchParams.get('startDate') || undefined;
+    const endDate = searchParams.get('endDate') || undefined;
+    const minPrice = searchParams.get('minPrice') ? parseFloat(searchParams.get('minPrice')!) : undefined;
+    const maxPrice = searchParams.get('maxPrice') ? parseFloat(searchParams.get('maxPrice')!) : undefined;
     const limit = parseInt(searchParams.get('limit') || '20');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    let filteredGear = [...mockGear];
+    const items = await findAvailableGear(
+      category,
+      startDate,
+      endDate,
+      minPrice,
+      maxPrice
+    );
 
-    // Фильтр по доступности
-    if (available) {
-      filteredGear = filteredGear.filter(item => item.isAvailable);
-    }
-
-    // Фильтр по категории
-    if (category) {
-      filteredGear = filteredGear.filter(item => item.category === category);
-    }
-
-    // Пагинация
-    const total = filteredGear.length;
-    filteredGear = filteredGear.slice(offset, offset + limit);
+    // Client-side pagination
+    const total = items.length;
+    const paginatedItems = items.slice(offset, offset + limit);
 
     return NextResponse.json({
       success: true,
-      data: filteredGear,
+      data: paginatedItems,
       pagination: {
         total,
         limit,
