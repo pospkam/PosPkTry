@@ -1,0 +1,345 @@
+/* ========================================
+   SAMSUNG WEATHER THEME
+   Современный дизайн с эффектами погоды
+   ======================================== */
+
+/* === Цветовая палитра Samsung Weather === */
+:root {
+  /* Основные цвета неба */
+  --sky-gradient-start: #4A90E2;
+  --sky-gradient-mid: #7FB4E8;
+  --sky-gradient-end: #B3D9F5;
+  
+  /* Акцентные цвета */
+  --accent-blue: #4A90E2;
+  --accent-light-blue: #7FB4E8;
+  --accent-ice: #B3D9F5;
+  --accent-white: #FFFFFF;
+  
+  /* Фоновые цвета */
+  --bg-sky: linear-gradient(180deg, #4A90E2 0%, #7FB4E8 50%, #B3D9F5 100%);
+  --bg-card-glass: rgba(255, 255, 255, 0.15);
+  --bg-card-hover: rgba(255, 255, 255, 0.25);
+  
+  /* Тени и эффекты */
+  --shadow-soft: 0 8px 32px rgba(74, 144, 226, 0.15);
+  --shadow-card: 0 12px 48px rgba(74, 144, 226, 0.2);
+  --glow-blue: 0 0 40px rgba(74, 144, 226, 0.4);
+  
+  /* Текст */
+  --text-primary: #FFFFFF;
+  --text-secondary: rgba(255, 255, 255, 0.9);
+  --text-muted: rgba(255, 255, 255, 0.7);
+  --text-dark: #1a2a4e;
+}
+
+/* === Основной фон === */
+body {
+  background: var(--bg-sky);
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* === Анимированный фон с облаками === */
+.weather-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  background: linear-gradient(180deg, 
+    #4A90E2 0%, 
+    #7FB4E8 40%, 
+    #B3D9F5 70%,
+    #E8F4FB 100%
+  );
+  overflow: hidden;
+}
+
+/* === Облака === */
+.weather-background::before,
+.weather-background::after {
+  content: '';
+  position: absolute;
+  background: radial-gradient(ellipse 800px 300px, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+  animation: float-clouds 60s ease-in-out infinite;
+}
+
+.weather-background::before {
+  top: 10%;
+  left: -20%;
+  width: 1000px;
+  height: 400px;
+  animation-delay: 0s;
+}
+
+.weather-background::after {
+  top: 50%;
+  right: -20%;
+  width: 1200px;
+  height: 500px;
+  animation-delay: -30s;
+}
+
+@keyframes float-clouds {
+  0%, 100% {
+    transform: translateX(0) translateY(0);
+    opacity: 0.3;
+  }
+  25% {
+    transform: translateX(100px) translateY(-50px);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateX(200px) translateY(0);
+    opacity: 0.4;
+  }
+  75% {
+    transform: translateX(100px) translateY(50px);
+    opacity: 0.5;
+  }
+}
+
+/* === Дополнительные облака === */
+.cloud {
+  position: absolute;
+  background: radial-gradient(ellipse 600px 200px, rgba(255, 255, 255, 0.4) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: drift 90s linear infinite;
+  pointer-events: none;
+}
+
+.cloud-1 {
+  top: 15%;
+  left: -10%;
+  width: 800px;
+  height: 300px;
+  animation-duration: 120s;
+}
+
+.cloud-2 {
+  top: 40%;
+  right: -15%;
+  width: 1000px;
+  height: 350px;
+  animation-duration: 100s;
+  animation-delay: -50s;
+}
+
+.cloud-3 {
+  bottom: 20%;
+  left: -20%;
+  width: 900px;
+  height: 320px;
+  animation-duration: 110s;
+  animation-delay: -70s;
+}
+
+@keyframes drift {
+  0% {
+    transform: translateX(0) translateY(0);
+  }
+  50% {
+    transform: translateX(150px) translateY(-30px);
+  }
+  100% {
+    transform: translateX(0) translateY(0);
+  }
+}
+
+/* === Glass Morphism Cards === */
+.weather-card {
+  background: var(--bg-card-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 24px;
+  box-shadow: var(--shadow-card);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.weather-card:hover {
+  background: var(--bg-card-hover);
+  transform: translateY(-8px);
+  box-shadow: var(--glow-blue);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* === Кнопки в стиле Samsung Weather === */
+.weather-btn {
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--accent-blue);
+  border: none;
+  border-radius: 16px;
+  padding: 14px 32px;
+  font-weight: 600;
+  font-size: 16px;
+  box-shadow: var(--shadow-soft);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.weather-btn:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(74, 144, 226, 0.25);
+}
+
+.weather-btn-primary {
+  background: var(--accent-blue);
+  color: white;
+}
+
+.weather-btn-primary:hover {
+  background: var(--accent-light-blue);
+  box-shadow: var(--glow-blue);
+}
+
+/* === Анимация появления === */
+.fade-in {
+  animation: fadeIn 0.8s ease-out forwards;
+  opacity: 0;
+}
+
+.fade-in-delay-1 { animation-delay: 0.2s; }
+.fade-in-delay-2 { animation-delay: 0.4s; }
+.fade-in-delay-3 { animation-delay: 0.6s; }
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* === Типографика === */
+.weather-title {
+  font-size: clamp(2.5rem, 8vw, 5rem);
+  font-weight: 800;
+  color: var(--text-primary);
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  line-height: 1.1;
+  margin-bottom: 1rem;
+}
+
+.weather-subtitle {
+  font-size: clamp(1.2rem, 3vw, 1.8rem);
+  font-weight: 400;
+  color: var(--text-secondary);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* === Иконки погоды === */
+.weather-icon {
+  filter: drop-shadow(0 4px 12px rgba(255, 255, 255, 0.3));
+  transition: transform 0.3s ease;
+}
+
+.weather-icon:hover {
+  transform: scale(1.1) rotate(5deg);
+}
+
+/* === Эффект стекла для хедера === */
+.weather-header {
+  background: rgba(74, 144, 226, 0.1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* === Градиентные оверлеи === */
+.gradient-overlay-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 300px;
+  background: linear-gradient(180deg, 
+    rgba(74, 144, 226, 0.6) 0%, 
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+.gradient-overlay-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 300px;
+  background: linear-gradient(0deg, 
+    rgba(179, 217, 245, 0.6) 0%, 
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+/* === Снежинки / Дождь (опционально) === */
+.weather-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 50%;
+  animation: fall linear infinite;
+}
+
+@keyframes fall {
+  0% {
+    transform: translateY(-100px) translateX(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) translateX(50px);
+    opacity: 0;
+  }
+}
+
+/* === Тени для текста === */
+.text-shadow-soft {
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.text-shadow-strong {
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* === Адаптивность === */
+@media (max-width: 768px) {
+  .weather-card {
+    border-radius: 16px;
+  }
+  
+  .weather-btn {
+    padding: 12px 24px;
+    font-size: 14px;
+  }
+  
+  .cloud {
+    display: none;
+  }
+}
+
+/* === Utility классы === */
+.backdrop-blur-xl {
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.glass-effect {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}

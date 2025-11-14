@@ -56,7 +56,7 @@ export function TourCard({ tour, className, onClick }: TourCardProps) {
   return (
     <div
       className={cn(
-        'bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:bg-white/10 transition-all duration-300 cursor-pointer',
+        'weather-card overflow-hidden cursor-pointer',
         className
       )}
       onClick={onClick}
@@ -161,7 +161,7 @@ export function TourCard({ tour, className, onClick }: TourCardProps) {
 
         {/* Кнопка бронирования */}
         <button
-          className="w-full bg-premium-gold hover:bg-premium-gold/90 text-premium-black font-bold py-3 px-4 rounded-xl transition-all duration-200"
+          className="w-full weather-btn weather-btn-primary py-3"
           onClick={(e) => {
             e.stopPropagation();
             // Здесь будет логика бронирования

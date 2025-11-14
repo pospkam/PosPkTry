@@ -2,33 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Import UI improvements */
-@import './ui-improvements.css';
+/* SAMSUNG WEATHER THEME - ОСНОВНАЯ ТЕМА */
+@import './samsung-weather-theme.css';
 
-/* Import Modern Homepage */
-@import './modern-homepage.css';
-
-/* Import Floating Navigation */
-@import './floating-nav.css';
-
-/* Import Modern Search */
-@import './search-modern.css';
-@import './search-page.css';
-
-/* Import Homepage 2025 */
-@import './homepage-2025.css';
-
-/* Import Professional Homepage */
-@import './professional-homepage.css';
-
-/* Import Final Homepage */
-@import './final-homepage.css';
-
-/* Samsung Weather Theme - Голубая/Ледяная */
+/* Legacy theme compatibility */
 :root {
-  --premium-black: #1a2a4e;
-  --premium-gold: #a2d2ff;
-  --gold-gradient: linear-gradient(135deg, #a2d2ff 0%, #7eb3ff 50%, #5a9eff 100%);
+  --premium-black: #4A90E2;
+  --premium-gold: #B3D9F5;
+  --gold-gradient: linear-gradient(135deg, #4A90E2 0%, #7FB4E8 50%, #B3D9F5 100%);
 }
 
 .bg-premium-black {
