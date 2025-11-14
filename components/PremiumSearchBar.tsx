@@ -464,14 +464,14 @@ export function PremiumSearchBar({ onSearch, placeholder = 'Что ищете?' 
                 onClick={() => scrollCarousel('left')}
                 aria-label="Влево"
               >
-                ‹
+                &lsaquo;
               </button>
               <button 
                 className="carousel-btn-small"
                 onClick={() => scrollCarousel('right')}
                 aria-label="Вправо"
               >
-                ›
+                &rsaquo;
               </button>
             </div>
           </div>
