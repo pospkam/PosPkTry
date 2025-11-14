@@ -105,30 +105,47 @@ export async function PUT(
     const body = await request.json();
 
     // Build dynamic update query
-    const allowedFields = [
-      'name', 'description', 'short_description', 'category', 'difficulty', 
-      'duration', 'price', 'currency', 'season', 'max_group_size', 'min_group_size', 
-      'requirements', 'included', 'not_included', 'coordinates', 'is_active'
-    ];
+      const allowedFields = [
+        'name', 'description', 'shortDescription', 'category', 'difficulty', 
+        'duration', 'price', 'currency', 'season', 'maxGroupSize', 'minGroupSize', 
+        'requirements', 'includes', 'excludes', 'coordinates', 'isActive'
+      ];
+      
+      const fieldMap: Record<string, string> = {
+        shortDescription: 'short_description',
+        maxGroupSize: 'max_group_size',
+        minGroupSize: 'min_group_size',
+        includes: 'included',
+        excludes: 'not_included',
+        isActive: 'is_active',
+      };
+      
+      const jsonFields = new Set(['season', 'requirements', 'includes', 'excludes', 'coordinates']);
 
     const updateFields = [];
     const updateValues = [];
     let paramIndex = 1;
 
-    for (const [key, value] of Object.entries(body)) {
-      const dbKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
-      
-      if (allowedFields.includes(dbKey)) {
+      for (const [key, value] of Object.entries(body)) {
+        if (typeof value === 'undefined') {
+          continue;
+        }
+        
+        if (!allowedFields.includes(key)) {
+          continue;
+        }
+        
+        const mappedKey = fieldMap[key] || key;
+        const dbKey = mappedKey.replace(/([A-Z])/g, '_$1').toLowerCase();
+        
         updateFields.push(`${dbKey} = $${paramIndex++}`);
         
-        // Handle JSON fields
-        if (['season', 'requirements', 'included', 'not_included', 'coordinates'].includes(dbKey)) {
+        if (jsonFields.has(key)) {
           updateValues.push(JSON.stringify(value));
         } else {
           updateValues.push(value);
         }
       }
-    }
 
     if (updateFields.length === 0) {
       return NextResponse.json({

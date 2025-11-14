@@ -18,7 +18,34 @@ export async function getOperatorPartnerId(userId: string): Promise<string | nul
       [userId]
     );
     
-    return result.rows[0]?.id || null;
+    if (result.rows.length > 0) {
+      return result.rows[0].id;
+    }
+    
+    // Auto-create partner profile if missing
+    const userResult = await query(
+      `SELECT name, email FROM users WHERE id = $1`,
+      [userId]
+    );
+    
+    if (userResult.rows.length === 0) {
+      return null;
+    }
+    
+    const user = userResult.rows[0];
+    const contact = {
+      email: user.email || '',
+      phone: '',
+    };
+    
+    const partnerResult = await query(
+      `INSERT INTO partners (user_id, name, category, contact, is_verified, rating, review_count)
+       VALUES ($1, $2, 'operator', $3, FALSE, 0, 0)
+       RETURNING id`,
+      [userId, user.name || 'Оператор', JSON.stringify(contact)]
+    );
+    
+    return partnerResult.rows[0]?.id || null;
   } catch (error) {
     console.error('Error getting operator partner ID:', error);
     return null;

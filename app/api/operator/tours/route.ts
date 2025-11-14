@@ -200,23 +200,23 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
 
-    const {
-      name,
-      description,
-      shortDescription,
-      category,
-      difficulty,
-      duration,
-      price,
-      currency = 'RUB',
-      season,
-      maxGroupSize,
-      minGroupSize,
-      requirements,
-      included,
-      notIncluded,
-      coordinates
-    } = body;
+      const {
+        name,
+        description,
+        shortDescription,
+        category = 'adventure',
+        difficulty,
+        duration,
+        price,
+        currency = 'RUB',
+        season = [],
+        maxGroupSize = 20,
+        minGroupSize = 1,
+        requirements = [],
+        includes = [],
+        excludes = [],
+        coordinates = []
+      } = body;
 
     // Validation
     if (!name || !description || !difficulty || !duration || !price) {
@@ -238,19 +238,19 @@ export async function POST(request: NextRequest) {
         name,
         description,
         shortDescription || description.substring(0, 200),
-        category || 'adventure',
+          category,
         difficulty,
         duration,
         price,
         currency,
-        JSON.stringify(season || []),
-        maxGroupSize || 20,
-        minGroupSize || 1,
+          JSON.stringify(season),
+          maxGroupSize,
+          minGroupSize,
         operatorId,
-        JSON.stringify(requirements || []),
-        JSON.stringify(included || []),
-        JSON.stringify(notIncluded || []),
-        JSON.stringify(coordinates || [])
+          JSON.stringify(requirements),
+          JSON.stringify(includes),
+          JSON.stringify(excludes),
+          JSON.stringify(coordinates)
       ]
     );
 
