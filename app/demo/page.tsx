@@ -32,14 +32,14 @@ export default function DemoPage() {
     localStorage.setItem('demo_user', JSON.stringify(updatedUser));
     
     // Перенаправляем в соответствующий дашборд
-    switch (role) {
+      switch (role) {
       case 'tourist':
         router.push('/hub/tourist');
         break;
       case 'operator':
         router.push('/hub/operator');
         break;
-      case 'transfer-operator':
+        case 'transfer':
         router.push('/hub/transfer-operator');
         break;
       case 'guide':
@@ -113,8 +113,8 @@ export default function DemoPage() {
             </div>
           </div>
 
-          {/* Оператор трансферов */}
-          <div className="bg-premium-black/90 backdrop-blur-sm rounded-2xl p-6 border border-premium-gold/20 hover:border-premium-gold/40 transition-all cursor-pointer group" onClick={() => handleStartDemo('transfer-operator')}>
+            {/* Оператор трансферов */}
+            <div className="bg-premium-black/90 backdrop-blur-sm rounded-2xl p-6 border border-premium-gold/20 hover:border-premium-gold/40 transition-all cursor-pointer group" onClick={() => handleStartDemo('transfer')}>
             <div className="text-center">
               <div className="w-16 h-16 bg-purple-500/20 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-purple-500/30 transition-colors">
                 <span className="text-2xl">■</span>

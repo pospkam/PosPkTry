@@ -71,22 +71,22 @@ export default function DriversPage() {
     }
   ];
 
-  return (
-    <Protected roles={['transfer_operator']}>
-      <main className="min-h-screen bg-premium-black text-white">
-        <TransferOperatorNav />
-        <div className="max-w-7xl mx-auto p-6">
-          <h1 className="text-3xl font-black text-premium-gold mb-6">
-            Водители
-          </h1>
-          {loading ? (
-            <LoadingSpinner message="Загрузка..." />
-          ) : (
-            <DataTable data={drivers} columns={columns} emptyMessage="Нет водителей" />
-          )}
-        </div>
-      </main>
-    </Protected>
-  );
+    return (
+      <Protected roles={['transfer']}>
+        <main className="min-h-screen bg-premium-black text-white">
+          <TransferOperatorNav />
+          <div className="max-w-7xl mx-auto p-6">
+            <h1 className="text-3xl font-black text-premium-gold mb-6">
+              Водители
+            </h1>
+            {loading ? (
+              <LoadingSpinner message="Загрузка..." />
+            ) : (
+              <DataTable data={drivers} columns={columns} emptyMessage="Нет водителей" />
+            )}
+          </div>
+        </main>
+      </Protected>
+    );
 }
 

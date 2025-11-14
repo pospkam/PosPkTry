@@ -28,9 +28,21 @@ export async function ensureCarsPartnerExists(userId: string): Promise<string> {
   let partnerId = await getCarsPartnerId(userId);
   
   if (!partnerId) {
-    const result = await query(
-      `INSERT INTO partners (user_id, category, is_active) VALUES ($1, 'cars', TRUE) RETURNING id`,
+    const userResult = await query(
+      `SELECT name, email FROM users WHERE id = $1`,
       [userId]
+    );
+    const user = userResult.rows[0] || { name: 'Партнёр автопарка', email: '' };
+    const contact = {
+      email: user.email || '',
+      phone: '',
+    };
+
+    const result = await query(
+      `INSERT INTO partners (user_id, name, category, contact, is_verified, rating, review_count)
+       VALUES ($1, $2, 'cars', $3, FALSE, 0, 0)
+       RETURNING id`,
+      [userId, user.name || 'Партнёр автопарка', JSON.stringify(contact)]
     );
     partnerId = result.rows[0].id;
   }

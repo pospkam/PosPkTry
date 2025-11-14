@@ -187,10 +187,10 @@ function RegisterForm() {
                   onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                 >
-                  <option value="operator">Туроператор</option>
-                  <option value="guide">Гид</option>
-                  <option value="transfer-operator">Трансфер</option>
-                  <option value="agent">Агент</option>
+                    <option value="operator">Туроператор</option>
+                    <option value="guide">Гид</option>
+                    <option value="transfer">Трансфер</option>
+                    <option value="agent">Агент</option>
                 </select>
               </div>
             </>

@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Валидация роли
-    const validRoles = ['tourist', 'operator', 'guide', 'agent', 'transfer-operator', 'stay-provider', 'admin'];
+    const validRoles = ['tourist', 'operator', 'guide', 'agent', 'transfer', 'admin'];
     const userRole = role || 'tourist';
     if (!validRoles.includes(userRole)) {
       return NextResponse.json(

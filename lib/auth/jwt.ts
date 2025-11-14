@@ -59,13 +59,81 @@ export function extractToken(authHeader: string | null): string | null {
 /**
  * Get user from NextRequest
  */
-export async function getUserFromRequest(request: any): Promise<JWTPayload | null> {
-  const authHeader = request.headers.get('authorization');
-  const token = extractToken(authHeader);
+function getHeader(request: any, name: string): string | null {
+  if (!request?.headers) return null;
+  if (typeof request.headers.get === 'function') {
+    return request.headers.get(name);
+  }
+  const entries = typeof request.headers.entries === 'function'
+    ? Array.from(request.headers.entries())
+    : Object.entries(request.headers);
+  const found = entries.find(([key]) => key?.toLowerCase() === name.toLowerCase());
+  return found ? (found[1] as string) : null;
+}
+
+function getCookieValue(request: any, name: string): string | null {
+  try {
+    if (request?.cookies?.get) {
+      const cookie = request.cookies.get(name);
+      if (typeof cookie === 'string') {
+        return cookie;
+      }
+      if (cookie?.value) {
+        return cookie.value;
+      }
+    }
+  } catch {
+    // ignore
+  }
   
-  if (!token) {
+  const cookieHeader =
+    getHeader(request, 'cookie') ||
+    request?.headers?.Cookie ||
+    request?.headers?.cookie ||
+    null;
+  
+  if (!cookieHeader) {
     return null;
   }
   
-  return await verifyToken(token);
+  const cookies = cookieHeader.split(';');
+  for (const cookie of cookies) {
+    const [key, ...rest] = cookie.trim().split('=');
+    if (key === name) {
+      return decodeURIComponent(rest.join('='));
+    }
+  }
+  
+  return null;
+}
+
+export async function getUserFromRequest(request: any): Promise<JWTPayload | null> {
+  const authHeader = getHeader(request, 'authorization');
+  let token = extractToken(authHeader);
+  
+  if (!token) {
+    token = getCookieValue(request, 'auth_token');
+  }
+  
+  if (token) {
+    const payload = await verifyToken(token);
+    if (payload) {
+      return payload;
+    }
+  }
+  
+  // Fallback to middleware headers if present (JWT уже проверен на уровне middleware)
+  const headerUserId = getHeader(request, 'x-user-id');
+  const headerEmail = getHeader(request, 'x-user-email');
+  const headerRole = getHeader(request, 'x-user-role');
+  
+  if (headerUserId && headerRole) {
+    return {
+      userId: headerUserId,
+      email: headerEmail || '',
+      role: headerRole,
+    };
+  }
+  
+  return null;
 }

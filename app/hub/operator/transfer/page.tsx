@@ -61,44 +61,44 @@ export default function TransferOperatorPage() {
     }
   };
 
-  const tabs = [
-    { id: 'dashboard' as ActiveTab, name: 'Панель управления', icon: ' ' },
-    { id: 'drivers' as ActiveTab, name: 'Водители', icon: ' ' },
-    { id: 'routes' as ActiveTab, name: 'Маршруты', icon: ' ' },
-    { id: 'bookings' as ActiveTab, name: 'Бронирования', icon: ' ' },
-  ];
+    const tabs = [
+      { id: 'dashboard' as ActiveTab, name: 'Панель управления', icon: ' ' },
+      { id: 'drivers' as ActiveTab, name: 'Водители', icon: ' ' },
+      { id: 'routes' as ActiveTab, name: 'Маршруты', icon: ' ' },
+      { id: 'bookings' as ActiveTab, name: 'Бронирования', icon: ' ' },
+    ];
 
-  return (
-    <Protected roles={['transfer_operator', 'admin']}>
-      <main className="min-h-screen bg-premium-black text-white">
-        {/* Header */}
-        <div className="bg-white/5 border-b border-white/10 p-6">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-black text-premium-gold">
-                  Оператор трансферов
-                </h1>
-                <p className="text-white/70 mt-1">
-                  Управление водителями, маршрутами и трансферами
-                </p>
-              </div>
-
-              <div className="flex items-center space-x-4">
-                <div className="text-right">
-                  <div className="text-sm text-white/50">Оператор</div>
-                  <div className="font-semibold">{user?.name || 'Неизвестно'}</div>
+    return (
+      <Protected roles={['transfer', 'admin']}>
+        <main className="min-h-screen bg-premium-black text-white">
+          {/* Header */}
+          <div className="bg-white/5 border-b border-white/10 p-6">
+            <div className="max-w-7xl mx-auto">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl font-black text-premium-gold">
+                    Оператор трансферов
+                  </h1>
+                  <p className="text-white/70 mt-1">
+                    Управление водителями, маршрутами и трансферами
+                  </p>
                 </div>
-                <button
-                  onClick={fetchData}
-                  className="px-4 py-2 bg-premium-gold hover:bg-premium-gold/80 text-premium-black font-semibold rounded-lg transition-colors"
-                >
-                  🔄 Обновить
-                </button>
+
+                <div className="flex items-center space-x-4">
+                  <div className="text-right">
+                    <div className="text-sm text-white/50">Оператор</div>
+                    <div className="font-semibold">{user?.name || 'Неизвестно'}</div>
+                  </div>
+                  <button
+                    onClick={fetchData}
+                    className="px-4 py-2 bg-premium-gold hover:bg-premium-gold/80 text-premium-black font-semibold rounded-lg transition-colors"
+                  >
+                    🔄 Обновить
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
         {/* Navigation Tabs */}
         <div className="bg-white/10 border-b border-white/10">
@@ -162,7 +162,7 @@ export default function TransferOperatorPage() {
             </>
           )}
         </div>
-      </main>
-    </Protected>
-  );
+        </main>
+      </Protected>
+    );
 }

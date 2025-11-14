@@ -44,22 +44,22 @@ export function TransferDriverManagement({ operatorId, onDataChange }: TransferD
     }
   };
 
-  const handleStatusChange = async (driverId: string, newStatus: string) => {
-    try {
-      const response = await fetch(`/api/transfer-operator/drivers/${driverId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus })
-      });
+    const handleStatusChange = async (driverId: string, newStatus: string) => {
+      try {
+        const response = await fetch(`/api/transfer-operator/drivers/${driverId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus })
+        });
 
-      if (response.ok) {
-        fetchDrivers();
-        onDataChange();
+        if (response.ok) {
+          fetchDrivers();
+          onDataChange();
+        }
+      } catch (error) {
+        console.error('Error updating driver status:', error);
       }
-    } catch (error) {
-      console.error('Error updating driver status:', error);
-    }
-  };
+    };
 
   if (loading) {
     return (
