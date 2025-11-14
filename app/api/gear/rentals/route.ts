@@ -147,7 +147,7 @@ export async function GET(request: NextRequest) {
     `;
 
     const params: any[] = [];
-    let whereConditions: string[] = [];
+    const whereConditions: string[] = [];
 
     // Фильтр по статусу
     if (status) {

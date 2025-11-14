@@ -78,7 +78,7 @@ export default function GearHub() {
 
   // Фильтрация и сортировка
   const getFilteredAndSortedGear = () => {
-    let filtered = gearItems.filter(item => {
+    const filtered = gearItems.filter(item => {
       // Фильтр по категории
       if (selectedCategory !== 'all' && item.category !== selectedCategory) {
         return false;

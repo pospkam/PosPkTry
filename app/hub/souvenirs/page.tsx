@@ -124,7 +124,7 @@ export default function SouvenirsHub() {
 
   // Фильтрация и сортировка товаров
   const getFilteredAndSortedSouvenirs = () => {
-    let filtered = souvenirs.filter(souvenir => {
+    const filtered = souvenirs.filter(souvenir => {
       // Фильтр по категории
       if (selectedCategory !== 'all' && souvenir.category !== selectedCategory) {
         return false;

@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if client exists, create if not
-    let clientResult = await query(
+    const clientResult = await query(
       'SELECT id FROM users WHERE email = $1',
       [clientEmail.toLowerCase()]
     );

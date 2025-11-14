@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let subtotal = orderCalculation.subtotal;
+    const subtotal = orderCalculation.subtotal;
     let couponDiscount = 0;
 
     // Apply coupon if provided
