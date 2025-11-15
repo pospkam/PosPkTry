@@ -5,13 +5,62 @@ import { useEffect, useState } from 'react';
 type WeatherType = 'clear' | 'snow' | 'rain' | 'wind';
 type TimeOfDay = 'night' | 'morning' | 'day' | 'evening';
 
+interface WeatherData {
+  temperature: number;
+  feelsLike: number;
+  condition: string;
+  weatherType: WeatherType;
+  timeOfDay: TimeOfDay;
+  windSpeed: number;
+  humidity: number;
+  pressure: number;
+  emoji: string;
+  location: string;
+  isFallback?: boolean;
+}
+
 export default function WeatherBackground() {
   const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>('day');
   const [weather, setWeather] = useState<WeatherType>('clear');
+  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
+  const [temperature, setTemperature] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Определяем время суток по часам
-    const updateTimeOfDay = () => {
+    // Получаем реальную погоду с Яндекс API
+    const fetchWeather = async () => {
+      try {
+        console.log('🌤️ Запрос погоды с Яндекс API...');
+        const response = await fetch('/api/weather');
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+          const data = result.data;
+          console.log('✅ Погода получена:', data);
+          
+          setWeatherData(data);
+          setWeather(data.weatherType);
+          setTimeOfDay(data.timeOfDay);
+          setTemperature(data.temperature);
+          
+          if (data.isFallback) {
+            console.log('⚠️ Используются fallback данные погоды');
+          }
+        } else {
+          console.error('❌ Ошибка получения погоды:', result.error);
+          // Используем локальное время суток
+          updateLocalTimeOfDay();
+        }
+      } catch (error) {
+        console.error('❌ Ошибка запроса погоды:', error);
+        updateLocalTimeOfDay();
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Определяем время суток локально (fallback)
+    const updateLocalTimeOfDay = () => {
       const hour = new Date().getHours();
       
       if (hour >= 0 && hour < 6) {
@@ -25,21 +74,18 @@ export default function WeatherBackground() {
       }
     };
 
-    updateTimeOfDay();
-    const interval = setInterval(updateTimeOfDay, 60000); // Обновляем каждую минуту
-
-    // Демо: меняем погоду каждые 30 секунд для демонстрации
-    const weatherTypes: WeatherType[] = ['clear', 'snow', 'rain', 'wind'];
-    let weatherIndex = 0;
+    // Первоначальная загрузка
+    fetchWeather();
     
-    const weatherInterval = setInterval(() => {
-      weatherIndex = (weatherIndex + 1) % weatherTypes.length;
-      setWeather(weatherTypes[weatherIndex]);
-    }, 30000);
+    // Обновляем погоду каждые 10 минут
+    const weatherInterval = setInterval(fetchWeather, 600000);
+    
+    // Обновляем время суток каждую минуту
+    const timeInterval = setInterval(updateLocalTimeOfDay, 60000);
 
     return () => {
-      clearInterval(interval);
       clearInterval(weatherInterval);
+      clearInterval(timeInterval);
     };
   }, []);
 
@@ -76,20 +122,56 @@ export default function WeatherBackground() {
       {weather === 'rain' && <RainEffect />}
       {weather === 'wind' && <WindEffect />}
 
-      {/* Индикатор времени и погоды - адаптивный */}
-      <div className="fixed top-4 right-4 z-50 bg-white/10 backdrop-blur-md rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-2 border border-white/20">
-        <div className="flex items-center gap-2 sm:gap-3 text-white">
-          <span className="text-xl sm:text-2xl">
-            {weather === 'clear' && '☀️'}
-            {weather === 'snow' && '❄️'}
-            {weather === 'rain' && '🌧️'}
-            {weather === 'wind' && '💨'}
-          </span>
-          <div className="text-xs sm:text-sm">
-            <div className="font-semibold capitalize">{getTimeLabel(timeOfDay)}</div>
-            <div className="text-xs text-white/70 hidden sm:block">{getWeatherLabel(weather)}</div>
+      {/* Индикатор времени и погоды - с реальными данными */}
+      <div className="fixed top-4 right-4 z-50 bg-black/30 backdrop-blur-xl rounded-xl sm:rounded-2xl px-4 py-3 sm:px-6 sm:py-4 border border-white/30 shadow-2xl">
+        {loading ? (
+          <div className="flex items-center gap-3 text-white">
+            <div className="animate-spin rounded-full h-6 w-6 border-2 border-white/30 border-t-white"></div>
+            <span className="text-sm">Загрузка...</span>
           </div>
-        </div>
+        ) : (
+          <div className="flex items-center gap-3 sm:gap-4 text-white">
+            {/* Иконка погоды */}
+            <span className="text-3xl sm:text-4xl drop-shadow-lg">
+              {weatherData?.emoji || (weather === 'clear' ? '☀️' : weather === 'snow' ? '❄️' : weather === 'rain' ? '🌧️' : '💨')}
+            </span>
+            
+            {/* Информация о погоде */}
+            <div className="text-left">
+              {/* Температура */}
+              {temperature !== null && (
+                <div className="text-2xl sm:text-3xl font-black text-white drop-shadow-lg">
+                  {temperature > 0 ? '+' : ''}{temperature}°
+                </div>
+              )}
+              
+              {/* Описание и время суток */}
+              <div className="flex items-center gap-2 text-xs sm:text-sm">
+                <span className="font-semibold text-white/90 capitalize">
+                  {getTimeLabel(timeOfDay)}
+                </span>
+                <span className="text-white/60">•</span>
+                <span className="text-white/80">
+                  {getWeatherLabel(weather)}
+                </span>
+              </div>
+              
+              {/* Дополнительная информация */}
+              {weatherData && (
+                <div className="text-xs text-white/60 mt-1 hidden sm:block">
+                  💨 {weatherData.windSpeed} м/с • 💧 {weatherData.humidity}%
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        
+        {/* Индикатор fallback данных */}
+        {weatherData?.isFallback && (
+          <div className="absolute -bottom-1 -right-1 bg-yellow-500/80 text-yellow-900 text-[10px] px-2 py-0.5 rounded-full font-bold">
+            DEMO
+          </div>
+        )}
       </div>
     </>
   );
