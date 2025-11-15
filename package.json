@@ -13,7 +13,6 @@
     "db:setup": "bash scripts/setup-database.sh",
     "db:migrate": "npx ts-node scripts/run-migrations.ts",
     "sentry:sourcemaps": "sentry-cli sourcemaps upload --org kamhub --project nextjs .next",
-    "postbuild": "npm run sentry:sourcemaps",
     "ai:update-knowledge": "node scripts/update-knowledge-base.js",
     "ai:update-knowledge:file": "node scripts/update-knowledge-base.js file"
   },
