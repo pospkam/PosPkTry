@@ -46,18 +46,20 @@ export default function Home() {
 
   return (
     <>
-      {/* Фоновое изображение на всю ширину */}
+      {/* Фоновое изображение на всю ширину - солнце и облака сверху */}
       <div className="fixed top-0 left-0 w-full h-screen -z-10">
         <div 
-          className="w-full h-full bg-cover bg-center bg-no-repeat"
+          className="w-full h-full bg-cover bg-top bg-no-repeat"
           style={{
-            backgroundImage: `url(/fon.jpg), linear-gradient(180deg, #4A90E2 0%, #7FB4E8 50%, #B3D9F5 100%)`
+            backgroundImage: `url(/fon.jpg), linear-gradient(180deg, #4A90E2 0%, #7FB4E8 50%, #B3D9F5 100%)`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'top center'
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-black/30" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/5 to-black/20" />
       </div>
 
-      <main className="relative min-h-screen pt-8 pb-20">
+      <main className="relative min-h-screen pt-4 pb-20">
         {/* Hero Section */}
         <section className="max-w-7xl mx-auto px-4 py-20 text-center fade-in">
           <h1 className="weather-title">
