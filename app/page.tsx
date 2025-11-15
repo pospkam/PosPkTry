@@ -6,6 +6,7 @@ import { TourCard } from '@/components/TourCard';
 import SamsungWeatherDynamic from '@/components/SamsungWeatherDynamic';
 import AIKamSmartSearch from '@/components/AIKamSmartSearch';
 import RegistrationButtons from '@/components/RegistrationButtons';
+import WeatherBackground from '@/components/WeatherBackground';
 
 interface Tour {
   id: number;
@@ -46,17 +47,21 @@ export default function Home() {
 
   return (
     <>
-      {/* Фоновое изображение на всю ширину - солнце и облака сверху */}
-      <div className="fixed top-0 left-0 w-full h-screen -z-10">
-        <div 
-          className="w-full h-full bg-cover bg-top bg-no-repeat"
-          style={{
-            backgroundImage: `url(/fon.jpg), linear-gradient(180deg, #4A90E2 0%, #7FB4E8 50%, #B3D9F5 100%)`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'top center'
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/5 to-black/20" />
+      {/* Динамический погодный фон */}
+      <WeatherBackground />
+
+      {/* Минимальная навигация */}
+      <div className="fixed top-4 left-4 z-50">
+        <Link 
+          href="/auth/login" 
+          className="flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-2xl px-4 py-2 border border-white/20 text-white hover:bg-white/20 transition-all"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <span className="text-sm font-medium">Вход</span>
+        </Link>
       </div>
 
       <main className="relative min-h-screen pt-4 pb-20">
