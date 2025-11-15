@@ -4,10 +4,10 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 const ROLES = [
-  { id: 'operator', name: 'Туроператор', icon: '🎯', description: 'Организация и продажа туров' },
-  { id: 'transfer', name: 'Трансфер', icon: '🚗', description: 'Транспортные услуги' },
-  { id: 'stay', name: 'Размещение', icon: '🏠', description: 'Отели, базы, домики' },
-  { id: 'gear', name: 'Аренда снаряжения', icon: '🎣', description: 'Прокат оборудования' },
+  { id: 'operator', name: 'Туроператор', description: 'Организация и продажа туров' },
+  { id: 'transfer', name: 'Трансфер', description: 'Транспортные услуги' },
+  { id: 'stay', name: 'Размещение', description: 'Отели, базы, домики' },
+  { id: 'gear', name: 'Аренда снаряжения', description: 'Прокат оборудования' },
 ];
 
 export default function PartnerRegisterPage() {
@@ -20,6 +20,7 @@ export default function PartnerRegisterPage() {
     name: '',
     email: '',
     phone: '',
+    password: '',
     description: '',
     address: '',
     website: '',
@@ -92,7 +93,7 @@ export default function PartnerRegisterPage() {
     return (
       <div className="min-h-screen bg-premium-black flex items-center justify-center p-6">
         <div className="max-w-md w-full bg-white/5 border border-white/10 rounded-2xl p-8 text-center">
-          <div className="text-6xl mb-4">✅</div>
+          <div className="text-6xl mb-4">✓</div>
           <h1 className="text-2xl font-bold text-white mb-2">Успешно!</h1>
           <p className="text-white/70 mb-4">
             Ваша заявка отправлена. Ожидайте подтверждения администратора.
@@ -106,7 +107,7 @@ export default function PartnerRegisterPage() {
   }
 
   return (
-    <main className="min-h-screen bg-premium-black text-white p-6">
+    <main className="min-h-screen bg-gradient-to-br from-blue-500 via-cyan-500 to-blue-600 text-white p-6">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -119,7 +120,7 @@ export default function PartnerRegisterPage() {
         {/* Error Message */}
         {error && (
           <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400">
-            ❌ {error}
+            Ошибка: {error}
           </div>
         )}
 
@@ -138,26 +139,26 @@ export default function PartnerRegisterPage() {
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-premium-gold"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 text-white placeholder-white/50"
                   placeholder="Камчатская рыбалка"
                 />
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Email <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-premium-gold"
-                    placeholder="info@kamchatka-fishing.ru"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Email <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 text-white placeholder-white/50"
+                  placeholder="info@kamchatka-fishing.ru"
+                />
+              </div>
 
+              <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">
                     Телефон <span className="text-red-400">*</span>
@@ -167,8 +168,23 @@ export default function PartnerRegisterPage() {
                     required
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-premium-gold"
+                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 text-white placeholder-white/50"
                     placeholder="+7 (999) 123-45-67"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Пароль <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    minLength={8}
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 text-white placeholder-white/50"
+                    placeholder="Минимум 8 символов"
                   />
                 </div>
               </div>
@@ -181,7 +197,7 @@ export default function PartnerRegisterPage() {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={4}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-premium-gold resize-none"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 resize-none text-white placeholder-white/50"
                   placeholder="Расскажите о вашей компании..."
                 />
               </div>
@@ -194,7 +210,7 @@ export default function PartnerRegisterPage() {
                   type="text"
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-premium-gold"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 text-white placeholder-white/50"
                   placeholder="г. Петропавловск-Камчатский, ул. Ленинская, 1"
                 />
               </div>
@@ -207,7 +223,7 @@ export default function PartnerRegisterPage() {
                   type="url"
                   value={formData.website}
                   onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-premium-gold"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 text-white placeholder-white/50"
                   placeholder="https://kamchatka-fishing.ru"
                 />
               </div>
@@ -231,15 +247,14 @@ export default function PartnerRegisterPage() {
                   onClick={() => handleRoleToggle(role.id)}
                   className={`p-4 rounded-xl border-2 transition-all text-left ${
                     formData.roles.includes(role.id)
-                      ? 'border-premium-gold bg-premium-gold/10'
-                      : 'border-white/10 bg-white/5 hover:border-white/20'
+                      ? 'border-white bg-white/20'
+                      : 'border-white/30 bg-white/10 hover:border-white/50'
                   }`}
                 >
                   <div className="flex items-center gap-3 mb-2">
-                    <span className="text-2xl">{role.icon}</span>
                     <span className="font-bold">{role.name}</span>
                   </div>
-                  <p className="text-sm text-white/70">{role.description}</p>
+                  <p className="text-sm text-white/80">{role.description}</p>
                 </button>
               ))}
             </div>
@@ -257,18 +272,18 @@ export default function PartnerRegisterPage() {
 
             <div className="flex items-center gap-6">
               {logoPreview ? (
-                <div className="w-32 h-32 rounded-xl border-2 border-premium-gold overflow-hidden">
+                <div className="w-32 h-32 rounded-xl border-2 border-white overflow-hidden">
                   <img src={logoPreview} alt="Logo preview" className="w-full h-full object-cover" />
                 </div>
               ) : (
-                <div className="w-32 h-32 rounded-xl border-2 border-dashed border-white/20 flex items-center justify-center bg-white/5">
-                  <span className="text-4xl">📷</span>
+                <div className="w-32 h-32 rounded-xl border-2 border-dashed border-white/30 flex items-center justify-center bg-white/10">
+                  <span className="text-white/50 text-sm">Логотип</span>
                 </div>
               )}
 
               <div className="flex-1">
                 <label className="block">
-                  <span className="px-4 py-2 bg-premium-gold text-premium-black font-bold rounded-xl cursor-pointer hover:bg-premium-gold/90 transition-colors inline-block">
+                  <span className="px-4 py-2 bg-white text-blue-600 font-bold rounded-xl cursor-pointer hover:bg-white/90 transition-colors inline-block">
                     Выбрать файл
                   </span>
                   <input
@@ -290,14 +305,14 @@ export default function PartnerRegisterPage() {
             <button
               type="button"
               onClick={() => router.back()}
-              className="flex-1 px-6 py-3 bg-white/5 border border-white/10 text-white rounded-xl hover:bg-white/10 transition-colors font-bold"
+              className="flex-1 px-6 py-3 bg-white/10 border border-white/30 text-white rounded-xl hover:bg-white/20 transition-colors font-bold"
             >
               Отмена
             </button>
             <button
               type="submit"
               disabled={loading || formData.roles.length === 0}
-              className="flex-1 px-6 py-3 bg-premium-gold text-premium-black rounded-xl hover:bg-premium-gold/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-bold"
+              className="flex-1 px-6 py-3 bg-white text-blue-600 rounded-xl hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-bold"
             >
               {loading ? 'Отправка...' : 'Зарегистрироваться'}
             </button>
