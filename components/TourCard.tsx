@@ -56,19 +56,23 @@ export function TourCard({ tour, className, onClick }: TourCardProps) {
   return (
     <div
       className={cn(
-        'bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:bg-white/10 transition-all duration-300 cursor-pointer',
+        'bg-white/10 border-2 border-white/20 rounded-3xl overflow-hidden hover:bg-white/15 transition-all duration-500 cursor-pointer group hover:scale-105 hover:shadow-2xl',
         className
       )}
       onClick={onClick}
     >
-      {/* Изображение тура */}
-      <div className="relative h-48 bg-gradient-to-br from-slate-800 to-slate-900">
+      {/* Изображение тура с overlay */}
+      <div className="relative h-56 bg-gradient-to-br from-slate-800 to-slate-900 overflow-hidden">
         {tour.images && tour.images.length > 0 ? (
-          <img
-            src={tour.images[0]}
-            alt={tour.title}
-            className="w-full h-full object-cover"
-          />
+          <>
+            <img
+              src={tour.images[0]}
+              alt={tour.title}
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+            />
+            {/* Градиентный overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
+          </>
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-green-100">
             <div className="text-center">
@@ -78,39 +82,42 @@ export function TourCard({ tour, className, onClick }: TourCardProps) {
           </div>
         )}
         
-        {/* Сложность */}
-        <div className="absolute top-3 left-3">
+        {/* Сложность - улучшенный бейдж */}
+        <div className="absolute top-4 left-4">
           <span
             className={cn(
-              'px-3 py-1 rounded-full text-xs font-bold bg-premium-gold text-premium-black'
+              'px-4 py-2 rounded-full text-sm font-bold backdrop-blur-md bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-lg'
             )}
           >
             {getDifficultyText(tour.difficulty)}
           </span>
         </div>
         
-        {/* Рейтинг */}
+        {/* Рейтинг - улучшенный */}
         {tour.rating > 0 && (
-          <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full flex items-center space-x-1">
-            <span className="text-premium-gold">⭐</span>
-            <span className="text-sm font-bold text-white">{tour.rating}</span>
-            <span className="text-xs text-white/70">({tour.reviewsCount})</span>
+          <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md px-4 py-2 rounded-full flex items-center space-x-2 shadow-lg">
+            <span className="text-yellow-400 text-lg">⭐</span>
+            <span className="text-base font-bold text-white">{tour.rating}</span>
+            <span className="text-sm text-white/80">({tour.reviewsCount})</span>
           </div>
         )}
       </div>
 
-      {/* Контент карточки */}
-      <div className="p-6">
-        {/* Название и цена */}
-        <div className="flex justify-between items-start mb-3">
-          <h3 className="text-lg font-bold text-white line-clamp-2">
-            {tour.title}
-          </h3>
-          <div className="text-right ml-2">
-            <div className="text-xl font-black text-premium-gold">
+      {/* Контент карточки - улучшенный */}
+      <div className="p-6 sm:p-8">
+        {/* Название */}
+        <h3 className="text-xl sm:text-2xl font-bold text-white mb-4 line-clamp-2 group-hover:text-cyan-200 transition-colors duration-300">
+          {tour.title}
+        </h3>
+        
+        {/* Цена - более заметная */}
+        <div className="mb-4 p-4 bg-gradient-to-r from-amber-500/20 to-orange-500/20 rounded-2xl border border-amber-400/30">
+          <div className="text-sm text-amber-200 mb-1">Стоимость</div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-black bg-gradient-to-r from-amber-300 to-orange-400 bg-clip-text text-transparent">
               {formatCurrency(tour.priceFrom, 'RUB')}
-            </div>
-            <div className="text-sm text-white/70">за человека</div>
+            </span>
+            <span className="text-sm text-white/70">за человека</span>
           </div>
         </div>
 
@@ -159,15 +166,18 @@ export function TourCard({ tour, className, onClick }: TourCardProps) {
           </div>
         )}
 
-        {/* Кнопка бронирования */}
+        {/* Кнопка бронирования - улучшенная */}
         <button
-          className="w-full bg-premium-gold hover:bg-premium-gold/90 text-premium-black font-bold py-3 px-4 rounded-xl transition-all duration-200"
+          className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-cyan-500/50 hover:scale-105 flex items-center justify-center gap-2 group/btn"
           onClick={(e) => {
             e.stopPropagation();
             // Здесь будет логика бронирования
           }}
         >
-          Забронировать
+          <span>Забронировать</span>
+          <svg className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
         </button>
       </div>
     </div>

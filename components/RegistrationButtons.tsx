@@ -6,9 +6,10 @@ import { User, Briefcase, ArrowRight, Sparkles } from 'lucide-react';
 export default function RegistrationButtons() {
   return (
     <div className="w-full max-w-5xl mx-auto px-4 py-12">
-      <h2 className="text-center text-4xl font-bold text-white mb-12 text-shadow-soft">
+      <h2 className="text-center text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 drop-shadow-lg animate-fade-in">
         Начните свое путешествие
       </h2>
+      <p className="text-center text-white/70 text-base sm:text-lg mb-12">Выберите свою роль в нашей платформе</p>
 
       <div className="grid md:grid-cols-2 gap-8">
         {/* ТУРИСТ - Голубая кнопка */}

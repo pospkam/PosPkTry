@@ -59,13 +59,14 @@ export default function WeatherBackground() {
         style={{ background: gradients[timeOfDay] }}
       />
 
-      {/* Фоновое изображение - хорошо видно */}
+      {/* Фоновое изображение с параллакс эффектом */}
       <div className="fixed inset-0 -z-10">
         <div 
           className="w-full h-full bg-cover bg-top bg-no-repeat transition-opacity duration-[3000ms]"
           style={{
             backgroundImage: `url(/fon.jpg)`,
-            opacity: timeOfDay === 'night' ? 0.7 : 0.9
+            opacity: timeOfDay === 'night' ? 0.7 : 0.9,
+            transform: 'scale(1.1)', // Небольшое увеличение для параллакс эффекта
           }}
         />
       </div>
