@@ -256,7 +256,7 @@ export async function POST(
           currency: 'RUB',
           userId,
           userEmail,
-          description: `Оплата размещения: ${accommodation.name}`,
+          description: `Оплата размещения: ${room.accommodation_name}`,
         }),
       });
 
