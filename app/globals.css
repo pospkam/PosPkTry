@@ -8,4 +8,5 @@
 /* SAMSUNG WEATHER DYNAMIC - ДИНАМИЧЕСКАЯ ТЕМА С АНИМАЦИЯМИ */
 @import './samsung-weather-dynamic.css';
 
-/* Minimal Header для навигации */
+/* АДАПТИВНЫЙ ДИЗАЙН */
+@import './responsive.css';
