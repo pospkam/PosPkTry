@@ -68,9 +68,9 @@ export async function POST(request: NextRequest) {
 
     const userId = userResult.rows[0].id;
 
-    // Создание партнера
+    // Создание заявки партнера
     const partnerResult = await query(
-      `INSERT INTO partners (
+      `INSERT INTO partner_applications (
         user_id, 
         name, 
         email, 
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      partnerId: partnerResult.rows[0].id,
+      applicationId: partnerResult.rows[0].id,
       userId: userId,
       message: 'Заявка успешно отправлена на модерацию'
     });
