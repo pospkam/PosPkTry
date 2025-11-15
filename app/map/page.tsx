@@ -7,84 +7,105 @@ import Link from 'next/link';
 // Типы активностей
 type ActivityType = 'all' | 'volcano' | 'nature' | 'geyser' | 'ocean' | 'thermal';
 
+interface Marker {
+  coords: [number, number];
+  title: string;
+  description: string;
+  activity: ActivityType;
+  color: string;
+}
+
 // Маркеры с активностями
-const KAMCHATKA_MARKERS = [
+const KAMCHATKA_MARKERS: Marker[] = [
   {
-    coords: [53.0444, 158.6483] as [number, number],
+    coords: [53.0444, 158.6483],
     title: 'Петропавловск-Камчатский',
     description: 'Столица Камчатского края',
-    activity: 'nature' as ActivityType,
+    activity: 'nature',
     color: 'blue'
   },
   {
-    coords: [53.1574, 158.3866] as [number, number],
+    coords: [53.1574, 158.3866],
     title: 'Авачинская бухта',
     description: 'Одна из крупнейших бухт мира',
-    activity: 'ocean' as ActivityType,
+    activity: 'ocean',
     color: 'blue'
   },
   {
-    coords: [53.2550, 158.6474] as [number, number],
+    coords: [53.2550, 158.6474],
     title: 'Вулкан Авачинский',
     description: 'Действующий вулкан высотой 2741 м',
-    activity: 'volcano' as ActivityType,
+    activity: 'volcano',
     color: 'orange'
   },
   {
-    coords: [53.2869, 158.7030] as [number, number],
+    coords: [53.2869, 158.7030],
     title: 'Вулкан Корякский',
     description: 'Действующий вулкан высотой 3456 м',
-    activity: 'volcano' as ActivityType,
+    activity: 'volcano',
     color: 'orange'
   },
   {
-    coords: [54.7595, 160.2658] as [number, number],
+    coords: [54.7595, 160.2658],
     title: 'Долина Гейзеров',
     description: 'Одно из семи чудес России',
-    activity: 'geyser' as ActivityType,
+    activity: 'geyser',
     color: 'green'
   },
   {
-    coords: [52.0803, 157.9786] as [number, number],
+    coords: [52.0803, 157.9786],
     title: 'Курильское озеро',
     description: 'Место нереста лосося и обитания медведей',
-    activity: 'nature' as ActivityType,
+    activity: 'nature',
     color: 'green'
   },
   {
-    coords: [52.9328, 158.0444] as [number, number],
+    coords: [52.9328, 158.0444],
     title: 'Мутновская ГеоЭС',
     description: 'Термальные источники',
-    activity: 'thermal' as ActivityType,
+    activity: 'thermal',
     color: 'red'
   },
   {
-    coords: [53.3833, 158.8833] as [number, number],
+    coords: [53.3833, 158.8833],
     title: 'Налычевская долина',
     description: 'Природный парк с термальными источниками',
-    activity: 'thermal' as ActivityType,
+    activity: 'thermal',
     color: 'red'
   }
 ];
 
+// Функция подсчета маркеров по активности
+const getCountForActivity = (activity: ActivityType): number => {
+  if (activity === 'all') return KAMCHATKA_MARKERS.length;
+  return KAMCHATKA_MARKERS.filter(m => m.activity === activity).length;
+};
+
 // Фильтры активностей
-const ACTIVITY_FILTERS = [
-  { id: 'all' as ActivityType, name: 'Все точки', count: KAMCHATKA_MARKERS.length },
-  { id: 'volcano' as ActivityType, name: 'Вулканы', count: KAMCHATKA_MARKERS.filter(m => m.activity === 'volcano').length },
-  { id: 'nature' as ActivityType, name: 'Природа', count: KAMCHATKA_MARKERS.filter(m => m.activity === 'nature').length },
-  { id: 'geyser' as ActivityType, name: 'Гейзеры', count: KAMCHATKA_MARKERS.filter(m => m.activity === 'geyser').length },
-  { id: 'ocean' as ActivityType, name: 'Океан', count: KAMCHATKA_MARKERS.filter(m => m.activity === 'ocean').length },
-  { id: 'thermal' as ActivityType, name: 'Термальные источники', count: KAMCHATKA_MARKERS.filter(m => m.activity === 'thermal').length }
+const ACTIVITY_FILTERS: Array<{ id: ActivityType; name: string; count: number }> = [
+  { id: 'all', name: 'Все точки', count: getCountForActivity('all') },
+  { id: 'volcano', name: 'Вулканы', count: getCountForActivity('volcano') },
+  { id: 'nature', name: 'Природа', count: getCountForActivity('nature') },
+  { id: 'geyser', name: 'Гейзеры', count: getCountForActivity('geyser') },
+  { id: 'ocean', name: 'Океан', count: getCountForActivity('ocean') },
+  { id: 'thermal', name: 'Термальные источники', count: getCountForActivity('thermal') }
 ];
 
 export default function MapPage() {
   const [isExpanded, setIsExpanded] = useState(true);
   const [activeFilter, setActiveFilter] = useState<ActivityType>('all');
 
-  // Фильтрация маркеров
+  // Фильтрация маркеров с проверкой
   const filteredMarkers = activeFilter === 'all' 
     ? KAMCHATKA_MARKERS 
-    : KAMCHATKA_MARKERS.filter(m => m.activity === activeFilter);
+    : KAMCHATKA_MARKERS.filter(marker => {
+        console.log('Checking marker:', marker.title, 'activity:', marker.activity, 'filter:', activeFilter, 'match:', marker.activity === activeFilter);
+        return marker.activity === activeFilter;
+      });
+
+  console.log('Active filter:', activeFilter);
+  console.log('Filtered markers count:', filteredMarkers.length);
+  console.log('Filtered markers:', filteredMarkers.map(m => m.title));
 
   if (!isExpanded) {
     return (

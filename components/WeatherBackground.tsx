@@ -59,9 +59,15 @@ export default function WeatherBackground() {
       }
     };
 
-    // Определяем время суток локально (fallback)
+    // Определяем время суток локально (fallback) - Камчатское время UTC+12
     const updateLocalTimeOfDay = () => {
-      const hour = new Date().getHours();
+      // Получаем время в Петропавловске-Камчатском (UTC+12)
+      const now = new Date();
+      const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+      const kamchatkaTime = new Date(utc + (3600000 * 12));
+      const hour = kamchatkaTime.getHours();
+      
+      console.log('Текущий час в Камчатке:', hour);
       
       if (hour >= 0 && hour < 6) {
         setTimeOfDay('night');
