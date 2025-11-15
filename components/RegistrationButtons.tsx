@@ -13,7 +13,7 @@ export default function RegistrationButtons() {
       <div className="grid md:grid-cols-2 gap-8">
         {/* ТУРИСТ - Голубая кнопка */}
         <Link
-          href="/auth/register?type=tourist"
+          href="/hub/tourist"
           className="group relative overflow-hidden rounded-3xl transition-all duration-500 hover:scale-105 hover:shadow-2xl"
         >
           {/* Анимированный фон */}
@@ -73,7 +73,7 @@ export default function RegistrationButtons() {
 
         {/* БИЗНЕС - Золотая кнопка */}
         <Link
-          href="/auth/register?type=business"
+          href="/partner/register"
           className="group relative overflow-hidden rounded-3xl transition-all duration-500 hover:scale-105 hover:shadow-2xl"
         >
           {/* Анимированный фон */}
