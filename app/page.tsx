@@ -141,12 +141,17 @@ export default function Home() {
               </h2>
               <p className="text-white/70 text-sm sm:text-base">Откройте для себя лучшие маршруты</p>
             </div>
-            <Link href="/hub/tours" className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-6 py-3 rounded-full text-white hover:bg-white/20 transition-all border border-white/20 hover:scale-105">
-              <span className="font-semibold">Смотреть все</span>
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </Link>
+            <div className="flex gap-3">
+              <Link href="/map" className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 sm:px-6 sm:py-3 rounded-full text-white hover:bg-white/20 transition-all border border-white/20 hover:scale-105 text-sm sm:text-base">
+                <span className="font-semibold">🗺️ Карта</span>
+              </Link>
+              <Link href="/hub/tours" className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 sm:px-6 sm:py-3 rounded-full text-white hover:bg-white/20 transition-all border border-white/20 hover:scale-105 text-sm sm:text-base">
+                <span className="font-semibold">Все туры</span>
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </Link>
+            </div>
           </div>
 
           {loading ? (
