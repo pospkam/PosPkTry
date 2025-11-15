@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
     const geocode = address || coords;
     const url = `https://geocode-maps.yandex.ru/1.x/?apikey=${apiKey}&geocode=${encodeURIComponent(geocode!)}&format=json&results=1`;
 
-    console.log('🗺️ Геокодирование:', geocode);
+    console.log('Геокодирование:', geocode);
 
     const response = await fetch(url, {
       next: { revalidate: 3600 } // Кэшируем на 1 час

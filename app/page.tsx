@@ -143,7 +143,10 @@ export default function Home() {
             </div>
             <div className="flex gap-3">
               <Link href="/map" className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 sm:px-6 sm:py-3 rounded-full text-white hover:bg-white/20 transition-all border border-white/20 hover:scale-105 text-sm sm:text-base">
-                <span className="font-semibold">🗺️ Карта</span>
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                </svg>
+                <span className="font-semibold">Карта</span>
               </Link>
               <Link href="/hub/tours" className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 sm:px-6 sm:py-3 rounded-full text-white hover:bg-white/20 transition-all border border-white/20 hover:scale-105 text-sm sm:text-base">
                 <span className="font-semibold">Все туры</span>

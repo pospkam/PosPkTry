@@ -90,7 +90,7 @@ export default function YandexMap({
     return (
       <div className={`bg-gray-100 rounded-2xl flex items-center justify-center ${className}`} style={{ height }}>
         <div className="text-center p-8">
-          <p className="text-gray-600 mb-2">🗺️ Карта временно недоступна</p>
+          <p className="text-gray-600 mb-2">Карта временно недоступна</p>
           <p className="text-sm text-gray-500">API ключ не настроен</p>
         </div>
       </div>

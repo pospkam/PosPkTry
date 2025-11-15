@@ -51,26 +51,26 @@ function getTimeOfDay(hour: number): 'night' | 'morning' | 'day' | 'evening' {
   return 'evening';
 }
 
-// Получение температуры в зависимости от условий (для красивого отображения)
-function getWeatherEmoji(condition: string): string {
-  const emojiMap: Record<string, string> = {
-    'clear': '☀️',
-    'partly-cloudy': '⛅',
-    'cloudy': '☁️',
-    'overcast': '☁️',
-    'light-rain': '🌦️',
-    'rain': '🌧️',
-    'heavy-rain': '⛈️',
-    'showers': '🌧️',
-    'thunderstorm': '⛈️',
-    'snow': '❄️',
-    'snow-showers': '🌨️',
-    'light-snow': '🌨️',
-    'wet-snow': '🌨️',
-    'wind': '💨',
-    'hurricane': '🌪️'
+// Получение иконки для условий погоды
+function getWeatherIcon(condition: string): string {
+  const iconMap: Record<string, string> = {
+    'clear': 'sun',
+    'partly-cloudy': 'cloud-sun',
+    'cloudy': 'cloud',
+    'overcast': 'cloud',
+    'light-rain': 'cloud-rain',
+    'rain': 'cloud-rain',
+    'heavy-rain': 'cloud-rain',
+    'showers': 'cloud-rain',
+    'thunderstorm': 'cloud-lightning',
+    'snow': 'snowflake',
+    'snow-showers': 'snowflake',
+    'light-snow': 'snowflake',
+    'wet-snow': 'snowflake',
+    'wind': 'wind',
+    'hurricane': 'wind'
   };
-  return emojiMap[condition] || '☀️';
+  return iconMap[condition] || 'sun';
 }
 
 export async function GET(request: NextRequest) {
@@ -134,7 +134,7 @@ export async function GET(request: NextRequest) {
       windSpeed: data.fact.wind_speed,
       humidity: data.fact.humidity,
       pressure: data.fact.pressure_mm,
-      emoji: getWeatherEmoji(data.fact.condition),
+      icon: getWeatherIcon(data.fact.condition),
       location: 'Петропавловск-Камчатский',
       timestamp: new Date().toISOString()
     };
@@ -169,7 +169,7 @@ function getFallbackWeather() {
     windSpeed: 3,
     humidity: 75,
     pressure: 760,
-    emoji: '⛅',
+    icon: 'cloud-sun',
     location: 'Петропавловск-Камчатский',
     timestamp: new Date().toISOString(),
     isFallback: true

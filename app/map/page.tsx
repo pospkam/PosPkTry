@@ -74,7 +74,7 @@ export default function MapPage() {
         {/* Заголовок секции */}
         <div className="mb-8 text-center">
           <h2 className="text-4xl font-bold text-gray-800 mb-4">
-            🗺️ Интерактивная карта Камчатки
+            Интерактивная карта Камчатки
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Исследуйте главные достопримечательности и туристические маршруты полуострова
@@ -94,8 +94,7 @@ export default function MapPage() {
 
         {/* Список достопримечательностей */}
         <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8">
-          <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
-            <span className="text-3xl">📍</span>
+          <h3 className="text-2xl font-bold text-gray-800 mb-6">
             Популярные места
           </h3>
           
@@ -110,16 +109,13 @@ export default function MapPage() {
                 }}
                 className="p-4 bg-gradient-to-br from-gray-50 to-gray-100 hover:from-blue-50 hover:to-cyan-50 rounded-xl border-2 border-gray-200 hover:border-blue-400 transition-all duration-300 text-left group"
               >
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">{getEmojiForColor(attraction.color)}</span>
-                  <div className="flex-1">
-                    <h4 className="font-bold text-gray-800 group-hover:text-blue-600 transition-colors mb-1">
-                      {attraction.title}
-                    </h4>
-                    <p className="text-sm text-gray-600">
-                      {attraction.description}
-                    </p>
-                  </div>
+                <div>
+                  <h4 className="font-bold text-gray-800 group-hover:text-blue-600 transition-colors mb-1">
+                    {attraction.title}
+                  </h4>
+                  <p className="text-sm text-gray-600">
+                    {attraction.description}
+                  </p>
                 </div>
               </button>
             ))}
@@ -139,7 +135,6 @@ export default function MapPage() {
         {/* Информационный блок */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white rounded-2xl p-6 shadow-lg">
-            <div className="text-3xl mb-3">🏔️</div>
             <h4 className="font-bold text-lg mb-2">29 вулканов</h4>
             <p className="text-gray-600 text-sm">
               Действующих вулканов на полуострове
@@ -147,7 +142,6 @@ export default function MapPage() {
           </div>
           
           <div className="bg-white rounded-2xl p-6 shadow-lg">
-            <div className="text-3xl mb-3">🐻</div>
             <h4 className="font-bold text-lg mb-2">Дикая природа</h4>
             <p className="text-gray-600 text-sm">
               Медведи, лососи, орланы и киты
@@ -155,7 +149,6 @@ export default function MapPage() {
           </div>
           
           <div className="bg-white rounded-2xl p-6 shadow-lg">
-            <div className="text-3xl mb-3">♨️</div>
             <h4 className="font-bold text-lg mb-2">Термальные источники</h4>
             <p className="text-gray-600 text-sm">
               Более 160 горячих источников
@@ -167,12 +160,3 @@ export default function MapPage() {
   );
 }
 
-function getEmojiForColor(color: string): string {
-  const emojiMap: Record<string, string> = {
-    red: '🏙️',
-    blue: '🌊',
-    orange: '🌋',
-    green: '🌿',
-  };
-  return emojiMap[color] || '📍';
-}

@@ -30,7 +30,7 @@ export default function WeatherBackground() {
     // Получаем реальную погоду с Яндекс API
     const fetchWeather = async () => {
       try {
-        console.log('🌤️ Запрос погоды с Яндекс API...');
+        console.log('Запрос погоды с Яндекс API...');
         const response = await fetch('/api/weather');
         const result = await response.json();
         
@@ -44,7 +44,7 @@ export default function WeatherBackground() {
           setTemperature(data.temperature);
           
           if (data.isFallback) {
-            console.log('⚠️ Используются fallback данные погоды');
+            console.log('Используются fallback данные погоды');
           }
         } else {
           console.error('❌ Ошибка получения погоды:', result.error);
@@ -132,9 +132,14 @@ export default function WeatherBackground() {
         ) : (
           <div className="flex items-center gap-3 sm:gap-4 text-white">
             {/* Иконка погоды */}
-            <span className="text-3xl sm:text-4xl drop-shadow-lg">
-              {weatherData?.emoji || (weather === 'clear' ? '☀️' : weather === 'snow' ? '❄️' : weather === 'rain' ? '🌧️' : '💨')}
-            </span>
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 flex items-center justify-center">
+              <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                {weather === 'snow' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />}
+                {weather === 'rain' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />}
+                {weather === 'wind' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />}
+                {weather === 'clear' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />}
+              </svg>
+            </div>
             
             {/* Информация о погоде */}
             <div className="text-left">
@@ -159,7 +164,7 @@ export default function WeatherBackground() {
               {/* Дополнительная информация */}
               {weatherData && (
                 <div className="text-xs text-white/60 mt-1 hidden sm:block">
-                  💨 {weatherData.windSpeed} м/с • 💧 {weatherData.humidity}%
+                  Ветер: {weatherData.windSpeed} м/с • Влажность: {weatherData.humidity}%
                 </div>
               )}
             </div>
@@ -202,7 +207,9 @@ function SnowEffect() {
             opacity: 0.8
           }}
         >
-          ❄
+          <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2L9 9L2 12L9 15L12 22L15 15L22 12L15 9L12 2Z" />
+          </svg>
         </div>
       ))}
       <style jsx>{`
@@ -279,7 +286,9 @@ function WindEffect() {
             animationDuration: `${leaf.duration}s`
           }}
         >
-          🍃
+          <svg className="w-6 h-6 text-green-300/60" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66C7.82 17.34 9.93 12 16 10l-2.56-2.56" />
+          </svg>
         </div>
       ))}
       <style jsx>{`
