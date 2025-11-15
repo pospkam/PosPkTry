@@ -187,9 +187,10 @@ cd $PROJECT_DIR
 # Остановка всех процессов PM2
 pm2 delete all 2>/dev/null || true
 
-# Запуск через PM2
+# Запуск через PM2 (указываем директорию cwd)
 echo "🚀 Запуск приложения через PM2..."
-PORT=3000 pm2 start npm --name kamhub -- start
+cd $PROJECT_DIR
+PORT=3000 pm2 start npm --name kamhub --cwd $PROJECT_DIR -- start
 
 # Сохранение конфигурации PM2
 pm2 save
