@@ -84,7 +84,7 @@ export default function CarsHub() {
 
   // Фильтрация и сортировка
   const getFilteredAndSortedCars = () => {
-    let filtered = cars.filter(car => {
+    const filtered = cars.filter(car => {
       // Фильтр по категории
       if (selectedCategory !== 'all' && car.category !== selectedCategory) {
         return false;
