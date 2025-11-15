@@ -59,25 +59,36 @@ export function isTouchDevice(): boolean {
   );
 }
 
-// Hook для использования в React компонентах
-export function useDevice() {
-  if (typeof window === 'undefined') {
-    return {
-      isMobile: false,
-      isTablet: false,
-      isDesktop: true,
-      deviceType: 'desktop' as DeviceType,
-      isTouch: false,
-      screenSize: 'lg' as 'sm' | 'md' | 'lg' | 'xl'
-    };
-  }
+// React Hook для использования в компонентах
+import { useState, useEffect } from 'react';
 
-  return {
-    isMobile: isMobileDevice(),
-    isTablet: isTablet(),
-    isDesktop: isDesktop(),
-    deviceType: getDeviceType(),
-    isTouch: isTouchDevice(),
-    screenSize: getScreenSize()
-  };
+export function useDevice() {
+  const [device, setDevice] = useState({
+    isMobile: false,
+    isTablet: false,
+    isDesktop: true,
+    deviceType: 'desktop' as DeviceType,
+    isTouch: false,
+    screenSize: 'lg' as 'sm' | 'md' | 'lg' | 'xl'
+  });
+
+  useEffect(() => {
+    const updateDevice = () => {
+      setDevice({
+        isMobile: isMobileDevice(),
+        isTablet: isTablet(),
+        isDesktop: isDesktop(),
+        deviceType: getDeviceType(),
+        isTouch: isTouchDevice(),
+        screenSize: getScreenSize()
+      });
+    };
+
+    updateDevice();
+    window.addEventListener('resize', updateDevice);
+    
+    return () => window.removeEventListener('resize', updateDevice);
+  }, []);
+
+  return device;
 }
