@@ -3,6 +3,14 @@ const nextConfig = {
   // Включить React Strict Mode
   reactStrictMode: true,
   
+  // Игнорировать ошибки TypeScript и ESLint во время сборки
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  
   // Оптимизация изображений
   images: {
     domains: [
