@@ -14,7 +14,7 @@ import { OrdersProvider } from '@/contexts/OrdersContext'
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ru">
-      <body className="min-h-screen bg-premium-black text-white">
+      <body className="min-h-screen">
         <AuthProvider>
           <RoleProvider>
             <OrdersProvider>
@@ -34,7 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   </Link>
                 </div>
               </header>
-              <main className="max-w-6xl mx-auto px-4">{children}</main>
+              <main>{children}</main>
             </OrdersProvider>
           </RoleProvider>
         </AuthProvider>
