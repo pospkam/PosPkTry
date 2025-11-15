@@ -43,12 +43,12 @@ export default function WeatherBackground() {
     };
   }, []);
 
-  // Градиенты для разного времени суток
+  // Прозрачные градиенты для разного времени суток (намекают, но не закрывают фото)
   const gradients = {
-    night: 'linear-gradient(180deg, #0a1929 0%, #1a2332 30%, #2a3442 70%, #0a1929 100%)',
-    morning: 'linear-gradient(180deg, #FFB347 0%, #FFCC33 20%, #87CEEB 50%, #B3D9F5 100%)',
-    day: 'linear-gradient(180deg, #4A90E2 0%, #7FB4E8 50%, #B3D9F5 100%)',
-    evening: 'linear-gradient(180deg, #FF6B6B 0%, #FF8E53 30%, #4A90E2 70%, #2C5F8D 100%)'
+    night: 'linear-gradient(180deg, rgba(10, 25, 41, 0.5) 0%, rgba(26, 35, 50, 0.4) 30%, rgba(42, 52, 66, 0.3) 70%, rgba(10, 25, 41, 0.4) 100%)',
+    morning: 'linear-gradient(180deg, rgba(255, 179, 71, 0.25) 0%, rgba(255, 204, 51, 0.2) 20%, rgba(135, 206, 235, 0.15) 50%, rgba(179, 217, 245, 0.1) 100%)',
+    day: 'linear-gradient(180deg, rgba(74, 144, 226, 0.2) 0%, rgba(127, 180, 232, 0.15) 50%, rgba(179, 217, 245, 0.1) 100%)',
+    evening: 'linear-gradient(180deg, rgba(255, 107, 107, 0.3) 0%, rgba(255, 142, 83, 0.25) 30%, rgba(74, 144, 226, 0.2) 70%, rgba(44, 95, 141, 0.3) 100%)'
   };
 
   return (
@@ -59,13 +59,13 @@ export default function WeatherBackground() {
         style={{ background: gradients[timeOfDay] }}
       />
 
-      {/* Фоновое изображение */}
-      <div className="fixed inset-0 -z-10 opacity-30">
+      {/* Фоновое изображение - хорошо видно */}
+      <div className="fixed inset-0 -z-10">
         <div 
           className="w-full h-full bg-cover bg-top bg-no-repeat transition-opacity duration-[3000ms]"
           style={{
             backgroundImage: `url(/fon.jpg)`,
-            opacity: timeOfDay === 'night' ? 0.1 : 0.3
+            opacity: timeOfDay === 'night' ? 0.7 : 0.9
           }}
         />
       </div>
@@ -75,18 +75,18 @@ export default function WeatherBackground() {
       {weather === 'rain' && <RainEffect />}
       {weather === 'wind' && <WindEffect />}
 
-      {/* Индикатор времени и погоды */}
-      <div className="fixed top-4 right-4 z-50 bg-white/10 backdrop-blur-md rounded-2xl px-4 py-2 border border-white/20">
-        <div className="flex items-center gap-3 text-white">
-          <span className="text-2xl">
+      {/* Индикатор времени и погоды - адаптивный */}
+      <div className="fixed top-4 right-4 z-50 bg-white/10 backdrop-blur-md rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-2 border border-white/20">
+        <div className="flex items-center gap-2 sm:gap-3 text-white">
+          <span className="text-xl sm:text-2xl">
             {weather === 'clear' && '☀️'}
             {weather === 'snow' && '❄️'}
             {weather === 'rain' && '🌧️'}
             {weather === 'wind' && '💨'}
           </span>
-          <div className="text-sm">
+          <div className="text-xs sm:text-sm">
             <div className="font-semibold capitalize">{getTimeLabel(timeOfDay)}</div>
-            <div className="text-xs text-white/70">{getWeatherLabel(weather)}</div>
+            <div className="text-xs text-white/70 hidden sm:block">{getWeatherLabel(weather)}</div>
           </div>
         </div>
       </div>

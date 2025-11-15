@@ -50,27 +50,27 @@ export default function Home() {
       {/* Динамический погодный фон */}
       <WeatherBackground />
 
-      {/* Минимальная навигация */}
-      <div className="fixed top-4 left-4 z-50">
+      {/* Минимальная навигация - адаптивная */}
+      <div className="fixed top-3 left-3 sm:top-4 sm:left-4 z-50">
         <Link 
           href="/auth/login" 
-          className="flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-2xl px-4 py-2 border border-white/20 text-white hover:bg-white/20 transition-all"
+          className="flex items-center gap-1.5 sm:gap-2 bg-white/10 backdrop-blur-md rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-2 border border-white/20 text-white hover:bg-white/20 transition-all"
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg width="20" height="20" className="sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
             <circle cx="12" cy="7" r="4"></circle>
           </svg>
-          <span className="text-sm font-medium">Вход</span>
+          <span className="text-xs sm:text-sm font-medium">Вход</span>
         </Link>
       </div>
 
       <main className="relative min-h-screen pt-4 pb-20">
-        {/* Hero Section */}
-        <section className="max-w-7xl mx-auto px-4 py-20 text-center fade-in">
-          <h1 className="weather-title">
+        {/* Hero Section - адаптивный */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-20 text-center fade-in">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-6 drop-shadow-lg">
             Исследуйте Камчатку
           </h1>
-          <p className="weather-subtitle mb-12 max-w-3xl mx-auto">
+          <p className="text-base sm:text-lg md:text-xl text-white/90 mb-8 sm:mb-12 max-w-3xl mx-auto px-4">
             Откройте для себя удивительный мир вулканов, гейзеров и дикой природы
           </p>
           
@@ -78,82 +78,82 @@ export default function Home() {
           <AIKamSmartSearch />
         </section>
 
-        {/* Features Grid - БЕЗ ЭМОДЗИ */}
-        <section className="max-w-7xl mx-auto px-4 py-16">
-          <div className="grid md:grid-cols-3 gap-6 fade-in-delay-2">
+        {/* Features Grid - адаптивный */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 md:py-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 fade-in-delay-2">
             {/* Feature 1 */}
-            <div className="weather-card p-8 text-center">
-              <h3 className="text-2xl font-bold text-white mb-3">Вулканы</h3>
-              <p className="text-white/80">
+            <div className="weather-card p-6 sm:p-8 text-center">
+              <h3 className="text-xl sm:text-2xl font-bold text-white mb-2 sm:mb-3">Вулканы</h3>
+              <p className="text-sm sm:text-base text-white/80">
                 Восхождения на действующие вулканы с опытными гидами
               </p>
             </div>
 
             {/* Feature 2 */}
-            <div className="weather-card p-8 text-center">
-              <h3 className="text-2xl font-bold text-white mb-3">Дикая природа</h3>
-              <p className="text-white/80">
+            <div className="weather-card p-6 sm:p-8 text-center">
+              <h3 className="text-xl sm:text-2xl font-bold text-white mb-2 sm:mb-3">Дикая природа</h3>
+              <p className="text-sm sm:text-base text-white/80">
                 Наблюдение за медведями, китами и редкими птицами
               </p>
             </div>
 
             {/* Feature 3 */}
-            <div className="weather-card p-8 text-center">
-              <h3 className="text-2xl font-bold text-white mb-3">Гейзеры</h3>
-              <p className="text-white/80">
+            <div className="weather-card p-6 sm:p-8 text-center sm:col-span-2 md:col-span-1">
+              <h3 className="text-xl sm:text-2xl font-bold text-white mb-2 sm:mb-3">Гейзеры</h3>
+              <p className="text-sm sm:text-base text-white/80">
                 Долина Гейзеров - одно из чудес России
               </p>
             </div>
           </div>
         </section>
 
-        {/* ДВЕ ИЗЫСКАННЫЕ КНОПКИ - ТУРИСТ И БИЗНЕС */}
-        <section className="max-w-7xl mx-auto px-4 py-16 fade-in-delay-3">
+        {/* ДВЕ ИЗЫСКАННЫЕ КНОПКИ - ТУРИСТ И БИЗНЕС - адаптивные */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 md:py-16 fade-in-delay-3">
           <RegistrationButtons />
         </section>
 
-        {/* Popular Tours */}
-        <section className="max-w-7xl mx-auto px-4 py-16">
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-4xl font-bold text-white text-shadow-soft">
+        {/* Popular Tours - адаптивный */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 md:py-16">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-3">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white drop-shadow-lg">
               Популярные туры
             </h2>
-            <Link href="/hub/tours" className="text-white/90 hover:text-white transition-colors">
+            <Link href="/hub/tours" className="text-sm sm:text-base text-white/90 hover:text-white transition-colors">
               Смотреть все →
             </Link>
           </div>
 
           {loading ? (
             <div className="text-center py-12">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-white/20 border-t-white"></div>
+              <div className="inline-block animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-4 border-white/20 border-t-white"></div>
             </div>
           ) : tours.length > 0 ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {tours.map((tour) => (
                 <TourCard key={tour.id} tour={tour} />
               ))}
             </div>
           ) : (
-            <div className="weather-card p-12 text-center">
-              <p className="text-xl text-white/80">Туры скоро появятся</p>
+            <div className="weather-card p-8 sm:p-12 text-center">
+              <p className="text-lg sm:text-xl text-white/80">Туры скоро появятся</p>
             </div>
           )}
         </section>
 
-        {/* CTA Section */}
-        <section className="max-w-5xl mx-auto px-4 py-16 text-center">
-          <div className="weather-card p-12">
-            <h2 className="text-4xl font-bold text-white mb-4">
+        {/* CTA Section - адаптивный */}
+        <section className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12 md:py-16 text-center">
+          <div className="weather-card p-6 sm:p-8 md:p-12">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-3 sm:mb-4">
               Готовы к приключению?
             </h2>
-            <p className="text-xl text-white/80 mb-8 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-white/80 mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
               Присоединяйтесь к тысячам путешественников, открывающих для себя Камчатку
             </p>
-            <div className="flex flex-wrap gap-4 justify-center">
-              <Link href="/hub/tourist" className="weather-btn weather-btn-primary text-lg px-8 py-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
+              <Link href="/hub/tourist" className="weather-btn weather-btn-primary text-base sm:text-lg px-6 py-3 sm:px-8 sm:py-4">
                 Начать путешествие
               </Link>
-              <Link href="/partner/register" className="weather-btn text-lg px-8 py-4">
+              <Link href="/partner/register" className="weather-btn text-base sm:text-lg px-6 py-3 sm:px-8 sm:py-4">
                 Стать партнером
               </Link>
             </div>
