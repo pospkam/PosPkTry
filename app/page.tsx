@@ -7,7 +7,7 @@ import AISmartSearch from '@/components/AISmartSearch';
 import FloatingAIButton from '@/components/FloatingAIButton';
 import { 
   Mountain, Compass, Fish, CloudSnow, Waves, Droplet,
-  Users, Briefcase, Award, Truck, Home, ShoppingBag,
+  Users, Briefcase, Award, Truck, Home as HomeIcon, ShoppingBag,
   Rocket, AlertTriangle, Leaf, Brain, Clock, UsersRound, Star, ArrowRight
 } from 'lucide-react';
 
@@ -82,7 +82,7 @@ export default function Home() {
       title: 'Размещение',
       subtitle: 'Предоставляй жильё',
       href: '/hub/stay',
-      icon: Home,
+      icon: HomeIcon,
       color: 'from-indigo-400 to-blue-400'
     },
     {
@@ -363,7 +363,7 @@ export default function Home() {
             {[
               { title: 'Каталог туров', href: '/tours', icon: Mountain },
               { title: 'Поиск', href: '/search', icon: Compass },
-              { title: 'Размещение', href: '/hub/stay', icon: Home },
+              { title: 'Размещение', href: '/hub/stay', icon: HomeIcon },
               { title: 'Прокат авто', href: '/cars', icon: Truck },
               { title: 'Снаряжение', href: '/gear', icon: ShoppingBag },
               { title: 'Сувениры', href: '/shop', icon: ShoppingBag },
