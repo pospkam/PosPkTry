@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { CloudSnow, Wind } from 'lucide-react';
 
-type WeatherType = 'clear' | 'snow' | 'rain' | 'clouds';
+type WeatherType = 'clear' | 'snow' | 'rain' | 'clouds' | 'wind';
 type TimeOfDay = 'dawn' | 'morning' | 'afternoon' | 'evening' | 'late-evening' | 'night';
 
 export default function WeatherBackground() {
@@ -57,6 +58,10 @@ export default function WeatherBackground() {
 
       {/* Облака - всегда присутствуют */}
       <CloudsEffect />
+
+      {/* ПОГОДНЫЕ АНИМАЦИИ */}
+      {weather === 'snow' && <SnowEffect />}
+      {weather === 'wind' && <WindEffect />}
 
       {/* Индикатор времени суток */}
       <div className="fixed top-4 right-4 z-50 bg-white/10 backdrop-blur-md rounded-2xl px-4 py-2 border border-white/20">
@@ -142,4 +147,90 @@ function getTimeLabel(time: TimeOfDay): string {
     night: 'Ночь'
   };
   return labels[time];
+}
+
+// ЭФФЕКТ СНЕГА (50 СНЕЖИНОК)
+function SnowEffect() {
+  const snowflakes = Array.from({ length: 50 }, (_, i) => ({
+    id: i,
+    left: Math.random() * 100,
+    delay: Math.random() * 3,
+    duration: 3 + Math.random() * 2,
+    size: 16 + Math.random() * 16
+  }));
+
+  return (
+    <div className="fixed inset-0 pointer-events-none z-10 overflow-hidden">
+      {snowflakes.map((flake) => (
+        <CloudSnow
+          key={flake.id}
+          className="absolute text-white/60 animate-snow"
+          style={{
+            left: `${flake.left}%`,
+            top: `-${Math.random() * 20}px`,
+            width: `${flake.size}px`,
+            height: `${flake.size}px`,
+            animationDelay: `${flake.delay}s`,
+            animationDuration: `${flake.duration}s`
+          }}
+        />
+      ))}
+      <style jsx>{`
+        @keyframes snow {
+          0% {
+            transform: translateY(0) translateX(0) rotate(0deg);
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(100vh) translateX(100px) rotate(360deg);
+            opacity: 0.3;
+          }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+// ЭФФЕКТ ВЕТРА (20 ЛИНИЙ)
+function WindEffect() {
+  const windLines = Array.from({ length: 20 }, (_, i) => ({
+    id: i,
+    top: Math.random() * 100,
+    delay: Math.random() * 2,
+    duration: 2 + Math.random()
+  }));
+
+  return (
+    <div className="fixed inset-0 pointer-events-none z-10 overflow-hidden">
+      {windLines.map((line) => (
+        <Wind
+          key={line.id}
+          className="absolute text-white/40 animate-wind"
+          style={{
+            top: `${line.top}%`,
+            left: '-10%',
+            width: '32px',
+            height: '32px',
+            animationDelay: `${line.delay}s`,
+            animationDuration: `${line.duration}s`
+          }}
+        />
+      ))}
+      <style jsx>{`
+        @keyframes wind {
+          0% {
+            transform: translateX(0);
+            opacity: 0;
+          }
+          50% {
+            opacity: 1;
+          }
+          100% {
+            transform: translateX(120vw);
+            opacity: 0;
+          }
+        }
+      `}</style>
+    </div>
+  );
 }

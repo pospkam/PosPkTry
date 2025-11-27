@@ -15,11 +15,26 @@ export default function Home() {
   const [tours, setTours] = useState<Tour[]>([]);
   const [loading, setLoading] = useState(true);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [greeting, setGreeting] = useState('Добрый день');
 
   useEffect(() => {
     fetchData();
     getUserLocation();
+    updateGreeting();
   }, []);
+
+  const updateGreeting = () => {
+    const hours = new Date().getHours();
+    if (hours >= 6 && hours < 12) {
+      setGreeting('Доброе утро');
+    } else if (hours >= 12 && hours < 18) {
+      setGreeting('Добрый день');
+    } else if (hours >= 18 && hours < 23) {
+      setGreeting('Добрый вечер');
+    } else {
+      setGreeting('Доброй ночи');
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -102,14 +117,14 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-br from-blue-900/40 via-purple-900/30 to-blue-900/40 backdrop-blur-xl border border-white/10"></div>
         <div className="relative p-6 md:p-10">
           <div className="max-w-4xl mx-auto text-center space-y-4">
-            {/* Заголовок */}
+            {/* Приветствие и Заголовок */}
             <div className="space-y-2">
-              <h1 className="text-4xl md:text-6xl font-black bg-gradient-to-r from-blue-200 via-white to-blue-200 bg-clip-text text-transparent leading-tight">
-                Камчатка
-              </h1>
-              <p className="text-xl md:text-2xl font-bold text-white/90">
-                Экосистема туризма
+              <p className="text-2xl md:text-3xl font-light text-white/80">
+                {greeting}, Камчатка
               </p>
+              <h1 className="text-4xl md:text-6xl font-black bg-gradient-to-r from-blue-200 via-white to-blue-200 bg-clip-text text-transparent leading-tight">
+                Экосистема туризма
+              </h1>
             </div>
             
             {/* AI Smart Search */}
