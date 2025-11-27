@@ -240,7 +240,7 @@ export default function BookingsManagement() {
         <OperatorNav />
         
         {/* Header */}
-        <div className="bg-white/25 border-b border-white/40 p-6">
+        <div className="bg-white/15 border-b border-white/15 p-6">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-between mb-6">
               <div>
@@ -270,7 +270,7 @@ export default function BookingsManagement() {
                   setStatusFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="px-4 py-3 bg-white/25 border border-white/40 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300"
               >
                 <option value="all">Все статусы</option>
                 <option value="pending">Ожидают подтверждения</option>
@@ -302,25 +302,25 @@ export default function BookingsManagement() {
             <div className="space-y-6">
               {/* Stats */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-white/25 border border-white/40 rounded-xl p-4">
+                <div className="bg-white/15 border border-white/15 rounded-xl p-4">
                   <p className="text-white/60 text-sm">Ожидают</p>
                   <p className="text-2xl font-bold text-yellow-400">
                     {bookings.filter(b => b.status === 'pending').length}
                   </p>
                 </div>
-                <div className="bg-white/25 border border-white/40 rounded-xl p-4">
+                <div className="bg-white/15 border border-white/15 rounded-xl p-4">
                   <p className="text-white/60 text-sm">Подтверждены</p>
                   <p className="text-2xl font-bold text-green-400">
                     {bookings.filter(b => b.status === 'confirmed').length}
                   </p>
                 </div>
-                <div className="bg-white/25 border border-white/40 rounded-xl p-4">
+                <div className="bg-white/15 border border-white/15 rounded-xl p-4">
                   <p className="text-white/60 text-sm">Завершены</p>
                   <p className="text-2xl font-bold text-blue-400">
                     {bookings.filter(b => b.status === 'completed').length}
                   </p>
                 </div>
-                <div className="bg-white/25 border border-white/40 rounded-xl p-4">
+                <div className="bg-white/15 border border-white/15 rounded-xl p-4">
                   <p className="text-white/60 text-sm">Отменены</p>
                   <p className="text-2xl font-bold text-red-400">
                     {bookings.filter(b => b.status === 'cancelled').length}

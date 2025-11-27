@@ -104,10 +104,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-20 md:py-32 text-center">
           <div className="space-y-6">
             {/* Заголовок */}
-            <h1 className="text-5xl sm:text-6xl md:text-7xl font-thin text-white drop-shadow-lg" style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.2)' }}>
+            <h1 className="text-5xl sm:text-6xl md:text-8xl font-extralight text-white drop-shadow-lg tracking-tight" style={{ textShadow: '0 4px 16px rgba(0, 0, 0, 0.2)', letterSpacing: '-0.02em' }}>
               Исследуйте Камчатку
             </h1>
-            <p className="text-xl sm:text-2xl text-white/90 max-w-3xl mx-auto leading-relaxed" style={{ textShadow: '0 1px 4px rgba(0, 0, 0, 0.15)' }}>
+            <p className="text-xl sm:text-2xl md:text-3xl text-white/80 max-w-3xl mx-auto leading-relaxed font-extralight" style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.15)' }}>
               Откройте для себя удивительный мир вулканов, гейзеров и дикой природы
             </p>
 
@@ -124,34 +124,34 @@ export default function Home() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
           {/* Feature 1 - Вулканы */}
-          <div className="bg-white/25 backdrop-blur-xl rounded-3xl p-8 sm:p-10 text-center border border-white/40 hover:bg-white/30 transition-all group cursor-pointer shadow-xl" style={{ backdropFilter: 'blur(20px)' }}>
-            <div className="mb-6 inline-block">
-              <Flame className="w-16 h-16 sm:w-20 sm:h-20 text-orange-400 group-hover:scale-110 transition-transform duration-300" />
+          <div className="bg-white/15 backdrop-blur-2xl rounded-[2rem] p-10 sm:p-14 text-center border border-white/15 hover:bg-white/20 hover:border-white/25 transition-all duration-500 group cursor-pointer" style={{ backdropFilter: 'blur(30px)', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)' }}>
+            <div className="mb-8 inline-block">
+              <Flame className="w-16 h-16 sm:w-24 sm:h-24 text-orange-300/90 group-hover:scale-110 group-hover:text-orange-300 transition-all duration-500" strokeWidth={1.5} />
             </div>
-            <h3 className="text-2xl sm:text-3xl font-light text-white mb-3 sm:mb-4" style={{ textShadow: '0 2px 6px rgba(0, 0, 0, 0.15)' }}>Вулканы</h3>
-            <p className="text-base sm:text-lg text-white/85 leading-relaxed" style={{ textShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>
+            <h3 className="text-2xl sm:text-3xl font-extralight text-white mb-4 sm:mb-5 tracking-wide" style={{ textShadow: '0 2px 12px rgba(0, 0, 0, 0.15)' }}>Вулканы</h3>
+            <p className="text-base sm:text-lg text-white/75 leading-relaxed font-extralight" style={{ textShadow: '0 1px 6px rgba(0, 0, 0, 0.1)' }}>
               Восхождения на действующие вулканы с опытными гидами
             </p>
           </div>
 
           {/* Feature 2 - Дикая природа */}
-          <div className="bg-white/25 backdrop-blur-xl rounded-3xl p-8 sm:p-10 text-center border border-white/40 hover:bg-white/30 transition-all group cursor-pointer shadow-xl" style={{ backdropFilter: 'blur(20px)' }}>
-            <div className="mb-6 inline-block">
-              <TreePine className="w-16 h-16 sm:w-20 sm:h-20 text-green-400 group-hover:scale-110 transition-transform duration-300" />
+          <div className="bg-white/15 backdrop-blur-2xl rounded-[2rem] p-10 sm:p-14 text-center border border-white/15 hover:bg-white/20 hover:border-white/25 transition-all duration-500 group cursor-pointer" style={{ backdropFilter: 'blur(30px)', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)' }}>
+            <div className="mb-8 inline-block">
+              <TreePine className="w-16 h-16 sm:w-24 sm:h-24 text-emerald-300/90 group-hover:scale-110 group-hover:text-emerald-300 transition-all duration-500" strokeWidth={1.5} />
             </div>
-            <h3 className="text-2xl sm:text-3xl font-light text-white mb-3 sm:mb-4" style={{ textShadow: '0 2px 6px rgba(0, 0, 0, 0.15)' }}>Дикая природа</h3>
-            <p className="text-base sm:text-lg text-white/85 leading-relaxed" style={{ textShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>
+            <h3 className="text-2xl sm:text-3xl font-extralight text-white mb-4 sm:mb-5 tracking-wide" style={{ textShadow: '0 2px 12px rgba(0, 0, 0, 0.15)' }}>Дикая природа</h3>
+            <p className="text-base sm:text-lg text-white/75 leading-relaxed font-extralight" style={{ textShadow: '0 1px 6px rgba(0, 0, 0, 0.1)' }}>
               Наблюдение за медведями, китами и редкими птицами
             </p>
           </div>
 
           {/* Feature 3 - Гейзеры */}
-          <div className="bg-white/25 backdrop-blur-xl rounded-3xl p-8 sm:p-10 text-center border border-white/40 hover:bg-white/30 transition-all sm:col-span-2 md:col-span-1 group cursor-pointer shadow-xl" style={{ backdropFilter: 'blur(20px)' }}>
-            <div className="mb-6 inline-block">
-              <Droplet className="w-16 h-16 sm:w-20 sm:h-20 text-blue-400 group-hover:scale-110 transition-transform duration-300" />
+          <div className="bg-white/15 backdrop-blur-2xl rounded-[2rem] p-10 sm:p-14 text-center border border-white/15 hover:bg-white/20 hover:border-white/25 transition-all duration-500 sm:col-span-2 md:col-span-1 group cursor-pointer" style={{ backdropFilter: 'blur(30px)', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)' }}>
+            <div className="mb-8 inline-block">
+              <Droplet className="w-16 h-16 sm:w-24 sm:h-24 text-sky-300/90 group-hover:scale-110 group-hover:text-sky-300 transition-all duration-500" strokeWidth={1.5} />
             </div>
-            <h3 className="text-2xl sm:text-3xl font-light text-white mb-3 sm:mb-4" style={{ textShadow: '0 2px 6px rgba(0, 0, 0, 0.15)' }}>Гейзеры</h3>
-            <p className="text-base sm:text-lg text-white/85 leading-relaxed" style={{ textShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>
+            <h3 className="text-2xl sm:text-3xl font-extralight text-white mb-4 sm:mb-5 tracking-wide" style={{ textShadow: '0 2px 12px rgba(0, 0, 0, 0.15)' }}>Гейзеры</h3>
+            <p className="text-base sm:text-lg text-white/75 leading-relaxed font-extralight" style={{ textShadow: '0 1px 6px rgba(0, 0, 0, 0.1)' }}>
               Долина Гейзеров - одно из чудес России
             </p>
           </div>
@@ -179,16 +179,16 @@ export default function Home() {
                 href={role.href}
                 className="group flex-shrink-0 w-72 snap-center"
               >
-                <div className="bg-white/25 backdrop-blur-2xl rounded-3xl p-6 border border-white/40 hover:bg-white/30 hover:scale-105 transition-all duration-500 shadow-xl hover:shadow-2xl h-full" style={{ backdropFilter: 'blur(20px)' }}>
+                <div className="bg-white/15 backdrop-blur-2xl rounded-3xl p-6 border border-white/15 hover:bg-white/30 hover:scale-105 transition-all duration-500 shadow-xl hover:shadow-2xl h-full" style={{ backdropFilter: 'blur(20px)' }}>
                   {/* Gradient Icon */}
                   <div className={`w-16 h-16 bg-gradient-to-br ${role.color} rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-xl`}>
                     <role.icon className="w-8 h-8 text-white" />
                   </div>
                   
-                  <h3 className="text-2xl font-light mb-2 text-white" style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.15)' }}>{role.title}</h3>
-                  <p className="text-white/80 mb-4 font-light text-sm" style={{ textShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>{role.subtitle}</p>
+                  <h3 className="text-2xl font-extralight mb-2 text-white" style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.15)' }}>{role.title}</h3>
+                  <p className="text-white/80 mb-4 font-extralight text-sm" style={{ textShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>{role.subtitle}</p>
                   
-                  <div className="flex items-center gap-2 text-white/90 font-light group-hover:gap-3 transition-all text-sm" style={{ textShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>
+                  <div className="flex items-center gap-2 text-white/90 font-extralight group-hover:gap-3 transition-all text-sm" style={{ textShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>
                     Узнать больше
                     <ArrowRight className="w-4 h-4" />
                   </div>
@@ -211,7 +211,7 @@ export default function Home() {
               {[...Array(6)].map((_, i) => (
                 <div 
                   key={i} 
-                  className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 backdrop-blur-sm rounded-3xl h-80 animate-pulse border border-white/40"
+                  className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 backdrop-blur-sm rounded-3xl h-80 animate-pulse border border-white/15"
                 ></div>
               ))}
             </div>
@@ -220,7 +220,7 @@ export default function Home() {
               {tours.map((tour) => (
                 <div
                   key={tour.id}
-                  className="group relative bg-gradient-to-br from-blue-900/30 via-purple-900/20 to-blue-900/30 backdrop-blur-xl border border-white/40 rounded-3xl overflow-hidden hover:border-white/30 transition-all duration-300 cursor-pointer"
+                  className="group relative bg-gradient-to-br from-blue-900/30 via-purple-900/20 to-blue-900/30 backdrop-blur-2xl border border-white/15 rounded-3xl overflow-hidden hover:border-white/30 transition-all duration-300 cursor-pointer"
                 >
                   {tour.images && tour.images[0] && (
                     <div className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity">
@@ -253,7 +253,7 @@ export default function Home() {
                       </div>
                     </div>
                     
-                    <div className="flex items-end justify-between mt-4 pt-4 border-t border-white/40">
+                    <div className="flex items-end justify-between mt-4 pt-4 border-t border-white/15">
                       <div>
                         <div className="text-2xl font-bold text-white">
                           {tour.priceFrom?.toLocaleString('ru-RU')} ₽
@@ -277,7 +277,7 @@ export default function Home() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-20 bg-gradient-to-br from-blue-900/20 to-purple-900/20 backdrop-blur-sm rounded-3xl border border-white/40">
+            <div className="text-center py-20 bg-gradient-to-br from-blue-900/20 to-purple-900/20 backdrop-blur-sm rounded-3xl border border-white/15">
               <Mountain className="w-16 h-16 mx-auto mb-4 text-white/50" />
               <p className="text-white/70 text-lg">Туры временно недоступны</p>
             </div>
@@ -290,7 +290,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           
           {/* SOS и Безопасность */}
-          <div className="bg-gradient-to-br from-red-900/30 via-red-800/20 to-red-900/30 backdrop-blur-xl border border-red-500/20 rounded-3xl p-6">
+          <div className="bg-gradient-to-br from-red-900/30 via-red-800/20 to-red-900/30 backdrop-blur-2xl border border-red-500/20 rounded-3xl p-6">
             <div className="text-red-400 text-sm font-semibold mb-3 flex items-center gap-2">
               <AlertTriangle className="w-4 h-4" />
               SOS и безопасность
@@ -320,7 +320,7 @@ export default function Home() {
           </div>
 
           {/* Эко-баллы */}
-          <div className="bg-gradient-to-br from-green-900/30 via-green-800/20 to-green-900/30 backdrop-blur-xl border border-green-500/20 rounded-3xl p-6">
+          <div className="bg-gradient-to-br from-green-900/30 via-green-800/20 to-green-900/30 backdrop-blur-2xl border border-green-500/20 rounded-3xl p-6">
             <div className="text-green-400 text-sm font-semibold mb-3 flex items-center gap-2">
               <Leaf className="w-4 h-4" />
               Экология
@@ -340,7 +340,7 @@ export default function Home() {
           </div>
 
           {/* AI-Гид */}
-          <div className="bg-gradient-to-br from-purple-900/30 via-purple-800/20 to-purple-900/30 backdrop-blur-xl border border-purple-500/20 rounded-3xl p-6">
+          <div className="bg-gradient-to-br from-purple-900/30 via-purple-800/20 to-purple-900/30 backdrop-blur-2xl border border-purple-500/20 rounded-3xl p-6">
             <div className="text-purple-400 text-sm font-semibold mb-3 flex items-center gap-2">
               <Brain className="w-4 h-4" />
               AI-помощник
@@ -381,7 +381,7 @@ export default function Home() {
               <a
                 key={title}
                 href={href}
-                className="flex items-center justify-center gap-2 text-center p-4 bg-white/20 hover:bg-white/25 backdrop-blur-sm border border-white/30 hover:border-white/40 rounded-2xl transition-all font-light text-white/90 hover:text-white shadow-lg"
+                className="flex items-center justify-center gap-2 text-center p-4 bg-white/20 hover:bg-white/15 backdrop-blur-sm border border-white/30 hover:border-white/15 rounded-2xl transition-all font-extralight text-white/90 hover:text-white shadow-lg"
                 style={{ backdropFilter: 'blur(16px)', textShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}
               >
                 <Icon className="w-4 h-4" />
@@ -395,7 +395,7 @@ export default function Home() {
       {/* Footer Info */}
       <section className="px-4 pb-8">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 backdrop-blur-sm border border-white/40 rounded-3xl p-8 text-center">
+          <div className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 backdrop-blur-sm border border-white/15 rounded-3xl p-8 text-center">
             <div className="flex items-center justify-center gap-2 text-white/50 text-sm">
               <Mountain className="w-5 h-5" />
               <span>KamHub — Современная экосистема туризма Камчатки</span>

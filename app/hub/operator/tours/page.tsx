@@ -246,7 +246,7 @@ export default function ToursManagement() {
         <OperatorNav />
         
         {/* Header */}
-        <div className="bg-white/25 border-b border-white/40 p-6">
+        <div className="bg-white/15 border-b border-white/15 p-6">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-between mb-6">
               <div>
@@ -283,7 +283,7 @@ export default function ToursManagement() {
                   setCategoryFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="px-4 py-3 bg-white/25 border border-white/40 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300"
               >
                 <option value="">Все категории</option>
                 <option value="adventure">Приключения</option>
@@ -298,7 +298,7 @@ export default function ToursManagement() {
                   setStatusFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="px-4 py-3 bg-white/25 border border-white/40 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300"
               >
                 <option value="all">Все статусы</option>
                 <option value="active">Активные</option>

@@ -15,7 +15,7 @@ export default function TransferOperatorDashboard() {
         <TransferOperatorNav />
 
       {/* Header */}
-        <div className="bg-white/25 border-b border-white/40 p-6">
+        <div className="bg-white/15 border-b border-white/15 p-6">
           <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between">
             <div>
@@ -33,7 +33,7 @@ export default function TransferOperatorDashboard() {
                 <select
                   value={period}
                   onChange={(e) => setPeriod(e.target.value)}
-                  className="px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300"
                 >
                   <option value="7">7 дней</option>
                   <option value="30">30 дней</option>
@@ -52,7 +52,7 @@ export default function TransferOperatorDashboard() {
             <TransferOperatorMetricsGrid period={period} />
 
             {/* Quick Actions */}
-            <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
+            <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
               <h3 className="text-lg font-bold text-white mb-4">Быстрые действия</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <button

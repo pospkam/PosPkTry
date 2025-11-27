@@ -62,7 +62,7 @@ export default function OperatorDashboard() {
         <OperatorNav />
 
       {/* Header */}
-        <div className="bg-white/25 border-b border-white/40 p-6">
+        <div className="bg-white/15 border-b border-white/15 p-6">
           <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between">
             <div>
@@ -78,7 +78,7 @@ export default function OperatorDashboard() {
               <select
                 value={period}
                 onChange={(e) => setPeriod(e.target.value)}
-                className="px-4 py-3 bg-white/10 border border-white/40 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                className="px-4 py-3 bg-white/10 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300 transition-colors"
               >
                 <option value="7">Последние 7 дней</option>
                 <option value="30">Последние 30 дней</option>
@@ -124,7 +124,7 @@ export default function OperatorDashboard() {
               {/* Charts */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Revenue Chart */}
-                <section className="bg-white/25 border border-white/40 rounded-2xl p-6">
+                <section className="bg-white/15 border border-white/15 rounded-2xl p-6">
                   <h2 className="text-xl font-bold text-white mb-4">
                     Выручка
                   </h2>
@@ -136,7 +136,7 @@ export default function OperatorDashboard() {
                 </section>
 
                 {/* Bookings Chart */}
-                <section className="bg-white/25 border border-white/40 rounded-2xl p-6">
+                <section className="bg-white/15 border border-white/15 rounded-2xl p-6">
                   <h2 className="text-xl font-bold text-white mb-4">
                     Бронирования
                   </h2>
@@ -174,7 +174,7 @@ export default function OperatorDashboard() {
                     {data.upcomingTours.map((tour) => (
                       <div
                         key={`${tour.tourId}-${tour.date.toString()}`}
-                        className="bg-white/25 border border-white/40 rounded-xl p-4 hover:bg-white/10 transition-colors"
+                        className="bg-white/15 border border-white/15 rounded-xl p-4 hover:bg-white/10 transition-colors"
                       >
                         <h3 className="font-semibold text-white mb-2">
                           {tour.tourName}
@@ -222,7 +222,7 @@ export default function OperatorDashboard() {
                   />
                 ) : (
                   <EmptyState
-                    icon={<CalendarIcon className="w-12 h-12 text-blue-500" />}
+                    icon={<CalendarIcon className="w-12 h-12 text-sky-300" />}
                     title="Нет бронирований"
                     description="Бронирования появятся здесь"
                   />

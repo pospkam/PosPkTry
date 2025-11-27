@@ -104,7 +104,7 @@ export default function BookingHistoryPage() {
     <Protected roles={['tourist']}>
       <main className="min-h-screen bg-transparent text-white">
         {/* Header */}
-        <div className="bg-white/25 border-b border-white/40 p-6">
+        <div className="bg-white/15 border-b border-white/15 p-6">
           <h1 className="text-3xl font-black text-white">Мои бронирования</h1>
           <p className="text-white/70">История ваших бронирований и заказов</p>
         </div>
@@ -156,7 +156,7 @@ export default function BookingHistoryPage() {
 
           {/* Bookings List */}
           {filteredBookings.length === 0 ? (
-            <div className="bg-white/25 border border-white/40 rounded-2xl p-12 text-center">
+            <div className="bg-white/15 border border-white/15 rounded-2xl p-12 text-center">
               <div className="text-6xl mb-4">📅</div>
               <p className="text-white/70 text-lg">У вас пока нет бронирований</p>
               <button
@@ -171,7 +171,7 @@ export default function BookingHistoryPage() {
               {filteredBookings.map((booking) => (
                 <div
                   key={booking.id}
-                  className="bg-white/25 border border-white/40 rounded-2xl p-6 hover:bg-white/10 transition-colors"
+                  className="bg-white/15 border border-white/15 rounded-2xl p-6 hover:bg-white/10 transition-colors"
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div>
@@ -193,14 +193,14 @@ export default function BookingHistoryPage() {
                   </div>
 
                   {booking.specialRequests && (
-                    <div className="mt-4 pt-4 border-t border-white/40">
+                    <div className="mt-4 pt-4 border-t border-white/15">
                       <p className="text-xs text-white/50 mb-1">Особые пожелания:</p>
                       <p className="text-sm text-white/80">{booking.specialRequests}</p>
                     </div>
                   )}
 
                   {/* Действия */}
-                  <div className="mt-4 pt-4 border-t border-white/40 flex gap-3">
+                  <div className="mt-4 pt-4 border-t border-white/15 flex gap-3">
                     <button className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm transition-colors">
                       Подробнее
                     </button>

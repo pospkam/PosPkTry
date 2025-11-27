@@ -22,7 +22,7 @@ export default function AdminSettings() {
         <AdminNav />
 
         {/* Header */}
-        <div className="bg-white/25 border-b border-white/40 p-6">
+        <div className="bg-white/15 border-b border-white/15 p-6">
           <div className="max-w-7xl mx-auto">
             <div>
               <h1 className="text-3xl font-black text-white">
@@ -36,7 +36,7 @@ export default function AdminSettings() {
         </div>
 
         {/* Tabs */}
-        <div className="bg-white/25 border-b border-white/40">
+        <div className="bg-white/15 border-b border-white/15">
           <div className="max-w-7xl mx-auto px-6">
             <div className="flex space-x-1">
               {tabs.map((tab) => (
@@ -45,7 +45,7 @@ export default function AdminSettings() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`px-6 py-4 font-medium transition-all duration-200 flex items-center gap-2 ${
                     activeTab === tab.id
-                      ? 'bg-premium-gold text-premium-black border-b-2 border-white/40'
+                      ? 'bg-premium-gold text-premium-black border-b-2 border-white/15'
                       : 'text-white/70 hover:bg-white/10 hover:text-white'
                   }`}
                 >

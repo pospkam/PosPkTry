@@ -54,7 +54,7 @@ export default function DemoPage() {
     return (
       <div className="min-h-screen bg-transparent flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-white/40 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-16 h-16 border-4 border-white/15 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-white text-lg">Загружаем демо-режим...</p>
         </div>
       </div>
@@ -66,8 +66,8 @@ export default function DemoPage() {
       <div className="max-w-4xl mx-auto px-4 py-12">
         {/* Заголовок */}
         <div className="text-center mb-12">
-          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 mx-auto mb-6"></div>
-          <h1 className="text-4xl font-light text-white mb-4" style={{ textShadow: '0 2px 6px rgba(0, 0, 0, 0.15)' }}>
+          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-sky-200 to-cyan-200 mx-auto mb-6"></div>
+          <h1 className="text-4xl font-extralight text-white mb-4" style={{ textShadow: '0 2px 6px rgba(0, 0, 0, 0.15)' }}>
             Демо-режим Kamchatour Hub
           </h1>
           <p className="text-xl text-white/80 mb-8" style={{ textShadow: '0 1px 4px rgba(0, 0, 0, 0.1)' }}>
@@ -78,12 +78,12 @@ export default function DemoPage() {
         {/* Роли */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           {/* Турист */}
-          <div className="bg-white/25 backdrop-blur-xl rounded-2xl p-6 border border-white/40 hover:border-white/50 transition-all cursor-pointer group" onClick={() => handleStartDemo('tourist')} style={{ backdropFilter: 'blur(20px)' }}>
+          <div className="bg-white/15 backdrop-blur-2xl rounded-2xl p-6 border border-white/15 hover:border-white/50 transition-all cursor-pointer group" onClick={() => handleStartDemo('tourist')} style={{ backdropFilter: 'blur(20px)' }}>
             <div className="text-center">
               <div className="w-16 h-16 bg-blue-500/30 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-500/40 transition-colors">
                 <span className="text-2xl">🧳</span>
               </div>
-              <h3 className="text-xl font-light text-white mb-2" style={{ textShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>Турист</h3>
+              <h3 className="text-xl font-extralight text-white mb-2" style={{ textShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>Турист</h3>
               <p className="text-white/80 text-sm mb-4" style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.08)' }}>
                 Поиск туров, трансферов, прогноз погоды, AI-помощник
               </p>
@@ -96,12 +96,12 @@ export default function DemoPage() {
           </div>
 
           {/* Туроператор */}
-          <div className="bg-white/25 backdrop-blur-xl rounded-2xl p-6 border border-white/40 hover:border-white/50 transition-all cursor-pointer group" onClick={() => handleStartDemo('operator')} style={{ backdropFilter: 'blur(20px)' }}>
+          <div className="bg-white/15 backdrop-blur-2xl rounded-2xl p-6 border border-white/15 hover:border-white/50 transition-all cursor-pointer group" onClick={() => handleStartDemo('operator')} style={{ backdropFilter: 'blur(20px)' }}>
             <div className="text-center">
               <div className="w-16 h-16 bg-green-500/30 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-green-500/40 transition-colors">
                 <span className="text-2xl">🏢</span>
               </div>
-              <h3 className="text-xl font-light text-white mb-2" style={{ textShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>Туроператор</h3>
+              <h3 className="text-xl font-extralight text-white mb-2" style={{ textShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>Туроператор</h3>
               <p className="text-white/80 text-sm mb-4" style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.08)' }}>
                 CRM система, управление турами, аналитика
               </p>
@@ -114,12 +114,12 @@ export default function DemoPage() {
           </div>
 
           {/* Оператор трансферов */}
-          <div className="bg-white/25 backdrop-blur-xl rounded-2xl p-6 border border-white/40 hover:border-white/50 transition-all cursor-pointer group" onClick={() => handleStartDemo('transfer-operator')} style={{ backdropFilter: 'blur(20px)' }}>
+          <div className="bg-white/15 backdrop-blur-2xl rounded-2xl p-6 border border-white/15 hover:border-white/50 transition-all cursor-pointer group" onClick={() => handleStartDemo('transfer-operator')} style={{ backdropFilter: 'blur(20px)' }}>
             <div className="text-center">
               <div className="w-16 h-16 bg-purple-500/30 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-purple-500/40 transition-colors">
                 <span className="text-2xl">🚌</span>
               </div>
-              <h3 className="text-xl font-light text-white mb-2" style={{ textShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>Оператор трансферов</h3>
+              <h3 className="text-xl font-extralight text-white mb-2" style={{ textShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>Оператор трансферов</h3>
               <p className="text-white/80 text-sm mb-4" style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.08)' }}>
                 Управление водителями, заказами, аналитика
               </p>
@@ -132,12 +132,12 @@ export default function DemoPage() {
           </div>
 
           {/* Гид */}
-          <div className="bg-white/25 backdrop-blur-xl rounded-2xl p-6 border border-white/40 hover:border-white/50 transition-all cursor-pointer group" onClick={() => handleStartDemo('guide')} style={{ backdropFilter: 'blur(20px)' }}>
+          <div className="bg-white/15 backdrop-blur-2xl rounded-2xl p-6 border border-white/15 hover:border-white/50 transition-all cursor-pointer group" onClick={() => handleStartDemo('guide')} style={{ backdropFilter: 'blur(20px)' }}>
             <div className="text-center">
               <div className="w-16 h-16 bg-orange-500/30 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-orange-500/40 transition-colors">
                 <span className="text-2xl">🗺️</span>
               </div>
-              <h3 className="text-xl font-light text-white mb-2" style={{ textShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>Гид</h3>
+              <h3 className="text-xl font-extralight text-white mb-2" style={{ textShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>Гид</h3>
               <p className="text-white/80 text-sm mb-4" style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.08)' }}>
                 Расписание, группы, заработок, профиль
               </p>
@@ -151,8 +151,8 @@ export default function DemoPage() {
         </div>
 
         {/* Информация о демо-режиме */}
-        <div className="bg-white/25 backdrop-blur-xl rounded-2xl p-6 border border-white/40" style={{ backdropFilter: 'blur(20px)' }}>
-          <h3 className="text-xl font-light text-white mb-4" style={{ textShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>ℹ️ О демо-режиме</h3>
+        <div className="bg-white/15 backdrop-blur-2xl rounded-2xl p-6 border border-white/15" style={{ backdropFilter: 'blur(20px)' }}>
+          <h3 className="text-xl font-extralight text-white mb-4" style={{ textShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>ℹ️ О демо-режиме</h3>
           <div className="space-y-3 text-white/80" style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.08)' }}>
             <p>• <strong className="text-white">Данные:</strong> Используются демо-данные для демонстрации функциональности</p>
             <p>• <strong className="text-white">API:</strong> Работают с заглушками, реальные API ключи не требуются</p>

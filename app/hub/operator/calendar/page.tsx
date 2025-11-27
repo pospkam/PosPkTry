@@ -87,7 +87,7 @@ export default function CalendarPage() {
         <OperatorNav />
 
         {/* Header */}
-        <div className="bg-white/25 border-b border-white/40 p-6">
+        <div className="bg-white/15 border-b border-white/15 p-6">
           <div className="max-w-7xl mx-auto">
             <h1 className="text-3xl font-black text-white">
               Календарь доступности
@@ -107,7 +107,7 @@ export default function CalendarPage() {
           ) : (
             <div className="space-y-6">
               {/* Month Selector */}
-              <div className="flex items-center justify-between bg-white/25 border border-white/40 rounded-xl p-4">
+              <div className="flex items-center justify-between bg-white/15 border border-white/15 rounded-xl p-4">
                 <button
                   onClick={() => changeMonth(-1)}
                   className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
@@ -129,7 +129,7 @@ export default function CalendarPage() {
               </div>
 
               {/* Calendar Grid */}
-              <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
+              <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
                 {/* Week days */}
                 <div className="grid grid-cols-7 gap-2 mb-4">
                   {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map(day => (
@@ -155,8 +155,8 @@ export default function CalendarPage() {
                         key={index}
                         className={`
                           aspect-square rounded-lg border p-2 transition-all
-                          ${isPast ? 'bg-white/25 border-white/40 opacity-50' : 'bg-white/10 border-white/20'}
-                          ${isToday ? 'border-white/40 border-2' : ''}
+                          ${isPast ? 'bg-white/15 border-white/15 opacity-50' : 'bg-white/10 border-white/20'}
+                          ${isToday ? 'border-white/15 border-2' : ''}
                           ${slot?.isBlocked ? 'bg-red-500/20' : ''}
                           hover:bg-white/20 cursor-pointer
                         `}

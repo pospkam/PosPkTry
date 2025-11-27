@@ -113,7 +113,7 @@ export default function AccommodationDetailsPage() {
   return (
     <div className="min-h-screen bg-transparent text-white">
       {/* Header */}
-      <div className="bg-gradient-to-r from-premium-black to-premium-black/80 border-b border-white/40">
+      <div className="bg-gradient-to-r from-premium-black to-premium-black/80 border-b border-white/15">
         <div className="max-w-7xl mx-auto px-6 py-8">
           <button
             onClick={() => router.back()}
@@ -152,12 +152,12 @@ export default function AccommodationDetailsPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-4 mb-6 border-b border-white/40">
+        <div className="flex gap-4 mb-6 border-b border-white/15">
           <button
             onClick={() => setSelectedTab('overview')}
             className={`px-6 py-3 font-semibold transition-colors ${
               selectedTab === 'overview'
-                ? 'text-white border-b-2 border-white/40'
+                ? 'text-white border-b-2 border-white/15'
                 : 'text-white/70 hover:text-white'
             }`}
           >
@@ -167,7 +167,7 @@ export default function AccommodationDetailsPage() {
             onClick={() => setSelectedTab('rooms')}
             className={`px-6 py-3 font-semibold transition-colors ${
               selectedTab === 'rooms'
-                ? 'text-white border-b-2 border-white/40'
+                ? 'text-white border-b-2 border-white/15'
                 : 'text-white/70 hover:text-white'
             }`}
           >
@@ -177,7 +177,7 @@ export default function AccommodationDetailsPage() {
             onClick={() => setSelectedTab('booking')}
             className={`px-6 py-3 font-semibold transition-colors ${
               selectedTab === 'booking'
-                ? 'text-white border-b-2 border-white/40'
+                ? 'text-white border-b-2 border-white/15'
                 : 'text-white/70 hover:text-white'
             }`}
           >
@@ -191,7 +191,7 @@ export default function AccommodationDetailsPage() {
             {selectedTab === 'overview' && (
               <div className="space-y-6">
                 {/* Описание */}
-                <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
+                <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
                   <h2 className="text-2xl font-bold mb-4">О размещении</h2>
                   <p className="text-white/80 leading-relaxed whitespace-pre-line">
                     {accommodation.description}
@@ -200,7 +200,7 @@ export default function AccommodationDetailsPage() {
 
                 {/* Удобства */}
                 {accommodation.amenities && accommodation.amenities.length > 0 && (
-                  <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
+                  <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
                     <h2 className="text-2xl font-bold mb-4">Удобства</h2>
                     <div className="grid grid-cols-2 gap-3">
                       {accommodation.amenities.map((amenity, idx) => (
@@ -214,7 +214,7 @@ export default function AccommodationDetailsPage() {
                 )}
 
                 {/* Расположение */}
-                <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
+                <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
                   <h2 className="text-2xl font-bold mb-4">Расположение</h2>
                   <p className="text-white/80 mb-4">📍 {accommodation.address}</p>
                   <div className="bg-white/10 rounded-xl h-64 flex items-center justify-center">
@@ -225,11 +225,11 @@ export default function AccommodationDetailsPage() {
             )}
 
             {selectedTab === 'rooms' && (
-              <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
+              <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
                 <h2 className="text-2xl font-bold mb-6">Доступные номера</h2>
                 <div className="space-y-4">
                   {[...Array(accommodation.roomsCount || 5)].map((_, idx) => (
-                    <div key={idx} className="bg-white/25 border border-white/40 rounded-xl p-4">
+                    <div key={idx} className="bg-white/15 border border-white/15 rounded-xl p-4">
                       <div className="flex justify-between items-start">
                         <div>
                           <h3 className="text-lg font-semibold mb-2">Стандартный номер #{idx + 1}</h3>
@@ -249,7 +249,7 @@ export default function AccommodationDetailsPage() {
             )}
 
             {selectedTab === 'booking' && (
-              <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
+              <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
                 <h2 className="text-2xl font-bold mb-6">Забронировать номер</h2>
                 <StayBookingForm
                   accommodationId={accommodationId}
@@ -264,7 +264,7 @@ export default function AccommodationDetailsPage() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Цена и кнопка */}
-            <div className="bg-gradient-to-br from-premium-gold/20 to-premium-gold/10 border border-white/40/30 rounded-2xl p-6 sticky top-6">
+            <div className="bg-gradient-to-br from-premium-gold/20 to-premium-gold/10 border border-white/15/30 rounded-2xl p-6 sticky top-6">
               <div className="text-center mb-4">
                 <p className="text-white/70 text-sm mb-1">от</p>
                 <p className="text-4xl font-black text-white">
@@ -281,7 +281,7 @@ export default function AccommodationDetailsPage() {
               </button>
 
               {/* Характеристики */}
-              <div className="mt-6 space-y-3 pt-6 border-t border-white/40">
+              <div className="mt-6 space-y-3 pt-6 border-t border-white/15">
                 <div className="flex items-center justify-between">
                   <span className="text-white/70">Тип</span>
                   <span className="text-white font-semibold">{getTypeText(accommodation.type)}</span>
@@ -305,7 +305,7 @@ export default function AccommodationDetailsPage() {
 
             {/* Популярные удобства */}
             {accommodation.amenities && accommodation.amenities.length > 0 && (
-              <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
+              <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
                 <h3 className="text-lg font-bold mb-4">Популярные удобства</h3>
                 <div className="space-y-2">
                   {accommodation.amenities.slice(0, 6).map((amenity, idx) => (

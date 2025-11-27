@@ -127,13 +127,13 @@ export default function StayHub() {
     <Protected roles={['tourist', 'admin']}>
       <main className="min-h-screen bg-transparent text-white">
         {/* Header */}
-        <div className="bg-white/25 border-b border-white/40 p-6">
+        <div className="bg-white/15 border-b border-white/15 p-6">
           <h1 className="text-3xl font-black text-white">Размещение</h1>
           <p className="text-white/70">Найдите идеальное место для отдыха на Камчатке</p>
         </div>
 
         {/* Tabs */}
-        <div className="px-6 py-4 border-b border-white/40">
+        <div className="px-6 py-4 border-b border-white/15">
           <div className="flex space-x-4">
             {[
               { id: 'properties', label: 'Объекты', count: accommodations.length },
@@ -213,7 +213,7 @@ export default function StayHub() {
                         <button
                           onClick={() => setPage(p => Math.max(1, p - 1))}
                           disabled={page === 1}
-                          className="px-4 py-2 rounded-xl bg-white/25 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          className="px-4 py-2 rounded-xl bg-white/15 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
                           Назад
                         </button>
@@ -223,7 +223,7 @@ export default function StayHub() {
                         <button
                           onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                           disabled={page === totalPages}
-                          className="px-4 py-2 rounded-xl bg-white/25 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          className="px-4 py-2 rounded-xl bg-white/15 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
                           Вперёд
                         </button>
@@ -231,7 +231,7 @@ export default function StayHub() {
                     )}
                   </>
                 ) : (
-                  <div className="bg-white/25 border border-white/40 rounded-2xl p-12">
+                  <div className="bg-white/15 border border-white/15 rounded-2xl p-12">
                     <div className="text-center text-white/70">
                       <div className="text-6xl mb-4">🏨</div>
                       <h3 className="text-xl font-bold text-white mb-2">Объекты не найдены</h3>
@@ -252,7 +252,7 @@ export default function StayHub() {
           {activeTab === 'bookings' && (
             <div className="space-y-4">
               <h2 className="text-xl font-bold">Мои бронирования</h2>
-              <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
+              <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
                 <div className="text-center text-white/70 py-8">
                   <div className="text-4xl mb-2">📋</div>
                   <p>Здесь будут отображаться ваши бронирования</p>
@@ -278,7 +278,7 @@ export default function StayHub() {
                     ))}
                 </div>
               ) : (
-                <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
+                <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
                   <div className="text-center text-white/70 py-8">
                     <div className="text-4xl mb-2">❤️</div>
                     <p>Здесь появятся избранные объекты</p>
@@ -291,7 +291,7 @@ export default function StayHub() {
           {activeTab === 'reviews' && (
             <div className="space-y-4">
               <h2 className="text-xl font-bold">Отзывы</h2>
-              <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
+              <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
                 <div className="text-center text-white/70 py-8">
                   <div className="text-4xl mb-2">⭐</div>
                   <p>Здесь будут ваши отзывы об объектах</p>

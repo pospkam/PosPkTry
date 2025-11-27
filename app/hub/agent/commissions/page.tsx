@@ -78,19 +78,19 @@ export default function AgentCommissionsPage() {
 
           {stats && (
             <div className="grid grid-cols-3 gap-4 mb-6">
-              <div className="bg-white/25 border border-white/40 rounded-xl p-4 text-center">
+              <div className="bg-white/15 border border-white/15 rounded-xl p-4 text-center">
                 <div className="text-2xl font-bold text-green-400">
                   {stats.totalPaid?.toLocaleString('ru-RU')} ₽
                 </div>
                 <div className="text-white/60 text-sm">Выплачено</div>
               </div>
-              <div className="bg-white/25 border border-white/40 rounded-xl p-4 text-center">
+              <div className="bg-white/15 border border-white/15 rounded-xl p-4 text-center">
                 <div className="text-2xl font-bold text-yellow-400">
                   {stats.totalPending?.toLocaleString('ru-RU')} ₽
                 </div>
                 <div className="text-white/60 text-sm">Ожидает</div>
               </div>
-              <div className="bg-white/25 border border-white/40 rounded-xl p-4 text-center">
+              <div className="bg-white/15 border border-white/15 rounded-xl p-4 text-center">
                 <div className="text-2xl font-bold text-white">
                   {stats.totalAll?.toLocaleString('ru-RU')} ₽
                 </div>

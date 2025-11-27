@@ -54,7 +54,7 @@ export default function ShopPage() {
   return (
     <main className="min-h-screen bg-transparent text-white">
       {/* Header */}
-      <div className="bg-white/25 border-b border-white/40">
+      <div className="bg-white/15 border-b border-white/15">
         <div className="max-w-7xl mx-auto px-6 py-8">
           <h1 className="text-4xl font-black text-white mb-2">
             🎁 Магазин Сувениров Камчатки
@@ -66,7 +66,7 @@ export default function ShopPage() {
       </div>
 
       {/* Categories */}
-      <div className="bg-white/25 border-b border-white/40">
+      <div className="bg-white/15 border-b border-white/15">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex gap-2 overflow-x-auto">
             {categories.map((cat) => (
@@ -104,9 +104,9 @@ export default function ShopPage() {
               <Link
                 key={souvenir.id}
                 href={`/shop/${souvenir.id}`}
-                className="bg-white/25 border border-white/40 rounded-2xl overflow-hidden hover:bg-white/10 transition-colors group"
+                className="bg-white/15 border border-white/15 rounded-2xl overflow-hidden hover:bg-white/10 transition-colors group"
               >
-                <div className="aspect-square bg-white/25 flex items-center justify-center">
+                <div className="aspect-square bg-white/15 flex items-center justify-center">
                   {souvenir.images.length > 0 ? (
                     <img
                       src={souvenir.images[0]}
@@ -154,7 +154,7 @@ export default function ShopPage() {
       </div>
 
       {/* Partner Info */}
-      <div className="bg-white/25 border-t border-white/40 mt-12">
+      <div className="bg-white/15 border-t border-white/15 mt-12">
         <div className="max-w-7xl mx-auto px-6 py-8">
           <div className="flex items-center gap-4">
             <div className="text-4xl">🤝</div>

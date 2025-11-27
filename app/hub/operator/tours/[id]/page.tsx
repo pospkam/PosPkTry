@@ -94,7 +94,7 @@ export default function EditTour() {
         <OperatorNav />
         
         {/* Header */}
-        <div className="bg-white/25 border-b border-white/40 p-6">
+        <div className="bg-white/15 border-b border-white/15 p-6">
           <div className="max-w-5xl mx-auto">
             <h1 className="text-3xl font-black text-white">
               Редактирование тура

@@ -121,7 +121,7 @@ export default function AddTourPage() {
   if (success) {
     return (
       <div className="min-h-screen bg-transparent flex items-center justify-center p-6">
-        <div className="max-w-md w-full bg-white/25 border border-white/40 rounded-2xl p-8 text-center">
+        <div className="max-w-md w-full bg-white/15 border border-white/15 rounded-2xl p-8 text-center">
           <div className="text-6xl mb-4">✅</div>
           <h1 className="text-2xl font-bold text-white mb-2">Тур добавлен!</h1>
           <p className="text-white/70 mb-4">
@@ -150,7 +150,7 @@ export default function AddTourPage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Основная информация */}
-          <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
+          <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
             <h2 className="text-xl font-bold mb-4">Основная информация</h2>
             
             <div className="grid gap-4">
@@ -163,7 +163,7 @@ export default function AddTourPage() {
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-3 bg-white/25 border border-white/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300"
                   placeholder="Рыбалка на реке Быстрая"
                 />
               </div>
@@ -176,7 +176,7 @@ export default function AddTourPage() {
                   type="text"
                   value={formData.shortDescription}
                   onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
-                  className="w-full px-4 py-3 bg-white/25 border border-white/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300"
                   placeholder="Незабываемая рыбалка в горной реке"
                   maxLength={100}
                 />
@@ -192,7 +192,7 @@ export default function AddTourPage() {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={6}
-                  className="w-full px-4 py-3 bg-white/25 border border-white/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 resize-none"
                   placeholder="Детальное описание тура, маршрута, особенностей..."
                 />
               </div>
@@ -208,7 +208,7 @@ export default function AddTourPage() {
                     min="1"
                     value={formData.duration}
                     onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) || 1 })}
-                    className="w-full px-4 py-3 bg-white/25 border border-white/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300"
                   />
                 </div>
 
@@ -223,7 +223,7 @@ export default function AddTourPage() {
                     step="100"
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-4 py-3 bg-white/25 border border-white/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300"
                     placeholder="15000"
                   />
                 </div>
@@ -238,7 +238,7 @@ export default function AddTourPage() {
                     max="100"
                     value={formData.maxGroupSize}
                     onChange={(e) => setFormData({ ...formData, maxGroupSize: parseInt(e.target.value) || 10 })}
-                    className="w-full px-4 py-3 bg-white/25 border border-white/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300"
                   />
                 </div>
               </div>
@@ -246,7 +246,7 @@ export default function AddTourPage() {
           </div>
 
           {/* Сложность */}
-          <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
+          <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
             <h2 className="text-xl font-bold mb-4">
               Уровень сложности <span className="text-red-400">*</span>
             </h2>
@@ -258,8 +258,8 @@ export default function AddTourPage() {
                   onClick={() => setFormData({ ...formData, difficulty: level.id as any })}
                   className={`p-4 rounded-xl border-2 transition-all ${
                     formData.difficulty === level.id
-                      ? 'border-white/40 bg-premium-gold/10'
-                      : 'border-white/40 bg-white/25 hover:border-white/20'
+                      ? 'border-white/15 bg-premium-gold/10'
+                      : 'border-white/15 bg-white/15 hover:border-white/20'
                   }`}
                 >
                   <div className="text-3xl mb-2">{level.icon}</div>
@@ -271,7 +271,7 @@ export default function AddTourPage() {
           </div>
 
           {/* Сезоны */}
-          <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
+          <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
             <h2 className="text-xl font-bold mb-4">Сезоны проведения</h2>
             <div className="grid grid-cols-4 gap-4">
               {SEASONS.map((season) => (
@@ -281,8 +281,8 @@ export default function AddTourPage() {
                   onClick={() => handleSeasonToggle(season.id)}
                   className={`p-4 rounded-xl border-2 transition-all ${
                     formData.season.includes(season.id)
-                      ? 'border-white/40 bg-premium-gold/10'
-                      : 'border-white/40 bg-white/25 hover:border-white/20'
+                      ? 'border-white/15 bg-premium-gold/10'
+                      : 'border-white/15 bg-white/15 hover:border-white/20'
                   }`}
                 >
                   <div className="text-2xl mb-1">{season.icon}</div>
@@ -293,7 +293,7 @@ export default function AddTourPage() {
           </div>
 
           {/* Что включено */}
-          <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
+          <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
             <h2 className="text-xl font-bold mb-4">Что включено в стоимость</h2>
             <div className="flex gap-2 mb-3">
               <input
@@ -301,7 +301,7 @@ export default function AddTourPage() {
                 value={currentIncluded}
                 onChange={(e) => setCurrentIncluded(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addItem('included', currentIncluded))}
-                className="flex-1 px-4 py-2 bg-white/25 border border-white/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 px-4 py-2 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300"
                 placeholder="Трансфер, обед, снаряжение..."
               />
               <button
@@ -329,7 +329,7 @@ export default function AddTourPage() {
           </div>
 
           {/* Что НЕ включено */}
-          <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
+          <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
             <h2 className="text-xl font-bold mb-4">Что НЕ включено</h2>
             <div className="flex gap-2 mb-3">
               <input
@@ -337,7 +337,7 @@ export default function AddTourPage() {
                 value={currentNotIncluded}
                 onChange={(e) => setCurrentNotIncluded(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addItem('notIncluded', currentNotIncluded))}
-                className="flex-1 px-4 py-2 bg-white/25 border border-white/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 px-4 py-2 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300"
                 placeholder="Личные расходы, алкоголь..."
               />
               <button
@@ -365,7 +365,7 @@ export default function AddTourPage() {
           </div>
 
           {/* Фотографии */}
-          <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
+          <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
             <h2 className="text-xl font-bold mb-4">Фотографии</h2>
             <div className="flex gap-2 mb-3">
               <input
@@ -373,7 +373,7 @@ export default function AddTourPage() {
                 value={currentImage}
                 onChange={(e) => setCurrentImage(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addImage())}
-                className="flex-1 px-4 py-2 bg-white/25 border border-white/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 px-4 py-2 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300"
                 placeholder="https://example.com/image.jpg"
               />
               <button
@@ -405,7 +405,7 @@ export default function AddTourPage() {
             <button
               type="button"
               onClick={() => router.back()}
-              className="flex-1 px-6 py-3 bg-white/25 border border-white/40 text-white rounded-xl hover:bg-white/10 transition-colors font-bold"
+              className="flex-1 px-6 py-3 bg-white/15 border border-white/15 text-white rounded-xl hover:bg-white/10 transition-colors font-bold"
             >
               Отмена
             </button>

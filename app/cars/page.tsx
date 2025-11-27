@@ -24,7 +24,7 @@ export default function CarRentalPage() {
 
   return (
     <main className="min-h-screen bg-transparent text-white">
-      <div className="bg-white/25 border-b border-white/40">
+      <div className="bg-white/15 border-b border-white/15">
         <div className="max-w-7xl mx-auto px-6 py-8">
           <h1 className="text-4xl font-black text-white mb-2">
             🚗 Прокат автомобилей
@@ -51,9 +51,9 @@ export default function CarRentalPage() {
             {cars.map((car: any) => (
               <div
                 key={car.id}
-                className="bg-white/25 border border-white/40 rounded-2xl overflow-hidden hover:bg-white/10 transition-colors"
+                className="bg-white/15 border border-white/15 rounded-2xl overflow-hidden hover:bg-white/10 transition-colors"
               >
-                <div className="aspect-video bg-white/25 flex items-center justify-center">
+                <div className="aspect-video bg-white/15 flex items-center justify-center">
                   <div className="text-6xl">🚗</div>
                 </div>
                 

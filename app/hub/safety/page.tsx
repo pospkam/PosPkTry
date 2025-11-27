@@ -8,13 +8,13 @@ export default function SafetyHub() {
   return (
     <main className="min-h-screen bg-transparent text-white">
       {/* Header */}
-      <div className="bg-white/25 border-b border-white/40 p-6">
+      <div className="bg-white/15 border-b border-white/15 p-6">
         <h1 className="text-3xl font-black text-white">SOS и безопасность</h1>
         <p className="text-white/70">Экстренные службы и информация о безопасности</p>
       </div>
 
       {/* Tabs */}
-      <div className="px-6 py-4 border-b border-white/40">
+      <div className="px-6 py-4 border-b border-white/15">
         <div className="flex space-x-4">
           {[
             { id: 'sos', label: 'SOS' },
@@ -51,7 +51,7 @@ export default function SafetyHub() {
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
-              <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
+              <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
                 <h3 className="text-lg font-bold mb-4">Экстренные номера</h3>
                 <div className="space-y-2">
                   <div className="flex justify-between">
@@ -69,7 +69,7 @@ export default function SafetyHub() {
                 </div>
               </div>
 
-              <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
+              <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
                 <h3 className="text-lg font-bold mb-4">Ваша локация</h3>
                 <div className="text-center text-white/70">
                   <div className="text-4xl mb-2">📍</div>
@@ -83,7 +83,7 @@ export default function SafetyHub() {
         {activeTab === 'emergency' && (
           <div className="space-y-6">
             <h2 className="text-xl font-bold">МЧС Камчатки</h2>
-            <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
+            <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
               <div className="text-center text-white/70 py-8">
                 <div className="text-4xl mb-2">🚒</div>
                 <p>Информация МЧС загружается...</p>
@@ -95,7 +95,7 @@ export default function SafetyHub() {
         {activeTab === 'seismic' && (
           <div className="space-y-6">
             <h2 className="text-xl font-bold">Сейсмическая активность</h2>
-            <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
+            <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
               <div className="text-center text-white/70 py-8">
                 <div className="text-4xl mb-2">🌋</div>
                 <p>Данные сейсмики загружаются...</p>
@@ -107,7 +107,7 @@ export default function SafetyHub() {
         {activeTab === 'weather' && (
           <div className="space-y-6">
             <h2 className="text-xl font-bold">Погодные условия</h2>
-            <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
+            <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
               <div className="text-center text-white/70 py-8">
                 <div className="text-4xl mb-2">🌤️</div>
                 <p>Прогноз погоды загружается...</p>

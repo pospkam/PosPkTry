@@ -14,7 +14,7 @@ const ROLES = [
       </svg>
     ),
     description: 'Организация туров', 
-    gradient: 'from-blue-500 to-cyan-500' 
+    gradient: 'from-sky-200 to-cyan-200' 
   },
   { 
     id: 'transfer', 
@@ -193,7 +193,7 @@ export default function AuthPage() {
     return (
       <div className="min-h-screen relative flex items-center justify-center p-6">
         <div className="max-w-md w-full">
-          <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 rounded-3xl p-8 text-center shadow-2xl">
+          <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/20 rounded-3xl p-8 text-center shadow-2xl">
             <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center animate-bounce">
               <span className="text-4xl">✓</span>
             </div>
@@ -236,13 +236,13 @@ export default function AuthPage() {
 
         {/* Mode Toggle */}
         <div className="max-w-md mx-auto mb-10">
-          <div className="bg-white/25 backdrop-blur-xl border border-white/40 rounded-2xl p-1.5 flex gap-2 shadow-xl">
+          <div className="bg-white/15 backdrop-blur-2xl border border-white/15 rounded-2xl p-1.5 flex gap-2 shadow-xl">
             <button
               onClick={() => setMode('login')}
               className={`flex-1 py-4 rounded-xl font-bold transition-all duration-300 ${
                 mode === 'login'
-                  ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-premium-black shadow-lg shadow-blue-500/50'
-                  : 'text-white/70 hover:text-white hover:bg-white/25'
+                  ? 'bg-gradient-to-r from-sky-200 to-cyan-200 text-premium-black shadow-lg shadow-blue-500/50'
+                  : 'text-white/70 hover:text-white hover:bg-white/15'
               }`}
             >
               Вход
@@ -251,8 +251,8 @@ export default function AuthPage() {
               onClick={() => setMode('register')}
               className={`flex-1 py-4 rounded-xl font-bold transition-all duration-300 ${
                 mode === 'register'
-                  ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-premium-black shadow-lg shadow-blue-500/50'
-                  : 'text-white/70 hover:text-white hover:bg-white/25'
+                  ? 'bg-gradient-to-r from-sky-200 to-cyan-200 text-premium-black shadow-lg shadow-blue-500/50'
+                  : 'text-white/70 hover:text-white hover:bg-white/15'
               }`}
             >
               Регистрация
@@ -262,7 +262,7 @@ export default function AuthPage() {
 
         {/* Error Message */}
         {error && (
-          <div className="max-w-4xl mx-auto mb-6 p-4 bg-red-500/10 backdrop-blur-xl border border-red-500/30 rounded-2xl text-red-400 animate-shake">
+          <div className="max-w-4xl mx-auto mb-6 p-4 bg-red-500/10 backdrop-blur-2xl border border-red-500/30 rounded-2xl text-red-400 animate-shake">
             <div className="flex items-center gap-3">
               <span className="text-2xl">⚠️</span>
               <span>{error}</span>
@@ -273,7 +273,7 @@ export default function AuthPage() {
         {/* LOGIN FORM */}
         {mode === 'login' && (
           <div className="max-w-md mx-auto">
-            <form onSubmit={handleLogin} className="bg-white/25 backdrop-blur-xl border border-white/40 rounded-3xl p-8 space-y-6 shadow-2xl">
+            <form onSubmit={handleLogin} className="bg-white/15 backdrop-blur-2xl border border-white/15 rounded-3xl p-8 space-y-6 shadow-2xl">
               <div>
                 <label className="block text-sm font-semibold mb-3 text-white/90">Email</label>
                 <input
@@ -281,7 +281,7 @@ export default function AuthPage() {
                   required
                   value={loginData.email}
                   onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
-                  className="w-full px-6 py-4 bg-white/25 border border-white/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-white/40 transition-all"
+                  className="w-full px-6 py-4 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-transparent text-white placeholder-white/40 transition-all"
                   placeholder="info@kamchatka-fishing.ru"
                 />
               </div>
@@ -294,7 +294,7 @@ export default function AuthPage() {
                     required
                     value={loginData.password}
                     onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                    className="w-full px-6 py-4 bg-white/25 border border-white/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-white/40 transition-all"
+                    className="w-full px-6 py-4 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-transparent text-white placeholder-white/40 transition-all"
                     placeholder="••••••••"
                   />
                   <button
@@ -310,7 +310,7 @@ export default function AuthPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-premium-black font-bold rounded-xl hover:shadow-lg hover:shadow-blue-500/50 disabled:opacity-50 transition-all transform hover:scale-105"
+                className="w-full py-4 bg-gradient-to-r from-sky-200 to-cyan-200 text-premium-black font-bold rounded-xl hover:shadow-lg hover:shadow-blue-500/50 disabled:opacity-50 transition-all transform hover:scale-105"
               >
                 {loading ? '⏳ Вход...' : '→ Войти'}
               </button>
@@ -328,7 +328,7 @@ export default function AuthPage() {
         {mode === 'register' && (
           <form onSubmit={handleRegister} className="max-w-5xl mx-auto space-y-8">
             {/* Основная информация */}
-            <div className="bg-white/25 backdrop-blur-xl border border-white/40 rounded-3xl p-8 shadow-2xl">
+            <div className="bg-white/15 backdrop-blur-2xl border border-white/15 rounded-3xl p-8 shadow-2xl">
               <h2 className="text-3xl font-bold mb-8 bg-gradient-to-r from-premium-gold to-yellow-300 bg-clip-text text-transparent">
                 📋 Основная информация
               </h2>
@@ -344,7 +344,7 @@ export default function AuthPage() {
                       required
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-6 py-4 bg-white/25 border border-white/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-white/40 transition-all"
+                      className="w-full px-6 py-4 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-transparent text-white placeholder-white/40 transition-all"
                       placeholder="Камчатская рыбалка"
                     />
                   </div>
@@ -358,7 +358,7 @@ export default function AuthPage() {
                       required
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-6 py-4 bg-white/25 border border-white/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-white/40 transition-all"
+                      className="w-full px-6 py-4 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-transparent text-white placeholder-white/40 transition-all"
                       placeholder="info@kamchatka-fishing.ru"
                     />
                   </div>
@@ -374,7 +374,7 @@ export default function AuthPage() {
                       required
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full px-6 py-4 bg-white/25 border border-white/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-white/40 transition-all"
+                      className="w-full px-6 py-4 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-transparent text-white placeholder-white/40 transition-all"
                       placeholder="+7 (999) 123-45-67"
                     />
                   </div>
@@ -387,7 +387,7 @@ export default function AuthPage() {
                       type="url"
                       value={formData.website}
                       onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                      className="w-full px-6 py-4 bg-white/25 border border-white/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-white/40 transition-all"
+                      className="w-full px-6 py-4 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-transparent text-white placeholder-white/40 transition-all"
                       placeholder="https://kamchatka-fishing.ru"
                     />
                   </div>
@@ -404,7 +404,7 @@ export default function AuthPage() {
                         required
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        className="w-full px-6 py-4 bg-white/25 border border-white/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-white/40 transition-all"
+                        className="w-full px-6 py-4 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-transparent text-white placeholder-white/40 transition-all"
                         placeholder="Минимум 8 символов"
                       />
                       <button
@@ -442,7 +442,7 @@ export default function AuthPage() {
                         required
                         value={formData.confirmPassword}
                         onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                        className="w-full px-6 py-4 bg-white/25 border border-white/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-white/40 transition-all"
+                        className="w-full px-6 py-4 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-transparent text-white placeholder-white/40 transition-all"
                         placeholder="Повторите пароль"
                       />
                       <button
@@ -467,7 +467,7 @@ export default function AuthPage() {
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     rows={4}
-                    className="w-full px-6 py-4 bg-white/25 border border-white/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-white placeholder-white/40 transition-all"
+                    className="w-full px-6 py-4 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-transparent resize-none text-white placeholder-white/40 transition-all"
                     placeholder="Расскажите о вашей компании, опыте работы, преимуществах..."
                   />
                 </div>
@@ -480,7 +480,7 @@ export default function AuthPage() {
                     type="text"
                     value={formData.address}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    className="w-full px-6 py-4 bg-white/25 border border-white/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-white/40 transition-all"
+                    className="w-full px-6 py-4 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-transparent text-white placeholder-white/40 transition-all"
                     placeholder="г. Петропавловск-Камчатский, ул. Ленинская, 1"
                   />
                 </div>
@@ -488,7 +488,7 @@ export default function AuthPage() {
             </div>
 
             {/* Направления деятельности */}
-            <div className="bg-white/25 backdrop-blur-xl border border-white/40 rounded-3xl p-8 shadow-2xl">
+            <div className="bg-white/15 backdrop-blur-2xl border border-white/15 rounded-3xl p-8 shadow-2xl">
               <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-premium-gold to-yellow-300 bg-clip-text text-transparent">
                 🎯 Направления деятельности <span className="text-red-400">*</span>
               </h2>
@@ -505,7 +505,7 @@ export default function AuthPage() {
                     className={`group relative p-8 rounded-2xl border-2 transition-all duration-300 text-left overflow-hidden ${
                       formData.roles.includes(role.id)
                         ? `border-transparent bg-gradient-to-br ${role.gradient} shadow-2xl shadow-${role.gradient}/50 scale-105`
-                        : 'border-white/40 bg-white/25 hover:border-white/20 hover:bg-white/10 hover:scale-102'
+                        : 'border-white/15 bg-white/15 hover:border-white/20 hover:bg-white/10 hover:scale-102'
                     }`}
                   >
                     <div className="relative">
@@ -541,7 +541,7 @@ export default function AuthPage() {
             </div>
 
             {/* Логотип */}
-            <div className="bg-white/25 backdrop-blur-xl border border-white/40 rounded-3xl p-8 shadow-2xl">
+            <div className="bg-white/15 backdrop-blur-2xl border border-white/15 rounded-3xl p-8 shadow-2xl">
               <h2 className="text-3xl font-bold mb-8 bg-gradient-to-r from-premium-gold to-yellow-300 bg-clip-text text-transparent">
                 📸 Логотип компании
               </h2>
@@ -549,11 +549,11 @@ export default function AuthPage() {
               <div className="flex flex-col md:flex-row items-center gap-8">
                 <div className="relative group">
                   {logoPreview ? (
-                    <div className="w-48 h-48 rounded-2xl border-4 border-white/40 overflow-hidden shadow-2xl shadow-blue-500/30 transform group-hover:scale-105 transition-transform">
+                    <div className="w-48 h-48 rounded-2xl border-4 border-white/15 overflow-hidden shadow-2xl shadow-blue-500/30 transform group-hover:scale-105 transition-transform">
                       <img src={logoPreview} alt="Logo" className="w-full h-full object-cover" />
                     </div>
                   ) : (
-                    <div className="w-48 h-48 rounded-2xl border-4 border-dashed border-white/20 flex items-center justify-center bg-white/25 group-hover:border-white/40 transition-all">
+                    <div className="w-48 h-48 rounded-2xl border-4 border-dashed border-white/20 flex items-center justify-center bg-white/15 group-hover:border-white/15 transition-all">
                       <div className="text-center">
                         <span className="text-6xl">📷</span>
                         <p className="text-xs text-white/50 mt-3">Загрузите лого</p>
@@ -564,7 +564,7 @@ export default function AuthPage() {
 
                 <div className="flex-1 w-full">
                   <label className="block">
-                    <span className="px-8 py-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-premium-black font-bold rounded-xl cursor-pointer hover:shadow-lg hover:shadow-blue-500/50 transition-all inline-flex items-center gap-2 transform hover:scale-105">
+                    <span className="px-8 py-4 bg-gradient-to-r from-sky-200 to-cyan-200 text-premium-black font-bold rounded-xl cursor-pointer hover:shadow-lg hover:shadow-blue-500/50 transition-all inline-flex items-center gap-2 transform hover:scale-105">
                       <span className="text-xl">📁</span>
                       Выбрать файл
                     </span>
@@ -600,19 +600,19 @@ export default function AuthPage() {
             </div>
 
             {/* Кнопка отправки */}
-            <div className="sticky bottom-6 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-2xl">
+            <div className="sticky bottom-6 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/20 rounded-3xl p-6 shadow-2xl">
               <div className="flex gap-4">
                 <button
                   type="button"
                   onClick={() => router.push('/')}
-                  className="flex-1 px-8 py-5 bg-white/25 border border-white/40 text-white rounded-2xl hover:bg-white/10 transition-all font-bold transform hover:scale-105"
+                  className="flex-1 px-8 py-5 bg-white/15 border border-white/15 text-white rounded-2xl hover:bg-white/10 transition-all font-bold transform hover:scale-105"
                 >
                   Отмена
                 </button>
                 <button
                   type="submit"
                   disabled={loading || formData.roles.length === 0 || formData.password !== formData.confirmPassword}
-                  className="flex-1 px-8 py-5 bg-gradient-to-r from-blue-500 to-cyan-500 text-premium-black rounded-2xl hover:shadow-xl hover:shadow-blue-500/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-bold text-lg transform hover:scale-105"
+                  className="flex-1 px-8 py-5 bg-gradient-to-r from-sky-200 to-cyan-200 text-premium-black rounded-2xl hover:shadow-xl hover:shadow-blue-500/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-bold text-lg transform hover:scale-105"
                 >
                   {loading ? '⏳ Регистрация...' : '✓ Зарегистрироваться'}
                 </button>

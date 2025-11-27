@@ -106,7 +106,7 @@ export default function TouristDashboard() {
     return (
       <div className="min-h-screen bg-transparent flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-white/40 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-16 h-16 border-4 border-white/15 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-white text-lg">Загружаем туры...</p>
         </div>
       </div>
@@ -116,11 +116,11 @@ export default function TouristDashboard() {
   return (
     <div className="min-h-screen bg-transparent">
       {/* Header */}
-      <div className="bg-white/25 backdrop-blur-xl border-b border-white/40" style={{ backdropFilter: 'blur(20px)' }}>
+      <div className="bg-white/15 backdrop-blur-2xl border-b border-white/15" style={{ backdropFilter: 'blur(20px)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-light text-white" style={{ textShadow: '0 2px 6px rgba(0, 0, 0, 0.15)' }}>Добро пожаловать, Турист!</h1>
+              <h1 className="text-3xl font-extralight text-white" style={{ textShadow: '0 2px 6px rgba(0, 0, 0, 0.15)' }}>Добро пожаловать, Турист!</h1>
               <p className="text-white/80 mt-1" style={{ textShadow: '0 1px 4px rgba(0, 0, 0, 0.1)' }}>Откройте для себя удивительную Камчатку</p>
             </div>
             <div className="flex items-center space-x-4">
@@ -140,14 +140,14 @@ export default function TouristDashboard() {
 
       {/* Tabs */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex space-x-1 bg-white/25 rounded-xl p-1 mb-8">
+        <div className="flex space-x-1 bg-white/15 rounded-xl p-1 mb-8">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setSelectedTab(tab.id)}
               className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-lg transition-colors ${
                 selectedTab === tab.id
-                  ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'
+                  ? 'bg-gradient-to-r from-sky-200 to-cyan-200 text-white'
                   : 'text-white/70 hover:text-white hover:bg-white/10'
               }`}
             >
@@ -161,7 +161,7 @@ export default function TouristDashboard() {
         {selectedTab === 'tours' && (
           <div className="space-y-6">
             {/* Filters */}
-            <div className="bg-white/25 rounded-2xl p-6">
+            <div className="bg-white/15 rounded-2xl p-6">
               <h3 className="text-xl font-bold text-white mb-4">Фильтры</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
@@ -169,7 +169,7 @@ export default function TouristDashboard() {
                   <select
                     value={filters.activity}
                     onChange={(e) => setFilters({ ...filters, activity: e.target.value })}
-                    className="w-full px-4 py-3 bg-white/25 border border-white/40 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300"
                   >
                     <option value="">Все активности</option>
                     <option value="hiking">Пешие походы</option>
@@ -185,7 +185,7 @@ export default function TouristDashboard() {
                   <select
                     value={filters.difficulty}
                     onChange={(e) => setFilters({ ...filters, difficulty: e.target.value })}
-                    className="w-full px-4 py-3 bg-white/25 border border-white/40 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300"
                   >
                     <option value="">Любая сложность</option>
                     <option value="easy">Легкая</option>
@@ -199,7 +199,7 @@ export default function TouristDashboard() {
                     type="number"
                     value={filters.priceRange[1]}
                     onChange={(e) => setFilters({ ...filters, priceRange: [filters.priceRange[0], parseInt(e.target.value)] })}
-                    className="w-full px-4 py-3 bg-white/25 border border-white/40 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300"
                     placeholder="50000"
                   />
                 </div>
@@ -209,7 +209,7 @@ export default function TouristDashboard() {
             {/* Tours Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {tours.map((tour) => (
-                <div key={tour.id} className="bg-white/25 rounded-2xl overflow-hidden border border-white/40 hover:border-white/50 transition-colors" style={{ backdropFilter: 'blur(20px)' }}>
+                <div key={tour.id} className="bg-white/15 rounded-2xl overflow-hidden border border-white/15 hover:border-white/50 transition-colors" style={{ backdropFilter: 'blur(20px)' }}>
                   <div className="aspect-video bg-gradient-to-br from-blue-500/20 to-cyan-500/20 relative">
                     {tour.images && tour.images.length > 0 ? (
                       <img
@@ -222,7 +222,7 @@ export default function TouristDashboard() {
                         <span className="text-6xl">{getActivityIcon(tour.activity)}</span>
                       </div>
                     )}
-                    <div className="absolute top-4 right-4 bg-white/30 backdrop-blur-xl text-white px-3 py-1 rounded-full text-sm font-light" style={{ backdropFilter: 'blur(10px)', textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)' }}>
+                    <div className="absolute top-4 right-4 bg-white/30 backdrop-blur-2xl text-white px-3 py-1 rounded-full text-sm font-extralight" style={{ backdropFilter: 'blur(10px)', textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)' }}>
                       {tour.priceFrom.toLocaleString()}₽
                     </div>
                   </div>
@@ -260,7 +260,7 @@ export default function TouristDashboard() {
                       <div className="text-sm text-white/70">
                         <span>👥 {tour.minParticipants}-{tour.maxParticipants} чел.</span>
                       </div>
-                      <button className="px-6 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl hover:from-blue-600 hover:to-cyan-600 transition-colors font-light" style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)' }}>
+                      <button className="px-6 py-2 bg-gradient-to-r from-sky-200 to-cyan-200 text-white rounded-xl hover:from-blue-600 hover:to-cyan-600 transition-colors font-extralight" style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)' }}>
                         Забронировать
                       </button>
                     </div>
@@ -284,7 +284,7 @@ export default function TouristDashboard() {
         {/* Weather Tab */}
         {selectedTab === 'weather' && weather && (
           <div className="space-y-6">
-            <div className="bg-white/25 rounded-2xl p-6">
+            <div className="bg-white/15 rounded-2xl p-6">
               <h3 className="text-2xl font-bold text-white mb-6">Текущая погода</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -313,7 +313,7 @@ export default function TouristDashboard() {
                 </div>
               </div>
               
-              <div className="border-t border-white/40 pt-6">
+              <div className="border-t border-white/15 pt-6">
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="text-lg font-bold text-white">Уровень безопасности</h4>
                   <span className={`text-lg font-bold ${getSafetyLevelColor(weather.safetyLevel)}`}>
@@ -336,7 +336,7 @@ export default function TouristDashboard() {
             
             {/* Forecast */}
             {weather.forecast && weather.forecast.length > 0 && (
-              <div className="bg-white/25 rounded-2xl p-6">
+              <div className="bg-white/15 rounded-2xl p-6">
                 <h3 className="text-xl font-bold text-white mb-6">Прогноз на неделю</h3>
                 <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
                   {weather.forecast.map((day, index) => (

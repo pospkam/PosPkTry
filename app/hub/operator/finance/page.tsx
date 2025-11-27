@@ -115,7 +115,7 @@ export default function FinancePage() {
         <OperatorNav />
 
         {/* Header */}
-        <div className="bg-white/25 border-b border-white/40 p-6">
+        <div className="bg-white/15 border-b border-white/15 p-6">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-between">
               <div>
@@ -130,7 +130,7 @@ export default function FinancePage() {
               <select
                 value={period}
                 onChange={(e) => setPeriod(e.target.value)}
-                className="px-4 py-3 bg-white/10 border border-white/40 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-4 py-3 bg-white/10 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300"
               >
                 <option value="7">Последние 7 дней</option>
                 <option value="30">Последние 30 дней</option>
@@ -184,7 +184,7 @@ export default function FinancePage() {
               </div>
 
               {/* Net Income */}
-              <div className="bg-gradient-to-r from-premium-gold/20 to-premium-gold/10 border border-white/40/30 rounded-2xl p-6">
+              <div className="bg-gradient-to-r from-premium-gold/20 to-premium-gold/10 border border-white/15/30 rounded-2xl p-6">
                 <h3 className="text-white/70 mb-2">Чистый доход</h3>
                 <p className="text-4xl font-black text-white">
                   {formatCurrency(data.netIncome)}

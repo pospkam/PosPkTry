@@ -180,7 +180,7 @@ export default function TransferDashboard() {
     return (
       <div className="min-h-screen bg-transparent flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-white/40 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-16 h-16 border-4 border-white/15 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-white text-lg">Загружаем данные...</p>
         </div>
       </div>
@@ -190,7 +190,7 @@ export default function TransferDashboard() {
   return (
     <div className="min-h-screen bg-transparent">
       {/* Header */}
-      <div className="bg-gradient-to-r from-premium-black to-premium-gold/10 border-b border-white/40/20">
+      <div className="bg-gradient-to-r from-premium-black to-premium-gold/10 border-b border-white/15/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
@@ -218,7 +218,7 @@ export default function TransferDashboard() {
 
       {/* Tabs */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex space-x-1 bg-white/25 rounded-xl p-1 mb-8">
+        <div className="flex space-x-1 bg-white/15 rounded-xl p-1 mb-8">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -257,7 +257,7 @@ export default function TransferDashboard() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {mockRoutes.map((route) => (
-                <div key={route.id} className="bg-white/25 rounded-2xl p-6 border border-white/40">
+                <div key={route.id} className="bg-white/15 rounded-2xl p-6 border border-white/15">
                   <div className="flex items-start justify-between mb-4">
                     <h4 className="text-lg font-bold text-white">{route.name}</h4>
                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${
@@ -325,7 +325,7 @@ export default function TransferDashboard() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {mockVehicles.map((vehicle) => (
-                <div key={vehicle.id} className="bg-white/25 rounded-2xl p-6 border border-white/40">
+                <div key={vehicle.id} className="bg-white/15 rounded-2xl p-6 border border-white/15">
                   <div className="flex items-start justify-between mb-4">
                     <h4 className="text-lg font-bold text-white">{vehicle.model}</h4>
                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${
@@ -386,7 +386,7 @@ export default function TransferDashboard() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {mockDrivers.map((driver) => (
-                <div key={driver.id} className="bg-white/25 rounded-2xl p-6 border border-white/40">
+                <div key={driver.id} className="bg-white/15 rounded-2xl p-6 border border-white/15">
                   <div className="flex items-start justify-between mb-4">
                     <h4 className="text-lg font-bold text-white">{driver.name}</h4>
                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${
@@ -445,11 +445,11 @@ export default function TransferDashboard() {
           <div className="space-y-6">
             <h3 className="text-2xl font-bold text-white">Управление бронированиями</h3>
             
-            <div className="bg-white/25 rounded-2xl p-6 border border-white/40">
+            <div className="bg-white/15 rounded-2xl p-6 border border-white/15">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-white/40">
+                    <tr className="border-b border-white/15">
                       <th className="text-left py-3 px-4 text-white/70">Маршрут</th>
                       <th className="text-left py-3 px-4 text-white/70">Дата/Время</th>
                       <th className="text-left py-3 px-4 text-white/70">Пассажиры</th>
@@ -492,7 +492,7 @@ export default function TransferDashboard() {
             <h3 className="text-2xl font-bold text-white">Аналитика и отчеты</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white/25 rounded-2xl p-6 border border-white/40">
+              <div className="bg-white/15 rounded-2xl p-6 border border-white/15">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-white/70 text-sm">Всего маршрутов</p>
@@ -502,7 +502,7 @@ export default function TransferDashboard() {
                 </div>
               </div>
               
-              <div className="bg-white/25 rounded-2xl p-6 border border-white/40">
+              <div className="bg-white/15 rounded-2xl p-6 border border-white/15">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-white/70 text-sm">Активных бронирований</p>
@@ -512,7 +512,7 @@ export default function TransferDashboard() {
                 </div>
               </div>
               
-              <div className="bg-white/25 rounded-2xl p-6 border border-white/40">
+              <div className="bg-white/15 rounded-2xl p-6 border border-white/15">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-white/70 text-sm">Доход за месяц</p>
@@ -522,7 +522,7 @@ export default function TransferDashboard() {
                 </div>
               </div>
               
-              <div className="bg-white/25 rounded-2xl p-6 border border-white/40">
+              <div className="bg-white/15 rounded-2xl p-6 border border-white/15">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-white/70 text-sm">Загрузка транспорта</p>
@@ -534,7 +534,7 @@ export default function TransferDashboard() {
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white/25 rounded-2xl p-6 border border-white/40">
+              <div className="bg-white/15 rounded-2xl p-6 border border-white/15">
                 <h4 className="text-lg font-bold text-white mb-4">Популярные маршруты</h4>
                 <div className="space-y-3">
                   {mockRoutes.map((route, index) => (
@@ -556,7 +556,7 @@ export default function TransferDashboard() {
                 </div>
               </div>
               
-              <div className="bg-white/25 rounded-2xl p-6 border border-white/40">
+              <div className="bg-white/15 rounded-2xl p-6 border border-white/15">
                 <h4 className="text-lg font-bold text-white mb-4">Доходы по маршрутам</h4>
                 <div className="space-y-3">
                   {mockRoutes.map((route, index) => (

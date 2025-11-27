@@ -70,7 +70,7 @@ export default function ToursPage() {
     return (
       <div className="min-h-screen bg-transparent flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-white/40 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-16 h-16 border-4 border-white/15 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-white text-lg" style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>Загружаем туры...</p>
         </div>
       </div>
@@ -80,15 +80,15 @@ export default function ToursPage() {
   if (error) {
     return (
       <div className="min-h-screen bg-transparent flex items-center justify-center p-6">
-        <div className="bg-white/25 backdrop-blur-xl rounded-2xl p-8 text-center max-w-md border border-white/40" style={{ backdropFilter: 'blur(20px)' }}>
+        <div className="bg-white/15 backdrop-blur-2xl rounded-2xl p-8 text-center max-w-md border border-white/15" style={{ backdropFilter: 'blur(20px)' }}>
           <div className="text-6xl mb-4">⚠️</div>
-          <h1 className="text-2xl font-light text-white mb-4" style={{ textShadow: '0 2px 6px rgba(0, 0, 0, 0.15)' }}>
+          <h1 className="text-2xl font-extralight text-white mb-4" style={{ textShadow: '0 2px 6px rgba(0, 0, 0, 0.15)' }}>
             Ошибка загрузки
           </h1>
           <p className="text-white/80 mb-6" style={{ textShadow: '0 1px 4px rgba(0, 0, 0, 0.1)' }}>{error}</p>
           <button
             onClick={() => router.push('/')}
-            className="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl hover:from-blue-600 hover:to-cyan-600 transition-colors font-light"
+            className="px-6 py-3 bg-gradient-to-r from-sky-200 to-cyan-200 text-white rounded-xl hover:from-blue-600 hover:to-cyan-600 transition-colors font-extralight"
             style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)' }}
           >
             На главную
@@ -101,9 +101,9 @@ export default function ToursPage() {
   return (
     <div className="min-h-screen bg-transparent">
       {/* Header */}
-      <div className="bg-white/25 backdrop-blur-xl border-b border-white/40" style={{ backdropFilter: 'blur(20px)' }}>
+      <div className="bg-white/15 backdrop-blur-2xl border-b border-white/15" style={{ backdropFilter: 'blur(20px)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <h1 className="text-4xl font-light text-white mb-2" style={{ textShadow: '0 2px 6px rgba(0, 0, 0, 0.15)' }}>
+          <h1 className="text-4xl font-extralight text-white mb-2" style={{ textShadow: '0 2px 6px rgba(0, 0, 0, 0.15)' }}>
             Туры по Камчатке
           </h1>
           <p className="text-white/80 text-lg" style={{ textShadow: '0 1px 4px rgba(0, 0, 0, 0.1)' }}>
@@ -114,28 +114,28 @@ export default function ToursPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Filters */}
-        <div className="bg-white/25 backdrop-blur-xl rounded-2xl p-6 mb-8 border border-white/40" style={{ backdropFilter: 'blur(20px)' }}>
-          <h3 className="text-xl font-light text-white mb-4" style={{ textShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>Фильтры</h3>
+        <div className="bg-white/15 backdrop-blur-2xl rounded-2xl p-6 mb-8 border border-white/15" style={{ backdropFilter: 'blur(20px)' }}>
+          <h3 className="text-xl font-extralight text-white mb-4" style={{ textShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>Фильтры</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <label className="block text-sm font-light text-white/80 mb-2" style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.08)' }}>Поиск</label>
+              <label className="block text-sm font-extralight text-white/80 mb-2" style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.08)' }}>Поиск</label>
               <input
                 type="text"
                 value={filters.search}
                 onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                className="w-full px-4 py-3 bg-white/25 border border-white/40 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-white/50"
+                className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300 placeholder-white/50"
                 style={{ backdropFilter: 'blur(10px)' }}
                 placeholder="Название тура..."
               />
             </div>
 
             <div>
-              <label className="block text-sm font-light text-white/80 mb-2" style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.08)' }}>Активность</label>
+              <label className="block text-sm font-extralight text-white/80 mb-2" style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.08)' }}>Активность</label>
               <select
                 value={filters.activity}
                 onChange={(e) => setFilters({ ...filters, activity: e.target.value })}
-                className="w-full px-4 py-3 bg-white/25 border border-white/40 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300"
                 style={{ backdropFilter: 'blur(10px)' }}
               >
                 <option value="">Все активности</option>
@@ -149,11 +149,11 @@ export default function ToursPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-light text-white/80 mb-2" style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.08)' }}>Сложность</label>
+              <label className="block text-sm font-extralight text-white/80 mb-2" style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.08)' }}>Сложность</label>
               <select
                 value={filters.difficulty}
                 onChange={(e) => setFilters({ ...filters, difficulty: e.target.value })}
-                className="w-full px-4 py-3 bg-white/25 border border-white/40 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300"
                 style={{ backdropFilter: 'blur(10px)' }}
               >
                 <option value="">Любая сложность</option>
@@ -164,12 +164,12 @@ export default function ToursPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-light text-white/80 mb-2" style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.08)' }}>Цена до</label>
+              <label className="block text-sm font-extralight text-white/80 mb-2" style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.08)' }}>Цена до</label>
               <input
                 type="number"
                 value={filters.priceRange[1]}
                 onChange={(e) => setFilters({ ...filters, priceRange: [filters.priceRange[0], parseInt(e.target.value)] })}
-                className="w-full px-4 py-3 bg-white/25 border border-white/40 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-white/50"
+                className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300 placeholder-white/50"
                 style={{ backdropFilter: 'blur(10px)' }}
                 placeholder="100000"
               />
@@ -183,9 +183,9 @@ export default function ToursPage() {
 
         {/* Tours Grid */}
         {filteredTours.length === 0 ? (
-          <div className="bg-white/25 backdrop-blur-xl rounded-2xl p-12 text-center border border-white/40" style={{ backdropFilter: 'blur(20px)' }}>
+          <div className="bg-white/15 backdrop-blur-2xl rounded-2xl p-12 text-center border border-white/15" style={{ backdropFilter: 'blur(20px)' }}>
             <div className="text-6xl mb-4">🔍</div>
-            <h3 className="text-2xl font-light text-white mb-2" style={{ textShadow: '0 2px 6px rgba(0, 0, 0, 0.15)' }}>
+            <h3 className="text-2xl font-extralight text-white mb-2" style={{ textShadow: '0 2px 6px rgba(0, 0, 0, 0.15)' }}>
               Туры не найдены
             </h3>
             <p className="text-white/80" style={{ textShadow: '0 1px 4px rgba(0, 0, 0, 0.1)' }}>
@@ -198,7 +198,7 @@ export default function ToursPage() {
               <div
                 key={tour.id}
                 onClick={() => router.push(`/tours/${tour.id}`)}
-                className="bg-white/25 backdrop-blur-xl rounded-2xl overflow-hidden border border-white/40 hover:border-white/50 transition-all cursor-pointer group"
+                className="bg-white/15 backdrop-blur-2xl rounded-2xl overflow-hidden border border-white/15 hover:border-white/50 transition-all cursor-pointer group"
                 style={{ backdropFilter: 'blur(20px)' }}
               >
                 <div className="aspect-video bg-gradient-to-br from-blue-500/20 to-cyan-500/20 relative">
@@ -213,18 +213,18 @@ export default function ToursPage() {
                       <span className="text-6xl">{getActivityIcon(tour.activity)}</span>
                     </div>
                   )}
-                  <div className="absolute top-4 right-4 bg-white/30 backdrop-blur-xl text-white px-3 py-1 rounded-full text-sm font-light" style={{ backdropFilter: 'blur(10px)', textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)' }}>
+                  <div className="absolute top-4 right-4 bg-white/30 backdrop-blur-2xl text-white px-3 py-1 rounded-full text-sm font-extralight" style={{ backdropFilter: 'blur(10px)', textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)' }}>
                     от {tour.priceFrom.toLocaleString()}₽
                   </div>
                 </div>
                 
                 <div className="p-6">
                   <div className="flex items-start justify-between mb-3">
-                    <h3 className="text-xl font-light text-white" style={{ textShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>{tour.title}</h3>
+                    <h3 className="text-xl font-extralight text-white" style={{ textShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>{tour.title}</h3>
                     {tour.rating && (
                       <div className="flex items-center space-x-1">
                         <span className="text-white">⭐</span>
-                        <span className="text-white font-light">{tour.rating}</span>
+                        <span className="text-white font-extralight">{tour.rating}</span>
                       </div>
                     )}
                   </div>

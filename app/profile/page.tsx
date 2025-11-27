@@ -122,7 +122,7 @@ export default function ProfilePage() {
     <Protected roles={['tourist', 'operator', 'agent', 'guide', 'transfer', 'admin']}>
       <main className="min-h-screen bg-transparent text-white">
         {/* Header */}
-        <div className="bg-white/25 border-b border-white/40 p-6">
+        <div className="bg-white/15 border-b border-white/15 p-6">
           <h1 className="text-3xl font-black text-white">Мой профиль</h1>
           <p className="text-white/70">Управление личными данными и предпочтениями</p>
         </div>
@@ -140,7 +140,7 @@ export default function ProfilePage() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Личные данные */}
-            <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
+            <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
               <h2 className="text-2xl font-bold mb-6">Личные данные</h2>
               
               <div className="space-y-4">
@@ -150,7 +150,7 @@ export default function ProfilePage() {
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-3 bg-white/10 border border-white/40 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300"
                     required
                   />
                 </div>
@@ -161,7 +161,7 @@ export default function ProfilePage() {
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-4 py-3 bg-white/10 border border-white/40 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300"
                     required
                   />
                 </div>
@@ -173,14 +173,14 @@ export default function ProfilePage() {
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     placeholder="+7 (XXX) XXX-XX-XX"
-                    className="w-full px-4 py-3 bg-white/10 border border-white/40 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-sky-300"
                   />
                 </div>
               </div>
             </div>
 
             {/* Предпочтения */}
-            <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
+            <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
               <h2 className="text-2xl font-bold mb-6">Предпочтения</h2>
               
               {/* Интересы */}
