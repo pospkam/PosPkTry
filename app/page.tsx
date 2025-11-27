@@ -5,36 +5,23 @@ import { Tour } from '@/types';
 import { WeatherWidget } from '@/components/WeatherWidget';
 import AISmartSearch from '@/components/AISmartSearch';
 import FloatingAIButton from '@/components/FloatingAIButton';
+import RegistrationButtons from '@/components/RegistrationButtons';
 import { 
   Mountain, Compass, Fish, CloudSnow, Waves, Droplet,
   Users, Briefcase, Award, Truck, Home as HomeIcon, ShoppingBag,
-  Rocket, AlertTriangle, Leaf, Brain, Clock, UsersRound, Star, ArrowRight
+  Rocket, AlertTriangle, Leaf, Brain, Clock, UsersRound, Star, ArrowRight,
+  Flame, TreePine
 } from 'lucide-react';
 
 export default function Home() {
   const [tours, setTours] = useState<Tour[]>([]);
   const [loading, setLoading] = useState(true);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [greeting, setGreeting] = useState('Добрый день');
 
   useEffect(() => {
     fetchData();
     getUserLocation();
-    updateGreeting();
   }, []);
-
-  const updateGreeting = () => {
-    const hours = new Date().getHours();
-    if (hours >= 6 && hours < 12) {
-      setGreeting('Доброе утро');
-    } else if (hours >= 12 && hours < 18) {
-      setGreeting('Добрый день');
-    } else if (hours >= 18 && hours < 23) {
-      setGreeting('Добрый вечер');
-    } else {
-      setGreeting('Доброй ночи');
-    }
-  };
 
   const fetchData = async () => {
     try {
@@ -113,63 +100,69 @@ export default function Home() {
   return (
     <main className="min-h-screen relative">
       {/* Hero Section - Samsung Weather Style */}
-      <section className="relative overflow-hidden mx-4 mt-6 mb-8 rounded-3xl">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/40 via-purple-900/30 to-blue-900/40 backdrop-blur-xl border border-white/10"></div>
-        <div className="relative p-6 md:p-10">
-          <div className="max-w-4xl mx-auto text-center space-y-4">
-            {/* Приветствие и Заголовок */}
-            <div className="space-y-2">
-              <p className="text-2xl md:text-3xl font-light text-white/80">
-                {greeting}, Камчатка
-              </p>
-              <h1 className="text-4xl md:text-6xl font-black bg-gradient-to-r from-blue-200 via-white to-blue-200 bg-clip-text text-transparent leading-tight">
-                Экосистема туризма
-              </h1>
-            </div>
+      <section className="relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-20 md:py-32 text-center">
+          <div className="space-y-6">
+            {/* Заголовок */}
+            <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold text-white drop-shadow-lg">
+              Исследуйте Камчатку
+            </h1>
+            <p className="text-xl sm:text-2xl text-white/90 max-w-3xl mx-auto leading-relaxed">
+              Откройте для себя удивительный мир вулканов, гейзеров и дикой природы
+            </p>
+
             
             {/* AI Smart Search */}
-            <div className="pt-4">
+            <div className="pt-6 max-w-4xl mx-auto">
               <AISmartSearch />
-            </div>
-
-            {/* Кнопки действий */}
-            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center pt-4">
-              <a 
-                href="/demo"
-                className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold rounded-2xl transition-all shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50"
-              >
-                <Rocket className="w-4 h-4" />
-                Демо-режим
-              </a>
-              <a 
-                href="/auth/login"
-                className="w-full sm:w-auto px-6 py-3 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-2xl border border-white/20 backdrop-blur-sm transition-all"
-              >
-                Войти
-              </a>
-            </div>
-
-            {/* Подсказка */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-300 text-sm">
-              <Brain className="w-4 h-4" />
-              <span>Демо-режим — попробуйте все функции без регистрации</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Weather Widget */}
-      {userLocation && (
-        <section className="px-4 mb-8">
-          <div className="max-w-4xl mx-auto">
-            <WeatherWidget
-              lat={userLocation.lat}
-              lng={userLocation.lng}
-              location="Петропавловск-Камчатский"
-            />
+      {/* Features Grid - 3 карточки */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
+          {/* Feature 1 - Вулканы */}
+          <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 sm:p-10 text-center border border-white/20 hover:bg-white/15 transition-all group cursor-pointer">
+            <div className="mb-6 inline-block">
+              <Flame className="w-16 h-16 sm:w-20 sm:h-20 text-orange-300 group-hover:scale-110 transition-transform duration-300" />
+            </div>
+            <h3 className="text-2xl sm:text-3xl font-bold text-white mb-3 sm:mb-4">Вулканы</h3>
+            <p className="text-base sm:text-lg text-white/90 leading-relaxed">
+              Восхождения на действующие вулканы с опытными гидами
+            </p>
           </div>
-        </section>
-      )}
+
+          {/* Feature 2 - Дикая природа */}
+          <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 sm:p-10 text-center border border-white/20 hover:bg-white/15 transition-all group cursor-pointer">
+            <div className="mb-6 inline-block">
+              <TreePine className="w-16 h-16 sm:w-20 sm:h-20 text-green-300 group-hover:scale-110 transition-transform duration-300" />
+            </div>
+            <h3 className="text-2xl sm:text-3xl font-bold text-white mb-3 sm:mb-4">Дикая природа</h3>
+            <p className="text-base sm:text-lg text-white/90 leading-relaxed">
+              Наблюдение за медведями, китами и редкими птицами
+            </p>
+          </div>
+
+          {/* Feature 3 - Гейзеры */}
+          <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 sm:p-10 text-center border border-white/20 hover:bg-white/15 transition-all sm:col-span-2 md:col-span-1 group cursor-pointer">
+            <div className="mb-6 inline-block">
+              <Droplet className="w-16 h-16 sm:w-20 sm:h-20 text-cyan-300 group-hover:scale-110 transition-transform duration-300" />
+            </div>
+            <h3 className="text-2xl sm:text-3xl font-bold text-white mb-3 sm:mb-4">Гейзеры</h3>
+            <p className="text-base sm:text-lg text-white/90 leading-relaxed">
+              Долина Гейзеров - одно из чудес России
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ДВЕ ИЗЫСКАННЫЕ КНОПКИ - ТУРИСТ И БИЗНЕС */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 md:py-16">
+        <RegistrationButtons />
+      </section>
+
 
       {/* Roles Section - HORIZONTAL SCROLL */}
       <section className="px-4 mb-8">
