@@ -102,7 +102,7 @@ export default function UsersManagement() {
       header: 'Роль',
       sortable: true,
       render: (user) => (
-        <span className="px-3 py-1 bg-premium-gold/20 text-premium-gold rounded-full text-xs font-bold">
+        <span className="px-3 py-1 bg-premium-gold/20 text-white rounded-full text-xs font-bold">
           {getRoleLabel(user.role)}
         </span>
       )
@@ -146,15 +146,15 @@ export default function UsersManagement() {
 
   return (
     <Protected roles={['admin']}>
-      <main className="min-h-screen bg-premium-black text-white">
+      <main className="min-h-screen bg-transparent text-white">
         <AdminNav />
         
         {/* Header */}
-        <div className="bg-white/5 border-b border-white/10 p-6">
+        <div className="bg-white/25 border-b border-white/40 p-6">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h1 className="text-3xl font-black text-premium-gold">
+                <h1 className="text-3xl font-black text-white">
                   Управление пользователями
                 </h1>
                 <p className="text-white/70 mt-1">
@@ -180,7 +180,7 @@ export default function UsersManagement() {
                   setRoleFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+                className="px-4 py-3 bg-white/25 border border-white/40 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Все роли</option>
                 <option value="tourist">Турист</option>

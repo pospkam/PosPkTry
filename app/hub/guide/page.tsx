@@ -94,9 +94,9 @@ export default function GuideDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-premium-black flex items-center justify-center">
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-premium-gold border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-16 h-16 border-4 border-white/40 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-white text-lg">Загружаем данные...</p>
         </div>
       </div>
@@ -104,9 +104,9 @@ export default function GuideDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-premium-black">
+    <div className="min-h-screen bg-transparent">
       {/* Header */}
-      <div className="bg-gradient-to-r from-premium-black to-premium-gold/10 border-b border-premium-gold/20">
+      <div className="bg-gradient-to-r from-premium-black to-premium-gold/10 border-b border-white/40/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
@@ -116,7 +116,7 @@ export default function GuideDashboard() {
             <div className="flex items-center space-x-4">
               <div className="text-right">
                 <div className="text-white text-sm">Рейтинг гида</div>
-                <div className="text-premium-gold text-lg font-bold">4.9 ⭐</div>
+                <div className="text-white text-lg font-bold">4.9 ⭐</div>
               </div>
               {weather && (
                 <div className="text-right">
@@ -134,7 +134,7 @@ export default function GuideDashboard() {
 
       {/* Tabs */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex space-x-1 bg-white/5 rounded-xl p-1 mb-8">
+        <div className="flex space-x-1 bg-white/25 rounded-xl p-1 mb-8">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -163,7 +163,7 @@ export default function GuideDashboard() {
 
             <div className="space-y-4">
               {mockSchedule.map((item) => (
-                <div key={item.id} className="bg-white/5 rounded-2xl p-6 border border-white/10">
+                <div key={item.id} className="bg-white/25 rounded-2xl p-6 border border-white/40">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
                       <h4 className="text-xl font-bold text-white">{item.tour}</h4>
@@ -216,7 +216,7 @@ export default function GuideDashboard() {
             <h3 className="text-2xl font-bold text-white">Управление группами</h3>
             
             {mockGroups.map((group) => (
-              <div key={group.id} className="bg-white/5 rounded-2xl p-6 border border-white/10">
+              <div key={group.id} className="bg-white/25 rounded-2xl p-6 border border-white/40">
                 <div className="flex items-start justify-between mb-6">
                   <div>
                     <h4 className="text-xl font-bold text-white">{group.tour}</h4>
@@ -232,7 +232,7 @@ export default function GuideDashboard() {
                     <h5 className="text-lg font-bold text-white mb-3">Участники группы</h5>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {group.participants.map((participant, index) => (
-                        <div key={index} className="bg-white/5 rounded-xl p-4">
+                        <div key={index} className="bg-white/25 rounded-xl p-4">
                           <div className="flex items-center justify-between mb-2">
                             <h6 className="text-white font-bold">{participant.name}</h6>
                             <span className={`px-2 py-1 rounded-full text-xs ${
@@ -280,7 +280,7 @@ export default function GuideDashboard() {
             <h3 className="text-2xl font-bold text-white">Доходы и выплаты</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+              <div className="bg-white/25 rounded-2xl p-6 border border-white/40">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-white/70 text-sm">Этот месяц</p>
@@ -290,7 +290,7 @@ export default function GuideDashboard() {
                 </div>
               </div>
               
-              <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+              <div className="bg-white/25 rounded-2xl p-6 border border-white/40">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-white/70 text-sm">Прошлый месяц</p>
@@ -300,7 +300,7 @@ export default function GuideDashboard() {
                 </div>
               </div>
               
-              <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+              <div className="bg-white/25 rounded-2xl p-6 border border-white/40">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-white/70 text-sm">Этот год</p>
@@ -310,7 +310,7 @@ export default function GuideDashboard() {
                 </div>
               </div>
               
-              <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+              <div className="bg-white/25 rounded-2xl p-6 border border-white/40">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-white/70 text-sm">Средний чек</p>
@@ -322,7 +322,7 @@ export default function GuideDashboard() {
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+              <div className="bg-white/25 rounded-2xl p-6 border border-white/40">
                 <h4 className="text-lg font-bold text-white mb-4">Статистика туров</h4>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
@@ -331,12 +331,12 @@ export default function GuideDashboard() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-white/70">Следующая выплата</span>
-                    <span className="text-premium-gold font-bold">{mockEarnings.nextPayout}</span>
+                    <span className="text-white font-bold">{mockEarnings.nextPayout}</span>
                   </div>
                 </div>
               </div>
               
-              <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+              <div className="bg-white/25 rounded-2xl p-6 border border-white/40">
                 <h4 className="text-lg font-bold text-white mb-4">Доходы по месяцам</h4>
                 <div className="space-y-3">
                   {['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь'].map((month, index) => (
@@ -349,7 +349,7 @@ export default function GuideDashboard() {
                             style={{ width: `${Math.random() * 100}%` }}
                           ></div>
                         </div>
-                        <span className="text-premium-gold font-bold w-20 text-right">
+                        <span className="text-white font-bold w-20 text-right">
                           {Math.floor(Math.random() * 50000 + 20000).toLocaleString()}₽
                         </span>
                       </div>
@@ -366,7 +366,7 @@ export default function GuideDashboard() {
           <div className="space-y-6">
             <h3 className="text-2xl font-bold text-white">Погодные условия</h3>
             
-            <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+            <div className="bg-white/25 rounded-2xl p-6 border border-white/40">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <div className="text-center">
                   <div className="text-4xl mb-2">🌤️</div>
@@ -393,7 +393,7 @@ export default function GuideDashboard() {
                 </div>
               </div>
               
-              <div className="border-t border-white/10 pt-6">
+              <div className="border-t border-white/40 pt-6">
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="text-lg font-bold text-white">Рекомендации для гидов</h4>
                   <span className={`text-lg font-bold ${
@@ -426,7 +426,7 @@ export default function GuideDashboard() {
             <h3 className="text-2xl font-bold text-white">Профиль гида</h3>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+              <div className="bg-white/25 rounded-2xl p-6 border border-white/40">
                 <h4 className="text-lg font-bold text-white mb-4">Личная информация</h4>
                 <div className="space-y-4">
                   <div>
@@ -434,7 +434,7 @@ export default function GuideDashboard() {
                     <input
                       type="text"
                       defaultValue="Александр Вулканов"
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+                      className="w-full px-4 py-3 bg-white/25 border border-white/40 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                   <div>
@@ -442,7 +442,7 @@ export default function GuideDashboard() {
                     <input
                       type="tel"
                       defaultValue="+7 (999) 123-45-67"
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+                      className="w-full px-4 py-3 bg-white/25 border border-white/40 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                   <div>
@@ -450,18 +450,18 @@ export default function GuideDashboard() {
                     <input
                       type="email"
                       defaultValue="alex@guide.kamchatka.ru"
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+                      className="w-full px-4 py-3 bg-white/25 border border-white/40 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                 </div>
               </div>
               
-              <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+              <div className="bg-white/25 rounded-2xl p-6 border border-white/40">
                 <h4 className="text-lg font-bold text-white mb-4">Профессиональная информация</h4>
                 <div className="space-y-4">
                   <div>
                     <label className="block text-white/70 text-sm mb-2">Специализация</label>
-                    <select className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold">
+                    <select className="w-full px-4 py-3 bg-white/25 border border-white/40 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                       <option>Горные походы</option>
                       <option>Экскурсии</option>
                       <option>Дикая природа</option>
@@ -473,7 +473,7 @@ export default function GuideDashboard() {
                     <input
                       type="text"
                       defaultValue="5 лет"
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+                      className="w-full px-4 py-3 bg-white/25 border border-white/40 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                   <div>
@@ -481,7 +481,7 @@ export default function GuideDashboard() {
                     <input
                       type="text"
                       defaultValue="Русский, Английский"
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+                      className="w-full px-4 py-3 bg-white/25 border border-white/40 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                 </div>

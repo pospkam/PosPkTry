@@ -211,7 +211,7 @@ export default function Home() {
               {[...Array(6)].map((_, i) => (
                 <div 
                   key={i} 
-                  className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 backdrop-blur-sm rounded-3xl h-80 animate-pulse border border-white/10"
+                  className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 backdrop-blur-sm rounded-3xl h-80 animate-pulse border border-white/40"
                 ></div>
               ))}
             </div>
@@ -220,7 +220,7 @@ export default function Home() {
               {tours.map((tour) => (
                 <div
                   key={tour.id}
-                  className="group relative bg-gradient-to-br from-blue-900/30 via-purple-900/20 to-blue-900/30 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden hover:border-white/30 transition-all duration-300 cursor-pointer"
+                  className="group relative bg-gradient-to-br from-blue-900/30 via-purple-900/20 to-blue-900/30 backdrop-blur-xl border border-white/40 rounded-3xl overflow-hidden hover:border-white/30 transition-all duration-300 cursor-pointer"
                 >
                   {tour.images && tour.images[0] && (
                     <div className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity">
@@ -253,7 +253,7 @@ export default function Home() {
                       </div>
                     </div>
                     
-                    <div className="flex items-end justify-between mt-4 pt-4 border-t border-white/10">
+                    <div className="flex items-end justify-between mt-4 pt-4 border-t border-white/40">
                       <div>
                         <div className="text-2xl font-bold text-white">
                           {tour.priceFrom?.toLocaleString('ru-RU')} ₽
@@ -277,7 +277,7 @@ export default function Home() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-20 bg-gradient-to-br from-blue-900/20 to-purple-900/20 backdrop-blur-sm rounded-3xl border border-white/10">
+            <div className="text-center py-20 bg-gradient-to-br from-blue-900/20 to-purple-900/20 backdrop-blur-sm rounded-3xl border border-white/40">
               <Mountain className="w-16 h-16 mx-auto mb-4 text-white/50" />
               <p className="text-white/70 text-lg">Туры временно недоступны</p>
             </div>
@@ -395,7 +395,7 @@ export default function Home() {
       {/* Footer Info */}
       <section className="px-4 pb-8">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 backdrop-blur-sm border border-white/10 rounded-3xl p-8 text-center">
+          <div className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 backdrop-blur-sm border border-white/40 rounded-3xl p-8 text-center">
             <div className="flex items-center justify-center gap-2 text-white/50 text-sm">
               <Mountain className="w-5 h-5" />
               <span>KamHub — Современная экосистема туризма Камчатки</span>

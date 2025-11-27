@@ -101,7 +101,7 @@ export default function AgentClientsPage() {
       key: 'source',
       header: 'Источник',
       render: (client: AgentClient) => (
-        <div className="capitalize text-premium-gold text-sm">
+        <div className="capitalize text-white text-sm">
           {client.source === 'direct' ? 'Прямой' :
            client.source === 'referral' ? 'Рекомендация' :
            client.source === 'social' ? 'Соцсети' :
@@ -121,7 +121,7 @@ export default function AgentClientsPage() {
       key: 'totalSpent',
       header: 'Потрачено',
       render: (client: AgentClient) => (
-        <div className="font-medium text-premium-gold">
+        <div className="font-medium text-white">
           {client.totalSpent.toLocaleString('ru-RU')} ₽
         </div>
       )
@@ -162,15 +162,15 @@ export default function AgentClientsPage() {
 
   return (
     <Protected roles={['agent']}>
-      <main className="min-h-screen bg-premium-black text-white">
+      <main className="min-h-screen bg-transparent text-white">
         <AgentNav />
 
         {/* Header */}
-        <div className="bg-white/5 border-b border-white/10 p-6">
+        <div className="bg-white/25 border-b border-white/40 p-6">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-black text-premium-gold">
+                <h1 className="text-3xl font-black text-white">
                   Управление клиентами
                 </h1>
                 <p className="text-white/70 mt-1">
@@ -189,7 +189,7 @@ export default function AgentClientsPage() {
         </div>
 
         {/* Filters */}
-        <div className="bg-white/5 border-b border-white/10">
+        <div className="bg-white/25 border-b border-white/40">
           <div className="max-w-7xl mx-auto px-6 py-4">
             <div className="flex gap-4">
               <div className="flex-1">
@@ -198,13 +198,13 @@ export default function AgentClientsPage() {
                   placeholder="Поиск по имени или email..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold"
+                  className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+                className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="all">Все статусы</option>
                 <option value="active">Активные</option>
@@ -232,7 +232,7 @@ export default function AgentClientsPage() {
               </button>
             </div>
           ) : (
-            <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+            <div className="bg-white/25 border border-white/40 rounded-2xl overflow-hidden">
               <DataTable
                 data={clients}
                 columns={columns}

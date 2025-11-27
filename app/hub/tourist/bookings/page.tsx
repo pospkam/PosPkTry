@@ -93,7 +93,7 @@ export default function BookingHistoryPage() {
   if (loading) {
     return (
       <Protected roles={['tourist']}>
-        <div className="min-h-screen bg-premium-black flex items-center justify-center">
+        <div className="min-h-screen bg-transparent flex items-center justify-center">
           <LoadingSpinner message="Загрузка бронирований..." />
         </div>
       </Protected>
@@ -102,10 +102,10 @@ export default function BookingHistoryPage() {
 
   return (
     <Protected roles={['tourist']}>
-      <main className="min-h-screen bg-premium-black text-white">
+      <main className="min-h-screen bg-transparent text-white">
         {/* Header */}
-        <div className="bg-white/5 border-b border-white/10 p-6">
-          <h1 className="text-3xl font-black text-premium-gold">Мои бронирования</h1>
+        <div className="bg-white/25 border-b border-white/40 p-6">
+          <h1 className="text-3xl font-black text-white">Мои бронирования</h1>
           <p className="text-white/70">История ваших бронирований и заказов</p>
         </div>
 
@@ -156,7 +156,7 @@ export default function BookingHistoryPage() {
 
           {/* Bookings List */}
           {filteredBookings.length === 0 ? (
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-12 text-center">
+            <div className="bg-white/25 border border-white/40 rounded-2xl p-12 text-center">
               <div className="text-6xl mb-4">📅</div>
               <p className="text-white/70 text-lg">У вас пока нет бронирований</p>
               <button
@@ -171,7 +171,7 @@ export default function BookingHistoryPage() {
               {filteredBookings.map((booking) => (
                 <div
                   key={booking.id}
-                  className="bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-colors"
+                  className="bg-white/25 border border-white/40 rounded-2xl p-6 hover:bg-white/10 transition-colors"
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div>
@@ -182,7 +182,7 @@ export default function BookingHistoryPage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-bold text-premium-gold mb-2">
+                      <p className="text-2xl font-bold text-white mb-2">
                         {booking.totalPrice.toLocaleString('ru-RU')} ₽
                       </p>
                       <div className="flex flex-col gap-2">
@@ -193,14 +193,14 @@ export default function BookingHistoryPage() {
                   </div>
 
                   {booking.specialRequests && (
-                    <div className="mt-4 pt-4 border-t border-white/10">
+                    <div className="mt-4 pt-4 border-t border-white/40">
                       <p className="text-xs text-white/50 mb-1">Особые пожелания:</p>
                       <p className="text-sm text-white/80">{booking.specialRequests}</p>
                     </div>
                   )}
 
                   {/* Действия */}
-                  <div className="mt-4 pt-4 border-t border-white/10 flex gap-3">
+                  <div className="mt-4 pt-4 border-t border-white/40 flex gap-3">
                     <button className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm transition-colors">
                       Подробнее
                     </button>
@@ -210,7 +210,7 @@ export default function BookingHistoryPage() {
                       </button>
                     )}
                     {booking.status === 'completed' && booking.paymentStatus === 'paid' && (
-                      <button className="px-4 py-2 bg-premium-gold/20 hover:bg-premium-gold/30 text-premium-gold rounded-lg text-sm transition-colors">
+                      <button className="px-4 py-2 bg-premium-gold/20 hover:bg-premium-gold/30 text-white rounded-lg text-sm transition-colors">
                         Оставить отзыв
                       </button>
                     )}

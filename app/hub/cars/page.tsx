@@ -139,7 +139,7 @@ export default function CarsHub() {
   if (loading) {
     return (
       <Protected roles={['tourist', 'admin']}>
-        <div className="min-h-screen bg-premium-black flex items-center justify-center">
+        <div className="min-h-screen bg-transparent flex items-center justify-center">
           <LoadingSpinner message="Загрузка автомобилей..." />
         </div>
       </Protected>
@@ -148,12 +148,12 @@ export default function CarsHub() {
 
   return (
     <Protected roles={['tourist', 'admin']}>
-      <main className="min-h-screen bg-premium-black text-white">
+      <main className="min-h-screen bg-transparent text-white">
         {/* Header */}
-        <div className="bg-white/5 border-b border-white/10 p-6">
+        <div className="bg-white/25 border-b border-white/40 p-6">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-black text-premium-gold">Аренда автомобилей</h1>
+              <h1 className="text-3xl font-black text-white">Аренда автомобилей</h1>
               <p className="text-white/70">Надежный транспорт для путешествий</p>
             </div>
 

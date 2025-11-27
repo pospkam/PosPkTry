@@ -60,7 +60,7 @@ export default function AgentBookingsPage() {
       key: 'totalPrice',
       header: 'Сумма',
       render: (booking: any) => (
-        <div className="font-medium text-premium-gold">
+        <div className="font-medium text-white">
           {booking.totalPrice?.toLocaleString('ru-RU')} ₽
         </div>
       )
@@ -83,10 +83,10 @@ export default function AgentBookingsPage() {
 
   return (
     <Protected roles={['agent']}>
-      <main className="min-h-screen bg-premium-black text-white">
+      <main className="min-h-screen bg-transparent text-white">
         <AgentNav />
         <div className="max-w-7xl mx-auto p-6">
-          <h1 className="text-3xl font-black text-premium-gold mb-6">
+          <h1 className="text-3xl font-black text-white mb-6">
             Бронирования
           </h1>
           {loading ? (

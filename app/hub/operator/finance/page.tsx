@@ -111,15 +111,15 @@ export default function FinancePage() {
 
   return (
     <Protected roles={['operator', 'admin']}>
-      <main className="min-h-screen bg-premium-black text-white">
+      <main className="min-h-screen bg-transparent text-white">
         <OperatorNav />
 
         {/* Header */}
-        <div className="bg-white/5 border-b border-white/10 p-6">
+        <div className="bg-white/25 border-b border-white/40 p-6">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-black text-premium-gold">
+                <h1 className="text-3xl font-black text-white">
                   Финансы
                 </h1>
                 <p className="text-white/70 mt-1">
@@ -130,7 +130,7 @@ export default function FinancePage() {
               <select
                 value={period}
                 onChange={(e) => setPeriod(e.target.value)}
-                className="px-4 py-3 bg-white/10 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+                className="px-4 py-3 bg-white/10 border border-white/40 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="7">Последние 7 дней</option>
                 <option value="30">Последние 30 дней</option>
@@ -184,9 +184,9 @@ export default function FinancePage() {
               </div>
 
               {/* Net Income */}
-              <div className="bg-gradient-to-r from-premium-gold/20 to-premium-gold/10 border border-premium-gold/30 rounded-2xl p-6">
+              <div className="bg-gradient-to-r from-premium-gold/20 to-premium-gold/10 border border-white/40/30 rounded-2xl p-6">
                 <h3 className="text-white/70 mb-2">Чистый доход</h3>
-                <p className="text-4xl font-black text-premium-gold">
+                <p className="text-4xl font-black text-white">
                   {formatCurrency(data.netIncome)}
                 </p>
                 <p className="text-white/60 text-sm mt-2">

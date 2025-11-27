@@ -100,27 +100,27 @@ export default function PartnerDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-premium-black flex items-center justify-center">
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
         <div className="text-white text-xl">⏳ Загрузка...</div>
       </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-premium-black text-white p-6">
+    <main className="min-h-screen bg-transparent text-white p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-4xl font-bold text-premium-gold mb-2">
+              <h1 className="text-4xl font-bold text-white mb-2">
                 {companyName}
               </h1>
               <p className="text-white/70">Личный кабинет партнера</p>
             </div>
             <button
               onClick={() => router.push('/')}
-              className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors"
+              className="px-4 py-2 bg-white/25 border border-white/40 rounded-xl hover:bg-white/10 transition-colors"
             >
               ← На главную
             </button>
@@ -145,7 +145,7 @@ export default function PartnerDashboard() {
           {partners.map((partner) => {
             const info = ROLE_INFO[partner.category as keyof typeof ROLE_INFO];
             return (
-              <div key={partner.id} className="bg-white/5 border border-white/10 rounded-xl p-6">
+              <div key={partner.id} className="bg-white/25 border border-white/40 rounded-xl p-6">
                 <div className="text-3xl mb-2">{info.icon}</div>
                 <div className="text-sm text-white/70 mb-1">{info.name}</div>
                 <div className="text-2xl font-bold">0</div>
@@ -159,7 +159,7 @@ export default function PartnerDashboard() {
         <div className="space-y-6">
           {/* ТУРЫ */}
           {partners.find(p => p.category === 'operator') && (
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+            <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
                   <span className="text-3xl">🎣</span>
@@ -185,7 +185,7 @@ export default function PartnerDashboard() {
 
           {/* ТРАНСФЕР */}
           {partners.find(p => p.category === 'transfer') && (
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+            <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
                   <span className="text-3xl">🚗</span>
@@ -211,7 +211,7 @@ export default function PartnerDashboard() {
 
           {/* РАЗМЕЩЕНИЕ */}
           {partners.find(p => p.category === 'stay') && (
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+            <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
                   <span className="text-3xl">🏠</span>
@@ -237,7 +237,7 @@ export default function PartnerDashboard() {
 
           {/* СНАРЯЖЕНИЕ */}
           {partners.find(p => p.category === 'gear') && (
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+            <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
                   <span className="text-3xl">🎣</span>

@@ -178,9 +178,9 @@ export default function TransferDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-premium-black flex items-center justify-center">
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-premium-gold border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-16 h-16 border-4 border-white/40 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-white text-lg">Загружаем данные...</p>
         </div>
       </div>
@@ -188,9 +188,9 @@ export default function TransferDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-premium-black">
+    <div className="min-h-screen bg-transparent">
       {/* Header */}
-      <div className="bg-gradient-to-r from-premium-black to-premium-gold/10 border-b border-premium-gold/20">
+      <div className="bg-gradient-to-r from-premium-black to-premium-gold/10 border-b border-white/40/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
@@ -200,7 +200,7 @@ export default function TransferDashboard() {
             <div className="flex items-center space-x-4">
               <div className="text-right">
                 <div className="text-white text-sm">Активных маршрутов</div>
-                <div className="text-premium-gold text-lg font-bold">{mockRoutes.length}</div>
+                <div className="text-white text-lg font-bold">{mockRoutes.length}</div>
               </div>
               {weather && (
                 <div className="text-right">
@@ -218,7 +218,7 @@ export default function TransferDashboard() {
 
       {/* Tabs */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex space-x-1 bg-white/5 rounded-xl p-1 mb-8">
+        <div className="flex space-x-1 bg-white/25 rounded-xl p-1 mb-8">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -257,7 +257,7 @@ export default function TransferDashboard() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {mockRoutes.map((route) => (
-                <div key={route.id} className="bg-white/5 rounded-2xl p-6 border border-white/10">
+                <div key={route.id} className="bg-white/25 rounded-2xl p-6 border border-white/40">
                   <div className="flex items-start justify-between mb-4">
                     <h4 className="text-lg font-bold text-white">{route.name}</h4>
                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${
@@ -280,7 +280,7 @@ export default function TransferDashboard() {
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-white/70">Цена:</span>
-                      <span className="text-premium-gold font-bold">{route.price.toLocaleString()}₽</span>
+                      <span className="text-white font-bold">{route.price.toLocaleString()}₽</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-white/70">Зависит от погоды:</span>
@@ -325,7 +325,7 @@ export default function TransferDashboard() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {mockVehicles.map((vehicle) => (
-                <div key={vehicle.id} className="bg-white/5 rounded-2xl p-6 border border-white/10">
+                <div key={vehicle.id} className="bg-white/25 rounded-2xl p-6 border border-white/40">
                   <div className="flex items-start justify-between mb-4">
                     <h4 className="text-lg font-bold text-white">{vehicle.model}</h4>
                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${
@@ -386,7 +386,7 @@ export default function TransferDashboard() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {mockDrivers.map((driver) => (
-                <div key={driver.id} className="bg-white/5 rounded-2xl p-6 border border-white/10">
+                <div key={driver.id} className="bg-white/25 rounded-2xl p-6 border border-white/40">
                   <div className="flex items-start justify-between mb-4">
                     <h4 className="text-lg font-bold text-white">{driver.name}</h4>
                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${
@@ -445,11 +445,11 @@ export default function TransferDashboard() {
           <div className="space-y-6">
             <h3 className="text-2xl font-bold text-white">Управление бронированиями</h3>
             
-            <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+            <div className="bg-white/25 rounded-2xl p-6 border border-white/40">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-white/10">
+                    <tr className="border-b border-white/40">
                       <th className="text-left py-3 px-4 text-white/70">Маршрут</th>
                       <th className="text-left py-3 px-4 text-white/70">Дата/Время</th>
                       <th className="text-left py-3 px-4 text-white/70">Пассажиры</th>
@@ -467,7 +467,7 @@ export default function TransferDashboard() {
                         <td className="py-3 px-4 text-white/70">{booking.passengers}</td>
                         <td className="py-3 px-4 text-white/70">{booking.vehicle}</td>
                         <td className="py-3 px-4 text-white/70">{booking.driver}</td>
-                        <td className="py-3 px-4 text-premium-gold font-bold">{booking.total.toLocaleString()}₽</td>
+                        <td className="py-3 px-4 text-white font-bold">{booking.total.toLocaleString()}₽</td>
                         <td className="py-3 px-4">
                           <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                             booking.status === 'confirmed' 
@@ -492,7 +492,7 @@ export default function TransferDashboard() {
             <h3 className="text-2xl font-bold text-white">Аналитика и отчеты</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+              <div className="bg-white/25 rounded-2xl p-6 border border-white/40">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-white/70 text-sm">Всего маршрутов</p>
@@ -502,7 +502,7 @@ export default function TransferDashboard() {
                 </div>
               </div>
               
-              <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+              <div className="bg-white/25 rounded-2xl p-6 border border-white/40">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-white/70 text-sm">Активных бронирований</p>
@@ -512,7 +512,7 @@ export default function TransferDashboard() {
                 </div>
               </div>
               
-              <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+              <div className="bg-white/25 rounded-2xl p-6 border border-white/40">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-white/70 text-sm">Доход за месяц</p>
@@ -522,7 +522,7 @@ export default function TransferDashboard() {
                 </div>
               </div>
               
-              <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+              <div className="bg-white/25 rounded-2xl p-6 border border-white/40">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-white/70 text-sm">Загрузка транспорта</p>
@@ -534,7 +534,7 @@ export default function TransferDashboard() {
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+              <div className="bg-white/25 rounded-2xl p-6 border border-white/40">
                 <h4 className="text-lg font-bold text-white mb-4">Популярные маршруты</h4>
                 <div className="space-y-3">
                   {mockRoutes.map((route, index) => (
@@ -547,7 +547,7 @@ export default function TransferDashboard() {
                             style={{ width: `${Math.random() * 100}%` }}
                           ></div>
                         </div>
-                        <span className="text-premium-gold font-bold w-12 text-right">
+                        <span className="text-white font-bold w-12 text-right">
                           {Math.floor(Math.random() * 50 + 10)}
                         </span>
                       </div>
@@ -556,7 +556,7 @@ export default function TransferDashboard() {
                 </div>
               </div>
               
-              <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+              <div className="bg-white/25 rounded-2xl p-6 border border-white/40">
                 <h4 className="text-lg font-bold text-white mb-4">Доходы по маршрутам</h4>
                 <div className="space-y-3">
                   {mockRoutes.map((route, index) => (
@@ -569,7 +569,7 @@ export default function TransferDashboard() {
                             style={{ width: `${Math.random() * 100}%` }}
                           ></div>
                         </div>
-                        <span className="text-premium-gold font-bold w-20 text-right">
+                        <span className="text-white font-bold w-20 text-right">
                           {Math.floor(Math.random() * 20000 + 5000).toLocaleString()}₽
                         </span>
                       </div>

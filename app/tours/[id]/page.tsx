@@ -95,7 +95,7 @@ export default function TourDetailsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-premium-black flex items-center justify-center">
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
         <LoadingSpinner message="Загрузка тура..." />
       </div>
     );
@@ -103,7 +103,7 @@ export default function TourDetailsPage() {
 
   if (error || !tour) {
     return (
-      <div className="min-h-screen bg-premium-black flex items-center justify-center">
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-400 text-xl mb-4">{error || 'Тур не найден'}</p>
           <button
@@ -118,9 +118,9 @@ export default function TourDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-premium-black text-white">
+    <div className="min-h-screen bg-transparent text-white">
       {/* Header */}
-      <div className="bg-gradient-to-r from-premium-black to-premium-black/80 border-b border-white/10">
+      <div className="bg-gradient-to-r from-premium-black to-premium-black/80 border-b border-white/40">
         <div className="max-w-7xl mx-auto px-6 py-8">
           <button
             onClick={() => router.back()}
@@ -128,7 +128,7 @@ export default function TourDetailsPage() {
           >
             ← Назад
           </button>
-          <h1 className="text-4xl font-black text-premium-gold mb-2">{tour.title}</h1>
+          <h1 className="text-4xl font-black text-white mb-2">{tour.title}</h1>
           <div className="flex items-center gap-4 text-white/70">
             <span>⭐ {tour.rating.toFixed(1)} ({tour.reviewsCount} отзывов)</span>
             <span className={getDifficultyColor(tour.difficulty)}>
@@ -161,12 +161,12 @@ export default function TourDetailsPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-4 mb-6 border-b border-white/10">
+        <div className="flex gap-4 mb-6 border-b border-white/40">
           <button
             onClick={() => setSelectedTab('overview')}
             className={`px-6 py-3 font-semibold transition-colors ${
               selectedTab === 'overview'
-                ? 'text-premium-gold border-b-2 border-premium-gold'
+                ? 'text-white border-b-2 border-white/40'
                 : 'text-white/70 hover:text-white'
             }`}
           >
@@ -176,7 +176,7 @@ export default function TourDetailsPage() {
             onClick={() => setSelectedTab('reviews')}
             className={`px-6 py-3 font-semibold transition-colors ${
               selectedTab === 'reviews'
-                ? 'text-premium-gold border-b-2 border-premium-gold'
+                ? 'text-white border-b-2 border-white/40'
                 : 'text-white/70 hover:text-white'
             }`}
           >
@@ -186,7 +186,7 @@ export default function TourDetailsPage() {
             onClick={() => setSelectedTab('booking')}
             className={`px-6 py-3 font-semibold transition-colors ${
               selectedTab === 'booking'
-                ? 'text-premium-gold border-b-2 border-premium-gold'
+                ? 'text-white border-b-2 border-white/40'
                 : 'text-white/70 hover:text-white'
             }`}
           >
@@ -200,7 +200,7 @@ export default function TourDetailsPage() {
             {selectedTab === 'overview' && (
               <div className="space-y-6">
                 {/* Описание */}
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
                   <h2 className="text-2xl font-bold mb-4">Описание тура</h2>
                   <p className="text-white/80 leading-relaxed whitespace-pre-line">
                     {tour.description}
@@ -209,7 +209,7 @@ export default function TourDetailsPage() {
 
                 {/* Что включено */}
                 {tour.equipmentIncluded && tour.equipmentIncluded.length > 0 && (
-                  <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                  <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
                     <h2 className="text-2xl font-bold mb-4">Что включено</h2>
                     <ul className="space-y-2">
                       {tour.equipmentIncluded.map((item, idx) => (
@@ -224,12 +224,12 @@ export default function TourDetailsPage() {
 
                 {/* Что взять с собой */}
                 {tour.equipmentRequired && tour.equipmentRequired.length > 0 && (
-                  <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                  <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
                     <h2 className="text-2xl font-bold mb-4">Что взять с собой</h2>
                     <ul className="space-y-2">
                       {tour.equipmentRequired.map((item, idx) => (
                         <li key={idx} className="flex items-center gap-2">
-                          <span className="text-premium-gold">•</span>
+                          <span className="text-white">•</span>
                           <span className="text-white/80">{item}</span>
                         </li>
                       ))}
@@ -249,7 +249,7 @@ export default function TourDetailsPage() {
 
             {selectedTab === 'reviews' && (
               <div className="space-y-4">
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
                   <h2 className="text-2xl font-bold mb-6">Отзывы</h2>
                   
                   {reviews.length === 0 ? (
@@ -257,7 +257,7 @@ export default function TourDetailsPage() {
                   ) : (
                     <div className="space-y-4">
                       {reviews.map((review) => (
-                        <div key={review.id} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                        <div key={review.id} className="bg-white/25 border border-white/40 rounded-xl p-4">
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
                               <span className="text-yellow-400">
@@ -283,7 +283,7 @@ export default function TourDetailsPage() {
             )}
 
             {selectedTab === 'booking' && (
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+              <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
                 <h2 className="text-2xl font-bold mb-6">Забронировать тур</h2>
                 <TourBookingForm
                   tourId={tourId}
@@ -298,10 +298,10 @@ export default function TourDetailsPage() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Цена и кнопка */}
-            <div className="bg-gradient-to-br from-premium-gold/20 to-premium-gold/10 border border-premium-gold/30 rounded-2xl p-6 sticky top-6">
+            <div className="bg-gradient-to-br from-premium-gold/20 to-premium-gold/10 border border-white/40/30 rounded-2xl p-6 sticky top-6">
               <div className="text-center mb-4">
                 <p className="text-white/70 text-sm mb-1">от</p>
-                <p className="text-4xl font-black text-premium-gold">
+                <p className="text-4xl font-black text-white">
                   {tour.priceFrom.toLocaleString('ru-RU')} ₽
                 </p>
                 <p className="text-white/50 text-sm mt-1">за человека</p>
@@ -315,7 +315,7 @@ export default function TourDetailsPage() {
               </button>
 
               {/* Характеристики */}
-              <div className="mt-6 space-y-3 pt-6 border-t border-white/10">
+              <div className="mt-6 space-y-3 pt-6 border-t border-white/40">
                 <div className="flex items-center justify-between">
                   <span className="text-white/70">Длительность</span>
                   <span className="text-white font-semibold">{tour.duration}</span>
@@ -343,7 +343,7 @@ export default function TourDetailsPage() {
 
             {/* Оператор */}
             {tour.operator && (
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+              <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
                 <h3 className="text-lg font-bold mb-4">Организатор</h3>
                 <div className="space-y-2">
                   <p className="text-white font-semibold">{tour.operator.name}</p>
@@ -353,13 +353,13 @@ export default function TourDetailsPage() {
                   <div className="pt-4 space-y-2">
                     <a
                       href={`tel:${tour.operator.phone}`}
-                      className="block text-premium-gold hover:underline text-sm"
+                      className="block text-white hover:underline text-sm"
                     >
                       📞 {tour.operator.phone}
                     </a>
                     <a
                       href={`mailto:${tour.operator.email}`}
-                      className="block text-premium-gold hover:underline text-sm"
+                      className="block text-white hover:underline text-sm"
                     >
                       ✉️ {tour.operator.email}
                     </a>
@@ -369,7 +369,7 @@ export default function TourDetailsPage() {
             )}
 
             {/* Погода */}
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+            <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
               <h3 className="text-lg font-bold mb-4">Погода на маршруте</h3>
               <WeatherWidget />
             </div>

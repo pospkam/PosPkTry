@@ -90,13 +90,13 @@ export default function EditTour() {
 
   return (
     <Protected roles={['operator', 'admin']}>
-      <main className="min-h-screen bg-premium-black text-white">
+      <main className="min-h-screen bg-transparent text-white">
         <OperatorNav />
         
         {/* Header */}
-        <div className="bg-white/5 border-b border-white/10 p-6">
+        <div className="bg-white/25 border-b border-white/40 p-6">
           <div className="max-w-5xl mx-auto">
-            <h1 className="text-3xl font-black text-premium-gold">
+            <h1 className="text-3xl font-black text-white">
               Редактирование тура
             </h1>
             <p className="text-white/70 mt-1">

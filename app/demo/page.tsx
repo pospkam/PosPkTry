@@ -52,22 +52,22 @@ export default function DemoPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-premium-black flex items-center justify-center">
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-premium-gold border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-premium-gold text-lg">Загружаем демо-режим...</p>
+          <div className="w-16 h-16 border-4 border-white/40 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white text-lg">Загружаем демо-режим...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-premium-black text-white">
+    <div className="min-h-screen bg-transparent text-white">
       <div className="max-w-4xl mx-auto px-4 py-12">
         {/* Заголовок */}
         <div className="text-center mb-12">
           <div className="w-20 h-20 rounded-2xl bg-gold-gradient mx-auto mb-6"></div>
-          <h1 className="text-4xl font-bold text-premium-gold mb-4">
+          <h1 className="text-4xl font-bold text-white mb-4">
             Демо-режим Kamchatour Hub
           </h1>
           <p className="text-xl text-gray-300 mb-8">
@@ -78,12 +78,12 @@ export default function DemoPage() {
         {/* Роли */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           {/* Турист */}
-          <div className="bg-premium-black/90 backdrop-blur-sm rounded-2xl p-6 border border-premium-gold/20 hover:border-premium-gold/40 transition-all cursor-pointer group" onClick={() => handleStartDemo('tourist')}>
+          <div className="bg-transparent/90 backdrop-blur-sm rounded-2xl p-6 border border-white/40/20 hover:border-white/40/40 transition-all cursor-pointer group" onClick={() => handleStartDemo('tourist')}>
             <div className="text-center">
               <div className="w-16 h-16 bg-blue-500/20 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-500/30 transition-colors">
                 <span className="text-2xl">🧳</span>
               </div>
-              <h3 className="text-xl font-semibold text-premium-gold mb-2">Турист</h3>
+              <h3 className="text-xl font-semibold text-white mb-2">Турист</h3>
               <p className="text-gray-400 text-sm mb-4">
                 Поиск туров, трансферов, прогноз погоды, AI-помощник
               </p>
@@ -96,12 +96,12 @@ export default function DemoPage() {
           </div>
 
           {/* Туроператор */}
-          <div className="bg-premium-black/90 backdrop-blur-sm rounded-2xl p-6 border border-premium-gold/20 hover:border-premium-gold/40 transition-all cursor-pointer group" onClick={() => handleStartDemo('operator')}>
+          <div className="bg-transparent/90 backdrop-blur-sm rounded-2xl p-6 border border-white/40/20 hover:border-white/40/40 transition-all cursor-pointer group" onClick={() => handleStartDemo('operator')}>
             <div className="text-center">
               <div className="w-16 h-16 bg-green-500/20 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-green-500/30 transition-colors">
                 <span className="text-2xl">🏢</span>
               </div>
-              <h3 className="text-xl font-semibold text-premium-gold mb-2">Туроператор</h3>
+              <h3 className="text-xl font-semibold text-white mb-2">Туроператор</h3>
               <p className="text-gray-400 text-sm mb-4">
                 CRM система, управление турами, аналитика
               </p>
@@ -114,12 +114,12 @@ export default function DemoPage() {
           </div>
 
           {/* Оператор трансферов */}
-          <div className="bg-premium-black/90 backdrop-blur-sm rounded-2xl p-6 border border-premium-gold/20 hover:border-premium-gold/40 transition-all cursor-pointer group" onClick={() => handleStartDemo('transfer-operator')}>
+          <div className="bg-transparent/90 backdrop-blur-sm rounded-2xl p-6 border border-white/40/20 hover:border-white/40/40 transition-all cursor-pointer group" onClick={() => handleStartDemo('transfer-operator')}>
             <div className="text-center">
               <div className="w-16 h-16 bg-purple-500/20 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-purple-500/30 transition-colors">
                 <span className="text-2xl">🚌</span>
               </div>
-              <h3 className="text-xl font-semibold text-premium-gold mb-2">Оператор трансферов</h3>
+              <h3 className="text-xl font-semibold text-white mb-2">Оператор трансферов</h3>
               <p className="text-gray-400 text-sm mb-4">
                 Управление водителями, заказами, аналитика
               </p>
@@ -132,12 +132,12 @@ export default function DemoPage() {
           </div>
 
           {/* Гид */}
-          <div className="bg-premium-black/90 backdrop-blur-sm rounded-2xl p-6 border border-premium-gold/20 hover:border-premium-gold/40 transition-all cursor-pointer group" onClick={() => handleStartDemo('guide')}>
+          <div className="bg-transparent/90 backdrop-blur-sm rounded-2xl p-6 border border-white/40/20 hover:border-white/40/40 transition-all cursor-pointer group" onClick={() => handleStartDemo('guide')}>
             <div className="text-center">
               <div className="w-16 h-16 bg-orange-500/20 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-orange-500/30 transition-colors">
                 <span className="text-2xl">🗺️</span>
               </div>
-              <h3 className="text-xl font-semibold text-premium-gold mb-2">Гид</h3>
+              <h3 className="text-xl font-semibold text-white mb-2">Гид</h3>
               <p className="text-gray-400 text-sm mb-4">
                 Расписание, группы, заработок, профиль
               </p>
@@ -151,13 +151,13 @@ export default function DemoPage() {
         </div>
 
         {/* Информация о демо-режиме */}
-        <div className="bg-premium-black/90 backdrop-blur-sm rounded-2xl p-6 border border-premium-gold/20">
-          <h3 className="text-xl font-semibold text-premium-gold mb-4">ℹ️ О демо-режиме</h3>
+        <div className="bg-transparent/90 backdrop-blur-sm rounded-2xl p-6 border border-white/40/20">
+          <h3 className="text-xl font-semibold text-white mb-4">ℹ️ О демо-режиме</h3>
           <div className="space-y-3 text-gray-300">
-            <p>• <strong className="text-premium-gold">Данные:</strong> Используются демо-данные для демонстрации функциональности</p>
-            <p>• <strong className="text-premium-gold">API:</strong> Работают с заглушками, реальные API ключи не требуются</p>
-            <p>• <strong className="text-premium-gold">Функции:</strong> Все основные функции доступны для просмотра</p>
-            <p>• <strong className="text-premium-gold">Безопасность:</strong> Демо-режим не влияет на реальные данные</p>
+            <p>• <strong className="text-white">Данные:</strong> Используются демо-данные для демонстрации функциональности</p>
+            <p>• <strong className="text-white">API:</strong> Работают с заглушками, реальные API ключи не требуются</p>
+            <p>• <strong className="text-white">Функции:</strong> Все основные функции доступны для просмотра</p>
+            <p>• <strong className="text-white">Безопасность:</strong> Демо-режим не влияет на реальные данные</p>
           </div>
         </div>
 

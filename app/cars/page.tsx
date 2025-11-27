@@ -23,10 +23,10 @@ export default function CarRentalPage() {
   };
 
   return (
-    <main className="min-h-screen bg-premium-black text-white">
-      <div className="bg-white/5 border-b border-white/10">
+    <main className="min-h-screen bg-transparent text-white">
+      <div className="bg-white/25 border-b border-white/40">
         <div className="max-w-7xl mx-auto px-6 py-8">
-          <h1 className="text-4xl font-black text-premium-gold mb-2">
+          <h1 className="text-4xl font-black text-white mb-2">
             🚗 Прокат автомобилей
           </h1>
           <p className="text-white/70">
@@ -51,15 +51,15 @@ export default function CarRentalPage() {
             {cars.map((car: any) => (
               <div
                 key={car.id}
-                className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:bg-white/10 transition-colors"
+                className="bg-white/25 border border-white/40 rounded-2xl overflow-hidden hover:bg-white/10 transition-colors"
               >
-                <div className="aspect-video bg-white/5 flex items-center justify-center">
+                <div className="aspect-video bg-white/25 flex items-center justify-center">
                   <div className="text-6xl">🚗</div>
                 </div>
                 
                 <div className="p-4">
                   <h3 className="font-bold text-white mb-2">{car.name}</h3>
-                  <div className="text-premium-gold font-bold">
+                  <div className="text-white font-bold">
                     {car.price_per_day?.toLocaleString('ru-RU')} ₽/день
                   </div>
                   <button className="w-full mt-4 px-4 py-2 bg-premium-gold hover:bg-premium-gold/80 text-premium-black font-bold rounded-lg">

@@ -168,7 +168,7 @@ export default function BookingsManagement() {
       title: 'Сумма',
       render: (booking) => (
         <div>
-          <div className="font-semibold text-premium-gold">
+          <div className="font-semibold text-white">
             {formatCurrency(booking.totalPrice)}
           </div>
           <div className="text-xs text-white/60">
@@ -236,15 +236,15 @@ export default function BookingsManagement() {
 
   return (
     <Protected roles={['operator', 'admin']}>
-      <main className="min-h-screen bg-premium-black text-white">
+      <main className="min-h-screen bg-transparent text-white">
         <OperatorNav />
         
         {/* Header */}
-        <div className="bg-white/5 border-b border-white/10 p-6">
+        <div className="bg-white/25 border-b border-white/40 p-6">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h1 className="text-3xl font-black text-premium-gold">
+                <h1 className="text-3xl font-black text-white">
                   Бронирования
                 </h1>
                 <p className="text-white/70 mt-1">
@@ -270,7 +270,7 @@ export default function BookingsManagement() {
                   setStatusFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+                className="px-4 py-3 bg-white/25 border border-white/40 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="all">Все статусы</option>
                 <option value="pending">Ожидают подтверждения</option>
@@ -302,25 +302,25 @@ export default function BookingsManagement() {
             <div className="space-y-6">
               {/* Stats */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                <div className="bg-white/25 border border-white/40 rounded-xl p-4">
                   <p className="text-white/60 text-sm">Ожидают</p>
                   <p className="text-2xl font-bold text-yellow-400">
                     {bookings.filter(b => b.status === 'pending').length}
                   </p>
                 </div>
-                <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                <div className="bg-white/25 border border-white/40 rounded-xl p-4">
                   <p className="text-white/60 text-sm">Подтверждены</p>
                   <p className="text-2xl font-bold text-green-400">
                     {bookings.filter(b => b.status === 'confirmed').length}
                   </p>
                 </div>
-                <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                <div className="bg-white/25 border border-white/40 rounded-xl p-4">
                   <p className="text-white/60 text-sm">Завершены</p>
                   <p className="text-2xl font-bold text-blue-400">
                     {bookings.filter(b => b.status === 'completed').length}
                   </p>
                 </div>
-                <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                <div className="bg-white/25 border border-white/40 rounded-xl p-4">
                   <p className="text-white/60 text-sm">Отменены</p>
                   <p className="text-2xl font-bold text-red-400">
                     {bookings.filter(b => b.status === 'cancelled').length}

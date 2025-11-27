@@ -13,15 +13,15 @@ export default function AgentDashboard() {
 
   return (
     <Protected roles={['agent']}>
-      <main className="min-h-screen bg-premium-black text-white">
+      <main className="min-h-screen bg-transparent text-white">
         <AgentNav />
 
         {/* Header */}
-        <div className="bg-white/5 border-b border-white/10 p-6">
+        <div className="bg-white/25 border-b border-white/40 p-6">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-black text-premium-gold">
+                <h1 className="text-3xl font-black text-white">
                   Агентская панель
                 </h1>
                 <p className="text-white/70 mt-1">
@@ -35,7 +35,7 @@ export default function AgentDashboard() {
                 <select
                   value={period}
                   onChange={(e) => setPeriod(e.target.value)}
-                  className="px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+                  className="px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="7">7 дней</option>
                   <option value="30">30 дней</option>
@@ -60,7 +60,7 @@ export default function AgentDashboard() {
             </div>
 
             {/* Quick Actions */}
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+            <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
               <h3 className="text-lg font-bold text-white mb-4">Быстрые действия</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <button

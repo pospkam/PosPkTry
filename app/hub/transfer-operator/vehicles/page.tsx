@@ -43,7 +43,7 @@ export default function VehiclesPage() {
     {
       key: 'type',
       header: 'Тип',
-      render: (v: any) => <div className="capitalize text-premium-gold">{v.type}</div>
+      render: (v: any) => <div className="capitalize text-white">{v.type}</div>
     },
     {
       key: 'capacity',
@@ -64,10 +64,10 @@ export default function VehiclesPage() {
 
   return (
     <Protected roles={['transfer_operator']}>
-      <main className="min-h-screen bg-premium-black text-white">
+      <main className="min-h-screen bg-transparent text-white">
         <TransferOperatorNav />
         <div className="max-w-7xl mx-auto p-6">
-          <h1 className="text-3xl font-black text-premium-gold mb-6">
+          <h1 className="text-3xl font-black text-white mb-6">
             Транспортные средства
           </h1>
           {loading ? (

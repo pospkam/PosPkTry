@@ -41,7 +41,7 @@ export default function AgentCommissionsPage() {
       key: 'amount',
       header: 'Сумма',
       render: (c: any) => (
-        <div className="font-bold text-premium-gold">
+        <div className="font-bold text-white">
           {c.amount?.toLocaleString('ru-RU')} ₽
         </div>
       )
@@ -69,29 +69,29 @@ export default function AgentCommissionsPage() {
 
   return (
     <Protected roles={['agent']}>
-      <main className="min-h-screen bg-premium-black text-white">
+      <main className="min-h-screen bg-transparent text-white">
         <AgentNav />
         <div className="max-w-7xl mx-auto p-6">
-          <h1 className="text-3xl font-black text-premium-gold mb-6">
+          <h1 className="text-3xl font-black text-white mb-6">
             Комиссионные
           </h1>
 
           {stats && (
             <div className="grid grid-cols-3 gap-4 mb-6">
-              <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
+              <div className="bg-white/25 border border-white/40 rounded-xl p-4 text-center">
                 <div className="text-2xl font-bold text-green-400">
                   {stats.totalPaid?.toLocaleString('ru-RU')} ₽
                 </div>
                 <div className="text-white/60 text-sm">Выплачено</div>
               </div>
-              <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
+              <div className="bg-white/25 border border-white/40 rounded-xl p-4 text-center">
                 <div className="text-2xl font-bold text-yellow-400">
                   {stats.totalPending?.toLocaleString('ru-RU')} ₽
                 </div>
                 <div className="text-white/60 text-sm">Ожидает</div>
               </div>
-              <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
-                <div className="text-2xl font-bold text-premium-gold">
+              <div className="bg-white/25 border border-white/40 rounded-xl p-4 text-center">
+                <div className="text-2xl font-bold text-white">
                   {stats.totalAll?.toLocaleString('ru-RU')} ₽
                 </div>
                 <div className="text-white/60 text-sm">Всего</div>

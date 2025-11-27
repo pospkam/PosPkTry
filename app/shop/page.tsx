@@ -52,11 +52,11 @@ export default function ShopPage() {
   ];
 
   return (
-    <main className="min-h-screen bg-premium-black text-white">
+    <main className="min-h-screen bg-transparent text-white">
       {/* Header */}
-      <div className="bg-white/5 border-b border-white/10">
+      <div className="bg-white/25 border-b border-white/40">
         <div className="max-w-7xl mx-auto px-6 py-8">
-          <h1 className="text-4xl font-black text-premium-gold mb-2">
+          <h1 className="text-4xl font-black text-white mb-2">
             🎁 Магазин Сувениров Камчатки
           </h1>
           <p className="text-white/70">
@@ -66,7 +66,7 @@ export default function ShopPage() {
       </div>
 
       {/* Categories */}
-      <div className="bg-white/5 border-b border-white/10">
+      <div className="bg-white/25 border-b border-white/40">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex gap-2 overflow-x-auto">
             {categories.map((cat) => (
@@ -104,9 +104,9 @@ export default function ShopPage() {
               <Link
                 key={souvenir.id}
                 href={`/shop/${souvenir.id}`}
-                className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:bg-white/10 transition-colors group"
+                className="bg-white/25 border border-white/40 rounded-2xl overflow-hidden hover:bg-white/10 transition-colors group"
               >
-                <div className="aspect-square bg-white/5 flex items-center justify-center">
+                <div className="aspect-square bg-white/25 flex items-center justify-center">
                   {souvenir.images.length > 0 ? (
                     <img
                       src={souvenir.images[0]}
@@ -119,7 +119,7 @@ export default function ShopPage() {
                 </div>
                 
                 <div className="p-4">
-                  <h3 className="font-bold text-white mb-2 group-hover:text-premium-gold transition-colors">
+                  <h3 className="font-bold text-white mb-2 group-hover:text-white transition-colors">
                     {souvenir.name}
                   </h3>
                   
@@ -128,7 +128,7 @@ export default function ShopPage() {
                   </p>
                   
                   <div className="flex items-center justify-between">
-                    <div className="text-premium-gold font-bold text-lg">
+                    <div className="text-white font-bold text-lg">
                       {souvenir.price.toLocaleString('ru-RU')} ₽
                     </div>
                     
@@ -154,7 +154,7 @@ export default function ShopPage() {
       </div>
 
       {/* Partner Info */}
-      <div className="bg-white/5 border-t border-white/10 mt-12">
+      <div className="bg-white/25 border-t border-white/40 mt-12">
         <div className="max-w-7xl mx-auto px-6 py-8">
           <div className="flex items-center gap-4">
             <div className="text-4xl">🤝</div>
@@ -168,7 +168,7 @@ export default function ShopPage() {
               <a 
                 href="https://dar-severa.ru/" 
                 target="_blank"
-                className="text-premium-gold hover:underline text-sm"
+                className="text-white hover:underline text-sm"
               >
                 dar-severa.ru →
               </a>

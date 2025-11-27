@@ -33,7 +33,7 @@ export default function StayProviderDashboard() {
   if (loading) {
     return (
       <Protected roles={['admin']}>
-        <div className="min-h-screen bg-premium-black flex items-center justify-center">
+        <div className="min-h-screen bg-transparent flex items-center justify-center">
           <LoadingSpinner message="Загрузка dashboard..." />
         </div>
       </Protected>
@@ -42,40 +42,40 @@ export default function StayProviderDashboard() {
 
   return (
     <Protected roles={['admin']}>
-      <main className="min-h-screen bg-premium-black text-white">
-        <div className="bg-white/5 border-b border-white/10 p-6">
-          <h1 className="text-3xl font-black text-premium-gold">Dashboard Размещений</h1>
+      <main className="min-h-screen bg-transparent text-white">
+        <div className="bg-white/25 border-b border-white/40 p-6">
+          <h1 className="text-3xl font-black text-white">Dashboard Размещений</h1>
           <p className="text-white/70">Управление вашими объектами размещения</p>
         </div>
 
         <div className="max-w-7xl mx-auto px-6 py-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+            <div className="bg-white/25 border border-white/40 rounded-xl p-6">
               <p className="text-white/50 text-sm mb-2">Объектов</p>
-              <p className="text-4xl font-black text-premium-gold">{metrics?.totalAccommodations || 0}</p>
+              <p className="text-4xl font-black text-white">{metrics?.totalAccommodations || 0}</p>
             </div>
-            <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+            <div className="bg-white/25 border border-white/40 rounded-xl p-6">
               <p className="text-white/50 text-sm mb-2">Бронирований</p>
               <p className="text-4xl font-black text-green-400">{metrics?.totalBookings || 0}</p>
             </div>
-            <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+            <div className="bg-white/25 border border-white/40 rounded-xl p-6">
               <p className="text-white/50 text-sm mb-2">Номеров</p>
               <p className="text-4xl font-black text-blue-400">{metrics?.totalRooms || 0}</p>
             </div>
-            <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+            <div className="bg-white/25 border border-white/40 rounded-xl p-6">
               <p className="text-white/50 text-sm mb-2">Доход</p>
-              <p className="text-4xl font-black text-premium-gold">{((metrics?.monthlyRevenue || 0) / 1000).toFixed(0)}K ₽</p>
+              <p className="text-4xl font-black text-white">{((metrics?.monthlyRevenue || 0) / 1000).toFixed(0)}K ₽</p>
             </div>
           </div>
 
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
             <h2 className="text-2xl font-bold mb-6">Последние бронирования</h2>
             {bookings.length === 0 ? (
               <p className="text-white/50 text-center py-8">Нет бронирований</p>
             ) : (
               <div className="space-y-3">
                 {bookings.map((booking) => (
-                  <div key={booking.id} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                  <div key={booking.id} className="bg-white/25 border border-white/40 rounded-xl p-4">
                     <div className="flex justify-between">
                       <div>
                         <h3 className="font-semibold">{booking.accommodation_name}</h3>
@@ -84,7 +84,7 @@ export default function StayProviderDashboard() {
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xl font-bold text-premium-gold">{booking.total_price.toLocaleString('ru-RU')} ₽</p>
+                        <p className="text-xl font-bold text-white">{booking.total_price.toLocaleString('ru-RU')} ₽</p>
                         <span className={`text-xs px-2 py-1 rounded-full ${booking.status === 'confirmed' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
                           {booking.status}
                         </span>

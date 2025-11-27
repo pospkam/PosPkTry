@@ -50,15 +50,15 @@ export default function AdminDashboard() {
 
   return (
     <Protected roles={['admin']}>
-      <main className="min-h-screen bg-premium-black text-white">
+      <main className="min-h-screen bg-transparent text-white">
         <AdminNav />
         
         {/* Header */}
-        <div className="bg-white/5 border-b border-white/10 p-6">
+        <div className="bg-white/25 border-b border-white/40 p-6">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-black text-premium-gold">
+                <h1 className="text-3xl font-black text-white">
                   Админ-панель
                 </h1>
                 <p className="text-white/70 mt-1">
@@ -72,7 +72,7 @@ export default function AdminDashboard() {
                 <select
                   value={period}
                   onChange={(e) => setPeriod(e.target.value)}
-                  className="px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+                  className="px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="7">7 дней</option>
                   <option value="30">30 дней</option>
@@ -143,13 +143,13 @@ export default function AdminDashboard() {
 
               {/* Top Tours */}
               {data.charts.topTours.length > 0 && (
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
                   <h3 className="text-lg font-bold text-white mb-4">Топ туры</h3>
                   <div className="space-y-3">
                     {data.charts.topTours.map((tour, index) => (
                       <div
                         key={tour.id}
-                        className="flex items-center justify-between p-4 bg-white/5 rounded-xl hover:bg-white/10 transition-colors"
+                        className="flex items-center justify-between p-4 bg-white/25 rounded-xl hover:bg-white/10 transition-colors"
                       >
                         <div className="flex items-center space-x-4">
                           <div className="w-8 h-8 rounded-full bg-premium-gold text-premium-black flex items-center justify-center font-bold">
@@ -163,7 +163,7 @@ export default function AdminDashboard() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="text-lg font-bold text-premium-gold">
+                          <p className="text-lg font-bold text-white">
                             {formatCurrency(tour.revenue)}
                           </p>
                         </div>
@@ -177,7 +177,7 @@ export default function AdminDashboard() {
               <RecentActivities activities={data.recentActivities} />
 
               {/* Quick Actions */}
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+              <div className="bg-white/25 border border-white/40 rounded-2xl p-6">
                 <h3 className="text-lg font-bold text-white mb-4">Быстрые действия</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <button className="p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-center">
