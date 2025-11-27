@@ -104,10 +104,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-20 md:py-32 text-center">
           <div className="space-y-6">
             {/* Заголовок */}
-            <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold text-white drop-shadow-lg">
+            <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold text-gray-900 drop-shadow-lg">
               Исследуйте Камчатку
             </h1>
-            <p className="text-xl sm:text-2xl text-white/90 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl sm:text-2xl text-gray-800 max-w-3xl mx-auto leading-relaxed">
               Откройте для себя удивительный мир вулканов, гейзеров и дикой природы
             </p>
 
@@ -124,34 +124,34 @@ export default function Home() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
           {/* Feature 1 - Вулканы */}
-          <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 sm:p-10 text-center border border-white/20 hover:bg-white/15 transition-all group cursor-pointer">
+          <div className="bg-white/70 backdrop-blur-xl rounded-3xl p-8 sm:p-10 text-center border border-white/30 hover:bg-white/80 transition-all group cursor-pointer shadow-xl">
             <div className="mb-6 inline-block">
-              <Flame className="w-16 h-16 sm:w-20 sm:h-20 text-orange-300 group-hover:scale-110 transition-transform duration-300" />
+              <Flame className="w-16 h-16 sm:w-20 sm:h-20 text-orange-500 group-hover:scale-110 transition-transform duration-300" />
             </div>
-            <h3 className="text-2xl sm:text-3xl font-bold text-white mb-3 sm:mb-4">Вулканы</h3>
-            <p className="text-base sm:text-lg text-white/90 leading-relaxed">
+            <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">Вулканы</h3>
+            <p className="text-base sm:text-lg text-gray-700 leading-relaxed">
               Восхождения на действующие вулканы с опытными гидами
             </p>
           </div>
 
           {/* Feature 2 - Дикая природа */}
-          <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 sm:p-10 text-center border border-white/20 hover:bg-white/15 transition-all group cursor-pointer">
+          <div className="bg-white/70 backdrop-blur-xl rounded-3xl p-8 sm:p-10 text-center border border-white/30 hover:bg-white/80 transition-all group cursor-pointer shadow-xl">
             <div className="mb-6 inline-block">
-              <TreePine className="w-16 h-16 sm:w-20 sm:h-20 text-green-300 group-hover:scale-110 transition-transform duration-300" />
+              <TreePine className="w-16 h-16 sm:w-20 sm:h-20 text-green-600 group-hover:scale-110 transition-transform duration-300" />
             </div>
-            <h3 className="text-2xl sm:text-3xl font-bold text-white mb-3 sm:mb-4">Дикая природа</h3>
-            <p className="text-base sm:text-lg text-white/90 leading-relaxed">
+            <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">Дикая природа</h3>
+            <p className="text-base sm:text-lg text-gray-700 leading-relaxed">
               Наблюдение за медведями, китами и редкими птицами
             </p>
           </div>
 
           {/* Feature 3 - Гейзеры */}
-          <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 sm:p-10 text-center border border-white/20 hover:bg-white/15 transition-all sm:col-span-2 md:col-span-1 group cursor-pointer">
+          <div className="bg-white/70 backdrop-blur-xl rounded-3xl p-8 sm:p-10 text-center border border-white/30 hover:bg-white/80 transition-all sm:col-span-2 md:col-span-1 group cursor-pointer shadow-xl">
             <div className="mb-6 inline-block">
-              <Droplet className="w-16 h-16 sm:w-20 sm:h-20 text-cyan-300 group-hover:scale-110 transition-transform duration-300" />
+              <Droplet className="w-16 h-16 sm:w-20 sm:h-20 text-blue-600 group-hover:scale-110 transition-transform duration-300" />
             </div>
-            <h3 className="text-2xl sm:text-3xl font-bold text-white mb-3 sm:mb-4">Гейзеры</h3>
-            <p className="text-base sm:text-lg text-white/90 leading-relaxed">
+            <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">Гейзеры</h3>
+            <p className="text-base sm:text-lg text-gray-700 leading-relaxed">
               Долина Гейзеров - одно из чудес России
             </p>
           </div>

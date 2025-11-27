@@ -15,7 +15,7 @@ import WeatherBackground from '@/components/WeatherBackground'
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ru">
-      <body className="min-h-screen bg-premium-black text-white relative overflow-x-hidden">
+      <body className="min-h-screen relative overflow-x-hidden">
         <WeatherBackground />
         <AuthProvider>
           <RoleProvider>

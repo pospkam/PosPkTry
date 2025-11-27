@@ -64,12 +64,12 @@ export default function WeatherBackground() {
       {weather === 'wind' && <WindEffect />}
 
       {/* Индикатор времени суток */}
-      <div className="fixed top-4 right-4 z-50 bg-white/10 backdrop-blur-md rounded-2xl px-4 py-2 border border-white/20">
-        <div className="flex items-center gap-3 text-white">
+      <div className={`fixed top-4 right-4 z-50 ${timeOfDay === 'night' ? 'bg-white/15' : 'bg-white/60'} backdrop-blur-md rounded-2xl px-4 py-2 border ${timeOfDay === 'night' ? 'border-white/20' : 'border-white/30'} shadow-lg`}>
+        <div className={`flex items-center gap-3 ${timeOfDay === 'night' ? 'text-white' : 'text-gray-900'}`}>
           <span className="text-2xl">{getTimeIcon(timeOfDay)}</span>
           <div className="text-sm">
             <div className="font-semibold">{getTimeLabel(timeOfDay)}</div>
-            <div className="text-xs text-white/70">{new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}</div>
+            <div className={`text-xs ${timeOfDay === 'night' ? 'text-white/70' : 'text-gray-600'}`}>{new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}</div>
           </div>
         </div>
       </div>
