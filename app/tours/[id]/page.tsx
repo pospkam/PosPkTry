@@ -130,11 +130,11 @@ export default function TourDetailsPage() {
           </button>
           <h1 className="text-4xl font-black text-white mb-2">{tour.title}</h1>
           <div className="flex items-center gap-4 text-white/70">
-            <span>⭐ {tour.rating.toFixed(1)} ({tour.reviewsCount} отзывов)</span>
+            <span><Star className="w-4 h-4" /> {tour.rating.toFixed(1)} ({tour.reviewsCount} отзывов)</span>
             <span className={getDifficultyColor(tour.difficulty)}>
               • {getDifficultyText(tour.difficulty)}
             </span>
-            <span>• ⏱️ {tour.duration}</span>
+            <span>•  {tour.duration}</span>
           </div>
         </div>
       </div>
@@ -335,7 +335,7 @@ export default function TourDetailsPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-white/70">Рейтинг</span>
                   <span className="text-yellow-400 font-semibold">
-                    ⭐ {tour.rating.toFixed(1)}
+                    <Star className="w-4 h-4" /> {tour.rating.toFixed(1)}
                   </span>
                 </div>
               </div>
@@ -348,7 +348,7 @@ export default function TourDetailsPage() {
                 <div className="space-y-2">
                   <p className="text-white font-semibold">{tour.operator.name}</p>
                   <p className="text-white/70 text-sm">
-                    ⭐ Рейтинг: {tour.operator.rating.toFixed(1)}
+                    <Star className="w-4 h-4" /> Рейтинг: {tour.operator.rating.toFixed(1)}
                   </p>
                   <div className="pt-4 space-y-2">
                     <a

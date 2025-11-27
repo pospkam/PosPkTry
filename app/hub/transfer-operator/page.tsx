@@ -59,14 +59,14 @@ export default function TransferOperatorDashboard() {
                   onClick={() => window.location.href = '/hub/transfer-operator/vehicles'}
                   className="p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-center"
                 >
-                  <div className="text-3xl mb-2">🚗</div>
+                  <div className="text-3xl mb-2"></div>
                   <p className="text-sm font-semibold">Добавить транспорт</p>
                 </button>
               <button
                   onClick={() => window.location.href = '/hub/transfer-operator/drivers'}
                   className="p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-center"
                 >
-                  <div className="text-3xl mb-2">👨‍🚗</div>
+                  <div className="text-3xl mb-2">👨‍</div>
                   <p className="text-sm font-semibold">Добавить водителя</p>
               </button>
                 <button

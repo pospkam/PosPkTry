@@ -302,7 +302,7 @@ export default function AuthPage() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors"
                   >
-                    {showPassword ? '👁️' : '👁️‍🗨️'}
+                    {showPassword ? "" : '👁️‍🗨️'}
                   </button>
                 </div>
               </div>
@@ -412,7 +412,7 @@ export default function AuthPage() {
                         onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors"
                       >
-                        {showPassword ? '👁️' : '👁️‍🗨️'}
+                        {showPassword ? "" : '👁️‍🗨️'}
                       </button>
                     </div>
                     {formData.password && (
@@ -450,7 +450,7 @@ export default function AuthPage() {
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                         className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors"
                       >
-                        {showConfirmPassword ? '👁️' : '👁️‍🗨️'}
+                        {showConfirmPassword ? "" : '👁️‍🗨️'}
                       </button>
                     </div>
                     {formData.confirmPassword && formData.password !== formData.confirmPassword && (
@@ -490,7 +490,7 @@ export default function AuthPage() {
             {/* Направления деятельности */}
             <div className="bg-white/15 backdrop-blur-2xl border border-white/15 rounded-3xl p-8 shadow-2xl">
               <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-premium-gold to-yellow-300 bg-clip-text text-transparent">
-                🎯 Направления деятельности <span className="text-red-400">*</span>
+                 Направления деятельности <span className="text-red-400">*</span>
               </h2>
               <p className="text-white/70 mb-8">
                 Выберите все подходящие направления
@@ -623,7 +623,7 @@ export default function AuthPage() {
 
         {/* Footer */}
         <div className="text-center mt-16 text-white/50 text-sm">
-          <p>🏔️ Kamchatour Hub — экосистема туризма Камчатки</p>
+          <p> Kamchatour Hub — экосистема туризма Камчатки</p>
         </div>
       </div>
     </main>

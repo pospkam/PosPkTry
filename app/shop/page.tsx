@@ -133,7 +133,7 @@ export default function ShopPage() {
                     </div>
                     
                     <div className="flex items-center gap-1 text-sm text-white/60">
-                      ⭐ {souvenir.rating.toFixed(1)}
+                      <Star className="w-4 h-4" /> {souvenir.rating.toFixed(1)}
                     </div>
                   </div>
                   

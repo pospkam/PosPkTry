@@ -30,8 +30,8 @@ export default function GuideDashboard() {
     { id: 'schedule', name: 'Расписание', icon: '📅' },
     { id: 'groups', name: 'Группы', icon: '👥' },
     { id: 'earnings', name: 'Доходы', icon: '💰' },
-    { id: 'weather', name: 'Погода', icon: '🌤️' },
-    { id: 'profile', name: 'Профиль', icon: '👤' },
+    { id: 'weather', name: 'Погода', icon: "" },
+    { id: 'profile', name: 'Профиль', icon: '<User className="w-4 h-4" />' },
   ];
 
   const mockSchedule = [
@@ -116,12 +116,12 @@ export default function GuideDashboard() {
             <div className="flex items-center space-x-4">
               <div className="text-right">
                 <div className="text-white text-sm">Рейтинг гида</div>
-                <div className="text-white text-lg font-bold">4.9 ⭐</div>
+                <div className="text-white text-lg font-bold">4.9 <Star className="w-4 h-4" /></div>
               </div>
               {weather && (
                 <div className="text-right">
                   <div className="flex items-center space-x-2">
-                    <span className="text-2xl">🌤️</span>
+                    <span className="text-2xl"></span>
                     <span className="text-white text-lg font-bold">{weather.temperature}°C</span>
                   </div>
                   <p className="text-white/70 text-sm">{weather.location}</p>
@@ -316,7 +316,7 @@ export default function GuideDashboard() {
                     <p className="text-white/70 text-sm">Средний чек</p>
                     <p className="text-3xl font-bold text-white">{mockEarnings.averagePerTour.toLocaleString()}₽</p>
                   </div>
-                  <div className="text-3xl">⚡</div>
+                  <div className="text-3xl"></div>
                 </div>
               </div>
             </div>
@@ -369,13 +369,13 @@ export default function GuideDashboard() {
             <div className="bg-white/15 rounded-2xl p-6 border border-white/15">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <div className="text-center">
-                  <div className="text-4xl mb-2">🌤️</div>
+                  <div className="text-4xl mb-2"></div>
                   <div className="text-3xl font-bold text-white">{weather.temperature}°C</div>
                   <div className="text-white/70 capitalize">{weather.condition}</div>
                 </div>
                 
                 <div className="text-center">
-                  <div className="text-2xl mb-2">💨</div>
+                  <div className="text-2xl mb-2"><Wind className="w-4 h-4" /></div>
                   <div className="text-xl font-bold text-white">{weather.windSpeed} км/ч</div>
                   <div className="text-white/70">Ветер</div>
                 </div>

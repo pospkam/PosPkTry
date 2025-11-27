@@ -293,7 +293,7 @@ export default function StayHub() {
               <h2 className="text-xl font-bold">Отзывы</h2>
               <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
                 <div className="text-center text-white/70 py-8">
-                  <div className="text-4xl mb-2">⭐</div>
+                  <div className="text-4xl mb-2"><Star className="w-4 h-4" /></div>
                   <p>Здесь будут ваши отзывы об объектах</p>
                 </div>
               </div>

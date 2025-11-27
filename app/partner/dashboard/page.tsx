@@ -15,10 +15,10 @@ interface Partner {
 }
 
 const ROLE_INFO = {
-  operator: { name: 'Туры', icon: '🎣', color: 'blue' },
-  transfer: { name: 'Трансфер', icon: '🚗', color: 'green' },
-  stay: { name: 'Размещение', icon: '🏠', color: 'purple' },
-  gear: { name: 'Аренда снаряжения', icon: '🎣', color: 'orange' },
+  operator: { name: 'Туры', color: 'blue' },
+  transfer: { name: 'Трансфер', color: 'green' },
+  stay: { name: 'Размещение', color: 'purple' },
+  gear: { name: 'Аренда снаряжения', color: 'orange' },
 };
 
 export default function PartnerDashboard() {
@@ -162,7 +162,7 @@ export default function PartnerDashboard() {
             <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <span className="text-3xl">🎣</span>
+                  <span className="text-3xl"></span>
                   <div>
                     <h2 className="text-2xl font-bold">Туры</h2>
                     <p className="text-sm text-white/70">Рыболовные туры и экскурсии</p>
@@ -188,7 +188,7 @@ export default function PartnerDashboard() {
             <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <span className="text-3xl">🚗</span>
+                  <span className="text-3xl"></span>
                   <div>
                     <h2 className="text-2xl font-bold">Трансфер</h2>
                     <p className="text-sm text-white/70">Транспортные услуги</p>
@@ -214,7 +214,7 @@ export default function PartnerDashboard() {
             <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <span className="text-3xl">🏠</span>
+                  <span className="text-3xl"></span>
                   <div>
                     <h2 className="text-2xl font-bold">Размещение</h2>
                     <p className="text-sm text-white/70">Базы, домики, гостиницы</p>
@@ -240,7 +240,7 @@ export default function PartnerDashboard() {
             <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <span className="text-3xl">🎣</span>
+                  <span className="text-3xl"></span>
                   <div>
                     <h2 className="text-2xl font-bold">Аренда снаряжения</h2>
                     <p className="text-sm text-white/70">Удочки, лодки, экипировка</p>

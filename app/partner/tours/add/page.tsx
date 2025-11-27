@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Flower, Leaf, Snowflake } from 'lucide-react';
 
 const DIFFICULTY_LEVELS = [
   { id: 'easy', name: 'Легкий', icon: '🟢', description: 'Для новичков' },
@@ -10,10 +11,10 @@ const DIFFICULTY_LEVELS = [
 ];
 
 const SEASONS = [
-  { id: 'spring', name: 'Весна', icon: '🌸' },
-  { id: 'summer', name: 'Лето', icon: '☀️' },
-  { id: 'autumn', name: 'Осень', icon: '🍂' },
-  { id: 'winter', name: 'Зима', icon: '❄️' },
+  { id: 'spring', name: 'Весна' },
+  { id: 'summer', name: 'Лето' },
+  { id: 'autumn', name: 'Осень' },
+  { id: 'winter', name: 'Зима' },
 ];
 
 export default function AddTourPage() {

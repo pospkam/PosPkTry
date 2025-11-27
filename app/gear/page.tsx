@@ -43,7 +43,7 @@ export default function GearRentalPage() {
 
   const categories = [
     { id: 'all', name: 'Все снаряжение', icon: '🎒' },
-    { id: 'hiking', name: 'Походное', icon: '🥾' },
+    { id: 'hiking', name: 'Походное', icon: "" },
     { id: 'camping', name: 'Кемпинг', icon: '⛺' },
     { id: 'climbing', name: 'Альпинизм', icon: '🧗' },
     { id: 'skiing', name: 'Лыжи/Сноуборд', icon: '⛷️' },

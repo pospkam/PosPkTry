@@ -123,7 +123,7 @@ export default function EditTour() {
             />
           ) : !tour ? (
             <EmptyState
-              icon="🏔️"
+              icon=""
               title="Тур не найден"
               description="Тур не существует или был удалён"
               action={{

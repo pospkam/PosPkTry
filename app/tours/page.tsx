@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Tour } from '@/types';
+import { Star, Zap, Clock } from 'lucide-react';
+import { ActivityIcon } from '@/components/icons';
 
 export default function ToursPage() {
   const router = useRouter();
@@ -35,18 +37,6 @@ export default function ToursPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const getActivityIcon = (activity: string) => {
-    const icons: { [key: string]: string } = {
-      hiking: '🥾',
-      sightseeing: '👁️',
-      wildlife: '🐻',
-      fishing: '🎣',
-      skiing: '🎿',
-      diving: '🤿',
-    };
-    return icons[activity] || '🏔️';
   };
 
   const getDifficultyColor = (difficulty: string) => {
@@ -210,7 +200,7 @@ export default function ToursPage() {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <span className="text-6xl">{getActivityIcon(tour.activity)}</span>
+                      <ActivityIcon activity={tour.activity} className="w-16 h-16 text-white/60" />
                     </div>
                   )}
                   <div className="absolute top-4 right-4 bg-white/30 backdrop-blur-2xl text-white px-3 py-1 rounded-full text-sm font-extralight" style={{ backdropFilter: 'blur(10px)', textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)' }}>
@@ -223,7 +213,7 @@ export default function ToursPage() {
                     <h3 className="text-xl font-extralight text-white" style={{ textShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>{tour.title}</h3>
                     {tour.rating && (
                       <div className="flex items-center space-x-1">
-                        <span className="text-white">⭐</span>
+                        <Star className="w-4 h-4 text-white fill-yellow-400" strokeWidth={1.5} />
                         <span className="text-white font-extralight">{tour.rating}</span>
                       </div>
                     )}
@@ -235,14 +225,14 @@ export default function ToursPage() {
                   
                   <div className="flex items-center justify-between text-sm text-white/70">
                     <div className="flex items-center space-x-3">
-                      <span className="flex items-center space-x-1">
-                        <span>{getActivityIcon(tour.activity)}</span>
+                      <span className="flex items-center space-x-1 text-white/70">
+                        <ActivityIcon activity={tour.activity} className="w-4 h-4" />
                       </span>
                       <span className={`flex items-center space-x-1 ${getDifficultyColor(tour.difficulty)}`}>
-                        <span>⚡</span>
+                        <Zap className="w-4 h-4" strokeWidth={1.5} />
                       </span>
                       <span className="flex items-center space-x-1">
-                        <span>⏱️</span>
+                        <Clock className="w-4 h-4" strokeWidth={1.5} />
                         <span>{tour.duration}</span>
                       </span>
                     </div>

@@ -205,7 +205,7 @@ export default function TransferDashboard() {
               {weather && (
                 <div className="text-right">
                   <div className="flex items-center space-x-2">
-                    <span className="text-2xl">🌤️</span>
+                    <span className="text-2xl"></span>
                     <span className="text-white text-lg font-bold">{weather.temperature}°C</span>
                   </div>
                   <p className="text-white/70 text-sm">{weather.location}</p>
@@ -405,7 +405,7 @@ export default function TransferDashboard() {
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-white/70">Рейтинг:</span>
-                      <span className="text-white">{driver.rating} ⭐</span>
+                      <span className="text-white">{driver.rating} <Star className="w-4 h-4" /></span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-white/70">Телефон:</span>

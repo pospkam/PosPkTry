@@ -123,7 +123,7 @@ export default function AccommodationDetailsPage() {
           </button>
           <h1 className="text-4xl font-black text-white mb-2">{accommodation.name}</h1>
           <div className="flex items-center gap-4 text-white/70">
-            <span>⭐ {accommodation.rating.toFixed(1)} ({accommodation.reviewCount} отзывов)</span>
+            <span><Star className="w-4 h-4" /> {accommodation.rating.toFixed(1)} ({accommodation.reviewCount} отзывов)</span>
             <span>• {getTypeText(accommodation.type)}</span>
             <span>• 👥 До {accommodation.maxGuests} гостей</span>
           </div>
@@ -216,7 +216,7 @@ export default function AccommodationDetailsPage() {
                 {/* Расположение */}
                 <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
                   <h2 className="text-2xl font-bold mb-4">Расположение</h2>
-                  <p className="text-white/80 mb-4">📍 {accommodation.address}</p>
+                  <p className="text-white/80 mb-4"><MapPin className="w-4 h-4" /> {accommodation.address}</p>
                   <div className="bg-white/10 rounded-xl h-64 flex items-center justify-center">
                     <p className="text-white/50">Карта: {accommodation.coordinates.lat.toFixed(4)}, {accommodation.coordinates.lng.toFixed(4)}</p>
                   </div>
@@ -297,7 +297,7 @@ export default function AccommodationDetailsPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-white/70">Рейтинг</span>
                   <span className="text-yellow-400 font-semibold">
-                    ⭐ {accommodation.rating.toFixed(1)}
+                    <Star className="w-4 h-4" /> {accommodation.rating.toFixed(1)}
                   </span>
                 </div>
               </div>

@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { Tour, Weather } from '@/types';
 import { AIChatWidget } from '@/components/AIChatWidget';
 import { TransferSearchWidget } from '@/components/TransferSearchWidget';
+import { Mountain, Eye, TreePine, Fish, CloudSnow, Waves, Star, Zap, Clock, Wind, Sun, Cloud, CloudRain } from 'lucide-react';
+import { ActivityIcon, WeatherIcon } from '@/components/icons';
 
 export default function TouristDashboard() {
   const [tours, setTours] = useState<Tour[]>([]);
@@ -50,15 +52,7 @@ export default function TouristDashboard() {
   };
 
   const getActivityIcon = (activity: string) => {
-    const icons: { [key: string]: string } = {
-      hiking: '🥾',
-      sightseeing: '👁️',
-      wildlife: '🐻',
-      fishing: '🎣',
-      skiing: '🎿',
-      diving: '🤿',
-    };
-    return icons[activity] || '🏔️';
+    return <ActivityIcon activity={activity} className="w-5 h-5" />;
   };
 
   const getDifficultyColor = (difficulty: string) => {
@@ -72,16 +66,16 @@ export default function TouristDashboard() {
 
   const getWeatherIcon = (condition: string) => {
     const icons: { [key: string]: string } = {
-      clear: '☀️',
-      mostly_clear: '🌤️',
-      partly_cloudy: '⛅',
-      overcast: '☁️',
-      rain: '🌧️',
-      snow: '❄️',
+      clear: "",
+      mostly_clear: "",
+      partly_cloudy: "",
+      overcast: "",
+      rain: "",
+      snow: Snowflake,
       thunderstorm: '⛈️',
       fog: '🌫️',
     };
-    return icons[condition] || '🌤️';
+    return icons[condition] || "";
   };
 
   const getSafetyLevelColor = (level: string) => {
@@ -95,9 +89,9 @@ export default function TouristDashboard() {
   };
 
   const tabs = [
-    { id: 'tours', name: 'Туры', icon: '🏔️' },
+    { id: 'tours', name: 'Туры', icon: Mountain },
     { id: 'transfers', name: 'Трансферы', icon: '🚌' },
-    { id: 'weather', name: 'Погода', icon: '🌤️' },
+    { id: 'weather', name: 'Погода', icon: "" },
     { id: 'ai', name: 'AI-помощник', icon: '🤖' },
     { id: 'favorites', name: 'Избранное', icon: '❤️' },
   ];
@@ -231,7 +225,7 @@ export default function TouristDashboard() {
                     <div className="flex items-start justify-between mb-3">
                       <h3 className="text-xl font-bold text-white">{tour.title}</h3>
                       <div className="flex items-center space-x-1">
-                        <span className="text-white">⭐</span>
+                        <span className="text-white"><Star className="w-4 h-4" /></span>
                         <span className="text-white font-bold">{tour.rating}</span>
                         <span className="text-white/50">({tour.reviewsCount})</span>
                       </div>
@@ -246,11 +240,11 @@ export default function TouristDashboard() {
                           <span className="capitalize">{tour.activity}</span>
                         </span>
                         <span className={`flex items-center space-x-1 ${getDifficultyColor(tour.difficulty)}`}>
-                          <span>⚡</span>
+                          <span></span>
                           <span className="capitalize">{tour.difficulty}</span>
                         </span>
                         <span className="flex items-center space-x-1">
-                          <span>⏱️</span>
+                          <span></span>
                           <span>{tour.duration}</span>
                         </span>
                       </div>
@@ -295,7 +289,7 @@ export default function TouristDashboard() {
                 </div>
                 
                 <div className="text-center">
-                  <div className="text-2xl mb-2">💨</div>
+                  <div className="text-2xl mb-2"><Wind className="w-4 h-4" /></div>
                   <div className="text-xl font-bold text-white">{weather.windSpeed} км/ч</div>
                   <div className="text-white/70">Ветер</div>
                 </div>

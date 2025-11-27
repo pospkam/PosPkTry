@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+/* SAMSUNG WEATHER THEME - ДИНАМИЧЕСКАЯ ТЕМА */
+@import './samsung-weather-theme.css';
+@import './samsung-weather-dynamic.css';
+
 :root {
   /* Ультрамарин цвета */
   --ultramarine: #120A8F;

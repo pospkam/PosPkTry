@@ -185,7 +185,7 @@ export default function AdminDashboard() {
                     <p className="text-sm font-semibold">Пользователи</p>
                   </button>
                   <button className="p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-center">
-                    <div className="text-3xl mb-2">🏔️</div>
+                    <div className="text-3xl mb-2"></div>
                     <p className="text-sm font-semibold">Туры</p>
                   </button>
                   <button className="p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-center">

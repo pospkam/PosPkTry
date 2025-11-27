@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { MapPin, Volcano, Sun, Cloud, CloudRain, Wind, Flame } from 'lucide-react';
 
 export default function SafetyHub() {
   const [activeTab, setActiveTab] = useState('sos');
@@ -72,7 +73,7 @@ export default function SafetyHub() {
               <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
                 <h3 className="text-lg font-bold mb-4">Ваша локация</h3>
                 <div className="text-center text-white/70">
-                  <div className="text-4xl mb-2">📍</div>
+                  <div className="text-4xl mb-2"><MapPin className="w-4 h-4" /></div>
                   <p>Координаты загружаются...</p>
                 </div>
               </div>
@@ -97,7 +98,7 @@ export default function SafetyHub() {
             <h2 className="text-xl font-bold">Сейсмическая активность</h2>
             <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
               <div className="text-center text-white/70 py-8">
-                <div className="text-4xl mb-2">🌋</div>
+                <div className="text-4xl mb-2"></div>
                 <p>Данные сейсмики загружаются...</p>
               </div>
             </div>
@@ -109,7 +110,7 @@ export default function SafetyHub() {
             <h2 className="text-xl font-bold">Погодные условия</h2>
             <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
               <div className="text-center text-white/70 py-8">
-                <div className="text-4xl mb-2">🌤️</div>
+                <div className="text-4xl mb-2"></div>
                 <p>Прогноз погоды загружается...</p>
               </div>
             </div>

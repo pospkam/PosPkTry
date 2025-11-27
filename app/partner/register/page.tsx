@@ -2,12 +2,13 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Target, Truck, Home, Fish } from 'lucide-react';
 
 const ROLES = [
-  { id: 'operator', name: 'Туроператор', icon: '🎯', description: 'Организация и продажа туров' },
-  { id: 'transfer', name: 'Трансфер', icon: '🚗', description: 'Транспортные услуги' },
-  { id: 'stay', name: 'Размещение', icon: '🏠', description: 'Отели, базы, домики' },
-  { id: 'gear', name: 'Аренда снаряжения', icon: '🎣', description: 'Прокат оборудования' },
+  { id: 'operator', name: 'Туроператор', description: 'Организация и продажа туров' },
+  { id: 'transfer', name: 'Трансфер', description: 'Транспортные услуги' },
+  { id: 'stay', name: 'Размещение', description: 'Отели, базы, домики' },
+  { id: 'gear', name: 'Аренда снаряжения', description: 'Прокат оборудования' },
 ];
 
 export default function PartnerRegisterPage() {
