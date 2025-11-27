@@ -119,14 +119,15 @@ function CloudsEffect() {
   );
 }
 
-function getTimeIcon(time: TimeOfDay): string {
-  const icons = {
-    dawn: '🌅',
-    morning: '☀️',
-    afternoon: '🌞',
-    evening: '🌆',
-    'late-evening': '🌃',
-    night: '🌙'
+function getTimeIcon(time: TimeOfDay): React.ReactNode {
+  // NO EMOJIS - Using lucide-react icons
+  const icons: Record<TimeOfDay, string> = {
+    dawn: 'Sunrise',
+    morning: 'Sun',
+    afternoon: 'Sun',
+    evening: 'Sunset',
+    'late-evening': 'CloudMoon',
+    night: 'Moon'
   };
   return icons[time];
 }
