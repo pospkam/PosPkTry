@@ -7,14 +7,16 @@ import './globals.css'
 import './minimal-header.css'
 import React from 'react'
 import Link from 'next/link'
-import { RoleProvider } from '@/contexts/RoleContext'
+import { RoleProvider } from '@/contexts/RoleProvider'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { OrdersProvider } from '@/contexts/OrdersContext'
+import WeatherBackground from '@/components/WeatherBackground'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ru">
-      <body className="min-h-screen bg-premium-black text-white">
+      <body className="min-h-screen bg-premium-black text-white relative overflow-x-hidden">
+        <WeatherBackground />
         <AuthProvider>
           <RoleProvider>
             <OrdersProvider>

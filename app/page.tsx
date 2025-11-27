@@ -40,7 +40,7 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900">
+    <main className="min-h-screen relative">
       {/* Hero Section - Samsung Weather Style */}
       <section className="relative overflow-hidden mx-4 mt-6 mb-8 rounded-3xl">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-900/40 via-purple-900/30 to-blue-900/40 backdrop-blur-xl border border-white/10"></div>
