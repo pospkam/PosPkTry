@@ -116,12 +116,12 @@ export default function TouristDashboard() {
   return (
     <div className="min-h-screen bg-transparent">
       {/* Header */}
-      <div className="bg-gradient-to-r from-premium-black to-premium-gold/10 border-b border-white/40/20">
+      <div className="bg-white/25 backdrop-blur-xl border-b border-white/40" style={{ backdropFilter: 'blur(20px)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-white">Добро пожаловать, Турист!</h1>
-              <p className="text-white/70 mt-1">Откройте для себя удивительную Камчатку</p>
+              <h1 className="text-3xl font-light text-white" style={{ textShadow: '0 2px 6px rgba(0, 0, 0, 0.15)' }}>Добро пожаловать, Турист!</h1>
+              <p className="text-white/80 mt-1" style={{ textShadow: '0 1px 4px rgba(0, 0, 0, 0.1)' }}>Откройте для себя удивительную Камчатку</p>
             </div>
             <div className="flex items-center space-x-4">
               {weather && (
@@ -147,7 +147,7 @@ export default function TouristDashboard() {
               onClick={() => setSelectedTab(tab.id)}
               className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-lg transition-colors ${
                 selectedTab === tab.id
-                  ? 'bg-premium-gold text-premium-black'
+                  ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'
                   : 'text-white/70 hover:text-white hover:bg-white/10'
               }`}
             >
@@ -209,8 +209,8 @@ export default function TouristDashboard() {
             {/* Tours Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {tours.map((tour) => (
-                <div key={tour.id} className="bg-white/25 rounded-2xl overflow-hidden border border-white/40 hover:border-white/40/50 transition-colors">
-                  <div className="aspect-video bg-gradient-to-br from-premium-gold/20 to-premium-black relative">
+                <div key={tour.id} className="bg-white/25 rounded-2xl overflow-hidden border border-white/40 hover:border-white/50 transition-colors" style={{ backdropFilter: 'blur(20px)' }}>
+                  <div className="aspect-video bg-gradient-to-br from-blue-500/20 to-cyan-500/20 relative">
                     {tour.images && tour.images.length > 0 ? (
                       <img
                         src={tour.images[0]}
@@ -222,7 +222,7 @@ export default function TouristDashboard() {
                         <span className="text-6xl">{getActivityIcon(tour.activity)}</span>
                       </div>
                     )}
-                    <div className="absolute top-4 right-4 bg-premium-gold text-premium-black px-3 py-1 rounded-full text-sm font-bold">
+                    <div className="absolute top-4 right-4 bg-white/30 backdrop-blur-xl text-white px-3 py-1 rounded-full text-sm font-light" style={{ backdropFilter: 'blur(10px)', textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)' }}>
                       {tour.priceFrom.toLocaleString()}₽
                     </div>
                   </div>
@@ -260,7 +260,7 @@ export default function TouristDashboard() {
                       <div className="text-sm text-white/70">
                         <span>👥 {tour.minParticipants}-{tour.maxParticipants} чел.</span>
                       </div>
-                      <button className="px-6 py-2 bg-premium-gold text-premium-black rounded-xl hover:bg-premium-gold/90 transition-colors font-bold">
+                      <button className="px-6 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl hover:from-blue-600 hover:to-cyan-600 transition-colors font-light" style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)' }}>
                         Забронировать
                       </button>
                     </div>
