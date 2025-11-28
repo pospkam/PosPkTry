@@ -8,13 +8,11 @@ import React from 'react'
 import { RoleProvider } from '@/contexts/RoleContext'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { OrdersProvider } from '@/contexts/OrdersContext'
-import WeatherBackground from '@/components/WeatherBackground'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ru">
-      <body className="min-h-screen relative overflow-x-hidden">
-        <WeatherBackground />
+      <body className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
         <AuthProvider>
           <RoleProvider>
             <OrdersProvider>
