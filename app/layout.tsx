@@ -12,7 +12,7 @@ import { OrdersProvider } from '@/contexts/OrdersContext'
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ru">
-      <body className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      <body className="min-h-screen">
         <AuthProvider>
           <RoleProvider>
             <OrdersProvider>
