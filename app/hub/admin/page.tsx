@@ -115,17 +115,17 @@ export default function AdminDashboard() {
     return (
       <main className="min-h-screen relative overflow-hidden">
         {/* Animated Gradient Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(167,139,250,0.3),transparent_50%)]"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(249,168,212,0.3),transparent_50%)]"></div>
+        <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-violet-900"></div>
+        <div className="fixed inset-0 bg-[radial-gradient(circle_at_top_right,rgba(167,139,250,0.15),transparent_50%)]"></div>
+        <div className="fixed inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(249,168,212,0.15),transparent_50%)]"></div>
         
         <div className="relative min-h-screen flex items-center justify-center">
           <div className="text-center">
             <div className="relative mb-8">
-              <div className="w-24 h-24 border-4 border-violet-200 border-t-violet-600 rounded-full animate-spin mx-auto"></div>
-              <Sparkles className="w-10 h-10 text-violet-600 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse" />
+              <div className="w-24 h-24 border-4 border-violet-500/30 border-t-violet-400 rounded-full animate-spin mx-auto"></div>
+              <Sparkles className="w-10 h-10 text-violet-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse" />
             </div>
-            <p className="text-xl font-semibold bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
+            <p className="text-xl font-semibold text-white">
               Загрузка данных...
             </p>
           </div>
@@ -291,8 +291,8 @@ export default function AdminDashboard() {
 
         {/* Top Tours - Glass Card */}
         {data.charts.topTours && data.charts.topTours.length > 0 && (
-          <div className="backdrop-blur-2xl bg-white/60 rounded-3xl border border-white/80 shadow-2xl overflow-hidden">
-            <div className="px-8 py-6 bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 border-b border-white/60">
+          <div className="backdrop-blur-2xl bg-black/40 rounded-3xl border border-white/30 shadow-2xl overflow-hidden">
+            <div className="px-8 py-6 bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 border-b border-white/20">
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg">
                   <TrendingUp className="w-7 h-7 text-white" strokeWidth={2.5} />
@@ -329,8 +329,8 @@ export default function AdminDashboard() {
         )}
 
         {/* Admin Tools - Premium Glass Grid */}
-        <div className="backdrop-blur-2xl bg-white/60 rounded-3xl border border-white/80 shadow-2xl overflow-hidden">
-          <div className="px-8 py-6 bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 border-b border-white/60">
+        <div className="backdrop-blur-2xl bg-black/40 rounded-3xl border border-white/30 shadow-2xl overflow-hidden">
+          <div className="px-8 py-6 bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 border-b border-white/20">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 bg-gradient-to-br from-slate-700 to-gray-900 rounded-2xl flex items-center justify-center shadow-lg">
                 <Wrench className="w-7 h-7 text-white" strokeWidth={2.5} />
@@ -384,8 +384,8 @@ export default function AdminDashboard() {
 
         {/* Recent Activity */}
         {data.recentActivities && data.recentActivities.length > 0 && (
-          <div className="backdrop-blur-2xl bg-white/60 rounded-3xl border border-white/80 shadow-2xl overflow-hidden">
-            <div className="px-8 py-6 bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 border-b border-white/60">
+          <div className="backdrop-blur-2xl bg-black/40 rounded-3xl border border-white/30 shadow-2xl overflow-hidden">
+            <div className="px-8 py-6 bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 border-b border-white/20">
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg">
                   <Clock className="w-7 h-7 text-white" strokeWidth={2.5} />
