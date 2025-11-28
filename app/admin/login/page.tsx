@@ -37,10 +37,12 @@ export default function AdminLoginPage() {
         throw new Error(data.error || 'Неверный email или пароль');
       }
 
-      // Сохраняем токен
+      // Сохраняем токен и роль администратора
       if (data.token) {
         localStorage.setItem('admin_token', data.token);
         localStorage.setItem('admin_email', formData.email);
+        // КРИТИЧЕСКИ ВАЖНО: Устанавливаем роль admin для доступа к защищённым страницам
+        localStorage.setItem('user_roles', JSON.stringify(['admin']));
       }
 
       // Редирект на админ панель
