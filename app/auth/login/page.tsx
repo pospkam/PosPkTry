@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
 
 // Модные SVG иконки вместо emoji
 const ROLES = [
@@ -58,6 +59,7 @@ const ROLES = [
 export default function AuthPage() {
   const router = useRouter();
   const [mode, setMode] = useState<'login' | 'register'>('register');
+  const [step, setStep] = useState(1); // Текущий шаг регистрации (1, 2, 3)
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -123,17 +125,66 @@ export default function AuthPage() {
     }
   };
 
+  const validateStep = (currentStep: number): boolean => {
+    setError('');
+    
+    if (currentStep === 1) {
+      if (!formData.name || !formData.email || !formData.phone) {
+        setError('Заполните все обязательные поля');
+        return false;
+      }
+      if (!formData.password || formData.password.length < 8) {
+        setError('Пароль должен быть не менее 8 символов');
+        return false;
+      }
+      if (formData.password !== formData.confirmPassword) {
+        setError('Пароли не совпадают');
+        return false;
+      }
+    }
+    
+    if (currentStep === 2) {
+      if (formData.roles.length === 0) {
+        setError('Выберите хотя бы одно направление деятельности');
+        return false;
+      }
+    }
+    
+    return true;
+  };
+
+  const handleNextStep = () => {
+    if (validateStep(step)) {
+      setStep(step + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handlePrevStep = () => {
+    setStep(step - 1);
+    setError('');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
     try {
-      if (loginData.email && loginData.password) {
-        router.push('/partner/dashboard');
-      } else {
-        throw new Error('Заполните все поля');
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(loginData),
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Ошибка входа');
       }
+
+      router.push('/partner/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка входа');
     } finally {
@@ -143,22 +194,15 @@ export default function AuthPage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateStep(3)) {
+      return;
+    }
+
     setLoading(true);
     setError('');
 
     try {
-      if (formData.roles.length === 0) {
-        throw new Error('Выберите хотя бы одно направление деятельности');
-      }
-
-      if (formData.password.length < 8) {
-        throw new Error('Пароль должен быть не менее 8 символов');
-      }
-
-      if (formData.password !== formData.confirmPassword) {
-        throw new Error('Пароли не совпадают');
-      }
-
       const submitData = {
         ...formData,
         logoUrl: logoPreview || '',
@@ -195,9 +239,9 @@ export default function AuthPage() {
         <div className="max-w-md w-full">
           <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/20 rounded-3xl p-8 text-center shadow-2xl">
             <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center animate-bounce">
-              <span className="text-4xl">✓</span>
+              <Check className="w-12 h-12 text-white" />
             </div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r text-white bg-clip-text text-transparent mb-3">
+            <h1 className="text-3xl font-bold text-white mb-3">
               Успешно!
             </h1>
             <p className="text-white/80 mb-2">
@@ -213,46 +257,46 @@ export default function AuthPage() {
   }
 
   return (
-    <main className="min-h-screen relative text-white overflow-hidden">
+    <main className="min-h-screen relative text-white overflow-hidden py-12">
       {/* Animated Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-premium-gold/20 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
       </div>
 
-      <div className="relative max-w-7xl mx-auto p-6">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
         {/* Header */}
-        <div className="text-center mb-12 mt-8">
+        <div className="text-center mb-8">
           <div className="mx-auto mb-6 flex justify-center">
             <img src="/logo-kamchatka.svg" alt="Kamchatka Tour Hub" className="h-16 md:h-20 transform hover:scale-110 transition-transform" />
           </div>
-          <h1 className="text-5xl md:text-6xl font-black mb-3 bg-gradient-to-r text-white bg-clip-text text-transparent">
+          <h1 className="text-4xl md:text-5xl font-black mb-3 text-white">
             Kamchatka Tour Hub
           </h1>
-          <p className="text-xl text-white/70">
+          <p className="text-lg text-white/70">
             Экосистема туризма Камчатки
           </p>
         </div>
 
         {/* Mode Toggle */}
-        <div className="max-w-md mx-auto mb-10">
+        <div className="max-w-md mx-auto mb-8">
           <div className="bg-white/15 backdrop-blur-2xl border border-white/15 rounded-2xl p-1.5 flex gap-2 shadow-xl">
             <button
-              onClick={() => setMode('login')}
-              className={`flex-1 py-4 rounded-xl font-bold transition-all duration-300 ${
+              onClick={() => { setMode('login'); setStep(1); setError(''); }}
+              className={`flex-1 py-3 rounded-xl font-bold transition-all duration-300 ${
                 mode === 'login'
-                  ? 'bg-gradient-to-r from-sky-200 to-cyan-200 text-premium-black shadow-lg shadow-blue-500/50'
-                  : 'text-white/70 hover:text-white hover:bg-white/15'
+                  ? 'bg-gradient-to-r from-sky-200 to-cyan-200 text-premium-black shadow-lg'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
               }`}
             >
               Вход
             </button>
             <button
-              onClick={() => setMode('register')}
-              className={`flex-1 py-4 rounded-xl font-bold transition-all duration-300 ${
+              onClick={() => { setMode('register'); setStep(1); setError(''); }}
+              className={`flex-1 py-3 rounded-xl font-bold transition-all duration-300 ${
                 mode === 'register'
-                  ? 'bg-gradient-to-r from-sky-200 to-cyan-200 text-premium-black shadow-lg shadow-blue-500/50'
-                  : 'text-white/70 hover:text-white hover:bg-white/15'
+                  ? 'bg-gradient-to-r from-sky-200 to-cyan-200 text-premium-black shadow-lg'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
               }`}
             >
               Регистрация
@@ -262,9 +306,11 @@ export default function AuthPage() {
 
         {/* Error Message */}
         {error && (
-          <div className="max-w-4xl mx-auto mb-6 p-4 bg-red-500/10 backdrop-blur-2xl border border-red-500/30 rounded-2xl text-red-400 animate-shake">
+          <div className="max-w-2xl mx-auto mb-6 p-4 bg-red-500/10 backdrop-blur-2xl border border-red-500/30 rounded-2xl text-red-400">
             <div className="flex items-center gap-3">
-              <span className="text-2xl">⚠️</span>
+              <svg className="w-6 h-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
               <span>{error}</span>
             </div>
           </div>
@@ -281,7 +327,7 @@ export default function AuthPage() {
                   required
                   value={loginData.email}
                   onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
-                  className="w-full px-6 py-4 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-transparent text-white placeholder-white/40 transition-all"
+                  className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-transparent text-white placeholder-white/40 transition-all"
                   placeholder="info@kamchatka-fishing.ru"
                 />
               </div>
@@ -294,7 +340,7 @@ export default function AuthPage() {
                     required
                     value={loginData.password}
                     onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                    className="w-full px-6 py-4 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-transparent text-white placeholder-white/40 transition-all"
+                    className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-transparent text-white placeholder-white/40 transition-all"
                     placeholder="••••••••"
                   />
                   <button
@@ -302,7 +348,7 @@ export default function AuthPage() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors"
                   >
-                    {showPassword ? "" : '👁️‍🗨️'}
+                    {showPassword ? '🙈' : '👁️'}
                   </button>
                 </div>
               </div>
@@ -312,31 +358,62 @@ export default function AuthPage() {
                 disabled={loading}
                 className="w-full py-4 bg-gradient-to-r from-sky-200 to-cyan-200 text-premium-black font-bold rounded-xl hover:shadow-lg hover:shadow-blue-500/50 disabled:opacity-50 transition-all transform hover:scale-105"
               >
-                {loading ? '⏳ Вход...' : '→ Войти'}
+                {loading ? 'Вход...' : 'Войти'}
               </button>
             </form>
 
             <div className="text-center mt-6">
               <a href="/demo" className="text-blue-400 hover:text-blue-300 text-sm transition-colors">
-                🚀 Демо-режим (без регистрации)
+                Демо-режим (без регистрации)
               </a>
             </div>
           </div>
         )}
 
-        {/* REGISTER FORM */}
+        {/* REGISTER FORM - MULTI-STEP */}
         {mode === 'register' && (
-          <form onSubmit={handleRegister} className="max-w-5xl mx-auto space-y-8">
-            {/* Основная информация */}
-            <div className="bg-white/15 backdrop-blur-2xl border border-white/15 rounded-3xl p-8 shadow-2xl">
-              <h2 className="text-3xl font-bold mb-8 bg-gradient-to-r from-premium-gold to-yellow-300 bg-clip-text text-transparent">
-                📋 Основная информация
-              </h2>
-              
-              <div className="grid gap-6">
-                <div className="grid md:grid-cols-2 gap-6">
+          <div className="max-w-2xl mx-auto">
+            {/* Progress Indicator */}
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-4">
+                {[1, 2, 3].map((s) => (
+                  <div key={s} className="flex items-center flex-1">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${
+                      step > s ? 'bg-green-500 text-white' :
+                      step === s ? 'bg-gradient-to-r from-sky-200 to-cyan-200 text-premium-black' :
+                      'bg-white/10 text-white/40'
+                    }`}>
+                      {step > s ? <Check className="w-6 h-6" /> : s}
+                    </div>
+                    {s < 3 && (
+                      <div className={`flex-1 h-1 mx-2 transition-all ${
+                        step > s ? 'bg-green-500' : 'bg-white/10'
+                      }`} />
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div className="text-center">
+                <p className="text-white/70 text-sm">
+                  Шаг {step} из 3: {
+                    step === 1 ? 'Основная информация' :
+                    step === 2 ? 'Направления деятельности' :
+                    'Дополнительно'
+                  }
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleRegister} className="space-y-6">
+              {/* ШАГ 1: Основная информация */}
+              {step === 1 && (
+                <div className="bg-white/15 backdrop-blur-2xl border border-white/15 rounded-3xl p-8 shadow-2xl space-y-6 animate-fade-in">
+                  <h2 className="text-2xl font-bold text-white mb-6">
+                    Основная информация
+                  </h2>
+                  
                   <div>
-                    <label className="block text-sm font-semibold mb-3 text-white/90">
+                    <label className="block text-sm font-semibold mb-2 text-white/90">
                       Название компании <span className="text-red-400">*</span>
                     </label>
                     <input
@@ -344,288 +421,324 @@ export default function AuthPage() {
                       required
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-6 py-4 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-transparent text-white placeholder-white/40 transition-all"
+                      className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 text-white placeholder-white/40"
                       placeholder="Камчатская рыбалка"
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold mb-3 text-white/90">
-                      Email <span className="text-red-400">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-6 py-4 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-transparent text-white placeholder-white/40 transition-all"
-                      placeholder="info@kamchatka-fishing.ru"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-semibold mb-3 text-white/90">
-                      Телефон <span className="text-red-400">*</span>
-                    </label>
-                    <input
-                      type="tel"
-                      required
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full px-6 py-4 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-transparent text-white placeholder-white/40 transition-all"
-                      placeholder="+7 (999) 123-45-67"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold mb-3 text-white/90">
-                      Веб-сайт
-                    </label>
-                    <input
-                      type="url"
-                      value={formData.website}
-                      onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                      className="w-full px-6 py-4 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-transparent text-white placeholder-white/40 transition-all"
-                      placeholder="https://kamchatka-fishing.ru"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-semibold mb-3 text-white/90">
-                      Пароль <span className="text-red-400">*</span>
-                    </label>
-                    <div className="relative">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold mb-2 text-white/90">
+                        Email <span className="text-red-400">*</span>
+                      </label>
                       <input
-                        type={showPassword ? 'text' : 'password'}
+                        type="email"
                         required
-                        value={formData.password}
-                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        className="w-full px-6 py-4 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-transparent text-white placeholder-white/40 transition-all"
-                        placeholder="Минимум 8 символов"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 text-white placeholder-white/40"
+                        placeholder="info@example.ru"
                       />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors"
-                      >
-                        {showPassword ? "" : '👁️‍🗨️'}
-                      </button>
                     </div>
-                    {formData.password && (
-                      <div className="mt-2">
-                        <div className="flex gap-1 mb-1">
-                          {[1, 2, 3, 4].map((level) => (
-                            <div
-                              key={level}
-                              className={`h-1 flex-1 rounded-full transition-all ${
-                                level <= passwordStrength.level ? passwordStrength.color : 'bg-white/10'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        <p className="text-xs text-white/70">{passwordStrength.text}</p>
-                      </div>
-                    )}
-                  </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold mb-3 text-white/90">
-                      Подтверждение пароля <span className="text-red-400">*</span>
-                    </label>
-                    <div className="relative">
+                    <div>
+                      <label className="block text-sm font-semibold mb-2 text-white/90">
+                        Телефон <span className="text-red-400">*</span>
+                      </label>
                       <input
-                        type={showConfirmPassword ? 'text' : 'password'}
+                        type="tel"
                         required
-                        value={formData.confirmPassword}
-                        onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                        className="w-full px-6 py-4 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-transparent text-white placeholder-white/40 transition-all"
-                        placeholder="Повторите пароль"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 text-white placeholder-white/40"
+                        placeholder="+7 (999) 123-45-67"
                       />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors"
-                      >
-                        {showConfirmPassword ? "" : '👁️‍🗨️'}
-                      </button>
                     </div>
-                    {formData.confirmPassword && formData.password !== formData.confirmPassword && (
-                      <p className="text-xs text-red-400 mt-2">Пароли не совпадают</p>
-                    )}
                   </div>
-                </div>
 
-                <div>
-                  <label className="block text-sm font-semibold mb-3 text-white/90">
-                    Описание компании
-                  </label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    rows={4}
-                    className="w-full px-6 py-4 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-transparent resize-none text-white placeholder-white/40 transition-all"
-                    placeholder="Расскажите о вашей компании, опыте работы, преимуществах..."
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold mb-3 text-white/90">
-                    Адрес
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    className="w-full px-6 py-4 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-transparent text-white placeholder-white/40 transition-all"
-                    placeholder="г. Петропавловск-Камчатский, ул. Ленинская, 1"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Направления деятельности */}
-            <div className="bg-white/15 backdrop-blur-2xl border border-white/15 rounded-3xl p-8 shadow-2xl">
-              <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-premium-gold to-yellow-300 bg-clip-text text-transparent">
-                 Направления деятельности <span className="text-red-400">*</span>
-              </h2>
-              <p className="text-white/70 mb-8">
-                Выберите все подходящие направления
-              </p>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                {ROLES.map((role) => (
-                  <button
-                    key={role.id}
-                    type="button"
-                    onClick={() => handleRoleToggle(role.id)}
-                    className={`group relative p-8 rounded-2xl border-2 transition-all duration-300 text-left overflow-hidden ${
-                      formData.roles.includes(role.id)
-                        ? `border-transparent bg-gradient-to-br ${role.gradient} shadow-2xl shadow-${role.gradient}/50 scale-105`
-                        : 'border-white/15 bg-white/15 hover:border-white/20 hover:bg-white/10 hover:scale-102'
-                    }`}
-                  >
-                    <div className="relative">
-                      <div className="flex items-center gap-4 mb-3">
-                        <div className={formData.roles.includes(role.id) ? 'text-white' : 'text-white/70 group-hover:text-white transition-colors'}>
-                          {role.icon}
-                        </div>
-                        <div>
-                          <div className="text-2xl font-bold">{role.name}</div>
-                          <div className="text-sm text-white/70">{role.description}</div>
-                        </div>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold mb-2 text-white/90">
+                        Пароль <span className="text-red-400">*</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          required
+                          value={formData.password}
+                          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                          className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 text-white placeholder-white/40"
+                          placeholder="Минимум 8 символов"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white"
+                        >
+                          {showPassword ? '🙈' : '👁️'}
+                        </button>
                       </div>
-                      
-                      {formData.roles.includes(role.id) && (
-                        <div className="mt-4 flex items-center gap-2 text-white font-bold text-sm">
-                          <span className="text-xl">✓</span>
-                          Выбрано
+                      {formData.password && (
+                        <div className="mt-2">
+                          <div className="flex gap-1 mb-1">
+                            {[1, 2, 3, 4].map((level) => (
+                              <div
+                                key={level}
+                                className={`h-1 flex-1 rounded-full transition-all ${
+                                  level <= passwordStrength.level ? passwordStrength.color : 'bg-white/10'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <p className="text-xs text-white/70">{passwordStrength.text}</p>
                         </div>
                       )}
                     </div>
-                  </button>
-                ))}
-              </div>
 
-              {formData.roles.length > 0 && (
-                <div className="mt-6 p-4 bg-green-500/10 border border-green-500/30 rounded-xl">
-                  <p className="text-green-400 text-sm flex items-center gap-2">
-                    <span className="text-xl">✓</span>
-                    Выбрано направлений: <strong className="text-lg">{formData.roles.length}</strong>
-                  </p>
+                    <div>
+                      <label className="block text-sm font-semibold mb-2 text-white/90">
+                        Подтверждение пароля <span className="text-red-400">*</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showConfirmPassword ? 'text' : 'password'}
+                          required
+                          value={formData.confirmPassword}
+                          onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                          className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 text-white placeholder-white/40"
+                          placeholder="Повторите пароль"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white"
+                        >
+                          {showConfirmPassword ? '🙈' : '👁️'}
+                        </button>
+                      </div>
+                      {formData.confirmPassword && formData.password !== formData.confirmPassword && (
+                        <p className="text-xs text-red-400 mt-2">Пароли не совпадают</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
-            </div>
 
-            {/* Логотип */}
-            <div className="bg-white/15 backdrop-blur-2xl border border-white/15 rounded-3xl p-8 shadow-2xl">
-              <h2 className="text-3xl font-bold mb-8 bg-gradient-to-r from-premium-gold to-yellow-300 bg-clip-text text-transparent">
-                📸 Логотип компании
-              </h2>
+              {/* ШАГ 2: Направления деятельности */}
+              {step === 2 && (
+                <div className="bg-white/15 backdrop-blur-2xl border border-white/15 rounded-3xl p-8 shadow-2xl animate-fade-in">
+                  <h2 className="text-2xl font-bold text-white mb-2">
+                    Направления деятельности <span className="text-red-400">*</span>
+                  </h2>
+                  <p className="text-white/70 mb-6 text-sm">
+                    Выберите все подходящие направления
+                  </p>
 
-              <div className="flex flex-col md:flex-row items-center gap-8">
-                <div className="relative group">
-                  {logoPreview ? (
-                    <div className="w-48 h-48 rounded-2xl border-4 border-white/15 overflow-hidden shadow-2xl shadow-blue-500/30 transform group-hover:scale-105 transition-transform">
-                      <img src={logoPreview} alt="Logo" className="w-full h-full object-cover" />
-                    </div>
-                  ) : (
-                    <div className="w-48 h-48 rounded-2xl border-4 border-dashed border-white/20 flex items-center justify-center bg-white/15 group-hover:border-white/15 transition-all">
-                      <div className="text-center">
-                        <span className="text-6xl">📷</span>
-                        <p className="text-xs text-white/50 mt-3">Загрузите лого</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex-1 w-full">
-                  <label className="block">
-                    <span className="px-8 py-4 bg-gradient-to-r from-sky-200 to-cyan-200 text-premium-black font-bold rounded-xl cursor-pointer hover:shadow-lg hover:shadow-blue-500/50 transition-all inline-flex items-center gap-2 transform hover:scale-105">
-                      <span className="text-xl">📁</span>
-                      Выбрать файл
-                    </span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleLogoChange}
-                      className="hidden"
-                    />
-                  </label>
-                  <div className="mt-6 space-y-2 text-sm text-white/70">
-                    <p className="flex items-center gap-2">
-                      <span className="text-green-400">✓</span> PNG, JPG, WEBP
-                    </p>
-                    <p className="flex items-center gap-2">
-                      <span className="text-green-400">✓</span> Максимум 5 МБ
-                    </p>
-                    <p className="flex items-center gap-2">
-                      <span className="text-green-400">✓</span> Рекомендуем 512x512px
-                    </p>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {ROLES.map((role) => (
+                      <button
+                        key={role.id}
+                        type="button"
+                        onClick={() => handleRoleToggle(role.id)}
+                        className={`group relative p-6 rounded-2xl border-2 transition-all duration-300 text-left ${
+                          formData.roles.includes(role.id)
+                            ? `border-transparent bg-gradient-to-br ${role.gradient} shadow-xl scale-105`
+                            : 'border-white/20 bg-white/5 hover:border-white/30 hover:bg-white/10'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className={formData.roles.includes(role.id) ? 'text-white' : 'text-white/70'}>
+                            {role.icon}
+                          </div>
+                          <div>
+                            <div className="text-xl font-bold text-white">{role.name}</div>
+                            <div className="text-sm text-white/70">{role.description}</div>
+                          </div>
+                        </div>
+                        
+                        {formData.roles.includes(role.id) && (
+                          <div className="mt-3 flex items-center gap-2 text-white font-bold text-sm">
+                            <Check className="w-5 h-5" />
+                            Выбрано
+                          </div>
+                        )}
+                      </button>
+                    ))}
                   </div>
-                  
-                  {logoFile && (
-                    <div className="mt-4 p-4 bg-green-500/10 border border-green-500/30 rounded-xl">
+
+                  {formData.roles.length > 0 && (
+                    <div className="mt-6 p-4 bg-green-500/10 border border-green-500/30 rounded-xl">
                       <p className="text-green-400 text-sm flex items-center gap-2">
-                        <span className="text-xl">✓</span>
-                        {logoFile.name} ({(logoFile.size / 1024).toFixed(1)} КБ)
+                        <Check className="w-5 h-5" />
+                        Выбрано направлений: <strong>{formData.roles.length}</strong>
                       </p>
                     </div>
                   )}
                 </div>
-              </div>
-            </div>
+              )}
 
-            {/* Кнопка отправки */}
-            <div className="sticky bottom-6 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/20 rounded-3xl p-6 shadow-2xl">
+              {/* ШАГ 3: Дополнительная информация */}
+              {step === 3 && (
+                <div className="bg-white/15 backdrop-blur-2xl border border-white/15 rounded-3xl p-8 shadow-2xl space-y-6 animate-fade-in">
+                  <h2 className="text-2xl font-bold text-white mb-6">
+                    Дополнительная информация
+                  </h2>
+
+                  <div>
+                    <label className="block text-sm font-semibold mb-2 text-white/90">
+                      Описание компании
+                    </label>
+                    <textarea
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      rows={4}
+                      className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 resize-none text-white placeholder-white/40"
+                      placeholder="Расскажите о вашей компании, опыте работы, преимуществах..."
+                    />
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold mb-2 text-white/90">
+                        Адрес
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.address}
+                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                        className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 text-white placeholder-white/40"
+                        placeholder="г. Петропавловск-Камчатский"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold mb-2 text-white/90">
+                        Веб-сайт
+                      </label>
+                      <input
+                        type="url"
+                        value={formData.website}
+                        onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                        className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 text-white placeholder-white/40"
+                        placeholder="https://example.ru"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold mb-4 text-white/90">
+                      Логотип компании
+                    </label>
+                    <div className="flex flex-col md:flex-row items-center gap-6">
+                      <div className="relative group">
+                        {logoPreview ? (
+                          <div className="w-32 h-32 rounded-2xl border-2 border-white/20 overflow-hidden shadow-xl">
+                            <img src={logoPreview} alt="Logo" className="w-full h-full object-cover" />
+                          </div>
+                        ) : (
+                          <div className="w-32 h-32 rounded-2xl border-2 border-dashed border-white/20 flex items-center justify-center bg-white/5">
+                            <svg className="w-12 h-12 text-white/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex-1">
+                        <label className="cursor-pointer">
+                          <span className="px-6 py-3 bg-gradient-to-r from-sky-200 to-cyan-200 text-premium-black font-bold rounded-xl inline-flex items-center gap-2 hover:shadow-lg transition-all">
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                            Выбрать файл
+                          </span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleLogoChange}
+                            className="hidden"
+                          />
+                        </label>
+                        <div className="mt-3 space-y-1 text-xs text-white/60">
+                          <p>PNG, JPG, WEBP · Макс. 5 МБ · 512x512px</p>
+                        </div>
+                        
+                        {logoFile && (
+                          <div className="mt-3 p-3 bg-green-500/10 border border-green-500/30 rounded-xl">
+                            <p className="text-green-400 text-xs flex items-center gap-2">
+                              <Check className="w-4 h-4" />
+                              {logoFile.name} ({(logoFile.size / 1024).toFixed(1)} КБ)
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Navigation Buttons */}
               <div className="flex gap-4">
-                <button
-                  type="button"
-                  onClick={() => router.push('/')}
-                  className="flex-1 px-8 py-5 bg-white/15 border border-white/15 text-white rounded-2xl hover:bg-white/10 transition-all font-bold transform hover:scale-105"
-                >
-                  Отмена
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading || formData.roles.length === 0 || formData.password !== formData.confirmPassword}
-                  className="flex-1 px-8 py-5 bg-gradient-to-r from-sky-200 to-cyan-200 text-premium-black rounded-2xl hover:shadow-xl hover:shadow-blue-500/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-bold text-lg transform hover:scale-105"
-                >
-                  {loading ? '⏳ Регистрация...' : '✓ Зарегистрироваться'}
-                </button>
+                {step > 1 && (
+                  <button
+                    type="button"
+                    onClick={handlePrevStep}
+                    className="flex-1 px-6 py-4 bg-white/10 border border-white/20 text-white rounded-xl hover:bg-white/15 transition-all font-bold flex items-center justify-center gap-2"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                    Назад
+                  </button>
+                )}
+                
+                {step < 3 ? (
+                  <button
+                    type="button"
+                    onClick={handleNextStep}
+                    className="flex-1 px-6 py-4 bg-gradient-to-r from-sky-200 to-cyan-200 text-premium-black rounded-xl hover:shadow-xl transition-all font-bold flex items-center justify-center gap-2"
+                  >
+                    Далее
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="flex-1 px-6 py-4 bg-gradient-to-r from-green-400 to-emerald-500 text-white rounded-xl hover:shadow-xl disabled:opacity-50 transition-all font-bold flex items-center justify-center gap-2"
+                  >
+                    {loading ? 'Регистрация...' : (
+                      <>
+                        <Check className="w-5 h-5" />
+                        Зарегистрироваться
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
-            </div>
-          </form>
+            </form>
+          </div>
         )}
 
         {/* Footer */}
-        <div className="text-center mt-16 text-white/50 text-sm">
-          <p> Kamchatour Hub — экосистема туризма Камчатки</p>
+        <div className="text-center mt-12 text-white/50 text-sm">
+          <p>Kamchatour Hub — экосистема туризма Камчатки</p>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out;
+        }
+      `}</style>
     </main>
   );
 }
