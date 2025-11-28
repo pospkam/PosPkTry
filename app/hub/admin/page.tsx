@@ -138,17 +138,15 @@ export default function AdminDashboard() {
     return (
       <main className="min-h-screen relative overflow-hidden flex items-center justify-center p-6">
         {/* Animated Gradient Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(167,139,250,0.3),transparent_50%)]"></div>
+        <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-violet-900"></div>
+        <div className="fixed inset-0 bg-[radial-gradient(circle_at_top_right,rgba(167,139,250,0.15),transparent_50%)]"></div>
         
-        <div className="relative max-w-md w-full backdrop-blur-2xl bg-white/70 rounded-3xl shadow-2xl border border-white/60 p-8 text-center">
-          <div className="w-20 h-20 bg-gradient-to-br from-red-400 to-pink-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-red-500/50">
-            <AlertCircle className="w-10 h-10 text-white" />
+        <div className="relative max-w-md w-full backdrop-blur-2xl bg-black/40 rounded-3xl shadow-2xl border border-white/30 p-8 text-center">
+          <div className="w-20 h-20 bg-gradient-to-br from-red-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl">
+            <AlertCircle className="w-10 h-10 text-white" strokeWidth={2.5} />
           </div>
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent mb-3">
-            Ошибка загрузки
-          </h2>
-          <p className="text-gray-600 mb-6">{error}</p>
+          <h2 className="text-2xl font-black text-white mb-4">Ошибка загрузки</h2>
+          <p className="text-gray-300 mb-6">{error}</p>
           <button
             onClick={fetchData}
             className="px-8 py-4 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white rounded-2xl font-bold hover:shadow-2xl hover:shadow-violet-500/50 transition-all transform hover:scale-105"
