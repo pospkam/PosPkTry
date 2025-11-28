@@ -201,13 +201,13 @@ export async function GET(request: NextRequest) {
     const topToursQuery = `
       SELECT
         t.id,
-        t.name as title,
+        t.title,
         COUNT(b.id) as bookings,
         COALESCE(SUM(b.total_price), 0) as revenue
       FROM tours t
       LEFT JOIN bookings b ON t.id = b.tour_id AND b.created_at >= $1
       WHERE t.is_active = true
-      GROUP BY t.id, t.name
+      GROUP BY t.id, t.title
       ORDER BY bookings DESC, revenue DESC
       LIMIT 5
     `;
@@ -233,10 +233,10 @@ export async function GET(request: NextRequest) {
         b.id,
         'booking' as type,
         'Новое бронирование' as title,
-        t.name as description,
+        t.title as description,
         b.created_at as timestamp,
         u.id as user_id,
-        u.name as user_name,
+        u.email as user_name,
         NULL as user_avatar
       FROM bookings b
       JOIN tours t ON b.tour_id = t.id
