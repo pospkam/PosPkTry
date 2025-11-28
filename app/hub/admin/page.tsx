@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Shield, Users, FileText, DollarSign, Settings, CheckCircle, Clock, TrendingUp, Package, Map, Wrench, AlertCircle, ArrowRight, Sparkles } from 'lucide-react';
+import { Shield, Users, FileText, DollarSign, Settings, CheckCircle, Clock, TrendingUp, Package, Map, Wrench, AlertCircle, ArrowRight, Sparkles, Star } from 'lucide-react';
 
 interface Metrics {
   totalRevenue: { value: number; change: number; trend: string };
@@ -66,7 +66,7 @@ export default function AdminDashboard() {
       title: 'Пользователи',
       description: 'Управление и аналитика',
       link: '/hub/admin/users',
-      color: 'from-violet-500 to-purple-600',
+      gradient: 'from-violet-400 via-purple-500 to-fuchsia-500',
       badge: data ? formatNumber(data.metrics.activeUsers.value) : null
     },
     {
@@ -74,52 +74,61 @@ export default function AdminDashboard() {
       title: 'Туры',
       description: 'Модерация контента',
       link: '/hub/admin/content/tours',
-      color: 'from-emerald-500 to-teal-600',
+      gradient: 'from-emerald-400 via-teal-500 to-cyan-500',
       badge: null
     },
     {
       icon: Package,
       title: 'Партнёры',
-      description: 'Верификация и управление',
+      description: 'Верификация',
       link: '/hub/admin/content/partners',
-      color: 'from-blue-500 to-cyan-600',
+      gradient: 'from-blue-400 via-indigo-500 to-purple-500',
       badge: null
     },
     {
       icon: FileText,
       title: 'Отзывы',
-      description: 'Модерация отзывов',
+      description: 'Модерация',
       link: '/hub/admin/content/reviews',
-      color: 'from-amber-500 to-orange-600',
+      gradient: 'from-amber-400 via-orange-500 to-red-500',
       badge: null
     },
     {
       icon: DollarSign,
       title: 'Финансы',
-      description: 'Транзакции и выплаты',
+      description: 'Транзакции',
       link: '/hub/admin/finance',
-      color: 'from-rose-500 to-pink-600',
+      gradient: 'from-pink-400 via-rose-500 to-red-500',
       badge: data ? formatCurrency(data.metrics.totalRevenue.value) : null
     },
     {
       icon: Settings,
       title: 'Настройки',
-      description: 'Конфигурация системы',
+      description: 'Конфигурация',
       link: '/hub/admin/settings',
-      color: 'from-slate-500 to-gray-600',
+      gradient: 'from-slate-400 via-gray-500 to-zinc-500',
       badge: null
     },
   ];
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="relative">
-            <div className="w-20 h-20 border-4 border-slate-200 border-t-violet-600 rounded-full animate-spin mx-auto mb-4"></div>
-            <Sparkles className="w-8 h-8 text-violet-600 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+      <main className="min-h-screen relative overflow-hidden">
+        {/* Animated Gradient Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(167,139,250,0.3),transparent_50%)]"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(249,168,212,0.3),transparent_50%)]"></div>
+        
+        <div className="relative min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="relative mb-8">
+              <div className="w-24 h-24 border-4 border-violet-200 border-t-violet-600 rounded-full animate-spin mx-auto"></div>
+              <Sparkles className="w-10 h-10 text-violet-600 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse" />
+            </div>
+            <p className="text-xl font-semibold bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
+              Загрузка данных...
+            </p>
           </div>
-          <p className="text-slate-600 font-medium">Загрузка данных...</p>
         </div>
       </main>
     );
@@ -127,16 +136,22 @@ export default function AdminDashboard() {
 
   if (error) {
     return (
-      <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-6">
-        <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl border border-red-100 p-8 text-center">
-          <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <AlertCircle className="w-8 h-8 text-red-600" />
+      <main className="min-h-screen relative overflow-hidden flex items-center justify-center p-6">
+        {/* Animated Gradient Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(167,139,250,0.3),transparent_50%)]"></div>
+        
+        <div className="relative max-w-md w-full backdrop-blur-2xl bg-white/70 rounded-3xl shadow-2xl border border-white/60 p-8 text-center">
+          <div className="w-20 h-20 bg-gradient-to-br from-red-400 to-pink-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-red-500/50">
+            <AlertCircle className="w-10 h-10 text-white" />
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">Ошибка загрузки</h2>
-          <p className="text-slate-600 mb-6">{error}</p>
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent mb-3">
+            Ошибка загрузки
+          </h2>
+          <p className="text-gray-600 mb-6">{error}</p>
           <button
             onClick={fetchData}
-            className="px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-violet-500/50 transition-all"
+            className="px-8 py-4 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white rounded-2xl font-bold hover:shadow-2xl hover:shadow-violet-500/50 transition-all transform hover:scale-105"
           >
             Попробовать снова
           </button>
@@ -153,8 +168,7 @@ export default function AdminDashboard() {
       label: 'Пользователи', 
       value: formatNumber(data.metrics.activeUsers.value),
       change: data.metrics.activeUsers.change.toFixed(1),
-      color: 'from-violet-500 to-purple-600',
-      bgColor: 'bg-violet-50',
+      gradient: 'from-violet-400 via-purple-500 to-fuchsia-500',
       trend: data.metrics.activeUsers.trend
     },
     { 
@@ -162,8 +176,7 @@ export default function AdminDashboard() {
       label: 'Бронирования', 
       value: formatNumber(data.metrics.totalBookings.value),
       change: data.metrics.totalBookings.change.toFixed(1),
-      color: 'from-emerald-500 to-teal-600',
-      bgColor: 'bg-emerald-50',
+      gradient: 'from-emerald-400 via-teal-500 to-cyan-500',
       trend: data.metrics.totalBookings.trend
     },
     { 
@@ -171,8 +184,7 @@ export default function AdminDashboard() {
       label: 'Выручка', 
       value: formatCurrency(data.metrics.totalRevenue.value),
       change: data.metrics.totalRevenue.change.toFixed(1),
-      color: 'from-rose-500 to-pink-600',
-      bgColor: 'bg-rose-50',
+      gradient: 'from-pink-400 via-rose-500 to-red-500',
       trend: data.metrics.totalRevenue.trend
     },
     { 
@@ -180,30 +192,43 @@ export default function AdminDashboard() {
       label: 'Конверсия', 
       value: `${data.metrics.conversionRate.value.toFixed(1)}%`,
       change: data.metrics.conversionRate.change.toFixed(1),
-      color: 'from-amber-500 to-orange-600',
-      bgColor: 'bg-amber-50',
+      gradient: 'from-amber-400 via-orange-500 to-red-500',
       trend: data.metrics.conversionRate.trend
     },
   ];
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
-      {/* Elegant Header */}
-      <div className="bg-white border-b border-slate-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-8">
+    <main className="min-h-screen relative overflow-hidden">
+      {/* Animated Gradient Background */}
+      <div className="fixed inset-0 bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50"></div>
+      <div className="fixed inset-0 bg-[radial-gradient(circle_at_top_right,rgba(167,139,250,0.3),transparent_50%)]"></div>
+      <div className="fixed inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(249,168,212,0.3),transparent_50%)]"></div>
+      
+      {/* Floating particles */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-20 w-72 h-72 bg-violet-300/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-fuchsia-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
+        <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-purple-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
+      </div>
+
+      {/* Header */}
+      <div className="relative backdrop-blur-xl bg-white/40 border-b border-white/60 shadow-lg">
+        <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <div className="relative">
-                <div className="w-16 h-16 bg-gradient-to-br from-violet-600 to-purple-700 rounded-2xl flex items-center justify-center shadow-lg shadow-violet-500/30">
-                  <Shield className="w-8 h-8 text-white" strokeWidth={2.5} />
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-3xl blur-xl opacity-75 group-hover:opacity-100 transition-opacity"></div>
+                <div className="relative w-20 h-20 bg-gradient-to-br from-violet-500 via-purple-600 to-fuchsia-600 rounded-3xl flex items-center justify-center shadow-2xl transform group-hover:scale-110 transition-transform">
+                  <Shield className="w-10 h-10 text-white" strokeWidth={2.5} />
                 </div>
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white"></div>
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full border-4 border-white shadow-lg animate-pulse"></div>
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+                <h1 className="text-4xl font-black bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 bg-clip-text text-transparent">
                   Панель администратора
                 </h1>
-                <p className="text-slate-500 mt-1 font-medium">
+                <p className="text-gray-600 mt-1 font-semibold flex items-center gap-2">
+                  <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
                   Kamchatour Hub · Control Center
                 </p>
               </div>
@@ -211,13 +236,13 @@ export default function AdminDashboard() {
             <div className="flex items-center gap-3">
               <button
                 onClick={fetchData}
-                className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all font-semibold border border-slate-200"
+                className="px-6 py-3 backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/80 rounded-2xl transition-all font-bold text-gray-700 shadow-lg hover:shadow-xl transform hover:scale-105"
               >
                 🔄 Обновить
               </button>
               <button
                 onClick={() => router.push('/')}
-                className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl transition-all font-semibold shadow-lg shadow-slate-900/20"
+                className="px-6 py-3 bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white rounded-2xl transition-all font-bold shadow-xl shadow-violet-500/50 hover:shadow-2xl hover:shadow-violet-500/70 transform hover:scale-105"
               >
                 ← Выход
               </button>
@@ -226,69 +251,76 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
-        {/* Elegant Stats Grid */}
+      <div className="relative max-w-7xl mx-auto px-6 py-8 space-y-8">
+        {/* Glass Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {stats.map((stat, index) => {
             const Icon = stat.icon;
             const isPositive = stat.trend === 'up';
-            const isNegative = stat.trend === 'down';
             
             return (
               <div
                 key={index}
-                className="group bg-white rounded-2xl p-6 border border-slate-200 hover:border-slate-300 hover:shadow-xl transition-all duration-300"
+                className="group relative backdrop-blur-2xl bg-white/60 rounded-3xl p-6 border border-white/80 hover:bg-white/80 transition-all duration-500 hover:scale-105 hover:-translate-y-2 shadow-xl hover:shadow-2xl"
               >
-                <div className="flex items-center justify-between mb-4">
-                  <div className={`w-12 h-12 ${stat.bgColor} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                    <Icon className={`w-6 h-6 bg-gradient-to-br ${stat.color} bg-clip-text text-transparent`} strokeWidth={2.5} />
-                  </div>
-                  {stat.change !== '0.0' && (
-                    <div className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold ${
-                      isPositive ? 'bg-emerald-50 text-emerald-700' : 
-                      isNegative ? 'bg-red-50 text-red-700' : 
-                      'bg-slate-50 text-slate-700'
-                    }`}>
-                      {isPositive ? '↑' : isNegative ? '↓' : '→'}
-                      {Math.abs(parseFloat(stat.change))}%
+                {/* Glow effect */}
+                <div className={`absolute inset-0 bg-gradient-to-r ${stat.gradient} rounded-3xl blur-xl opacity-0 group-hover:opacity-30 transition-opacity duration-500`}></div>
+                
+                <div className="relative">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className={`w-14 h-14 bg-gradient-to-br ${stat.gradient} rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-12 transition-all`}>
+                      <Icon className="w-7 h-7 text-white" strokeWidth={2.5} />
                     </div>
-                  )}
+                    {stat.change !== '0.0' && (
+                      <div className={`px-3 py-1.5 rounded-xl text-xs font-bold ${
+                        isPositive ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                      }`}>
+                        {isPositive ? '↑' : '↓'} {Math.abs(parseFloat(stat.change))}%
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-gray-500 text-sm font-semibold mb-2">{stat.label}</p>
+                  <p className="text-3xl font-black bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                    {stat.value}
+                  </p>
                 </div>
-                <p className="text-slate-500 text-sm font-medium mb-1">{stat.label}</p>
-                <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
               </div>
             );
           })}
         </div>
 
-        {/* Top Tours - Elegant Card */}
+        {/* Top Tours - Glass Card */}
         {data.charts.topTours && data.charts.topTours.length > 0 && (
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-6 py-5 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-sm">
-                  <TrendingUp className="w-5 h-5 text-white" strokeWidth={2.5} />
+          <div className="backdrop-blur-2xl bg-white/60 rounded-3xl border border-white/80 shadow-2xl overflow-hidden">
+            <div className="px-8 py-6 bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 border-b border-white/60">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg">
+                  <TrendingUp className="w-7 h-7 text-white" strokeWidth={2.5} />
                 </div>
-                <h2 className="text-xl font-bold text-slate-900">Топ туры</h2>
+                <h2 className="text-2xl font-black bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
+                  Топ туры
+                </h2>
               </div>
             </div>
-            <div className="p-6">
-              <div className="space-y-3">
+            <div className="p-8">
+              <div className="space-y-4">
                 {data.charts.topTours.map((tour, index) => (
                   <div
                     key={tour.id}
-                    className="group flex items-center justify-between p-4 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50 transition-all"
+                    className="group flex items-center justify-between p-5 rounded-2xl backdrop-blur-xl bg-white/50 border border-white/60 hover:bg-white/80 hover:scale-105 transition-all shadow-lg hover:shadow-xl"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-sm">
+                    <div className="flex items-center gap-5">
+                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white font-black text-lg shadow-lg">
                         {index + 1}
                       </div>
                       <div>
-                        <p className="text-slate-900 font-semibold group-hover:text-violet-600 transition-colors">{tour.title}</p>
-                        <p className="text-slate-500 text-sm">{tour.bookings} бронирований</p>
+                        <p className="text-gray-900 font-bold text-lg group-hover:text-violet-600 transition-colors">{tour.title}</p>
+                        <p className="text-gray-500 text-sm">{tour.bookings} бронирований</p>
                       </div>
                     </div>
-                    <p className="text-slate-900 font-bold text-lg">{formatCurrency(tour.revenue)}</p>
+                    <p className="text-2xl font-black bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
+                      {formatCurrency(tour.revenue)}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -296,49 +328,51 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Admin Tools - Premium Grid */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="px-6 py-5 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-slate-700 to-slate-900 rounded-xl flex items-center justify-center shadow-sm">
-                <Wrench className="w-5 h-5 text-white" strokeWidth={2.5} />
+        {/* Admin Tools - Premium Glass Grid */}
+        <div className="backdrop-blur-2xl bg-white/60 rounded-3xl border border-white/80 shadow-2xl overflow-hidden">
+          <div className="px-8 py-6 bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 border-b border-white/60">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-gradient-to-br from-slate-700 to-gray-900 rounded-2xl flex items-center justify-center shadow-lg">
+                <Wrench className="w-7 h-7 text-white" strokeWidth={2.5} />
               </div>
-              <h2 className="text-xl font-bold text-slate-900">Инструменты администратора</h2>
+              <h2 className="text-2xl font-black bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
+                Инструменты администратора
+              </h2>
             </div>
           </div>
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="p-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {adminTools.map((tool, index) => {
                 const Icon = tool.icon;
                 return (
                   <button
                     key={index}
                     onClick={() => router.push(tool.link)}
-                    className="group relative bg-gradient-to-br from-white to-slate-50 rounded-2xl p-6 border border-slate-200 hover:border-slate-300 hover:shadow-xl transition-all duration-300 text-left overflow-hidden"
+                    className="group relative backdrop-blur-xl bg-white/50 rounded-3xl p-8 border border-white/60 hover:bg-white/80 transition-all duration-500 text-left overflow-hidden hover:scale-105 hover:-translate-y-2 shadow-xl hover:shadow-2xl"
                   >
-                    {/* Gradient overlay on hover */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${tool.color} opacity-0 group-hover:opacity-5 transition-opacity`}></div>
+                    {/* Gradient glow on hover */}
+                    <div className={`absolute inset-0 bg-gradient-to-br ${tool.gradient} opacity-0 group-hover:opacity-20 transition-opacity duration-500`}></div>
                     
                     <div className="relative">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className={`w-12 h-12 bg-gradient-to-br ${tool.color} rounded-xl flex items-center justify-center shadow-sm group-hover:scale-110 group-hover:rotate-3 transition-all`}>
-                          <Icon className="w-6 h-6 text-white" strokeWidth={2.5} />
+                      <div className="flex items-start justify-between mb-5">
+                        <div className={`w-16 h-16 bg-gradient-to-br ${tool.gradient} rounded-2xl flex items-center justify-center shadow-xl group-hover:scale-110 group-hover:rotate-6 transition-all`}>
+                          <Icon className="w-8 h-8 text-white" strokeWidth={2.5} />
                         </div>
                         {tool.badge && (
-                          <span className="px-3 py-1 bg-slate-100 text-slate-700 text-xs font-bold rounded-lg">
+                          <span className="px-4 py-2 backdrop-blur-xl bg-white/80 text-gray-700 text-sm font-bold rounded-xl shadow-lg">
                             {tool.badge}
                           </span>
                         )}
                       </div>
-                      <h3 className="text-lg font-bold text-slate-900 mb-1">
+                      <h3 className="text-xl font-black text-gray-900 mb-2">
                         {tool.title}
                       </h3>
-                      <p className="text-slate-500 text-sm mb-4">
+                      <p className="text-gray-600 text-sm mb-5 font-medium">
                         {tool.description}
                       </p>
-                      <div className="flex items-center gap-2 text-slate-400 group-hover:text-violet-600 transition-colors text-sm font-semibold">
+                      <div className="flex items-center gap-2 text-violet-600 group-hover:text-fuchsia-600 transition-colors font-bold">
                         <span>Перейти</span>
-                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                        <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" strokeWidth={3} />
                       </div>
                     </div>
                   </button>
@@ -348,31 +382,33 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Recent Activity - Elegant List */}
+        {/* Recent Activity */}
         {data.recentActivities && data.recentActivities.length > 0 && (
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-6 py-5 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center shadow-sm">
-                  <Clock className="w-5 h-5 text-white" strokeWidth={2.5} />
+          <div className="backdrop-blur-2xl bg-white/60 rounded-3xl border border-white/80 shadow-2xl overflow-hidden">
+            <div className="px-8 py-6 bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 border-b border-white/60">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg">
+                  <Clock className="w-7 h-7 text-white" strokeWidth={2.5} />
                 </div>
-                <h2 className="text-xl font-bold text-slate-900">Последняя активность</h2>
+                <h2 className="text-2xl font-black bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
+                  Последняя активность
+                </h2>
               </div>
             </div>
-            <div className="p-6">
-              <div className="space-y-3">
+            <div className="p-8">
+              <div className="space-y-4">
                 {data.recentActivities.map((activity) => (
                   <div
                     key={activity.id}
-                    className="flex items-center gap-4 p-4 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50 transition-all"
+                    className="flex items-center gap-5 p-5 rounded-2xl backdrop-blur-xl bg-white/50 border border-white/60 hover:bg-white/80 transition-all shadow-lg hover:shadow-xl"
                   >
-                    <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
-                      <CheckCircle className="w-5 h-5 text-emerald-600" strokeWidth={2.5} />
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg">
+                      <CheckCircle className="w-6 h-6 text-white" strokeWidth={2.5} />
                     </div>
                     <div className="flex-1">
-                      <p className="text-slate-900 text-sm font-semibold">{activity.title}</p>
-                      <p className="text-slate-600 text-xs">{activity.description}</p>
-                      <p className="text-slate-400 text-xs mt-1">
+                      <p className="text-gray-900 font-bold">{activity.title}</p>
+                      <p className="text-gray-600 text-sm">{activity.description}</p>
+                      <p className="text-gray-400 text-xs mt-1">
                         {new Date(activity.timestamp).toLocaleString('ru-RU')}
                       </p>
                     </div>
