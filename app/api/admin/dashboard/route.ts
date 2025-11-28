@@ -263,12 +263,35 @@ export async function GET(request: NextRequest) {
     // 7. АЛЕРТЫ (пока заглушка, можно добавить логику позже)
     const alerts: AdminAlert[] = [];
 
+    // 8. ПОДСЧЁТ ОЖИДАЮЩИХ ЗАЯВОК
+    const pendingPartnersQuery = `
+      SELECT COUNT(*) as total
+      FROM partners
+      WHERE is_verified = false
+    `;
+    const pendingPartnersResult = await query(pendingPartnersQuery, []);
+    const pendingPartners = parseInt(pendingPartnersResult.rows[0]?.total || '0');
+
+    const pendingToursQuery = `
+      SELECT COUNT(*) as total
+      FROM tours
+      WHERE is_active = false
+    `;
+    const pendingToursResult = await query(pendingToursQuery, []);
+    const pendingTours = parseInt(pendingToursResult.rows[0]?.total || '0');
+
     // Собираем все данные
     const dashboardData: DashboardData = {
       metrics,
       charts,
       recentActivities,
-      alerts
+      alerts,
+      summary: {
+        period: periodDays,
+        lastUpdated: now
+      },
+      pendingPartners,
+      pendingTours,
     };
 
     return NextResponse.json({

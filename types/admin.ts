@@ -86,6 +86,12 @@ export interface DashboardData {
   charts: DashboardCharts;
   recentActivities: RecentActivity[];
   alerts: AdminAlert[];
+  summary?: {
+    period: number;
+    lastUpdated: Date;
+  };
+  pendingPartners?: number;
+  pendingTours?: number;
 }
 
 // User Management Types

@@ -75,7 +75,7 @@ export default function AdminDashboard() {
       description: 'Модерация контента',
       link: '/hub/admin/content/tours',
       gradient: 'from-emerald-400 via-teal-500 to-cyan-500',
-      badge: null
+      badge: data?.pendingTours && data.pendingTours > 0 ? `${data.pendingTours} ⏳` : null
     },
     {
       icon: Package,
@@ -83,7 +83,7 @@ export default function AdminDashboard() {
       description: 'Верификация',
       link: '/hub/admin/content/partners',
       gradient: 'from-blue-400 via-indigo-500 to-purple-500',
-      badge: null
+      badge: data?.pendingPartners && data.pendingPartners > 0 ? `${data.pendingPartners} ⏳` : null
     },
     {
       icon: FileText,
