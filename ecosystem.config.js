@@ -9,7 +9,7 @@ module.exports = {
       name: 'kamhub-production',
       script: 'node_modules/next/dist/bin/next',
       args: 'start',
-      cwd: '/var/www/kamhub',
+      cwd: '/var/www/kamchatour',
       instances: 'max', // Использовать все CPU cores
       exec_mode: 'cluster',
       watch: false,
@@ -45,7 +45,7 @@ module.exports = {
       name: 'kamhub-dev',
       script: 'node_modules/next/dist/bin/next',
       args: 'dev',
-      cwd: '/var/www/kamhub',
+      cwd: '/var/www/kamchatour',
       instances: 1,
       exec_mode: 'fork',
       watch: ['app', 'components', 'lib', 'contexts'],
@@ -66,10 +66,10 @@ module.exports = {
   deploy: {
     production: {
       user: 'root',
-      host: '5.129.248.224',
+      host: '147.45.158.166',
       ref: 'origin/main',
       repo: 'https://github.com/PosPk/kamhub.git',
-      path: '/var/www/kamhub',
+      path: '/var/www/kamchatour',
       
       'pre-deploy-local': '',
       
