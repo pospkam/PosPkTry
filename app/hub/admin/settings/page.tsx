@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Protected } from '@/components/Protected';
+import { AdminProtected } from '@/components/AdminProtected';
 import { AdminNav } from '@/components/admin/AdminNav';
 import { SystemSettings } from '@/components/admin/Settings/SystemSettings';
 import { EmailTemplatesManager } from '@/components/admin/Settings/EmailTemplatesManager';
@@ -17,7 +17,7 @@ export default function AdminSettings() {
   ];
 
   return (
-    <Protected roles={['admin']}>
+    <AdminProtected>
       <main className="min-h-screen bg-transparent text-white">
         <AdminNav />
 
@@ -63,7 +63,7 @@ export default function AdminSettings() {
           {activeTab === 'email' && <EmailTemplatesManager />}
         </div>
       </main>
-    </Protected>
+    </AdminProtected>
   );
 }
 

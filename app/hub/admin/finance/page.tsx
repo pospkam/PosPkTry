@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Protected } from '@/components/Protected';
+import { AdminProtected } from '@/components/AdminProtected';
 import { AdminNav } from '@/components/admin/AdminNav';
 import { FinanceMetricsGrid } from '@/components/admin/Finance/FinanceMetricsGrid';
 import { RevenueChart } from '@/components/admin/Finance/RevenueChart';
@@ -19,7 +19,7 @@ export default function AdminFinance() {
   ];
 
   return (
-    <Protected roles={['admin']}>
+    <AdminProtected>
       <main className="min-h-screen bg-transparent text-white">
         <AdminNav />
 
@@ -95,7 +95,7 @@ export default function AdminFinance() {
           )}
         </div>
       </main>
-    </Protected>
+    </AdminProtected>
   );
 }
 

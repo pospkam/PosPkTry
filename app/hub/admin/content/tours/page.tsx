@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Protected } from '@/components/Protected';
+import { AdminProtected } from '@/components/AdminProtected';
 import { AdminNav } from '@/components/admin/AdminNav';
 import {
   DataTable,
@@ -202,7 +202,7 @@ export default function ToursManagement() {
   ];
 
   return (
-    <Protected roles={['admin']}>
+    <AdminProtected>
       <main className="min-h-screen bg-transparent text-white">
         <AdminNav />
         
@@ -275,7 +275,7 @@ export default function ToursManagement() {
           )}
         </div>
       </main>
-    </Protected>
+    </AdminProtected>
   );
 }
 
