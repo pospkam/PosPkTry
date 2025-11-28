@@ -197,50 +197,59 @@ export default function AdminDashboard() {
 
   return (
     <main className="min-h-screen relative overflow-hidden">
-      {/* Animated Gradient Background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-violet-900"></div>
-      <div className="fixed inset-0 bg-[radial-gradient(circle_at_top_right,rgba(167,139,250,0.15),transparent_50%)]"></div>
-      <div className="fixed inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(249,168,212,0.15),transparent_50%)]"></div>
+      {/* КАМЧАТКА: Фоновое изображение вулканов */}
+      <div className="fixed inset-0 bg-gradient-to-br from-[#2C1810] via-[#1a2634] to-[#0f1821]"></div>
+      <div 
+        className="fixed inset-0 opacity-20 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: `url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><defs><linearGradient id="volcano" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:%23DC143C;stop-opacity:0.3"/><stop offset="100%" style="stop-color:%23FF4500;stop-opacity:0.1"/></linearGradient></defs><polygon points="200,800 400,200 600,800" fill="url(%23volcano)"/><polygon points="700,800 900,150 1100,800" fill="url(%23volcano)" opacity="0.8"/><circle cx="400" cy="180" r="30" fill="%23FF6347" opacity="0.6"/><circle cx="900" cy="130" r="40" fill="%23FF4500" opacity="0.5"/></svg>')`,
+          filter: 'blur(2px)'
+        }}
+      ></div>
       
-      {/* Floating particles */}
+      {/* Камчатские цвета: охра, лава, океан, мох */}
+      <div className="fixed inset-0 bg-[radial-gradient(circle_at_top_right,rgba(205,133,63,0.15),transparent_50%)]"></div>
+      <div className="fixed inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(30,144,255,0.1),transparent_50%)]"></div>
+      
+      {/* Плавающие частицы - вулканический пепел */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-20 w-72 h-72 bg-violet-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-fuchsia-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
-        <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
+        <div className="absolute top-20 left-20 w-72 h-72 bg-[#CD853F]/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-[#DC143C]/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
+        <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-[#556B2F]/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
       </div>
 
       {/* Header */}
-      <div className="relative backdrop-blur-xl bg-black/30 border-b border-white/20 shadow-2xl">
+      <div className="relative backdrop-blur-xl bg-gradient-to-r from-[#2C1810]/40 via-[#1a2634]/40 to-[#2C1810]/40 border-b border-[#CD853F]/30 shadow-2xl">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
               <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-3xl blur-xl opacity-75 group-hover:opacity-100 transition-opacity"></div>
-                <div className="relative w-20 h-20 bg-gradient-to-br from-violet-500 via-purple-600 to-fuchsia-600 rounded-3xl flex items-center justify-center shadow-2xl transform group-hover:scale-110 transition-transform">
+                <div className="absolute inset-0 bg-gradient-to-r from-[#DC143C] to-[#FF4500] rounded-3xl blur-xl opacity-75 group-hover:opacity-100 transition-opacity"></div>
+                <div className="relative w-20 h-20 bg-gradient-to-br from-[#DC143C] via-[#FF4500] to-[#CD853F] rounded-3xl flex items-center justify-center shadow-2xl transform group-hover:scale-110 transition-transform">
                   <Shield className="w-10 h-10 text-white" strokeWidth={2.5} />
                 </div>
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full border-4 border-white shadow-lg animate-pulse"></div>
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-[#6B8E23] to-[#556B2F] rounded-full border-4 border-[#CD853F] shadow-lg animate-pulse"></div>
               </div>
               <div>
-                <h1 className="text-4xl font-black bg-gradient-to-r from-violet-400 via-purple-400 to-fuchsia-400 bg-clip-text text-transparent">
-                  Панель администратора
+                <h1 className="text-4xl font-black bg-gradient-to-r from-[#CD853F] via-[#DAA520] to-[#FF6347] bg-clip-text text-transparent drop-shadow-lg">
+                  Панель администратора Камчатки
                 </h1>
-                <p className="text-gray-300 mt-1 font-semibold flex items-center gap-2">
-                  <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                  Kamchatour Hub · Control Center
+                <p className="text-[#E8D4B0] mt-1 font-semibold flex items-center gap-2">
+                  <Star className="w-4 h-4 text-[#FF4500] fill-[#FF4500]" />
+                  Kamchatour Hub · Вулканы, Океан, Приключения
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-3">
               <button
                 onClick={fetchData}
-                className="px-6 py-3 backdrop-blur-xl bg-white/10 hover:bg-white/20 border border-white/30 rounded-2xl transition-all font-bold text-white shadow-lg hover:shadow-xl transform hover:scale-105"
+                className="px-6 py-3 backdrop-blur-xl bg-[#556B2F]/20 hover:bg-[#6B8E23]/30 border border-[#CD853F]/50 rounded-2xl transition-all font-bold text-[#E8D4B0] shadow-lg hover:shadow-xl transform hover:scale-105"
               >
                 🔄 Обновить
               </button>
               <button
                 onClick={() => router.push('/')}
-                className="px-6 py-3 bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white rounded-2xl transition-all font-bold shadow-xl shadow-violet-500/50 hover:shadow-2xl hover:shadow-violet-500/70 transform hover:scale-105"
+                className="px-6 py-3 bg-gradient-to-r from-[#DC143C] to-[#FF4500] hover:from-[#FF4500] hover:to-[#FF6347] text-white rounded-2xl transition-all font-bold shadow-xl shadow-[#DC143C]/50 hover:shadow-2xl hover:shadow-[#FF4500]/70 transform hover:scale-105"
               >
                 ← Выход
               </button>
@@ -259,10 +268,10 @@ export default function AdminDashboard() {
             return (
               <div
                 key={index}
-                className="group relative backdrop-blur-2xl bg-black/40 rounded-3xl p-6 border border-white/30 hover:bg-black/50 transition-all duration-500 hover:scale-105 hover:-translate-y-2 shadow-xl hover:shadow-2xl"
+                className="group relative backdrop-blur-2xl bg-gradient-to-br from-[#2C1810]/60 to-[#1a2634]/60 rounded-3xl p-6 border border-[#CD853F]/40 hover:border-[#FF4500]/60 hover:bg-[#2C1810]/70 transition-all duration-500 hover:scale-105 hover:-translate-y-2 shadow-xl hover:shadow-2xl hover:shadow-[#DC143C]/30"
               >
-                {/* Glow effect */}
-                <div className={`absolute inset-0 bg-gradient-to-r ${stat.gradient} rounded-3xl blur-xl opacity-0 group-hover:opacity-40 transition-opacity duration-500`}></div>
+                {/* Glow effect - Камчатка */}
+                <div className={`absolute inset-0 bg-gradient-to-r ${stat.gradient} rounded-3xl blur-xl opacity-0 group-hover:opacity-30 transition-opacity duration-500`}></div>
                 
                 <div className="relative">
                   <div className="flex items-center justify-between mb-4">
