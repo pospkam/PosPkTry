@@ -200,19 +200,19 @@ export default function AdminDashboard() {
   return (
     <main className="min-h-screen relative overflow-hidden">
       {/* Animated Gradient Background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50"></div>
-      <div className="fixed inset-0 bg-[radial-gradient(circle_at_top_right,rgba(167,139,250,0.3),transparent_50%)]"></div>
-      <div className="fixed inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(249,168,212,0.3),transparent_50%)]"></div>
+      <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-violet-900"></div>
+      <div className="fixed inset-0 bg-[radial-gradient(circle_at_top_right,rgba(167,139,250,0.15),transparent_50%)]"></div>
+      <div className="fixed inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(249,168,212,0.15),transparent_50%)]"></div>
       
       {/* Floating particles */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-20 w-72 h-72 bg-violet-300/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-fuchsia-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
-        <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-purple-300/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
+        <div className="absolute top-20 left-20 w-72 h-72 bg-violet-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-fuchsia-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
+        <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
       </div>
 
       {/* Header */}
-      <div className="relative backdrop-blur-xl bg-white/40 border-b border-white/60 shadow-lg">
+      <div className="relative backdrop-blur-xl bg-black/30 border-b border-white/20 shadow-2xl">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
@@ -224,11 +224,11 @@ export default function AdminDashboard() {
                 <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full border-4 border-white shadow-lg animate-pulse"></div>
               </div>
               <div>
-                <h1 className="text-4xl font-black bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 bg-clip-text text-transparent">
+                <h1 className="text-4xl font-black bg-gradient-to-r from-violet-400 via-purple-400 to-fuchsia-400 bg-clip-text text-transparent">
                   Панель администратора
                 </h1>
-                <p className="text-gray-600 mt-1 font-semibold flex items-center gap-2">
-                  <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                <p className="text-gray-300 mt-1 font-semibold flex items-center gap-2">
+                  <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
                   Kamchatour Hub · Control Center
                 </p>
               </div>
@@ -236,7 +236,7 @@ export default function AdminDashboard() {
             <div className="flex items-center gap-3">
               <button
                 onClick={fetchData}
-                className="px-6 py-3 backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/80 rounded-2xl transition-all font-bold text-gray-700 shadow-lg hover:shadow-xl transform hover:scale-105"
+                className="px-6 py-3 backdrop-blur-xl bg-white/10 hover:bg-white/20 border border-white/30 rounded-2xl transition-all font-bold text-white shadow-lg hover:shadow-xl transform hover:scale-105"
               >
                 🔄 Обновить
               </button>
@@ -261,10 +261,10 @@ export default function AdminDashboard() {
             return (
               <div
                 key={index}
-                className="group relative backdrop-blur-2xl bg-white/60 rounded-3xl p-6 border border-white/80 hover:bg-white/80 transition-all duration-500 hover:scale-105 hover:-translate-y-2 shadow-xl hover:shadow-2xl"
+                className="group relative backdrop-blur-2xl bg-black/40 rounded-3xl p-6 border border-white/30 hover:bg-black/50 transition-all duration-500 hover:scale-105 hover:-translate-y-2 shadow-xl hover:shadow-2xl"
               >
                 {/* Glow effect */}
-                <div className={`absolute inset-0 bg-gradient-to-r ${stat.gradient} rounded-3xl blur-xl opacity-0 group-hover:opacity-30 transition-opacity duration-500`}></div>
+                <div className={`absolute inset-0 bg-gradient-to-r ${stat.gradient} rounded-3xl blur-xl opacity-0 group-hover:opacity-40 transition-opacity duration-500`}></div>
                 
                 <div className="relative">
                   <div className="flex items-center justify-between mb-4">
@@ -273,14 +273,14 @@ export default function AdminDashboard() {
                     </div>
                     {stat.change !== '0.0' && (
                       <div className={`px-3 py-1.5 rounded-xl text-xs font-bold ${
-                        isPositive ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                        isPositive ? 'bg-emerald-500/20 text-emerald-300' : 'bg-red-500/20 text-red-300'
                       }`}>
                         {isPositive ? '↑' : '↓'} {Math.abs(parseFloat(stat.change))}%
                       </div>
                     )}
                   </div>
-                  <p className="text-gray-500 text-sm font-semibold mb-2">{stat.label}</p>
-                  <p className="text-3xl font-black bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                  <p className="text-gray-400 text-sm font-semibold mb-2">{stat.label}</p>
+                  <p className="text-3xl font-black text-white">
                     {stat.value}
                   </p>
                 </div>
@@ -307,18 +307,18 @@ export default function AdminDashboard() {
                 {data.charts.topTours.map((tour, index) => (
                   <div
                     key={tour.id}
-                    className="group flex items-center justify-between p-5 rounded-2xl backdrop-blur-xl bg-white/50 border border-white/60 hover:bg-white/80 hover:scale-105 transition-all shadow-lg hover:shadow-xl"
+                    className="group flex items-center justify-between p-5 rounded-2xl backdrop-blur-xl bg-white/10 border border-white/20 hover:bg-white/20 hover:scale-105 transition-all shadow-lg hover:shadow-xl"
                   >
                     <div className="flex items-center gap-5">
                       <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white font-black text-lg shadow-lg">
                         {index + 1}
                       </div>
                       <div>
-                        <p className="text-gray-900 font-bold text-lg group-hover:text-violet-600 transition-colors">{tour.title}</p>
-                        <p className="text-gray-500 text-sm">{tour.bookings} бронирований</p>
+                        <p className="text-white font-bold text-lg group-hover:text-violet-300 transition-colors">{tour.title}</p>
+                        <p className="text-gray-400 text-sm">{tour.bookings} бронирований</p>
                       </div>
                     </div>
-                    <p className="text-2xl font-black bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
+                    <p className="text-2xl font-black bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
                       {formatCurrency(tour.revenue)}
                     </p>
                   </div>
@@ -348,10 +348,10 @@ export default function AdminDashboard() {
                   <button
                     key={index}
                     onClick={() => router.push(tool.link)}
-                    className="group relative backdrop-blur-xl bg-white/50 rounded-3xl p-8 border border-white/60 hover:bg-white/80 transition-all duration-500 text-left overflow-hidden hover:scale-105 hover:-translate-y-2 shadow-xl hover:shadow-2xl"
+                    className="group relative backdrop-blur-xl bg-white/10 rounded-3xl p-8 border border-white/30 hover:bg-white/20 transition-all duration-500 text-left overflow-hidden hover:scale-105 hover:-translate-y-2 shadow-xl hover:shadow-2xl"
                   >
                     {/* Gradient glow on hover */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${tool.gradient} opacity-0 group-hover:opacity-20 transition-opacity duration-500`}></div>
+                    <div className={`absolute inset-0 bg-gradient-to-br ${tool.gradient} opacity-0 group-hover:opacity-30 transition-opacity duration-500`}></div>
                     
                     <div className="relative">
                       <div className="flex items-start justify-between mb-5">
@@ -359,18 +359,18 @@ export default function AdminDashboard() {
                           <Icon className="w-8 h-8 text-white" strokeWidth={2.5} />
                         </div>
                         {tool.badge && (
-                          <span className="px-4 py-2 backdrop-blur-xl bg-white/80 text-gray-700 text-sm font-bold rounded-xl shadow-lg">
+                          <span className="px-4 py-2 backdrop-blur-xl bg-white/20 text-white text-sm font-bold rounded-xl shadow-lg">
                             {tool.badge}
                           </span>
                         )}
                       </div>
-                      <h3 className="text-xl font-black text-gray-900 mb-2">
+                      <h3 className="text-xl font-black text-white mb-2">
                         {tool.title}
                       </h3>
-                      <p className="text-gray-600 text-sm mb-5 font-medium">
+                      <p className="text-gray-300 text-sm mb-5 font-medium">
                         {tool.description}
                       </p>
-                      <div className="flex items-center gap-2 text-violet-600 group-hover:text-fuchsia-600 transition-colors font-bold">
+                      <div className="flex items-center gap-2 text-violet-400 group-hover:text-fuchsia-300 transition-colors font-bold">
                         <span>Перейти</span>
                         <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" strokeWidth={3} />
                       </div>
@@ -400,15 +400,15 @@ export default function AdminDashboard() {
                 {data.recentActivities.map((activity) => (
                   <div
                     key={activity.id}
-                    className="flex items-center gap-5 p-5 rounded-2xl backdrop-blur-xl bg-white/50 border border-white/60 hover:bg-white/80 transition-all shadow-lg hover:shadow-xl"
+                    className="flex items-center gap-5 p-5 rounded-2xl backdrop-blur-xl bg-white/10 border border-white/20 hover:bg-white/20 transition-all shadow-lg hover:shadow-xl"
                   >
                     <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg">
                       <CheckCircle className="w-6 h-6 text-white" strokeWidth={2.5} />
                     </div>
                     <div className="flex-1">
-                      <p className="text-gray-900 font-bold">{activity.title}</p>
-                      <p className="text-gray-600 text-sm">{activity.description}</p>
-                      <p className="text-gray-400 text-xs mt-1">
+                      <p className="text-white font-bold">{activity.title}</p>
+                      <p className="text-gray-300 text-sm">{activity.description}</p>
+                      <p className="text-gray-500 text-xs mt-1">
                         {new Date(activity.timestamp).toLocaleString('ru-RU')}
                       </p>
                     </div>
