@@ -1,207 +1,322 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Protected } from '@/components/Protected';
-import { AdminNav } from '@/components/admin/AdminNav';
-import { LoadingSpinner } from '@/components/admin/shared';
-import { MetricsGrid } from '@/components/admin/Dashboard/MetricsGrid';
-import { RecentActivities } from '@/components/admin/Dashboard/RecentActivities';
-import { SimpleChart } from '@/components/admin/Dashboard/SimpleChart';
-import { DashboardData } from '@/types/admin';
+import React from 'react';
+import { useRouter } from 'next/navigation';
+import { Shield, Users, FileText, DollarSign, Settings, CheckCircle, XCircle, Clock, TrendingUp, Package, Map, Home, Wrench } from 'lucide-react';
 
 export default function AdminDashboard() {
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [period, setPeriod] = useState('30');
+  const router = useRouter();
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, [period]);
+  const stats = [
+    { 
+      icon: Users, 
+      label: 'Всего пользователей', 
+      value: '1,234', 
+      change: '+12%', 
+      color: 'from-blue-400 to-cyan-500' 
+    },
+    { 
+      icon: FileText, 
+      label: 'Активных туров', 
+      value: '87', 
+      change: '+5%', 
+      color: 'from-green-400 to-emerald-500' 
+    },
+    { 
+      icon: DollarSign, 
+      label: 'Выручка (месяц)', 
+      value: '₽2.4M', 
+      change: '+23%', 
+      color: 'from-amber-400 to-orange-500' 
+    },
+    { 
+      icon: CheckCircle, 
+      label: 'Завершённых заказов', 
+      value: '456', 
+      change: '+18%', 
+      color: 'from-purple-400 to-pink-500' 
+    },
+  ];
 
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const response = await fetch(`/api/admin/dashboard?period=${period}`);
-      const result = await response.json();
+  const adminTools = [
+    {
+      icon: Users,
+      title: 'Управление пользователями',
+      description: 'Просмотр, редактирование и блокировка',
+      link: '/hub/admin/users',
+      color: 'from-blue-400 to-cyan-500',
+      badge: '1,234'
+    },
+    {
+      icon: Map,
+      title: 'Модерация туров',
+      description: 'Проверка и одобрение новых туров',
+      link: '/hub/admin/content/tours',
+      color: 'from-green-400 to-emerald-500',
+      badge: '12'
+    },
+    {
+      icon: Package,
+      title: 'Партнёры',
+      description: 'Управление партнёрами платформы',
+      link: '/hub/admin/content/partners',
+      color: 'from-purple-400 to-pink-500',
+      badge: '45'
+    },
+    {
+      icon: FileText,
+      title: 'Модерация отзывов',
+      description: 'Проверка и модерация отзывов',
+      link: '/hub/admin/content/reviews',
+      color: 'from-orange-400 to-red-500',
+      badge: '8'
+    },
+    {
+      icon: DollarSign,
+      title: 'Финансы',
+      description: 'Транзакции, выплаты, статистика',
+      link: '/hub/admin/finance',
+      color: 'from-amber-400 to-yellow-500',
+      badge: '₽2.4M'
+    },
+    {
+      icon: Settings,
+      title: 'Настройки системы',
+      description: 'Конфигурация платформы',
+      link: '/hub/admin/settings',
+      color: 'from-gray-400 to-slate-500',
+      badge: null
+    },
+  ];
 
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to fetch data');
-      }
+  const recentActivity = [
+    { 
+      icon: CheckCircle, 
+      text: 'Новый пользователь зарегистрирован', 
+      time: '5 мин назад', 
+      color: 'text-green-400' 
+    },
+    { 
+      icon: FileText, 
+      text: 'Тур "Вулкан Мутновский" требует модерации', 
+      time: '15 мин назад', 
+      color: 'text-orange-400' 
+    },
+    { 
+      icon: DollarSign, 
+      text: 'Выплата партнёру ₽45,000', 
+      time: '1 час назад', 
+      color: 'text-blue-400' 
+    },
+    { 
+      icon: XCircle, 
+      text: 'Отзыв отклонён (нарушение правил)', 
+      time: '2 часа назад', 
+      color: 'text-red-400' 
+    },
+    { 
+      icon: Users, 
+      text: 'Новый партнёр одобрен', 
+      time: '3 часа назад', 
+      color: 'text-purple-400' 
+    },
+  ];
 
-      setData(result.data);
-    } catch (err) {
-      console.error('Error fetching dashboard data:', err);
-      setError(err instanceof Error ? err.message : 'Unknown error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('ru-RU', {
-      style: 'currency',
-      currency: 'RUB',
-      minimumFractionDigits: 0
-    }).format(value);
-  };
+  const pendingTasks = [
+    { title: 'Туры на модерации', count: 12, color: 'bg-orange-500' },
+    { title: 'Ожидают верификации', count: 8, color: 'bg-blue-500' },
+    { title: 'Жалобы на рассмотрении', count: 3, color: 'bg-red-500' },
+    { title: 'Запросы на выплату', count: 5, color: 'bg-green-500' },
+  ];
 
   return (
-    <Protected roles={['admin']}>
-      <main className="min-h-screen bg-transparent text-white">
-        <AdminNav />
-        
-        {/* Header */}
-        <div className="bg-white/15 border-b border-white/15 p-6">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between">
+    <main className="min-h-screen bg-transparent text-white">
+      {/* Header */}
+      <div className="bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-2xl border-b border-white/20 p-6 shadow-2xl">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-2xl shadow-amber-500/50">
+                <Shield className="w-9 h-9 text-white" strokeWidth={2.5} />
+              </div>
               <div>
-                <h1 className="text-3xl font-black text-white">
-                  Админ-панель
+                <h1 className="text-3xl md:text-4xl font-black text-white">
+                  Панель администратора
                 </h1>
                 <p className="text-white/70 mt-1">
-                  Управление платформой KamHub
+                  Kamchatour Hub Control Center
                 </p>
               </div>
-
-              {/* Period selector */}
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-white/70">Период:</span>
-                <select
-                  value={period}
-                  onChange={(e) => setPeriod(e.target.value)}
-                  className="px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300"
-                >
-                  <option value="7">7 дней</option>
-                  <option value="30">30 дней</option>
-                  <option value="90">90 дней</option>
-                  <option value="365">Год</option>
-                </select>
-                <button
-                  onClick={fetchDashboardData}
-                  className="px-4 py-2 bg-premium-gold text-premium-black rounded-xl font-bold hover:bg-premium-gold/90 transition-colors"
-                >
-                  🔄 Обновить
-                </button>
-              </div>
             </div>
+            <button
+              onClick={() => router.push('/')}
+              className="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl transition-all text-white font-semibold"
+            >
+              ← Назад
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto p-6 space-y-8">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {stats.map((stat, index) => {
+            const Icon = stat.icon;
+            return (
+              <div
+                key={index}
+                className="bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-2xl border border-white/20 rounded-2xl p-6 hover:scale-105 transition-transform shadow-xl"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className={`w-12 h-12 bg-gradient-to-br ${stat.color} rounded-xl flex items-center justify-center shadow-lg`}>
+                    <Icon className="w-6 h-6 text-white" />
+                  </div>
+                  <span className="text-green-400 text-sm font-bold flex items-center gap-1">
+                    <TrendingUp className="w-4 h-4" />
+                    {stat.change}
+                  </span>
+                </div>
+                <p className="text-white/70 text-sm mb-1">{stat.label}</p>
+                <p className="text-3xl font-black text-white">{stat.value}</p>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Pending Tasks */}
+        <div className="bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-2xl border border-white/20 rounded-2xl p-6 shadow-xl">
+          <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+            <Clock className="w-6 h-6" />
+            Требуют внимания
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {pendingTasks.map((task, index) => (
+              <div
+                key={index}
+                className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl p-4 hover:bg-white/15 transition-all"
+              >
+                <div className="flex items-center justify-between">
+                  <p className="text-white/80 text-sm">{task.title}</p>
+                  <div className={`${task.color} text-white text-xs font-bold px-3 py-1 rounded-full`}>
+                    {task.count}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Content */}
-        <div className="max-w-7xl mx-auto p-6">
-          {loading && (
-            <div className="flex items-center justify-center py-20">
-              <LoadingSpinner size="lg" message="Загрузка данных..." />
-            </div>
-          )}
+        {/* Admin Tools Grid */}
+        <div className="bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-2xl border border-white/20 rounded-2xl p-6 shadow-xl">
+          <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+            <Wrench className="w-6 h-6" />
+            Инструменты администратора
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {adminTools.map((tool, index) => {
+              const Icon = tool.icon;
+              return (
+                <button
+                  key={index}
+                  onClick={() => router.push(tool.link)}
+                  className="group bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 rounded-2xl p-6 hover:scale-105 hover:shadow-2xl transition-all text-left"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className={`w-14 h-14 bg-gradient-to-br ${tool.color} rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
+                      <Icon className="w-7 h-7 text-white" strokeWidth={2} />
+                    </div>
+                    {tool.badge && (
+                      <span className="bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full">
+                        {tool.badge}
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="text-lg font-bold text-white mb-2">
+                    {tool.title}
+                  </h3>
+                  <p className="text-white/60 text-sm">
+                    {tool.description}
+                  </p>
+                  <div className="mt-4 text-white/40 group-hover:text-white/80 transition-colors text-sm flex items-center gap-1">
+                    Перейти
+                    <span className="group-hover:translate-x-1 transition-transform">→</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-          {error && (
-            <div className="bg-red-500/20 border border-red-500/50 rounded-2xl p-6 text-center">
-              <div className="text-4xl mb-2">⚠️</div>
-              <h3 className="text-lg font-bold text-red-400 mb-2">Ошибка загрузки</h3>
-              <p className="text-white/70">{error}</p>
-              <button
-                onClick={fetchDashboardData}
-                className="mt-4 px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold transition-colors"
-              >
-                Попробовать снова
-              </button>
-            </div>
-          )}
-
-          {!loading && !error && data && (
-            <div className="space-y-6">
-              {/* Metrics Grid */}
-              <MetricsGrid metrics={data.metrics} />
-
-              {/* Charts Row */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <SimpleChart
-                  title="Выручка по месяцам"
-                  data={data.charts.revenueByMonth.map(point => ({
-                    label: point.date,
-                    value: point.value
-                  }))}
-                  type="line"
-                  valueFormatter={formatCurrency}
-                />
-
-                <SimpleChart
-                  title="Бронирования по категориям"
-                  data={data.charts.bookingsByCategory.map(cat => ({
-                    label: cat.category,
-                    value: cat.value,
-                    color: cat.color
-                  }))}
-                  type="bar"
-                  valueFormatter={(v) => v.toString()}
-                />
-              </div>
-
-              {/* Top Tours */}
-              {data.charts.topTours.length > 0 && (
-                <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
-                  <h3 className="text-lg font-bold text-white mb-4">Топ туры</h3>
-                  <div className="space-y-3">
-                    {data.charts.topTours.map((tour, index) => (
-                      <div
-                        key={tour.id}
-                        className="flex items-center justify-between p-4 bg-white/15 rounded-xl hover:bg-white/10 transition-colors"
-                      >
-                        <div className="flex items-center space-x-4">
-                          <div className="w-8 h-8 rounded-full bg-premium-gold text-premium-black flex items-center justify-center font-bold">
-                            {index + 1}
-                          </div>
-                          <div>
-                            <p className="font-semibold text-white">{tour.title}</p>
-                            <p className="text-sm text-white/60">
-                              {tour.bookings} бронирований
-                            </p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-lg font-bold text-white">
-                            {formatCurrency(tour.revenue)}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
+        {/* Recent Activity */}
+        <div className="bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-2xl border border-white/20 rounded-2xl p-6 shadow-xl">
+          <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+            <Clock className="w-6 h-6" />
+            Последняя активность
+          </h2>
+          <div className="space-y-3">
+            {recentActivity.map((activity, index) => {
+              const Icon = activity.icon;
+              return (
+                <div
+                  key={index}
+                  className="flex items-center gap-4 p-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl hover:bg-white/15 transition-all"
+                >
+                  <div className={`w-10 h-10 rounded-full bg-white/10 flex items-center justify-center ${activity.color}`}>
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-white text-sm">{activity.text}</p>
+                    <p className="text-white/50 text-xs mt-1">{activity.time}</p>
                   </div>
                 </div>
-              )}
-
-              {/* Recent Activities */}
-              <RecentActivities activities={data.recentActivities} />
-
-              {/* Quick Actions */}
-              <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
-                <h3 className="text-lg font-bold text-white mb-4">Быстрые действия</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <button className="p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-center">
-                    <div className="text-3xl mb-2">👥</div>
-                    <p className="text-sm font-semibold">Пользователи</p>
-                  </button>
-                  <button className="p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-center">
-                    <div className="text-3xl mb-2"></div>
-                    <p className="text-sm font-semibold">Туры</p>
-                  </button>
-                  <button className="p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-center">
-                    <div className="text-3xl mb-2">💳</div>
-                    <p className="text-sm font-semibold">Транзакции</p>
-                  </button>
-                  <button className="p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-center">
-                    <div className="text-3xl mb-2">⚙️</div>
-                    <p className="text-sm font-semibold">Настройки</p>
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+              );
+            })}
+          </div>
         </div>
-      </main>
-    </Protected>
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <button
+            onClick={() => router.push('/hub/admin/content/tours')}
+            className="bg-gradient-to-br from-orange-500/20 to-red-500/20 backdrop-blur-xl border border-orange-500/30 rounded-2xl p-6 hover:scale-105 transition-all text-left"
+          >
+            <div className="text-4xl mb-3">⚠️</div>
+            <h3 className="text-lg font-bold text-white mb-2">
+              12 туров на модерации
+            </h3>
+            <p className="text-white/60 text-sm">
+              Требуется проверка и одобрение
+            </p>
+          </button>
+
+          <button
+            onClick={() => router.push('/hub/admin/finance')}
+            className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-xl border border-green-500/30 rounded-2xl p-6 hover:scale-105 transition-all text-left"
+          >
+            <div className="text-4xl mb-3">💰</div>
+            <h3 className="text-lg font-bold text-white mb-2">
+              ₽245,000 к выплате
+            </h3>
+            <p className="text-white/60 text-sm">
+              5 запросов от партнёров
+            </p>
+          </button>
+
+          <button
+            onClick={() => router.push('/hub/admin/settings')}
+            className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-xl border border-blue-500/30 rounded-2xl p-6 hover:scale-105 transition-all text-left"
+          >
+            <div className="text-4xl mb-3">⚙️</div>
+            <h3 className="text-lg font-bold text-white mb-2">
+              Настройки системы
+            </h3>
+            <p className="text-white/60 text-sm">
+              Конфигурация и параметры
+            </p>
+          </button>
+        </div>
+      </div>
+    </main>
   );
 }
