@@ -5,6 +5,7 @@ import { AdminProtected } from '@/components/AdminProtected';
 import { AdminNav } from '@/components/admin/AdminNav';
 import { SystemSettings } from '@/components/admin/Settings/SystemSettings';
 import { EmailTemplatesManager } from '@/components/admin/Settings/EmailTemplatesManager';
+import { Settings, Mail } from 'lucide-react';
 
 type TabType = 'system' | 'email';
 
@@ -12,8 +13,8 @@ export default function AdminSettings() {
   const [activeTab, setActiveTab] = useState<TabType>('system');
 
   const tabs = [
-    { id: 'system' as TabType, name: 'Системные настройки', icon: '⚙️' },
-    { id: 'email' as TabType, name: 'Email шаблоны', icon: '📧' },
+    { id: 'system' as TabType, name: 'Системные настройки', icon: Settings },
+    { id: 'email' as TabType, name: 'Email шаблоны', icon: Mail },
   ];
 
   return (

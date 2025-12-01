@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Shield, Users, FileText, DollarSign, Settings, CheckCircle, Clock, TrendingUp, Package, Map, Wrench, AlertCircle, ArrowRight, Sparkles, Star } from 'lucide-react';
+import { Shield, Users, FileText, DollarSign, Settings, CheckCircle, Clock, TrendingUp, Package, Map, Wrench, AlertCircle, ArrowRight, Sparkles, Star, RefreshCw } from 'lucide-react';
 
 interface Metrics {
   totalRevenue: { value: number; change: number; trend: string };
@@ -75,7 +75,7 @@ export default function AdminDashboard() {
       description: 'Модерация контента',
       link: '/hub/admin/content/tours',
       gradient: 'from-emerald-400 via-teal-500 to-cyan-500',
-      badge: data?.pendingTours && data.pendingTours > 0 ? `${data.pendingTours} ⏳` : null
+      badge: data?.pendingTours && data.pendingTours > 0 ? data.pendingTours : null
     },
     {
       icon: Package,
@@ -83,7 +83,7 @@ export default function AdminDashboard() {
       description: 'Верификация',
       link: '/hub/admin/content/partners',
       gradient: 'from-blue-400 via-indigo-500 to-purple-500',
-      badge: data?.pendingPartners && data.pendingPartners > 0 ? `${data.pendingPartners} ⏳` : null
+      badge: data?.pendingPartners && data.pendingPartners > 0 ? data.pendingPartners : null
     },
     {
       icon: FileText,
@@ -243,9 +243,10 @@ export default function AdminDashboard() {
             <div className="flex items-center gap-3">
               <button
                 onClick={fetchData}
-                className="px-6 py-3 backdrop-blur-xl bg-[#556B2F]/20 hover:bg-[#6B8E23]/30 border border-[#CD853F]/50 rounded-2xl transition-all font-bold text-[#E8D4B0] shadow-lg hover:shadow-xl transform hover:scale-105"
+                className="px-6 py-3 backdrop-blur-xl bg-[#556B2F]/20 hover:bg-[#6B8E23]/30 border border-[#CD853F]/50 rounded-2xl transition-all font-bold text-[#E8D4B0] shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center gap-2"
               >
-                🔄 Обновить
+                <RefreshCw className="w-5 h-5" />
+                Обновить
               </button>
               <button
                 onClick={() => router.push('/')}
