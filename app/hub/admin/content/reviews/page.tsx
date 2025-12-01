@@ -205,7 +205,6 @@ export default function ReviewsManagement() {
             </div>
           ) : reviews.length === 0 ? (
             <EmptyState
-              icon="💬"
               title="Отзывы не найдены"
               description="Отзывов для модерации пока нет"
             />

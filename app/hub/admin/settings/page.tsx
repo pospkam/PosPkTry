@@ -40,20 +40,23 @@ export default function AdminSettings() {
         <div className="bg-white/15 border-b border-white/15">
           <div className="max-w-7xl mx-auto px-6">
             <div className="flex space-x-1">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`px-6 py-4 font-medium transition-all duration-200 flex items-center gap-2 ${
-                    activeTab === tab.id
-                      ? 'bg-premium-gold text-premium-black border-b-2 border-white/15'
-                      : 'text-white/70 hover:bg-white/10 hover:text-white'
-                  }`}
-                >
-                  <span>{tab.icon}</span>
-                  {tab.name}
-                </button>
-              ))}
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`px-6 py-4 font-medium transition-all duration-200 flex items-center gap-2 ${
+                      activeTab === tab.id
+                        ? 'bg-premium-gold text-premium-black border-b-2 border-white/15'
+                        : 'text-white/70 hover:bg-white/10 hover:text-white'
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                    {tab.name}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>

@@ -202,7 +202,6 @@ export default function UsersManagement() {
             </div>
           ) : users.length === 0 ? (
             <EmptyState
-              icon="👥"
               title="Пользователи не найдены"
               description="Попробуйте изменить фильтры или условия поиска"
             />
