@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { clsx } from 'clsx';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export interface PaginationProps {
   currentPage: number;
@@ -61,13 +62,13 @@ export function Pagination({
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
           className={clsx(
-            'px-4 py-2 rounded-lg font-medium transition-colors',
+            'px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-1',
             currentPage === 1
               ? 'bg-white/5 text-white/30 cursor-not-allowed'
               : 'bg-white/10 text-white hover:bg-white/20'
           )}
         >
-          ← Назад
+          <ChevronLeft className="w-4 h-4" /> Назад
         </button>
 
         <div className="flex items-center space-x-1">
@@ -101,13 +102,13 @@ export function Pagination({
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
           className={clsx(
-            'px-4 py-2 rounded-lg font-medium transition-colors',
+            'px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-1',
             currentPage === totalPages
               ? 'bg-white/5 text-white/30 cursor-not-allowed'
               : 'bg-white/10 text-white hover:bg-white/20'
           )}
         >
-          Вперёд →
+          Вперёд <ChevronRight className="w-4 h-4" />
         </button>
       </div>
     </div>

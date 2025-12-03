@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { clsx } from 'clsx';
+import { Check, AlertTriangle, X, Info, Clock, Circle, LucideIcon } from 'lucide-react';
 
 export type StatusType = 
   | 'success' 
@@ -18,54 +19,55 @@ export interface StatusBadgeProps {
   className?: string;
 }
 
-const statusConfig: Record<StatusType, { color: string; bgColor: string; label: string; icon: string }> = {
+const statusConfig: Record<StatusType, { color: string; bgColor: string; label: string; icon: LucideIcon }> = {
   success: {
     color: 'text-green-400',
     bgColor: 'bg-green-500/20',
     label: 'Успешно',
-    icon: '✓'
+    icon: Check
   },
   warning: {
     color: 'text-yellow-400',
     bgColor: 'bg-yellow-500/20',
     label: 'Внимание',
-    icon: '⚠'
+    icon: AlertTriangle
   },
   error: {
     color: 'text-red-400',
     bgColor: 'bg-red-500/20',
     label: 'Ошибка',
-    icon: '✕'
+    icon: X
   },
   info: {
     color: 'text-blue-400',
     bgColor: 'bg-blue-500/20',
     label: 'Инфо',
-    icon: 'ℹ'
+    icon: Info
   },
   pending: {
     color: 'text-orange-400',
     bgColor: 'bg-orange-500/20',
     label: 'Ожидает',
-    icon: '⏱'
+    icon: Clock
   },
   active: {
     color: 'text-green-400',
     bgColor: 'bg-green-500/20',
     label: 'Активен',
-    icon: '●'
+    icon: Circle
   },
   inactive: {
     color: 'text-gray-400',
     bgColor: 'bg-gray-500/20',
     label: 'Неактивен',
-    icon: '○'
+    icon: Circle
   }
 };
 
 export function StatusBadge({ status, label, className }: StatusBadgeProps) {
   const config = statusConfig[status];
   const displayLabel = label || config.label;
+  const Icon = config.icon;
 
   return (
     <span
@@ -76,7 +78,10 @@ export function StatusBadge({ status, label, className }: StatusBadgeProps) {
         className
       )}
     >
-      <span>{config.icon}</span>
+      <Icon className={clsx(
+        'w-3 h-3',
+        status === 'inactive' && 'fill-current'
+      )} />
       <span>{displayLabel}</span>
     </span>
   );

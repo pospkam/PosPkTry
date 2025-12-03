@@ -75,7 +75,6 @@ export function DataTable<T extends { id: string | number }>({
         'bg-white/5 border border-white/10 rounded-2xl p-12 text-center',
         className
       )}>
-        <div className="text-6xl mb-4">📋</div>
         <p className="text-white/70">{emptyMessage}</p>
       </div>
     );

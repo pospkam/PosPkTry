@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { MetricCard } from '../shared/MetricCard';
 import { LoadingSpinner } from '../shared/LoadingSpinner';
+import { Banknote, CreditCard, BarChart3, Users } from 'lucide-react';
 
 interface FinanceMetrics {
   totalTransactions: number;
@@ -75,32 +76,28 @@ export function FinanceMetricsGrid({ period = '30', type = 'all' }: FinanceMetri
       <MetricCard
         title="Общий доход"
         value={`${metrics.totalRevenue.toLocaleString('ru-RU')} ₽`}
-        subtitle={`за ${metrics.period} дней`}
-        icon="💰"
+        icon={<Banknote className="w-6 h-6" />}
         trend={metrics.totalRevenue > 0 ? 'up' : 'neutral'}
       />
 
       <MetricCard
         title="Количество транзакций"
         value={metrics.totalTransactions.toString()}
-        subtitle={`за ${metrics.period} дней`}
-        icon="💳"
+        icon={<CreditCard className="w-6 h-6" />}
         trend={metrics.totalTransactions > 0 ? 'up' : 'neutral'}
       />
 
       <MetricCard
         title="Средний чек"
         value={`${metrics.avgTransaction.toLocaleString('ru-RU')} ₽`}
-        subtitle="на транзакцию"
-        icon="📊"
+        icon={<BarChart3 className="w-6 h-6" />}
         trend={metrics.avgTransaction > 1000 ? 'up' : 'neutral'}
       />
 
       <MetricCard
         title="Уникальных клиентов"
         value={metrics.uniqueCustomers.toString()}
-        subtitle={`за ${metrics.period} дней`}
-        icon="👥"
+        icon={<Users className="w-6 h-6" />}
         trend={metrics.uniqueCustomers > 0 ? 'up' : 'neutral'}
       />
     </div>

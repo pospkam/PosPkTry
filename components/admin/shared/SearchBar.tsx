@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { clsx } from 'clsx';
+import { Search, X } from 'lucide-react';
 
 export interface SearchBarProps {
   placeholder?: string;
@@ -48,7 +49,7 @@ export function SearchBar({
     <div className={clsx('relative', className)}>
       <div className="relative">
         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-          <span className="text-white/50 text-lg">🔍</span>
+          <Search className="w-5 h-5 text-white/50" />
         </div>
         <input
           type="text"
@@ -68,7 +69,7 @@ export function SearchBar({
             onClick={handleClear}
             className="absolute inset-y-0 right-0 pr-4 flex items-center text-white/50 hover:text-white transition-colors"
           >
-            ✕
+            <X className="w-5 h-5" />
           </button>
         )}
       </div>

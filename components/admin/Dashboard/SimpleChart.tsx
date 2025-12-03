@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { clsx } from 'clsx';
+import { BarChart3 } from 'lucide-react';
 
 export interface ChartDataPoint {
   label: string;
@@ -41,7 +42,7 @@ export function SimpleChart({
         <h3 className="text-lg font-bold text-white mb-4">{title}</h3>
         <div className="h-64 flex items-center justify-center text-white/50">
           <div className="text-center">
-            <div className="text-4xl mb-2">📊</div>
+            <BarChart3 className="w-12 h-12 mx-auto mb-2 text-white/30" />
             <p>Нет данных</p>
           </div>
         </div>

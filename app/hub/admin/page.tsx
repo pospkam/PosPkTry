@@ -280,10 +280,10 @@ export default function AdminDashboard() {
                       <Icon className="w-7 h-7 text-white" strokeWidth={2.5} />
                     </div>
                     {stat.change !== '0.0' && (
-                      <div className={`px-3 py-1.5 rounded-xl text-xs font-bold ${
+                      <div className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 ${
                         isPositive ? 'bg-emerald-500/20 text-emerald-300' : 'bg-red-500/20 text-red-300'
                       }`}>
-                        {isPositive ? '↑' : '↓'} {Math.abs(parseFloat(stat.change))}%
+                        {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />} {Math.abs(parseFloat(stat.change))}%
                       </div>
                     )}
                   </div>

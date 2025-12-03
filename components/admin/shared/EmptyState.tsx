@@ -15,7 +15,7 @@ export interface EmptyStateProps {
 }
 
 export function EmptyState({
-  icon = '📋',
+  icon,
   title,
   description,
   action,
@@ -27,9 +27,11 @@ export function EmptyState({
       'bg-white/5 border border-white/10 rounded-2xl',
       className
     )}>
-      <div className="text-6xl mb-4">
-        {typeof icon === 'string' ? icon : icon}
-      </div>
+      {icon && (
+        <div className="mb-4">
+          {typeof icon === 'string' ? <span className="text-6xl">{icon}</span> : icon}
+        </div>
+      )}
       <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
       {description && (
         <p className="text-white/70 text-center mb-6 max-w-md">{description}</p>

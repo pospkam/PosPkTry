@@ -2,13 +2,14 @@
 
 import React from 'react';
 import { clsx } from 'clsx';
+import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 export interface MetricCardProps {
   title: string;
   value: string | number;
   change?: number;
   trend?: 'up' | 'down' | 'neutral';
-  icon?: string;
+  icon?: React.ReactNode;
   loading?: boolean;
   className?: string;
 }
@@ -31,9 +32,9 @@ export function MetricCard({
 
   const getTrendIcon = () => {
     if (!change) return null;
-    if (trend === 'up') return '↑';
-    if (trend === 'down') return '↓';
-    return '→';
+    if (trend === 'up') return <TrendingUp className="w-3 h-3 inline" />;
+    if (trend === 'down') return <TrendingDown className="w-3 h-3 inline" />;
+    return <Minus className="w-3 h-3 inline" />;
   };
 
   if (loading) {
@@ -74,7 +75,7 @@ export function MetricCard({
           </div>
         </div>
         {icon && (
-          <div className="text-4xl opacity-50 group-hover:opacity-100 transition-opacity">
+          <div className="text-premium-gold opacity-50 group-hover:opacity-100 transition-opacity">
             {icon}
           </div>
         )}

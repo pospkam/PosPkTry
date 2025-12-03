@@ -3,18 +3,19 @@
 import React from 'react';
 import { RecentActivity } from '@/types/admin';
 import { clsx } from 'clsx';
+import { Calendar, User, Star, CreditCard, Settings, ClipboardList, LucideIcon } from 'lucide-react';
 
 interface RecentActivitiesProps {
   activities: RecentActivity[];
   loading?: boolean;
 }
 
-const activityIcons: Record<RecentActivity['type'], string> = {
-  booking: '📅',
-  user: '👤',
-  review: '⭐',
-  payment: '💳',
-  system: '⚙️'
+const activityIcons: Record<RecentActivity['type'], LucideIcon> = {
+  booking: Calendar,
+  user: User,
+  review: Star,
+  payment: CreditCard,
+  system: Settings
 };
 
 const activityColors: Record<RecentActivity['type'], string> = {
@@ -63,7 +64,7 @@ export function RecentActivities({ activities, loading = false }: RecentActiviti
       <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
         <h3 className="text-lg font-bold text-white mb-4">Последние активности</h3>
         <div className="text-center py-8 text-white/50">
-          <div className="text-4xl mb-2">📋</div>
+          <ClipboardList className="w-12 h-12 mx-auto mb-2 text-white/30" />
           <p>Пока нет активностей</p>
         </div>
       </div>
@@ -74,44 +75,47 @@ export function RecentActivities({ activities, loading = false }: RecentActiviti
     <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
       <h3 className="text-lg font-bold text-white mb-4">Последние активности</h3>
       <div className="space-y-4">
-        {activities.map((activity) => (
-          <div
-            key={activity.id}
-            className="flex items-start space-x-4 p-3 rounded-xl hover:bg-white/5 transition-colors"
-          >
-            {/* Icon */}
-            <div className={clsx(
-              'w-10 h-10 rounded-full flex items-center justify-center text-xl flex-shrink-0',
-              activityColors[activity.type]
-            )}>
-              {activityIcons[activity.type]}
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-white">
-                    {activity.title}
-                  </p>
-                  <p className="text-xs text-white/70 truncate">
-                    {activity.description}
-                  </p>
-                </div>
-                <span className="text-xs text-white/50 ml-2 flex-shrink-0">
-                  {formatTime(activity.timestamp)}
-                </span>
+        {activities.map((activity) => {
+          const Icon = activityIcons[activity.type];
+          return (
+            <div
+              key={activity.id}
+              className="flex items-start space-x-4 p-3 rounded-xl hover:bg-white/5 transition-colors"
+            >
+              {/* Icon */}
+              <div className={clsx(
+                'w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0',
+                activityColors[activity.type]
+              )}>
+                <Icon className="w-5 h-5" />
               </div>
-              
-              {activity.user && (
-                <div className="flex items-center mt-2 text-xs text-white/60">
-                  <span className="mr-1">👤</span>
-                  {activity.user.name}
+
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-white">
+                      {activity.title}
+                    </p>
+                    <p className="text-xs text-white/70 truncate">
+                      {activity.description}
+                    </p>
+                  </div>
+                  <span className="text-xs text-white/50 ml-2 flex-shrink-0">
+                    {formatTime(activity.timestamp)}
+                  </span>
                 </div>
-              )}
+                
+                {activity.user && (
+                  <div className="flex items-center mt-2 text-xs text-white/60 gap-1">
+                    <User className="w-3 h-3" />
+                    {activity.user.name}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <button className="w-full mt-4 py-2 text-sm text-premium-gold hover:text-premium-gold/80 transition-colors font-medium">
