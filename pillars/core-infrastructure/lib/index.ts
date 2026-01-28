@@ -4,8 +4,8 @@
  * Экспортирует общедоступный API для всех компонентов системы
  * 
  * Использование:
- * import { getUser, checkAuth } from '@core-infrastructure/lib/auth';
- * import { getDatabase } from '@core-infrastructure/lib/database';
+ * import { getUser, checkAuth } from '@/pillars/core-infrastructure-infrastructure/lib/auth';
+ * import { getDatabase } from '@/pillars/core-infrastructure-infrastructure/lib/database';
  */
 
 // ============ AUTH & AUTHORIZATION ============

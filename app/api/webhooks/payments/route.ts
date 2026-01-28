@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { paymentService } from '@booking-pillar'
+import { paymentService } from '@/pillars/booking'
 import crypto from 'crypto'
 
 /**

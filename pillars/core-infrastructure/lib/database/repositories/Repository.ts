@@ -4,7 +4,7 @@
  */
 
 import { PoolClient } from 'pg';
-import { DatabaseService, QueryResult } from '../services/DatabaseService';
+import { DatabaseService, QueryResult } from '@/pillars/core-infrastructure/services/DatabaseService';
 import { BaseEntity, QueryOptions, PaginatedResult } from '../types';
 
 /**

@@ -47,7 +47,7 @@
  *   replayEvents,
  *   DomainEvent,
  *   BookingCreatedEvent,
- * } from '@core-infrastructure/lib/eventbus';
+ * } from '@/pillars/core-infrastructure-infrastructure/lib/eventbus';
  *
  * // Initialize
  * await eventBus.initialize({

@@ -3,10 +3,10 @@
  * Manages SLA policies and violation tracking
  */
 
-import { DatabaseService } from '@core-infrastructure/services/database.service'
-import { CacheService } from '@core-infrastructure/services/cache.service'
-import { EventBusService } from '@core-infrastructure/services/event-bus.service'
-import { MonitoringService } from '@core-infrastructure/services/monitoring.service'
+import { DatabaseService } from '@/pillars/core-infrastructure-infrastructure/services/database.service'
+import { CacheService } from '@/pillars/core-infrastructure-infrastructure/services/cache.service'
+import { EventBusService } from '@/pillars/core-infrastructure-infrastructure/services/event-bus.service'
+import { MonitoringService } from '@/pillars/core-infrastructure-infrastructure/services/monitoring.service'
 import {
   SLAPolicy,
   TicketStatus,

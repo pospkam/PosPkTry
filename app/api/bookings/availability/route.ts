@@ -5,9 +5,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { availabilityService } from '@booking-pillar'
-import { authenticateUser, authorizeRole } from '@core/auth'
-import type { AvailabilitySearch } from '@booking-pillar/lib/availability/types'
+import { availabilityService } from '@/pillars/booking'
+import { authenticateUser, authorizeRole } from '@/pillars/core-infrastructure/services/auth'
+import type { AvailabilitySearch } from '@/pillars/booking/lib/availability/types'
 
 /**
  * GET /api/bookings/availability

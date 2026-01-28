@@ -7,15 +7,15 @@
 import {
   databaseService,
   DatabaseService,
-} from '@core-infrastructure/lib/database';
+} from '@/pillars/core-infrastructure-infrastructure/lib/database';
 import {
   cacheService,
   CacheService,
-} from '@core-infrastructure/lib/cache';
+} from '@/pillars/core-infrastructure-infrastructure/lib/cache';
 import {
   monitoringService,
   MonitoringService,
-} from '@core-infrastructure/lib/monitoring';
+} from '@/pillars/core-infrastructure-infrastructure/lib/monitoring';
 
 import {
   Tour,

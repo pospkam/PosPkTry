@@ -16,7 +16,7 @@
  *
  * @example
  * ```typescript
- * import { monitoring, recordMetric, checkHealth } from '@core-infrastructure/lib/monitoring';
+ * import { monitoring, recordMetric, checkHealth } from '@/pillars/core-infrastructure-infrastructure/lib/monitoring';
  *
  * // Initialize monitoring
  * await monitoring.initialize({

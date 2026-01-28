@@ -4,9 +4,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { tourService } from '@discovery-pillar/lib/tour/services/TourService';
-import { reviewService } from '@discovery-pillar/lib/review/services/ReviewService';
-import { TourNotFoundError } from '@discovery-pillar/lib/tour/types';
+import { tourService } from '@/pillars/discovery/lib/tour/services/TourService';
+import { reviewService } from '@/pillars/discovery/lib/review/services/ReviewService';
+import { TourNotFoundError } from '@/pillars/discovery/lib/tour/types';
 
 // ============================================================================
 // GET - ПОЛУЧИТЬ СТАТИСТИКУ ТУРА

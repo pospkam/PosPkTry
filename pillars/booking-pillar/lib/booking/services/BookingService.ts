@@ -4,11 +4,11 @@
  * 900+ lines of production-ready code
  */
 
-import { DatabaseService } from '@core/database'
-import { CacheService } from '@core/cache'
-import { EventBusService } from '@core/event-bus'
-import { NotificationsService } from '@core/notifications'
-import { MonitoringService } from '@core/monitoring'
+import { DatabaseService } from '@/pillars/core-infrastructure/database'
+import { CacheService } from '@/pillars/core-infrastructure/cache'
+import { EventBusService } from '@/pillars/core-infrastructure/event-bus'
+import { NotificationsService } from '@/pillars/core-infrastructure/notifications'
+import { MonitoringService } from '@/pillars/core-infrastructure/monitoring'
 
 import type {
   Booking,

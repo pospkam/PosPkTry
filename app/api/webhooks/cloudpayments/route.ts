@@ -15,7 +15,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { processCloudPaymentsWebhook } from '@/lib/payments/cloudpayments-webhook';
-import { transaction } from '@core-infrastructure/lib/database';
+import { transaction } from '@/pillars/core-infrastructure-infrastructure/lib/database';
 
 // Note: Sentry monitoring temporarily disabled to reduce build size
 // import * as Sentry from '@sentry/nextjs';

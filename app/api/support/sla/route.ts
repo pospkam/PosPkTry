@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { slaService } from '@support-pillar/services'
+import { slaService } from '@/pillars/support/services'
 
 export async function GET(request: NextRequest) {
   try {

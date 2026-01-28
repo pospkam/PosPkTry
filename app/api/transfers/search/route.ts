@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@core-infrastructure/lib/database';
+import { query } from '@/pillars/core-infrastructure-infrastructure/lib/database';
 import { TransferSearchRequest, TransferSearchResponse, TransferOption, SearchMetadata } from '@/types/transfer';
 import { config } from '@/lib/config';
 

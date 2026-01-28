@@ -505,7 +505,7 @@ export function PremiumSearchBar({ onSearch, placeholder = 'Что ищете?' 
         </div>
       )}
 
-      {/* Suggestions Dropdown */
+      {/* Suggestions Dropdown */}
       {isFocused && (
         <div className="search-dropdown">
           {/* History */}

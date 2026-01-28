@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { availabilityService } from '@booking-pillar'
+import { availabilityService } from '@/pillars/booking'
 
 /**
  * GET /api/bookings/availability/calendar

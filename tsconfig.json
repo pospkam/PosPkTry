@@ -50,6 +50,27 @@
       "@booking/types/*": ["./pillars/booking/types/*"],
       "@booking/services/*": ["./pillars/booking/services/*"],
       
+      "@support/*": ["./pillars/support/*"],
+      "@support/api/*": ["./pillars/support/api/*"],
+      "@support/components/*": ["./pillars/support/components/*"],
+      "@support/lib/*": ["./pillars/support/lib/*"],
+      "@support/types/*": ["./pillars/support/types/*"],
+      "@support/services/*": ["./pillars/support/services/*"],
+      
+      "@partner/*": ["./pillars/partner/*"],
+      "@partner/api/*": ["./pillars/partner/api/*"],
+      "@partner/components/*": ["./pillars/partner/components/*"],
+      "@partner/lib/*": ["./pillars/partner/lib/*"],
+      "@partner/types/*": ["./pillars/partner/types/*"],
+      "@partner/services/*": ["./pillars/partner/services/*"],
+      
+      "@analytics/*": ["./pillars/analytics/*"],
+      "@analytics/api/*": ["./pillars/analytics/api/*"],
+      "@analytics/components/*": ["./pillars/analytics/components/*"],
+      "@analytics/lib/*": ["./pillars/analytics/lib/*"],
+      "@analytics/types/*": ["./pillars/analytics/types/*"],
+      "@analytics/services/*": ["./pillars/analytics/services/*"],
+      
       "@engagement/*": ["./pillars/engagement/*"],
       "@engagement/api/*": ["./pillars/engagement/api/*"],
       "@engagement/components/*": ["./pillars/engagement/components/*"],
@@ -57,29 +78,10 @@
       "@engagement/types/*": ["./pillars/engagement/types/*"],
       "@engagement/services/*": ["./pillars/engagement/services/*"],
       
-      "@partner-pillar/*": ["./pillars/partner-pillar/*"],
-      "@partner-pillar/api/*": ["./pillars/partner-pillar/api/*"],
-      "@partner-pillar/services/*": ["./pillars/partner-pillar/services/*"],
-      "@partner-pillar/types/*": ["./pillars/partner-pillar/types/*"],
-      
-      "@partner-management/*": ["./pillars/partner-management/*"],
-      "@partner-management/api/*": ["./pillars/partner-management/api/*"],
-      "@partner-management/components/*": ["./pillars/partner-management/components/*"],
-      "@partner-management/lib/*": ["./pillars/partner-management/lib/*"],
-      "@partner-management/types/*": ["./pillars/partner-management/types/*"],
-      "@partner-management/services/*": ["./pillars/partner-management/services/*"],
-      
-      "@analytics-pillar/*": ["./pillars/analytics-pillar/*"],
-      "@analytics-pillar/api/*": ["./pillars/analytics-pillar/api/*"],
-      "@analytics-pillar/services/*": ["./pillars/analytics-pillar/services/*"],
-      "@analytics-pillar/types/*": ["./pillars/analytics-pillar/types/*"],
-      
-      "@support-pillar/*": ["./pillars/support-pillar/*"],
-      "@support-pillar/api/*": ["./pillars/support-pillar/api/*"],
-      "@support-pillar/services/*": ["./pillars/support-pillar/services/*"],
-      "@support-pillar/types/*": ["./pillars/support-pillar/types/*"]
+      "@services/*": ["./pillars/core-infrastructure/services/*"],
+      "@types/*": ["./pillars/core-infrastructure/types/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", "kamchatour-hub-business"]
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules"]
 }

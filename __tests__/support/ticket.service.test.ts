@@ -3,8 +3,8 @@
  * Critical business logic tests
  */
 
-import { TicketService } from '../../../pillars/support-pillar/services/ticket.service'
-import { TicketStatus, TicketPriority } from '../../../pillars/support-pillar/types'
+import { TicketService } from '@/pillars/support/services/ticket.service'
+import { TicketStatus, TicketPriority } from '@/pillars/support/types'
 
 // Mock dependencies
 const mockDatabase = {

@@ -7,7 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { searchService } from '@discovery-pillar/lib/tour/services/SearchService';
+import { searchService } from '@/pillars/discovery/lib/tour/services/SearchService';
 
 export async function GET(request: NextRequest) {
   try {

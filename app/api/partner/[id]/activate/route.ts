@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { partnerService } from '@partner-pillar/services'
+import { partnerService } from '@/pillars/partner/services'
 
 export async function POST(
   request: NextRequest,

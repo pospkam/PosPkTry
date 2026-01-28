@@ -3,7 +3,7 @@
 // Kamchatour Hub - Transfer Payment System
 // =============================================
 
-import { query } from '@core-infrastructure/lib/database';
+import { query } from '@/pillars/core-infrastructure-infrastructure/lib/database';
 
 interface PaymentRequest {
   bookingId: string;

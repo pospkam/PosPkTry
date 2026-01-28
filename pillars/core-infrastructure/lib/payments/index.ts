@@ -30,7 +30,7 @@
  *   refundPayment,
  *   getPaymentStatistics,
  *   PaymentRequest,
- * } from '@core-infrastructure/lib/payments';
+ * } from '@/pillars/core-infrastructure-infrastructure/lib/payments';
  *
  * // Initialize with CloudPayments provider
  * await payments.initialize({

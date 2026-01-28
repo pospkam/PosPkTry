@@ -10,7 +10,7 @@ import {
   CreateAgentSchema,
   CreateSLAPolicySchema,
   validateInput,
-} from '../../../lib/validation/support-schemas'
+} from '@/lib/validation/support-schemas'
 
 describe('Support Validation Schemas', () => {
   // ============================================================================

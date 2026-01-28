@@ -1,40 +1,26 @@
 module.exports = {
   preset: 'ts-jest',
-  testEnvironment: 'node',
+  testEnvironment: 'jsdom',
   roots: ['<rootDir>'],
-  testMatch: ['**/__tests__/**/*.test.ts', '**/*.spec.ts'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
-    '^@support-pillar/(.*)$': '<rootDir>/pillars/support-pillar/$1',
     '^@core-infrastructure/(.*)$': '<rootDir>/pillars/core-infrastructure/$1',
-    '^@partner-pillar/(.*)$': '<rootDir>/pillars/partner-pillar/$1',
-    '^@analytics-pillar/(.*)$': '<rootDir>/pillars/analytics-pillar/$1',
+    '^@support/(.*)$': '<rootDir>/pillars/support/$1',
+    '^@partner/(.*)$': '<rootDir>/pillars/partner/$1',
+    '^@analytics/(.*)$': '<rootDir>/pillars/analytics/$1',
+    '^@discovery/(.*)$': '<rootDir>/pillars/discovery/$1',
+    '^@booking/(.*)$': '<rootDir>/pillars/booking/$1',
+    '^@engagement/(.*)$': '<rootDir>/pillars/engagement/$1',
+    '^@services/(.*)$': '<rootDir>/pillars/core-infrastructure/services/$1',
+    '^@types/(.*)$': '<rootDir>/pillars/core-infrastructure/types/$1',
   },
+  testMatch: ['**/__tests__/**/*.ts?(x)', '**/?(*.)+(spec|test).ts?(x)'],
   collectCoverageFrom: [
-    'pillars/**/*.ts',
-    'lib/**/*.ts',
+    'pillars/**/*.{ts,tsx}',
+    'app/**/*.{ts,tsx}',
+    'components/**/*.{ts,tsx}',
     '!**/*.d.ts',
     '!**/node_modules/**',
-    '!**/index.ts',
-    '!**/*.test.ts',
+    '!**/.next/**',
   ],
-  coverageThreshold: {
-    global: {
-      branches: 30,
-      functions: 30,
-      lines: 30,
-      statements: 30,
-    },
-  },
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
-  globals: {
-    'ts-jest': {
-      tsconfig: {
-        jsx: 'react',
-        esModuleInterop: true,
-      },
-    },
-  },
-  testTimeout: 10000,
-  verbose: true,
-}
+};

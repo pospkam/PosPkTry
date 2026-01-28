@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@core-infrastructure/lib/database';
+import { query } from '@/pillars/core-infrastructure-infrastructure/lib/database';
 import { DashboardData, DashboardMetrics, DashboardCharts, RecentActivity, AdminAlert } from '@/types/admin';
 import { ApiResponse } from '@/types';
 

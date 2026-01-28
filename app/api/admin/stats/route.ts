@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse } from '@/types';
 import { requireAdmin } from '@/lib/auth/check-admin';
-import { query } from '@core-infrastructure/lib/database';
-import { monitoringService } from '@core-infrastructure/lib/monitoring';
+import { query } from '@/pillars/core-infrastructure-infrastructure/lib/database';
+import { monitoringService } from '@/pillars/core-infrastructure-infrastructure/lib/monitoring';
 
 // GET /api/admin/stats - Получение статистики для админ-панели
 export async function GET(request: NextRequest) {

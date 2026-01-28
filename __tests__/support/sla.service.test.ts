@@ -3,8 +3,8 @@
  * Critical SLA violation detection
  */
 
-import { SLAService } from '../../../pillars/support-pillar/services/sla.service'
-import { TicketStatus } from '../../../pillars/support-pillar/types'
+import { SLAService } from '@/pillars/support/services/sla.service'
+import { TicketStatus } from '@/pillars/support/types'
 
 const mockDatabase = {
   query: jest.fn(),
@@ -84,7 +84,7 @@ describe('SLAService', () => {
           expect.objectContaining({
             type: 'FIRST_RESPONSE_SLA',
           })
-        )
+        ])
       )
       expect(mockEventBus.publish).toHaveBeenCalledWith(
         'sla.violation_detected',
@@ -134,7 +134,7 @@ describe('SLAService', () => {
           expect.objectContaining({
             type: 'RESOLUTION_SLA',
           })
-        )
+        ])
       )
     })
 

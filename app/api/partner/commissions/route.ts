@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { commissionService } from '@partner-pillar/services'
+import { commissionService } from '@/pillars/partner/services'
 
 export async function GET(request: NextRequest) {
   try {

@@ -4,11 +4,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { reviewService } from '@discovery-pillar/lib/review/services/ReviewService';
+import { reviewService } from '@/pillars/discovery/lib/review/services/ReviewService';
 import {
   ReviewValidationError,
   DuplicateReviewError,
-} from '@discovery-pillar/lib/review/types';
+} from '@/pillars/discovery/lib/review/types';
 
 // ============================================================================
 // POST - СОЗДАТЬ НОВЫЙ ОТЗЫВ

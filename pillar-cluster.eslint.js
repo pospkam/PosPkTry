@@ -64,7 +64,7 @@ module.exports = {
  * ПРАВИЛА ИМПОРТА:
  * 
  * ✅ ПРАВИЛЬНО:
- * - import { getAuth } from '@core-infrastructure/lib/auth';
+ * - import { getAuth } from '@/pillars/core-infrastructure-infrastructure/lib/auth';
  * - import { Tour } from '@discovery/types';
  * - const response = await fetch('/api/discovery/tours');
  * - eventBus.on('discovery:tour_updated', handler);

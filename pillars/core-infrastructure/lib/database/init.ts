@@ -8,7 +8,7 @@
  * - Health monitoring
  * 
  * Usage:
- * import { initializeDatabase } from '@core-infrastructure/lib/database'
+ * import { initializeDatabase } from '@/pillars/core-infrastructure-infrastructure/lib/database'
  * 
  * // In app startup
  * await initializeDatabase()
@@ -25,7 +25,7 @@ import { database } from './services/DatabaseService';
  * 
  * @example
  * // In middleware.ts or app initialization
- * import { initializeDatabase } from '@core-infrastructure/lib/database'
+ * import { initializeDatabase } from '@/pillars/core-infrastructure-infrastructure/lib/database'
  * 
  * export const middleware = async () => {
  *   await initializeDatabase()

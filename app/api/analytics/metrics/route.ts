@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { metricsService } from '@analytics-pillar/services'
+import { metricsService } from '@/pillars/analytics/services'
 
 export async function GET(request: NextRequest) {
   try {

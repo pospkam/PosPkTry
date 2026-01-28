@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { messagingService } from '@engagement-pillar/lib/messaging/services'
+import { messagingService } from '@/pillars/engagement/lib/messaging/services'
 import { verifyAuth } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {

@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { feedbackService } from '@support-pillar/services'
+import { feedbackService } from '@/pillars/support/services'
 
 export async function GET(request: NextRequest) {
   try {

@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { wishlistService } from '@engagement-pillar/lib/wishlist/services'
+import { wishlistService } from '@/pillars/engagement/lib/wishlist/services'
 import { verifyAuth } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {

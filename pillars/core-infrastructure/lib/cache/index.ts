@@ -16,7 +16,7 @@
  *   CacheService,
  *   get, set, deleteKey, clearCache,
  *   CacheKey, CacheValue, CacheOptions, CacheStats
- * } from '@core-infrastructure/lib/cache'
+ * } from '@/pillars/core-infrastructure-infrastructure/lib/cache'
  *
  * // Initialize
  * await cache.initialize()
