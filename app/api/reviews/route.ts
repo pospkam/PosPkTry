@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse, Review } from '@/types';
-import { query } from '@/lib/database';
+import { query } from '@core-infrastructure/lib/database';
 
 // GET /api/reviews - Получение отзывов (для тура, оператора и т.д.)
 export async function GET(request: NextRequest) {

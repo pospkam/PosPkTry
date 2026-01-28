@@ -1,0 +1,396 @@
+/api/support/tickets:
+  get:
+    summary: Get all support tickets
+    description: Retrieve a paginated list of all support tickets with optional filtering
+    operationId: getAllTickets
+    tags:
+      - Tickets
+    parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          default: 1
+        description: Page number
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          default: 20
+        description: Number of items per page
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum: [open, in_progress, resolved, closed]
+        description: Filter by status
+      - name: priority
+        in: query
+        schema:
+          type: string
+          enum: [low, medium, high, critical]
+        description: Filter by priority
+    responses:
+      200:
+        description: List of tickets retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaginatedResponse'
+      400:
+        $ref: '#/components/responses/BadRequest'
+      401:
+        $ref: '#/components/responses/Unauthorized'
+
+  post:
+    summary: Create a new support ticket
+    description: Create a new support ticket with the provided information
+    operationId: createTicket
+    tags:
+      - Tickets
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - subject
+              - description
+              - customerEmail
+            properties:
+              subject:
+                type: string
+                example: Проблема с оплатой
+              description:
+                type: string
+                example: Не проходит оплата картой
+              customerId:
+                type: integer
+              customerEmail:
+                type: string
+                format: email
+                example: customer@example.com
+              priorityLevel:
+                type: string
+                enum: [low, medium, high, critical]
+                default: medium
+              serviceType:
+                type: string
+                example: payment
+    responses:
+      201:
+        description: Ticket created successfully
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Ticket'
+      400:
+        $ref: '#/components/responses/BadRequest'
+      401:
+        $ref: '#/components/responses/Unauthorized'
+
+/api/support/tickets/{ticketId}:
+  get:
+    summary: Get a specific ticket
+    description: Retrieve detailed information about a specific support ticket
+    operationId: getTicketById
+    tags:
+      - Tickets
+    parameters:
+      - name: ticketId
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: Ticket ID
+    responses:
+      200:
+        description: Ticket retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Ticket'
+      404:
+        $ref: '#/components/responses/NotFound'
+      401:
+        $ref: '#/components/responses/Unauthorized'
+
+  patch:
+    summary: Update a ticket
+    description: Update the status, priority, or other details of a support ticket
+    operationId: updateTicket
+    tags:
+      - Tickets
+    parameters:
+      - name: ticketId
+        in: path
+        required: true
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                enum: [open, in_progress, resolved, closed]
+              priorityLevel:
+                type: string
+                enum: [low, medium, high, critical]
+              resolutionNotes:
+                type: string
+    responses:
+      200:
+        description: Ticket updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Ticket'
+      404:
+        $ref: '#/components/responses/NotFound'
+      401:
+        $ref: '#/components/responses/Unauthorized'
+
+  delete:
+    summary: Delete a ticket
+    description: Delete a support ticket (soft delete)
+    operationId: deleteTicket
+    tags:
+      - Tickets
+    parameters:
+      - name: ticketId
+        in: path
+        required: true
+        schema:
+          type: integer
+    responses:
+      204:
+        description: Ticket deleted successfully
+      404:
+        $ref: '#/components/responses/NotFound'
+      401:
+        $ref: '#/components/responses/Unauthorized'
+
+/api/support/tickets/{ticketId}/messages:
+  get:
+    summary: Get ticket messages
+    description: Retrieve all messages for a specific ticket
+    operationId: getTicketMessages
+    tags:
+      - Tickets
+    parameters:
+      - name: ticketId
+        in: path
+        required: true
+        schema:
+          type: integer
+    responses:
+      200:
+        description: Messages retrieved successfully
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/TicketMessage'
+
+  post:
+    summary: Add message to ticket
+    description: Add a new message to a support ticket
+    operationId: addTicketMessage
+    tags:
+      - Tickets
+    parameters:
+      - name: ticketId
+        in: path
+        required: true
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - content
+              - senderType
+              - senderId
+            properties:
+              content:
+                type: string
+              senderType:
+                type: string
+                enum: [agent, customer, system]
+              senderId:
+                type: integer
+    responses:
+      201:
+        description: Message added successfully
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TicketMessage'
+
+/api/support/knowledge-base/search:
+  get:
+    summary: Search knowledge base
+    description: Search for articles in the knowledge base
+    operationId: searchKnowledgeBase
+    tags:
+      - Knowledge Base
+    parameters:
+      - name: q
+        in: query
+        required: true
+        schema:
+          type: string
+        description: Search query
+      - name: category
+        in: query
+        schema:
+          type: string
+        description: Filter by category
+      - name: page
+        in: query
+        schema:
+          type: integer
+          default: 1
+    responses:
+      200:
+        description: Search results retrieved successfully
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                articles:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/KnowledgeBaseArticle'
+                total:
+                  type: integer
+                executionTime:
+                  type: integer
+
+/api/support/knowledge-base/articles/{articleId}:
+  get:
+    summary: Get article details
+    description: Retrieve detailed information about a specific article
+    operationId: getArticle
+    tags:
+      - Knowledge Base
+    parameters:
+      - name: articleId
+        in: path
+        required: true
+        schema:
+          type: integer
+    responses:
+      200:
+        description: Article retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KnowledgeBaseArticle'
+      404:
+        $ref: '#/components/responses/NotFound'
+
+/api/support/knowledge-base/articles/{articleId}/stats:
+  get:
+    summary: Get article statistics
+    description: Retrieve view and engagement statistics for an article
+    operationId: getArticleStats
+    tags:
+      - Knowledge Base
+    parameters:
+      - name: articleId
+        in: path
+        required: true
+        schema:
+          type: integer
+    responses:
+      200:
+        description: Statistics retrieved successfully
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                views:
+                  type: integer
+                helpful_votes:
+                  type: integer
+                unhelpful_votes:
+                  type: integer
+                average_rating:
+                  type: number
+
+/api/support/sla/violations:
+  get:
+    summary: Get SLA violations
+    description: Retrieve tickets with SLA violations
+    operationId: getSLAViolations
+    tags:
+      - Tickets
+    responses:
+      200:
+        description: SLA violations retrieved successfully
+
+/api/support/sla/violations/{ticketId}:
+  get:
+    summary: Check SLA violation for ticket
+    description: Check if a specific ticket has violated SLA
+    operationId: checkSLAViolation
+    tags:
+      - Tickets
+    parameters:
+      - name: ticketId
+        in: path
+        required: true
+        schema:
+          type: integer
+    responses:
+      200:
+        description: SLA check completed
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                violated:
+                  type: boolean
+                violationType:
+                  type: string
+                violationTime:
+                  type: string
+                  format: date-time
+
+/health:
+  get:
+    summary: Health check
+    description: Check API health status
+    operationId: healthCheck
+    tags:
+      - Health
+    security: []
+    responses:
+      200:
+        description: API is healthy
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [ok, healthy]
+                timestamp:
+                  type: string
+                  format: date-time
+                version:
+                  type: string

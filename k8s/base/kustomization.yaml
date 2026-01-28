@@ -1,0 +1,21 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: kamhub
+
+resources:
+- namespace.yaml
+- secrets.yaml
+- configmap.yaml
+- database.yaml
+- deployment.yaml
+- ingress.yaml
+- monitoring.yaml
+
+commonLabels:
+  managed-by: kustomize
+  platform: kamhub
+
+commonAnnotations:
+  kustomize.config.k8s.io/needs-hash: "true"
+  docs: "https://kamhub.com/docs"

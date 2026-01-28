@@ -13,7 +13,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/database';
+import { query } from '@core-infrastructure/lib/database';
 import { z } from 'zod';
 import { emailService } from '@/lib/notifications/email-service';
 

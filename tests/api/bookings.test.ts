@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { GET, POST } from '@/app/api/bookings/route';
-import { query } from '@/lib/database';
+import { query } from '@core-infrastructure/lib/database';
 import { createMockRequest, createMockQueryResult, mockBooking, mockTour, mockUser } from '../helpers/mock-data';
 
 // Получаем мокированную функцию query

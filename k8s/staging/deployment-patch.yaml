@@ -1,0 +1,203 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kamhub-api
+  namespace: kamhub-staging
+spec:
+  replicas: 2  # Less than production (which has 3)
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  
+  template:
+    spec:
+      # Staging: no strict pod affinity
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 50
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - kamhub-api
+                topologyKey: kubernetes.io/hostname
+      
+      containers:
+      - name: api
+        image: registry.kamhub.com/kamhub:v1.0.0-staging
+        imagePullPolicy: Always
+        
+        ports:
+        - containerPort: 3000
+          name: http
+          protocol: TCP
+        - containerPort: 9090
+          name: metrics
+          protocol: TCP
+        
+        # Environment variables for staging
+        env:
+        - name: NODE_ENV
+          value: staging
+        - name: LOG_LEVEL
+          value: debug
+        - name: SENTRY_DSN
+          valueFrom:
+            secretKeyRef:
+              name: kamhub-secrets-staging
+              key: sentry-dsn
+        - name: DATADOG_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: kamhub-secrets-staging
+              key: datadog-api-key
+        - name: CLOUDPAYMENTS_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: kamhub-secrets-staging
+              key: cloudpayments-api-key
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: kamhub-secrets-staging
+              key: jwt-secret
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: kamhub-secrets-staging
+              key: database-url
+        
+        # Staging: relaxed resource limits
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        
+        # Startup probe - wait for app to be ready
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 5
+          failureThreshold: 30
+        
+        # Liveness probe - restart if unhealthy
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        # Readiness probe - traffic only if ready
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 2
+          failureThreshold: 2
+        
+        # Logging configuration
+        volumeMounts:
+        - name: logs
+          mountPath: /app/logs
+        
+        # Security context
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - ALL
+      
+      # Pod-level security context
+      securityContext:
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      
+      # Service account for staging
+      serviceAccountName: kamhub-staging
+      
+      # Image pull secrets
+      imagePullSecrets:
+      - name: registry-credentials
+      
+      # Volumes
+      volumes:
+      - name: logs
+        emptyDir: {}
+
+---
+# HorizontalPodAutoscaler for staging
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: kamhub-api-hpa
+  namespace: kamhub-staging
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: kamhub-api
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 15
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+      - type: Pods
+        value: 2
+        periodSeconds: 15
+      selectPolicy: Max
+
+---
+# PodDisruptionBudget for staging
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: kamhub-api-pdb
+  namespace: kamhub-staging
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: kamhub-api

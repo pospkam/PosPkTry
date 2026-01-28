@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse } from '@/types';
 import { requireAdmin } from '@/lib/auth/check-admin';
-import { query } from '@/lib/database';
+import { query } from '@core-infrastructure/lib/database';
+import { monitoringService } from '@core-infrastructure/lib/monitoring';
 
 // GET /api/admin/stats - Получение статистики для админ-панели
 export async function GET(request: NextRequest) {
@@ -64,9 +65,9 @@ export async function GET(request: NextRequest) {
       // Системные метрики
       system: {
         uptime: Math.round(process.uptime() / 3600 * 100) / 100, // Часы работы
-        avgResponseTime: 145, // TODO: Интегрировать с APM
-        errorRate: 0.2, // TODO: Интегрировать с Sentry
-        activeConnections: 234, // TODO: Получать из PM2 metrics
+        avgResponseTime: await getAverageResponseTime(), // Получаем из мониторинга
+        errorRate: await getErrorRate(), // Получаем из Sentry
+        activeConnections: await getActiveConnections(), // Получаем из PM2 metrics
       },
     };
 
@@ -173,6 +174,59 @@ async function getTopOperators() {
     revenue: parseFloat(row.revenue),
     bookings: parseInt(row.bookings),
   }));
+}
+
+// Получение среднего времени ответа от мониторинга
+async function getAverageResponseTime(): Promise<number> {
+  try {
+    const metrics = monitoringService.getMetrics();
+    if (metrics.length === 0) return 0;
+    
+    const responseTimes = metrics
+      .filter(m => m.type === 'http_request')
+      .map(m => m.duration || 0);
+    
+    if (responseTimes.length === 0) return 0;
+    return Math.round(
+      responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length
+    );
+  } catch {
+    return 0;
+  }
+}
+
+// Получение коэффициента ошибок
+async function getErrorRate(): Promise<number> {
+  try {
+    const metrics = monitoringService.getMetrics();
+    if (metrics.length === 0) return 0;
+    
+    const totalRequests = metrics.filter(m => m.type === 'http_request').length;
+    const errorRequests = metrics.filter(
+      m => m.type === 'http_request' && m.statusCode && m.statusCode >= 400
+    ).length;
+    
+    if (totalRequests === 0) return 0;
+    return Math.round((errorRequests / totalRequests) * 100) / 100;
+  } catch {
+    return 0;
+  }
+}
+
+// Получение количества активных соединений
+async function getActiveConnections(): Promise<number> {
+  try {
+    // Получаем количество активных сессий из БД
+    const result = await query(`
+      SELECT COUNT(*) as count
+      FROM sessions
+      WHERE expires_at > NOW()
+    `);
+    
+    return parseInt(result.rows[0]?.count || '0');
+  } catch {
+    return 0;
+  }
 }
 
 

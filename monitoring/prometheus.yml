@@ -1,0 +1,53 @@
+# Prometheus Configuration for KamHub Monitoring
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'kamhub-monitor'
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+rule_files:
+  - 'alert_rules.yml'
+
+scrape_configs:
+  # ============================================================================
+  # Application Metrics (Next.js with prom-client)
+  # ============================================================================
+  - job_name: 'kamhub-app'
+    static_configs:
+      - targets: ['app:3000']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'kamhub-app'
+
+  # ============================================================================
+  # PostgreSQL Exporter
+  # ============================================================================
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres:5432']
+    metrics_path: '/metrics'
+
+  # ============================================================================
+  # Redis Exporter
+  # ============================================================================
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    metrics_path: '/metrics'
+
+  # ============================================================================
+  # Prometheus Self-Monitoring
+  # ============================================================================
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

@@ -1,0 +1,83 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kamhub-config
+  namespace: kamhub
+data:
+  NODE_ENV: "production"
+  LOG_LEVEL: "info"
+  PORT: "3000"
+  CORS_ORIGIN: "https://kamhub.com,https://www.kamhub.com"
+  API_URL: "https://api.kamhub.com"
+  RATE_LIMIT_WINDOW_MS: "900000"
+  RATE_LIMIT_MAX_REQUESTS: "100"
+  SESSION_TIMEOUT_MINUTES: "60"
+  PASSWORD_MIN_LENGTH: "8"
+  MAX_UPLOAD_SIZE_MB: "50"
+  DATABASE_POOL_MIN: "5"
+  DATABASE_POOL_MAX: "20"
+  CACHE_TTL_SECONDS: "3600"
+  SLA_RESPONSE_TIME_LOW_HOURS: "48"
+  SLA_RESPONSE_TIME_MEDIUM_HOURS: "24"
+  SLA_RESPONSE_TIME_HIGH_HOURS: "4"
+  SLA_RESPONSE_TIME_CRITICAL_HOURS: "1"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kamhub-config-staging
+  namespace: kamhub-staging
+data:
+  NODE_ENV: "staging"
+  LOG_LEVEL: "debug"
+  PORT: "3000"
+  CORS_ORIGIN: "https://staging.kamhub.com"
+  API_URL: "https://staging-api.kamhub.com"
+  RATE_LIMIT_WINDOW_MS: "900000"
+  RATE_LIMIT_MAX_REQUESTS: "200"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: kamhub
+data:
+  nginx.conf: |
+    upstream api_backend {
+      least_conn;
+      server kamhub-api-0:3000;
+      server kamhub-api-1:3000;
+      server kamhub-api-2:3000;
+    }
+    
+    server {
+      listen 80;
+      server_name _;
+      client_max_body_size 50M;
+      
+      # Security headers
+      add_header X-Frame-Options "SAMEORIGIN" always;
+      add_header X-Content-Type-Options "nosniff" always;
+      add_header X-XSS-Protection "1; mode=block" always;
+      add_header Referrer-Policy "no-referrer-when-downgrade" always;
+      add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';" always;
+      
+      # Gzip compression
+      gzip on;
+      gzip_types text/plain text/css text/xml text/javascript application/json application/javascript application/xml+rss;
+      gzip_min_length 1000;
+      
+      location / {
+        proxy_pass http://api_backend;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+      }
+    }

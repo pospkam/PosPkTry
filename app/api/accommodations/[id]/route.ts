@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/database';
+import { query } from '@core-infrastructure/lib/database';
 
 export const dynamic = 'force-dynamic';
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/database';
+import { query } from '@core-infrastructure/lib/database';
 import { AdminUser } from '@/types/admin';
 import { ApiResponse, PaginatedResponse } from '@/types';
 
@@ -10,6 +10,23 @@ export const dynamic = 'force-dynamic';
  * Получение списка пользователей с фильтрацией и пагинацией
  */
 export async function GET(request: NextRequest) {
+  // Проверка прав администратора
+  const userId = request.headers.get('x-user-id');
+  const userRole = request.headers.get('x-user-role');
+  
+  if (!userId) {
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized' },
+      { status: 401 }
+    );
+  }
+  
+  if (userRole !== 'admin') {
+    return NextResponse.json(
+      { success: false, error: 'Forbidden: admin access required' },
+      { status: 403 }
+    );
+  }
   try {
     // TODO: Add authentication check here
     // const userOrResponse = await requireAdmin(request);

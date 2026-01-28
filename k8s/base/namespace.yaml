@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kamhub
+  labels:
+    name: kamhub
+    environment: production
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kamhub-staging
+  labels:
+    name: kamhub-staging
+    environment: staging

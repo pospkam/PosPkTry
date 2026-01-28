@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/database';
+import { query } from '@core-infrastructure/lib/database';
 import { ApiResponse, PaginatedResponse } from '@/types';
 import { OperatorBooking } from '@/types/operator';
 

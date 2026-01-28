@@ -1,94 +1,177 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
+  # ============================================================================
+  # PostgreSQL Database with PostGIS (enhanced from KamChatour)
+  # ============================================================================
   postgres:
     image: postgis/postgis:15-3.3-alpine
-    container_name: kamchatour-db
+    container_name: kamhub-db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: kamchatour
+      POSTGRES_DB: kamhub
       POSTGRES_USER: kamuser
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-kampass2024}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-kampass2024_local}
       PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_INITDB_ARGS: '-c shared_preload_libraries=pg_trgm'
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./lib/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
-      - ./lib/database/transfer_schema.sql:/docker-entrypoint-initdb.d/02-transfer.sql:ro
-      - ./lib/database/loyalty_schema.sql:/docker-entrypoint-initdb.d/03-loyalty.sql:ro
-      - ./lib/database/seat_holds_schema.sql:/docker-entrypoint-initdb.d/04-seat-holds.sql:ro
+      - ./migrations:/docker-entrypoint-initdb.d:ro
     ports:
-      - "5432:5432"
+      - '5432:5432'
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U kamuser -d kamchatour"]
+      test: ['CMD-SHELL', 'pg_isready -U kamuser -d kamhub']
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - kamhub_network
 
+  # ============================================================================
   # Next.js Application
+  # ============================================================================
   app:
     build: 
       context: .
       dockerfile: Dockerfile
-    container_name: kamchatour-app
+    container_name: kamhub-app
     restart: unless-stopped
     ports:
-      - "3002:3002"
+      - '3000:3000'
     environment:
       # Database
-      DATABASE_URL: postgresql://kamuser:${DB_PASSWORD:-kampass2024}@postgres:5432/kamchatour
-      DATABASE_SSL: "false"
-      DATABASE_MAX_CONNECTIONS: "20"
+      DATABASE_URL: postgresql://kamuser:${DB_PASSWORD:-kampass2024_local}@postgres:5432/kamhub
+      DATABASE_SSL: 'false'
+      DATABASE_MAX_CONNECTIONS: '20'
+      
+      # Redis
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_password_local}@redis:6379
       
       # Application
-      NODE_ENV: production
-      NEXT_PUBLIC_APP_URL: ${APP_URL:-http://localhost:3002}
+      NODE_ENV: development
+      NEXT_PUBLIC_APP_URL: ${APP_URL:-http://localhost:3000}
+      LOG_LEVEL: debug
       
       # Security
       JWT_SECRET: ${JWT_SECRET:-change-this-secret-in-production-12345678}
-      JWT_EXPIRES_IN: "7d"
-      
-      # AI APIs (optional)
-      GROQ_API_KEY: ${GROQ_API_KEY:-}
-      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
-      
-      # Payments (optional)
-      CLOUDPAYMENTS_PUBLIC_ID: ${CLOUDPAYMENTS_PUBLIC_ID:-}
-      CLOUDPAYMENTS_API_SECRET: ${CLOUDPAYMENTS_API_SECRET:-}
-      
-      # Monitoring (optional)
-      SENTRY_DSN: ${SENTRY_DSN:-}
-      NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
+      JWT_EXPIRES_IN: '7d'
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3002/api/health"]
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:3000/api/health']
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - kamhub_network
+    command: npm run dev
 
-  # Redis (optional - for rate limiting)
+  # ============================================================================
+  # Redis Cache & Session Store
+  # ============================================================================
   redis:
     image: redis:7-alpine
-    container_name: kamchatour-redis
+    container_name: kamhub-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - '6379:6379'
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis_password_local}
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - kamhub_network
+
+  # ============================================================================
+  # Prometheus Monitoring
+  # ============================================================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: kamhub-prometheus
+    restart: unless-stopped
+    ports:
+      - '9090:9090'
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    networks:
+      - kamhub_network
+    depends_on:
+      - app
+
+  # ============================================================================
+  # Grafana Dashboards
+  # ============================================================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: kamhub-grafana
+    restart: unless-stopped
+    ports:
+      - '3001:3000'
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+      GF_INSTALL_PLUGINS: 'grafana-piechart-panel'
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    networks:
+      - kamhub_network
+    depends_on:
+      - prometheus
+
+  # ============================================================================
+  # pgAdmin for Database Management
+  # ============================================================================
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: kamhub-pgadmin
+    restart: unless-stopped
+    ports:
+      - '5050:80'
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@kamhub.local
+      PGADMIN_DEFAULT_PASSWORD: admin_password
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - kamhub_network
+    depends_on:
+      - postgres
 
 volumes:
   postgres_data:
     driver: local
   redis_data:
     driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  pgadmin_data:
+    driver: local
 
 networks:
+  kamhub_network:
+    driver: bridge
   default:
+    driver: bridge
     name: kamchatour-network

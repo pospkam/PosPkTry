@@ -3,7 +3,7 @@
 // Kamchatour Hub - Transfer Matching Algorithm
 // =============================================
 
-import { query } from '@/lib/database';
+import { query } from '@core-infrastructure/lib/database';
 import { TransferBookingRequest, TransferOption } from '@/types/transfer';
 
 interface MatchingCriteria {

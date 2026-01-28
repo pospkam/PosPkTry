@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/database';
+import { query } from '@core-infrastructure/lib/database';
 import { Tour, ApiResponse } from '@/types';
 import { config } from '@/lib/config';
 
@@ -73,10 +73,10 @@ export async function GET(request: NextRequest) {
         t.updated_at,
         p.name as operator_name,
         p.rating as operator_rating,
-        p.phone as operator_phone,
         p.email as operator_email
       FROM tours t
       LEFT JOIN partners p ON t.operator_id = p.id
+      WHERE t.is_active = true
       ${whereClause}
       ORDER BY t.rating DESC, t.created_at DESC
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}

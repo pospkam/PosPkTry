@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse } from '@/types';
-import { query } from '@/lib/database';
+import { query } from '@core-infrastructure/lib/database';
 import { emailService } from '@/lib/notifications/email-service';
 
 // POST /api/bookings/[id]/cancel - Отмена бронирования

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/database';
+import { query } from '@core-infrastructure/lib/database';
 import { ApiResponse } from '@/types';
 import { OperatorDashboardData, OperatorMetrics, TourStats, OperatorBooking, ChartDataPoint } from '@/types/operator';
 import { requireOperator } from '@/lib/auth/middleware';
