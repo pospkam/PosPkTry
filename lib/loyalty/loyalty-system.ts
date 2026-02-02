@@ -3,7 +3,7 @@
 // Аналог Yandex Go бонусной системы
 // =============================================
 
-import { query } from '@/pillars/core-infrastructure-infrastructure/lib/database';
+import { query } from '@/lib/database';
 
 interface UserLevel {
   name: string;

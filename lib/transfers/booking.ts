@@ -12,7 +12,7 @@
  */
 
 import { PoolClient } from 'pg';
-import { transaction } from '@/pillars/core-infrastructure-infrastructure/lib/database';
+import { transaction } from '@/lib/database';
 
 export interface BookingRequest {
   scheduleId: string;
