@@ -38,10 +38,10 @@ const colors = {
 };
 
 const log = {
-  success: (msg) => console.log(`${colors.green}✅ ${msg}${colors.reset}`),
-  error: (msg) => console.log(`${colors.red}❌ ${msg}${colors.reset}`),
-  warning: (msg) => console.log(`${colors.yellow}⚠️  ${msg}${colors.reset}`),
-  info: (msg) => console.log(`${colors.blue}ℹ️  ${msg}${colors.reset}`),
+  success: (msg) => console.log(`${colors.green}[OK] ${msg}${colors.reset}`),
+  error: (msg) => console.log(`${colors.red}[X] ${msg}${colors.reset}`),
+  warning: (msg) => console.log(`${colors.yellow}!  ${msg}${colors.reset}`),
+  info: (msg) => console.log(`${colors.blue}i  ${msg}${colors.reset}`),
   step: (msg) => console.log(`${colors.cyan}▶️  ${msg}${colors.reset}`),
   test: (msg) => console.log(`${colors.magenta}🧪 ${msg}${colors.reset}`),
 };
@@ -103,11 +103,11 @@ async function testAllEndpoints() {
     results.push(result);
 
     if (result.ok) {
-      log.success(`✅ ${result.status} ${result.statusText}`);
+      log.success(`[OK] ${result.status} ${result.statusText}`);
     } else if (result.networkError) {
-      log.error(`❌ Сеть: ${result.error}`);
+      log.error(`[X] Сеть: ${result.error}`);
     } else {
-      log.warning(`⚠️  ${result.status} ${result.statusText}`);
+      log.warning(`!  ${result.status} ${result.statusText}`);
     }
     console.log('');
   }
@@ -121,12 +121,12 @@ async function testAllEndpoints() {
     results.push(result);
 
     if (result.ok) {
-      log.success(`✅ ${result.status} ${result.statusText} - РАБОТАЕТ!`);
-      console.log(`   📄 Headers: ${JSON.stringify(result.headers, null, 2)}`);
+      log.success(`[OK] ${result.status} ${result.statusText} - РАБОТАЕТ!`);
+      console.log(`    Headers: ${JSON.stringify(result.headers, null, 2)}`);
     } else if (result.networkError) {
-      log.error(`❌ Сеть: ${result.error}`);
+      log.error(`[X] Сеть: ${result.error}`);
     } else {
-      log.warning(`⚠️  ${result.status} ${result.statusText}`);
+      log.warning(`!  ${result.status} ${result.statusText}`);
     }
     console.log('');
   }
@@ -140,25 +140,25 @@ function analyzeResults(results) {
   const successful = results.filter(r => r.ok);
   const total = results.length;
 
-  console.log(`\n📊 РЕЗУЛЬТАТЫ: ${successful.length}/${total} успешных endpoints`);
+  console.log(`\n РЕЗУЛЬТАТЫ: ${successful.length}/${total} успешных endpoints`);
   console.log('');
 
   if (successful.length > 0) {
-    log.success('🎉 НАЙДЕНЫ РАБОЧИЕ ENDPOINTS!');
+    log.success(' НАЙДЕНЫ РАБОЧИЕ ENDPOINTS!');
 
     successful.forEach(result => {
-      log.success(`✅ ${result.url}`);
+      log.success(`[OK] ${result.url}`);
       log.info(`   Метод: ${result.method}, Статус: ${result.status}`);
     });
 
     console.log('');
-    console.log('🚀 РЕКОМЕНДАЦИИ:');
+    console.log(' РЕКОМЕНДАЦИИ:');
     console.log('• Используйте первый рабочий endpoint');
     console.log('• Обновите конфигурацию в приложении');
     console.log('• Протестируйте с реальными данными');
 
   } else {
-    log.error('❌ НИ ОДИН ENDPOINT НЕ РАБОТАЕТ');
+    log.error('[X] НИ ОДИН ENDPOINT НЕ РАБОТАЕТ');
 
     // Анализ ошибок
     const notFound = results.filter(r => r.status === 404).length;
@@ -186,7 +186,7 @@ function analyzeResults(results) {
 
     if (forbidden > 0 || unauthorized > 0) {
       console.log('');
-      console.log('2. 🔐 ПРОБЛЕМЫ АВТОРИЗАЦИИ:');
+      console.log('2.  ПРОБЛЕМЫ АВТОРИЗАЦИИ:');
       console.log('   • Проверьте API токен');
       console.log('   • Возможно токен истек');
       console.log('   • Проверьте права доступа');
@@ -200,7 +200,7 @@ function analyzeResults(results) {
     }
 
     console.log('');
-    console.log('4. 📞 ОБРАТИТЕСЬ В ПОДДЕРЖКУ:');
+    console.log('4.  ОБРАТИТЕСЬ В ПОДДЕРЖКУ:');
     console.log('   • Свяжитесь с Timeweb Cloud support');
     console.log('   • Предоставьте результаты диагностики');
     console.log('   • Запросите актуальную документацию AI API');

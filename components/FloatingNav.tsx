@@ -143,7 +143,7 @@ export function FloatingNav() {
           <div className="ai-modal-elegant" onClick={(e) => e.stopPropagation()}>
             <div className="ai-modal-header-elegant">
               <div className="ai-title-elegant">
-                <div className="ai-avatar-elegant">✨</div>
+                <div className="ai-avatar-elegant"></div>
                 <div>
                   <h3>AI.Kam</h3>
                   <p>Умный помощник</p>
@@ -153,10 +153,10 @@ export function FloatingNav() {
             </div>
             
             <div className="ai-suggestions-elegant">
-              <button className="ai-suggestion-elegant">🗻 Вулканы</button>
-              <button className="ai-suggestion-elegant">🎣 Рыбалка</button>
-              <button className="ai-suggestion-elegant">🐻 Медведи</button>
-              <button className="ai-suggestion-elegant">🌡️ Погода</button>
+              <button className="ai-suggestion-elegant"> Вулканы</button>
+              <button className="ai-suggestion-elegant"> Рыбалка</button>
+              <button className="ai-suggestion-elegant"> Медведи</button>
+              <button className="ai-suggestion-elegant"> Погода</button>
             </div>
             
             <div className="ai-input-wrapper-elegant">

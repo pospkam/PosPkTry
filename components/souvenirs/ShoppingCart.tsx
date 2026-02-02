@@ -25,7 +25,7 @@ export function ShoppingCart({ items, onUpdateQuantity, onRemove, onCheckout }: 
   if (items.length === 0) {
     return (
       <div className="bg-white/5 border border-white/10 rounded-2xl p-12 text-center">
-        <div className="text-6xl mb-4">🛒</div>
+        <div className="text-6xl mb-4"></div>
         <p className="text-white/70 text-lg">Корзина пуста</p>
         <p className="text-white/50 text-sm mt-2">Добавьте товары из каталога</p>
       </div>
@@ -52,7 +52,7 @@ export function ShoppingCart({ items, onUpdateQuantity, onRemove, onCheckout }: 
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-2xl">
-                  🎁
+                  
                 </div>
               )}
             </div>
@@ -88,7 +88,7 @@ export function ShoppingCart({ items, onUpdateQuantity, onRemove, onCheckout }: 
               className="text-red-400 hover:text-red-300 transition-colors"
               title="Удалить"
             >
-              ✕
+              
             </button>
           </div>
         ))}

@@ -7,22 +7,29 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
-    setupFiles: ['./tests/setup.ts'],
+    setupFiles: ['./test/setup.ts'],
+    include: ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    exclude: ['node_modules', 'dist', '.next', 'test/e2e/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
       exclude: [
         'node_modules/',
-        'tests/',
+        'test/',
         '**/*.d.ts',
         '**/*.config.*',
-        '**/mockData.ts',
+        '**/mockData',
+        '**/.next/**',
       ],
     },
   },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './'),
+      '@/lib': path.resolve(__dirname, './lib'),
+      '@/app': path.resolve(__dirname, './app'),
+      '@/components': path.resolve(__dirname, './components'),
+      '@/types': path.resolve(__dirname, './types'),
     },
   },
 });

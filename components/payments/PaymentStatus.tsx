@@ -73,7 +73,7 @@ export function PaymentStatus({ paymentId, onSuccess, onFailure }: PaymentStatus
   if (error) {
     return (
       <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-6 text-center">
-        <div className="text-5xl mb-4">⚠️</div>
+        <div className="text-5xl mb-4">!</div>
         <h3 className="text-xl font-bold text-white mb-2">Ошибка</h3>
         <p className="text-white/70">{error}</p>
       </div>
@@ -96,7 +96,7 @@ export function PaymentStatus({ paymentId, onSuccess, onFailure }: PaymentStatus
   if (payment.status === 'completed') {
     return (
       <div className="bg-green-500/10 border border-green-500/30 rounded-2xl p-8 text-center">
-        <div className="text-6xl mb-4 animate-bounce">✅</div>
+        <div className="text-6xl mb-4 animate-bounce">[]</div>
         <h3 className="text-2xl font-bold text-white mb-2">Оплата прошла успешно!</h3>
         <p className="text-white/70 mb-4">
           Бронирование подтверждено
@@ -119,7 +119,7 @@ export function PaymentStatus({ paymentId, onSuccess, onFailure }: PaymentStatus
   if (payment.status === 'failed') {
     return (
       <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-8 text-center">
-        <div className="text-6xl mb-4">❌</div>
+        <div className="text-6xl mb-4">[]</div>
         <h3 className="text-2xl font-bold text-white mb-2">Платёж не прошёл</h3>
         <p className="text-white/70 mb-4">
           {payment.failureReason || 'Произошла ошибка при оплате'}
@@ -138,7 +138,7 @@ export function PaymentStatus({ paymentId, onSuccess, onFailure }: PaymentStatus
     return (
       <div className="bg-blue-500/10 border border-blue-500/30 rounded-2xl p-8 text-center">
         <div className="text-6xl mb-4">
-          <span className="animate-spin inline-block">⏳</span>
+          <span className="animate-spin inline-block"> </span>
         </div>
         <h3 className="text-2xl font-bold text-white mb-2">Обработка платежа...</h3>
         <p className="text-white/70 mb-4">

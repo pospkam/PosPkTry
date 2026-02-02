@@ -319,14 +319,14 @@ export const TourDatePicker: React.FC<TourDatePickerProps> = ({
       {/* Предупреждение о погоде */}
       {tourType === 'individual' && selectedDate && (
         <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-sm text-yellow-200">
-          ⚠️ Погодные условия проверяются за 24 часа до тура
+          ! Погодные условия проверяются за 24 часа до тура
         </div>
       )}
 
       {/* Ошибка */}
       {error && (
         <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-sm text-red-200">
-          ⚠️ {error}
+          ! {error}
         </div>
       )}
     </div>
@@ -336,11 +336,11 @@ export const TourDatePicker: React.FC<TourDatePickerProps> = ({
 // Утилита для текста погоды
 const getWeatherText = (weather: string): string => {
   switch (weather) {
-    case 'excellent': return '☀️ Отлично';
-    case 'good': return '🌤️ Хорошо';
-    case 'windy': return '💨 Ветрено';
-    case 'rainy': return '🌧️ Дождь';
-    default: return '🌤️ Хорошо';
+    case 'excellent': return '  Отлично';
+    case 'good': return ' Хорошо';
+    case 'windy': return ' Ветрено';
+    case 'rainy': return '  Дождь';
+    default: return ' Хорошо';
   }
 };
 

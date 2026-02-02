@@ -1,202 +1,124 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
+import { verifyBookingOwnership } from '@/lib/auth/operator-helpers';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * GET /api/operator/bookings/[id]
- * Получение детальной информации о бронировании
- */
-export async function GET(
-  request: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await context.params;
-    const { searchParams } = new URL(request.url);
-    const operatorId = searchParams.get('operatorId');
-
-    if (!operatorId) {
-      return NextResponse.json({
-        success: false,
-        error: 'Operator ID is required'
-      } as ApiResponse<null>, { status: 400 });
-    }
-
-    const bookingQuery = `
-      SELECT
-        b.*,
-        t.name as tour_name,
-        t.operator_id,
-        u.name as user_name,
-        u.email as user_email,
-        u.phone as user_phone
-      FROM bookings b
-      JOIN tours t ON b.tour_id = t.id
-      JOIN users u ON b.user_id = u.id
-      WHERE b.id = $1 AND t.operator_id = $2
-    `;
-
-    const result = await query(bookingQuery, [id, operatorId]);
-
-    if (result.rows.length === 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'Booking not found'
-      } as ApiResponse<null>, { status: 404 });
-    }
-
-    const row = result.rows[0];
-
-    const booking = {
-      id: row.id,
-      tourId: row.tour_id,
-      tourName: row.tour_name,
-      userId: row.user_id,
-      userName: row.user_name,
-      userEmail: row.user_email,
-      userPhone: row.user_phone,
-      date: new Date(row.start_date),
-      guestsCount: parseInt(row.guests_count) || 1,
-      totalPrice: parseFloat(row.total_price),
-      status: row.status,
-      paymentStatus: row.payment_status,
-      notes: row.special_requirements,
-      createdAt: new Date(row.created_at),
-      updatedAt: new Date(row.updated_at)
-    };
-
-    return NextResponse.json({
-      success: true,
-      data: booking
-    });
-
-  } catch (error) {
-    console.error('Error fetching booking:', error);
-    return NextResponse.json({
-      success: false,
-      error: 'Failed to fetch booking',
-      message: error instanceof Error ? error.message : 'Unknown error'
-    } as ApiResponse<null>, { status: 500 });
-  }
-}
-
-/**
  * PUT /api/operator/bookings/[id]
- * Обновление статуса бронирования (подтверждение/отмена)
+ * Update booking status with ownership verification
  */
 export async function PUT(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = await context.params;
-    const { searchParams } = new URL(request.url);
-    const operatorId = searchParams.get('operatorId');
-
-    if (!operatorId) {
+    const userId = request.headers.get('X-User-Id');
+    const userRole = request.headers.get('X-User-Role');
+    
+    if (!userId || userRole !== 'operator') {
       return NextResponse.json({
         success: false,
-        error: 'Operator ID is required'
-      } as ApiResponse<null>, { status: 400 });
+        error: 'Недостаточно прав'
+      } as ApiResponse<null>, { status: 403 });
     }
 
-    const body = await request.json();
-
-    // Проверка прав доступа
-    const checkQuery = `
-      SELECT b.id, b.status
-      FROM bookings b
-      JOIN tours t ON b.tour_id = t.id
-      WHERE b.id = $1 AND t.operator_id = $2
-    `;
-    const checkResult = await query(checkQuery, [id, operatorId]);
-
-    if (checkResult.rows.length === 0) {
+    // Verify ownership
+    const isOwner = await verifyBookingOwnership(userId, params.id);
+    
+    if (!isOwner) {
       return NextResponse.json({
         success: false,
-        error: 'Booking not found or access denied'
+        error: 'Бронирование не найдено или у вас нет прав на его изменение'
       } as ApiResponse<null>, { status: 404 });
     }
 
-    const currentStatus = checkResult.rows[0].status;
+    const body = await request.json();
+    const { status, paymentStatus, notes } = body;
 
-    // Валидация изменения статуса
-    if (body.status) {
-      const validTransitions: Record<string, string[]> = {
-        pending: ['confirmed', 'cancelled'],
-        confirmed: ['completed', 'cancelled'],
-        completed: [],
-        cancelled: []
-      };
-
-      if (!validTransitions[currentStatus]?.includes(body.status)) {
-        return NextResponse.json({
-          success: false,
-          error: `Cannot change status from ${currentStatus} to ${body.status}`
-        } as ApiResponse<null>, { status: 400 });
-      }
-    }
-
-    // Обновление
-    const updates: string[] = [];
-    const values: any[] = [];
-    let paramIndex = 1;
-
-    if (body.status !== undefined) {
-      updates.push(`status = $${paramIndex}`);
-      values.push(body.status);
-      paramIndex++;
-    }
-
-    if (body.notes !== undefined) {
-      updates.push(`special_requirements = $${paramIndex}`);
-      values.push(body.notes);
-      paramIndex++;
-    }
-
-    if (updates.length === 0) {
+    // Validate status change
+    const validStatuses = ['pending', 'confirmed', 'completed', 'cancelled'];
+    if (status && !validStatuses.includes(status)) {
       return NextResponse.json({
         success: false,
-        error: 'No fields to update'
+        error: 'Неверный статус бронирования'
       } as ApiResponse<null>, { status: 400 });
     }
 
-    updates.push(`updated_at = NOW()`);
-    values.push(id);
+    const validPaymentStatuses = ['pending', 'paid', 'refunded'];
+    if (paymentStatus && !validPaymentStatuses.includes(paymentStatus)) {
+      return NextResponse.json({
+        success: false,
+        error: 'Неверный статус оплаты'
+      } as ApiResponse<null>, { status: 400 });
+    }
 
-    const updateQuery = `
-      UPDATE bookings
-      SET ${updates.join(', ')}
-      WHERE id = $${paramIndex}
-      RETURNING id, status, updated_at
-    `;
+    // Build update query
+    const updateFields = [];
+    const updateValues = [];
+    let paramIndex = 1;
 
-    const result = await query(updateQuery, values);
-    const updatedBooking = result.rows[0];
+    if (status) {
+      updateFields.push(`status = $${paramIndex++}`);
+      updateValues.push(status);
+    }
 
-    // TODO: Отправить email уведомление клиенту
+    if (paymentStatus) {
+      updateFields.push(`payment_status = $${paramIndex++}`);
+      updateValues.push(paymentStatus);
+    }
+
+    if (notes !== undefined) {
+      updateFields.push(`special_requests = $${paramIndex++}`);
+      updateValues.push(notes);
+    }
+
+    if (updateFields.length === 0) {
+      return NextResponse.json({
+        success: false,
+        error: 'Нет полей для обновления'
+      } as ApiResponse<null>, { status: 400 });
+    }
+
+    updateValues.push(params.id);
+
+    const result = await query(
+      `UPDATE bookings 
+       SET ${updateFields.join(', ')}
+       WHERE id = $${paramIndex}
+       RETURNING *`,
+      updateValues
+    );
+
+    // Create notification for status change
+    if (status) {
+      const booking = result.rows[0];
+      await query(
+        `INSERT INTO notifications (user_id, type, title, message, priority, action_url)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [
+          booking.user_id,
+          'booking_status_changed',
+          'Статус бронирования изменён',
+          `Статус вашего бронирования изменён на: ${status}`,
+          status === 'cancelled' ? 'high' : 'normal',
+          `/hub/tourist/bookings/${params.id}`
+        ]
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      data: {
-        id: updatedBooking.id,
-        status: updatedBooking.status,
-        updatedAt: new Date(updatedBooking.updated_at)
-      },
-      message: 'Booking updated successfully'
-    });
+      data: result.rows[0],
+      message: 'Бронирование успешно обновлено'
+    } as ApiResponse<any>);
 
   } catch (error) {
-    console.error('Error updating booking:', error);
+    console.error('Update booking error:', error);
     return NextResponse.json({
       success: false,
-      error: 'Failed to update booking',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      error: 'Ошибка при обновлении бронирования'
     } as ApiResponse<null>, { status: 500 });
   }
 }
-
-
-

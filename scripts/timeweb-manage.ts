@@ -45,7 +45,7 @@ class TimewebManager {
    * Список всех VDS серверов
    */
   async listServers(): Promise<void> {
-    console.log('\n📦 VDS Серверы:');
+    console.log('\n  VDS Серверы:');
     console.log('═'.repeat(80));
     
     try {
@@ -68,7 +68,7 @@ class TimewebManager {
         console.log(`   Disk: ${server.disk / 1024} GB`);
       });
     } catch (error) {
-      console.error('❌ Ошибка получения серверов:', getErrorMessage(error));
+      console.error('[] Ошибка получения серверов:', getErrorMessage(error));
     }
   }
 
@@ -76,7 +76,7 @@ class TimewebManager {
    * Список всех баз данных
    */
   async listDatabases(): Promise<void> {
-    console.log('\n🗄️ Базы данных:');
+    console.log('\n Базы данных:');
     console.log('═'.repeat(80));
     
     try {
@@ -99,7 +99,7 @@ class TimewebManager {
         console.log(`   RAM: ${db.ram / 1024} GB`);
       });
     } catch (error) {
-      console.error('❌ Ошибка получения БД:', getErrorMessage(error));
+      console.error('[] Ошибка получения БД:', getErrorMessage(error));
     }
   }
 
@@ -107,7 +107,7 @@ class TimewebManager {
    * Список всех S3 buckets
    */
   async listBuckets(): Promise<void> {
-    console.log('\n💾 S3 Buckets:');
+    console.log('\n S3 Buckets:');
     console.log('═'.repeat(80));
     
     try {
@@ -128,7 +128,7 @@ class TimewebManager {
         console.log(`   Objects: ${bucket.object_amount || 0}`);
       });
     } catch (error) {
-      console.error('❌ Ошибка получения buckets:', getErrorMessage(error));
+      console.error('[] Ошибка получения buckets:', getErrorMessage(error));
     }
   }
 
@@ -136,7 +136,7 @@ class TimewebManager {
    * Список Firewall групп
    */
   async listFirewallGroups(): Promise<void> {
-    console.log('\n🔥 Firewall Groups:');
+    console.log('\n  Firewall Groups:');
     console.log('═'.repeat(80));
     
     try {
@@ -155,7 +155,7 @@ class TimewebManager {
         console.log(`   Rules: ${group.rules_count || 0}`);
       });
     } catch (error) {
-      console.error('❌ Ошибка получения firewall групп:', getErrorMessage(error));
+      console.error('[] Ошибка получения firewall групп:', getErrorMessage(error));
     }
   }
 
@@ -163,7 +163,7 @@ class TimewebManager {
    * Показать все ресурсы
    */
   async listAll(): Promise<void> {
-    console.log('\n📊 Все ресурсы Timeweb Cloud');
+    console.log('\n  Все ресурсы Timeweb Cloud');
     console.log('═'.repeat(80));
     
     await this.listServers();
@@ -178,7 +178,7 @@ class TimewebManager {
    * Статус конкретного ресурса
    */
   async getResourceStatus(type: string, id: string): Promise<void> {
-    console.log(`\n🔍 Статус ${type} (ID: ${id})`);
+    console.log(`\n Статус ${type} (ID: ${id})`);
     console.log('═'.repeat(80));
 
     try {
@@ -204,7 +204,7 @@ class TimewebManager {
       const response = await this.apiRequest('GET', endpoint);
       console.log(JSON.stringify(response, null, 2));
     } catch (error) {
-      console.error('❌ Ошибка получения статуса:', getErrorMessage(error));
+      console.error('[] Ошибка получения статуса:', getErrorMessage(error));
     }
   }
 
@@ -212,7 +212,7 @@ class TimewebManager {
    * Перезагрузка VDS сервера
    */
   async restartServer(serverId: string): Promise<void> {
-    console.log(`\n🔄 Перезагрузка сервера (ID: ${serverId})`);
+    console.log(`\n Перезагрузка сервера (ID: ${serverId})`);
     console.log('═'.repeat(80));
 
     try {
@@ -220,11 +220,11 @@ class TimewebManager {
         action: 'restart',
       });
       
-      console.log('✅ Команда перезагрузки отправлена');
+      console.log('[] Команда перезагрузки отправлена');
       console.log('   Сервер перезагружается...');
       console.log('   Это может занять 2-5 минут');
     } catch (error) {
-      console.error('❌ Ошибка перезагрузки:', getErrorMessage(error));
+      console.error('[] Ошибка перезагрузки:', getErrorMessage(error));
     }
   }
 
@@ -232,7 +232,7 @@ class TimewebManager {
    * Создание backup
    */
   async createBackup(resourceType: string, resourceId: string): Promise<void> {
-    console.log(`\n💾 Создание резервной копии ${resourceType} (ID: ${resourceId})`);
+    console.log(`\n Создание резервной копии ${resourceType} (ID: ${resourceId})`);
     console.log('═'.repeat(80));
 
     try {
@@ -250,10 +250,10 @@ class TimewebManager {
         comment: `Автоматический backup ${new Date().toISOString()}`,
       });
       
-      console.log('✅ Резервная копия создается');
+      console.log('[] Резервная копия создается');
       console.log(`   ID backup: ${response.backup?.id || 'N/A'}`);
     } catch (error) {
-      console.error('❌ Ошибка создания backup:', getErrorMessage(error));
+      console.error('[] Ошибка создания backup:', getErrorMessage(error));
     }
   }
 
@@ -261,16 +261,16 @@ class TimewebManager {
    * Удаление ресурса
    */
   async deleteResource(type: string, id: string, confirm: boolean = false): Promise<void> {
-    console.log(`\n⚠️  УДАЛЕНИЕ ${type} (ID: ${id})`);
+    console.log(`\n!  УДАЛЕНИЕ ${type} (ID: ${id})`);
     console.log('═'.repeat(80));
 
     if (!confirm) {
-      console.log('❌ Для удаления добавьте флаг --confirm');
+      console.log('[] Для удаления добавьте флаг --confirm');
       console.log(`   tsx scripts/timeweb-manage.ts delete ${type} ${id} --confirm`);
       return;
     }
 
-    console.log('⚠️  ЭТО ДЕЙСТВИЕ НЕОБРАТИМО!');
+    console.log('!  ЭТО ДЕЙСТВИЕ НЕОБРАТИМО!');
     console.log('   Ресурс будет удален без возможности восстановления');
 
     try {
@@ -298,9 +298,9 @@ class TimewebManager {
 
       await this.apiRequest('DELETE', endpoint);
       
-      console.log('✅ Ресурс удален');
+      console.log('[] Ресурс удален');
     } catch (error) {
-      console.error('❌ Ошибка удаления:', getErrorMessage(error));
+      console.error('[] Ошибка удаления:', getErrorMessage(error));
     }
   }
 
@@ -308,7 +308,7 @@ class TimewebManager {
    * Получение статистики аккаунта
    */
   async getAccountInfo(): Promise<void> {
-    console.log('\n👤 Информация об аккаунте');
+    console.log('\n Информация об аккаунте');
     console.log('═'.repeat(80));
 
     try {
@@ -318,9 +318,9 @@ class TimewebManager {
       console.log(`\nEmail: ${account.email || 'N/A'}`);
       console.log(`Status: ${account.status || 'N/A'}`);
       console.log(`\nБаланс: ${finances.balance || 0}₽`);
-      console.log(`Авто-пополнение: ${finances.autopay_enabled ? '✅ Включено' : '❌ Выключено'}`);
+      console.log(`Авто-пополнение: ${finances.autopay_enabled ? '[] Включено' : '[] Выключено'}`);
     } catch (error) {
-      console.error('❌ Ошибка получения информации:', getErrorMessage(error));
+      console.error('[] Ошибка получения информации:', getErrorMessage(error));
     }
   }
 
@@ -340,28 +340,28 @@ class TimewebManager {
    * Быстрая проверка статуса проекта
    */
   async projectStatus(): Promise<void> {
-    console.log('\n🚀 Статус проекта KamchaTour Hub');
+    console.log('\n  Статус проекта KamchaTour Hub');
     console.log('═'.repeat(80));
 
     const resources = await this.loadResourcesInfo();
     
     if (!resources) {
-      console.log('❌ Файл timeweb-resources.json не найден');
+      console.log('[] Файл timeweb-resources.json не найден');
       console.log('   Запустите сначала: tsx scripts/timeweb-setup.ts');
       return;
     }
 
-    console.log(`\n📅 Создано: ${new Date(resources.timestamp).toLocaleString('ru-RU')}`);
+    console.log(`\n  Создано: ${new Date(resources.timestamp).toLocaleString('ru-RU')}`);
 
     // Проверка VDS
     if (resources.resources?.vds?.id) {
       try {
         const vds = await this.apiRequest('GET', `/api/v1/servers/${resources.resources.vds.id}`);
-        console.log(`\n📦 VDS: ${this.getStatusEmoji(vds.server?.status)} ${vds.server?.status}`);
+        console.log(`\n  VDS: ${this.getStatusEmoji(vds.server?.status)} ${vds.server?.status}`);
         console.log(`   IP: ${vds.server?.main_ipv4}`);
         console.log(`   Uptime: ${this.formatUptime(vds.server?.uptime || 0)}`);
       } catch (error) {
-        console.log(`\n📦 VDS: ❌ Недоступен`);
+        console.log(`\n  VDS: [] Недоступен`);
       }
     }
 
@@ -369,10 +369,10 @@ class TimewebManager {
     if (resources.resources?.database?.id) {
       try {
         const db = await this.apiRequest('GET', `/api/v1/databases/${resources.resources.database.id}`);
-        console.log(`\n🗄️ Database: ${this.getStatusEmoji(db.database?.status)} ${db.database?.status}`);
+        console.log(`\n Database: ${this.getStatusEmoji(db.database?.status)} ${db.database?.status}`);
         console.log(`   Host: ${db.database?.host}`);
       } catch (error) {
-        console.log(`\n🗄️ Database: ❌ Недоступна`);
+        console.log(`\n Database: [] Недоступна`);
       }
     }
 
@@ -380,11 +380,11 @@ class TimewebManager {
     if (resources.resources?.s3?.id) {
       try {
         const s3 = await this.apiRequest('GET', `/api/v1/storages/buckets/${resources.resources.s3.id}`);
-        console.log(`\n💾 S3 Bucket: ✅ Активен`);
+        console.log(`\n S3 Bucket: [] Активен`);
         console.log(`   Size: ${this.formatBytes(s3.bucket?.size || 0)}`);
         console.log(`   Objects: ${s3.bucket?.object_amount || 0}`);
       } catch (error) {
-        console.log(`\n💾 S3 Bucket: ❌ Недоступен`);
+        console.log(`\n S3 Bucket: [] Недоступен`);
       }
     }
 
@@ -423,18 +423,18 @@ class TimewebManager {
 
   private getStatusEmoji(status: string): string {
     const statusMap: Record<string, string> = {
-      'on': '✅',
-      'running': '✅',
-      'active': '✅',
-      'off': '⏸️',
-      'stopped': '⏸️',
-      'starting': '🔄',
-      'stopping': '🔄',
-      'error': '❌',
-      'failed': '❌',
+      'on': '[]',
+      'running': '[]',
+      'active': '[]',
+      'off': '',
+      'stopped': '',
+      'starting': '',
+      'stopping': '',
+      'error': '[]',
+      'failed': '[]',
     };
     
-    return statusMap[status?.toLowerCase()] || '❓';
+    return statusMap[status?.toLowerCase()] || '';
   }
 
   private formatBytes(bytes: number): string {
@@ -466,7 +466,7 @@ async function main() {
   const apiToken = process.env.TIMEWEB_TOKEN;
   
   if (!apiToken) {
-    console.error('❌ Ошибка: API токен не найден');
+    console.error('[] Ошибка: API токен не найден');
     console.error('   Экспортируйте: export TIMEWEB_TOKEN=your_token');
     process.exit(1);
   }
@@ -573,7 +573,7 @@ async function main() {
       break;
 
     default:
-      console.error(`❌ Неизвестная команда: ${command}`);
+      console.error(`[] Неизвестная команда: ${command}`);
       console.error('   Используйте: tsx scripts/timeweb-manage.ts help');
       process.exit(1);
   }
@@ -582,7 +582,7 @@ async function main() {
 // Запуск
 if (require.main === module) {
   main().catch((error) => {
-    console.error('💥 Ошибка:', getErrorMessage(error));
+    console.error(' Ошибка:', getErrorMessage(error));
     process.exit(1);
   });
 }

@@ -70,10 +70,10 @@ class DatabaseAnalyzer {
 
       // Тестируем подключение
       await this.pool.query('SELECT 1');
-      this.log('✅ Подключение к базе данных установлено', 'green');
+      this.log('[OK] Подключение к базе данных установлено', 'green');
       return true;
     } catch (error) {
-      this.log(`❌ Ошибка подключения к БД: ${error.message}`, 'red');
+      this.log(`[X] Ошибка подключения к БД: ${error.message}`, 'red');
       this.issues.push({
         type: 'connection',
         severity: 'critical',
@@ -85,7 +85,7 @@ class DatabaseAnalyzer {
   }
 
   async analyzeTables() {
-    this.logSection('📊 АНАЛИЗ СТРУКТУРЫ ТАБЛИЦ');
+    this.logSection(' АНАЛИЗ СТРУКТУРЫ ТАБЛИЦ');
 
     try {
       const result = await this.pool.query(`
@@ -107,12 +107,12 @@ class DatabaseAnalyzer {
       this.stats.tables = result.rows.length;
 
       for (const table of result.rows) {
-        this.log(`📋 Таблица: ${table.schemaname}.${table.tablename}`, 'blue');
+        this.log(` Таблица: ${table.schemaname}.${table.tablename}`, 'blue');
         this.log(`   Владелец: ${table.tableowner}`);
         this.log(`   Размер: ${table.size}`);
-        this.log(`   Индексы: ${table.hasindexes ? '✅' : '❌'}`);
-        this.log(`   Триггеры: ${table.hastriggers ? '✅' : '❌'}`);
-        this.log(`   Row Security: ${table.rowsecurity ? '✅' : '❌'}`);
+        this.log(`   Индексы: ${table.hasindexes ? '[OK]' : '[X]'}`);
+        this.log(`   Триггеры: ${table.hastriggers ? '[OK]' : '[X]'}`);
+        this.log(`   Row Security: ${table.rowsecurity ? '[OK]' : '[X]'}`);
 
         // Анализируем структуру таблицы
         await this.analyzeTableStructure(table.schemaname, table.tablename);
@@ -151,7 +151,7 @@ class DatabaseAnalyzer {
         this.log(`     • ${col.column_name} (${col.data_type}) ${nullable}${defaultVal}`);
       }
     } catch (error) {
-      this.log(`   ❌ Ошибка анализа структуры: ${error.message}`, 'red');
+      this.log(`   [X] Ошибка анализа структуры: ${error.message}`, 'red');
     }
   }
 
@@ -189,7 +189,7 @@ class DatabaseAnalyzer {
       }
 
     } catch (error) {
-      this.log(`   ❌ Ошибка анализа данных: ${error.message}`, 'red');
+      this.log(`   [X] Ошибка анализа данных: ${error.message}`, 'red');
     }
   }
 
@@ -241,7 +241,7 @@ class DatabaseAnalyzer {
   }
 
   async analyzeConstraints() {
-    this.logSection('🔒 АНАЛИЗ ОГРАНИЧЕНИЙ');
+    this.logSection(' АНАЛИЗ ОГРАНИЧЕНИЙ');
 
     try {
       const result = await this.pool.query(`
@@ -274,7 +274,7 @@ class DatabaseAnalyzer {
       for (const constraint of result.rows) {
         switch (constraint.constraint_type) {
           case 'PRIMARY KEY':
-            this.log(`🔑 PK: ${constraint.table_schema}.${constraint.table_name}.${constraint.constraint_name}`, 'green');
+            this.log(` PK: ${constraint.table_schema}.${constraint.table_name}.${constraint.constraint_name}`, 'green');
             pkCount++;
             break;
           case 'FOREIGN KEY':
@@ -282,11 +282,11 @@ class DatabaseAnalyzer {
             fkCount++;
             break;
           case 'UNIQUE':
-            this.log(`🎯 UK: ${constraint.table_schema}.${constraint.table_name}.${constraint.constraint_name}`, 'yellow');
+            this.log(` UK: ${constraint.table_schema}.${constraint.table_name}.${constraint.constraint_name}`, 'yellow');
             ukCount++;
             break;
           case 'CHECK':
-            this.log(`✅ CK: ${constraint.table_schema}.${constraint.table_name}.${constraint.constraint_name}`, 'cyan');
+            this.log(`[OK] CK: ${constraint.table_schema}.${constraint.table_name}.${constraint.constraint_name}`, 'cyan');
             ckCount++;
             break;
         }
@@ -295,7 +295,7 @@ class DatabaseAnalyzer {
       this.stats.constraints = pkCount + ukCount + ckCount;
       this.stats.foreignKeys = fkCount;
 
-      this.log(`\n📊 Статистика ограничений:`, 'cyan');
+      this.log(`\n Статистика ограничений:`, 'cyan');
       this.log(`   Primary Keys: ${pkCount}`);
       this.log(`   Foreign Keys: ${fkCount}`);
       this.log(`   Unique Keys: ${ukCount}`);
@@ -338,7 +338,7 @@ class DatabaseAnalyzer {
 
         this.recommendations.push('Найдены медленные запросы. Рассмотреть оптимизацию индексов.');
       } else {
-        this.log('✅ Медленных запросов не найдено', 'green');
+        this.log('[OK] Медленных запросов не найдено', 'green');
       }
 
       // Анализируем использование кэша
@@ -356,8 +356,8 @@ class DatabaseAnalyzer {
         const heapCacheRatio = heap_hit / (heap_hit + heap_read) * 100;
         const idxCacheRatio = idx_hit / (idx_hit + idx_read) * 100;
 
-        this.log(`📈 Кэш таблиц: ${heapCacheRatio.toFixed(1)}%`, heapCacheRatio > 95 ? 'green' : 'yellow');
-        this.log(`📈 Кэш индексов: ${idxCacheRatio.toFixed(1)}%`, idxCacheRatio > 95 ? 'green' : 'yellow');
+        this.log(` Кэш таблиц: ${heapCacheRatio.toFixed(1)}%`, heapCacheRatio > 95 ? 'green' : 'yellow');
+        this.log(` Кэш индексов: ${idxCacheRatio.toFixed(1)}%`, idxCacheRatio > 95 ? 'green' : 'yellow');
 
         if (heapCacheRatio < 95 || idxCacheRatio < 95) {
           this.recommendations.push('Низкий процент попаданий в кэш. Рассмотреть увеличение shared_buffers.');
@@ -365,12 +365,12 @@ class DatabaseAnalyzer {
       }
 
     } catch (error) {
-      this.log(`⚠️  Ошибка анализа производительности: ${error.message}`, 'yellow');
+      this.log(`!  Ошибка анализа производительности: ${error.message}`, 'yellow');
     }
   }
 
   async analyzeSecurity() {
-    this.logSection('🔐 АНАЛИЗ БЕЗОПАСНОСТИ');
+    this.logSection(' АНАЛИЗ БЕЗОПАСНОСТИ');
 
     try {
       // Проверяем пользователей и роли
@@ -381,7 +381,7 @@ class DatabaseAnalyzer {
         ORDER BY rolname
       `);
 
-      this.log('👥 Пользователи и роли:', 'blue');
+      this.log(' Пользователи и роли:', 'blue');
       for (const user of users.rows) {
         const flags = [];
         if (user.rolsuper) flags.push('SUPERUSER');
@@ -405,7 +405,7 @@ class DatabaseAnalyzer {
       `);
 
       if (privileges.rows.length > 0) {
-        this.log('\n🔑 Права доступа к таблицам:', 'blue');
+        this.log('\n Права доступа к таблицам:', 'blue');
         for (const priv of privileges.rows) {
           this.log(`   • ${priv.schemaname}.${priv.tablename}: ${priv.grantee} -> ${priv.privilege_type}`);
         }
@@ -421,7 +421,7 @@ class DatabaseAnalyzer {
       this.log(`\n🔌 Активных соединений: ${connections.rows[0].active_connections}`, 'cyan');
 
     } catch (error) {
-      this.log(`⚠️  Ошибка анализа безопасности: ${error.message}`, 'yellow');
+      this.log(`!  Ошибка анализа безопасности: ${error.message}`, 'yellow');
     }
   }
 
@@ -436,7 +436,7 @@ class DatabaseAnalyzer {
         WHERE name IN ('wal_level', 'archive_mode', 'max_wal_senders', 'wal_keep_segments')
       `);
 
-      this.log('📋 Настройки WAL:', 'blue');
+      this.log(' Настройки WAL:', 'blue');
       for (const setting of walSettings.rows) {
         this.log(`   • ${setting.name}: ${setting.setting}${setting.unit || ''}`);
       }
@@ -454,15 +454,15 @@ class DatabaseAnalyzer {
       }
 
     } catch (error) {
-      this.log(`⚠️  Ошибка анализа резервного копирования: ${error.message}`, 'yellow');
+      this.log(`!  Ошибка анализа резервного копирования: ${error.message}`, 'yellow');
     }
   }
 
   async generateReport() {
-    this.logSection('📋 ПОЛНЫЙ АНАЛИТИЧЕСКИЙ ОТЧЁТ БАЗЫ ДАННЫХ');
+    this.logSection(' ПОЛНЫЙ АНАЛИТИЧЕСКИЙ ОТЧЁТ БАЗЫ ДАННЫХ');
 
     // Общая статистика
-    this.log('🎯 ОБЩАЯ СТАТИСТИКА', 'cyan');
+    this.log(' ОБЩАЯ СТАТИСТИКА', 'cyan');
     this.log(`   Таблиц: ${this.stats.tables}`);
     this.log(`   Индексов: ${this.stats.indexes}`);
     this.log(`   Ограничений: ${this.stats.constraints}`);
@@ -472,7 +472,7 @@ class DatabaseAnalyzer {
 
     // Проблемы
     if (this.issues.length > 0) {
-      this.log('\n🚨 ВЫЯВЛЕННЫЕ ПРОБЛЕМЫ', 'red');
+      this.log('\n ВЫЯВЛЕННЫЕ ПРОБЛЕМЫ', 'red');
       const critical = this.issues.filter(i => i.severity === 'critical');
       const high = this.issues.filter(i => i.severity === 'high');
       const medium = this.issues.filter(i => i.severity === 'medium');
@@ -481,7 +481,7 @@ class DatabaseAnalyzer {
         this.log('🔴 КРИТИЧЕСКИЕ:', 'red');
         critical.forEach(issue => {
           this.log(`   • ${issue.message}`, 'red');
-          this.log(`     💡 ${issue.recommendation}`, 'yellow');
+          this.log(`      ${issue.recommendation}`, 'yellow');
         });
       }
 
@@ -489,7 +489,7 @@ class DatabaseAnalyzer {
         this.log('🟠 ВЫСОКИЙ ПРИОРИТЕТ:', 'yellow');
         high.forEach(issue => {
           this.log(`   • ${issue.message}`, 'yellow');
-          this.log(`     💡 ${issue.recommendation}`, 'cyan');
+          this.log(`      ${issue.recommendation}`, 'cyan');
         });
       }
 
@@ -497,16 +497,16 @@ class DatabaseAnalyzer {
         this.log('🟡 СРЕДНИЙ ПРИОРИТЕТ:', 'cyan');
         medium.forEach(issue => {
           this.log(`   • ${issue.message}`, 'cyan');
-          this.log(`     💡 ${issue.recommendation}`, 'blue');
+          this.log(`      ${issue.recommendation}`, 'blue');
         });
       }
     } else {
-      this.log('\n✅ ПРОБЛЕМ НЕ ВЫЯВЛЕНО', 'green');
+      this.log('\n[OK] ПРОБЛЕМ НЕ ВЫЯВЛЕНО', 'green');
     }
 
     // Рекомендации
     if (this.recommendations.length > 0) {
-      this.log('\n💡 РЕКОМЕНДАЦИИ ПО ОПТИМИЗАЦИИ', 'blue');
+      this.log('\n РЕКОМЕНДАЦИИ ПО ОПТИМИЗАЦИИ', 'blue');
       this.recommendations.forEach(rec => {
         this.log(`   • ${rec}`, 'blue');
       });
@@ -565,13 +565,13 @@ class DatabaseAnalyzer {
   }
 
   async runAnalysis() {
-    this.logSection('🚀 ЗАПУСК ПОЛНОГО АНАЛИЗА БАЗЫ ДАННЫХ');
+    this.logSection(' ЗАПУСК ПОЛНОГО АНАЛИЗА БАЗЫ ДАННЫХ');
     this.log(`Время начала: ${new Date().toLocaleString('ru-RU')}`, 'blue');
 
     try {
       const connected = await this.connect();
       if (!connected) {
-        this.log('❌ Невозможно продолжить анализ без подключения к БД', 'red');
+        this.log('[X] Невозможно продолжить анализ без подключения к БД', 'red');
         return;
       }
 
@@ -584,10 +584,10 @@ class DatabaseAnalyzer {
 
       await this.generateReport();
 
-      this.log('\n✅ АНАЛИЗ ЗАВЕРШЁН!', 'green');
+      this.log('\n[OK] АНАЛИЗ ЗАВЕРШЁН!', 'green');
 
     } catch (error) {
-      this.log(`❌ Ошибка анализа: ${error.message}`, 'red');
+      this.log(`[X] Ошибка анализа: ${error.message}`, 'red');
     } finally {
       await this.close();
     }

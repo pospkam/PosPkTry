@@ -32,7 +32,7 @@ export function UIShowcase() {
           <h2 className="text-2xl font-bold text-premium-gold">1. Улучшенные кнопки</h2>
           <div className="flex flex-wrap gap-4">
             <button className="button-primary">
-              🚀 Основная кнопка
+                Основная кнопка
             </button>
             <button className="button-secondary">
               Вторичная кнопка
@@ -51,17 +51,17 @@ export function UIShowcase() {
           <h2 className="text-2xl font-bold text-premium-gold">2. Карточки с hover эффектом</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="card-premium hover-lift">
-              <div className="icon-circle mb-4">🏔️</div>
+              <div className="icon-circle mb-4"> </div>
               <h3 className="text-xl font-bold mb-2">Hover Lift</h3>
               <p className="text-white/70">Поднимается при наведении</p>
             </div>
             <div className="card-premium hover-glow">
-              <div className="icon-circle mb-4">✨</div>
+              <div className="icon-circle mb-4"> </div>
               <h3 className="text-xl font-bold mb-2">Hover Glow</h3>
               <p className="text-white/70">Светится при наведении</p>
             </div>
             <div className="card-premium hover-scale">
-              <div className="icon-circle mb-4">🎯</div>
+              <div className="icon-circle mb-4"> </div>
               <h3 className="text-xl font-bold mb-2">Hover Scale</h3>
               <p className="text-white/70">Увеличивается при наведении</p>
             </div>
@@ -96,11 +96,11 @@ export function UIShowcase() {
         <section className="card-premium space-y-4">
           <h2 className="text-2xl font-bold text-premium-gold">4. Badges и метки</h2>
           <div className="flex flex-wrap gap-2">
-            <span className="badge badge-success">✓ Success</span>
-            <span className="badge badge-warning">⚠ Warning</span>
-            <span className="badge badge-error">✕ Error</span>
+            <span className="badge badge-success">[] Success</span>
+            <span className="badge badge-warning"> Warning</span>
+            <span className="badge badge-error"> Error</span>
             <span className="badge badge-info">ℹ Info</span>
-            <span className="badge badge-gold">⭐ Premium</span>
+            <span className="badge badge-gold"> Premium</span>
           </div>
         </section>
 
@@ -172,7 +172,7 @@ export function UIShowcase() {
               <button className="button-secondary">Наведи на меня</button>
             </span>
             <span className="tooltip" data-tooltip="Еще одна подсказка">
-              <div className="icon-circle">ℹ️</div>
+              <div className="icon-circle">i</div>
             </span>
           </div>
         </section>
@@ -192,7 +192,7 @@ export function UIShowcase() {
           {showToast && (
             <div className="toast toast-success animate-slide-in-right">
               <div className="flex items-center gap-3">
-                <span className="text-2xl">✓</span>
+                <span className="text-2xl">[]</span>
                 <div>
                   <div className="font-bold">Успешно!</div>
                   <div className="text-sm text-white/70">Операция выполнена</div>
@@ -235,7 +235,7 @@ export function UIShowcase() {
         {/* 10. Empty State */}
         <section className="card-premium">
           <div className="empty-state">
-            <div className="empty-state-icon">📭</div>
+            <div className="empty-state-icon"></div>
             <div className="empty-state-title">Пока пусто</div>
             <div className="empty-state-description">
               Здесь появится контент, когда вы добавите данные
@@ -259,7 +259,7 @@ export function UIShowcase() {
         <section className="card-premium space-y-4">
           <h2 className="text-2xl font-bold text-premium-gold">12. Иконки в кружочках</h2>
           <div className="flex flex-wrap gap-4">
-            {['🏔️', '🚌', '🏨', '🎿', '🌋', '🐻'].map((emoji, i) => (
+            {[' ', ' ', '', '', ' ', ''].map((emoji, i) => (
               <div key={i} className="icon-circle hover-scale">
                 {emoji}
               </div>

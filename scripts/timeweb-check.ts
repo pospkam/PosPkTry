@@ -39,7 +39,7 @@ class TimewebChecker {
    * Выполнить все проверки
    */
   async runAllChecks(): Promise<boolean> {
-    console.log('🔍 ПРОВЕРКА ГОТОВНОСТИ К СОЗДАНИЮ ИНФРАСТРУКТУРЫ\n');
+    console.log(' ПРОВЕРКА ГОТОВНОСТИ К СОЗДАНИЮ ИНФРАСТРУКТУРЫ\n');
     console.log('='.repeat(60));
 
     await this.checkAPIToken();
@@ -50,7 +50,7 @@ class TimewebChecker {
     await this.checkEstimatedCosts();
 
     console.log('\n' + '='.repeat(60));
-    console.log('📊 ИТОГИ ПРОВЕРКИ\n');
+    console.log('  ИТОГИ ПРОВЕРКИ\n');
 
     this.printResults();
 
@@ -58,16 +58,16 @@ class TimewebChecker {
     const hasWarnings = this.results.some(r => r.status === 'warning');
 
     if (hasErrors) {
-      console.log('\n❌ ПРОВЕРКА НЕ ПРОЙДЕНА');
+      console.log('\n[] ПРОВЕРКА НЕ ПРОЙДЕНА');
       console.log('   Исправьте ошибки и запустите проверку снова.');
       return false;
     }
 
     if (hasWarnings) {
-      console.log('\n⚠️  ПРОВЕРКА ПРОЙДЕНА С ПРЕДУПРЕЖДЕНИЯМИ');
+      console.log('\n!  ПРОВЕРКА ПРОЙДЕНА С ПРЕДУПРЕЖДЕНИЯМИ');
       console.log('   Рекомендуется исправить предупреждения перед созданием.');
     } else {
-      console.log('\n✅ ВСЕ ПРОВЕРКИ ПРОЙДЕНЫ!');
+      console.log('\n[] ВСЕ ПРОВЕРКИ ПРОЙДЕНЫ!');
       console.log('   Можно запускать: npm run timeweb:setup');
     }
 
@@ -291,7 +291,7 @@ class TimewebChecker {
    */
   private printResults(): void {
     this.results.forEach(result => {
-      const icon = result.status === 'ok' ? '✅' : result.status === 'warning' ? '⚠️' : '❌';
+      const icon = result.status === 'ok' ? '[]' : result.status === 'warning' ? '!' : '[]';
       console.log(`${icon} ${result.name}: ${result.message}`);
       if (result.details) {
         console.log(`   ${result.details}`);
@@ -322,8 +322,8 @@ async function main() {
   const apiToken = process.env.TIMEWEB_TOKEN;
 
   if (!apiToken) {
-    console.error('❌ Ошибка: TIMEWEB_TOKEN не найден');
-    console.error('\n📋 Получите токен:');
+    console.error('[] Ошибка: TIMEWEB_TOKEN не найден');
+    console.error('\n  Получите токен:');
     console.error('1. https://timeweb.cloud/my/api');
     console.error('2. export TIMEWEB_TOKEN=your_token');
     console.error('3. npm run timeweb:check');
@@ -338,7 +338,7 @@ async function main() {
 
 if (require.main === module) {
   main().catch(error => {
-    console.error('💥 Критическая ошибка:', getErrorMessage(error));
+    console.error(' Критическая ошибка:', getErrorMessage(error));
     process.exit(1);
   });
 }

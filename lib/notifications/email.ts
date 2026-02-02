@@ -76,7 +76,7 @@ export class EmailNotificationService {
     driverPhone: string;
     meetingPoint: string;
   }): Promise<EmailResponse> {
-    const subject = `✅ Подтверждение бронирования трансфера #${booking.confirmationCode}`;
+    const subject = `[✓] Подтверждение бронирования трансфера #${booking.confirmationCode}`;
     
     const html = `
       <!DOCTYPE html>
@@ -98,7 +98,7 @@ export class EmailNotificationService {
       <body>
         <div class="container">
           <div class="header">
-            <h1>🚌 Kamchatour Hub</h1>
+            <h1>  Kamchatour Hub</h1>
             <h2>Бронирование подтверждено</h2>
           </div>
           
@@ -127,7 +127,7 @@ export class EmailNotificationService {
             
             <div class="footer">
               <p>С уважением,<br>Команда Kamchatour Hub</p>
-              <p>📞 +7 (XXX) XXX-XX-XX | 📧 info@kamchatour.ru</p>
+              <p>  +7 (XXX) XXX-XX-XX | 📧 info@kamchatour.ru</p>
             </div>
           </div>
         </div>
@@ -172,7 +172,7 @@ export class EmailNotificationService {
     passengerPhone: string;
     meetingPoint: string;
   }): Promise<EmailResponse> {
-    const subject = `🚗 Назначение на поездку - ${assignment.route}`;
+    const subject = `  Назначение на поездку - ${assignment.route}`;
     
     const html = `
       <!DOCTYPE html>
@@ -193,7 +193,7 @@ export class EmailNotificationService {
       <body>
         <div class="container">
           <div class="header">
-            <h1>🚌 Kamchatour Hub</h1>
+            <h1>  Kamchatour Hub</h1>
             <h2>Новое назначение</h2>
           </div>
           
@@ -248,7 +248,7 @@ export class EmailNotificationService {
     }>;
     features: string[];
   }): Promise<EmailResponse> {
-    const subject = `🗺️ Детали маршрута - ${route.name}`;
+    const subject = `  Детали маршрута - ${route.name}`;
     
     const html = `
       <!DOCTYPE html>
@@ -270,7 +270,7 @@ export class EmailNotificationService {
       <body>
         <div class="container">
           <div class="header">
-            <h1>🚌 Kamchatour Hub</h1>
+            <h1>  Kamchatour Hub</h1>
             <h2>Детали маршрута</h2>
           </div>
           
@@ -323,7 +323,7 @@ export class EmailNotificationService {
     refundAmount?: number;
     refundMethod?: string;
   }): Promise<EmailResponse> {
-    const subject = `❌ Отмена поездки - ${cancellation.route}`;
+    const subject = `[✗] Отмена поездки - ${cancellation.route}`;
     
     const html = `
       <!DOCTYPE html>
@@ -344,7 +344,7 @@ export class EmailNotificationService {
       <body>
         <div class="container">
           <div class="header">
-            <h1>🚌 Kamchatour Hub</h1>
+            <h1>  Kamchatour Hub</h1>
             <h2>Поездка отменена</h2>
           </div>
           
@@ -398,7 +398,7 @@ export class EmailNotificationService {
       bookings: number;
     }>;
   }): Promise<EmailResponse> {
-    const subject = `📊 Еженедельная статистика - ${stats.week}`;
+    const subject = `  Еженедельная статистика - ${stats.week}`;
     
     const html = `
       <!DOCTYPE html>
@@ -421,7 +421,7 @@ export class EmailNotificationService {
       <body>
         <div class="container">
           <div class="header">
-            <h1>🚌 Kamchatour Hub</h1>
+            <h1>  Kamchatour Hub</h1>
             <h2>Еженедельная статистика</h2>
           </div>
           

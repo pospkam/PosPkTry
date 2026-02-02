@@ -36,15 +36,15 @@ const typeLabels: Record<string, string> = {
 };
 
 const amenityIcons: Record<string, string> = {
-  wifi: '📶',
-  parking: '🅿️',
-  breakfast: '🍳',
-  spa: '💆',
-  pool: '🏊',
-  gym: '🏋️',
-  restaurant: '🍽️',
-  bar: '🍸',
-  pets: '🐕',
+  wifi: '',
+  parking: '🅿',
+  breakfast: '',
+  spa: '',
+  pool: '',
+  gym: '',
+  restaurant: '',
+  bar: '',
+  pets: '',
 };
 
 export const AccommodationCard: React.FC<AccommodationCardProps> = ({
@@ -100,7 +100,7 @@ export const AccommodationCard: React.FC<AccommodationCardProps> = ({
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-white/50 text-6xl">
-              🏨
+              
             </div>
           )}
           
@@ -138,7 +138,7 @@ export const AccommodationCard: React.FC<AccommodationCardProps> = ({
             </span>
             {starRating && (
               <span className="px-3 py-1 bg-black/70 backdrop-blur-sm rounded-full text-xs text-premium-gold font-medium">
-                {'⭐'.repeat(starRating)}
+                {''.repeat(starRating)}
               </span>
             )}
           </div>
@@ -152,7 +152,7 @@ export const AccommodationCard: React.FC<AccommodationCardProps> = ({
               {name}
             </h3>
             <p className="text-sm text-white/60 line-clamp-1">
-              📍 {address}
+               {address}
             </p>
           </div>
           
@@ -168,7 +168,7 @@ export const AccommodationCard: React.FC<AccommodationCardProps> = ({
                 key={index}
                 className="px-2 py-1 bg-white/5 rounded-lg text-xs text-white/80 flex items-center gap-1"
               >
-                <span>{amenityIcons[amenity] || '✓'}</span>
+                <span>{amenityIcons[amenity] || '[]'}</span>
                 <span className="capitalize">{amenity}</span>
               </span>
             ))}

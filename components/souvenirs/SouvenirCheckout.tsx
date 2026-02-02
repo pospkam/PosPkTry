@@ -143,7 +143,7 @@ export function SouvenirCheckout({ items, onBack, onOrderComplete }: SouvenirChe
                     {item.imageUrl ? (
                       <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover rounded-lg" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-2xl">🎁</div>
+                      <div className="w-full h-full flex items-center justify-center text-2xl"></div>
                     )}
                   </div>
 

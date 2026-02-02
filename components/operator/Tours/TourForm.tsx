@@ -242,13 +242,13 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
                   key={index}
                   className="flex items-center justify-between bg-white/5 px-4 py-3 rounded-xl"
                 >
-                  <span className="text-white">✓ {item}</span>
+                  <span className="text-white"> {item}</span>
                   <button
                     type="button"
                     onClick={() => handleRemoveInclude(index)}
                     className="text-red-400 hover:text-red-300 transition-colors"
                   >
-                    ✕
+                    
                   </button>
                 </li>
               ))}
@@ -287,13 +287,13 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
                   key={index}
                   className="flex items-center justify-between bg-white/5 px-4 py-3 rounded-xl"
                 >
-                  <span className="text-white">✗ {item}</span>
+                  <span className="text-white"> {item}</span>
                   <button
                     type="button"
                     onClick={() => handleRemoveExclude(index)}
                     className="text-red-400 hover:text-red-300 transition-colors"
                   >
-                    ✕
+                    
                   </button>
                 </li>
               ))}
@@ -319,7 +319,7 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
         >
           {loading ? (
             <>
-              <span className="animate-spin mr-2">⏳</span>
+              <span className="animate-spin mr-2"></span>
               Сохранение...
             </>
           ) : (

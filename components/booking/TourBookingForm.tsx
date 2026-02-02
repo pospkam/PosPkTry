@@ -187,7 +187,7 @@ export function TourBookingForm({
         {selectedDate && (
           <div className="mt-4 p-4 bg-green-500/10 border border-green-500/30 rounded-xl">
             <p className="text-green-400">
-              ✓ Выбрана дата: {selectedDate.toLocaleDateString('ru-RU')}
+              [] Выбрана дата: {selectedDate.toLocaleDateString('ru-RU')}
             </p>
             <p className="text-white/70 text-sm mt-1">
               Свободных мест: {getSpotsLeft(selectedDate)}
@@ -278,7 +278,7 @@ export function TourBookingForm({
         >
           {submitting ? (
             <span className="flex items-center justify-center">
-              <span className="animate-spin mr-2">⏳</span>
+              <span className="animate-spin mr-2"> </span>
               Оформление...
             </span>
           ) : (

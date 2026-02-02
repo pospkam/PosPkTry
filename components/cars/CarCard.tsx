@@ -75,7 +75,7 @@ export function CarCard({ car, onRent }: CarCardProps) {
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-4xl">
-            🚗
+            
           </div>
         )}
 
@@ -110,7 +110,7 @@ export function CarCard({ car, onRent }: CarCardProps) {
         {/* Specs */}
         <div className="grid grid-cols-2 gap-2 mb-4 text-sm">
           <div className="flex items-center gap-1">
-            <span>⚙️</span>
+            <span></span>
             <span>{getTransmissionText(car.transmission)}</span>
           </div>
           <div className="flex items-center gap-1">
@@ -118,7 +118,7 @@ export function CarCard({ car, onRent }: CarCardProps) {
             <span>{getFuelTypeText(car.fuelType)}</span>
           </div>
           <div className="flex items-center gap-1">
-            <span>👥</span>
+            <span></span>
             <span>{car.seats} мест</span>
           </div>
           {car.rating && (

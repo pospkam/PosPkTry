@@ -86,7 +86,7 @@ export function ReviewForm({
                 ? 'text-yellow-400'
                 : 'text-gray-600'
             }>
-              ★
+              
             </span>
           </button>
         ))}

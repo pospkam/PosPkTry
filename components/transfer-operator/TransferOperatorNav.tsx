@@ -12,13 +12,13 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { name: 'Dashboard', path: '/hub/transfer-operator', icon: '📊' },
-  { name: 'Транспорт', path: '/hub/transfer-operator/vehicles', icon: '🚗' },
-  { name: 'Водители', path: '/hub/transfer-operator/drivers', icon: '👨‍🚗' },
-  { name: 'Трансферы', path: '/hub/transfer-operator/transfers', icon: '🚐' },
-  { name: 'Расписание', path: '/hub/transfer-operator/schedule', icon: '📅' },
-  { name: 'Финансы', path: '/hub/transfer-operator/finance', icon: '💰' },
-  { name: 'Заявки', path: '/hub/transfer-operator/requests', icon: '📋' },
+  { name: 'Dashboard', path: '/hub/transfer-operator', icon: ' ' },
+  { name: 'Транспорт', path: '/hub/transfer-operator/vehicles', icon: ' ' },
+  { name: 'Водители', path: '/hub/transfer-operator/drivers', icon: ' ' },
+  { name: 'Трансферы', path: '/hub/transfer-operator/transfers', icon: '' },
+  { name: 'Расписание', path: '/hub/transfer-operator/schedule', icon: ' ' },
+  { name: 'Финансы', path: '/hub/transfer-operator/finance', icon: ' ' },
+  { name: 'Заявки', path: '/hub/transfer-operator/requests', icon: ' ' },
 ];
 
 export function TransferOperatorNav() {
@@ -59,7 +59,7 @@ export function TransferOperatorNav() {
           {/* User Menu */}
           <div className="flex items-center">
             <button className="p-2 rounded-lg hover:bg-white/10 transition-colors">
-              <span className="text-2xl">👤</span>
+              <span className="text-2xl"></span>
             </button>
           </div>
         </div>

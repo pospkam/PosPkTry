@@ -54,10 +54,10 @@ const colors = {
 };
 
 const log = {
-  success: (msg) => console.log(`${colors.green}✅ ${msg}${colors.reset}`),
-  error: (msg) => console.log(`${colors.red}❌ ${msg}${colors.reset}`),
-  warning: (msg) => console.log(`${colors.yellow}⚠️  ${msg}${colors.reset}`),
-  info: (msg) => console.log(`${colors.blue}ℹ️  ${msg}${colors.reset}`),
+  success: (msg) => console.log(`${colors.green}[OK] ${msg}${colors.reset}`),
+  error: (msg) => console.log(`${colors.red}[X] ${msg}${colors.reset}`),
+  warning: (msg) => console.log(`${colors.yellow}!  ${msg}${colors.reset}`),
+  info: (msg) => console.log(`${colors.blue}i  ${msg}${colors.reset}`),
   step: (msg) => console.log(`${colors.cyan}▶️  ${msg}${colors.reset}`),
 };
 
@@ -114,7 +114,7 @@ async function testDatabaseConnection(dbConfig, name) {
       log.warning('Таблицы не найдены в базе данных');
     } else {
       log.success(`Найдено таблиц: ${tablesResult.rows.length}`);
-      console.log('📋 Список таблиц:');
+      console.log(' Список таблиц:');
       tablesResult.rows.slice(0, 10).forEach(row => {
         console.log(`   • ${row.table_name}`);
       });
@@ -243,13 +243,13 @@ async function main() {
 
   // ИТОГИ
   console.log('═══════════════════════════════════════════════════════');
-  console.log('📊 РЕЗУЛЬТАТЫ ТЕСТИРОВАНИЯ:');
+  console.log(' РЕЗУЛЬТАТЫ ТЕСТИРОВАНИЯ:');
   console.log('═══════════════════════════════════════════════════════');
 
   const successCount = Object.values(results).filter(Boolean).length;
   const totalCount = Object.keys(results).length;
 
-  console.log(`\n✅ Успешных подключений: ${successCount}/${totalCount}`);
+  console.log(`\n[OK] Успешных подключений: ${successCount}/${totalCount}`);
 
   if (results.databaseInternal || results.databasePublic) {
     log.success('База данных PostgreSQL: ДОСТУПНА');
@@ -272,14 +272,14 @@ async function main() {
   console.log('\n═══════════════════════════════════════════════════════');
 
   if (successCount === totalCount) {
-    log.success('🎉 ВСЕ СЕРВИСЫ TIMEWEB CLOUD ДОСТУПНЫ!');
-    console.log('\n🚀 ГОТОВ К ДЕПЛОЮ НА TIMEWEB CLOUD!');
+    log.success(' ВСЕ СЕРВИСЫ TIMEWEB CLOUD ДОСТУПНЫ!');
+    console.log('\n ГОТОВ К ДЕПЛОЮ НА TIMEWEB CLOUD!');
   } else if (successCount >= 2) {
-    log.success('✅ ОСНОВНЫЕ СЕРВИСЫ РАБОТАЮТ!');
-    console.log('\n⚠️  Некоторые сервисы требуют настройки, но можно продолжать деплой.');
+    log.success('[OK] ОСНОВНЫЕ СЕРВИСЫ РАБОТАЮТ!');
+    console.log('\n!  Некоторые сервисы требуют настройки, но можно продолжать деплой.');
   } else {
-    log.error('❌ ПРОБЛЕМЫ С ПОДКЛЮЧЕНИЕМ!');
-    console.log('\n🔧 Проверьте:');
+    log.error('[X] ПРОБЛЕМЫ С ПОДКЛЮЧЕНИЕМ!');
+    console.log('\n Проверьте:');
     console.log('   • Доступность серверов Timeweb');
     console.log('   • Корректность учетных данных');
     console.log('   • Настройки firewall');

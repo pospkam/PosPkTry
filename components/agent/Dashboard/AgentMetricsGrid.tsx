@@ -83,7 +83,7 @@ export function AgentMetricsGrid({ period = '30' }: AgentMetricsGridProps) {
         title="Общий доход"
         value={`${metrics.totalRevenue.toLocaleString('ru-RU')} ₽`}
         subtitle={`за ${period} дней`}
-        icon="💰"
+        icon=" "
         trend={metrics.totalRevenue > 0 ? 'up' : 'neutral'}
       />
 
@@ -91,7 +91,7 @@ export function AgentMetricsGrid({ period = '30' }: AgentMetricsGridProps) {
         title="Комиссионные"
         value={`${metrics.totalCommission.toLocaleString('ru-RU')} ₽`}
         subtitle={`${metrics.pendingCommission.toLocaleString('ru-RU')} ₽ ожидает`}
-        icon="💵"
+        icon=""
         trend={metrics.totalCommission > 0 ? 'up' : 'neutral'}
       />
 
@@ -99,7 +99,7 @@ export function AgentMetricsGrid({ period = '30' }: AgentMetricsGridProps) {
         title="Клиенты"
         value={metrics.totalClients.toString()}
         subtitle={`${metrics.activeClients} активных`}
-        icon="👥"
+        icon=" "
         trend={metrics.totalClients > 0 ? 'up' : 'neutral'}
       />
 
@@ -107,7 +107,7 @@ export function AgentMetricsGrid({ period = '30' }: AgentMetricsGridProps) {
         title="Бронирования"
         value={metrics.totalBookings.toString()}
         subtitle={`${metrics.completedBookings} завершено`}
-        icon="📅"
+        icon=" "
         trend={metrics.totalBookings > 0 ? 'up' : 'neutral'}
       />
 
@@ -115,7 +115,7 @@ export function AgentMetricsGrid({ period = '30' }: AgentMetricsGridProps) {
         title="Средний чек"
         value={`${metrics.averageBookingValue.toLocaleString('ru-RU')} ₽`}
         subtitle="на бронирование"
-        icon="📊"
+        icon=" "
         trend={metrics.averageBookingValue > 5000 ? 'up' : 'neutral'}
       />
 
@@ -123,7 +123,7 @@ export function AgentMetricsGrid({ period = '30' }: AgentMetricsGridProps) {
         title="Конверсия"
         value={`${metrics.conversionRate.toFixed(1)}%`}
         subtitle="завершенных бронирований"
-        icon="🎯"
+        icon=" "
         trend={metrics.conversionRate > 70 ? 'up' : 'down'}
       />
 
@@ -131,7 +131,7 @@ export function AgentMetricsGrid({ period = '30' }: AgentMetricsGridProps) {
         title="Ожидает оплаты"
         value={metrics.pendingBookings.toString()}
         subtitle="бронирований"
-        icon="⏳"
+        icon=" "
         trend={metrics.pendingBookings > 5 ? 'down' : 'neutral'}
       />
 
@@ -139,7 +139,7 @@ export function AgentMetricsGrid({ period = '30' }: AgentMetricsGridProps) {
         title="Отменено"
         value={metrics.cancelledBookings.toString()}
         subtitle="бронирований"
-        icon="❌"
+        icon="[]"
         trend={metrics.cancelledBookings > metrics.totalBookings * 0.1 ? 'down' : 'neutral'}
       />
     </div>

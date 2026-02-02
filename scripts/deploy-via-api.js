@@ -62,19 +62,19 @@ function apiRequest(method, path, data = null) {
 
 // Главная функция
 async function main() {
-  console.log('🚀 Попытка автоматического деплоя через Timeweb API...\n');
+  console.log('  Попытка автоматического деплоя через Timeweb API...\n');
 
   try {
     // 1. Получить информацию о сервере
-    console.log('📊 Получение информации о сервере...');
+    console.log('  Получение информации о сервере...');
     const serverInfo = await apiRequest('GET', `/servers/${config.timeweb.serverId}`);
-    console.log('✅ Сервер найден:', serverInfo.server?.name || 'Unknown');
+    console.log('[] Сервер найден:', serverInfo.server?.name || 'Unknown');
     console.log('   IP:', serverInfo.server?.ip || config.server.ip);
     console.log('   Status:', serverInfo.server?.status || 'Unknown');
     console.log('');
 
     // 2. Проверить доступные методы управления
-    console.log('🔍 Проверка доступных методов управления...');
+    console.log(' Проверка доступных методов управления...');
     
     // Попробуем найти endpoints для выполнения команд
     const endpoints = [
@@ -86,20 +86,20 @@ async function main() {
     for (const endpoint of endpoints) {
       try {
         const result = await apiRequest('GET', endpoint);
-        console.log(`   ${endpoint}:`, result ? '✅ Доступен' : '❌ Недоступен');
+        console.log(`   ${endpoint}:`, result ? '[] Доступен' : '[] Недоступен');
       } catch (e) {
-        console.log(`   ${endpoint}: ❌ Недоступен`);
+        console.log(`   ${endpoint}: [] Недоступен`);
       }
     }
     console.log('');
 
     // 3. Создать скрипт установки
-    console.log('📝 Создание скрипта установки...');
+    console.log('  Создание скрипта установки...');
     
     const installScript = `#!/bin/bash
 set -e
 
-echo "🚀 KamHub Auto Deploy Starting..."
+echo "  KamHub Auto Deploy Starting..."
 
 # Update system
 export DEBIAN_FRONTEND=noninteractive
@@ -128,7 +128,7 @@ PORT=8080
 NEXT_PUBLIC_APP_URL=http://${config.server.ip}
 ENVEOF
 
-echo "✅ Base installation completed!"
+echo "[] Base installation completed!"
 echo "Next steps:"
 echo "1. Upload project files to /var/www/kamhub"
 echo "2. Run: npm install && npm run build"
@@ -136,38 +136,38 @@ echo "3. Run: pm2 start ecosystem.config.js"
 `;
 
     fs.writeFileSync('/tmp/kamhub-auto-install.sh', installScript);
-    console.log('✅ Скрипт создан: /tmp/kamhub-auto-install.sh\n');
+    console.log('[] Скрипт создан: /tmp/kamhub-auto-install.sh\n');
 
     // 4. Вывести инструкции
     console.log('═══════════════════════════════════════════════════════');
-    console.log('  ℹ️  АВТОМАТИЧЕСКИЙ ДЕПЛОЙ ЧЕРЕЗ API НЕДОСТУПЕН');
+    console.log('  i  АВТОМАТИЧЕСКИЙ ДЕПЛОЙ ЧЕРЕЗ API НЕДОСТУПЕН');
     console.log('═══════════════════════════════════════════════════════\n');
     
     console.log('Timeweb Cloud API не предоставляет прямой доступ к консоли VDS.');
     console.log('Необходим SSH доступ для выполнения команд на сервере.\n');
 
-    console.log('🔄 АЛЬТЕРНАТИВНЫЕ МЕТОДЫ:\n');
+    console.log(' АЛЬТЕРНАТИВНЫЕ МЕТОДЫ:\n');
 
-    console.log('1️⃣  ЧЕРЕЗ ВЕБЛАЙН КОНСОЛЬ (Самый простой):');
+    console.log('1⃣  ЧЕРЕЗ ВЕБЛАЙН КОНСОЛЬ (Самый простой):');
     console.log('   • Откройте: https://timeweb.cloud/my/servers/5898003');
     console.log('   • Нажмите кнопку "Консоль"');
     console.log('   • Скопируйте команды из INSTANT_DEPLOY.md\n');
 
-    console.log('2️⃣  ЧЕРЕЗ SSH С АВТОМАТИЧЕСКИМ ВВОДОМ ПАРОЛЯ:');
+    console.log('2⃣  ЧЕРЕЗ SSH С АВТОМАТИЧЕСКИМ ВВОДОМ ПАРОЛЯ:');
     console.log('   • Установите sshpass на локальной машине');
     console.log('   • Запустите: bash scripts/deploy-with-sshpass.sh\n');
 
-    console.log('3️⃣  ЧЕРЕЗ ЗАГРУЗКУ ГОТОВОГО ОБРАЗА:');
+    console.log('3⃣  ЧЕРЕЗ ЗАГРУЗКУ ГОТОВОГО ОБРАЗА:');
     console.log('   • Создать Docker образ с проектом');
     console.log('   • Загрузить на сервер');
     console.log('   • Запустить контейнер\n');
 
     console.log('═══════════════════════════════════════════════════════\n');
 
-    console.log('📋 СОЗДАЮ ДОПОЛНИТЕЛЬНЫЕ ИНСТРУМЕНТЫ...\n');
+    console.log('  СОЗДАЮ ДОПОЛНИТЕЛЬНЫЕ ИНСТРУМЕНТЫ...\n');
 
   } catch (error) {
-    console.error('❌ Ошибка:', error.message);
+    console.error('[] Ошибка:', error.message);
     console.error('\nСоздаю альтернативные решения...\n');
   }
 
@@ -176,7 +176,7 @@ echo "3. Run: pm2 start ecosystem.config.js"
 }
 
 function createAlternativeScripts() {
-  console.log('🛠️  Создание альтернативных инструментов деплоя...\n');
+  console.log('  Создание альтернативных инструментов деплоя...\n');
 
   // 1. Скрипт с sshpass
   const sshpassScript = `#!/bin/bash
@@ -186,7 +186,7 @@ SERVER="${config.server.ip}"
 USER="${config.server.user}"
 PASSWORD="${config.server.password}"
 
-echo "🚀 Деплой через sshpass..."
+echo "  Деплой через sshpass..."
 
 # Копирование скрипта
 sshpass -p "$PASSWORD" scp /tmp/kamhub-auto-install.sh $USER@$SERVER:/root/
@@ -194,12 +194,12 @@ sshpass -p "$PASSWORD" scp /tmp/kamhub-auto-install.sh $USER@$SERVER:/root/
 # Выполнение на сервере
 sshpass -p "$PASSWORD" ssh $USER@$SERVER 'bash /root/kamhub-auto-install.sh'
 
-echo "✅ Установка завершена!"
+echo "[] Установка завершена!"
 `;
 
   fs.writeFileSync('scripts/deploy-with-sshpass.sh', sshpassScript);
   fs.chmodSync('scripts/deploy-with-sshpass.sh', '755');
-  console.log('✅ Создан: scripts/deploy-with-sshpass.sh');
+  console.log('[] Создан: scripts/deploy-with-sshpass.sh');
 
   // 2. PowerShell скрипт для Windows
   const powershellScript = `# PowerShell скрипт для автоматического деплоя
@@ -208,7 +208,7 @@ $server = "${config.server.ip}"
 $user = "${config.server.user}"
 $password = "${config.server.password}"
 
-Write-Host "🚀 KamHub Deploy для Windows" -ForegroundColor Green
+Write-Host "  KamHub Deploy для Windows" -ForegroundColor Green
 Write-Host ""
 
 # Создание secure string для пароля
@@ -223,14 +223,14 @@ apt-get update && apt-get upgrade -y
 apt-get install -y curl wget git nodejs npm nginx
 npm install -g pm2
 mkdir -p /var/www/kamhub
-echo "✅ Установка завершена!"
+echo "[] Установка завершена!"
 "@
 
 # Попытка выполнить через SSH
 try {
     ssh $user@$server
 } catch {
-    Write-Host "❌ Не удалось подключиться автоматически" -ForegroundColor Red
+    Write-Host "[] Не удалось подключиться автоматически" -ForegroundColor Red
     Write-Host ""
     Write-Host "Откройте SSH вручную:" -ForegroundColor Yellow
     Write-Host "  ssh $user@$server" -ForegroundColor Cyan
@@ -239,13 +239,13 @@ try {
 `;
 
   fs.writeFileSync('scripts/deploy-windows.ps1', powershellScript);
-  console.log('✅ Создан: scripts/deploy-windows.ps1');
+  console.log('[] Создан: scripts/deploy-windows.ps1');
 
   // 3. Простой bash launcher
   const launcherScript = `#!/bin/bash
 
 echo "═══════════════════════════════════════════════════════"
-echo "  🚀 KamHub Deploy Launcher"
+echo "    KamHub Deploy Launcher"
 echo "═══════════════════════════════════════════════════════"
 echo ""
 echo "Выберите метод деплоя:"
@@ -260,7 +260,7 @@ read -p "Ваш выбор [1-4]: " choice
 case $choice in
   1)
     echo ""
-    echo "📱 Откройте в браузере:"
+    echo " Откройте в браузере:"
     echo "   https://timeweb.cloud/my/servers/5898003"
     echo ""
     echo "Нажмите кнопку 'Консоль' и скопируйте команды из:"
@@ -287,11 +287,11 @@ esac
 
   fs.writeFileSync('scripts/deploy-launcher.sh', launcherScript);
   fs.chmodSync('scripts/deploy-launcher.sh', '755');
-  console.log('✅ Создан: scripts/deploy-launcher.sh');
+  console.log('[] Создан: scripts/deploy-launcher.sh');
 
   console.log('');
   console.log('═══════════════════════════════════════════════════════');
-  console.log('  ✅ ИНСТРУМЕНТЫ СОЗДАНЫ');
+  console.log('  [] ИНСТРУМЕНТЫ СОЗДАНЫ');
   console.log('═══════════════════════════════════════════════════════\n');
 
   console.log('Доступные инструменты:');

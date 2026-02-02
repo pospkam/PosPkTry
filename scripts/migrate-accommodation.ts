@@ -18,7 +18,7 @@ import fs from 'fs';
 import path from 'path';
 
 async function migrate() {
-  console.log('🚀 Начинаем миграцию accommodation...\n');
+  console.log('  Начинаем миграцию accommodation...\n');
 
   const pool = getPool();
   const client = await pool.connect();
@@ -36,7 +36,7 @@ async function migrate() {
       .map(cmd => cmd.trim())
       .filter(cmd => cmd.length > 0 && !cmd.startsWith('--'));
 
-    console.log(`📝 Найдено ${commands.length} SQL команд\n`);
+    console.log(`  Найдено ${commands.length} SQL команд\n`);
 
     // Выполняем каждую команду
     for (let i = 0; i < commands.length; i++) {
@@ -57,11 +57,11 @@ async function migrate() {
       
       try {
         await client.query(cmd + ';');
-        console.log(`  ✅ Успешно\n`);
+        console.log(`  [] Успешно\n`);
       } catch (error: any) {
         // Игнорируем ошибки "already exists"
         if (error.message.includes('already exists')) {
-          console.log(`  ⚠️  Уже существует (пропущено)\n`);
+          console.log(`  !  Уже существует (пропущено)\n`);
         } else {
           throw error;
         }
@@ -69,8 +69,8 @@ async function migrate() {
     }
 
     await client.query('COMMIT');
-    console.log('\n✅ Миграция успешно завершена!');
-    console.log('\n📊 Созданные таблицы:');
+    console.log('\n[] Миграция успешно завершена!');
+    console.log('\n  Созданные таблицы:');
     console.log('  - accommodations');
     console.log('  - accommodation_rooms');
     console.log('  - accommodation_bookings');
@@ -78,7 +78,7 @@ async function migrate() {
 
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('\n❌ Ошибка миграции:', error);
+    console.error('\n[] Ошибка миграции:', error);
     throw error;
   } finally {
     client.release();
@@ -87,7 +87,7 @@ async function migrate() {
 
 // Проверка таблиц
 async function verifyTables() {
-  console.log('\n🔍 Проверка созданных таблиц...\n');
+  console.log('\n Проверка созданных таблиц...\n');
 
   const tables = [
     'accommodations',
@@ -105,18 +105,18 @@ async function verifyTables() {
         FROM ${table}
       `, [table]);
 
-      console.log(`✅ ${table}:`);
+      console.log(`[] ${table}:`);
       console.log(`   Строк: ${result.rows[0].row_count}`);
       console.log(`   Колонок: ${result.rows[0].column_count}`);
     } catch (error: any) {
-      console.log(`❌ ${table}: Не найдена`);
+      console.log(`[] ${table}: Не найдена`);
     }
   }
 }
 
 // Добавление тестовых данных
 async function seedTestData() {
-  console.log('\n🌱 Добавление тестовых данных...\n');
+  console.log('\n Добавление тестовых данных...\n');
 
   try {
     // Проверяем есть ли уже партнёр типа 'stay'
@@ -140,10 +140,10 @@ async function seedTestData() {
         RETURNING id
       `);
       partnerId = partnerResult.rows[0].id;
-      console.log('  ✅ Создан партнёр (гостиница)');
+      console.log('  [] Создан партнёр (гостиница)');
     } else {
       partnerId = partnerCheck.rows[0].id;
-      console.log('  ℹ️  Партнёр уже существует');
+      console.log('  i  Партнёр уже существует');
     }
 
     // Добавляем размещение
@@ -194,7 +194,7 @@ async function seedTestData() {
 
     if (accommodationResult.rows.length > 0) {
       const accommodationId = accommodationResult.rows[0].id;
-      console.log('  ✅ Создано размещение');
+      console.log('  [] Создано размещение');
 
       // Добавляем номера
       await query(`
@@ -254,15 +254,15 @@ async function seedTestData() {
         ON CONFLICT DO NOTHING
       `, [accommodationId]);
 
-      console.log('  ✅ Созданы номера (3 типа)');
+      console.log('  [] Созданы номера (3 типа)');
     } else {
-      console.log('  ℹ️  Размещение уже существует');
+      console.log('  i  Размещение уже существует');
     }
 
-    console.log('\n✅ Тестовые данные добавлены!');
+    console.log('\n[] Тестовые данные добавлены!');
 
   } catch (error) {
-    console.error('\n❌ Ошибка добавления тестовых данных:', error);
+    console.error('\n[] Ошибка добавления тестовых данных:', error);
   }
 }
 
@@ -273,7 +273,7 @@ async function main() {
     await verifyTables();
     
     // Спрашиваем о добавлении тестовых данных
-    console.log('\n❓ Добавить тестовые данные? (y/n)');
+    console.log('\n Добавить тестовые данные? (y/n)');
     console.log('   (Для автоматического добавления запустите: tsx scripts/migrate-accommodation.ts --seed)');
     
     const shouldSeed = process.argv.includes('--seed') || process.argv.includes('-s');
@@ -282,10 +282,10 @@ async function main() {
       await seedTestData();
     }
 
-    console.log('\n🎉 Готово!\n');
+    console.log('\n  Готово!\n');
     process.exit(0);
   } catch (error) {
-    console.error('\n💥 Критическая ошибка:', error);
+    console.error('\n Критическая ошибка:', error);
     process.exit(1);
   }
 }

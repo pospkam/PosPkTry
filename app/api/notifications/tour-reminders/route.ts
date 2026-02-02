@@ -61,16 +61,16 @@ export async function POST(request: NextRequest) {
             <h2>Напоминание о вашем туре!</h2>
 
             <div style="background: #f0f8ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h3 style="color: #2e7d32; margin-top: 0;">🏔️ ${booking.tour_name}</h3>
-              <p><strong>📅 Дата и время:</strong> ${booking.start_date}</p>
-              <p><strong>⏱️ Длительность:</strong> ${booking.duration} часов</p>
-              <p><strong>👥 Участников:</strong> ${booking.guests_count}</p>
-              <p><strong>🏢 Оператор:</strong> ${booking.operator_name}</p>
-              <p><strong>📞 Телефон оператора:</strong> ${booking.operator_phone}</p>
-              <p><strong>✉️ Email оператора:</strong> ${booking.operator_email}</p>
+              <h3 style="color: #2e7d32; margin-top: 0;">${booking.tour_name}</h3>
+              <p><strong>Дата и время:</strong> ${booking.start_date}</p>
+              <p><strong>Длительность:</strong> ${booking.duration} часов</p>
+              <p><strong>Участников:</strong> ${booking.guests_count}</p>
+              <p><strong>Оператор:</strong> ${booking.operator_name}</p>
+              <p><strong>Телефон оператора:</strong> ${booking.operator_phone}</p>
+              <p><strong>Email оператора:</strong> ${booking.operator_email}</p>
             </div>
 
-            <h3 style="color: #1976d2;">📋 Что нужно взять с собой:</h3>
+            <h3 style="color: #1976d2;">Что нужно взять с собой:</h3>
             <ul>
               <li>Паспорт или водительское удостоверение</li>
               <li>Удобную одежду и обувь</li>
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
               <li>Фотоаппарат (опционально)</li>
             </ul>
 
-            <h3 style="color: #1976d2;">⚠️ Важная информация:</h3>
+            <h3 style="color: #1976d2;">Важная информация:</h3>
             <ul>
               <li>Будьте готовы за 15 минут до времени сбора</li>
               <li>В случае опоздания свяжитесь с оператором</li>
@@ -88,12 +88,12 @@ export async function POST(request: NextRequest) {
             </ul>
 
             <div style="background: #fff3e0; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ff9800;">
-              <p><strong>🚨 Экстренные контакты:</strong></p>
+              <p><strong>Экстренные контакты:</strong></p>
               <p>МЧС: 112</p>
               <p>Оператор: ${booking.operator_phone}</p>
             </div>
 
-            <p><em>Желаем незабываемого путешествия по Камчатке! 🏔️</em></p>
+            <p><em>Желаем незабываемого путешествия по Камчатке!</em></p>
           `
         });
 
