@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Tour, Weather } from '@/types';
 import { AIChatWidget } from '@/components/AIChatWidget';
 import { TransferSearchWidget } from '@/components/TransferSearchWidget';
+import { TouristNav } from '@/components/tourist/TouristNav';
 import { Mountain, Eye, TreePine, Fish, CloudSnow, Waves, Star, Zap, Clock, Wind, Sun, Cloud, CloudRain } from 'lucide-react';
 import { ActivityIcon, WeatherIcon } from '@/components/icons';
 
@@ -109,6 +110,7 @@ export default function TouristDashboard() {
 
   return (
     <div className="min-h-screen bg-transparent">
+      <TouristNav />
       {/* Header */}
       <div className="bg-white/15 backdrop-blur-2xl border-b border-white/15" style={{ backdropFilter: 'blur(20px)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">

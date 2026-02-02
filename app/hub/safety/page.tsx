@@ -2,12 +2,14 @@
 
 import React, { useState } from 'react';
 import { MapPin, Volcano, Sun, Cloud, CloudRain, Wind, Flame } from 'lucide-react';
+import { PublicNav } from '@/components/shared/PublicNav';
 
 export default function SafetyHub() {
   const [activeTab, setActiveTab] = useState('sos');
 
   return (
     <main className="min-h-screen bg-transparent text-white">
+      <PublicNav />
       {/* Header */}
       <div className="bg-white/15 border-b border-white/15 p-6">
         <h1 className="text-3xl font-black text-white">SOS и безопасность</h1>

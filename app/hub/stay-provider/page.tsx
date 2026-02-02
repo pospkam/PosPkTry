@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Protected } from '@/components/Protected';
+import { StayProviderNav } from '@/components/stay-provider/StayProviderNav';
 import { LoadingSpinner } from '@/components/admin/shared';
 
 export default function StayProviderDashboard() {
@@ -32,7 +33,7 @@ export default function StayProviderDashboard() {
 
   if (loading) {
     return (
-      <Protected roles={['admin']}>
+      <Protected roles={['stay', 'operator', 'admin']}>
         <div className="min-h-screen bg-transparent flex items-center justify-center">
           <LoadingSpinner message="Загрузка dashboard..." />
         </div>
@@ -41,8 +42,9 @@ export default function StayProviderDashboard() {
   }
 
   return (
-    <Protected roles={['admin']}>
+    <Protected roles={['stay', 'operator', 'admin']}>
       <main className="min-h-screen bg-transparent text-white">
+        <StayProviderNav />
         <div className="bg-white/15 border-b border-white/15 p-6">
           <h1 className="text-3xl font-black text-white">Dashboard Размещений</h1>
           <p className="text-white/70">Управление вашими объектами размещения</p>

@@ -10,7 +10,7 @@ export default function TransferOperatorDashboard() {
   const [period, setPeriod] = useState('30');
 
   return (
-    <Protected roles={['transfer_operator']}>
+    <Protected roles={['transfer', 'operator', 'admin']}>
       <main className="min-h-screen bg-transparent text-white">
         <TransferOperatorNav />
 
