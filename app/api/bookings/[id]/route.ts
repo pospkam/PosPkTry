@@ -6,9 +6,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { bookingService } from '@/pillars/booking'
-import { authenticateUser } from '@/pillars/core-infrastructure/services/auth'
-import type { BookingUpdate } from '@/pillars/booking/lib/booking/types'
+import { bookingService } from .@/lib/database.
+import { authenticateUser } from '@/lib/auth'
+import type { BookingUpdate } from .@/lib/database.lib/booking/types'
 
 /**
  * GET /api/bookings/[id]
