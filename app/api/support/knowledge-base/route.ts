@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { knowledgeBaseService } from '@/pillars/support/services'
+import { knowledgeBaseService } from '@/lib/database'
 
 export async function GET(request: NextRequest) {
   try {

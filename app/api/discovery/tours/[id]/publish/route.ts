@@ -4,11 +4,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { tourService } from '@/pillars/discovery/lib/tour/services/TourService';
+import { tourService } from '@/lib/database';
 import {
   TourNotFoundError,
   TourAlreadyPublishedError,
-} from '@/pillars/discovery/lib/tour/types';
+} from '@/lib/database';
 
 // ============================================================================
 // POST - ОПУБЛИКОВАТЬ ТУР

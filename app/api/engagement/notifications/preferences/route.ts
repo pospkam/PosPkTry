@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { notificationService } from '@/pillars/engagement/lib/notifications/services'
+import { notificationService } from '@/lib/database'
 import { verifyAuth } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
