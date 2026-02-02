@@ -5,8 +5,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { paymentService } from .@/lib/database.
-import { bookingService } from .@/lib/database.
+import { paymentService } from '@/lib/database'
+import { bookingService } from '@/lib/database'
 import { authenticateUser } from '@/lib/auth'
 
 /**

@@ -6,9 +6,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { bookingService } from .@/lib/database.
+import { db } from '@/lib/database'
 import { authenticateUser } from '@/lib/auth'
-import type { BookingUpdate } from .@/lib/database.lib/booking/types'
+import type { BookingUpdate } from '@/types'
 
 /**
  * GET /api/bookings/[id]

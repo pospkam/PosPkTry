@@ -5,9 +5,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { availabilityService } from .@/lib/database.
+import { availabilityService } from '@/lib/database'
 import { authenticateUser, authorizeRole } from '@/lib/auth'
-import type { AvailabilitySearch } from .@/lib/database.lib/availability/types'
+import type { AvailabilitySearch } from '@/lib/database' // TODO: fix import path - lib/availability/types'
 
 /**
  * GET /api/bookings/availability
