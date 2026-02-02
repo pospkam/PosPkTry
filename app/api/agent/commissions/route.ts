@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/pillars/core-infrastructure-infrastructure/lib/database';
+import { query } from '@/lib/database';
 import { ApiResponse, AgentCommission, CommissionPayout } from '@/types';
 import { requireAgent } from '@/lib/auth/middleware';
 

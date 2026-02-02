@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse, Booking } from '@/types';
-import { query } from '@/pillars/core-infrastructure-infrastructure/lib/database';
+import { query } from '@/lib/database';
 
 // GET /api/bookings - Получение бронирований пользователя
 export async function GET(request: NextRequest) {
