@@ -15,7 +15,7 @@
     "db:setup": "bash scripts/setup-database.sh",
     "db:migrate": "psql $DATABASE_URL -f scripts/apply-new-schemas.sql",
     "sentry:sourcemaps": "sentry-cli sourcemaps upload --org kamhub --project nextjs .next",
-    "postbuild": "npm run sentry:sourcemaps",
+    "postbuild": "echo Sentry sourcemaps skipped",
     "ai:update-knowledge": "node scripts/update-knowledge-base.js",
     "ai:update-knowledge:file": "node scripts/update-knowledge-base.js file",
     "security:audit": "bash scripts/security/audit.sh",
