@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    console.log('🎯 Планирование поездки:', { query: body.query, days: body.days });
+    console.log('  Планирование поездки:', { query: body.query, days: body.days });
 
     // Шаг 1: Анализ запроса через AI
     const userIntent = await analyzeUserIntent(body.query, body);
@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('❌ Ошибка планирования поездки:', error);
+    console.error('[✗] Ошибка планирования поездки:', error);
     return NextResponse.json({
       success: false,
       error: 'Failed to plan trip',

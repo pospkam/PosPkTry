@@ -48,7 +48,7 @@ export default function GearRentalPage() {
     { id: 'climbing', name: 'Альпинизм', icon: '🧗' },
     { id: 'skiing', name: 'Лыжи/Сноуборд', icon: '⛷️' },
     { id: 'water', name: 'Водное', icon: '🚣' },
-    { id: 'photography', name: 'Фототехника', icon: '📸' },
+    { id: 'photography', name: 'Фототехника', icon: ' ' },
     { id: 'safety', name: 'Безопасность', icon: '🦺' },
   ];
 
@@ -88,7 +88,7 @@ export default function GearRentalPage() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         {loading ? (
           <div className="text-center py-20">
-            <div className="text-4xl mb-4">⏳</div>
+            <div className="text-4xl mb-4"> </div>
             <p className="text-white/70">Загрузка снаряжения...</p>
           </div>
         ) : gear.length === 0 ? (
@@ -121,7 +121,7 @@ export default function GearRentalPage() {
                   </div>
                   
                   <div className="text-green-400 text-sm">
-                    ✅ Доступно: {item.availableQuantity} шт
+                    [✓] Доступно: {item.availableQuantity} шт
                   </div>
                   
                   <button className="w-full mt-4 px-4 py-2 bg-premium-gold hover:bg-premium-gold/80 text-premium-black font-bold rounded-lg transition-colors">

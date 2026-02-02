@@ -1,244 +1,271 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/pillars/core-infrastructure-infrastructure/lib/database';
-import { ApiResponse, PaginatedResponse } from '@/types';
-import { OperatorTour } from '@/types/operator';
+import { query } from '@/lib/database';
+import { ApiResponse } from '@/types';
+import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/operator/tours
- * Получение списка туров оператора
+ * Get operator's tours
  */
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
+    const userId = request.headers.get('X-User-Id');
+    const userRole = request.headers.get('X-User-Role');
     
-    const operatorId = searchParams.get('operatorId');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
-    const offset = (page - 1) * limit;
-    
-    const status = searchParams.get('status'); // 'active', 'inactive', 'all'
-    const search = searchParams.get('search');
-    const category = searchParams.get('category');
-    const sortBy = searchParams.get('sortBy') || 'created_at';
-    const sortOrder = searchParams.get('sortOrder') || 'desc';
+    if (!userId || userRole !== 'operator') {
+      return NextResponse.json({
+        success: false,
+        error: 'Недостаточно прав'
+      } as ApiResponse<null>, { status: 403 });
+    }
 
+    // Get operator's partner ID
+    const operatorId = await getOperatorPartnerId(userId);
+    
     if (!operatorId) {
       return NextResponse.json({
         success: false,
-        error: 'Operator ID is required'
-      } as ApiResponse<null>, { status: 400 });
+        error: 'Профиль оператора не найден. Обратитесь к администратору.'
+      } as ApiResponse<null>, { status: 404 });
     }
 
-    const whereConditions: string[] = ['t.operator_id = $1'];
-    const queryParams: any[] = [operatorId];
+    // Parse query parameters
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '20');
+    const search = searchParams.get('search') || '';
+    const status = searchParams.get('status') || 'all';
+    const category = searchParams.get('category') || '';
+    const offset = (page - 1) * limit;
+
+    // Build query
+    let queryStr = `
+        SELECT 
+          t.id,
+          t.name,
+          t.description,
+          t.short_description,
+          t.category,
+          t.difficulty,
+        t.duration,
+        t.price,
+        t.currency,
+        t.season,
+        t.max_group_size,
+        t.min_group_size,
+        t.rating,
+        t.review_count,
+        t.is_active,
+        t.created_at,
+        t.updated_at,
+        COALESCE(array_agg(DISTINCT a.url) FILTER (WHERE a.url IS NOT NULL), '{}') as images,
+        COUNT(DISTINCT b.id) as bookings_count,
+        COALESCE(SUM(CASE WHEN b.payment_status = 'paid' THEN b.total_price ELSE 0 END), 0) as total_revenue
+      FROM tours t
+      LEFT JOIN tour_assets ta ON t.id = ta.tour_id
+      LEFT JOIN assets a ON ta.asset_id = a.id
+      LEFT JOIN bookings b ON t.id = b.tour_id
+      WHERE t.operator_id = $1
+    `;
+
+    const params: any[] = [operatorId];
     let paramIndex = 2;
 
-    if (status === 'active') {
-      whereConditions.push('t.is_active = true');
-    } else if (status === 'inactive') {
-      whereConditions.push('t.is_active = false');
+    // Search filter
+    if (search) {
+      queryStr += ` AND (t.name ILIKE $${paramIndex} OR t.description ILIKE $${paramIndex})`;
+      params.push(`%${search}%`);
+      paramIndex++;
     }
 
-    if (search) {
-      whereConditions.push(`(t.name ILIKE $${paramIndex} OR t.description ILIKE $${paramIndex})`);
-      queryParams.push(`%${search}%`);
+    // Status filter
+    if (status !== 'all') {
+      queryStr += ` AND t.is_active = $${paramIndex}`;
+      params.push(status === 'active');
       paramIndex++;
+    }
+
+    // Category filter
+    if (category) {
+      queryStr += ` AND t.category = $${paramIndex}`;
+      params.push(category);
+      paramIndex++;
+    }
+
+    queryStr += `
+      GROUP BY t.id
+      ORDER BY t.created_at DESC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `;
+    params.push(limit, offset);
+
+    const result = await query(queryStr, params);
+
+    // Get total count
+    let countQuery = `SELECT COUNT(*) FROM tours WHERE operator_id = $1`;
+    const countParams: any[] = [operatorId];
+    let countIndex = 2;
+
+    if (search) {
+      countQuery += ` AND (name ILIKE $${countIndex} OR description ILIKE $${countIndex})`;
+      countParams.push(`%${search}%`);
+      countIndex++;
+    }
+
+    if (status !== 'all') {
+      countQuery += ` AND is_active = $${countIndex}`;
+      countParams.push(status === 'active');
+      countIndex++;
     }
 
     if (category) {
-      whereConditions.push(`t.category = $${paramIndex}`);
-      queryParams.push(category);
-      paramIndex++;
+      countQuery += ` AND category = $${countIndex}`;
+      countParams.push(category);
     }
 
-    const whereClause = `WHERE ${whereConditions.join(' AND ')}`;
+    const countResult = await query(countQuery, countParams);
+    const totalCount = parseInt(countResult.rows[0].count);
 
-    // Подсчёт
-    const countQuery = `
-      SELECT COUNT(*) as total
-      FROM tours t
-      ${whereClause}
-    `;
-
-    const countResult = await query(countQuery, queryParams);
-    const total = parseInt(countResult.rows[0].total);
-
-    // Получение туров с дополнительной информацией
-    const toursQuery = `
-      SELECT
-        t.id,
-        t.name,
-        t.description,
-        t.category,
-        t.difficulty,
-        t.duration,
-        t.max_group_size,
-        t.min_group_size,
-        t.price,
-        t.currency,
-        t.is_active,
-        t.rating,
-        t.review_count,
-        t.created_at,
-        t.updated_at,
-        COALESCE(COUNT(DISTINCT b.id), 0) as bookings_count,
-        COALESCE(SUM(CASE WHEN b.status IN ('confirmed', 'completed') THEN b.total_price ELSE 0 END), 0) as total_revenue,
-        ARRAY_AGG(DISTINCT a.url) FILTER (WHERE a.url IS NOT NULL) as images
-      FROM tours t
-      LEFT JOIN bookings b ON t.id = b.tour_id
-      LEFT JOIN tour_images ti ON t.id = ti.tour_id
-      LEFT JOIN assets a ON ti.asset_id = a.id
-      ${whereClause}
-      GROUP BY t.id
-      ORDER BY t.${sortBy} ${sortOrder.toUpperCase()}
-      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
-    `;
-
-    queryParams.push(limit, offset);
-    const toursResult = await query(toursQuery, queryParams);
-
-    const tours: OperatorTour[] = toursResult.rows.map(row => ({
+      const tours = result.rows.map(row => ({
       id: row.id,
       name: row.name,
       description: row.description,
-      category: row.category,
+      shortDescription: row.short_description,
+        category: row.category || 'adventure',
       difficulty: row.difficulty,
-      duration: parseInt(row.duration),
-      maxGroupSize: parseInt(row.max_group_size),
-      minGroupSize: parseInt(row.min_group_size) || 1,
+      duration: row.duration,
       price: parseFloat(row.price),
       currency: row.currency,
+      season: row.season,
+      maxGroupSize: row.max_group_size,
+      minGroupSize: row.min_group_size,
+      rating: parseFloat(row.rating),
+      reviewCount: row.review_count,
       isActive: row.is_active,
-      images: row.images || [],
-      includes: [], // TODO: Получить из БД
-      excludes: [], // TODO: Получить из БД
-      itinerary: [], // TODO: Получить из БД
-      schedule: {
-        startDate: new Date(),
-        endDate: undefined,
-        daysOfWeek: undefined,
-        timeSlots: undefined
-      },
-      rating: parseFloat(row.rating) || 0,
-      reviewCount: parseInt(row.review_count) || 0,
-      bookingsCount: parseInt(row.bookings_count) || 0,
-      totalRevenue: parseFloat(row.total_revenue) || 0,
-      createdAt: new Date(row.created_at),
-      updatedAt: new Date(row.updated_at)
+      images: row.images,
+      bookingsCount: parseInt(row.bookings_count),
+      totalRevenue: parseFloat(row.total_revenue),
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
     }));
-
-    const response: PaginatedResponse<OperatorTour> = {
-      data: tours,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit)
-      }
-    };
 
     return NextResponse.json({
       success: true,
-      data: response
-    } as ApiResponse<PaginatedResponse<OperatorTour>>);
+      data: {
+        data: tours,
+        pagination: {
+          page,
+          limit,
+          totalCount,
+          totalPages: Math.ceil(totalCount / limit)
+        }
+      }
+    } as ApiResponse<any>);
 
   } catch (error) {
-    console.error('Error fetching operator tours:', error);
+    console.error('Get operator tours error:', error);
     return NextResponse.json({
       success: false,
-      error: 'Failed to fetch tours',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      error: 'Ошибка при получении туров'
     } as ApiResponse<null>, { status: 500 });
   }
 }
 
 /**
  * POST /api/operator/tours
- * Создание нового тура
+ * Create new tour
  */
 export async function POST(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const operatorId = searchParams.get('operatorId');
+    const userId = request.headers.get('X-User-Id');
+    const userRole = request.headers.get('X-User-Role');
+    
+    if (!userId || userRole !== 'operator') {
+      return NextResponse.json({
+        success: false,
+        error: 'Недостаточно прав'
+      } as ApiResponse<null>, { status: 403 });
+    }
 
+    const operatorId = await getOperatorPartnerId(userId);
+    
     if (!operatorId) {
       return NextResponse.json({
         success: false,
-        error: 'Operator ID is required'
-      } as ApiResponse<null>, { status: 400 });
+        error: 'Профиль оператора не найден'
+      } as ApiResponse<null>, { status: 404 });
     }
 
     const body = await request.json();
 
-    // Валидация
-    if (!body.name || !body.description || !body.price) {
+      const {
+        name,
+        description,
+        shortDescription,
+        category = 'adventure',
+        difficulty,
+        duration,
+        price,
+        currency = 'RUB',
+        season = [],
+        maxGroupSize = 20,
+        minGroupSize = 1,
+        requirements = [],
+        includes = [],
+        excludes = [],
+        coordinates = []
+      } = body;
+
+    // Validation
+    if (!name || !description || !difficulty || !duration || !price) {
       return NextResponse.json({
         success: false,
-        error: 'Name, description, and price are required'
+        error: 'Заполните все обязательные поля: название, описание, сложность, длительность, цена'
       } as ApiResponse<null>, { status: 400 });
     }
 
-    // Создание тура
-    const insertQuery = `
-      INSERT INTO tours (
-        operator_id,
+    // Create tour
+    const result = await query(
+      `INSERT INTO tours (
+        name, description, short_description, category, difficulty, duration, price, currency,
+        season, max_group_size, min_group_size, operator_id,
+        requirements, included, not_included, coordinates, is_active
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, true)
+      RETURNING *`,
+      [
         name,
         description,
-        category,
+        shortDescription || description.substring(0, 200),
+          category,
         difficulty,
         duration,
-        max_group_size,
-        min_group_size,
         price,
         currency,
-        is_active,
-        created_at,
-        updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
-      RETURNING id, name, is_active, created_at
-    `;
-
-    const values = [
-      operatorId,
-      body.name,
-      body.description,
-      body.category || 'adventure',
-      body.difficulty || 'medium',
-      body.duration || 4,
-      body.maxGroupSize || 15,
-      body.minGroupSize || 1,
-      body.price,
-      body.currency || 'RUB',
-      body.isActive !== undefined ? body.isActive : true
-    ];
-
-    const result = await query(insertQuery, values);
-    const newTour = result.rows[0];
-
-    // TODO: Сохранить includes, excludes, itinerary
+          JSON.stringify(season),
+          maxGroupSize,
+          minGroupSize,
+        operatorId,
+          JSON.stringify(requirements),
+          JSON.stringify(includes),
+          JSON.stringify(excludes),
+          JSON.stringify(coordinates)
+      ]
+    );
 
     return NextResponse.json({
       success: true,
-      data: {
-        id: newTour.id,
-        name: newTour.name,
-        isActive: newTour.is_active,
-        createdAt: new Date(newTour.created_at)
-      },
-      message: 'Tour created successfully'
-    });
+      data: result.rows[0],
+      message: 'Тур успешно создан'
+    } as ApiResponse<any>);
 
   } catch (error) {
-    console.error('Error creating tour:', error);
+    console.error('Create tour error:', error);
     return NextResponse.json({
       success: false,
-      error: 'Failed to create tour',
+      error: 'Ошибка при создании тура',
       message: error instanceof Error ? error.message : 'Unknown error'
     } as ApiResponse<null>, { status: 500 });
   }
 }
-
-
-

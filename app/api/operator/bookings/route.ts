@@ -1,102 +1,120 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/pillars/core-infrastructure-infrastructure/lib/database';
-import { ApiResponse, PaginatedResponse } from '@/types';
-import { OperatorBooking } from '@/types/operator';
+import { query } from '@/lib/database';
+import { ApiResponse } from '@/types';
+import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/operator/bookings
- * Получение списка бронирований оператора
+ * Get bookings for operator's tours
  */
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
+    const userId = request.headers.get('X-User-Id');
+    const userRole = request.headers.get('X-User-Role');
     
-    const operatorId = searchParams.get('operatorId');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
-    const offset = (page - 1) * limit;
-    
-    const status = searchParams.get('status'); // 'pending', 'confirmed', 'cancelled', 'completed', 'all'
-    const search = searchParams.get('search');
-    const tourId = searchParams.get('tourId');
-    const sortBy = searchParams.get('sortBy') || 'created_at';
-    const sortOrder = searchParams.get('sortOrder') || 'desc';
+    if (!userId || userRole !== 'operator') {
+      return NextResponse.json({
+        success: false,
+        error: 'Недостаточно прав'
+      } as ApiResponse<null>, { status: 403 });
+    }
 
+    const operatorId = await getOperatorPartnerId(userId);
+    
     if (!operatorId) {
       return NextResponse.json({
         success: false,
-        error: 'Operator ID is required'
-      } as ApiResponse<null>, { status: 400 });
+        error: 'Профиль оператора не найден'
+      } as ApiResponse<null>, { status: 404 });
     }
 
-    const whereConditions: string[] = ['t.operator_id = $1'];
-    const queryParams: any[] = [operatorId];
-    let paramIndex = 2;
+    // Parse query parameters
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '20');
+    const search = searchParams.get('search') || '';
+    const status = searchParams.get('status') || 'all';
+    const offset = (page - 1) * limit;
 
-    if (status && status !== 'all') {
-      whereConditions.push(`b.status = $${paramIndex}`);
-      queryParams.push(status);
-      paramIndex++;
-    }
-
-    if (tourId) {
-      whereConditions.push(`b.tour_id = $${paramIndex}`);
-      queryParams.push(tourId);
-      paramIndex++;
-    }
-
-    if (search) {
-      whereConditions.push(`(u.name ILIKE $${paramIndex} OR u.email ILIKE $${paramIndex} OR t.name ILIKE $${paramIndex})`);
-      queryParams.push(`%${search}%`);
-      paramIndex++;
-    }
-
-    const whereClause = `WHERE ${whereConditions.join(' AND ')}`;
-
-    // Подсчёт
-    const countQuery = `
-      SELECT COUNT(*) as total
-      FROM bookings b
-      JOIN tours t ON b.tour_id = t.id
-      JOIN users u ON b.user_id = u.id
-      ${whereClause}
-    `;
-
-    const countResult = await query(countQuery, queryParams);
-    const total = parseInt(countResult.rows[0].total);
-
-    // Получение бронирований
-    const bookingsQuery = `
-      SELECT
+    // Build query
+    let queryStr = `
+      SELECT 
         b.id,
         b.tour_id,
         t.name as tour_name,
         b.user_id,
         u.name as user_name,
         u.email as user_email,
-        u.phone as user_phone,
-        b.start_date as date,
+        u.preferences->>'phone' as user_phone,
+        b.date,
+        b.start_date,
+        b.participants,
         b.guests_count,
         b.total_price,
         b.status,
         b.payment_status,
-        b.special_requirements as notes,
+        b.special_requests,
         b.created_at,
         b.updated_at
       FROM bookings b
       JOIN tours t ON b.tour_id = t.id
       JOIN users u ON b.user_id = u.id
-      ${whereClause}
-      ORDER BY b.${sortBy} ${sortOrder.toUpperCase()}
-      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+      WHERE t.operator_id = $1
     `;
 
-    queryParams.push(limit, offset);
-    const bookingsResult = await query(bookingsQuery, queryParams);
+    const params: any[] = [operatorId];
+    let paramIndex = 2;
 
-    const bookings: OperatorBooking[] = bookingsResult.rows.map(row => ({
+    // Search filter
+    if (search) {
+      queryStr += ` AND (u.name ILIKE $${paramIndex} OR u.email ILIKE $${paramIndex} OR t.name ILIKE $${paramIndex})`;
+      params.push(`%${search}%`);
+      paramIndex++;
+    }
+
+    // Status filter
+    if (status !== 'all') {
+      queryStr += ` AND b.status = $${paramIndex}`;
+      params.push(status);
+      paramIndex++;
+    }
+
+    queryStr += `
+      ORDER BY b.created_at DESC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `;
+    params.push(limit, offset);
+
+    const result = await query(queryStr, params);
+
+    // Get total count
+    let countQuery = `
+      SELECT COUNT(*) 
+      FROM bookings b
+      JOIN tours t ON b.tour_id = t.id
+      JOIN users u ON b.user_id = u.id
+      WHERE t.operator_id = $1
+    `;
+    const countParams: any[] = [operatorId];
+    let countIndex = 2;
+
+    if (search) {
+      countQuery += ` AND (u.name ILIKE $${countIndex} OR u.email ILIKE $${countIndex} OR t.name ILIKE $${countIndex})`;
+      countParams.push(`%${search}%`);
+      countIndex++;
+    }
+
+    if (status !== 'all') {
+      countQuery += ` AND b.status = $${countIndex}`;
+      countParams.push(status);
+    }
+
+    const countResult = await query(countQuery, countParams);
+    const totalCount = parseInt(countResult.rows[0].count);
+
+    const bookings = result.rows.map(row => ({
       id: row.id,
       tourId: row.tour_id,
       tourName: row.tour_name,
@@ -104,40 +122,34 @@ export async function GET(request: NextRequest) {
       userName: row.user_name,
       userEmail: row.user_email,
       userPhone: row.user_phone,
-      date: new Date(row.date),
-      guestsCount: parseInt(row.guests_count) || 1,
+      date: row.start_date || row.date,
+      guestsCount: row.guests_count || row.participants,
       totalPrice: parseFloat(row.total_price),
       status: row.status,
       paymentStatus: row.payment_status,
-      notes: row.notes,
-      createdAt: new Date(row.created_at),
-      updatedAt: new Date(row.updated_at)
+      specialRequests: row.special_requests,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
     }));
-
-    const response: PaginatedResponse<OperatorBooking> = {
-      data: bookings,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit)
-      }
-    };
 
     return NextResponse.json({
       success: true,
-      data: response
-    } as ApiResponse<PaginatedResponse<OperatorBooking>>);
+      data: {
+        data: bookings,
+        pagination: {
+          page,
+          limit,
+          totalCount,
+          totalPages: Math.ceil(totalCount / limit)
+        }
+      }
+    } as ApiResponse<any>);
 
   } catch (error) {
-    console.error('Error fetching operator bookings:', error);
+    console.error('Get operator bookings error:', error);
     return NextResponse.json({
       success: false,
-      error: 'Failed to fetch bookings',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      error: 'Ошибка при получении бронирований'
     } as ApiResponse<null>, { status: 500 });
   }
 }
-
-
-

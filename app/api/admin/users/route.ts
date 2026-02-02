@@ -1,231 +1,80 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/pillars/core-infrastructure-infrastructure/lib/database';
-import { AdminUser } from '@/types/admin';
-import { ApiResponse, PaginatedResponse } from '@/types';
+import { query } from '@/lib/database';
+import { ApiResponse } from '@/types';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/admin/users
- * Получение списка пользователей с фильтрацией и пагинацией
+ * Get all users
  */
 export async function GET(request: NextRequest) {
-  // Проверка прав администратора
-  const userId = request.headers.get('x-user-id');
-  const userRole = request.headers.get('x-user-role');
-  
-  if (!userId) {
-    return NextResponse.json(
-      { success: false, error: 'Unauthorized' },
-      { status: 401 }
-    );
-  }
-  
-  if (userRole !== 'admin') {
-    return NextResponse.json(
-      { success: false, error: 'Forbidden: admin access required' },
-      { status: 403 }
-    );
-  }
   try {
-    // TODO: Add authentication check here
-    // const userOrResponse = await requireAdmin(request);
-    // if (userOrResponse instanceof NextResponse) return userOrResponse;
+    const userId = request.headers.get('X-User-Id');
+    const userRole = request.headers.get('X-User-Role');
     
+    if (!userId || userRole !== 'admin') {
+      return NextResponse.json({
+        success: false,
+        error: 'Недостаточно прав'
+      } as ApiResponse<null>, { status: 403 });
+    }
+
     const { searchParams } = new URL(request.url);
-    
-    // Параметры пагинации
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
-    const offset = (page - 1) * limit;
-
-    // Фильтры
     const role = searchParams.get('role');
-    const status = searchParams.get('status');
-    const search = searchParams.get('search');
-    const sortBy = searchParams.get('sortBy') || 'created_at';
-    const sortOrder = searchParams.get('sortOrder') || 'desc';
+    const limit = parseInt(searchParams.get('limit') || '100');
+    const offset = parseInt(searchParams.get('offset') || '0');
 
-    // Строим WHERE условия
-    const whereConditions: string[] = [];
-    const queryParams: any[] = [];
+    let queryStr = `
+      SELECT 
+        id, email, name, role, preferences, created_at, updated_at
+      FROM users
+    `;
+
+    const params = [];
     let paramIndex = 1;
 
     if (role) {
-      whereConditions.push(`u.role = $${paramIndex}`);
-      queryParams.push(role);
-      paramIndex++;
+      queryStr += ` WHERE role = $${paramIndex++}`;
+      params.push(role);
     }
 
-    // Для статуса: пока у нас нет поля status в схеме, добавим логику позже
-    // if (status) {
-    //   whereConditions.push(`u.status = $${paramIndex}`);
-    //   queryParams.push(status);
-    //   paramIndex++;
-    // }
+    queryStr += ` ORDER BY created_at DESC LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
+    params.push(limit, offset);
 
-    if (search) {
-      whereConditions.push(`(u.name ILIKE $${paramIndex} OR u.email ILIKE $${paramIndex})`);
-      queryParams.push(`%${search}%`);
-      paramIndex++;
-    }
+    const result = await query(queryStr, params);
 
-    const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
-
-    // Подсчёт общего количества
-    const countQuery = `
-      SELECT COUNT(*) as total
-      FROM users u
-      ${whereClause}
-    `;
-
-    const countResult = await query(countQuery, queryParams);
-    const total = parseInt(countResult.rows[0].total);
-
-    // Получение пользователей
-    const usersQuery = `
-      SELECT
-        u.id,
-        u.email,
-        u.name,
-        u.role,
-        u.created_at,
-        u.updated_at,
-        COALESCE(b.bookings_count, 0) as bookings_count,
-        COALESCE(b.total_spent, 0) as total_spent
-      FROM users u
-      LEFT JOIN (
-        SELECT
-          user_id,
-          COUNT(*) as bookings_count,
-          SUM(total_price) as total_spent
-        FROM bookings
-        WHERE payment_status = 'paid'
-        GROUP BY user_id
-      ) b ON u.id = b.user_id
-      ${whereClause}
-      ORDER BY u.${sortBy} ${sortOrder.toUpperCase()}
-      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
-    `;
-
-    queryParams.push(limit, offset);
-    const usersResult = await query(usersQuery, queryParams);
-
-    const users: AdminUser[] = usersResult.rows.map(row => ({
+    const users = result.rows.map(row => ({
       id: row.id,
       email: row.email,
       name: row.name,
       role: row.role,
-      status: 'active', // По умолчанию, можно добавить логику позже
-      emailVerified: true, // По умолчанию
-      createdAt: new Date(row.created_at),
-      lastLoginAt: row.updated_at ? new Date(row.updated_at) : undefined,
-      bookingsCount: parseInt(row.bookings_count),
-      totalSpent: parseFloat(row.total_spent)
+      preferences: row.preferences,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
     }));
 
-    const response: PaginatedResponse<AdminUser> = {
-      data: users,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit)
-      }
-    };
-
-    return NextResponse.json({
-      success: true,
-      data: response
-    } as ApiResponse<PaginatedResponse<AdminUser>>);
-
-  } catch (error) {
-    console.error('Error fetching users:', error);
-    return NextResponse.json({
-      success: false,
-      error: 'Failed to fetch users',
-      message: error instanceof Error ? error.message : 'Unknown error'
-    } as ApiResponse<null>, { status: 500 });
-  }
-}
-
-/**
- * POST /api/admin/users
- * Создание нового пользователя
- */
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-
-    // Валидация
-    if (!body.email || !body.name || !body.role) {
-      return NextResponse.json({
-        success: false,
-        error: 'Missing required fields: email, name, role'
-      } as ApiResponse<null>, { status: 400 });
-    }
-
-    // Проверка валидности роли
-    const validRoles = ['tourist', 'operator', 'guide', 'transfer', 'agent', 'admin'];
-    if (!validRoles.includes(body.role)) {
-      return NextResponse.json({
-        success: false,
-        error: `Invalid role. Must be one of: ${validRoles.join(', ')}`
-      } as ApiResponse<null>, { status: 400 });
-    }
-
-    // Проверка, существует ли уже пользователь с таким email
-    const existingUserQuery = 'SELECT id FROM users WHERE email = $1';
-    const existingUserResult = await query(existingUserQuery, [body.email]);
-
-    if (existingUserResult.rows.length > 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'User with this email already exists'
-      } as ApiResponse<null>, { status: 409 });
-    }
-
-    // Создание пользователя
-    const createUserQuery = `
-      INSERT INTO users (email, name, role, preferences)
-      VALUES ($1, $2, $3, $4)
-      RETURNING id, email, name, role, created_at
-    `;
-
-    const preferences = body.preferences || {};
-    const result = await query(createUserQuery, [
-      body.email,
-      body.name,
-      body.role,
-      JSON.stringify(preferences)
-    ]);
-
-    const newUser = result.rows[0];
+    // Get total count
+    const countResult = await query(
+      role ? 'SELECT COUNT(*) FROM users WHERE role = $1' : 'SELECT COUNT(*) FROM users',
+      role ? [role] : []
+    );
 
     return NextResponse.json({
       success: true,
       data: {
-        id: newUser.id,
-        email: newUser.email,
-        name: newUser.name,
-        role: newUser.role,
-        createdAt: new Date(newUser.created_at)
-      },
-      message: 'User created successfully'
-    } as ApiResponse<{
-      id: string;
-      email: string;
-      name: string;
-      role: string;
-      createdAt: Date;
-    }>);
+        users,
+        total: parseInt(countResult.rows[0].count),
+        limit,
+        offset
+      }
+    } as ApiResponse<any>);
 
   } catch (error) {
-    console.error('Error creating user:', error);
+    console.error('Get users error:', error);
     return NextResponse.json({
       success: false,
-      error: 'Failed to create user',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      error: 'Ошибка при получении пользователей'
     } as ApiResponse<null>, { status: 500 });
   }
 }

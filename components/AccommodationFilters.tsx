@@ -22,7 +22,7 @@ interface AccommodationFiltersProps {
 const accommodationTypes = [
   { value: 'hotel', label: 'Отель', icon: '🏨' },
   { value: 'hostel', label: 'Хостел', icon: '🏠' },
-  { value: 'apartment', label: 'Апартаменты', icon: '🏢' },
+  { value: 'apartment', label: 'Апартаменты', icon: '' },
   { value: 'guesthouse', label: 'Гостевой дом', icon: '🏡' },
   { value: 'resort', label: 'Курорт', icon: '🏖️' },
   { value: 'camping', label: 'Кемпинг', icon: '⛺' },

@@ -15,23 +15,23 @@ export function PartnerCard({ partner, className, onClick }: PartnerCardProps) {
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case 'operator':
-        return '🏢';
+        return ' ';
       case 'guide':
-        return '👨‍🏫';
+        return '';
       case 'transfer':
-        return '🚗';
+        return ' ';
       case 'stay':
-        return '🏨';
+        return '';
       case 'souvenir':
-        return '🎁';
+        return ' ';
       case 'gear':
-        return '🎒';
+        return '';
       case 'cars':
-        return '🚙';
+        return '';
       case 'restaurant':
-        return '🍽️';
+        return '';
       default:
-        return '🏢';
+        return ' ';
     }
   };
 
@@ -127,7 +127,7 @@ export function PartnerCard({ partner, className, onClick }: PartnerCardProps) {
         {partner.isVerified && (
           <div className="absolute top-3 right-3">
             <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1">
-              <span>✓</span>
+              <span>[]</span>
               <span>Проверен</span>
             </span>
           </div>
@@ -143,7 +143,7 @@ export function PartnerCard({ partner, className, onClick }: PartnerCardProps) {
           </h3>
           {partner.rating > 0 && (
             <div className="flex items-center space-x-1 ml-2">
-              <span className="text-yellow-500">⭐</span>
+              <span className="text-yellow-500"></span>
               <span className="text-sm font-medium">{formatRating(partner.rating)}</span>
               <span className="text-xs text-gray-500">({partner.reviewCount})</span>
             </div>
@@ -160,28 +160,28 @@ export function PartnerCard({ partner, className, onClick }: PartnerCardProps) {
           <div className="space-y-2 mb-4">
             {partner.contact.phone && (
               <div className="flex items-center text-sm text-gray-600">
-                <span className="mr-2">📞</span>
+                <span className="mr-2"> </span>
                 <span>{partner.contact.phone}</span>
               </div>
             )}
             
             {partner.contact.email && (
               <div className="flex items-center text-sm text-gray-600">
-                <span className="mr-2">✉️</span>
+                <span className="mr-2"> </span>
                 <span className="truncate">{partner.contact.email}</span>
               </div>
             )}
             
             {partner.contact.website && (
               <div className="flex items-center text-sm text-gray-600">
-                <span className="mr-2">🌐</span>
+                <span className="mr-2"></span>
                 <span className="truncate">{partner.contact.website}</span>
               </div>
             )}
             
             {partner.contact.telegram && (
               <div className="flex items-center text-sm text-gray-600">
-                <span className="mr-2">💬</span>
+                <span className="mr-2"> </span>
                 <span>{partner.contact.telegram}</span>
               </div>
             )}

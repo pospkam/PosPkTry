@@ -149,7 +149,7 @@ export default function FinancePage() {
             </div>
           ) : !data ? (
             <EmptyState
-              icon="💰"
+              icon=" "
               title="Нет данных"
               description="Финансовые данные не найдены"
             />
@@ -160,25 +160,25 @@ export default function FinancePage() {
                 <MetricCard
                   title="Общая выручка"
                   value={formatCurrency(data.totalRevenue)}
-                  icon="💰"
+                  icon=" "
                   trend="up"
                 />
                 <MetricCard
                   title="Ожидают выплаты"
                   value={formatCurrency(data.pendingPayouts)}
-                  icon="⏳"
+                  icon=" "
                   trend="neutral"
                 />
                 <MetricCard
                   title="Выплачено"
                   value={formatCurrency(data.completedPayouts)}
-                  icon="✅"
+                  icon="[✓]"
                   trend="up"
                 />
                 <MetricCard
                   title="Комиссия платформы"
                   value={formatCurrency(data.commission)}
-                  icon="📊"
+                  icon=" "
                   trend="neutral"
                 />
               </div>
@@ -206,7 +206,7 @@ export default function FinancePage() {
                   />
                 ) : (
                   <EmptyState
-                    icon="📋"
+                    icon=" "
                     title="Нет транзакций"
                     description="Транзакции появятся здесь"
                   />

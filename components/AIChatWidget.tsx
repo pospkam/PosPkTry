@@ -161,7 +161,7 @@ export function AIChatWidget({ userId, className, onClose }: AIChatWidgetProps) 
       <div className="flex-1 overflow-y-auto p-6 space-y-4">
         {messages.length === 0 ? (
           <div className="text-center text-white/70">
-            <div className="text-4xl mb-2">🏔️</div>
+            <div className="text-4xl mb-2"> </div>
             <div className="text-sm mb-4">Привет! Я AI-гид по Камчатке</div>
             <div className="text-xs text-white/50 mb-4">Задайте вопрос или выберите один из вариантов:</div>
             

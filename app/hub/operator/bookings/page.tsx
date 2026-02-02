@@ -158,7 +158,7 @@ export default function BookingsManagement() {
       title: 'Гости',
       render: (booking) => (
         <span className="text-white/80">
-          <span className="text-xl mr-1">👥</span>
+          <span className="text-xl mr-1"> </span>
           {booking.guestsCount}
         </span>
       )
@@ -172,7 +172,7 @@ export default function BookingsManagement() {
             {formatCurrency(booking.totalPrice)}
           </div>
           <div className="text-xs text-white/60">
-            {booking.paymentStatus === 'paid' ? '✓ Оплачено' : '⏳ Ожидает'}
+            {booking.paymentStatus === 'paid' ? '[✓] Оплачено' : '  Ожидает'}
           </div>
         </div>
       )
@@ -290,7 +290,7 @@ export default function BookingsManagement() {
             </div>
           ) : bookings.length === 0 ? (
             <EmptyState
-              icon="📅"
+              icon=" "
               title="Бронирований не найдено"
               description={
                 search || statusFilter !== 'all'

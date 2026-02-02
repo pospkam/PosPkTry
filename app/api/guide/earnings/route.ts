@@ -1,146 +1,85 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/pillars/core-infrastructure-infrastructure/lib/database';
 import { ApiResponse } from '@/types';
-import { requireAuth } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * GET /api/guide/earnings - Получение доходов гида
+ * GET /api/guide/earnings
+ * Get guide's earnings
  */
 export async function GET(request: NextRequest) {
   try {
-    const userOrResponse = await requireAuth(request);
-    if (userOrResponse instanceof NextResponse) {
-      return userOrResponse;
+    const userId = request.headers.get('X-User-Id');
+    const userRole = request.headers.get('X-User-Role');
+    
+    if (!userId || userRole !== 'guide') {
+      return NextResponse.json({
+        success: false,
+        error: 'Недостаточно прав'
+      } as ApiResponse<null>, { status: 403 });
     }
 
-    const guideId = userOrResponse.userId;
-    const { searchParams } = new URL(request.url);
-    const period = searchParams.get('period') || 'month'; // month, year, all
-
-    // Рассчитываем даты
-    const today = new Date();
-    let startDate: Date;
-
-    switch (period) {
-      case 'month':
-        startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-        break;
-      case 'year':
-        startDate = new Date(today.getFullYear(), 0, 1);
-        break;
-      default:
-        startDate = new Date(0); // Все время
-    }
-
-    // Статистика доходов
-    const statsQuery = `
-      SELECT
-        COUNT(*) as total_tours,
-        SUM(amount) as total_earned,
-        SUM(commission_amount) as total_commission,
-        AVG(amount) as avg_earning,
-        SUM(CASE WHEN payment_status = 'paid' THEN amount ELSE 0 END) as paid_amount,
-        SUM(CASE WHEN payment_status = 'pending' THEN amount ELSE 0 END) as pending_amount
-      FROM guide_earnings
-      WHERE guide_id = $1
-        AND created_at >= $2
-    `;
-
-    const statsResult = await query(statsQuery, [guideId, startDate]);
-    const stats = statsResult.rows[0];
-
-    // Детальный список
-    const earningsQuery = `
-      SELECT
-        ge.id,
-        ge.amount,
-        ge.commission_rate,
-        ge.commission_amount,
-        ge.payment_status,
-        ge.payment_date,
-        ge.notes,
-        ge.created_at,
+    // Get earnings list
+    const earningsResult = await query(
+      `SELECT 
+        ge.*,
         t.name as tour_name,
-        gs.tour_date,
-        gs.participants_count
+        gs.tour_date
       FROM guide_earnings ge
       LEFT JOIN tours t ON ge.tour_id = t.id
       LEFT JOIN guide_schedule gs ON ge.schedule_id = gs.id
       WHERE ge.guide_id = $1
-        AND ge.created_at >= $2
-      ORDER BY ge.created_at DESC
-      LIMIT 50
-    `;
+      ORDER BY ge.created_at DESC`,
+      [userId]
+    );
 
-    const earningsResult = await query(earningsQuery, [guideId, startDate]);
-
-    // График по месяцам
-    const chartQuery = `
-      SELECT
-        to_char(created_at, 'YYYY-MM') as month,
-        SUM(amount) as total,
-        COUNT(*) as tours_count
+    // Get summary statistics
+    const statsResult = await query(
+      `SELECT 
+        COUNT(*) as total_count,
+        COALESCE(SUM(amount), 0) as total_earned,
+        COALESCE(SUM(CASE WHEN payment_status = 'paid' THEN amount ELSE 0 END), 0) as total_paid,
+        COALESCE(SUM(CASE WHEN payment_status = 'pending' THEN amount ELSE 0 END), 0) as total_pending,
+        COALESCE(SUM(commission_amount), 0) as total_commission,
+        COALESCE(AVG(commission_rate), 10.00) as avg_commission_rate
       FROM guide_earnings
-      WHERE guide_id = $1
-        AND created_at >= $2
-      GROUP BY to_char(created_at, 'YYYY-MM')
-      ORDER BY month ASC
-    `;
+      WHERE guide_id = $1`,
+      [userId]
+    );
 
-    const chartResult = await query(chartQuery, [guideId, startDate]);
+    const earnings = earningsResult.rows.map(row => ({
+      id: row.id,
+      amount: parseFloat(row.amount),
+      commissionRate: parseFloat(row.commission_rate),
+      commissionAmount: parseFloat(row.commission_amount),
+      paymentStatus: row.payment_status,
+      paymentDate: row.payment_date,
+      notes: row.notes,
+      createdAt: row.created_at,
+      tourName: row.tour_name,
+      tourDate: row.tour_date
+    }));
+
+    const stats = {
+      totalCount: parseInt(statsResult.rows[0].total_count),
+      totalEarned: parseFloat(statsResult.rows[0].total_earned),
+      totalPaid: parseFloat(statsResult.rows[0].total_paid),
+      totalPending: parseFloat(statsResult.rows[0].total_pending),
+      totalCommission: parseFloat(statsResult.rows[0].total_commission),
+      avgCommissionRate: parseFloat(statsResult.rows[0].avg_commission_rate)
+    };
 
     return NextResponse.json({
       success: true,
-      data: {
-        stats: {
-          totalTours: parseInt(stats.total_tours) || 0,
-          totalEarned: parseFloat(stats.total_earned) || 0,
-          totalCommission: parseFloat(stats.total_commission) || 0,
-          avgEarning: parseFloat(stats.avg_earning) || 0,
-          paidAmount: parseFloat(stats.paid_amount) || 0,
-          pendingAmount: parseFloat(stats.pending_amount) || 0
-        },
-        earnings: earningsResult.rows,
-        chart: chartResult.rows
-      }
+      data: { earnings, stats }
     } as ApiResponse<any>);
 
   } catch (error) {
-    console.error('Error fetching earnings:', error);
-    return NextResponse.json(
-      { success: false, error: 'Ошибка загрузки доходов' } as ApiResponse<null>,
-      { status: 500 }
-    );
+    console.error('Get guide earnings error:', error);
+    return NextResponse.json({
+      success: false,
+      error: 'Ошибка при получении доходов'
+    } as ApiResponse<null>, { status: 500 });
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

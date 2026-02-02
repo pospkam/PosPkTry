@@ -52,15 +52,15 @@ export function WeatherWidget({
 
   const getWeatherIcon = (condition: string) => {
     switch (condition) {
-      case 'clear': return '☀️';
+      case 'clear': return ' ';
       case 'mostly_clear': return '🌤️';
       case 'partly_cloudy': return '⛅';
       case 'overcast': return '☁️';
       case 'fog': return '🌫️';
-      case 'drizzle': return '🌦️';
-      case 'rain': return '🌧️';
-      case 'showers': return '🌧️';
-      case 'snow': return '❄️';
+      case 'drizzle': return ' ';
+      case 'rain': return ' ';
+      case 'showers': return ' ';
+      case 'snow': return ' ';
       case 'thunderstorm': return '⛈️';
       default: return '🌤️';
     }
@@ -90,11 +90,11 @@ export function WeatherWidget({
 
   const getSafetyLevelBadge = (level: string) => {
     const badges: { [key: string]: { text: string; color: string } } = {
-      'excellent': { text: '✅ Отлично', color: 'bg-green-100 text-green-800' },
+      'excellent': { text: '[✓] Отлично', color: 'bg-green-100 text-green-800' },
       'good': { text: '👍 Хорошо', color: 'bg-blue-100 text-blue-800' },
-      'moderate': { text: '⚠️ Умеренно', color: 'bg-yellow-100 text-yellow-800' },
-      'difficult': { text: '⚠️ Сложно', color: 'bg-orange-100 text-orange-800' },
-      'dangerous': { text: '❌ Опасно', color: 'bg-red-100 text-red-800' },
+      'moderate': { text: '! Умеренно', color: 'bg-yellow-100 text-yellow-800' },
+      'difficult': { text: '! Сложно', color: 'bg-orange-100 text-orange-800' },
+      'dangerous': { text: '[✗] Опасно', color: 'bg-red-100 text-red-800' },
     };
     const badge = badges[level] || badges['moderate'];
     return (
@@ -178,7 +178,7 @@ export function WeatherWidget({
           {weather.alerts.map((alert, idx) => (
             <div key={idx} className="mb-2 last:mb-0">
               <div className="flex items-start">
-                <span className="text-red-600 mr-2">⚠️</span>
+                <span className="text-red-600 mr-2">!</span>
                 <div className="flex-1">
                   <p className="font-semibold text-red-800">{alert.event}</p>
                   <p className="text-sm text-red-700">{alert.description}</p>
@@ -282,7 +282,7 @@ export function WeatherWidget({
               )}
               
               <div className="flex items-center space-x-2 text-sm">
-                <span className="text-lg">📊</span>
+                <span className="text-lg"> </span>
                 <div>
                   <div className="text-gray-600">Давление</div>
                   <div className="font-medium">{weather.pressure} мм</div>
@@ -290,7 +290,7 @@ export function WeatherWidget({
               </div>
               
               <div className="flex items-center space-x-2 text-sm">
-                <span className="text-lg">👁️</span>
+                <span className="text-lg">○</span>
                 <div>
                   <div className="text-gray-600">Видимость</div>
                   <div className="font-medium">{weather.visibility} км</div>
@@ -306,7 +306,7 @@ export function WeatherWidget({
               </div>
               
               <div className="flex items-center space-x-2 text-sm">
-                <span className="text-lg">☀️</span>
+                <span className="text-lg"> </span>
                 <div>
                   <div className="text-gray-600">УФ-индекс</div>
                   <div className={`font-medium ${getUVIndexColor(weather.uvIndex)}`}>
@@ -353,14 +353,14 @@ export function WeatherWidget({
             <div className="space-y-3">
               {weather.tourAdvice && (
                 <div className="bg-blue-50 rounded-lg p-3">
-                  <div className="font-medium text-blue-900 mb-1">🎯 Для туризма</div>
+                  <div className="font-medium text-blue-900 mb-1">  Для туризма</div>
                   <div className="text-sm text-blue-800">{weather.tourAdvice}</div>
                 </div>
               )}
 
               {weather.recommendations && weather.recommendations.length > 0 && (
                 <div className="bg-yellow-50 rounded-lg p-3">
-                  <div className="font-medium text-yellow-900 mb-2">💡 Рекомендации</div>
+                  <div className="font-medium text-yellow-900 mb-2">  Рекомендации</div>
                   <ul className="text-sm text-yellow-800 space-y-1">
                     {weather.recommendations.map((rec, idx) => (
                       <li key={idx}>{rec}</li>

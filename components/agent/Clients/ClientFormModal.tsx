@@ -103,7 +103,7 @@ export function ClientFormModal({ client, onClose, onSave }: ClientFormModalProp
               onClick={onClose}
               className="text-white/60 hover:text-white transition-colors"
             >
-              ✕
+              
             </button>
           </div>
         </div>

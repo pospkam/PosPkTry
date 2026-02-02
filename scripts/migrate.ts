@@ -10,37 +10,37 @@ async function main() {
   try {
     switch (command) {
       case 'up':
-        console.log('🚀 Running migrations...');
+        console.log('  Running migrations...');
         await runMigrations();
         break;
         
       case 'down':
         const targetVersion = args[1];
-        console.log('🔄 Rolling back migrations...');
+        console.log(' Rolling back migrations...');
         await rollbackMigrations(targetVersion);
         break;
         
       case 'status':
-        console.log('📊 Checking migration status...');
+        console.log('  Checking migration status...');
         const status = await getMigrationStatus();
-        console.log(`\n📈 Migration Status:`);
+        console.log(`\n  Migration Status:`);
         console.log(`   Total migrations: ${status.total}`);
         console.log(`   Executed: ${status.executed.length}`);
         console.log(`   Pending: ${status.pending.length}`);
         
         if (status.executed.length > 0) {
-          console.log(`\n✅ Executed migrations:`);
+          console.log(`\n[] Executed migrations:`);
           status.executed.forEach(version => console.log(`   - ${version}`));
         }
         
         if (status.pending.length > 0) {
-          console.log(`\n⏳ Pending migrations:`);
+          console.log(`\n  Pending migrations:`);
           status.pending.forEach(version => console.log(`   - ${version}`));
         }
         break;
         
       default:
-        console.log('❌ Unknown command. Available commands:');
+        console.log('[] Unknown command. Available commands:');
         console.log('   up      - Run all pending migrations');
         console.log('   down    - Rollback migrations (optionally to specific version)');
         console.log('   status  - Show migration status');
@@ -52,11 +52,11 @@ async function main() {
         process.exit(1);
     }
     
-    console.log('\n🎉 Command completed successfully!');
+    console.log('\n  Command completed successfully!');
     process.exit(0);
     
   } catch (error) {
-    console.error('❌ Command failed:', error);
+    console.error('[] Command failed:', error);
     process.exit(1);
   }
 }

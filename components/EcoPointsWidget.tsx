@@ -82,15 +82,15 @@ export function EcoPointsWidget({ userId, className }: EcoPointsWidgetProps) {
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case 'recycling':
-        return '♻️';
+        return '';
       case 'cleaning':
-        return '🧹';
+        return '';
       case 'conservation':
-        return '🌱';
+        return '';
       case 'education':
-        return '📚';
+        return '';
       default:
-        return '🌍';
+        return '';
     }
   };
 
@@ -159,7 +159,7 @@ export function EcoPointsWidget({ userId, className }: EcoPointsWidgetProps) {
     return (
       <div className={`bg-white rounded-lg shadow-md p-4 ${className}`}>
         <div className="text-center text-gray-500">
-          <div className="text-2xl mb-2">🌍</div>
+          <div className="text-2xl mb-2"></div>
           <div className="text-sm">{error}</div>
           <button
             onClick={fetchNearbyEcoPoints}
@@ -218,7 +218,7 @@ export function EcoPointsWidget({ userId, className }: EcoPointsWidgetProps) {
         
         {nearbyEcoPoints.length === 0 ? (
           <div className="text-center text-gray-500 py-4">
-            <div className="text-2xl mb-2">🌍</div>
+            <div className="text-2xl mb-2"></div>
             <div className="text-sm">Нет Eco-points поблизости</div>
           </div>
         ) : (
@@ -277,7 +277,7 @@ export function EcoPointsWidget({ userId, className }: EcoPointsWidgetProps) {
                 key={achievement.id}
                 className="flex items-center space-x-2 text-sm"
               >
-                <span className="text-yellow-500">🏆</span>
+                <span className="text-yellow-500"></span>
                 <span className="text-gray-700">{achievement.name}</span>
                 <span className="text-green-600 font-medium">
                   +{achievement.points}

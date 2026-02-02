@@ -44,10 +44,10 @@ class TestRunner {
     this.results.total++;
     try {
       await fn();
-      this.log(`✅ ${name}`, 'green');
+      this.log(`[OK] ${name}`, 'green');
       this.results.passed++;
     } catch (error) {
-      this.log(`❌ ${name}`, 'red');
+      this.log(`[X] ${name}`, 'red');
       this.log(`   Ошибка: ${error.message}`, 'red');
       this.results.failed++;
       this.failedTests.push(name);
@@ -218,7 +218,7 @@ class TestRunner {
       } catch (error) {
         if (error.killed || error.signal) throw new Error('Timeout при проверке TypeScript');
         // Может быть ошибка компиляции, но мы все равно продолжаем
-        this.log('   ⚠️  TypeScript проверка пропущена (может быть установка)', 'yellow');
+        this.log('   !  TypeScript проверка пропущена (может быть установка)', 'yellow');
       }
     });
 
@@ -263,19 +263,19 @@ class TestRunner {
     });
 
     // === ИТОГОВЫЙ ОТЧЁТ ===
-    this.logSection('📊 ИТОГОВЫЙ ОТЧЁТ');
+    this.logSection(' ИТОГОВЫЙ ОТЧЁТ');
 
     const passRate = ((this.results.passed / this.results.total) * 100).toFixed(2);
     const status = this.results.failed === 0 ? 'green' : 'red';
 
     this.log(`Всего тестов:     ${this.results.total}`, 'cyan');
-    this.log(`✅ Пройдено:      ${this.results.passed}`, 'green');
-    this.log(`❌ Не пройдено:   ${this.results.failed}`, 'red');
+    this.log(`[OK] Пройдено:      ${this.results.passed}`, 'green');
+    this.log(`[X] Не пройдено:   ${this.results.failed}`, 'red');
     this.log(`⏭️  Пропущено:    ${this.results.skipped}`, 'yellow');
-    this.log(`📈 Успешность:    ${passRate}%`, status);
+    this.log(` Успешность:    ${passRate}%`, status);
 
     if (this.failedTests.length > 0) {
-      this.log('\n❌ Не прошедшие тесты:', 'red');
+      this.log('\n[X] Не прошедшие тесты:', 'red');
       this.failedTests.forEach(test => {
         this.log(`   • ${test}`, 'red');
       });
@@ -284,13 +284,13 @@ class TestRunner {
     // === ВЫВОДЫ ===
     console.log('\n' + '═'.repeat(60));
     if (this.results.failed === 0) {
-      this.log('🎉 ВСЕ ТЕСТЫ ПРОЙДЕНЫ УСПЕШНО!', 'green');
-      this.log('✅ Проект готов к deployment!', 'green');
+      this.log(' ВСЕ ТЕСТЫ ПРОЙДЕНЫ УСПЕШНО!', 'green');
+      this.log('[OK] Проект готов к deployment!', 'green');
       console.log('═'.repeat(60));
       return true;
     } else {
-      this.log('⚠️  НЕКОТОРЫЕ ТЕСТЫ НЕ ПРОШЛИ', 'red');
-      this.log('❌ Требуется исправление перед deployment', 'red');
+      this.log('!  НЕКОТОРЫЕ ТЕСТЫ НЕ ПРОШЛИ', 'red');
+      this.log('[X] Требуется исправление перед deployment', 'red');
       console.log('═'.repeat(60));
       return false;
     }

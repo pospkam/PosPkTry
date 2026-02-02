@@ -92,9 +92,9 @@ export class TelegramNotificationService {
     meetingPoint: string;
   }): Promise<TelegramResponse> {
     const text = `
-🚗 <b>Новая заявка на трансфер</b>
+  <b>Новая заявка на трансфер</b>
 
-📋 <b>Детали поездки:</b>
+  <b>Детали поездки:</b>
 • Маршрут: ${booking.route}
 • Дата: ${booking.date}
 • Время: ${booking.time}
@@ -113,17 +113,17 @@ export class TelegramNotificationService {
       inline_keyboard: [
         [
           {
-            text: '✅ Принять',
+            text: '[✓] Принять',
             callback_data: `accept_booking_${booking.id}`
           },
           {
-            text: '❌ Отклонить',
+            text: '[✗] Отклонить',
             callback_data: `reject_booking_${booking.id}`
           }
         ],
         [
           {
-            text: '📞 Позвонить пассажиру',
+            text: '  Позвонить пассажиру',
             callback_data: `call_passenger_${booking.passengerPhone}`
           }
         ]
@@ -148,14 +148,14 @@ export class TelegramNotificationService {
     driverPhone: string;
   }): Promise<TelegramResponse> {
     const text = `
-✅ <b>Заявка принята!</b>
+[✓] <b>Заявка принята!</b>
 
-📋 <b>Детали поездки:</b>
+  <b>Детали поездки:</b>
 • Маршрут: ${booking.route}
 • Дата: ${booking.date}
 • Время: ${booking.time}
 
-👨‍💼 <b>Назначенный водитель:</b>
+  <b>Назначенный водитель:</b>
 • Имя: ${booking.driverName}
 • Телефон: <a href="tel:${booking.driverPhone}">${booking.driverPhone}</a>
 
@@ -178,9 +178,9 @@ export class TelegramNotificationService {
     reason: string;
   }): Promise<TelegramResponse> {
     const text = `
-❌ <b>Заявка отклонена</b>
+[✗] <b>Заявка отклонена</b>
 
-📋 <b>Детали:</b>
+  <b>Детали:</b>
 • Маршрут: ${booking.route}
 • Причина: ${booking.reason}
 
@@ -208,12 +208,12 @@ export class TelegramNotificationService {
     const text = `
 ⏰ <b>Напоминание о поездке</b>
 
-📋 <b>Детали:</b>
+  <b>Детали:</b>
 • Маршрут: ${trip.route}
 • Время отправления: ${trip.departureTime}
 • Место встречи: ${trip.meetingPoint}
 
-👨‍💼 <b>Водитель:</b>
+  <b>Водитель:</b>
 • Имя: ${trip.driverName}
 • Телефон: <a href="tel:${trip.driverPhone}">${trip.driverPhone}</a>
 
@@ -226,7 +226,7 @@ export class TelegramNotificationService {
       inline_keyboard: [
         [
           {
-            text: '📞 Связаться с водителем',
+            text: '  Связаться с водителем',
             callback_data: `call_driver_${trip.driverPhone}`
           }
         ],
@@ -260,9 +260,9 @@ export class TelegramNotificationService {
     }>;
   }): Promise<TelegramResponse> {
     const text = `
-📊 <b>Статистика за ${stats.period}</b>
+  <b>Статистика за ${stats.period}</b>
 
-📈 <b>Основные показатели:</b>
+  <b>Основные показатели:</b>
 • Всего заявок: <b>${stats.totalBookings}</b>
 • Выполнено поездок: <b>${stats.completedTrips}</b>
 • Общий доход: <b>${stats.totalRevenue} ₽</b>
@@ -273,7 +273,7 @@ ${stats.topRoutes.map(route =>
   `• ${route.route}: ${route.bookings} заявок`
 ).join('\n')}
 
-<i>Продолжайте в том же духе! 🚀</i>
+<i>Продолжайте в том же духе!  </i>
     `;
 
     return this.sendMessage({
@@ -292,9 +292,9 @@ ${stats.topRoutes.map(route =>
     refundAmount?: number;
   }): Promise<TelegramResponse> {
     let text = `
-❌ <b>Поездка отменена</b>
+[✗] <b>Поездка отменена</b>
 
-📋 <b>Детали:</b>
+  <b>Детали:</b>
 • Маршрут: ${cancellation.route}
 • Дата: ${cancellation.date}
 • Причина: ${cancellation.reason}
@@ -303,7 +303,7 @@ ${stats.topRoutes.map(route =>
     `;
 
     if (cancellation.refundAmount) {
-      text += `\n💰 <b>Возврат:</b> ${cancellation.refundAmount} ₽`;
+      text += `\n  <b>Возврат:</b> ${cancellation.refundAmount} ₽`;
     }
 
     text += `\n\n<i>Если у вас есть вопросы, свяжитесь с нами.</i>`;
@@ -323,16 +323,16 @@ ${stats.topRoutes.map(route =>
     feedback?: string;
   }): Promise<TelegramResponse> {
     const text = `
-✅ <b>Поездка завершена</b>
+[✓] <b>Поездка завершена</b>
 
-📋 <b>Детали:</b>
+  <b>Детали:</b>
 • Маршрут: ${trip.route}
 • Время завершения: ${new Date().toLocaleString('ru-RU')}
 
 🆔 <b>ID поездки:</b> ${trip.id}
 
-${trip.rating ? `⭐ <b>Оценка:</b> ${trip.rating}/5` : ''}
-${trip.feedback ? `💬 <b>Отзыв:</b> ${trip.feedback}` : ''}
+${trip.rating ? `★ <b>Оценка:</b> ${trip.rating}/5` : ''}
+${trip.feedback ? `  <b>Отзыв:</b> ${trip.feedback}` : ''}
 
 <i>Спасибо за использование наших услуг! 🙏</i>
     `;

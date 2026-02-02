@@ -29,7 +29,7 @@ export function OperatorMetricsGrid({ metrics, loading = false }: OperatorMetric
       <MetricCard
         title="Активные туры"
         value={metrics.activeTours}
-        icon="🏔️"
+        icon=""
         loading={loading}
         change={metrics.totalTours > 0 ? calculateTrend(metrics.activeTours, metrics.totalTours) : 0}
         trend={metrics.activeTours > 0 ? 'up' : 'neutral'}
@@ -39,7 +39,7 @@ export function OperatorMetricsGrid({ metrics, loading = false }: OperatorMetric
       <MetricCard
         title="Всего бронирований"
         value={metrics.totalBookings}
-        icon="📅"
+        icon=""
         loading={loading}
         change={metrics.pendingBookings}
         trend="neutral"
@@ -49,7 +49,7 @@ export function OperatorMetricsGrid({ metrics, loading = false }: OperatorMetric
       <MetricCard
         title="Подтверждено"
         value={metrics.confirmedBookings}
-        icon="✅"
+        icon="[OK]"
         loading={loading}
         change={metrics.totalBookings > 0 ? calculateTrend(metrics.confirmedBookings, metrics.totalBookings) : 0}
         trend="up"
@@ -59,7 +59,7 @@ export function OperatorMetricsGrid({ metrics, loading = false }: OperatorMetric
       <MetricCard
         title="Ожидают подтверждения"
         value={metrics.pendingBookings}
-        icon="⏳"
+        icon=""
         loading={loading}
         trend={metrics.pendingBookings > 5 ? 'up' : 'neutral'}
       />
@@ -68,7 +68,7 @@ export function OperatorMetricsGrid({ metrics, loading = false }: OperatorMetric
       <MetricCard
         title="Общая выручка"
         value={formatCurrency(metrics.totalRevenue)}
-        icon="💰"
+        icon=""
         loading={loading}
         trend="up"
       />
@@ -77,7 +77,7 @@ export function OperatorMetricsGrid({ metrics, loading = false }: OperatorMetric
       <MetricCard
         title="Выручка за месяц"
         value={formatCurrency(metrics.monthlyRevenue)}
-        icon="📊"
+        icon=""
         loading={loading}
         change={metrics.totalRevenue > 0 ? calculateTrend(metrics.monthlyRevenue, metrics.totalRevenue) : 0}
         trend={metrics.monthlyRevenue > 0 ? 'up' : 'neutral'}
@@ -86,8 +86,8 @@ export function OperatorMetricsGrid({ metrics, loading = false }: OperatorMetric
       {/* Средний рейтинг */}
       <MetricCard
         title="Средний рейтинг"
-        value={`${metrics.averageRating.toFixed(1)} ⭐`}
-        icon="⭐"
+        value={`${metrics.averageRating.toFixed(1)} `}
+        icon=""
         loading={loading}
         trend={metrics.averageRating >= 4.5 ? 'up' : metrics.averageRating >= 4.0 ? 'neutral' : 'down'}
       />
@@ -96,7 +96,7 @@ export function OperatorMetricsGrid({ metrics, loading = false }: OperatorMetric
       <MetricCard
         title="Всего отзывов"
         value={metrics.totalReviews}
-        icon="💬"
+        icon=""
         loading={loading}
         trend="neutral"
       />

@@ -43,11 +43,11 @@ const colors = {
 };
 
 const log = {
-  success: (msg) => console.log(`${colors.green}✅ ${msg}${colors.reset}`),
-  error: (msg) => console.log(`${colors.red}❌ ${msg}${colors.reset}`),
-  warning: (msg) => console.log(`${colors.yellow}⚠️  ${msg}${colors.reset}`),
-  info: (msg) => console.log(`${colors.blue}ℹ️  ${msg}${colors.reset}`),
-  step: (msg) => console.log(`${colors.cyan}▶️  ${msg}${colors.reset}`),
+  success: (msg) => console.log(`${colors.green}[] ${msg}${colors.reset}`),
+  error: (msg) => console.log(`${colors.red}[] ${msg}${colors.reset}`),
+  warning: (msg) => console.log(`${colors.yellow}!  ${msg}${colors.reset}`),
+  info: (msg) => console.log(`${colors.blue}i  ${msg}${colors.reset}`),
+  step: (msg) => console.log(`${colors.cyan}▶  ${msg}${colors.reset}`),
 };
 
 // Получить все документы для базы знаний
@@ -254,7 +254,7 @@ async function main() {
   const updateType = args[0] || 'auto';
 
   console.log('\n═══════════════════════════════════════════════════════');
-  console.log('🧠 ОБНОВЛЕНИЕ БАЗЫ ЗНАНИЙ TIMEWEB AI');
+  console.log(' ОБНОВЛЕНИЕ БАЗЫ ЗНАНИЙ TIMEWEB AI');
   console.log('═══════════════════════════════════════════════════════\n');
 
   try {
@@ -317,16 +317,16 @@ async function main() {
 
     if (success) {
       console.log('\n═══════════════════════════════════════════════════════');
-      log.success('✅ БАЗА ЗНАНИЙ УСПЕШНО ОБНОВЛЕНА!');
+      log.success('[] БАЗА ЗНАНИЙ УСПЕШНО ОБНОВЛЕНА!');
       console.log('═══════════════════════════════════════════════════════');
-      console.log(`\n📊 Статистика:`);
+      console.log(`\n  Статистика:`);
       console.log(`   • Обработано документов: ${limitedDocuments.length}`);
       console.log(`   • Тип обновления: ${updateType}`);
       console.log(`   • Агент ID: ${process.env.TIMEWEB_AI_AGENT_ID || '3933ea81-05e2-470e-80de-80dc67c1101f'}`);
-      console.log('\n🤖 AI агент теперь имеет актуальную информацию о проекте!');
+      console.log('\n AI агент теперь имеет актуальную информацию о проекте!');
     } else {
       console.log('\n═══════════════════════════════════════════════════════');
-      log.error('❌ ОШИБКА ОБНОВЛЕНИЯ БАЗЫ ЗНАНИЙ');
+      log.error('[] ОШИБКА ОБНОВЛЕНИЯ БАЗЫ ЗНАНИЙ');
       console.log('═══════════════════════════════════════════════════════');
       process.exit(1);
     }

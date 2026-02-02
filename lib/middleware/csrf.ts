@@ -222,7 +222,7 @@ export async function getCsrfTokenEndpoint(request: NextRequest) {
  * - Даже если атакующий может сделать POST запрос, он не знает токен
  * 
  * Защита от:
- * ✅ CSRF атаки
- * ✅ Replay атаки (токен rotates)
- * ✅ Timing attacks (crypto.timingSafeEqual)
+ * [✓] CSRF атаки
+ * [✓] Replay атаки (токен rotates)
+ * [✓] Timing attacks (crypto.timingSafeEqual)
  */

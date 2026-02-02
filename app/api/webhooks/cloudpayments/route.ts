@@ -2,7 +2,7 @@
  * CLOUDPAYMENTS WEBHOOK ENDPOINT
  * Прием уведомлений от CloudPayments о платежах
  * 
- * ⚠️ КРИТИЧНО: Этот endpoint ДОЛЖЕН быть защищен HMAC подписью!
+ * ! КРИТИЧНО: Этот endpoint ДОЛЖЕН быть защищен HMAC подписью!
  * 
  * CloudPayments отправляет webhook на этот URL при:
  * - Успешном платеже (Status: Completed)
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
   const startTime = Date.now();
   
   try {
-    // 🔒 БЕЗОПАСНОСТЬ: Получаем raw body для валидации HMAC
+    //   БЕЗОПАСНОСТЬ: Получаем raw body для валидации HMAC
     const rawBody = await request.text();
     
     // Получаем подпись из header
@@ -63,11 +63,11 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString()
     });
     
-    // 🛡️ ВАЛИДАЦИЯ WEBHOOK
+    //   ВАЛИДАЦИЯ WEBHOOK
     const validation = await processCloudPaymentsWebhook(rawBody, signature);
     
     if (!validation.success) {
-      console.error('❌ Webhook validation failed:', {
+      console.error('[✗] Webhook validation failed:', {
         error: validation.error,
         errorCode: validation.errorCode
       });
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
     
     const webhookData = validation.data!;
     
-    console.log('✅ Webhook validated', {
+    console.log('[✓] Webhook validated', {
       transactionId: webhookData.TransactionId,
       amount: webhookData.Amount,
       status: webhookData.Status,
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
       testMode: webhookData.TestMode
     });
     
-    // 📊 ОБРАБОТКА WEBHOOK В ТРАНЗАКЦИИ
+    //   ОБРАБОТКА WEBHOOK В ТРАНЗАКЦИИ
     const result = await transaction(async (client) => {
       const bookingId = webhookData.InvoiceId;
       const transactionId = webhookData.TransactionId.toString();
@@ -172,7 +172,7 @@ export async function POST(request: NextRequest) {
                    'Ваше бронирование подтверждено! Платеж получен.', NOW())
         `, [bookingId, booking.user_id, booking.operator_id]);
         
-        console.log('✅ Payment confirmed', {
+        console.log('[✓] Payment confirmed', {
           bookingId,
           transactionId,
           amount: webhookData.Amount
@@ -212,7 +212,7 @@ export async function POST(request: NextRequest) {
         const { cancelBooking } = await import('@/lib/transfers/booking');
         await cancelBooking(bookingId, `Payment declined: ${webhookData.Reason}`);
         
-        console.log('❌ Payment declined', {
+        console.log('[✗] Payment declined', {
           bookingId,
           transactionId,
           reason: webhookData.Reason
@@ -226,7 +226,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ code: 0 });
     
   } catch (error: any) {
-    console.error('❌ Webhook processing error:', error);
+    console.error('[✗] Webhook processing error:', error);
     
     // CloudPayments код 13 = ошибка (повторит позже)
     return NextResponse.json({ 
@@ -235,7 +235,7 @@ export async function POST(request: NextRequest) {
     });
   } finally {
     const duration = Date.now() - startTime;
-    console.log(`⏱️ Webhook processed in ${duration}ms`);
+    console.log(`  Webhook processed in ${duration}ms`);
   }
 }
 
