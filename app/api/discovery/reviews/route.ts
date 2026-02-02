@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { reviewService } from '@/pillars/discovery/lib/review/services/ReviewService';
+import { reviewService } from '@/lib/database';
 import {
   ReviewValidationError,
   DuplicateReviewError,

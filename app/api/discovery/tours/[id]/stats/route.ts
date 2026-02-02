@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { tourService } from '@/pillars/discovery/lib/tour/services/TourService';
-import { reviewService } from '@/pillars/discovery/lib/review/services/ReviewService';
+import { reviewService } from '@/lib/database';
 import { TourNotFoundError } from '@/pillars/discovery/lib/tour/types';
 
 // ============================================================================
