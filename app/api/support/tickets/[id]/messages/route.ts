@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { ticketMessageService } from '@/pillars/support/services'
+import { ticketMessageService } from '@/lib/database'
 
 export async function GET(
   request: NextRequest,

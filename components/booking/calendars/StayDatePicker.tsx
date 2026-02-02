@@ -225,14 +225,14 @@ export const StayDatePicker: React.FC<StayDatePickerProps> = ({
       {/* Минимум ночей */}
       {minNights > 1 && (
         <div className="mt-4 text-sm text-white/70">
-          ⚠️ Минимальное количество ночей: {minNights}
+          ! Минимальное количество ночей: {minNights}
         </div>
       )}
 
       {/* Ошибка */}
       {error && (
         <div className={styles.error}>
-          <span className={styles.errorIcon}>⚠️</span>
+          <span className={styles.errorIcon}>!</span>
           <span>{error}</span>
         </div>
       )}

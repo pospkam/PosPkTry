@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/pillars/core-infrastructure-infrastructure/lib/database';
+import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireAuth } from '@/lib/auth/middleware';
+import { 
+  checkCarAvailability, 
+  calculateRentalCost, 
+  validateRentalData,
+  validateDriverLicense
+} from '@/lib/auth/cars-helpers';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * POST /api/cars/rentals - Создание заявки на аренду автомобиля
+ * POST /api/cars/rentals - Create car rental booking
  */
 export async function POST(request: NextRequest) {
   try {
@@ -18,106 +24,156 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       carId,
-      carName,
-      customer,
-      rental,
-      pricing,
-      comments
+      customerName,
+      customerEmail,
+      customerPhone,
+      driverLicenseNumber,
+      driverLicenseIssueDate,
+      driverLicenseExpiryDate,
+      driverBirthDate,
+      additionalDriverName,
+      additionalDriverLicense,
+      startDate,
+      endDate,
+      pickupLocation,
+      returnLocation,
+      includesGPS,
+      includesChildSeat,
+      includesInsurance,
+      notes
     } = body;
 
-    // Валидация данных
-    if (!customer?.name || !customer?.email || !customer?.phone || !customer?.driverLicense) {
+    // Validate rental data
+    const validation = validateRentalData({
+      startDate,
+      endDate,
+      carId,
+      customerName,
+      customerEmail,
+      customerPhone,
+      driverLicenseNumber
+    });
+
+    if (!validation.valid) {
       return NextResponse.json(
-        { success: false, error: 'Необходимо указать полные контактные данные и номер ВУ' } as ApiResponse<null>,
+        { success: false, error: validation.errors.join(', ') } as ApiResponse<null>,
         { status: 400 }
       );
     }
 
-    if (!rental?.startDate || !rental?.endDate) {
+    // Validate driver license
+    const licenseValidation = validateDriverLicense({
+      licenseNumber: driverLicenseNumber,
+      issueDate: driverLicenseIssueDate,
+      expiryDate: driverLicenseExpiryDate,
+      birthDate: driverBirthDate,
+      rentalStartDate: startDate
+    });
+
+    if (!licenseValidation.valid) {
       return NextResponse.json(
-        { success: false, error: 'Необходимо указать даты аренды' } as ApiResponse<null>,
+        { success: false, error: licenseValidation.errors.join(', ') } as ApiResponse<null>,
         { status: 400 }
       );
     }
 
-    // Проверяем доступность автомобиля
-    const availabilityCheck = await query(`
-      SELECT is_available FROM cars WHERE id = $1
-    `, [carId]);
+    // Get car details and partner_id
+    const carResult = await query(
+      `SELECT partner_id, is_active, min_driver_age FROM cars WHERE id = $1`,
+      [carId]
+    );
 
-    if (availabilityCheck.rows.length === 0) {
+    if (carResult.rows.length === 0) {
       return NextResponse.json(
         { success: false, error: 'Автомобиль не найден' } as ApiResponse<null>,
         { status: 404 }
       );
     }
 
-    if (!availabilityCheck.rows[0].is_available) {
+    const car = carResult.rows[0];
+
+    if (!car.is_active) {
       return NextResponse.json(
         { success: false, error: 'Автомобиль недоступен для аренды' } as ApiResponse<null>,
         { status: 400 }
       );
     }
 
-    // Создаем заявку на аренду автомобиля
-    const result = await query(`
-      INSERT INTO car_rentals (
-        id, car_id, customer_name, customer_email, customer_phone, driver_license,
-        start_date, end_date, days_count, pickup_location, return_location,
-        insurance_type, additional_drivers, gps, child_seat,
-        rental_price, insurance_cost, additional_drivers_cost, gps_cost, child_seat_cost,
-        deposit, total_price, comments, status, created_at
-      ) VALUES (
-        gen_random_uuid(),
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14,
-        $15, $16, $17, $18, $19, $20, $21, $22, 'pending', NOW()
-      ) RETURNING id
-    `, [
-      carId,
-      customer.name,
-      customer.email,
-      customer.phone,
-      customer.driverLicense,
-      rental.startDate,
-      rental.endDate,
-      rental.days,
-      rental.pickupLocation,
-      rental.returnLocation,
-      rental.insurance,
-      rental.additionalDrivers,
-      rental.gps,
-      rental.childSeat,
-      pricing.rentalPrice,
-      pricing.insuranceCost,
-      pricing.additionalDriversCost,
-      pricing.gpsCost,
-      pricing.childSeatCost,
-      pricing.deposit,
-      pricing.totalPrice,
-      comments || null
-    ]);
+    // Check availability for date range
+    const availability = await checkCarAvailability(carId, startDate, endDate);
+    if (!availability.available) {
+      return NextResponse.json(
+        { success: false, error: 'Автомобиль недоступен на выбранные даты' } as ApiResponse<null>,
+        { status: 400 }
+      );
+    }
 
-    const rentalId = result.rows[0].id;
+    // Calculate costs
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const totalDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+
+    const costs = await calculateRentalCost(
+      carId,
+      totalDays,
+      includesInsurance,
+      includesGPS,
+      includesChildSeat,
+      !!additionalDriverName
+    );
+
+    // Create rental
+    const result = await query(
+      `INSERT INTO car_rentals (
+        partner_id, car_id, user_id,
+        customer_name, customer_email, customer_phone,
+        driver_license_number, driver_license_issue_date, driver_license_expiry_date, driver_birth_date,
+        additional_driver_name, additional_driver_license,
+        start_date, end_date, total_days,
+        pickup_location, return_location,
+        rental_cost, deposit_amount, insurance_cost,
+        additional_driver_cost, gps_cost, child_seat_cost, total_amount,
+        includes_gps, includes_child_seat,
+        notes, status
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+        $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
+        $21, $22, $23, $24, $25, $26, $27, 'pending'
+      ) RETURNING id, rental_number`,
+      [
+        car.partner_id, carId, userOrResponse.id,
+        customerName, customerEmail, customerPhone,
+        driverLicenseNumber, driverLicenseIssueDate || null, driverLicenseExpiryDate, driverBirthDate,
+        additionalDriverName || null, additionalDriverLicense || null,
+        startDate, endDate, totalDays,
+        pickupLocation, returnLocation,
+        costs.rentalCost, costs.depositAmount, costs.insuranceCost,
+        costs.extrasCost, includesGPS ? (totalDays * 300) : 0, includesChildSeat ? (totalDays * 200) : 0, costs.totalCost,
+        includesGPS, includesChildSeat,
+        notes || null
+      ]
+    );
 
     return NextResponse.json({
       success: true,
       data: {
-        rentalId,
-        message: 'Заявка на аренду автомобиля создана успешно'
+        rentalId: result.rows[0].id,
+        rentalNumber: result.rows[0].rental_number,
+        costs,
+        message: 'Заявка на аренду создана'
       }
-    } as ApiResponse<{ rentalId: string; message: string }>);
-
+    } as ApiResponse<any>);
   } catch (error) {
     console.error('Error creating car rental:', error);
     return NextResponse.json(
-      { success: false, error: 'Ошибка создания заявки на аренду автомобиля' } as ApiResponse<null>,
+      { success: false, error: 'Ошибка создания заявки' } as ApiResponse<null>,
       { status: 500 }
     );
   }
 }
 
 /**
- * GET /api/cars/rentals - Получение списка заявок на аренду автомобилей
+ * GET /api/cars/rentals - Get user's car rentals
  */
 export async function GET(request: NextRequest) {
   try {
@@ -129,44 +185,45 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const limit = parseInt(searchParams.get('limit') || '50');
+    const offset = parseInt(searchParams.get('offset') || '0');
 
     let queryText = `
       SELECT
         cr.id,
+        cr.rental_number,
         cr.customer_name,
-        cr.customer_email,
-        cr.customer_phone,
         cr.start_date,
         cr.end_date,
-        cr.days_count,
+        cr.total_days,
         cr.pickup_location,
         cr.return_location,
-        cr.insurance_type,
-        cr.total_price,
+        cr.total_amount,
+        cr.deposit_amount,
+        cr.deposit_paid,
         cr.status,
+        cr.payment_status,
         cr.created_at,
         c.brand,
         c.model,
-        c.year
+        c.year,
+        c.license_plate,
+        c.images
       FROM car_rentals cr
       JOIN cars c ON cr.car_id = c.id
+      WHERE cr.user_id = $1
     `;
 
-    const params: any[] = [];
-    let whereConditions: string[] = [];
+    const params: any[] = [userOrResponse.id];
+    let paramIndex = 2;
 
-    // Фильтр по статусу
     if (status) {
-      whereConditions.push(`cr.status = $${params.length + 1}`);
+      queryText += ` AND cr.status = $${paramIndex}`;
       params.push(status);
+      paramIndex++;
     }
 
-    if (whereConditions.length > 0) {
-      queryText += ` WHERE ${whereConditions.join(' AND ')}`;
-    }
-
-    queryText += ` ORDER BY cr.created_at DESC LIMIT $${params.length + 1}`;
-    params.push(limit);
+    queryText += ` ORDER BY cr.created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    params.push(limit, offset);
 
     const result = await query(queryText, params);
 
@@ -174,14 +231,17 @@ export async function GET(request: NextRequest) {
       success: true,
       data: {
         rentals: result.rows,
-        count: result.rows.length
+        pagination: {
+          total: result.rows.length,
+          limit,
+          offset
+        }
       }
     } as ApiResponse<any>);
-
   } catch (error) {
     console.error('Error fetching car rentals:', error);
     return NextResponse.json(
-      { success: false, error: 'Ошибка получения заявок на аренду автомобилей' } as ApiResponse<null>,
+      { success: false, error: 'Ошибка получения аренд' } as ApiResponse<null>,
       { status: 500 }
     );
   }

@@ -44,22 +44,22 @@ export function TransferDriverManagement({ operatorId, onDataChange }: TransferD
     }
   };
 
-  const handleStatusChange = async (driverId: string, newStatus: string) => {
-    try {
-      const response = await fetch(`/api/transfer-operator/drivers/${driverId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus })
-      });
+    const handleStatusChange = async (driverId: string, newStatus: string) => {
+      try {
+        const response = await fetch(`/api/transfer-operator/drivers/${driverId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus })
+        });
 
-      if (response.ok) {
-        fetchDrivers();
-        onDataChange();
+        if (response.ok) {
+          fetchDrivers();
+          onDataChange();
+        }
+      } catch (error) {
+        console.error('Error updating driver status:', error);
       }
-    } catch (error) {
-      console.error('Error updating driver status:', error);
-    }
-  };
+    };
 
   if (loading) {
     return (
@@ -78,7 +78,7 @@ export function TransferDriverManagement({ operatorId, onDataChange }: TransferD
           onClick={() => setShowAddForm(!showAddForm)}
           className="px-4 py-2 bg-premium-gold hover:bg-premium-gold/80 text-premium-black font-semibold rounded-lg transition-colors"
         >
-          {showAddForm ? '✕ Отмена' : '+ Добавить водителя'}
+          {showAddForm ? ' Отмена' : '+ Добавить водителя'}
         </button>
       </div>
 
@@ -138,15 +138,15 @@ export function TransferDriverManagement({ operatorId, onDataChange }: TransferD
 
             <div className="space-y-2 mb-4">
               <div className="flex items-center gap-2">
-                <span>🚗</span>
+                <span> </span>
                 <span className="text-sm">{driver.car_model}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span>🔢</span>
+                <span></span>
                 <span className="text-sm">{driver.car_number}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span>⭐</span>
+                <span></span>
                 <span className="text-sm">{driver.rating.toFixed(1)} ({driver.total_transfers} поездок)</span>
               </div>
             </div>

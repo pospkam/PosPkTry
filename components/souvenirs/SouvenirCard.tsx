@@ -25,7 +25,7 @@ export function SouvenirCard({ souvenir, onAddToCart }: SouvenirCardProps) {
         {souvenir.imageUrl ? (
           <img src={souvenir.imageUrl} alt={souvenir.name} className="w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-6xl">🎁</div>
+          <div className="w-full h-full flex items-center justify-center text-6xl"></div>
         )}
         {!souvenir.inStock && (
           <div className="absolute top-2 right-2 px-3 py-1 bg-red-500/90 text-white text-xs rounded-full">Нет в наличии</div>
@@ -37,7 +37,7 @@ export function SouvenirCard({ souvenir, onAddToCart }: SouvenirCardProps) {
         <p className="text-white/70 text-sm mb-4 line-clamp-2">{souvenir.description}</p>
         {souvenir.rating && (
           <div className="flex items-center gap-1 mb-3">
-            <span className="text-yellow-400 text-sm">★</span>
+            <span className="text-yellow-400 text-sm"></span>
             <span className="text-white/70 text-sm">{souvenir.rating.toFixed(1)}</span>
           </div>
         )}

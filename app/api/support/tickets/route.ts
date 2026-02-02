@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { ticketService } from '@/pillars/support/services'
+import { ticketService } from '@/lib/database'
 import { CreateTicketSchema, validateInput, CreateTicketInput } from '@/lib/validation/support-schemas'
 
 export async function GET(request: NextRequest) {

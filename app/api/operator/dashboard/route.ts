@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/pillars/core-infrastructure-infrastructure/lib/database';
+import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { OperatorDashboardData, OperatorMetrics, TourStats, OperatorBooking, ChartDataPoint } from '@/types/operator';
 import { requireOperator } from '@/lib/auth/middleware';
+import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,7 +19,13 @@ export async function GET(request: NextRequest) {
       return userOrResponse;
     }
     
-    const operatorId = userOrResponse.userId;
+      const partnerId = await getOperatorPartnerId(userOrResponse.userId);
+      if (!partnerId) {
+        return NextResponse.json({
+          success: false,
+          error: 'Партнёрский профиль оператора не найден'
+        } as ApiResponse<null>, { status: 404 });
+      }
     const { searchParams } = new URL(request.url);
     const period = parseInt(searchParams.get('period') || '30');
 
@@ -71,7 +78,7 @@ export async function GET(request: NextRequest) {
       FROM tour_stats ts, booking_stats bs, review_stats rs
     `;
 
-    const metricsResult = await query(metricsQuery, [operatorId, startDate]);
+      const metricsResult = await query(metricsQuery, [partnerId, startDate]);
     const metricsRow = metricsResult.rows[0];
 
     const metrics: OperatorMetrics = {
@@ -112,7 +119,7 @@ export async function GET(request: NextRequest) {
       LIMIT 10
     `;
 
-    const bookingsResult = await query(recentBookingsQuery, [operatorId]);
+      const bookingsResult = await query(recentBookingsQuery, [partnerId]);
     const recentBookings: OperatorBooking[] = bookingsResult.rows.map(row => ({
       id: row.id,
       tourId: row.tour_id,
@@ -152,7 +159,7 @@ export async function GET(request: NextRequest) {
       LIMIT 5
     `;
 
-    const topToursResult = await query(topToursQuery, [operatorId]);
+      const topToursResult = await query(topToursQuery, [partnerId]);
     const topTours: TourStats[] = topToursResult.rows.map(row => ({
       tourId: row.tour_id,
       tourName: row.tour_name,
@@ -177,7 +184,7 @@ export async function GET(request: NextRequest) {
       ORDER BY date ASC
     `;
 
-    const revenueChartResult = await query(revenueChartQuery, [operatorId, startDate]);
+      const revenueChartResult = await query(revenueChartQuery, [partnerId, startDate]);
     const revenueChart: ChartDataPoint[] = revenueChartResult.rows.map(row => ({
       date: new Date(row.date).toISOString().split('T')[0],
       value: parseFloat(row.value) || 0
@@ -196,7 +203,7 @@ export async function GET(request: NextRequest) {
       ORDER BY date ASC
     `;
 
-    const bookingsChartResult = await query(bookingsChartQuery, [operatorId, startDate]);
+      const bookingsChartResult = await query(bookingsChartQuery, [partnerId, startDate]);
     const bookingsChart: ChartDataPoint[] = bookingsChartResult.rows.map(row => ({
       date: new Date(row.date).toISOString().split('T')[0],
       value: parseInt(row.value) || 0
@@ -220,7 +227,7 @@ export async function GET(request: NextRequest) {
       LIMIT 5
     `;
 
-    const upcomingToursResult = await query(upcomingToursQuery, [operatorId]);
+      const upcomingToursResult = await query(upcomingToursQuery, [partnerId]);
     const upcomingTours = upcomingToursResult.rows.map(row => ({
       tourId: row.tour_id,
       tourName: row.tour_name,

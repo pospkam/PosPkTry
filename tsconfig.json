@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["dom", "dom.iterable", "ES6"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "ES6"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -20,68 +24,168 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"],
-      "@/components/*": ["./components/*"],
-      "@/app/*": ["./app/*"],
-      "@/lib/*": ["./lib/*"],
-      "@/types/*": ["./types/*"],
-      
-      "@core-infrastructure/*": ["./pillars/core-infrastructure/*"],
-      "@core-infrastructure/api/*": ["./pillars/core-infrastructure/api/*"],
-      "@core-infrastructure/lib/*": ["./pillars/core-infrastructure/lib/*"],
-      "@core-infrastructure/types/*": ["./pillars/core-infrastructure/types/*"],
-      "@core-infrastructure/services/*": ["./pillars/core-infrastructure/services/*"],
-      
-      "@discovery-pillar/*": ["./pillars/discovery-pillar/*"],
-      "@discovery-pillar/lib/*": ["./pillars/discovery-pillar/lib/*"],
-      "@discovery-pillar/services/*": ["./pillars/discovery-pillar/services/*"],
-      
-      "@discovery/*": ["./pillars/discovery/*"],
-      "@discovery/api/*": ["./pillars/discovery/api/*"],
-      "@discovery/components/*": ["./pillars/discovery/components/*"],
-      "@discovery/lib/*": ["./pillars/discovery/lib/*"],
-      "@discovery/types/*": ["./pillars/discovery/types/*"],
-      "@discovery/services/*": ["./pillars/discovery/services/*"],
-      
-      "@booking/*": ["./pillars/booking/*"],
-      "@booking/api/*": ["./pillars/booking/api/*"],
-      "@booking/components/*": ["./pillars/booking/components/*"],
-      "@booking/lib/*": ["./pillars/booking/lib/*"],
-      "@booking/types/*": ["./pillars/booking/types/*"],
-      "@booking/services/*": ["./pillars/booking/services/*"],
-      
-      "@support/*": ["./pillars/support/*"],
-      "@support/api/*": ["./pillars/support/api/*"],
-      "@support/components/*": ["./pillars/support/components/*"],
-      "@support/lib/*": ["./pillars/support/lib/*"],
-      "@support/types/*": ["./pillars/support/types/*"],
-      "@support/services/*": ["./pillars/support/services/*"],
-      
-      "@partner/*": ["./pillars/partner/*"],
-      "@partner/api/*": ["./pillars/partner/api/*"],
-      "@partner/components/*": ["./pillars/partner/components/*"],
-      "@partner/lib/*": ["./pillars/partner/lib/*"],
-      "@partner/types/*": ["./pillars/partner/types/*"],
-      "@partner/services/*": ["./pillars/partner/services/*"],
-      
-      "@analytics/*": ["./pillars/analytics/*"],
-      "@analytics/api/*": ["./pillars/analytics/api/*"],
-      "@analytics/components/*": ["./pillars/analytics/components/*"],
-      "@analytics/lib/*": ["./pillars/analytics/lib/*"],
-      "@analytics/types/*": ["./pillars/analytics/types/*"],
-      "@analytics/services/*": ["./pillars/analytics/services/*"],
-      
-      "@engagement/*": ["./pillars/engagement/*"],
-      "@engagement/api/*": ["./pillars/engagement/api/*"],
-      "@engagement/components/*": ["./pillars/engagement/components/*"],
-      "@engagement/lib/*": ["./pillars/engagement/lib/*"],
-      "@engagement/types/*": ["./pillars/engagement/types/*"],
-      "@engagement/services/*": ["./pillars/engagement/services/*"],
-      
-      "@services/*": ["./pillars/core-infrastructure/services/*"],
-      "@types/*": ["./pillars/core-infrastructure/types/*"]
+      "@/*": [
+        "./*"
+      ],
+      "@/components/*": [
+        "./components/*"
+      ],
+      "@/app/*": [
+        "./app/*"
+      ],
+      "@/lib/*": [
+        "./lib/*"
+      ],
+      "@/types/*": [
+        "./types/*"
+      ],
+      "@core-infrastructure/*": [
+        "./pillars/core-infrastructure/*"
+      ],
+      "@core-infrastructure/api/*": [
+        "./pillars/core-infrastructure/api/*"
+      ],
+      "@core-infrastructure/lib/*": [
+        "./pillars/core-infrastructure/lib/*"
+      ],
+      "@core-infrastructure/types/*": [
+        "./pillars/core-infrastructure/types/*"
+      ],
+      "@core-infrastructure/services/*": [
+        "./pillars/core-infrastructure/services/*"
+      ],
+      "@discovery-pillar/*": [
+        "./pillars/discovery-pillar/*"
+      ],
+      "@discovery-pillar/lib/*": [
+        "./pillars/discovery-pillar/lib/*"
+      ],
+      "@discovery-pillar/services/*": [
+        "./pillars/discovery-pillar/services/*"
+      ],
+      "@discovery/*": [
+        "./pillars/discovery/*"
+      ],
+      "@discovery/api/*": [
+        "./pillars/discovery/api/*"
+      ],
+      "@discovery/components/*": [
+        "./pillars/discovery/components/*"
+      ],
+      "@discovery/lib/*": [
+        "./pillars/discovery/lib/*"
+      ],
+      "@discovery/types/*": [
+        "./pillars/discovery/types/*"
+      ],
+      "@discovery/services/*": [
+        "./pillars/discovery/services/*"
+      ],
+      "@booking/*": [
+        "./pillars/booking/*"
+      ],
+      "@booking/api/*": [
+        "./pillars/booking/api/*"
+      ],
+      "@booking/components/*": [
+        "./pillars/booking/components/*"
+      ],
+      "@booking/lib/*": [
+        "./pillars/booking/lib/*"
+      ],
+      "@booking/types/*": [
+        "./pillars/booking/types/*"
+      ],
+      "@booking/services/*": [
+        "./pillars/booking/services/*"
+      ],
+      "@support/*": [
+        "./pillars/support/*"
+      ],
+      "@support/api/*": [
+        "./pillars/support/api/*"
+      ],
+      "@support/components/*": [
+        "./pillars/support/components/*"
+      ],
+      "@support/lib/*": [
+        "./pillars/support/lib/*"
+      ],
+      "@support/types/*": [
+        "./pillars/support/types/*"
+      ],
+      "@support/services/*": [
+        "./pillars/support/services/*"
+      ],
+      "@partner/*": [
+        "./pillars/partner/*"
+      ],
+      "@partner/api/*": [
+        "./pillars/partner/api/*"
+      ],
+      "@partner/components/*": [
+        "./pillars/partner/components/*"
+      ],
+      "@partner/lib/*": [
+        "./pillars/partner/lib/*"
+      ],
+      "@partner/types/*": [
+        "./pillars/partner/types/*"
+      ],
+      "@partner/services/*": [
+        "./pillars/partner/services/*"
+      ],
+      "@analytics/*": [
+        "./pillars/analytics/*"
+      ],
+      "@analytics/api/*": [
+        "./pillars/analytics/api/*"
+      ],
+      "@analytics/components/*": [
+        "./pillars/analytics/components/*"
+      ],
+      "@analytics/lib/*": [
+        "./pillars/analytics/lib/*"
+      ],
+      "@analytics/types/*": [
+        "./pillars/analytics/types/*"
+      ],
+      "@analytics/services/*": [
+        "./pillars/analytics/services/*"
+      ],
+      "@engagement/*": [
+        "./pillars/engagement/*"
+      ],
+      "@engagement/api/*": [
+        "./pillars/engagement/api/*"
+      ],
+      "@engagement/components/*": [
+        "./pillars/engagement/components/*"
+      ],
+      "@engagement/lib/*": [
+        "./pillars/engagement/lib/*"
+      ],
+      "@engagement/types/*": [
+        "./pillars/engagement/types/*"
+      ],
+      "@engagement/services/*": [
+        "./pillars/engagement/services/*"
+      ],
+      "@services/*": [
+        "./pillars/core-infrastructure/services/*"
+      ],
+      "@types/*": [
+        "./pillars/core-infrastructure/types/*"
+      ]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

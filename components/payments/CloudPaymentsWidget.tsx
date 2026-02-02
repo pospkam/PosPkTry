@@ -113,17 +113,17 @@ export function CloudPaymentsWidget({
       >
         {processing ? (
           <>
-            <span className="animate-spin mr-2">⏳</span>
+            <span className="animate-spin mr-2"></span>
             Обработка платежа...
           </>
         ) : !scriptLoaded ? (
           <>
-            <span className="animate-pulse mr-2">⏳</span>
+            <span className="animate-pulse mr-2"></span>
             Загрузка...
           </>
         ) : (
           <>
-            <span className="mr-2">💳</span>
+            <span className="mr-2"></span>
             {buttonText}
           </>
         )}

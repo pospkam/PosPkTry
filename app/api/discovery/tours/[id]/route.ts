@@ -5,11 +5,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { tourService } from '@/pillars/discovery/lib/tour/services/TourService';
+import { tourService } from '@/lib/database';
 import {
   TourNotFoundError,
   TourValidationError,
-} from '@/pillars/discovery/lib/tour/types';
+} from '@/lib/database';
 
 // ============================================================================
 // GET - ПОЛУЧИТЬ ДЕТАЛИ ТУРА

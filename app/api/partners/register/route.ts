@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/pillars/core-infrastructure-infrastructure/lib/database';
+import { query } from '@/lib/database';
 import { z } from 'zod';
 
 // Валидация входных данных
@@ -12,7 +12,6 @@ const registerSchema = z.object({
   name: z.string().min(2, 'Название должно быть минимум 2 символа'),
   email: z.string().email('Неверный формат email'),
   phone: z.string().min(10, 'Неверный формат телефона'),
-  password: z.string().min(8, 'Пароль должен быть минимум 8 символов'),
   description: z.string().optional(),
   address: z.string().optional(),
   website: z.string().url().optional().or(z.literal('')),
@@ -39,12 +38,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, email, phone, password, description, address, website, roles, logoUrl } = validationResult.data;
-
-    // TODO: В production хешировать пароль с bcrypt
-    // const passwordHash = await bcrypt.hash(password, 10);
-    // Для демо сохраняем как есть (НЕ ДЕЛАЙТЕ ТАК В PRODUCTION!)
-    const passwordHash = password;
+    const { name, email, phone, description, address, website, roles, logoUrl } = validationResult.data;
 
     // Проверяем, не существует ли уже партнер с таким email
     const existingPartner = await query(

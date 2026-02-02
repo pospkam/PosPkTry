@@ -13,7 +13,7 @@ export function ReviewList({ reviews, showAddButton, onAddReview }: ReviewListPr
   if (reviews.length === 0 && !showAddButton) {
     return (
       <div className="bg-white/5 border border-white/10 rounded-2xl p-12 text-center">
-        <div className="text-6xl mb-4">⭐</div>
+        <div className="text-6xl mb-4"></div>
         <p className="text-white/70">Пока нет отзывов</p>
         <p className="text-white/50 text-sm mt-2">Будьте первым, кто оставит отзыв!</p>
       </div>
@@ -27,7 +27,7 @@ export function ReviewList({ reviews, showAddButton, onAddReview }: ReviewListPr
           onClick={onAddReview}
           className="w-full px-6 py-4 bg-premium-gold/20 hover:bg-premium-gold/30 border border-premium-gold/50 text-premium-gold rounded-xl font-semibold transition-colors"
         >
-          ✍️ Оставить отзыв
+           Оставить отзыв
         </button>
       )}
 
@@ -42,8 +42,8 @@ export function ReviewList({ reviews, showAddButton, onAddReview }: ReviewListPr
               <div>
                 <div className="flex items-center gap-3 mb-2">
                   <span className="text-yellow-400 text-lg">
-                    {'★'.repeat(review.rating)}
-                    <span className="text-gray-600">{'★'.repeat(5 - review.rating)}</span>
+                    {''.repeat(review.rating)}
+                    <span className="text-gray-600">{''.repeat(5 - review.rating)}</span>
                   </span>
                   <span className="text-white font-semibold">
                     {review.rating === 5 ? 'Отлично!' : 
@@ -63,7 +63,7 @@ export function ReviewList({ reviews, showAddButton, onAddReview }: ReviewListPr
 
               {review.isVerified && (
                 <span className="px-3 py-1 bg-green-500/20 text-green-400 text-xs rounded-full flex items-center gap-1">
-                  <span>✓</span>
+                  <span>[]</span>
                   <span>Проверен</span>
                 </span>
               )}

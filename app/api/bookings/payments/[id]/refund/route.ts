@@ -4,9 +4,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { paymentService } from '@/pillars/booking'
-import { bookingService } from '@/pillars/booking'
-import { authenticateUser, authorizeRole } from '@/pillars/core-infrastructure/services/auth'
+import { paymentService } from '@/lib/database'
+import { bookingService } from '@/lib/database'
+import { authenticateUser, authorizeRole } from '@/lib/auth'
 
 /**
  * POST /api/bookings/payments/[id]/refund

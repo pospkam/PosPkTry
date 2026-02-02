@@ -24,16 +24,16 @@ const colors = {
 };
 
 const log = {
-  success: (msg) => console.log(`${colors.green}✅ ${msg}${colors.reset}`),
-  error: (msg) => console.log(`${colors.red}❌ ${msg}${colors.reset}`),
-  warning: (msg) => console.log(`${colors.yellow}⚠️  ${msg}${colors.reset}`),
-  info: (msg) => console.log(`${colors.blue}ℹ️  ${msg}${colors.reset}`),
+  success: (msg) => console.log(`${colors.green}[OK] ${msg}${colors.reset}`),
+  error: (msg) => console.log(`${colors.red}[X] ${msg}${colors.reset}`),
+  warning: (msg) => console.log(`${colors.yellow}!  ${msg}${colors.reset}`),
+  info: (msg) => console.log(`${colors.blue}i  ${msg}${colors.reset}`),
   step: (msg) => console.log(`${colors.cyan}▶️  ${msg}${colors.reset}`),
 };
 
 async function testPrivateConnection() {
   console.log('═══════════════════════════════════════════════════════');
-  console.log('🔒 ТЕСТИРОВАНИЕ ПОДКЛЮЧЕНИЯ К POSTGRESQL');
+  console.log(' ТЕСТИРОВАНИЕ ПОДКЛЮЧЕНИЯ К POSTGRESQL');
   console.log('🏠 ЧЕРЕЗ ПРИВАТНЫЙ IP TIMEWEB CLOUD');
   console.log('═══════════════════════════════════════════════════════');
   console.log('');
@@ -49,7 +49,7 @@ async function testPrivateConnection() {
     log.step('Установка соединения...');
     await client.connect();
 
-    log.success('ПОДКЛЮЧЕНИЕ УСТАНОВЛЕНО! 🎉');
+    log.success('ПОДКЛЮЧЕНИЕ УСТАНОВЛЕНО! ');
     console.log('');
 
     // Информация о сервере
@@ -94,7 +94,7 @@ async function testPrivateConnection() {
     } else {
       log.success(`Найдено таблиц: ${tablesResult.rows.length}`);
 
-      console.log('📋 Список таблиц:');
+      console.log(' Список таблиц:');
       console.log('┌─────────────────────────────────────┐');
       console.log('│ Название таблицы          │ Владелец │');
       console.log('├─────────────────────────────────────┤');
@@ -134,12 +134,12 @@ async function testPrivateConnection() {
 
     console.log('');
     console.log('═══════════════════════════════════════════════════════');
-    log.success('✅ ТЕСТИРОВАНИЕ ПРОЙДЕНО УСПЕШНО!');
+    log.success('[OK] ТЕСТИРОВАНИЕ ПРОЙДЕНО УСПЕШНО!');
     console.log('═══════════════════════════════════════════════════════');
     console.log('');
-    console.log('🚀 ГОТОВ К РАБОТЕ С БАЗОЙ ДАННЫХ!');
+    console.log(' ГОТОВ К РАБОТЕ С БАЗОЙ ДАННЫХ!');
     console.log('');
-    console.log('📝 ДАЛЬНЕЙШИЕ ШАГИ:');
+    console.log(' ДАЛЬНЕЙШИЕ ШАГИ:');
     console.log('   1. Выполнить миграции схемы БД');
     console.log('   2. Загрузить начальные данные');
     console.log('   3. Настроить подключение в приложении');
@@ -150,7 +150,7 @@ async function testPrivateConnection() {
   } catch (error) {
     console.log('');
     console.log('═══════════════════════════════════════════════════════');
-    log.error('❌ ОШИБКА ПОДКЛЮЧЕНИЯ');
+    log.error('[X] ОШИБКА ПОДКЛЮЧЕНИЯ');
     console.log('═══════════════════════════════════════════════════════');
     console.log('');
 
@@ -211,11 +211,11 @@ async function testPrivateConnection() {
     console.log('   • Проверьте статус в панели Timeweb Cloud');
     console.log('   • Перезапустите сервис если необходимо');
     console.log('');
-    console.log('3. 🔐 ПРОВЕРЬТЕ ПРАВА:');
+    console.log('3.  ПРОВЕРЬТЕ ПРАВА:');
     console.log('   • Убедитесь в правильности учетных данных');
     console.log('   • Проверьте что пользователь имеет доступ');
     console.log('');
-    console.log('4. 📞 ПОДДЕРЖКА:');
+    console.log('4.  ПОДДЕРЖКА:');
     console.log('   • Свяжитесь с поддержкой Timeweb Cloud');
     console.log('   • Предоставьте код ошибки и IP адрес');
 

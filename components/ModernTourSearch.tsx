@@ -174,12 +174,12 @@ export function ModernTourSearch() {
   };
 
   const activities = [
-    { id: 'volcano', name: 'Вулканы', icon: '🌋' },
-    { id: 'fishing', name: 'Рыбалка', icon: '🎣' },
-    { id: 'hiking', name: 'Треккинг', icon: '🥾' },
-    { id: 'wildlife', name: 'Медведи', icon: '🐻' },
-    { id: 'geysers', name: 'Гейзеры', icon: '💨' },
-    { id: 'hot-springs', name: 'Термалы', icon: '♨️' },
+    { id: 'volcano', name: 'Вулканы', icon: '' },
+    { id: 'fishing', name: 'Рыбалка', icon: '' },
+    { id: 'hiking', name: 'Треккинг', icon: '' },
+    { id: 'wildlife', name: 'Медведи', icon: '' },
+    { id: 'geysers', name: 'Гейзеры', icon: '' },
+    { id: 'hot-springs', name: 'Термалы', icon: '' },
   ];
 
   return (
@@ -190,7 +190,7 @@ export function ModernTourSearch() {
           <div className="ai-search-content" onClick={(e) => e.stopPropagation()}>
             <div className="ai-search-header">
               <div className="ai-search-title">
-                <div className="ai-icon">🤖</div>
+                <div className="ai-icon"></div>
                 <div>
                   <h3>AI Помощник поиска</h3>
                   <p>Опишите свой идеальный тур, я помогу подобрать!</p>
@@ -208,13 +208,13 @@ export function ModernTourSearch() {
                 <p>Примеры запросов:</p>
                 <div className="ai-example-chips">
                   <button onClick={() => setAiQuery('Хочу увидеть вулкан и медведей за 3 дня')}>
-                    🌋 Вулканы + медведи
+                     Вулканы + медведи
                   </button>
                   <button onClick={() => setAiQuery('Рыбалка для начинающих на выходные')}>
-                    🎣 Рыбалка для новичков
+                     Рыбалка для новичков
                   </button>
                   <button onClick={() => setAiQuery('Романтический тур с горячими источниками')}>
-                    ♨️ Романтический отдых
+                     Романтический отдых
                   </button>
                 </div>
               </div>
@@ -420,13 +420,13 @@ export function ModernTourSearch() {
                       {tour.imageUrl ? (
                         <img src={tour.imageUrl} alt={tour.title} />
                       ) : (
-                        <div className="tour-placeholder">🏔️</div>
+                        <div className="tour-placeholder"></div>
                       )}
                       {tour.difficulty && (
                         <span className={`difficulty-badge ${tour.difficulty}`}>
-                          {tour.difficulty === 'easy' && '🟢 Легко'}
-                          {tour.difficulty === 'medium' && '🟡 Средне'}
-                          {tour.difficulty === 'hard' && '🔴 Сложно'}
+                          {tour.difficulty === 'easy' && ' Легко'}
+                          {tour.difficulty === 'medium' && ' Средне'}
+                          {tour.difficulty === 'hard' && ' Сложно'}
                         </span>
                       )}
                     </div>
@@ -443,7 +443,7 @@ export function ModernTourSearch() {
                         </span>
                         {tour.rating && (
                           <span className="tour-rating">
-                            ⭐ {tour.rating}
+                             {tour.rating}
                             {tour.reviews && ` (${tour.reviews})`}
                           </span>
                         )}
@@ -458,7 +458,7 @@ export function ModernTourSearch() {
             </>
           ) : (
             <div className="no-results">
-              <div className="no-results-icon">🔍</div>
+              <div className="no-results-icon"></div>
               <h3>Ничего не найдено</h3>
               <p>Попробуйте изменить запрос или воспользуйтесь AI-помощником</p>
               <button onClick={() => setShowAI(true)} className="try-ai-btn">

@@ -206,7 +206,7 @@ async function updateKnowledgeBase(documents: KnowledgeDocument[]): Promise<bool
       }
 
       const result = await response.json()
-      console.log(`✅ Чанк ${i + 1}/${chunks.length} отправлен:`, result.message || 'OK')
+      console.log(`[✓] Чанк ${i + 1}/${chunks.length} отправлен:`, result.message || 'OK')
 
       // Небольшая задержка между запросами
       await new Promise(resolve => setTimeout(resolve, 1000))
@@ -270,7 +270,7 @@ export async function POST(request: NextRequest) {
         }, { status: 400 })
       }
 
-      console.log(`📁 Загрузка файла: ${file.name}`)
+      console.log(`  Загрузка файла: ${file.name}`)
 
       // Загружаем файл в S3
       const fileName = `${Date.now()}_${file.name}`
@@ -301,14 +301,14 @@ export async function POST(request: NextRequest) {
     const limitedDocuments = documents.slice(0, maxDocs)
 
     if (documents.length > maxDocs) {
-      console.log(`⚠️ Ограничено до ${maxDocs} документов (было ${documents.length})`)
+      console.log(`! Ограничено до ${maxDocs} документов (было ${documents.length})`)
     }
 
     // Обновляем базу знаний
     const success = await updateKnowledgeBase(limitedDocuments)
 
     if (success) {
-      console.log('✅ База знаний успешно обновлена!')
+      console.log('[✓] База знаний успешно обновлена!')
       return NextResponse.json({
         success: true,
         message: 'База знаний обновлена',
@@ -317,7 +317,7 @@ export async function POST(request: NextRequest) {
         type: updateType
       })
     } else {
-      console.error('❌ Ошибка обновления базы знаний')
+      console.error('[✗] Ошибка обновления базы знаний')
       return NextResponse.json({
         success: false,
         error: 'Failed to update knowledge base'

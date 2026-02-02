@@ -56,7 +56,7 @@ export function TourCard({ tour, className, onClick }: TourCardProps) {
   return (
     <div
       className={cn(
-        'bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:bg-white/10 transition-all duration-300 cursor-pointer',
+        'weather-card overflow-hidden cursor-pointer',
         className
       )}
       onClick={onClick}
@@ -72,7 +72,7 @@ export function TourCard({ tour, className, onClick }: TourCardProps) {
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-green-100">
             <div className="text-center">
-              <div className="text-4xl mb-2">🏔️</div>
+              <div className="text-4xl mb-2"> </div>
               <div className="text-gray-600 text-sm">{tour.title}</div>
             </div>
           </div>
@@ -92,7 +92,7 @@ export function TourCard({ tour, className, onClick }: TourCardProps) {
         {/* Рейтинг */}
         {tour.rating > 0 && (
           <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full flex items-center space-x-1">
-            <span className="text-premium-gold">⭐</span>
+            <span className="text-premium-gold">★</span>
             <span className="text-sm font-bold text-white">{tour.rating}</span>
             <span className="text-xs text-white/70">({tour.reviewsCount})</span>
           </div>
@@ -123,13 +123,13 @@ export function TourCard({ tour, className, onClick }: TourCardProps) {
         <div className="space-y-2 mb-4">
           {/* Продолжительность */}
           <div className="flex items-center text-sm text-white/70">
-            <span className="mr-2">⏱️</span>
+            <span className="mr-2"> </span>
             <span>{tour.duration}</span>
           </div>
 
           {/* Размер группы */}
           <div className="flex items-center text-sm text-white/70">
-            <span className="mr-2">👥</span>
+            <span className="mr-2"> </span>
             <span>
               {tour.minParticipants === tour.maxParticipants
                 ? `${tour.minParticipants} чел.`
@@ -140,7 +140,7 @@ export function TourCard({ tour, className, onClick }: TourCardProps) {
           {/* Сезон */}
           {tour.activity && (
             <div className="flex items-center text-sm text-white/70">
-              <span className="mr-2">🌿</span>
+              <span className="mr-2"> </span>
               <span>Круглый год</span>
             </div>
           )}
@@ -149,11 +149,11 @@ export function TourCard({ tour, className, onClick }: TourCardProps) {
         {/* Оператор */}
         {tour.operator && (
           <div className="flex items-center text-sm text-white/70 mb-4">
-            <span className="mr-2">🏢</span>
+            <span className="mr-2"> </span>
             <span>{tour.operator.name}</span>
             {tour.operator.rating > 0 && (
               <span className="ml-2 text-premium-gold">
-                ⭐ {formatRating(tour.operator.rating)}
+                ★ {formatRating(tour.operator.rating)}
               </span>
             )}
           </div>
@@ -161,7 +161,7 @@ export function TourCard({ tour, className, onClick }: TourCardProps) {
 
         {/* Кнопка бронирования */}
         <button
-          className="w-full bg-premium-gold hover:bg-premium-gold/90 text-premium-black font-bold py-3 px-4 rounded-xl transition-all duration-200"
+          className="w-full weather-btn weather-btn-primary py-3"
           onClick={(e) => {
             e.stopPropagation();
             // Здесь будет логика бронирования

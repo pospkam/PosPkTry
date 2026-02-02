@@ -13,7 +13,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/pillars/core-infrastructure-infrastructure/lib/database';
+import { query } from '@/lib/database';
 import { z } from 'zod';
 import { emailService } from '@/lib/notifications/email-service';
 
@@ -256,7 +256,7 @@ export async function POST(
           currency: 'RUB',
           userId,
           userEmail,
-          description: `Оплата размещения: ${accommodation.name}`,
+          description: `Оплата размещения: ${room.accommodation_name}`,
         }),
       });
 

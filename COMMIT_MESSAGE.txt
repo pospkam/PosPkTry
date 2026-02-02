@@ -1,0 +1,63 @@
+fix: Полное исправление регистрации партнеров с DB миграциями
+
+КРИТИЧЕСКИЕ ИСПРАВЛЕНИЯ:
+- Добавлена миграция 006: password_hash в таблицу users
+- Добавлена миграция 007: user_id в таблицу partners для связи с users
+- Полностью переписан /api/partners/register с правильной бизнес-логикой
+- Добавлено хеширование паролей с bcrypt (10 раундов)
+- Добавлена генерация JWT токенов для автоматической авторизации
+- Все операции теперь в транзакциях для целостности данных
+
+ТЕХНИЧЕСКИЕ ДЕТАЛИ:
+- При регистрации партнера теперь СОЗДАЕТСЯ пользователь в таблице users
+- Пароль хешируется и сохраняется в users.password_hash
+- Партнер создается в partners со ссылкой на users через user_id
+- JWT токен устанавливается в HTTP-only cookie
+- Партнер автоматически авторизуется после регистрации
+
+НОВЫЕ ФАЙЛЫ:
+- lib/database/migrations/006_add_password_hash_to_users.sql
+- lib/database/migrations/007_add_user_id_to_partners.sql
+- scripts/run-migrations.ts
+- deploy-partner-fix.sh
+- PARTNER_REGISTRATION_ISSUES_REPORT.md
+- PARTNER_REGISTRATION_FIX_INSTRUCTIONS.md
+- PARTNER_REGISTRATION_FIXED.md
+- БЫСТРЫЙ_ДЕПЛОЙ_ИСПРАВЛЕНИЙ.md
+
+ИЗМЕНЁННЫЕ ФАЙЛЫ:
+- app/api/partners/register/route.ts - полностью переписан (272 строки)
+- lib/database/migrations.ts - добавлены миграции 006 и 007
+- package.json - добавлен bcryptjs и @types/bcryptjs
+
+ЗАВИСИМОСТИ:
++ bcryptjs@^2.4.3
++ @types/bcryptjs@^2.4.6
+
+МИГРАЦИИ БД:
+- 006_add_password_hash_to_users - добавляет password_hash в users
+- 007_add_user_id_to_partners - добавляет user_id в partners
+
+БЕЗОПАСНОСТЬ:
+✅ Пароли хешируются с bcrypt (невозможно расшифровать)
+✅ JWT в HTTP-only cookies (защита от XSS)
+✅ Транзакции БД (целостность данных)
+✅ Валидация входных данных (zod)
+✅ Проверка уникальности email
+
+ТЕСТИРОВАНИЕ:
+- Протестировано создание пользователя
+- Протестировано создание партнера
+- Протестирована авторизация
+- Протестированы транзакции
+- Протестирована валидация
+
+BREAKING CHANGES:
+- Требуется применить миграции БД перед использованием
+- Требуется установить bcryptjs: npm install
+- Старые партнеры без user_id не смогут войти (нужна миграция данных)
+
+ДОКУМЕНТАЦИЯ:
+См. PARTNER_REGISTRATION_FIX_INSTRUCTIONS.md для инструкций по деплою
+
+Closes #19

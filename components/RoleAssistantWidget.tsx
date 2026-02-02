@@ -25,11 +25,11 @@ export function RoleAssistantWidget({ role, userId }: RoleAssistantWidgetProps) 
   };
 
   const roleIcons: Record<RoleType, string> = {
-    tourist: '🏔️',
-    operator: '💼',
-    agent: '👨‍💼',
+    tourist: '',
+    operator: '',
+    agent: '',
     guide: '🧗',
-    transfer: '🚗',
+    transfer: '',
     admin: '👑'
   };
 

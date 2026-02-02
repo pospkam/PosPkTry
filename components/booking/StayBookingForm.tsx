@@ -241,10 +241,10 @@ export function StayBookingForm({
         {checkInDate && checkOutDate && (
           <div className="mt-4 p-4 bg-green-500/10 border border-green-500/30 rounded-xl">
             <p className="text-green-400">
-              ✓ Заезд: {checkInDate.toLocaleDateString('ru-RU')}
+              [] Заезд: {checkInDate.toLocaleDateString('ru-RU')}
             </p>
             <p className="text-green-400">
-              ✓ Выезд: {checkOutDate.toLocaleDateString('ru-RU')}
+              [] Выезд: {checkOutDate.toLocaleDateString('ru-RU')}
             </p>
             <p className="text-white/70 text-sm mt-2">
               Количество ночей: {nights}
@@ -347,7 +347,7 @@ export function StayBookingForm({
         >
           {submitting ? (
             <span className="flex items-center justify-center">
-              <span className="animate-spin mr-2">⏳</span>
+              <span className="animate-spin mr-2"> </span>
               Оформление...
             </span>
           ) : (

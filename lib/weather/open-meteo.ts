@@ -160,14 +160,14 @@ export function checkVolcanicAsh(weather: WeatherData, isKamchatka: boolean): bo
  */
 export function getWeatherEmoji(condition: string): string {
   const emojiMap: Record<string, string> = {
-    clear: '☀️',
+    clear: ' ',
     mostly_clear: '🌤️',
     partly_cloudy: '⛅',
     overcast: '☁️',
     fog: '🌫️',
-    drizzle: '🌦️',
-    rain: '🌧️',
-    snow: '❄️',
+    drizzle: ' ',
+    rain: ' ',
+    snow: ' ',
     thunderstorm: '⛈️',
   };
   

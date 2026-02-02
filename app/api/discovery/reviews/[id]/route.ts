@@ -8,11 +8,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { reviewService } from '@/pillars/discovery/lib/review/services/ReviewService';
+import { reviewService } from '@/lib/database';
 import {
   ReviewNotFoundError,
   ReviewValidationError,
-} from '@/pillars/discovery/lib/review/types';
+} from '@/lib/database';
 
 // ============================================================================
 // GET - ПОЛУЧИТЬ ОТЗЫВ

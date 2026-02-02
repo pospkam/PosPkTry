@@ -7,10 +7,12 @@ export interface User {
   email: string;
   name: string;
   avatar?: string;
+  role: string;
   roles: string[];
   preferences: UserPreferences;
   createdAt: Date;
   updatedAt: Date;
+  token?: string;
 }
 
 export interface UserPreferences {
@@ -59,13 +61,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loadUserFromStorage = async () => {
     try {
+      // Try to load from localStorage first
       const userData = localStorage.getItem('user');
       if (userData) {
         const parsedUser = JSON.parse(userData);
         parsedUser.createdAt = new Date(parsedUser.createdAt);
         parsedUser.updatedAt = new Date(parsedUser.updatedAt);
         parsedUser.preferences = { ...defaultPreferences, ...parsedUser.preferences };
-        setUser(parsedUser);
+        
+        // Verify session with server
+        try {
+          const response = await fetch('/api/auth/me', {
+            headers: {
+              'Authorization': `Bearer ${parsedUser.token}`
+            }
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            if (result.success) {
+              result.data.token = parsedUser.token;
+              setUser(result.data);
+              return;
+            }
+          }
+        } catch (err) {
+          console.error('Session verification failed:', err);
+        }
+        
+        // If verification failed, clear storage
+        localStorage.removeItem('user');
       }
     } catch (error) {
       console.error('Error loading user from storage:', error);
@@ -95,14 +120,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         body: JSON.stringify({ email, password }),
       });
 
-      if (!response.ok) {
-        throw new Error('Invalid credentials');
+      const result = await response.json();
+      
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Invalid credentials');
       }
 
-      const userData = await response.json();
+      const userData = result.data;
       userData.preferences = { ...defaultPreferences, ...userData.preferences };
+      userData.createdAt = new Date(userData.createdAt);
+      userData.updatedAt = new Date(userData.updatedAt);
+      
       setUser(userData);
       await saveUserToStorage(userData);
+      
+      // Also update roles in RoleContext
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('user_roles', JSON.stringify(userData.roles));
+      }
     } catch (error) {
       console.error('Sign in error:', error);
       throw error;
@@ -120,14 +155,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         body: JSON.stringify({ email, password, name }),
       });
 
-      if (!response.ok) {
-        throw new Error('Registration failed');
+      const result = await response.json();
+      
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Registration failed');
       }
 
-      const userData = await response.json();
+      const userData = result.data;
       userData.preferences = { ...defaultPreferences, ...userData.preferences };
+      userData.createdAt = new Date(userData.createdAt);
+      userData.updatedAt = new Date(userData.updatedAt);
+      
       setUser(userData);
       await saveUserToStorage(userData);
+      
+      // Also update roles in RoleContext
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('user_roles', JSON.stringify(userData.roles));
+      }
     } catch (error) {
       console.error('Sign up error:', error);
       throw error;

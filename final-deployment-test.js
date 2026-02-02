@@ -42,12 +42,12 @@ const colors = {
 };
 
 const log = {
-  success: (msg) => console.log(`${colors.green}✅ ${msg}${colors.reset}`),
-  error: (msg) => console.log(`${colors.red}❌ ${msg}${colors.reset}`),
-  warning: (msg) => console.log(`${colors.yellow}⚠️  ${msg}${colors.reset}`),
-  info: (msg) => console.log(`${colors.blue}ℹ️  ${msg}${colors.reset}`),
+  success: (msg) => console.log(`${colors.green}[OK] ${msg}${colors.reset}`),
+  error: (msg) => console.log(`${colors.red}[X] ${msg}${colors.reset}`),
+  warning: (msg) => console.log(`${colors.yellow}!  ${msg}${colors.reset}`),
+  info: (msg) => console.log(`${colors.blue}i  ${msg}${colors.reset}`),
   step: (msg) => console.log(`${colors.cyan}▶️  ${msg}${colors.reset}`),
-  ready: (msg) => console.log(`${colors.magenta}🚀 ${msg}${colors.reset}`),
+  ready: (msg) => console.log(`${colors.magenta} ${msg}${colors.reset}`),
 };
 
 async function testDatabase() {
@@ -188,7 +188,7 @@ SENTRY_DSN=YOUR_SENTRY_DSN_HERE
   fs.writeFileSync(envPath, envContent);
 
   log.success(`Конфигурация сохранена: ${envPath}`);
-  log.warning('⚠️  ВАЖНО: Заполните API ключи перед деплоем!');
+  log.warning('!  ВАЖНО: Заполните API ключи перед деплоем!');
   log.info('Требуется: GROQ_API_KEY, DEEPSEEK_API_KEY, SENTRY_DSN');
 
   return envPath;
@@ -197,7 +197,7 @@ SENTRY_DSN=YOUR_SENTRY_DSN_HERE
 // Основная функция
 async function main() {
   console.log('═══════════════════════════════════════════════════════');
-  console.log('🚀 ФИНАЛЬНОЕ ТЕСТИРОВАНИЕ ПЕРЕД ДЕПЛОЕМ');
+  console.log(' ФИНАЛЬНОЕ ТЕСТИРОВАНИЕ ПЕРЕД ДЕПЛОЕМ');
   console.log('☁️  TIMEWEB CLOUD PRODUCTION');
   console.log('═══════════════════════════════════════════════════════');
   console.log('');
@@ -221,41 +221,41 @@ async function main() {
   const totalOk = [dbOk, s3Ok, aiOk].filter(Boolean).length;
   const total = 3;
 
-  console.log(`📊 ГОТОВНОСТЬ: ${totalOk}/${total} компонентов`);
+  console.log(` ГОТОВНОСТЬ: ${totalOk}/${total} компонентов`);
   console.log('');
 
   if (dbOk) {
-    log.success('✅ PostgreSQL: ГОТОВ');
+    log.success('[OK] PostgreSQL: ГОТОВ');
   } else {
-    log.error('❌ PostgreSQL: ПРОБЛЕМЫ');
+    log.error('[X] PostgreSQL: ПРОБЛЕМЫ');
   }
 
   if (s3Ok) {
-    log.success('✅ S3 хранилище: ГОТОВ');
+    log.success('[OK] S3 хранилище: ГОТОВ');
   } else {
-    log.error('❌ S3 хранилище: ПРОБЛЕМЫ');
+    log.error('[X] S3 хранилище: ПРОБЛЕМЫ');
   }
 
   if (aiOk) {
     if (results.ai.fallback) {
-      log.warning('⚠️  Timeweb AI: ОТКЛЮЧЕН (работает fallback)');
+      log.warning('!  Timeweb AI: ОТКЛЮЧЕН (работает fallback)');
     } else {
-      log.success('✅ AI система: ГОТОВА');
+      log.success('[OK] AI система: ГОТОВА');
     }
   } else {
-    log.error('❌ AI система: ПРОБЛЕМЫ');
+    log.error('[X] AI система: ПРОБЛЕМЫ');
   }
 
   console.log('');
   console.log('═══════════════════════════════════════════════════════');
 
   if (totalOk >= 2) { // Минимум DB + S3
-    log.ready('🎉 ГОТОВ К ДЕПЛОЮ НА TIMEWEB CLOUD!');
+    log.ready(' ГОТОВ К ДЕПЛОЮ НА TIMEWEB CLOUD!');
     console.log('');
-    console.log('📋 ДАЛЬНЕЙШИЕ ШАГИ:');
-    console.log('1. 🔧 Сгенерировать production конфигурацию');
-    console.log('2. 🔑 Заполнить API ключи');
-    console.log('3. 🚀 Выполнить деплой');
+    console.log(' ДАЛЬНЕЙШИЕ ШАГИ:');
+    console.log('1.  Сгенерировать production конфигурацию');
+    console.log('2.  Заполнить API ключи');
+    console.log('3.  Выполнить деплой');
     console.log('4. 🧪 Протестировать после деплоя');
 
     // Генерация конфигурации
@@ -263,15 +263,15 @@ async function main() {
 
     console.log('');
     log.ready('КОНФИГУРАЦИЯ СОЗДАНА!');
-    console.log(`📄 Файл: ${envPath}`);
+    console.log(` Файл: ${envPath}`);
     console.log('');
-    console.log('💡 НАПОМИНАНИЕ:');
+    console.log(' НАПОМИНАНИЕ:');
     console.log('• Установите этот файл как .env на сервере Timeweb');
     console.log('• Заполните все YOUR_API_KEY_HERE значениями');
     console.log('• Timeweb AI можно включить после исправления API');
 
   } else {
-    log.error('❌ НЕДОСТАТОЧНО КОМПОНЕНТОВ ДЛЯ ДЕПЛОЯ');
+    log.error('[X] НЕДОСТАТОЧНО КОМПОНЕНТОВ ДЛЯ ДЕПЛОЯ');
 
     if (!dbOk) {
       console.log('🔴 Критично: PostgreSQL не работает');

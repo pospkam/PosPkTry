@@ -1,31 +1,54 @@
-import { beforeAll, afterAll, afterEach } from 'vitest';
-import { query } from '../lib/database';
+import '@testing-library/jest-dom';
+import { expect, afterEach, vi } from 'vitest';
+import { cleanup } from '@testing-library/react';
 
-// Мок для базы данных в тестах
-beforeAll(async () => {
-  // Настройка тестовой базы данных
-  // NODE_ENV устанавливается через vitest.config.ts, не изменяем здесь
-  if (!process.env.DATABASE_URL) {
-    process.env.DATABASE_URL = process.env.TEST_DATABASE_URL || 'postgresql://test:test@localhost:5432/kamchatour_hub_test';
-  }
+// Cleanup after each test
+afterEach(() => {
+  cleanup();
 });
 
-afterEach(async () => {
-  // Очистка данных после каждого теста
-  try {
-    await query('TRUNCATE TABLE transfer_bookings CASCADE');
-    await query('TRUNCATE TABLE transfer_payments CASCADE');
-    await query('TRUNCATE TABLE loyalty_transactions CASCADE');
-  } catch (error) {
-    console.warn('Failed to clean up test data:', error);
-  }
-});
+// Mock environment variables
+process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/kamhub_test';
+process.env.JWT_SECRET = 'test_jwt_secret_key_for_testing';
+process.env.NEXTAUTH_SECRET = 'test_nextauth_secret_key';
+process.env.NEXTAUTH_URL = 'http://localhost:3000';
 
-afterAll(async () => {
-  // Закрытие соединения с базой данных
-  try {
-    // await query('DROP SCHEMA IF EXISTS test CASCADE');
-  } catch (error) {
-    console.warn('Failed to clean up test database:', error);
-  }
-});
+// Mock Next.js router
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+    back: vi.fn(),
+  }),
+  usePathname: () => '/',
+  useSearchParams: () => new URLSearchParams(),
+}));
+
+// Mock fetch globally
+global.fetch = vi.fn();
+
+// Helper function to reset fetch mock
+export const resetFetchMock = () => {
+  (global.fetch as any).mockReset();
+};
+
+// Helper to mock successful API response
+export const mockApiSuccess = (data: any) => {
+  (global.fetch as any).mockResolvedValueOnce({
+    ok: true,
+    status: 200,
+    json: async () => ({ success: true, data }),
+    headers: new Headers(),
+  });
+};
+
+// Helper to mock API error
+export const mockApiError = (error: string, status = 400) => {
+  (global.fetch as any).mockResolvedValueOnce({
+    ok: false,
+    status,
+    json: async () => ({ success: false, error }),
+    headers: new Headers(),
+  });
+};

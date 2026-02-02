@@ -10,7 +10,7 @@ process.env.TIMEWEB_SERVER_ID = '1735784';
 async function callTimeweb(prompt) {
   const agentId = process.env.TIMEWEB_AI_AGENT_ID;
   if (!agentId) {
-    console.error('❌ TIMEWEB_AI_AGENT_ID не установлен');
+    console.error('[X] TIMEWEB_AI_AGENT_ID не установлен');
     return null;
   }
 
@@ -18,7 +18,7 @@ async function callTimeweb(prompt) {
   const url = `https://agent.timeweb.cloud/api/v1/cloud-ai/agents/${agentId}/v1`;
 
   console.log(`🔗 URL агента: ${url}`);
-  console.log(`📝 Prompt: ${prompt}`);
+  console.log(` Prompt: ${prompt}`);
 
   try {
     const response = await fetch(url, {
@@ -39,23 +39,23 @@ async function callTimeweb(prompt) {
       }),
     });
 
-    console.log(`📊 Status: ${response.status} ${response.statusText}`);
+    console.log(` Status: ${response.status} ${response.statusText}`);
 
     if (response.ok) {
       const data = await response.json();
-      console.log('📦 Response data:', JSON.stringify(data, null, 2));
+      console.log(' Response data:', JSON.stringify(data, null, 2));
       const content = data?.choices?.[0]?.message?.content || data?.response || data?.answer || data?.message || '';
-      console.log(`✅ Answer: ${content}`);
+      console.log(`[OK] Answer: ${content}`);
       return content;
     } else {
-      console.log(`❌ Ошибка: ${response.status} ${response.statusText}`);
+      console.log(`[X] Ошибка: ${response.status} ${response.statusText}`);
       const errorText = await response.text();
       console.log('Error response:', errorText);
       return null;
     }
 
   } catch (error) {
-    console.error('❌ Сетевая ошибка:', error.message);
+    console.error('[X] Сетевая ошибка:', error.message);
     return null;
   }
 }
@@ -74,17 +74,17 @@ async function checkServiceAvailability() {
     try {
       console.log(`🌐 Проверяем: ${url}`);
       const response = await fetch(url, { method: 'GET' });
-      console.log(`📊 Status: ${response.status} ${response.statusText}`);
+      console.log(` Status: ${response.status} ${response.statusText}`);
 
       if (response.ok) {
-        console.log('✅ Сервис доступен!');
+        console.log('[OK] Сервис доступен!');
         const text = await response.text();
-        console.log(`📄 Содержимое (первые 200 символов): ${text.substring(0, 200)}...`);
+        console.log(` Содержимое (первые 200 символов): ${text.substring(0, 200)}...`);
       } else {
-        console.log('❌ Сервис не отвечает');
+        console.log('[X] Сервис не отвечает');
       }
     } catch (error) {
-      console.log(`❌ Ошибка подключения: ${error.message}`);
+      console.log(`[X] Ошибка подключения: ${error.message}`);
     }
     console.log('');
   }
@@ -100,10 +100,10 @@ async function test() {
   const result = await callTimeweb(testPrompt);
 
   if (result) {
-    console.log('\n🎉 УСПЕХ! Timeweb AI работает!');
+    console.log('\n УСПЕХ! Timeweb AI работает!');
   } else {
-    console.log('\n❌ ОШИБКА: Timeweb AI не отвечает');
-    console.log('\n💡 Возможные причины:');
+    console.log('\n[X] ОШИБКА: Timeweb AI не отвечает');
+    console.log('\n Возможные причины:');
     console.log('   • Неправильный Agent ID');
     console.log('   • API требует авторизации');
     console.log('   • URL API изменился');

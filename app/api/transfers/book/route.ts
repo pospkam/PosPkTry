@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/pillars/core-infrastructure-infrastructure/lib/database';
+import { query } from '@/lib/database';
 import { TransferBookingRequest, TransferBookingResponse } from '@/types/transfer';
 import { config } from '@/lib/config';
 import { smsService } from '@/lib/notifications/sms';

@@ -26,7 +26,7 @@ function emailLayout(content: string): string {
           <tr>
             <td style="background: linear-gradient(135deg, ${DARK_BG} 0%, #1a1a1a 100%); padding: 40px 30px; text-align: center;">
               <h1 style="margin: 0; color: ${BRAND_COLOR}; font-size: 32px; font-weight: 900;">
-                🏔️ KamHub
+                  KamHub
               </h1>
               <p style="margin: 8px 0 0; color: rgba(255,255,255,0.7); font-size: 14px;">
                 Туристическая платформа Камчатки
@@ -77,7 +77,7 @@ export function bookingConfirmationEmail(data: {
 }): { subject: string; html: string } {
   const content = `
     <h2 style="margin: 0 0 20px; color: #333; font-size: 24px;">
-      Бронирование подтверждено! 🎉
+      Бронирование подтверждено!  
     </h2>
     
     <p style="margin: 0 0 20px; color: #666; font-size: 16px; line-height: 1.6;">
@@ -137,7 +137,7 @@ export function paymentConfirmationEmail(data: {
 }): { subject: string; html: string } {
   const content = `
     <div style="text-align: center; margin-bottom: 30px;">
-      <div style="font-size: 64px; margin-bottom: 20px;">✅</div>
+      <div style="font-size: 64px; margin-bottom: 20px;">[✓]</div>
       <h2 style="margin: 0; color: #22c55e; font-size: 28px;">
         Оплата прошла успешно!
       </h2>
@@ -185,7 +185,7 @@ export function tourReminderEmail(data: {
 }): { subject: string; html: string } {
   const content = `
     <h2 style="margin: 0 0 20px; color: #333; font-size: 24px;">
-      Напоминание о туре завтра! 📅
+      Напоминание о туре завтра!  
     </h2>
     
     <p style="margin: 0 0 20px; color: #666; font-size: 16px; line-height: 1.6;">
@@ -201,7 +201,7 @@ export function tourReminderEmail(data: {
         ${data.tourName}
       </h3>
       <p style="margin: 10px 0; font-size: 16px;">
-        <strong style="color: ${BRAND_COLOR};">📅 Дата:</strong> ${data.date.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+        <strong style="color: ${BRAND_COLOR};">  Дата:</strong> ${data.date.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
       </p>
       ${data.time ? `
         <p style="margin: 10px 0; font-size: 16px;">
@@ -213,7 +213,7 @@ export function tourReminderEmail(data: {
       </p>
       ${data.guidePhone ? `
         <p style="margin: 10px 0; font-size: 16px;">
-          <strong style="color: ${BRAND_COLOR};">📞 Телефон гида:</strong> ${data.guidePhone}
+          <strong style="color: ${BRAND_COLOR};">  Телефон гида:</strong> ${data.guidePhone}
         </p>
       ` : ''}
     </div>
@@ -301,7 +301,7 @@ export function welcomeEmail(data: {
 }): { subject: string; html: string } {
   const content = `
     <div style="text-align: center; margin-bottom: 30px;">
-      <div style="font-size: 64px; margin-bottom: 20px;">🏔️</div>
+      <div style="font-size: 64px; margin-bottom: 20px;"> </div>
       <h2 style="margin: 0; color: #333; font-size: 28px;">
         Добро пожаловать на Камчатку!
       </h2>
@@ -339,7 +339,7 @@ export function welcomeEmail(data: {
   `;
 
   return {
-    subject: 'Добро пожаловать на KamHub! 🏔️',
+    subject: 'Добро пожаловать на KamHub!  ',
     html: emailLayout(content)
   };
 }
@@ -353,7 +353,7 @@ export function passwordResetEmail(data: {
 }): { subject: string; html: string } {
   const content = `
     <h2 style="margin: 0 0 20px; color: #333; font-size: 24px;">
-      Восстановление пароля 🔐
+      Восстановление пароля  
     </h2>
     
     <p style="margin: 0 0 20px; color: #666; font-size: 16px; line-height: 1.6;">
@@ -377,7 +377,7 @@ export function passwordResetEmail(data: {
     
     <div style="background-color: #fff3cd; border: 1px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 8px;">
       <p style="margin: 0; color: #856404; font-size: 14px;">
-        ⚠️ Если вы не запрашивали восстановление пароля, просто проигнорируйте это письмо.
+        ! Если вы не запрашивали восстановление пароля, просто проигнорируйте это письмо.
       </p>
     </div>
   `;
@@ -397,7 +397,7 @@ export function partnerVerificationEmail(data: {
 }): { subject: string; html: string } {
   const content = `
     <div style="text-align: center; margin-bottom: 30px;">
-      <div style="font-size: 64px; margin-bottom: 20px;">✅</div>
+      <div style="font-size: 64px; margin-bottom: 20px;">[✓]</div>
       <h2 style="margin: 0; color: #22c55e; font-size: 28px;">
         Вы верифицированы!
       </h2>
@@ -419,7 +419,7 @@ export function partnerVerificationEmail(data: {
         <strong>Категория:</strong> ${data.category}
       </p>
       <p style="margin: 15px 0 0; color: #22c55e; font-size: 18px; font-weight: bold;">
-        ✓ Статус: Верифицирован
+        [✓] Статус: Верифицирован
       </p>
     </div>
     

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/pillars/core-infrastructure-infrastructure/lib/database';
+import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireAuth } from '@/lib/auth/middleware';
 
@@ -147,7 +147,7 @@ export async function GET(request: NextRequest) {
     `;
 
     const params: any[] = [];
-    let whereConditions: string[] = [];
+    const whereConditions: string[] = [];
 
     // Фильтр по статусу
     if (status) {

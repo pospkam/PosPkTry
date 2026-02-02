@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse } from '@/types';
-import { query } from '@/pillars/core-infrastructure-infrastructure/lib/database';
+import { query } from '@/lib/database';
 import { emailService } from '@/lib/notifications/email-service';
 
 // POST /api/bookings/[id]/cancel - Отмена бронирования
@@ -95,10 +95,10 @@ export async function POST(
           <h2>Ваше бронирование отменено</h2>
 
           <div style="background: #ffebee; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f44336;">
-            <h3 style="color: #d32f2f; margin-top: 0;">❌ ${booking.tour_name}</h3>
-            <p><strong>📅 Дата тура:</strong> ${booking.start_date}</p>
-            <p><strong>👥 Участников:</strong> ${booking.guests_count}</p>
-            <p><strong>💰 Стоимость тура:</strong> ${booking.total_price.toLocaleString('ru-RU')} ₽</p>
+            <h3 style="color: #d32f2f; margin-top: 0;">[✗] ${booking.tour_name}</h3>
+            <p><strong>  Дата тура:</strong> ${booking.start_date}</p>
+            <p><strong>  Участников:</strong> ${booking.guests_count}</p>
+            <p><strong>  Стоимость тура:</strong> ${booking.total_price.toLocaleString('ru-RU')} ₽</p>
             <p><strong>🔙 Сумма возврата:</strong> ${refundAmount.toLocaleString('ru-RU')} ₽ (${(refundPercentage * 100).toFixed(0)}%)</p>
           </div>
 
@@ -106,19 +106,19 @@ export async function POST(
 
           ${refundAmount > 0 ?
             `<div style="background: #e8f5e8; padding: 15px; border-radius: 8px; margin: 20px 0;">
-              <p><strong>✅ Возврат средств</strong></p>
+              <p><strong>[✓] Возврат средств</strong></p>
               <p>Сумма ${refundAmount.toLocaleString('ru-RU')} ₽ будет возвращена на вашу карту в течение 5-7 рабочих дней.</p>
               <p>Процесс возврата может занять до 14 дней в зависимости от банка.</p>
             </div>` :
             `<div style="background: #fff3e0; padding: 15px; border-radius: 8px; margin: 20px 0;">
-              <p><strong>⚠️ Возврат не предусмотрен</strong></p>
+              <p><strong>! Возврат не предусмотрен</strong></p>
               <p>Согласно правилам отмены, возврат средств не производится при отмене менее чем за 3 дня до тура.</p>
             </div>`
           }
 
           <p>Если у вас есть вопросы, свяжитесь с нами:</p>
           <p><strong>📧 Email:</strong> support@kamhub.ru</p>
-          <p><strong>📞 Телефон:</strong> +7 (914) 123-45-67</p>
+          <p><strong>  Телефон:</strong> +7 (914) 123-45-67</p>
 
           <p><em>Спасибо за понимание. Ждем вас на других турах KamHub!</em></p>
         `

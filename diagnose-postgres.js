@@ -61,10 +61,10 @@ const colors = {
 };
 
 const log = {
-  success: (msg) => console.log(`${colors.green}✅ ${msg}${colors.reset}`),
-  error: (msg) => console.log(`${colors.red}❌ ${msg}${colors.reset}`),
-  warning: (msg) => console.log(`${colors.yellow}⚠️  ${msg}${colors.reset}`),
-  info: (msg) => console.log(`${colors.blue}ℹ️  ${msg}${colors.reset}`),
+  success: (msg) => console.log(`${colors.green}[OK] ${msg}${colors.reset}`),
+  error: (msg) => console.log(`${colors.red}[X] ${msg}${colors.reset}`),
+  warning: (msg) => console.log(`${colors.yellow}!  ${msg}${colors.reset}`),
+  info: (msg) => console.log(`${colors.blue}i  ${msg}${colors.reset}`),
   step: (msg) => console.log(`${colors.cyan}▶️  ${msg}${colors.reset}`),
   test: (msg) => console.log(`${colors.magenta}🧪 ${msg}${colors.reset}`),
 };
@@ -187,7 +187,7 @@ function analyzeResults(results) {
   const successful = Object.values(results).filter(r => r.success).length;
   const total = Object.keys(results).length;
 
-  console.log(`📊 РЕЗУЛЬТАТЫ: ${successful}/${total} успешных подключений`);
+  console.log(` РЕЗУЛЬТАТЫ: ${successful}/${total} успешных подключений`);
   console.log('');
 
   // Анализ проблем
@@ -250,7 +250,7 @@ function analyzeResults(results) {
 
     Object.entries(results).forEach(([name, result]) => {
       if (result.success) {
-        log.success(`   ✅ ${name}`);
+        log.success(`   [OK] ${name}`);
       }
     });
   }
@@ -260,14 +260,14 @@ function analyzeResults(results) {
   log.step('РЕКОМЕНДАЦИИ:');
 
   if (successful === 0) {
-    console.log('1. 🔧 Проверьте статус PostgreSQL сервера в панели Timeweb Cloud');
-    console.log('2. 🔧 Перезапустите сервис если он остановлен');
-    console.log('3. 🔧 Проверьте настройки firewall и белый список IP');
-    console.log('4. 📞 Свяжитесь с поддержкой Timeweb Cloud');
+    console.log('1.  Проверьте статус PostgreSQL сервера в панели Timeweb Cloud');
+    console.log('2.  Перезапустите сервис если он остановлен');
+    console.log('3.  Проверьте настройки firewall и белый список IP');
+    console.log('4.  Свяжитесь с поддержкой Timeweb Cloud');
   } else {
-    console.log('1. ✅ Используйте рабочую конфигурацию для подключения');
-    console.log('2. 🔧 Настройте SSL для production окружения');
-    console.log('3. 🚀 Продолжите настройку AI и деплой');
+    console.log('1. [OK] Используйте рабочую конфигурацию для подключения');
+    console.log('2.  Настройте SSL для production окружения');
+    console.log('3.  Продолжите настройку AI и деплой');
   }
 
   console.log('');
