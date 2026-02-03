@@ -1,20 +1,50 @@
-// The Dev Container format allows you to configure your environment. At the heart of it
-// is a Docker image or Dockerfile which controls the tools available in your environment.
-//
-// See https://aka.ms/devcontainer.json for more information.
 {
-	"name": "Ona",
-	// Use "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
-	// instead of the build to use a pre-built image.
+	"name": "Kamhub Dev",
 	"build": {
-        "context": ".",
-        "dockerfile": "Dockerfile"
-    }
-	// Features add additional features to your environment. See https://containers.dev/features
-	// Beware: features are not supported on all platforms and may have unintended side-effects.
-	// "features": {
-    //   "ghcr.io/devcontainers/features/docker-in-docker": {
-    //     "moby": false
-    //   }
-    // }
+		"context": ".",
+		"dockerfile": "Dockerfile"
+	},
+	"customizations": {
+		"gitpod": {
+			"automations": {
+				"tasks": {
+					"install": {
+						"name": "Install Dependencies",
+						"description": "Install npm dependencies",
+						"command": "npm ci",
+						"triggeredBy": ["postEnvironmentStart"]
+					},
+					"build": {
+						"name": "Build Project",
+						"description": "Build Next.js application",
+						"command": "npm run build",
+						"dependsOn": ["install"]
+					},
+					"test": {
+						"name": "Run Tests",
+						"description": "Run unit tests",
+						"command": "npm test",
+						"dependsOn": ["install"]
+					},
+					"lint": {
+						"name": "Lint Code",
+						"description": "Run ESLint",
+						"command": "npm run lint",
+						"dependsOn": ["install"]
+					}
+				},
+				"services": {
+					"dev-server": {
+						"name": "Development Server",
+						"description": "Next.js dev server on port 3000",
+						"command": "npm run dev",
+						"dependsOn": ["install"],
+						"triggeredBy": ["postEnvironmentStart"]
+					}
+				}
+			}
+		}
+	},
+	"forwardPorts": [3000],
+	"postCreateCommand": "npm ci"
 }
