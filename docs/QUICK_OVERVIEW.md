@@ -326,7 +326,7 @@ A: В `lib/database/schema.sql` + контекст в `contexts/RoleContext.tsx`
 ## 🎖️ Команда
 
 - **Разработка:** PosPk Team
-- **Дизайн:** Black & Gold Premium
+- **Дизайн:** Kamchatka Nature (ocean/volcano/moss)
 - **AI:** Multi-provider Consensus
 - **Архитектура:** Next.js + PostgreSQL
 

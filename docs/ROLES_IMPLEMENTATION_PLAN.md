@@ -1173,11 +1173,12 @@ POST /api/operator/reviews/[id]/respond
 ### Цветовая схема:
 
 ```css
-/* Premium Black & Gold Theme */
---premium-black: #0b0b0b;
---premium-gold: #E6C149;
---premium-gold-light: #F5D976;
---premium-gold-dark: #C9A635;
+/* Kamchatka Nature Theme */
+--ocean: #0EA5E9;
+--ocean-light: #BAE6FD;
+--ocean-dark: #0369A1;
+--volcano: #64748B;
+--moss: #84CC16;
 
 /* Semantic Colors */
 --success: #10B981;
