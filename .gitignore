@@ -137,3 +137,4 @@ test-*.html
 temp-*.html
 *-demo-standalone.html
 
+.env.mcp

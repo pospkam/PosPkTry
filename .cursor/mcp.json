@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "timeweb": {
+      "command": "npx",
+      "args": ["-y", "timeweb-mcp-server"],
+      "env": {
+        "TIMEWEB_API_TOKEN": "${TIMEWEB_API_TOKEN}"
+      }
+    }
+  }
+}
