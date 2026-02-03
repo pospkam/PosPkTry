@@ -9,7 +9,7 @@ import { TransferRouteManagement } from '@/components/transfer-operator/Transfer
 import { TransferBookingManagement } from '@/components/transfer-operator/TransferBookingManagement';
 import { LoadingSpinner, EmptyState } from '@/components/admin/shared';
 import { useAuth } from '@/contexts/AuthContext';
-import { AlertTriangleIcon } from '@/components/icons';
+import { AlertTriangle } from 'lucide-react';
 
 type ActiveTab = 'dashboard' | 'drivers' | 'routes' | 'bookings';
 
@@ -132,7 +132,7 @@ export default function TransferOperatorPage() {
             </div>
           ) : error ? (
             <EmptyState
-              icon={<AlertTriangleIcon className="w-12 h-12 text-yellow-500" />}
+              icon={<AlertTriangle className="w-12 h-12 text-yellow-500" />}
               title="Ошибка загрузки данных"
               description={error}
               action={
