@@ -157,6 +157,12 @@ export async function GET(request: NextRequest) {
 /**
  * POST /api/operator/tours
  * Создание нового тура
+ * 
+ * Бизнес-логика на основе партнера fishingkam.ru:
+ * - Минимальная группа: 5 человек
+ * - Сезонность с разными ценами
+ * - Включено/не включено в стоимость
+ * - Виды рыб по сезонам
  */
 export async function POST(request: NextRequest) {
   try {
@@ -172,19 +178,102 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
 
-    // Валидация
-    if (!body.name || !body.description || !body.price) {
+    // === ВАЛИДАЦИЯ ===
+    const errors: string[] = [];
+
+    // Обязательные поля
+    if (!body.name || body.name.trim().length < 3) {
+      errors.push('Название тура обязательно (минимум 3 символа)');
+    }
+    if (!body.description || body.description.trim().length < 20) {
+      errors.push('Описание тура обязательно (минимум 20 символов)');
+    }
+    if (body.price === undefined || body.price === null) {
+      errors.push('Цена тура обязательна');
+    }
+
+    // Валидация цены
+    if (body.price !== undefined) {
+      if (typeof body.price !== 'number' || body.price < 0) {
+        errors.push('Цена должна быть положительным числом');
+      }
+      if (body.price < 1000) {
+        errors.push('Минимальная цена тура: 1000 рублей');
+      }
+      if (body.price > 1000000) {
+        errors.push('Максимальная цена тура: 1,000,000 рублей');
+      }
+    }
+
+    // Валидация размера группы (на основе fishingkam.ru - мин. 5 человек)
+    const minGroupSize = body.minGroupSize || 5;
+    const maxGroupSize = body.maxGroupSize || 15;
+
+    if (minGroupSize < 1) {
+      errors.push('Минимальный размер группы: 1 человек');
+    }
+    if (maxGroupSize > 100) {
+      errors.push('Максимальный размер группы: 100 человек');
+    }
+    if (minGroupSize > maxGroupSize) {
+      errors.push('Минимальный размер группы не может превышать максимальный');
+    }
+
+    // Валидация продолжительности
+    const duration = body.duration || 1;
+    if (duration < 1 || duration > 30) {
+      errors.push('Продолжительность тура: от 1 до 30 дней');
+    }
+
+    // Валидация сезона
+    const validSeasons = ['winter', 'spring', 'summer', 'autumn', 'year-round'];
+    if (body.season && !validSeasons.includes(body.season)) {
+      errors.push(`Сезон должен быть одним из: ${validSeasons.join(', ')}`);
+    }
+
+    // Валидация категории
+    const validCategories = ['fishing', 'hunting', 'adventure', 'eco', 'cultural', 'family'];
+    if (body.category && !validCategories.includes(body.category)) {
+      errors.push(`Категория должна быть одной из: ${validCategories.join(', ')}`);
+    }
+
+    // Валидация сложности
+    const validDifficulties = ['easy', 'medium', 'hard', 'extreme'];
+    if (body.difficulty && !validDifficulties.includes(body.difficulty)) {
+      errors.push(`Сложность должна быть одной из: ${validDifficulties.join(', ')}`);
+    }
+
+    // Если есть ошибки - возвращаем 400
+    if (errors.length > 0) {
       return NextResponse.json({
         success: false,
-        error: 'Name, description, and price are required'
+        error: 'Validation failed',
+        errors: errors
       } as ApiResponse<null>, { status: 400 });
     }
 
-    // Создание тура
+    // === ГЕНЕРАЦИЯ SLUG ===
+    const slug = body.name
+      .toLowerCase()
+      .replace(/[а-яё]/g, (char: string) => {
+        const map: Record<string, string> = {
+          'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo',
+          'ж': 'zh', 'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm',
+          'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
+          'ф': 'f', 'х': 'h', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'sch',
+          'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya'
+        };
+        return map[char] || char;
+      })
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+
+    // === СОЗДАНИЕ ТУРА ===
     const insertQuery = `
       INSERT INTO tours (
         operator_id,
         name,
+        slug,
         description,
         category,
         difficulty,
@@ -193,42 +282,63 @@ export async function POST(request: NextRequest) {
         min_group_size,
         price,
         currency,
+        season,
         is_active,
+        includes,
+        excludes,
         created_at,
         updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
-      RETURNING id, name, is_active, created_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW(), NOW())
+      RETURNING id, name, slug, is_active, created_at
     `;
+
+    // Стандартные включения/исключения на основе fishingkam.ru
+    const defaultIncludes = body.includes || [
+      'Размещение на базе',
+      'Комплект снаряжения',
+      'Сопровождение гида'
+    ];
+    const defaultExcludes = body.excludes || [
+      'Трансфер до базы',
+      'Одежда и обувь',
+      'Аренда снастей',
+      'Питание (по договоренности)'
+    ];
 
     const values = [
       operatorId,
-      body.name,
-      body.description,
-      body.category || 'adventure',
+      body.name.trim(),
+      slug,
+      body.description.trim(),
+      body.category || 'fishing',
       body.difficulty || 'medium',
-      body.duration || 4,
-      body.maxGroupSize || 15,
-      body.minGroupSize || 1,
+      duration,
+      maxGroupSize,
+      minGroupSize,
       body.price,
       body.currency || 'RUB',
-      body.isActive !== undefined ? body.isActive : true
+      body.season || 'year-round',
+      false, // Новые туры создаются как черновики (draft)
+      JSON.stringify(defaultIncludes),
+      JSON.stringify(defaultExcludes)
     ];
 
     const result = await query(insertQuery, values);
     const newTour = result.rows[0];
-
-    // TODO: Сохранить includes, excludes, itinerary
 
     return NextResponse.json({
       success: true,
       data: {
         id: newTour.id,
         name: newTour.name,
+        slug: newTour.slug,
+        status: 'draft',
+        operator_id: operatorId,
         isActive: newTour.is_active,
         createdAt: new Date(newTour.created_at)
       },
-      message: 'Tour created successfully'
-    });
+      message: 'Тур успешно создан'
+    }, { status: 201 });
 
   } catch (error) {
     console.error('Error creating tour:', error);
