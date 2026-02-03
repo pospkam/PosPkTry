@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { Protected } from '@/components/Protected';
+import { OperatorNav } from '@/components/operator/OperatorNav';
 import { TransferOperatorDashboard } from '@/components/transfer-operator/TransferOperatorDashboard';
 import { TransferDriverManagement } from '@/components/transfer-operator/TransferDriverManagement';
 import { TransferRouteManagement } from '@/components/transfer-operator/TransferRouteManagement';
 import { TransferBookingManagement } from '@/components/transfer-operator/TransferBookingManagement';
 import { LoadingSpinner, EmptyState } from '@/components/admin/shared';
 import { useAuth } from '@/contexts/AuthContext';
-import { AlertTriangleIcon } from '@/components/icons';
+import { AlertTriangle } from 'lucide-react';
 
 type ActiveTab = 'dashboard' | 'drivers' | 'routes' | 'bookings';
 
@@ -69,8 +70,9 @@ export default function TransferOperatorPage() {
   ];
 
   return (
-    <Protected roles={['transfer_operator', 'admin']}>
+    <Protected roles={['transfer', 'operator', 'admin']}>
       <main className="min-h-screen bg-transparent text-white">
+        <OperatorNav />
         {/* Header */}
         <div className="bg-white/15 border-b border-white/15 p-6">
           <div className="max-w-7xl mx-auto">
@@ -130,7 +132,7 @@ export default function TransferOperatorPage() {
             </div>
           ) : error ? (
             <EmptyState
-              icon={<AlertTriangleIcon className="w-12 h-12 text-yellow-500" />}
+              icon={<AlertTriangle className="w-12 h-12 text-yellow-500" />}
               title="Ошибка загрузки данных"
               description={error}
               action={

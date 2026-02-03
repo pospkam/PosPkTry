@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Weather } from '@/types';
 import { TransferSearchWidget } from '@/components/TransferSearchWidget';
+import { PublicNav } from '@/components/shared/PublicNav';
 
 export default function TransferDashboard() {
   const [weather, setWeather] = useState<Weather | null>(null);
@@ -189,6 +190,7 @@ export default function TransferDashboard() {
 
   return (
     <div className="min-h-screen bg-transparent">
+      <PublicNav />
       {/* Header */}
       <div className="bg-gradient-to-r from-premium-black to-premium-gold/10 border-b border-white/15/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">

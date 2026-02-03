@@ -191,7 +191,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Валидация роли
-    const validRoles = ['tourist', 'operator', 'guide', 'transfer', 'agent', 'admin'];
+    const validRoles = ['tourist', 'operator', 'guide', 'transfer', 'agent', 'admin', 'stay', 'gear'];
     if (!validRoles.includes(role)) {
       return NextResponse.json({
         success: false,

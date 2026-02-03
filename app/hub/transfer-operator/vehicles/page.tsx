@@ -63,7 +63,7 @@ export default function VehiclesPage() {
   ];
 
   return (
-    <Protected roles={['transfer_operator']}>
+    <Protected roles={['transfer', 'operator', 'admin']}>
       <main className="min-h-screen bg-transparent text-white">
         <TransferOperatorNav />
         <div className="max-w-7xl mx-auto p-6">

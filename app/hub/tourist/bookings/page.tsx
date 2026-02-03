@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Protected } from '@/components/Protected';
 import { LoadingSpinner } from '@/components/admin/shared';
+import { TouristNav } from '@/components/tourist/TouristNav';
 import { Booking } from '@/types';
 
 export default function BookingHistoryPage() {
@@ -103,6 +104,7 @@ export default function BookingHistoryPage() {
   return (
     <Protected roles={['tourist']}>
       <main className="min-h-screen bg-transparent text-white">
+        <TouristNav />
         {/* Header */}
         <div className="bg-white/15 border-b border-white/15 p-6">
           <h1 className="text-3xl font-black text-white">Мои бронирования</h1>

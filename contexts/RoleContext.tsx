@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
 
-export type AppRole = 'tourist' | 'operator' | 'guide' | 'transfer' | 'agent' | 'admin';
+export type AppRole = 'tourist' | 'operator' | 'guide' | 'transfer' | 'agent' | 'admin' | 'stay' | 'gear';
 
 interface RoleState {
   roles: AppRole[];

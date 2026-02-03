@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Protected } from '@/components/Protected';
+import { PublicNav } from '@/components/shared/PublicNav';
 import { CarCard } from '@/components/cars/CarCard';
 import { CarFilters } from '@/components/cars/CarFilters';
 import { CarBookingForm } from '@/components/cars/CarBookingForm';
@@ -150,6 +151,7 @@ export default function CarsHub() {
   return (
     <Protected roles={['tourist', 'admin']}>
       <main className="min-h-screen bg-transparent text-white">
+        <PublicNav />
         {/* Header */}
         <div className="bg-white/15 border-b border-white/15 p-6">
           <div className="flex justify-between items-center">

@@ -10,7 +10,7 @@ import { SimpleChart } from '@/components/admin/Dashboard/SimpleChart';
 import { LoadingSpinner, EmptyState } from '@/components/admin/shared';
 import { OperatorDashboardData, OperatorBooking } from '@/types/operator';
 import { useAuth } from '@/contexts/AuthContext';
-import { AlertTriangleIcon, BarChartIcon, MountainIcon, CalendarIcon } from '@/components/icons';
+import { AlertTriangle, BarChart3, Mountain, Calendar } from 'lucide-react';
 import { WeatherWidget } from '@/components/WeatherWidget';
 
 export default function OperatorDashboard() {
@@ -97,7 +97,7 @@ export default function OperatorDashboard() {
                     </div>
           ) : error ? (
             <EmptyState
-              icon={<AlertTriangleIcon className="w-12 h-12 text-yellow-500" />}
+              icon={<AlertTriangle className="w-12 h-12 text-yellow-500" />}
               title="Ошибка загрузки"
               description={error}
               action={{
@@ -107,7 +107,7 @@ export default function OperatorDashboard() {
             />
           ) : !data ? (
             <EmptyState
-              icon={<BarChartIcon className="w-12 h-12 text-purple-500" />}
+              icon={<BarChart3 className="w-12 h-12 text-purple-500" />}
               title="Нет данных"
               description="Данные не найдены"
             />
@@ -157,7 +157,7 @@ export default function OperatorDashboard() {
                   <TopToursTable tours={data.topTours} />
                 ) : (
                   <EmptyState
-                    icon={<MountainIcon className="w-12 h-12 text-green-500" />}
+                    icon={<Mountain className="w-12 h-12 text-green-500" />}
                     title="Нет туров"
                     description="Создайте свой первый тур"
                   />
@@ -222,7 +222,7 @@ export default function OperatorDashboard() {
                   />
                 ) : (
                   <EmptyState
-                    icon={<CalendarIcon className="w-12 h-12 text-sky-300" />}
+                    icon={<Calendar className="w-12 h-12 text-sky-300" />}
                     title="Нет бронирований"
                     description="Бронирования появятся здесь"
                   />

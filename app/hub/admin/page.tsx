@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { AdminNav } from '@/components/admin/AdminNav';
 import { Shield, Users, FileText, DollarSign, Settings, CheckCircle, Clock, TrendingUp, Package, Map, Wrench, AlertCircle, ArrowRight, Sparkles, Star, RefreshCw } from 'lucide-react';
 
 interface Metrics {
@@ -197,6 +198,7 @@ export default function AdminDashboard() {
 
   return (
     <main className="min-h-screen relative overflow-hidden">
+      <AdminNav />
       {/* КАМЧАТКА: Фоновое изображение вулканов */}
       <div className="fixed inset-0 bg-gradient-to-br from-[#2C1810] via-[#1a2634] to-[#0f1821]"></div>
       <div 
