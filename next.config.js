@@ -144,9 +144,6 @@ const nextConfig = {
 
   // Production optimizations
   ...(process.env.NODE_ENV === 'production' && {
-    // Минификация
-    swcMinify: true,
-    
     // Удаление console.log в production
     compiler: {
       removeConsole: {
@@ -155,5 +152,6 @@ const nextConfig = {
     },
   }),
 };
+
 
 module.exports = nextConfig;
