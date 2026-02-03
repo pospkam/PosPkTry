@@ -22,14 +22,32 @@
 					},
 					"test": {
 						"name": "Run Tests",
-						"description": "Run unit tests",
-						"command": "npm test",
+						"description": "Run unit tests with vitest",
+						"command": "npm test -- --run",
 						"dependsOn": ["install"]
 					},
 					"lint": {
 						"name": "Lint Code",
 						"description": "Run ESLint",
 						"command": "npm run lint",
+						"dependsOn": ["install"]
+					},
+					"type-check": {
+						"name": "Type Check",
+						"description": "Check TypeScript types",
+						"command": "npm run type-check",
+						"dependsOn": ["install"]
+					},
+					"deploy": {
+						"name": "Deploy to Timeweb",
+						"description": "Deploy to Timeweb Cloud via API",
+						"command": "bash scripts/deploy.sh",
+						"dependsOn": ["build"]
+					},
+					"db-seed": {
+						"name": "Seed Database",
+						"description": "Load tour data into database",
+						"command": "npx tsx scripts/db/seed-tours.ts",
 						"dependsOn": ["install"]
 					}
 				},
