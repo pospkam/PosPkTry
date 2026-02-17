@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Standalone output для запуска в Docker/Timeweb App
+  output: 'standalone',
+
   // Включить React Strict Mode
   reactStrictMode: true,
   
