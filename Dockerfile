@@ -4,7 +4,7 @@ FROM node:20-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
-RUN apk add --no-cache libc6-compat postgresql-client
+RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
 
@@ -38,15 +38,11 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
-# Copy database schemas for migrations
-COPY --from=builder /app/lib/database ./lib/database
-COPY --from=builder /app/scripts ./scripts
-
 USER nextjs
 
-EXPOSE 8080
+EXPOSE 3000
 
-ENV PORT 8080
+ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
 CMD ["node", "server.js"]
