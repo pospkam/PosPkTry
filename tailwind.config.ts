@@ -1,35 +1,29 @@
 import type { Config } from 'tailwindcss'
 
-const config: Config = {
+export default {
   content: [
-    './pages/**/*.{js,ts,jsx,tsx,mdx}',
-    './components/**/*.{js,ts,jsx,tsx,mdx}',
-    './app/**/*.{js,ts,jsx,tsx,mdx}',
+    './app/**/*.{ts,tsx}',
+    './components/**/*.{ts,tsx}',
   ],
-  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        background: 'var(--background)',
-        foreground: 'var(--foreground)',
-      },
-      animation: {
-        'fade-in': 'fadeIn 0.5s ease-in-out',
-        'slide-up': 'slideUp 0.3s ease-out',
-      },
-      keyframes: {
-        fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
+        premium: {
+          black: '#1a2a4e',
+          border: '#2e3c5a',
+          gold: '#a2d2ff',
+          ice: '#7eb3ff',
         },
-        slideUp: {
-          '0%': { transform: 'translateY(10px)', opacity: '0' },
-          '100%': { transform: 'translateY(0)', opacity: '1' },
-        },
+        gold: '#a2d2ff',
+      },
+      boxShadow: {
+        gold: '0 8px 24px rgba(162,210,255,0.3)',
+      },
+      backgroundImage: {
+        'gold-gradient': 'linear-gradient(135deg, #a2d2ff, #7eb3ff)',
+        'gold-aurora': 'radial-gradient(1200px 600px at 20% 80%, rgba(162,210,255,0.15), transparent 60%), radial-gradient(1000px 500px at 80% 20%, rgba(126,179,255,0.12), transparent 60%)',
       },
     },
   },
   plugins: [],
-}
-
-export default config
+} satisfies Config
