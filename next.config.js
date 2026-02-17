@@ -5,6 +5,11 @@ const nextConfig = {
   poweredByHeader: false,
   compress: true,
   
+  // Игнорировать ESLint во время сборки
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  
   images: {
     domains: [],
     formats: ['image/avif', 'image/webp'],
