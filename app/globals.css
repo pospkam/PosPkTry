@@ -2,9 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Kamchatour Hub — дизайн-токены главного экрана */
+@import './home-variables.css';
+
 /* SAMSUNG WEATHER THEME - ДИНАМИЧЕСКАЯ ТЕМА */
 @import './samsung-weather-theme.css';
 @import './samsung-weather-dynamic.css';
+
+/* ===== Анимации Home Screen ===== */
+
+/* Staggered fade-in для карточек туров */
+@keyframes khFadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Glow-pulse для активных элементов */
+@keyframes khGlowPulse {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.6);
+  }
+}
 
 :root {
   /* Ультрамарин цвета */

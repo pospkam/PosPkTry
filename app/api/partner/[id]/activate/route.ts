@@ -3,7 +3,7 @@ import { partnerService } from '@/lib/database'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const partner = await partnerService.activatePartner(params.id)

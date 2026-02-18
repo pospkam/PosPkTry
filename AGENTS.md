@@ -21,7 +21,7 @@ npm run type-check   # Проверка типов
 ## Структура проекта
 
 ```
-app/                 # Next.js App Router
+app/                 # Next.js App Router (ОСНОВНАЯ)
 ├── api/             # API endpoints
 │   ├── tours/       # CRUD туров
 │   ├── operator/    # Кабинет оператора
@@ -29,15 +29,24 @@ app/                 # Next.js App Router
 ├── tours/           # Страницы туров
 └── partner/         # Кабинет партнера
 
-components/          # React компоненты
-lib/
-├── database.ts      # Подключение к PostgreSQL
-├── partners/        # Данные партнеров
-└── config.ts        # Конфигурация
-
-scripts/             # Скрипты деплоя и миграций
-tests/               # Unit тесты
+components/          # React компоненты (ОСНОВНАЯ)
+lib/                 # Утилиты и конфигурация (ОСНОВНАЯ)
+pillars/             # ⚠️ LEGACY - не используется, подлежит удалению
 ```
+
+## ⚠️ Legacy: Pillars
+
+**Статус:** Не используется в коде - подлежит удалению.
+
+Директория `pillars/` содержит альтернативную архитектуру, которая **не импортируется** в основном коде. Дублирование:
+- `analytics/` и `analytics-pillar/`
+- `booking/` и `booking-pillar/`
+- `discovery/` и `discovery-pillar/`
+- `engagement/` и `engagement-pillar/`
+- `partner/` и `partner-pillar/`
+- `support/` и `support-pillar/`
+
+**Рекомендация:** Удалить всю папку `pillars/` после проверки что она не используется.
 
 ## База данных
 

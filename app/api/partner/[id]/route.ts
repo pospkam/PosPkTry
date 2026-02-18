@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { partnerService } from '@/lib/database'
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const partner = await partnerService.getPartner(params.id)
     return NextResponse.json({ success: true, data: partner })
@@ -13,7 +13,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const data = await request.json()
     const partner = await partnerService.updatePartner(params.id, data)

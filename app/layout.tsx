@@ -76,18 +76,21 @@ import React from 'react'
 import { RoleProvider } from '@/contexts/RoleContext'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { OrdersProvider } from '@/contexts/OrdersContext'
+import { ThemeProvider } from '@/contexts/ThemeContext'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ru">
-      <body className="min-h-screen">
-        <AuthProvider>
-          <RoleProvider>
-            <OrdersProvider>
-              {children}
-            </OrdersProvider>
-          </RoleProvider>
-        </AuthProvider>
+    <html lang="ru" suppressHydrationWarning>
+      <body className="min-h-screen font-sans transition-colors duration-300">
+        <ThemeProvider>
+          <AuthProvider>
+            <RoleProvider>
+              <OrdersProvider>
+                {children}
+              </OrdersProvider>
+            </RoleProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

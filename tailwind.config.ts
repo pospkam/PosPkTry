@@ -1,27 +1,35 @@
 import type { Config } from 'tailwindcss'
 
 export default {
+  darkMode: 'class',
   content: [
     './app/**/*.{ts,tsx}',
     './components/**/*.{ts,tsx}',
+    './contexts/**/*.{ts,tsx}',
   ],
   theme: {
     extend: {
       colors: {
-        premium: {
-          black: '#1a2a4e',
-          border: '#2e3c5a',
-          gold: '#a2d2ff',
-          ice: '#7eb3ff',
+        /* iOS Light Theme */
+        kh: {
+          bg:          '#C8D4E3',
+          card:        'rgba(255,255,255,0.85)',
+          'card-solid':'#FFFFFF',
+          nav:         'rgba(255,255,255,0.85)',
+          text:        '#1A1A2E',
+          muted:       '#6B7A99',
+          faint:       '#9AA5BC',
+          accent:      '#4A7FD4',
+          gold:        '#FFB800',
+          /* Dark overrides used via dark: prefix */
+          'dark-bg':   '#0B1120',
+          'dark-card': 'rgba(255,255,255,0.07)',
+          'dark-nav':  'rgba(13,27,42,0.95)',
+          cyan:        '#00D4FF',
         },
-        gold: '#a2d2ff',
       },
-      boxShadow: {
-        gold: '0 8px 24px rgba(162,210,255,0.3)',
-      },
-      backgroundImage: {
-        'gold-gradient': 'linear-gradient(135deg, #a2d2ff, #7eb3ff)',
-        'gold-aurora': 'radial-gradient(1200px 600px at 20% 80%, rgba(162,210,255,0.15), transparent 60%), radial-gradient(1000px 500px at 80% 20%, rgba(126,179,255,0.12), transparent 60%)',
+      fontFamily: {
+        sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', '"Segoe UI"', 'Roboto', 'sans-serif'],
       },
     },
   },
