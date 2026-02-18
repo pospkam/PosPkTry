@@ -59,6 +59,28 @@ pillars/             # ⚠️ LEGACY - не используется, подле
 
 Timeweb Cloud Apps автоматически деплоит при push в main.
 
+### MCP Server (опционально)
+
+Проект включает MCP сервер для управления Timeweb Cloud через GitHub Copilot:
+
+```bash
+# Установить зависимости
+npm install @modelcontextprotocol/sdk
+
+# Настроить токен
+export TIMEWEB_TOKEN="your_timeweb_api_token"
+
+# Запустить MCP сервер
+node timeweb-mcp-server.ts
+```
+
+**Доступные инструменты:**
+- `get_app_status` — получить статус приложения
+- `get_logs` — получить логи (build/runtime)
+- `trigger_deploy` — запустить деплой
+- `update_env_vars` — обновить переменные окружения
+- `get_deployments` — получить список деплоев
+
 ```bash
 # Ручной деплой через API
 gitpod automations task start deploy
