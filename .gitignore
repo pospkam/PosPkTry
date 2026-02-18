@@ -138,3 +138,5 @@ temp-*.html
 *-demo-standalone.html
 
 .env.mcp
+node_modules/
+package-lock.json

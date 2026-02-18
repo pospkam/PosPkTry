@@ -1,4 +1,11 @@
 import { Metadata } from 'next';
+import { Syne } from 'next/font/google';
+
+const syne = Syne({ 
+  subsets: ['latin'], 
+  weight: ['400', '600', '700'],
+  display: 'swap'
+});
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://kamchatour.ru';
 
@@ -81,7 +88,7 @@ import { ThemeProvider } from '@/contexts/ThemeContext'
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ru" suppressHydrationWarning>
-      <body className="min-h-screen font-sans transition-colors duration-300">
+      <body className={`min-h-screen transition-colors duration-300 ${syne.className}`}>
         <ThemeProvider>
           <AuthProvider>
             <RoleProvider>

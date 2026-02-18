@@ -39,27 +39,24 @@ const FALLBACK_TOURS: Tour[] = [
   {
     id: '2',
     name: 'Медвежий Тур',
-    href: '/tours?category=bears',
+    short_description: 'Наблюдение за медведями',
+    category: 'bears',
+    price: 18000,
+    rating: 4.8,
+    review_count: 93,
+    image_url: 'https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?w=400&q=80',
   },
   {
-    id: 'thermal-tour',
-    title: 'Термальный Тур',
-    imageUrl: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&q=80',
-    imageAlt: 'Термальные источники Камчатки',
+    id: '3',
+    name: 'Термальный Тур',
+    short_description: 'Термальные источники Камчатки',
+    category: 'thermal',
     price: 10000,
-    rating: 4.8,
-    href: '/tours?category=thermal',
+    rating: 4.7,
+    review_count: 156,
+    image_url: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&q=80',
   },
 ];
-
-function StarRating({ rating }: { rating: number }) {
-  return (
-    <div className="flex items-center gap-0.5" aria-label={`Рейтинг: ${rating} из 5`} role="img">
-      <span className="text-amber-400 text-sm">★</span>
-      <span className="text-xs font-semibold text-gray-700 dark:text-gray-200">{rating.toFixed(1)}</span>
-    </div>
-  );
-}
 
 export function TourCardsRow() {
   return (
@@ -78,19 +75,19 @@ export function TourCardsRow() {
         style={{ WebkitOverflowScrolling: 'touch' }}
         role="list"
       >
-        {FEATURED_TOURS.map(tour => (
+        {FALLBACK_TOURS.map(tour => (
           <Link
             key={tour.id}
-            href={tour.href}
+            href={`/tours?category=${tour.category}`}
             role="listitem"
-            aria-label={`${tour.title}, ${tour.price.toLocaleString('ru-RU')} ₽`}
+            aria-label={`${tour.name}, ${tour.price.toLocaleString('ru-RU')} ₽`}
             className="flex-shrink-0 w-[170px] bg-white dark:bg-gray-800 rounded-2xl shadow-md overflow-hidden transition-transform hover:-translate-y-1 active:scale-95"
           >
             {/* Фото */}
             <div className="relative h-[140px] w-full">
               <Image
-                src={tour.imageUrl}
-                alt={tour.imageAlt}
+                src={tour.image_url || '/placeholder-tour.jpg'}
+                alt={tour.short_description}
                 fill
                 sizes="170px"
                 className="object-cover"
@@ -101,7 +98,7 @@ export function TourCardsRow() {
             {/* Инфо */}
             <div className="px-3 py-2.5">
               <h3 className="text-sm font-bold text-gray-900 dark:text-white leading-tight mb-1.5 line-clamp-2">
-                {tour.title}
+                {tour.name}
               </h3>
               <div className="flex items-center justify-between">
                 <StarRating rating={tour.rating} />
