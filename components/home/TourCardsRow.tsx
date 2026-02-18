@@ -2,43 +2,43 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-
-/**
- * TourCardsRow — горизонтальный ряд карточек туров (iOS light theme).
- * Белые карточки: фото сверху 140px, инфо снизу в белой панели.
- * Цены в рублях.
- *
- * TODO: загружать туры из /api/tours?featured=true
- */
+import { useState, useEffect } from 'react';
 
 interface Tour {
   id: string;
-  title: string;
-  imageUrl: string;
-  imageAlt: string;
-  /** Цена в рублях */
+  name: string;
+  short_description: string;
+  category: string;
   price: number;
   rating: number;
-  href: string;
+  review_count: number;
+  image_url?: string;
 }
 
-const FEATURED_TOURS: Tour[] = [
+function StarRating({ rating }: { rating: number }) {
+  return (
+    <div className="flex items-center gap-0.5" aria-label={`Рейтинг: ${rating} из 5`} role="img">
+      <span className="text-amber-400 text-sm">★</span>
+      <span className="text-xs font-semibold text-gray-700 dark:text-gray-200">{rating.toFixed(1)}</span>
+    </div>
+  );
+}
+
+// Fallback туры если API недоступен
+const FALLBACK_TOURS: Tour[] = [
   {
-    id: 'volcano-tour',
-    title: 'Вулканный Тур',
-    imageUrl: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=400&q=80',
-    imageAlt: 'Закат над вулканом Камчатки',
+    id: '1',
+    name: 'Вулканный Тур',
+    short_description: 'Поход к действующим вулканам',
+    category: 'volcanoes',
     price: 15000,
     rating: 4.9,
-    href: '/tours?category=volcanoes',
+    review_count: 127,
+    image_url: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=400&q=80',
   },
   {
-    id: 'bear-tour',
-    title: 'Медвежий Тур',
-    imageUrl: 'https://images.unsplash.com/photo-1589656966895-2f33e7653819?w=400&q=80',
-    imageAlt: 'Бурый медведь Камчатки',
-    price: 12000,
-    rating: 4.7,
+    id: '2',
+    name: 'Медвежий Тур',
     href: '/tours?category=bears',
   },
   {
