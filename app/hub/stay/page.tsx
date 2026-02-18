@@ -6,6 +6,7 @@ import { PublicNav } from '@/components/shared/PublicNav';
 import { AccommodationCard } from '@/components/AccommodationCard';
 import { AccommodationCardSkeleton } from '@/components/AccommodationCardSkeleton';
 import { AccommodationFilters } from '@/components/AccommodationFilters';
+import { Star } from 'lucide-react';
 
 interface Accommodation {
   id: string;

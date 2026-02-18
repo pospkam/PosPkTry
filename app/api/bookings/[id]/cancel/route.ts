@@ -6,7 +6,7 @@ import { emailService } from '@/lib/notifications/email-service';
 // POST /api/bookings/[id]/cancel - Отмена бронирования
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const bookingId = params.id;

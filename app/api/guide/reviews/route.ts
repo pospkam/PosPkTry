@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     `;
 
     const params: any[] = [guideId];
-    let paramIndex = 2;
+    const paramIndex = 2;
 
     // Apply filters
     if (filter === 'replied') {

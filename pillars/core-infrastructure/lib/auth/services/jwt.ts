@@ -4,7 +4,12 @@
 
 import { SignJWT, jwtVerify } from 'jose';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'kamhub-secret-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET is required');
+}
+
 const secret = new TextEncoder().encode(JWT_SECRET);
 
 export interface JWTPayload {

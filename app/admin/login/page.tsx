@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Shield, Lock, Mail, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
 
 export default function AdminLoginPage() {
@@ -189,7 +190,7 @@ export default function AdminLoginPage() {
 
         {/* Back Link */}
         <div className="text-center mt-8">
-          <a
+          <Link
             href="/"
             className="text-white/60 hover:text-white transition-colors text-sm flex items-center justify-center gap-2"
           >
@@ -197,7 +198,7 @@ export default function AdminLoginPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
             Вернуться на главную
-          </a>
+          </Link>
         </div>
       </div>
 

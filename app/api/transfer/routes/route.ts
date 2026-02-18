@@ -40,7 +40,6 @@ export async function GET(request: NextRequest) {
     `;
 
     const params: any[] = [operatorId];
-    let paramIndex = 2;
 
     if (active === 'true') {
       queryStr += ` AND is_active = true`;

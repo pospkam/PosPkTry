@@ -1,0 +1,53 @@
+/**
+ * Kamchatour Hub — CSS Custom Properties (Design Tokens)
+ * Единый источник истины для цветовой палитры и дизайн-токенов главного экрана.
+ * Все компоненты Home Screen используют эти переменные напрямую.
+ *
+ * @see AGENTS.md — Visual Identity section
+ */
+
+:root {
+  /* === Фоновые цвета === */
+  --kh-bg-deep: #0B1120;
+  --kh-bg-dark: #0D1B2A;
+  --kh-bg-gradient: linear-gradient(180deg, var(--kh-bg-deep) 0%, var(--kh-bg-dark) 100%);
+
+  /* === Акцентные цвета === */
+  --kh-accent-cyan: #00D4FF;
+  --kh-accent-cyan-glow: rgba(0, 212, 255, 0.3);
+  --kh-accent-cyan-border: rgba(0, 212, 255, 0.2);
+  --kh-accent-cyan-border-hover: rgba(0, 212, 255, 0.6);
+  --kh-accent-gold: #FFD700;
+  --kh-accent-amber: #FFC107;
+
+  /* === Текст === */
+  --kh-text-primary: #FFFFFF;
+  --kh-text-secondary: rgba(255, 255, 255, 0.6);
+  --kh-text-muted: rgba(255, 255, 255, 0.4);
+
+  /* === Карточки / Glassmorphism === */
+  --kh-card-bg: rgba(255, 255, 255, 0.07);
+  --kh-card-border: 1px solid rgba(0, 212, 255, 0.15);
+  --kh-card-radius: 20px;
+  --kh-card-blur: blur(12px);
+
+  /* === Нижняя навигация === */
+  --kh-nav-bg: rgba(13, 27, 42, 0.95);
+  --kh-nav-border: rgba(0, 212, 255, 0.1);
+  --kh-nav-height: 64px;
+
+  /* === Кнопки и чипы === */
+  --kh-chip-radius: 16px;
+  --kh-btn-radius: 50px;
+  --kh-chip-bg: rgba(255, 255, 255, 0.08);
+  --kh-chip-border: rgba(0, 212, 255, 0.2);
+
+  /* === Поиск === */
+  --kh-search-bg: rgba(255, 255, 255, 0.1);
+  --kh-search-border: rgba(0, 212, 255, 0.3);
+
+  /* === Анимации === */
+  --kh-transition-fast: 0.2s ease;
+  --kh-transition-card: 0.25s ease;
+  --kh-transition-page: 0.35s ease;
+}
