@@ -6,6 +6,7 @@ import { TransferOperatorNav } from '@/components/transfer-operator/TransferOper
 import { DataTable } from '@/components/admin/shared/DataTable';
 import { LoadingSpinner } from '@/components/admin/shared/LoadingSpinner';
 import { StatusBadge } from '@/components/admin/shared/StatusBadge';
+import { Star } from 'lucide-react';
 
 export default function DriversPage() {
   const [drivers, setDrivers] = useState([]);

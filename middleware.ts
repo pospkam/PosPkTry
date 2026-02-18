@@ -11,9 +11,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'kamchatour-hub-secret-key-change-in-production'
-);
+const jwtSecret = process.env.JWT_SECRET;
+
+if (!jwtSecret) {
+  throw new Error('JWT_SECRET is required');
+}
+
+const JWT_SECRET = new TextEncoder().encode(jwtSecret);
 
 // Protected routes that require authentication
 const PROTECTED_ROUTES = ['/hub', '/profile'];

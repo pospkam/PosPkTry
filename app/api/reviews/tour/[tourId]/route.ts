@@ -10,9 +10,10 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { tourId: string } }
+  { params }: { params: Promise<{ tourId: string }> }
 ) {
   try {
+    const { tourId } = await params;
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
@@ -40,7 +41,7 @@ export async function GET(
       WHERE r.tour_id = $1
     `;
 
-    const params: any[] = [params.tourId];
+    const params: any[] = [tourId];
     let paramIndex = 2;
 
     // Rating filter
@@ -150,9 +151,10 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { tourId: string } }
+  { params }: { params: Promise<{ tourId: string }> }
 ) {
   try {
+    const { tourId } = await params;
     const userId = request.headers.get('X-User-Id');
     
     if (!userId) {

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Weather } from '@/types';
 import { GuideNav } from '@/components/guide/GuideNav';
+import { Star, Wind } from 'lucide-react';
 
 export default function GuideDashboard() {
   const [weather, setWeather] = useState<Weather | null>(null);

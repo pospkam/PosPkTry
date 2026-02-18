@@ -6,6 +6,7 @@ import { Tour, Review } from '@/types';
 import { WeatherWidget } from '@/components/WeatherWidget';
 import { TourBookingForm } from '@/components/booking/TourBookingForm';
 import { LoadingSpinner } from '@/components/admin/shared';
+import { Star, MapPin } from 'lucide-react';
 
 export default function TourDetailsPage() {
   const params = useParams();

@@ -58,6 +58,22 @@ export const config = {
       temperature: 0.7,
       timeout: 30000,
     },
+    minimax: {
+      apiKey: process.env.MINIMAX_API_KEY || '',
+      baseUrl: 'https://api.minimax.chat/v1',
+      model: 'abab6.5s-chat',
+      maxTokens: parseInt(process.env.AI_MAX_TOKENS || '4000'),
+      temperature: 0.7,
+      timeout: 30000,
+    },
+    xai: {
+      apiKey: process.env.XAI_API_KEY || '',
+      baseUrl: 'https://api.x.ai/v1',
+      model: 'grok-4',
+      maxTokens: parseInt(process.env.AI_MAX_TOKENS || '4000'),
+      temperature: 0.7,
+      timeout: 30000,
+    },
     openrouter: {
       apiKey: process.env.OPENROUTER_API_KEY || '',
       baseUrl: 'https://openrouter.ai/api/v1',

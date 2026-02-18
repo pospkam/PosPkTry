@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { AdminNav } from '@/components/admin/AdminNav';
-import { Shield, Users, FileText, DollarSign, Settings, CheckCircle, Clock, TrendingUp, Package, Map, Wrench, AlertCircle, ArrowRight, Sparkles, Star, RefreshCw } from 'lucide-react';
+import { Shield, Users, FileText, DollarSign, Settings, CheckCircle, Clock, TrendingUp, TrendingDown, Package, Map, Wrench, AlertCircle, ArrowRight, Sparkles, Star, RefreshCw } from 'lucide-react';
 
 interface Metrics {
   totalRevenue: { value: number; change: number; trend: string };

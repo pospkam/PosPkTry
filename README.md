@@ -2,9 +2,9 @@
 
 Единая платформа для управления туризмом на Камчатке.
 
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/PosPk/kamhub)
-[![Pages](https://img.shields.io/badge/pages-91-blue)](https://github.com/PosPk/kamhub)
-[![Branches](https://img.shields.io/badge/branches-2-green)](https://github.com/PosPk/kamhub)
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/pospkam/PosPkTry)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.4-blue)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-15-blue)](https://nextjs.org/)
 
 ---
 
@@ -18,7 +18,364 @@
 - Агентов (клиенты, ваучеры, комиссионные)
 - Администраторов (модерация, финансы, настройки)
 
-**Стек:** Next.js 14, TypeScript, PostgreSQL, Tailwind CSS
+**Стек:** Next.js 15, TypeScript 5.4, PostgreSQL, Tailwind CSS
+
+---
+
+## Быстрый старт
+
+### Разработка
+
+```bash
+# Клонировать
+git clone https://github.com/pospkam/PosPkTry.git
+cd PosPkTry
+
+# Установить зависимости
+npm install
+
+# Настроить окружение
+cp .env.local.example .env.local
+# Заполните JWT_SECRET и DATABASE_URL
+
+# Запустить
+npm run dev
+```
+
+Откройте http://localhost:3000
+
+### Production сборка
+
+```bash
+npm run build
+npm start
+```
+
+---
+
+## Структура проекта
+
+```
+PosPkTry/
+├── app/                    # Next.js App Router (Основная)
+│   ├── page.tsx           # Главная страница (мобильная версия)
+│   ├── api/               # API routes (~280 endpoints)
+│   ├── api-docs/          # Swagger документация
+│   ├── auth/              # Авторизация (login, register)
+│   ├── hub/               # Dashboards по ролям
+│   │   ├── tourist/       # Dashboard туриста
+│   │   ├── operator/       # CRM оператора
+│   │   ├── guide/         # Dashboard гида
+│   │   ├── transfer/      # Dashboard трансфера
+│   │   └── admin/         # Админ-панель
+│   ├── tours/             # Каталог туров
+│   └── ...
+│
+├── components/            # React компоненты
+│   ├── home/             # Компоненты главной страницы
+│   ├── ui/               # UI kit
+│   ├── weather/          # Погодные виджеты
+│   ├── admin/            # Компоненты админки
+│   └── icons/            # Иконки (Lucide React)
+│
+├── lib/                  # Утилиты и логика
+│   ├── database.ts       # Подключение к PostgreSQL
+│   ├── auth/             # JWT авторизация
+│   └── ...
+│
+├── contexts/            # React контексты
+├── types/               # TypeScript типы
+├── scripts/             # Утилиты
+├── database/            # SQL схемы и миграции
+├── k8s/                 # Kubernetes конфиги
+└── docs/                # Документация
+```
+
+---
+
+## Главная страница
+
+Новая мобильная версия с iOS-подобным дизайном:
+
+```tsx
+// app/page.tsx
+import { HomeHeader, HomeSearchBar, CategoryChips, TourCardsRow, HomeBottomNav } from '@/components/home';
+
+export default function HomePage() {
+  return (
+    <div className="max-w-[768px] mx-auto">
+      <HomeHeader />
+      <HomeSearchBar />
+      <CategoryChips />
+      <TourCardsRow />
+      <HomeBottomNav />
+    </div>
+  );
+}
+```
+
+### Компоненты (`components/home/`)
+
+- `HomeHeader.tsx` — шапка с аватаром и переключателем темы
+- `HomeSearchBar.tsx` — поисковая строка
+- `CategoryChips.tsx` — 7 категорий (Вулканы, Медведи, Рыбалка, Термы, Треккинг, Вертолёт, Рафтинг)
+- `TourCardsRow.tsx` — горизонтальный скролл туров
+- `HomeBottomNav.tsx` — нижняя навигация
+
+### Темы
+
+- **Светлая:** фон `#C8D4E3`, белые карточки
+- **Тёмная:** фон `#0B1120`, glassmorphism, синие акценты
+
+---
+
+## Документация
+
+См. полный индекс: [docs/README.md](docs/README.md)
+
+**Основные разделы:**
+- [Design](docs/design/) — UX исследования, wireframes
+- [Architecture](docs/architecture/) — архитектура системы
+- [Deployment](docs/deployment/) — инструкции по деплою
+
+---
+
+## Функциональность
+
+### По ролям
+
+| Роль | Функционал |
+|------|------------|
+| **Турист** | Поиск, бронирование, отзывы, история поездок |
+| **Туроператор** | CRM, управление турами, календарь, аналитика |
+| **Гид** | Расписание, группы, заработок, профиль |
+| **Трансфер** | Автопарк, водители, маршруты, расписание |
+| **Агент** | Клиенты, ваучеры, комиссионные, статистика |
+| **Админ** | Модерация, пользователи, финансы, настройки |
+
+### Общие сервисы
+
+- AI-помощник (Groq AI, DeepSeek, Minimax, xAI)
+- Погода (Яндекс Weather API)
+- Интерактивная карта (Яндекс.Карты)
+- Платежи (CloudPayments)
+- Eco-points система
+- SOS/МЧС безопасность
+
+---
+
+## Технологии
+
+### Frontend
+- Next.js 15 (App Router)
+- React 18
+- TypeScript 5.4
+- Tailwind CSS 3.4
+- Lucide React (иконки)
+
+### Backend
+- Next.js API Routes (~280 endpoints)
+- PostgreSQL с PostGIS
+- Node.js + Edge Runtime
+
+### Интеграции
+- Яндекс.Карты
+- Яндекс Weather API
+- CloudPayments
+- Groq AI (Llama 3.1)
+- DeepSeek AI
+- Minimax AI
+- xAI (Grok)
+
+### DevOps
+- GitHub Actions
+- Docker
+- Kubernetes (k8s/)
+- Timeweb Cloud
+
+---
+
+## API
+
+### Swagger документация
+
+```bash
+# Запустить сервер и открыть
+GET /api-docs
+```
+
+### Основные endpoints
+
+**Auth:**
+- `POST /api/auth/login` — Авторизация
+- `POST /api/auth/register` — Регистрация
+- `GET /api/auth/me` — Текущий пользователь
+
+**Tours:**
+- `GET /api/tours` — Список туров
+- `GET /api/tours/[id]` — Детали тура
+
+**Bookings:**
+- `POST /api/bookings` — Создать бронирование
+- `GET /api/bookings/my` — Мои бронирования
+
+**Всего:** ~280 API routes
+
+---
+
+## База данных
+
+### Основные таблицы
+
+```sql
+users               -- Пользователи всех ролей
+partners            -- Партнёры
+tours               -- Туры
+bookings            -- Бронирования
+reviews             -- Отзывы
+transfers           -- Трансферы
+transfer_schedules  -- Расписание трансферов
+vehicles            -- Автопарк
+chat_sessions       -- AI чат
+notifications       -- Уведомления
+```
+
+### Миграции
+
+16+ миграций в `lib/database/`
+
+---
+
+## Статус проекта
+
+### Текущее состояние (18 февраля 2026)
+
+```
+✅ Сборка: Работает
+✅ Lint: 0 ошибок
+✅ TypeScript: Core API routes мигрированы на Next.js 15 params: Promise
+✅ API: ~280 endpoints
+✅ Роли: 6 ролей реализованы
+✅ JWT: Безопасные secrets (обязательный JWT_SECRET)
+✅ Swagger: Добавлена документация /api-docs
+```
+
+### Что работает
+
+- [x] Авторизация и регистрация (JWT)
+- [x] Dashboards для всех 6 ролей
+- [x] Каталог и поиск туров
+- [x] Бронирование
+- [x] Платежи (CloudPayments)
+- [x] AI-помощник (Groq, DeepSeek, Minimax)
+- [x] Погода (Яндекс API)
+- [x] Карты (Яндекс.Карты)
+- [x] Админ-панель
+- [x] Трансферы
+- [x] Мобильная главная страница
+
+### В разработке
+
+- [ ] Полная интеграция платежей
+- [ ] E2E тестирование
+- [ ] Мобильное приложение
+- [ ] Push уведомления
+- [ ] API интеграция для главной страницы (туры из БД)
+
+---
+
+## Команды
+
+```bash
+# Разработка
+npm run dev              # Dev сервер (порт 3000)
+
+# Сборка
+npm run build            # Production сборка
+npm start                # Production запуск
+
+# Качество кода
+npm run lint             # ESLint
+npm run type-check       # TypeScript
+
+# Тестирование
+npm test                 # Vitest
+npm run test:ui          # Vitest UI
+
+# Деплой
+npm run docker:build     # Docker образ
+npm run k8s:apply        # Kubernetes
+```
+
+---
+
+## Переменные окружения
+
+```bash
+# Обязательные
+DATABASE_URL=postgresql://...    # PostgreSQL
+JWT_SECRET=                     # Секрет для JWT (обязательно!)
+
+# Опциональные
+GROQ_API_KEY=
+DEEPSEEK_API_KEY=
+MINIMAX_API_KEY=
+XAI_API_KEY=
+YANDEX_WEATHER_API_KEY=
+YANDEX_MAPS_API_KEY=
+CLOUDPAYMENTS_PUBLIC_ID=
+```
+
+---
+
+## Безопасность
+
+- JWT токены с обязательным secret
+- Роли и права доступа (6 ролей)
+- Валидация входных данных (Zod)
+- SQL injection защита (параметризованные запросы)
+- CORS настройки
+- Security headers в middleware
+
+---
+
+## Вклад в проект
+
+1. Fork репозитория
+2. Создайте feature ветку
+3. Commit изменения
+4. Push в ветку
+5. Откройте Pull Request
+
+---
+
+## Статистика
+
+```
+Страницы: 91+
+API routes: ~280
+TypeScript файлы: 634
+Компоненты: 100+
+Миграции БД: 16+
+```
+
+---
+
+## Лицензия
+
+MIT License
+
+---
+
+## Контакты
+
+- **GitHub**: [pospkam/PosPkTry](https://github.com/pospkam/PosPkTry)
+- **Production**: https://pospk-kamhub-c8e0.twc1.net
+
+---
+
+**Обновлено:** 18 февраля 2026
+**Статус:** Active development
 
 ---
 
