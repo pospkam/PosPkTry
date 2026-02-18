@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { StayBookingForm } from '@/components/booking/StayBookingForm';
 import { LoadingSpinner } from '@/components/admin/shared';
+import { Star, MapPin } from 'lucide-react';
+import { Star, MapPin } from 'lucide-react';
 
 interface Accommodation {
   id: string;

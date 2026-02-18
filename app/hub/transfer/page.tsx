@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Weather } from '@/types';
 import { TransferSearchWidget } from '@/components/TransferSearchWidget';
 import { PublicNav } from '@/components/shared/PublicNav';
+import { Star } from 'lucide-react';
 
 export default function TransferDashboard() {
   const [weather, setWeather] = useState<Weather | null>(null);

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { Star } from 'lucide-react';
 
 interface Souvenir {
   id: string;

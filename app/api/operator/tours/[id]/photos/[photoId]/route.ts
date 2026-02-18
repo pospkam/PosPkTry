@@ -11,10 +11,10 @@ export const dynamic = 'force-dynamic';
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string; photoId: string } }
+  { params }: { params: Promise<{ id: string; photoId: string }> }
 ) {
   try {
-    const userId = request.headers.get('X-User-Id');
+    const { id, photoId } = await params;
     const userRole = request.headers.get('X-User-Role');
     
     if (!userId || userRole !== 'operator') {
@@ -74,7 +74,7 @@ export async function PATCH(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; photoId: string } }
+  { params }: { params: Promise<{ id: string; photoId: string }> }
 ) {
   try {
     const userId = request.headers.get('X-User-Id');

@@ -300,6 +300,79 @@ async function getAIResponse(message: string, context?: any): Promise<{ content:
       }
     }
 
+    // Если DeepSeek не работает, пробуем Minimax
+    if (config.ai.minimax.apiKey) {
+      try {
+        const response = await fetch(`${config.ai.minimax.baseUrl}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${config.ai.minimax.apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: config.ai.minimax.model,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt }
+            ],
+            max_tokens: config.ai.minimax.maxTokens,
+            temperature: config.ai.minimax.temperature,
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          return {
+            content: data.choices[0].message.content,
+            metadata: {
+              model: config.ai.minimax.model,
+              provider: 'minimax',
+              tokens: data.usage?.total_tokens,
+            }
+          };
+        }
+      } catch (error) {
+        console.error('Minimax API error:', error);
+      }
+    }
+
+    // Если Minimax не работает, пробуем x.ai (Grok)
+    if (config.ai.xai.apiKey) {
+      try {
+        const response = await fetch(`${config.ai.xai.baseUrl}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${config.ai.xai.apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: config.ai.xai.model,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt }
+            ],
+            max_tokens: config.ai.xai.maxTokens,
+            temperature: config.ai.xai.temperature,
+            stream: false,
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          return {
+            content: data.choices[0].message.content,
+            metadata: {
+              model: config.ai.xai.model,
+              provider: 'xai',
+              tokens: data.usage?.total_tokens,
+            }
+          };
+        }
+      } catch (error) {
+        console.error('x.ai API error:', error);
+      }
+    }
+
     // Если все AI провайдеры не работают, возвращаем стандартный ответ
     return {
       content: "Извините, я временно недоступен. Попробуйте позже или обратитесь к нашим специалистам по телефону +7 (4152) 123-456.",
