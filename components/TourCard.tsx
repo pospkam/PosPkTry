@@ -61,6 +61,10 @@ export function TourCard({ tour, className, onClick }: TourCardProps) {
         className
       )}
       onClick={onClick}
+      onKeyDown={(e) => e.key === 'Enter' && onClick?.()}
+      role="button"
+      tabIndex={0}
+      aria-label={`Подробнее о туре ${tour.title}`}
     >
       {/* Изображение тура */}
       <div className="relative h-48 bg-gradient-to-br from-slate-800 to-slate-900">

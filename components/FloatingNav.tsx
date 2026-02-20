@@ -144,7 +144,10 @@ export function FloatingNav() {
           onClick={() => setShowAI(false)}
           role="button"
           tabIndex={0}
-          onKeyDown={(e) => e.key === 'Escape' && setShowAI(false)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') setShowAI(false);
+            if (e.key === 'Enter') setShowAI(false);
+          }}
           aria-label="Закрыть модальное окно"
         >
           <div className="ai-modal-elegant" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
