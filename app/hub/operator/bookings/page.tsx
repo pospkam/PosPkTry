@@ -3,6 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { Protected } from '@/components/Protected';
 import { OperatorNav } from '@/components/operator/OperatorNav';
+
+export const metadata = {
+  title: 'Бронирования | Kamhub',
+  description: 'Управление бронированиями оператора',
+};
+
 import {
   DataTable,
   Pagination,

@@ -3,6 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { Protected } from '@/components/Protected';
 import { OperatorNav } from '@/components/operator/OperatorNav';
+
+export const metadata = {
+  title: 'Календарь | Kamhub',
+  description: 'Календарь бронирований оператора',
+};
+
 import { LoadingSpinner, EmptyState } from '@/components/admin/shared';
 import { AvailabilitySlot } from '@/types/operator';
 import { useAuth } from '@/contexts/AuthContext';

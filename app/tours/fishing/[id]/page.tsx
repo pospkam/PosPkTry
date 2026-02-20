@@ -3,6 +3,12 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+
+export const metadata = {
+  title: 'Рыболовный тур на Камчатке | Kamhub',
+  description: 'Детальная информация о рыболовном туре на Камчатке',
+};
+
 import { 
   Fish, 
   MapPin, 

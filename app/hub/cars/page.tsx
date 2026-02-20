@@ -3,6 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { Protected } from '@/components/Protected';
 import { PublicNav } from '@/components/shared/PublicNav';
+
+export const metadata = {
+  title: 'Автопарк | Kamhub',
+  description: 'Управление автомобилями и арендой транспорта',
+};
+
 import { CarCard } from '@/components/cars/CarCard';
 import { CarFilters } from '@/components/cars/CarFilters';
 import { CarBookingForm } from '@/components/cars/CarBookingForm';

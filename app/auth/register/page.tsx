@@ -4,6 +4,11 @@ import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
+export const metadata = {
+  title: 'Регистрация | Kamhub',
+  description: 'Зарегистрируйтесь на Kamhub для бронирования туров на Камчатке',
+};
+
 function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();

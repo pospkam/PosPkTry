@@ -3,6 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { Protected } from '@/components/Protected';
 import { StayProviderNav } from '@/components/stay-provider/StayProviderNav';
+
+export const metadata = {
+  title: 'Панель поставщика жилья | Kamhub',
+  description: 'Управление объектами размещения',
+};
+
 import { LoadingSpinner } from '@/components/admin/shared';
 
 export default function StayProviderDashboard() {

@@ -5,6 +5,11 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Flower, Leaf, Snowflake } from 'lucide-react';
 
+export const metadata = {
+  title: 'Добавить тур | Kamhub',
+  description: 'Добавление нового тура на платформу Kamhub',
+};
+
 const DIFFICULTY_LEVELS = [
   { id: 'easy', name: 'Легкий', icon: '🟢', description: 'Для новичков' },
   { id: 'medium', name: 'Средний', icon: '🟡', description: 'Требуется подготовка' },

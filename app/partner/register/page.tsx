@@ -3,6 +3,12 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+
+export const metadata = {
+  title: 'Регистрация партнёра | Kamhub',
+  description: 'Станьте партнёром Kamhub и размещайте туры на Камчатке',
+};
+
 import {
   Building2, Mail, Phone, Globe, User, CreditCard, FileText,
   Check, ChevronLeft, ChevronRight, AlertCircle, MapPin,

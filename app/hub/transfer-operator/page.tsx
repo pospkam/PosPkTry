@@ -3,6 +3,12 @@
 import React, { useState } from 'react';
 import { Protected } from '@/components/Protected';
 import { TransferOperatorNav } from '@/components/transfer-operator/TransferOperatorNav';
+
+export const metadata = {
+  title: 'Панель перевозчика | Kamhub',
+  description: 'Управление трансферами и транспортом',
+};
+
 import { TransferOperatorMetricsGrid } from '@/components/transfer-operator/Dashboard/TransferOperatorMetricsGrid';
 import { LoadingSpinner } from '@/components/admin/shared';
 

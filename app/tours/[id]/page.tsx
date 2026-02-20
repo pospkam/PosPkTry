@@ -9,6 +9,11 @@ import { TourBookingForm } from '@/components/booking/TourBookingForm';
 import { LoadingSpinner } from '@/components/admin/shared';
 import { Star, MapPin } from 'lucide-react';
 
+export const metadata = {
+  title: 'Тур на Камчатке | Kamhub',
+  description: 'Детальная информация о туре на Камчатке: описание, маршрут, цены, отзывы',
+};
+
 export default function TourDetailsPage() {
   const params = useParams();
   const router = useRouter();

@@ -3,6 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { Protected } from '@/components/Protected';
 import { OperatorNav } from '@/components/operator/OperatorNav';
+
+export const metadata = {
+  title: 'Клиенты | Kamhub',
+  description: 'Управление клиентами оператора',
+};
+
 import { LoadingSpinner, EmptyState } from '@/components/admin/shared';
 import { 
   Users, 

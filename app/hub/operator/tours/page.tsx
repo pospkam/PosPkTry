@@ -4,6 +4,12 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Protected } from '@/components/Protected';
 import { OperatorNav } from '@/components/operator/OperatorNav';
+
+export const metadata = {
+  title: 'Управление турами | Kamhub',
+  description: 'Управление турами оператора',
+};
+
 import {
   DataTable,
   Pagination,

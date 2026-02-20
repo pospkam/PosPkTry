@@ -6,6 +6,12 @@ import { Tour, Weather } from '@/types';
 import { AIChatWidget } from '@/components/AIChatWidget';
 import { TransferSearchWidget } from '@/components/TransferSearchWidget';
 import { TouristNav } from '@/components/tourist/TouristNav';
+
+export const metadata = {
+  title: 'Личный кабинет | Kamhub',
+  description: 'Мои туры и бронирования на Камчатке',
+};
+
 import { Mountain, Eye, TreePine, Fish, CloudSnow, Waves, Star, Zap, Clock, Wind, Sun, Cloud, CloudRain } from 'lucide-react';
 import { ActivityIcon, WeatherIcon } from '@/components/icons';
 

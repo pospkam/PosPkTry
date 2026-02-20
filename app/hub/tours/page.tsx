@@ -3,6 +3,11 @@
 import { useState } from 'react';
 import { PublicNav } from '@/components/shared/PublicNav';
 
+export const metadata = {
+  title: 'Туры | Kamhub',
+  description: 'Управление турами в личном кабинете',
+};
+
 export default function ToursPage() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
