@@ -3,6 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { Protected } from '@/components/Protected';
 import { GuideNav } from '@/components/guide/GuideNav';
+
+export const metadata = {
+  title: 'Заработок | Kamhub',
+  description: 'Заработок и выплаты гида',
+};
+
 import { LoadingSpinner } from '@/components/admin/shared';
 import { DollarSign, TrendingUp, Calendar, Download } from 'lucide-react';
 

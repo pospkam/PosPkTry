@@ -3,6 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { Protected } from '@/components/Protected';
 import { AgentNav } from '@/components/agent/AgentNav';
+
+export const metadata = {
+  title: 'Ваучеры | Kamhub',
+  description: 'Ваучеры агента',
+};
+
 import { DataTable } from '@/components/admin/shared/DataTable';
 import { LoadingSpinner } from '@/components/admin/shared/LoadingSpinner';
 

@@ -3,6 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { Protected } from '@/components/Protected';
 import { GuideNav } from '@/components/guide/GuideNav';
+
+export const metadata = {
+  title: 'Группы | Kamhub',
+  description: 'Управление группами гида',
+};
+
 import { LoadingSpinner } from '@/components/admin/shared';
 import { Users, Calendar, Phone, Mail } from 'lucide-react';
 

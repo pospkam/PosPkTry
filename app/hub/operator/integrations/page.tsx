@@ -2,6 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { Protected } from '@/components/Protected';
+
+export const metadata = {
+  title: 'Интеграции | Kamhub',
+  description: 'Интеграции с партнерами',
+};
+
 import { 
   RefreshCw, 
   CheckCircle, 

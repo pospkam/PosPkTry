@@ -3,6 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { Protected } from '@/components/Protected';
 import { OperatorNav } from '@/components/operator/OperatorNav';
+
+export const metadata = {
+  title: 'Трансферы | Kamhub',
+  description: 'Управление трансферами оператора',
+};
+
 import { TransferOperatorDashboard } from '@/components/transfer-operator/TransferOperatorDashboard';
 import { TransferDriverManagement } from '@/components/transfer-operator/TransferDriverManagement';
 import { TransferRouteManagement } from '@/components/transfer-operator/TransferRouteManagement';
