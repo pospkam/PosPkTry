@@ -1,186 +1,33 @@
-# Kamchatour Hub — Инструкции для GitHub Copilot
+# Copilot Instructions for this project
 
-## 🗺️ Контекст проекта
+## React Best Practices (react-doctor rules)
 
-**Kamchatour Hub** — туристическая платформа для Камчатки.
-Стек: **Next.js 14 App Router · TypeScript · Tailwind CSS · Supabase**
-Репозиторий: `pospkam/PosPkTry`
+When generating React code, follow these rules:
 
----
+### 1. useEffect
+- Avoid unnecessary useEffect
+- Use derived state when possible
+- Only for side effects (API calls, subscriptions)
 
-## 🎨 Дизайн-система главной страницы
+### 2. Accessibility
+- Add aria-label to buttons/inputs
+- Use semantic HTML
+- Ensure keyboard navigation
+- Alt text on images
 
-### Цветовые токены (строго соблюдать)
+### 3. Composition
+- Avoid prop drilling (max 2-3 levels)
+- Use Context for global state
+- Use children prop for flexibility
 
-| Токен | HEX | Использование |
-|---|---|---|
-| `--bg-primary` / `#0B1120` | тёмно-синий | Фон всей страницы |
-| `#00D4FF` | cyan-акцент | CTA, иконки, подсветка |
-| `#FFD700` | золото | Цены, рейтинги, premium-бейджи |
-| `var(--premium-black)` | `#0a0a0a` | Текст на светлых поверхностях |
-| `var(--premium-gold)` | `#d4af37` | Кнопки, акценты |
+### 4. Performance
+- React.memo for expensive components
+- useMemo for expensive calculations
+- useCallback for functions passed to children
 
-CSS-переменные объявлены в `app/globals.css` → Samsung Weather Theme.
-Tailwind-расширения в `tailwind.config.ts`:
-```ts
-premium: { black, border, gold, ice }
-gold: '#a2d2ff'        // ice-blue вариант
-```
+### 5. Error Handling
+- Error boundaries for components
+- Try/catch for async operations
+- User-friendly error messages
 
-### Glassmorphism (стандарт карточек туров)
-```css
-/* Базовый шаблон glassmorphism-карточки */ackground: rgba(255, 255, 255, 0.05);
-backdrop-filter: blur(20px);
-border: 1px solid rgba(255, 255, 255, 0.1);
-border-radius: 20px;
-box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-```
-
----
-
-## 🏗️ Архитектура главной страницы (`app/page.tsx`)
-
-### Блок 1 — Header / Hero
-```
-[Лого KH] ················· [Погода] [Профиль]
-```
-- Компонент: `WeatherWidget` (уже существует в `components/WeatherWidget.tsx`)
-- Фон: Samsung Weather Dynamic (импорт из `app/samsung-weather-dynamic.css`)
-- Лого: текст `KH` в стиле glassmorphism или SVG из `public/`
-
-### Блок 2 — Поисковая строка
-- Компонент: `AISmartSearch` (`components/AISmartSearch.tsx`) или `AIKamSmartSearch`
-- Placeholder: "Поиск туров, гидов, размещения..."
-- Иконка поиска из `components/SearchIcons.tsx`
-- Touch-friendly: `min-height: 52px`, `font-size: 16px` (запрет zoom на iOS)
-
-### Блок 3 — Горизонтальный скролл категорий (6 чипов)
-```tsx
-// Чипы категорий — строго этот порядок и иконки (lucide-react)
-const categories = [
-  { id: 'tours',     label: 'Туры',        icon: Mountain  },
-  { id: 'fishing',   label: 'Рыбалка',     icon: Fish      },
-  { id: 'volcano',   label: 'Вулканы',     icon: Flame     },
-  { id: 'nature',    label: 'Природа',     icon: TreePine  },
-  { id: 'transfer',  label: 'Трансфер',    icon: Truck     },
-  { id: 'stay',      label: 'Жильё',       icon: HomeIcon  },
-]
-```
-- Горизонтальный скролл: `overflow-x: auto; scrollbar-width: none`
-- CSS-класс: `.scrollbar-hide` (определён в `app/globals.css`)
-- Активный чип: border `1px solid #00D4FF`, `color: #00D4FF`
-
-### Блок 4 — Карточки туров (3 шт., glassmorphism)
-- Базовый компонент: `TourCard` (`components/TourCard.tsx`) — переиспользовать
-- Lazy loading: `<Image loading="lazy" />` (Next.js Image)
-- Цена: `font-weight: 700; color: #FFD700`
-- Кнопка "Подробнее": акцент `#00D4FF`
-
-### Блок 5 — Нижняя навигация
-- Компонент: `FloatingNav` (`components/FloatingNav.tsx`) — уже существует
-- CSS: `components/FloatingNavElegant.css`
-
----
-
-## ⚙️ Технические требования
-
-### CSS-переменные вместо хардкода
-```css
-/* ✅ Правильно */
-color: var(--accent-primary);
-background: var(--bg-primary);
-
-/* ❌ Неправильно */
-color: #00D4FF;
-background: #0B1120;
-```
-
-### Анимации — без layout thrashing
-```css
-/* ✅ Только transform и opacity */
-transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-            opacity 0.3s ease;
-
-/* ❌ Запрещено анимировать */
-/* width, height, top, left, margin, padding */
-```
-
-### Touch и мобильные устройства
-```css
-/* Обязательно для интерактивных элементов */
--webkit-tap-highlight-color: transparent;  /* уже в app/responsive.css */
-min-height: 44px;   /* минимальная touch-зона */
-cursor: pointer;
-```
-
-### Адаптивность
-Использовать классы из `app/responsive.css`:
-- `.container-responsive` — ограничение ширины + паддинги
-- `.grid-responsive-3` — сетка 1→2→3 колонки
-- `.section-padding` — адаптивные отступы секций
-
-### Доступность (WCAG AA)
-- Контрастность текста ≥ 4.5:1
-- `aria-label` на иконках без подписей
-- `role="tab"` для чипов категорий
-- `tabIndex={0}` + `onKeyDown` для кастомных интерактивных элементов
-
----
-
-## 📁 Конвенции файловой структуры
-
-```
-app/
-  page.tsx              ← Главная страница (редактировать здесь)
-  globals.css           ← Глобальные CSS-переменные
-  responsive.css        ← Адаптивные хелперы
-
-components/
-  TourCard.tsx          ← Карточка тура (переиспользовать)
-  FloatingNav.tsx       ← Нижняя навигация
-  WeatherWidget.tsx     ← Виджет погоды
-  AISmartSearch.tsx     ← Поиск с AI
-  SearchIcons.tsx       ← Иконки поиска
-  shared/               ← Переиспользуемые UI-компоненты
-```
-
-**Новые компоненты для главной страницы** помещать в:
-- `components/shared/` — если переиспользуется в >1 странице
-- `components/` — если специфичен для главной
-
----
-
-## 📝 JSDoc-комментарии (обязательны для новых компонентов)
-
-```tsx
-/**
- * CategoryChip — чип для горизонтального скролла категорий туров.
- *
- * Дизайн-решение: использует glassmorphism с border #00D4FF в активном состоянии,
- * чтобы соответствовать Samsung Weather Theme и не создавать layout shift при hover.
- *
- * @param category - объект с id, label, icon
- * @param isActive - текущее выбранное состояние
- * @param onClick - обработчик выбора категории
- */
-``` 
-
----
-
-## 🔄 Роль Copilot как соавтора
-
-1. **Следовать конвенциям** — не создавать новые CSS-переменные, если эквивалент уже есть в `globals.css` или `tailwind.config.ts`
-2. **Переиспользовать** — проверять `components/` перед созданием нового компонента
-3. **Предлагать рефакторинг** — если новый код дублирует существующий (например, стили glassmorphism), предложить выделить в shared-компонент
-4. **TypeScript строго** — использовать типы из `types/` (например, `Tour`, `Partner`)
-5. **Импорты** — алиас `@/` для абсолютных путей (настроен в `tsconfig.json`)
-
----
-
-## 🚫 Запрещено
-
-- Инлайн-стили `style={{}}` для повторяющихся значений
-- `any` в TypeScript без `// TODO: уточнить тип`
-- `console.log` в production-коде (только `console.error` в catch-блоках)
-- Анимация `width`/`height` (layout thrashing)
-- Хардкод цветов вместо CSS-переменных или Tailwind-токенов
+Scan code with: `npx -y react-doctor@latest`
