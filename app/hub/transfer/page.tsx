@@ -296,8 +296,8 @@ export default function TransferDashboard() {
                   <div className="mb-4">
                     <p className="text-white/70 text-sm mb-2">Остановки:</p>
                     <div className="space-y-1">
-                      {route.stops.map((stop, index) => (
-                        <div key={index} className="text-white text-sm">• {stop}</div>
+                      {route.stops.map((stop) => (
+                        <div key={stop} className="text-white text-sm">• {stop}</div>
                       ))}
                     </div>
                   </div>
@@ -423,8 +423,8 @@ export default function TransferDashboard() {
                   <div className="mb-4">
                     <p className="text-white/70 text-sm mb-2">Маршруты:</p>
                     <div className="space-y-1">
-                      {driver.routes.map((route, index) => (
-                        <div key={index} className="text-white text-sm">• {route}</div>
+                      {driver.routes.map((route) => (
+                        <div key={route} className="text-white text-sm">• {route}</div>
                       ))}
                     </div>
                   </div>
@@ -540,7 +540,7 @@ export default function TransferDashboard() {
               <div className="bg-white/15 rounded-2xl p-6 border border-white/15">
                 <h4 className="text-lg font-bold text-white mb-4">Популярные маршруты</h4>
                 <div className="space-y-3">
-                  {mockRoutes.map((route, index) => (
+                  {mockRoutes.map((route, routeIdx) => (
                     <div key={route.id} className="flex items-center justify-between">
                       <span className="text-white/70">{route.name}</span>
                       <div className="flex items-center space-x-3">
@@ -562,7 +562,7 @@ export default function TransferDashboard() {
               <div className="bg-white/15 rounded-2xl p-6 border border-white/15">
                 <h4 className="text-lg font-bold text-white mb-4">Доходы по маршрутам</h4>
                 <div className="space-y-3">
-                  {mockRoutes.map((route, index) => (
+                  {mockRoutes.map((route, routeIncomeIdx) => (
                     <div key={route.id} className="flex items-center justify-between">
                       <span className="text-white/70">{route.name}</span>
                       <div className="flex items-center space-x-3">

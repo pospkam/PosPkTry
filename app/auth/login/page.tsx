@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
 
@@ -155,13 +157,13 @@ export default function AuthPage() {
 
   const handleNextStep = () => {
     if (validateStep(step)) {
-      setStep(step + 1);
+      setStep(prev => prev + 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const handlePrevStep = () => {
-    setStep(step - 1);
+    setStep(prev => prev - 1);
     setError('');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -268,7 +270,7 @@ export default function AuthPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="mx-auto mb-6 flex justify-center">
-            <img src="/logo-kamchatka.svg" alt="Kamchatka Tour Hub" className="h-16 md:h-20 transform hover:scale-110 transition-transform" />
+            <Image src="/logo-kamchatka.svg" alt="Kamchatka Tour Hub" className="h-16 md:h-20 transform hover:scale-110 transition-transform" width={120} height={80} />
           </div>
           <h1 className="text-4xl md:text-5xl font-black mb-3 text-white">
             Kamchatka Tour Hub
@@ -321,8 +323,9 @@ export default function AuthPage() {
           <div className="max-w-md mx-auto">
             <form onSubmit={handleLogin} className="bg-white/15 backdrop-blur-2xl border border-white/15 rounded-3xl p-8 space-y-6 shadow-2xl">
               <div>
-                <label className="block text-sm font-semibold mb-3 text-white/90">Email</label>
+                <label htmlFor="login-email" className="block text-sm font-semibold mb-3 text-white/90">Email</label>
                 <input
+                  id="login-email"
                   type="email"
                   required
                   value={loginData.email}
@@ -333,9 +336,10 @@ export default function AuthPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-3 text-white/90">Пароль</label>
+                <label htmlFor="login-password" className="block text-sm font-semibold mb-3 text-white/90">Пароль</label>
                 <div className="relative">
                   <input
+                    id="login-password"
                     type={showPassword ? 'text' : 'password'}
                     required
                     value={loginData.password}
@@ -363,9 +367,9 @@ export default function AuthPage() {
             </form>
 
             <div className="text-center mt-6">
-              <a href="/demo" className="text-blue-400 hover:text-blue-300 text-sm transition-colors">
+              <Link href="/demo" className="text-blue-400 hover:text-blue-300 text-sm transition-colors">
                 Демо-режим (без регистрации)
-              </a>
+              </Link>
             </div>
           </div>
         )}
@@ -413,10 +417,11 @@ export default function AuthPage() {
                   </h2>
                   
                   <div>
-                    <label className="block text-sm font-semibold mb-2 text-white/90">
+                    <label htmlFor="reg-company-name" className="block text-sm font-semibold mb-2 text-white/90">
                       Название компании <span className="text-red-400">*</span>
                     </label>
                     <input
+                      id="reg-company-name"
                       type="text"
                       required
                       value={formData.name}
@@ -428,10 +433,11 @@ export default function AuthPage() {
 
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-semibold mb-2 text-white/90">
+                      <label htmlFor="reg-email" className="block text-sm font-semibold mb-2 text-white/90">
                         Email <span className="text-red-400">*</span>
                       </label>
                       <input
+                        id="reg-email"
                         type="email"
                         required
                         value={formData.email}
@@ -442,10 +448,11 @@ export default function AuthPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold mb-2 text-white/90">
+                      <label htmlFor="reg-phone" className="block text-sm font-semibold mb-2 text-white/90">
                         Телефон <span className="text-red-400">*</span>
                       </label>
                       <input
+                        id="reg-phone"
                         type="tel"
                         required
                         value={formData.phone}
@@ -458,11 +465,12 @@ export default function AuthPage() {
 
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-semibold mb-2 text-white/90">
+                      <label htmlFor="reg-password" className="block text-sm font-semibold mb-2 text-white/90">
                         Пароль <span className="text-red-400">*</span>
                       </label>
                       <div className="relative">
                         <input
+                          id="reg-password"
                           type={showPassword ? 'text' : 'password'}
                           required
                           value={formData.password}
@@ -496,11 +504,12 @@ export default function AuthPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold mb-2 text-white/90">
+                      <label htmlFor="reg-confirm-password" className="block text-sm font-semibold mb-2 text-white/90">
                         Подтверждение пароля <span className="text-red-400">*</span>
                       </label>
                       <div className="relative">
                         <input
+                          id="reg-confirm-password"
                           type={showConfirmPassword ? 'text' : 'password'}
                           required
                           value={formData.confirmPassword}
@@ -585,10 +594,11 @@ export default function AuthPage() {
                   </h2>
 
                   <div>
-                    <label className="block text-sm font-semibold mb-2 text-white/90">
+                    <label htmlFor="reg-description" className="block text-sm font-semibold mb-2 text-white/90">
                       Описание компании
                     </label>
                     <textarea
+                      id="reg-description"
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                       rows={4}
@@ -599,10 +609,11 @@ export default function AuthPage() {
 
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-semibold mb-2 text-white/90">
+                      <label htmlFor="reg-address" className="block text-sm font-semibold mb-2 text-white/90">
                         Адрес
                       </label>
                       <input
+                        id="reg-address"
                         type="text"
                         value={formData.address}
                         onChange={(e) => setFormData({ ...formData, address: e.target.value })}
@@ -612,10 +623,11 @@ export default function AuthPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold mb-2 text-white/90">
+                      <label htmlFor="reg-website" className="block text-sm font-semibold mb-2 text-white/90">
                         Веб-сайт
                       </label>
                       <input
+                        id="reg-website"
                         type="url"
                         value={formData.website}
                         onChange={(e) => setFormData({ ...formData, website: e.target.value })}
@@ -626,14 +638,14 @@ export default function AuthPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold mb-4 text-white/90">
+                    <span className="block text-sm font-semibold mb-4 text-white/90">
                       Логотип компании
-                    </label>
+                    </span>
                     <div className="flex flex-col md:flex-row items-center gap-6">
                       <div className="relative group">
                         {logoPreview ? (
                           <div className="w-32 h-32 rounded-2xl border-2 border-white/20 overflow-hidden shadow-xl">
-                            <img src={logoPreview} alt="Logo" className="w-full h-full object-cover" />
+                            <Image src={logoPreview} alt="Logo" className="w-full h-full object-cover" width={128} height={128} />
                           </div>
                         ) : (
                           <div className="w-32 h-32 rounded-2xl border-2 border-dashed border-white/20 flex items-center justify-center bg-white/5">

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
+import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { TouristNav } from '@/components/tourist/TouristNav';
@@ -132,11 +133,15 @@ function NewBookingForm() {
         <div className="bg-white/5 rounded-2xl p-6 mb-8 border border-white/10">
           <div className="flex items-start space-x-6">
             {tour.images && tour.images.length > 0 && (
-              <img
-                src={tour.images[0]}
-                alt={tour.name}
-                className="w-32 h-32 rounded-xl object-cover"
-              />
+              <div className="w-32 h-32 rounded-xl relative overflow-hidden flex-shrink-0">
+                <Image
+                  src={tour.images[0]}
+                  alt={tour.name}
+                  fill
+                  className="object-cover"
+                  sizes="128px"
+                />
+              </div>
             )}
             <div>
               <h2 className="text-2xl font-bold text-white mb-2">{tour.name}</h2>
@@ -157,9 +162,9 @@ function NewBookingForm() {
           <div className="space-y-6">
             {/* Date */}
             <div>
-              <label className="block text-sm font-medium text-white mb-2">Дата тура *</label>
+              <label htmlFor="booking-date" className="block text-sm font-medium text-white mb-2">Дата тура *</label>
               <input
-                type="date"
+                id="booking-date"
                 required
                 min={new Date().toISOString().split('T')[0]}
                 value={formData.date}
@@ -170,9 +175,9 @@ function NewBookingForm() {
 
             {/* Participants */}
             <div>
-              <label className="block text-sm font-medium text-white mb-2">Количество участников *</label>
+              <label htmlFor="booking-participants" className="block text-sm font-medium text-white mb-2">Количество участников *</label>
               <input
-                type="number"
+                id="booking-participants"
                 required
                 min={tour.min_group_size || 1}
                 max={tour.max_group_size || 20}
@@ -187,8 +192,9 @@ function NewBookingForm() {
 
             {/* Special Requests */}
             <div>
-              <label className="block text-sm font-medium text-white mb-2">Особые пожелания</label>
+              <label htmlFor="booking-requests" className="block text-sm font-medium text-white mb-2">Особые пожелания</label>
               <textarea
+                id="booking-requests"
                 rows={4}
                 value={formData.specialRequests}
                 onChange={(e) => setFormData({ ...formData, specialRequests: e.target.value })}

@@ -104,7 +104,7 @@ export default function WeatherBackground() {
   };
 
   return (
-    <>
+    <div suppressHydrationWarning>
       {/* Динамический фон по времени суток */}
       <div 
         className="fixed inset-0 -z-20 transition-all duration-[3000ms]"

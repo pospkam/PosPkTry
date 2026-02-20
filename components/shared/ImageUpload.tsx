@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
+import Image from 'next/image';
 
 interface ImageUploadProps {
   onUpload: (urls: string[]) => void;
@@ -82,9 +83,9 @@ export function ImageUpload({ onUpload, maxFiles = 5, maxSizeMB = 5 }: ImageUplo
 
       {previews.length > 0 && (
         <div className="grid grid-cols-3 gap-4">
-          {previews.map((url, index) => (
-            <div key={index} className="relative aspect-square rounded-lg overflow-hidden bg-white/5">
-              <img src={url} alt={`Preview ${index + 1}`} className="w-full h-full object-cover" />
+          {previews.map((url) => (
+            <div key={url} className="relative aspect-square rounded-lg overflow-hidden bg-white/5">
+              <Image src={url} alt="Preview" fill className="object-cover" sizes="(max-width: 768px) 33vw, 20vw" />
             </div>
           ))}
         </div>

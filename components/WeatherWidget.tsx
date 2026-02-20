@@ -175,8 +175,8 @@ export function WeatherWidget({
       {/* Алерты */}
       {showAlerts && weather.alerts && weather.alerts.length > 0 && (
         <div className="bg-red-50 border-l-4 border-red-500 p-4">
-          {weather.alerts.map((alert, idx) => (
-            <div key={idx} className="mb-2 last:mb-0">
+          {weather.alerts.map((alert) => (
+            <div key={alert.event} className="mb-2 last:mb-0">
               <div className="flex items-start">
                 <span className="text-red-600 mr-2">!</span>
                 <div className="flex-1">
@@ -362,8 +362,8 @@ export function WeatherWidget({
                 <div className="bg-yellow-50 rounded-lg p-3">
                   <div className="font-medium text-yellow-900 mb-2">  Рекомендации</div>
                   <ul className="text-sm text-yellow-800 space-y-1">
-                    {weather.recommendations.map((rec, idx) => (
-                      <li key={idx}>{rec}</li>
+                    {weather.recommendations.map((rec) => (
+                      <li key={rec}>{rec}</li>
                     ))}
                   </ul>
                 </div>
@@ -373,8 +373,8 @@ export function WeatherWidget({
                 <div className="bg-purple-50 rounded-lg p-3">
                   <div className="font-medium text-purple-900 mb-2">👕 Что надеть</div>
                   <ul className="text-sm text-purple-800 space-y-1">
-                    {weather.clothingAdvice.map((advice, idx) => (
-                      <li key={idx}>{advice}</li>
+                    {weather.clothingAdvice.map((advice) => (
+                      <li key={advice}>{advice}</li>
                     ))}
                   </ul>
                 </div>
@@ -385,8 +385,8 @@ export function WeatherWidget({
 
         {activeTab === 'hourly' && weather.hourlyForecast && (
           <div className="space-y-2 max-h-96 overflow-y-auto">
-            {weather.hourlyForecast.slice(0, 12).map((hour, idx) => (
-              <div key={idx} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
+            {weather.hourlyForecast.slice(0, 12).map((hour) => (
+              <div key={hour.time} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
                 <div className="flex items-center space-x-3">
                   <span className="text-2xl">{getWeatherIcon(hour.condition)}</span>
                   <div>
@@ -409,8 +409,8 @@ export function WeatherWidget({
 
         {activeTab === 'forecast' && weather.forecast && (
           <div className="space-y-3">
-            {weather.forecast.map((day, idx) => (
-              <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+            {weather.forecast.map((day) => (
+              <div key={day.date} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                 <div className="flex items-center space-x-3">
                   <span className="text-3xl">{getWeatherIcon(day.condition)}</span>
                   <div>

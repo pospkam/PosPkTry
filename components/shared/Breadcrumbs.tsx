@@ -25,8 +25,8 @@ export function Breadcrumbs({ items, homeHref = '/', className = '' }: Breadcrum
         <Home className="w-4 h-4" />
       </Link>
       
-      {items.map((item, index) => (
-        <React.Fragment key={index}>
+      {items.map((item) => (
+        <React.Fragment key={item.href || item.label}>
           <ChevronRight className="w-4 h-4 mx-2 text-white/40" />
           {item.href ? (
             <Link 

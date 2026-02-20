@@ -139,8 +139,18 @@ export function FloatingNav() {
 
       {/* AI MODAL */}
       {showAI && (
-        <div className="ai-modal-overlay-elegant" onClick={() => setShowAI(false)}>
-          <div className="ai-modal-elegant" onClick={(e) => e.stopPropagation()}>
+        <div 
+          className="ai-modal-overlay-elegant" 
+          onClick={() => setShowAI(false)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') setShowAI(false);
+            if (e.key === 'Enter') setShowAI(false);
+          }}
+          aria-label="Закрыть модальное окно"
+        >
+          <div className="ai-modal-elegant" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
             <div className="ai-modal-header-elegant">
               <div className="ai-title-elegant">
                 <div className="ai-avatar-elegant"></div>

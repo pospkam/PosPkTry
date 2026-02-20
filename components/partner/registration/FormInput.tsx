@@ -43,12 +43,13 @@ export function FormInput({
 
   return (
     <div>
-      <label className="block text-sm font-medium mb-2 text-white/90 flex items-center gap-2">
+      <label htmlFor={name} className="block text-sm font-medium mb-2 text-white/90 flex items-center gap-2">
         {Icon && <Icon className="w-4 h-4" />}
         {label}
         {required && <span className="text-red-400">*</span>}
       </label>
       <input
+        id={name}
         type={type}
         name={name}
         value={value}
@@ -94,12 +95,13 @@ export function FormTextarea({
 }: FormTextareaProps) {
   return (
     <div>
-      <label className="block text-sm font-medium mb-2 text-white/90 flex items-center gap-2">
+      <label htmlFor={name} className="block text-sm font-medium mb-2 text-white/90 flex items-center gap-2">
         {Icon && <Icon className="w-4 h-4" />}
         {label}
         {required && <span className="text-red-400">*</span>}
       </label>
       <textarea
+        id={name}
         name={name}
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -115,17 +117,21 @@ export function FormTextarea({
 
 interface FormCheckboxProps {
   label: string | React.ReactNode;
+  name?: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
   required?: boolean;
 }
 
-export function FormCheckbox({ label, checked, onChange, required = false }: FormCheckboxProps) {
+export function FormCheckbox({ label, name, checked, onChange, required = false }: FormCheckboxProps) {
+  const checkboxId = name || `checkbox-${Math.random().toString(36).substr(2, 9)}`;
   return (
-    <label className="flex items-start gap-3 cursor-pointer group">
+    <label htmlFor={checkboxId} className="flex items-start gap-3 cursor-pointer group">
       <div className="relative mt-0.5">
         <input
+          id={checkboxId}
           type="checkbox"
+          name={name}
           checked={checked}
           onChange={(e) => onChange(e.target.checked)}
           required={required}

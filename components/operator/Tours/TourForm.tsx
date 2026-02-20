@@ -86,11 +86,11 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
         <div className="space-y-6">
           {/* Название */}
           <div>
-            <label className="block text-white/70 mb-2">
+            <label htmlFor="tour-name" className="block text-white/70 mb-2">
               Название тура <span className="text-red-400">*</span>
             </label>
             <input
-              type="text"
+              id="tour-name"
               value={formData.name}
               onChange={(e) => handleChange('name', e.target.value)}
               placeholder="Например: Восхождение на вулкан Авачинский"
@@ -101,10 +101,11 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
 
           {/* Описание */}
           <div>
-            <label className="block text-white/70 mb-2">
+            <label htmlFor="tour-description" className="block text-white/70 mb-2">
               Описание <span className="text-red-400">*</span>
             </label>
             <textarea
+              id="tour-description"
               value={formData.description}
               onChange={(e) => handleChange('description', e.target.value)}
               placeholder="Подробное описание тура..."
@@ -117,8 +118,9 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
           {/* Категория и Сложность */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-white/70 mb-2">Категория</label>
+              <label htmlFor="tour-category" className="block text-white/70 mb-2">Категория</label>
               <select
+                id="tour-category"
                 value={formData.category}
                 onChange={(e) => handleChange('category', e.target.value)}
                 className="w-full px-4 py-3 bg-white/10 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
@@ -132,8 +134,9 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
             </div>
 
             <div>
-              <label className="block text-white/70 mb-2">Сложность</label>
+              <label htmlFor="tour-difficulty" className="block text-white/70 mb-2">Сложность</label>
               <select
+                id="tour-difficulty"
                 value={formData.difficulty}
                 onChange={(e) => handleChange('difficulty', e.target.value as any)}
                 className="w-full px-4 py-3 bg-white/10 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
@@ -154,11 +157,11 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Длительность */}
           <div>
-            <label className="block text-white/70 mb-2">
+            <label htmlFor="tour-duration" className="block text-white/70 mb-2">
               Длительность (часы)
             </label>
             <input
-              type="number"
+              id="tour-duration"
               value={formData.duration}
               onChange={(e) => handleChange('duration', parseInt(e.target.value))}
               min="1"
@@ -168,11 +171,11 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
 
           {/* Мин. группа */}
           <div>
-            <label className="block text-white/70 mb-2">
+            <label htmlFor="tour-min-group" className="block text-white/70 mb-2">
               Мин. группа
             </label>
             <input
-              type="number"
+              id="tour-min-group"
               value={formData.minGroupSize}
               onChange={(e) => handleChange('minGroupSize', parseInt(e.target.value))}
               min="1"
@@ -182,21 +185,22 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
 
           {/* Макс. группа */}
           <div>
-            <label className="block text-white/70 mb-2">
+            <label htmlFor="tour-max-group" className="block text-white/70 mb-2">
               Макс. группа
             </label>
             <input
-              type="number"
+              id="tour-max-group"
               value={formData.maxGroupSize}
               onChange={(e) => handleChange('maxGroupSize', parseInt(e.target.value))}
               min="1"
               className="w-full px-4 py-3 bg-white/10 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
             />
           </div>
-
-          {/* Цена */}
-          <div>
-            <label className="block text-white/70 mb-2">
+htmlFor="tour-price" className="block text-white/70 mb-2">
+              Цена <span className="text-red-400">*</span>
+            </label>
+            <input
+              id="tour-price" htmlFor="tour-price" className="block text-white/70 mb-2">
               Цена <span className="text-red-400">*</span>
             </label>
             <input
@@ -237,9 +241,9 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
 
           {formData.includes.length > 0 && (
             <ul className="space-y-2">
-              {formData.includes.map((item, index) => (
+              {formData.includes.map((item, includeIndex) => (
                 <li
-                  key={index}
+                  key={`include-${includeIndex}`}
                   className="flex items-center justify-between bg-white/5 px-4 py-3 rounded-xl"
                 >
                   <span className="text-white"> {item}</span>
@@ -282,9 +286,9 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
 
           {formData.excludes.length > 0 && (
             <ul className="space-y-2">
-              {formData.excludes.map((item, index) => (
+              {formData.excludes.map((item, excludeIndex) => (
                 <li
-                  key={index}
+                  key={`exclude-${excludeIndex}`}
                   className="flex items-center justify-between bg-white/5 px-4 py-3 rounded-xl"
                 >
                   <span className="text-white"> {item}</span>

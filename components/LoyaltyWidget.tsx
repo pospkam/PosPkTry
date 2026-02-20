@@ -145,8 +145,8 @@ export function LoyaltyWidget({ userId, className }: LoyaltyWidgetProps) {
       <div className="mb-6">
         <h4 className="text-white font-semibold mb-3">Преимущества уровня</h4>
         <div className="space-y-2">
-          {stats.currentLevel.benefits.map((benefit, index) => (
-            <div key={index} className="flex items-center text-white/70">
+          {stats.currentLevel.benefits.map((benefit) => (
+            <div key={benefit} className="flex items-center text-white/70">
               <div className="w-2 h-2 bg-premium-gold rounded-full mr-3"></div>
               <span className="text-sm">{benefit}</span>
             </div>
@@ -242,8 +242,8 @@ export function LoyaltyLevels({ className }: { className?: string }) {
     return (
       <div className={`bg-premium-black/90 backdrop-blur-sm rounded-2xl p-6 border border-premium-gold/20 ${className}`}>
         <div className="animate-pulse space-y-4">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="h-16 bg-premium-gold/10 rounded"></div>
+          {[1, 2, 3, 4, 5].map((index) => (
+            <div key={`skeleton-${index}`} className="h-16 bg-premium-gold/10 rounded"></div>
           ))}
         </div>
       </div>
@@ -255,13 +255,13 @@ export function LoyaltyLevels({ className }: { className?: string }) {
       <h3 className="text-xl font-bold text-white mb-6">Уровни лояльности</h3>
       
       <div className="space-y-4">
-        {levels.map((level, index) => (
-          <div key={index} className="flex items-center justify-between p-4 rounded-xl" 
+        {levels.map((level) => (
+          <div key={level.name} className="flex items-center justify-between p-4 rounded-xl" 
                style={{ backgroundColor: level.color + '10' }}>
             <div className="flex items-center">
               <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold mr-4"
                    style={{ backgroundColor: level.color }}>
-                {index + 1}
+                {levels.indexOf(level) + 1}
               </div>
               <div>
                 <div className="text-white font-semibold">{level.name}</div>

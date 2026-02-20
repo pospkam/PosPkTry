@@ -32,8 +32,9 @@ export function GearFilters({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Categories */}
         <div>
-          <label className="block text-sm font-medium mb-3">Категория</label>
+          <label htmlFor="gear-category" className="block text-sm font-medium mb-3">Категория</label>
           <select
+            id="gear-category"
             value={selectedCategory}
             onChange={(e) => onCategoryChange(e.target.value)}
             className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
@@ -47,7 +48,7 @@ export function GearFilters({
 
         {/* Price Range */}
         <div>
-          <label className="block text-sm font-medium mb-3">Цена за день</label>
+          <span className="block text-sm font-medium mb-3">Цена за день</span>
           <div className="space-y-2">
             <div className="flex gap-2">
               <input
@@ -76,9 +77,10 @@ export function GearFilters({
 
         {/* Availability */}
         <div>
-          <label className="block text-sm font-medium mb-3">Доступность</label>
-          <label className="flex items-center gap-3">
+          <span className="block text-sm font-medium mb-3">Доступность</span>
+          <label htmlFor="gear-available" className="flex items-center gap-3">
             <input
+              id="gear-available"
               type="checkbox"
               checked={showAvailableOnly}
               onChange={(e) => onAvailableToggle(e.target.checked)}
@@ -90,8 +92,9 @@ export function GearFilters({
 
         {/* Sort */}
         <div>
-          <label className="block text-sm font-medium mb-3">Сортировка</label>
+          <label htmlFor="gear-sort" className="block text-sm font-medium mb-3">Сортировка</label>
           <select
+            id="gear-sort"
             value={sortBy}
             onChange={(e) => onSortChange(e.target.value)}
             className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 
 interface Souvenir {
   id: string;
@@ -23,7 +24,7 @@ export function SouvenirCard({ souvenir, onAddToCart }: SouvenirCardProps) {
     <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:bg-white/10 transition-all hover:scale-105">
       <div className="relative h-48 bg-white/10">
         {souvenir.imageUrl ? (
-          <img src={souvenir.imageUrl} alt={souvenir.name} className="w-full h-full object-cover" />
+          <Image src={souvenir.imageUrl} alt={souvenir.name} fill className="object-cover" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-6xl"></div>
         )}

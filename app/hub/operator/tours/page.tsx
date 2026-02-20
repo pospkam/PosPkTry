@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Protected } from '@/components/Protected';
 import { OperatorNav } from '@/components/operator/OperatorNav';
 import {
@@ -124,9 +125,11 @@ export default function ToursManagement() {
       render: (tour) => (
         <div className="flex items-center">
           {tour.images && tour.images.length > 0 ? (
-            <img
+            <Image
               src={tour.images[0]}
               alt={tour.name}
+              width={48}
+              height={48}
               className="w-12 h-12 rounded-lg mr-3 object-cover"
             />
           ) : (

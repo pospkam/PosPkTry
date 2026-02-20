@@ -2,6 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 
+export const metadata = {
+  title: 'Аренда автомобилей на Камчатке | Kamhub',
+  description: 'Аренда внедорожников и автомобилей для путешествий по Камчатке. Бронирование онлайн',
+};
+
 export default function CarRentalPage() {
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);

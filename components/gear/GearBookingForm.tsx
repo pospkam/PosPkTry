@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 
 interface GearItem {
   id: string;
@@ -169,7 +170,7 @@ export function GearBookingForm({ gear, onBookingComplete, onCancel }: GearBooki
             <div className="flex gap-4 mb-4">
               <div className="w-20 h-20 bg-white/10 rounded-lg flex-shrink-0">
                 {gear.imageUrl ? (
-                  <img src={gear.imageUrl} alt={gear.name} className="w-full h-full object-cover rounded-lg" />
+                  <Image src={gear.imageUrl} alt={gear.name} fill className="object-cover rounded-lg" sizes="80px" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-2xl">🎒</div>
                 )}
@@ -216,9 +217,9 @@ export function GearBookingForm({ gear, onBookingComplete, onCancel }: GearBooki
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Имя *</label>
+              <label htmlFor="gear-booking-name" className="block text-sm font-medium mb-2">Имя *</label>
               <input
-                type="text"
+                id="gear-booking-name"
                 value={form.name}
                 onChange={(e) => updateForm('name', e.target.value)}
                 className={`w-full px-4 py-3 bg-white/10 border rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold ${
@@ -230,9 +231,9 @@ export function GearBookingForm({ gear, onBookingComplete, onCancel }: GearBooki
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Email *</label>
+              <label htmlFor="gear-booking-email" className="block text-sm font-medium mb-2">Email *</label>
               <input
-                type="email"
+                id="gear-booking-email"
                 value={form.email}
                 onChange={(e) => updateForm('email', e.target.value)}
                 className={`w-full px-4 py-3 bg-white/10 border rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold ${
@@ -244,9 +245,9 @@ export function GearBookingForm({ gear, onBookingComplete, onCancel }: GearBooki
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Телефон *</label>
+              <label htmlFor="gear-booking-phone" className="block text-sm font-medium mb-2">Телефон *</label>
               <input
-                type="tel"
+                id="gear-booking-phone"
                 value={form.phone}
                 onChange={(e) => updateForm('phone', e.target.value)}
                 className={`w-full px-4 py-3 bg-white/10 border rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold ${
@@ -259,9 +260,9 @@ export function GearBookingForm({ gear, onBookingComplete, onCancel }: GearBooki
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Дата начала *</label>
+                <label htmlFor="gear-booking-start-date" className="block text-sm font-medium mb-2">Дата начала *</label>
                 <input
-                  type="date"
+                  id="gear-booking-start-date"
                   value={form.startDate}
                   onChange={(e) => updateForm('startDate', e.target.value)}
                   min={new Date().toISOString().split('T')[0]}
@@ -273,9 +274,9 @@ export function GearBookingForm({ gear, onBookingComplete, onCancel }: GearBooki
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Дата окончания *</label>
+                <label htmlFor="gear-booking-end-date" className="block text-sm font-medium mb-2">Дата окончания *</label>
                 <input
-                  type="date"
+                  id="gear-booking-end-date"
                   value={form.endDate}
                   onChange={(e) => updateForm('endDate', e.target.value)}
                   min={form.startDate}
@@ -288,9 +289,9 @@ export function GearBookingForm({ gear, onBookingComplete, onCancel }: GearBooki
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Количество *</label>
+              <label htmlFor="gear-quantity" className="block text-sm font-medium mb-2">Количество *</label>
               <input
-                type="number"
+                id="gear-quantity"
                 min="1"
                 max={gear.availableQuantity}
                 value={form.quantity}
@@ -303,8 +304,9 @@ export function GearBookingForm({ gear, onBookingComplete, onCancel }: GearBooki
             </div>
 
             <div>
-              <label className="flex items-center gap-3">
+              <label htmlFor="gear-insurance" className="flex items-center gap-3">
                 <input
+                  id="gear-insurance"
                   type="checkbox"
                   checked={form.insurance}
                   onChange={(e) => updateForm('insurance', e.target.checked)}
@@ -315,8 +317,9 @@ export function GearBookingForm({ gear, onBookingComplete, onCancel }: GearBooki
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Комментарии</label>
+              <label htmlFor="gear-comments" className="block text-sm font-medium mb-2">Комментарии</label>
               <textarea
+                id="gear-comments"
                 value={form.comments}
                 onChange={(e) => updateForm('comments', e.target.value)}
                 className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold resize-none"

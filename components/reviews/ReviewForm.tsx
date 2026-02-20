@@ -10,6 +10,46 @@ interface ReviewFormProps {
   onCancel?: () => void;
 }
 
+// Вынесенный компонент для рейтинга звёзд с hover эффектом
+function StarRatingWithHover({ 
+  rating, 
+  hoveredRating,
+  onChange,
+  onHover 
+}: { 
+  rating: number; 
+  hoveredRating: number;
+  onChange: (r: number) => void;
+  onHover: (r: number) => void;
+}) {
+  const labels = ['', 'Ужасно', 'Плохо', 'Нормально', 'Хорошо', 'Отлично!'];
+  return (
+    <div className="flex items-center gap-1 mb-4">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          key={star}
+          type="button"
+          onClick={() => onChange(star)}
+          onMouseEnter={() => onHover(star)}
+          onMouseLeave={() => onHover(0)}
+          className="text-3xl focus:outline-none transition-transform hover:scale-110"
+        >
+          <span className={
+            star <= (hoveredRating || rating)
+              ? 'text-yellow-400'
+              : 'text-gray-600'
+          }>
+            ★
+          </span>
+        </button>
+      ))}
+      <span className="ml-3 text-white/70">
+        {labels[hoveredRating || rating]}
+      </span>
+    </div>
+  );
+}
+
 export function ReviewForm({
   tourId,
   accommodationId,
@@ -69,34 +109,6 @@ export function ReviewForm({
     }
   };
 
-  const renderStars = () => {
-    return (
-      <div className="flex items-center gap-1 mb-4">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <button
-            key={star}
-            type="button"
-            onClick={() => setRating(star)}
-            onMouseEnter={() => setHoveredRating(star)}
-            onMouseLeave={() => setHoveredRating(0)}
-            className="text-3xl focus:outline-none transition-transform hover:scale-110"
-          >
-            <span className={
-              star <= (hoveredRating || rating)
-                ? 'text-yellow-400'
-                : 'text-gray-600'
-            }>
-              
-            </span>
-          </button>
-        ))}
-        <span className="ml-3 text-white/70">
-          {rating === 5 ? 'Отлично!' : rating === 4 ? 'Хорошо' : rating === 3 ? 'Нормально' : rating === 2 ? 'Плохо' : 'Ужасно'}
-        </span>
-      </div>
-    );
-  };
-
   return (
     <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
       <h3 className="text-xl font-semibold text-white mb-6">Оставить отзыв</h3>
@@ -110,14 +122,20 @@ export function ReviewForm({
 
         {/* Рейтинг */}
         <div>
-          <label className="block text-white/70 mb-2">Ваша оценка</label>
-          {renderStars()}
+          <span className="block text-white/70 mb-2">Ваша оценка</span>
+          <StarRatingWithHover 
+            rating={rating} 
+            hoveredRating={hoveredRating}
+            onChange={setRating}
+            onHover={setHoveredRating}
+          />
         </div>
 
         {/* Комментарий */}
         <div>
-          <label className="block text-white/70 mb-2">Ваш отзыв</label>
+          <label htmlFor="review-comment" className="block text-white/70 mb-2">Ваш отзыв</label>
           <textarea
+            id="review-comment"
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             placeholder="Расскажите о вашем опыте..."

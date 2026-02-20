@@ -74,9 +74,9 @@ export default function AISmartSearch() {
       
       {/* Quick Categories */}
       <div className="mt-3 flex flex-wrap gap-2 justify-center">
-        {searchCategories.map((cat, i) => (
+        {searchCategories.map((cat) => (
           <button 
-            key={i}
+            key={cat.label}
             onClick={() => {
               setSearchQuery(cat.label);
               handleAISearch();

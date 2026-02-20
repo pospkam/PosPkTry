@@ -283,11 +283,11 @@ function EmailTemplateForm({ template, onSave, onCancel }: EmailTemplateFormProp
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-white font-medium mb-2">
+            <label htmlFor="template-name" className="block text-white font-medium mb-2">
               Название <span className="text-red-400">*</span>
             </label>
             <input
-              type="text"
+              id="template-name"
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
               className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
@@ -296,10 +296,11 @@ function EmailTemplateForm({ template, onSave, onCancel }: EmailTemplateFormProp
           </div>
 
           <div>
-            <label className="block text-white font-medium mb-2">
+            <label htmlFor="template-type" className="block text-white font-medium mb-2">
               Тип <span className="text-red-400">*</span>
             </label>
             <select
+              id="template-type"
               value={formData.type}
               onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value }))}
               className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
@@ -316,11 +317,11 @@ function EmailTemplateForm({ template, onSave, onCancel }: EmailTemplateFormProp
         </div>
 
         <div>
-          <label className="block text-white font-medium mb-2">
+          <label htmlFor="template-subject" className="block text-white font-medium mb-2">
             Тема письма <span className="text-red-400">*</span>
           </label>
           <input
-            type="text"
+            id="template-subject"
             value={formData.subject}
             onChange={(e) => setFormData(prev => ({ ...prev, subject: e.target.value }))}
             className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
@@ -329,10 +330,11 @@ function EmailTemplateForm({ template, onSave, onCancel }: EmailTemplateFormProp
         </div>
 
         <div>
-          <label className="block text-white font-medium mb-2">
+          <label htmlFor="template-html" className="block text-white font-medium mb-2">
             HTML контент <span className="text-red-400">*</span>
           </label>
           <textarea
+            id="template-html"
             value={formData.htmlContent}
             onChange={(e) => setFormData(prev => ({ ...prev, htmlContent: e.target.value }))}
             rows={10}
@@ -343,10 +345,11 @@ function EmailTemplateForm({ template, onSave, onCancel }: EmailTemplateFormProp
         </div>
 
         <div>
-          <label className="block text-white font-medium mb-2">
+          <label htmlFor="template-text" className="block text-white font-medium mb-2">
             Text версия (опционально)
           </label>
           <textarea
+            id="template-text"
             value={formData.textContent}
             onChange={(e) => setFormData(prev => ({ ...prev, textContent: e.target.value }))}
             rows={5}
@@ -356,11 +359,12 @@ function EmailTemplateForm({ template, onSave, onCancel }: EmailTemplateFormProp
         </div>
 
         <div>
-          <label className="block text-white font-medium mb-2">
+          <label htmlFor="template-variable-input" className="block text-white font-medium mb-2">
             Переменные шаблона
           </label>
           <div className="flex gap-2 mb-3">
             <input
+              id="template-variable-input"
               type="text"
               value={newVariable}
               onChange={(e) => setNewVariable(e.target.value)}

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { fetchYandexWeather, getTimeOfDay, needsWeatherAnimation, type WeatherData } from '@/lib/weather/yandex-weather';
+import { Sun, Moon, Stars, Rain, Snow, Wind, Thunder } from '@/components/weather/WeatherEffects';
 
 export default function SamsungWeatherDynamic() {
   const [timeOfDay, setTimeOfDay] = useState<string>('day');
@@ -41,113 +42,6 @@ export default function SamsungWeatherDynamic() {
     return () => clearInterval(interval);
   }, []);
 
-  // Рендер дождя
-  const renderRain = () => {
-    if (!animations.rain) return null;
-
-    const drops = Array.from({ length: 100 }, (_, i) => (
-      <div
-        key={i}
-        className="rain-drop"
-        style={{
-          left: `${Math.random() * 100}%`,
-          animationDuration: `${0.3 + Math.random() * 0.3}s`,
-          animationDelay: `${Math.random() * 2}s`,
-        }}
-      />
-    ));
-
-    return <div className="rain-container">{drops}</div>;
-  };
-
-  // Рендер снега
-  const renderSnow = () => {
-    if (!animations.snow) return null;
-
-    const flakes = Array.from({ length: 50 }, (_, i) => (
-      <div
-        key={i}
-        className="snowflake"
-        style={{
-          left: `${Math.random() * 100}%`,
-          animationDuration: `${3 + Math.random() * 3}s, ${2 + Math.random() * 2}s`,
-          animationDelay: `${Math.random() * 5}s`,
-          width: `${8 + Math.random() * 8}px`,
-          height: `${8 + Math.random() * 8}px`,
-        }}
-      />
-    ));
-
-    return <div className="snow-container">{flakes}</div>;
-  };
-
-  // Рендер ветра
-  const renderWind = () => {
-    if (!animations.wind) return null;
-
-    const lines = Array.from({ length: 15 }, (_, i) => (
-      <div
-        key={i}
-        className="wind-line"
-        style={{
-          top: `${Math.random() * 100}%`,
-          animationDuration: `${1 + Math.random() * 2}s`,
-          animationDelay: `${Math.random() * 3}s`,
-          width: `${100 + Math.random() * 100}px`,
-        }}
-      />
-    ));
-
-    return <div className={`wind-container ${weather?.windSpeed && weather.windSpeed > 10 ? 'wind-strong' : 'wind-light'}`}>{lines}</div>;
-  };
-
-  // Рендер грозы
-  const renderThunder = () => {
-    if (!animations.thunder) return null;
-
-    return (
-      <div
-        className="thunder-flash"
-        style={{
-          animation: 'thunder-strike 0.3s ease-out infinite',
-          animationDelay: `${Math.random() * 5}s`,
-        }}
-      />
-    );
-  };
-
-  // Рендер солнца (утро/день)
-  const renderSun = () => {
-    if (timeOfDay === 'evening' || timeOfDay === 'night') return null;
-    return <div className="sun" />;
-  };
-
-  // Рендер луны (ночь)
-  const renderMoon = () => {
-    if (timeOfDay !== 'night') return null;
-    return <div className="moon" />;
-  };
-
-  // Рендер звезд (ночь)
-  const renderStars = () => {
-    if (timeOfDay !== 'night') return null;
-
-    const stars = Array.from({ length: 100 }, (_, i) => (
-      <div
-        key={i}
-        className="star"
-        style={{
-          left: `${Math.random() * 100}%`,
-          top: `${Math.random() * 60}%`,
-          animationDuration: `${2 + Math.random() * 3}s`,
-          animationDelay: `${Math.random() * 5}s`,
-        }}
-      />
-    ));
-
-    return <div className="stars-container">{stars}</div>;
-  };
-
   return (
     <>
       {/* Основной фон с градиентом */}
@@ -162,17 +56,17 @@ export default function SamsungWeatherDynamic() {
       </div>
 
       {/* Солнце или луна */}
-      {renderSun()}
-      {renderMoon()}
+      <Sun timeOfDay={timeOfDay as 'morning' | 'day' | 'evening' | 'night'} />
+      <Moon timeOfDay={timeOfDay as 'morning' | 'day' | 'evening' | 'night'} />
 
-      {/* Звезды (только ночью) */}
-      {renderStars()}
+      {/* Звёзды (только ночью) */}
+      <Stars timeOfDay={timeOfDay as 'morning' | 'day' | 'evening' | 'night'} />
 
       {/* Погодные анимации */}
-      {renderRain()}
-      {renderSnow()}
-      {renderWind()}
-      {renderThunder()}
+      <Rain animations={animations} />
+      <Snow animations={animations} />
+      <Wind animations={animations} windSpeed={weather?.windSpeed} />
+      <Thunder animations={animations} />
 
       {/* ВИДЖЕТ ПОГОДЫ - ВИДИМЫЙ */}
       {weather && (

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { Review } from '@/types';
 
 interface ReviewListProps {
@@ -77,12 +78,14 @@ export function ReviewList({ reviews, showAddButton, onAddReview }: ReviewListPr
             {/* Images */}
             {review.images && review.images.length > 0 && (
               <div className="grid grid-cols-4 gap-2 mt-4">
-                {review.images.map((image, idx) => (
-                  <img
-                    key={idx}
+                {review.images.map((image) => (
+                  <Image
+                    key={image.url}
                     src={image.url}
-                    alt={image.alt || `Review image ${idx + 1}`}
-                    className="w-full h-24 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                    alt={image.alt || `Review image`}
+                    fill
+                    className="object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                    sizes="(max-width: 768px) 25vw, 10vw"
                   />
                 ))}
               </div>

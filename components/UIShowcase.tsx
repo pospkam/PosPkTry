@@ -73,8 +73,9 @@ export function UIShowcase() {
           <h2 className="text-2xl font-bold text-premium-gold">3. Улучшенные Input&apos;ы</h2>
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm mb-2">Обычный input</label>
+              <label htmlFor="regular-input" className="block text-sm mb-2">Обычный input</label>
               <input
+                id="regular-input"
                 type="text"
                 placeholder="Введите текст..."
                 className="input-premium"
@@ -212,8 +213,18 @@ export function UIShowcase() {
             Открыть модальное окно
           </button>
           {showModal && (
-            <div className="modal-overlay" onClick={() => setShowModal(false)}>
-              <div className="modal-content p-8" onClick={(e) => e.stopPropagation()}>
+            <div 
+              className="modal-overlay" 
+              onClick={() => setShowModal(false)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') setShowModal(false);
+                if (e.key === 'Enter') setShowModal(false);
+              }}
+              aria-label="Закрыть модальное окно"
+            >
+              <div className="modal-content p-8" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
                 <h3 className="text-2xl font-bold mb-4">Модальное окно</h3>
                 <p className="text-white/70 mb-6">
                   Это пример красивого модального окна с плавной анимацией
@@ -259,8 +270,8 @@ export function UIShowcase() {
         <section className="card-premium space-y-4">
           <h2 className="text-2xl font-bold text-premium-gold">12. Иконки в кружочках</h2>
           <div className="flex flex-wrap gap-4">
-            {[' ', ' ', '', '', ' ', ''].map((emoji, i) => (
-              <div key={i} className="icon-circle hover-scale">
+            {['🎯', '⭐', '🔥', '💎', '🎁', '🚀'].map((emoji, iconIndex) => (
+              <div key={`icon-${iconIndex}`} className="icon-circle hover-scale">
                 {emoji}
               </div>
             ))}

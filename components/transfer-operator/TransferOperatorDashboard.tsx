@@ -41,8 +41,8 @@ export function TransferOperatorDashboard({ data }: TransferOperatorDashboardPro
                 </tr>
               </thead>
               <tbody>
-                {data.recentBookings.map((booking: any, index: number) => (
-                  <tr key={index} className="border-b border-white/5 hover:bg-white/5">
+                {data.recentBookings.map((booking: any) => (
+                  <tr key={booking.id} className="border-b border-white/5 hover:bg-white/5">
                     <td className="py-3 px-4">#{booking.id?.substring(0, 8)}</td>
                     <td className="py-3 px-4">{booking.customer_name}</td>
                     <td className="py-3 px-4">{booking.route_name}</td>

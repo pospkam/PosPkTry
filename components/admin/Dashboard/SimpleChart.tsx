@@ -58,10 +58,10 @@ export function SimpleChart({
       
       {type === 'bar' && (
         <div className="space-y-4">
-          {data.map((point, index) => {
+          {data.map((point) => {
             const percentage = maxValue > 0 ? (point.value / maxValue) * 100 : 0;
             return (
-              <div key={index}>
+              <div key={point.label}>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm text-white/70">{point.label}</span>
                   <span className="text-sm font-bold text-white">
@@ -96,17 +96,17 @@ export function SimpleChart({
           <div className="ml-14 h-full relative">
             {/* Grid lines */}
             <div className="absolute inset-0 flex flex-col justify-between">
-              {[0, 1, 2, 3, 4].map((i) => (
-                <div key={i} className="border-t border-white/5" />
+              {[0, 1, 2, 3, 4].map((gridIndex) => (
+                <div key={`grid-line-${gridIndex}`} className="border-t border-white/5" />
               ))}
             </div>
 
             {/* Data points and lines */}
             <div className="absolute inset-0 flex items-end justify-between">
-              {data.map((point, index) => {
+              {data.map((point) => {
                 const height = maxValue > 0 ? (point.value / maxValue) * 100 : 0;
                 return (
-                  <div key={index} className="flex-1 flex flex-col items-center">
+                  <div key={point.label} className="flex-1 flex flex-col items-center">
                     <div className="relative w-full flex items-end justify-center" style={{ height: '100%' }}>
                       {/* Point */}
                       <div
@@ -127,8 +127,8 @@ export function SimpleChart({
 
             {/* X-axis labels */}
             <div className="absolute -bottom-6 left-0 right-0 flex justify-between text-xs text-white/50">
-              {data.map((point, index) => (
-                <span key={index} className="transform -rotate-45 origin-left">
+              {data.map((point) => (
+                <span key={point.label} className="transform -rotate-45 origin-left">
                   {point.label}
                 </span>
               ))}

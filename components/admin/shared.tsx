@@ -31,9 +31,9 @@ export function DataTable<T extends { id: string }>({ columns, data, onRowClick 
       <table className="w-full">
         <thead className="bg-[#2C1810]/40 border-b border-[#CD853F]/30">
           <tr>
-            {columns.map((col, idx) => (
+            {columns.map((col) => (
               <th
-                key={idx}
+                key={col.key}
                 className="px-6 py-4 text-left text-xs font-bold text-[#E8D4B0] uppercase tracking-wider"
               >
                 {col.header || col.title || String(col.key)}
@@ -50,8 +50,8 @@ export function DataTable<T extends { id: string }>({ columns, data, onRowClick 
                 onRowClick ? 'cursor-pointer' : ''
               }`}
             >
-              {columns.map((col, idx) => (
-                <td key={idx} className="px-6 py-4 text-sm text-white/90">
+              {columns.map((col) => (
+                <td key={col.key} className="px-6 py-4 text-sm text-white/90">
                   {col.render ? col.render(item) : String(item[col.key as keyof T] || '—')}
                 </td>
               ))}

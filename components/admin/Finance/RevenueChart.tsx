@@ -100,7 +100,7 @@ export function RevenueChart({ period = '30', type = 'all' }: RevenueChartProps)
           {/* График */}
           <div className="relative">
             <div className="flex items-end justify-between h-64 gap-1">
-              {dailyData.slice(-14).map((day, index) => (
+              {dailyData.slice(-14).map((day, dayIdx) => (
                 <div key={day.date} className="flex-1 flex flex-col items-center">
                   {/* Столбец дохода */}
                   <div className="relative w-full flex flex-col items-center">

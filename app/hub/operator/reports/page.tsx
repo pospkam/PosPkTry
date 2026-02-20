@@ -131,8 +131,9 @@ export default function ReportsPage() {
               <h2 className="text-xl font-bold mb-4">Параметры</h2>
               <div className="bg-white/10 border border-white/20 rounded-2xl p-6 space-y-6">
                 <div>
-                  <label className="block text-sm text-white/70 mb-2">Дата начала</label>
+                  <label htmlFor="report-date-from" className="block text-sm text-white/70 mb-2">Дата начала</label>
                   <input
+                    id="report-date-from"
                     type="date"
                     value={dateFrom}
                     onChange={(e) => setDateFrom(e.target.value)}
@@ -140,8 +141,9 @@ export default function ReportsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-white/70 mb-2">Дата окончания</label>
+                  <label htmlFor="report-date-to" className="block text-sm text-white/70 mb-2">Дата окончания</label>
                   <input
+                    id="report-date-to"
                     type="date"
                     value={dateTo}
                     onChange={(e) => setDateTo(e.target.value)}
@@ -189,8 +191,8 @@ export default function ReportsPage() {
                     { name: 'Финансовый отчет', date: '01.02.2026', size: '245 KB' },
                     { name: 'Отчет по бронированиям', date: '28.01.2026', size: '128 KB' },
                     { name: 'Сводный отчет', date: '15.01.2026', size: '512 KB' },
-                  ].map((report, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
+                  ].map((report) => (
+                    <div key={report.name} className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
                       <div className="flex items-center gap-3">
                         <FileText className="w-5 h-5 text-white/50" />
                         <div>

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { 
   Fish, 
   MapPin, 
@@ -92,10 +93,12 @@ export function FishingTourCard({ tour, onBook }: FishingTourCardProps) {
       {/* Image Section */}
       <div className="relative h-52 overflow-hidden">
         {tour.images && tour.images.length > 0 ? (
-          <img
+          <Image
             src={tour.images[0]}
             alt={tour.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-500"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-blue-900 to-cyan-800 flex items-center justify-center">
@@ -132,9 +135,9 @@ export function FishingTourCard({ tour, onBook }: FishingTourCardProps) {
         {/* Fish Types */}
         <div className="absolute bottom-3 left-3 right-3">
           <div className="flex flex-wrap gap-1">
-            {tour.fishTypes.slice(0, 4).map((fish, i) => (
+            {tour.fishTypes.slice(0, 4).map((fish) => (
               <span 
-                key={i}
+                key={fish}
                 className="px-2 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs text-white flex items-center gap-1"
               >
                 <span>{fishIcons[fish.toLowerCase()] || fishIcons.default}</span>

@@ -5,6 +5,11 @@ import { Protected } from '@/components/Protected';
 import { LoadingSpinner } from '@/components/admin/shared';
 import { User } from '@/types';
 
+export const metadata = {
+  title: 'Профиль пользователя | Kamhub',
+  description: 'Управление профилем и настройками аккаунта на Kamhub',
+};
+
 export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -145,8 +150,9 @@ export default function ProfilePage() {
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-white/70 mb-2">Имя</label>
+                  <label htmlFor="profile-name" className="block text-white/70 mb-2">Имя</label>
                   <input
+                    id="profile-name"
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -156,8 +162,9 @@ export default function ProfilePage() {
                 </div>
 
                 <div>
-                  <label className="block text-white/70 mb-2">Email</label>
+                  <label htmlFor="profile-email" className="block text-white/70 mb-2">Email</label>
                   <input
+                    id="profile-email"
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -167,8 +174,9 @@ export default function ProfilePage() {
                 </div>
 
                 <div>
-                  <label className="block text-white/70 mb-2">Телефон</label>
+                  <label htmlFor="profile-phone" className="block text-white/70 mb-2">Телефон</label>
                   <input
+                    id="profile-phone"
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -185,7 +193,7 @@ export default function ProfilePage() {
               
               {/* Интересы */}
               <div className="mb-6">
-                <label className="block text-white/70 mb-3">Интересы</label>
+                <span className="block text-white/70 mb-3">Интересы</span>
                 <div className="flex flex-wrap gap-2">
                   {popularInterests.map((interest) => (
                     <button
@@ -206,9 +214,9 @@ export default function ProfilePage() {
 
               {/* Бюджет */}
               <div className="mb-6">
-                <label className="block text-white/70 mb-3">
+                <span className="block text-white/70 mb-3">
                   Бюджет на путешествие: {formData.preferences.budget.min.toLocaleString('ru-RU')} - {formData.preferences.budget.max.toLocaleString('ru-RU')} ₽
-                </label>
+                </span>
                 <div className="flex gap-4">
                   <input
                     type="range"
@@ -230,7 +238,7 @@ export default function ProfilePage() {
 
               {/* Сложность */}
               <div>
-                <label className="block text-white/70 mb-3">Предпочитаемая сложность</label>
+                <span className="block text-white/70 mb-3">Предпочитаемая сложность</span>
                 <div className="flex gap-3">
                   {(['easy', 'medium', 'hard'] as const).map((diff) => (
                     <button

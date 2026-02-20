@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { AdminProtected } from '@/components/AdminProtected';
 import { AdminNav } from '@/components/admin/AdminNav';
 import { Partner } from '@/types';
@@ -89,11 +90,15 @@ export default function PartnersManagement() {
       render: (partner) => (
         <div className="flex items-center">
           {partner.logo && (
-            <img
-              src={partner.logo.url}
-              alt={partner.name}
-              className="w-10 h-10 rounded-lg mr-3 object-cover"
-            />
+            <div className="w-10 h-10 rounded-lg mr-3 relative overflow-hidden">
+              <Image
+                src={partner.logo.url}
+                alt={partner.name}
+                fill
+                className="object-cover"
+                sizes="40px"
+              />
+            </div>
           )}
           <div>
             <p className="font-semibold text-white">{partner.name}</p>
@@ -106,7 +111,7 @@ export default function PartnersManagement() {
       key: 'contact',
       title: 'Контакт',
       render: (partner) => (
-        <span className="text-white/80">{partner.contact || '—'}</span>
+        <span className="text-white/80">{partner.contact?.phone || '—'}</span>
       )
     },
     {

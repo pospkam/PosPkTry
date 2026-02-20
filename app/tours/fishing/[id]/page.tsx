@@ -127,10 +127,10 @@ export default function FishingTourDetailPage() {
                 </div>
               </div>
               <div className="grid grid-cols-4 gap-3">
-                {[1, 2, 3, 4].map((_, i) => (
+                {[1, 2, 3, 4].map((num) => (
                   <button
-                    key={i}
-                    onClick={() => setSelectedImage(i)}
+                    key={`img-${num}`}
+                    onClick={() => setSelectedImage(num - 1)}
                     className={`aspect-video bg-white/10 rounded-xl overflow-hidden border-2 transition-colors ${
                       selectedImage === i ? 'border-premium-gold' : 'border-transparent'
                     }`}
@@ -149,8 +149,8 @@ export default function FishingTourDetailPage() {
                 <span className={`px-3 py-1 rounded-full text-sm font-bold ${difficulty.color}`}>
                   {difficulty.text}
                 </span>
-                {tourData.fishTypes.map((fish, i) => (
-                  <span key={i} className="px-3 py-1 rounded-full text-sm bg-blue-500/20 text-blue-400">
+                {tourData.fishTypes.map((fish) => (
+                  <span key={fish} className="px-3 py-1 rounded-full text-sm bg-blue-500/20 text-blue-400">
                     🐟 {fish}
                   </span>
                 ))}
@@ -199,8 +199,8 @@ export default function FishingTourDetailPage() {
             <div className="bg-white/5 rounded-2xl p-6">
               <h2 className="text-xl font-bold mb-4">Что включено</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {tourData.includes.map((item, i) => (
-                  <div key={i} className="flex items-start gap-3">
+                {tourData.includes.map((item) => (
+                  <div key={item} className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-green-400 shrink-0 mt-0.5" />
                     <span className="text-white/80">{item}</span>
                   </div>
@@ -212,8 +212,8 @@ export default function FishingTourDetailPage() {
             <div className="bg-white/5 rounded-2xl p-6">
               <h2 className="text-xl font-bold mb-4">Что взять с собой</h2>
               <div className="space-y-3">
-                {tourData.requirements.map((item, i) => (
-                  <div key={i} className="flex items-start gap-3">
+                {tourData.requirements.map((item) => (
+                  <div key={item} className="flex items-start gap-3">
                     <AlertTriangle className="w-5 h-5 text-yellow-400 shrink-0 mt-0.5" />
                     <span className="text-white/80">{item}</span>
                   </div>

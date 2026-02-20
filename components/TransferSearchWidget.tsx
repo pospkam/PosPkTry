@@ -115,11 +115,11 @@ export function TransferSearchWidget({ className, onSearchResults }: TransferSea
       {/* Основные поля поиска */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div>
-          <label className="block text-sm font-medium text-white mb-2">
+          <label htmlFor="transfer-from" className="block text-sm font-medium text-white mb-2">
             Откуда *
           </label>
           <input
-            type="text"
+            id="transfer-from"
             value={searchParams.from}
             onChange={(e) => updateSearchParam('from', e.target.value)}
             placeholder="Аэропорт, отель, адрес..."
@@ -128,11 +128,11 @@ export function TransferSearchWidget({ className, onSearchResults }: TransferSea
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-white mb-2">
+          <label htmlFor="transfer-to" className="block text-sm font-medium text-white mb-2">
             Куда *
           </label>
           <input
-            type="text"
+            id="transfer-to"
             value={searchParams.to}
             onChange={(e) => updateSearchParam('to', e.target.value)}
             placeholder="Аэропорт, отель, адрес..."
@@ -141,11 +141,11 @@ export function TransferSearchWidget({ className, onSearchResults }: TransferSea
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-white mb-2">
+          <label htmlFor="transfer-date" className="block text-sm font-medium text-white mb-2">
             Дата *
           </label>
           <input
-            type="date"
+            id="transfer-date"
             value={searchParams.date}
             onChange={(e) => updateSearchParam('date', e.target.value)}
             min={new Date().toISOString().split('T')[0]}
@@ -154,10 +154,11 @@ export function TransferSearchWidget({ className, onSearchResults }: TransferSea
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-white mb-2">
+          <label htmlFor="transfer-passengers" className="block text-sm font-medium text-white mb-2">
             Пассажиры *
           </label>
           <select
+            id="transfer-passengers"
             value={searchParams.passengers}
             onChange={(e) => updateSearchParam('passengers', parseInt(e.target.value))}
             className="w-full px-4 py-3 bg-premium-black/50 border border-premium-gold/30 rounded-xl text-white focus:border-premium-gold focus:outline-none transition-colors"
@@ -191,10 +192,11 @@ export function TransferSearchWidget({ className, onSearchResults }: TransferSea
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6 p-4 bg-premium-black/30 rounded-xl border border-premium-gold/10">
           {/* Тип транспорта */}
           <div>
-            <label className="block text-sm font-medium text-white mb-3">
+            <label htmlFor="transfer-vehicle-type" className="block text-sm font-medium text-white mb-3">
               Тип транспорта
             </label>
             <select
+              id="transfer-vehicle-type"
               value={searchParams.vehicleType || ''}
               onChange={(e) => updateSearchParam('vehicleType', e.target.value || undefined)}
               className="w-full px-4 py-3 bg-premium-black/50 border border-premium-gold/30 rounded-xl text-white focus:border-premium-gold focus:outline-none transition-colors"
@@ -210,9 +212,9 @@ export function TransferSearchWidget({ className, onSearchResults }: TransferSea
 
           {/* Бюджет */}
           <div>
-            <label className="block text-sm font-medium text-white mb-3">
+            <span className="block text-sm font-medium text-white mb-3">
               Бюджет (руб.)
-            </label>
+            </span>
             <div className="grid grid-cols-2 gap-2">
               <input
                 type="number"
@@ -233,9 +235,9 @@ export function TransferSearchWidget({ className, onSearchResults }: TransferSea
 
           {/* Функции */}
           <div>
-            <label className="block text-sm font-medium text-white mb-3">
+            <span className="block text-sm font-medium text-white mb-3">
               Функции
-            </label>
+            </span>
             <div className="space-y-2">
               {[
                 { key: 'wifi', label: 'Wi-Fi' },
@@ -258,9 +260,9 @@ export function TransferSearchWidget({ className, onSearchResults }: TransferSea
 
           {/* Языки водителя */}
           <div>
-            <label className="block text-sm font-medium text-white mb-3">
+            <span className="block text-sm font-medium text-white mb-3">
               Языки водителя
-            </label>
+            </span>
             <div className="space-y-2">
               {[
                 { key: 'ru', label: 'Русский' },
@@ -318,8 +320,8 @@ export function TransferSearchWidget({ className, onSearchResults }: TransferSea
             Найдено трансферов: {searchResults.length}
           </h3>
           <div className="space-y-4">
-            {searchResults.map((transfer, index) => (
-              <TransferCard key={index} transfer={transfer} />
+            {searchResults.map((transfer) => (
+              <TransferCard key={transfer.id || transfer.scheduleId} transfer={transfer} />
             ))}
           </div>
         </div>

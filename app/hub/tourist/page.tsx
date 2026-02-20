@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Tour, Weather } from '@/types';
 import { AIChatWidget } from '@/components/AIChatWidget';
 import { TransferSearchWidget } from '@/components/TransferSearchWidget';
@@ -112,7 +113,7 @@ export default function TouristDashboard() {
     <div className="min-h-screen bg-transparent">
       <TouristNav />
       {/* Header */}
-      <div className="bg-white/15 backdrop-blur-2xl border-b border-white/15" style={{ backdropFilter: 'blur(20px)' }}>
+      <div className="bg-white/15 backdrop-blur-2xl border-b border-white/15" style={{ backdropFilter: 'blur(10px)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
@@ -161,8 +162,9 @@ export default function TouristDashboard() {
               <h3 className="text-xl font-bold text-white mb-4">Фильтры</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-white/70 mb-2">Активность</label>
+                  <label htmlFor="filter-activity" className="block text-sm font-medium text-white/70 mb-2">Активность</label>
                   <select
+                    id="filter-activity"
                     value={filters.activity}
                     onChange={(e) => setFilters({ ...filters, activity: e.target.value })}
                     className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300"
@@ -177,8 +179,9 @@ export default function TouristDashboard() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-white/70 mb-2">Сложность</label>
+                  <label htmlFor="filter-difficulty" className="block text-sm font-medium text-white/70 mb-2">Сложность</label>
                   <select
+                    id="filter-difficulty"
                     value={filters.difficulty}
                     onChange={(e) => setFilters({ ...filters, difficulty: e.target.value })}
                     className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300"
@@ -190,8 +193,9 @@ export default function TouristDashboard() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-white/70 mb-2">Цена до</label>
+                  <label htmlFor="filter-price" className="block text-sm font-medium text-white/70 mb-2">Цена до</label>
                   <input
+                    id="filter-price"
                     type="number"
                     value={filters.priceRange[1]}
                     onChange={(e) => setFilters({ ...filters, priceRange: [filters.priceRange[0], parseInt(e.target.value)] })}
@@ -205,13 +209,15 @@ export default function TouristDashboard() {
             {/* Tours Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {tours.map((tour) => (
-                <div key={tour.id} className="bg-white/15 rounded-2xl overflow-hidden border border-white/15 hover:border-white/50 transition-colors" style={{ backdropFilter: 'blur(20px)' }}>
+                <div key={tour.id} className="bg-white/15 rounded-2xl overflow-hidden border border-white/15 hover:border-white/50 transition-colors" style={{ backdropFilter: 'blur(10px)' }}>
                   <div className="aspect-video bg-gradient-to-br from-blue-500/20 to-cyan-500/20 relative">
                     {tour.images && tour.images.length > 0 ? (
-                      <img
+                      <Image
                         src={tour.images[0]}
                         alt={tour.title}
-                        className="w-full h-full object-cover"
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
@@ -321,8 +327,8 @@ export default function TouristDashboard() {
                 </div>
                 
                 <div className="space-y-2">
-                  {weather.recommendations?.map((rec, index) => (
-                    <div key={index} className="text-white/70 text-sm">
+                  {weather.recommendations?.map((rec) => (
+                    <div key={rec} className="text-white/70 text-sm">
                       {rec}
                     </div>
                   ))}
@@ -335,8 +341,8 @@ export default function TouristDashboard() {
               <div className="bg-white/15 rounded-2xl p-6">
                 <h3 className="text-xl font-bold text-white mb-6">Прогноз на неделю</h3>
                 <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
-                  {weather.forecast.map((day, index) => (
-                    <div key={index} className="text-center">
+                  {weather.forecast.map((day) => (
+                    <div key={day.date.toISOString()} className="text-center">
                       <div className="text-sm text-white/70 mb-2">
                         {day.date.toLocaleDateString('ru-RU', { weekday: 'short' })}
                       </div>

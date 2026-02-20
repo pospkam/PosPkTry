@@ -288,3 +288,24 @@ export async function closePool(): Promise<void> {
 
 // Экспорт пула для прямого использования
 export { pool };
+
+// Re-export services from pillars
+// Note: These services are maintained in pillars/ directory
+
+// Wishlist service
+export {
+  wishlistService,
+  WishlistService
+} from '@/pillars/engagement-pillar/lib/wishlist/services';
+
+// Payment service  
+export {
+  paymentService,
+  PaymentService
+} from '@/pillars/booking-pillar/lib/payment/services';
+
+// Ticket service (support)
+export {
+  ticketService,
+  TicketService
+} from '@/pillars/support-pillar/services/ticket.service';

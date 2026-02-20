@@ -234,8 +234,8 @@ export default function GuideDashboard() {
                   <div>
                     <h5 className="text-lg font-bold text-white mb-3">Участники группы</h5>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {group.participants.map((participant, index) => (
-                        <div key={index} className="bg-white/15 rounded-xl p-4">
+                      {group.participants.map((participant) => (
+                        <div key={participant.phone} className="bg-white/15 rounded-xl p-4">
                           <div className="flex items-center justify-between mb-2">
                             <h6 className="text-white font-bold">{participant.name}</h6>
                             <span className={`px-2 py-1 rounded-full text-xs ${
@@ -256,8 +256,8 @@ export default function GuideDashboard() {
                     <div>
                       <h5 className="text-lg font-bold text-white mb-3">Особые требования</h5>
                       <div className="space-y-2">
-                        {group.specialRequirements.map((req, index) => (
-                          <div key={index} className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                        {group.specialRequirements.map((req) => (
+                          <div key={req} className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
                             <p className="text-yellow-400 text-sm">⚠️ {req}</p>
                           </div>
                         ))}
@@ -342,7 +342,7 @@ export default function GuideDashboard() {
               <div className="bg-white/15 rounded-2xl p-6 border border-white/15">
                 <h4 className="text-lg font-bold text-white mb-4">Доходы по месяцам</h4>
                 <div className="space-y-3">
-                  {['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь'].map((month, index) => (
+                  {['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь'].map((month, monthIdx) => (
                     <div key={month} className="flex items-center justify-between">
                       <span className="text-white/70">{month}</span>
                       <div className="flex items-center space-x-3">
@@ -412,8 +412,8 @@ export default function GuideDashboard() {
                 </div>
                 
                 <div className="space-y-2">
-                  {weather.recommendations?.map((rec, index) => (
-                    <div key={index} className="text-white/70 text-sm">
+                  {weather.recommendations?.map((rec) => (
+                    <div key={rec} className="text-white/70 text-sm">
                       {rec}
                     </div>
                   ))}
@@ -433,25 +433,25 @@ export default function GuideDashboard() {
                 <h4 className="text-lg font-bold text-white mb-4">Личная информация</h4>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-white/70 text-sm mb-2">Имя</label>
+                    <label htmlFor="guide-name" className="block text-white/70 text-sm mb-2">Имя</label>
                     <input
-                      type="text"
+                      id="guide-name"
                       defaultValue="Александр Вулканов"
                       className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300"
                     />
                   </div>
                   <div>
-                    <label className="block text-white/70 text-sm mb-2">Телефон</label>
+                    <label htmlFor="guide-phone" className="block text-white/70 text-sm mb-2">Телефон</label>
                     <input
-                      type="tel"
+                      id="guide-phone"
                       defaultValue="+7 (999) 123-45-67"
                       className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300"
                     />
                   </div>
                   <div>
-                    <label className="block text-white/70 text-sm mb-2">Email</label>
+                    <label htmlFor="guide-email" className="block text-white/70 text-sm mb-2">Email</label>
                     <input
-                      type="email"
+                      id="guide-email"
                       defaultValue="alex@guide.kamchatka.ru"
                       className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300"
                     />
@@ -463,8 +463,8 @@ export default function GuideDashboard() {
                 <h4 className="text-lg font-bold text-white mb-4">Профессиональная информация</h4>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-white/70 text-sm mb-2">Специализация</label>
-                    <select className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300">
+                    <label htmlFor="guide-specialization" className="block text-white/70 text-sm mb-2">Специализация</label>
+                    <select id="guide-specialization" className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300">
                       <option>Горные походы</option>
                       <option>Экскурсии</option>
                       <option>Дикая природа</option>
@@ -472,17 +472,17 @@ export default function GuideDashboard() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-white/70 text-sm mb-2">Опыт работы</label>
+                    <label htmlFor="guide-experience" className="block text-white/70 text-sm mb-2">Опыт работы</label>
                     <input
-                      type="text"
+                      id="guide-experience"
                       defaultValue="5 лет"
                       className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300"
                     />
                   </div>
                   <div>
-                    <label className="block text-white/70 text-sm mb-2">Языки</label>
+                    <label htmlFor="guide-languages" className="block text-white/70 text-sm mb-2">Языки</label>
                     <input
-                      type="text"
+                      id="guide-languages"
                       defaultValue="Русский, Английский"
                       className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300"
                     />

@@ -4,6 +4,11 @@ import { useState } from 'react';
 import YandexMap from '@/components/YandexMap';
 import Link from 'next/link';
 
+export const metadata = {
+  title: 'Карта Камчатки | Kamhub',
+  description: 'Интерактивная карта Камчатки с достопримечательностями, вулканами, термальными источниками',
+};
+
 // Типы активностей
 type ActivityType = 'all' | 'volcano' | 'nature' | 'geyser' | 'ocean' | 'thermal';
 

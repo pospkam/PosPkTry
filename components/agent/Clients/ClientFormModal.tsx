@@ -111,11 +111,11 @@ export function ClientFormModal({ client, onClose, onSave }: ClientFormModalProp
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-white font-medium mb-2">
+              <label htmlFor="client-name" className="block text-white font-medium mb-2">
                 Имя <span className="text-red-400">*</span>
               </label>
               <input
-                type="text"
+                id="client-name"
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                 className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
@@ -124,11 +124,11 @@ export function ClientFormModal({ client, onClose, onSave }: ClientFormModalProp
             </div>
 
             <div>
-              <label className="block text-white font-medium mb-2">
+              <label htmlFor="client-email" className="block text-white font-medium mb-2">
                 Email <span className="text-red-400">*</span>
               </label>
               <input
-                type="email"
+                id="client-email"
                 value={formData.email}
                 onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                 className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
@@ -139,11 +139,11 @@ export function ClientFormModal({ client, onClose, onSave }: ClientFormModalProp
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-white font-medium mb-2">
+              <label htmlFor="client-phone" className="block text-white font-medium mb-2">
                 Телефон
               </label>
               <input
-                type="tel"
+                id="client-phone"
                 value={formData.phone}
                 onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
                 className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
@@ -152,11 +152,11 @@ export function ClientFormModal({ client, onClose, onSave }: ClientFormModalProp
             </div>
 
             <div>
-              <label className="block text-white font-medium mb-2">
+              <label htmlFor="client-company" className="block text-white font-medium mb-2">
                 Компания
               </label>
               <input
-                type="text"
+                id="client-company"
                 value={formData.company}
                 onChange={(e) => setFormData(prev => ({ ...prev, company: e.target.value }))}
                 className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
@@ -167,10 +167,11 @@ export function ClientFormModal({ client, onClose, onSave }: ClientFormModalProp
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-white font-medium mb-2">
+              <label htmlFor="client-status" className="block text-white font-medium mb-2">
                 Статус
               </label>
               <select
+                id="client-status"
                 value={formData.status}
                 onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as any }))}
                 className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
@@ -182,10 +183,11 @@ export function ClientFormModal({ client, onClose, onSave }: ClientFormModalProp
             </div>
 
             <div>
-              <label className="block text-white font-medium mb-2">
+              <label htmlFor="client-source" className="block text-white font-medium mb-2">
                 Источник
               </label>
               <select
+                id="client-source"
                 value={formData.source}
                 onChange={(e) => setFormData(prev => ({ ...prev, source: e.target.value as any }))}
                 className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
@@ -200,10 +202,11 @@ export function ClientFormModal({ client, onClose, onSave }: ClientFormModalProp
           </div>
 
           <div>
-            <label className="block text-white font-medium mb-2">
+            <label htmlFor="client-notes" className="block text-white font-medium mb-2">
               Заметки
             </label>
             <textarea
+              id="client-notes"
               value={formData.notes}
               onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
               rows={3}
@@ -213,9 +216,9 @@ export function ClientFormModal({ client, onClose, onSave }: ClientFormModalProp
           </div>
 
           <div>
-            <label className="block text-white font-medium mb-2">
+            <span className="block text-white font-medium mb-2">
               Теги
-            </label>
+            </span>
             <div className="flex gap-2 mb-3">
               <input
                 type="text"

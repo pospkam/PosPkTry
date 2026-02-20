@@ -152,7 +152,7 @@ export default function CalendarPage() {
 
                     return (
                       <div
-                        key={index}
+                        key={date.toISOString()}
                         className={`
                           aspect-square rounded-lg border p-2 transition-all
                           ${isPast ? 'bg-white/15 border-white/15 opacity-50' : 'bg-white/10 border-white/20'}

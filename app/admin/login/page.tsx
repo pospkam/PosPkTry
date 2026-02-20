@@ -94,12 +94,13 @@ export default function AdminLoginPage() {
           <div className="bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-2xl border border-white/20 rounded-3xl p-8 shadow-2xl">
             {/* Email Field */}
             <div className="mb-6">
-              <label className="block text-sm font-bold mb-3 text-white/90 flex items-center gap-2">
+              <label htmlFor="admin-email" className="block text-sm font-bold mb-3 text-white/90 flex items-center gap-2">
                 <Mail className="w-4 h-4" />
                 Email администратора
               </label>
               <div className="relative">
                 <input
+                  id="admin-email"
                   type="email"
                   required
                   value={formData.email}
@@ -116,12 +117,13 @@ export default function AdminLoginPage() {
 
             {/* Password Field */}
             <div className="mb-6">
-              <label className="block text-sm font-bold mb-3 text-white/90 flex items-center gap-2">
+              <label htmlFor="admin-password" className="block text-sm font-bold mb-3 text-white/90 flex items-center gap-2">
                 <Lock className="w-4 h-4" />
                 Пароль
               </label>
               <div className="relative">
                 <input
+                  id="admin-password"
                   type={showPassword ? 'text' : 'password'}
                   required
                   value={formData.password}

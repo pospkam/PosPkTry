@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { LoadingSpinner } from '@/components/admin/shared';
 
 interface ReviewFormProps {
@@ -9,6 +10,27 @@ interface ReviewFormProps {
   transferId?: string;
   onSuccess?: () => void;
   onCancel?: () => void;
+}
+
+// Вынесенный компонент для рейтинга звёзд
+function StarRating({ rating, onChange }: { rating: number; onChange: (r: number) => void }) {
+  return (
+    <div className="flex items-center gap-1 mb-4">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          key={star}
+          type="button"
+          onClick={() => onChange(star)}
+          className="text-2xl focus:outline-none"
+        >
+          <span className={star <= rating ? 'text-yellow-400' : 'text-gray-300'}>
+            ★
+          </span>
+        </button>
+      ))}
+      <span className="ml-2 text-white/70">{rating}/5</span>
+    </div>
+  );
 }
 
 export function ReviewForm({
@@ -99,26 +121,6 @@ export function ReviewForm({
     setImages(images.filter((_, i) => i !== index));
   };
 
-  const renderStars = () => {
-    return (
-      <div className="flex items-center gap-1 mb-4">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <button
-            key={star}
-            type="button"
-            onClick={() => setRating(star)}
-            className="text-2xl focus:outline-none"
-          >
-            <span className={star <= rating ? 'text-yellow-400' : 'text-gray-300'}>
-              ★
-            </span>
-          </button>
-        ))}
-        <span className="ml-2 text-white/70">{rating}/5</span>
-      </div>
-    );
-  };
-
   return (
     <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
       <h3 className="text-xl font-semibold text-white mb-6">Оставить отзыв</h3>
@@ -132,14 +134,15 @@ export function ReviewForm({
 
         {/* Рейтинг */}
         <div>
-          <label className="block text-white/70 mb-2">Ваша оценка</label>
-          {renderStars()}
+          <span className="block text-white/70 mb-2">Ваша оценка</span>
+          <StarRating rating={rating} onChange={setRating} />
         </div>
 
         {/* Комментарий */}
         <div>
-          <label className="block text-white/70 mb-2">Ваш отзыв</label>
+          <label htmlFor="review-comment" className="block text-white/70 mb-2">Ваш отзыв</label>
           <textarea
+            id="review-comment"
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             placeholder="Расскажите о вашем опыте..."
@@ -151,7 +154,7 @@ export function ReviewForm({
 
         {/* Изображения */}
         <div>
-          <label className="block text-white/70 mb-2">Фотографии (опционально)</label>
+          <span className="block text-white/70 mb-2">Фотографии (опционально)</span>
           <input
             type="file"
             accept="image/*"
@@ -166,16 +169,18 @@ export function ReviewForm({
           {/* Предпросмотр изображений */}
           {images.length > 0 && (
             <div className="grid grid-cols-5 gap-2 mt-3">
-              {images.map((image, index) => (
-                <div key={index} className="relative">
-                  <img
+              {images.map((image) => (
+                <div key={image.name} className="relative">
+                  <Image
                     src={URL.createObjectURL(image)}
-                    alt={`Preview ${index + 1}`}
+                    alt="Preview"
+                    width={64}
+                    height={64}
                     className="w-full h-16 object-cover rounded-lg"
                   />
                   <button
                     type="button"
-                    onClick={() => removeImage(index)}
+                    onClick={() => removeImage(images.indexOf(image))}
                     className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full text-white text-xs hover:bg-red-600"
                   >
                     ×

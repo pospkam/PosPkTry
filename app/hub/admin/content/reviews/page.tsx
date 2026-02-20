@@ -100,10 +100,10 @@ export default function ReviewsManagement() {
       title: 'Оценка',
       render: (review) => (
         <div className="flex">
-          {[...Array(5)].map((_, i) => (
+          {[...Array(5)].map((_, starIndex) => (
             <span
-              key={i}
-              className={i < review.rating ? 'text-yellow-400' : 'text-white/20'}
+              key={`star-${starIndex}`}
+              className={starIndex < review.rating ? 'text-yellow-400' : 'text-white/20'}
             >
               ★
             </span>
