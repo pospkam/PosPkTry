@@ -218,7 +218,10 @@ export function UIShowcase() {
               onClick={() => setShowModal(false)}
               role="button"
               tabIndex={0}
-              onKeyDown={(e) => e.key === 'Escape' && setShowModal(false)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') setShowModal(false);
+                if (e.key === 'Enter') setShowModal(false);
+              }}
               aria-label="Закрыть модальное окно"
             >
               <div className="modal-content p-8" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">

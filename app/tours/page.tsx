@@ -198,8 +198,12 @@ export default function ToursPage() {
               <div
                 key={tour.id}
                 onClick={() => router.push(`/tours/${tour.id}`)}
+                onKeyDown={(e) => e.key === 'Enter' && router.push(`/tours/${tour.id}`)}
+                role="button"
+                tabIndex={0}
                 className="bg-white/15 backdrop-blur-2xl rounded-2xl overflow-hidden border border-white/15 hover:border-white/50 transition-all cursor-pointer group"
                 style={{ backdropFilter: 'blur(10px)' }}
+                aria-label={`Перейти к туру ${tour.title}`}
               >
                 <div className="aspect-video bg-gradient-to-br from-blue-500/20 to-cyan-500/20 relative">
                   {tour.images && tour.images.length > 0 ? (
