@@ -144,10 +144,11 @@ export default function OperatorRegisterPage() {
               <h3 className="text-lg font-semibold text-white">Личные данные</h3>
               
               <div>
-                <label className="block text-white/80 text-sm mb-2">
+                <label htmlFor="operator-name" className="block text-white/80 text-sm mb-2">
                   ФИО контактного лица *
                 </label>
                 <input
+                  id="operator-name"
                   type="text"
                   name="name"
                   required
@@ -159,10 +160,11 @@ export default function OperatorRegisterPage() {
               </div>
 
               <div>
-                <label className="block text-white/80 text-sm mb-2">
+                <label htmlFor="operator-email" className="block text-white/80 text-sm mb-2">
                   Email *
                 </label>
                 <input
+                  id="operator-email"
                   type="email"
                   name="email"
                   required
@@ -174,10 +176,11 @@ export default function OperatorRegisterPage() {
               </div>
 
               <div>
-                <label className="block text-white/80 text-sm mb-2">
+                <label htmlFor="operator-phone" className="block text-white/80 text-sm mb-2">
                   Телефон
                 </label>
                 <input
+                  id="operator-phone"
                   type="tel"
                   name="phone"
                   value={formData.phone}
@@ -189,10 +192,11 @@ export default function OperatorRegisterPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-white/80 text-sm mb-2">
+                  <label htmlFor="operator-password" className="block text-white/80 text-sm mb-2">
                     Пароль *
                   </label>
                   <input
+                    id="operator-password"
                     type="password"
                     name="password"
                     required
@@ -204,10 +208,11 @@ export default function OperatorRegisterPage() {
                 </div>
 
                 <div>
-                  <label className="block text-white/80 text-sm mb-2">
+                  <label htmlFor="operator-confirm-password" className="block text-white/80 text-sm mb-2">
                     Подтвердите пароль *
                   </label>
                   <input
+                    id="operator-confirm-password"
                     type="password"
                     name="confirmPassword"
                     required
@@ -225,10 +230,11 @@ export default function OperatorRegisterPage() {
               <h3 className="text-lg font-semibold text-white">Данные компании</h3>
               
               <div>
-                <label className="block text-white/80 text-sm mb-2">
+                <label htmlFor="operator-company-name" className="block text-white/80 text-sm mb-2">
                   Название компании *
                 </label>
                 <input
+                  id="operator-company-name"
                   type="text"
                   name="company_name"
                   required
@@ -241,10 +247,11 @@ export default function OperatorRegisterPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-white/80 text-sm mb-2">
+                  <label htmlFor="operator-company-inn" className="block text-white/80 text-sm mb-2">
                     ИНН
                   </label>
                   <input
+                    id="operator-company-inn"
                     type="text"
                     name="company_inn"
                     value={formData.company_inn}
@@ -255,10 +262,11 @@ export default function OperatorRegisterPage() {
                 </div>
 
                 <div>
-                  <label className="block text-white/80 text-sm mb-2">
+                  <label htmlFor="operator-website" className="block text-white/80 text-sm mb-2">
                     Веб-сайт
                   </label>
                   <input
+                    id="operator-website"
                     type="url"
                     name="website"
                     value={formData.website}
@@ -270,10 +278,11 @@ export default function OperatorRegisterPage() {
               </div>
 
               <div>
-                <label className="block text-white/80 text-sm mb-2">
+                <label htmlFor="operator-company-address" className="block text-white/80 text-sm mb-2">
                   Адрес компании
                 </label>
                 <input
+                  id="operator-company-address"
                   type="text"
                   name="company_address"
                   value={formData.company_address}
@@ -284,10 +293,11 @@ export default function OperatorRegisterPage() {
               </div>
 
               <div>
-                <label className="block text-white/80 text-sm mb-2">
+                <label htmlFor="operator-description" className="block text-white/80 text-sm mb-2">
                   Описание компании
                 </label>
                 <textarea
+                  id="operator-description"
                   name="description"
                   value={formData.description}
                   onChange={handleChange}

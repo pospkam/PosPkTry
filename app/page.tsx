@@ -1,4 +1,4 @@
-'use client';
+import { Metadata } from 'next';
 
 /**
  * app/page.tsx — Home Screen — светлая iOS-тема + тёмная (через Tailwind dark: + ThemeContext)
@@ -15,6 +15,25 @@ import {
   TourCardsRow,
   HomeBottomNav,
 } from '@/components/home';
+
+export const metadata: Metadata = {
+  title: 'Kamchatour — Туры на Камчатку | Рыбалка, Вулканы, Природа',
+  description: 'Туры на Камчатку: рыбалка на лосося, восхождения на вулканы, горячие источники. Бронирование онлайн. AEO: лучшие туры Камчатки.',
+  keywords: [
+    'туры на Камчатку',
+    'рыбалка Камчатка',
+    'вулканы',
+    'отдых на Камчатке',
+    // GEO/AEO ключевые слова
+    'GEO оптимизация',
+    'AI туризм',
+    'куда поехать на отдых',
+    'лучшие туры России',
+    'дикая природа',
+    'горячие источники',
+    'фьорды Камчатки',
+  ],
+};
 
 export default function HomePage() {
   return (

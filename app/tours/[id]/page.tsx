@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Tour, Review } from '@/types';
 import { WeatherWidget } from '@/components/WeatherWidget';
 import { TourBookingForm } from '@/components/booking/TourBookingForm';
@@ -144,18 +145,22 @@ export default function TourDetailsPage() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="grid grid-cols-4 gap-4 mb-8">
           <div className="col-span-4 md:col-span-2 row-span-2">
-            <img
+            <Image
               src={tour.images[0] || '/placeholder-tour.jpg'}
               alt={tour.title}
-              className="w-full h-full object-cover rounded-2xl"
+              fill
+              className="object-cover rounded-2xl"
+              sizes="(max-width: 768px) 100vw, 50vw"
             />
           </div>
-          {tour.images.slice(1, 5).map((img, idx) => (
-            <div key={idx} className="col-span-2 md:col-span-1">
-              <img
+          {tour.images.slice(1, 5).map((img) => (
+            <div key={img} className="col-span-2 md:col-span-1">
+              <Image
                 src={img}
-                alt={`${tour.title} ${idx + 2}`}
-                className="w-full h-48 object-cover rounded-xl"
+                alt={tour.title}
+                fill
+                className="object-cover rounded-xl"
+                sizes="(max-width: 768px) 50vw, 25vw"
               />
             </div>
           ))}
@@ -213,8 +218,8 @@ export default function TourDetailsPage() {
                   <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
                     <h2 className="text-2xl font-bold mb-4">Что включено</h2>
                     <ul className="space-y-2">
-                      {tour.equipmentIncluded.map((item, idx) => (
-                        <li key={idx} className="flex items-center gap-2">
+                      {tour.equipmentIncluded.map((item) => (
+                        <li key={item} className="flex items-center gap-2">
                           <span className="text-green-400">✓</span>
                           <span className="text-white/80">{item}</span>
                         </li>
@@ -228,8 +233,8 @@ export default function TourDetailsPage() {
                   <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
                     <h2 className="text-2xl font-bold mb-4">Что взять с собой</h2>
                     <ul className="space-y-2">
-                      {tour.equipmentRequired.map((item, idx) => (
-                        <li key={idx} className="flex items-center gap-2">
+                      {tour.equipmentRequired.map((item) => (
+                        <li key={item} className="flex items-center gap-2">
                           <span className="text-white">•</span>
                           <span className="text-white/80">{item}</span>
                         </li>

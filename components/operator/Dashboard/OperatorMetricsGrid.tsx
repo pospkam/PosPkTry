@@ -76,8 +76,8 @@ export function OperatorMetricsGrid({ metrics, loading = false }: OperatorMetric
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[...Array(8)].map((_, i) => (
-          <div key={i} className="bg-white/10 rounded-2xl p-6 animate-pulse">
+        {[...Array(8)].map((_, metricIndex) => (
+          <div key={`skeleton-${metricIndex}`} className="bg-white/10 rounded-2xl p-6 animate-pulse">
             <div className="w-12 h-12 bg-white/20 rounded-xl mb-4" />
             <div className="h-8 bg-white/20 rounded w-20 mb-2" />
             <div className="h-4 bg-white/10 rounded w-32" />

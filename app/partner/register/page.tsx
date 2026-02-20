@@ -64,13 +64,13 @@ export default function PartnerRegisterPage() {
       return;
     }
     setError('');
-    setStep(step + 1);
+    setStep(prev => prev + 1);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handlePrevStep = () => {
     setError('');
-    setStep(step - 1);
+    setStep(prev => prev - 1);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 

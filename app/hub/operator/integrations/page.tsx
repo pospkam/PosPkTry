@@ -158,8 +158,8 @@ export default function IntegrationsPage() {
                     </p>
                   ) : (
                     <ul className="text-red-300 text-sm mt-1">
-                      {syncResult.errors.map((err, i) => (
-                        <li key={i}>{err}</li>
+                      {syncResult.errors.map((err) => (
+                        <li key={err}>{err}</li>
                       ))}
                     </ul>
                   )}

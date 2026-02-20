@@ -215,9 +215,9 @@ export const TourDatePicker: React.FC<TourDatePickerProps> = ({
       {/* Выбранная дата */}
       {selectedDate && (
         <div className="mb-6">
-          <label className="block text-sm text-white/70 mb-2">
+          <span className="block text-sm text-white/70 mb-2">
             Дата начала тура
-          </label>
+          </span>
           <div className="px-4 py-3 bg-premium-gold/10 border border-premium-gold/30 rounded-lg text-white font-medium">
             {formatDisplayDate(selectedDate)}
           </div>

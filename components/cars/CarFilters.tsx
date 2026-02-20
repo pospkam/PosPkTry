@@ -76,8 +76,9 @@ export function CarFilters({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
         {/* Categories */}
         <div>
-          <label className="block text-sm font-medium mb-3">Класс автомобиля</label>
+          <label htmlFor="car-category" className="block text-sm font-medium mb-3">Класс автомобиля</label>
           <select
+            id="car-category"
             value={selectedCategory}
             onChange={(e) => onCategoryChange(e.target.value)}
             className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
@@ -92,8 +93,9 @@ export function CarFilters({
 
         {/* Transmission */}
         <div>
-          <label className="block text-sm font-medium mb-3">Трансмиссия</label>
+          <label htmlFor="car-transmission" className="block text-sm font-medium mb-3">Трансмиссия</label>
           <select
+            id="car-transmission"
             value={transmission}
             onChange={(e) => onTransmissionChange(e.target.value)}
             className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
@@ -108,8 +110,9 @@ export function CarFilters({
 
         {/* Fuel Type */}
         <div>
-          <label className="block text-sm font-medium mb-3">Тип топлива</label>
+          <label htmlFor="car-fuel-type" className="block text-sm font-medium mb-3">Тип топлива</label>
           <select
+            id="car-fuel-type"
             value={fuelType}
             onChange={(e) => onFuelTypeChange(e.target.value)}
             className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
@@ -124,7 +127,7 @@ export function CarFilters({
 
         {/* Price Range */}
         <div>
-          <label className="block text-sm font-medium mb-3">Цена за день</label>
+          <span className="block text-sm font-medium mb-3">Цена за день</span>
           <div className="space-y-2">
             <div className="flex gap-2">
               <input
@@ -153,8 +156,9 @@ export function CarFilters({
 
         {/* Sort */}
         <div>
-          <label className="block text-sm font-medium mb-3">Сортировка</label>
+          <label htmlFor="car-sort" className="block text-sm font-medium mb-3">Сортировка</label>
           <select
+            id="car-sort"
             value={sortBy}
             onChange={(e) => onSortChange(e.target.value)}
             className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
@@ -169,8 +173,9 @@ export function CarFilters({
 
       {/* Additional filters */}
       <div className="mt-4">
-        <label className="flex items-center gap-3">
+        <label htmlFor="car-available-only" className="flex items-center gap-3">
           <input
+            id="car-available-only"
             type="checkbox"
             checked={showAvailableOnly}
             onChange={(e) => onAvailableToggle(e.target.checked)}

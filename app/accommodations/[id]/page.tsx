@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { StayBookingForm } from '@/components/booking/StayBookingForm';
 import { LoadingSpinner } from '@/components/admin/shared';
-import { Star, MapPin } from 'lucide-react';
 import { Star, MapPin } from 'lucide-react';
 
 interface Accommodation {
@@ -136,18 +136,22 @@ export default function AccommodationDetailsPage() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="grid grid-cols-4 gap-4 mb-8">
           <div className="col-span-4 md:col-span-2 row-span-2">
-            <img
+            <Image
               src={accommodation.photos[0] || '/placeholder-hotel.jpg'}
               alt={accommodation.name}
-              className="w-full h-full object-cover rounded-2xl"
+              fill
+              className="object-cover rounded-2xl"
+              sizes="(max-width: 768px) 100vw, 50vw"
             />
           </div>
-          {accommodation.photos.slice(1, 5).map((photo, idx) => (
-            <div key={idx} className="col-span-2 md:col-span-1">
-              <img
+          {accommodation.photos.slice(1, 5).map((photo, photoIndex) => (
+            <div key={`photo-${photo}-${photoIndex}`} className="col-span-2 md:col-span-1">
+              <Image
                 src={photo}
                 alt={`${accommodation.name} ${idx + 2}`}
-                className="w-full h-48 object-cover rounded-xl"
+                fill
+                className="object-cover rounded-xl"
+                sizes="(max-width: 768px) 100vw, 25vw"
               />
             </div>
           ))}
@@ -205,8 +209,8 @@ export default function AccommodationDetailsPage() {
                   <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
                     <h2 className="text-2xl font-bold mb-4">Удобства</h2>
                     <div className="grid grid-cols-2 gap-3">
-                      {accommodation.amenities.map((amenity, idx) => (
-                        <div key={idx} className="flex items-center gap-2">
+                      {accommodation.amenities.map((amenity) => (
+                        <div key={amenity} className="flex items-center gap-2">
                           <span className="text-green-400">✓</span>
                           <span className="text-white/80">{amenity}</span>
                         </div>
@@ -230,8 +234,8 @@ export default function AccommodationDetailsPage() {
               <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
                 <h2 className="text-2xl font-bold mb-6">Доступные номера</h2>
                 <div className="space-y-4">
-                  {[...Array(accommodation.roomsCount || 5)].map((_, idx) => (
-                    <div key={idx} className="bg-white/15 border border-white/15 rounded-xl p-4">
+                  {[...Array(accommodation.roomsCount || 5)].map((_, roomIndex) => (
+                    <div key={`room-${roomIndex}`} className="bg-white/15 border border-white/15 rounded-xl p-4">
                       <div className="flex justify-between items-start">
                         <div>
                           <h3 className="text-lg font-semibold mb-2">Стандартный номер #{idx + 1}</h3>
@@ -310,8 +314,8 @@ export default function AccommodationDetailsPage() {
               <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
                 <h3 className="text-lg font-bold mb-4">Популярные удобства</h3>
                 <div className="space-y-2">
-                  {accommodation.amenities.slice(0, 6).map((amenity, idx) => (
-                    <div key={idx} className="flex items-center gap-2">
+                  {accommodation.amenities.slice(0, 6).map((amenity, amenityIndex) => (
+                    <div key={`amenity-${amenity}-${amenityIndex}`} className="flex items-center gap-2">
                       <span className="text-green-400">✓</span>
                       <span className="text-white/80 text-sm">{amenity}</span>
                     </div>

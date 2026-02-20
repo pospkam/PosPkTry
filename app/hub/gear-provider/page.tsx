@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Protected } from '@/components/Protected';
 import { GearProviderNav } from '@/components/gear-provider/GearProviderNav';
 import { LoadingSpinner } from '@/components/admin/shared';
@@ -113,18 +114,18 @@ export default function GearProviderDashboard() {
             <div className="bg-white/10 border border-white/20 rounded-xl p-6">
               <h2 className="text-xl font-bold mb-4">Быстрые действия</h2>
               <div className="space-y-3">
-                <a 
+                <Link 
                   href="/hub/gear-provider/items/new" 
                   className="block w-full px-4 py-3 bg-premium-gold text-premium-black font-medium rounded-lg text-center hover:bg-premium-gold/80 transition-colors"
                 >
                   Добавить снаряжение
-                </a>
-                <a 
+                </Link>
+                <Link 
                   href="/hub/gear-provider/bookings" 
                   className="block w-full px-4 py-3 bg-white/10 text-white font-medium rounded-lg text-center hover:bg-white/20 transition-colors"
                 >
                   Просмотреть бронирования
-                </a>
+                </Link>
               </div>
             </div>
 

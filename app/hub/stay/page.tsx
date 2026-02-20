@@ -187,8 +187,8 @@ export default function StayHub() {
               <div className="col-span-12 lg:col-span-9">
                 {loading ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {[...Array(6)].map((_, i) => (
-                      <AccommodationCardSkeleton key={i} />
+                    {[...Array(6)].map((_, skeletonIndex) => (
+                      <AccommodationCardSkeleton key={`skeleton-${skeletonIndex}`} />
                     ))}
                   </div>
                 ) : accommodations.length > 0 ? (

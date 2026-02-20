@@ -133,11 +133,11 @@ export const AccommodationFilters: React.FC<AccommodationFiltersProps> = ({
         <div className="p-4 space-y-6">
           {/* Поиск */}
           <div>
-            <label className="block text-sm font-medium text-white/80 mb-2">
+            <label htmlFor="accommodation-search" className="block text-sm font-medium text-white/80 mb-2">
               Поиск по названию
             </label>
             <input
-              type="text"
+              id="accommodation-search"
               value={filters.search}
               onChange={(e) => onFiltersChange({ ...filters, search: e.target.value })}
               placeholder="Название объекта..."
@@ -178,12 +178,13 @@ export const AccommodationFilters: React.FC<AccommodationFiltersProps> = ({
           
           {/* Цена */}
           <div>
-            <label className="block text-sm font-medium text-white/80 mb-3">
+            <span className="block text-sm font-medium text-white/80 mb-3">
               Цена за ночь
-            </label>
+            </span>
             <div className="space-y-3">
               <div className="flex items-center gap-4">
                 <input
+                  id="price-min"
                   type="number"
                   value={filters.priceMin}
                   onChange={(e) => handlePriceChange(Number(e.target.value), filters.priceMax)}
@@ -197,8 +198,8 @@ export const AccommodationFilters: React.FC<AccommodationFiltersProps> = ({
                 />
                 <span className="text-white/60">—</span>
                 <input
+                  id="price-max"
                   type="number"
-                  value={filters.priceMax}
                   onChange={(e) => handlePriceChange(filters.priceMin, Number(e.target.value))}
                   placeholder="До"
                   className="
@@ -231,9 +232,9 @@ export const AccommodationFilters: React.FC<AccommodationFiltersProps> = ({
           
           {/* Рейтинг */}
           <div>
-            <label className="block text-sm font-medium text-white/80 mb-3">
+            <span className="block text-sm font-medium text-white/80 mb-3">
               Минимальный рейтинг
-            </label>
+            </span>
             <div className="flex gap-2">
               {[0, 6, 7, 8, 9].map(rating => (
                 <button
@@ -254,10 +255,11 @@ export const AccommodationFilters: React.FC<AccommodationFiltersProps> = ({
           
           {/* Расположение */}
           <div>
-            <label className="block text-sm font-medium text-white/80 mb-3">
+            <label htmlFor="location-zone" className="block text-sm font-medium text-white/80 mb-3">
               Расположение
             </label>
             <select
+              id="location-zone"
               value={filters.locationZone}
               onChange={(e) => onFiltersChange({ ...filters, locationZone: e.target.value })}
               className="
@@ -278,9 +280,9 @@ export const AccommodationFilters: React.FC<AccommodationFiltersProps> = ({
           
           {/* Удобства */}
           <div>
-            <label className="block text-sm font-medium text-white/80 mb-3">
+            <span className="block text-sm font-medium text-white/80 mb-3">
               Удобства
-            </label>
+            </span>
             <div className="grid grid-cols-2 gap-2">
               {amenitiesList.map(amenity => (
                 <button
@@ -303,10 +305,11 @@ export const AccommodationFilters: React.FC<AccommodationFiltersProps> = ({
           
           {/* Сортировка */}
           <div>
-            <label className="block text-sm font-medium text-white/80 mb-3">
+            <label htmlFor="sort-order" className="block text-sm font-medium text-white/80 mb-3">
               Сортировать
             </label>
             <select
+              id="sort-order"
               value={filters.sort}
               onChange={(e) => onFiltersChange({ ...filters, sort: e.target.value })}
               className="

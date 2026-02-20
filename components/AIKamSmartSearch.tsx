@@ -143,9 +143,9 @@ export default function AIKamSmartSearch() {
         {/* AI подсказки */}
         {showSuggestions && suggestions.length > 0 && (
           <div className="absolute top-full left-0 right-0 mt-2 bg-white/20 backdrop-blur-xl rounded-2xl border border-white/30 overflow-hidden shadow-2xl z-50">
-            {suggestions.map((suggestion, index) => (
+            {suggestions.map((suggestion, suggestionIndex) => (
               <button
-                key={index}
+                key={`suggestion-${suggestionIndex}`}
                 onClick={() => {
                   setQuery(suggestion);
                   setShowSuggestions(false);
@@ -164,11 +164,11 @@ export default function AIKamSmartSearch() {
       {/* Популярные запросы */}
       <div className="mt-6 flex flex-wrap gap-3 justify-center">
         <span className="text-white/70 text-sm">Популярное:</span>
-        {trendingQueries.map((item, index) => {
+        {trendingQueries.map((item, trendingIndex) => {
           const Icon = item.icon;
           return (
             <button
-              key={index}
+              key={`trending-${trendingIndex}`}
               onClick={() => {
                 setQuery(item.text);
                 handleSearch(item.text);

@@ -126,9 +126,9 @@ export function RoleAssistantWidget({ role, userId }: RoleAssistantWidgetProps) 
             {/* Quick Commands */}
             <div className="space-y-2">
               <p className="text-xs text-white/50 mb-2">Быстрые команды:</p>
-              {quickCommands.map((cmd, idx) => (
+              {quickCommands.map((cmd) => (
                 <button
-                  key={idx}
+                  key={cmd}
                   onClick={() => handleQuickCommand(cmd)}
                   className="block w-full text-left px-3 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-sm text-white/80 transition-colors"
                 >
@@ -138,9 +138,9 @@ export function RoleAssistantWidget({ role, userId }: RoleAssistantWidgetProps) 
             </div>
           </div>
         ) : (
-          messages.map((msg, idx) => (
+          messages.map((msg) => (
             <div
-              key={idx}
+              key={msg.content.substring(0, 20)}
               className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div

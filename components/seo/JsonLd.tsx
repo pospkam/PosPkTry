@@ -254,9 +254,9 @@ export function BreadcrumbJsonLd({ items }: BreadcrumbJsonLdProps) {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
-    itemListElement: items.map((item, index) => ({
+    itemListElement: items.map((item, itemIdx) => ({
       '@type': 'ListItem',
-      position: index + 1,
+      position: itemIdx + 1,
       name: item.name,
       item: item.url,
     })),

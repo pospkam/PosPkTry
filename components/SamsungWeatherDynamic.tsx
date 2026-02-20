@@ -45,9 +45,9 @@ export default function SamsungWeatherDynamic() {
   const renderRain = () => {
     if (!animations.rain) return null;
 
-    const drops = Array.from({ length: 100 }, (_, i) => (
+    const drops = Array.from({ length: 100 }, (_, dropIndex) => (
       <div
-        key={i}
+        key={`rain-${dropIndex}`}
         className="rain-drop"
         style={{
           left: `${Math.random() * 100}%`,
@@ -64,9 +64,9 @@ export default function SamsungWeatherDynamic() {
   const renderSnow = () => {
     if (!animations.snow) return null;
 
-    const flakes = Array.from({ length: 50 }, (_, i) => (
+    const flakes = Array.from({ length: 50 }, (_, flakeIndex) => (
       <div
-        key={i}
+        key={`snow-${flakeIndex}`}
         className="snowflake"
         style={{
           left: `${Math.random() * 100}%`,
@@ -85,9 +85,9 @@ export default function SamsungWeatherDynamic() {
   const renderWind = () => {
     if (!animations.wind) return null;
 
-    const lines = Array.from({ length: 15 }, (_, i) => (
+    const lines = Array.from({ length: 15 }, (_, lineIndex) => (
       <div
-        key={i}
+        key={`wind-${lineIndex}`}
         className="wind-line"
         style={{
           top: `${Math.random() * 100}%`,
@@ -132,9 +132,9 @@ export default function SamsungWeatherDynamic() {
   const renderStars = () => {
     if (timeOfDay !== 'night') return null;
 
-    const stars = Array.from({ length: 100 }, (_, i) => (
+    const stars = Array.from({ length: 100 }, (_, starIndex) => (
       <div
-        key={i}
+        key={`star-${starIndex}`}
         className="star"
         style={{
           left: `${Math.random() * 100}%`,

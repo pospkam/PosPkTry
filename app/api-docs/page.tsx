@@ -1,32 +1,26 @@
-'use client';
+import { Metadata } from 'next';
 
-import { useEffect, useState } from 'react';
-
-export default function ApiDocsPage() {
-  const [spec, setSpec] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetch('/api-docs')
-      .then(res => res.json())
-      .then(data => {
-        setSpec(data);
-        setLoading(false);
-      })
-      .catch(err => {
-        setError(err.message);
-        setLoading(false);
-      });
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-premium-black to-premium-gold/10 flex items-center justify-center">
-        <div className="text-white text-xl">Загрузка документации...</div>
-      </div>
-    );
+// Server Component - fetch data on server instead of useEffect
+async function getApiSpec() {
+  try {
+    const res = await fetch('/api-docs', { cache: 'no-store' });
+    if (!res.ok) throw new Error('Failed to fetch');
+    return res.json();
+  } catch (error) {
+    console.error('Error fetching API spec:', error);
+    return null;
   }
+}
+
+export const metadata: Metadata = {
+  title: 'API Documentation | Kamhub',
+  description: 'Kamhub API Documentation',
+};
+
+export default async function ApiDocsPage() {
+  const spec = await getApiSpec();
+  const loading = false;
+  const error = spec === null ? 'Failed to load API specification' : null;
 
   if (error) {
     return (
@@ -47,10 +41,10 @@ export default function ApiDocsPage() {
         <div className="bg-white/10 backdrop-blur-xl border border-white/15 rounded-2xl p-6 mb-8">
           <h2 className="text-2xl font-bold text-white mb-4">Endpoints</h2>
           <div className="grid gap-4">
-            {(spec?.tags || []).map((tag: any) => (
-              <div key={tag.name} className="border-l-4 border-premium-gold pl-4">
-                <h3 className="text-xl font-semibold text-white">{tag.name}</h3>
-                <p className="text-white/60">{tag.description}</p>
+            {(spec?.tags || []).map((tag: unknown) => (
+              <div key={(tag as { name: string }).name} className="border-l-4 border-premium-gold pl-4">
+                <h3 className="text-xl font-semibold text-white">{(tag as { name: string }).name}</h3>
+                <p className="text-white/60">{(tag as { description: string }).description}</p>
               </div>
             ))}
           </div>

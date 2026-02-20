@@ -163,9 +163,9 @@ export const AccommodationCard: React.FC<AccommodationCardProps> = ({
           
           {/* Удобства */}
           <div className="flex flex-wrap gap-2 mb-4">
-            {displayAmenities.map((amenity, index) => (
+            {displayAmenities.map((amenity) => (
               <span
-                key={index}
+                key={amenity}
                 className="px-2 py-1 bg-white/5 rounded-lg text-xs text-white/80 flex items-center gap-1"
               >
                 <span>{amenityIcons[amenity] || '[]'}</span>
@@ -233,8 +233,6 @@ export const AccommodationCard: React.FC<AccommodationCardProps> = ({
     </Link>
   );
 };
-
-export default AccommodationCard;
 
 
 

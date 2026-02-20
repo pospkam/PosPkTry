@@ -2,9 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Tour } from '@/types';
 import { Star, Zap, Clock } from 'lucide-react';
 import { ActivityIcon } from '@/components/icons';
+
+export const metadata = {
+  title: 'Туры на Камчатке | Kamhub',
+  description: 'Лучшие туры на Камчатке: вулканы, рыбалка, термальные источники. Забронируйте незабываемое путешествие',
+};
 
 export default function ToursPage() {
   const router = useRouter();
@@ -70,7 +76,7 @@ export default function ToursPage() {
   if (error) {
     return (
       <div className="min-h-screen bg-transparent flex items-center justify-center p-6">
-        <div className="bg-white/15 backdrop-blur-2xl rounded-2xl p-8 text-center max-w-md border border-white/15" style={{ backdropFilter: 'blur(20px)' }}>
+        <div className="bg-white/15 backdrop-blur-2xl rounded-2xl p-8 text-center max-w-md border border-white/15" style={{ backdropFilter: 'blur(10px)' }}>
           <div className="text-6xl mb-4">⚠️</div>
           <h1 className="text-2xl font-extralight text-white mb-4" style={{ textShadow: '0 2px 6px rgba(0, 0, 0, 0.15)' }}>
             Ошибка загрузки
@@ -91,7 +97,7 @@ export default function ToursPage() {
   return (
     <div className="min-h-screen bg-transparent">
       {/* Header */}
-      <div className="bg-white/15 backdrop-blur-2xl border-b border-white/15" style={{ backdropFilter: 'blur(20px)' }}>
+      <div className="bg-white/15 backdrop-blur-2xl border-b border-white/15" style={{ backdropFilter: 'blur(10px)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <h1 className="text-4xl font-extralight text-white mb-2" style={{ textShadow: '0 2px 6px rgba(0, 0, 0, 0.15)' }}>
             Туры по Камчатке
@@ -104,13 +110,14 @@ export default function ToursPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Filters */}
-        <div className="bg-white/15 backdrop-blur-2xl rounded-2xl p-6 mb-8 border border-white/15" style={{ backdropFilter: 'blur(20px)' }}>
+        <div className="bg-white/15 backdrop-blur-2xl rounded-2xl p-6 mb-8 border border-white/15" style={{ backdropFilter: 'blur(10px)' }}>
           <h3 className="text-xl font-extralight text-white mb-4" style={{ textShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>Фильтры</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <label className="block text-sm font-extralight text-white/80 mb-2" style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.08)' }}>Поиск</label>
+              <label htmlFor="tour-search" className="block text-sm font-extralight text-white/80 mb-2" style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.08)' }}>Поиск</label>
               <input
+                id="tour-search"
                 type="text"
                 value={filters.search}
                 onChange={(e) => setFilters({ ...filters, search: e.target.value })}
@@ -121,8 +128,9 @@ export default function ToursPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-extralight text-white/80 mb-2" style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.08)' }}>Активность</label>
+              <label htmlFor="tour-activity" className="block text-sm font-extralight text-white/80 mb-2" style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.08)' }}>Активность</label>
               <select
+                id="tour-activity"
                 value={filters.activity}
                 onChange={(e) => setFilters({ ...filters, activity: e.target.value })}
                 className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300"
@@ -139,8 +147,9 @@ export default function ToursPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-extralight text-white/80 mb-2" style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.08)' }}>Сложность</label>
+              <label htmlFor="tour-difficulty" className="block text-sm font-extralight text-white/80 mb-2" style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.08)' }}>Сложность</label>
               <select
+                id="tour-difficulty"
                 value={filters.difficulty}
                 onChange={(e) => setFilters({ ...filters, difficulty: e.target.value })}
                 className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300"
@@ -154,8 +163,9 @@ export default function ToursPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-extralight text-white/80 mb-2" style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.08)' }}>Цена до</label>
+              <label htmlFor="tour-price" className="block text-sm font-extralight text-white/80 mb-2" style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.08)' }}>Цена до</label>
               <input
+                id="tour-price"
                 type="number"
                 value={filters.priceRange[1]}
                 onChange={(e) => setFilters({ ...filters, priceRange: [filters.priceRange[0], parseInt(e.target.value)] })}
@@ -173,7 +183,7 @@ export default function ToursPage() {
 
         {/* Tours Grid */}
         {filteredTours.length === 0 ? (
-          <div className="bg-white/15 backdrop-blur-2xl rounded-2xl p-12 text-center border border-white/15" style={{ backdropFilter: 'blur(20px)' }}>
+          <div className="bg-white/15 backdrop-blur-2xl rounded-2xl p-12 text-center border border-white/15" style={{ backdropFilter: 'blur(10px)' }}>
             <div className="text-6xl mb-4">🔍</div>
             <h3 className="text-2xl font-extralight text-white mb-2" style={{ textShadow: '0 2px 6px rgba(0, 0, 0, 0.15)' }}>
               Туры не найдены
@@ -189,14 +199,16 @@ export default function ToursPage() {
                 key={tour.id}
                 onClick={() => router.push(`/tours/${tour.id}`)}
                 className="bg-white/15 backdrop-blur-2xl rounded-2xl overflow-hidden border border-white/15 hover:border-white/50 transition-all cursor-pointer group"
-                style={{ backdropFilter: 'blur(20px)' }}
+                style={{ backdropFilter: 'blur(10px)' }}
               >
                 <div className="aspect-video bg-gradient-to-br from-blue-500/20 to-cyan-500/20 relative">
                   {tour.images && tour.images.length > 0 ? (
-                    <img
+                    <Image
                       src={tour.images[0]}
                       alt={tour.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">

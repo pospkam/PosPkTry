@@ -171,12 +171,12 @@ export const GuestSelector: React.FC<GuestSelectorProps> = ({
           <div className="text-white font-medium mb-3">
             Укажите возраст детей на момент заезда
           </div>
-          {Array.from({ length: children }).map((_, index) => (
-            <div key={index} className="flex items-center justify-between">
-              <span className="text-white/70">Ребёнок {index + 1}</span>
+          {Array.from({ length: children }).map((_, childIndex) => (
+            <div key={`child-age-${childIndex}`} className="flex items-center justify-between">
+              <span className="text-white/70">Ребёнок {childIndex + 1}</span>
               <select
-                value={childrenAges[index] || 0}
-                onChange={(e) => handleChildAgeChange(index, Number(e.target.value))}
+                value={childrenAges[childIndex] || 0}
+                onChange={(e) => handleChildAgeChange(childIndex, Number(e.target.value))}
                 className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-premium-gold"
                 aria-label={`Возраст ребёнка ${index + 1}`}
               >

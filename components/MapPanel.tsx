@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import './MapPanel.css';
 
 interface MapPanelProps {
@@ -32,11 +33,18 @@ export function MapPanel({ isOpen, onClose }: MapPanelProps) {
 
   return (
     <>
-      <div className="map-panel-overlay" onClick={onClose}></div>
+      <div 
+        className="map-panel-overlay" 
+        onClick={onClose}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => e.key === 'Escape' && onClose()}
+        aria-label="Закрыть карту"
+      ></div>
       <div className="map-panel">
         <div className="map-panel-header">
           <div className="map-panel-title">
-            <img src="/icons/kam-button.svg" alt="Карта" width="24" height="24" />
+            <Image src="/icons/kam-button.svg" alt="Карта" width={24} height={24} />
             <h3>Карта активностей</h3>
           </div>
           <button className="map-panel-close" onClick={onClose}>×</button>
@@ -50,8 +58,9 @@ export function MapPanel({ isOpen, onClose }: MapPanelProps) {
               width="100%"
               height="100%"
               style={{ border: 0 }}
-              allowFullScreen
+              allowFullScreen={true}
               loading="lazy"
+              title="Google Maps - Камчатка"
             ></iframe>
           </div>
 

@@ -264,13 +264,13 @@ export default function AdminDashboard() {
       <div className="relative max-w-7xl mx-auto px-6 py-8 space-y-8">
         {/* Glass Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {stats.map((stat, index) => {
+          {stats.map((stat) => {
             const Icon = stat.icon;
             const isPositive = stat.trend === 'up';
             
             return (
               <div
-                key={index}
+                key={stat.label}
                 className="group relative backdrop-blur-2xl bg-gradient-to-br from-[#2C1810]/60 to-[#1a2634]/60 rounded-3xl p-6 border border-[#CD853F]/40 hover:border-[#FF4500]/60 hover:bg-[#2C1810]/70 transition-all duration-500 hover:scale-105 hover:-translate-y-2 shadow-xl hover:shadow-2xl hover:shadow-[#DC143C]/30"
               >
                 {/* Glow effect - Камчатка */}
@@ -314,14 +314,14 @@ export default function AdminDashboard() {
             </div>
             <div className="p-8">
               <div className="space-y-4">
-                {data.charts.topTours.map((tour, index) => (
+                {data.charts.topTours.map((tour, tourIdx) => (
                   <div
                     key={tour.id}
                     className="group flex items-center justify-between p-5 rounded-2xl backdrop-blur-xl bg-white/10 border border-white/20 hover:bg-white/20 hover:scale-105 transition-all shadow-lg hover:shadow-xl"
                   >
                     <div className="flex items-center gap-5">
                       <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white font-black text-lg shadow-lg">
-                        {index + 1}
+                        {tourIdx + 1}
                       </div>
                       <div>
                         <p className="text-white font-bold text-lg group-hover:text-violet-300 transition-colors">{tour.title}</p>
@@ -352,11 +352,11 @@ export default function AdminDashboard() {
           </div>
           <div className="p-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {adminTools.map((tool, index) => {
+              {adminTools.map((tool) => {
                 const Icon = tool.icon;
                 return (
                   <button
-                    key={index}
+                    key={tool.label}
                     onClick={() => router.push(tool.link)}
                     className="group relative backdrop-blur-xl bg-white/10 rounded-3xl p-8 border border-white/30 hover:bg-white/20 transition-all duration-500 text-left overflow-hidden hover:scale-105 hover:-translate-y-2 shadow-xl hover:shadow-2xl"
                   >

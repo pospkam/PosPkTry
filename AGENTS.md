@@ -138,3 +138,128 @@ XAI_API_KEY=...
 Основной партнер: **Камчатская Рыбалка** (fishingkam.ru)
 - 11 туров загружены в БД
 - Контакты: +7 914-782-22-22, +7 999-299-70-07
+
+## React Doctor - Исправления и Паттерны
+
+### Целевой показатель
+- Начальное количество: 972 предупреждения
+- Целевой показатель: <100 предупреждений
+- Текущий результат: ~489 предупреждений (50% исправлено)
+
+### Исправленные проблемы
+
+#### 1. blur(20px) - проблема с производительностью
+**Проблема:** blur радиус более 10px создает высокую нагрузку на GPU на мобильных устройствах
+**Решение:** Заменить `blur(20px)` на `blur(10px)`
+
+Файлы:
+- app/samsung-weather-theme.css
+- app/tours/page.tsx
+- app/hub/tourist/page.tsx
+- components/ThemeToggle.css
+
+```css
+/* До */
+backdrop-filter: blur(20px);
+
+/* После */
+backdrop-filter: blur(10px);
+```
+
+#### 2. Form Labels - доступность
+**Проблема:** Label не связан с input через htmlFor/id
+**Решение:** Добавить `htmlFor` и `id` атрибуты
+
+```tsx
+/* До */
+<label className="block text-sm">Email</label>
+<input type="email" ... />
+
+/* После */
+<label htmlFor="login-email" className="block text-sm">Email</label>
+<input id="login-email" type="email" ... />
+```
+
+Файлы:
+- app/auth/login/page.tsx
+- app/auth/register/operator/page.tsx
+- components/ReviewForm.tsx
+- components/reviews/ReviewForm.tsx
+
+#### 3. Array Keys - ключи массивов
+**Проблема:** Использование индекса как ключа нарушает React реконсиляцию
+**Решение:** Использовать уникальный идентификатор
+
+```tsx
+/* До */
+{array.map((item, index) => (
+  <div key={index}>...</div>
+))}
+
+/* После */
+{array.map((item) => (
+  <div key={item.id}>...</div>
+))}
+```
+
+#### 4. Inline Render Functions
+**Проблема:** Inline функции рендера нарушают React reconciliation
+**Решение:** Вынести в именованный компонент
+
+```tsx
+/* До */
+function MyComponent() {
+  const renderStars = () => { ... };
+  return <>{renderStars()}</>;
+}
+
+/* После */
+function StarRating({ rating, onChange }) { ... }
+function MyComponent() {
+  return <StarRating rating={rating} onChange={onChange} />;
+}
+```
+
+Файлы:
+- components/ReviewForm.tsx
+- components/reviews/ReviewForm.tsx
+
+### Нерешенные проблемы (требуют значительного рефакторинга)
+
+- Unused exports: 130 (требуют анализа что можно удалить)
+- Unused types: 81 (требуют анализа)
+- Unused files: 84 (требуют удаления)
+- Page metadata: 45 (добавить metadata export)
+- Array index keys: 27 (требуют рефакторинга)
+- Inline render functions: 7 (SamsungWeatherDynamic)
+
+### Паттерны проекта
+
+#### Glassmorphism карточки
+```css
+background: rgba(255, 255, 255, 0.05);
+backdrop-filter: blur(10px);
+border: 1px solid rgba(255, 255, 255, 0.1);
+border-radius: 20px;
+```
+
+#### CSS переменные (из globals.css)
+```css
+--bg-primary: #0B1120
+--accent-primary: #00D4FF
+--premium-gold: #FFD700
+```
+
+#### Типы данных (Tour)
+```typescript
+interface Tour {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  duration: number;
+  location: string;
+  rating: number;
+  images: string[];
+}
+```

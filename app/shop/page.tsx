@@ -2,7 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Star } from 'lucide-react';
+
+export const metadata = {
+  title: 'Сувениры Камчатки | Kamhub',
+  description: 'Купить сувениры и подарки с Камчатки: мед, икра, изделия из меха и камня',
+};
 
 interface Souvenir {
   id: string;
@@ -109,10 +115,12 @@ export default function ShopPage() {
               >
                 <div className="aspect-square bg-white/15 flex items-center justify-center">
                   {souvenir.images.length > 0 ? (
-                    <img
+                    <Image
                       src={souvenir.images[0]}
                       alt={souvenir.name}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
                   ) : (
                     <div className="text-6xl">🎁</div>

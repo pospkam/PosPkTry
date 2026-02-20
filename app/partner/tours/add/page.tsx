@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Flower, Leaf, Snowflake } from 'lucide-react';
 
@@ -156,10 +157,11 @@ export default function AddTourPage() {
             
             <div className="grid gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label htmlFor="tour-name" className="block text-sm font-medium mb-2">
                   Название тура <span className="text-red-400">*</span>
                 </label>
                 <input
+                  id="tour-name"
                   type="text"
                   required
                   value={formData.name}
@@ -170,10 +172,11 @@ export default function AddTourPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label htmlFor="tour-short-desc" className="block text-sm font-medium mb-2">
                   Краткое описание
                 </label>
                 <input
+                  id="tour-short-desc"
                   type="text"
                   value={formData.shortDescription}
                   onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
@@ -185,10 +188,11 @@ export default function AddTourPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label htmlFor="tour-description" className="block text-sm font-medium mb-2">
                   Полное описание <span className="text-red-400">*</span>
                 </label>
                 <textarea
+                  id="tour-description"
                   required
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -200,10 +204,11 @@ export default function AddTourPage() {
 
               <div className="grid md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">
+                  <label htmlFor="tour-duration" className="block text-sm font-medium mb-2">
                     Длительность (часов) <span className="text-red-400">*</span>
                   </label>
                   <input
+                    id="tour-duration"
                     type="number"
                     required
                     min="1"
@@ -214,10 +219,11 @@ export default function AddTourPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">
+                  <label htmlFor="tour-price" className="block text-sm font-medium mb-2">
                     Цена (₽) <span className="text-red-400">*</span>
                   </label>
                   <input
+                    id="tour-price"
                     type="number"
                     required
                     min="0"
@@ -230,10 +236,11 @@ export default function AddTourPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">
+                  <label htmlFor="tour-max-group" className="block text-sm font-medium mb-2">
                     Макс. группа
                   </label>
                   <input
+                    id="tour-max-group"
                     type="number"
                     min="1"
                     max="100"
@@ -314,12 +321,12 @@ export default function AddTourPage() {
               </button>
             </div>
             <div className="flex flex-wrap gap-2">
-              {formData.included.map((item, index) => (
-                <span key={index} className="px-3 py-1 bg-green-500/20 text-green-400 border border-green-500/30 rounded-lg text-sm flex items-center gap-2">
+              {formData.included.map((item, includedIdx) => (
+                <span key={`included-${item}-${includedIdx}`} className="px-3 py-1 bg-green-500/20 text-green-400 border border-green-500/30 rounded-lg text-sm flex items-center gap-2">
                   ✅ {item}
                   <button
                     type="button"
-                    onClick={() => removeItem('included', index)}
+                    onClick={() => removeItem('included', includedIdx)}
                     className="hover:text-red-400"
                   >
                     ×
@@ -350,12 +357,12 @@ export default function AddTourPage() {
               </button>
             </div>
             <div className="flex flex-wrap gap-2">
-              {formData.notIncluded.map((item, index) => (
-                <span key={index} className="px-3 py-1 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-sm flex items-center gap-2">
+              {formData.notIncluded.map((item, notIncludedIdx) => (
+                <span key={`notIncluded-${item}-${notIncludedIdx}`} className="px-3 py-1 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-sm flex items-center gap-2">
                   ❌ {item}
                   <button
                     type="button"
-                    onClick={() => removeItem('notIncluded', index)}
+                    onClick={() => removeItem('notIncluded', notIncludedIdx)}
                     className="hover:text-white"
                   >
                     ×
@@ -386,12 +393,12 @@ export default function AddTourPage() {
               </button>
             </div>
             <div className="grid grid-cols-4 gap-3">
-              {formData.images.map((url, index) => (
-                <div key={index} className="relative group">
-                  <img src={url} alt="" className="w-full h-24 object-cover rounded-lg" />
+              {formData.images.map((url, imgIndex) => (
+                <div key={`image-${url}-${imgIndex}`} className="relative group">
+                  <Image src={url} alt="" className="w-full h-24 object-cover rounded-lg" width={200} height={96} />
                   <button
                     type="button"
-                    onClick={() => removeItem('images', index)}
+                    onClick={() => removeItem('images', imgIndex)}
                     className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     ×

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface SearchFilters {
   query: string;
@@ -186,8 +187,15 @@ export function ModernTourSearch() {
     <div className="modern-search-container">
       {/* AI Помощник */}
       {showAI && (
-        <div className="ai-search-modal" onClick={() => setShowAI(false)}>
-          <div className="ai-search-content" onClick={(e) => e.stopPropagation()}>
+        <div 
+          className="ai-search-modal" 
+          onClick={() => setShowAI(false)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === 'Escape' && setShowAI(false)}
+          aria-label="Закрыть поиск"
+        >
+          <div className="ai-search-content" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
             <div className="ai-search-header">
               <div className="ai-search-title">
                 <div className="ai-icon"></div>
@@ -343,8 +351,9 @@ export function ModernTourSearch() {
           <div className="advanced-filters">
             <div className="filter-grid">
               <div className="filter-group">
-                <label>Сложность</label>
+                <label htmlFor="filter-difficulty">Сложность</label>
                 <select 
+                  id="filter-difficulty"
                   value={filters.difficulty}
                   onChange={(e) => setFilters(prev => ({ ...prev, difficulty: e.target.value as any }))}
                   className="filter-select"
@@ -357,8 +366,9 @@ export function ModernTourSearch() {
               </div>
 
               <div className="filter-group">
-                <label>Цена от</label>
+                <label htmlFor="filter-price-min">Цена от</label>
                 <input
+                  id="filter-price-min"
                   type="number"
                   value={filters.priceMin || ''}
                   onChange={(e) => setFilters(prev => ({ ...prev, priceMin: parseInt(e.target.value) || undefined }))}
@@ -368,8 +378,9 @@ export function ModernTourSearch() {
               </div>
 
               <div className="filter-group">
-                <label>Цена до</label>
+                <label htmlFor="filter-price-max">Цена до</label>
                 <input
+                  id="filter-price-max"
                   type="number"
                   value={filters.priceMax || ''}
                   onChange={(e) => setFilters(prev => ({ ...prev, priceMax: parseInt(e.target.value) || undefined }))}
@@ -379,8 +390,9 @@ export function ModernTourSearch() {
               </div>
 
               <div className="filter-group">
-                <label>Длительность (дней)</label>
+                <label htmlFor="filter-duration">Длительность (дней)</label>
                 <input
+                  id="filter-duration"
                   type="number"
                   value={filters.duration || ''}
                   onChange={(e) => setFilters(prev => ({ ...prev, duration: parseInt(e.target.value) || undefined }))}
@@ -418,7 +430,7 @@ export function ModernTourSearch() {
                   <Link key={tour.id} href={`/tours/${tour.id}`} className="tour-result-card">
                     <div className="tour-result-image">
                       {tour.imageUrl ? (
-                        <img src={tour.imageUrl} alt={tour.title} />
+                        <Image src={tour.imageUrl} alt={tour.title} fill className="object-cover" sizes="(max-width: 768px) 100vw, 50vw" />
                       ) : (
                         <div className="tour-placeholder"></div>
                       )}

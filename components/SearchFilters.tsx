@@ -100,12 +100,12 @@ export function SearchFilters({ isOpen, onClose, onApply }: SearchFiltersProps) 
         <div className="filters-content">
           {/* Price Range */}
           <div className="filter-group">
-            <label className="filter-label">
+            <span className="filter-label">
               <span className="filter-label-icon">
                 <MoneyIcon size={18} />
               </span>
               <span>Диапазон цен</span>
-            </label>
+            </span>
             <div className="filter-row">
               <div className="input-wrapper">
                 <input
@@ -133,12 +133,12 @@ export function SearchFilters({ isOpen, onClose, onApply }: SearchFiltersProps) 
 
           {/* Dates */}
           <div className="filter-group">
-            <label className="filter-label">
+            <span className="filter-label">
               <span className="filter-label-icon">
                 <CalendarIcon size={18} />
               </span>
               <span>Даты поездки</span>
-            </label>
+            </span>
             <div className="filter-row">
               <input
                 type="date"
@@ -158,12 +158,12 @@ export function SearchFilters({ isOpen, onClose, onApply }: SearchFiltersProps) 
 
           {/* People */}
           <div className="filter-group">
-            <label className="filter-label">
+            <span className="filter-label">
               <span className="filter-label-icon">
                 <UsersIcon size={18} />
               </span>
               <span>Количество человек</span>
-            </label>
+            </span>
             <div className="counter-control">
               <button 
                 className="counter-btn"
@@ -195,12 +195,12 @@ export function SearchFilters({ isOpen, onClose, onApply }: SearchFiltersProps) 
 
           {/* Difficulty */}
           <div className="filter-group">
-            <label className="filter-label">
+            <span className="filter-label">
               <span className="filter-label-icon">
                 <ZapIcon size={18} />
               </span>
               <span>Уровень сложности</span>
-            </label>
+            </span>
             <div className="filter-chips">
               {[
                 { value: 'all', label: 'Все', icon: TargetIcon },
@@ -228,12 +228,12 @@ export function SearchFilters({ isOpen, onClose, onApply }: SearchFiltersProps) 
 
           {/* Duration */}
           <div className="filter-group">
-            <label className="filter-label">
+            <span className="filter-label">
               <span className="filter-label-icon">
                 <ClockIcon size={18} />
               </span>
               <span>Длительность тура</span>
-            </label>
+            </span>
             <div className="select-wrapper">
               <select
                 className="filter-select"
@@ -256,12 +256,12 @@ export function SearchFilters({ isOpen, onClose, onApply }: SearchFiltersProps) 
 
           {/* Category */}
           <div className="filter-group">
-            <label className="filter-label">
+            <span className="filter-label">
               <span className="filter-label-icon">
                 <TagIcon size={18} />
               </span>
               <span>Категория активности</span>
-            </label>
+            </span>
             <div className="select-wrapper">
               <select
                 className="filter-select"
@@ -286,12 +286,12 @@ export function SearchFilters({ isOpen, onClose, onApply }: SearchFiltersProps) 
 
           {/* Rating */}
           <div className="filter-group">
-            <label className="filter-label">
+            <span className="filter-label">
               <span className="filter-label-icon">
                 <StarIcon size={18} />
               </span>
               <span>Минимальный рейтинг</span>
-            </label>
+            </span>
             <div className="rating-slider">
               <div className="rating-display">
                 <div className="rating-stars">
@@ -326,15 +326,16 @@ export function SearchFilters({ isOpen, onClose, onApply }: SearchFiltersProps) 
 
           {/* Checkboxes */}
           <div className="filter-group">
-            <label className="filter-label">
+            <span className="filter-label">
               <span className="filter-label-icon">
                 <SparklesIcon size={18} />
               </span>
               <span>Дополнительные услуги</span>
-            </label>
+            </span>
             <div className="filter-checks">
-              <label className="filter-checkbox-elegant">
+              <label htmlFor="filter-food" className="filter-checkbox-elegant">
                 <input
+                  id="filter-food"
                   type="checkbox"
                   checked={filters.hasFood}
                   onChange={(e) => setFilters({ ...filters, hasFood: e.target.checked })}

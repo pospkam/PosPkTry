@@ -3,6 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 
+export const metadata = {
+  title: 'Аренда снаряжения на Камчатке | Kamhub',
+  description: 'Аренда туристического снаряжения, палаток, спальников, рюкзаков и другого оборудования для походов на Камчатке',
+};
+
 interface GearItem {
   id: string;
   name: string;

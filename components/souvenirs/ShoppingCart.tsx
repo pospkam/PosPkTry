@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 
 interface CartItem {
   id: string;
@@ -45,10 +46,12 @@ export function ShoppingCart({ items, onUpdateQuantity, onRemove, onCheckout }: 
             {/* Image */}
             <div className="w-20 h-20 bg-white/10 rounded-lg flex-shrink-0">
               {item.imageUrl ? (
-                <img
+                <Image
                   src={item.imageUrl}
                   alt={item.name}
-                  className="w-full h-full object-cover rounded-lg"
+                  fill
+                  className="object-cover rounded-lg"
+                  sizes="80px"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-2xl">

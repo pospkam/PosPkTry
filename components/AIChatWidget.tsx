@@ -166,9 +166,9 @@ export function AIChatWidget({ userId, className, onClose }: AIChatWidgetProps) 
             <div className="text-xs text-white/50 mb-4">Задайте вопрос или выберите один из вариантов:</div>
             
             <div className="space-y-2">
-              {getQuickQuestions().map((question, index) => (
+              {getQuickQuestions().map((question) => (
                 <button
-                  key={index}
+                  key={question}
                   onClick={() => setInputMessage(question)}
                   className="block w-full text-left p-3 text-xs bg-white/5 hover:bg-white/10 rounded-xl transition-colors border border-white/10"
                 >

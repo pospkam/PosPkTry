@@ -45,8 +45,8 @@ export function RecentActivities({ activities, loading = false }: RecentActiviti
       <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
         <h3 className="text-lg font-bold text-white mb-4">Последние активности</h3>
         <div className="space-y-4 animate-pulse">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex items-start space-x-4">
+          {[...Array(5)].map((_, activityIndex) => (
+            <div key={`skeleton-${activityIndex}`} className="flex items-start space-x-4">
               <div className="w-10 h-10 rounded-full bg-white/10"></div>
               <div className="flex-1 space-y-2">
                 <div className="h-4 bg-white/10 rounded w-3/4"></div>

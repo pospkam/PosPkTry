@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { Tour } from '@/types';
 // import { formatCurrency, formatDuration, formatRating } from '@/lib/utils';
 import { cn } from '@/lib/utils';
@@ -64,10 +65,12 @@ export function TourCard({ tour, className, onClick }: TourCardProps) {
       {/* Изображение тура */}
       <div className="relative h-48 bg-gradient-to-br from-slate-800 to-slate-900">
         {tour.images && tour.images.length > 0 ? (
-          <img
+          <Image
             src={tour.images[0]}
             alt={tour.title}
-            className="w-full h-full object-cover"
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-green-100">

@@ -135,8 +135,8 @@ export default function FishingToursPage() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            {PARTNER_INFO.features.map((feature, i) => (
-              <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
+            {PARTNER_INFO.features.map((feature) => (
+              <div key={feature} className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
                 <p className="text-sm text-white/80">{feature}</p>
               </div>
             ))}
@@ -165,6 +165,7 @@ export default function FishingToursPage() {
             <div className="flex-1 relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
               <input
+                id="fishing-search"
                 type="text"
                 placeholder="Поиск по названию тура..."
                 value={searchQuery}
@@ -218,8 +219,9 @@ export default function FishingToursPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm text-white/70 mb-2">Сложность</label>
+                  <label htmlFor="fishing-difficulty" className="block text-sm text-white/70 mb-2">Сложность</label>
                   <select
+                    id="fishing-difficulty"
                     value={selectedDifficulty}
                     onChange={(e) => setSelectedDifficulty(e.target.value)}
                     className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:border-premium-gold"
@@ -231,10 +233,11 @@ export default function FishingToursPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm text-white/70 mb-2">
+                  <label htmlFor="fishing-price" className="block text-sm text-white/70 mb-2">
                     Цена: до {priceRange[1].toLocaleString('ru-RU')} ₽
                   </label>
                   <input
+                    id="fishing-price"
                     type="range"
                     min="0"
                     max="200000"

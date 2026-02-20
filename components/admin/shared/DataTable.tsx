@@ -61,8 +61,8 @@ export function DataTable<T extends { id: string | number }>({
       <div className={clsx('bg-white/5 border border-white/10 rounded-2xl overflow-hidden', className)}>
         <div className="animate-pulse">
           <div className="h-12 bg-white/5 border-b border-white/10"></div>
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-16 bg-white/5 border-b border-white/5"></div>
+          {[...Array(5)].map((_, loadIndex) => (
+            <div key={`loading-${loadIndex}`} className="h-16 bg-white/5 border-b border-white/5"></div>
           ))}
         </div>
       </div>
@@ -112,14 +112,14 @@ export function DataTable<T extends { id: string | number }>({
             </tr>
           </thead>
           <tbody>
-            {sortedData.map((item, index) => (
+            {sortedData.map((item, rowIndex) => (
               <tr
                 key={item.id}
                 onClick={() => onRowClick?.(item)}
                 className={clsx(
                   'border-b border-white/5',
                   onRowClick && 'cursor-pointer hover:bg-white/5 transition-colors',
-                  index % 2 === 0 ? 'bg-transparent' : 'bg-white/[0.02]'
+                  rowIndex % 2 === 0 ? 'bg-transparent' : 'bg-white/[0.02]'
                 )}
               >
                 {columns.map((column) => (

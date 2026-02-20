@@ -154,9 +154,9 @@ export function RoleAIAssistant({ roleContext, className = '', compact = false }
 
             {/* Сообщения */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {messages.map((message, index) => (
+              {messages.map((message) => (
                 <div
-                  key={index}
+                  key={message.content.substring(0, 20)}
                   className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
@@ -192,9 +192,9 @@ export function RoleAIAssistant({ roleContext, className = '', compact = false }
               <div className="px-4 pb-2 space-y-2">
                 <p className="text-xs text-white/50">Быстрые вопросы:</p>
                 <div className="flex flex-wrap gap-2">
-                  {quickQuestions.slice(0, 3).map((question, index) => (
+                  {quickQuestions.slice(0, 3).map((question, qIndex) => (
                     <button
-                      key={index}
+                      key={`quick-${qIndex}`}
                       onClick={() => handleQuickQuestion(question)}
                       className="text-xs px-3 py-1.5 bg-white/5 hover:bg-white/10 text-white/70 rounded-full border border-white/10 transition-colors"
                     >
@@ -261,9 +261,9 @@ export function RoleAIAssistant({ roleContext, className = '', compact = false }
 
       {/* Сообщения */}
       <div className="flex-1 overflow-y-auto p-6 space-y-4 min-h-[400px] max-h-[600px]">
-        {messages.map((message, index) => (
+        {messages.map((message, msgIndex) => (
           <div
-            key={index}
+            key={`msg-${message.timestamp.getTime()}-${msgIndex}`}
             className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
@@ -299,9 +299,9 @@ export function RoleAIAssistant({ roleContext, className = '', compact = false }
         <div className="px-6 pb-4 space-y-3">
           <p className="text-sm text-white/50">  Популярные вопросы:</p>
           <div className="grid grid-cols-1 gap-2">
-            {quickQuestions.map((question, index) => (
+            {quickQuestions.map((question, qIndex) => (
               <button
-                key={index}
+                key={`popular-${qIndex}`}
                 onClick={() => handleQuickQuestion(question)}
                 className="text-left text-sm px-4 py-2 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white rounded-xl border border-white/10 hover:border-premium-gold/30 transition-all"
               >

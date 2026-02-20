@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 
 interface Car {
   id: string;
@@ -213,7 +214,7 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
             <div className="flex gap-4 mb-4">
               <div className="w-20 h-20 bg-white/10 rounded-lg flex-shrink-0">
                 {car.imageUrl ? (
-                  <img src={car.imageUrl} alt={`${car.brand} ${car.model}`} className="w-full h-full object-cover rounded-lg" />
+                  <Image src={car.imageUrl} alt={`${car.brand} ${car.model}`} fill className="object-cover rounded-lg" sizes="80px" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-2xl"></div>
                 )}
@@ -250,9 +251,9 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2">ФИО *</label>
+              <label htmlFor="booking-name" className="block text-sm font-medium mb-2">ФИО *</label>
               <input
-                type="text"
+                id="booking-name"
                 value={form.name}
                 onChange={(e) => updateForm('name', e.target.value)}
                 className={`w-full px-4 py-3 bg-white/10 border rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold ${
@@ -265,9 +266,9 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Email *</label>
+                <label htmlFor="booking-email" className="block text-sm font-medium mb-2">Email *</label>
                 <input
-                  type="email"
+                  id="booking-email"
                   value={form.email}
                   onChange={(e) => updateForm('email', e.target.value)}
                   className={`w-full px-4 py-3 bg-white/10 border rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold ${
@@ -279,9 +280,9 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Телефон *</label>
+                <label htmlFor="booking-phone" className="block text-sm font-medium mb-2">Телефон *</label>
                 <input
-                  type="tel"
+                  id="booking-phone"
                   value={form.phone}
                   onChange={(e) => updateForm('phone', e.target.value)}
                   className={`w-full px-4 py-3 bg-white/10 border rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold ${
@@ -294,9 +295,9 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Номер водительских прав *</label>
+              <label htmlFor="booking-driver-license" className="block text-sm font-medium mb-2">Номер водительских прав *</label>
               <input
-                type="text"
+                id="booking-driver-license"
                 value={form.driverLicense}
                 onChange={(e) => updateForm('driverLicense', e.target.value)}
                 className={`w-full px-4 py-3 bg-white/10 border rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold ${
@@ -309,8 +310,9 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Дата начала *</label>
+                <label htmlFor="booking-start-date" className="block text-sm font-medium mb-2">Дата начала *</label>
                 <input
+                  id="booking-start-date"
                   type="date"
                   value={form.startDate}
                   onChange={(e) => updateForm('startDate', e.target.value)}
@@ -323,9 +325,9 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Дата окончания *</label>
+                <label htmlFor="booking-end-date" className="block text-sm font-medium mb-2">Дата окончания *</label>
                 <input
-                  type="date"
+                  id="booking-end-date"
                   value={form.endDate}
                   onChange={(e) => updateForm('endDate', e.target.value)}
                   min={form.startDate}
@@ -339,8 +341,9 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Место получения</label>
+                <label htmlFor="booking-pickup-location" className="block text-sm font-medium mb-2">Место получения</label>
                 <select
+                  id="booking-pickup-location"
                   value={form.pickupLocation}
                   onChange={(e) => updateForm('pickupLocation', e.target.value)}
                   className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
@@ -352,8 +355,9 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Место возврата</label>
+                <label htmlFor="booking-return-location" className="block text-sm font-medium mb-2">Место возврата</label>
                 <select
+                  id="booking-return-location"
                   value={form.returnLocation}
                   onChange={(e) => updateForm('returnLocation', e.target.value)}
                   className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
@@ -366,11 +370,11 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-3">Страховка</label>
+              <label htmlFor="booking-insurance-none" className="block text-sm font-medium mb-3">Страховка</label>
               <div className="space-y-2">
-                <label className="flex items-center gap-3">
+                <label htmlFor="insurance-none" className="flex items-center gap-3">
                   <input
-                    type="radio"
+                    id="insurance-none"
                     name="insurance"
                     value="none"
                     checked={form.insurance === 'none'}
@@ -380,11 +384,9 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
                   <span>Без страховки</span>
                 </label>
 
-                <label className="flex items-center gap-3">
+                <label htmlFor="insurance-basic" className="flex items-center gap-3">
                   <input
-                    type="radio"
-                    name="insurance"
-                    value="basic"
+                    id="insurance-basic"
                     checked={form.insurance === 'basic'}
                     onChange={(e) => updateForm('insurance', e.target.value as 'basic' | 'premium' | 'none')}
                     className="text-premium-gold"
@@ -392,11 +394,9 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
                   <span>Базовая страховка (+8%)</span>
                 </label>
 
-                <label className="flex items-center gap-3">
+                <label htmlFor="insurance-premium" className="flex items-center gap-3">
                   <input
-                    type="radio"
-                    name="insurance"
-                    value="premium"
+                    id="insurance-premium"
                     checked={form.insurance === 'premium'}
                     onChange={(e) => updateForm('insurance', e.target.value as 'basic' | 'premium' | 'none')}
                     className="text-premium-gold"
@@ -409,33 +409,31 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
             <div>
               <label className="block text-sm font-medium mb-3">Дополнительные опции</label>
               <div className="space-y-2">
-                <label className="flex items-center justify-between">
+               span className="block text-sm font-medium mb-3">Дополнительные опции</span>
+              <div className="space-y-2">
+                <label htmlFor="opt-additional-driver" className="flex items-center justify-between">
                   <span>Дополнительный водитель (+5%)</span>
                   <input
-                    type="checkbox"
-                    checked={form.additionalDrivers}
-                    onChange={(e) => updateForm('additionalDrivers', e.target.checked)}
+                    id="opt-additional-driver=> updateForm('additionalDrivers', e.target.checked)}
                     className="text-premium-gold rounded"
                   />
                 </label>
 
                 <label className="flex items-center justify-between">
                   <span>GPS навигатор (+500₽/день)</span>
+                  <inpuhtmlFor="opt-gps" className="flex items-center justify-between">
+                  <span>GPS навигатор (+500₽/день)</span>
                   <input
-                    type="checkbox"
-                    checked={form.gps}
-                    onChange={(e) => updateForm('gps', e.target.checked)}
-                    className="text-premium-gold rounded"
+                    id="opt-gps"emium-gold rounded"
                   />
                 </label>
 
                 <label className="flex items-center justify-between">
                   <span>Детское кресло (+300₽/день)</span>
+                  <inpuhtmlFor="opt-child-seat" className="flex items-center justify-between">
+                  <span>Детское кресло (+300₽/день)</span>
                   <input
-                    type="checkbox"
-                    checked={form.childSeat}
-                    onChange={(e) => updateForm('childSeat', e.target.checked)}
-                    className="text-premium-gold rounded"
+                    id="opt-child-seat"gold rounded"
                   />
                 </label>
               </div>
@@ -444,8 +442,9 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
             <div>
               <label className="block text-sm font-medium mb-2">Комментарии</label>
               <textarea
-                value={form.comments}
-                onChange={(e) => updateForm('comments', e.target.value)}
+                valuehtmlFor="booking-comments" className="block text-sm font-medium mb-2">Комментарии</label>
+              <textarea
+                id="booking-comments"e={(e) => updateForm('comments', e.target.value)}
                 className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold resize-none"
                 rows={3}
                 placeholder="Особые пожелания или требования"

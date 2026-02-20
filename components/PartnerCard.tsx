@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { Partner } from '@/types';
 import { formatRating, getInitials, generateAvatarColor } from '@/lib/utils';
 import { cn } from '@/lib/utils';
@@ -91,10 +92,12 @@ export function PartnerCard({ partner, className, onClick }: PartnerCardProps) {
     >
       {/* Логотип и категория */}
       <div className="relative h-32 bg-gray-100">
-        {partner.logo ? (
-          <img
+        {paImage
             src={partner.logo.url}
             alt={partner.name}
+            fill
+            className="object-contain p-4"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw
             className="w-full h-full object-contain p-4"
           />
         ) : (

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 
 interface GearItem {
   id: string;
@@ -45,10 +46,12 @@ export function GearCard({ gear, onRent }: GearCardProps) {
       {/* Image */}
       <div className="relative h-48 bg-white/10">
         {gear.imageUrl ? (
-          <img
+          <Image
             src={gear.imageUrl}
             alt={gear.name}
-            className="w-full h-full object-cover"
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-4xl">

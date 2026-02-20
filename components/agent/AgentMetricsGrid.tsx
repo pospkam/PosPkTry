@@ -55,9 +55,9 @@ export function AgentMetricsGrid({ metrics }: AgentMetricsGridProps) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {metricCards.map((metric, index) => (
+      {metricCards.map((metric) => (
         <div
-          key={index}
+          key={metric.label}
           className="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-colors"
         >
           <div className="flex items-center justify-between mb-3">

@@ -196,13 +196,13 @@ export const StayDatePicker: React.FC<StayDatePickerProps> = ({
       {/* Выбранные даты */}
       <div className="mb-6 grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm text-white/70 mb-2">Заезд</label>
+          <span className="block text-sm text-white/70 mb-2">Заезд</span>
           <div className="px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white">
             {checkIn ? formatDisplayDate(checkIn) : 'Выберите дату'}
           </div>
         </div>
         <div>
-          <label className="block text-sm text-white/70 mb-2">Выезд</label>
+          <span className="block text-sm text-white/70 mb-2">Выезд</span>
           <div className="px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white">
             {checkOut ? formatDisplayDate(checkOut) : 'Выберите дату'}
           </div>

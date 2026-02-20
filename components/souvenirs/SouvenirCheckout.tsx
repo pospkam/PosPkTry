@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 
 interface CartItem {
   id: string;
@@ -141,7 +142,7 @@ export function SouvenirCheckout({ items, onBack, onOrderComplete }: SouvenirChe
                 <div className="flex gap-4">
                   <div className="w-16 h-16 bg-white/10 rounded-lg flex-shrink-0">
                     {item.imageUrl ? (
-                      <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover rounded-lg" />
+                      <Image src={item.imageUrl} alt={item.name} fill className="object-cover rounded-lg" sizes="64px" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-2xl"></div>
                     )}
@@ -183,9 +184,9 @@ export function SouvenirCheckout({ items, onBack, onOrderComplete }: SouvenirChe
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Имя *</label>
+              <label htmlFor="checkout-name" className="block text-sm font-medium mb-2">Имя *</label>
               <input
-                type="text"
+                id="checkout-name"
                 value={form.name}
                 onChange={(e) => updateForm('name', e.target.value)}
                 className={`w-full px-4 py-3 bg-white/10 border rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold ${
@@ -197,9 +198,9 @@ export function SouvenirCheckout({ items, onBack, onOrderComplete }: SouvenirChe
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Email *</label>
+              <label htmlFor="checkout-email" className="block text-sm font-medium mb-2">Email *</label>
               <input
-                type="email"
+                id="checkout-email"
                 value={form.email}
                 onChange={(e) => updateForm('email', e.target.value)}
                 className={`w-full px-4 py-3 bg-white/10 border rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold ${
@@ -211,9 +212,9 @@ export function SouvenirCheckout({ items, onBack, onOrderComplete }: SouvenirChe
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Телефон *</label>
+              <label htmlFor="checkout-phone" className="block text-sm font-medium mb-2">Телефон *</label>
               <input
-                type="tel"
+                id="checkout-phone"
                 value={form.phone}
                 onChange={(e) => updateForm('phone', e.target.value)}
                 className={`w-full px-4 py-3 bg-white/10 border rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold ${
@@ -225,10 +226,11 @@ export function SouvenirCheckout({ items, onBack, onOrderComplete }: SouvenirChe
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-3">Способ получения</label>
+              <span className="block text-sm font-medium mb-3">Способ получения</span>
               <div className="space-y-2">
-                <label className="flex items-center gap-3">
+                <label htmlFor="delivery-pickup" className="flex items-center gap-3">
                   <input
+                    id="delivery-pickup"
                     type="radio"
                     name="deliveryMethod"
                     value="pickup"
@@ -255,8 +257,9 @@ export function SouvenirCheckout({ items, onBack, onOrderComplete }: SouvenirChe
 
             {form.deliveryMethod === 'delivery' && (
               <div>
-                <label className="block text-sm font-medium mb-2">Адрес доставки *</label>
+                <label htmlFor="checkout-address" className="block text-sm font-medium mb-2">Адрес доставки *</label>
                 <textarea
+                  id="checkout-address"
                   value={form.address}
                   onChange={(e) => updateForm('address', e.target.value)}
                   className={`w-full px-4 py-3 bg-white/10 border rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold resize-none ${
@@ -270,8 +273,9 @@ export function SouvenirCheckout({ items, onBack, onOrderComplete }: SouvenirChe
             )}
 
             <div>
-              <label className="block text-sm font-medium mb-2">Комментарии к заказу</label>
+              <label htmlFor="checkout-comments" className="block text-sm font-medium mb-2">Комментарии к заказу</label>
               <textarea
+                id="checkout-comments"
                 value={form.comments}
                 onChange={(e) => updateForm('comments', e.target.value)}
                 className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold resize-none"

@@ -72,10 +72,10 @@ export function Pagination({
         </button>
 
         <div className="flex items-center space-x-1">
-          {getPageNumbers().map((page, index) => {
+          {getPageNumbers().map((page, pageIndex) => {
             if (page === '...') {
               return (
-                <span key={`ellipsis-${index}`} className="px-3 py-2 text-white/50">
+                <span key={`ellipsis-${pageIndex}`} className="px-3 py-2 text-white/50">
                   ...
                 </span>
               );
