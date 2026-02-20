@@ -95,6 +95,7 @@ export const AccommodationCard: React.FC<AccommodationCardProps> = ({
               src={mainImage}
               alt={images[0]?.alt || name}
               fill
+              sizes="(max-width: 768px) 100vw, 50vw"
               className="object-cover transition-transform duration-500 group-hover:scale-110"
               onError={() => setImgError(true)}
             />

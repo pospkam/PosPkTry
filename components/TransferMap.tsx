@@ -3,6 +3,21 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { yandexMaps, Coordinates, RoutePoint } from '@/lib/maps/yandex';
 
+// Модульные константы для избежания создания новых ссылок при каждом рендере
+const EMPTY_VEHICLES: Array<{
+  id: string;
+  coordinates: Coordinates;
+  name: string;
+  status: 'available' | 'busy' | 'offline';
+}> = [];
+
+const EMPTY_BOOKINGS: Array<{
+  id: string;
+  coordinates: Coordinates;
+  passengerName: string;
+  status: 'pending' | 'confirmed' | 'in_progress';
+}> = [];
+
 interface TransferMapProps {
   route?: {
     from: string;
@@ -10,18 +25,8 @@ interface TransferMapProps {
     fromCoordinates: Coordinates;
     toCoordinates: Coordinates;
   };
-  vehicles?: Array<{
-    id: string;
-    coordinates: Coordinates;
-    name: string;
-    status: 'available' | 'busy' | 'offline';
-  }>;
-  bookings?: Array<{
-    id: string;
-    coordinates: Coordinates;
-    passengerName: string;
-    status: 'pending' | 'confirmed' | 'in_progress';
-  }>;
+  vehicles?: typeof EMPTY_VEHICLES;
+  bookings?: typeof EMPTY_BOOKINGS;
   center?: Coordinates;
   zoom?: number;
   height?: string;
@@ -34,8 +39,8 @@ interface TransferMapProps {
 
 export function TransferMap({
   route,
-  vehicles = [],
-  bookings = [],
+  vehicles = EMPTY_VEHICLES,
+  bookings = EMPTY_BOOKINGS,
   center,
   zoom = 13,
   height = '400px',

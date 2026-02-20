@@ -153,9 +153,9 @@ export const AccommodationFilters: React.FC<AccommodationFiltersProps> = ({
           
           {/* Тип размещения */}
           <div>
-            <label className="block text-sm font-medium text-white/80 mb-3">
+            <span className="block text-sm font-medium text-white/80 mb-3">
               Тип размещения
-            </label>
+            </span>
             <div className="grid grid-cols-2 gap-2">
               {accommodationTypes.map(type => (
                 <button

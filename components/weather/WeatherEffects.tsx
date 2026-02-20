@@ -54,17 +54,20 @@ interface WeatherAnimations {
 export function Rain({ animations }: { animations: WeatherAnimations }) {
   if (!animations.rain) return null;
 
-  const raindrops = Array.from({ length: 50 }, (_, i) => (
-    <div
-      key={`rain-${i}`}
-      className="raindrop"
-      style={{
-        left: `${Math.random() * 100}%`,
-        animationDuration: `${0.5 + Math.random() * 0.5}s`,
-        animationDelay: `${Math.random() * 2}s`,
-      }}
-    />
-  ));
+  const raindrops = Array.from({ length: 50 }, (_, i) => {
+    const id = `rain-${i}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    return (
+      <div
+        key={id}
+        className="raindrop"
+        style={{
+          left: `${Math.random() * 100}%`,
+          animationDuration: `${0.5 + Math.random() * 0.5}s`,
+          animationDelay: `${Math.random() * 2}s`,
+        }}
+      />
+    );
+  });
 
   return <div className="rain-container">{raindrops}</div>;
 }
@@ -73,18 +76,21 @@ export function Rain({ animations }: { animations: WeatherAnimations }) {
 export function Snow({ animations }: { animations: WeatherAnimations }) {
   if (!animations.snow) return null;
 
-  const snowflakes = Array.from({ length: 50 }, (_, i) => (
-    <div
-      key={`snow-${i}`}
-      className="snowflake"
-      style={{
-        left: `${Math.random() * 100}%`,
-        animationDuration: `${3 + Math.random() * 4}s`,
-        animationDelay: `${Math.random() * 5}s`,
-        opacity: Math.random(),
-      }}
-    />
-  ));
+  const snowflakes = Array.from({ length: 50 }, (_, i) => {
+    const id = `snow-${i}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    return (
+      <div
+        key={id}
+        className="snowflake"
+        style={{
+          left: `${Math.random() * 100}%`,
+          animationDuration: `${3 + Math.random() * 4}s`,
+          animationDelay: `${Math.random() * 5}s`,
+          opacity: Math.random(),
+        }}
+      />
+    );
+  });
 
   return <div className="snow-container">{snowflakes}</div>;
 }
