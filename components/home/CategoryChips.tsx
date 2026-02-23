@@ -34,18 +34,18 @@ interface CategoryChipsProps {
 
 export function CategoryChips({ activeCategory }: CategoryChipsProps) {
   return (
-    <section aria-label="Категории туров" className="pt-6 pb-2">
+    <section aria-label="Категории туров" className="pt-4 pb-2">
       {/* Заголовок */}
-      <div className="flex items-center justify-between px-4 mb-4">
-        <h2 className="text-base font-bold text-gray-900 dark:text-white">Категории</h2>
-        <Link href="/tours" className="text-sm font-medium text-[#4A7FD4] dark:text-[#7EB3FF]">
+      <div className="flex items-center justify-between px-4 mb-3">
+        <h2 className="text-[15px] font-bold text-white dark:text-white drop-shadow-sm">Категории</h2>
+        <Link href="/tours" className="text-sm font-medium text-white/70 dark:text-[#7EB3FF]">
           Все →
         </Link>
       </div>
 
       {/* Горизонтальный скролл */}
       <div
-        className="scrollbar-hide flex overflow-x-auto gap-3 px-4 pb-2"
+        className="scrollbar-hide flex overflow-x-auto gap-2.5 px-4 pb-2"
         style={{ WebkitOverflowScrolling: 'touch' }}
         role="list"
       >
@@ -58,18 +58,18 @@ export function CategoryChips({ activeCategory }: CategoryChipsProps) {
               role="listitem"
               aria-current={isActive ? 'page' : undefined}
               className={[
-                'flex flex-col items-center justify-center gap-2 w-[68px] h-[78px] flex-shrink-0 rounded-2xl transition-all',
+                'flex flex-col items-center justify-center gap-1.5 w-[66px] h-[74px] flex-shrink-0 rounded-2xl transition-all',
                 isActive
-                  ? 'bg-[#4A7FD4] text-white shadow-lg shadow-[#4A7FD4]/30'
-                  : 'bg-white/70 dark:bg-white/10 backdrop-blur-lg text-gray-700 dark:text-gray-200 shadow-sm border border-white/60 dark:border-white/10',
+                  ? 'bg-white/30 text-white shadow-lg shadow-white/10 ring-1 ring-white/40'
+                  : 'bg-white/15 dark:bg-white/10 backdrop-blur-md text-white/80 dark:text-gray-200',
               ].join(' ')}
             >
               <cat.Icon
-                size={24}
+                size={22}
                 strokeWidth={1.8}
-                className={isActive ? 'text-white' : 'text-gray-700 dark:text-gray-100'}
+                className={isActive ? 'text-white' : 'text-white/80 dark:text-gray-100'}
               />
-              <span className="text-[10px] font-semibold leading-tight text-center">
+              <span className="text-[10px] font-medium leading-tight text-center">
                 {cat.label}
               </span>
             </Link>

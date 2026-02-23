@@ -36,11 +36,11 @@ export const metadata: Metadata = {
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen max-w-[768px] mx-auto relative transition-colors duration-300 overflow-hidden">
+    <div className="min-h-screen max-w-[768px] mx-auto relative transition-colors duration-300">
 
       {/* ================================================================
-       * FULL-SCREEN BACKGROUND — фото вулкана за всем контентом
-       * Light: видимый blur-фон; Dark: тёмный фон (скрыто)
+       * FULL-SCREEN BACKGROUND — размытый пейзаж за всем контентом
+       * Сине-лавандовый тон (#BAC5D8) просвечивает везде
        * ================================================================ */}
       <div className="fixed inset-0 -z-10 dark:hidden">
         <Image
@@ -51,17 +51,18 @@ export default function HomePage() {
           sizes="100vw"
           style={{ objectFit: 'cover', objectPosition: 'center 30%' }}
         />
-        {/* Frost overlay — размытие для читаемости контента */}
-        <div className="absolute inset-0 bg-white/30 backdrop-blur-sm" />
+        {/* Сине-лавандовый overlay — ключевой тон из макета */}
+        <div className="absolute inset-0 bg-[#9BAAC8]/40 backdrop-blur-[20px]" />
       </div>
 
-      {/* Dark mode fallback background */}
+      {/* Dark mode background */}
       <div className="fixed inset-0 -z-10 hidden dark:block bg-[#0B1120]" />
 
       {/* ================================================================
-       * HERO SECTION — верхние 42vh: чистое фото без blur
+       * HERO SECTION — верхние 30%: нативное фото видно в центре
+       * По краям — сине-лавандовый padding от фона
        * ================================================================ */}
-      <div className="relative h-[42vh] min-h-[280px] max-h-[400px] w-full overflow-hidden">
+      <div className="relative h-[32vh] min-h-[240px] max-h-[360px] w-full overflow-hidden rounded-b-[32px]">
         <Image
           src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=900&q=80"
           alt="Вулкан Камчатки"
@@ -71,32 +72,29 @@ export default function HomePage() {
           style={{ objectFit: 'cover', objectPosition: 'center 30%' }}
         />
 
-        {/* Gradient overlay: чистое фото сверху → мягкий переход к контенту */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-white/60 dark:to-[#0B1120]" />
+        {/* Gradient: прозрачное фото сверху → лавандовый переход снизу */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#B9C1D6]/30 via-transparent to-[#B9C1D6]/70 dark:from-[#0B1120]/30 dark:to-[#0B1120]" />
 
         {/* 1. Header */}
         <HomeHeader />
-
-        {/* 2. Поисковая строка — внизу hero */}
-        <div className="absolute bottom-4 left-4 right-4 z-10">
-          <HomeSearchBar />
-        </div>
       </div>
 
       {/* ================================================================
-       * ОСНОВНОЙ КОНТЕНТ — glassmorphism panel поверх фона
+       * 2. Поисковая строка — отдельно между hero и контентом
        * ================================================================ */}
-      <main className="relative px-0 pt-2 pb-28">
-        {/* Frosted glass подложка для контента (только light) */}
-        <div className="absolute inset-0 bg-white/50 dark:bg-transparent backdrop-blur-md dark:backdrop-blur-none rounded-t-3xl -top-4 pointer-events-none" />
+      <div className="relative px-4 -mt-6 z-20">
+        <HomeSearchBar />
+      </div>
 
-        <div className="relative z-[1]">
-          {/* 3. Категории */}
-          <CategoryChips />
+      {/* ================================================================
+       * ОСНОВНОЙ КОНТЕНТ — без белого overlay, фон просвечивает
+       * ================================================================ */}
+      <main className="relative px-0 pt-4 pb-28">
+        {/* 3. Категории */}
+        <CategoryChips />
 
-          {/* 4. Карточки туров */}
-          <TourCardsRow />
-        </div>
+        {/* 4. Карточки туров — 2 колонки */}
+        <TourCardsRow />
       </main>
 
       {/* 5. Нижняя навигация */}

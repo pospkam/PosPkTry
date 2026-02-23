@@ -2,7 +2,6 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
 
 interface Tour {
   id: string;
@@ -18,8 +17,8 @@ interface Tour {
 function StarRating({ rating }: { rating: number }) {
   return (
     <div className="flex items-center gap-0.5" aria-label={`Рейтинг: ${rating} из 5`} role="img">
-      <span className="text-amber-400 text-sm">★</span>
-      <span className="text-xs font-semibold text-gray-700 dark:text-gray-200">{rating.toFixed(1)}</span>
+      <span className="text-amber-400 text-xs">★</span>
+      <span className="text-[11px] font-semibold text-white/90">{rating.toFixed(1)}</span>
     </div>
   );
 }
@@ -49,12 +48,22 @@ const FALLBACK_TOURS: Tour[] = [
   {
     id: '3',
     name: 'Термальный Тур',
-    short_description: 'Термальные источники Камчатки',
+    short_description: 'Горячие источники Камчатки',
     category: 'thermal',
     price: 10000,
     rating: 4.7,
     review_count: 156,
     image_url: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&q=80',
+  },
+  {
+    id: '4',
+    name: 'Рыбалка',
+    short_description: 'Рыбалка на дикого лосося',
+    category: 'fishing',
+    price: 12000,
+    rating: 4.6,
+    review_count: 84,
+    image_url: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=400&q=80',
   },
 ];
 
@@ -62,53 +71,54 @@ export function TourCardsRow() {
   return (
     <section aria-label="Популярные туры" className="py-2">
       {/* Заголовок */}
-      <div className="flex items-center justify-between px-4 mb-4">
-        <h2 className="text-base font-bold text-gray-900 dark:text-white">Популярные туры</h2>
-        <Link href="/tours" className="text-sm font-medium text-[#4A7FD4] dark:text-[#7EB3FF]">
+      <div className="flex items-center justify-between px-4 mb-3">
+        <h2 className="text-[15px] font-bold text-white dark:text-white drop-shadow-sm">Популярные туры</h2>
+        <Link href="/tours" className="text-sm font-medium text-white/70 dark:text-[#7EB3FF]">
           Все →
         </Link>
       </div>
 
-      {/* Горизонтальный скролл */}
-      <div
-        className="scrollbar-hide flex overflow-x-auto gap-3 px-4 pb-4"
-        style={{ WebkitOverflowScrolling: 'touch' }}
-        role="list"
-      >
+      {/* Сетка 2 колонки — как в макете */}
+      <div className="grid grid-cols-2 gap-3 px-4" role="list">
         {FALLBACK_TOURS.map(tour => (
           <Link
             key={tour.id}
             href={`/tours?category=${tour.category}`}
             role="listitem"
             aria-label={`${tour.name}, ${tour.price.toLocaleString('ru-RU')} ₽`}
-            className="flex-shrink-0 w-[170px] bg-white/70 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-md shadow-black/5 dark:shadow-black/30 overflow-hidden transition-transform hover:-translate-y-1 active:scale-95 border border-white/60 dark:border-white/10"
+            className="relative rounded-2xl overflow-hidden shadow-lg shadow-black/20 transition-transform active:scale-[0.97] aspect-[3/4]"
           >
-            {/* Фото */}
-            <div className="relative h-[140px] w-full">
-              <Image
-                src={tour.image_url || '/placeholder-tour.jpg'}
-                alt={tour.short_description}
-                fill
-                sizes="170px"
-                className="object-cover"
-                loading="lazy"
-              />
-              {/* Бейдж с ценой поверх фото */}
-              <div className="absolute bottom-2 left-2 bg-white/90 dark:bg-black/60 backdrop-blur-sm rounded-lg px-2 py-0.5">
-                <span className="text-xs font-bold text-[#4A7FD4] dark:text-[#7EB3FF]">
-                  {tour.price.toLocaleString('ru-RU')} ₽
-                </span>
-              </div>
+            {/* Фото на всю карточку */}
+            <Image
+              src={tour.image_url || '/placeholder-tour.jpg'}
+              alt={tour.short_description}
+              fill
+              sizes="(max-width: 768px) 46vw, 350px"
+              className="object-cover"
+              loading="lazy"
+            />
+
+            {/* Тёмный gradient overlay снизу — для текста */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+            {/* Цена — бейдж сверху-справа */}
+            <div className="absolute top-2 right-2 bg-black/40 backdrop-blur-sm rounded-lg px-2 py-0.5">
+              <span className="text-[11px] font-bold text-white">
+                {tour.price.toLocaleString('ru-RU')} ₽
+              </span>
             </div>
 
-            {/* Инфо */}
-            <div className="px-3 py-2.5">
-              <h3 className="text-sm font-bold text-gray-900 dark:text-white leading-tight mb-1.5 line-clamp-2">
+            {/* Инфо внизу — на тёмном overlay */}
+            <div className="absolute bottom-0 left-0 right-0 p-3">
+              <h3 className="text-[13px] font-bold text-white leading-tight mb-1 drop-shadow-md line-clamp-2">
                 {tour.name}
               </h3>
-              <div className="flex items-center gap-1">
+              <p className="text-[10px] text-white/60 mb-1.5 line-clamp-1">
+                {tour.short_description}
+              </p>
+              <div className="flex items-center gap-1.5">
                 <StarRating rating={tour.rating} />
-                <span className="text-[10px] text-gray-400">({tour.review_count})</span>
+                <span className="text-[10px] text-white/50">({tour.review_count})</span>
               </div>
             </div>
           </Link>

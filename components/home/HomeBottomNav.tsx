@@ -37,7 +37,7 @@ export function HomeBottomNav() {
       aria-label="Основная навигация"
       className="fixed bottom-4 left-4 right-4 z-50 max-w-[720px] mx-auto"
     >
-      <div className="flex items-center justify-around h-16 bg-white/75 dark:bg-[#0D1B2A]/95 backdrop-blur-xl rounded-3xl shadow-xl shadow-black/10 dark:shadow-black/40 border border-white/60 dark:border-white/10 px-2">
+      <div className="flex items-center justify-around h-16 bg-[#8B9AC0]/50 dark:bg-[#0D1B2A]/95 backdrop-blur-xl rounded-3xl shadow-xl shadow-black/15 dark:shadow-black/40 border border-white/20 dark:border-white/10 px-2">
         {NAV_ITEMS.map(item => {
           const active = isActive(item);
           return (
@@ -49,8 +49,8 @@ export function HomeBottomNav() {
               className={[
                 'flex flex-col items-center justify-center gap-1 flex-1 h-full transition-colors',
                 active
-                  ? 'text-[#4A7FD4] dark:text-[#7EB3FF]'
-                  : 'text-gray-400 dark:text-gray-500',
+                  ? 'text-white dark:text-[#7EB3FF]'
+                  : 'text-white/50 dark:text-gray-500',
               ].join(' ')}
             >
               <item.Icon size={22} strokeWidth={active ? 2.2 : 1.6} />
