@@ -3,8 +3,8 @@
 // Импорт дизайнов и компонентов из Figma
 // =============================================
 
-const FIGMA_CLIENT_ID = '4WZfL71ZBHuFZ9FD6zcJZz';
-const FIGMA_CLIENT_SECRET = 'FIGMA_SECRET_REMOVED';
+const FIGMA_CLIENT_ID = process.env.FIGMA_CLIENT_ID ?? '';
+const FIGMA_CLIENT_SECRET = process.env.FIGMA_CLIENT_SECRET ?? '';
 const FIGMA_API_BASE = 'https://api.figma.com/v1';
 
 export interface FigmaFile {
