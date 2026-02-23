@@ -3,12 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { Protected } from '@/components/Protected';
 import { OperatorNav } from '@/components/operator/OperatorNav';
-
-export const metadata = {
-  title: 'Панель оператора | Kamhub',
-  description: 'Управление турами и бронированиями оператора',
-};
-
 import { OperatorMetricsGrid } from '@/components/operator/Dashboard/OperatorMetricsGrid';
 import { RecentBookingsTable } from '@/components/operator/Dashboard/RecentBookingsTable';
 import { TopToursTable } from '@/components/operator/Dashboard/TopToursTable';

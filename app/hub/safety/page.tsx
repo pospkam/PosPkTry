@@ -4,11 +4,6 @@ import React, { useState } from 'react';
 import { MapPin, Volcano, Sun, Cloud, CloudRain, Wind, Flame } from 'lucide-react';
 import { PublicNav } from '@/components/shared/PublicNav';
 
-export const metadata = {
-  title: 'Безопасность | Kamhub',
-  description: 'Экстренные службы и информация о безопасности на Камчатке',
-};
-
 export default function SafetyHub() {
   const [activeTab, setActiveTab] = useState('sos');
 

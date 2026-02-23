@@ -4,12 +4,6 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Protected } from '@/components/Protected';
 import { OperatorNav } from '@/components/operator/OperatorNav';
-
-export const metadata = {
-  title: 'Создание тура | Kamhub',
-  description: 'Создание нового тура оператора',
-};
-
 import { TourForm } from '@/components/operator/Tours/TourForm';
 import { TourFormData } from '@/types/operator';
 import { useAuth } from '@/contexts/AuthContext';

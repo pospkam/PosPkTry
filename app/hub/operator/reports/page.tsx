@@ -3,12 +3,6 @@
 import React, { useState } from 'react';
 import { Protected } from '@/components/Protected';
 import { OperatorNav } from '@/components/operator/OperatorNav';
-
-export const metadata = {
-  title: 'Отчёты | Kamhub',
-  description: 'Отчёты и статистика оператора',
-};
-
 import { 
   FileText, 
   Download, 

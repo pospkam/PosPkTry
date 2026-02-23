@@ -1,16 +1,9 @@
-export TIMEWEB_TOKEN="твой_токен"eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCIsImtpZCI6IjFrYnhacFJNQGJSI0tSbE1xS1lqIn0.eyJ1c2VyIjoicGE0MjIxMDgiLCJ0eXBlIjoiYXBpX2tleSIsImFwaV9rZXlfaWQiOiI2YjU5YTQ1Yi05ODcxLTRlMzItYmM4Ny00ZGVkY2VkZTc2MTEiLCJpYXQiOjE3NzE2MjU3NTB9.qwUinkBlRi52itjtUbjm3M69IU_Jp4W_Y24ndaB9jKy0657qP5r5Bq0JF6M2MajjNluIMLAeRg8bysDaQV-iN9JXn1WPombMR6a86WM7Yrl0lyW3AE8JNHbnn9beuFqnAoxVSIbLS3VEn2C0boCVXEhvzomqdXiOFOFBsof3RGZ_mMNqbvfWB7-SxB9I3MKseyC3kgkM8sEbG0zUlsv-J_-tNgk45L-0eGsM3xqXKoRexj8CskjiJwURp-nF4P1wpryD5mvl-CNjcRMuldcZxFTCiNWiDm-j1RCrp7ak5CmvgAspn9xg7JYSVeHQx-qsZhIdPslIviO2pbPADMboF63RRf2vFbZUHcOHZB07RLHnAUpi3b9IkLCA70YjB6SxW_TegTDovsBuuQ92zRRJTBp2ar4aK1P9UeoA054Qj6Sjv-6gAZ3-6r5fB18h_PAXYXVd63vSK5i16Lm7geCGW5uDOhQ4Q8fi9Pa8vNRCBpvOnD3uU6F7tQwftNpjMaMR
-nano /workspaces/PosPkTry/.env.local'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Protected } from '@/components/Protected';
 import { OperatorNav } from '@/components/operator/OperatorNav';
-
-export const metadata = {
-  title: 'Управление турами | Kamhub',
-  description: 'Управление турами оператора',
-};
-
 import {
   DataTable,
   Pagination,

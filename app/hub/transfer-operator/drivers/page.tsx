@@ -3,12 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { Protected } from '@/components/Protected';
 import { TransferOperatorNav } from '@/components/transfer-operator/TransferOperatorNav';
-
-export const metadata = {
-  title: 'Водители | Kamhub',
-  description: 'Управление водителями перевозчика',
-};
-
 import { DataTable } from '@/components/admin/shared/DataTable';
 import { LoadingSpinner } from '@/components/admin/shared/LoadingSpinner';
 import { StatusBadge } from '@/components/admin/shared/StatusBadge';

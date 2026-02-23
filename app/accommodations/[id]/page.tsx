@@ -7,11 +7,6 @@ import { StayBookingForm } from '@/components/booking/StayBookingForm';
 import { LoadingSpinner } from '@/components/admin/shared';
 import { Star, MapPin } from 'lucide-react';
 
-export const metadata = {
-  title: 'Жильё на Камчатке | Kamhub',
-  description: 'Детальная информация о жилье на Камчатке: гостиницы, апартаменты, коттеджи',
-};
-
 interface Accommodation {
   id: string;
   name: string;

@@ -92,13 +92,13 @@ export function PartnerCard({ partner, className, onClick }: PartnerCardProps) {
     >
       {/* Логотип и категория */}
       <div className="relative h-32 bg-gray-100">
-        {paImage
+        {partner.logo?.url ? (
+          <Image
             src={partner.logo.url}
-            alt={partner.name}
+            alt={partner.logo.alt || partner.name}
             fill
             className="object-contain p-4"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw
-            className="w-full h-full object-contain p-4"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">

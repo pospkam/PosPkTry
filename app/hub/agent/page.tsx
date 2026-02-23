@@ -3,12 +3,6 @@
 import React, { useState } from 'react';
 import { Protected } from '@/components/Protected';
 import { AgentNav } from '@/components/agent/AgentNav';
-
-export const metadata = {
-  title: 'Панель агента | Kamhub',
-  description: 'Управление бронированиями и клиентами агента',
-};
-
 import { AgentMetricsGrid } from '@/components/agent/Dashboard/AgentMetricsGrid';
 import { RecentClientsTable } from '@/components/agent/Dashboard/RecentClientsTable';
 import { UpcomingBookingsTable } from '@/components/agent/Dashboard/UpcomingBookingsTable';

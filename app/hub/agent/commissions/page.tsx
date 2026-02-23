@@ -3,12 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { Protected } from '@/components/Protected';
 import { AgentNav } from '@/components/agent/AgentNav';
-
-export const metadata = {
-  title: 'Комиссии | Kamhub',
-  description: 'Комиссии и заработок агента',
-};
-
 import { DataTable } from '@/components/admin/shared/DataTable';
 import { LoadingSpinner } from '@/components/admin/shared/LoadingSpinner';
 import { StatusBadge } from '@/components/admin/shared/StatusBadge';

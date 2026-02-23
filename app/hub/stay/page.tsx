@@ -3,12 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { Protected } from '@/components/Protected';
 import { PublicNav } from '@/components/shared/PublicNav';
-
-export const metadata = {
-  title: 'Жильё | Kamhub',
-  description: 'Управление объектами размещения',
-};
-
 import { AccommodationCard } from '@/components/AccommodationCard';
 import { AccommodationCardSkeleton } from '@/components/AccommodationCardSkeleton';
 import { AccommodationFilters } from '@/components/AccommodationFilters';

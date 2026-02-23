@@ -6,11 +6,6 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
 
-export const metadata = {
-  title: 'Вход в аккаунт | Kamhub',
-  description: 'Войдите в личный кабинет Kamhub для бронирования туров на Камчатке',
-};
-
 // Модные SVG иконки вместо emoji
 const ROLES = [
   { 

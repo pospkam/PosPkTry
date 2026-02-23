@@ -4,12 +4,6 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Protected } from '@/components/Protected';
 import { GearProviderNav } from '@/components/gear-provider/GearProviderNav';
-
-export const metadata = {
-  title: 'Панель поставщика снаряжения | Kamhub',
-  description: 'Управление арендой снаряжения',
-};
-
 import { LoadingSpinner } from '@/components/admin/shared';
 import { Package, Calendar, DollarSign, Star, TrendingUp, AlertCircle } from 'lucide-react';
 

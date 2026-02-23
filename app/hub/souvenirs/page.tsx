@@ -3,12 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { Protected } from '@/components/Protected';
 import { PublicNav } from '@/components/shared/PublicNav';
-
-export const metadata = {
-  title: 'Сувениры | Kamhub',
-  description: 'Магазин сувениров Камчатки',
-};
-
 import { SouvenirCard } from '@/components/souvenirs/SouvenirCard';
 import { ShoppingCart } from '@/components/souvenirs/ShoppingCart';
 import { SouvenirCheckout } from '@/components/souvenirs/SouvenirCheckout';

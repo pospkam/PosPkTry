@@ -4,11 +4,6 @@ import React, { useState, useMemo } from 'react';
 import { FishingToursGrid } from '@/components/fishing';
 import { FISHING_TOURS, PARTNER_INFO, getToursByType } from '@/lib/partners/kamchatka-fishing/tours-data';
 import { OrganizationJsonLd, BreadcrumbJsonLd } from '@/components/seo';
-
-export const metadata = {
-  title: 'Рыбалка на Камчатке | Kamhub',
-  description: 'Рыбалка на Камчатке: туры на чавычу, нерку, кижуча. Забронируйте рыболовный тур на Камчатке',
-};
 import { 
   Fish, 
   Search, 

@@ -3,12 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { Protected } from '@/components/Protected';
 import { GuideNav } from '@/components/guide/GuideNav';
-
-export const metadata = {
-  title: 'Расписание | Kamhub',
-  description: 'Расписание туров гида',
-};
-
 import { LoadingSpinner } from '@/components/admin/shared';
 import { Calendar, Clock, MapPin, Users } from 'lucide-react';
 

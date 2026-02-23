@@ -5,11 +5,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import WeatherBackground from '@/components/WeatherBackground';
 
-export const metadata = {
-  title: 'Регистрация оператора | Kamhub',
-  description: 'Зарегистрируйтесь как туроператор на Kamhub',
-};
-
 export default function OperatorRegisterPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);

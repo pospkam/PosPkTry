@@ -3,12 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { Protected } from '@/components/Protected';
 import { OperatorNav } from '@/components/operator/OperatorNav';
-
-export const metadata = {
-  title: 'Финансы | Kamhub',
-  description: 'Финансы и транзакции оператора',
-};
-
 import { DataTable, LoadingSpinner, EmptyState, Column } from '@/components/admin/shared';
 import { FinanceData, Transaction } from '@/types/operator';
 import { useAuth } from '@/contexts/AuthContext';

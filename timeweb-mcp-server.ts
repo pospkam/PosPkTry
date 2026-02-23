@@ -13,7 +13,7 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 
 const TIMEWEB_API = 'https://api.timeweb.cloud/api/v1';
-const APP_ID = '158643';
+const APP_ID = '125051';
 const TOKEN = process.env.TIMEWEB_TOKEN || process.env.TIMEWEB_TOKEN1;
 
 if (!TOKEN) {

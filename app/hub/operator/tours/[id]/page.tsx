@@ -4,12 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Protected } from '@/components/Protected';
 import { OperatorNav } from '@/components/operator/OperatorNav';
-
-export const metadata = {
-  title: 'Редактирование тура | Kamhub',
-  description: 'Редактирование тура оператора',
-};
-
 import { TourForm } from '@/components/operator/Tours/TourForm';
 import { LoadingSpinner, EmptyState } from '@/components/admin/shared';
 import { TourFormData, OperatorTour } from '@/types/operator';

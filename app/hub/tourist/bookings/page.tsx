@@ -4,12 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { Protected } from '@/components/Protected';
 import { LoadingSpinner } from '@/components/admin/shared';
 import { TouristNav } from '@/components/tourist/TouristNav';
-
-export const metadata = {
-  title: 'Мои бронирования | Kamhub',
-  description: 'История бронирований туриста',
-};
-
 import { Booking } from '@/types';
 
 export default function BookingHistoryPage() {

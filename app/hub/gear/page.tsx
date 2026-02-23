@@ -3,12 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { Protected } from '@/components/Protected';
 import { PublicNav } from '@/components/shared/PublicNav';
-
-export const metadata = {
-  title: 'Аренда снаряжения | Kamhub',
-  description: 'Управление арендой туристического снаряжения',
-};
-
 import { GearCard } from '@/components/gear/GearCard';
 import { GearFilters } from '@/components/gear/GearFilters';
 import { GearBookingForm } from '@/components/gear/GearBookingForm';

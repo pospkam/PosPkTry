@@ -4,12 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { Weather } from '@/types';
 import { TransferSearchWidget } from '@/components/TransferSearchWidget';
 import { PublicNav } from '@/components/shared/PublicNav';
-
-export const metadata = {
-  title: 'Трансферы | Kamhub',
-  description: 'Поиск и бронирование трансферов на Камчатке',
-};
-
 import { Star } from 'lucide-react';
 
 export default function TransferDashboard() {

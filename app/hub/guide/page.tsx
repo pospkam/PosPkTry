@@ -3,12 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { Weather } from '@/types';
 import { GuideNav } from '@/components/guide/GuideNav';
-
-export const metadata = {
-  title: 'Панель гида | Kamhub',
-  description: 'Управление турами и расписанием гида',
-};
-
 import { Star, Wind } from 'lucide-react';
 
 export default function GuideDashboard() {

@@ -6,11 +6,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { TouristNav } from '@/components/tourist/TouristNav';
 
-export const metadata = {
-  title: 'Новое бронирование | Kamhub',
-  description: 'Создание нового бронирования тура',
-};
-
 function NewBookingForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
