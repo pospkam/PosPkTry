@@ -186,6 +186,18 @@
     ".next/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    ".next",
+    "__tests__",
+    "tests",
+    "test",
+    "e2e",
+    "scripts",
+    "playwright.config.ts",
+    "sentry.client.config.ts",
+    "sentry.edge.config.ts",
+    "sentry.server.config.ts",
+    "lib/figma",
+    "app/api/**/*"
   ]
 }

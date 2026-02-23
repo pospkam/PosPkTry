@@ -409,42 +409,47 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
             <div>
               <label className="block text-sm font-medium mb-3">Дополнительные опции</label>
               <div className="space-y-2">
-               span className="block text-sm font-medium mb-3">Дополнительные опции</span>
-              <div className="space-y-2">
                 <label htmlFor="opt-additional-driver" className="flex items-center justify-between">
                   <span>Дополнительный водитель (+5%)</span>
                   <input
-                    id="opt-additional-driver=> updateForm('additionalDrivers', e.target.checked)}
+                    id="opt-additional-driver"
+                    type="checkbox"
+                    checked={form.additionalDrivers}
+                    onChange={(e) => updateForm('additionalDrivers', e.target.checked)}
                     className="text-premium-gold rounded"
                   />
                 </label>
 
-                <label className="flex items-center justify-between">
-                  <span>GPS навигатор (+500₽/день)</span>
-                  <inpuhtmlFor="opt-gps" className="flex items-center justify-between">
+                <label htmlFor="opt-gps" className="flex items-center justify-between">
                   <span>GPS навигатор (+500₽/день)</span>
                   <input
-                    id="opt-gps"emium-gold rounded"
+                    id="opt-gps"
+                    type="checkbox"
+                    checked={form.gps}
+                    onChange={(e) => updateForm('gps', e.target.checked)}
+                    className="text-premium-gold rounded"
                   />
                 </label>
 
-                <label className="flex items-center justify-between">
-                  <span>Детское кресло (+300₽/день)</span>
-                  <inpuhtmlFor="opt-child-seat" className="flex items-center justify-between">
+                <label htmlFor="opt-child-seat" className="flex items-center justify-between">
                   <span>Детское кресло (+300₽/день)</span>
                   <input
-                    id="opt-child-seat"gold rounded"
+                    id="opt-child-seat"
+                    type="checkbox"
+                    checked={form.childSeat}
+                    onChange={(e) => updateForm('childSeat', e.target.checked)}
+                    className="text-premium-gold rounded"
                   />
                 </label>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Комментарии</label>
+              <label htmlFor="booking-comments" className="block text-sm font-medium mb-2">Комментарии</label>
               <textarea
-                valuehtmlFor="booking-comments" className="block text-sm font-medium mb-2">Комментарии</label>
-              <textarea
-                id="booking-comments"e={(e) => updateForm('comments', e.target.value)}
+                id="booking-comments"
+                value={form.comments}
+                onChange={(e) => updateForm('comments', e.target.value)}
                 className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold resize-none"
                 rows={3}
                 placeholder="Особые пожелания или требования"

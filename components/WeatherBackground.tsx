@@ -184,7 +184,7 @@ export default function WeatherBackground() {
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 }
 

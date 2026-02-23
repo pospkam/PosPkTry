@@ -148,7 +148,7 @@ export default function AccommodationDetailsPage() {
             <div key={`photo-${photo}-${photoIndex}`} className="col-span-2 md:col-span-1">
               <Image
                 src={photo}
-                alt={`${accommodation.name} ${idx + 2}`}
+                alt={`${accommodation.name} ${photoIndex + 2}`}
                 fill
                 className="object-cover rounded-xl"
                 sizes="(max-width: 768px) 100vw, 25vw"
@@ -238,7 +238,7 @@ export default function AccommodationDetailsPage() {
                     <div key={`room-${roomIndex}`} className="bg-white/15 border border-white/15 rounded-xl p-4">
                       <div className="flex justify-between items-start">
                         <div>
-                          <h3 className="text-lg font-semibold mb-2">Стандартный номер #{idx + 1}</h3>
+                          <h3 className="text-lg font-semibold mb-2">Стандартный номер #{roomIndex + 1}</h3>
                           <p className="text-white/70 text-sm">До 2 гостей • 1 кровать</p>
                         </div>
                         <div className="text-right">

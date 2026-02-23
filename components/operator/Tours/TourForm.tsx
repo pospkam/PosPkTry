@@ -190,20 +190,21 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
             </label>
             <input
               id="tour-max-group"
+              type="number"
               value={formData.maxGroupSize}
               onChange={(e) => handleChange('maxGroupSize', parseInt(e.target.value))}
               min="1"
               className="w-full px-4 py-3 bg-white/10 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
             />
           </div>
-htmlFor="tour-price" className="block text-white/70 mb-2">
+
+          {/* Цена */}
+          <div>
+            <label htmlFor="tour-price" className="block text-white/70 mb-2">
               Цена <span className="text-red-400">*</span>
             </label>
             <input
-              id="tour-price" htmlFor="tour-price" className="block text-white/70 mb-2">
-              Цена <span className="text-red-400">*</span>
-            </label>
-            <input
+              id="tour-price"
               type="number"
               value={formData.price}
               onChange={(e) => handleChange('price', parseFloat(e.target.value))}
@@ -249,7 +250,7 @@ htmlFor="tour-price" className="block text-white/70 mb-2">
                   <span className="text-white"> {item}</span>
                   <button
                     type="button"
-                    onClick={() => handleRemoveInclude(index)}
+                    onClick={() => handleRemoveInclude(includeIndex)}
                     className="text-red-400 hover:text-red-300 transition-colors"
                   >
                     
@@ -294,7 +295,7 @@ htmlFor="tour-price" className="block text-white/70 mb-2">
                   <span className="text-white"> {item}</span>
                   <button
                     type="button"
-                    onClick={() => handleRemoveExclude(index)}
+                    onClick={() => handleRemoveExclude(excludeIndex)}
                     className="text-red-400 hover:text-red-300 transition-colors"
                   >
                     
