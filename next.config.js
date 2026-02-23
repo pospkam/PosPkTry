@@ -4,18 +4,32 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
-  
+
   // Игнорировать ESLint во время сборки
   eslint: {
     ignoreDuringBuilds: true,
   },
-  
+
+  // unoptimized: убирает sharp/@img (~33MB) из standalone — критично для Timeweb лимита 50MB
   images: {
+    unoptimized: true,
     remotePatterns: [
       { protocol: 'https', hostname: '**' },
       { protocol: 'http', hostname: '**' },
     ],
-    formats: ['image/avif', 'image/webp'],
+  },
+
+  // Исключить dev-пакеты из standalone (экономит ~45MB)
+  experimental: {
+    outputFileTracingExcludes: {
+      '*': [
+        'node_modules/typescript/**',
+        'node_modules/caniuse-lite/**',
+        'node_modules/@swc/core/**',
+        'node_modules/sharp/**',
+        'node_modules/@img/**',
+      ],
+    },
   },
 
   env: {
