@@ -2,7 +2,7 @@
 
 ## О проекте
 Kamhub - туристическая платформа Камчатки. Next.js 15, TypeScript, Tailwind CSS, PostgreSQL.
-Продакшен: https://pospk-kamhub-c8e0.twc1.net
+Продакшен: https://pospkam-pospktry-c1f3.twc1.net
 
 ## Команды
 ```bash

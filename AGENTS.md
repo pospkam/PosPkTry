@@ -6,7 +6,7 @@ Kamhub - платформа для бронирования туров на Ка
 
 **Стек:** Next.js 15, TypeScript, Tailwind CSS, PostgreSQL (Timeweb Cloud)
 
-**Продакшен:** https://pospk-kamhub-c8e0.twc1.net
+**Продакшен:** https://pospkam-pospktry-c1f3.twc1.net
 
 ## Команды
 
