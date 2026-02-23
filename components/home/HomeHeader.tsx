@@ -55,7 +55,7 @@ export function HomeHeader({
     <header className="flex items-center justify-between px-4 pt-12 pb-4 relative z-10">
       {/* Аватар + название */}
       <div className="flex items-center gap-3">
-        <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-white shadow-lg relative flex-shrink-0">
+        <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-white/80 shadow-lg relative flex-shrink-0 ring-2 ring-white/20">
           <Image
             src={avatarUrl}
             alt={`Аватар ${username}`}
@@ -69,7 +69,7 @@ export function HomeHeader({
           <h1 className="text-white font-bold text-xl leading-tight drop-shadow-md">
             Kamchatour Hub
           </h1>
-          <p className="text-white/80 text-sm font-medium drop-shadow">{username}</p>
+          <p className="text-white/90 text-sm font-medium drop-shadow">{username}</p>
         </div>
       </div>
 
@@ -79,7 +79,7 @@ export function HomeHeader({
         <button
           onClick={toggleTheme}
           aria-label={isDark ? 'Светлая тема' : 'Тёмная тема'}
-          className="w-11 h-11 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/30 transition-colors"
+          className="w-11 h-11 rounded-full bg-white/25 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/35 transition-all shadow-sm"
         >
           {isDark ? <SunIcon /> : <MoonIcon />}
         </button>
@@ -87,7 +87,7 @@ export function HomeHeader({
         {/* Настройки */}
         <button
           aria-label="Настройки"
-          className="w-11 h-11 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/30 transition-colors"
+          className="w-11 h-11 rounded-full bg-white/25 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/35 transition-all shadow-sm"
         >
           <Settings size={20} />
         </button>

@@ -37,7 +37,7 @@ export function HomeBottomNav() {
       aria-label="Основная навигация"
       className="fixed bottom-4 left-4 right-4 z-50 max-w-[720px] mx-auto"
     >
-      <div className="flex items-center justify-around h-16 bg-white/85 dark:bg-[#0D1B2A]/95 backdrop-blur-xl rounded-3xl shadow-xl border border-white/50 dark:border-white/10 px-2">
+      <div className="flex items-center justify-around h-16 bg-white/75 dark:bg-[#0D1B2A]/95 backdrop-blur-xl rounded-3xl shadow-xl shadow-black/10 dark:shadow-black/40 border border-white/60 dark:border-white/10 px-2">
         {NAV_ITEMS.map(item => {
           const active = isActive(item);
           return (

@@ -58,18 +58,18 @@ export function CategoryChips({ activeCategory }: CategoryChipsProps) {
               role="listitem"
               aria-current={isActive ? 'page' : undefined}
               className={[
-                'flex flex-col items-center justify-center gap-2 w-16 h-[72px] flex-shrink-0 rounded-2xl shadow-sm transition-all',
+                'flex flex-col items-center justify-center gap-2 w-[68px] h-[78px] flex-shrink-0 rounded-2xl transition-all',
                 isActive
-                  ? 'bg-[#4A7FD4] text-white shadow-md'
-                  : 'bg-white dark:bg-white/10 text-gray-700 dark:text-gray-200',
+                  ? 'bg-[#4A7FD4] text-white shadow-lg shadow-[#4A7FD4]/30'
+                  : 'bg-white/70 dark:bg-white/10 backdrop-blur-lg text-gray-700 dark:text-gray-200 shadow-sm border border-white/60 dark:border-white/10',
               ].join(' ')}
             >
               <cat.Icon
-                size={22}
+                size={24}
                 strokeWidth={1.8}
-                className={isActive ? 'text-white' : 'text-gray-800 dark:text-gray-100'}
+                className={isActive ? 'text-white' : 'text-gray-700 dark:text-gray-100'}
               />
-              <span className="text-[10px] font-medium leading-tight text-center">
+              <span className="text-[10px] font-semibold leading-tight text-center">
                 {cat.label}
               </span>
             </Link>

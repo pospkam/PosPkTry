@@ -34,19 +34,19 @@ export function HomeSearchBar({ onSearch }: HomeSearchBarProps) {
         {/* Иконка поиска слева */}
         <div
           aria-hidden="true"
-          className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none flex items-center"
+          className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400 pointer-events-none flex items-center"
         >
           <Search size={18} strokeWidth={2} />
         </div>
 
-        {/* Поле ввода */}
+        {/* Поле ввода — frosted glass pill */}
         <input
           type="search"
           value={query}
           onChange={e => setQuery(e.target.value)}
-          placeholder="Поиск туров, маршрутов..."
+          placeholder="Поиск направления..."
           autoComplete="off"
-          className="w-full pl-11 pr-11 py-3.5 rounded-full bg-white/90 dark:bg-white/10 backdrop-blur-md border border-white/50 dark:border-white/20 text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 shadow-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#4A7FD4]/30 transition-all"
+          className="w-full pl-11 pr-11 py-3.5 rounded-full bg-white/80 dark:bg-white/10 backdrop-blur-xl border border-white/60 dark:border-white/20 text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 shadow-lg shadow-black/5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#4A7FD4]/30 focus:bg-white/90 dark:focus:bg-white/15 transition-all"
         />
 
         {/* ChevronDown справа */}

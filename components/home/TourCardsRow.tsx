@@ -81,7 +81,7 @@ export function TourCardsRow() {
             href={`/tours?category=${tour.category}`}
             role="listitem"
             aria-label={`${tour.name}, ${tour.price.toLocaleString('ru-RU')} ₽`}
-            className="flex-shrink-0 w-[170px] bg-white dark:bg-gray-800 rounded-2xl shadow-md overflow-hidden transition-transform hover:-translate-y-1 active:scale-95"
+            className="flex-shrink-0 w-[170px] bg-white/70 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-md shadow-black/5 dark:shadow-black/30 overflow-hidden transition-transform hover:-translate-y-1 active:scale-95 border border-white/60 dark:border-white/10"
           >
             {/* Фото */}
             <div className="relative h-[140px] w-full">
@@ -93,6 +93,12 @@ export function TourCardsRow() {
                 className="object-cover"
                 loading="lazy"
               />
+              {/* Бейдж с ценой поверх фото */}
+              <div className="absolute bottom-2 left-2 bg-white/90 dark:bg-black/60 backdrop-blur-sm rounded-lg px-2 py-0.5">
+                <span className="text-xs font-bold text-[#4A7FD4] dark:text-[#7EB3FF]">
+                  {tour.price.toLocaleString('ru-RU')} ₽
+                </span>
+              </div>
             </div>
 
             {/* Инфо */}
@@ -100,11 +106,9 @@ export function TourCardsRow() {
               <h3 className="text-sm font-bold text-gray-900 dark:text-white leading-tight mb-1.5 line-clamp-2">
                 {tour.name}
               </h3>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1">
                 <StarRating rating={tour.rating} />
-                <span className="text-sm font-bold text-[#4A7FD4] dark:text-[#7EB3FF]">
-                  {tour.price.toLocaleString('ru-RU')} ₽
-                </span>
+                <span className="text-[10px] text-gray-400">({tour.review_count})</span>
               </div>
             </div>
           </Link>
