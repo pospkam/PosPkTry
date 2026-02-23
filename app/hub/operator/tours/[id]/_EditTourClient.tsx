@@ -8,6 +8,7 @@ import { TourForm } from '@/components/operator/Tours/TourForm';
 import { LoadingSpinner, EmptyState } from '@/components/admin/shared';
 import { TourFormData, OperatorTour } from '@/types/operator';
 import { useAuth } from '@/contexts/AuthContext';
+import GenerateTagsButton from '@/components/operator/GenerateTagsButton';
 
 export default function EditTourClient() {
   const { user } = useAuth();
@@ -132,12 +133,15 @@ export default function EditTourClient() {
               }}
             />
           ) : (
-            <TourForm
-              initialData={tourFormData}
-              onSubmit={handleSubmit}
-              onCancel={handleCancel}
-              isEdit={true}
-            />
+            <>
+              <TourForm
+                initialData={tourFormData}
+                onSubmit={handleSubmit}
+                onCancel={handleCancel}
+                isEdit={true}
+              />
+              <GenerateTagsButton tourId={tourId} />
+            </>
           )}
         </div>
       </main>

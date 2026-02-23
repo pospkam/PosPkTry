@@ -28,6 +28,56 @@ export async function GET(request: NextRequest) {
       : undefined;
     const sortBy = searchParams.get('sortBy') as any || 'rating';
 
+    // AI-теги фильтры (из ai_tags JSONB колонки)
+    const tagLandscape = searchParams.get('landscape');
+    const tagActivity = searchParams.get('activity');
+    const tagFeature = searchParams.get('feature');
+
+    // Если заданы AI-теги — выполняем фильтрацию по ai_tags сразу
+    if (tagLandscape || tagActivity || tagFeature) {
+      const conditions: string[] = ['is_active = true'];
+      const sqlParams: (string | number)[] = [];
+      let pIdx = 1;
+
+      if (tagLandscape) {
+        conditions.push(`ai_tags->'landscape' ? $${pIdx}`);
+        sqlParams.push(tagLandscape);
+        pIdx++;
+      }
+      if (tagActivity) {
+        conditions.push(`ai_tags->'activity' ? $${pIdx}`);
+        sqlParams.push(tagActivity);
+        pIdx++;
+      }
+      if (tagFeature) {
+        conditions.push(`ai_tags->'features' ? $${pIdx}`);
+        sqlParams.push(tagFeature);
+        pIdx++;
+      }
+
+      sqlParams.push(limit, offset);
+
+      const { query: dbQuery } = await import('@/lib/database');
+      const tagResult = await dbQuery<{
+        id: string; title: string; description: string; price: number;
+        category: string; difficulty: string; ai_tags: Record<string, unknown>;
+      }>(
+        `SELECT id, title, description, price, category, difficulty, ai_tags
+         FROM tours
+         WHERE ${conditions.join(' AND ')}
+         ORDER BY rating DESC NULLS LAST
+         LIMIT $${pIdx} OFFSET $${pIdx + 1}`,
+        sqlParams
+      );
+
+      return NextResponse.json({
+        success: true,
+        data: tagResult.rows,
+        pagination: { page, limit, total: tagResult.rows.length, hasMore: false },
+        meta: { filteredByAiTags: true },
+      }, { status: 200 });
+    }
+
     // Если есть параметр advanced=true, использовать продвинутый поиск с фасетами
     const isAdvanced = searchParams.get('advanced') === 'true';
 

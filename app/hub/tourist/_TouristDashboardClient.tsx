@@ -7,6 +7,8 @@ import { AIChatWidget } from '@/components/AIChatWidget';
 import { TransferSearchWidget } from '@/components/TransferSearchWidget';
 import { TouristNav } from '@/components/tourist/TouristNav';
 import { Mountain, Eye, TreePine, Fish, CloudSnow, Waves, Star, Zap, Clock, Wind, Sun, Cloud, CloudRain } from 'lucide-react';
+import RecommendationCard, { RecommendationCardSkeleton } from '@/components/tourist/RecommendationCard';
+import type { RecommendedTour, RecommendationStrategy } from '@/lib/recommendations/engine';
 import { ActivityIcon, WeatherIcon } from '@/components/icons';
 
 export default function TouristDashboardClient() {
@@ -20,10 +22,13 @@ export default function TouristDashboardClient() {
     difficulty: '',
   });
   const [transferResults, setTransferResults] = useState<any[]>([]);
+  const [recommendations, setRecommendations] = useState<RecommendedTour[]>([]);
+  const [recsLoading, setRecsLoading] = useState(true);
 
   useEffect(() => {
     fetchTours();
     fetchWeather();
+    fetchRecommendations();
   }, []);
 
   const fetchTours = async () => {
@@ -50,6 +55,21 @@ export default function TouristDashboardClient() {
       }
     } catch (error) {
       console.error('Error fetching weather:', error);
+    }
+  };
+
+  const fetchRecommendations = async () => {
+    try {
+      setRecsLoading(true);
+      const res = await fetch('/api/tourist/recommendations?limit=6');
+      const data = await res.json();
+      if (data.success) {
+        setRecommendations(data.data);
+      }
+    } catch {
+      // Не критично
+    } finally {
+      setRecsLoading(false);
     }
   };
 
@@ -382,6 +402,35 @@ export default function TouristDashboardClient() {
             <p className="text-white/70">Здесь будут ваши избранные туры</p>
           </div>
         )}
+
+        {/* ── Рекомендации ── */}
+        <div className="mt-10">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-white">🎯 Рекомендуем вам</h2>
+            <a
+              href="/tours"
+              className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+            >
+              Смотреть все →
+            </a>
+          </div>
+          {recsLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <RecommendationCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : recommendations.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {recommendations.slice(0, 3).map((tour) => (
+                <RecommendationCard
+                  key={tour.id}
+                  tour={tour}
+                />
+              ))}
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   );
