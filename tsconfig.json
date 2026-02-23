@@ -198,7 +198,6 @@
     "sentry.edge.config.ts",
     "sentry.server.config.ts",
     "timeweb-mcp-server.ts",
-    "lib/figma",
     "app/api/**/*"
   ]
 }
