@@ -3,7 +3,7 @@ import { Metadata } from 'next';
 // Server Component - fetch data on server instead of useEffect
 async function getApiSpec() {
   try {
-    const res = await fetch('/api-docs', { cache: 'no-store' });
+    const res = await fetch('/api/docs', { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to fetch');
     return res.json();
   } catch (error) {
