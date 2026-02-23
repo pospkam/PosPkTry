@@ -178,7 +178,7 @@ export const GuestSelector: React.FC<GuestSelectorProps> = ({
                 value={childrenAges[childIndex] || 0}
                 onChange={(e) => handleChildAgeChange(childIndex, Number(e.target.value))}
                 className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-premium-gold"
-                aria-label={`Возраст ребёнка ${index + 1}`}
+                aria-label={`Возраст ребёнка ${childIndex + 1}`}
               >
                 <option value={0}>Выберите возраст</option>
                 {Array.from({ length: 13 }).map((_, age) => (

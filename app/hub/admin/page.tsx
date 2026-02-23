@@ -17,7 +17,9 @@ interface DashboardData {
   charts: {
     topTours: Array<{ id: string; title: string; bookings: number; revenue: number }>;
   };
-  recentActivities: Array<any>;
+  recentActivities: Array<{ id: string; type: string; title: string; description: string; timestamp: string; message?: string; time?: string; [key: string]: unknown }>;
+  pendingTours?: number;
+  pendingPartners?: number;
 }
 
 export default function AdminDashboard() {
@@ -356,7 +358,7 @@ export default function AdminDashboard() {
                 const Icon = tool.icon;
                 return (
                   <button
-                    key={tool.label}
+                    key={tool.title}
                     onClick={() => router.push(tool.link)}
                     className="group relative backdrop-blur-xl bg-white/10 rounded-3xl p-8 border border-white/30 hover:bg-white/20 transition-all duration-500 text-left overflow-hidden hover:scale-105 hover:-translate-y-2 shadow-xl hover:shadow-2xl"
                   >

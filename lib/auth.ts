@@ -16,3 +16,9 @@ export async function authorizeRole(userId: string, allowedRoles: string[]): Pro
   // For now, allow all
   return true
 }
+
+export async function verifyAuth(request: NextRequest): Promise<{ userId: string | null }> {
+  // TODO: Implement real token verification
+  const userId = request.headers.get('x-user-id') || null;
+  return { userId };
+}

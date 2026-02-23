@@ -270,3 +270,14 @@ export function withMonitoring(handler: Function) {
     }
   };
 }
+// monitoringService alias with extended API
+export const monitoringService = {
+  ...monitoring,
+  getMetrics() {
+    return {
+      uptime: process.uptime(),
+      memory: process.memoryUsage(),
+      timestamp: new Date().toISOString(),
+    };
+  },
+};

@@ -43,7 +43,7 @@ export async function createToken(payload: JWTPayload): Promise<string> {
 export async function verifyToken(token: string): Promise<JWTPayload | null> {
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET);
-    return payload as JWTPayload;
+    return payload as unknown as JWTPayload;
   } catch (error) {
     console.error('JWT verification failed:', error);
     return null;
@@ -68,9 +68,9 @@ function getHeader(request: any, name: string): string | null {
   if (typeof request.headers.get === 'function') {
     return request.headers.get(name);
   }
-  const entries = typeof request.headers.entries === 'function'
+  const entries = (typeof request.headers.entries === 'function'
     ? Array.from(request.headers.entries())
-    : Object.entries(request.headers);
+    : Object.entries(request.headers)) as string[][];
   const found = entries.find(([key]) => key?.toLowerCase() === name.toLowerCase());
   return found ? (found[1] as string) : null;
 }

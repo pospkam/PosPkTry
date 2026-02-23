@@ -47,7 +47,7 @@ export async function ensureSouvenirPartnerExists(userId: string): Promise<strin
     partnerId = result.rows[0].id;
   }
   
-  return partnerId;
+  return partnerId as string;
 }
 
 /**

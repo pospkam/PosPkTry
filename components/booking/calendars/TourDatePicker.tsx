@@ -130,23 +130,25 @@ export const TourDatePicker: React.FC<TourDatePickerProps> = ({
   };
 
   // Обработка выбора даты
-  const handleDateSelect = async (date: Date | null) => {
-    if (!date) {
+  const handleDateSelect = async (date: Date | [Date | null, Date | null] | null) => {
+    const singleDate = Array.isArray(date) ? date[0] : date;
+    if (!singleDate) {
       setSelectedDate(null);
       setTimeSlots([]);
       setSelectedTimeSlot(undefined);
       return;
     }
+    const resolvedDate = singleDate;
 
-    setSelectedDate(date);
+    setSelectedDate(resolvedDate);
 
     // Для групповых туров - сразу callback
     if (tourType === 'group') {
-      onDateSelect(date);
+      onDateSelect(resolvedDate);
     }
     // Для индивидуальных - загружаем слоты времени
     else {
-      await loadTimeSlots(date);
+      await loadTimeSlots(resolvedDate);
     }
   };
 

@@ -4,7 +4,15 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, Car, Users, Route, CheckCircle, DollarSign, LucideIcon } from 'lucide-react';
 
 interface TransferOperatorMetricsGridProps {
-  period: string;
+  period?: string;
+  metrics?: {
+    totalBookings: number;
+    activeBookings: number;
+    totalRevenue: number;
+    availableDrivers: number;
+    activeRoutes: number;
+    completedTransfers: number;
+  };
 }
 
 interface Metrics {
@@ -16,8 +24,8 @@ interface Metrics {
   completedTransfers: number;
 }
 
-export function TransferOperatorMetricsGrid({ period }: TransferOperatorMetricsGridProps) {
-  const [metrics, setMetrics] = useState<Metrics>({
+export function TransferOperatorMetricsGrid({ period = '30', metrics: metricsProp }: TransferOperatorMetricsGridProps) {
+  const [metrics, setMetrics] = useState<Metrics>(metricsProp || {
     totalBookings: 0,
     activeBookings: 0,
     totalRevenue: 0,

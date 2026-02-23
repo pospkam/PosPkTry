@@ -11,9 +11,10 @@ export interface ChartDataPoint {
 }
 
 interface SimpleChartProps {
-  title: string;
+  title?: string;
   data: ChartDataPoint[];
   type?: 'bar' | 'line';
+  color?: string;
   valueFormatter?: (value: number) => string;
   loading?: boolean;
   className?: string;
@@ -23,6 +24,7 @@ export function SimpleChart({
   title,
   data,
   type = 'bar',
+  color,
   valueFormatter = (v) => v.toString(),
   loading = false,
   className

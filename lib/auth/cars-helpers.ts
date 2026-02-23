@@ -47,7 +47,7 @@ export async function ensureCarsPartnerExists(userId: string): Promise<string> {
     partnerId = result.rows[0].id;
   }
   
-  return partnerId;
+  return partnerId as string;
 }
 
 /**

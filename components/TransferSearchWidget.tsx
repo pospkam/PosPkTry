@@ -321,7 +321,7 @@ export function TransferSearchWidget({ className, onSearchResults }: TransferSea
           </h3>
           <div className="space-y-4">
             {searchResults.map((transfer) => (
-              <TransferCard key={transfer.id || transfer.scheduleId} transfer={transfer} />
+              <TransferCard key={transfer.scheduleId} transfer={transfer} />
             ))}
           </div>
         </div>

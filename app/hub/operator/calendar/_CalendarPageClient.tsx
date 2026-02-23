@@ -27,7 +27,7 @@ export default function CalendarPageClient() {
       const endDate = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0);
 
       const params = new URLSearchParams({
-        operatorId,
+        ...(operatorId ? { operatorId } : {}),
         startDate: startDate.toISOString().split('T')[0],
         endDate: endDate.toISOString().split('T')[0]
       });

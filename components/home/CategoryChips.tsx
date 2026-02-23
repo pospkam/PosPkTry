@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Mountain, Waves, Fish, Wind, Footprints, Zap, Sailboat } from 'lucide-react';
+import { Mountain, Waves, Fish, Wind, Footprints, Zap, Sailboat, LucideIcon } from 'lucide-react';
 
 /**
  * CategoryChips — категории туров (iOS light theme).
@@ -11,7 +11,7 @@ import { Mountain, Waves, Fish, Wind, Footprints, Zap, Sailboat } from 'lucide-r
 interface Category {
   id: string;
   label: string;
-  Icon: React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>;
+  Icon: LucideIcon;
   href: string;
 }
 

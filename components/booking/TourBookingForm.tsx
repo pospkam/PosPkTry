@@ -12,7 +12,7 @@ interface TourBookingFormProps {
   price: number;
   tourType?: 'group' | 'individual'; // Тип тура
   duration?: number; // Длительность в днях
-  onSubmit: (booking: BookingData) => Promise<void>;
+  onSubmit: (booking: BookingData) => Promise<{ id?: string } | void>;
 }
 
 interface BookingData {
@@ -132,7 +132,8 @@ export function TourBookingForm({
       });
       
       // После создания бронирования показываем оплату
-      setBookingId(booking.id);
+      const bookingResult = booking as { id?: string } | void;
+      setBookingId((bookingResult as { id?: string })?.id || '');
       setShowPayment(true);
     } catch (error) {
       console.error('Error submitting booking:', error);

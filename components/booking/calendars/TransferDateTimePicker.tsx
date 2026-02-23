@@ -75,21 +75,22 @@ export const TransferDateTimePicker: React.FC<TransferDateTimePickerProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   // Загрузка расписания при выборе даты
-  const handleDateSelect = async (date: Date | null) => {
-    if (!date) {
+  const handleDateSelect = async (date: Date | [Date | null, Date | null] | null) => {
+    const resolvedDate = Array.isArray(date) ? date[0] : date;
+    if (!resolvedDate) {
       setSelectedDate(null);
       setSchedules([]);
       setSelectedScheduleId(null);
       return;
     }
 
-    setSelectedDate(date);
+    setSelectedDate(resolvedDate);
     setLoading(true);
     setError(null);
 
     try {
       const response = await fetch(
-        `/api/transfers/${routeId}/schedules?date=${formatAPIDate(date)}`
+        `/api/transfers/${routeId}/schedules?date=${formatAPIDate(resolvedDate)}`
       );
 
       if (!response.ok) {

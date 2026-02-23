@@ -307,3 +307,5 @@ export interface GuideEarnings {
 
 // Импорт типов для трансферов
 export * from './transfer';
+// Импорт типов агента
+export * from './agent';

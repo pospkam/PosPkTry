@@ -36,7 +36,7 @@ export default function BookingsManagementClient() {
       setLoading(true);
       
       const params = new URLSearchParams({
-        operatorId,
+        ...(operatorId ? { operatorId } : {}),
         page: currentPage.toString(),
         limit: '20'
       });

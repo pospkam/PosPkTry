@@ -132,7 +132,7 @@ export default function FishingTourDetailPageClient() {
                     key={`img-${num}`}
                     onClick={() => setSelectedImage(num - 1)}
                     className={`aspect-video bg-white/10 rounded-xl overflow-hidden border-2 transition-colors ${
-                      selectedImage === i ? 'border-premium-gold' : 'border-transparent'
+                      selectedImage === num - 1 ? 'border-premium-gold' : 'border-transparent'
                     }`}
                   >
                     <div className="w-full h-full bg-gradient-to-br from-blue-900/50 to-cyan-800/50 flex items-center justify-center">

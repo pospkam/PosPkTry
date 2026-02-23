@@ -12,10 +12,10 @@ const DIFFICULTY_LEVELS = [
 ];
 
 const SEASONS = [
-  { id: 'spring', name: 'Весна' },
-  { id: 'summer', name: 'Лето' },
-  { id: 'autumn', name: 'Осень' },
-  { id: 'winter', name: 'Зима' },
+  { id: 'spring', name: 'Весна', icon: '🌸' },
+  { id: 'summer', name: 'Лето', icon: '☀️' },
+  { id: 'autumn', name: 'Осень', icon: '🍂' },
+  { id: 'winter', name: 'Зима', icon: '❄️' },
 ];
 
 export default function AddTourPageClient() {

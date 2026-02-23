@@ -88,30 +88,33 @@ export const BaseCalendar: React.FC<BaseCalendarProps> = ({
         className
       )}
     >
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <DatePicker
-        selected={selected}
-        startDate={startDate}
-        endDate={endDate}
-        onChange={onChange}
-        selectsRange={selectsRange}
-        inline={inline}
-        monthsShown={monthsShown}
-        minDate={minDate}
-        maxDate={maxDate}
-        excludeDates={excludeDates}
-        includeDates={includeDates}
-        filterDate={filterDate}
-        dayClassName={dayClassName}
-        renderDayContents={renderDayContents}
-        disabled={disabled}
-        placeholderText={placeholderText}
-        dateFormat={dateFormat}
-        showTimeSelect={showTimeSelect}
-        timeIntervals={timeIntervals}
-        timeCaption={timeCaption}
-        locale="ru"
-        calendarClassName={calendarClassName}
-        showPopperArrow={false}
+        {...({
+          selected,
+          startDate,
+          endDate,
+          onChange: onChange as (date: Date | null) => void,
+          selectsRange: selectsRange ? true : undefined,
+          inline: inline ? true : undefined,
+          monthsShown,
+          minDate,
+          maxDate,
+          excludeDates,
+          includeDates,
+          filterDate,
+          dayClassName: dayClassName ? (d: Date) => dayClassName(d) ?? '' : undefined,
+          renderDayContents,
+          disabled,
+          placeholderText,
+          dateFormat,
+          showTimeSelect,
+          timeIntervals,
+          timeCaption,
+          locale: 'ru',
+          calendarClassName,
+          showPopperArrow: false,
+        } as any)}
       />
     </div>
   );

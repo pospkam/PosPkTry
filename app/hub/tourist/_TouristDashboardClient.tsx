@@ -73,7 +73,7 @@ export default function TouristDashboardClient() {
       partly_cloudy: "",
       overcast: "",
       rain: "",
-      snow: Snowflake,
+      snow: '❄️',
       thunderstorm: '⛈️',
       fog: '🌫️',
     };
@@ -91,9 +91,9 @@ export default function TouristDashboardClient() {
   };
 
   const tabs = [
-    { id: 'tours', name: 'Туры', icon: Mountain },
+    { id: 'tours', name: 'Туры', icon: '🏔️' },
     { id: 'transfers', name: 'Трансферы', icon: '🚌' },
-    { id: 'weather', name: 'Погода', icon: "" },
+    { id: 'weather', name: 'Погода', icon: '' },
     { id: 'ai', name: 'AI-помощник', icon: '🤖' },
     { id: 'favorites', name: 'Избранное', icon: '❤️' },
   ];

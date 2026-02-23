@@ -145,7 +145,7 @@ export const StayDatePicker: React.FC<StayDatePickerProps> = ({
   );
 
   // Обработка изменения дат
-  const handleDateChange = (dates: [Date | null, Date | null] | null) => {
+  const handleDateChange = (dates: Date | [Date | null, Date | null] | null) => {
     if (!dates) {
       setCheckIn(null);
       setCheckOut(null);
@@ -154,6 +154,9 @@ export const StayDatePicker: React.FC<StayDatePickerProps> = ({
       onDatesChange(null, null, null);
       return;
     }
+
+    // Если пришла одиночная дата - игнорируем (ожидаем range)
+    if (!Array.isArray(dates)) return;
 
     const [start, end] = dates;
     setCheckIn(start);

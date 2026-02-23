@@ -5,7 +5,9 @@ import { Sparkles, X } from 'lucide-react';
 import dynamic from 'next/dynamic';
 
 // Динамический импорт AIChatWidget для оптимизации
-const AIChatWidget = dynamic(() => import('@/components/AIChatWidget'), {
+const AIChatWidget = dynamic(
+  () => import('@/components/AIChatWidget').then(m => ({ default: m.AIChatWidget })),
+  {
   ssr: false,
   loading: () => (
     <div className="flex items-center justify-center h-full">

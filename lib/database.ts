@@ -309,3 +309,31 @@ export {
   ticketService,
   TicketService
 } from '@/pillars/support-pillar/services/ticket.service';
+
+// Re-export all service stubs
+export {
+  tourService,
+  TourNotFoundError,
+  TourValidationError,
+  TourAlreadyPublishedError,
+  reviewService,
+  ReviewNotFoundError,
+  ReviewValidationError,
+  DuplicateReviewError,
+  bookingService,
+  availabilityService,
+  agentService,
+  partnerService,
+  commissionService,
+  dashboardService,
+  feedbackService,
+  knowledgeBaseService,
+  messagingService,
+  metricsService,
+  notificationService,
+  payoutService,
+  reportService,
+  searchService,
+  slaService,
+  ticketMessageService,
+} from '@/lib/services';

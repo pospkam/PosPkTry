@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { MapPin, Volcano, Sun, Cloud, CloudRain, Wind, Flame } from 'lucide-react';
+import { MapPin, Mountain as Volcano, Sun, Cloud, CloudRain, Wind, Flame } from 'lucide-react';
 import { PublicNav } from '@/components/shared/PublicNav';
 
 export default function SafetyHubClient() {

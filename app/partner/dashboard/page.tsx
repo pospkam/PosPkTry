@@ -15,10 +15,10 @@ interface Partner {
 }
 
 const ROLE_INFO = {
-  operator: { name: 'Туры', color: 'blue' },
-  transfer: { name: 'Трансфер', color: 'green' },
-  stay: { name: 'Размещение', color: 'purple' },
-  gear: { name: 'Аренда снаряжения', color: 'orange' },
+  operator: { name: 'Туры', color: 'blue', icon: '🏔️' },
+  transfer: { name: 'Трансфер', color: 'green', icon: '🚌' },
+  stay: { name: 'Размещение', color: 'purple', icon: '🏨' },
+  gear: { name: 'Аренда снаряжения', color: 'orange', icon: '🎒' },
 };
 
 export default function PartnerDashboard() {

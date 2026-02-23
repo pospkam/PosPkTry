@@ -42,8 +42,8 @@ export default function AgentClientsPageClient() {
     try {
       setLoading(true);
       const params = new URLSearchParams({
-        search: searchTerm,
-        status: statusFilter,
+        ...(searchTerm ? { search: searchTerm } : {}),
+        ...(statusFilter ? { status: statusFilter } : {}),
         limit: '100'
       });
       const response = await fetch(`/api/agent/clients?${params}`);
@@ -94,7 +94,7 @@ export default function AgentClientsPageClient() {
       key: 'status',
       header: 'Статус',
       render: (client: AgentClient) => (
-        <StatusBadge status={client.status} />
+        <StatusBadge status={client.status === 'prospect' ? 'info' : client.status as import('@/components/admin/shared/StatusBadge').StatusType} />
       )
     },
     {

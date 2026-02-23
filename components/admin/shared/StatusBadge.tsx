@@ -11,15 +11,16 @@ export type StatusType =
   | 'info' 
   | 'pending' 
   | 'active' 
-  | 'inactive';
+  | 'inactive'
+  | 'prospect';
 
 export interface StatusBadgeProps {
-  status: StatusType;
+  status: StatusType | string;
   label?: string;
   className?: string;
 }
 
-const statusConfig: Record<StatusType, { color: string; bgColor: string; label: string; icon: LucideIcon }> = {
+const statusConfig: Record<string, { color: string; bgColor: string; label: string; icon: LucideIcon }> = {
   success: {
     color: 'text-green-400',
     bgColor: 'bg-green-500/20',
@@ -61,11 +62,22 @@ const statusConfig: Record<StatusType, { color: string; bgColor: string; label: 
     bgColor: 'bg-gray-500/20',
     label: 'Неактивен',
     icon: Circle
+  },
+  prospect: {
+    color: 'text-blue-400',
+    bgColor: 'bg-blue-500/20',
+    label: 'Потенциальный',
+    icon: Info
   }
 };
 
 export function StatusBadge({ status, label, className }: StatusBadgeProps) {
-  const config = statusConfig[status];
+  const config = statusConfig[status] || {
+    color: 'text-gray-400',
+    bgColor: 'bg-gray-500/20',
+    label: status,
+    icon: Circle
+  };
   const displayLabel = label || config.label;
   const Icon = config.icon;
 

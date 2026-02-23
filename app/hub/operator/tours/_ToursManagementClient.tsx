@@ -38,7 +38,7 @@ export default function ToursManagementClient() {
       setLoading(true);
       
       const params = new URLSearchParams({
-        operatorId,
+        ...(operatorId ? { operatorId } : {}),
         page: currentPage.toString(),
         limit: '20'
       });

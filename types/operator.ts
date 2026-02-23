@@ -19,6 +19,7 @@ export interface OperatorMetrics {
 
 // Статистика по турам
 export interface TourStats {
+  id: string;
   tourId: string;
   tourName: string;
   bookingsCount: number;
@@ -51,7 +52,8 @@ export interface OperatorBooking {
 export interface ChartDataPoint {
   date: string;
   value: number;
-  label?: string;
+  label: string;
+  color?: string;
 }
 
 // Финансовые данные

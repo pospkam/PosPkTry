@@ -4,8 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { Weather } from '@/types';
 
 interface WeatherWidgetProps {
-  lat: number;
-  lng: number;
+  lat?: number;
+  lng?: number;
   location?: string;
   className?: string;
   showHourly?: boolean;
@@ -13,8 +13,8 @@ interface WeatherWidgetProps {
 }
 
 export function WeatherWidget({ 
-  lat, 
-  lng, 
+  lat = 53.0475, 
+  lng = 158.6522, 
   location, 
   className,
   showHourly = true,
@@ -409,8 +409,8 @@ export function WeatherWidget({
 
         {activeTab === 'forecast' && weather.forecast && (
           <div className="space-y-3">
-            {weather.forecast.map((day) => (
-              <div key={day.date} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+            {weather.forecast.map((day, idx) => (
+              <div key={String(day.date)} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                 <div className="flex items-center space-x-3">
                   <span className="text-3xl">{getWeatherIcon(day.condition)}</span>
                   <div>

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 // ===============================
 // TYPES
@@ -12,6 +12,7 @@ export interface Column<T> {
   header?: string;
   title?: string;
   sortable?: boolean;
+  width?: string;
   render?: (item: T) => React.ReactNode;
 }
 
@@ -33,7 +34,7 @@ export function DataTable<T extends { id: string }>({ columns, data, onRowClick 
           <tr>
             {columns.map((col) => (
               <th
-                key={col.key}
+                key={String(col.key)}
                 className="px-6 py-4 text-left text-xs font-bold text-[#E8D4B0] uppercase tracking-wider"
               >
                 {col.header || col.title || String(col.key)}
@@ -51,7 +52,7 @@ export function DataTable<T extends { id: string }>({ columns, data, onRowClick 
               }`}
             >
               {columns.map((col) => (
-                <td key={col.key} className="px-6 py-4 text-sm text-white/90">
+                <td key={String(col.key)} className="px-6 py-4 text-sm text-white/90">
                   {col.render ? col.render(item) : String(item[col.key as keyof T] || '—')}
                 </td>
               ))}
@@ -126,6 +127,47 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
 }
 
 // ===============================
+// METRIC CARD
+// ===============================
+
+export interface MetricCardProps {
+  title: string;
+  value: string;
+  subtitle?: string;
+  icon?: string | React.ReactNode;
+  trend?: 'up' | 'down' | 'neutral';
+  change?: number;
+  loading?: boolean;
+}
+
+export function MetricCard({ title, value, subtitle, icon, trend, change, loading }: MetricCardProps) {
+  if (loading) {
+    return (
+      <div className="bg-white/10 rounded-2xl border border-white/15 p-6 animate-pulse">
+        <div className="h-4 bg-white/20 rounded mb-3 w-3/4"></div>
+        <div className="h-8 bg-white/20 rounded mb-2 w-1/2"></div>
+      </div>
+    );
+  }
+  return (
+    <div className="bg-white/10 rounded-2xl border border-white/15 p-6">
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-white/60 text-sm font-medium">{title}</span>
+        {icon && <span className="text-2xl">{icon}</span>}
+      </div>
+      <div className="text-3xl font-bold text-white mb-2">{value}</div>
+      {subtitle && <div className="text-white/50 text-sm">{subtitle}</div>}
+      {(trend || change !== undefined) && (
+        <div className={`flex items-center gap-1 text-sm mt-3 ${trend === 'up' ? 'text-green-400' : trend === 'down' ? 'text-red-400' : 'text-white/50'}`}>
+          {trend === 'up' ? <TrendingUp className="w-4 h-4" /> : trend === 'down' ? <TrendingDown className="w-4 h-4" /> : <Minus className="w-4 h-4" />}
+          {change !== undefined && <span>{change > 0 ? '+' : ''}{change.toFixed(1)}%</span>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ===============================
 // SEARCH BAR
 // ===============================
 
@@ -164,7 +206,9 @@ export function SearchBar({ placeholder = 'Поиск...', onSearch }: SearchBar
 // ===============================
 
 interface StatusBadgeProps {
-  status: 'active' | 'inactive' | 'pending' | 'success';
+  status: 'active' | 'inactive' | 'pending' | 'success' | 'warning' | 'error' | 'info' | string;
+  label?: string;
+  className?: string;
 }
 
 export function StatusBadge({ status }: StatusBadgeProps) {
@@ -182,9 +226,10 @@ export function StatusBadge({ status }: StatusBadgeProps) {
     pending: 'Ожидает',
   };
 
+  const safeStatus = status as keyof typeof styles;
   return (
-    <span className={`px-3 py-1 rounded-full text-xs font-bold border ${styles[status]}`}>
-      {labels[status]}
+    <span className={`px-3 py-1 rounded-full text-xs font-bold border ${styles[safeStatus] || 'bg-gray-500/20 text-gray-400 border-gray-500/40'}`}>
+      {labels[safeStatus as keyof typeof labels] || status}
     </span>
   );
 }
@@ -193,7 +238,7 @@ export function StatusBadge({ status }: StatusBadgeProps) {
 // LOADING SPINNER
 // ===============================
 
-interface LoadingSpinnerProps {
+export interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg';
   message?: string;
 }
@@ -218,13 +263,14 @@ export function LoadingSpinner({ size = 'md', message }: LoadingSpinnerProps) {
 // ===============================
 
 interface EmptyStateProps {
-  icon?: string;
+  icon?: string | React.ReactNode;
   title: string;
   description?: string;
-  action?: {
-    label: string;
-    onClick: () => void;
-  };
+  action?: React.ReactNode | { label: string; onClick: () => void };
+}
+
+function isActionObject(a: unknown): a is { label: string; onClick: () => void } {
+  return typeof a === 'object' && a !== null && 'label' in a && 'onClick' in a;
 }
 
 export function EmptyState({ icon, title, description, action }: EmptyStateProps) {
@@ -233,12 +279,16 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
       <h3 className="text-2xl font-bold text-white mb-2">{title}</h3>
       {description && <p className="text-[#E8D4B0]/70 text-center mb-6">{description}</p>}
       {action && (
-        <button
-          onClick={action.onClick}
-          className="px-6 py-3 bg-gradient-to-r from-[#DC143C] to-[#FF4500] text-white rounded-xl font-bold hover:shadow-xl hover:shadow-[#DC143C]/50 transition-all transform hover:scale-105"
-        >
-          {action.label}
-        </button>
+        isActionObject(action) ? (
+          <button
+            onClick={action.onClick}
+            className="px-6 py-3 bg-gradient-to-r from-[#DC143C] to-[#FF4500] text-white rounded-xl font-bold hover:shadow-xl hover:shadow-[#DC143C]/50 transition-all transform hover:scale-105"
+          >
+            {action.label}
+          </button>
+        ) : (
+          <>{action}</>
+        )
       )}
     </div>
   );
