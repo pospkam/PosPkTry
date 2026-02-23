@@ -5,16 +5,17 @@
 
 import { SignJWT, jwtVerify } from 'jose';
 
-const jwtSecret = process.env.JWT_SECRET;
-
-if (!jwtSecret) {
-  throw new Error('JWT_SECRET is required');
-}
-
-const JWT_SECRET = new TextEncoder().encode(jwtSecret);
-
 const JWT_ALGORITHM = 'HS256';
 const JWT_EXPIRATION = '7d'; // 7 days
+
+// Получаем секрет в runtime, а не при загрузке модуля (во время сборки)
+function getJWTSecret(): Uint8Array {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET is required');
+  }
+  return new TextEncoder().encode(secret);
+}
 
 export interface JWTPayload {
   userId: string;
@@ -32,7 +33,7 @@ export async function createToken(payload: JWTPayload): Promise<string> {
     .setProtectedHeader({ alg: JWT_ALGORITHM })
     .setIssuedAt()
     .setExpirationTime(JWT_EXPIRATION)
-    .sign(JWT_SECRET);
+    .sign(getJWTSecret());
 
   return token;
 }
@@ -42,7 +43,7 @@ export async function createToken(payload: JWTPayload): Promise<string> {
  */
 export async function verifyToken(token: string): Promise<JWTPayload | null> {
   try {
-    const { payload } = await jwtVerify(token, JWT_SECRET);
+    const { payload } = await jwtVerify(token, getJWTSecret());
     return payload as unknown as JWTPayload;
   } catch (error) {
     console.error('JWT verification failed:', error);

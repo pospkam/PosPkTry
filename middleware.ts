@@ -11,13 +11,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 
-const jwtSecret = process.env.JWT_SECRET;
-
-if (!jwtSecret) {
-  throw new Error('JWT_SECRET is required');
+// JWT_SECRET читается в runtime, не при сборке
+function getJWTSecret(): Uint8Array {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET is required');
+  }
+  return new TextEncoder().encode(secret);
 }
-
-const JWT_SECRET = new TextEncoder().encode(jwtSecret);
 
 // Protected routes that require authentication
 const PROTECTED_ROUTES = ['/hub', '/profile'];
@@ -84,7 +85,7 @@ export async function middleware(request: NextRequest) {
   // Verify JWT token
   if (token) {
     try {
-      const { payload } = await jwtVerify(token, JWT_SECRET);
+      const { payload } = await jwtVerify(token, getJWTSecret());
       
       // Add user info to headers for API routes
       if (isApiRoute) {
