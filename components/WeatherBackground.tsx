@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import useSWR from 'swr';
 
 type WeatherType = 'clear' | 'snow' | 'rain' | 'wind';
 type TimeOfDay = 'night' | 'morning' | 'day' | 'evening';
@@ -19,80 +20,39 @@ interface WeatherData {
   isFallback?: boolean;
 }
 
+// Определяем время суток по Камчатскому времени (UTC+12)
+function getKamchatkaTimeOfDay(): TimeOfDay {
+  const now = new Date();
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  const hour = new Date(utc + 3600000 * 12).getHours();
+  if (hour >= 0 && hour < 6) return 'night';
+  if (hour >= 6 && hour < 12) return 'morning';
+  if (hour >= 12 && hour < 18) return 'day';
+  return 'evening';
+}
+
+const fetcher = (url: string) => fetch(url).then(res => res.json());
+
 export default function WeatherBackground() {
-  const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>('day');
-  const [weather, setWeather] = useState<WeatherType>('clear');
-  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
-  const [temperature, setTemperature] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [localTimeOfDay, setLocalTimeOfDay] = useState<TimeOfDay>(getKamchatkaTimeOfDay);
 
+  // useSWR обновляет погоду каждые 10 минут без fetch в useEffect
+  const { data: result, isLoading: loading } = useSWR('/api/weather', fetcher, {
+    refreshInterval: 600000,
+    onError: () => console.error('❌ Ошибка запроса погоды'),
+  });
+
+  const weatherData: WeatherData | null = result?.success && result.data ? result.data : null;
+  const weather: WeatherType = weatherData?.weatherType ?? 'clear';
+  const temperature: number | null = weatherData?.temperature ?? null;
+  const timeOfDay: TimeOfDay = weatherData?.timeOfDay ?? localTimeOfDay;
+
+  // Обновляем локальное время суток каждую минуту (не содержит fetch)
   useEffect(() => {
-    // Получаем реальную погоду с Яндекс API
-    const fetchWeather = async () => {
-      try {
-        console.log('Запрос погоды с Яндекс API...');
-        const response = await fetch('/api/weather');
-        const result = await response.json();
-        
-        if (result.success && result.data) {
-          const data = result.data;
-          console.log('✅ Погода получена:', data);
-          
-          setWeatherData(data);
-          setWeather(data.weatherType);
-          setTimeOfDay(data.timeOfDay);
-          setTemperature(data.temperature);
-          
-          if (data.isFallback) {
-            console.log('Используются fallback данные погоды');
-          }
-        } else {
-          console.error('❌ Ошибка получения погоды:', result.error);
-          // Используем локальное время суток
-          updateLocalTimeOfDay();
-        }
-      } catch (error) {
-        console.error('❌ Ошибка запроса погоды:', error);
-        updateLocalTimeOfDay();
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    // Определяем время суток локально (fallback) - Камчатское время UTC+12
-    const updateLocalTimeOfDay = () => {
-      // Получаем время в Петропавловске-Камчатском (UTC+12)
-      const now = new Date();
-      const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-      const kamchatkaTime = new Date(utc + (3600000 * 12));
-      const hour = kamchatkaTime.getHours();
-      
-      console.log('Текущий час в Камчатке:', hour);
-      
-      if (hour >= 0 && hour < 6) {
-        setTimeOfDay('night');
-      } else if (hour >= 6 && hour < 12) {
-        setTimeOfDay('morning');
-      } else if (hour >= 12 && hour < 18) {
-        setTimeOfDay('day');
-      } else {
-        setTimeOfDay('evening');
-      }
-    };
-
-    // Первоначальная загрузка
-    fetchWeather();
-    
-    // Обновляем погоду каждые 10 минут
-    const weatherInterval = setInterval(fetchWeather, 600000);
-    
-    // Обновляем время суток каждую минуту
-    const timeInterval = setInterval(updateLocalTimeOfDay, 60000);
-
-    return () => {
-      clearInterval(weatherInterval);
-      clearInterval(timeInterval);
-    };
+    const timeInterval = setInterval(() => {
+      setLocalTimeOfDay(getKamchatkaTimeOfDay());
+    }, 60000);
+    return () => clearInterval(timeInterval);
   }, []);
 
   // Прозрачные градиенты для разного времени суток (намекают, но не закрывают фото)
@@ -218,17 +178,6 @@ function SnowEffect() {
           </svg>
         </div>
       ))}
-      <style jsx>{`
-        @keyframes fall {
-          to {
-            transform: translateY(110vh) translateX(50px);
-            opacity: 0;
-          }
-        }
-        .animate-fall {
-          animation: fall linear infinite;
-        }
-      `}</style>
     </div>
   );
 }
@@ -256,16 +205,6 @@ function RainEffect() {
           }}
         />
       ))}
-      <style jsx>{`
-        @keyframes rain {
-          to {
-            transform: translateY(110vh);
-          }
-        }
-        .animate-rain {
-          animation: rain linear infinite;
-        }
-      `}</style>
     </div>
   );
 }
@@ -297,17 +236,6 @@ function WindEffect() {
           </svg>
         </div>
       ))}
-      <style jsx>{`
-        @keyframes wind {
-          to {
-            transform: translateX(110vw) translateY(-100px) rotate(360deg);
-            opacity: 0;
-          }
-        }
-        .animate-wind {
-          animation: wind linear infinite;
-        }
-      `}</style>
     </div>
   );
 }

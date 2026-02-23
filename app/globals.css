@@ -106,8 +106,38 @@ body {
 
 /* Glassmorphism утилита */
 .glass {
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ===== Weather Effects Animations ===== */
+@keyframes fall {
+  to {
+    transform: translateY(110vh) translateX(50px);
+    opacity: 0;
+  }
+}
+.animate-fall {
+  animation: fall linear infinite;
+}
+
+@keyframes rain {
+  to {
+    transform: translateY(110vh);
+  }
+}
+.animate-rain {
+  animation: rain linear infinite;
+}
+
+@keyframes wind {
+  to {
+    transform: translateX(110vw) translateY(-100px) rotate(360deg);
+    opacity: 0;
+  }
+}
+.animate-wind {
+  animation: wind linear infinite;
 }

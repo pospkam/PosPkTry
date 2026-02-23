@@ -99,12 +99,12 @@ export function Snow({ animations }: { animations: WeatherAnimations }) {
 export function Wind({ animations, windSpeed }: { animations: WeatherAnimations; windSpeed?: number }) {
   if (!animations.wind) return null;
 
-  const lines = Array.from({ length: 5 }, (_, i) => (
+  const lines = Array.from({ length: 5 }, (_, position) => (
     <div
-      key={`wind-${i}`}
+      key={`wind-line-${position}`}
       className="wind-line"
       style={{
-        top: `${20 + i * 15}%`,
+        top: `${20 + position * 15}%`,
         animationDuration: `${2 + Math.random()}s`,
         animationDelay: `${Math.random() * 2}s`,
       }}

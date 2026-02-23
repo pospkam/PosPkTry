@@ -242,8 +242,8 @@ export function LoyaltyLevels({ className }: { className?: string }) {
     return (
       <div className={`bg-premium-black/90 backdrop-blur-sm rounded-2xl p-6 border border-premium-gold/20 ${className}`}>
         <div className="animate-pulse space-y-4">
-          {[1, 2, 3, 4, 5].map((index) => (
-            <div key={`skeleton-${index}`} className="h-16 bg-premium-gold/10 rounded"></div>
+          {[1, 2, 3, 4, 5].map((n) => (
+            <div key={`skeleton-${n}`} className="h-16 bg-premium-gold/10 rounded"></div>
           ))}
         </div>
       </div>

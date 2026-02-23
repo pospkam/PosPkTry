@@ -333,7 +333,7 @@ export function SearchFilters({ isOpen, onClose, onApply }: SearchFiltersProps) 
               <span>Дополнительные услуги</span>
             </span>
             <div className="filter-checks">
-              <label htmlFor="filter-food" className="filter-checkbox-elegant">
+              <label htmlFor="filter-food" aria-label="Питание включено" className="filter-checkbox-elegant">
                 <input
                   id="filter-food"
                   type="checkbox"
@@ -348,8 +348,9 @@ export function SearchFilters({ isOpen, onClose, onApply }: SearchFiltersProps) 
                   <span>Питание включено</span>
                 </span>
               </label>
-              <label className="filter-checkbox-elegant">
+              <label htmlFor="filter-transport" aria-label="Трансфер включен" className="filter-checkbox-elegant">
                 <input
+                  id="filter-transport"
                   type="checkbox"
                   checked={filters.hasTransport}
                   onChange={(e) => setFilters({ ...filters, hasTransport: e.target.checked })}

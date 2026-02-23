@@ -90,11 +90,12 @@ export function TokenImportForm({ onTokenSaved }: TokenImportFormProps) {
 
       <div className="space-y-4">
         <div>
-          <label className="block text-sm text-white/80 mb-2">
+          <label htmlFor="api-token-input" className="block text-sm text-white/80 mb-2">
             API Token
           </label>
           <div className="relative">
             <input
+              id="api-token-input"
               type={showToken ? 'text' : 'password'}
               value={token}
               onChange={(e) => {

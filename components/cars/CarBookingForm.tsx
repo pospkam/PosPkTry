@@ -407,7 +407,7 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-3">Дополнительные опции</label>
+              <p className="block text-sm font-medium mb-3">Дополнительные опции</p>
               <div className="space-y-2">
                 <label htmlFor="opt-additional-driver" className="flex items-center justify-between">
                   <span>Дополнительный водитель (+5%)</span>
