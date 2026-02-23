@@ -82,7 +82,7 @@ export const AvailabilityIndicator: React.FC<AvailabilityIndicatorProps> = ({
   );
 };
 
-export default AvailabilityIndicator;
+// AvailabilityIndicator — используй именованный импорт: { AvailabilityIndicator }
 
 
 

@@ -9,6 +9,7 @@ import { TouristNav } from '@/components/tourist/TouristNav';
 import { Mountain, Eye, TreePine, Fish, CloudSnow, Waves, Star, Zap, Clock, Wind, Sun, Cloud, CloudRain } from 'lucide-react';
 import RecommendationCard, { RecommendationCardSkeleton } from '@/components/tourist/RecommendationCard';
 import type { RecommendedTour, RecommendationStrategy } from '@/lib/recommendations/engine';
+import Link from 'next/link';
 import { ActivityIcon, WeatherIcon } from '@/components/icons';
 
 export default function TouristDashboardClient() {
@@ -407,12 +408,12 @@ export default function TouristDashboardClient() {
         <div className="mt-10">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-white">🎯 Рекомендуем вам</h2>
-            <a
+            <Link
               href="/tours"
               className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
             >
               Смотреть все →
-            </a>
+            </Link>
           </div>
           {recsLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

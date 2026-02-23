@@ -120,7 +120,7 @@ export const BaseCalendar: React.FC<BaseCalendarProps> = ({
   );
 };
 
-export default BaseCalendar;
+// BaseCalendar — используй именованный импорт: { BaseCalendar }
 
 
 

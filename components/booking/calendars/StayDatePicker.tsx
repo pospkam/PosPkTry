@@ -290,7 +290,7 @@ const getNightsLabel = (count: number): string => {
   return 'ночей';
 };
 
-export default StayDatePicker;
+// StayDatePicker — используй именованный импорт: { StayDatePicker }
 
 
 

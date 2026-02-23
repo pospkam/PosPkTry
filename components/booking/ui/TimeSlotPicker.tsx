@@ -121,7 +121,7 @@ export const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
   );
 };
 
-export default TimeSlotPicker;
+// TimeSlotPicker — используй именованный импорт: { TimeSlotPicker }
 
 
 

@@ -207,7 +207,7 @@ const getAgeLabel = (age: number): string => {
   return 'лет';
 };
 
-export default GuestSelector;
+// GuestSelector — используй именованный импорт: { GuestSelector }
 
 
 

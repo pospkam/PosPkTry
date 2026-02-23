@@ -11,7 +11,10 @@ const nextConfig = {
   },
   
   images: {
-    domains: ['images.unsplash.com'],
+    remotePatterns: [
+      { protocol: 'https', hostname: '**' },
+      { protocol: 'http', hostname: '**' },
+    ],
     formats: ['image/avif', 'image/webp'],
   },
 

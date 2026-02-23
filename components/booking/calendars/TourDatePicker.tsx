@@ -346,7 +346,7 @@ const getWeatherText = (weather: string): string => {
   }
 };
 
-export default TourDatePicker;
+// TourDatePicker — используй именованный импорт: { TourDatePicker }
 
 
 

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import type { RecommendedTour, RecommendationStrategy } from '@/lib/recommendations/engine';
 
 interface RecommendationCardProps {
@@ -66,10 +67,12 @@ export default function RecommendationCard({ tour, onCardClick }: Recommendation
       {/* Фото */}
       <div className="relative h-44 overflow-hidden bg-white/5">
         {mainImage ? (
-          <img
+          <Image
             src={mainImage}
             alt={`Фото тура: ${tour.title}`}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover group-hover:scale-105 transition-transform duration-500"
             loading="lazy"
           />
         ) : (

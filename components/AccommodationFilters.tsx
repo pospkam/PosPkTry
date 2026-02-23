@@ -333,7 +333,7 @@ export const AccommodationFilters: React.FC<AccommodationFiltersProps> = ({
   );
 };
 
-export default AccommodationFilters;
+// AccommodationFilters — используй именованный импорт: { AccommodationFilters }
 
 
 

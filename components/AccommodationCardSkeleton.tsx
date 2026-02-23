@@ -40,7 +40,7 @@ export const AccommodationCardSkeleton: React.FC = () => {
   );
 };
 
-export default AccommodationCardSkeleton;
+// AccommodationCardSkeleton — используй именованный импорт: { AccommodationCardSkeleton }
 
 
 
