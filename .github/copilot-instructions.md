@@ -42,12 +42,10 @@ When generating React code, follow these rules:
 - Try/catch for async operations
 - User-friendly error messages
 
-## Известные проблемы (React Doctor)
-- Score: 83/100 (Great)
-- Цель: <100 предупреждений
-- Page без metadata: 44
-- Unused exports: 130
-- Unused types: 81
+## Статус кода (React Doctor)
+- Score: **99/100** ✅
+- Page без metadata: **0** (исправлено паттерном server/client split)
+- Оставшиеся предупреждения: 4 (архитектурные)
 
 ## Паттерны проекта
 ### Glassmorphism
@@ -58,3 +56,30 @@ border-radius: 20px;
 ```
 
 Scan code with: `npx -y react-doctor@latest`
+
+## Ключевые паттерны Next.js
+
+### Server/Client split (metadata)
+Никогда не смешивать `'use client'` и `export const metadata` в одном файле.
+```tsx
+// page.tsx (server component)
+import type { Metadata } from 'next'
+export const metadata: Metadata = { title: 'Страница' }
+import PageClient from './_PageClient'
+export default function Page() { return <PageClient /> }
+
+// _PageClient.tsx
+'use client'
+export default function PageClient() { /* вся логика */ }
+```
+
+### Data fetching
+Использовать `useSWR` вместо `fetch` в `useEffect`:
+```tsx
+import useSWR from 'swr'
+const fetcher = (url: string) => fetch(url).then(r => r.json())
+const { data } = useSWR('/api/weather', fetcher, { refreshInterval: 600000 })
+```
+
+### Timeweb MCP
+Конфигурация в `.vscode/mcp.json` (не в git). Управление деплоем через GitHub Copilot.
