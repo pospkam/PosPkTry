@@ -73,6 +73,9 @@ export function HomeHeader({
 
       {/* Кнопки управления */}
       <div className="flex items-center gap-2">
+        {/* Переключатель темы */}
+        <ThemeToggleButton />
+        
         {/* Настройки */}
         <button
           aria-label="Настройки"
@@ -82,5 +85,19 @@ export function HomeHeader({
         </button>
       </div>
     </header>
+  );
+}
+
+function ThemeToggleButton() {
+  const { theme, toggleTheme } = useTheme();
+  
+  return (
+    <button
+      onClick={toggleTheme}
+      aria-label="Переключить тему"
+      className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/30 transition-all shadow-sm"
+    >
+      {theme === 'light' ? <MoonIcon /> : <SunIcon />}
+    </button>
   );
 }

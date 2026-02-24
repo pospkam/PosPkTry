@@ -82,6 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (result.success) {
               result.data.token = parsedUser.token;
               setUser(result.data);
+              
               return;
             }
           }
@@ -187,6 +188,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await fetch('/api/auth/signout', { method: 'POST' });
       setUser(null);
       await saveUserToStorage(null);
+      
+      // Clear roles in RoleContext
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('user_roles');
+      }
     } catch (error) {
       console.error('Sign out error:', error);
       throw error;

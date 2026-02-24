@@ -1,0 +1,10 @@
+const lucide = require('lucide-react');
+console.log('PawPrint:', !!lucide.PawPrint);
+console.log('Fish:', !!lucide.Fish);
+console.log('Mountain:', !!lucide.Mountain);
+console.log('Users:', !!lucide.Users);
+console.log('Footprints:', !!lucide.Footprints);
+console.log('Sailboat:', !!lucide.Sailboat);
+console.log('Ship:', !!lucide.Ship);
+console.log('Waves:', !!lucide.Waves);
+console.log('MountainSnow:', !!lucide.MountainSnow);

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
 
 export type AppRole = 'tourist' | 'operator' | 'guide' | 'transfer' | 'agent' | 'admin' | 'stay' | 'gear';
 
@@ -14,36 +15,20 @@ interface RoleState {
 const RoleContext = createContext<RoleState | undefined>(undefined);
 
 export const RoleProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, isLoading: authLoading } = useAuth();
   const [roles, setRoles] = useState<AppRole[]>(['tourist']);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const loadRoles = () => {
-      try {
-        const savedRoles = localStorage.getItem('user_roles');
-        if (savedRoles) {
-          const parsedRoles = JSON.parse(savedRoles) as AppRole[];
-          setRoles(parsedRoles);
-        }
-      } catch (error) {
-        console.error('Error loading roles from localStorage:', error);
-      } finally {
-        setIsLoading(false);
+    if (!authLoading) {
+      if (user && user.roles) {
+        setRoles(user.roles as AppRole[]);
+      } else {
+        setRoles(['tourist']);
       }
-    };
-
-    loadRoles();
-  }, []);
-
-  useEffect(() => {
-    if (!isLoading) {
-      try {
-        localStorage.setItem('user_roles', JSON.stringify(roles));
-      } catch (error) {
-        console.error('Error saving roles to localStorage:', error);
-      }
+      setIsLoading(false);
     }
-  }, [roles, isLoading]);
+  }, [user, authLoading]);
 
   const hasRole = (r: AppRole) => roles.includes(r) || roles.includes('admin');
   

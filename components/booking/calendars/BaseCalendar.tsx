@@ -88,7 +88,6 @@ export const BaseCalendar: React.FC<BaseCalendarProps> = ({
         className
       )}
     >
-      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <DatePicker
         {...({
           selected,

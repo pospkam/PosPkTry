@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, MapPin, BookOpen, User, type LucideIcon } from 'lucide-react';
+import { Home, Search, MapPin, Map, UserCircle, type LucideIcon } from 'lucide-react';
 
 /**
  * HomeBottomNav — плавающая pill-навигация (iOS light theme).
@@ -17,11 +17,11 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: '/',        label: 'Главная',  Icon: Home,     pathKey: '/' },
-  { href: '/search',  label: 'Поиск',    Icon: Search,   pathKey: '/search' },
-  { href: '/map',     label: 'Карта',    Icon: MapPin,   pathKey: '/map' },
-  { href: '/tours',   label: 'Туры',     Icon: BookOpen, pathKey: '/tours' },
-  { href: '/profile', label: 'Профиль',  Icon: User,     pathKey: '/profile' },
+  { href: '/',        label: 'Home',  Icon: Home,     pathKey: '/' },
+  { href: '/search',  label: 'Search',    Icon: Search,   pathKey: '/search' },
+  { href: '/map',     label: 'Map',    Icon: MapPin,   pathKey: '/map' },
+  { href: '/favorites', label: 'Favorites', Icon: Map, pathKey: '/favorites' },
+  { href: '/profile', label: 'Profille',  Icon: UserCircle, pathKey: '/profile' },
 ];
 
 export function HomeBottomNav() {
