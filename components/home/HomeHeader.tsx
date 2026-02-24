@@ -49,13 +49,11 @@ export function HomeHeader({
   username = 'Kuzmich',
   avatarUrl = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=96&h=96&fit=crop&crop=face',
 }: HomeHeaderProps) {
-  const { isDark, toggleTheme } = useTheme();
-
   return (
     <header className="flex items-center justify-between px-4 pt-12 pb-4 relative z-10">
       {/* Аватар + название */}
       <div className="flex items-center gap-3">
-        <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-white/80 shadow-lg relative flex-shrink-0 ring-2 ring-white/20">
+        <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-white shadow-lg relative flex-shrink-0">
           <Image
             src={avatarUrl}
             alt={`Аватар ${username}`}
@@ -75,21 +73,12 @@ export function HomeHeader({
 
       {/* Кнопки управления */}
       <div className="flex items-center gap-2">
-        {/* Переключатель темы */}
-        <button
-          onClick={toggleTheme}
-          aria-label={isDark ? 'Светлая тема' : 'Тёмная тема'}
-          className="w-11 h-11 rounded-full bg-white/25 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/35 transition-all shadow-sm"
-        >
-          {isDark ? <SunIcon /> : <MoonIcon />}
-        </button>
-
         {/* Настройки */}
         <button
           aria-label="Настройки"
-          className="w-11 h-11 rounded-full bg-white/25 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/35 transition-all shadow-sm"
+          className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/30 transition-all shadow-sm"
         >
-          <Settings size={20} />
+          <Settings size={24} />
         </button>
       </div>
     </header>

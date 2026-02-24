@@ -11,3 +11,5 @@ export { HomeSearchBar } from './HomeSearchBar';
 export { CategoryChips } from './CategoryChips';
 export { TourCardsRow } from './TourCardsRow';
 export { HomeBottomNav } from './HomeBottomNav';
+export { DesktopNav } from './DesktopNav';
+export { DesktopHero } from './DesktopHero';

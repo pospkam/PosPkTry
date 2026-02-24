@@ -14,6 +14,8 @@ import {
   CategoryChips,
   TourCardsRow,
   HomeBottomNav,
+  DesktopNav,
+  DesktopHero,
 } from '@/components/home';
 
 export const metadata: Metadata = {
@@ -40,7 +42,6 @@ export default function HomePage() {
 
       {/* ================================================================
        * FULL-SCREEN BACKGROUND — размытый пейзаж за всем контентом
-       * Сине-лавандовый тон (#BAC5D8) просвечивает везде
        * ================================================================ */}
       <div className="fixed inset-0 -z-10 dark:hidden">
         <Image
@@ -51,8 +52,8 @@ export default function HomePage() {
           sizes="100vw"
           style={{ objectFit: 'cover', objectPosition: 'center 30%' }}
         />
-        {/* Сине-лавандовый overlay — ключевой тон из макета */}
-        <div className="absolute inset-0 bg-[#9BAAC8]/40 backdrop-blur-[20px]" />
+        {/* Градиентный overlay для читаемости текста, как на макете */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#8B9AC0]/40 to-[#8B9AC0]/80 backdrop-blur-[2px]" />
       </div>
 
       {/* Dark mode background */}
@@ -60,21 +61,8 @@ export default function HomePage() {
 
       {/* ================================================================
        * HERO SECTION — верхние 30%: нативное фото видно в центре
-       * По краям — сине-лавандовый padding от фона
        * ================================================================ */}
-      <div className="relative h-[32vh] min-h-[240px] max-h-[360px] w-full overflow-hidden rounded-b-[32px]">
-        <Image
-          src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=900&q=80"
-          alt="Вулкан Камчатки"
-          fill
-          priority
-          sizes="768px"
-          style={{ objectFit: 'cover', objectPosition: 'center 30%' }}
-        />
-
-        {/* Gradient: прозрачное фото сверху → лавандовый переход снизу */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#B9C1D6]/30 via-transparent to-[#B9C1D6]/70 dark:from-[#0B1120]/30 dark:to-[#0B1120]" />
-
+      <div className="relative w-full overflow-hidden">
         {/* 1. Header */}
         <HomeHeader />
       </div>
@@ -82,14 +70,14 @@ export default function HomePage() {
       {/* ================================================================
        * 2. Поисковая строка — отдельно между hero и контентом
        * ================================================================ */}
-      <div className="relative px-4 -mt-6 z-20">
+      <div className="relative px-4 mt-4 z-20">
         <HomeSearchBar />
       </div>
 
       {/* ================================================================
        * ОСНОВНОЙ КОНТЕНТ — без белого overlay, фон просвечивает
        * ================================================================ */}
-      <main className="relative px-0 pt-4 pb-28">
+      <main className="relative px-0 pt-6 pb-28">
         {/* 3. Категории */}
         <CategoryChips />
 

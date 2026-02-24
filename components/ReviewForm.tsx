@@ -154,8 +154,9 @@ export function ReviewForm({
 
         {/* Изображения */}
         <div>
-          <span className="block text-white/70 mb-2">Фотографии (опционально)</span>
+          <label htmlFor="review-images" className="block text-white/70 mb-2">Фотографии (опционально)</label>
           <input
+            id="review-images"
             type="file"
             accept="image/*"
             multiple

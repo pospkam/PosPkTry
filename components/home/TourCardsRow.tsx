@@ -16,9 +16,12 @@ interface Tour {
 
 function StarRating({ rating }: { rating: number }) {
   return (
-    <div className="flex items-center gap-0.5" aria-label={`Рейтинг: ${rating} из 5`} role="img">
-      <span className="text-amber-400 text-xs">★</span>
-      <span className="text-[11px] font-semibold text-white/90">{rating.toFixed(1)}</span>
+    <div className="flex items-center gap-1" aria-label={`Рейтинг: ${rating} из 5`} role="img">
+      <div className="flex gap-0.5">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <span key={star} className="text-amber-400 text-sm">★</span>
+        ))}
+      </div>
     </div>
   );
 }
@@ -69,56 +72,45 @@ const FALLBACK_TOURS: Tour[] = [
 
 export function TourCardsRow() {
   return (
-    <section aria-label="Популярные туры" className="py-2">
+    <section aria-label="Популярные туры" className="py-4 lg:py-6">
       {/* Заголовок */}
-      <div className="flex items-center justify-between px-4 mb-3">
-        <h2 className="text-[15px] font-bold text-white dark:text-white drop-shadow-sm">Популярные туры</h2>
-        <Link href="/tours" className="text-sm font-medium text-white/70 dark:text-[#7EB3FF]">
-          Все →
+      <div className="flex items-center justify-between px-4 lg:px-0 mb-4 lg:mb-5">
+        <h2 className="text-2xl lg:text-xl font-medium text-white drop-shadow-sm lg:drop-shadow-none">Популярные туры</h2>
+        <Link href="/tours" className="text-lg font-medium text-white/90 hover:underline flex items-center gap-1">
+          Все <span className="text-xl">›</span>
         </Link>
       </div>
 
-      {/* Сетка 2 колонки — как в макете */}
-      <div className="grid grid-cols-2 gap-3 px-4" role="list">
+      {/* Скролл на мобилке */}
+      <div className="flex overflow-x-auto gap-4 px-4 pb-4 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }} role="list">
         {FALLBACK_TOURS.map(tour => (
           <Link
             key={tour.id}
             href={`/tours?category=${tour.category}`}
             role="listitem"
             aria-label={`${tour.name}, ${tour.price.toLocaleString('ru-RU')} ₽`}
-            className="relative rounded-2xl overflow-hidden shadow-lg shadow-black/20 transition-transform active:scale-[0.97] aspect-[3/4]"
+            className="relative flex-shrink-0 w-[160px] h-[220px] rounded-[24px] overflow-hidden shadow-lg shadow-black/10 transition-transform active:scale-[0.97] bg-white/20 backdrop-blur-md border border-white/10"
           >
-            {/* Фото на всю карточку */}
-            <Image
-              src={tour.image_url || '/placeholder-tour.jpg'}
-              alt={tour.short_description}
-              fill
-              sizes="(max-width: 768px) 46vw, 350px"
-              className="object-cover"
-              loading="lazy"
-            />
-
-            {/* Тёмный gradient overlay снизу — для текста */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
-            {/* Цена — бейдж сверху-справа */}
-            <div className="absolute top-2 right-2 bg-black/40 backdrop-blur-sm rounded-lg px-2 py-0.5">
-              <span className="text-[11px] font-bold text-white">
-                {tour.price.toLocaleString('ru-RU')} ₽
-              </span>
+            {/* Фото на верхнюю часть карточки */}
+            <div className="relative w-full h-[65%]">
+              <Image
+                src={tour.image_url || '/placeholder-tour.jpg'}
+                alt={tour.short_description}
+                fill
+                sizes="160px"
+                className="object-cover rounded-t-[24px]"
+                loading="lazy"
+              />
             </div>
 
-            {/* Инфо внизу — на тёмном overlay */}
-            <div className="absolute bottom-0 left-0 right-0 p-3">
-              <h3 className="text-[13px] font-bold text-white leading-tight mb-1 drop-shadow-md line-clamp-2">
-                {tour.name}
-              </h3>
-              <p className="text-[10px] text-white/60 mb-1.5 line-clamp-1">
-                {tour.short_description}
-              </p>
-              <div className="flex items-center gap-1.5">
+            {/* Контент внизу */}
+            <div className="absolute bottom-0 left-0 right-0 p-3 h-[35%] flex flex-col justify-center">
+              <div className="text-xl font-bold text-white mb-1">
+                {tour.price.toLocaleString('ru-RU')}₽
+              </div>
+              <div className="flex items-center justify-between">
                 <StarRating rating={tour.rating} />
-                <span className="text-[10px] text-white/50">({tour.review_count})</span>
+                <span className="text-sm font-medium text-white/80">{tour.rating.toFixed(1)}</span>
               </div>
             </div>
           </Link>

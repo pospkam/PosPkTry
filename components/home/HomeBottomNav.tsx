@@ -35,9 +35,9 @@ export function HomeBottomNav() {
   return (
     <nav
       aria-label="Основная навигация"
-      className="fixed bottom-4 left-4 right-4 z-50 max-w-[720px] mx-auto"
+      className="fixed bottom-0 left-0 right-0 z-50 max-w-[768px] mx-auto lg:hidden"
     >
-      <div className="flex items-center justify-around h-16 bg-[#8B9AC0]/50 dark:bg-[#0D1B2A]/95 backdrop-blur-xl rounded-3xl shadow-xl shadow-black/15 dark:shadow-black/40 border border-white/20 dark:border-white/10 px-2">
+      <div className="flex items-center justify-around h-20 bg-white/10 backdrop-blur-2xl border-t border-white/20 px-2 pb-2">
         {NAV_ITEMS.map(item => {
           const active = isActive(item);
           return (
@@ -49,12 +49,12 @@ export function HomeBottomNav() {
               className={[
                 'flex flex-col items-center justify-center gap-1 flex-1 h-full transition-colors',
                 active
-                  ? 'text-white dark:text-[#7EB3FF]'
-                  : 'text-white/50 dark:text-gray-500',
+                  ? 'text-white'
+                  : 'text-white/60',
               ].join(' ')}
             >
-              <item.Icon size={22} strokeWidth={active ? 2.2 : 1.6} />
-              <span className={['text-[10px] leading-tight', active ? 'font-semibold' : 'font-normal'].join(' ')}>
+              <item.Icon size={26} strokeWidth={active ? 2.5 : 2} />
+              <span className={['text-[11px] leading-tight', active ? 'font-bold' : 'font-medium'].join(' ')}>
                 {item.label}
               </span>
             </Link>
