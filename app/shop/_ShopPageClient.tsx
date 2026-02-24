@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
+import React, { useState, useEffect } from 'react';import { Search } from 'lucide-react';import Link from 'next/link';
 import Image from 'next/image';
 import { Star } from 'lucide-react';
 
@@ -97,7 +96,7 @@ export default function ShopPageClient() {
           </div>
         ) : souvenirs.length === 0 ? (
           <div className="text-center py-20">
-            <div className="text-4xl mb-4">🔍</div>
+            <Search className="w-12 h-12 mx-auto mb-4 text-sky-400 opacity-80" />
             <p className="text-white/70">Товары не найдены</p>
           </div>
         ) : (

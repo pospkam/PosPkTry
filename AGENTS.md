@@ -88,6 +88,7 @@ gitpod automations task start deploy
 
 ## Правила кода
 
+- **НИКАКИХ ЭМОДЗИ** в коде, UI, console.log, markdown. Заменять на Lucide React иконки или текст.
 - TypeScript strict mode
 - Conventional Commits: `feat:`, `fix:`, `docs:`
 - Тесты для критического функционала

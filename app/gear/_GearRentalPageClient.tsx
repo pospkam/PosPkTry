@@ -93,7 +93,7 @@ export default function GearRentalPageClient() {
           </div>
         ) : gear.length === 0 ? (
           <div className="text-center py-20">
-            <div className="text-4xl mb-4">🔍</div>
+            <Search className="w-12 h-12 mx-auto mb-4 text-sky-400 opacity-80" />
             <p className="text-white/70">Снаряжение не найдено</p>
           </div>
         ) : (
@@ -104,7 +104,7 @@ export default function GearRentalPageClient() {
                 className="bg-white/15 border border-white/15 rounded-2xl overflow-hidden hover:bg-white/10 transition-colors"
               >
                 <div className="aspect-square bg-white/15 flex items-center justify-center">
-                  <div className="text-6xl">🎒</div>
+                  <Backpack className="w-24 h-24 text-gray-400 opacity-80" />
                 </div>
                 
                 <div className="p-4">

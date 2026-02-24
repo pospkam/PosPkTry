@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react';import { Search } from 'lucide-react';import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Tour } from '@/types';
 import { Star, Zap, Clock } from 'lucide-react';
@@ -179,7 +178,7 @@ export default function ToursPageClient() {
         {/* Tours Grid */}
         {filteredTours.length === 0 ? (
           <div className="bg-white/15 backdrop-blur-2xl rounded-2xl p-12 text-center border border-white/15" style={{ backdropFilter: 'blur(10px)' }}>
-            <div className="text-6xl mb-4">🔍</div>
+            <Search className="w-16 h-16 mx-auto mb-4 text-sky-400 opacity-80" />
             <h3 className="text-2xl font-extralight text-white mb-2" style={{ textShadow: '0 2px 6px rgba(0, 0, 0, 0.15)' }}>
               Туры не найдены
             </h3>

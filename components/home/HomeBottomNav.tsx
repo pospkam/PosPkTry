@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, MapPin, Map, UserCircle, type LucideIcon } from 'lucide-react';
+import { Home, Search, MapPin, BookOpen, User, type LucideIcon } from 'lucide-react';
 
 /**
  * HomeBottomNav — плавающая pill-навигация (iOS light theme).
@@ -17,11 +17,11 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: '/',        label: 'Home',  Icon: Home,     pathKey: '/' },
-  { href: '/search',  label: 'Search',    Icon: Search,   pathKey: '/search' },
-  { href: '/map',     label: 'Map',    Icon: MapPin,   pathKey: '/map' },
-  { href: '/favorites', label: 'Favorites', Icon: Map, pathKey: '/favorites' },
-  { href: '/profile', label: 'Profille',  Icon: UserCircle, pathKey: '/profile' },
+  { href: '/',        label: 'Главная',  Icon: Home,     pathKey: '/' },
+  { href: '/search',  label: 'Поиск',    Icon: Search,   pathKey: '/search' },
+  { href: '/map',     label: 'Карта',    Icon: MapPin,   pathKey: '/map' },
+  { href: '/tours',   label: 'Туры',     Icon: BookOpen, pathKey: '/tours' },
+  { href: '/profile', label: 'Профиль',  Icon: User,     pathKey: '/profile' },
 ];
 
 export function HomeBottomNav() {
@@ -35,9 +35,9 @@ export function HomeBottomNav() {
   return (
     <nav
       aria-label="Основная навигация"
-      className="fixed bottom-0 left-0 right-0 z-50 max-w-[768px] mx-auto lg:hidden"
+      className="fixed bottom-4 left-4 right-4 z-50 max-w-[720px] mx-auto"
     >
-      <div className="flex items-center justify-around h-20 bg-white/10 backdrop-blur-2xl border-t border-white/20 px-2 pb-2">
+      <div className="flex items-center justify-around h-16 bg-[#8B9AC0]/50 dark:bg-[#0D1B2A]/95 backdrop-blur-xl rounded-3xl shadow-xl shadow-black/15 dark:shadow-black/40 border border-white/20 dark:border-white/10 px-2">
         {NAV_ITEMS.map(item => {
           const active = isActive(item);
           return (
@@ -49,12 +49,12 @@ export function HomeBottomNav() {
               className={[
                 'flex flex-col items-center justify-center gap-1 flex-1 h-full transition-colors',
                 active
-                  ? 'text-white'
-                  : 'text-white/60',
+                  ? 'text-white dark:text-[#7EB3FF]'
+                  : 'text-white/50 dark:text-gray-500',
               ].join(' ')}
             >
-              <item.Icon size={26} strokeWidth={active ? 2.5 : 2} />
-              <span className={['text-[11px] leading-tight', active ? 'font-bold' : 'font-medium'].join(' ')}>
+              <item.Icon size={22} strokeWidth={active ? 2.2 : 1.6} />
+              <span className={['text-[10px] leading-tight', active ? 'font-semibold' : 'font-normal'].join(' ')}>
                 {item.label}
               </span>
             </Link>

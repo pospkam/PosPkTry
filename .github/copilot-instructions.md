@@ -42,6 +42,10 @@ When generating React code, follow these rules:
 - Try/catch for async operations
 - User-friendly error messages
 
+### 6. No Emojis
+- **НИКАКИХ ЭМОДЗИ** в коде, UI, console.log, markdown. Заменять на Lucide React иконки (`import { IconName } from 'lucide-react'`) или чистый текст.
+- В поиске и фильтрах: только SVG/Lucide или Tailwind символы (★, ✔).
+
 ## Статус кода (React Doctor)
 - Score: **99/100** ✅
 - Page без metadata: **0** (исправлено паттерном server/client split)
