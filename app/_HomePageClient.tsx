@@ -11,7 +11,7 @@ import {
   HomeBottomNav,
 } from '@/components/home';
 
-import ModernTourSearch from '@/components/ModernTourSearch';
+import { ModernTourSearch } from '@/components/ModernTourSearch';
 
 export default function HomePageClient() {
   const isDesktop = useMediaQuery({ minWidth: 1024 });
