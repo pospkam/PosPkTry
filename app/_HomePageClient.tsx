@@ -127,7 +127,9 @@ export default function HomePageClient() {
         <CategoryChips />
 
         {/* Интегрированный поиск */}
-        <ModernTourSearch />
+        <Suspense fallback={<Loader2 className="animate-spin" />}>
+          <ModernTourSearch />
+        </Suspense>
 
         {/* 4. Карточки туров — 2 колонки */}
         <TourCardsRow />
