@@ -1,8 +1,10 @@
 'use client';
 
 import Image from 'next/image';
-import { Settings } from 'lucide-react';
+import Link from 'next/link';
+import { Settings, LogIn, UserPlus } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 function MoonIcon() {
   return (
