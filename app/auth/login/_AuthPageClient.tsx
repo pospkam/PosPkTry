@@ -67,6 +67,8 @@ export default function AuthPageClient() {
   const [success, setSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showMfa, setShowMfa] = useState(false);
+  const [mfaToken, setMfaToken] = useState('');
 
   // Login form
   const [loginData, setLoginData] = useState({
@@ -166,6 +168,19 @@ export default function AuthPageClient() {
     setStep(prev => prev - 1);
     setError('');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await signIn(email, password);
+    } catch (err) {
+      if (err.message === 'MFA required') {
+        setShowMfa(true);
+      } else {
+        setError(err.message);
+      }
+    }
   };
 
   const handleLogin = async (e: React.FormEvent) => {

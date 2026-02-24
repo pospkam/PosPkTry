@@ -10,6 +10,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
 
 // JWT_SECRET читается в runtime, не при сборке
 function getJWTSecret(): Uint8Array {
@@ -32,7 +34,24 @@ const PUBLIC_API_ROUTES = [
   '/api/partners',
 ];
 
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN,
+});
+
+const ratelimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(10, '10 s'),
+});
+
 export async function middleware(request: NextRequest) {
+  const ip = request.ip ?? '127.0.0.1';
+  const { success } = await ratelimit.limit(ip);
+
+  if (!success) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  }
+
   const { pathname } = request.nextUrl;
   
   // Security headers for all responses
