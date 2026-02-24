@@ -11,6 +11,8 @@ import {
   HomeBottomNav,
 } from '@/components/home';
 
+import ModernTourSearch from '@/components/ModernTourSearch';
+
 export default function HomePageClient() {
   const isDesktop = useMediaQuery({ minWidth: 1024 });
 
@@ -122,7 +124,10 @@ export default function HomePageClient() {
        * ================================================================ */}
       <main className="relative px-4 lg:px-0 pt-4 pb-28 lg:pb-0">
         {/* 3. Категории */}
-        <CategoryChips />
+        <CatИнтегрированный поиск */}
+        <ModernTourSearch />
+
+        {/* egoryChips />
 
         {/* 4. Карточки туров — 2 колонки */}
         <TourCardsRow />
