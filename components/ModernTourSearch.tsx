@@ -427,7 +427,7 @@ export function ModernTourSearch() {
               onClick={() => setFilters({ query: '', difficulty: 'any' })}
               className="clear-filters-btn"
             >
-       (filters.query || filters.activity || results.length > 0)ть фильтры
+       Очистить фильтры
             </button>
           </div>
         )}

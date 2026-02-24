@@ -32,7 +32,7 @@ export function AIChatWidget({ userId, className, onClose }: AIChatWidgetProps) 
 
   const fetchChatHistory = async () => {
     try {
-      const response = await fetch(`/api/chat?userId=${userId}`);
+      const response = await fetch(`/api/ai/chat?userId=${userId}`);
       const data = await response.json();
       
       if (data.success && data.data) {
@@ -60,7 +60,7 @@ export function AIChatWidget({ userId, className, onClose }: AIChatWidgetProps) 
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/chat', {
+      const response = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

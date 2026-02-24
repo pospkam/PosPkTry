@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import { Syne } from 'next/font/google';
+import dynamic from 'next/dynamic';
 
 const syne = Syne({ 
   subsets: ['latin'], 
@@ -8,6 +9,11 @@ const syne = Syne({
 });
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://kamchatour.ru';
+
+const FloatingAIButton = dynamic(
+  () => import('@/components/FloatingAIButton').then(mod => ({ default: mod.default })),
+  { ssr: false }
+)
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
@@ -94,6 +100,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <RoleProvider>
               <OrdersProvider>
                 {children}
+                <FloatingAIButton />
               </OrdersProvider>
             </RoleProvider>
           </AuthProvider>

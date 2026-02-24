@@ -70,6 +70,90 @@ async function callDeepSeek(messages: ChatMessage[]): Promise<string | null> {
   }
 }
 
+// ── Minimax fallback ──────────────────────────────────────────
+async function callMinimax(messages: ChatMessage[]): Promise<string | null> {
+  const apiKey = process.env.MINIMAX_API_KEY;
+  if (!apiKey) return null;
+
+  try {
+    const res = await fetch('https://api.minimax.chat/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'abab6.5s-chat',
+        temperature: 0.4,
+        max_tokens: 800,
+        messages,
+      }),
+    });
+
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data?.choices?.[0]?.message?.content ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// ── xAI (Grok) fallback ──────────────────────────────────────
+async function callXai(messages: ChatMessage[]): Promise<string | null> {
+  const apiKey = process.env.XAI_API_KEY;
+  if (!apiKey) return null;
+
+  try {
+    const res = await fetch('https://api.x.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'grok-beta',
+        temperature: 0.4,
+        max_tokens: 800,
+        messages,
+      }),
+    });
+
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data?.choices?.[0]?.message?.content ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// ── OpenRouter fallback ─────────────────────────────────────
+async function callOpenrouter(messages: ChatMessage[]): Promise<string | null> {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) return null;
+
+  try {
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'anthropic/claude-3.5-sonnet',
+        temperature: 0.4,
+        max_tokens: 800,
+        messages,
+      }),
+    });
+
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data?.choices?.[0]?.message?.content ?? null;
+  } catch {
+    return null;
+  }
+}
+
 // ── Загрузка истории сессии из БД ─────────────────────────────
 async function loadSessionHistory(sessionId: string): Promise<ChatMessage[]> {
   if (!sessionId) return [];
@@ -151,9 +235,12 @@ export async function POST(request: NextRequest) {
     const systemPrompt = getSystemPrompt(safeRole);
     const messagesForAI = buildMessageHistory(systemPrompt, history, 10);
 
-    // Вызываем AI — Groq → DeepSeek → fallback
+    // Вызываем AI — Groq → DeepSeek → Minimax → xAI → OpenRouter → fallback
     let answer = await callGroq(messagesForAI);
     if (!answer) answer = await callDeepSeek(messagesForAI);
+    if (!answer) answer = await callMinimax(messagesForAI);
+    if (!answer) answer = await callXai(messagesForAI);
+    if (!answer) answer = await callOpenrouter(messagesForAI);
     if (!answer) {
       answer = 'Извините, сервис временно недоступен. Попробуйте позже или обратитесь в поддержку.';
     }
