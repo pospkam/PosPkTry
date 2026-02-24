@@ -30,9 +30,19 @@ interface TourResult {
 }
 
 export function ModernTourSearch() {
+  const searchParams = useSearchParams();
+  const initialQuery = searchParams.get('q') || '';
+  const initialActivity = searchParams.get('activity') || '';
+  const initialGuests = searchParams.get('guests') || '';
+  const initialDateFrom = searchParams.get('dateFrom') || '';
+  const initialDateTo = searchParams.get('dateTo') || '';
+
   const [filters, setFilters] = useState<SearchFilters>({
-    query: '',
+    query: initialQuery,
     difficulty: 'any',
+    activity: initialActivity || undefined,
+    dateFrom: initialDateFrom || undefined,
+    dateTo: initialDateTo || undefined,
   });
   const [results, setResults] = useState<TourResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -77,17 +87,25 @@ export function ModernTourSearch() {
     }
   }, []);
 
+  // Автопоиск при переходе с главной с параметрами
+  useEffect(() => {
+    if (initialQuery || initialActivity) {
+      performSearch();
+    }
+  }, []);
+
   // Живой поиск с debounce
   useEffect(() => {
     if (searchTimeout.current) {
       clearTimeout(searchTimeout.current);
     }
 
-    if (filters.query.length >= 2) {
+    const hasFilters = filters.query.length >= 2 || filters.activity || filters.dateFrom;
+    if (hasFilters) {
       searchTimeout.current = setTimeout(() => {
         performSearch();
       }, 300);
-    } else {
+    } else if (!initialQuery && !initialActivity) {
       setResults([]);
     }
 
@@ -101,13 +119,12 @@ export function ModernTourSearch() {
   const performSearch = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({
-        search: filters.query,
-        ...(filters.difficulty !== 'any' && { difficulty: filters.difficulty }),
-        ...(filters.activity && { activity: filters.activity }),
-        ...(filters.priceMin && { priceMin: filters.priceMin.toString() }),
-        ...(filters.priceMax && { priceMax: filters.priceMax.toString() }),
-      });
+      const params = new URLSearchParams();
+      if (filters.query) params.append('search', filters.query);
+      if (filters.difficulty && filters.difficulty !== 'any') params.append('difficulty', filters.difficulty);
+      if (filters.activity) params.append('activity', filters.activity);
+      if (filters.priceMin) params.append('priceMin', filters.priceMin.toString());
+      if (filters.priceMax) params.append('priceMax', filters.priceMax.toString());
 
       const response = await fetch(`/api/tours?${params}`);
       const data = await response.json();
@@ -410,7 +427,7 @@ export function ModernTourSearch() {
               onClick={() => setFilters({ query: '', difficulty: 'any' })}
               className="clear-filters-btn"
             >
-              Сбросить фильтры
+       (filters.query || filters.activity || results.length > 0)ть фильтры
             </button>
           </div>
         )}

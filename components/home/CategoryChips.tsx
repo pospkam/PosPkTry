@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { VolcanoIcon, BearIcon, FishIcon, TwoHikersIcon, HikerIcon, HelicopterIcon, RaftingIcon } from './CustomIcons';
+import { VolcanoIcon, BearIcon, FishIcon, HotSpringIcon, HikerIcon, HelicopterIcon, RaftingIcon, EthnoDrumIcon } from './CustomIcons';
 
 /**
  * CategoryChips — категории туров (iOS light theme).
@@ -18,13 +18,14 @@ interface Category {
 import React from 'react';
 
 const CATEGORIES: Category[] = [
-  { id: 'volcanoes', label: 'Volcanoe',    Icon: VolcanoIcon,  href: '/tours?category=volcanoes' },
-  { id: 'bears',    label: 'Bears',    Icon: BearIcon,        href: '/tours?category=bears' },
-  { id: 'fishing',  label: 'Fishing',    Icon: FishIcon,       href: '/tours?category=fishing' },
-  { id: 'thermal',  label: 'Springm',      Icon: TwoHikersIcon,      href: '/tours?category=thermal' },
-  { id: 'hiking',   label: 'Hiking',   Icon: HikerIcon, href: '/tours?category=hiking' },
-  { id: 'flights',  label: 'Helicopter',  Icon: HelicopterIcon,       href: '/tours?category=helicopter' },
-  { id: 'rafting',  label: 'Rafting',   Icon: RaftingIcon,   href: '/tours?category=rafting' },
+  { id: 'volcanoes',   label: 'Вулканы',     Icon: VolcanoIcon,      href: '/tours?category=volcanoes' },
+  { id: 'bears',       label: 'Медведи',     Icon: BearIcon,         href: '/tours?category=bears' },
+  { id: 'fishing',     label: 'Рыбалка',     Icon: FishIcon,         href: '/tours?category=fishing' },
+  { id: 'thermal',     label: 'Термалы',     Icon: HotSpringIcon,    href: '/tours?category=thermal' },
+  { id: 'hiking',      label: 'Треккинг',    Icon: HikerIcon,        href: '/tours?category=hiking' },
+  { id: 'flights',     label: 'Вертолёт',    Icon: HelicopterIcon,   href: '/tours?category=helicopter' },
+  { id: 'rafting',     label: 'Рафтинг',     Icon: RaftingIcon,      href: '/tours?category=rafting' },
+  { id: 'ethno',       label: 'Этно',        Icon: EthnoDrumIcon,    href: '/tours?category=ethno' },
 ];
 
 interface CategoryChipsProps {
@@ -37,9 +38,9 @@ export function CategoryChips({ activeCategory }: CategoryChipsProps) {
     <section aria-label="Категории туров" className="pt-4 pb-2 lg:py-6">
       {/* Заголовок */}
       <div className="flex items-center justify-between px-4 lg:px-0 mb-4 lg:mb-5">
-        <h2 className="text-2xl lg:text-xl font-medium text-white drop-shadow-sm lg:drop-shadow-none">Затерора</h2>
+        <h2 className="text-2xl lg:text-xl font-medium text-white drop-shadow-sm lg:drop-shadow-none">Категории</h2>
         <Link href="/tours" className="text-lg font-medium text-white/90 hover:underline flex items-center gap-1">
-          Мын. <span className="text-xl">›</span>
+          Все <span className="text-xl">›</span>
         </Link>
       </div>
 
