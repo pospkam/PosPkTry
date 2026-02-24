@@ -51,26 +51,56 @@ export function HomeHeader({
   username = 'Kuzmich',
   avatarUrl = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=96&h=96&fit=crop&crop=face',
 }: HomeHeaderProps) {
+  const { user, isLoading } = useAuth();
+
   return (
     <header className="flex items-center justify-between px-4 pt-12 pb-4 relative z-10">
-      {/* Аватар + название */}
+      {/* Аватар + название ИЛИ Кнопки входа */}
       <div className="flex items-center gap-3">
-        <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-white shadow-lg relative flex-shrink-0">
-          <Image
-            src={avatarUrl}
-            alt={`Аватар ${username}`}
-            fill
-            sizes="56px"
-            className="object-cover"
-            priority
-          />
-        </div>
-        <div>
-          <h1 className="text-white font-bold text-xl leading-tight drop-shadow-md">
-            Kamchatour Hub
-          </h1>
-          <p className="text-white/90 text-sm font-medium drop-shadow">{username}</p>
-        </div>
+        {isLoading ? (
+          <div className="w-14 h-14 rounded-full bg-white/20 animate-pulse" />
+        ) : user ? (
+          <>
+            <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-white shadow-lg relative flex-shrink-0">
+              <Image
+                src={user.avatar || avatarUrl}
+                alt={`Аватар ${user.name}`}
+                fill
+                sizes="56px"
+                className="object-cover"
+                priority
+              />
+            </div>
+            <div>
+              <h1 className="text-white font-bold text-xl leading-tight drop-shadow-md">
+                Kamchatour Hub
+              </h1>
+              <p className="text-white/90 text-sm font-medium drop-shadow">{user.name}</p>
+            </div>
+          </>
+        ) : (
+          <div className="flex flex-col gap-1">
+            <h1 className="text-white font-bold text-xl leading-tight drop-shadow-md">
+              Kamchatour Hub
+            </h1>
+            <div className="flex items-center gap-2 mt-1">
+              <Link 
+                href="/auth/login" 
+                className="text-xs font-medium bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-3 py-1.5 rounded-full transition-colors flex items-center gap-1 border border-white/10"
+              >
+                <LogIn size={12} />
+                Войти
+              </Link>
+              <Link 
+                href="/auth/register" 
+                className="text-xs font-medium bg-white text-black hover:bg-white/90 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1 shadow-sm"
+              >
+                <UserPlus size={12} />
+                Регистрация
+              </Link>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Кнопки управления */}
