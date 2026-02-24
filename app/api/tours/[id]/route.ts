@@ -17,7 +17,7 @@ export async function GET(
         id, name, description, short_description, category, difficulty,
         duration, price, currency, season, coordinates, requirements,
         included, not_included, max_group_size, min_group_size,
-        rating, review_count, is_active, created_at, updated_at
+        rating, review_count, is_active, created_at, updated_at, images
       FROM tours
       WHERE id = $1
     `, [id]);
@@ -30,9 +30,18 @@ export async function GET(
     }
 
     const row = result.rows[0];
+    
+    let images = [];
+    if (row.images) {
+      try {
+        images = typeof row.images === 'string' ? JSON.parse(row.images) : row.images;
+      } catch (e) {}
+    }
+
     const tour = {
       id: row.id,
       name: row.name,
+      title: row.name, // Add title for client compatibility
       description: row.description,
       shortDescription: row.short_description,
       category: row.category,
@@ -50,6 +59,7 @@ export async function GET(
       rating: parseFloat(row.rating) || 0,
       reviewCount: row.review_count || 0,
       isActive: row.is_active,
+      images: images,
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.updated_at),
     };
