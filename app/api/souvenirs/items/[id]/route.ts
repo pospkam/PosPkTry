@@ -19,7 +19,7 @@ export async function GET(
       return userOrResponse;
     }
 
-    const souvenirId = params.id;
+    const { id: souvenirId } = await params;
 
     const hasAccess = await verifySouvenirOwnership(userOrResponse.id, souvenirId);
     if (!hasAccess) {
@@ -82,7 +82,7 @@ export async function PUT(
       return userOrResponse;
     }
 
-    const souvenirId = params.id;
+    const { id: souvenirId } = await params;
 
     const hasAccess = await verifySouvenirOwnership(userOrResponse.id, souvenirId);
     if (!hasAccess) {
@@ -165,7 +165,7 @@ export async function DELETE(
       return userOrResponse;
     }
 
-    const souvenirId = params.id;
+    const { id: souvenirId } = await params;
 
     const hasAccess = await verifySouvenirOwnership(userOrResponse.id, souvenirId);
     if (!hasAccess) {

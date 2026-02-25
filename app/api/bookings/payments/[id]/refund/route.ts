@@ -24,6 +24,8 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
+
     // Parse body
     const body = await request.json()
 
@@ -32,7 +34,7 @@ export async function POST(
     }
 
     // Get payment to check authorization
-    const payment = await paymentService.getTransaction(params.id)
+    const payment = await paymentService.getTransaction(id)
 
     if (!payment) {
       return NextResponse.json({ error: 'Payment not found' }, { status: 404 })
@@ -47,7 +49,7 @@ export async function POST(
 
     // Process refund
     const refund = await paymentService.refund({
-      transactionId: params.id,
+      transactionId: id,
       refundAmount: body.refundAmount,
       reason: body.reason,
       description: body.description,

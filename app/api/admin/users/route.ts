@@ -11,27 +11,11 @@ export const dynamic = 'force-dynamic';
  * Получение списка пользователей с фильтрацией и пагинацией
  */
 export async function GET(request: NextRequest) {
-  // Проверка прав администратора
-  const userId = request.headers.get('x-user-id');
-  const userRole = request.headers.get('x-user-role');
-  
-  if (!userId) {
-    return NextResponse.json(
-      { success: false, error: 'Unauthorized' },
-      { status: 401 }
-    );
-  }
-  
-  if (userRole !== 'admin') {
-    return NextResponse.json(
-      { success: false, error: 'Forbidden: admin access required' },
-      { status: 403 }
-    );
-  }
   try {
-    // TODO: Add authentication check here
-    // const userOrResponse = await requireAdmin(request);
-    // if (userOrResponse instanceof NextResponse) return userOrResponse;
+    const adminOrResponse = await requireAdmin(request);
+    if (adminOrResponse instanceof NextResponse) {
+      return adminOrResponse;
+    }
     
     const { searchParams } = new URL(request.url);
     
@@ -44,8 +28,11 @@ export async function GET(request: NextRequest) {
     const role = searchParams.get('role');
     const status = searchParams.get('status');
     const search = searchParams.get('search');
-    const sortBy = searchParams.get('sortBy') || 'created_at';
-    const sortOrder = searchParams.get('sortOrder') || 'desc';
+    const sortByParam = searchParams.get('sortBy') || 'created_at';
+    const sortOrderParam = searchParams.get('sortOrder') || 'desc';
+    const allowedSortFields = new Set(['created_at', 'updated_at', 'name', 'email', 'role']);
+    const sortBy = allowedSortFields.has(sortByParam) ? sortByParam : 'created_at';
+    const sortOrder = sortOrderParam.toLowerCase() === 'asc' ? 'asc' : 'desc';
 
     // Строим WHERE условия
     const whereConditions: string[] = [];
@@ -156,6 +143,11 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    const adminOrResponse = await requireAdmin(request);
+    if (adminOrResponse instanceof NextResponse) {
+      return adminOrResponse;
+    }
+
     const body = await request.json();
 
     // Валидация

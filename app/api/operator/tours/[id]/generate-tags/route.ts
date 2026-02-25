@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { tagTourPhotos } from '@/lib/ai/image-tagger';
 import { query } from '@/lib/database';
 import { requireOperator } from '@/lib/auth/middleware';
+import { verifyTourOwnership } from '@/lib/auth/operator-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,15 +25,24 @@ export async function POST(
 
     const tourId = params.id;
 
+    if (userRole !== 'admin') {
+      const isOwner = await verifyTourOwnership(userId, tourId);
+      if (!isOwner) {
+        return NextResponse.json(
+          { success: false, error: 'Нет доступа к этому туру' },
+          { status: 403 }
+        );
+      }
+    }
+
     // Получаем данные тура и проверяем владельца
     const tourResult = await query<{
       id: string;
       title: string;
       photos: string[];
       images: string[];
-      operator_id: string;
     }>(
-      `SELECT id, title, photos, images, operator_id FROM tours WHERE id = $1`,
+      `SELECT id, title, photos, images FROM tours WHERE id = $1`,
       [tourId]
     );
 
@@ -44,14 +54,6 @@ export async function POST(
     }
 
     const tour = tourResult.rows[0];
-
-    // Проверяем что оператор владеет этим туром (admins могут всё)
-    if (userRole !== 'admin' && tour.operator_id !== userId) {
-      return NextResponse.json(
-        { success: false, error: 'Нет доступа к этому туру' },
-        { status: 403 }
-      );
-    }
 
     // Собираем URL фотографий (photos или images поле)
     const photoUrls: string[] = [
@@ -99,9 +101,27 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    const operatorOrResponse = await requireOperator(request);
+    if (operatorOrResponse instanceof NextResponse) {
+      return operatorOrResponse;
+    }
+    const userId = operatorOrResponse.userId;
+    const userRole = operatorOrResponse.role;
+    const tourId = params.id;
+
+    if (userRole !== 'admin') {
+      const isOwner = await verifyTourOwnership(userId, tourId);
+      if (!isOwner) {
+        return NextResponse.json(
+          { success: false, error: 'Нет доступа к этому туру' },
+          { status: 403 }
+        );
+      }
+    }
+
     const result = await query<{ ai_tags: Record<string, unknown> }>(
       `SELECT ai_tags FROM tours WHERE id = $1`,
-      [params.id]
+      [tourId]
     );
 
     if (result.rows.length === 0) {

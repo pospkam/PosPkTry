@@ -19,7 +19,7 @@ export async function GET(
       return userOrResponse;
     }
 
-    const carId = params.id;
+    const { id: carId } = await params;
 
     // Verify ownership
     const hasAccess = await verifyCarOwnership(userOrResponse.id, carId);
@@ -82,7 +82,7 @@ export async function PUT(
       return userOrResponse;
     }
 
-    const carId = params.id;
+    const { id: carId } = await params;
 
     // Verify ownership
     const hasAccess = await verifyCarOwnership(userOrResponse.id, carId);
@@ -183,7 +183,7 @@ export async function DELETE(
       return userOrResponse;
     }
 
-    const carId = params.id;
+    const { id: carId } = await params;
 
     // Verify ownership
     const hasAccess = await verifyCarOwnership(userOrResponse.id, carId);

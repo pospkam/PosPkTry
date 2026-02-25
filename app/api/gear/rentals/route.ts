@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireAuth } from '@/lib/auth/middleware';
+import { getGearPartnerId } from '@/lib/auth/gear-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -117,7 +118,23 @@ export async function GET(request: NextRequest) {
       return userOrResponse;
     }
 
-    const userId = userOrResponse.userId;
+    const userId = userOrResponse.userId ?? userOrResponse.id;
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' } as ApiResponse<null>,
+        { status: 401 }
+      );
+    }
+
+    const isAdmin = userOrResponse.role === 'admin';
+    const partnerId = isAdmin ? null : await getGearPartnerId(userId);
+    if (!isAdmin && !partnerId) {
+      return NextResponse.json(
+        { success: false, error: 'Профиль партнёра не найден' } as ApiResponse<null>,
+        { status: 403 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const limit = parseInt(searchParams.get('limit') || '50');
@@ -146,8 +163,14 @@ export async function GET(request: NextRequest) {
       JOIN gear g ON gr.gear_id = g.id
     `;
 
-    const params: any[] = [];
+    const params: (string | number)[] = [];
     const whereConditions: string[] = [];
+
+    // Бизнес-правило: партнёр видит только свои заявки, admin — все.
+    if (!isAdmin && partnerId) {
+      whereConditions.push(`gr.partner_id = $${params.length + 1}`);
+      params.push(partnerId);
+    }
 
     // Фильтр по статусу
     if (status) {

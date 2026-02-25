@@ -6,9 +6,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/database'
+import { bookingService } from '@/lib/database'
 import { authenticateUser } from '@/lib/auth'
-import type { BookingUpdate } from '@/types'
 
 /**
  * GET /api/bookings/[id]
@@ -25,8 +24,10 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
+
     // Get booking
-    const booking = await bookingService.getById(params.id)
+    const booking = await bookingService.getById(id)
 
     // Authorization: user can only see their own bookings
     if (booking.userId !== userId) {
@@ -63,8 +64,10 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
+
     // Get booking for authorization
-    const booking = await bookingService.getById(params.id)
+    const booking = await bookingService.getById(id)
 
     if (booking.userId !== userId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
@@ -74,7 +77,7 @@ export async function PUT(
     const body = await request.json()
 
     // Update booking
-    const updated = await bookingService.update(params.id, {
+    const updated = await bookingService.update(id, {
       specialRequests: body.specialRequests,
       dietaryRequirements: body.dietaryRequirements,
       mobilityRequirements: body.mobilityRequirements,
@@ -109,8 +112,10 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
+
     // Get booking for authorization
-    const booking = await bookingService.getById(params.id)
+    const booking = await bookingService.getById(id)
 
     if (booking.userId !== userId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
@@ -121,7 +126,7 @@ export async function DELETE(
     const reason = body.reason || 'User requested cancellation'
 
     // Cancel booking
-    const cancelled = await bookingService.cancel(params.id, reason, userId)
+    const cancelled = await bookingService.cancel(id, reason, userId)
 
     return NextResponse.json({
       message: 'Booking cancelled successfully',
