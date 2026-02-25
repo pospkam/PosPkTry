@@ -25,14 +25,73 @@ function getJWTSecret(): Uint8Array {
 // Protected routes that require authentication
 const PROTECTED_ROUTES = ['/hub', '/profile'];
 
-// Public API routes (no auth needed)
-const PUBLIC_API_ROUTES = [
-  '/api/auth',
-  '/api/tours',
-  '/api/weather',
-  '/api/eco-points',
-  '/api/partners',
-];
+type PublicApiMethods = 'ALL' | ReadonlyArray<string>;
+
+const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
+  '/api/auth': 'ALL',
+  '/api/weather': 'ALL',
+  '/api/tours': ['GET'],
+  '/api/partners': ['GET'],
+  '/api/eco-points': ['GET'],
+};
+
+const API_ROLE_REQUIREMENTS = {
+  '/api/operator': 'operator',
+  '/api/admin': 'admin',
+  '/api/guide': 'guide',
+  '/api/transfer-operator': 'transfer_operator',
+  '/api/agent': 'agent',
+} as const;
+
+function isPathMatch(pathname: string, route: string): boolean {
+  return pathname === route || pathname.startsWith(`${route}/`);
+}
+
+function applySecurityHeaders(response: NextResponse): NextResponse {
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('X-XSS-Protection', '1; mode=block');
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+
+  // Content Security Policy (базовый)
+  if (process.env.NODE_ENV === 'production') {
+    response.headers.set(
+      'Content-Security-Policy',
+      "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:;"
+    );
+  }
+
+  return response;
+}
+
+// Public route check учитывает путь и HTTP метод
+function isPublicRoute(pathname: string, method: string): boolean {
+  if (!pathname.startsWith('/api')) {
+    return false;
+  }
+
+  const normalizedMethod = method.toUpperCase();
+
+  return Object.entries(PUBLIC_API_ROUTES).some(([route, allowedMethods]) => {
+    if (!isPathMatch(pathname, route)) {
+      return false;
+    }
+
+    if (allowedMethods === 'ALL') {
+      return true;
+    }
+
+    return allowedMethods.includes(normalizedMethod);
+  });
+}
+
+function getRequiredRole(pathname: string): string | null {
+  const matchedRoute = Object.entries(API_ROLE_REQUIREMENTS).find(([route]) =>
+    isPathMatch(pathname, route)
+  );
+
+  return matchedRoute?.[1] ?? null;
+}
 
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL,
@@ -49,34 +108,22 @@ export async function middleware(request: NextRequest) {
   const { success } = await ratelimit.limit(ip);
 
   if (!success) {
-    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    return applySecurityHeaders(
+      NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+    );
   }
 
   const { pathname } = request.nextUrl;
-  
-  // Security headers for all responses
-  const response = NextResponse.next();
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('X-Frame-Options', 'DENY');
-  response.headers.set('X-XSS-Protection', '1; mode=block');
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  
-  // Content Security Policy (базовый)
-  if (process.env.NODE_ENV === 'production') {
-    response.headers.set(
-      'Content-Security-Policy',
-      "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:;"
-    );
-  }
-  
+  const method = request.method;
+
   // Check if route requires authentication
   const isProtectedRoute = PROTECTED_ROUTES.some(route => pathname.startsWith(route));
-  const isPublicApiRoute = PUBLIC_API_ROUTES.some(route => pathname.startsWith(route));
+  const isPublicApiRoute = isPublicRoute(pathname, method);
   const isApiRoute = pathname.startsWith('/api');
   
   // Skip auth check for public routes
   if (!isProtectedRoute && (isPublicApiRoute || !isApiRoute)) {
-    return response;
+    return applySecurityHeaders(NextResponse.next());
   }
   
   // Get token from cookie or Authorization header
@@ -89,14 +136,16 @@ export async function middleware(request: NextRequest) {
       const url = request.nextUrl.clone();
       url.pathname = '/auth/login';
       url.searchParams.set('from', pathname);
-      return NextResponse.redirect(url);
+      return applySecurityHeaders(NextResponse.redirect(url));
     }
     
     // Return 401 for protected API routes
     if (isApiRoute && !isPublicApiRoute) {
-      return NextResponse.json(
-        { success: false, error: 'Не авторизован' },
-        { status: 401 }
+      return applySecurityHeaders(
+        NextResponse.json(
+          { success: false, error: 'Не авторизован' },
+          { status: 401 }
+        )
       );
     }
   }
@@ -106,21 +155,43 @@ export async function middleware(request: NextRequest) {
     try {
       const { payload } = await jwtVerify(token, getJWTSecret());
       
-      // Add user info to headers for API routes
+      const userId = typeof payload.userId === 'string' ? payload.userId : null;
+      const userRole = typeof payload.role === 'string' ? payload.role : null;
+      const userEmail = typeof payload.email === 'string' ? payload.email : null;
+
+      // Add user info to headers for API routes + RBAC check
       if (isApiRoute) {
+        const requiredRole = getRequiredRole(pathname);
+        if (requiredRole && userRole !== requiredRole) {
+          return applySecurityHeaders(
+            NextResponse.json(
+              { success: false, error: 'Forbidden' },
+              { status: 403 }
+            )
+          );
+        }
+
         const newHeaders = new Headers(request.headers);
-        newHeaders.set('X-User-Id', payload.userId as string);
-        newHeaders.set('X-User-Role', payload.role as string);
-        newHeaders.set('X-User-Email', payload.email as string);
+        if (userId) {
+          newHeaders.set('X-User-Id', userId);
+        }
+        if (userRole) {
+          newHeaders.set('X-User-Role', userRole);
+        }
+        if (userEmail) {
+          newHeaders.set('X-User-Email', userEmail);
+        }
         
-        return NextResponse.next({
-          request: {
-            headers: newHeaders,
-          },
-        });
+        return applySecurityHeaders(
+          NextResponse.next({
+            request: {
+              headers: newHeaders,
+            },
+          })
+        );
       }
       
-      return response;
+      return applySecurityHeaders(NextResponse.next());
       
     } catch (error) {
       console.error('JWT verification failed:', error);
@@ -133,19 +204,21 @@ export async function middleware(request: NextRequest) {
         url.searchParams.set('error', 'session_expired');
         const redirect = NextResponse.redirect(url);
         redirect.cookies.delete('auth_token');
-        return redirect;
+        return applySecurityHeaders(redirect);
       }
       
       if (isApiRoute && !isPublicApiRoute) {
-        return NextResponse.json(
-          { success: false, error: 'Неверный или истекший токен' },
-          { status: 401 }
+        return applySecurityHeaders(
+          NextResponse.json(
+            { success: false, error: 'Неверный или истекший токен' },
+            { status: 401 }
+          )
         );
       }
     }
   }
   
-  return response;
+  return applySecurityHeaders(NextResponse.next());
 }
 
 // Apply middleware to specific routes
