@@ -63,7 +63,7 @@
 
 **AI (3):**
 - `POST /api/ai` (OpenRouter)
-- `POST /api/ai/groq`
+- `POST /api/ai`
 - `POST /api/ai/deepseek`
 - `POST /api/chat`
 
@@ -92,7 +92,7 @@
 #### 5. Интеграции
 
 **AI провайдеры (3):**
-- ✅ GROQ API (Llama 3.1 70B)
+- ✅ DeepSeek API
 - ✅ DeepSeek API
 - ✅ OpenRouter API
 
@@ -294,7 +294,7 @@ bash scripts/setup-timeweb-server.sh
 
 - [ ] ✅ PostgreSQL база данных создана
 - [ ] ✅ `DATABASE_URL` настроен
-- [ ] ✅ Хотя бы один AI API ключ (GROQ рекомендуется)
+- [ ] ✅ Хотя бы один AI API ключ (DeepSeek рекомендуется)
 - [ ] ✅ `JWT_SECRET` сгенерирован (32+ символа)
 - [ ] ✅ Миграции применены (`npm run migrate:up`)
 
@@ -473,7 +473,7 @@ curl -X POST https://your-domain.ru/api/tours/create \
 
 1. **Выберите платформу** (Timeweb Cloud рекомендуется для РФ)
 2. **Создайте БД** (Timeweb Cloud Database или Supabase)
-3. **Получите API ключи** (GROQ бесплатно!)
+3. **Получите API ключи** (DeepSeek + fallback-провайдеры)
 4. **Настройте .env** (скопируйте из .env.example)
 5. **Запустите миграции** (`npm run migrate:up`)
 6. **Деплой!** (`docker-compose up -d --build`)

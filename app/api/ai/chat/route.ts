@@ -9,39 +9,6 @@ import { query } from '@/lib/database';
 
 export const dynamic = 'force-dynamic';
 
-// ── Groq AI вызов ──────────────────────────────────────────────
-async function callGroq(messages: ChatMessage[]): Promise<string | null> {
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) return null;
-
-  try {
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'llama-3.1-70b-versatile',
-        temperature: 0.4,
-        max_tokens: 800,
-        messages,
-      }),
-    });
-
-    if (!res.ok) {
-      console.error(`Groq API error: ${res.status} ${res.statusText}`);
-      return null;
-    }
-
-    const data = await res.json();
-    return data?.choices?.[0]?.message?.content ?? null;
-  } catch (err) {
-    console.error('Groq call failed:', err);
-    return null;
-  }
-}
-
 // ── DeepSeek fallback ──────────────────────────────────────────
 async function callDeepSeek(messages: ChatMessage[]): Promise<string | null> {
   const apiKey = process.env.DEEPSEEK_API_KEY;
@@ -236,9 +203,8 @@ export async function POST(request: NextRequest) {
     const systemPrompt = getSystemPrompt(safeRole);
     const messagesForAI = buildMessageHistory(systemPrompt, history, 10);
 
-    // Вызываем AI — Groq → DeepSeek → Minimax → xAI → OpenRouter → fallback
-    let answer = await callGroq(messagesForAI);
-    if (!answer) answer = await callDeepSeek(messagesForAI);
+    // Вызываем AI — DeepSeek → Minimax → xAI → OpenRouter → fallback
+    let answer = await callDeepSeek(messagesForAI);
     if (!answer) answer = await callMinimax(messagesForAI);
     if (!answer) answer = await callXai(messagesForAI);
     if (!answer) answer = await callOpenrouter(messagesForAI);

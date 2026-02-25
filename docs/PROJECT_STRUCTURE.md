@@ -29,7 +29,7 @@ kamhub/
 
 #### AI сервисы
 - `ai/route.ts` - Главный AI консенсус
-- `ai/groq/route.ts` - GROQ API (Llama 3.1 70B)
+- `ai/deepseek/route.ts` - DeepSeek API
 - `ai/deepseek/route.ts` - DeepSeek API
 - `chat/route.ts` - Чат с AI
 

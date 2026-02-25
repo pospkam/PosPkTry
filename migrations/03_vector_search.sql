@@ -6,7 +6,7 @@
 -- Расширение pgvector (если не установлено)
 CREATE EXTENSION IF NOT EXISTS vector;
 
--- Добавить колонку эмбеддинга к турам (1536 dims — OpenAI/Groq compatible)
+-- Добавить колонку эмбеддинга к турам (1536 dims — OpenAI-compatible)
 ALTER TABLE tours
   ADD COLUMN IF NOT EXISTS embedding vector(1536);
 

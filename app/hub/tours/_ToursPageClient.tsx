@@ -21,13 +21,13 @@ export default function ToursPageClient() {
     setText('');
     
     const prompt = `Составь 2-дневный план по Камчатке. Даты: ${dates}. Гостей: ${guests}. Интересы: ${interests}. Бюджет: ${budget} RUB.`;
-    const r = await fetch('/api/ai/groq', {
+    const r = await fetch('/api/ai', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'llama-3.1-70b', prompt })
+      body: JSON.stringify({ prompt })
     });
     const j = await r.json();
-    setText(j.itinerary || j.error || '');
+    setText(j.answer || j.data?.answer || j.error || '');
     setLoading(false);
   }
 

@@ -36,7 +36,7 @@ https://kamhub-pospks-projects.vercel.app
 
 ```bash
 # AI API Keys
-GROQ_API_KEY=your_groq_key_here
+DEEPSEEK_API_KEY=your_deepseek_key_here
 DEEPSEEK_API_KEY=your_deepseek_key_here
 
 # Yandex API Keys (ОБЯЗАТЕЛЬНО!)

@@ -191,7 +191,7 @@ YANDEX_MAPS_API_KEY: REPLACE_WITH_YANDEX_MAPS_API_KEY (есть ключ!)
 ```
 ✅ YANDEX_WEATHER_API_KEY - ЕСТЬ ключ!
 ✅ YANDEX_MAPS_API_KEY - ЕСТЬ ключ!
-❌ GROQ_API_KEY - нет (AI не работает)
+❌ DEEPSEEK_API_KEY - нет (AI не работает)
 ❌ DEEPSEEK_API_KEY - нет (AI fallback нет)
 ```
 
@@ -582,7 +582,7 @@ bash deploy-timeweb.sh
 
 # 4. Добавить API ключи вручную
 nano .env
-# Добавить GROQ_API_KEY, DEEPSEEK_API_KEY
+# Добавить DEEPSEEK_API_KEY (и опционально MINIMAX_API_KEY/XAI_API_KEY)
 
 # 5. Перезапустить
 pm2 restart kamchatour-hub

@@ -193,7 +193,6 @@ app/hub/guide/page.tsx      - Guide AI
 
 ```
 POST /api/ai - Общий endpoint для всех AI помощников
-POST /api/ai/groq - GROQ (основной провайдер)
 POST /api/ai/deepseek - DeepSeek (альтернативный)
 ```
 
@@ -390,6 +389,6 @@ const trackAIUsage = async (role: string, question: string) => {
 ---
 
 **Создано:** 7 ноября 2025  
-**AI Провайдеры:** GROQ, DeepSeek, OpenRouter  
+**AI Провайдеры:** DeepSeek, Minimax, x.ai, OpenRouter  
 **Языки:** Русский (основной)
 

@@ -209,7 +209,7 @@ CLOUDPAYMENTS_API_SECRET=ваш_секретный_ключ
 CLOUDPAYMENTS_WEBHOOK_SECRET=ваш_webhook_секрет
 
 # AI Providers
-GROQ_API_KEY=ваш_groq_api_key
+DEEPSEEK_API_KEY=ваш_deepseek_api_key
 DEEPSEEK_API_KEY=ваш_deepseek_api_key
 OPENROUTER_API_KEY=ваш_openrouter_api_key
 

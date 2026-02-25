@@ -99,7 +99,7 @@ S3_REGION=ru-1
 NEXT_PUBLIC_STORAGE_URL=https://s3.twcstorage.ru/d9542536-676ee691-7f59-46bb-bf0e-ab64230eec50
 
 # AI (пока пусто)
-GROQ_API_KEY=
+DEEPSEEK_API_KEY=
 DEEPSEEK_API_KEY=
 OPENROUTER_API_KEY=
 YANDEX_MAPS_API_KEY=
@@ -224,7 +224,7 @@ systemctl restart nginx
 
 ### Получите API ключи (бесплатно):
 
-- [ ] **GROQ API:** https://console.groq.com → Create API Key
+- [ ] **DeepSeek API:** https://platform.deepseek.com → Create API Key
 - [ ] **Yandex Maps:** https://developer.tech.yandex.ru → JavaScript API
 - [ ] Добавьте в `.env` и перезапустите: `pm2 restart kamhub`
 

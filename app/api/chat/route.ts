@@ -288,43 +288,7 @@ async function getAIResponse(message: string, context?: any): Promise<{ content:
 
     const userPrompt = `Пользователь: ${message}`;
 
-    // Пробуем получить ответ от GROQ
-    if (config.ai.groq.apiKey) {
-      try {
-        const response = await fetch(`${config.ai.groq.baseUrl}/chat/completions`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${config.ai.groq.apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: config.ai.groq.model,
-            messages: [
-              { role: 'system', content: systemPrompt },
-              { role: 'user', content: userPrompt }
-            ],
-            max_tokens: config.ai.groq.maxTokens,
-            temperature: config.ai.groq.temperature,
-          }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          return {
-            content: data.choices[0].message.content,
-            metadata: {
-              model: config.ai.groq.model,
-              provider: 'groq',
-              tokens: data.usage?.total_tokens,
-            }
-          };
-        }
-      } catch (error) {
-        console.error('GROQ API error:', error);
-      }
-    }
-
-    // Если GROQ не работает, пробуем DeepSeek
+    // Пробуем получить ответ от DeepSeek
     if (config.ai.deepseek.apiKey) {
       try {
         const response = await fetch(`${config.ai.deepseek.baseUrl}/chat/completions`, {

@@ -51,7 +51,7 @@ Kamchatour Hub — туристическая платформа для Камч
 | Администратор | /hub/admin | Модерация, пользователи, финансы платформы |
 
 USP:
-- AI-помощник для планирования маршрутов (Groq + DeepSeek)
+- AI-помощник для планирования маршрутов (DeepSeek + Minimax + x.ai)
 - Safety-first: SOS-кнопка с геолокацией → МЧС
 - Real-time погода с алертами (Яндекс Weather)
 - Eco-points gamification за экологичные выборы
@@ -91,8 +91,8 @@ const stack = {
   storage:    'AWS S3',
 
   // AI
-  primary:    'Groq AI (Llama 3.1)',
-  fallback:   'DeepSeek',
+  primary:    'DeepSeek',
+  fallback:   'Minimax + x.ai (Grok)',
   rag:        'PostgreSQL knowledge_base (Камчатка)',
 
   // Интеграции
@@ -127,7 +127,7 @@ kamhub/
 │   │   ├── transfer/               # Трансферы
 │   │   ├── agent/                  # Агентские операции
 │   │   ├── admin/                  # Платформенное управление
-│   │   ├── ai/                     # Groq + DeepSeek
+│   │   ├── ai/                     # DeepSeek + Minimax + x.ai
 │   │   ├── weather/                # Яндекс Weather proxy
 │   │   ├── payments/               # CloudPayments webhook
 │   │   └── safety/                 # ⚠️ SOS — критичный endpoint
@@ -157,7 +157,7 @@ kamhub/
 │   ├── database.ts                 # PostgreSQL client
 │   ├── auth.ts                     # NextAuth config
 │   ├── weather/                    # Яндекс Weather client
-│   ├── ai/                         # Groq + DeepSeek clients, prompts
+│   ├── ai/                         # DeepSeek + Minimax + x.ai clients, prompts
 │   ├── payments/                   # CloudPayments helpers
 │   └── eco/                        # Eco-points логика, constants
 ├── contexts/                       # Auth, Eco, Notifications
@@ -203,7 +203,7 @@ kamhub/
 │       └── CTA (бронировать / wishlist / поделиться)
 │
 ├── /search                     # NLP-поиск ("восхождение в июле")
-├── /ai-assistant               # Чат Groq + DeepSeek
+├── /ai-assistant               # Чат DeepSeek + Minimax + x.ai
 ├── /safety                     # SOS, МЧС, чеклисты, offline maps
 ├── /eco                        # Eco-points, impact dashboard
 │
@@ -306,7 +306,7 @@ CRM для операторов — главный инструмент удер
 ```tsx
 // components/ai/AIChatBubble.tsx — sticky правый нижний угол
 // API: POST /api/ai/chat
-// Groq (Llama 3.1) основной, DeepSeek — fallback
+// DeepSeek основной, Minimax/x.ai — fallback
 // Quick actions: планирование тура / погода / безопасность
 // Conversation history — в стейте сессии
 
@@ -517,7 +517,7 @@ A/B тесты (приоритет):
 
 ### Phase 1 — MVP (реализовано)
 - 91 страница, 208 API endpoints, 6 ролей
-- AI-помощник (Groq + DeepSeek), погода, карты
+- AI-помощник (DeepSeek + Minimax + x.ai), погода, карты
 - SOS, платежи, eco-points
 - Docker + k8s + CI/CD + Sentry
 
@@ -650,7 +650,6 @@ gitpod automations task start deploy
 DATABASE_URL=postgresql://...
 TIMEWEB_API_TOKEN=...
 NEXTAUTH_SECRET=...
-GROQ_API_KEY=...
 DEEPSEEK_API_KEY=...
 MINIMAX_API_KEY=...
 XAI_API_KEY=...
@@ -660,10 +659,9 @@ XAI_API_KEY=...
 
 Платформа поддерживает несколько AI-провайдеров для чата и поиска. Они используются в порядке приоритета:
 
-1. **GROQ** - llama-3.1-70b-versatile
-2. **DeepSeek** - deepseek-chat  
-3. **Minimax** - abab6.5s-chat
-4. **x.ai (Grok)** - grok-4
+1. **DeepSeek** - deepseek-chat
+2. **Minimax** - abab6.5s-chat
+3. **x.ai (Grok)** - grok-4
 
 Если API-ключ не указан, провайдер пропускается. Если все провайдеры недоступны, используется fallback-ответ.
 
