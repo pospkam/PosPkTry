@@ -13,6 +13,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { z } from 'zod';
 import { emailService } from '@/lib/notifications/email-service';
+import { requireAuth } from '@/lib/auth/middleware';
+import { getTokenFromRequest } from '@/lib/auth';
 
 // Валидация входных данных
 const bookingSchema = z.object({
@@ -24,13 +26,19 @@ const bookingSchema = z.object({
 
 export const dynamic = 'force-dynamic';
 
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
+// POST /api/tours/[id]/book - protected: requires auth
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+  const userId = authResult.userId;
+
   try {
-    const { id: tourId } = params;
+    const { id: tourId } = await params;
     const body = await request.json();
 
     // Валидация
@@ -130,16 +138,6 @@ export async function POST(
     const childPrice = adultPrice * 0.5; // Дети со скидкой 50%
     const totalPrice = (adults * adultPrice) + (children * childPrice);
 
-    // Получаем userId из заголовка (middleware должен установить)
-    const userId = request.headers.get('x-user-id');
-
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, error: 'Пользователь не авторизован' },
-        { status: 401 }
-      );
-    }
-
     // Создаем бронирование
     const bookingResult = await query(
       `INSERT INTO bookings (
@@ -179,21 +177,22 @@ export async function POST(
     const userEmail = userResult.rows[0]?.email || 'user@example.com';
     const userName = userResult.rows[0]?.name || 'Гость';
 
-    // Создаем платеж через CloudPayments
+    // Создаем платеж через CloudPayments (передаём токен из входящего запроса)
     let paymentData = null;
     try {
+      const authToken = getTokenFromRequest(request);
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+      };
       const paymentResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/payments/create`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': userId,
-        },
+        headers,
         body: JSON.stringify({
           bookingId,
           bookingType: 'tour',
           amount: totalPrice,
           currency: 'RUB',
-          userId,
           userEmail,
           description: `Оплата тура: ${tour.name}`,
         }),

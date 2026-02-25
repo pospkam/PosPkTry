@@ -15,8 +15,8 @@ interface TimeSlot {
 /**
  * GET /api/tours/[id]/time-slots
  * Получить временные слоты для индивидуальных туров на определённую дату
+ * Public by design: time slot selection for booking flow.
  */
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }

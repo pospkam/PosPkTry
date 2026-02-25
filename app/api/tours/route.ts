@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
+import { requireOperator } from '@/lib/auth/middleware';
+import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,7 +31,7 @@ interface TourResponse {
 }
 
 // GET /api/tours - Получение списка туров
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
+// Public by design: catalog listing for discovery.
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -144,8 +146,13 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/tours - Создание нового тура
+// POST /api/tours - Создание нового тура (protected: operator only)
 export async function POST(request: NextRequest) {
+  const authResult = await requireOperator(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const body = await request.json();
     const {
@@ -167,6 +174,25 @@ export async function POST(request: NextRequest) {
       operatorId,
       guideId,
     } = body;
+
+    let effectiveOperatorId = operatorId;
+    if (authResult.role !== 'admin') {
+      const resolvedOperatorId = await getOperatorPartnerId(authResult.userId);
+      if (!resolvedOperatorId) {
+        return NextResponse.json({
+          success: false,
+          error: 'Профиль оператора не найден',
+        } as ApiResponse<null>, { status: 404 });
+      }
+      effectiveOperatorId = resolvedOperatorId;
+    }
+
+    if (!effectiveOperatorId) {
+      return NextResponse.json({
+        success: false,
+        error: 'operatorId обязателен для администратора',
+      } as ApiResponse<null>, { status: 400 });
+    }
 
     // Валидация обязательных полей
     if (!name || !description || !difficulty || !duration || !price) {
@@ -204,7 +230,7 @@ export async function POST(request: NextRequest) {
       JSON.stringify(notIncluded || []),
       maxGroupSize || 20,
       minGroupSize || 1,
-      operatorId || null,
+      effectiveOperatorId,
       guideId || null,
     ]);
 

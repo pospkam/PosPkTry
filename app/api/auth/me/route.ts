@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
  * GET /api/auth/me
  * Get current user info
  */
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
+// JWT validation required — implemented in handler via verifyToken; returns 401 if missing/invalid.
 export async function GET(request: NextRequest) {
   try {
     // Get token from cookie or header

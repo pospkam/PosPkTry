@@ -11,8 +11,8 @@ import { availabilityService } from '@/lib/database'
  * GET /api/bookings/availability/calendar
  * Get calendar view with all availability data
  * Query params: tourId, startDate, endDate
+ * Public by design: calendar availability for tour selection.
  */
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function GET(request: NextRequest) {
   try {
     // Parse query parameters

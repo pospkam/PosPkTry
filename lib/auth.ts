@@ -73,10 +73,11 @@ function rolesMatch(userRole: string | null | undefined, allowedRole: AuthRole):
   return normalizedUserRole === normalizedAllowedRole;
 }
 
-function getTokenFromRequest(request: NextRequest): string | null {
-  const cookieToken = request.cookies.get('auth_token')?.value ?? null;
+/** Извлечь JWT токен из запроса (Authorization header приоритетнее, иначе auth_token cookie). Для передачи во внутренние вызовы API. */
+export function getTokenFromRequest(request: NextRequest): string | null {
   const headerToken = extractToken(request.headers.get('authorization'));
-  return cookieToken || headerToken;
+  const cookieToken = request.cookies.get('auth_token')?.value ?? null;
+  return headerToken || cookieToken;
 }
 
 export async function verifyAuth(request: NextRequest): Promise<VerifiedAuth> {
