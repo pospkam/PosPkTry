@@ -53,8 +53,8 @@ export async function POST(
     if (checkResult.rows[0].user_id !== userId) {
       return NextResponse.json({
         success: false,
-        error: 'У вас нет прав отвечать на этот отзыв'
-      } as ApiResponse<null>, { status: 403 });
+        error: 'Отзыв не найден'
+      } as ApiResponse<null>, { status: 404 });
     }
 
     // Add operator_reply column if it doesn't exist (temporary solution)

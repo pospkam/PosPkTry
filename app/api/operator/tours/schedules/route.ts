@@ -204,8 +204,8 @@ export async function POST(request: NextRequest) {
     if (tourResult.rows[0].operator_id !== operatorId) {
       return NextResponse.json({
         success: false,
-        error: 'Нет доступа к этому туру'
-      } as ApiResponse<null>, { status: 403 });
+        error: 'Тур не найден'
+      } as ApiResponse<null>, { status: 404 });
     }
 
     // Создаем расписание

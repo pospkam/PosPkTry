@@ -29,8 +29,8 @@ export async function POST(
       const isOwner = await verifyTourOwnership(userId, tourId);
       if (!isOwner) {
         return NextResponse.json(
-          { success: false, error: 'Нет доступа к этому туру' },
-          { status: 403 }
+          { success: false, error: 'Тур не найден' },
+          { status: 404 }
         );
       }
     }
@@ -113,8 +113,8 @@ export async function GET(
       const isOwner = await verifyTourOwnership(userId, tourId);
       if (!isOwner) {
         return NextResponse.json(
-          { success: false, error: 'Нет доступа к этому туру' },
-          { status: 403 }
+          { success: false, error: 'Тур не найден' },
+          { status: 404 }
         );
       }
     }

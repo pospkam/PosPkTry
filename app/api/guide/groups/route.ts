@@ -113,8 +113,8 @@ export async function POST(request: NextRequest) {
     if (!ownsSchedule) {
       return NextResponse.json({
         success: false,
-        error: 'Расписание не найдено или недоступно'
-      } as ApiResponse<null>, { status: 403 });
+        error: 'Расписание не найдено'
+      } as ApiResponse<null>, { status: 404 });
     }
 
     const result = await query(

@@ -212,7 +212,7 @@ export async function POST(request: NextRequest) {
     if (bookingOwnershipResult.rows.length === 0) {
       return NextResponse.json(
         { success: false, error: 'Бронирование не найдено или недоступно' } as ApiResponse<null>,
-        { status: 403 }
+        { status: 404 }
       );
     }
 
@@ -351,8 +351,8 @@ export async function PATCH(request: NextRequest) {
     if (payload.action === 'cancel') {
       if (transfer.from_operator_user_id !== userOrResponse.userId || transfer.status !== 'pending') {
         return NextResponse.json(
-          { success: false, error: 'Недостаточно прав для отмены переброса' } as ApiResponse<null>,
-          { status: 403 }
+          { success: false, error: 'Запрос на переброс не найден' } as ApiResponse<null>,
+          { status: 404 }
         );
       }
 
@@ -371,8 +371,8 @@ export async function PATCH(request: NextRequest) {
 
     if (transfer.to_operator_user_id !== userOrResponse.userId || transfer.status !== 'pending') {
       return NextResponse.json(
-        { success: false, error: 'Недостаточно прав для обработки переброса' } as ApiResponse<null>,
-        { status: 403 }
+        { success: false, error: 'Запрос на переброс не найден' } as ApiResponse<null>,
+        { status: 404 }
       );
     }
 
@@ -407,8 +407,8 @@ export async function PATCH(request: NextRequest) {
 
     if (targetTourResult.rows.length === 0) {
       return NextResponse.json(
-        { success: false, error: 'Целевой тур не найден или не принадлежит оператору' } as ApiResponse<null>,
-        { status: 403 }
+        { success: false, error: 'Целевой тур не найден или недоступен' } as ApiResponse<null>,
+        { status: 404 }
       );
     }
 
