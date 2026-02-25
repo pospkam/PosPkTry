@@ -2057,6 +2057,17 @@ export const notificationService = {
       return null;
     }
   },
+  async getByIdForUser(id: string, userId: string) {
+    try {
+      const result = await pool.query(
+        `SELECT * FROM notifications WHERE id = $1 AND user_id = $2 LIMIT 1`,
+        [id, userId]
+      );
+      return this.normalize(result.rows[0] ?? null);
+    } catch {
+      return null;
+    }
+  },
   async markRead(id: string, userId: string) {
     try {
       await pool.query(
@@ -2138,6 +2149,28 @@ export const notificationService = {
       // no-op fallback
     }
     return { success: true };
+  },
+  async deleteById(id: string) {
+    try {
+      const result = await pool.query(
+        `DELETE FROM notifications WHERE id = $1 RETURNING id`,
+        [id]
+      );
+      return result.rows.length > 0;
+    } catch {
+      return false;
+    }
+  },
+  async deleteByIdForUser(id: string, userId: string) {
+    try {
+      const result = await pool.query(
+        `DELETE FROM notifications WHERE id = $1 AND user_id = $2 RETURNING id`,
+        [id, userId]
+      );
+      return result.rows.length > 0;
+    } catch {
+      return false;
+    }
   },
 };
 

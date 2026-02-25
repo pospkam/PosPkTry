@@ -8,30 +8,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { ticketMessageService, ticketService } from '@/lib/database'
 import { requireAuth } from '@/lib/auth/middleware'
 
-function extractTicketParticipantIds(ticket: unknown): { customerId: string | null; agentId: string | null } {
-  if (!ticket || typeof ticket !== 'object') {
-    return { customerId: null, agentId: null }
-  }
-  const record = ticket as Record<string, unknown>
-  const customerId =
-    typeof record.customerId === 'string'
-      ? record.customerId
-      : typeof record.customer_id === 'string'
-        ? record.customer_id
-        : typeof record.customer_id === 'number'
-          ? String(record.customer_id)
-          : null
-  const agentId =
-    typeof record.agentId === 'string'
-      ? record.agentId
-      : typeof record.agent_id === 'string'
-        ? record.agent_id
-        : typeof record.agent_id === 'number'
-          ? String(record.agent_id)
-          : null
-  return { customerId, agentId }
-}
-
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -41,17 +17,12 @@ export async function GET(
 
   try {
     const { id } = await params
-    const ticket = await ticketService.getTicket(id)
+    const isPrivileged = auth.role === 'admin' || auth.role === 'agent'
+    const ticket = isPrivileged
+      ? await ticketService.getTicket(id)
+      : await ticketService.getTicketForUser(id, auth.userId)
     if (!ticket) {
       return NextResponse.json({ success: false, error: 'Ticket not found' }, { status: 404 })
-    }
-
-    const { customerId, agentId } = extractTicketParticipantIds(ticket)
-    const isPrivileged = auth.role === 'admin' || auth.role === 'agent'
-    const isParticipant = auth.userId === customerId || auth.userId === agentId
-
-    if (!isPrivileged && !isParticipant) {
-      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 })
     }
 
     const searchParams = request.nextUrl.searchParams
@@ -79,17 +50,12 @@ export async function POST(
 
   try {
     const { id } = await params
-    const ticket = await ticketService.getTicket(id)
+    const isPrivileged = auth.role === 'admin' || auth.role === 'agent'
+    const ticket = isPrivileged
+      ? await ticketService.getTicket(id)
+      : await ticketService.getTicketForUser(id, auth.userId)
     if (!ticket) {
       return NextResponse.json({ success: false, error: 'Ticket not found' }, { status: 404 })
-    }
-
-    const { customerId, agentId } = extractTicketParticipantIds(ticket)
-    const isPrivileged = auth.role === 'admin' || auth.role === 'agent'
-    const isParticipant = auth.userId === customerId || auth.userId === agentId
-
-    if (!isPrivileged && !isParticipant) {
-      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 })
     }
 
     const data = await request.json()
