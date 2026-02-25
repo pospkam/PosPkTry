@@ -78,10 +78,10 @@ export async function PUT(
       return NextResponse.json(
         {
           success: false,
-          error: 'Forbidden',
-          message: 'You can only update your own tours',
+          error: 'Not Found',
+          message: 'Tour not found',
         },
-        { status: 403 }
+        { status: 404 }
       );
     }
 
@@ -154,10 +154,10 @@ export async function DELETE(
       return NextResponse.json(
         {
           success: false,
-          error: 'Forbidden',
-          message: 'You can only delete your own tours',
+          error: 'Not Found',
+          message: 'Tour not found',
         },
-        { status: 403 }
+        { status: 404 }
       );
     }
 

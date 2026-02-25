@@ -24,8 +24,8 @@ export async function GET(
     const hasAccess = await verifySouvenirOwnership(userOrResponse.userId, souvenirId);
     if (!hasAccess) {
       return NextResponse.json(
-        { success: false, error: 'Доступ запрещен' } as ApiResponse<null>,
-        { status: 403 }
+        { success: false, error: 'Товар не найден' } as ApiResponse<null>,
+        { status: 404 }
       );
     }
 
@@ -87,8 +87,8 @@ export async function PUT(
     const hasAccess = await verifySouvenirOwnership(userOrResponse.userId, souvenirId);
     if (!hasAccess) {
       return NextResponse.json(
-        { success: false, error: 'Доступ запрещен' } as ApiResponse<null>,
-        { status: 403 }
+        { success: false, error: 'Товар не найден' } as ApiResponse<null>,
+        { status: 404 }
       );
     }
 
@@ -170,8 +170,8 @@ export async function DELETE(
     const hasAccess = await verifySouvenirOwnership(userOrResponse.userId, souvenirId);
     if (!hasAccess) {
       return NextResponse.json(
-        { success: false, error: 'Доступ запрещен' } as ApiResponse<null>,
-        { status: 403 }
+        { success: false, error: 'Товар не найден' } as ApiResponse<null>,
+        { status: 404 }
       );
     }
 

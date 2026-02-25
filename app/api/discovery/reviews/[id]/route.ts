@@ -82,10 +82,10 @@ export async function PUT(
       return NextResponse.json(
         {
           success: false,
-          error: 'Forbidden',
-          message: 'You can only update your own reviews',
+          error: 'Not Found',
+          message: 'Review not found',
         },
-        { status: 403 }
+        { status: 404 }
       );
     }
 
@@ -160,10 +160,10 @@ export async function DELETE(
       return NextResponse.json(
         {
           success: false,
-          error: 'Forbidden',
-          message: 'You can only delete your own reviews',
+          error: 'Not Found',
+          message: 'Review not found',
         },
-        { status: 403 }
+        { status: 404 }
       );
     }
 
@@ -274,10 +274,10 @@ export async function POST(
         return NextResponse.json(
           {
             success: false,
-            error: 'Forbidden',
-            message: 'You can only respond to reviews for your own tours',
+            error: 'Not Found',
+            message: 'Review not found',
           },
-          { status: 403 }
+          { status: 404 }
         );
       }
       return NextResponse.json(

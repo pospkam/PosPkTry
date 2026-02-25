@@ -33,10 +33,10 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          error: 'Forbidden',
-          message: 'You can only manage your own tours',
+          error: 'Not Found',
+          message: 'Tour not found',
         },
-        { status: 403 }
+        { status: 404 }
       );
     }
 

@@ -57,8 +57,8 @@ export async function POST(
 
     if (!isBookingOwner && !isOperatorOwner && !isAdmin) {
       return NextResponse.json(
-        { success: false, error: 'Нет доступа к этому бронированию' } as ApiResponse<null>,
-        { status: 403 }
+        { success: false, error: 'Бронирование не найдено' } as ApiResponse<null>,
+        { status: 404 }
       );
     }
 

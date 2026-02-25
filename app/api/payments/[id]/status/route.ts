@@ -72,8 +72,8 @@ export async function GET(
     if (!isAdmin && !isPaymentOwner && !isOperatorOwner) {
       return NextResponse.json({
         success: false,
-        error: 'Forbidden'
-      } as ApiResponse<null>, { status: 403 });
+        error: 'Payment not found'
+      } as ApiResponse<null>, { status: 404 });
     }
 
     return NextResponse.json({
