@@ -118,7 +118,7 @@ export async function GET(request: NextRequest) {
       return userOrResponse;
     }
 
-    const userId = userOrResponse.userId ?? userOrResponse.id;
+    const userId = userOrResponse.userId;
     if (!userId) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' } as ApiResponse<null>,

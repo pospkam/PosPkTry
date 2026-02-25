@@ -4,6 +4,7 @@ import { requireAdmin } from '@/lib/auth/middleware';
 import { ApiResponse, PaginatedResponse } from '@/types';
 
 export const dynamic = 'force-dynamic';
+const ALLOWED_SORT_FIELDS = new Set(['created_at', 'updated_at', 'name', 'price', 'rating', 'review_count', 'is_active']);
 
 interface AdminTour {
   id: string;
@@ -40,8 +41,9 @@ export async function GET(request: NextRequest) {
     
     const status = searchParams.get('status'); // 'active', 'inactive', 'all'
     const search = searchParams.get('search');
-    const sortBy = searchParams.get('sortBy') || 'created_at';
-    const sortOrder = searchParams.get('sortOrder') || 'desc';
+    const requestedSortBy = searchParams.get('sortBy') || 'created_at';
+    const sortBy = ALLOWED_SORT_FIELDS.has(requestedSortBy) ? requestedSortBy : 'created_at';
+    const sortOrder = (searchParams.get('sortOrder') || 'desc').toLowerCase() === 'asc' ? 'ASC' : 'DESC';
 
     // Строим WHERE условия
     const whereConditions: string[] = [];
@@ -94,7 +96,7 @@ export async function GET(request: NextRequest) {
       FROM tours t
       LEFT JOIN partners p ON t.operator_id = p.id
       ${whereClause}
-      ORDER BY t.${sortBy} ${sortOrder.toUpperCase()}
+      ORDER BY t.${sortBy} ${sortOrder}
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
 

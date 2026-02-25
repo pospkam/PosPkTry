@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
       return userOrResponse;
     }
 
-    const profile = await getTouristProfile(userOrResponse.id);
+    const profile = await getTouristProfile(userOrResponse.userId);
     if (!profile) {
       return NextResponse.json(
         { success: false, error: 'Профиль не найден' } as ApiResponse<null>,
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
       return userOrResponse;
     }
 
-    const profile = await getTouristProfile(userOrResponse.id);
+    const profile = await getTouristProfile(userOrResponse.userId);
     if (!profile) {
       return NextResponse.json(
         { success: false, error: 'Профиль не найден' } as ApiResponse<null>,
