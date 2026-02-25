@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { availabilityService } from '@/lib/database'
 import { authenticateUser, authorizeRole } from '@/lib/auth'
+import { verifyTourOwnership } from '@/lib/auth/operator-helpers'
 import type { AvailabilitySearch } from '@/lib/database' // TODO: fix import path - lib/availability/types'
 
 /**
@@ -81,16 +82,42 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
+    const isTourOwner = await verifyTourOwnership(userId, String(body.tourId))
+    if (!isTourOwner) {
+      return NextResponse.json({ error: 'Not Found' }, { status: 404 })
+    }
+
+    const parsedDate = new Date(String(body.date))
+    const totalCapacity = Number(body.totalCapacity)
+    const basePrice = Number(body.basePrice)
+    const minParticipants = body.minParticipants !== undefined ? Number(body.minParticipants) : 1
+    const maxParticipants = body.maxParticipants !== undefined ? Number(body.maxParticipants) : totalCapacity
+
+    if (
+      Number.isNaN(parsedDate.getTime()) ||
+      !Number.isInteger(totalCapacity) ||
+      totalCapacity < 1 ||
+      !Number.isFinite(basePrice) ||
+      basePrice < 0 ||
+      !Number.isInteger(minParticipants) ||
+      minParticipants < 1 ||
+      !Number.isInteger(maxParticipants) ||
+      maxParticipants < minParticipants ||
+      maxParticipants > totalCapacity
+    ) {
+      return NextResponse.json({ error: 'Invalid availability payload' }, { status: 400 })
+    }
+
     // Create slot
     const slot = await availabilityService.createSlot({
       tourId: body.tourId,
-      date: new Date(body.date),
+      date: parsedDate,
       startTime: body.startTime || '09:00',
       endTime: body.endTime || '18:00',
-      totalCapacity: body.totalCapacity,
-      basePrice: body.basePrice,
-      minParticipants: body.minParticipants || 1,
-      maxParticipants: body.maxParticipants || body.totalCapacity,
+      totalCapacity,
+      basePrice,
+      minParticipants,
+      maxParticipants,
       bookingDeadlineHours: body.bookingDeadlineHours,
       cancellationDeadlineHours: body.cancellationDeadlineHours,
       notes: body.notes,
