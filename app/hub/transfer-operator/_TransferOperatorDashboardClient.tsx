@@ -5,6 +5,7 @@ import { Protected } from '@/components/Protected';
 import { TransferOperatorNav } from '@/components/transfer-operator/TransferOperatorNav';
 import { TransferOperatorMetricsGrid } from '@/components/transfer-operator/Dashboard/TransferOperatorMetricsGrid';
 import { LoadingSpinner } from '@/components/admin/shared';
+import { Bus, UserPlus, ClipboardList } from 'lucide-react';
 
 export default function TransferOperatorDashboardClient() {
   const [period, setPeriod] = useState('30');
@@ -59,28 +60,28 @@ export default function TransferOperatorDashboardClient() {
                   onClick={() => window.location.href = '/hub/transfer-operator/vehicles'}
                   className="p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-center"
                 >
-                  <div className="text-3xl mb-2"></div>
+                  <Bus className="w-8 h-8 mb-2" />
                   <p className="text-sm font-semibold">Добавить транспорт</p>
                 </button>
               <button
                   onClick={() => window.location.href = '/hub/transfer-operator/drivers'}
                   className="p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-center"
                 >
-                  <div className="text-3xl mb-2">👨‍</div>
+                  <UserPlus className="w-8 h-8 mb-2" />
                   <p className="text-sm font-semibold">Добавить водителя</p>
               </button>
                 <button
                   onClick={() => window.location.href = '/hub/transfer-operator/transfers'}
                   className="p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-center"
                 >
-                  <div className="text-3xl mb-2">🚐</div>
+                  <Bus className="w-8 h-8 mb-2" />
                   <p className="text-sm font-semibold">Создать трансфер</p>
                         </button>
                 <button
                   onClick={() => window.location.href = '/hub/transfer-operator/requests'}
                   className="p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-center"
                 >
-                  <div className="text-3xl mb-2">📋</div>
+                  <ClipboardList className="w-8 h-8 mb-2" />
                   <p className="text-sm font-semibold">Заявки</p>
                         </button>
                       </div>

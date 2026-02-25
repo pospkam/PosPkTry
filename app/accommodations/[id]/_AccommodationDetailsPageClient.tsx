@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { StayBookingForm } from '@/components/booking/StayBookingForm';
 import { LoadingSpinner } from '@/components/admin/shared';
-import { Star, MapPin } from 'lucide-react';
+import { Star, MapPin, Users, Check } from 'lucide-react';
 
 interface Accommodation {
   id: string;
@@ -127,7 +127,7 @@ export default function AccommodationDetailsPageClient() {
           <div className="flex items-center gap-4 text-white/70">
             <span><Star className="w-4 h-4" /> {accommodation.rating.toFixed(1)} ({accommodation.reviewCount} отзывов)</span>
             <span>• {getTypeText(accommodation.type)}</span>
-            <span>• 👥 До {accommodation.maxGuests} гостей</span>
+            <span className="flex items-center gap-1">• <Users className="w-4 h-4" /> До {accommodation.maxGuests} гостей</span>
           </div>
         </div>
       </div>
@@ -211,7 +211,7 @@ export default function AccommodationDetailsPageClient() {
                     <div className="grid grid-cols-2 gap-3">
                       {accommodation.amenities.map((amenity) => (
                         <div key={amenity} className="flex items-center gap-2">
-                          <span className="text-green-400">✓</span>
+                          <Check className="w-4 h-4 text-green-400 shrink-0" />
                           <span className="text-white/80">{amenity}</span>
                         </div>
                       ))}
@@ -316,7 +316,7 @@ export default function AccommodationDetailsPageClient() {
                 <div className="space-y-2">
                   {accommodation.amenities.slice(0, 6).map((amenity, amenityIndex) => (
                     <div key={`amenity-${amenity}-${amenityIndex}`} className="flex items-center gap-2">
-                      <span className="text-green-400">✓</span>
+                      <Check className="w-4 h-4 text-green-400 shrink-0" />
                       <span className="text-white/80 text-sm">{amenity}</span>
                     </div>
                   ))}

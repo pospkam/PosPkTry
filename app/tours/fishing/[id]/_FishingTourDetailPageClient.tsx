@@ -150,8 +150,9 @@ export default function FishingTourDetailPageClient() {
                   {difficulty.text}
                 </span>
                 {tourData.fishTypes.map((fish) => (
-                  <span key={fish} className="px-3 py-1 rounded-full text-sm bg-blue-500/20 text-blue-400">
-                    🐟 {fish}
+                  <span key={fish} className="px-3 py-1 rounded-full text-sm bg-blue-500/20 text-blue-400 flex items-center gap-1">
+                    <Fish className="w-4 h-4" />
+                    {fish}
                   </span>
                 ))}
               </div>

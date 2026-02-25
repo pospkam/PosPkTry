@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';import { Search } from 'lucide-react';import Link from 'next/link';
 import Image from 'next/image';
-import { Star } from 'lucide-react';
+import { Star, Gift, Palette, Gem, Scissors, TreeDeciduous, Coffee, Loader2, Check, X, Handshake } from 'lucide-react';
 
 interface Souvenir {
   id: string;
@@ -44,12 +44,12 @@ export default function ShopPageClient() {
   };
 
   const categories = [
-    { id: 'all', name: 'Все товары', icon: '🎁' },
-    { id: 'traditional_art', name: 'Традиционное искусство', icon: '🎨' },
-    { id: 'jewelry', name: 'Украшения', icon: '💎' },
-    { id: 'textiles', name: 'Текстиль', icon: '🧵' },
-    { id: 'woodwork', name: 'Изделия из дерева', icon: '🪵' },
-    { id: 'food_drinks', name: 'Еда и напитки', icon: '🍯' },
+    { id: 'all', name: 'Все товары', Icon: Gift },
+    { id: 'traditional_art', name: 'Традиционное искусство', Icon: Palette },
+    { id: 'jewelry', name: 'Украшения', Icon: Gem },
+    { id: 'textiles', name: 'Текстиль', Icon: Scissors },
+    { id: 'woodwork', name: 'Изделия из дерева', Icon: TreeDeciduous },
+    { id: 'food_drinks', name: 'Еда и напитки', Icon: Coffee },
   ];
 
   return (
@@ -57,8 +57,9 @@ export default function ShopPageClient() {
       {/* Header */}
       <div className="bg-white/15 border-b border-white/15">
         <div className="max-w-7xl mx-auto px-6 py-8">
-          <h1 className="text-4xl font-black text-white mb-2">
-            🎁 Магазин Сувениров Камчатки
+          <h1 className="text-4xl font-black text-white mb-2 flex items-center gap-2">
+            <Gift className="w-10 h-10" />
+            Магазин Сувениров Камчатки
           </h1>
           <p className="text-white/70">
             Авторские изделия от потомственных мастеров
@@ -74,13 +75,14 @@ export default function ShopPageClient() {
               <button
                 key={cat.id}
                 onClick={() => setCategory(cat.id)}
-                className={`px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${
+                className={`px-4 py-2 rounded-lg whitespace-nowrap transition-colors flex items-center gap-2 ${
                   category === cat.id
                     ? 'bg-premium-gold text-premium-black'
                     : 'bg-white/10 hover:bg-white/20 text-white'
                 }`}
               >
-                {cat.icon} {cat.name}
+                {React.createElement(cat.Icon, { className: 'w-4 h-4' })}
+                {cat.name}
               </button>
             ))}
           </div>
@@ -91,7 +93,7 @@ export default function ShopPageClient() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         {loading ? (
           <div className="text-center py-20">
-            <div className="text-4xl mb-4">⏳</div>
+            <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin text-white/70" />
             <p className="text-white/70">Загрузка товаров...</p>
           </div>
         ) : souvenirs.length === 0 ? (
@@ -117,7 +119,7 @@ export default function ShopPageClient() {
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
                   ) : (
-                    <div className="text-6xl">🎁</div>
+                    <Gift className="w-16 h-16 text-white/40" />
                   )}
                 </div>
                 
@@ -141,12 +143,14 @@ export default function ShopPageClient() {
                   </div>
                   
                   {souvenir.stockQuantity > 0 ? (
-                    <div className="mt-3 text-green-400 text-sm">
-                      ✅ В наличии
+                    <div className="mt-3 text-green-400 text-sm flex items-center gap-1">
+                      <Check className="w-4 h-4" />
+                      В наличии
                     </div>
                   ) : (
-                    <div className="mt-3 text-red-400 text-sm">
-                      ❌ Нет в наличии
+                    <div className="mt-3 text-red-400 text-sm flex items-center gap-1">
+                      <X className="w-4 h-4" />
+                      Нет в наличии
                     </div>
                   )}
                 </div>
@@ -160,7 +164,7 @@ export default function ShopPageClient() {
       <div className="bg-white/15 border-t border-white/15 mt-12">
         <div className="max-w-7xl mx-auto px-6 py-8">
           <div className="flex items-center gap-4">
-            <div className="text-4xl">🤝</div>
+            <Handshake className="w-10 h-10 text-white/70" />
             <div>
               <h3 className="font-bold text-white mb-1">
                 Официальный партнёр: &ldquo;Дар Севера&rdquo;

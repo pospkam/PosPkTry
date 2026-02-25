@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Weather } from '@/types';
 import { GuideNav } from '@/components/guide/GuideNav';
-import { Star, Wind } from 'lucide-react';
+import { Star, Wind, AlertTriangle, AlertCircle, DollarSign, BarChart3, TrendingUp, Droplets, Eye, Calendar, Users, User, Cloud } from 'lucide-react';
 
 export default function GuideDashboardClient() {
   const [weather, setWeather] = useState<Weather | null>(null);
@@ -29,11 +29,11 @@ export default function GuideDashboardClient() {
   };
 
   const tabs = [
-    { id: 'schedule', name: 'Расписание', icon: '📅' },
-    { id: 'groups', name: 'Группы', icon: '👥' },
-    { id: 'earnings', name: 'Доходы', icon: '💰' },
-    { id: 'weather', name: 'Погода', icon: "" },
-    { id: 'profile', name: 'Профиль', icon: '<User className="w-4 h-4" />' },
+    { id: 'schedule', name: 'Расписание', Icon: Calendar },
+    { id: 'groups', name: 'Группы', Icon: Users },
+    { id: 'earnings', name: 'Доходы', Icon: DollarSign },
+    { id: 'weather', name: 'Погода', Icon: Cloud },
+    { id: 'profile', name: 'Профиль', Icon: User },
   ];
 
   const mockSchedule = [
@@ -148,7 +148,7 @@ export default function GuideDashboardClient() {
                   : 'text-white/70 hover:text-white hover:bg-white/10'
               }`}
             >
-              <span className="text-lg">{tab.icon}</span>
+              {React.createElement(tab.Icon, { className: 'w-5 h-5' })}
               <span className="font-medium">{tab.name}</span>
             </button>
           ))}
@@ -258,7 +258,7 @@ export default function GuideDashboardClient() {
                       <div className="space-y-2">
                         {group.specialRequirements.map((req) => (
                           <div key={req} className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
-                            <p className="text-yellow-400 text-sm">⚠️ {req}</p>
+                            <p className="text-yellow-400 text-sm flex items-center gap-1"><AlertTriangle className="w-4 h-4" /> {req}</p>
                           </div>
                         ))}
                       </div>
@@ -268,7 +268,7 @@ export default function GuideDashboardClient() {
                   <div>
                     <h5 className="text-lg font-bold text-white mb-3">Экстренные контакты</h5>
                     <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-                      <p className="text-red-400 text-sm">🚨 {group.emergencyContact}</p>
+                      <p className="text-red-400 text-sm flex items-center gap-1"><AlertCircle className="w-4 h-4" /> {group.emergencyContact}</p>
                     </div>
                   </div>
                 </div>
@@ -289,7 +289,7 @@ export default function GuideDashboardClient() {
                     <p className="text-white/70 text-sm">Этот месяц</p>
                     <p className="text-3xl font-bold text-white">{mockEarnings.thisMonth.toLocaleString()}₽</p>
                   </div>
-                  <div className="text-3xl">💰</div>
+                  <div className="text-3xl"><DollarSign className="w-8 h-8" /></div>
                 </div>
               </div>
               
@@ -299,7 +299,7 @@ export default function GuideDashboardClient() {
                     <p className="text-white/70 text-sm">Прошлый месяц</p>
                     <p className="text-3xl font-bold text-white">{mockEarnings.lastMonth.toLocaleString()}₽</p>
                   </div>
-                  <div className="text-3xl">📊</div>
+                  <div className="text-3xl"><BarChart3 className="w-8 h-8" /></div>
                 </div>
               </div>
               
@@ -309,7 +309,7 @@ export default function GuideDashboardClient() {
                     <p className="text-white/70 text-sm">Этот год</p>
                     <p className="text-3xl font-bold text-white">{mockEarnings.thisYear.toLocaleString()}₽</p>
                   </div>
-                  <div className="text-3xl">📈</div>
+                  <div className="text-3xl"><TrendingUp className="w-8 h-8" /></div>
                 </div>
               </div>
               
@@ -384,13 +384,13 @@ export default function GuideDashboardClient() {
                 </div>
                 
                 <div className="text-center">
-                  <div className="text-2xl mb-2">💧</div>
+                  <div className="text-2xl mb-2"><Droplets className="w-6 h-6" /></div>
                   <div className="text-xl font-bold text-white">{weather.humidity}%</div>
                   <div className="text-white/70">Влажность</div>
                 </div>
                 
                 <div className="text-center">
-                  <div className="text-2xl mb-2">👁️</div>
+                  <div className="text-2xl mb-2"><Eye className="w-6 h-6" /></div>
                   <div className="text-xl font-bold text-white">{weather.visibility} км</div>
                   <div className="text-white/70">Видимость</div>
                 </div>

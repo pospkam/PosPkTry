@@ -5,6 +5,7 @@ import { Protected } from '@/components/Protected';
 import { LoadingSpinner } from '@/components/admin/shared';
 import { TouristNav } from '@/components/tourist/TouristNav';
 import { Booking } from '@/types';
+import { Calendar, Users } from 'lucide-react';
 
 export default function BookingHistoryPageClient() {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -159,7 +160,7 @@ export default function BookingHistoryPageClient() {
           {/* Bookings List */}
           {filteredBookings.length === 0 ? (
             <div className="bg-white/15 border border-white/15 rounded-2xl p-12 text-center">
-              <div className="text-6xl mb-4">📅</div>
+              <Calendar className="w-16 h-16 mx-auto mb-4 text-white/50" />
               <p className="text-white/70 text-lg">У вас пока нет бронирований</p>
               <button
                 onClick={() => window.location.href = '/hub/tourist'}
@@ -179,8 +180,8 @@ export default function BookingHistoryPageClient() {
                     <div>
                       <h3 className="text-xl font-bold mb-2">{booking.tour?.title || 'Тур'}</h3>
                       <div className="flex items-center gap-4 text-sm text-white/70">
-                        <span>📅 {new Date(booking.date).toLocaleDateString('ru-RU')}</span>
-                        <span>👥 {booking.participants} чел</span>
+                        <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {new Date(booking.date).toLocaleDateString('ru-RU')}</span>
+                        <span className="flex items-center gap-1"><Users className="w-4 h-4" /> {booking.participants} чел</span>
                       </div>
                     </div>
                     <div className="text-right">

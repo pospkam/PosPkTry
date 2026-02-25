@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { MapPin, Mountain as Volcano, Sun, Cloud, CloudRain, Wind, Flame } from 'lucide-react';
+import { MapPin, Mountain as Volcano, Sun, Cloud, CloudRain, Wind, Flame, AlertTriangle, Truck } from 'lucide-react';
 import { PublicNav } from '@/components/shared/PublicNav';
 
 export default function SafetyHubClient() {
@@ -45,7 +45,7 @@ export default function SafetyHubClient() {
         {activeTab === 'sos' && (
           <div className="space-y-6">
             <div className="bg-red-500/20 border border-red-500/50 rounded-2xl p-6 text-center">
-              <div className="text-6xl mb-4">🚨</div>
+              <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-red-400" />
               <h2 className="text-2xl font-bold text-red-400 mb-2">ЭКСТРЕННЫЙ ВЫЗОВ</h2>
               <p className="text-white/70 mb-4">В случае экстренной ситуации</p>
               <button className="bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-8 rounded-xl text-xl">
@@ -88,7 +88,7 @@ export default function SafetyHubClient() {
             <h2 className="text-xl font-bold">МЧС Камчатки</h2>
             <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
               <div className="text-center text-white/70 py-8">
-                <div className="text-4xl mb-2">🚒</div>
+                <div className="text-4xl mb-2"><Truck className="w-10 h-10 mx-auto text-white/50" /></div>
                 <p>Информация МЧС загружается...</p>
               </div>
             </div>

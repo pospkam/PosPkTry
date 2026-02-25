@@ -3,19 +3,19 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Flower, Leaf, Snowflake } from 'lucide-react';
+import { Flower, Leaf, Snowflake, Sun, CheckCircle2, XCircle, Circle } from 'lucide-react';
 
 const DIFFICULTY_LEVELS = [
-  { id: 'easy', name: 'Легкий', icon: '🟢', description: 'Для новичков' },
-  { id: 'medium', name: 'Средний', icon: '🟡', description: 'Требуется подготовка' },
-  { id: 'hard', name: 'Сложный', icon: '🔴', description: 'Для опытных' },
+  { id: 'easy', name: 'Легкий', color: 'text-green-400', description: 'Для новичков' },
+  { id: 'medium', name: 'Средний', color: 'text-yellow-400', description: 'Требуется подготовка' },
+  { id: 'hard', name: 'Сложный', color: 'text-red-400', description: 'Для опытных' },
 ];
 
 const SEASONS = [
-  { id: 'spring', name: 'Весна', icon: '🌸' },
-  { id: 'summer', name: 'Лето', icon: '☀️' },
-  { id: 'autumn', name: 'Осень', icon: '🍂' },
-  { id: 'winter', name: 'Зима', icon: '❄️' },
+  { id: 'spring', name: 'Весна', Icon: Flower },
+  { id: 'summer', name: 'Лето', Icon: Sun },
+  { id: 'autumn', name: 'Осень', Icon: Leaf },
+  { id: 'winter', name: 'Зима', Icon: Snowflake },
 ];
 
 export default function AddTourPageClient() {
@@ -124,7 +124,7 @@ export default function AddTourPageClient() {
     return (
       <div className="min-h-screen bg-transparent flex items-center justify-center p-6">
         <div className="max-w-md w-full bg-white/15 border border-white/15 rounded-2xl p-8 text-center">
-          <div className="text-6xl mb-4">✅</div>
+          <CheckCircle2 className="w-16 h-16 mx-auto mb-4 text-green-400" />
           <h1 className="text-2xl font-bold text-white mb-2">Тур добавлен!</h1>
           <p className="text-white/70 mb-4">
             Тур успешно создан и доступен для бронирования.
@@ -146,7 +146,7 @@ export default function AddTourPageClient() {
 
         {error && (
           <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400">
-            ❌ {error}
+            <span className="flex items-center gap-2"><XCircle className="w-4 h-4" />{error}</span>
           </div>
         )}
 
@@ -270,7 +270,9 @@ export default function AddTourPageClient() {
                       : 'border-white/15 bg-white/15 hover:border-white/20'
                   }`}
                 >
-                  <div className="text-3xl mb-2">{level.icon}</div>
+                  <div className={`text-3xl mb-2 ${level.color}`}>
+                    <Circle className="w-8 h-8 fill-current" />
+                  </div>
                   <div className="font-bold mb-1">{level.name}</div>
                   <div className="text-sm text-white/70">{level.description}</div>
                 </button>
@@ -293,7 +295,7 @@ export default function AddTourPageClient() {
                       : 'border-white/15 bg-white/15 hover:border-white/20'
                   }`}
                 >
-                  <div className="text-2xl mb-1">{season.icon}</div>
+                  <div className="text-2xl mb-1">{React.createElement(season.Icon, { className: 'w-6 h-6' })}</div>
                   <div className="text-sm font-bold">{season.name}</div>
                 </button>
               ))}
@@ -323,7 +325,8 @@ export default function AddTourPageClient() {
             <div className="flex flex-wrap gap-2">
               {formData.included.map((item, includedIdx) => (
                 <span key={`included-${item}-${includedIdx}`} className="px-3 py-1 bg-green-500/20 text-green-400 border border-green-500/30 rounded-lg text-sm flex items-center gap-2">
-                  ✅ {item}
+                  <CheckCircle2 className="w-4 h-4" />
+                  {item}
                   <button
                     type="button"
                     onClick={() => removeItem('included', includedIdx)}
@@ -359,7 +362,8 @@ export default function AddTourPageClient() {
             <div className="flex flex-wrap gap-2">
               {formData.notIncluded.map((item, notIncludedIdx) => (
                 <span key={`notIncluded-${item}-${notIncludedIdx}`} className="px-3 py-1 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-sm flex items-center gap-2">
-                  ❌ {item}
+                  <XCircle className="w-4 h-4" />
+                  {item}
                   <button
                     type="button"
                     onClick={() => removeItem('notIncluded', notIncludedIdx)}
