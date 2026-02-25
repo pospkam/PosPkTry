@@ -89,6 +89,7 @@ const options: swaggerJsdoc.Options = {
   apis: ['./app/api/**/*.ts'],
 };
 
+// AUTH: Public — API documentation for developers
 export async function GET(request: NextRequest) {
   try {
     const swaggerSpec = swaggerJsdoc(options);

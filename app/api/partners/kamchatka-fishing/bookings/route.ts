@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { KamchatkaFishingClient } from '@/lib/partners/kamchatka-fishing';
+import { requireRole } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
 // GET /api/partners/kamchatka-fishing/bookings - Получить бронирования
 export async function GET(request: NextRequest) {
   try {
+    const userOrResponse = await requireRole(request, ['operator', 'admin']);
+    if (userOrResponse instanceof NextResponse) return userOrResponse;
+
     const apiKey = process.env.KAMCHATKA_FISHING_API_KEY;
     const apiSecret = process.env.KAMCHATKA_FISHING_API_SECRET;
 
@@ -48,6 +52,9 @@ export async function GET(request: NextRequest) {
 // POST /api/partners/kamchatka-fishing/bookings - Создать бронирование
 export async function POST(request: NextRequest) {
   try {
+    const userOrResponse = await requireRole(request, ['operator', 'admin']);
+    if (userOrResponse instanceof NextResponse) return userOrResponse;
+
     const apiKey = process.env.KAMCHATKA_FISHING_API_KEY;
     const apiSecret = process.env.KAMCHATKA_FISHING_API_SECRET;
 

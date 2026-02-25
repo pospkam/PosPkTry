@@ -20,6 +20,7 @@ import { query } from '@/lib/database';
 
 export const dynamic = 'force-dynamic';
 
+// GET /api/accommodations - Public by design: catalog listing for discovery.
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);

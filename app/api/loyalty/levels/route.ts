@@ -4,6 +4,7 @@ import { loyaltySystem } from '@/lib/loyalty/loyalty-system';
 export const dynamic = 'force-dynamic';
 
 // GET /api/loyalty/levels - Получение всех уровней лояльности
+// AUTH: Level catalog is intentionally public (no auth required).
 export async function GET(request: NextRequest) {
   try {
     const levels = loyaltySystem.getAllLevels();

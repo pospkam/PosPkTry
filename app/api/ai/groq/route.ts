@@ -3,6 +3,7 @@ import { config } from '@/lib/config';
 
 export const dynamic = 'force-dynamic';
 
+// AUTH: Public — AI assistant for visitors
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();

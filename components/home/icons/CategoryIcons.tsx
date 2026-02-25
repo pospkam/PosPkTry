@@ -11,7 +11,7 @@ interface IconProps {
   size?: number;
 }
 
-/** 🏔️ Вулкан — outline горного пика с кратером */
+/** Вулкан — outline горного пика с кратером */
 export function Mountain({ size = 32 }: IconProps) {
   return (
     <svg
@@ -35,7 +35,7 @@ export function Mountain({ size = 32 }: IconProps) {
   );
 }
 
-/** 🐟 Рыбалка — рыба в воде */
+/** Рыбалка — рыба в воде */
 export function Fish({ size = 32 }: IconProps) {
   return (
     <svg
@@ -61,7 +61,7 @@ export function Fish({ size = 32 }: IconProps) {
   );
 }
 
-/** 🌊 Термальные источники — волны с паром */
+/** Термальные источники — волны с паром */
 export function Waves({ size = 32 }: IconProps) {
   return (
     <svg
@@ -86,7 +86,7 @@ export function Waves({ size = 32 }: IconProps) {
   );
 }
 
-/** 🚁 Вертолёт — вид сбоку */
+/** Вертолёт — вид сбоку */
 export function Helicopter({ size = 32 }: IconProps) {
   return (
     <svg
@@ -116,7 +116,7 @@ export function Helicopter({ size = 32 }: IconProps) {
   );
 }
 
-/** 🚶 Пеший туризм — силуэт человека с рюкзаком */
+/** Пеший туризм — силуэт человека с рюкзаком */
 export function Footprints({ size = 32 }: IconProps) {
   return (
     <svg
@@ -148,7 +148,7 @@ export function Footprints({ size = 32 }: IconProps) {
   );
 }
 
-/** 🚤 Лодка — катер на воде */
+/** Лодка — катер на воде */
 export function Boat({ size = 32 }: IconProps) {
   return (
     <svg

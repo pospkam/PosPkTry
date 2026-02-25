@@ -14,6 +14,7 @@ interface TransferSlot {
 /**
  * GET /api/transfers/availability
  * Проверка доступности трансферов на дату
+ * AUTH: публичный — guest может проверять доступность слотов без авторизации.
  */
 export async function GET(request: NextRequest) {
   try {

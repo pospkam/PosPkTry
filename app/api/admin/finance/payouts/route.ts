@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
+import { requireAdmin } from '@/lib/auth/middleware';
 import { ApiResponse } from '@/types';
 
 export const dynamic = 'force-dynamic';
@@ -9,6 +10,10 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: NextRequest) {
   try {
+    const adminOrResponse = await requireAdmin(request);
+    if (adminOrResponse instanceof NextResponse) {
+      return adminOrResponse;
+    }
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status') || 'all'; // all, pending, completed, failed
     const limit = parseInt(searchParams.get('limit') || '50');
@@ -108,6 +113,10 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    const adminOrResponse = await requireAdmin(request);
+    if (adminOrResponse instanceof NextResponse) {
+      return adminOrResponse;
+    }
     const body = await request.json();
     const { partnerId, bookingId, amount, description } = body;
 

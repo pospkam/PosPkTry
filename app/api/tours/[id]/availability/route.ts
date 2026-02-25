@@ -15,6 +15,7 @@ interface AvailabilityDate {
 /**
  * GET /api/tours/[id]/availability
  * Проверка доступности дат для тура
+ * Public by design: availability check for tour selection.
  */
 export async function GET(
   request: NextRequest,

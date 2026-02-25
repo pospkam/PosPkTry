@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/cart - Получить корзину
+ * Public by design: guest cart by session (sessionId query param).
  */
 export async function GET(request: NextRequest) {
   try {
@@ -46,6 +47,7 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/cart - Добавить в корзину
+ * Public by design: guest cart by session (sessionId in body).
  */
 export async function POST(request: NextRequest) {
   try {

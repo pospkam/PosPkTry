@@ -4,6 +4,8 @@ import { FISHING_TOURS } from '@/lib/partners/kamchatka-fishing/tours-data';
 /**
  * AI Smart Search API
  * Умный поиск туров с AI анализом запроса
+ *
+ * AUTH: Public — AI search for visitors
  */
 export async function POST(request: Request) {
   try {

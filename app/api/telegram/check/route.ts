@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/auth/middleware';
 
 /**
  * API endpoint для проверки Telegram Bot
  * GET /api/telegram/check
+ * AUTH: requireAdmin — чувствительная операционная диагностика
  */
 export async function GET(request: NextRequest) {
+  const adminOrResponse = await requireAdmin(request);
+  if (adminOrResponse instanceof NextResponse) return adminOrResponse;
+
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
 
   if (!botToken) {

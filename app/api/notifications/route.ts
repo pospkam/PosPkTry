@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
+import { requireAuth, requireAdmin } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,14 +11,9 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: NextRequest) {
   try {
-    const userId = request.headers.get('X-User-Id');
-    
-    if (!userId) {
-      return NextResponse.json({
-        success: false,
-        error: 'Не авторизован'
-      } as ApiResponse<null>, { status: 401 });
-    }
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult.userId;
 
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '50');
@@ -96,14 +92,8 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const userRole = request.headers.get('X-User-Role');
-    
-    if (userRole !== 'admin') {
-      return NextResponse.json({
-        success: false,
-        error: 'Недостаточно прав'
-      } as ApiResponse<null>, { status: 403 });
-    }
+    const adminOrResponse = await requireAdmin(request);
+    if (adminOrResponse instanceof NextResponse) return adminOrResponse;
 
     const body = await request.json();
     const { userId, type, title, message, data, priority, actionUrl, expiresAt } = body;

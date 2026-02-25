@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { config } from '@/lib/config'
+import { requireAdmin } from '@/lib/auth/middleware'
 import { convertUrlToMarkdown } from '@/lib/ai/markdown-new'
 import fs from 'fs'
 import path from 'path'
@@ -53,15 +54,22 @@ async function collectExternalUrlDocuments(urls: string[]): Promise<KnowledgeDoc
 }
 
 // Настройка S3 клиента для Timeweb Cloud
-const s3Client = new S3Client({
-  region: config.files.s3Region || 'ru-1',
-  endpoint: config.files.s3Endpoint || 'https://s3.twcstorage.ru',
-  credentials: {
-    accessKeyId: process.env.S3_ACCESS_KEY || 'F2CP4X3X17GVQ1YH5I5D',
-    secretAccessKey: process.env.S3_SECRET_KEY || '72iAsYR4QQCIdaDI9e9AzXnzVvvP8bvPELmrBVzX',
-  },
-  forcePathStyle: true,
-})
+const s3AccessKey = process.env.S3_ACCESS_KEY
+const s3SecretKey = process.env.S3_SECRET_KEY
+const s3Endpoint = config.files.s3Endpoint || process.env.S3_ENDPOINT || 'https://s3.twcstorage.ru'
+const s3Bucket = config.files.s3Bucket || process.env.S3_BUCKET
+
+const s3Client = s3AccessKey && s3SecretKey
+  ? new S3Client({
+      region: config.files.s3Region || process.env.S3_REGION || 'ru-1',
+      endpoint: s3Endpoint,
+      credentials: {
+        accessKeyId: s3AccessKey,
+        secretAccessKey: s3SecretKey,
+      },
+      forcePathStyle: true,
+    })
+  : null
 
 // Получить все документы для базы знаний
 async function collectProjectDocuments(): Promise<KnowledgeDocument[]> {
@@ -183,10 +191,14 @@ async function collectProjectDocuments(): Promise<KnowledgeDocument[]> {
 // Загрузить файл в S3 хранилище
 async function uploadToS3(file: File, fileName: string): Promise<string> {
   try {
+    if (!s3Client || !s3Bucket) {
+      throw new Error('S3 credentials or bucket are not configured')
+    }
+
     const buffer = Buffer.from(await file.arrayBuffer())
 
     const command = new PutObjectCommand({
-      Bucket: config.files.s3Bucket || 'd9542536-676ee691-7f59-46bb-bf0e-ab64230eec50',
+      Bucket: s3Bucket,
       Key: `knowledge-base/${fileName}`,
       Body: buffer,
       ContentType: file.type,
@@ -195,7 +207,7 @@ async function uploadToS3(file: File, fileName: string): Promise<string> {
 
     await s3Client.send(command)
 
-    const fileUrl = `${config.files.s3Endpoint}/${config.files.s3Bucket}/knowledge-base/${fileName}`
+    const fileUrl = `${s3Endpoint}/${s3Bucket}/knowledge-base/${fileName}`
     return fileUrl
   } catch (error) {
     console.error('Ошибка загрузки в S3:', error)
@@ -261,7 +273,11 @@ async function updateKnowledgeBase(documents: KnowledgeDocument[]): Promise<bool
 }
 
 // GET - Получить статус базы знаний
+// AUTH: requireAdmin — чувствительное управление KB и внешние интеграции
 export async function GET(request: NextRequest) {
+  const adminOrResponse = await requireAdmin(request);
+  if (adminOrResponse instanceof NextResponse) return adminOrResponse;
+
   try {
     const { timeweb } = config.ai
 
@@ -292,7 +308,11 @@ export async function GET(request: NextRequest) {
 }
 
 // POST - Обновить базу знаний
+// AUTH: requireAdmin — чувствительное управление KB и внешние интеграции
 export async function POST(request: NextRequest) {
+  const adminOrResponse = await requireAdmin(request);
+  if (adminOrResponse instanceof NextResponse) return adminOrResponse;
+
   try {
     console.log('🔄 Начинаем обновление базы знаний...')
 

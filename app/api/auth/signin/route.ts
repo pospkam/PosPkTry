@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
  * POST /api/auth/signin
  * User authentication endpoint
  */
+// PUBLIC: Auth entry point — signin endpoint intentionally public (no token required).
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();

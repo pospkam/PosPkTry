@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { verifyVehicleOwnership } from '@/lib/auth/transfer-helpers';
+import { requireTransferOperator } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,17 +15,12 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = request.headers.get('X-User-Id');
-    const userRole = request.headers.get('X-User-Role');
-    
-    if (!userId || userRole !== 'transfer') {
-      return NextResponse.json({
-        success: false,
-        error: 'Недостаточно прав'
-      } as ApiResponse<null>, { status: 403 });
-    }
+    const authResult = await requireTransferOperator(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult.userId;
 
-    const isOwner = await verifyVehicleOwnership(userId, params.id);
+    const { id } = await params;
+    const isOwner = await verifyVehicleOwnership(userId, id);
     
     if (!isOwner) {
       return NextResponse.json({
@@ -47,7 +43,7 @@ export async function GET(
       LEFT JOIN transfers t ON v.id = t.vehicle_id
       WHERE v.id = $1
       GROUP BY v.id, d.id, d.first_name, d.last_name`,
-      [params.id]
+      [id]
     );
 
     if (result.rows.length === 0) {
@@ -113,17 +109,12 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = request.headers.get('X-User-Id');
-    const userRole = request.headers.get('X-User-Role');
-    
-    if (!userId || userRole !== 'transfer') {
-      return NextResponse.json({
-        success: false,
-        error: 'Недостаточно прав'
-      } as ApiResponse<null>, { status: 403 });
-    }
+    const authResult = await requireTransferOperator(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult.userId;
 
-    const isOwner = await verifyVehicleOwnership(userId, params.id);
+    const { id } = await params;
+    const isOwner = await verifyVehicleOwnership(userId, id);
     
     if (!isOwner) {
       return NextResponse.json({
@@ -172,7 +163,7 @@ export async function PUT(
       } as ApiResponse<null>, { status: 400 });
     }
 
-    updateValues.push(params.id);
+    updateValues.push(id);
 
     const result = await query(
       `UPDATE vehicles 
@@ -206,17 +197,12 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = request.headers.get('X-User-Id');
-    const userRole = request.headers.get('X-User-Role');
-    
-    if (!userId || userRole !== 'transfer') {
-      return NextResponse.json({
-        success: false,
-        error: 'Недостаточно прав'
-      } as ApiResponse<null>, { status: 403 });
-    }
+    const authResult = await requireTransferOperator(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult.userId;
 
-    const isOwner = await verifyVehicleOwnership(userId, params.id);
+    const { id } = await params;
+    const isOwner = await verifyVehicleOwnership(userId, id);
     
     if (!isOwner) {
       return NextResponse.json({
@@ -229,7 +215,7 @@ export async function DELETE(
     const activeTransfers = await query(
       `SELECT COUNT(*) as count FROM transfers 
        WHERE vehicle_id = $1 AND status IN ('pending', 'assigned', 'confirmed', 'in_progress')`,
-      [params.id]
+      [id]
     );
 
     if (parseInt(activeTransfers.rows[0].count) > 0) {
@@ -240,7 +226,7 @@ export async function DELETE(
       } as ApiResponse<null>, { status: 400 });
     }
 
-    await query('DELETE FROM vehicles WHERE id = $1', [params.id]);
+    await query('DELETE FROM vehicles WHERE id = $1', [id]);
 
     return NextResponse.json({
       success: true,

@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { Star } from 'lucide-react';
 
 interface Tour {
   id: string;
@@ -17,7 +18,7 @@ interface Tour {
 function StarRating({ rating }: { rating: number }) {
   return (
     <div className="flex items-center gap-0.5" aria-label={`Рейтинг: ${rating} из 5`} role="img">
-      <span className="text-amber-400 text-xs">★</span>
+      <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
       <span className="text-[11px] font-semibold text-white/90">{rating.toFixed(1)}</span>
     </div>
   );

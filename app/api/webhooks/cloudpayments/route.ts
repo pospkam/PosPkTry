@@ -46,6 +46,8 @@ export const dynamic = 'force-dynamic';
  * Response:
  * - { code: 0 } = успех (CloudPayments повторно не отправит)
  * - { code: 13 } = ошибка (CloudPayments повторит через 1 час, максимум 10 раз)
+ *
+ * AUTH: Public by design — webhooks protected by X-Content-HMAC (HMAC-SHA256).
  */
 export async function POST(request: NextRequest) {
   const startTime = Date.now();

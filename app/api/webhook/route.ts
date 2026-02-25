@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 
 /**
  * POST /api/webhook - GitHub webhook for automatic deployment
+ * AUTH: Public by design — webhooks protected by X-Hub-Signature-256 (HMAC-SHA256).
  */
 export async function POST(request: NextRequest) {
   try {

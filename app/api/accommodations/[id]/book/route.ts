@@ -16,6 +16,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { z } from 'zod';
 import { emailService } from '@/lib/notifications/email-service';
+import { requireAuth } from '@/lib/auth/middleware';
+import { getTokenFromRequest } from '@/lib/auth';
 
 // Валидация входных данных
 const bookingSchema = z.object({
@@ -30,12 +32,19 @@ const bookingSchema = z.object({
 
 export const dynamic = 'force-dynamic';
 
+// POST /api/accommodations/[id]/book - protected: requires auth
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+  const userId = authResult.userId;
+
   try {
-    const { id: accommodationId } = params;
+    const { id: accommodationId } = await params;
     const body = await request.json();
     
     // Валидация
@@ -159,16 +168,6 @@ export async function POST(
     const pricePerNight = parseFloat(room.price_per_night);
     const totalPrice = pricePerNight * nights;
     
-    // Получаем userId из заголовка (middleware должен установить)
-    const userId = request.headers.get('x-user-id');
-
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, error: 'Пользователь не авторизован' },
-        { status: 401 }
-      );
-    }
-    
     // Создаём бронирование
     const bookingResult = await query(
       `INSERT INTO accommodation_bookings (
@@ -240,21 +239,22 @@ export async function POST(
       // Не прерываем выполнение при ошибке email
     }
 
-    // Создаем платеж через CloudPayments
+    // Создаем платеж через CloudPayments (передаём токен из входящего запроса)
     let paymentData = null;
     try {
+      const authToken = getTokenFromRequest(request);
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+      };
       const paymentResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/payments/create`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': userId,
-        },
+        headers,
         body: JSON.stringify({
           bookingId,
           bookingType: 'accommodation',
           amount: totalPrice,
           currency: 'RUB',
-          userId,
           userEmail,
           description: `Оплата размещения: ${room.accommodation_name}`,
         }),

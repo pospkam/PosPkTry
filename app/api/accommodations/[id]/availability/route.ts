@@ -15,6 +15,7 @@ interface RoomAvailability {
 /**
  * GET /api/accommodations/[id]/availability
  * Проверка доступности номеров в отеле
+ * Public by design: availability check for accommodation selection.
  */
 export async function GET(
   request: NextRequest,

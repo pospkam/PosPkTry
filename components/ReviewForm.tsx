@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { LoadingSpinner } from '@/components/admin/shared';
+import { Star } from 'lucide-react';
 
 interface ReviewFormProps {
   tourId?: string;
@@ -23,9 +24,7 @@ function StarRating({ rating, onChange }: { rating: number; onChange: (r: number
           onClick={() => onChange(star)}
           className="text-2xl focus:outline-none"
         >
-          <span className={star <= rating ? 'text-yellow-400' : 'text-gray-300'}>
-            ★
-          </span>
+          <Star className={`w-8 h-8 ${star <= rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} />
         </button>
       ))}
       <span className="ml-2 text-white/70">{rating}/5</span>

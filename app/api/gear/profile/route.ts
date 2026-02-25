@@ -2,22 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { getGearPartnerByUserId, ensureGearPartnerExists, getGearStats } from '@/lib/auth/gear-helpers';
+import { requireAuth } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * GET /api/gear/profile - Get gear partner profile with stats
+ * GET /api/gear/profile - Get gear partner profile with stats (auth required)
  */
 export async function GET(request: NextRequest) {
   try {
-    const userId = request.headers.get('X-User-Id');
-    
-    if (!userId) {
-      return NextResponse.json({
-        success: false,
-        error: 'Требуется авторизация'
-      } as ApiResponse<null>, { status: 401 });
-    }
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult.userId;
 
     const userResult = await query(
       'SELECT id, email, name, created_at FROM users WHERE id = $1',
@@ -65,18 +61,13 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * PUT /api/gear/profile - Update gear partner profile
+ * PUT /api/gear/profile - Update gear partner profile (auth required)
  */
 export async function PUT(request: NextRequest) {
   try {
-    const userId = request.headers.get('X-User-Id');
-    
-    if (!userId) {
-      return NextResponse.json({
-        success: false,
-        error: 'Требуется авторизация'
-      } as ApiResponse<null>, { status: 401 });
-    }
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult.userId;
 
     const body = await request.json();
     const { name, partnerName, description, contact } = body;

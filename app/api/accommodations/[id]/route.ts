@@ -8,6 +8,7 @@ import { query } from '@/lib/database';
 
 export const dynamic = 'force-dynamic';
 
+// GET /api/accommodations/[id] - Public by design: accommodation detail for discovery.
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

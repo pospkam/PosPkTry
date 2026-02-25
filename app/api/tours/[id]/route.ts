@@ -5,6 +5,7 @@ import { ApiResponse } from '@/types';
 export const dynamic = 'force-dynamic';
 
 // GET /api/tours/[id] - Получение тура по ID
+// Public by design: tour detail page for discovery.
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

@@ -15,7 +15,8 @@ export async function GET(
     const { userId } = await verifyAuth(request)
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const wishlist = await wishlistService.getWishlist(params.id, userId)
+    const { id } = await params
+    const wishlist = await wishlistService.getWishlist(id, userId)
 
     if (!wishlist) {
       return NextResponse.json(
@@ -45,10 +46,11 @@ export async function PUT(
     const { userId } = await verifyAuth(request)
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+    const { id } = await params
     const body = await request.json()
 
     const wishlist = await wishlistService.updateWishlist(
-      params.id,
+      id,
       {
         name: body.name,
         description: body.description,
@@ -82,7 +84,8 @@ export async function DELETE(
     const { userId } = await verifyAuth(request)
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    await wishlistService.deleteWishlist(params.id, userId)
+    const { id } = await params
+    await wishlistService.deleteWishlist(id, userId)
 
     return NextResponse.json({
       success: true,

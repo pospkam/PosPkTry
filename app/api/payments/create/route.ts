@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
+import { verifyAuth } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,9 +10,8 @@ interface CreatePaymentRequest {
   bookingType: 'tour' | 'accommodation' | 'transfer';
   amount: number;
   currency: string;
-  userId: string;
-  userEmail: string;
   description?: string;
+  userEmail?: string;
 }
 
 /**
@@ -20,10 +20,20 @@ interface CreatePaymentRequest {
  */
 export async function POST(request: NextRequest) {
   try {
+    const auth = await verifyAuth(request);
+    if (!auth.isAuthenticated || !auth.userId) {
+      return NextResponse.json({
+        success: false,
+        error: 'Unauthorized',
+      } as ApiResponse<null>, { status: 401 });
+    }
+
     const body: CreatePaymentRequest = await request.json();
+    const userId = auth.userId;
+    const userEmail = auth.email || body.userEmail || '';
 
     // Валидация
-    if (!body.bookingId || !body.amount || !body.userId) {
+    if (!body.bookingId || !body.amount) {
       return NextResponse.json({
         success: false,
         error: 'Missing required fields'
@@ -34,13 +44,13 @@ export async function POST(request: NextRequest) {
     let bookingQuery = '';
     switch (body.bookingType) {
       case 'tour':
-        bookingQuery = 'SELECT id, total_price, status FROM bookings WHERE id = $1';
+        bookingQuery = 'SELECT id, total_price, status, user_id FROM bookings WHERE id = $1';
         break;
       case 'accommodation':
-        bookingQuery = 'SELECT id, total_price, status FROM accommodation_bookings WHERE id = $1';
+        bookingQuery = 'SELECT id, total_price, status, user_id FROM accommodation_bookings WHERE id = $1';
         break;
       case 'transfer':
-        bookingQuery = 'SELECT id, total_price, status FROM transfer_bookings WHERE id = $1';
+        bookingQuery = 'SELECT id, total_price, status, user_id FROM transfer_bookings WHERE id = $1';
         break;
       default:
         return NextResponse.json({
@@ -59,6 +69,14 @@ export async function POST(request: NextRequest) {
     }
 
     const booking = bookingResult.rows[0];
+
+    // Проверяем ownership (или admin доступ)
+    if (auth.role !== 'admin' && booking.user_id !== userId) {
+      return NextResponse.json({
+        success: false,
+        error: 'Forbidden',
+      } as ApiResponse<null>, { status: 403 });
+    }
 
     // Проверяем, что сумма совпадает
     if (parseFloat(booking.total_price) !== body.amount) {
@@ -87,7 +105,7 @@ export async function POST(request: NextRequest) {
     const paymentResult = await query(paymentQuery, [
       body.bookingId,
       body.bookingType,
-      body.userId,
+      userId,
       body.amount,
       body.currency || 'RUB',
       'pending',
@@ -105,8 +123,8 @@ export async function POST(request: NextRequest) {
         currency: body.currency || 'RUB',
         description: body.description || `Оплата бронирования #${body.bookingId.substring(0, 8)}`,
         invoiceId: payment.id,
-        accountId: body.userId,
-        email: body.userEmail,
+        accountId: userId,
+        email: userEmail,
         status: payment.status,
         createdAt: new Date(payment.created_at)
       }

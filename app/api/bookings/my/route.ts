@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
+import { verifyAuth } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,14 +11,14 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: NextRequest) {
   try {
-    const userId = request.headers.get('X-User-Id');
-    
-    if (!userId) {
+    const auth = await verifyAuth(request);
+    if (!auth.isAuthenticated || !auth.userId) {
       return NextResponse.json({
         success: false,
         error: 'Не авторизован'
       } as ApiResponse<null>, { status: 401 });
     }
+    const userId = auth.userId;
 
     const result = await query(
       `SELECT 

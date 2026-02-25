@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';import { Search } from 'lucide-react';import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Tour } from '@/types';
-import { Star, Zap, Clock } from 'lucide-react';
+import { Star, Zap, Clock, AlertTriangle } from 'lucide-react';
 import { ActivityIcon } from '@/components/icons';
 
 export default function ToursPageClient() {
@@ -71,7 +71,7 @@ export default function ToursPageClient() {
     return (
       <div className="min-h-screen bg-transparent flex items-center justify-center p-6">
         <div className="bg-white/15 backdrop-blur-2xl rounded-2xl p-8 text-center max-w-md border border-white/15" style={{ backdropFilter: 'blur(10px)' }}>
-          <div className="text-6xl mb-4">⚠️</div>
+          <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-red-400" />
           <h1 className="text-2xl font-extralight text-white mb-4" style={{ textShadow: '0 2px 6px rgba(0, 0, 0, 0.15)' }}>
             Ошибка загрузки
           </h1>

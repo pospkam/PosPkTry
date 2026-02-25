@@ -49,17 +49,7 @@ interface FishingTourCardProps {
   onBook?: (tourId: string) => void;
 }
 
-const fishIcons: Record<string, string> = {
-  'чавыча': '🐟',
-  'кижуч': '🐠',
-  'нерка': '🐡',
-  'горбуша': '🐟',
-  'кета': '🐠',
-  'голец': '🐟',
-  'микижа': '🐠',
-  'хариус': '🐟',
-  'default': '🐟',
-};
+// Используем Lucide Fish вместо emoji
 
 export function FishingTourCard({ tour, onBook }: FishingTourCardProps) {
   const getDifficultyLabel = (difficulty: string) => {
@@ -140,7 +130,7 @@ export function FishingTourCard({ tour, onBook }: FishingTourCardProps) {
                 key={fish}
                 className="px-2 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs text-white flex items-center gap-1"
               >
-                <span>{fishIcons[fish.toLowerCase()] || fishIcons.default}</span>
+                <Fish className="w-3 h-3" />
                 {fish}
               </span>
             ))}

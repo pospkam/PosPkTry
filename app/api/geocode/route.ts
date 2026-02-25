@@ -19,6 +19,8 @@ interface GeocodeResult {
  * Примеры запросов:
  * GET /api/geocode?address=Петропавловск-Камчатский,+проспект+Победы,+1
  * GET /api/geocode?coords=53.0444,158.6483 (обратное геокодирование)
+ *
+ * AUTH: Public — geocoding for maps/tours search
  */
 export async function GET(request: NextRequest) {
   try {

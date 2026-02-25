@@ -13,11 +13,12 @@ import {
   ReviewNotFoundError,
   ReviewValidationError,
 } from '@/lib/database';
+import { requireAuth, requireRole, requireAdmin } from '@/lib/auth/middleware';
 
 // ============================================================================
 // GET - ПОЛУЧИТЬ ОТЗЫВ
 // ============================================================================
-
+// Public: детали отзыва доступны без аутентификации для просмотра.
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -68,27 +69,16 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authOrResponse = await requireAuth(request);
+  if (authOrResponse instanceof NextResponse) return authOrResponse;
+
   try {
     const { id } = await params;
 
-    // Проверка аутентификации
-    const userId = request.headers.get('x-user-id');
-
-    if (!userId) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Unauthorized',
-          message: 'User ID is required',
-        },
-        { status: 401 }
-      );
-    }
-
-    // Получить отзыв для проверки владения
     const review = await reviewService.read(id);
+    const authorId = review.userId ?? review.user_id;
 
-    if (review.userId !== userId) {
+    if (authorId !== authOrResponse.userId) {
       return NextResponse.json(
         {
           success: false,
@@ -157,28 +147,16 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authOrResponse = await requireAuth(request);
+  if (authOrResponse instanceof NextResponse) return authOrResponse;
+
   try {
     const { id } = await params;
 
-    // Проверка аутентификации
-    const userId = request.headers.get('x-user-id');
-    const role = request.headers.get('x-user-role');
-
-    if (!userId) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Unauthorized',
-          message: 'User ID is required',
-        },
-        { status: 401 }
-      );
-    }
-
-    // Получить отзыв для проверки владения
     const review = await reviewService.read(id);
+    const authorId = review.userId ?? review.user_id;
 
-    if (review.userId !== userId && role !== 'admin') {
+    if (authorId !== authOrResponse.userId && authOrResponse.role !== 'admin') {
       return NextResponse.json(
         {
           success: false,
@@ -233,41 +211,20 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authOrResponse = await requireAuth(request);
+  if (authOrResponse instanceof NextResponse) return authOrResponse;
+
   try {
     const { id } = await params;
     const pathname = request.nextUrl.pathname;
-
-    // Проверка аутентификации
-    const userId = request.headers.get('x-user-id');
-    const role = request.headers.get('x-user-role');
-
-    if (!userId) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Unauthorized',
-          message: 'User ID is required',
-        },
-        { status: 401 }
-      );
-    }
-
     const body = await request.json();
 
-    // APPROVE
+    // APPROVE — admin only (moderator not in global auth roles)
     if (pathname.includes('/approve')) {
-      if (role !== 'admin' && role !== 'moderator') {
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'Forbidden',
-            message: 'Only moderators can approve reviews',
-          },
-          { status: 403 }
-        );
-      }
+      const adminOrResponse = await requireAdmin(request);
+      if (adminOrResponse instanceof NextResponse) return adminOrResponse;
 
-      const approvedReview = await reviewService.approve(id, userId);
+      const approvedReview = await reviewService.approve(id, adminOrResponse.userId);
       return NextResponse.json(
         {
           success: true,
@@ -278,21 +235,13 @@ export async function POST(
       );
     }
 
-    // REJECT
+    // REJECT — admin only
     if (pathname.includes('/reject')) {
-      if (role !== 'admin' && role !== 'moderator') {
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'Forbidden',
-            message: 'Only moderators can reject reviews',
-          },
-          { status: 403 }
-        );
-      }
+      const adminOrResponse = await requireAdmin(request);
+      if (adminOrResponse instanceof NextResponse) return adminOrResponse;
 
       const reason = body.reason || 'No reason provided';
-      const rejectedReview = await reviewService.reject(id, userId, reason);
+      const rejectedReview = await reviewService.reject(id, adminOrResponse.userId, reason);
       return NextResponse.json(
         {
           success: true,
@@ -303,18 +252,10 @@ export async function POST(
       );
     }
 
-    // RESPOND
+    // RESPOND — operator or admin
     if (pathname.includes('/respond')) {
-      if (role !== 'operator' && role !== 'admin') {
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'Forbidden',
-            message: 'Only operators can respond to reviews',
-          },
-          { status: 403 }
-        );
-      }
+      const operatorOrResponse = await requireRole(request, ['operator', 'admin']);
+      if (operatorOrResponse instanceof NextResponse) return operatorOrResponse;
 
       const response = body.response;
       if (!response || response.trim().length === 0) {
@@ -328,7 +269,17 @@ export async function POST(
         );
       }
 
-      const respondedReview = await reviewService.respondToReview(id, userId, response);
+      const respondedReview = await reviewService.respondToReview(id, operatorOrResponse.userId, response);
+      if (!respondedReview) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Forbidden',
+            message: 'You can only respond to reviews for your own tours',
+          },
+          { status: 403 }
+        );
+      }
       return NextResponse.json(
         {
           success: true,

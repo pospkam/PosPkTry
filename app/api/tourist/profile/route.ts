@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
       return userOrResponse;
     }
 
-    const profile = await getTouristProfile(userOrResponse.id);
+    const profile = await getTouristProfile(userOrResponse.userId);
     if (!profile) {
       return NextResponse.json(
         { success: false, error: 'Профиль не найден' } as ApiResponse<null>,
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const stats = await getTouristTravelStats(userOrResponse.id);
+    const stats = await getTouristTravelStats(userOrResponse.userId);
 
     const achievementsResult = await query(
       `SELECT * FROM tourist_achievements WHERE tourist_id = $1 ORDER BY earned_at DESC`,
@@ -58,7 +58,7 @@ export async function PUT(request: NextRequest) {
       return userOrResponse;
     }
 
-    const profile = await getTouristProfile(userOrResponse.id);
+    const profile = await getTouristProfile(userOrResponse.userId);
     if (!profile) {
       return NextResponse.json(
         { success: false, error: 'Профиль не найден' } as ApiResponse<null>,

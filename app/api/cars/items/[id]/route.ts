@@ -19,10 +19,10 @@ export async function GET(
       return userOrResponse;
     }
 
-    const carId = params.id;
+    const { id: carId } = await params;
 
     // Verify ownership
-    const hasAccess = await verifyCarOwnership(userOrResponse.id, carId);
+    const hasAccess = await verifyCarOwnership(userOrResponse.userId, carId);
     if (!hasAccess) {
       return NextResponse.json(
         { success: false, error: 'Доступ запрещен' } as ApiResponse<null>,
@@ -82,10 +82,10 @@ export async function PUT(
       return userOrResponse;
     }
 
-    const carId = params.id;
+    const { id: carId } = await params;
 
     // Verify ownership
-    const hasAccess = await verifyCarOwnership(userOrResponse.id, carId);
+    const hasAccess = await verifyCarOwnership(userOrResponse.userId, carId);
     if (!hasAccess) {
       return NextResponse.json(
         { success: false, error: 'Доступ запрещен' } as ApiResponse<null>,
@@ -183,10 +183,10 @@ export async function DELETE(
       return userOrResponse;
     }
 
-    const carId = params.id;
+    const { id: carId } = await params;
 
     // Verify ownership
-    const hasAccess = await verifyCarOwnership(userOrResponse.id, carId);
+    const hasAccess = await verifyCarOwnership(userOrResponse.userId, carId);
     if (!hasAccess) {
       return NextResponse.json(
         { success: false, error: 'Доступ запрещен' } as ApiResponse<null>,

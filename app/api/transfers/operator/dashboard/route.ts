@@ -2,14 +2,25 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { TransferOperatorDashboard, TransferOperatorStats } from '@/types/transfer';
 import { config } from '@/lib/config';
+import { requireTransferOperator } from '@/lib/auth/middleware';
+import { getTransferPartnerId } from '@/lib/auth/transfer-helpers';
 
 export const dynamic = 'force-dynamic';
 
 // GET /api/transfers/operator/dashboard - Дашборд перевозчика
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const operatorId = searchParams.get('operator_id') || 'operator_1'; // Заглушка
+    const authResult = await requireTransferOperator(request);
+    if (authResult instanceof NextResponse) return authResult;
+
+    const partnerId = await getTransferPartnerId(authResult.userId);
+    if (!partnerId) {
+      return NextResponse.json({
+        success: false,
+        error: 'Профиль трансферного оператора не найден'
+      }, { status: 404 });
+    }
+    const operatorId = partnerId;
 
     try {
       // Получаем статистику перевозчика

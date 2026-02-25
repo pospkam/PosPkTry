@@ -24,6 +24,8 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
+
     // Parse body
     const body = await request.json()
 
@@ -32,22 +34,33 @@ export async function POST(
     }
 
     // Get payment to check authorization
-    const payment = await paymentService.getTransaction(params.id)
+    const payment = await paymentService.getTransaction(id)
 
     if (!payment) {
       return NextResponse.json({ error: 'Payment not found' }, { status: 404 })
     }
 
-    // Check authorization
-    const booking = await bookingService.getById(payment.bookingId)
+    if (!payment.bookingId) {
+      return NextResponse.json({ error: 'Payment has no booking reference' }, { status: 400 })
+    }
 
-    if (booking.userId !== userId && !(await authorizeRole(request, 'admin'))) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    // Check authorization (service-level ownership first)
+    const ownBooking = await bookingService.getByIdForUser(payment.bookingId, userId)
+    if (!ownBooking) {
+      const isAdmin = await authorizeRole(request, 'admin')
+      if (!isAdmin) {
+        return NextResponse.json({ error: 'Payment not found' }, { status: 404 })
+      }
+
+      const adminBooking = await bookingService.getById(payment.bookingId)
+      if (!adminBooking) {
+        return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
+      }
     }
 
     // Process refund
     const refund = await paymentService.refund({
-      transactionId: params.id,
+      transactionId: id,
       refundAmount: body.refundAmount,
       reason: body.reason,
       description: body.description,

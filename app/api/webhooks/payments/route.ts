@@ -11,6 +11,8 @@ import crypto from 'crypto'
  * POST /api/webhooks/payments
  * Handle webhooks from payment gateways (Yandex Kassa, Stripe, etc.)
  * Verifies webhook signature and processes payment status updates
+ *
+ * AUTH: Public by design — webhooks protected by x-signature/x-signature-256 headers.
  */
 export async function POST(request: NextRequest) {
   try {

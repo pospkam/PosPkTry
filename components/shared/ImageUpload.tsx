@@ -78,7 +78,7 @@ export function ImageUpload({ onUpload, maxFiles = 5, maxSizeMB = 5 }: ImageUplo
         disabled={uploading}
         className="px-4 py-2 bg-premium-gold hover:bg-premium-gold/80 text-premium-black font-bold rounded-lg transition-colors disabled:opacity-50"
       >
-        {uploading ? '⏳ Загрузка...' : '📸 Выбрать изображения'}
+        {uploading ? 'Загрузка...' : 'Выбрать изображения'}
       </button>
 
       {previews.length > 0 && (

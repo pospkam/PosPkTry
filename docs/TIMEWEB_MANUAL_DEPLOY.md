@@ -10,14 +10,14 @@
 ✅ **VDS сервер Timeweb:**
 - IP: `5.129.248.224`
 - User: `root`
-- Password: `xQvB1pv?yZTjaR`
+- Password: `REPLACE_WITH_SERVER_PASSWORD`
 - Ссылка: https://timeweb.cloud/my/servers/5898003
 
 ✅ **S3 хранилище:**
 - Endpoint: `https://s3.twcstorage.ru`
 - Bucket: `d9542536-676ee691-7f59-46bb-bf0e-ab64230eec50`
-- Access Key: `F2CP4X3X17GVQ1YH5I5D`
-- Secret Key: `72iAsYR4QQCIdaDI9e9AzXnzVvvP8bvPELmrBVzX`
+- Access Key: `REPLACE_WITH_S3_ACCESS_KEY`
+- Secret Key: `REPLACE_WITH_S3_SECRET_KEY`
 
 ✅ **API Token:**
 - Для автоматизации через Timeweb API
@@ -77,7 +77,7 @@
    ```powershell
    ssh root@5.129.248.224
    ```
-3. Введите пароль: `xQvB1pv?yZTjaR`
+3. Введите пароль: `REPLACE_WITH_SERVER_PASSWORD`
 4. При первом подключении напишите `yes` и нажмите Enter
 
 ---
@@ -195,8 +195,8 @@ DATABASE_URL=postgresql://gen_user:PASSWORD@xxxxx.timeweb.cloud:5432/kamhub
 # S3 хранилище (уже настроено)
 S3_ENDPOINT=https://s3.twcstorage.ru
 S3_BUCKET_ID=d9542536-676ee691-7f59-46bb-bf0e-ab64230eec50
-S3_ACCESS_KEY_ID=F2CP4X3X17GVQ1YH5I5D
-S3_SECRET_ACCESS_KEY=72iAsYR4QQCIdaDI9e9AzXnzVvvP8bvPELmrBVzX
+S3_ACCESS_KEY_ID=REPLACE_WITH_S3_ACCESS_KEY
+S3_SECRET_ACCESS_KEY=REPLACE_WITH_S3_SECRET_KEY
 S3_REGION=ru-1
 NEXT_PUBLIC_STORAGE_URL=https://s3.twcstorage.ru/d9542536-676ee691-7f59-46bb-bf0e-ab64230eec50
 

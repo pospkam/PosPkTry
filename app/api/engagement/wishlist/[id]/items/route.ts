@@ -15,7 +15,8 @@ export async function GET(
     const { userId } = await verifyAuth(request)
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const wishlist = await wishlistService.getWishlist(params.id, userId)
+    const { id } = await params
+    const wishlist = await wishlistService.getWishlist(id, userId)
 
     if (!wishlist) {
       return NextResponse.json(
@@ -48,10 +49,11 @@ export async function POST(
     const { userId } = await verifyAuth(request)
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+    const { id } = await params
     const body = await request.json()
 
     const item = await wishlistService.addItem(
-      params.id,
+      id,
       {
         itemId: body.itemId,
         itemType: body.itemType,

@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { searchService } from '@/lib/database';
 
+// Public: рекомендации, автодополнение и похожие туры доступны без аутентификации.
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;

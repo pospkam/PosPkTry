@@ -198,6 +198,7 @@ async function saveSessionHistory(
 }
 
 // ── Основной обработчик ────────────────────────────────────────
+// AUTH: Public — AI chat assistant for visitors
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();

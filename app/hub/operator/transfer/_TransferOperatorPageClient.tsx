@@ -9,7 +9,7 @@ import { TransferRouteManagement } from '@/components/transfer-operator/Transfer
 import { TransferBookingManagement } from '@/components/transfer-operator/TransferBookingManagement';
 import { LoadingSpinner, EmptyState } from '@/components/admin/shared';
 import { useAuth } from '@/contexts/AuthContext';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, BarChart3, Users, Map, Calendar, RefreshCw } from 'lucide-react';
 
 type ActiveTab = 'dashboard' | 'drivers' | 'routes' | 'bookings';
 
@@ -63,10 +63,10 @@ export default function TransferOperatorPageClient() {
   };
 
   const tabs = [
-    { id: 'dashboard' as ActiveTab, name: 'Панель управления', icon: '📊' },
-    { id: 'drivers' as ActiveTab, name: 'Водители', icon: '' },
-    { id: 'routes' as ActiveTab, name: 'Маршруты', icon: '🗺️' },
-    { id: 'bookings' as ActiveTab, name: 'Бронирования', icon: '📅' },
+    { id: 'dashboard' as ActiveTab, name: 'Панель управления', Icon: BarChart3 },
+    { id: 'drivers' as ActiveTab, name: 'Водители', Icon: Users },
+    { id: 'routes' as ActiveTab, name: 'Маршруты', Icon: Map },
+    { id: 'bookings' as ActiveTab, name: 'Бронирования', Icon: Calendar },
   ];
 
   return (
@@ -95,7 +95,8 @@ export default function TransferOperatorPageClient() {
                   onClick={fetchData}
                   className="px-4 py-2 bg-premium-gold hover:bg-premium-gold/80 text-premium-black font-semibold rounded-lg transition-colors"
                 >
-                  🔄 Обновить
+                  <RefreshCw className="w-4 h-4 inline mr-2" />
+                  Обновить
                 </button>
               </div>
             </div>
@@ -116,7 +117,7 @@ export default function TransferOperatorPageClient() {
                       : 'text-white/70 hover:bg-white/10 hover:text-white'
                   }`}
                 >
-                  <span>{tab.icon}</span>
+                  {React.createElement(tab.Icon, { className: 'w-5 h-5' })}
                   {tab.name}
                 </button>
               ))}

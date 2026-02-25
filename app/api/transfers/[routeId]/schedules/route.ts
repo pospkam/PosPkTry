@@ -13,6 +13,7 @@ interface TimeSlot {
 /**
  * GET /api/transfers/[routeId]/schedules
  * Получить расписание рейсов для маршрута на определённую дату
+ * AUTH: публичный — guest может просматривать расписание маршрута без авторизации.
  */
 export async function GET(
   request: NextRequest,

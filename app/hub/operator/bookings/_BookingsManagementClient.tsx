@@ -13,6 +13,7 @@ import {
   Column
 } from '@/components/admin/shared';
 import { OperatorBooking } from '@/types/operator';
+import { Check } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function BookingsManagementClient() {
@@ -172,7 +173,7 @@ export default function BookingsManagementClient() {
             {formatCurrency(booking.totalPrice)}
           </div>
           <div className="text-xs text-white/60">
-            {booking.paymentStatus === 'paid' ? '[✓] Оплачено' : '  Ожидает'}
+            {booking.paymentStatus === 'paid' ? <><Check className="w-3 h-3 inline mr-1" />Оплачено</> : 'Ожидает'}
           </div>
         </div>
       )

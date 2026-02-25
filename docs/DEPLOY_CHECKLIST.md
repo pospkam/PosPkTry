@@ -35,7 +35,7 @@ Password: _______________
 **Вариант Б: SSH**
 ```bash
 ssh root@5.129.248.224
-# Пароль: xQvB1pv?yZTjaR
+# Пароль: REPLACE_WITH_SERVER_PASSWORD
 ```
 
 ---
@@ -93,8 +93,8 @@ DATABASE_URL=postgresql://gen_user:PASSWORD@xxxxx.timeweb.cloud:5432/kamhub
 # S3 хранилище (уже настроено)
 S3_ENDPOINT=https://s3.twcstorage.ru
 S3_BUCKET_ID=d9542536-676ee691-7f59-46bb-bf0e-ab64230eec50
-S3_ACCESS_KEY_ID=F2CP4X3X17GVQ1YH5I5D
-S3_SECRET_ACCESS_KEY=72iAsYR4QQCIdaDI9e9AzXnzVvvP8bvPELmrBVzX
+S3_ACCESS_KEY_ID=REPLACE_WITH_S3_ACCESS_KEY
+S3_SECRET_ACCESS_KEY=REPLACE_WITH_S3_SECRET_KEY
 S3_REGION=ru-1
 NEXT_PUBLIC_STORAGE_URL=https://s3.twcstorage.ru/d9542536-676ee691-7f59-46bb-bf0e-ab64230eec50
 

@@ -9,6 +9,8 @@ import {
   TourNotFoundError,
   TourAlreadyPublishedError,
 } from '@/lib/database';
+import { requireOperator } from '@/lib/auth/middleware';
+import { verifyTourOwnership } from '@/lib/auth/operator-helpers';
 
 // ============================================================================
 // POST - ОПУБЛИКОВАТЬ ТУР
@@ -18,30 +20,16 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authOrResponse = await requireOperator(request);
+  if (authOrResponse instanceof NextResponse) return authOrResponse;
+
   try {
     const { id } = await params;
     const pathname = request.nextUrl.pathname;
     const isPublish = pathname.includes('/publish');
 
-    // Проверка аутентификации
-    const operatorId = request.headers.get('x-operator-id');
-    const role = request.headers.get('x-user-role');
-
-    if (!operatorId) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Unauthorized',
-          message: 'Operator ID is required',
-        },
-        { status: 401 }
-      );
-    }
-
-    // Получить тур для проверки владения
-    const tour = await tourService.read(id);
-
-    if (tour.operatorId !== operatorId && role !== 'admin') {
+    const isOwner = await verifyTourOwnership(authOrResponse.userId, id);
+    if (!isOwner && authOrResponse.role !== 'admin') {
       return NextResponse.json(
         {
           success: false,

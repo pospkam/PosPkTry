@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { commissionService } from '@/lib/database'
+import { requireAdmin } from '@/lib/auth/middleware'
 
 export async function GET(request: NextRequest) {
   try {
+    const adminOrResponse = await requireAdmin(request)
+    if (adminOrResponse instanceof NextResponse) return adminOrResponse
+
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '20')

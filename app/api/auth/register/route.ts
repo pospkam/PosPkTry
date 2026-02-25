@@ -11,6 +11,7 @@ if (!jwtSecret) {
 
 const JWT_SECRET = new TextEncoder().encode(jwtSecret);
 
+// PUBLIC: Auth entry point — register endpoint intentionally public (no token required).
 export async function POST(request: NextRequest) {
   let client;
   

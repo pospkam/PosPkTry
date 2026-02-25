@@ -15,6 +15,7 @@ interface TimeSlot {
 /**
  * GET /api/tours/[id]/time-slots
  * Получить временные слоты для индивидуальных туров на определённую дату
+ * Public by design: time slot selection for booking flow.
  */
 export async function GET(
   request: NextRequest,

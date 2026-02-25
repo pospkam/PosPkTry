@@ -1,5 +1,7 @@
 'use client';
 
+import { Suspense } from 'react';
+import { Loader2 } from 'lucide-react';
 import { useMediaQuery } from 'react-responsive';
 import { DesktopHero } from '@/components/home/DesktopHero';
 import Image from 'next/image';
@@ -26,23 +28,23 @@ export default function HomePageClient() {
         <svg viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice" className="w-full h-full">
           <defs>
             <radialGradient id="sky" cx="50%" cy="20%">
-              <stop offset="0%" stop-color="#87CEEB"/>
-              <stop offset="50%" stop-color="#B0C4DE"/>
-              <stop offset="100%" stop-color="#1E3A8A"/>
+              <stop offset="0%" stopColor="#87CEEB"/>
+              <stop offset="50%" stopColor="#B0C4DE"/>
+              <stop offset="100%" stopColor="#1E3A8A"/>
             </radialGradient>
             <radialGradient id="volcano1" cx="30%" cy="80%">
-              <stop offset="0%" stop-color="#FF4500"/>
-              <stop offset="70%" stop-color="#8B0000"/>
-              <stop offset="100%" stop-color="#2F1B14"/>
+              <stop offset="0%" stopColor="#FF4500"/>
+              <stop offset="70%" stopColor="#8B0000"/>
+              <stop offset="100%" stopColor="#2F1B14"/>
             </radialGradient>
             <radialGradient id="volcano2" cx="70%" cy="75%">
-              <stop offset="0%" stop-color="#FF6347"/>
-              <stop offset="70%" stop-color="#DC143C"/>
-              <stop offset="100%" stop-color="#4A0E0E"/>
+              <stop offset="0%" stopColor="#FF6347"/>
+              <stop offset="70%" stopColor="#DC143C"/>
+              <stop offset="100%" stopColor="#4A0E0E"/>
             </radialGradient>
             <linearGradient id="ocean" x1="0%" y1="90%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#4682B4"/>
-              <stop offset="100%" stop-color="#191970"/>
+              <stop offset="0%" stopColor="#4682B4"/>
+              <stop offset="100%" stopColor="#191970"/>
             </linearGradient>
             <filter id="smoke" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur"/>
@@ -80,6 +82,13 @@ export default function HomePageClient() {
       {/* Dark mode SVG background */}
       <div className="fixed inset-0 -z-10 hidden dark:block">
         <svg viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice" className="w-full h-full">
+          <defs>
+            <radialGradient id="darkSky" cx="50%" cy="20%">
+              <stop offset="0%" stopColor="#1E293B" />
+              <stop offset="50%" stopColor="#0F172A" />
+              <stop offset="100%" stopColor="#020617" />
+            </radialGradient>
+          </defs>
           {/* Темный градиент небо */}
           <rect width="1200" height="500" fill="url(#darkSky)"/>
           {/* ... similar paths with dark colors */}

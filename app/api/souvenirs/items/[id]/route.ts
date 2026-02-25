@@ -19,9 +19,9 @@ export async function GET(
       return userOrResponse;
     }
 
-    const souvenirId = params.id;
+    const { id: souvenirId } = await params;
 
-    const hasAccess = await verifySouvenirOwnership(userOrResponse.id, souvenirId);
+    const hasAccess = await verifySouvenirOwnership(userOrResponse.userId, souvenirId);
     if (!hasAccess) {
       return NextResponse.json(
         { success: false, error: 'Доступ запрещен' } as ApiResponse<null>,
@@ -82,9 +82,9 @@ export async function PUT(
       return userOrResponse;
     }
 
-    const souvenirId = params.id;
+    const { id: souvenirId } = await params;
 
-    const hasAccess = await verifySouvenirOwnership(userOrResponse.id, souvenirId);
+    const hasAccess = await verifySouvenirOwnership(userOrResponse.userId, souvenirId);
     if (!hasAccess) {
       return NextResponse.json(
         { success: false, error: 'Доступ запрещен' } as ApiResponse<null>,
@@ -165,9 +165,9 @@ export async function DELETE(
       return userOrResponse;
     }
 
-    const souvenirId = params.id;
+    const { id: souvenirId } = await params;
 
-    const hasAccess = await verifySouvenirOwnership(userOrResponse.id, souvenirId);
+    const hasAccess = await verifySouvenirOwnership(userOrResponse.userId, souvenirId);
     if (!hasAccess) {
       return NextResponse.json(
         { success: false, error: 'Доступ запрещен' } as ApiResponse<null>,

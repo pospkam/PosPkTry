@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
       return userOrResponse;
     }
 
-    const partnerId = await getSouvenirPartnerId(userOrResponse.id);
+    const partnerId = await getSouvenirPartnerId(userOrResponse.userId);
     if (!partnerId) {
       return NextResponse.json(
         { success: false, error: 'Партнер не найден' } as ApiResponse<null>,

@@ -12,7 +12,7 @@
 ### 1. Доступ к серверу
 ```bash
 SSH: root@5.129.248.224
-Password: xQvB1pv?yZTjaR
+Password: REPLACE_WITH_SERVER_PASSWORD
 ```
 
 ### 2. Доступ к БД PostgreSQL
@@ -28,8 +28,8 @@ Password: [будет создан при установке]
 ```
 ✅ Timeweb API: eyJhbGci...
 ✅ S3 Storage: d9542536-676ee691-7f59-46bb-bf0e-ab64230eec50
-✅ Access Key: F2CP4X3X17GVQ1YH5I5D
-✅ Secret Key: 72iAsYR4QQCIdaDI9e9AzXnzVvvP8bvPELmrBVzX
+✅ Access Key: REPLACE_WITH_S3_ACCESS_KEY
+✅ Secret Key: REPLACE_WITH_S3_SECRET_KEY
 ```
 
 ---
@@ -171,8 +171,8 @@ TELEGRAM_BOT_TOKEN=YOUR_TELEGRAM_BOT_TOKEN
 # S3 Storage (Timeweb)
 S3_ENDPOINT=https://s3.twcstorage.ru
 S3_BUCKET=d9542536-676ee691-7f59-46bb-bf0e-ab64230eec50
-S3_ACCESS_KEY=F2CP4X3X17GVQ1YH5I5D
-S3_SECRET_KEY=72iAsYR4QQCIdaDI9e9AzXnzVvvP8bvPELmrBVzX
+S3_ACCESS_KEY=REPLACE_WITH_S3_ACCESS_KEY
+S3_SECRET_KEY=REPLACE_WITH_S3_SECRET_KEY
 S3_REGION=ru-1
 EOF
 

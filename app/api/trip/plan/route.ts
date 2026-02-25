@@ -101,6 +101,8 @@ interface TripPlan {
 /**
  * POST /api/trip/plan
  * Планирование поездки на Камчатку
+ *
+ * AUTH: Public — trip planning for visitors before booking
  */
 export async function POST(request: NextRequest) {
   try {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
+import { requireAdmin } from '@/lib/auth/middleware';
 import { ApiResponse } from '@/types';
 
 export const dynamic = 'force-dynamic';
@@ -13,6 +14,10 @@ export async function POST(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const adminOrResponse = await requireAdmin(request);
+    if (adminOrResponse instanceof NextResponse) {
+      return adminOrResponse;
+    }
     const { id } = await context.params;
 
     // Проверяем существование

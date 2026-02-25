@@ -16,6 +16,7 @@ import {
 import { OperatorTour } from '@/types/operator';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
+import { Users, Plus, Star } from 'lucide-react';
 
 export default function ToursManagementClient() {
   const { user } = useAuth();
@@ -170,7 +171,7 @@ export default function ToursManagementClient() {
       title: 'Макс. группа',
       render: (tour) => (
         <span className="text-white/80">
-          <span className="text-xl mr-1">👥</span>
+          <Users className="w-5 h-5 mr-1 inline" />
           {tour.maxGroupSize}
         </span>
       )
@@ -203,7 +204,7 @@ export default function ToursManagementClient() {
       title: 'Рейтинг',
       render: (tour) => (
         <div className="text-sm">
-          <span className="text-yellow-400">★</span> {tour.rating.toFixed(1)}
+          <Star className="w-4 h-4 text-yellow-400 fill-yellow-400 inline" /> {tour.rating.toFixed(1)}
           <span className="text-white/50 text-xs"> ({tour.reviewCount})</span>
         </div>
       )
@@ -264,7 +265,7 @@ export default function ToursManagementClient() {
                 href="/hub/operator/tours/new"
                 className="px-6 py-3 bg-premium-gold hover:bg-premium-gold/80 text-premium-black font-bold rounded-xl transition-colors"
               >
-                <span className="mr-2">➕</span>
+                <Plus className="w-5 h-5 mr-2 inline" />
                 Создать тур
               </Link>
             </div>

@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { Partner, ApiResponse, PaginatedResponse } from '@/types';
+import { requireAdmin } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
+const ALLOWED_SORT_FIELDS = new Set(['created_at', 'updated_at', 'name', 'category', 'rating', 'review_count', 'is_verified']);
 
-// GET /api/partners - Получение списка партнеров
+// GET /api/partners - Получение списка партнеров (каталог)
+// PUBLIC: endpoint intentionally public for partner catalog browsing
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -13,8 +16,9 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category');
     const verified = searchParams.get('verified');
     const search = searchParams.get('search');
-    const sortBy = searchParams.get('sortBy') || 'created_at';
-    const sortOrder = searchParams.get('sortOrder') || 'desc';
+    const requestedSortBy = searchParams.get('sortBy') || 'created_at';
+    const sortBy = ALLOWED_SORT_FIELDS.has(requestedSortBy) ? requestedSortBy : 'created_at';
+    const sortOrder = (searchParams.get('sortOrder') || 'desc').toLowerCase() === 'asc' ? 'ASC' : 'DESC';
 
     // Строим WHERE условия
     const whereConditions: string[] = [];
@@ -73,7 +77,7 @@ export async function GET(request: NextRequest) {
       LEFT JOIN assets l ON p.logo_asset_id = l.id
       ${whereClause}
       GROUP BY p.id, l.url
-      ORDER BY p.${sortBy} ${sortOrder.toUpperCase()}
+      ORDER BY p.${sortBy} ${sortOrder}
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
 
@@ -137,6 +141,9 @@ export async function GET(request: NextRequest) {
 // POST /api/partners - Создание нового партнера
 export async function POST(request: NextRequest) {
   try {
+    const adminOrResponse = await requireAdmin(request);
+    if (adminOrResponse instanceof NextResponse) return adminOrResponse;
+
     const body = await request.json();
     
     // Валидация обязательных полей

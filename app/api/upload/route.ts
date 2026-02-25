@@ -2,13 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { ApiResponse } from '@/types';
+import { requireAuth } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * POST /api/upload - Загрузка изображений
+ * AUTH: requireAuth — только авторизованные пользователи
  */
 export async function POST(request: NextRequest) {
+  const userOrResponse = await requireAuth(request);
+  if (userOrResponse instanceof NextResponse) return userOrResponse;
+
   try {
     const formData = await request.formData();
     const files = formData.getAll('files') as File[];

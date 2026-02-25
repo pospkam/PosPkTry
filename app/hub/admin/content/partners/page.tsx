@@ -14,6 +14,7 @@ import {
   EmptyState,
   Column
 } from '@/components/admin/shared';
+import { Star } from 'lucide-react';
 
 export default function PartnersManagement() {
   const [partners, setPartners] = useState<Partner[]>([]);
@@ -119,7 +120,7 @@ export default function PartnersManagement() {
       title: 'Рейтинг',
       render: (partner) => (
         <div className="text-sm">
-          <span className="text-yellow-400">★</span> {partner.rating.toFixed(1)}
+          <Star className="w-4 h-4 text-yellow-400 fill-yellow-400 inline" /> {partner.rating.toFixed(1)}
           <span className="text-white/50 text-xs"> ({partner.reviewCount})</span>
         </div>
       )

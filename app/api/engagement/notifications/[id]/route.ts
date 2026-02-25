@@ -77,7 +77,7 @@ export async function PUT(
     const body = await request.json()
 
     if (body.markAsRead) {
-      await notificationService.markAsRead(id)
+      await notificationService.markAsRead(id, userId)
     }
 
     if (body.toggleMute !== undefined) {

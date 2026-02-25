@@ -131,6 +131,7 @@ async function callOpenrouter(prompt: string) {
   return content
 }
 
+// AUTH: Public — AI assistant for visitors
 export async function POST(req: NextRequest) {
   try {
     const body = await req.formData().catch(async () => await req.json().catch(() => null))
