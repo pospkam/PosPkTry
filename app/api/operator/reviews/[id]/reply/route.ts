@@ -8,7 +8,6 @@ export const dynamic = 'force-dynamic';
 /**
  * POST /api/operator/reviews/[id]/reply
  * Reply to a review
- * Note: Need to add operator_reply field to reviews table
  */
 export async function POST(
   request: NextRequest,
@@ -56,14 +55,6 @@ export async function POST(
         error: 'Отзыв не найден'
       } as ApiResponse<null>, { status: 404 });
     }
-
-    // Add operator_reply column if it doesn't exist (temporary solution)
-    // In production, this should be in a migration
-    await query(`
-      ALTER TABLE reviews 
-      ADD COLUMN IF NOT EXISTS operator_reply TEXT,
-      ADD COLUMN IF NOT EXISTS operator_reply_at TIMESTAMPTZ
-    `);
 
     // Update review with reply
     const result = await query(

@@ -211,7 +211,7 @@ export async function GET(request: NextRequest) {
 
     // Бизнес-правило: партнёр видит только свои заявки, admin — все.
     if (!isAdmin && partnerId) {
-      whereConditions.push(`gr.partner_id = $${params.length + 1}`);
+      whereConditions.push(`g.partner_id = $${params.length + 1}`);
       params.push(partnerId);
     }
 
