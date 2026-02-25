@@ -26,12 +26,10 @@ export async function GET(
 
     const { id } = await params
 
-    // Get booking
-    const booking = await bookingService.getById(id)
-
-    // Authorization: user can only see their own bookings
-    if (booking.userId !== userId) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    // Ownership is enforced at service layer
+    const booking = await bookingService.getByIdForUser(id, userId)
+    if (!booking) {
+      return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
     }
 
     return NextResponse.json(booking)
@@ -66,22 +64,18 @@ export async function PUT(
 
     const { id } = await params
 
-    // Get booking for authorization
-    const booking = await bookingService.getById(id)
-
-    if (booking.userId !== userId) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
-
     // Parse body
     const body = await request.json()
 
-    // Update booking
-    const updated = await bookingService.update(id, {
+    // Ownership is enforced at service layer
+    const updated = await bookingService.updateForUser(id, userId, {
       specialRequests: body.specialRequests,
       dietaryRequirements: body.dietaryRequirements,
       mobilityRequirements: body.mobilityRequirements,
     })
+    if (!updated) {
+      return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
+    }
 
     return NextResponse.json(updated)
   } catch (error) {
@@ -114,19 +108,15 @@ export async function DELETE(
 
     const { id } = await params
 
-    // Get booking for authorization
-    const booking = await bookingService.getById(id)
-
-    if (booking.userId !== userId) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
-
     // Parse body
     const body = await request.json()
     const reason = body.reason || 'User requested cancellation'
 
-    // Cancel booking
+    // Ownership is enforced at service layer
     const cancelled = await bookingService.cancel(id, reason, userId)
+    if (!cancelled) {
+      return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
+    }
 
     return NextResponse.json({
       message: 'Booking cancelled successfully',

@@ -40,11 +40,22 @@ export async function POST(
       return NextResponse.json({ error: 'Payment not found' }, { status: 404 })
     }
 
-    // Check authorization
-    const booking = await bookingService.getById(payment.bookingId)
+    if (!payment.bookingId) {
+      return NextResponse.json({ error: 'Payment has no booking reference' }, { status: 400 })
+    }
 
-    if (booking.userId !== userId && !(await authorizeRole(request, 'admin'))) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    // Check authorization (service-level ownership first)
+    const ownBooking = await bookingService.getByIdForUser(payment.bookingId, userId)
+    if (!ownBooking) {
+      const isAdmin = await authorizeRole(request, 'admin')
+      if (!isAdmin) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
+
+      const adminBooking = await bookingService.getById(payment.bookingId)
+      if (!adminBooking) {
+        return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
+      }
     }
 
     // Process refund
