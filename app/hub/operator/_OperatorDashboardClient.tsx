@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Protected } from '@/components/Protected';
 import { OperatorNav } from '@/components/operator/OperatorNav';
 import { OperatorMetricsGrid } from '@/components/operator/Dashboard/OperatorMetricsGrid';
@@ -18,11 +18,7 @@ export default function OperatorDashboardClient() {
   const [error, setError] = useState<string | null>(null);
   const [period, setPeriod] = useState('30');
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, [period]);
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -43,7 +39,11 @@ export default function OperatorDashboardClient() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [period]);
+
+  useEffect(() => {
+    void fetchDashboardData();
+  }, [fetchDashboardData]);
 
   const handleViewBookingDetails = (booking: OperatorBooking) => {
     // TODO: Открыть модальное окно с деталями
