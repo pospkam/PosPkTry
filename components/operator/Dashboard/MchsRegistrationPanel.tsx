@@ -1,23 +1,57 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, CheckCircle2, ClipboardList, Loader2, Send } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, ClipboardList, Loader2, Search, Send } from 'lucide-react';
 
 type RegistrationStatus = 'submitted' | 'registered' | 'rejected' | 'failed';
 
-interface RegistrationItem {
-  id: string;
-  groupName: string;
-  routeDescription: string;
-  routeRegion: string | null;
+interface RegistrationDates {
   startDate: string;
   endDate: string;
-  participantCount: number;
+}
+
+interface GroupCompositionItem {
+  fullName: string;
+  phone?: string;
+  role?: string;
+}
+
+interface EmergencyContactItem {
+  name: string;
+  phone: string;
+  relation?: string;
+}
+
+interface GuideContacts {
+  fullName: string;
+  phone: string;
+  email?: string;
+}
+
+interface RegistrationItem {
+  id: string;
+  bookingId: string;
+  route: string;
+  dates: RegistrationDates | null;
   status: RegistrationStatus;
-  mchsRequestId: string | null;
-  lastError: string | null;
-  submittedAt: string | null;
   createdAt: string;
+  updatedAt: string;
+}
+
+interface RegistrationDetails {
+  id: string;
+  bookingId: string;
+  bookingStatus: string;
+  bookingDates: RegistrationDates | null;
+  tourName: string | null;
+  groupComposition: GroupCompositionItem[];
+  route: string;
+  dates: RegistrationDates | null;
+  guideContacts: GuideContacts | null;
+  emergencyContacts: EmergencyContactItem[];
+  status: RegistrationStatus;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface RegistrationSummary {
@@ -31,20 +65,46 @@ interface RegistrationSummary {
 interface RegistrationsApiResponse {
   success: boolean;
   data?: {
-    registrations: RegistrationItem[];
+    registrations: Array<{
+      id: string;
+      bookingId: string;
+      route: string;
+      dates: unknown;
+      status: RegistrationStatus;
+      createdAt: string;
+      updatedAt: string;
+    }>;
     summary: RegistrationSummary;
   };
-  error?: string;
+  error?: string | unknown;
+}
+
+interface RegistrationDetailsApiResponse {
+  success: boolean;
+  data?: {
+    id: string;
+    bookingId: string;
+    bookingStatus: string;
+    bookingDates: unknown;
+    tour: { id: string; name: string | null };
+    groupComposition: unknown;
+    route: string;
+    dates: unknown;
+    guideContacts: unknown;
+    emergencyContacts: unknown;
+    status: RegistrationStatus;
+    createdAt: string;
+    updatedAt: string;
+  };
+  error?: string | unknown;
 }
 
 interface FormState {
-  groupName: string;
-  routeDescription: string;
-  routeRegion: string;
+  bookingId: string;
+  route: string;
   startDate: string;
   endDate: string;
-  participantCount: string;
-  groupMembersRaw: string;
+  groupCompositionRaw: string;
   guideFullName: string;
   guidePhone: string;
   guideEmail: string;
@@ -52,48 +112,125 @@ interface FormState {
 }
 
 const initialFormState: FormState = {
-  groupName: '',
-  routeDescription: '',
-  routeRegion: 'Камчатский край',
+  bookingId: '',
+  route: '',
   startDate: '',
   endDate: '',
-  participantCount: '',
-  groupMembersRaw: '',
+  groupCompositionRaw: '',
   guideFullName: '',
   guidePhone: '',
   guideEmail: '',
   emergencyContactsRaw: '',
 };
 
-function parseGroupMembers(raw: string): Array<{ fullName: string; phone?: string }> {
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function parseDates(value: unknown): RegistrationDates | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const startDate = typeof value.startDate === 'string' ? value.startDate : null;
+  const endDate = typeof value.endDate === 'string' ? value.endDate : null;
+
+  if (!startDate || !endDate) {
+    return null;
+  }
+
+  return { startDate, endDate };
+}
+
+function parseGroupComposition(raw: string): GroupCompositionItem[] {
   return raw
     .split('\n')
     .map(line => line.trim())
     .filter(Boolean)
     .map(line => {
-      const [fullNamePart, phonePart] = line.split(',').map(part => part?.trim() || '');
+      const [fullNamePart, phonePart, rolePart] = line.split(',').map(part => part?.trim() || '');
       return {
         fullName: fullNamePart,
         phone: phonePart || undefined,
+        role: rolePart || undefined,
       };
     })
     .filter(item => item.fullName.length > 0);
 }
 
-function parseEmergencyContacts(raw: string): Array<{ name: string; phone: string; relation?: string }> {
+function parseEmergencyContacts(raw: string): EmergencyContactItem[] {
   return raw
     .split('\n')
     .map(line => line.trim())
     .filter(Boolean)
     .map(line => {
       const [namePart, phonePart, relationPart] = line.split(',').map(part => part?.trim() || '');
-      return {
+      const parsed: EmergencyContactItem = {
         name: namePart,
         phone: phonePart,
-        relation: relationPart || undefined,
       };
+      if (relationPart) {
+        parsed.relation = relationPart;
+      }
+      return parsed;
     })
     .filter(item => item.name.length > 0 && item.phone.length > 0);
+}
+
+function parseGuideContacts(value: unknown): GuideContacts | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const fullName = typeof value.fullName === 'string' ? value.fullName : null;
+  const phone = typeof value.phone === 'string' ? value.phone : null;
+  const email = typeof value.email === 'string' ? value.email : undefined;
+
+  if (!fullName || !phone) {
+    return null;
+  }
+
+  return { fullName, phone, email };
+}
+
+function parseGroupCompositionPayload(value: unknown): GroupCompositionItem[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .filter(isRecord)
+    .map(item => {
+      const fullName = typeof item.fullName === 'string' ? item.fullName : '';
+      const phone = typeof item.phone === 'string' ? item.phone : undefined;
+      const role = typeof item.role === 'string' ? item.role : undefined;
+      return { fullName, phone, role };
+    })
+    .filter(item => item.fullName.length > 0);
+}
+
+function parseEmergencyContactsPayload(value: unknown): EmergencyContactItem[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .filter(isRecord)
+    .map(item => {
+      const name = typeof item.name === 'string' ? item.name : '';
+      const phone = typeof item.phone === 'string' ? item.phone : '';
+      const relation = typeof item.relation === 'string' ? item.relation : undefined;
+      return { name, phone, relation };
+    })
+    .filter(item => item.name.length > 0 && item.phone.length > 0);
+}
+
+function formatDateLabel(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+  return date.toLocaleDateString('ru-RU');
 }
 
 function getStatusLabel(status: RegistrationStatus): string {
@@ -113,11 +250,15 @@ function getStatusClasses(status: RegistrationStatus): string {
 export function MchsRegistrationPanel() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [detailsLoading, setDetailsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [detailsError, setDetailsError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [formState, setFormState] = useState<FormState>(initialFormState);
   const [registrations, setRegistrations] = useState<RegistrationItem[]>([]);
+  const [selectedRegistrationId, setSelectedRegistrationId] = useState<string | null>(null);
+  const [registrationDetails, setRegistrationDetails] = useState<RegistrationDetails | null>(null);
   const [summary, setSummary] = useState<RegistrationSummary>({
     total: 0,
     submitted: 0,
@@ -126,9 +267,13 @@ export function MchsRegistrationPanel() {
     failed: 0,
   });
 
-  const parsedMembers = useMemo(
-    () => parseGroupMembers(formState.groupMembersRaw),
-    [formState.groupMembersRaw]
+  const parsedGroupComposition = useMemo(
+    () => parseGroupComposition(formState.groupCompositionRaw),
+    [formState.groupCompositionRaw]
+  );
+  const parsedEmergencyContacts = useMemo(
+    () => parseEmergencyContacts(formState.emergencyContactsRaw),
+    [formState.emergencyContactsRaw]
   );
 
   useEffect(() => {
@@ -140,14 +285,26 @@ export function MchsRegistrationPanel() {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('/api/operator/mchs-registrations?limit=5');
+      const response = await fetch('/api/operator/mchs/register?limit=5');
       const payload = (await response.json()) as RegistrationsApiResponse;
 
       if (!response.ok || !payload.success || !payload.data) {
-        throw new Error(payload.error || 'Не удалось загрузить МЧС регистрации');
+        const errorMessage =
+          typeof payload.error === 'string' ? payload.error : 'Не удалось загрузить МЧС регистрации';
+        throw new Error(errorMessage);
       }
 
-      setRegistrations(payload.data.registrations);
+      setRegistrations(
+        payload.data.registrations.map(item => ({
+          id: item.id,
+          bookingId: item.bookingId,
+          route: item.route,
+          dates: parseDates(item.dates),
+          status: item.status,
+          createdAt: item.createdAt,
+          updatedAt: item.updatedAt,
+        }))
+      );
       setSummary(payload.data.summary);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Не удалось загрузить данные');
@@ -160,63 +317,119 @@ export function MchsRegistrationPanel() {
     setFormState(prev => ({ ...prev, [field]: value }));
   }
 
+  async function loadRegistrationDetails(id: string) {
+    try {
+      setDetailsLoading(true);
+      setDetailsError(null);
+      setSelectedRegistrationId(id);
+
+      const response = await fetch(`/api/operator/mchs/${id}`);
+      const payload = (await response.json()) as RegistrationDetailsApiResponse;
+
+      if (!response.ok || !payload.success || !payload.data) {
+        const errorMessage =
+          typeof payload.error === 'string' ? payload.error : 'Не удалось загрузить детали регистрации';
+        throw new Error(errorMessage);
+      }
+
+      const details = payload.data;
+      const parsedGuideContacts = parseGuideContacts(details.guideContacts);
+
+      setRegistrationDetails({
+        id: details.id,
+        bookingId: details.bookingId,
+        bookingStatus: details.bookingStatus,
+        bookingDates: parseDates(details.bookingDates),
+        tourName: details.tour.name,
+        groupComposition: parseGroupCompositionPayload(details.groupComposition),
+        route: details.route,
+        dates: parseDates(details.dates),
+        guideContacts: parsedGuideContacts,
+        emergencyContacts: parseEmergencyContactsPayload(details.emergencyContacts),
+        status: details.status,
+        createdAt: details.createdAt,
+        updatedAt: details.updatedAt,
+      });
+    } catch (loadDetailsError) {
+      setDetailsError(loadDetailsError instanceof Error ? loadDetailsError.message : 'Не удалось загрузить детали');
+    } finally {
+      setDetailsLoading(false);
+    }
+  }
+
   async function submitRegistration(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitError(null);
     setSuccessMessage(null);
 
-    const participantCount = parseInt(formState.participantCount, 10);
-    const emergencyContacts = parseEmergencyContacts(formState.emergencyContactsRaw);
-
-    if (parsedMembers.length === 0) {
+    if (parsedGroupComposition.length === 0) {
       setSubmitError('Добавьте состав группы (минимум один участник).');
       return;
     }
-    if (emergencyContacts.length === 0) {
+    if (parsedEmergencyContacts.length === 0) {
       setSubmitError('Добавьте хотя бы один экстренный контакт.');
       return;
     }
-    if (!Number.isFinite(participantCount) || participantCount <= 0) {
-      setSubmitError('Количество участников должно быть положительным числом.');
+
+    if (!formState.bookingId.trim()) {
+      setSubmitError('Укажите ID бронирования.');
+      return;
+    }
+
+    const startDate = new Date(formState.startDate);
+    const endDate = new Date(formState.endDate);
+    if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
+      setSubmitError('Укажите корректные даты маршрута.');
+      return;
+    }
+    if (startDate > endDate) {
+      setSubmitError('Дата окончания не может быть раньше даты начала.');
       return;
     }
 
     try {
       setSubmitting(true);
 
-      const response = await fetch('/api/operator/mchs-registrations', {
+      const response = await fetch('/api/operator/mchs/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          groupName: formState.groupName,
-          groupMembers: parsedMembers,
-          routeDescription: formState.routeDescription,
-          routeRegion: formState.routeRegion || undefined,
-          startDate: formState.startDate,
-          endDate: formState.endDate,
-          participantCount,
-          guideContact: {
+          bookingId: formState.bookingId.trim(),
+          groupComposition: parsedGroupComposition,
+          route: formState.route,
+          dates: {
+            startDate: formState.startDate,
+            endDate: formState.endDate,
+          },
+          guideContacts: {
             fullName: formState.guideFullName,
             phone: formState.guidePhone,
             email: formState.guideEmail || undefined,
           },
-          emergencyContacts,
+          emergencyContacts: parsedEmergencyContacts,
         }),
       });
 
       const payload = (await response.json()) as {
         success: boolean;
+        data?: { id: string };
         message?: string;
-        error?: string;
+        error?: string | unknown;
       };
 
       if (!response.ok || !payload.success) {
-        throw new Error(payload.error || 'Не удалось отправить регистрацию в МЧС');
+        const errorMessage =
+          typeof payload.error === 'string' ? payload.error : 'Не удалось отправить регистрацию в МЧС';
+        throw new Error(errorMessage);
       }
 
       setSuccessMessage(payload.message || 'Регистрация отправлена в МЧС');
       setFormState(initialFormState);
       await loadRegistrations();
+
+      if (payload.data?.id) {
+        await loadRegistrationDetails(payload.data.id);
+      }
     } catch (submitErrorValue) {
       setSubmitError(
         submitErrorValue instanceof Error ? submitErrorValue.message : 'Не удалось отправить форму'
@@ -271,38 +484,32 @@ export function MchsRegistrationPanel() {
           </div>
 
           <form onSubmit={submitRegistration} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <label className="block">
-              <span className="text-sm text-white/80">Название группы</span>
+            <label htmlFor="mchs-booking-id" className="block">
+              <span className="text-sm text-white/80">ID бронирования</span>
               <input
-                value={formState.groupName}
-                onChange={e => onFormChange('groupName', e.target.value)}
+                id="mchs-booking-id"
+                value={formState.bookingId}
+                onChange={e => onFormChange('bookingId', e.target.value)}
                 className="mt-1 w-full bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white"
                 required
               />
             </label>
 
-            <label className="block">
-              <span className="text-sm text-white/80">Регион маршрута</span>
-              <input
-                value={formState.routeRegion}
-                onChange={e => onFormChange('routeRegion', e.target.value)}
-                className="mt-1 w-full bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white"
-              />
-            </label>
-
-            <label className="block md:col-span-2">
-              <span className="text-sm text-white/80">Описание маршрута</span>
+            <label htmlFor="mchs-route" className="block md:col-span-2">
+              <span className="text-sm text-white/80">Маршрут</span>
               <textarea
-                value={formState.routeDescription}
-                onChange={e => onFormChange('routeDescription', e.target.value)}
+                id="mchs-route"
+                value={formState.route}
+                onChange={e => onFormChange('route', e.target.value)}
                 className="mt-1 w-full min-h-[90px] bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white"
                 required
               />
             </label>
 
-            <label className="block">
+            <label htmlFor="mchs-start-date" className="block">
               <span className="text-sm text-white/80">Дата начала</span>
               <input
+                id="mchs-start-date"
                 type="date"
                 value={formState.startDate}
                 onChange={e => onFormChange('startDate', e.target.value)}
@@ -311,9 +518,10 @@ export function MchsRegistrationPanel() {
               />
             </label>
 
-            <label className="block">
+            <label htmlFor="mchs-end-date" className="block">
               <span className="text-sm text-white/80">Дата окончания</span>
               <input
+                id="mchs-end-date"
                 type="date"
                 value={formState.endDate}
                 onChange={e => onFormChange('endDate', e.target.value)}
@@ -322,22 +530,10 @@ export function MchsRegistrationPanel() {
               />
             </label>
 
-            <label className="block">
-              <span className="text-sm text-white/80">Количество участников</span>
-              <input
-                type="number"
-                min={1}
-                max={100}
-                value={formState.participantCount}
-                onChange={e => onFormChange('participantCount', e.target.value)}
-                className="mt-1 w-full bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white"
-                required
-              />
-            </label>
-
-            <label className="block">
+            <label htmlFor="mchs-guide-name" className="block">
               <span className="text-sm text-white/80">Контакт гида (ФИО)</span>
               <input
+                id="mchs-guide-name"
                 value={formState.guideFullName}
                 onChange={e => onFormChange('guideFullName', e.target.value)}
                 className="mt-1 w-full bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white"
@@ -345,9 +541,10 @@ export function MchsRegistrationPanel() {
               />
             </label>
 
-            <label className="block">
+            <label htmlFor="mchs-guide-phone" className="block">
               <span className="text-sm text-white/80">Телефон гида</span>
               <input
+                id="mchs-guide-phone"
                 value={formState.guidePhone}
                 onChange={e => onFormChange('guidePhone', e.target.value)}
                 className="mt-1 w-full bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white"
@@ -355,9 +552,10 @@ export function MchsRegistrationPanel() {
               />
             </label>
 
-            <label className="block">
+            <label htmlFor="mchs-guide-email" className="block">
               <span className="text-sm text-white/80">Email гида</span>
               <input
+                id="mchs-guide-email"
                 type="email"
                 value={formState.guideEmail}
                 onChange={e => onFormChange('guideEmail', e.target.value)}
@@ -365,24 +563,28 @@ export function MchsRegistrationPanel() {
               />
             </label>
 
-            <label className="block md:col-span-2">
+            <label htmlFor="mchs-group-composition" className="block md:col-span-2">
               <span className="text-sm text-white/80">
-                Состав группы (каждая строка: ФИО, телефон)
+                Состав группы (каждая строка: ФИО, телефон, роль)
               </span>
               <textarea
-                value={formState.groupMembersRaw}
-                onChange={e => onFormChange('groupMembersRaw', e.target.value)}
+                id="mchs-group-composition"
+                value={formState.groupCompositionRaw}
+                onChange={e => onFormChange('groupCompositionRaw', e.target.value)}
                 className="mt-1 w-full min-h-[90px] bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white"
                 required
               />
-              <p className="text-xs text-white/50 mt-1">Распознано участников: {parsedMembers.length}</p>
+              <p className="text-xs text-white/50 mt-1">
+                Регистрируем участников: {parsedGroupComposition.length}
+              </p>
             </label>
 
-            <label className="block md:col-span-2">
+            <label htmlFor="mchs-emergency-contacts" className="block md:col-span-2">
               <span className="text-sm text-white/80">
                 Экстренные контакты (каждая строка: Имя, телефон, связь)
               </span>
               <textarea
+                id="mchs-emergency-contacts"
                 value={formState.emergencyContactsRaw}
                 onChange={e => onFormChange('emergencyContactsRaw', e.target.value)}
                 className="mt-1 w-full min-h-[90px] bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white"
@@ -437,20 +639,77 @@ export function MchsRegistrationPanel() {
                     className="bg-white/10 border border-white/15 rounded-xl p-4 flex flex-col gap-2"
                   >
                     <div className="flex items-center justify-between gap-3">
-                      <p className="text-white font-medium">{item.groupName}</p>
+                      <p className="text-white font-medium">Бронирование: {item.bookingId}</p>
                       <span className={`text-xs px-2 py-1 rounded-full ${getStatusClasses(item.status)}`}>
                         {getStatusLabel(item.status)}
                       </span>
                     </div>
-                    <p className="text-white/70 text-sm line-clamp-2">{item.routeDescription}</p>
+                    <p className="text-white/70 text-sm line-clamp-2">{item.route}</p>
                     <p className="text-xs text-white/50">
-                      {item.startDate} — {item.endDate} · участников: {item.participantCount}
+                      {item.dates ? `${item.dates.startDate} — ${item.dates.endDate}` : 'Даты не указаны'} ·
+                      создано: {formatDateLabel(item.createdAt)}
                     </p>
-                    {item.lastError && (
-                      <p className="text-xs text-red-200 bg-red-500/15 rounded-lg px-2 py-1">{item.lastError}</p>
-                    )}
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => loadRegistrationDetails(item.id)}
+                        className="min-h-[44px] min-w-[44px] px-3 py-2 rounded-xl bg-white/10 border border-white/20 text-white text-sm inline-flex items-center gap-2"
+                      >
+                        {detailsLoading && selectedRegistrationId === item.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Search className="w-4 h-4" />
+                        )}
+                        Проверить статус
+                      </button>
+                    </div>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {detailsError && (
+              <div className="px-3 py-2 rounded-xl bg-red-500/20 border border-red-400/30 text-red-200 text-sm">
+                {detailsError}
+              </div>
+            )}
+
+            {registrationDetails && (
+              <div className="bg-white/10 border border-white/20 rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <h4 className="text-base font-semibold text-white">Статус регистрации {registrationDetails.id}</h4>
+                  <span
+                    className={`text-xs px-2 py-1 rounded-full ${getStatusClasses(registrationDetails.status)}`}
+                  >
+                    {getStatusLabel(registrationDetails.status)}
+                  </span>
+                </div>
+                <p className="text-sm text-white/80">
+                  Бронирование: {registrationDetails.bookingId}
+                  {registrationDetails.tourName ? ` · Тур: ${registrationDetails.tourName}` : ''}
+                </p>
+                <p className="text-xs text-white/60">
+                  Статус бронирования: {registrationDetails.bookingStatus}
+                  {registrationDetails.bookingDates
+                    ? ` · ${registrationDetails.bookingDates.startDate} — ${registrationDetails.bookingDates.endDate}`
+                    : ''}
+                </p>
+                <p className="text-sm text-white/70">{registrationDetails.route}</p>
+                <p className="text-xs text-white/60">
+                  Даты маршрута:{' '}
+                  {registrationDetails.dates
+                    ? `${registrationDetails.dates.startDate} — ${registrationDetails.dates.endDate}`
+                    : 'не указаны'}
+                </p>
+                <p className="text-xs text-white/60">
+                  Участников: {registrationDetails.groupComposition.length} · Экстренных контактов:{' '}
+                  {registrationDetails.emergencyContacts.length}
+                </p>
+                {registrationDetails.guideContacts && (
+                  <p className="text-xs text-white/60">
+                    Гид: {registrationDetails.guideContacts.fullName}, {registrationDetails.guideContacts.phone}
+                  </p>
+                )}
               </div>
             )}
           </div>
