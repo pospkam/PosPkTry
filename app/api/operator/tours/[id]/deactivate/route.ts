@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
+import { requireOperator } from '@/lib/auth/middleware';
+import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
 
 /**
  * POST /api/operator/tours/[id]/deactivate
@@ -11,16 +13,20 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
-    const { searchParams } = new URL(request.url);
-    const operatorId = searchParams.get('operatorId');
+    const userOrResponse = await requireOperator(request);
+    if (userOrResponse instanceof NextResponse) {
+      return userOrResponse;
+    }
 
+    const operatorId = await getOperatorPartnerId(userOrResponse.userId);
     if (!operatorId) {
       return NextResponse.json({
         success: false,
-        error: 'Operator ID is required'
-      } as ApiResponse<null>, { status: 400 });
+        error: 'Партнёрский профиль оператора не найден'
+      } as ApiResponse<null>, { status: 404 });
     }
+
+    const { id } = await params;
 
     // Проверяем что тур принадлежит оператору
     const tourResult = await query(

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { FinanceData, Transaction } from '@/types/operator';
+import { requireOperator } from '@/lib/auth/middleware';
+import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,17 +13,21 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    
-    const operatorId = searchParams.get('operatorId');
-    const period = parseInt(searchParams.get('period') || '30');
+    const userOrResponse = await requireOperator(request);
+    if (userOrResponse instanceof NextResponse) {
+      return userOrResponse;
+    }
 
+    const operatorId = await getOperatorPartnerId(userOrResponse.userId);
     if (!operatorId) {
       return NextResponse.json({
         success: false,
-        error: 'Operator ID is required'
-      } as ApiResponse<null>, { status: 400 });
+        error: 'Партнёрский профиль оператора не найден'
+      } as ApiResponse<null>, { status: 404 });
     }
+
+    const { searchParams } = new URL(request.url);
+    const period = parseInt(searchParams.get('period') || '30');
 
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - period);
