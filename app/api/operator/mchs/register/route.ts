@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireOperator } from '@/lib/auth/middleware';
+import { registerGroupWithMchs } from '@/lib/safety/mchs-client';
 
 export const dynamic = 'force-dynamic';
 
@@ -96,6 +97,7 @@ interface MchsSummaryRow {
 interface BookingOwnershipRow {
   id: string;
   guests_count: number | null;
+  tour_name: string | null;
 }
 
 export async function GET(request: NextRequest) {
@@ -211,7 +213,7 @@ export async function POST(request: NextRequest) {
     const registrationData = validation.data;
 
     const bookingOwnership = await query<BookingOwnershipRow>(
-      `SELECT b.id, b.guests_count
+      `SELECT b.id, b.guests_count, t.name AS tour_name
        FROM bookings b
        JOIN tours t ON t.id = b.tour_id
        JOIN partners p ON p.id = t.operator_id
@@ -244,6 +246,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const generatedGroupName = booking.tour_name
+      ? `Группа ${booking.tour_name}`
+      : `Группа ${registrationData.bookingId.slice(0, 8)}`;
+
+    const mchsResult = await registerGroupWithMchs({
+      groupName: generatedGroupName,
+      groupMembers: registrationData.groupComposition.map(member => ({
+        fullName: member.fullName,
+        phone: member.phone,
+      })),
+      routeDescription: registrationData.route,
+      startDate: registrationData.dates.startDate,
+      endDate: registrationData.dates.endDate,
+      guideContact: registrationData.guideContacts,
+      emergencyContacts: registrationData.emergencyContacts,
+      participantCount: registrationData.groupComposition.length,
+    });
+
     const inserted = await query<{
       id: string;
       status: RegistrationStatus;
@@ -266,7 +286,7 @@ export async function POST(request: NextRequest) {
          $4::jsonb,
          $5::jsonb,
          $6::jsonb,
-         'submitted',
+         $7,
          NOW(),
          NOW()
        )
@@ -278,6 +298,7 @@ export async function POST(request: NextRequest) {
         JSON.stringify(registrationData.dates),
         JSON.stringify(registrationData.guideContacts),
         JSON.stringify(registrationData.emergencyContacts),
+        mchsResult.status,
       ]
     );
 
@@ -289,8 +310,12 @@ export async function POST(request: NextRequest) {
           bookingId: registrationData.bookingId,
           status: inserted.rows[0].status,
           createdAt: inserted.rows[0].created_at,
+          mchsError: mchsResult.errorMessage,
         },
-        message: 'Заявка на регистрацию группы в МЧС сохранена',
+        message:
+          mchsResult.status === 'failed'
+            ? 'Заявка сохранена, но отправка в МЧС не удалась'
+            : 'Заявка на регистрацию группы в МЧС отправлена',
       } as ApiResponse<unknown>,
       { status: 201 }
     );
