@@ -1,20 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { UserEcoPoints, EcoAchievement, ApiResponse } from '@/types';
+import { verifyAuth } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 // GET /api/eco-points/user - Получение Eco-points пользователя
 export async function GET(request: NextRequest) {
   try {
+    const auth = await verifyAuth(request);
+    if (!auth.userId) {
+      return NextResponse.json({
+        success: false,
+        error: 'Unauthorized',
+      } as ApiResponse<null>, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
+    const requestedUserId = searchParams.get('userId');
+    const userId = requestedUserId || auth.userId;
 
     if (!userId) {
       return NextResponse.json({
         success: false,
         error: 'User ID is required',
       } as ApiResponse<null>, { status: 400 });
+    }
+
+    if (requestedUserId && requestedUserId !== auth.userId && auth.role !== 'admin') {
+      return NextResponse.json({
+        success: false,
+        error: 'Forbidden',
+      } as ApiResponse<null>, { status: 403 });
     }
 
     // Получаем данные пользователя
@@ -104,14 +121,30 @@ export async function GET(request: NextRequest) {
 // POST /api/eco-points/user - Добавление очков пользователю
 export async function POST(request: NextRequest) {
   try {
+    const auth = await verifyAuth(request);
+    if (!auth.userId) {
+      return NextResponse.json({
+        success: false,
+        error: 'Unauthorized',
+      } as ApiResponse<null>, { status: 401 });
+    }
+
     const body = await request.json();
-    const { userId, points, activity, ecoPointId } = body;
+    const { userId: requestedUserId, points, activity, ecoPointId } = body;
+    const userId = requestedUserId || auth.userId;
 
     if (!userId || !points || !activity) {
       return NextResponse.json({
         success: false,
         error: 'User ID, points, and activity are required',
       } as ApiResponse<null>, { status: 400 });
+    }
+
+    if (userId !== auth.userId && auth.role !== 'admin') {
+      return NextResponse.json({
+        success: false,
+        error: 'Forbidden',
+      } as ApiResponse<null>, { status: 403 });
     }
 
     // Начинаем транзакцию

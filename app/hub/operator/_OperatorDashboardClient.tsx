@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Protected } from '@/components/Protected';
 import { OperatorNav } from '@/components/operator/OperatorNav';
 import { OperatorMetricsGrid } from '@/components/operator/Dashboard/OperatorMetricsGrid';
@@ -8,32 +8,23 @@ import { RecentBookingsTable } from '@/components/operator/Dashboard/RecentBooki
 import { TopToursTable } from '@/components/operator/Dashboard/TopToursTable';
 import { SimpleChart } from '@/components/admin/Dashboard/SimpleChart';
 import { LoadingSpinner, EmptyState } from '@/components/admin/shared';
+import { MchsRegistrationPanel } from '@/components/operator/Dashboard/MchsRegistrationPanel';
 import { OperatorDashboardData, OperatorBooking } from '@/types/operator';
-import { useAuth } from '@/contexts/AuthContext';
 import { AlertTriangle, BarChart3, Mountain, Calendar } from 'lucide-react';
-import { WeatherWidget } from '@/components/WeatherWidget';
 
 export default function OperatorDashboardClient() {
-  const { user } = useAuth();
   const [data, setData] = useState<OperatorDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [period, setPeriod] = useState('30');
-  const [selectedBooking, setSelectedBooking] = useState<OperatorBooking | null>(null);
 
-  const operatorId = user?.id;
-
-  useEffect(() => {
-    fetchDashboardData();
-  }, [period]);
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
       const response = await fetch(
-        `/api/operator/dashboard?operatorId=${operatorId}&period=${period}`
+        `/api/operator/dashboard?period=${period}`
       );
       const result = await response.json();
 
@@ -48,10 +39,13 @@ export default function OperatorDashboardClient() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [period]);
+
+  useEffect(() => {
+    void fetchDashboardData();
+  }, [fetchDashboardData]);
 
   const handleViewBookingDetails = (booking: OperatorBooking) => {
-    setSelectedBooking(booking);
     // TODO: Открыть модальное окно с деталями
     console.log('Viewing booking details:', booking);
   };
@@ -120,6 +114,8 @@ export default function OperatorDashboardClient() {
                 </h2>
                 <OperatorMetricsGrid metrics={data.metrics} />
               </section>
+
+              <MchsRegistrationPanel />
 
               {/* Charts */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

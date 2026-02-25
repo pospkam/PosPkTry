@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse, Review } from '@/types';
 import { query } from '@/lib/database';
+import { verifyAuth } from '@/lib/auth';
 
 // GET /api/reviews - Получение отзывов (для тура, оператора и т.д.)
 export async function GET(request: NextRequest) {
@@ -87,6 +88,14 @@ export async function GET(request: NextRequest) {
 // POST /api/reviews - Создание отзыва
 export async function POST(request: NextRequest) {
   try {
+    const auth = await verifyAuth(request);
+    if (!auth.userId) {
+      return NextResponse.json(
+        { success: false, error: 'Пользователь не авторизован' } as ApiResponse<null>,
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { tourId, rating, comment, images = [] } = body;
 
@@ -98,16 +107,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Получаем userId из сессии (предполагаем, что middleware уже проверил токен)
-    // В реальном приложении это нужно получить из JWT токена
-    const userId = request.headers.get('x-user-id'); // Временное решение
-
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, error: 'Пользователь не авторизован' } as ApiResponse<null>,
-        { status: 401 }
-      );
-    }
+    const userId = auth.userId;
 
     // Проверяем, что пользователь прошел тур (есть завершенная бронь)
     const bookingCheck = await query(`

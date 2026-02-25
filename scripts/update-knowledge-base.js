@@ -1,8 +1,9 @@
 /**
  * Скрипт для обновления базы знаний Timeweb AI агента
  * Использование: node scripts/update-knowledge-base.js [type]
- * type: auto (по умолчанию) - собрать документы из проекта
+ * type: auto (по умолчанию) - собрать документы из проекта + внешние URL из env
  * type: file <file_path> - загрузить конкретный файл
+ * type: url <https://...> - конвертировать URL через markdown.new и загрузить в базу знаний
  */
 
 const fs = require('fs');
@@ -49,6 +50,49 @@ const log = {
   info: (msg) => console.log(`${colors.blue}i  ${msg}${colors.reset}`),
   step: (msg) => console.log(`${colors.cyan}▶  ${msg}${colors.reset}`),
 };
+
+function parseSourceUrls(rawValue) {
+  if (!rawValue) return [];
+  return rawValue
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+async function convertUrlToMarkdown(url) {
+  const endpoint = process.env.MARKDOWN_NEW_ENDPOINT || 'https://markdown.new/';
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      url,
+      method: 'auto',
+      retain_images: false,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`markdown.new HTTP ${response.status}`);
+  }
+
+  const contentType = response.headers.get('content-type') || '';
+  if (contentType.includes('application/json')) {
+    const json = await response.json();
+    const markdown = json.markdown || json.content || json.data;
+    if (!markdown || !String(markdown).trim()) {
+      throw new Error('markdown.new вернул пустой markdown');
+    }
+    return String(markdown);
+  }
+
+  const text = await response.text();
+  if (!text.trim()) {
+    throw new Error('markdown.new вернул пустой ответ');
+  }
+  return text;
+}
 
 // Получить все документы для базы знаний
 async function collectProjectDocuments() {
@@ -163,6 +207,24 @@ async function collectProjectDocuments() {
     await client.end();
   } catch (error) {
     log.warning(`Не удалось подключиться к БД для получения данных: ${error.message}`);
+  }
+
+  const externalUrls = parseSourceUrls(process.env.KNOWLEDGE_BASE_SOURCE_URLS);
+  for (const sourceUrl of externalUrls) {
+    try {
+      const markdown = await convertUrlToMarkdown(sourceUrl);
+      documents.push({
+        id: `external_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`,
+        title: `External URL: ${sourceUrl}`,
+        content: markdown,
+        category: 'external_sources',
+        lastUpdated: new Date().toISOString(),
+        source: sourceUrl,
+        url: sourceUrl,
+      });
+    } catch (error) {
+      log.warning(`Не удалось конвертировать URL ${sourceUrl}: ${error.message}`);
+    }
   }
 
   return documents;
@@ -293,13 +355,32 @@ async function main() {
 
       log.success(`Файл загружен в S3: ${fileUrl}`);
 
+    } else if (updateType === 'url') {
+      const sourceUrl = args[1];
+      if (!sourceUrl) {
+        log.error('Укажите URL: node scripts/update-knowledge-base.js url <https://...>');
+        process.exit(1);
+      }
+
+      log.step(`Конвертация URL через markdown.new: ${sourceUrl}`);
+      const markdown = await convertUrlToMarkdown(sourceUrl);
+
+      documents.push({
+        id: `url_${Date.now()}`,
+        title: `URL: ${sourceUrl}`,
+        content: markdown,
+        category: 'external_sources',
+        lastUpdated: new Date().toISOString(),
+        source: sourceUrl,
+        url: sourceUrl,
+      });
     } else if (updateType === 'auto') {
       log.step('Сбор документов из проекта...');
       documents = await collectProjectDocuments();
       log.success(`Собрано ${documents.length} документов`);
 
     } else {
-      log.error('Неверный тип обновления. Используйте: auto или file <file_path>');
+      log.error('Неверный тип обновления. Используйте: auto | file <file_path> | url <https://...>');
       process.exit(1);
     }
 

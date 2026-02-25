@@ -2,21 +2,38 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ChatMessage, ChatSession, ApiResponse } from '@/types';
 import { config } from '@/lib/config';
+import { verifyAuth } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 // GET /api/chat - Получение истории чата
 export async function GET(request: NextRequest) {
   try {
+    const auth = await verifyAuth(request);
+    if (!auth.userId) {
+      return NextResponse.json({
+        success: false,
+        error: 'Unauthorized',
+      } as ApiResponse<null>, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const sessionId = searchParams.get('sessionId');
-    const userId = searchParams.get('userId');
+    const requestedUserId = searchParams.get('userId');
+    const userId = requestedUserId || auth.userId;
 
     if (!sessionId && !userId) {
       return NextResponse.json({
         success: false,
         error: 'Session ID or User ID is required',
       } as ApiResponse<null>, { status: 400 });
+    }
+
+    if (requestedUserId && requestedUserId !== auth.userId && auth.role !== 'admin') {
+      return NextResponse.json({
+        success: false,
+        error: 'Forbidden',
+      } as ApiResponse<null>, { status: 403 });
     }
 
     let chatQuery: string;
@@ -74,6 +91,13 @@ export async function GET(request: NextRequest) {
       } as ApiResponse<ChatSession | null>);
     }
 
+    if (auth.role !== 'admin' && sessionId && result.rows[0].user_id !== auth.userId) {
+      return NextResponse.json({
+        success: false,
+        error: 'Forbidden',
+      } as ApiResponse<null>, { status: 403 });
+    }
+
     // Группируем сообщения по сессиям
     const sessionsMap = new Map<string, ChatSession>();
     
@@ -122,17 +146,55 @@ export async function GET(request: NextRequest) {
 // POST /api/chat - Отправка сообщения в чат
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { sessionId, userId, message, context } = body;
-
-    if (!message || (!sessionId && !userId)) {
+    const auth = await verifyAuth(request);
+    if (!auth.userId) {
       return NextResponse.json({
         success: false,
-        error: 'Message and sessionId or userId are required',
+        error: 'Unauthorized',
+      } as ApiResponse<null>, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { sessionId, userId: requestedUserId, message, context } = body;
+    const userId = (auth.role === 'admin' && requestedUserId) ? requestedUserId : auth.userId;
+
+    if (!message || !userId) {
+      return NextResponse.json({
+        success: false,
+        error: 'Message and userId are required',
       } as ApiResponse<null>, { status: 400 });
     }
 
+    if (requestedUserId && requestedUserId !== auth.userId && auth.role !== 'admin') {
+      return NextResponse.json({
+        success: false,
+        error: 'Forbidden',
+      } as ApiResponse<null>, { status: 403 });
+    }
+
     let currentSessionId = sessionId;
+
+    if (currentSessionId) {
+      const existingSession = await query(
+        'SELECT user_id FROM chat_sessions WHERE id = $1 LIMIT 1',
+        [currentSessionId]
+      );
+
+      if (existingSession.rows.length === 0) {
+        return NextResponse.json({
+          success: false,
+          error: 'Session not found',
+        } as ApiResponse<null>, { status: 404 });
+      }
+
+      const sessionOwnerId = existingSession.rows[0].user_id as string;
+      if (auth.role !== 'admin' && sessionOwnerId !== auth.userId) {
+        return NextResponse.json({
+          success: false,
+          error: 'Forbidden',
+        } as ApiResponse<null>, { status: 403 });
+      }
+    }
 
     // Если sessionId не указан, создаем новую сессию
     if (!currentSessionId) {

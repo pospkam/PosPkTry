@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse } from '@/types';
 import { query } from '@/lib/database';
 import { emailService } from '@/lib/notifications/email-service';
+import { verifyAuth } from '@/lib/auth';
 
 // POST /api/bookings/[id]/cancel - Отмена бронирования
 export async function POST(
@@ -9,7 +10,15 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const bookingId = params.id;
+    const auth = await verifyAuth(request);
+    if (!auth.userId) {
+      return NextResponse.json(
+        { success: false, error: 'Не авторизован' } as ApiResponse<null>,
+        { status: 401 }
+      );
+    }
+
+    const { id: bookingId } = await params;
     const body = await request.json();
     const { reason = 'Отменено пользователем' } = body;
 
@@ -21,6 +30,7 @@ export async function POST(
         t.price as tour_price,
         p.name as operator_name,
         p.email as operator_email,
+        p.user_id as operator_user_id,
         -- TODO: Добавить user.email из users таблицы
         'user@example.com' as user_email,
         'Иван Иванов' as user_name
@@ -40,6 +50,17 @@ export async function POST(
     }
 
     const booking = bookingResult.rows[0];
+
+    const isBookingOwner = booking.user_id === auth.userId;
+    const isOperatorOwner = auth.role === 'operator' && booking.operator_user_id === auth.userId;
+    const isAdmin = auth.role === 'admin';
+
+    if (!isBookingOwner && !isOperatorOwner && !isAdmin) {
+      return NextResponse.json(
+        { success: false, error: 'Нет доступа к этому бронированию' } as ApiResponse<null>,
+        { status: 403 }
+      );
+    }
 
     // Проверяем, можно ли отменить
     if (booking.status === 'cancelled') {

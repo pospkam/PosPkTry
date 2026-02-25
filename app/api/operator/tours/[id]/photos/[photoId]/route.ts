@@ -15,6 +15,7 @@ export async function PATCH(
 ) {
   try {
     const { id, photoId } = await params;
+    const userId = request.headers.get('X-User-Id');
     const userRole = request.headers.get('X-User-Role');
     
     if (!userId || userRole !== 'operator') {
@@ -25,7 +26,7 @@ export async function PATCH(
     }
 
     // Verify ownership
-    const isOwner = await verifyTourOwnership(userId, params.id);
+    const isOwner = await verifyTourOwnership(userId, id);
     
     if (!isOwner) {
       return NextResponse.json({
@@ -43,7 +44,7 @@ export async function PATCH(
        SET alt = $1
        WHERE id = $2
        RETURNING *`,
-      [alt || '', params.photoId]
+      [alt || '', photoId]
     );
 
     if (result.rows.length === 0) {
@@ -77,6 +78,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string; photoId: string }> }
 ) {
   try {
+    const { id, photoId } = await params;
     const userId = request.headers.get('X-User-Id');
     const userRole = request.headers.get('X-User-Role');
     
@@ -88,7 +90,7 @@ export async function DELETE(
     }
 
     // Verify ownership
-    const isOwner = await verifyTourOwnership(userId, params.id);
+    const isOwner = await verifyTourOwnership(userId, id);
     
     if (!isOwner) {
       return NextResponse.json({
@@ -100,18 +102,18 @@ export async function DELETE(
     // Remove link between tour and asset
     await query(
       'DELETE FROM tour_assets WHERE tour_id = $1 AND asset_id = $2',
-      [params.id, params.photoId]
+      [id, photoId]
     );
 
     // Check if asset is used by other tours
     const usageCheck = await query(
       'SELECT COUNT(*) as count FROM tour_assets WHERE asset_id = $1',
-      [params.photoId]
+      [photoId]
     );
 
     // If not used anywhere else, delete the asset
     if (parseInt(usageCheck.rows[0].count) === 0) {
-      await query('DELETE FROM assets WHERE id = $1', [params.photoId]);
+      await query('DELETE FROM assets WHERE id = $1', [photoId]);
     }
 
     return NextResponse.json({

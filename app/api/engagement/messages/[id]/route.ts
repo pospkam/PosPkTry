@@ -7,15 +7,42 @@ import { NextRequest, NextResponse } from 'next/server'
 import { messagingService } from '@/lib/database'
 import { verifyAuth } from '@/lib/auth'
 
+function extractMessageParticipantIds(message: unknown): string[] {
+  if (!message || typeof message !== 'object') {
+    return [];
+  }
+
+  const record = message as Record<string, unknown>;
+  const candidateIds = [
+    record.senderId,
+    record.sender_id,
+    record.recipientId,
+    record.recipient_id,
+    record.userId,
+    record.user_id,
+  ];
+
+  return candidateIds.filter((value): value is string => typeof value === 'string');
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = await verifyAuth(request)
+    const { userId, role } = await verifyAuth(request)
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const message = await messagingService.getMessage(params.id)
+    const { id } = await params
+    const message = await messagingService.getMessage(id)
+    if (!message) {
+      return NextResponse.json({ error: 'Message not found' }, { status: 404 })
+    }
+
+    const participantIds = extractMessageParticipantIds(message)
+    if (role !== 'admin' && (participantIds.length === 0 || !participantIds.includes(userId))) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
 
     return NextResponse.json({
       success: true,
@@ -35,16 +62,27 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = await verifyAuth(request)
+    const { userId, role } = await verifyAuth(request)
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const { id } = await params
+    const existingMessage = await messagingService.getMessage(id)
+    if (!existingMessage) {
+      return NextResponse.json({ error: 'Message not found' }, { status: 404 })
+    }
+
+    const participantIds = extractMessageParticipantIds(existingMessage)
+    if (role !== 'admin' && (participantIds.length === 0 || !participantIds.includes(userId))) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
 
     const body = await request.json()
 
     if (body.markAsRead) {
-      await messagingService.markAsRead(params.id, userId)
+      await messagingService.markAsRead(id, userId)
     }
 
-    const message = await messagingService.getMessage(params.id)
+    const message = await messagingService.getMessage(id)
 
     return NextResponse.json({
       success: true,
@@ -64,10 +102,21 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = await verifyAuth(request)
+    const { userId, role } = await verifyAuth(request)
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    await messagingService.deleteMessage(params.id, userId)
+    const { id } = await params
+    const existingMessage = await messagingService.getMessage(id)
+    if (!existingMessage) {
+      return NextResponse.json({ error: 'Message not found' }, { status: 404 })
+    }
+
+    const participantIds = extractMessageParticipantIds(existingMessage)
+    if (role !== 'admin' && (participantIds.length === 0 || !participantIds.includes(userId))) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    await messagingService.deleteMessage(id, userId)
 
     return NextResponse.json({
       success: true,
