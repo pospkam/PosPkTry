@@ -7,17 +7,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ticketService } from '@/lib/database'
 import { CreateTicketSchema, validateInput, CreateTicketInput } from '@/lib/validation/support-schemas'
+import { requireAuth } from '@/lib/auth/middleware'
 
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function GET(request: NextRequest) {
+  const auth = await requireAuth(request)
+  if (auth instanceof NextResponse) return auth
+
   try {
     const searchParams = request.nextUrl.searchParams
+    const isPrivileged = auth.role === 'admin' || auth.role === 'agent'
 
     const filter = {
       status: (searchParams.get('status') || undefined) as any,
       priority: (searchParams.get('priority') || undefined) as any,
       category: (searchParams.get('category') || undefined) as any,
-      customerId: searchParams.get('customerId') || undefined,
+      customerId: isPrivileged
+        ? (searchParams.get('customerId') || undefined)
+        : auth.userId,
       agentId: searchParams.get('agentId') || undefined,
       search: searchParams.get('search') || undefined,
       page: parseInt(searchParams.get('page') || '1'),
@@ -39,19 +45,36 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await requireAuth(request)
+  if (auth instanceof NextResponse) return auth
+
   try {
     const data = await request.json()
+    const isPrivileged = auth.role === 'admin' || auth.role === 'agent'
 
-    // Validate input
-    const validation = validateInput<CreateTicketInput>(CreateTicketSchema, data)
-    if (!validation.success) {
-      return NextResponse.json(
-        { success: false, errors: validation.errors },
-        { status: 400 }
-      )
+    let ticketData: Record<string, unknown>
+    if (isPrivileged && data.customerId !== undefined) {
+      const validation = validateInput<CreateTicketInput>(CreateTicketSchema, data)
+      if (!validation.success) {
+        return NextResponse.json(
+          { success: false, errors: validation.errors },
+          { status: 400 }
+        )
+      }
+      ticketData = validation.data as Record<string, unknown>
+    } else {
+      const SelfCreateSchema = CreateTicketSchema.omit({ customerId: true })
+      const validation = validateInput<Omit<CreateTicketInput, 'customerId'>>(SelfCreateSchema, data)
+      if (!validation.success) {
+        return NextResponse.json(
+          { success: false, errors: validation.errors },
+          { status: 400 }
+        )
+      }
+      ticketData = { ...validation.data, customerId: auth.userId }
     }
 
-    const ticket = await ticketService.createTicket(validation.data! as any)
+    const ticket = await ticketService.createTicket(ticketData as any)
 
     return NextResponse.json({
       success: true,

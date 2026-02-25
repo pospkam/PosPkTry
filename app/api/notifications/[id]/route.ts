@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
+import { requireAuth } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,21 +9,16 @@ export const dynamic = 'force-dynamic';
  * PUT /api/notifications/[id]
  * Mark notification as read
  */
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = request.headers.get('X-User-Id');
-    
-    if (!userId) {
-      return NextResponse.json({
-        success: false,
-        error: 'Не авторизован'
-      } as ApiResponse<null>, { status: 401 });
-    }
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult.userId;
 
+    const { id } = await params;
     const body = await request.json();
     const { isRead, isArchived } = body;
 
@@ -51,7 +47,7 @@ export async function PUT(
       } as ApiResponse<null>, { status: 400 });
     }
 
-    updateValues.push(params.id, userId);
+    updateValues.push(id, userId);
 
     const result = await query(
       `UPDATE notifications 
@@ -91,18 +87,14 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = request.headers.get('X-User-Id');
-    
-    if (!userId) {
-      return NextResponse.json({
-        success: false,
-        error: 'Не авторизован'
-      } as ApiResponse<null>, { status: 401 });
-    }
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult.userId;
 
+    const { id } = await params;
     const result = await query(
       'DELETE FROM notifications WHERE id = $1 AND user_id = $2 RETURNING id',
-      [params.id, userId]
+      [id, userId]
     );
 
     if (result.rows.length === 0) {

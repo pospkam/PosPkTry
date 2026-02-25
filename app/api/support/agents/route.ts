@@ -6,9 +6,12 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { agentService } from '@/lib/database'
+import { requireRole } from '@/lib/auth/middleware'
 
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function GET(request: NextRequest) {
+  const auth = await requireRole(request, ['admin', 'agent'])
+  if (auth instanceof NextResponse) return auth
+
   try {
     const searchParams = request.nextUrl.searchParams
     const team = searchParams.get('team')
@@ -38,6 +41,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await requireRole(request, ['admin'])
+  if (auth instanceof NextResponse) return auth
+
   try {
     const data = await request.json()
 

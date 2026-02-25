@@ -1,17 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { emailService } from '@/lib/notifications/email-service';
+import { requireAdmin } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * POST /api/notifications/tour-reminders
  * Отправка email напоминаний о предстоящих турах (за 24 часа)
- * Может вызываться по расписанию (cron job)
+ * Может вызываться по расписанию (cron job). Admin only.
  */
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function POST(request: NextRequest) {
   try {
+    const adminOrResponse = await requireAdmin(request);
+    if (adminOrResponse instanceof NextResponse) return adminOrResponse;
+
     // Находим все подтвержденные бронирования на завтра
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);

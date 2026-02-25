@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { Partner, ApiResponse, PaginatedResponse } from '@/types';
+import { requireAdmin } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/partners - Получение списка партнеров
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
+// GET /api/partners - Получение списка партнеров (каталог)
+// PUBLIC: endpoint intentionally public for partner catalog browsing
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -138,6 +139,9 @@ export async function GET(request: NextRequest) {
 // POST /api/partners - Создание нового партнера
 export async function POST(request: NextRequest) {
   try {
+    const adminOrResponse = await requireAdmin(request);
+    if (adminOrResponse instanceof NextResponse) return adminOrResponse;
+
     const body = await request.json();
     
     // Валидация обязательных полей

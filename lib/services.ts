@@ -423,4 +423,11 @@ export const ticketMessageService = {
   async list(ticketId: string, params: Record<string, unknown>) {
     return { messages: [], total: 0 };
   },
+  async getTicketMessages(ticketId: string, limit: number, offset: number) {
+    return this.list(ticketId, { limit, offset });
+  },
+  async createMessage(data: Record<string, unknown>) {
+    const ticketId = data.ticketId as string;
+    return this.create(ticketId, data);
+  },
 };
