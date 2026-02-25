@@ -270,6 +270,16 @@ export async function POST(
       }
 
       const respondedReview = await reviewService.respondToReview(id, operatorOrResponse.userId, response);
+      if (!respondedReview) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Forbidden',
+            message: 'You can only respond to reviews for your own tours',
+          },
+          { status: 403 }
+        );
+      }
       return NextResponse.json(
         {
           success: true,

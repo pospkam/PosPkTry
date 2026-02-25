@@ -8,6 +8,7 @@ import { tourService } from '@/lib/database';
 import { reviewService } from '@/lib/database';
 import { TourNotFoundError } from '@/lib/database';
 import { requireRole } from '@/lib/auth/middleware';
+import { verifyTourOwnership } from '@/lib/auth/operator-helpers';
 
 // ============================================================================
 // GET - ПОЛУЧИТЬ СТАТИСТИКУ ТУРА
@@ -24,6 +25,20 @@ export async function GET(
     const { id } = await params;
     const pathname = request.nextUrl.pathname;
     const isStats = pathname.includes('/stats');
+
+    if (authOrResponse.role !== 'admin') {
+      const isOwner = await verifyTourOwnership(authOrResponse.userId, id);
+      if (!isOwner) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Forbidden',
+            message: 'You can only access stats for your own tours',
+          },
+          { status: 403 }
+        );
+      }
+    }
 
     if (isStats) {
       // Получить статистику тура
