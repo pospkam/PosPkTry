@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { config } from '@/lib/config'
+import { convertUrlToMarkdown } from '@/lib/ai/markdown-new'
 import fs from 'fs'
 import path from 'path'
 import { S3Client, PutObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3'
@@ -15,6 +16,40 @@ interface KnowledgeDocument {
   lastUpdated: string
   source: string
   url?: string
+}
+
+function parseSourceUrls(rawValue: string | undefined): string[] {
+  if (!rawValue) {
+    return [];
+  }
+
+  return rawValue
+    .split(',')
+    .map(item => item.trim())
+    .filter(Boolean);
+}
+
+async function collectExternalUrlDocuments(urls: string[]): Promise<KnowledgeDocument[]> {
+  const documents: KnowledgeDocument[] = [];
+
+  for (const sourceUrl of urls) {
+    try {
+      const markdown = await convertUrlToMarkdown(sourceUrl, { method: 'auto', retainImages: false });
+      documents.push({
+        id: `external_${Buffer.from(sourceUrl).toString('base64').replace(/[^a-zA-Z0-9]/g, '').slice(0, 24)}`,
+        title: `External URL: ${sourceUrl}`,
+        content: markdown,
+        category: 'external_sources',
+        lastUpdated: new Date().toISOString(),
+        source: sourceUrl,
+        url: sourceUrl,
+      });
+    } catch (error) {
+      console.error(`Ошибка конвертации URL через markdown.new (${sourceUrl}):`, error);
+    }
+  }
+
+  return documents;
 }
 
 // Настройка S3 клиента для Timeweb Cloud
@@ -134,6 +169,12 @@ async function collectProjectDocuments(): Promise<KnowledgeDocument[]> {
 
   } catch (error) {
     console.error('Ошибка получения данных из БД:', error)
+  }
+
+  const externalUrls = parseSourceUrls(process.env.KNOWLEDGE_BASE_SOURCE_URLS)
+  if (externalUrls.length > 0) {
+    const externalDocuments = await collectExternalUrlDocuments(externalUrls)
+    documents.push(...externalDocuments)
   }
 
   return documents
@@ -289,6 +330,26 @@ export async function POST(request: NextRequest) {
         url: fileUrl,
       })
 
+    } else if (updateType === 'url') {
+      const sourceUrl = (formData.get('url') as string | null)?.trim()
+
+      if (!sourceUrl) {
+        return NextResponse.json({
+          success: false,
+          error: 'URL is required for type=url'
+        }, { status: 400 })
+      }
+
+      const markdown = await convertUrlToMarkdown(sourceUrl, { method: 'auto', retainImages: false })
+      documents.push({
+        id: `url_${Date.now()}`,
+        title: `URL: ${sourceUrl}`,
+        content: markdown,
+        category: 'external_sources',
+        lastUpdated: new Date().toISOString(),
+        source: sourceUrl,
+        url: sourceUrl,
+      })
     } else {
       // Автоматическое обновление из проекта
       documents = await collectProjectDocuments()
