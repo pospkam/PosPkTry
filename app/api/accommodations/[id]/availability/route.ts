@@ -16,6 +16,7 @@ interface RoomAvailability {
  * GET /api/accommodations/[id]/availability
  * Проверка доступности номеров в отеле
  */
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }

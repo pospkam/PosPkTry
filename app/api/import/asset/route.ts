@@ -12,6 +12,7 @@ async function fetchBytes(url: string): Promise<{ bytes: Buffer; mime: string } 
   return { bytes: Buffer.from(ab), mime: ct }
 }
 
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({})) as any

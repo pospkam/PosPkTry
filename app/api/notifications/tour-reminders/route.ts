@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
  * Отправка email напоминаний о предстоящих турах (за 24 часа)
  * Может вызываться по расписанию (cron job)
  */
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function POST(request: NextRequest) {
   try {
     // Находим все подтвержденные бронирования на завтра

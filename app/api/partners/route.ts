@@ -5,6 +5,7 @@ import { Partner, ApiResponse, PaginatedResponse } from '@/types';
 export const dynamic = 'force-dynamic';
 
 // GET /api/partners - Получение списка партнеров
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);

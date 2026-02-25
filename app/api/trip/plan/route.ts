@@ -102,6 +102,7 @@ interface TripPlan {
  * POST /api/trip/plan
  * Планирование поездки на Камчатку
  */
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function POST(request: NextRequest) {
   try {
     const body: TripRequest = await request.json();

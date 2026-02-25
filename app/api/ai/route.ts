@@ -131,6 +131,7 @@ async function callOpenrouter(prompt: string) {
   return content
 }
 
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function POST(req: NextRequest) {
   try {
     const body = await req.formData().catch(async () => await req.json().catch(() => null))

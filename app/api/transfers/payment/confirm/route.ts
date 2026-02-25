@@ -4,6 +4,7 @@ import { transferPayments } from '@/lib/payments/transfer-payments';
 export const dynamic = 'force-dynamic';
 
 // POST /api/transfers/payment/confirm - Подтверждение платежа
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();

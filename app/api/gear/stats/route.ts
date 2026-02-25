@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
 /**
  * GET /api/gear/stats - Get comprehensive gear partner statistics
  */
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function GET(request: NextRequest) {
   try {
     const userId = request.headers.get('X-User-Id');

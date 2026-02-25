@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
  * GET /api/admin/users/[id]
  * Получение информации о конкретном пользователе
  */
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }

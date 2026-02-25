@@ -16,6 +16,7 @@ interface AvailabilityDate {
  * GET /api/tours/[id]/availability
  * Проверка доступности дат для тура
  */
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }

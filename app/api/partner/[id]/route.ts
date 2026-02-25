@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { partnerService } from '@/lib/database'
 
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const partner = await partnerService.getPartner(params.id)

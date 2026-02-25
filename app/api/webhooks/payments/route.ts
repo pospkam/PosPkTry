@@ -12,6 +12,7 @@ import crypto from 'crypto'
  * Handle webhooks from payment gateways (Yandex Kassa, Stripe, etc.)
  * Verifies webhook signature and processes payment status updates
  */
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function POST(request: NextRequest) {
   try {
     // Get webhook signature from headers

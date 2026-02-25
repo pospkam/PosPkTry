@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
  * PATCH /api/operator/tours/[id]/photos/[photoId]
  * Update photo metadata (alt text, etc)
  */
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; photoId: string }> }

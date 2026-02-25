@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
  * GET /api/operator/tours/[id]
  * Get specific tour with ownership verification
  */
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

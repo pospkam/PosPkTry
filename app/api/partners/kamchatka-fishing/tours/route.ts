@@ -7,6 +7,7 @@ import {
 export const dynamic = 'force-dynamic';
 
 // GET /api/partners/kamchatka-fishing/tours - Получить туры партнера
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function GET(request: NextRequest) {
   try {
     const apiKey = process.env.KAMCHATKA_FISHING_API_KEY;

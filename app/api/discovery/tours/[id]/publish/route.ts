@@ -14,6 +14,7 @@ import {
 // POST - ОПУБЛИКОВАТЬ ТУР
 // ============================================================================
 
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

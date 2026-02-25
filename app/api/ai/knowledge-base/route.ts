@@ -261,6 +261,7 @@ async function updateKnowledgeBase(documents: KnowledgeDocument[]): Promise<bool
 }
 
 // GET - Получить статус базы знаний
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function GET(request: NextRequest) {
   try {
     const { timeweb } = config.ai

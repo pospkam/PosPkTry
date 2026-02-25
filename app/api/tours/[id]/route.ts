@@ -5,6 +5,7 @@ import { ApiResponse } from '@/types';
 export const dynamic = 'force-dynamic';
 
 // GET /api/tours/[id] - Получение тура по ID
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

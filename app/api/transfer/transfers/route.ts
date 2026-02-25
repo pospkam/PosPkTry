@@ -15,6 +15,7 @@ export const dynamic = 'force-dynamic';
  * GET /api/transfer/transfers
  * Get transfer operator's transfers
  */
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function GET(request: NextRequest) {
   try {
     const userId = request.headers.get('X-User-Id');

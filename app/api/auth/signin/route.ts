@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
  * POST /api/auth/signin
  * User authentication endpoint
  */
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();

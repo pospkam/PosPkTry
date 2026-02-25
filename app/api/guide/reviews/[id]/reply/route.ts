@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
  * POST /api/guide/reviews/[id]/reply
  * Reply to a review
  */
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

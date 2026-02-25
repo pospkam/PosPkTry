@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
  * POST /api/admin/content/reviews/[id]/moderate
  * Модерация отзыва (одобрение/удаление)
  */
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function POST(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }

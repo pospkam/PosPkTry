@@ -8,6 +8,7 @@ function hashPassword(password: string, salt: string): string {
   return createHash('sha256').update(`${salt}:${password}`).digest('hex');
 }
 
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function POST(request: NextRequest) {
   try {
     let body: unknown;

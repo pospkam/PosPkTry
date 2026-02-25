@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
  * POST /api/operator/calendar/block
  * Block date range for a tour
  */
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function POST(request: NextRequest) {
   try {
     const userId = request.headers.get('X-User-Id');

@@ -15,6 +15,7 @@ interface SendEmailRequest {
  * POST /api/notifications/send
  * Отправка email уведомлений
  */
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function POST(request: NextRequest) {
   try {
     const body: SendEmailRequest = await request.json();

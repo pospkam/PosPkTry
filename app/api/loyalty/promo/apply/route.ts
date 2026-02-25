@@ -4,6 +4,7 @@ import { loyaltySystem } from '@/lib/loyalty/loyalty-system';
 export const dynamic = 'force-dynamic';
 
 // POST /api/loyalty/promo/apply - Применение промокода
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();

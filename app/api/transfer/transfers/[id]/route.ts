@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
  * GET /api/transfer/transfers/[id]
  * Get transfer details
  */
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

@@ -5,6 +5,7 @@ import { FISHING_TOURS } from '@/lib/partners/kamchatka-fishing/tours-data';
  * AI Smart Search API
  * Умный поиск туров с AI анализом запроса
  */
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function POST(request: Request) {
   try {
     const { query } = await request.json();

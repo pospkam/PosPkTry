@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
  * PUT /api/operator/bookings/[id]
  * Update booking status with ownership verification
  */
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

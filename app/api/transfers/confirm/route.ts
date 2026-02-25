@@ -6,6 +6,7 @@ import { config } from '@/lib/config';
 export const dynamic = 'force-dynamic';
 
 // POST /api/transfers/confirm - Подтверждение/отклонение бронирования перевозчиком
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function POST(request: NextRequest) {
   try {
     const body: TransferConfirmationRequest = await request.json();

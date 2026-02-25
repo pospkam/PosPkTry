@@ -20,6 +20,7 @@ interface GeocodeResult {
  * GET /api/geocode?address=Петропавловск-Камчатский,+проспект+Победы,+1
  * GET /api/geocode?coords=53.0444,158.6483 (обратное геокодирование)
  */
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);

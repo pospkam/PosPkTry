@@ -13,6 +13,7 @@ import {
 
 export const dynamic = 'force-dynamic';
 
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function GET(request: NextRequest) {
   try {
     // Авторизация — берём userId из заголовков (middleware устанавливает)

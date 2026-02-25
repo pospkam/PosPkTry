@@ -11,6 +11,7 @@ if (!jwtSecret) {
 
 const JWT_SECRET = new TextEncoder().encode(jwtSecret);
 
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function POST(request: NextRequest) {
   let client;
   

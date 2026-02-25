@@ -3,6 +3,7 @@ import { ApiResponse, Booking } from '@/types';
 import { query } from '@/lib/database';
 
 // GET /api/bookings - Получение бронирований пользователя
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function GET(request: NextRequest) {
   try {
     // Получаем userId из заголовка (должен быть установлен middleware)

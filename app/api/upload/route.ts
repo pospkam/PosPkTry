@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 /**
  * POST /api/upload - Загрузка изображений
  */
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();

@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
 /**
  * POST /api/webhook - GitHub webhook for automatic deployment
  */
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function POST(request: NextRequest) {
   try {
     const signature = request.headers.get('x-hub-signature-256');

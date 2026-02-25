@@ -29,6 +29,7 @@ interface TourResponse {
 }
 
 // GET /api/tours - Получение списка туров
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);

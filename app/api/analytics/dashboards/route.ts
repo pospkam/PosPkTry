@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { dashboardService, metricsService } from '@/lib/database'
 
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function GET(request: NextRequest) {
   try {
     const userId = request.headers.get('x-user-id')

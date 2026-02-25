@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
  * GET /api/accommodations/[id]/blocked-dates
  * Получить список забронированных дат для отеля
  */
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }

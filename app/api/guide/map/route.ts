@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
  * GET /api/guide/map
  * Get guide's location data for map display
  */
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function GET(request: NextRequest) {
   try {
     const userId = request.headers.get('X-User-Id');

@@ -20,6 +20,7 @@ interface AdminReview {
  * GET /api/admin/content/reviews
  * Получение отзывов для модерации
  */
+// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
