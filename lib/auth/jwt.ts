@@ -17,7 +17,7 @@ function getJWTSecret(): Uint8Array {
   return new TextEncoder().encode(secret);
 }
 
-export interface JWTPayload {
+export interface JWTPayload extends Record<string, unknown> {
   userId: string;
   email: string;
   role: string;
