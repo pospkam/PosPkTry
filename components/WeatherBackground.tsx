@@ -39,7 +39,7 @@ export default function WeatherBackground() {
   // useSWR обновляет погоду каждые 10 минут без fetch в useEffect
   const { data: result, isLoading: loading } = useSWR('/api/weather', fetcher, {
     refreshInterval: 600000,
-    onError: () => console.error('❌ Ошибка запроса погоды'),
+    onError: () => console.error('Ошибка запроса погоды'),
   });
 
   const weatherData: WeatherData | null = result?.success && result.data ? result.data : null;

@@ -6,6 +6,7 @@
  */
 
 import React, { useState } from 'react';
+import { Target, Star, Flame, Gem, Gift, Rocket } from 'lucide-react';
 
 export function UIShowcase() {
   const [showToast, setShowToast] = useState(false);
@@ -270,9 +271,9 @@ export function UIShowcase() {
         <section className="card-premium space-y-4">
           <h2 className="text-2xl font-bold text-premium-gold">12. Иконки в кружочках</h2>
           <div className="flex flex-wrap gap-4">
-            {['🎯', '⭐', '🔥', '💎', '🎁', '🚀'].map((emoji, iconIndex) => (
-              <div key={`icon-${iconIndex}`} className="icon-circle hover-scale">
-                {emoji}
+            {[Target, Star, Flame, Gem, Gift, Rocket].map((Icon, iconIndex) => (
+              <div key={`icon-${iconIndex}`} className="icon-circle hover-scale flex items-center justify-center">
+                <Icon className="w-6 h-6" />
               </div>
             ))}
           </div>

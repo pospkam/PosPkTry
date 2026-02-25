@@ -63,16 +63,16 @@ export function TokenImportForm({ onTokenSaved }: TokenImportFormProps) {
 
       if (response.ok) {
         setError('');
-        alert('✅ Токен работает! Подключение к Timeweb Cloud успешно.');
+        alert('Токен работает! Подключение к Timeweb Cloud успешно.');
       } else if (response.status === 401) {
-        setError('❌ Неверный токен (401 Unauthorized)');
+        setError('Неверный токен (401 Unauthorized)');
       } else if (response.status === 403) {
-        setError('❌ Нет доступа. Проверьте права токена');
+        setError('Нет доступа. Проверьте права токена');
       } else {
-        setError(`❌ Ошибка: ${response.status}`);
+        setError(`Ошибка: ${response.status}`);
       }
     } catch (e) {
-      setError('❌ Не удалось подключиться к API');
+      setError('Не удалось подключиться к API');
     }
   };
 

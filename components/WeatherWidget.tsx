@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Weather } from '@/types';
+import { CloudSun, Cloud, CloudFog, CloudRain, Snowflake, CloudLightning, Droplets, Wind, Gauge, Sun, Moon, Sunrise, Sunset, Shirt } from 'lucide-react';
 
 interface WeatherWidgetProps {
   lat?: number;
@@ -51,18 +52,19 @@ export function WeatherWidget({
   };
 
   const getWeatherIcon = (condition: string) => {
+    const iconClass = 'w-12 h-12 text-gray-600';
     switch (condition) {
-      case 'clear': return ' ';
-      case 'mostly_clear': return '🌤️';
-      case 'partly_cloudy': return '⛅';
-      case 'overcast': return '☁️';
-      case 'fog': return '🌫️';
-      case 'drizzle': return ' ';
-      case 'rain': return ' ';
-      case 'showers': return ' ';
-      case 'snow': return ' ';
-      case 'thunderstorm': return '⛈️';
-      default: return '🌤️';
+      case 'clear': return <Sun className={iconClass} />;
+      case 'mostly_clear': return <CloudSun className={iconClass} />;
+      case 'partly_cloudy': return <CloudSun className={iconClass} />;
+      case 'overcast': return <Cloud className={iconClass} />;
+      case 'fog': return <CloudFog className={iconClass} />;
+      case 'drizzle': return <CloudRain className={iconClass} />;
+      case 'rain': return <CloudRain className={iconClass} />;
+      case 'showers': return <CloudRain className={iconClass} />;
+      case 'snow': return <Snowflake className={iconClass} />;
+      case 'thunderstorm': return <CloudLightning className={iconClass} />;
+      default: return <CloudSun className={iconClass} />;
     }
   };
 
@@ -90,11 +92,11 @@ export function WeatherWidget({
 
   const getSafetyLevelBadge = (level: string) => {
     const badges: { [key: string]: { text: string; color: string } } = {
-      'excellent': { text: '[✓] Отлично', color: 'bg-green-100 text-green-800' },
-      'good': { text: '👍 Хорошо', color: 'bg-blue-100 text-blue-800' },
-      'moderate': { text: '! Умеренно', color: 'bg-yellow-100 text-yellow-800' },
-      'difficult': { text: '! Сложно', color: 'bg-orange-100 text-orange-800' },
-      'dangerous': { text: '[✗] Опасно', color: 'bg-red-100 text-red-800' },
+      'excellent': { text: 'Отлично', color: 'bg-green-100 text-green-800' },
+      'good': { text: 'Хорошо', color: 'bg-blue-100 text-blue-800' },
+      'moderate': { text: 'Умеренно', color: 'bg-yellow-100 text-yellow-800' },
+      'difficult': { text: 'Сложно', color: 'bg-orange-100 text-orange-800' },
+      'dangerous': { text: 'Опасно', color: 'bg-red-100 text-red-800' },
     };
     const badge = badges[level] || badges['moderate'];
     return (
@@ -138,7 +140,7 @@ export function WeatherWidget({
     return (
       <div className={`bg-white rounded-lg shadow-md p-6 ${className}`}>
         <div className="text-center text-gray-500">
-          <div className="text-3xl mb-2">🌤️</div>
+          <div className="mb-2"><CloudSun className="w-10 h-10 text-gray-400 mx-auto" /></div>
           <div className="text-sm mb-3">{error}</div>
           <button
             onClick={fetchWeather}
@@ -234,7 +236,7 @@ export function WeatherWidget({
           <div>
             {/* Текущая погода */}
             <div className="text-center mb-6">
-              <div className="text-6xl mb-2">
+              <div className="flex justify-center mb-2">
                 {getWeatherIcon(weather.condition)}
               </div>
               <div className="text-4xl font-bold text-gray-900 mb-1">
@@ -254,7 +256,7 @@ export function WeatherWidget({
             {/* Детали погоды */}
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div className="flex items-center space-x-2 text-sm">
-                <span className="text-lg">💧</span>
+                <Droplets className="w-5 h-5 text-blue-500" />
                 <div>
                   <div className="text-gray-600">Влажность</div>
                   <div className="font-medium">{weather.humidity}%</div>
@@ -262,7 +264,7 @@ export function WeatherWidget({
               </div>
               
               <div className="flex items-center space-x-2 text-sm">
-                <span className="text-lg">💨</span>
+                <Wind className="w-5 h-5 text-blue-500" />
                 <div>
                   <div className="text-gray-600">Ветер</div>
                   <div className="font-medium">
@@ -273,7 +275,7 @@ export function WeatherWidget({
               
               {weather.windGust && weather.windGust > weather.windSpeed && (
                 <div className="flex items-center space-x-2 text-sm">
-                  <span className="text-lg">💨</span>
+                  <Wind className="w-5 h-5 text-blue-500" />
                   <div>
                     <div className="text-gray-600">Порывы</div>
                     <div className="font-medium">{weather.windGust} км/ч</div>
@@ -282,7 +284,7 @@ export function WeatherWidget({
               )}
               
               <div className="flex items-center space-x-2 text-sm">
-                <span className="text-lg"> </span>
+                <Gauge className="w-5 h-5 text-gray-500" />
                 <div>
                   <div className="text-gray-600">Давление</div>
                   <div className="font-medium">{weather.pressure} мм</div>
@@ -290,7 +292,7 @@ export function WeatherWidget({
               </div>
               
               <div className="flex items-center space-x-2 text-sm">
-                <span className="text-lg">○</span>
+                <Sun className="w-5 h-5 text-gray-500" />
                 <div>
                   <div className="text-gray-600">Видимость</div>
                   <div className="font-medium">{weather.visibility} км</div>
@@ -298,7 +300,7 @@ export function WeatherWidget({
               </div>
               
               <div className="flex items-center space-x-2 text-sm">
-                <span className="text-lg">☁️</span>
+                <Cloud className="w-5 h-5 text-gray-500" />
                 <div>
                   <div className="text-gray-600">Облачность</div>
                   <div className="font-medium">{weather.cloudCover}%</div>
@@ -306,7 +308,7 @@ export function WeatherWidget({
               </div>
               
               <div className="flex items-center space-x-2 text-sm">
-                <span className="text-lg"> </span>
+                <Sun className="w-5 h-5 text-gray-500" />
                 <div>
                   <div className="text-gray-600">УФ-индекс</div>
                   <div className={`font-medium ${getUVIndexColor(weather.uvIndex)}`}>
@@ -317,7 +319,7 @@ export function WeatherWidget({
 
               {weather.dewPoint && (
                 <div className="flex items-center space-x-2 text-sm">
-                  <span className="text-lg">💧</span>
+                  <Droplets className="w-5 h-5 text-blue-500" />
                   <div>
                     <div className="text-gray-600">Точка росы</div>
                     <div className="font-medium">{weather.dewPoint}°C</div>
@@ -330,18 +332,18 @@ export function WeatherWidget({
             {weather.sunrise && weather.sunset && (
               <div className="flex justify-around py-3 bg-amber-50 rounded-lg mb-4">
                 <div className="text-center">
-                  <div className="text-2xl mb-1">🌅</div>
+                  <div className="mb-1"><Sunrise className="w-6 h-6 text-amber-500 mx-auto" /></div>
                   <div className="text-xs text-gray-600">Восход</div>
                   <div className="text-sm font-medium">{formatTime(weather.sunrise)}</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl mb-1">🌇</div>
+                  <div className="mb-1"><Sunset className="w-6 h-6 text-amber-500 mx-auto" /></div>
                   <div className="text-xs text-gray-600">Закат</div>
                   <div className="text-sm font-medium">{formatTime(weather.sunset)}</div>
                 </div>
                 {weather.moonPhase && (
                   <div className="text-center">
-                    <div className="text-2xl mb-1">🌙</div>
+                    <div className="mb-1"><Moon className="w-6 h-6 text-slate-500 mx-auto" /></div>
                     <div className="text-xs text-gray-600">Луна</div>
                     <div className="text-sm font-medium">{weather.moonPhase}</div>
                   </div>
@@ -371,7 +373,7 @@ export function WeatherWidget({
 
               {weather.clothingAdvice && weather.clothingAdvice.length > 0 && (
                 <div className="bg-purple-50 rounded-lg p-3">
-                  <div className="font-medium text-purple-900 mb-2">👕 Что надеть</div>
+                  <div className="font-medium text-purple-900 mb-2 flex items-center gap-2"><Shirt className="w-4 h-4" /> Что надеть</div>
                   <ul className="text-sm text-purple-800 space-y-1">
                     {weather.clothingAdvice.map((advice) => (
                       <li key={advice}>{advice}</li>
@@ -398,8 +400,8 @@ export function WeatherWidget({
                 </div>
                 <div className="text-right">
                   <div className="text-lg font-bold">{hour.temperature}°C</div>
-                  <div className="text-xs text-gray-500">
-                    💨 {hour.windSpeed} км/ч
+                  <div className="text-xs text-gray-500 flex items-center gap-1">
+                    <Wind className="w-4 h-4" /> {hour.windSpeed} км/ч
                   </div>
                 </div>
               </div>
@@ -419,8 +421,8 @@ export function WeatherWidget({
                     </div>
                     <div className="text-sm text-gray-600">{day.conditionText}</div>
                     {day.precipitationProbability > 0 && (
-                      <div className="text-xs text-blue-600">
-                        💧 {day.precipitationProbability}%
+                      <div className="text-xs text-blue-600 flex items-center gap-1">
+                        <Droplets className="w-4 h-4" /> {day.precipitationProbability}%
                       </div>
                     )}
                   </div>
@@ -430,7 +432,7 @@ export function WeatherWidget({
                     {day.temperature.max}° / {day.temperature.min}°
                   </div>
                   <div className="text-xs text-gray-500">
-                    💨 {day.windSpeed} км/ч
+                    <Wind className="w-4 h-4 inline" /> {day.windSpeed} км/ч
                   </div>
                 </div>
               </div>

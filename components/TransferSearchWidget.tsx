@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { TransferSearchRequest, TransferOption, TransferSearchResponse } from '@/types/transfer';
+import { ChevronDown, ChevronRight, Search, Clock, Star, Car, CarFront, Bus } from 'lucide-react';
 
 interface TransferSearchWidgetProps {
   className?: string;
@@ -178,9 +179,7 @@ export function TransferSearchWidget({ className, onSearchResults }: TransferSea
           onClick={() => setShowFilters(!showFilters)}
           className="flex items-center gap-2 text-premium-gold hover:text-premium-gold/80 transition-colors"
         >
-          <span className="text-lg">
-            {showFilters ? '🔽' : '▶️'}
-          </span>
+          {showFilters ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
           <span className="font-medium">
             {showFilters ? 'Скрыть фильтры' : 'Расширенные фильтры'}
           </span>
@@ -299,7 +298,7 @@ export function TransferSearchWidget({ className, onSearchResults }: TransferSea
             </>
           ) : (
             <>
-              <span>🔍</span>
+              <Search className="w-5 h-5" />
               <span>Найти трансферы</span>
             </>
           )}
@@ -357,21 +356,21 @@ function TransferCard({ transfer }: { transfer: TransferOption }) {
   };
 
   const getVehicleTypeIcon = (type: string) => {
-    const icons: Record<string, string> = {
-      economy: ' ',
-      comfort: '🚙',
-      business: '🚘',
-      minibus: '🚐',
-      bus: ' '
+    const iconMap: Record<string, React.ReactNode> = {
+      economy: <Car className="w-6 h-6" />,
+      comfort: <Car className="w-6 h-6" />,
+      business: <CarFront className="w-6 h-6" />,
+      minibus: <Bus className="w-6 h-6" />,
+      bus: <Bus className="w-6 h-6" />
     };
-    return icons[type] || ' ';
+    return iconMap[type] || <Car className="w-6 h-6" />;
   };
 
   return (
     <div className="bg-premium-black/50 border border-premium-gold/20 rounded-xl p-4 hover:border-premium-gold/40 transition-colors">
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">
-          <span className="text-2xl">{getVehicleTypeIcon(transfer.vehicle.vehicleType)}</span>
+          <span className="text-premium-gold">{getVehicleTypeIcon(transfer.vehicle.vehicleType)}</span>
           <div>
             <h4 className="text-lg font-bold text-white">
               {getVehicleTypeLabel(transfer.vehicle.vehicleType)} • {transfer.vehicle.make} {transfer.vehicle.model}
@@ -393,17 +392,16 @@ function TransferCard({ transfer }: { transfer: TransferOption }) {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         <div className="flex items-center gap-2 text-white/80">
-          <span>🕐</span>
+          <Clock className="w-4 h-4" />
           <span className="text-sm">
             {transfer.departureTime} - {transfer.arrivalTime}
           </span>
         </div>
         <div className="flex items-center gap-2 text-white/80">
-          <span> </span>
           <span className="text-sm">{transfer.driver.name}</span>
         </div>
         <div className="flex items-center gap-2 text-white/80">
-          <span>★</span>
+          <Star className="w-4 h-4 text-premium-gold fill-premium-gold" />
           <span className="text-sm">{transfer.driver.rating}/5</span>
         </div>
       </div>

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
+import { Bear, Waves, Flame, Mountain, TreePine } from 'lucide-react';
 import './MapPanel.css';
 
 interface MapPanelProps {
@@ -20,12 +21,12 @@ const activities = [
   { id: 7, name: 'Паратунка', lat: 52.9500, lng: 158.2500, category: 'hot-springs', tours: 6 }
 ];
 
-const categoryIcons: Record<string, string> = {
-  volcano: '',
-  wildlife: '🐻',
-  nature: '',
-  ocean: '🌊',
-  'hot-springs': '♨️'
+const categoryIcons: Record<string, React.ReactNode> = {
+  volcano: <Mountain className="w-5 h-5" />,
+  wildlife: <Bear className="w-5 h-5" />,
+  nature: <TreePine className="w-5 h-5" />,
+  ocean: <Waves className="w-5 h-5" />,
+  'hot-springs': <Flame className="w-5 h-5" />
 };
 
 export function MapPanel({ isOpen, onClose }: MapPanelProps) {

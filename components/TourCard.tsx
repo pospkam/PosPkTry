@@ -99,7 +99,7 @@ export function TourCard({ tour, className, onClick }: TourCardProps) {
         {/* Рейтинг */}
         {tour.rating > 0 && (
           <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full flex items-center space-x-1">
-            <span className="text-premium-gold">★</span>
+            <Star className="w-4 h-4 text-premium-gold fill-premium-gold" />
             <span className="text-sm font-bold text-white">{tour.rating}</span>
             <span className="text-xs text-white/70">({tour.reviewsCount})</span>
           </div>
@@ -159,8 +159,8 @@ export function TourCard({ tour, className, onClick }: TourCardProps) {
             <span className="mr-2"> </span>
             <span>{tour.operator.name}</span>
             {tour.operator.rating > 0 && (
-              <span className="ml-2 text-premium-gold">
-                ★ {formatRating(tour.operator.rating)}
+              <span className="ml-2 text-premium-gold flex items-center gap-1">
+                <Star className="w-4 h-4 fill-premium-gold" /> {formatRating(tour.operator.rating)}
               </span>
             )}
           </div>
