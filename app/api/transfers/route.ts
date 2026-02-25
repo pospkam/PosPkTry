@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth/middleware';
 
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
+// GET: публичный список трансферов для каталога (guest может просматривать).
 export async function GET(request: NextRequest) {
   try {
     // TODO: Получить список трансфертов
@@ -18,6 +19,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) return authResult;
+
     const { from, to, date, passengers } = await request.json();
     
     // TODO: Создать новый трансферт

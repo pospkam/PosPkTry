@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
+import { requireAgent } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,18 +9,10 @@ export const dynamic = 'force-dynamic';
  * GET /api/agent/tours
  * Get all available tours for agents to sell
  */
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function GET(request: NextRequest) {
   try {
-    const userId = request.headers.get('X-User-Id');
-    const userRole = request.headers.get('X-User-Role');
-    
-    if (!userId || userRole !== 'agent') {
-      return NextResponse.json({
-        success: false,
-        error: 'Недостаточно прав'
-      } as ApiResponse<null>, { status: 403 });
-    }
+    const userOrResponse = await requireAgent(request);
+    if (userOrResponse instanceof NextResponse) return userOrResponse;
 
     // Get all active tours with commission info
     const result = await query(

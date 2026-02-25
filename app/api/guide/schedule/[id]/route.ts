@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { verifyScheduleOwnership, checkScheduleConflicts, hasTourDayConflict } from '@/lib/auth/guide-helpers';
+import { requireRole } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,23 +10,17 @@ export const dynamic = 'force-dynamic';
  * GET /api/guide/schedule/[id]
  * Get specific schedule entry
  */
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = request.headers.get('X-User-Id');
-    const userRole = request.headers.get('X-User-Role');
-    
-    if (!userId || userRole !== 'guide') {
-      return NextResponse.json({
-        success: false,
-        error: 'Недостаточно прав'
-      } as ApiResponse<null>, { status: 403 });
-    }
+    const guideOrResponse = await requireRole(request, ['guide', 'admin']);
+    if (guideOrResponse instanceof NextResponse) return guideOrResponse;
+    const userId = guideOrResponse.userId;
 
-    const isOwner = await verifyScheduleOwnership(userId, params.id);
+    const { id } = await params;
+    const isOwner = await verifyScheduleOwnership(userId, id);
     
     if (!isOwner) {
       return NextResponse.json({
@@ -45,7 +40,7 @@ export async function GET(
       LEFT JOIN tours t ON gs.tour_id = t.id
       LEFT JOIN bookings b ON gs.booking_id = b.id
       WHERE gs.id = $1`,
-      [params.id]
+      [id]
     );
 
     if (result.rows.length === 0) {
@@ -102,17 +97,12 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = request.headers.get('X-User-Id');
-    const userRole = request.headers.get('X-User-Role');
-    
-    if (!userId || userRole !== 'guide') {
-      return NextResponse.json({
-        success: false,
-        error: 'Недостаточно прав'
-      } as ApiResponse<null>, { status: 403 });
-    }
+    const guideOrResponse = await requireRole(request, ['guide', 'admin']);
+    if (guideOrResponse instanceof NextResponse) return guideOrResponse;
+    const userId = guideOrResponse.userId;
 
-      const isOwner = await verifyScheduleOwnership(userId, params.id);
+    const { id } = await params;
+    const isOwner = await verifyScheduleOwnership(userId, id);
       
       if (!isOwner) {
         return NextResponse.json({
@@ -125,7 +115,7 @@ export async function PUT(
 
       const scheduleResult = await query(
         'SELECT guide_id, start_time, end_time, tour_id FROM guide_schedule WHERE id = $1',
-        [params.id]
+        [id]
       );
 
       const scheduleRow = scheduleResult.rows[0];
@@ -171,7 +161,7 @@ export async function PUT(
           guideId,
           nextStartTime,
           nextEndTime,
-          params.id
+          id
         );
         
         if (!noConflicts) {
@@ -186,7 +176,7 @@ export async function PUT(
           guideId,
           tourId: nextTourId,
           startTime: nextStartTime,
-          excludeId: params.id,
+          excludeId: id,
         })) {
           return NextResponse.json({
             success: false,
@@ -248,7 +238,7 @@ export async function PUT(
       } as ApiResponse<null>, { status: 400 });
     }
 
-    updateValues.push(params.id);
+    updateValues.push(id);
 
     const result = await query(
       `UPDATE guide_schedule 
@@ -282,17 +272,12 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = request.headers.get('X-User-Id');
-    const userRole = request.headers.get('X-User-Role');
-    
-    if (!userId || userRole !== 'guide') {
-      return NextResponse.json({
-        success: false,
-        error: 'Недостаточно прав'
-      } as ApiResponse<null>, { status: 403 });
-    }
+    const guideOrResponse = await requireRole(request, ['guide', 'admin']);
+    if (guideOrResponse instanceof NextResponse) return guideOrResponse;
+    const userId = guideOrResponse.userId;
 
-    const isOwner = await verifyScheduleOwnership(userId, params.id);
+    const { id } = await params;
+    const isOwner = await verifyScheduleOwnership(userId, id);
     
     if (!isOwner) {
       return NextResponse.json({
@@ -304,7 +289,7 @@ export async function DELETE(
     // Instead of hard delete, mark as cancelled if has bookings
     const checkResult = await query(
       'SELECT booking_id FROM guide_schedule WHERE id = $1',
-      [params.id]
+      [id]
     );
 
     if (checkResult.rows[0]?.booking_id) {
@@ -313,7 +298,7 @@ export async function DELETE(
         `UPDATE guide_schedule 
          SET status = 'cancelled', updated_at = NOW()
          WHERE id = $1`,
-        [params.id]
+        [id]
       );
       
       return NextResponse.json({
@@ -322,7 +307,7 @@ export async function DELETE(
       } as ApiResponse<null>);
     } else {
       // No booking, safe to delete
-      await query('DELETE FROM guide_schedule WHERE id = $1', [params.id]);
+      await query('DELETE FROM guide_schedule WHERE id = $1', [id]);
       
       return NextResponse.json({
         success: true,

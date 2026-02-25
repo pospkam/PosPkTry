@@ -2,13 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { TransferConfirmationRequest, TransferConfirmationResponse } from '@/types/transfer';
 import { config } from '@/lib/config';
+import { requireTransferOperator } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
 // POST /api/transfers/confirm - Подтверждение/отклонение бронирования перевозчиком
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function POST(request: NextRequest) {
   try {
+    const authResult = await requireTransferOperator(request);
+    if (authResult instanceof NextResponse) return authResult;
+
     const body: TransferConfirmationRequest = await request.json();
     
     // Валидация входных данных

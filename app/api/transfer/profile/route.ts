@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { getTransferPartnerByUserId, ensureTransferPartnerExists, getTransferStats } from '@/lib/auth/transfer-helpers';
+import { requireTransferOperator } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,18 +10,11 @@ export const dynamic = 'force-dynamic';
  * GET /api/transfer/profile
  * Get transfer operator profile
  */
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function GET(request: NextRequest) {
   try {
-    const userId = request.headers.get('X-User-Id');
-    const userRole = request.headers.get('X-User-Role');
-    
-    if (!userId || userRole !== 'transfer') {
-      return NextResponse.json({
-        success: false,
-        error: 'Недостаточно прав'
-      } as ApiResponse<null>, { status: 403 });
-    }
+    const authResult = await requireTransferOperator(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult.userId;
 
     // Get user details
     const userResult = await query(
@@ -76,15 +70,9 @@ export async function GET(request: NextRequest) {
  */
 export async function PUT(request: NextRequest) {
   try {
-    const userId = request.headers.get('X-User-Id');
-    const userRole = request.headers.get('X-User-Role');
-    
-    if (!userId || userRole !== 'transfer') {
-      return NextResponse.json({
-        success: false,
-        error: 'Недостаточно прав'
-      } as ApiResponse<null>, { status: 403 });
-    }
+    const authResult = await requireTransferOperator(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult.userId;
 
     const body = await request.json();
     const {
