@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
+import { requireAdmin } from '@/lib/auth/middleware';
 import { AdminUser } from '@/types/admin';
 import { ApiResponse } from '@/types';
 
@@ -9,12 +10,15 @@ export const dynamic = 'force-dynamic';
  * GET /api/admin/users/[id]
  * Получение информации о конкретном пользователе
  */
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const adminOrResponse = await requireAdmin(request);
+    if (adminOrResponse instanceof NextResponse) {
+      return adminOrResponse;
+    }
     const { id } = await context.params;
 
     const userQuery = `
@@ -88,6 +92,10 @@ export async function PUT(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const adminOrResponse = await requireAdmin(request);
+    if (adminOrResponse instanceof NextResponse) {
+      return adminOrResponse;
+    }
     const { id } = await context.params;
     const body = await request.json();
 
@@ -198,6 +206,10 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const adminOrResponse = await requireAdmin(request);
+    if (adminOrResponse instanceof NextResponse) {
+      return adminOrResponse;
+    }
     const { id } = await context.params;
 
     // Проверяем, существует ли пользователь

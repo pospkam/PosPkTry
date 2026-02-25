@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
+import { requireOperator } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,21 +10,18 @@ export const dynamic = 'force-dynamic';
  * Reply to a review
  * Note: Need to add operator_reply field to reviews table
  */
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = request.headers.get('X-User-Id');
-    const userRole = request.headers.get('X-User-Role');
-    
-    if (!userId || userRole !== 'operator') {
-      return NextResponse.json({
-        success: false,
-        error: 'Недостаточно прав'
-      } as ApiResponse<null>, { status: 403 });
+    const operatorOrResponse = await requireOperator(request);
+    if (operatorOrResponse instanceof NextResponse) {
+      return operatorOrResponse;
     }
+    const userId = operatorOrResponse.userId;
+
+    const { id } = await params;
 
     const body = await request.json();
     const { reply } = body;
@@ -42,7 +40,7 @@ export async function POST(
        JOIN tours t ON r.tour_id = t.id
        JOIN partners p ON t.operator_id = p.id
        WHERE r.id = $1`,
-      [params.id]
+      [id]
     );
 
     if (checkResult.rows.length === 0) {
@@ -73,7 +71,7 @@ export async function POST(
        SET operator_reply = $1, operator_reply_at = NOW()
        WHERE id = $2
        RETURNING *`,
-      [reply, params.id]
+      [reply, id]
     );
 
     // Create notification for review author

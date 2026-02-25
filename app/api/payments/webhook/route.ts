@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
  * CloudPayments webhook endpoint
  * Обработка уведомлений о платежах
  */
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
+// AUTH: публичный webhook от CloudPayments; доступ контролируется HMAC-подписью в processCloudPaymentsWebhook.
 export async function POST(request: NextRequest) {
   try {
     // Получаем сырое тело запроса и подпись

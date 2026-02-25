@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
+import { requireAdmin } from '@/lib/auth/middleware';
 import { ApiResponse } from '@/types';
 
 export const dynamic = 'force-dynamic';
@@ -7,9 +8,12 @@ export const dynamic = 'force-dynamic';
 /**
  * GET /api/admin/settings/email-templates - Получение всех email шаблонов
  */
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function GET(request: NextRequest) {
   try {
+    const adminOrResponse = await requireAdmin(request);
+    if (adminOrResponse instanceof NextResponse) {
+      return adminOrResponse;
+    }
     const templatesQuery = `
       SELECT id, name, subject, type, html_content, text_content, variables, is_active, created_at, updated_at
       FROM email_templates
@@ -50,6 +54,10 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    const adminOrResponse = await requireAdmin(request);
+    if (adminOrResponse instanceof NextResponse) {
+      return adminOrResponse;
+    }
     const body = await request.json();
     const { name, subject, type, htmlContent, textContent, variables } = body;
 

@@ -6,34 +6,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { tagTourPhotos } from '@/lib/ai/image-tagger';
 import { query } from '@/lib/database';
+import { requireOperator } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    const operatorOrResponse = await requireOperator(request);
+    if (operatorOrResponse instanceof NextResponse) {
+      return operatorOrResponse;
+    }
+    const userId = operatorOrResponse.userId;
+    const userRole = operatorOrResponse.role;
+
     const tourId = params.id;
-
-    // Проверка авторизации оператора
-    const userId = request.headers.get('x-user-id');
-    const userRole = request.headers.get('x-user-role');
-
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, error: 'Требуется авторизация' },
-        { status: 401 }
-      );
-    }
-
-    if (userRole !== 'operator' && userRole !== 'admin') {
-      return NextResponse.json(
-        { success: false, error: 'Недостаточно прав. Требуется роль оператора' },
-        { status: 403 }
-      );
-    }
 
     // Получаем данные тура и проверяем владельца
     const tourResult = await query<{

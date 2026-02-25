@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
+import { requireOperator } from '@/lib/auth/middleware';
 import { verifyBookingOwnership } from '@/lib/auth/operator-helpers';
 
 export const dynamic = 'force-dynamic';
@@ -9,24 +10,21 @@ export const dynamic = 'force-dynamic';
  * PUT /api/operator/bookings/[id]
  * Update booking status with ownership verification
  */
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = request.headers.get('X-User-Id');
-    const userRole = request.headers.get('X-User-Role');
-    
-    if (!userId || userRole !== 'operator') {
-      return NextResponse.json({
-        success: false,
-        error: 'Недостаточно прав'
-      } as ApiResponse<null>, { status: 403 });
+    const operatorOrResponse = await requireOperator(request);
+    if (operatorOrResponse instanceof NextResponse) {
+      return operatorOrResponse;
     }
+    const userId = operatorOrResponse.userId;
+
+    const { id } = await params;
 
     // Verify ownership
-    const isOwner = await verifyBookingOwnership(userId, params.id);
+    const isOwner = await verifyBookingOwnership(userId, id);
     
     if (!isOwner) {
       return NextResponse.json({
@@ -82,7 +80,7 @@ export async function PUT(
       } as ApiResponse<null>, { status: 400 });
     }
 
-    updateValues.push(params.id);
+    updateValues.push(id);
 
     const result = await query(
       `UPDATE bookings 
@@ -104,7 +102,7 @@ export async function PUT(
           'Статус бронирования изменён',
           `Статус вашего бронирования изменён на: ${status}`,
           status === 'cancelled' ? 'high' : 'normal',
-          `/hub/tourist/bookings/${params.id}`
+          `/hub/tourist/bookings/${id}`
         ]
       );
     }

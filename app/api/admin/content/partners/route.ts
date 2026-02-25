@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
+import { requireAdmin } from '@/lib/auth/middleware';
 import { Partner, ApiResponse, PaginatedResponse } from '@/types';
 
 export const dynamic = 'force-dynamic';
@@ -8,9 +9,12 @@ export const dynamic = 'force-dynamic';
  * GET /api/admin/content/partners
  * Получение списка партнёров для верификации
  */
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function GET(request: NextRequest) {
   try {
+    const adminOrResponse = await requireAdmin(request);
+    if (adminOrResponse instanceof NextResponse) {
+      return adminOrResponse;
+    }
     const { searchParams } = new URL(request.url);
     
     const page = parseInt(searchParams.get('page') || '1');
