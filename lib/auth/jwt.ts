@@ -25,11 +25,18 @@ export interface JWTPayload {
   exp?: number;
 }
 
+interface RequestLike {
+  headers?: Headers | Record<string, string | undefined>;
+  cookies?: {
+    get?: (name: string) => { value?: string } | string | undefined;
+  };
+}
+
 /**
  * Create a new JWT token
  */
 export async function createToken(payload: JWTPayload): Promise<string> {
-  const token = await new SignJWT(payload as any)
+  const token = await new SignJWT(payload)
     .setProtectedHeader({ alg: JWT_ALGORITHM })
     .setIssuedAt()
     .setExpirationTime(JWT_EXPIRATION)
@@ -44,7 +51,21 @@ export async function createToken(payload: JWTPayload): Promise<string> {
 export async function verifyToken(token: string): Promise<JWTPayload | null> {
   try {
     const { payload } = await jwtVerify(token, getJWTSecret());
-    return payload as unknown as JWTPayload;
+    if (
+      typeof payload.userId !== 'string' ||
+      typeof payload.email !== 'string' ||
+      typeof payload.role !== 'string'
+    ) {
+      return null;
+    }
+
+    return {
+      userId: payload.userId,
+      email: payload.email,
+      role: payload.role,
+      iat: typeof payload.iat === 'number' ? payload.iat : undefined,
+      exp: typeof payload.exp === 'number' ? payload.exp : undefined,
+    };
   } catch (error) {
     console.error('JWT verification failed:', error);
     return null;
@@ -55,28 +76,36 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
  * Extract token from Authorization header
  */
 export function extractToken(authHeader: string | null): string | null {
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (!authHeader) {
     return null;
   }
-  return authHeader.substring(7);
+
+  const normalizedHeader = authHeader.trim();
+  if (!normalizedHeader.toLowerCase().startsWith('bearer ')) {
+    return null;
+  }
+
+  return normalizedHeader.slice(7).trim() || null;
 }
 
 /**
  * Get user from NextRequest
  */
-function getHeader(request: any, name: string): string | null {
-  if (!request?.headers) return null;
-  if (typeof request.headers.get === 'function') {
+function getHeader(request: RequestLike, name: string): string | null {
+  if (!request?.headers) {
+    return null;
+  }
+
+  if (request.headers instanceof Headers) {
     return request.headers.get(name);
   }
-  const entries = (typeof request.headers.entries === 'function'
-    ? Array.from(request.headers.entries())
-    : Object.entries(request.headers)) as string[][];
-  const found = entries.find(([key]) => key?.toLowerCase() === name.toLowerCase());
-  return found ? (found[1] as string) : null;
+
+  const lowerName = name.toLowerCase();
+  const headerValue = request.headers[name] ?? request.headers[lowerName];
+  return typeof headerValue === 'string' ? headerValue : null;
 }
 
-function getCookieValue(request: any, name: string): string | null {
+function getCookieValue(request: RequestLike, name: string): string | null {
   try {
     if (request?.cookies?.get) {
       const cookie = request.cookies.get(name);
@@ -91,11 +120,7 @@ function getCookieValue(request: any, name: string): string | null {
     // ignore
   }
   
-  const cookieHeader =
-    getHeader(request, 'cookie') ||
-    request?.headers?.Cookie ||
-    request?.headers?.cookie ||
-    null;
+  const cookieHeader = getHeader(request, 'cookie');
   
   if (!cookieHeader) {
     return null;
@@ -112,7 +137,7 @@ function getCookieValue(request: any, name: string): string | null {
   return null;
 }
 
-export async function getUserFromRequest(request: any): Promise<JWTPayload | null> {
+export async function getUserFromRequest(request: RequestLike): Promise<JWTPayload | null> {
   const authHeader = getHeader(request, 'authorization');
   let token = extractToken(authHeader);
   
@@ -127,7 +152,12 @@ export async function getUserFromRequest(request: any): Promise<JWTPayload | nul
     }
   }
   
-  // Fallback to middleware headers if present (JWT уже проверен на уровне middleware)
+  // Fallback разрешен только если middleware явно отметил запрос как проверенный
+  const authVerifiedByMiddleware = getHeader(request, 'x-auth-verified') === 'true';
+  if (!authVerifiedByMiddleware) {
+    return null;
+  }
+
   const headerUserId = getHeader(request, 'x-user-id');
   const headerEmail = getHeader(request, 'x-user-email');
   const headerRole = getHeader(request, 'x-user-role');

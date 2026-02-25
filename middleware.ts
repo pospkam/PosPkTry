@@ -26,6 +26,7 @@ function getJWTSecret(): Uint8Array {
 const PROTECTED_ROUTES = ['/hub', '/profile'];
 
 type PublicApiMethods = 'ALL' | ReadonlyArray<string>;
+type AuthRole = 'tourist' | 'operator' | 'guide' | 'transfer_operator' | 'transfer' | 'agent' | 'admin';
 
 const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/auth': 'ALL',
@@ -35,16 +36,64 @@ const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/eco-points': ['GET'],
 };
 
-const API_ROLE_REQUIREMENTS = {
+const API_ROLE_REQUIREMENTS: Record<string, AuthRole> = {
+  '/api/tourist': 'tourist',
   '/api/operator': 'operator',
   '/api/admin': 'admin',
   '/api/guide': 'guide',
   '/api/transfer-operator': 'transfer_operator',
+  '/api/transfer': 'transfer_operator',
   '/api/agent': 'agent',
-} as const;
+};
 
 function isPathMatch(pathname: string, route: string): boolean {
   return pathname === route || pathname.startsWith(`${route}/`);
+}
+
+function normalizeRole(role: string | null | undefined): AuthRole | null {
+  if (!role) {
+    return null;
+  }
+
+  const allowedRoles = new Set<AuthRole>([
+    'tourist',
+    'operator',
+    'guide',
+    'transfer_operator',
+    'transfer',
+    'agent',
+    'admin',
+  ]);
+
+  return allowedRoles.has(role as AuthRole) ? (role as AuthRole) : null;
+}
+
+function hasRequiredRole(userRole: string | null, requiredRole: AuthRole): boolean {
+  const normalizedUserRole = normalizeRole(userRole);
+  const normalizedRequiredRole = normalizeRole(requiredRole);
+
+  if (!normalizedUserRole || !normalizedRequiredRole) {
+    return false;
+  }
+
+  if (normalizedRequiredRole === 'transfer_operator' || normalizedRequiredRole === 'transfer') {
+    return normalizedUserRole === 'transfer_operator' || normalizedUserRole === 'transfer';
+  }
+
+  return normalizedUserRole === normalizedRequiredRole;
+}
+
+function extractBearerToken(authHeader: string | null): string | null {
+  if (!authHeader) {
+    return null;
+  }
+
+  const trimmedHeader = authHeader.trim();
+  if (!trimmedHeader.toLowerCase().startsWith('bearer ')) {
+    return null;
+  }
+
+  return trimmedHeader.slice(7).trim() || null;
 }
 
 function applySecurityHeaders(response: NextResponse): NextResponse {
@@ -85,7 +134,7 @@ function isPublicRoute(pathname: string, method: string): boolean {
   });
 }
 
-function getRequiredRole(pathname: string): string | null {
+function getRequiredRole(pathname: string): AuthRole | null {
   const matchedRoute = Object.entries(API_ROLE_REQUIREMENTS).find(([route]) =>
     isPathMatch(pathname, route)
   );
@@ -127,8 +176,8 @@ export async function middleware(request: NextRequest) {
   }
   
   // Get token from cookie or Authorization header
-  const token = request.cookies.get('auth_token')?.value || 
-                request.headers.get('Authorization')?.replace('Bearer ', '');
+  const token = request.cookies.get('auth_token')?.value ||
+                extractBearerToken(request.headers.get('authorization'));
   
   if (!token) {
     // Redirect to login for protected pages
@@ -162,7 +211,7 @@ export async function middleware(request: NextRequest) {
       // Add user info to headers for API routes + RBAC check
       if (isApiRoute) {
         const requiredRole = getRequiredRole(pathname);
-        if (requiredRole && userRole !== requiredRole) {
+        if (requiredRole && !hasRequiredRole(userRole, requiredRole)) {
           return applySecurityHeaders(
             NextResponse.json(
               { success: false, error: 'Forbidden' },
@@ -181,6 +230,7 @@ export async function middleware(request: NextRequest) {
         if (userEmail) {
           newHeaders.set('X-User-Email', userEmail);
         }
+        newHeaders.set('X-Auth-Verified', 'true');
         
         return applySecurityHeaders(
           NextResponse.next({
