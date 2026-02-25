@@ -98,11 +98,24 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const { tourId, rating, comment, images = [] } = body;
+    const parsedRating = Number(rating);
+    const normalizedImages = Array.isArray(images)
+      ? images
+          .filter((imageId): imageId is string => typeof imageId === 'string' && imageId.length > 0)
+          .slice(0, 20)
+      : [];
 
     // Валидация входных данных
-    if (!tourId || !rating || rating < 1 || rating > 5) {
+    if (!tourId || !Number.isFinite(parsedRating) || parsedRating < 1 || parsedRating > 5) {
       return NextResponse.json(
         { success: false, error: 'Неверные данные: tourId обязателен, rating должен быть от 1 до 5' } as ApiResponse<null>,
+        { status: 400 }
+      );
+    }
+
+    if (!Array.isArray(images)) {
+      return NextResponse.json(
+        { success: false, error: 'Неверные данные: images должен быть массивом идентификаторов' } as ApiResponse<null>,
         { status: 400 }
       );
     }
@@ -111,12 +124,13 @@ export async function POST(request: NextRequest) {
 
     // Проверяем, что пользователь прошел тур (есть завершенная бронь)
     const bookingCheck = await query(`
-      SELECT COUNT(*) as count
+      SELECT 1
       FROM bookings
       WHERE user_id = $1 AND tour_id = $2 AND status = 'completed'
+      LIMIT 1
     `, [userId, tourId]);
 
-    if (bookingCheck.rows[0].count === 0) {
+    if (bookingCheck.rows.length === 0) {
       return NextResponse.json(
         { success: false, error: 'Вы не можете оставить отзыв о туре, который не завершили' } as ApiResponse<null>,
         { status: 403 }
@@ -140,13 +154,13 @@ export async function POST(request: NextRequest) {
       INSERT INTO reviews (user_id, tour_id, rating, comment, is_verified)
       VALUES ($1, $2, $3, $4, false)
       RETURNING id, created_at, updated_at
-    `, [userId, tourId, rating, comment]);
+    `, [userId, tourId, parsedRating, comment]);
 
     const newReview = result.rows[0];
 
     // Сохраняем изображения, если они есть
-    if (images && images.length > 0) {
-      for (const imageId of images) {
+    if (normalizedImages.length > 0) {
+      for (const imageId of normalizedImages) {
         await query(`
           INSERT INTO review_assets (review_id, asset_id)
           VALUES ($1, $2)
@@ -162,9 +176,9 @@ export async function POST(request: NextRequest) {
         id: newReview.id,
         userId,
         tourId,
-        rating,
+        rating: parsedRating,
         comment,
-        images: images || [],
+        images: normalizedImages,
         isVerified: false,
         createdAt: newReview.created_at,
         updatedAt: newReview.updated_at,
