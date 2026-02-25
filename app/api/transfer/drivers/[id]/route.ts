@@ -3,8 +3,30 @@ import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { verifyDriverOwnership } from '@/lib/auth/transfer-helpers';
 import { requireTransferOperator } from '@/lib/auth/middleware';
+import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
+
+const SAFE_DB_COLUMN_REGEX = /^[a-z_][a-z0-9_]*$/;
+const DRIVER_STATUSES = ['active', 'inactive', 'suspended', 'on_leave'] as const;
+
+const updateDriverSchema = z.object({
+  firstName: z.string().trim().min(1).max(120).optional(),
+  lastName: z.string().trim().min(1).max(120).optional(),
+  phone: z.string().trim().min(1).max(50).optional(),
+  email: z.string().trim().email().optional(),
+  status: z.enum(DRIVER_STATUSES).optional(),
+  vehicleId: z.union([z.string().trim().min(1), z.null()]).optional(),
+  experience: z.coerce.number().int().min(0).max(70).optional(),
+  languages: z.array(z.string().trim().min(1).max(50)).max(20).optional(),
+  emergencyContact: z.record(z.unknown()).optional(),
+  address: z.string().max(500).optional(),
+  city: z.string().max(100).optional(),
+  notes: z.string().max(5000).optional(),
+}).refine(
+  (payload) => Object.keys(payload).length > 0,
+  { message: 'Нет полей для обновления' }
+);
 
 /**
  * GET /api/transfer/drivers/[id]
@@ -71,11 +93,11 @@ export async function GET(
         licenseExpiry: driver.license_expiry,
         experience: driver.experience,
         languages: driver.languages,
-        rating: parseFloat(driver.rating),
-        avgDriverRating: parseFloat(driver.avg_driver_rating),
+        rating: Number.parseFloat(driver.rating ?? '0'),
+        avgDriverRating: Number.parseFloat(driver.avg_driver_rating ?? '0'),
         totalTrips: driver.total_trips,
-        completedTrips: parseInt(driver.completed_trips_count || 0),
-        cancelledTrips: parseInt(driver.cancelled_trips_count || 0),
+        completedTrips: Number.parseInt(driver.completed_trips ?? '0', 10),
+        cancelledTrips: Number.parseInt(driver.cancelled_trips ?? '0', 10),
         status: driver.status,
         vehicle: driver.vehicle_id ? {
           id: driver.vehicle_id,
@@ -88,9 +110,9 @@ export async function GET(
         hireDate: driver.hire_date,
         notes: driver.notes,
         stats: {
-          completedTrips: parseInt(driver.completed_trips || 0),
-          cancelledTrips: parseInt(driver.cancelled_trips || 0),
-          totalRevenue: parseFloat(driver.total_revenue || 0)
+          completedTrips: Number.parseInt(driver.completed_trips ?? '0', 10),
+          cancelledTrips: Number.parseInt(driver.cancelled_trips ?? '0', 10),
+          totalRevenue: Number.parseFloat(driver.total_revenue ?? '0')
         },
         createdAt: driver.created_at,
         updatedAt: driver.updated_at
@@ -130,16 +152,17 @@ export async function PUT(
     }
 
     const body = await request.json();
+    const parsedBody = updateDriverSchema.safeParse(body);
+    if (!parsedBody.success) {
+      return NextResponse.json({
+        success: false,
+        error: 'Некорректные данные водителя',
+        details: parsedBody.error.flatten(),
+      } as ApiResponse<null>, { status: 400 });
+    }
 
-    const updateFields = [];
-    const updateValues = [];
-    let paramIndex = 1;
-
-    const allowedFields = [
-      'firstName', 'lastName', 'phone', 'email', 'status', 'vehicleId',
-      'experience', 'languages', 'emergencyContact', 'address', 'city', 'notes'
-    ];
-
+    const updateFields: string[] = [];
+    const updateValues: unknown[] = [];
     const dbFieldMap: Record<string, string> = {
       firstName: 'first_name',
       lastName: 'last_name',
@@ -147,32 +170,30 @@ export async function PUT(
       emergencyContact: 'emergency_contact'
     };
 
-    for (const [key, value] of Object.entries(body)) {
-      if (allowedFields.includes(key)) {
-        const dbKey = dbFieldMap[key] || key.replace(/([A-Z])/g, '_$1').toLowerCase();
-        updateFields.push(`${dbKey} = $${paramIndex++}`);
-        
-        if (['languages', 'emergencyContact'].includes(key)) {
-          updateValues.push(JSON.stringify(value));
-        } else {
-          updateValues.push(value);
-        }
+    for (const [key, value] of Object.entries(parsedBody.data)) {
+      const dbKey = dbFieldMap[key] || key.replace(/([A-Z])/g, '_$1').toLowerCase();
+      if (!SAFE_DB_COLUMN_REGEX.test(dbKey)) {
+        return NextResponse.json({
+          success: false,
+          error: 'Некорректное поле обновления'
+        } as ApiResponse<null>, { status: 400 });
+      }
+
+      updateFields.push(`${dbKey} = $${updateValues.length + 1}`);
+      if (key === 'languages' || key === 'emergencyContact') {
+        updateValues.push(JSON.stringify(value));
+      } else {
+        updateValues.push(value);
       }
     }
 
-    if (updateFields.length === 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'Нет полей для обновления'
-      } as ApiResponse<null>, { status: 400 });
-    }
-
+    const idParamIndex = updateValues.length + 1;
     updateValues.push(id);
 
     const result = await query(
       `UPDATE drivers 
        SET ${updateFields.join(', ')}
-       WHERE id = $${paramIndex}
+       WHERE id = $${idParamIndex}
        RETURNING *`,
       updateValues
     );
@@ -222,7 +243,7 @@ export async function DELETE(
       [id]
     );
 
-    if (parseInt(activeTransfers.rows[0].count) > 0) {
+    if (Number.parseInt(activeTransfers.rows[0]?.count ?? '0', 10) > 0) {
       return NextResponse.json({
         success: false,
         error: 'Невозможно удалить водителя с активными трансферами'

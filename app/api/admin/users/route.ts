@@ -3,8 +3,39 @@ import { query } from '@/lib/database';
 import { AdminUser } from '@/types/admin';
 import { ApiResponse, PaginatedResponse } from '@/types';
 import { requireAdmin } from '@/lib/auth/middleware';
+import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
+
+const ADMIN_USER_ROLES = ['tourist', 'operator', 'guide', 'transfer', 'agent', 'admin', 'stay', 'gear'] as const;
+const ADMIN_USER_SORT_FIELDS = ['created_at', 'updated_at', 'name', 'email', 'role'] as const;
+
+const adminUsersQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  role: z.enum(ADMIN_USER_ROLES).optional(),
+  status: z.string().trim().optional(),
+  search: z.string().trim().max(200).optional(),
+  sortBy: z.enum(ADMIN_USER_SORT_FIELDS).default('created_at'),
+  sortOrder: z.enum(['asc', 'desc']).default('desc'),
+});
+
+const createAdminUserSchema = z.object({
+  email: z.string().trim().email(),
+  name: z.string().trim().min(1).max(120),
+  role: z.enum(ADMIN_USER_ROLES),
+  preferences: z.record(z.unknown()).optional().default({}),
+});
+
+function paramOrUndefined(searchParams: URLSearchParams, key: string): string | undefined {
+  const value = searchParams.get(key);
+  if (!value) {
+    return undefined;
+  }
+
+  const normalized = value.trim();
+  return normalized.length > 0 ? normalized : undefined;
+}
 
 /**
  * GET /api/admin/users
@@ -18,25 +49,30 @@ export async function GET(request: NextRequest) {
     }
     
     const { searchParams } = new URL(request.url);
-    
-    // Параметры пагинации
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
-    const offset = (page - 1) * limit;
+    const parsedQuery = adminUsersQuerySchema.safeParse({
+      page: paramOrUndefined(searchParams, 'page'),
+      limit: paramOrUndefined(searchParams, 'limit'),
+      role: paramOrUndefined(searchParams, 'role'),
+      status: paramOrUndefined(searchParams, 'status'),
+      search: paramOrUndefined(searchParams, 'search'),
+      sortBy: paramOrUndefined(searchParams, 'sortBy'),
+      sortOrder: paramOrUndefined(searchParams, 'sortOrder')?.toLowerCase(),
+    });
 
-    // Фильтры
-    const role = searchParams.get('role');
-    const status = searchParams.get('status');
-    const search = searchParams.get('search');
-    const sortByParam = searchParams.get('sortBy') || 'created_at';
-    const sortOrderParam = searchParams.get('sortOrder') || 'desc';
-    const allowedSortFields = new Set(['created_at', 'updated_at', 'name', 'email', 'role']);
-    const sortBy = allowedSortFields.has(sortByParam) ? sortByParam : 'created_at';
-    const sortOrder = sortOrderParam.toLowerCase() === 'asc' ? 'asc' : 'desc';
+    if (!parsedQuery.success) {
+      return NextResponse.json({
+        success: false,
+        error: 'Invalid query parameters',
+        details: parsedQuery.error.flatten(),
+      } as ApiResponse<null>, { status: 400 });
+    }
+
+    const { page, limit, role, search, sortBy, sortOrder } = parsedQuery.data;
+    const offset = (page - 1) * limit;
 
     // Строим WHERE условия
     const whereConditions: string[] = [];
-    const queryParams: any[] = [];
+    const queryParams: unknown[] = [];
     let paramIndex = 1;
 
     if (role) {
@@ -68,7 +104,7 @@ export async function GET(request: NextRequest) {
     `;
 
     const countResult = await query(countQuery, queryParams);
-    const total = parseInt(countResult.rows[0].total);
+    const total = Number.parseInt(countResult.rows[0]?.total ?? '0', 10);
 
     // Получение пользователей
     const usersQuery = `
@@ -108,8 +144,8 @@ export async function GET(request: NextRequest) {
       emailVerified: true, // По умолчанию
       createdAt: new Date(row.created_at),
       lastLoginAt: row.updated_at ? new Date(row.updated_at) : undefined,
-      bookingsCount: parseInt(row.bookings_count),
-      totalSpent: parseFloat(row.total_spent)
+      bookingsCount: Number.parseInt(row.bookings_count ?? '0', 10),
+      totalSpent: Number.parseFloat(row.total_spent ?? '0')
     }));
 
     const response: PaginatedResponse<AdminUser> = {
@@ -149,27 +185,20 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-
-    // Валидация
-    if (!body.email || !body.name || !body.role) {
+    const parsedBody = createAdminUserSchema.safeParse(body);
+    if (!parsedBody.success) {
       return NextResponse.json({
         success: false,
-        error: 'Missing required fields: email, name, role'
+        error: 'Invalid user payload',
+        details: parsedBody.error.flatten(),
       } as ApiResponse<null>, { status: 400 });
     }
 
-    // Проверка валидности роли
-    const validRoles = ['tourist', 'operator', 'guide', 'transfer', 'agent', 'admin'];
-    if (!validRoles.includes(body.role)) {
-      return NextResponse.json({
-        success: false,
-        error: `Invalid role. Must be one of: ${validRoles.join(', ')}`
-      } as ApiResponse<null>, { status: 400 });
-    }
+    const { email, name, role, preferences } = parsedBody.data;
 
     // Проверка, существует ли уже пользователь с таким email
     const existingUserQuery = 'SELECT id FROM users WHERE email = $1';
-    const existingUserResult = await query(existingUserQuery, [body.email]);
+    const existingUserResult = await query(existingUserQuery, [email]);
 
     if (existingUserResult.rows.length > 0) {
       return NextResponse.json({
@@ -185,11 +214,10 @@ export async function POST(request: NextRequest) {
       RETURNING id, email, name, role, created_at
     `;
 
-    const preferences = body.preferences || {};
     const result = await query(createUserQuery, [
-      body.email,
-      body.name,
-      body.role,
+      email,
+      name,
+      role,
       JSON.stringify(preferences)
     ]);
 

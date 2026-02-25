@@ -3,8 +3,49 @@ import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { getTransferPartnerId } from '@/lib/auth/transfer-helpers';
 import { requireTransferOperator } from '@/lib/auth/middleware';
+import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
+
+const DRIVER_STATUSES = ['active', 'inactive', 'suspended', 'on_leave'] as const;
+
+const listDriversQuerySchema = z.object({
+  status: z.enum(['all', ...DRIVER_STATUSES] as const).default('all'),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+});
+
+const createDriverSchema = z.object({
+  firstName: z.string().trim().min(1).max(120),
+  lastName: z.string().trim().min(1).max(120),
+  phone: z.string().trim().min(1).max(50),
+  email: z.string().trim().email().optional(),
+  licenseNumber: z.string().trim().min(1).max(100),
+  licenseExpiry: z.string().trim().min(1),
+  experience: z.coerce.number().int().min(0).max(70).optional().default(0),
+  languages: z.array(z.string().trim().min(1).max(50)).max(20).optional().default([]),
+  vehicleId: z.string().trim().min(1).optional(),
+  emergencyContact: z.record(z.unknown()).optional().default({}),
+}).superRefine((payload, ctx) => {
+  const parsed = new Date(payload.licenseExpiry);
+  if (Number.isNaN(parsed.getTime())) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['licenseExpiry'],
+      message: 'Некорректная дата окончания лицензии',
+    });
+  }
+});
+
+function paramOrUndefined(searchParams: URLSearchParams, key: string): string | undefined {
+  const value = searchParams.get(key);
+  if (!value) {
+    return undefined;
+  }
+
+  const normalized = value.trim();
+  return normalized.length > 0 ? normalized : undefined;
+}
 
 /**
  * GET /api/transfer/drivers
@@ -26,9 +67,21 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status') || 'all';
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '50');
+    const parsedQuery = listDriversQuerySchema.safeParse({
+      status: paramOrUndefined(searchParams, 'status'),
+      page: paramOrUndefined(searchParams, 'page'),
+      limit: paramOrUndefined(searchParams, 'limit'),
+    });
+
+    if (!parsedQuery.success) {
+      return NextResponse.json({
+        success: false,
+        error: 'Некорректные параметры запроса',
+        details: parsedQuery.error.flatten(),
+      } as ApiResponse<null>, { status: 400 });
+    }
+
+    const { status, page, limit } = parsedQuery.data;
     const offset = (page - 1) * limit;
 
     let queryStr = `
@@ -44,7 +97,7 @@ export async function GET(request: NextRequest) {
       WHERE d.operator_id = $1
     `;
 
-    const params: any[] = [operatorId];
+    const params: unknown[] = [operatorId];
     let paramIndex = 2;
 
     if (status !== 'all') {
@@ -72,10 +125,10 @@ export async function GET(request: NextRequest) {
       licenseExpiry: row.license_expiry,
       experience: row.experience,
       languages: row.languages,
-      rating: parseFloat(row.rating),
+      rating: Number.parseFloat(row.rating ?? '0'),
       totalTrips: row.total_trips,
-      completedTrips: parseInt(row.completed_trips || 0),
-      activeTrips: parseInt(row.active_trips || 0),
+      completedTrips: Number.parseInt(row.completed_trips ?? '0', 10),
+      activeTrips: Number.parseInt(row.active_trips ?? '0', 10),
       status: row.status,
       vehicleId: row.vehicle_id,
       vehicleName: row.vehicle_name,
@@ -119,6 +172,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    const parsedBody = createDriverSchema.safeParse(body);
+    if (!parsedBody.success) {
+      return NextResponse.json({
+        success: false,
+        error: 'Некорректные данные водителя',
+        details: parsedBody.error.flatten(),
+      } as ApiResponse<null>, { status: 400 });
+    }
+
     const {
       firstName,
       lastName,
@@ -130,15 +192,7 @@ export async function POST(request: NextRequest) {
       languages,
       vehicleId,
       emergencyContact
-    } = body;
-
-    // Validation
-    if (!firstName || !lastName || !phone || !licenseNumber || !licenseExpiry) {
-      return NextResponse.json({
-        success: false,
-        error: 'Заполните обязательные поля'
-      } as ApiResponse<null>, { status: 400 });
-    }
+    } = parsedBody.data;
 
     const result = await query(
       `INSERT INTO drivers (
@@ -155,10 +209,10 @@ export async function POST(request: NextRequest) {
         email,
         licenseNumber,
         licenseExpiry,
-        experience || 0,
-        JSON.stringify(languages || []),
+        experience,
+        JSON.stringify(languages),
         vehicleId,
-        JSON.stringify(emergencyContact || {})
+        JSON.stringify(emergencyContact)
       ]
     );
 
