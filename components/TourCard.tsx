@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
+import { Star } from 'lucide-react';
 import { Tour } from '@/types';
 // import { formatCurrency, formatDuration, formatRating } from '@/lib/utils';
 import { cn } from '@/lib/utils';

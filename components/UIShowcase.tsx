@@ -101,7 +101,7 @@ export function UIShowcase() {
             <span className="badge badge-success">[] Success</span>
             <span className="badge badge-warning"> Warning</span>
             <span className="badge badge-error"> Error</span>
-            <span className="badge badge-info">ℹ Info</span>
+            <span className="badge badge-info">Info</span>
             <span className="badge badge-gold"> Premium</span>
           </div>
         </section>
