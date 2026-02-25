@@ -2,15 +2,55 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse, Review } from '@/types';
 import { query } from '@/lib/database';
 import { verifyAuth } from '@/lib/auth';
+import { z } from 'zod';
+
+const reviewListQuerySchema = z.object({
+  tourId: z.string().trim().min(1).optional(),
+  operatorId: z.string().trim().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(10),
+  offset: z.coerce.number().int().min(0).default(0),
+});
+
+const createReviewSchema = z.object({
+  tourId: z.string().trim().min(1),
+  rating: z.coerce.number().int().min(1).max(5),
+  comment: z.string().trim().max(5000).optional().default(''),
+  images: z.array(z.string().trim().min(1)).max(20).optional().default([]),
+});
+
+function queryParamOrUndefined(searchParams: URLSearchParams, key: string): string | undefined {
+  const value = searchParams.get(key);
+  if (!value) {
+    return undefined;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
 
 // GET /api/reviews - Получение отзывов (для тура, оператора и т.д.)
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const tourId = searchParams.get('tourId');
-    const operatorId = searchParams.get('operatorId');
-    const limit = parseInt(searchParams.get('limit') || '10');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const parsedQuery = reviewListQuerySchema.safeParse({
+      tourId: queryParamOrUndefined(searchParams, 'tourId'),
+      operatorId: queryParamOrUndefined(searchParams, 'operatorId'),
+      limit: queryParamOrUndefined(searchParams, 'limit'),
+      offset: queryParamOrUndefined(searchParams, 'offset'),
+    });
+
+    if (!parsedQuery.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Неверные параметры запроса',
+          details: parsedQuery.error.flatten(),
+        } as ApiResponse<null>,
+        { status: 400 }
+      );
+    }
+
+    const { tourId, operatorId, limit, offset } = parsedQuery.data;
 
     let queryText = `
       SELECT
@@ -32,8 +72,8 @@ export async function GET(request: NextRequest) {
       LEFT JOIN assets a ON ra.asset_id = a.id
     `;
 
-    const conditions = [];
-    const params = [];
+    const conditions: string[] = [];
+    const params: unknown[] = [];
 
     if (tourId) {
       conditions.push(`r.tour_id = $${conditions.length + 1}`);
@@ -97,28 +137,20 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { tourId, rating, comment, images = [] } = body;
-    const parsedRating = Number(rating);
-    const normalizedImages = Array.isArray(images)
-      ? images
-          .filter((imageId): imageId is string => typeof imageId === 'string' && imageId.length > 0)
-          .slice(0, 20)
-      : [];
-
-    // Валидация входных данных
-    if (!tourId || !Number.isFinite(parsedRating) || parsedRating < 1 || parsedRating > 5) {
+    const parsedBody = createReviewSchema.safeParse(body);
+    if (!parsedBody.success) {
       return NextResponse.json(
-        { success: false, error: 'Неверные данные: tourId обязателен, rating должен быть от 1 до 5' } as ApiResponse<null>,
+        {
+          success: false,
+          error: 'Неверные данные отзыва',
+          details: parsedBody.error.flatten(),
+        } as ApiResponse<null>,
         { status: 400 }
       );
     }
 
-    if (!Array.isArray(images)) {
-      return NextResponse.json(
-        { success: false, error: 'Неверные данные: images должен быть массивом идентификаторов' } as ApiResponse<null>,
-        { status: 400 }
-      );
-    }
+    const { tourId, rating: parsedRating, comment, images } = parsedBody.data;
+    const normalizedImages = [...new Set(images)];
 
     const userId = auth.userId;
 

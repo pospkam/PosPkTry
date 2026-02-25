@@ -6,6 +6,8 @@ import { getOperatorPartnerId, verifyTourOwnership } from '@/lib/auth/operator-h
 
 export const dynamic = 'force-dynamic';
 
+const SAFE_DB_COLUMN_REGEX = /^[a-z_][a-z0-9_]*$/;
+
 /**
  * GET /api/operator/tours/[id]
  * Get specific tour with ownership verification
@@ -146,8 +148,8 @@ export async function PUT(
       
       const jsonFields = new Set(['season', 'requirements', 'includes', 'excludes', 'coordinates']);
 
-    const updateFields = [];
-    const updateValues = [];
+    const updateFields: string[] = [];
+    const updateValues: unknown[] = [];
     let paramIndex = 1;
 
       for (const [key, value] of Object.entries(body)) {
@@ -161,6 +163,12 @@ export async function PUT(
         
         const mappedKey = fieldMap[key] || key;
         const dbKey = mappedKey.replace(/([A-Z])/g, '_$1').toLowerCase();
+        if (!SAFE_DB_COLUMN_REGEX.test(dbKey)) {
+          return NextResponse.json({
+            success: false,
+            error: 'Некорректное поле обновления'
+          } as ApiResponse<null>, { status: 400 });
+        }
         
         updateFields.push(`${dbKey} = $${paramIndex++}`);
         
@@ -178,12 +186,13 @@ export async function PUT(
       } as ApiResponse<null>, { status: 400 });
     }
 
+    const idParamIndex = updateValues.length + 1;
     updateValues.push(id);
 
     const result = await query(
       `UPDATE tours 
        SET ${updateFields.join(', ')}
-       WHERE id = $${paramIndex}
+       WHERE id = $${idParamIndex}
        RETURNING *`,
       updateValues
     );

@@ -17,98 +17,154 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
+import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
+
+const ACCOMMODATIONS_SORT_SQL = {
+  price_asc: 'price_per_night_from ASC',
+  price_desc: 'price_per_night_from DESC',
+  rating_desc: 'rating DESC, review_count DESC',
+  name_asc: 'name ASC',
+} as const;
+
+const accommodationsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  type: z.string().trim().min(1).optional(),
+  price_min: z.coerce.number().nonnegative().optional(),
+  price_max: z.coerce.number().nonnegative().optional(),
+  rating_min: z.coerce.number().min(0).max(5).optional(),
+  amenities: z.string().trim().min(1).optional(),
+  location_zone: z.string().trim().min(1).optional(),
+  search: z.string().trim().max(200).optional(),
+  sort: z.enum(['price_asc', 'price_desc', 'rating_desc', 'name_asc']).default('rating_desc'),
+});
+
+function paramOrUndefined(searchParams: URLSearchParams, key: string): string | undefined {
+  const raw = searchParams.get(key);
+  if (!raw) {
+    return undefined;
+  }
+
+  const value = raw.trim();
+  return value.length > 0 ? value : undefined;
+}
 
 // GET /api/accommodations - Public by design: catalog listing for discovery.
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    
-    // Параметры пагинации
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100);
+
+    const parsedQuery = accommodationsQuerySchema.safeParse({
+      page: paramOrUndefined(searchParams, 'page'),
+      limit: paramOrUndefined(searchParams, 'limit'),
+      type: paramOrUndefined(searchParams, 'type'),
+      price_min: paramOrUndefined(searchParams, 'price_min'),
+      price_max: paramOrUndefined(searchParams, 'price_max'),
+      rating_min: paramOrUndefined(searchParams, 'rating_min'),
+      amenities: paramOrUndefined(searchParams, 'amenities'),
+      location_zone: paramOrUndefined(searchParams, 'location_zone'),
+      search: paramOrUndefined(searchParams, 'search'),
+      sort: paramOrUndefined(searchParams, 'sort'),
+    });
+
+    if (!parsedQuery.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Некорректные параметры запроса',
+          details: parsedQuery.error.flatten(),
+        },
+        { status: 400 }
+      );
+    }
+
+    const {
+      page,
+      limit,
+      type,
+      price_min: priceMin,
+      price_max: priceMax,
+      rating_min: ratingMin,
+      amenities: amenitiesStr,
+      location_zone: locationZone,
+      search,
+      sort,
+    } = parsedQuery.data;
+
+    if (priceMin !== undefined && priceMax !== undefined && priceMin > priceMax) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Некорректные параметры запроса',
+          details: { price: ['price_min не может быть больше price_max'] },
+        },
+        { status: 400 }
+      );
+    }
+
     const offset = (page - 1) * limit;
-    
-    // Параметры фильтрации
-    const type = searchParams.get('type');
-    const priceMin = searchParams.get('price_min');
-    const priceMax = searchParams.get('price_max');
-    const ratingMin = searchParams.get('rating_min');
-    const amenitiesStr = searchParams.get('amenities');
-    const locationZone = searchParams.get('location_zone');
-    const search = searchParams.get('search');
-    const sort = searchParams.get('sort') || 'rating_desc';
-    
+
     // Строим WHERE условия
     const conditions: string[] = ['is_active = true'];
-    const params: any[] = [];
+    const params: unknown[] = [];
     let paramIndex = 1;
-    
+
     if (type) {
       conditions.push(`type = $${paramIndex++}`);
       params.push(type);
     }
-    
-    if (priceMin) {
+
+    if (priceMin !== undefined) {
       conditions.push(`price_per_night_from >= $${paramIndex++}`);
-      params.push(parseFloat(priceMin));
+      params.push(priceMin);
     }
-    
-    if (priceMax) {
+
+    if (priceMax !== undefined) {
       conditions.push(`price_per_night_from <= $${paramIndex++}`);
-      params.push(parseFloat(priceMax));
+      params.push(priceMax);
     }
-    
-    if (ratingMin) {
+
+    if (ratingMin !== undefined) {
       conditions.push(`rating >= $${paramIndex++}`);
-      params.push(parseFloat(ratingMin));
+      params.push(ratingMin);
     }
-    
+
     if (locationZone) {
       conditions.push(`location_zone = $${paramIndex++}`);
       params.push(locationZone);
     }
-    
+
     if (search) {
       conditions.push(`(name ILIKE $${paramIndex} OR description ILIKE $${paramIndex})`);
       params.push(`%${search}%`);
       paramIndex++;
     }
-    
+
     // Фильтр по удобствам (amenities)
     if (amenitiesStr) {
-      const amenities = amenitiesStr.split(',').map(a => a.trim());
-      conditions.push(`amenities @> $${paramIndex++}::jsonb`);
-      params.push(JSON.stringify(amenities));
+      const amenities = amenitiesStr
+        .split(',')
+        .map(a => a.trim())
+        .filter(Boolean)
+        .slice(0, 20);
+      if (amenities.length > 0) {
+        conditions.push(`amenities @> $${paramIndex++}::jsonb`);
+        params.push(JSON.stringify(amenities));
+      }
     }
-    
+
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
-    
-    // Сортировка
-    let orderBy = 'rating DESC, review_count DESC';
-    switch (sort) {
-      case 'price_asc':
-        orderBy = 'price_per_night_from ASC';
-        break;
-      case 'price_desc':
-        orderBy = 'price_per_night_from DESC';
-        break;
-      case 'rating_desc':
-        orderBy = 'rating DESC, review_count DESC';
-        break;
-      case 'name_asc':
-        orderBy = 'name ASC';
-        break;
-    }
-    
+    const orderBy = ACCOMMODATIONS_SORT_SQL[sort];
+
     // Получаем общее количество
     const countResult = await query(
       `SELECT COUNT(*) as total FROM accommodations ${whereClause}`,
       params
     );
-    const total = parseInt(countResult.rows[0]?.total || '0');
-    
+    const total = Number.parseInt(countResult.rows[0]?.total || '0', 10);
+
     // Получаем список объектов
     const accommodationsQuery = `
       SELECT 
@@ -187,9 +243,9 @@ export async function GET(request: NextRequest) {
         },
         filters: {
           type,
-          priceMin,
-          priceMax,
-          ratingMin,
+          priceMin: priceMin ?? null,
+          priceMax: priceMax ?? null,
+          ratingMin: ratingMin ?? null,
           amenities: amenitiesStr,
           locationZone,
           search,
