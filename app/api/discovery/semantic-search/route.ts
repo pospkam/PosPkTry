@@ -49,7 +49,7 @@ async function sqlFallbackSearch(
   return result.rows.map((row) => ({ ...row, similarity: 0 }));
 }
 
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
+// Public: семантический поиск туров доступен без аутентификации.
 export async function GET(request: NextRequest) {
   try {
     const sp = request.nextUrl.searchParams;

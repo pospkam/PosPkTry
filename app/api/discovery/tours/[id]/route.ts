@@ -10,12 +10,13 @@ import {
   TourNotFoundError,
   TourValidationError,
 } from '@/lib/database';
+import { requireOperator } from '@/lib/auth/middleware';
+import { verifyTourOwnership } from '@/lib/auth/operator-helpers';
 
 // ============================================================================
 // GET - ПОЛУЧИТЬ ДЕТАЛИ ТУРА
 // ============================================================================
-
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
+// Public: детали тура доступны без аутентификации для просмотра.
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -66,28 +67,14 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authOrResponse = await requireOperator(request);
+  if (authOrResponse instanceof NextResponse) return authOrResponse;
+
   try {
     const { id } = await params;
 
-    // Проверка аутентификации
-    const operatorId = request.headers.get('x-operator-id');
-    const role = request.headers.get('x-user-role');
-
-    if (!operatorId) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Unauthorized',
-          message: 'Operator ID is required',
-        },
-        { status: 401 }
-      );
-    }
-
-    // Получить тур для проверки владения
-    const tour = await tourService.read(id);
-
-    if (tour.operatorId !== operatorId && role !== 'admin') {
+    const isOwner = await verifyTourOwnership(authOrResponse.userId, id);
+    if (!isOwner && authOrResponse.role !== 'admin') {
       return NextResponse.json(
         {
           success: false,
@@ -156,28 +143,14 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authOrResponse = await requireOperator(request);
+  if (authOrResponse instanceof NextResponse) return authOrResponse;
+
   try {
     const { id } = await params;
 
-    // Проверка аутентификации
-    const operatorId = request.headers.get('x-operator-id');
-    const role = request.headers.get('x-user-role');
-
-    if (!operatorId) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Unauthorized',
-          message: 'Operator ID is required',
-        },
-        { status: 401 }
-      );
-    }
-
-    // Получить тур для проверки владения
-    const tour = await tourService.read(id);
-
-    if (tour.operatorId !== operatorId && role !== 'admin') {
+    const isOwner = await verifyTourOwnership(authOrResponse.userId, id);
+    if (!isOwner && authOrResponse.role !== 'admin') {
       return NextResponse.json(
         {
           success: false,

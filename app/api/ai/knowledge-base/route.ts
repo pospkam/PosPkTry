@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { config } from '@/lib/config'
+import { requireAdmin } from '@/lib/auth/middleware'
 import { convertUrlToMarkdown } from '@/lib/ai/markdown-new'
 import fs from 'fs'
 import path from 'path'
@@ -261,8 +262,11 @@ async function updateKnowledgeBase(documents: KnowledgeDocument[]): Promise<bool
 }
 
 // GET - Получить статус базы знаний
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
+// AUTH: requireAdmin — чувствительное управление KB и внешние интеграции
 export async function GET(request: NextRequest) {
+  const adminOrResponse = await requireAdmin(request);
+  if (adminOrResponse instanceof NextResponse) return adminOrResponse;
+
   try {
     const { timeweb } = config.ai
 
@@ -293,7 +297,11 @@ export async function GET(request: NextRequest) {
 }
 
 // POST - Обновить базу знаний
+// AUTH: requireAdmin — чувствительное управление KB и внешние интеграции
 export async function POST(request: NextRequest) {
+  const adminOrResponse = await requireAdmin(request);
+  if (adminOrResponse instanceof NextResponse) return adminOrResponse;
+
   try {
     console.log('🔄 Начинаем обновление базы знаний...')
 

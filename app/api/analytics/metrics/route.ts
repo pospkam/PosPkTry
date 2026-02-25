@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { metricsService } from '@/lib/database'
+import { requireRole } from '@/lib/auth/middleware'
 
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function GET(request: NextRequest) {
+  const authOrResponse = await requireRole(request, ['admin', 'operator'])
+  if (authOrResponse instanceof NextResponse) return authOrResponse
+
   try {
     const { searchParams } = new URL(request.url)
     const type = searchParams.get('type')
@@ -27,6 +30,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const authOrResponse = await requireRole(request, ['admin', 'operator'])
+  if (authOrResponse instanceof NextResponse) return authOrResponse
+
   try {
     const { type, value, period, metadata } = await request.json()
 

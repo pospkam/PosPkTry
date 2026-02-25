@@ -9,12 +9,13 @@ import {
   TourNotFoundError,
   TourValidationError,
 } from '@/lib/database';
+import { requireOperator } from '@/lib/auth/middleware';
+import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
 
 // ============================================================================
 // GET - ПОЛУЧИТЬ СПИСОК ТУРОВ
 // ============================================================================
-
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
+// Public: каталог туров доступен без аутентификации для просмотра.
 export async function GET(request: NextRequest) {
   try {
     // Получить параметры из query
@@ -86,37 +87,37 @@ export async function GET(request: NextRequest) {
 // ============================================================================
 
 export async function POST(request: NextRequest) {
+  const authOrResponse = await requireOperator(request);
+  if (authOrResponse instanceof NextResponse) return authOrResponse;
+
   try {
-    // Проверка аутентификации
-    const operatorId = request.headers.get('x-operator-id');
-    const role = request.headers.get('x-user-role');
-
-    if (!operatorId) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Unauthorized',
-          message: 'Operator ID is required',
-        },
-        { status: 401 }
-      );
-    }
-
-    if (role !== 'operator' && role !== 'admin') {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Forbidden',
-          message: 'Only operators can create tours',
-        },
-        { status: 403 }
-      );
-    }
-
-    // Получить тело запроса
     const body = await request.json();
+    let operatorId = body.operatorId;
 
-    // Создать тур
+    if (authOrResponse.role !== 'admin') {
+      const resolvedOperatorId = await getOperatorPartnerId(authOrResponse.userId);
+      if (!resolvedOperatorId) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Forbidden',
+            message: 'Operator profile not found',
+          },
+          { status: 404 }
+        );
+      }
+      operatorId = resolvedOperatorId;
+    } else if (!operatorId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Bad Request',
+          message: 'operatorId is required for admin',
+        },
+        { status: 400 }
+      );
+    }
+
     const tour = await tourService.create({
       ...body,
       operatorId,

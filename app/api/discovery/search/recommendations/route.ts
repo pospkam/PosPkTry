@@ -9,7 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { searchService } from '@/lib/database';
 
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
+// Public: рекомендации, автодополнение и похожие туры доступны без аутентификации.
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;

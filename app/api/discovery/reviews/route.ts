@@ -9,35 +9,22 @@ import {
   ReviewValidationError,
   DuplicateReviewError,
 } from '@/lib/database';
+import { requireAuth, requireAdmin } from '@/lib/auth/middleware';
 
 // ============================================================================
 // POST - СОЗДАТЬ НОВЫЙ ОТЗЫВ
 // ============================================================================
 
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function POST(request: NextRequest) {
+  const authOrResponse = await requireAuth(request);
+  if (authOrResponse instanceof NextResponse) return authOrResponse;
+
   try {
-    // Проверка аутентификации
-    const userId = request.headers.get('x-user-id');
-
-    if (!userId) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Unauthorized',
-          message: 'User ID is required',
-        },
-        { status: 401 }
-      );
-    }
-
-    // Получить тело запроса
     const body = await request.json();
 
-    // Создать отзыв
     const review = await reviewService.create({
       ...body,
-      userId,
+      userId: authOrResponse.userId,
     });
 
     return NextResponse.json(
@@ -89,22 +76,10 @@ export async function POST(request: NextRequest) {
 // ============================================================================
 
 export async function GET(request: NextRequest) {
+  const adminOrResponse = await requireAdmin(request);
+  if (adminOrResponse instanceof NextResponse) return adminOrResponse;
+
   try {
-    // Проверка аутентификации и прав модератора
-    const role = request.headers.get('x-user-role');
-
-    if (role !== 'admin' && role !== 'moderator') {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Forbidden',
-          message: 'Only moderators can view pending reviews',
-        },
-        { status: 403 }
-      );
-    }
-
-    // Получить параметры из query
     const searchParams = request.nextUrl.searchParams;
     const page = parseInt(searchParams.get('page') || '1');
     const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100);

@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
+// AUTH: Public — infra/utility endpoint for health checks
 export async function GET() {
   return NextResponse.json({
     status: 'ok',

@@ -16,7 +16,7 @@ interface DeepSeekRequest {
 }
 
 // POST /api/ai/deepseek - Chat с DeepSeek AI
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
+// AUTH: Public — AI assistant for visitors
 export async function POST(request: NextRequest) {
   try {
     const { message, context } = await request.json();

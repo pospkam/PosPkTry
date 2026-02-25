@@ -3,7 +3,7 @@ import { Client } from 'pg'
 
 export const runtime = 'nodejs'
 
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
+// AUTH: Public — infra/utility endpoint for DB connectivity check
 export async function GET(_req: NextRequest) {
   const url = process.env.DATABASE_URL
   if (!url) return NextResponse.json({ error: 'NO_DATABASE_URL' }, { status: 500 })

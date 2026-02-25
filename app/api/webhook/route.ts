@@ -9,8 +9,8 @@ export const dynamic = 'force-dynamic';
 
 /**
  * POST /api/webhook - GitHub webhook for automatic deployment
+ * AUTH: Public by design — webhooks protected by X-Hub-Signature-256 (HMAC-SHA256).
  */
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function POST(request: NextRequest) {
   try {
     const signature = request.headers.get('x-hub-signature-256');

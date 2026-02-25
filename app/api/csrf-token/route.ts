@@ -8,7 +8,7 @@ import { getCsrfTokenEndpoint } from '@/lib/middleware/csrf';
 
 export const dynamic = 'force-dynamic';
 
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
+// AUTH: Public — CSRF token needed for forms before auth
 export async function GET(request: NextRequest) {
   return getCsrfTokenEndpoint(request);
 }

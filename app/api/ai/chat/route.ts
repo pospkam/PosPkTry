@@ -198,7 +198,7 @@ async function saveSessionHistory(
 }
 
 // ── Основной обработчик ────────────────────────────────────────
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
+// AUTH: Public — AI chat assistant for visitors
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();

@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
+import { requireAuth } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * GET /api/reviews/tour/[tourId]
- * Get all reviews for a specific tour (public)
+ * GET /api/reviews/tour/[tourId] - Public
  */
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ tourId: string }> }
@@ -42,13 +41,13 @@ export async function GET(
       WHERE r.tour_id = $1
     `;
 
-    const params: any[] = [tourId];
+    const sqlParams: unknown[] = [tourId];
     let paramIndex = 2;
 
     // Rating filter
     if (rating) {
       queryStr += ` AND r.rating = $${paramIndex}`;
-      params.push(parseInt(rating));
+      sqlParams.push(parseInt(rating));
       paramIndex++;
     }
 
@@ -67,13 +66,13 @@ export async function GET(
     }
 
     queryStr += ` LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
-    params.push(limit, offset);
+    sqlParams.push(limit, offset);
 
-    const result = await query(queryStr, params);
+    const result = await query(queryStr, sqlParams);
 
     // Get total count
     let countQuery = 'SELECT COUNT(*) FROM reviews WHERE tour_id = $1';
-    const countParams: any[] = [params.tourId];
+    const countParams: unknown[] = [tourId];
     
     if (rating) {
       countQuery += ' AND rating = $2';
@@ -95,7 +94,7 @@ export async function GET(
         COUNT(*) FILTER (WHERE rating = 1) as one_star
       FROM reviews
       WHERE tour_id = $1`,
-      [params.tourId]
+      [tourId]
     );
 
     const summary = summaryResult.rows[0];
@@ -147,24 +146,18 @@ export async function GET(
 }
 
 /**
- * POST /api/reviews/tour/[tourId]
- * Create a review for a tour
+ * POST /api/reviews/tour/[tourId] - Create a review for a tour (auth required)
  */
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ tourId: string }> }
 ) {
   try {
-    const { tourId } = await params;
-    const userId = request.headers.get('X-User-Id');
-    
-    if (!userId) {
-      return NextResponse.json({
-        success: false,
-        error: 'Не авторизован'
-      } as ApiResponse<null>, { status: 401 });
-    }
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult.userId;
 
+    const { tourId } = await params;
     const body = await request.json();
     const { rating, comment } = body;
 
@@ -183,7 +176,7 @@ export async function POST(
        AND tour_id = $2 
        AND status = 'completed'
        LIMIT 1`,
-      [userId, params.tourId]
+      [userId, tourId]
     );
 
     if (bookingCheck.rows.length === 0) {
@@ -196,7 +189,7 @@ export async function POST(
     // Check if user already reviewed this tour
     const existingReview = await query(
       'SELECT id FROM reviews WHERE user_id = $1 AND tour_id = $2',
-      [userId, params.tourId]
+      [userId, tourId]
     );
 
     if (existingReview.rows.length > 0) {
@@ -211,7 +204,7 @@ export async function POST(
       `INSERT INTO reviews (user_id, tour_id, rating, comment)
        VALUES ($1, $2, $3, $4)
        RETURNING *`,
-      [userId, params.tourId, rating, comment || '']
+      [userId, tourId, rating, comment || '']
     );
 
     return NextResponse.json({

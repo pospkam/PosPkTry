@@ -1,18 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
+import { requireAdmin } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
+// GET /api/souvenirs/[id] - Public
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const result = await query(
       'SELECT * FROM souvenirs WHERE id = $1',
-      [params.id]
+      [id]
     );
 
     if (result.rows.length === 0) {
@@ -41,17 +43,22 @@ export async function GET(
   }
 }
 
+// PUT /api/souvenirs/[id] - Admin only
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const adminOrResponse = await requireAdmin(request);
+    if (adminOrResponse instanceof NextResponse) return adminOrResponse;
+
+    const { id } = await params;
     const body = await request.json();
     await query(`
       UPDATE souvenirs 
       SET name = $1, description = $2, price = $3, updated_at = NOW()
       WHERE id = $4
-    `, [body.name, body.description, body.price, params.id]);
+    `, [body.name, body.description, body.price, id]);
 
     return NextResponse.json({
       success: true,
@@ -65,12 +72,17 @@ export async function PUT(
   }
 }
 
+// DELETE /api/souvenirs/[id] - Admin only
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await query('UPDATE souvenirs SET is_active = false WHERE id = $1', [params.id]);
+    const adminOrResponse = await requireAdmin(request);
+    if (adminOrResponse instanceof NextResponse) return adminOrResponse;
+
+    const { id } = await params;
+    await query('UPDATE souvenirs SET is_active = false WHERE id = $1', [id]);
     return NextResponse.json({
       success: true,
       message: 'Удалено'

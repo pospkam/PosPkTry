@@ -7,16 +7,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { tourService } from '@/lib/database';
 import { reviewService } from '@/lib/database';
 import { TourNotFoundError } from '@/lib/database';
+import { requireRole } from '@/lib/auth/middleware';
 
 // ============================================================================
 // GET - ПОЛУЧИТЬ СТАТИСТИКУ ТУРА
 // ============================================================================
 
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authOrResponse = await requireRole(request, ['operator', 'admin']);
+  if (authOrResponse instanceof NextResponse) return authOrResponse;
+
   try {
     const { id } = await params;
     const pathname = request.nextUrl.pathname;

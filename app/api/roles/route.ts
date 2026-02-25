@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse } from '@/types';
+import { requireAdmin } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/roles - Получение информации о ролях
-// TODO: AUTH — проверить необходимость публичного доступа; для приватного доступа добавить verifyAuth/authorizeRole и проверку роли.
+// GET /api/roles - Public
 export async function GET(request: NextRequest) {
   try {
     const roles = [
@@ -178,9 +178,12 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/roles - Обновление роли пользователя
+// POST /api/roles - Обновление роли пользователя (admin only)
 export async function POST(request: NextRequest) {
   try {
+    const adminOrResponse = await requireAdmin(request);
+    if (adminOrResponse instanceof NextResponse) return adminOrResponse;
+
     const body = await request.json();
     const { userId, role, level } = body;
 
