@@ -163,8 +163,8 @@ Port: 22 (SSH), 80 (HTTP), 443 (HTTPS)
 ```
 DATABASE_URL: postgresql://kamhub_user:pass@localhost:5432/kamhub
 NEXT_PUBLIC_API_URL: http://5.129.248.224:3002 ⭐
-YANDEX_WEATHER_API_KEY: 8f6b0a53-135f-4217-8de1-de98c1316cc0 (есть ключ!)
-YANDEX_MAPS_API_KEY: e5c02a43-3805-4b6e-9870-56ad9db712c9 (есть ключ!)
+YANDEX_WEATHER_API_KEY: REPLACE_WITH_YANDEX_WEATHER_API_KEY (есть ключ!)
+YANDEX_MAPS_API_KEY: REPLACE_WITH_YANDEX_MAPS_API_KEY (есть ключ!)
 ```
 
 **2. .env.local.example** (для разработки)
@@ -423,8 +423,8 @@ lib/database/migrations/
 ### Находка 1: Есть production API ключи!
 
 ```
-YANDEX_WEATHER_API_KEY=8f6b0a53-135f-4217-8de1-de98c1316cc0
-YANDEX_MAPS_API_KEY=e5c02a43-3805-4b6e-9870-56ad9db712c9
+YANDEX_WEATHER_API_KEY=REPLACE_WITH_YANDEX_WEATHER_API_KEY
+YANDEX_MAPS_API_KEY=REPLACE_WITH_YANDEX_MAPS_API_KEY
 
 ⚠️ ОПАСНОСТЬ: Ключи в открытом репозитории!
 → Любой может их использовать
@@ -507,8 +507,8 @@ git filter-branch --force --index-filter \
   --prune-empty --tag-name-filter cat -- --all
 
 # Или просто удалить ключи из файла
-sed -i 's/8f6b0a53-135f-4217-8de1-de98c1316cc0/YOUR_YANDEX_WEATHER_KEY/' .env.production.example
-sed -i 's/e5c02a43-3805-4b6e-9870-56ad9db712c9/YOUR_YANDEX_MAPS_KEY/' .env.production.example
+sed -i 's/REPLACE_WITH_YANDEX_WEATHER_API_KEY/YOUR_YANDEX_WEATHER_KEY/' .env.production.example
+sed -i 's/REPLACE_WITH_YANDEX_MAPS_API_KEY/YOUR_YANDEX_MAPS_KEY/' .env.production.example
 
 git add .env.production.example
 git commit -m "security: Remove production API keys from example"

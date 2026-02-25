@@ -138,13 +138,13 @@ DATABASE_SSL=false
 NODE_ENV=production
 NEXT_PUBLIC_APP_URL=http://5.129.248.224
 PORT=3000
-YANDEX_WEATHER_API_KEY=8f6b0a53-135f-4217-8de1-de98c1316cc0
+YANDEX_WEATHER_API_KEY=REPLACE_WITH_YANDEX_WEATHER_API_KEY
 JWT_SECRET=production-secret-kamchatour-2025-secure-random-string
-TIMEWEB_TOKEN=eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCIsImtpZCI6IjFrYnhacFJNQGJSI0tSbE1xS1lqIn0.eyJ1c2VyIjoicGE0MjIxMDgiLCJ0eXBlIjoiYXBpX2tleSIsImFwaV9rZXlfaWQiOiI0MmZmZTY1MC02OWI4LTRmZmQtYTFkOC02OWRkMjMwM2QyY2MiLCJpYXQiOjE3NjE3ODUzNDl9.SFHpwgy9kr-EH2CwN6K1REkOl7KCpiUnMk5ivTRljEaWl8iE-B-BMjaJxaFhpdB2dqcb33ky2oyfwxkU1Sszrbo-8UINnFO5SothY4P6WC8kSSHxFlLI2i0xGCa3YzgyYZ1Wgn2a0jf__ZcyZi7ZsaJkuold9NAeeGCCrAUbdVsr39-fLDL_EKh0iekq_tuO59f_BCmg7Poe7xKlmNYzu2hy3GnfNp3ueKW52H6kFkGwibixS3tWKCHkPpyTAjRztWKCnDZOOG6xDk4sSiPPMlZOEfFzzkpKkizQ9CykBC06SXwmT2uPRR2NyZJIY-PZd4AVZ34H1jXQ-NGquRPi_aYiywt3LtOVDRarpVErBdk6I0qO0Yf33zICvMN-yFpXuY_oSlE8v3C-02XHnYLsMXcHTsUB4ISkJrhglBkv-hTzuiQxwAEZp0eHOEq8YNz6qOLU3RcaNgg0DWGXMDrMzObYx2NknrZUCMbRFftIU-C1Ilo8Ayy98MwI3J77X62p
+TIMEWEB_TOKEN=REPLACE_WITH_TIMEWEB_TOKEN
 S3_ENDPOINT=https://s3.twcstorage.ru
 S3_BUCKET=d9542536-676ee691-7f59-46bb-bf0e-ab64230eec50
-S3_ACCESS_KEY=F2CP4X3X17GVQ1YH5I5D
-S3_SECRET_KEY=72iAsYR4QQCIdaDI9e9AzXnzVvvP8bvPELmrBVzX
+S3_ACCESS_KEY=REPLACE_WITH_S3_ACCESS_KEY
+S3_SECRET_KEY=REPLACE_WITH_S3_SECRET_KEY
 S3_REGION=ru-1
 ENV_EOF
 
@@ -278,7 +278,7 @@ ssh -v root@5.129.248.224
 
 ```bash
 ssh root@5.129.248.224
-# Пароль: xQvB1pv?yZTjaR
+# Пароль: REPLACE_WITH_SERVER_PASSWORD
 
 # После подключения добавьте публичный ключ:
 mkdir -p ~/.ssh
@@ -294,7 +294,7 @@ chmod 700 ~/.ssh
 ✅ **SSH подключение:** Работает без пароля  
 ✅ **PM2 Status:** online  
 ✅ **URL:** http://5.129.248.224  
-✅ **Weather API:** Yandex (8f6b0a53...)  
+✅ **Weather API:** Yandex (configured via env)  
 ✅ **Nginx:** Настроен  
 ✅ **Firewall:** Активен  
 
@@ -322,4 +322,4 @@ curl http://localhost:3000/api/health
 
 ---
 
-**Важно:** Yandex Weather API key (`8f6b0a53-135f-4217-8de1-de98c1316cc0`) уже включен в скрипт! ✅
+**Важно:** Yandex Weather API key должен храниться только в env (`YANDEX_WEATHER_API_KEY`). ✅

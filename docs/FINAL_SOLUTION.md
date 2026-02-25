@@ -82,7 +82,7 @@ choco install putty -y
 
 После установки plink я смогу использовать:
 ```batch
-plink -pw "xQvB1pv?yZTjaR" root@5.129.248.224 "команды"
+plink -pw "REPLACE_WITH_SERVER_PASSWORD" root@5.129.248.224 "команды"
 ```
 
 ---

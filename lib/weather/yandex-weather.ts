@@ -1,6 +1,6 @@
 /**
  * Yandex Weather API Integration
- * API Key: 8f6b0a53-135f-4217-8de1-de98c1316cc0
+ * API Key: берётся только из YANDEX_WEATHER_API_KEY
  * Docs: https://yandex.ru/dev/weather/doc/dg/concepts/about.html
  */
 
@@ -117,7 +117,11 @@ export async function fetchYandexWeather(
   lang: string = 'ru_RU'
 ): Promise<WeatherData | null> {
   try {
-    const apiKey = process.env.YANDEX_WEATHER_API_KEY || '8f6b0a53-135f-4217-8de1-de98c1316cc0';
+    const apiKey = process.env.YANDEX_WEATHER_API_KEY;
+    if (!apiKey) {
+      console.warn('YANDEX_WEATHER_API_KEY is not configured');
+      return null;
+    }
     
     const url = `https://api.weather.yandex.ru/v2/informers?lat=${lat}&lon=${lon}&lang=${lang}`;
     
