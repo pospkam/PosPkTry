@@ -32,14 +32,15 @@ export async function POST(
       } as ApiResponse<null>, { status: 400 });
     }
 
-    // Check if review exists and belongs to operator's tour
+    // Проверка владения на уровне SQL: оператор может отвечать только на отзывы по своим турам.
     const checkResult = await query(
-      `SELECT r.id, t.operator_id, p.user_id
+      `SELECT r.id
        FROM reviews r
        JOIN tours t ON r.tour_id = t.id
        JOIN partners p ON t.operator_id = p.id
-       WHERE r.id = $1`,
-      [id]
+       WHERE r.id = $1 AND p.user_id = $2
+       LIMIT 1`,
+      [id, userId]
     );
 
     if (checkResult.rows.length === 0) {
@@ -49,21 +50,25 @@ export async function POST(
       } as ApiResponse<null>, { status: 404 });
     }
 
-    if (checkResult.rows[0].user_id !== userId) {
+    // Повторяем ownership-проверку в UPDATE для защиты от race-condition.
+    const result = await query(
+      `UPDATE reviews r
+       SET operator_reply = $1, operator_reply_at = NOW()
+       FROM tours t
+       JOIN partners p ON t.operator_id = p.id
+       WHERE r.id = $2
+         AND r.tour_id = t.id
+         AND p.user_id = $3
+       RETURNING r.*`,
+      [reply, id, userId]
+    );
+
+    if (result.rows.length === 0) {
       return NextResponse.json({
         success: false,
         error: 'Отзыв не найден'
       } as ApiResponse<null>, { status: 404 });
     }
-
-    // Update review with reply
-    const result = await query(
-      `UPDATE reviews 
-       SET operator_reply = $1, operator_reply_at = NOW()
-       WHERE id = $2
-       RETURNING *`,
-      [reply, id]
-    );
 
     // Create notification for review author
     const review = result.rows[0];
