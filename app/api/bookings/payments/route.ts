@@ -97,7 +97,7 @@ export async function PATCH(request: NextRequest) {
 
     const booking = await bookingService.getByIdForUser(transaction.bookingId, userId)
     if (!booking) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      return NextResponse.json({ error: 'Transaction not found' }, { status: 404 })
     }
 
     // Verify payment

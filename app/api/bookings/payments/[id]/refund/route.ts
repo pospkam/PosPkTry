@@ -49,7 +49,7 @@ export async function POST(
     if (!ownBooking) {
       const isAdmin = await authorizeRole(request, 'admin')
       if (!isAdmin) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+        return NextResponse.json({ error: 'Payment not found' }, { status: 404 })
       }
 
       const adminBooking = await bookingService.getById(payment.bookingId)
