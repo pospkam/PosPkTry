@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireOperator } from '@/lib/auth/middleware';
-import { verifyTourOwnership } from '@/lib/auth/operator-helpers';
+import { getOperatorPartnerId, verifyTourOwnership } from '@/lib/auth/operator-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -86,24 +86,32 @@ export async function DELETE(
     if (operatorOrResponse instanceof NextResponse) {
       return operatorOrResponse;
     }
-    const userId = operatorOrResponse.userId;
-
-    const { id, photoId } = await params;
-
-    // Verify ownership
-    const isOwner = await verifyTourOwnership(userId, id);
-    
-    if (!isOwner) {
+    if (operatorOrResponse.role !== 'operator') {
       return NextResponse.json({
         success: false,
-        error: 'Тур не найден или у вас нет прав'
+        error: 'Недостаточно прав доступа'
+      } as ApiResponse<null>, { status: 403 });
+    }
+    const operatorId = await getOperatorPartnerId(operatorOrResponse.userId);
+    if (!operatorId) {
+      return NextResponse.json({
+        success: false,
+        error: 'Партнёрский профиль оператора не найден'
       } as ApiResponse<null>, { status: 404 });
     }
 
+    const { id, photoId } = await params;
+
     // Удаляем связь только если фото действительно принадлежит этому туру.
     const unlinkResult = await query(
-      'DELETE FROM tour_assets WHERE tour_id = $1 AND asset_id = $2 RETURNING asset_id',
-      [id, photoId]
+      `DELETE FROM tour_assets ta
+       USING tours t
+       WHERE ta.tour_id = t.id
+         AND ta.tour_id = $1
+         AND ta.asset_id = $2
+         AND t.operator_id = $3
+       RETURNING ta.asset_id`,
+      [id, photoId, operatorId]
     );
 
     if (unlinkResult.rows.length === 0) {
