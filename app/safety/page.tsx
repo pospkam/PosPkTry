@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function SafetyPage() {
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-4xl mx-auto px-4 py-8 bg-[var(--bg-primary)] text-[var(--text-primary)] min-h-screen">
       <div className="flex items-center gap-3 mb-6">
         <Shield className="w-8 h-8 text-[var(--danger)]" />
         <h1 className="text-3xl font-bold text-[var(--text-primary)]">Безопасность</h1>

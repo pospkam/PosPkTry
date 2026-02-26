@@ -49,10 +49,11 @@ export default function ToursPageClient() {
   };
 
   const filteredTours = tours.filter((tour) => {
-    if (filters.activity && tour.activity !== filters.activity) return false;
+    if (filters.activity && (tour.activity || tour.category) !== filters.activity) return false;
     if (filters.difficulty && tour.difficulty !== filters.difficulty) return false;
-    if (tour.priceFrom > filters.priceRange[1]) return false;
-    if (filters.search && !tour.title.toLowerCase().includes(filters.search.toLowerCase())) return false;
+    if ((tour.priceFrom ?? tour.price ?? 0) > filters.priceRange[1]) return false;
+    const tourName = tour.title || tour.name || '';
+    if (filters.search && !tourName.toLowerCase().includes(filters.search.toLowerCase())) return false;
     return true;
   });
 
@@ -197,13 +198,13 @@ export default function ToursPageClient() {
                 tabIndex={0}
                 className="bg-white/15 backdrop-blur-2xl rounded-2xl overflow-hidden border border-white/15 hover:border-white/50 transition-all cursor-pointer group"
                 style={{ backdropFilter: 'blur(10px)' }}
-                aria-label={`Перейти к туру ${tour.title}`}
+                aria-label={`Перейти к туру ${tour.title || tour.name}`}
               >
                 <div className="aspect-video bg-gradient-to-br from-blue-500/20 to-cyan-500/20 relative">
                   {tour.images && tour.images.length > 0 ? (
                     <Image
                       src={tour.images[0]}
-                      alt={tour.title}
+                      alt={tour.title || tour.name || 'Тур'}
                       fill
                       className="object-cover group-hover:scale-105 transition-transform"
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -214,13 +215,13 @@ export default function ToursPageClient() {
                     </div>
                   )}
                   <div className="absolute top-4 right-4 bg-white/30 backdrop-blur-2xl text-white px-3 py-1 rounded-full text-sm font-extralight" style={{ backdropFilter: 'blur(10px)', textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)' }}>
-                    от {tour.priceFrom.toLocaleString()}₽
+                    от {(tour.priceFrom ?? tour.price ?? 0).toLocaleString()}₽
                   </div>
                 </div>
                 
                 <div className="p-6">
                   <div className="flex items-start justify-between mb-3">
-                    <h3 className="text-xl font-extralight text-white" style={{ textShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>{tour.title}</h3>
+                    <h3 className="text-xl font-extralight text-white" style={{ textShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>{tour.title || tour.name}</h3>
                     {tour.rating && (
                       <div className="flex items-center space-x-1">
                         <Star className="w-4 h-4 text-white fill-yellow-400" strokeWidth={1.5} />
