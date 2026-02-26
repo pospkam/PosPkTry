@@ -71,12 +71,12 @@
 - `requireOperator(` -> `51` вызов
 - `requireTransferOperator(` -> `34` вызова
 
-### Проверка legacy header-auth (`X-User-Id` / `X-User-Role`)
+### Проверка legacy header-auth (кастомные user headers)
 
-- В `app/api/**/*.ts`: `0` прямых ссылок на `x-user-id` / `x-user-role`
+- В `app/api/**/*.ts`: `0` прямых ссылок на legacy user headers
 - Обнаружен один legacy helper:
   - `app/api/admin/stats/route.ts` импортирует `requireAdmin` из `lib/auth/check-admin.ts`
-  - `lib/auth/check-admin.ts` использует `x-user-id`/`x-user-role`
+  - `lib/auth/check-admin.ts` использует legacy user headers
 
 Итог по пункту: для большинства приватных маршрутов header-based решение убрано, но есть 1 remaining endpoint (`/api/admin/stats`) на legacy helper.
 

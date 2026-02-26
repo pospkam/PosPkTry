@@ -236,8 +236,8 @@ const stats = await reviewService.getStats(tourId)
 ## 🔐 БЕЗОПАСНОСТЬ
 
 ### Аутентификация
-- ✅ x-user-id header
-- ✅ x-operator-id header
+- ✅ JWT bearer token
+- ✅ Проверка токена на каждом приватном endpoint
 - ✅ Проверка на всех endpoints
 
 ### Авторизация

@@ -204,11 +204,9 @@ export async function middleware(request: NextRequest) {
     try {
       const { payload } = await jwtVerify(token, getJWTSecret());
       
-      const userId = typeof payload.userId === 'string' ? payload.userId : null;
       const userRole = typeof payload.role === 'string' ? payload.role : null;
-      const userEmail = typeof payload.email === 'string' ? payload.email : null;
 
-      // Add user info to headers for API routes + RBAC check
+      // Проверяем RBAC для API-маршрутов на основе роли из JWT
       if (isApiRoute) {
         const requiredRole = getRequiredRole(pathname);
         if (requiredRole && !hasRequiredRole(userRole, requiredRole)) {
@@ -219,26 +217,7 @@ export async function middleware(request: NextRequest) {
             )
           );
         }
-
-        const newHeaders = new Headers(request.headers);
-        if (userId) {
-          newHeaders.set('X-User-Id', userId);
-        }
-        if (userRole) {
-          newHeaders.set('X-User-Role', userRole);
-        }
-        if (userEmail) {
-          newHeaders.set('X-User-Email', userEmail);
-        }
-        newHeaders.set('X-Auth-Verified', 'true');
-        
-        return applySecurityHeaders(
-          NextResponse.next({
-            request: {
-              headers: newHeaders,
-            },
-          })
-        );
+        return applySecurityHeaders(NextResponse.next());
       }
       
       return applySecurityHeaders(NextResponse.next());

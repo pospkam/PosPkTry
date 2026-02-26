@@ -36,7 +36,7 @@
 - No JWT token in response
 - No Authorization header check
 - No token refresh mechanism
-- Missing x-user-id header validation
+- Missing JWT user extraction validation
 
 ---
 
@@ -109,13 +109,12 @@ SELECT p.phone FROM provider_contacts p
 **Добавить в начало:**
 ```typescript
 // Проверка прав администратора
-const userId = request.headers.get('x-user-id');
-if (!userId) {
+const user = await authenticateUser(request);
+if (!user) {
   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 }
 
-const userRole = request.headers.get('x-user-role');
-if (userRole !== 'admin') {
+if (user.role !== 'admin') {
   return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 }
 ```

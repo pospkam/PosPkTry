@@ -34,15 +34,9 @@ vi.mock('@/lib/notifications/email-service', () => ({
 vi.mock('@/lib/auth/middleware', () => ({
   requireAgent: vi.fn(),
   requireAuth: vi.fn(),
+  requireAdmin: vi.fn(),
   requireTourOperator: vi.fn(),
   requireStayProvider: vi.fn(),
-}));
-
-// Mock admin check
-vi.mock('@/lib/auth/check-admin', () => ({
-  requireAdmin: vi.fn(),
-  validateAdmin: vi.fn(),
-  getAdminUserId: vi.fn(),
 }));
 
 // Mock fetch for API calls

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse } from '@/types';
-import { requireAdmin } from '@/lib/auth/check-admin';
+import { requireAdmin } from '@/lib/auth/middleware';
 import { query } from '@/lib/database';
 import { monitoringService } from '@/lib/monitoring';
 
@@ -8,8 +8,10 @@ import { monitoringService } from '@/lib/monitoring';
 export async function GET(request: NextRequest) {
   try {
     // Проверка прав администратора
-    const adminError = await requireAdmin(request);
-    if (adminError) return adminError;
+    const adminOrResponse = await requireAdmin(request);
+    if (adminOrResponse instanceof NextResponse) {
+      return adminOrResponse;
+    }
 
     // Реальные запросы к БД для получения статистики
     
@@ -74,7 +76,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: stats,
-    } as ApiResponse<any>);
+    } as ApiResponse<typeof stats>);
 
   } catch (error) {
     console.error('Error fetching admin stats:', error);

@@ -94,7 +94,7 @@ KNOWLEDGE_BASE_SOURCE_URLS=https://fishingkam.ru,https://example.com/news
 - Реализована полноценная JWT-авторизация в `lib/auth.ts`:
   - `authenticateUser` проверяет токен и возвращает валидный `userId`
   - `authorizeRole` выполняет реальную проверку ролей
-  - `verifyAuth` не доверяет `x-user-id`, работает через JWT
+  - `verifyAuth` не доверяет кастомным user headers, работает через JWT
 - Усилен `middleware.ts`:
   - method-aware публичные API (`GET /api/tours`, `GET /api/partners`, `GET /api/eco-points`, публичные `/api/auth`, `/api/weather`)
   - role-based доступ к namespace:

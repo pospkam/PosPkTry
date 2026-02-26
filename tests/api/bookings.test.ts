@@ -44,7 +44,7 @@ describe('Bookings API', () => {
       const request = createMockRequest({
         method: 'GET',
         url: 'http://localhost:3000/api/bookings',
-        headers: { 'x-user-id': 'user-123' },
+        headers: { authorization: 'Bearer test-token' },
       });
 
       const response = await GET(request as any);
@@ -61,7 +61,7 @@ describe('Bookings API', () => {
       const request = createMockRequest({
         method: 'GET',
         url: 'http://localhost:3000/api/bookings',
-        headers: {}, // No x-user-id header
+        headers: {}, // No Authorization header
       });
 
       const response = await GET(request as any);
@@ -83,7 +83,7 @@ describe('Bookings API', () => {
       const request = createMockRequest({
         method: 'GET',
         url: 'http://localhost:3000/api/bookings?status=confirmed',
-        headers: { 'x-user-id': 'user-123' },
+        headers: { authorization: 'Bearer test-token' },
       });
 
       const response = await GET(request as any);
@@ -102,7 +102,7 @@ describe('Bookings API', () => {
       const request = createMockRequest({
         method: 'GET',
         url: 'http://localhost:3000/api/bookings?limit=5&offset=10',
-        headers: { 'x-user-id': 'user-123' },
+        headers: { authorization: 'Bearer test-token' },
       });
 
       await GET(request as any);
@@ -119,7 +119,7 @@ describe('Bookings API', () => {
       const request = createMockRequest({
         method: 'GET',
         url: 'http://localhost:3000/api/bookings',
-        headers: { 'x-user-id': 'user-123' },
+        headers: { authorization: 'Bearer test-token' },
       });
 
       const response = await GET(request as any);
@@ -136,7 +136,7 @@ describe('Bookings API', () => {
       const request = createMockRequest({
         method: 'GET',
         url: 'http://localhost:3000/api/bookings',
-        headers: { 'x-user-id': 'user-123' },
+        headers: { authorization: 'Bearer test-token' },
       });
 
       const response = await GET(request as any);
@@ -170,7 +170,7 @@ describe('Bookings API', () => {
       const request = createMockRequest({
         method: 'POST',
         url: 'http://localhost:3000/api/bookings',
-        headers: { 'x-user-id': 'user-123' },
+        headers: { authorization: 'Bearer test-token' },
         body: {
           tourId: 'tour-123',
           date: '2025-12-01',
@@ -210,7 +210,7 @@ describe('Bookings API', () => {
       const request = createMockRequest({
         method: 'POST',
         url: 'http://localhost:3000/api/bookings',
-        headers: { 'x-user-id': 'user-123' },
+        headers: { authorization: 'Bearer test-token' },
         body: {
           // Missing tourId
           date: '2025-12-01',
@@ -230,7 +230,7 @@ describe('Bookings API', () => {
       const request = createMockRequest({
         method: 'POST',
         url: 'http://localhost:3000/api/bookings',
-        headers: { 'x-user-id': 'user-123' },
+        headers: { authorization: 'Bearer test-token' },
         body: {
           tourId: 'tour-123',
           date: '2025-12-01',
@@ -252,7 +252,7 @@ describe('Bookings API', () => {
       const request = createMockRequest({
         method: 'POST',
         url: 'http://localhost:3000/api/bookings',
-        headers: { 'x-user-id': 'user-123' },
+        headers: { authorization: 'Bearer test-token' },
         body: {
           tourId: 'nonexistent-tour',
           date: '2025-12-01',
@@ -284,7 +284,7 @@ describe('Bookings API', () => {
       const request = createMockRequest({
         method: 'POST',
         url: 'http://localhost:3000/api/bookings',
-        headers: { 'x-user-id': 'user-123' },
+        headers: { authorization: 'Bearer test-token' },
         body: {
           tourId: 'tour-123',
           date: '2025-12-01',
@@ -321,7 +321,7 @@ describe('Bookings API', () => {
       const request = createMockRequest({
         method: 'POST',
         url: 'http://localhost:3000/api/bookings',
-        headers: { 'x-user-id': 'user-123' },
+        headers: { authorization: 'Bearer test-token' },
         body: {
           tourId: 'tour-123',
           date: '2025-12-01',

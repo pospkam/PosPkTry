@@ -283,14 +283,14 @@ GET /api/discovery/search/trending
 GET /api/discovery/search/tags
 ```
 
-### С аутентификацией (x-user-id)
+### С аутентификацией (JWT)
 ```
 POST /api/discovery/reviews                    - создать отзыв
 PUT /api/discovery/reviews/[id]                - обновить отзыв
 DELETE /api/discovery/reviews/[id]             - удалить отзыв
 ```
 
-### С авторизацией оператора (x-operator-id, role: operator)
+### С авторизацией оператора (роль из JWT: operator)
 ```
 POST /api/discovery/tours                      - создать тур
 PUT /api/discovery/tours/[id]                  - обновить тур
@@ -331,22 +331,9 @@ try {
 ## 🎛️ Headers для запросов
 
 ```typescript
-// Для создания/обновления туров
+// Для приватных запросов
 headers: {
-  'x-operator-id': 'operator-123',
-  'x-user-role': 'operator',
-}
-
-// Для создания отзывов
-headers: {
-  'x-user-id': 'user-456',
-  'x-user-role': 'user',
-}
-
-// Для модерации отзывов
-headers: {
-  'x-user-id': 'moderator-789',
-  'x-user-role': 'moderator', // или 'admin'
+  authorization: 'Bearer <jwt-token>',
 }
 ```
 
