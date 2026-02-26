@@ -74,7 +74,7 @@ export function TourCardsRow() {
       {/* Заголовок */}
       <div className="flex items-center justify-between px-4 mb-3">
         <h2 className="text-[15px] font-bold text-white">Популярные туры</h2>
-        <Link href="/tours" className="text-sm font-medium text-[#00D4FF]">
+        <Link href="/tours" className="text-sm font-medium text-[var(--accent)]">
           Все →
         </Link>
       </div>
