@@ -27,10 +27,10 @@ export default function SafetyPage() {
           </p>
           <a
             href="tel:112"
-            className="inline-flex items-center gap-2 min-h-[44px] px-6 py-3 bg-[var(--danger)] text-white font-bold rounded-[var(--radius-md)] hover:opacity-90 transition-opacity"
+            className="w-full flex items-center justify-center gap-3 py-8 text-3xl font-bold bg-[var(--danger)] text-white rounded-2xl shadow-lg hover:bg-red-600 transition-all duration-200 animate-pulse"
           >
-            <Phone className="w-5 h-5" />
-            112 -- МЧС
+            <Phone className="w-8 h-8" />
+            112 -- MChS
           </a>
         </div>
 

@@ -685,6 +685,156 @@ body {
   line-height: 1.5;
 }
 
+/* =============================================
+   DESIGN SYSTEM — Utility Classes
+   Primenyayutsya globalno cherez Tailwind @layer.
+   Obespechivayut edinoobraznyj vid vsekh stranic.
+   ============================================= */
+
+@layer components {
+  /* Bazovyj fon stranicy i tekst -- nasleduyetsya vsemi stranicami */
+  .ds-page {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+  }
+
+  /* Kartochka */
+  .ds-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s;
+  }
+  .ds-card:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--border-strong);
+  }
+
+  /* Pole vvoda */
+  .ds-input {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    min-height: 44px;
+    padding: 0 1rem;
+    transition: border-color 0.2s;
+  }
+  .ds-input::placeholder {
+    color: var(--text-muted);
+  }
+  .ds-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
+    outline: none;
+  }
+
+  /* Knopka primary */
+  .ds-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 44px;
+    padding: 0 1rem;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  .ds-btn-primary {
+    background: var(--accent);
+    color: #0D1117;
+  }
+  .ds-btn-primary:hover {
+    opacity: 0.9;
+  }
+  .ds-btn-secondary {
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    color: var(--text-primary);
+  }
+  .ds-btn-secondary:hover {
+    background: var(--bg-hover);
+  }
+  .ds-btn-danger {
+    background: var(--danger);
+    color: white;
+  }
+  .ds-btn-danger:hover {
+    opacity: 0.9;
+  }
+
+  /* Sekciya stranicy */
+  .ds-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+  }
+
+  /* Badge statusov */
+  .ds-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  /* Zagalovki */
+  .ds-h1 {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+  }
+  .ds-h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .ds-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+
+  /* Skeleton loading */
+  .ds-skeleton {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+}
+
+/* Globalnye overrajdy -- kazhdaya stranica poluchaet korrektnyj fon */
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Scrollbar pod temnuyu/svetluyu temu */
+:root[data-theme="light"] ::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.03);
+}
+:root[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+}
+:root[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
 /* ===== Star field effect for hero section ===== */
 .hero-stars {
   position: relative;
