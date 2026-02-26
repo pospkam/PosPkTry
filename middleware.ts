@@ -142,24 +142,31 @@ function getRequiredRole(pathname: string): AuthRole | null {
   return matchedRoute?.[1] ?? null;
 }
 
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN,
-});
+const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+  ? new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    })
+  : null;
 
-const ratelimit = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(10, '10 s'),
-});
+const ratelimit = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(10, '10 s'),
+    })
+  : null;
 
 export async function middleware(request: NextRequest) {
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? '127.0.0.1';
-  const { success } = await ratelimit.limit(ip);
+  // Skip rate limiting if Redis is not configured (development mode)
+  if (ratelimit) {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? '127.0.0.1';
+    const { success } = await ratelimit.limit(ip);
 
-  if (!success) {
-    return applySecurityHeaders(
-      NextResponse.json({ error: 'Too many requests' }, { status: 429 })
-    );
+    if (!success) {
+      return applySecurityHeaders(
+        NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+      );
+    }
   }
 
   const { pathname } = request.nextUrl;
