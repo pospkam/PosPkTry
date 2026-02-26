@@ -2,10 +2,42 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireOperator } from '@/lib/auth/middleware';
-import { verifyTourOwnership } from '@/lib/auth/operator-helpers';
+import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
 import crypto from 'crypto';
 
 export const dynamic = 'force-dynamic';
+
+async function getStrictOperatorId(request: NextRequest): Promise<string | NextResponse> {
+  const operatorOrResponse = await requireOperator(request);
+  if (operatorOrResponse instanceof NextResponse) {
+    return operatorOrResponse;
+  }
+
+  if (operatorOrResponse.role !== 'operator') {
+    return NextResponse.json({
+      success: false,
+      error: 'Недостаточно прав доступа'
+    } as ApiResponse<null>, { status: 403 });
+  }
+
+  const operatorId = await getOperatorPartnerId(operatorOrResponse.userId);
+  if (!operatorId) {
+    return NextResponse.json({
+      success: false,
+      error: 'Партнёрский профиль оператора не найден'
+    } as ApiResponse<null>, { status: 404 });
+  }
+
+  return operatorId;
+}
+
+async function ensureTourOwnership(tourId: string, operatorId: string): Promise<boolean> {
+  const result = await query(
+    `SELECT id FROM tours WHERE id = $1 AND operator_id = $2`,
+    [tourId, operatorId]
+  );
+  return result.rows.length > 0;
+}
 
 /**
  * GET /api/operator/tours/[id]/photos
@@ -16,17 +48,15 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const operatorOrResponse = await requireOperator(request);
-    if (operatorOrResponse instanceof NextResponse) {
-      return operatorOrResponse;
+    const operatorIdOrResponse = await getStrictOperatorId(request);
+    if (operatorIdOrResponse instanceof NextResponse) {
+      return operatorIdOrResponse;
     }
-    const userId = operatorOrResponse.userId;
+    const operatorId = operatorIdOrResponse;
 
     const { id } = await params;
 
-    // Verify ownership
-    const isOwner = await verifyTourOwnership(userId, id);
-    
+    const isOwner = await ensureTourOwnership(id, operatorId);
     if (!isOwner) {
       return NextResponse.json({
         success: false,
@@ -65,7 +95,7 @@ export async function GET(
     return NextResponse.json({
       success: true,
       data: { photos }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Get tour photos error:', error);
@@ -86,17 +116,15 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const operatorOrResponse = await requireOperator(request);
-    if (operatorOrResponse instanceof NextResponse) {
-      return operatorOrResponse;
+    const operatorIdOrResponse = await getStrictOperatorId(request);
+    if (operatorIdOrResponse instanceof NextResponse) {
+      return operatorIdOrResponse;
     }
-    const userId = operatorOrResponse.userId;
+    const operatorId = operatorIdOrResponse;
 
     const { id } = await params;
 
-    // Verify ownership
-    const isOwner = await verifyTourOwnership(userId, id);
-    
+    const isOwner = await ensureTourOwnership(id, operatorId);
     if (!isOwner) {
       return NextResponse.json({
         success: false,
@@ -157,7 +185,7 @@ export async function POST(
       success: true,
       data: result.rows[0],
       message: 'Фотография успешно добавлена'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Upload photo error:', error);
