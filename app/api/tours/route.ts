@@ -137,11 +137,12 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<{ tours: TourResponse[]; pagination: any }>);
 
   } catch (error) {
-    console.error('Error fetching tours:', error);
+    const errMsg = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[TOURS_GET] Database error:', errMsg, error);
     return NextResponse.json({
       success: false,
-      error: 'Failed to fetch tours',
-      message: error instanceof Error ? error.message : 'Database connection error',
+      error: 'Не удалось загрузить туры',
+      details: process.env.NODE_ENV === 'development' ? errMsg : undefined,
     } as ApiResponse<null>, { status: 500 });
   }
 }

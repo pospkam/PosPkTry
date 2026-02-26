@@ -30,7 +30,7 @@ export default function SafetyPage() {
             className="w-full flex items-center justify-center gap-3 py-8 text-3xl font-bold bg-[var(--danger)] text-white rounded-2xl shadow-lg hover:bg-red-600 transition-all duration-200 animate-pulse"
           >
             <Phone className="w-8 h-8" />
-            112 -- MChS
+            112 — МЧС
           </a>
         </div>
 
@@ -40,10 +40,10 @@ export default function SafetyPage() {
             <h2 className="text-lg font-bold text-[var(--text-primary)]">Экстренные контакты</h2>
           </div>
           <ul className="space-y-2 text-[var(--text-secondary)]">
-            <li>112 -- Единый номер экстренных служб</li>
-            <li>103 -- Скорая помощь</li>
-            <li>101 -- Пожарная</li>
-            <li>+7 914-782-22-22 -- Kamchatour Hub</li>
+            <li>112 — Единый номер экстренных служб</li>
+            <li>103 — Скорая помощь</li>
+            <li>101 — Пожарная</li>
+            <li>+7 914-782-22-22 — Kamchatour Hub</li>
           </ul>
         </div>
       </div>
@@ -56,7 +56,7 @@ export default function SafetyPage() {
         <ul className="space-y-2 text-[var(--text-secondary)] list-disc list-inside">
           <li>Всегда сообщайте маршрут и сроки похода оператору или МЧС</li>
           <li>Не приближайтесь к медведям ближе 100 метров</li>
-          <li>Следите за погодой -- она меняется быстро</li>
+          <li>Следите за погодой — она меняется быстро</li>
           <li>Берите запас еды, воды и тёплой одежды</li>
           <li>Не ходите на вулканы без сертифицированного гида</li>
           <li>Держите телефон заряженным, имейте powerbank</li>

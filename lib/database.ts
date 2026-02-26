@@ -2,12 +2,13 @@ import { Pool, PoolClient } from 'pg';
 import { config } from '@/lib/config';
 
 // Создаем пул соединений с базой данных
+// SSL включается через DATABASE_SSL=true в env (требуется для Timeweb Cloud)
 const pool = new Pool({
   connectionString: config.database.url,
   ssl: config.database.ssl ? { rejectUnauthorized: false } : false,
-  max: 20, // Максимальное количество соединений
-  idleTimeoutMillis: 30000, // Таймаут неактивных соединений
-  connectionTimeoutMillis: 2000, // Таймаут установки соединения
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 5000,
 });
 
 // Экспортируем функцию для получения пула (для миграционных скриптов)
