@@ -32,8 +32,8 @@ export async function GET(request: NextRequest) {
     if (requestedUserId && requestedUserId !== auth.userId && auth.role !== 'admin') {
       return NextResponse.json({
         success: false,
-        error: 'Forbidden',
-      } as ApiResponse<null>, { status: 403 });
+        error: 'Session not found',
+      } as ApiResponse<null>, { status: 404 });
     }
 
     let chatQuery: string;
@@ -56,9 +56,10 @@ export async function GET(request: NextRequest) {
         FROM chat_sessions s
         LEFT JOIN chat_messages m ON s.id = m.session_id
         WHERE s.id = $1
+          ${auth.role === 'admin' ? '' : 'AND s.user_id = $2'}
         ORDER BY m.timestamp ASC
       `;
-      queryParams = [sessionId];
+      queryParams = auth.role === 'admin' ? [sessionId] : [sessionId, auth.userId];
     } else {
       // Получаем последний чат пользователя
       chatQuery = `
@@ -85,17 +86,17 @@ export async function GET(request: NextRequest) {
     const result = await query(chatQuery, queryParams);
 
     if (result.rows.length === 0) {
+      if (sessionId) {
+        return NextResponse.json({
+          success: false,
+          error: 'Session not found',
+        } as ApiResponse<null>, { status: 404 });
+      }
+
       return NextResponse.json({
         success: true,
         data: null,
       } as ApiResponse<ChatSession | null>);
-    }
-
-    if (auth.role !== 'admin' && sessionId && result.rows[0].user_id !== auth.userId) {
-      return NextResponse.json({
-        success: false,
-        error: 'Forbidden',
-      } as ApiResponse<null>, { status: 403 });
     }
 
     // Группируем сообщения по сессиям
@@ -168,31 +169,28 @@ export async function POST(request: NextRequest) {
     if (requestedUserId && requestedUserId !== auth.userId && auth.role !== 'admin') {
       return NextResponse.json({
         success: false,
-        error: 'Forbidden',
-      } as ApiResponse<null>, { status: 403 });
+        error: 'Session not found',
+      } as ApiResponse<null>, { status: 404 });
     }
 
     let currentSessionId = sessionId;
 
     if (currentSessionId) {
-      const existingSession = await query(
-        'SELECT user_id FROM chat_sessions WHERE id = $1 LIMIT 1',
-        [currentSessionId]
-      );
+      const existingSession = auth.role === 'admin'
+        ? await query(
+            'SELECT user_id FROM chat_sessions WHERE id = $1 LIMIT 1',
+            [currentSessionId]
+          )
+        : await query(
+            'SELECT user_id FROM chat_sessions WHERE id = $1 AND user_id = $2 LIMIT 1',
+            [currentSessionId, auth.userId]
+          );
 
       if (existingSession.rows.length === 0) {
         return NextResponse.json({
           success: false,
           error: 'Session not found',
         } as ApiResponse<null>, { status: 404 });
-      }
-
-      const sessionOwnerId = existingSession.rows[0].user_id as string;
-      if (auth.role !== 'admin' && sessionOwnerId !== auth.userId) {
-        return NextResponse.json({
-          success: false,
-          error: 'Forbidden',
-        } as ApiResponse<null>, { status: 403 });
       }
     }
 
@@ -290,43 +288,7 @@ async function getAIResponse(message: string, context?: any): Promise<{ content:
 
     const userPrompt = `Пользователь: ${message}`;
 
-    // Пробуем получить ответ от GROQ
-    if (config.ai.groq.apiKey) {
-      try {
-        const response = await fetch(`${config.ai.groq.baseUrl}/chat/completions`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${config.ai.groq.apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: config.ai.groq.model,
-            messages: [
-              { role: 'system', content: systemPrompt },
-              { role: 'user', content: userPrompt }
-            ],
-            max_tokens: config.ai.groq.maxTokens,
-            temperature: config.ai.groq.temperature,
-          }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          return {
-            content: data.choices[0].message.content,
-            metadata: {
-              model: config.ai.groq.model,
-              provider: 'groq',
-              tokens: data.usage?.total_tokens,
-            }
-          };
-        }
-      } catch (error) {
-        console.error('GROQ API error:', error);
-      }
-    }
-
-    // Если GROQ не работает, пробуем DeepSeek
+    // Пробуем получить ответ от DeepSeek
     if (config.ai.deepseek.apiKey) {
       try {
         const response = await fetch(`${config.ai.deepseek.baseUrl}/chat/completions`, {

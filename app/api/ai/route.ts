@@ -6,31 +6,6 @@ export const runtime = 'nodejs'
 
 // async function callTimeweb(prompt: string) { ... } // Временно отключено TODO
 
-async function callGroq(prompt: string) {
-  const apiKey = process.env.GROQ_API_KEY
-  if (!apiKey) return null
-  const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: 'llama-3.1-70b',
-      temperature: 0.3,
-      max_tokens: 400,
-      messages: [
-        { role: 'system', content: 'Кратко и по делу. Я туристический ассистент Камчатки.' },
-        { role: 'user', content: prompt },
-      ],
-    }),
-  })
-  if (!r.ok) return null
-  const data = await r.json()
-  const content = data?.choices?.[0]?.message?.content || ''
-  return content
-}
-
 async function callDeepseek(prompt: string) {
   const apiKey = process.env.DEEPSEEK_API_KEY
   if (!apiKey) return null
@@ -139,9 +114,8 @@ export async function POST(req: NextRequest) {
     const q = String(prompt || '').slice(0, 800)
     if (!q) return NextResponse.json({ error: 'EMPTY' }, { status: 400 })
 
-    // Приоритет: GROQ → DeepSeek → Minimax → xAI → OpenRouter (Timeweb AI временно отключен)
-    let answer = await callGroq(q)
-    if (!answer) answer = await callDeepseek(q)
+    // Приоритет: DeepSeek → Minimax → xAI → OpenRouter (Timeweb AI временно отключен)
+    let answer = await callDeepseek(q)
     if (!answer) answer = await callMinimax(q)
     if (!answer) answer = await callXai(q)
     if (!answer) answer = await callOpenrouter(q)
@@ -149,7 +123,6 @@ export async function POST(req: NextRequest) {
 
     // TODO: Включить Timeweb AI после исправления API
     // let answer = await callTimeweb(q)
-    // if (!answer) answer = await callGroq(q)
     // if (!answer) answer = await callDeepseek(q)
 
     return NextResponse.json({ ok: true, answer })

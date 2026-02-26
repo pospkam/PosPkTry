@@ -8,28 +8,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { ticketService } from '@/lib/database'
 import { verifyAuth } from '@/lib/auth'
 
-function extractTicketParticipantIds(ticket: unknown): { customerId: string | null; agentId: string | null } {
-  if (!ticket || typeof ticket !== 'object') {
-    return { customerId: null, agentId: null };
-  }
-
-  const record = ticket as Record<string, unknown>;
-  const customerId =
-    typeof record.customerId === 'string'
-      ? record.customerId
-      : typeof record.customer_id === 'string'
-        ? record.customer_id
-        : null;
-  const agentId =
-    typeof record.agentId === 'string'
-      ? record.agentId
-      : typeof record.agent_id === 'string'
-        ? record.agent_id
-        : null;
-
-  return { customerId, agentId };
-}
-
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -43,17 +21,12 @@ export async function GET(
 
     const { id } = await params
     ticketId = id
-    const ticket = await ticketService.getTicket(id)
+    const isPrivilegedRole = auth.role === 'admin' || auth.role === 'agent'
+    const ticket = isPrivilegedRole
+      ? await ticketService.getTicket(id)
+      : await ticketService.getTicketForUser(id, auth.userId)
     if (!ticket) {
       return NextResponse.json({ success: false, error: 'Ticket not found' }, { status: 404 })
-    }
-
-    const { customerId, agentId } = extractTicketParticipantIds(ticket)
-    const isPrivilegedRole = auth.role === 'admin' || auth.role === 'agent'
-    const isParticipant = auth.userId === customerId || auth.userId === agentId
-
-    if (!isPrivilegedRole && !isParticipant) {
-      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 })
     }
 
     return NextResponse.json({
@@ -82,21 +55,21 @@ export async function PUT(
 
     const { id } = await params
     ticketId = id
-    const existingTicket = await ticketService.getTicket(id)
+    const isPrivilegedRole = auth.role === 'admin' || auth.role === 'agent'
+    const existingTicket = isPrivilegedRole
+      ? await ticketService.getTicket(id)
+      : await ticketService.getTicketForUser(id, auth.userId)
     if (!existingTicket) {
       return NextResponse.json({ success: false, error: 'Ticket not found' }, { status: 404 })
     }
 
-    const { customerId, agentId } = extractTicketParticipantIds(existingTicket)
-    const isPrivilegedRole = auth.role === 'admin' || auth.role === 'agent'
-    const isParticipant = auth.userId === customerId || auth.userId === agentId
-
-    if (!isPrivilegedRole && !isParticipant) {
-      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 })
-    }
-
     const data = await request.json()
-    const ticket = await ticketService.updateTicket(id, data)
+    const ticket = isPrivilegedRole
+      ? await ticketService.updateTicket(id, data)
+      : await ticketService.updateTicketForUser(id, auth.userId, data)
+    if (!ticket) {
+      return NextResponse.json({ success: false, error: 'Ticket not found' }, { status: 404 })
+    }
 
     return NextResponse.json({
       success: true,

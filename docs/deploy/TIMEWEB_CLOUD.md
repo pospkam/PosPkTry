@@ -110,7 +110,7 @@ YANDEX_WEATHER_API_KEY=REPLACE_WITH_YANDEX_WEATHER_API_KEY
 
 ```env
 # AI
-GROQ_API_KEY=your-groq-key
+DEEPSEEK_API_KEY=your-deepseek-key
 TIMEWEB_AI_API_KEY=your-timeweb-ai-key
 
 # Email

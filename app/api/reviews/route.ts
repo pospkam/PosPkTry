@@ -2,15 +2,55 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse, Review } from '@/types';
 import { query } from '@/lib/database';
 import { verifyAuth } from '@/lib/auth';
+import { z } from 'zod';
+
+const reviewListQuerySchema = z.object({
+  tourId: z.string().trim().min(1).optional(),
+  operatorId: z.string().trim().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(10),
+  offset: z.coerce.number().int().min(0).default(0),
+});
+
+const createReviewSchema = z.object({
+  tourId: z.string().trim().min(1),
+  rating: z.coerce.number().int().min(1).max(5),
+  comment: z.string().trim().max(5000).optional().default(''),
+  images: z.array(z.string().trim().min(1)).max(20).optional().default([]),
+});
+
+function queryParamOrUndefined(searchParams: URLSearchParams, key: string): string | undefined {
+  const value = searchParams.get(key);
+  if (!value) {
+    return undefined;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
 
 // GET /api/reviews - Получение отзывов (для тура, оператора и т.д.)
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const tourId = searchParams.get('tourId');
-    const operatorId = searchParams.get('operatorId');
-    const limit = parseInt(searchParams.get('limit') || '10');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const parsedQuery = reviewListQuerySchema.safeParse({
+      tourId: queryParamOrUndefined(searchParams, 'tourId'),
+      operatorId: queryParamOrUndefined(searchParams, 'operatorId'),
+      limit: queryParamOrUndefined(searchParams, 'limit'),
+      offset: queryParamOrUndefined(searchParams, 'offset'),
+    });
+
+    if (!parsedQuery.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Неверные параметры запроса',
+          details: parsedQuery.error.flatten(),
+        } as ApiResponse<null>,
+        { status: 400 }
+      );
+    }
+
+    const { tourId, operatorId, limit, offset } = parsedQuery.data;
 
     let queryText = `
       SELECT
@@ -32,8 +72,8 @@ export async function GET(request: NextRequest) {
       LEFT JOIN assets a ON ra.asset_id = a.id
     `;
 
-    const conditions = [];
-    const params = [];
+    const conditions: string[] = [];
+    const params: unknown[] = [];
 
     if (tourId) {
       conditions.push(`r.tour_id = $${conditions.length + 1}`);
@@ -97,26 +137,32 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { tourId, rating, comment, images = [] } = body;
-
-    // Валидация входных данных
-    if (!tourId || !rating || rating < 1 || rating > 5) {
+    const parsedBody = createReviewSchema.safeParse(body);
+    if (!parsedBody.success) {
       return NextResponse.json(
-        { success: false, error: 'Неверные данные: tourId обязателен, rating должен быть от 1 до 5' } as ApiResponse<null>,
+        {
+          success: false,
+          error: 'Неверные данные отзыва',
+          details: parsedBody.error.flatten(),
+        } as ApiResponse<null>,
         { status: 400 }
       );
     }
+
+    const { tourId, rating: parsedRating, comment, images } = parsedBody.data;
+    const normalizedImages = [...new Set(images)];
 
     const userId = auth.userId;
 
     // Проверяем, что пользователь прошел тур (есть завершенная бронь)
     const bookingCheck = await query(`
-      SELECT COUNT(*) as count
+      SELECT 1
       FROM bookings
       WHERE user_id = $1 AND tour_id = $2 AND status = 'completed'
+      LIMIT 1
     `, [userId, tourId]);
 
-    if (bookingCheck.rows[0].count === 0) {
+    if (bookingCheck.rows.length === 0) {
       return NextResponse.json(
         { success: false, error: 'Вы не можете оставить отзыв о туре, который не завершили' } as ApiResponse<null>,
         { status: 403 }
@@ -140,13 +186,13 @@ export async function POST(request: NextRequest) {
       INSERT INTO reviews (user_id, tour_id, rating, comment, is_verified)
       VALUES ($1, $2, $3, $4, false)
       RETURNING id, created_at, updated_at
-    `, [userId, tourId, rating, comment]);
+    `, [userId, tourId, parsedRating, comment]);
 
     const newReview = result.rows[0];
 
     // Сохраняем изображения, если они есть
-    if (images && images.length > 0) {
-      for (const imageId of images) {
+    if (normalizedImages.length > 0) {
+      for (const imageId of normalizedImages) {
         await query(`
           INSERT INTO review_assets (review_id, asset_id)
           VALUES ($1, $2)
@@ -162,9 +208,9 @@ export async function POST(request: NextRequest) {
         id: newReview.id,
         userId,
         tourId,
-        rating,
+        rating: parsedRating,
         comment,
-        images: images || [],
+        images: normalizedImages,
         isVerified: false,
         createdAt: newReview.created_at,
         updatedAt: newReview.updated_at,

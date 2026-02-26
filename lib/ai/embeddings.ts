@@ -1,7 +1,7 @@
 /**
  * Генерация эмбеддингов и семантический поиск туров
- * Использует Groq embeddings API (совместимо с OpenAI)
- * Fallback: text-embedding-ada-002 compatible
+ * Использует OpenAI embeddings API
+ * Fallback: детерминированный локальный эмбеддинг
  */
 
 import { query } from '@/lib/database';
@@ -25,35 +25,32 @@ export interface SemanticSearchResult {
   similarity: number;
 }
 
-// ── Генерация эмбеддинга через Groq/OpenAI-compatible API ─────
+// ── Генерация эмбеддинга через OpenAI API ─────────────────────
 export async function generateEmbedding(text: string): Promise<number[] | null> {
-  // Пробуем Groq (модель mixedembeddings) или OpenAI-совместимый endpoint
-  const apiKey = process.env.GROQ_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    console.warn('GROQ_API_KEY не задан — эмбеддинги недоступны');
-    return null;
+    console.warn('OPENAI_API_KEY не задан — используем fallback-эмбеддинг');
+    return await generateEmbeddingFallback(text);
   }
 
   // Преобразуем текст: убираем лишние пробелы
   const cleanText = text.replace(/\s+/g, ' ').trim().slice(0, 8000);
 
   try {
-    // Groq поддерживает OpenAI-совместимый embeddings endpoint
-    const res = await fetch('https://api.groq.com/openai/v1/embeddings', {
+    const res = await fetch('https://api.openai.com/v1/embeddings', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'text-embedding-ada-002', // или 'nomic-embed-text-v1.5' если доступен в Groq
+        model: 'text-embedding-3-small',
         input: cleanText,
       }),
     });
 
     if (!res.ok) {
-      // Groq может не поддерживать embeddings — используем имитацию для разработки
-      console.warn(`Groq embeddings API: ${res.status}. Trying fallback.`);
+      console.warn(`OpenAI embeddings API: ${res.status}. Trying fallback.`);
       return await generateEmbeddingFallback(cleanText);
     }
 

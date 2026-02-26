@@ -25,7 +25,7 @@ NODE_ENV=production
 Опциональные (погода работает и без них):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 OPENWEATHERMAP_API_KEY=ваш_ключ
-GROQ_API_KEY=ваш_ключ
+DEEPSEEK_API_KEY=ваш_ключ
 ```
 
 ### Шаг 3: Deploy (2 минуты)
@@ -87,7 +87,7 @@ docker-compose up -d
 - 🌦️ API погоды (4 провайдера)
 - 🗺️ 25 API эндпоинтов
 - 🗄️ База данных PostgreSQL
-- 🤖 AI-помощник (если добавили GROQ_API_KEY)
+- 🤖 AI-помощник (если добавили DEEPSEEK_API_KEY)
 - 📊 Все 6 SQL схем автоматически применены
 
 ---

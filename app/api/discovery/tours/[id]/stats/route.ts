@@ -32,10 +32,10 @@ export async function GET(
         return NextResponse.json(
           {
             success: false,
-            error: 'Forbidden',
-            message: 'You can only access stats for your own tours',
+            error: 'Not Found',
+            message: 'Tour not found',
           },
-          { status: 403 }
+          { status: 404 }
         );
       }
     }

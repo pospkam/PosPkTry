@@ -116,55 +116,9 @@ Rules:
   }
 }
 
-// ── Groq Vision fallback (llama vision) ──────────────────────
-async function analyzeWithGroqVision(imageUrl: string): Promise<TourImageTags | null> {
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) return null;
-
-  try {
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-        max_tokens: 300,
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'image_url',
-                image_url: { url: imageUrl, detail: 'low' },
-              },
-              {
-                type: 'text',
-                text: `Tag this Kamchatka tourism photo. Return ONLY JSON:
-{"landscape":["volcano"|"geyser"|"ocean"|"forest"|"snow"|"mountain"|"river"|"lake"|"beach"|"tundra"],"activity":["hiking"|"fishing"|"boat"|"helicopter"|"skiing"|"camping"],"difficulty":"easy"|"moderate"|"extreme","season":["summer"|"winter"|"spring"|"autumn"],"features":["wildlife"|"bears"|"salmon"|"birds"|"aurora"|"hot_springs"]}`,
-              },
-            ],
-          },
-        ],
-      }),
-    });
-
-    if (!res.ok) return null;
-    const data = await res.json();
-    const text = data?.choices?.[0]?.message?.content ?? '';
-    const raw = parseTagsFromText(text);
-    return sanitizeTags(raw);
-  } catch {
-    return null;
-  }
-}
-
 // ── Основная функция: теггинг одного изображения ─────────────
 export async function tagTourImage(imageUrl: string): Promise<TourImageTags | null> {
-  // Пробуем Claude → Groq Vision
-  const result = (await analyzeWithClaude(imageUrl)) ?? (await analyzeWithGroqVision(imageUrl));
-  return result;
+  return analyzeWithClaude(imageUrl);
 }
 
 // ── Теггинг всех фото тура (агрегированный результат) ─────────

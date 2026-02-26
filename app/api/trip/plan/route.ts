@@ -553,38 +553,9 @@ function createFallbackPlan(
 }
 
 /**
- * Вызов AI (GROQ или DeepSeek)
+ * Вызов AI (DeepSeek как основной провайдер)
  */
 async function callAI(systemPrompt: string, userPrompt: string): Promise<string> {
-  // Пробуем GROQ
-  if (config.ai.groq.apiKey) {
-    try {
-      const response = await fetch(`${config.ai.groq.baseUrl}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${config.ai.groq.apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: config.ai.groq.model,
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt }
-          ],
-          max_tokens: config.ai.groq.maxTokens,
-          temperature: 0.7,
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        return data.choices[0].message.content;
-      }
-    } catch (error) {
-      console.error('GROQ AI error:', error);
-    }
-  }
-
   // Пробуем DeepSeek
   if (config.ai.deepseek.apiKey) {
     try {

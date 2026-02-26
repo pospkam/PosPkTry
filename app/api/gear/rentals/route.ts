@@ -19,10 +19,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       gearId,
-      gearName,
       customer,
       rental,
-      pricing,
       comments
     } = body;
 
@@ -41,6 +39,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const quantity = Number(rental?.quantity);
+    if (!Number.isInteger(quantity) || quantity < 1) {
+      return NextResponse.json(
+        { success: false, error: 'Количество должно быть целым числом больше 0' } as ApiResponse<null>,
+        { status: 400 }
+      );
+    }
+
+    const startDate = new Date(rental.startDate);
+    const endDate = new Date(rental.endDate);
+    if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime()) || endDate <= startDate) {
+      return NextResponse.json(
+        { success: false, error: 'Некорректный диапазон дат аренды' } as ApiResponse<null>,
+        { status: 400 }
+      );
+    }
+
+    const rentalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+
     // Проверяем доступность снаряжения
     const availabilityCheck = await query(`
       SELECT available_quantity, price_per_day, price_per_week
@@ -56,12 +73,29 @@ export async function POST(request: NextRequest) {
     }
 
     const gearData = availabilityCheck.rows[0];
-    if (gearData.available_quantity < rental.quantity) {
+    if (gearData.available_quantity < quantity) {
       return NextResponse.json(
         { success: false, error: 'Недостаточное количество доступного снаряжения' } as ApiResponse<null>,
         { status: 400 }
       );
     }
+
+    const pricePerDay = Number(gearData.price_per_day);
+    const pricePerWeek = Number(gearData.price_per_week);
+    if (!Number.isFinite(pricePerDay) || pricePerDay < 0) {
+      return NextResponse.json(
+        { success: false, error: 'Ошибка конфигурации цен снаряжения' } as ApiResponse<null>,
+        { status: 500 }
+      );
+    }
+
+    // Бизнес-правило: стоимость аренды рассчитывается на сервере, а не из клиентского payload.
+    const weeklyPrice = Number.isFinite(pricePerWeek) && pricePerWeek > 0 ? pricePerWeek : null;
+    const weeks = weeklyPrice ? Math.floor(rentalDays / 7) : 0;
+    const remainingDays = weeklyPrice ? rentalDays % 7 : rentalDays;
+    const basePrice = ((weeklyPrice ? weeks * weeklyPrice : 0) + remainingDays * pricePerDay) * quantity;
+    const insuranceCost = 0;
+    const totalPrice = basePrice + insuranceCost;
 
     // Создаем заявку на аренду
     const result = await query(`
@@ -80,12 +114,12 @@ export async function POST(request: NextRequest) {
       customer.phone,
       rental.startDate,
       rental.endDate,
-      rental.quantity,
-      rental.days,
-      rental.insurance,
-      pricing.basePrice,
-      pricing.insuranceCost,
-      pricing.totalPrice,
+      quantity,
+      rentalDays,
+      Boolean(rental.insurance),
+      basePrice,
+      insuranceCost,
+      totalPrice,
       comments || null
     ]);
 
@@ -131,13 +165,22 @@ export async function GET(request: NextRequest) {
     if (!isAdmin && !partnerId) {
       return NextResponse.json(
         { success: false, error: 'Профиль партнёра не найден' } as ApiResponse<null>,
-        { status: 403 }
+        { status: 404 }
       );
     }
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
-    const limit = parseInt(searchParams.get('limit') || '50');
+    const parsedLimit = Number.parseInt(searchParams.get('limit') || '50', 10);
+    const limit = Number.isFinite(parsedLimit) ? Math.min(Math.max(parsedLimit, 1), 100) : 50;
+    const allowedStatuses = new Set(['pending', 'confirmed', 'active', 'completed', 'cancelled', 'overdue']);
+
+    if (status && !allowedStatuses.has(status)) {
+      return NextResponse.json(
+        { success: false, error: 'Некорректный статус' } as ApiResponse<null>,
+        { status: 400 }
+      );
+    }
 
     let queryText = `
       SELECT
@@ -168,7 +211,7 @@ export async function GET(request: NextRequest) {
 
     // Бизнес-правило: партнёр видит только свои заявки, admin — все.
     if (!isAdmin && partnerId) {
-      whereConditions.push(`gr.partner_id = $${params.length + 1}`);
+      whereConditions.push(`g.partner_id = $${params.length + 1}`);
       params.push(partnerId);
     }
 

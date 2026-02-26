@@ -30,8 +30,8 @@ export async function GET(request: NextRequest) {
     if (requestedUserId && requestedUserId !== auth.userId && auth.role !== 'admin') {
       return NextResponse.json({
         success: false,
-        error: 'Forbidden',
-      } as ApiResponse<null>, { status: 403 });
+        error: 'User eco-points not found',
+      } as ApiResponse<null>, { status: 404 });
     }
 
     // Получаем данные пользователя
@@ -143,8 +143,8 @@ export async function POST(request: NextRequest) {
     if (userId !== auth.userId && auth.role !== 'admin') {
       return NextResponse.json({
         success: false,
-        error: 'Forbidden',
-      } as ApiResponse<null>, { status: 403 });
+        error: 'User eco-points not found',
+      } as ApiResponse<null>, { status: 404 });
     }
 
     // Начинаем транзакцию

@@ -3,8 +3,21 @@ import { query } from '@/lib/database';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { AdminUser } from '@/types/admin';
 import { ApiResponse } from '@/types';
+import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
+
+const ADMIN_USER_ROLES = ['tourist', 'operator', 'guide', 'transfer', 'agent', 'admin', 'stay', 'gear'] as const;
+
+const updateAdminUserSchema = z.object({
+  name: z.string().trim().min(1).max(120).optional(),
+  email: z.string().trim().email().optional(),
+  role: z.enum(ADMIN_USER_ROLES).optional(),
+  preferences: z.record(z.unknown()).optional(),
+}).refine(
+  (data) => Object.keys(data).length > 0,
+  { message: 'No fields to update' }
+);
 
 /**
  * GET /api/admin/users/[id]
@@ -98,9 +111,19 @@ export async function PUT(
     }
     const { id } = await context.params;
     const body = await request.json();
+    const parsedBody = updateAdminUserSchema.safeParse(body);
+    if (!parsedBody.success) {
+      return NextResponse.json({
+        success: false,
+        error: 'Invalid user payload',
+        details: parsedBody.error.flatten(),
+      } as ApiResponse<null>, { status: 400 });
+    }
+
+    const { name, email, role, preferences } = parsedBody.data;
 
     // Проверяем, существует ли пользователь
-    const checkQuery = 'SELECT id FROM users WHERE id = $1';
+    const checkQuery = 'SELECT id, role FROM users WHERE id = $1';
     const checkResult = await query(checkQuery, [id]);
 
     if (checkResult.rows.length === 0) {
@@ -110,59 +133,70 @@ export async function PUT(
       } as ApiResponse<null>, { status: 404 });
     }
 
-    // Строим динамический запрос обновления
-    const updates: string[] = [];
-    const values: any[] = [];
-    let paramIndex = 1;
+    const existingUser = checkResult.rows[0] as { id: string; role: string };
 
-    if (body.name !== undefined) {
-      updates.push(`name = $${paramIndex}`);
-      values.push(body.name);
-      paramIndex++;
-    }
-
-    if (body.email !== undefined) {
-      updates.push(`email = $${paramIndex}`);
-      values.push(body.email);
-      paramIndex++;
-    }
-
-    if (body.role !== undefined) {
-      const validRoles = ['tourist', 'operator', 'guide', 'transfer', 'agent', 'admin'];
-      if (!validRoles.includes(body.role)) {
+    if (email) {
+      const emailCheck = await query('SELECT id FROM users WHERE email = $1 AND id <> $2 LIMIT 1', [email, id]);
+      if (emailCheck.rows.length > 0) {
         return NextResponse.json({
           success: false,
-          error: `Invalid role. Must be one of: ${validRoles.join(', ')}`
+          error: 'User with this email already exists'
+        } as ApiResponse<null>, { status: 409 });
+      }
+    }
+
+    // Защита: нельзя понизить последнего администратора через update.
+    if (role && existingUser.role === 'admin' && role !== 'admin') {
+      const adminCountResult = await query('SELECT COUNT(*) as count FROM users WHERE role = $1', ['admin']);
+      const adminCount = Number.parseInt(adminCountResult.rows[0]?.count ?? '0', 10);
+      if (adminCount <= 1) {
+        return NextResponse.json({
+          success: false,
+          error: 'Cannot demote the last admin user'
         } as ApiResponse<null>, { status: 400 });
       }
+    }
+
+    // Строим динамический запрос обновления
+    const updates: string[] = [];
+    const values: unknown[] = [];
+    let paramIndex = 1;
+
+    if (name !== undefined) {
+      updates.push(`name = $${paramIndex}`);
+      values.push(name);
+      paramIndex++;
+    }
+
+    if (email !== undefined) {
+      updates.push(`email = $${paramIndex}`);
+      values.push(email);
+      paramIndex++;
+    }
+
+    if (role !== undefined) {
       updates.push(`role = $${paramIndex}`);
-      values.push(body.role);
+      values.push(role);
       paramIndex++;
     }
 
-    if (body.preferences !== undefined) {
+    if (preferences !== undefined) {
       updates.push(`preferences = $${paramIndex}`);
-      values.push(JSON.stringify(body.preferences));
+      values.push(JSON.stringify(preferences));
       paramIndex++;
-    }
-
-    if (updates.length === 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'No fields to update'
-      } as ApiResponse<null>, { status: 400 });
     }
 
     // Добавляем updated_at
     updates.push(`updated_at = NOW()`);
 
     // ID в конец
+    const idParamIndex = values.length + 1;
     values.push(id);
 
     const updateQuery = `
       UPDATE users
       SET ${updates.join(', ')}
-      WHERE id = $${paramIndex}
+      WHERE id = $${idParamIndex}
       RETURNING id, email, name, role, updated_at
     `;
 
@@ -228,7 +262,7 @@ export async function DELETE(
       const adminCountQuery = 'SELECT COUNT(*) as count FROM users WHERE role = $1';
       const adminCountResult = await query(adminCountQuery, ['admin']);
       
-      if (parseInt(adminCountResult.rows[0].count) <= 1) {
+      if (Number.parseInt(adminCountResult.rows[0]?.count ?? '0', 10) <= 1) {
         return NextResponse.json({
           success: false,
           error: 'Cannot delete the last admin user'

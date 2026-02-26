@@ -29,8 +29,8 @@ export async function GET(request: NextRequest) {
     if (requestedUserId && requestedUserId !== auth.userId && auth.role !== 'admin') {
       return NextResponse.json({
         success: false,
-        error: 'Forbidden'
-      }, { status: 403 });
+        error: 'User stats not found'
+      }, { status: 404 });
     }
 
     const stats = await loyaltySystem.getUserLoyaltyStats(userId);

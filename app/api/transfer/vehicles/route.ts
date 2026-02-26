@@ -3,8 +3,44 @@ import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { getTransferPartnerId } from '@/lib/auth/transfer-helpers';
 import { requireTransferOperator } from '@/lib/auth/middleware';
+import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
+
+const VEHICLE_STATUSES = ['active', 'maintenance', 'inactive'] as const;
+const VEHICLE_TYPES = ['car', 'minivan', 'bus', 'helicopter', 'boat'] as const;
+const VEHICLE_CATEGORIES = ['economy', 'comfort', 'business', 'premium'] as const;
+
+const vehiclesListQuerySchema = z.object({
+  status: z.enum(['all', ...VEHICLE_STATUSES] as const).default('all'),
+  type: z.enum(['all', ...VEHICLE_TYPES] as const).default('all'),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+});
+
+const createVehicleSchema = z.object({
+  name: z.string().trim().min(1).max(255),
+  type: z.enum(VEHICLE_TYPES),
+  licensePlate: z.string().trim().min(1).max(50),
+  capacity: z.coerce.number().int().min(1).max(200),
+  category: z.enum(VEHICLE_CATEGORIES).optional().default('economy'),
+  location: z.string().trim().max(255).optional().default('Петропавловск-Камчатский'),
+  features: z.array(z.string().trim().min(1).max(120)).max(50).optional().default([]),
+  year: z.coerce.number().int().min(1950).max(2100).optional(),
+  color: z.string().trim().max(50).optional(),
+  fuelType: z.string().trim().max(50).optional(),
+  vin: z.string().trim().max(100).optional(),
+});
+
+function paramOrUndefined(searchParams: URLSearchParams, key: string): string | undefined {
+  const value = searchParams.get(key);
+  if (!value) {
+    return undefined;
+  }
+
+  const normalized = value.trim();
+  return normalized.length > 0 ? normalized : undefined;
+}
 
 /**
  * GET /api/transfer/vehicles
@@ -26,10 +62,22 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status') || 'all';
-    const type = searchParams.get('type') || 'all';
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '50');
+    const parsedQuery = vehiclesListQuerySchema.safeParse({
+      status: paramOrUndefined(searchParams, 'status'),
+      type: paramOrUndefined(searchParams, 'type'),
+      page: paramOrUndefined(searchParams, 'page'),
+      limit: paramOrUndefined(searchParams, 'limit'),
+    });
+
+    if (!parsedQuery.success) {
+      return NextResponse.json({
+        success: false,
+        error: 'Некорректные параметры запроса',
+        details: parsedQuery.error.flatten(),
+      } as ApiResponse<null>, { status: 400 });
+    }
+
+    const { status, type, page, limit } = parsedQuery.data;
     const offset = (page - 1) * limit;
 
     let queryStr = `
@@ -42,7 +90,7 @@ export async function GET(request: NextRequest) {
       WHERE v.operator_id = $1
     `;
 
-    const params: any[] = [operatorId];
+    const params: unknown[] = [operatorId];
     let paramIndex = 2;
 
     if (status !== 'all') {
@@ -68,7 +116,7 @@ export async function GET(request: NextRequest) {
 
     // Get total count
     let countQuery = `SELECT COUNT(*) FROM vehicles WHERE operator_id = $1`;
-    const countParams: any[] = [operatorId];
+    const countParams: unknown[] = [operatorId];
     let countIndex = 2;
 
     if (status !== 'all') {
@@ -83,7 +131,7 @@ export async function GET(request: NextRequest) {
     }
 
     const countResult = await query(countQuery, countParams);
-    const totalCount = parseInt(countResult.rows[0].count);
+    const totalCount = Number.parseInt(countResult.rows[0]?.count ?? '0', 10);
 
     const vehicles = result.rows.map(row => ({
       id: row.id,
@@ -102,8 +150,8 @@ export async function GET(request: NextRequest) {
       fuelType: row.fuel_type,
       lastServiceDate: row.last_service_date,
       nextServiceDate: row.next_service_date,
-      completedTrips: parseInt(row.completed_trips || 0),
-      activeTrips: parseInt(row.active_trips || 0),
+      completedTrips: Number.parseInt(row.completed_trips ?? '0', 10),
+      activeTrips: Number.parseInt(row.active_trips ?? '0', 10),
       createdAt: row.created_at,
       updatedAt: row.updated_at
     }));
@@ -150,6 +198,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    const parsedBody = createVehicleSchema.safeParse(body);
+    if (!parsedBody.success) {
+      return NextResponse.json({
+        success: false,
+        error: 'Некорректные данные транспорта',
+        details: parsedBody.error.flatten(),
+      } as ApiResponse<null>, { status: 400 });
+    }
+
     const {
       name,
       type,
@@ -162,15 +219,7 @@ export async function POST(request: NextRequest) {
       color,
       fuelType,
       vin
-    } = body;
-
-    // Validation
-    if (!name || !type || !licensePlate || !capacity) {
-      return NextResponse.json({
-        success: false,
-        error: 'Заполните обязательные поля: название, тип, госномер, вместимость'
-      } as ApiResponse<null>, { status: 400 });
-    }
+    } = parsedBody.data;
 
     // Check unique license plate
     const existingResult = await query(
@@ -198,9 +247,9 @@ export async function POST(request: NextRequest) {
         type,
         licensePlate,
         capacity,
-        category || 'economy',
-        location || 'Петропавловск-Камчатский',
-        JSON.stringify(features || []),
+        category,
+        location,
+        JSON.stringify(features),
         year,
         color,
         fuelType,

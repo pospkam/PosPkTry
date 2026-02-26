@@ -36,13 +36,19 @@ export async function PATCH(
     const body = await request.json();
     const { alt } = body;
 
-    // Update asset
+    // Обновляем только фото, которое действительно привязано к этому туру.
     const result = await query(
-      `UPDATE assets 
+      `UPDATE assets a
        SET alt = $1
-       WHERE id = $2
+       WHERE a.id = $2
+         AND EXISTS (
+           SELECT 1
+           FROM tour_assets ta
+           WHERE ta.tour_id = $3
+             AND ta.asset_id = a.id
+         )
        RETURNING *`,
-      [alt || '', photoId]
+      [alt || '', photoId, id]
     );
 
     if (result.rows.length === 0) {
@@ -94,11 +100,18 @@ export async function DELETE(
       } as ApiResponse<null>, { status: 404 });
     }
 
-    // Remove link between tour and asset
-    await query(
-      'DELETE FROM tour_assets WHERE tour_id = $1 AND asset_id = $2',
+    // Удаляем связь только если фото действительно принадлежит этому туру.
+    const unlinkResult = await query(
+      'DELETE FROM tour_assets WHERE tour_id = $1 AND asset_id = $2 RETURNING asset_id',
       [id, photoId]
     );
+
+    if (unlinkResult.rows.length === 0) {
+      return NextResponse.json({
+        success: false,
+        error: 'Фотография не найдена'
+      } as ApiResponse<null>, { status: 404 });
+    }
 
     // Check if asset is used by other tours
     const usageCheck = await query(

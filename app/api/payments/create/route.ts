@@ -74,8 +74,8 @@ export async function POST(request: NextRequest) {
     if (auth.role !== 'admin' && booking.user_id !== userId) {
       return NextResponse.json({
         success: false,
-        error: 'Forbidden',
-      } as ApiResponse<null>, { status: 403 });
+        error: 'Booking not found',
+      } as ApiResponse<null>, { status: 404 });
     }
 
     // Проверяем, что сумма совпадает

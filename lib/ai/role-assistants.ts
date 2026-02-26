@@ -365,7 +365,7 @@ export async function callRoleAssistant(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         messages: preparedMessages,
-        model: 'llama3-70b-8192' // GROQ по умолчанию
+        model: 'deepseek-chat'
       })
     });
 

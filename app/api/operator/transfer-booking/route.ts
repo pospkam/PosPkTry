@@ -20,9 +20,26 @@ const updateTransferSchema = z.object({
   targetTourId: z.string().uuid().optional(),
 });
 
+const listTransfersQuerySchema = z.object({
+  direction: z.enum(['incoming', 'outgoing', 'all']).default('all'),
+  status: z.enum(['pending', 'accepted', 'rejected', 'cancelled', 'all']).default('all'),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+});
+
 async function resolveOperatorContext(userId: string): Promise<{ partnerId: string | null }> {
   const partnerId = await getOperatorPartnerId(userId);
   return { partnerId };
+}
+
+function ensureStrictOperatorRole(role: string): NextResponse | null {
+  if (role !== 'operator') {
+    return NextResponse.json(
+      { success: false, error: 'Действие доступно только оператору' } as ApiResponse<null>,
+      { status: 403 }
+    );
+  }
+
+  return null;
 }
 
 export async function GET(request: NextRequest) {
@@ -33,10 +50,20 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const direction = searchParams.get('direction') || 'all';
-    const status = searchParams.get('status') || 'all';
-    const limitRaw = parseInt(searchParams.get('limit') || '50', 10);
-    const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(limitRaw, 1), 100) : 50;
+    const queryValidation = listTransfersQuerySchema.safeParse({
+      direction: searchParams.get('direction') ?? undefined,
+      status: searchParams.get('status') ?? undefined,
+      limit: searchParams.get('limit') ?? undefined,
+    });
+
+    if (!queryValidation.success) {
+      return NextResponse.json(
+        { success: false, error: queryValidation.error.issues } as ApiResponse<null>,
+        { status: 400 }
+      );
+    }
+
+    const { direction, status, limit } = queryValidation.data;
 
     const whereParts: string[] = [];
     const values: unknown[] = [];
@@ -152,6 +179,11 @@ export async function POST(request: NextRequest) {
       return userOrResponse;
     }
 
+    const roleError = ensureStrictOperatorRole(userOrResponse.role);
+    if (roleError) {
+      return roleError;
+    }
+
     const context = await resolveOperatorContext(userOrResponse.userId);
     if (!context.partnerId) {
       return NextResponse.json(
@@ -212,7 +244,7 @@ export async function POST(request: NextRequest) {
     if (bookingOwnershipResult.rows.length === 0) {
       return NextResponse.json(
         { success: false, error: 'Бронирование не найдено или недоступно' } as ApiResponse<null>,
-        { status: 403 }
+        { status: 404 }
       );
     }
 
@@ -233,6 +265,7 @@ export async function POST(request: NextRequest) {
 
     const booking = bookingOwnershipResult.rows[0];
     const bookingTotalPrice = parseFloat(booking.total_price) || 0;
+    // Комиссия фиксируется в момент предложения, чтобы обе стороны работали с одной суммой.
     const commissionAmount = Number(((bookingTotalPrice * payload.commissionPercent) / 100).toFixed(2));
 
     const inserted = await query<{
@@ -302,6 +335,11 @@ export async function PATCH(request: NextRequest) {
       return userOrResponse;
     }
 
+    const roleError = ensureStrictOperatorRole(userOrResponse.role);
+    if (roleError) {
+      return roleError;
+    }
+
     const context = await resolveOperatorContext(userOrResponse.userId);
     if (!context.partnerId) {
       return NextResponse.json(
@@ -351,8 +389,8 @@ export async function PATCH(request: NextRequest) {
     if (payload.action === 'cancel') {
       if (transfer.from_operator_user_id !== userOrResponse.userId || transfer.status !== 'pending') {
         return NextResponse.json(
-          { success: false, error: 'Недостаточно прав для отмены переброса' } as ApiResponse<null>,
-          { status: 403 }
+          { success: false, error: 'Запрос на переброс не найден' } as ApiResponse<null>,
+          { status: 404 }
         );
       }
 
@@ -371,8 +409,8 @@ export async function PATCH(request: NextRequest) {
 
     if (transfer.to_operator_user_id !== userOrResponse.userId || transfer.status !== 'pending') {
       return NextResponse.json(
-        { success: false, error: 'Недостаточно прав для обработки переброса' } as ApiResponse<null>,
-        { status: 403 }
+        { success: false, error: 'Запрос на переброс не найден' } as ApiResponse<null>,
+        { status: 404 }
       );
     }
 
@@ -407,12 +445,13 @@ export async function PATCH(request: NextRequest) {
 
     if (targetTourResult.rows.length === 0) {
       return NextResponse.json(
-        { success: false, error: 'Целевой тур не найден или не принадлежит оператору' } as ApiResponse<null>,
-        { status: 403 }
+        { success: false, error: 'Целевой тур не найден или недоступен' } as ApiResponse<null>,
+        { status: 404 }
       );
     }
 
     await transaction(async client => {
+      // 1) Фиксируем принятие оффера переброса и целевой тур оператора Б.
       await client.query(
         `UPDATE operator_booking_transfers
          SET
@@ -424,6 +463,7 @@ export async function PATCH(request: NextRequest) {
         [payload.transferId, payload.targetTourId]
       );
 
+      // 2) Переназначаем само бронирование на тур оператора Б.
       await client.query(
         `UPDATE bookings
          SET tour_id = $2, updated_at = NOW()
@@ -431,6 +471,7 @@ export async function PATCH(request: NextRequest) {
         [transfer.booking_id, payload.targetTourId]
       );
 
+      // 3) Закрываем все остальные pending-офферы по этому бронированию.
       await client.query(
         `UPDATE operator_booking_transfers
          SET status = 'cancelled', responded_at = NOW(), updated_at = NOW()

@@ -765,8 +765,8 @@ ChatMessage {
 ```
 
 **AI Providers:**
-- GROQ (primary) - Llama 3.1 70B
-- DeepSeek (fallback)
+- DeepSeek (primary)
+- Minimax/x.ai (fallback)
 - OpenRouter (alternative)
 
 ---
@@ -1198,7 +1198,6 @@ AGENT
 **AI & Chat (4):**
 - POST `/api/chat`
 - POST `/api/ai`
-- POST `/api/ai/groq`
 - POST `/api/ai/deepseek`
 - GET `/api/ai/knowledge-base`
 
@@ -1347,7 +1346,7 @@ AGENT
        │
 ┌──────┴────────────────────────────────────────────────────────┐
 │                 EXTERNAL INTEGRATIONS                         │
-│  • Yandex Weather (9/10 accuracy)  • GROQ AI (FREE)         │
+│  • Yandex Weather (9/10 accuracy)  • DeepSeek AI             │
 │  • Yandex Maps                     • CloudPayments           │
 │  • SMS.ru                          • Telegram Bot            │
 │  • SMTP Email                      • Timeweb S3              │
@@ -1390,8 +1389,8 @@ AGENT
    - Achievements
 
 6. **AI-Powered Assistance**
-   - GROQ AI (бесплатно!)
-   - Llama 3.1 70B
+   - DeepSeek AI
+   - Multi-provider fallback
    - Контекстная память
    - Персональные рекомендации
 
@@ -1545,7 +1544,7 @@ AGENT
 ✅ **106 API endpoints** для всех операций  
 ✅ **14 dashboards** для разных типов пользователей  
 ✅ **15 SQL схем** с правильной нормализацией  
-✅ **Multi-provider integrations** (Yandex, GROQ, CloudPayments)  
+✅ **Multi-provider integrations** (Yandex, DeepSeek, CloudPayments)  
 
 **Архитектура:** Модульная, масштабируемая, production-ready ✅
 
