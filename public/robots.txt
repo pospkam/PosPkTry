@@ -1,0 +1,10 @@
+User-agent: *
+Disallow: /api/
+Disallow: /hub/
+Disallow: /auth/
+Allow: /
+Allow: /tours
+Allow: /search
+Allow: /safety
+Allow: /eco
+Sitemap: https://kamchatourhub.ru/sitemap.xml
