@@ -43,8 +43,11 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    const whereConditions = ['is_active = true'];
-    const queryParams: any[] = [];
+    // Совместимость со схемами: production (camelCase) и dev (snake_case).
+    // Production: title, pricePerDay, minDuration, maxGroupSize, minGroupSize
+    // Dev: name, price, duration, max_group_size, min_group_size, is_active
+    const whereConditions: string[] = [];
+    const queryParams: unknown[] = [];
     let paramIndex = 1;
 
     if (category) {
@@ -54,19 +57,19 @@ export async function GET(request: NextRequest) {
     }
 
     if (search) {
-      whereConditions.push(`(name ILIKE $${paramIndex} OR description ILIKE $${paramIndex})`);
+      whereConditions.push(`(COALESCE(title, name, '') ILIKE $${paramIndex} OR description ILIKE $${paramIndex})`);
       queryParams.push(`%${search}%`);
       paramIndex++;
     }
 
     if (minPrice) {
-      whereConditions.push(`price >= $${paramIndex}`);
+      whereConditions.push(`COALESCE("pricePerDay", price) >= $${paramIndex}`);
       queryParams.push(parseInt(minPrice));
       paramIndex++;
     }
 
     if (maxPrice) {
-      whereConditions.push(`price <= $${paramIndex}`);
+      whereConditions.push(`COALESCE("pricePerDay", price) <= $${paramIndex}`);
       queryParams.push(parseInt(maxPrice));
       paramIndex++;
     }
@@ -80,14 +83,10 @@ export async function GET(request: NextRequest) {
     const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
 
     const toursQuery = `
-      SELECT 
-        id, name, description, short_description, category, difficulty,
-        duration, price, currency, season, coordinates, requirements,
-        included, not_included, max_group_size, min_group_size,
-        rating, review_count, is_active, created_at, updated_at
+      SELECT *
       FROM tours
       ${whereClause}
-      ORDER BY rating DESC NULLS LAST, created_at DESC
+      ORDER BY "createdAt" DESC NULLS LAST, "updatedAt" DESC NULLS LAST
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
 
@@ -99,28 +98,29 @@ export async function GET(request: NextRequest) {
     const countResult = await query(countQuery, queryParams.slice(0, -2));
     const total = parseInt(countResult.rows[0]?.total || '0');
 
+    // Маппинг строк: поддержка обеих схем
     const tours: TourResponse[] = result.rows.map(row => ({
       id: row.id,
-      name: row.name,
-      description: row.description,
-      shortDescription: row.short_description,
-      category: row.category,
-      difficulty: row.difficulty,
-      duration: row.duration,
-      price: parseFloat(row.price),
-      currency: row.currency,
+      name: row.title || row.name || '',
+      description: row.fullDescription || row.description || '',
+      shortDescription: row.description || row.short_description || '',
+      category: row.category || '',
+      difficulty: row.difficulty || 'medium',
+      duration: row.minDuration || row.duration || 0,
+      price: parseFloat(row.pricePerDay || row.price || 0),
+      currency: row.currency || 'RUB',
       season: row.season || [],
       coordinates: row.coordinates || [],
       requirements: row.requirements || [],
       included: row.included || [],
-      notIncluded: row.not_included || [],
-      maxGroupSize: row.max_group_size,
-      minGroupSize: row.min_group_size,
+      notIncluded: row.notIncluded || row.not_included || [],
+      maxGroupSize: row.maxGroupSize || row.max_group_size || 20,
+      minGroupSize: row.minGroupSize || row.min_group_size || 1,
       rating: parseFloat(row.rating) || 0,
-      reviewCount: row.review_count || 0,
-      isActive: row.is_active,
-      createdAt: new Date(row.created_at),
-      updatedAt: new Date(row.updated_at),
+      reviewCount: row.review_count || row.reviewCount || 0,
+      isActive: row.is_active ?? true,
+      createdAt: new Date(row.createdAt || row.created_at || Date.now()),
+      updatedAt: new Date(row.updatedAt || row.updated_at || Date.now()),
     }));
 
     return NextResponse.json({
