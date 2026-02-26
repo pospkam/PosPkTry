@@ -150,3 +150,79 @@
 - `JWT_SECRET=dummy-secret npm run build` — успешно.
 - `npm run lint` — успешно, без новых ошибок.
 
+---
+
+## Wave 2 (дополнение): operator tour routes
+
+Проверено в `app/api/operator/tours/**` (только `GET/PUT/DELETE` c `id` в `params/query`):
+
+- `GET /api/operator/tours/[id]`
+- `PUT /api/operator/tours/[id]`
+- `DELETE /api/operator/tours/[id]`
+- `GET /api/operator/tours/[id]/photos`
+- `DELETE /api/operator/tours/[id]/photos/[photoId]`
+- `GET /api/operator/tours/[id]/generate-tags`
+- `GET /api/operator/tours/schedules?tourId=...`
+
+Дополнительно по требованию проверен `POST /api/operator/tours`:
+
+- `operator_id` берётся только из JWT (`getOperatorPartnerId(session.userId)`), не из request body.
+
+### Findings
+
+1. `app/api/operator/tours/[id]/route.ts`
+   - До фикса ownership проверялся pre-check (`verifyTourOwnership`), но:
+     - `GET` выбирал тур по `t.id` без `operator_id`;
+     - `PUT` обновлял по `id` без `operator_id`;
+     - `DELETE` удалял по `id` без `operator_id`.
+   - Риск: ownership не был встроен в основную SQL-операцию (TOCTOU/рассинхронизация pre-check и mutation).
+
+2. `app/api/operator/tours/[id]/generate-tags/route.ts` (`GET`)
+   - До фикса `SELECT ai_tags FROM tours WHERE id = $1` без ownership-фильтра.
+
+3. `app/api/operator/tours/[id]/photos/route.ts` (`GET`)
+   - До фикса контроль владения был отдельным pre-check, а получение фото шло по `tour_id` без `operator_id`.
+
+4. `app/api/operator/tours/[id]/photos/[photoId]/route.ts` (`DELETE`)
+   - До фикса удаление связи выполнялось по `tour_id + asset_id`, без прямого ownership-фильтра `operator_id` в SQL удаления.
+
+5. `app/api/operator/tours/schedules/route.ts` (`GET`, query `tourId`)
+   - До фикса чужой `tourId` возвращал пустой список; теперь введён явный `404` для object-level anti-enumeration.
+
+### Fixes
+
+- `app/api/operator/tours/[id]/route.ts`:
+  - добавлен strict operator context (`role === 'operator'`) до любых DB-запросов.
+  - `GET`: `WHERE t.id = $1 AND t.operator_id = $2`.
+  - `PUT`: `UPDATE ... WHERE id = $... AND operator_id = $... RETURNING *`, при `0 rows` -> `404`.
+  - `DELETE`: ownership-check `SELECT id FROM tours WHERE id = $1 AND operator_id = $2` + финальный `DELETE ... WHERE id = $1 AND operator_id = $2 RETURNING id`, при `0 rows` -> `404`.
+
+- `app/api/operator/tours/[id]/generate-tags/route.ts`:
+  - добавлен strict operator context (`role === 'operator'` + `operatorId` из JWT).
+  - `GET`: `SELECT ai_tags ... WHERE id = $1 AND operator_id = $2`.
+  - дополнительно усилен `POST`: выбор/обновление тура также через `id + operator_id`.
+
+- `app/api/operator/tours/[id]/photos/route.ts`:
+  - добавлен strict operator context (`role === 'operator'` + `operatorId` из JWT).
+  - добавлен ownership-check: `SELECT id FROM tours WHERE id = $1 AND operator_id = $2`.
+  - при отсутствии владения -> `404`; для своего тура без фото остаётся корректный `200` с пустым массивом.
+
+- `app/api/operator/tours/[id]/photos/[photoId]/route.ts` (`DELETE`):
+  - добавлен strict operator context (`role === 'operator'` + `operatorId` из JWT).
+  - удаление связи переведено на ownership-aware SQL:
+    - `DELETE FROM tour_assets ... USING tours t ... AND t.operator_id = $3 RETURNING ta.asset_id`.
+  - при `0 rows` -> `404` (anti-enumeration).
+
+- `app/api/operator/tours/schedules/route.ts` (`GET`):
+  - добавлена явная проверка `role === 'operator'` до DB.
+  - при наличии `tourId` добавлен ownership-check:
+    - `SELECT id FROM tours WHERE id = $1 AND operator_id = $2`
+    - при `0 rows` -> `404`.
+
+### Валидация после фикса Wave 2
+
+После каждого изменённого файла выполнялись:
+
+- `JWT_SECRET=dummy-secret npm run build` — успешно.
+- `npm run lint` — успешно, без новых ошибок.
+
