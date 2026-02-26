@@ -44,7 +44,7 @@ export function HomeBottomNav() {
               className={[
                 'flex flex-col items-center justify-center gap-1 flex-1 h-full transition-colors',
                 active
-                  ? 'text-[var(--accent)]'
+                  ? 'text-lava'
                   : 'text-[var(--text-muted)]',
               ].join(' ')}
             >

@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { AlertTriangle, Phone, MapPin, Shield } from 'lucide-react';
+import { AlertTriangle, Phone, MapPin, Shield, Mountain, Thermometer, Compass } from 'lucide-react';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
@@ -10,62 +10,78 @@ export const metadata: Metadata = {
 
 export default function SafetyPage() {
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 bg-[var(--bg-primary)] text-[var(--text-primary)] min-h-screen">
-      <div className="flex items-center gap-3 mb-6">
+    <div className="max-w-4xl mx-auto px-4 py-8 bg-[#0D1117] min-h-screen">
+      <div className="flex items-center gap-3 mb-8">
         <Shield className="w-8 h-8 text-[var(--danger)]" />
-        <h1 className="text-3xl font-bold text-[var(--text-primary)]">Безопасность</h1>
+        <h1 className="font-serif text-3xl font-bold text-[#F0F6FC]">Безопасность</h1>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        <div className="bg-[var(--danger)]/10 border border-[var(--danger)]/30 rounded-[var(--radius-lg)] p-6">
-          <div className="flex items-center gap-2 mb-3">
-            <AlertTriangle className="w-6 h-6 text-[var(--danger)]" />
-            <h2 className="text-lg font-bold text-[var(--text-primary)]">SOS</h2>
+      {/* SOS -- glavnyj blok, pervyj i samyj bol'shoj */}
+      <div className="border-2 border-[var(--danger)] rounded-2xl p-8 mb-8 bg-[var(--danger)]/5">
+        <div className="flex items-center gap-3 mb-4">
+          <AlertTriangle className="w-12 h-12 text-[var(--danger)]" />
+          <div>
+            <h2 className="font-serif text-2xl font-bold text-[#F0F6FC]">При угрозе жизни</h2>
+            <p className="text-[#8B949E]">Немедленно звоните в МЧС</p>
           </div>
-          <p className="text-[var(--text-secondary)] mb-4">
-            При угрозе жизни немедленно звоните в МЧС
-          </p>
+        </div>
+        <a
+          href="tel:112"
+          className="w-full flex items-center justify-center gap-3 h-16 text-2xl font-bold bg-[var(--danger)] text-white rounded-2xl shadow-lg hover:bg-red-600 transition-all duration-200 animate-pulse"
+        >
+          <Phone className="w-7 h-7" />
+          112 — МЧС
+        </a>
+      </div>
+
+      {/* Ekstrennye kontakty -- 4 kartochki */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+        {[
+          { number: '112', label: 'МЧС', color: 'text-[var(--danger)]' },
+          { number: '103', label: 'Скорая', color: 'text-[var(--ocean,#00A8CC)]' },
+          { number: '101', label: 'Пожарная', color: 'text-[var(--accent)]' },
+          { number: '+7 914-782-22-22', label: 'Kamchatour', color: 'text-[var(--accent)]' },
+        ].map(c => (
           <a
-            href="tel:112"
-            className="w-full flex items-center justify-center gap-3 py-8 text-3xl font-bold bg-[var(--danger)] text-white rounded-2xl shadow-lg hover:bg-red-600 transition-all duration-200 animate-pulse"
+            key={c.number}
+            href={`tel:${c.number.replace(/[^+\d]/g, '')}`}
+            className="bg-[#21262D] border border-[rgba(255,255,255,0.08)] rounded-xl p-4 text-center hover:border-[rgba(255,255,255,0.16)] transition-colors min-h-[44px]"
           >
-            <Phone className="w-8 h-8" />
-            112 — МЧС
+            <p className={`text-xl font-bold ${c.color}`}>{c.number}</p>
+            <p className="text-xs text-[#8B949E] mt-1">{c.label}</p>
           </a>
-        </div>
-
-        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius-lg)] p-6">
-          <div className="flex items-center gap-2 mb-3">
-            <Phone className="w-6 h-6 text-[var(--accent)]" />
-            <h2 className="text-lg font-bold text-[var(--text-primary)]">Экстренные контакты</h2>
-          </div>
-          <ul className="space-y-2 text-[var(--text-secondary)]">
-            <li>112 — Единый номер экстренных служб</li>
-            <li>103 — Скорая помощь</li>
-            <li>101 — Пожарная</li>
-            <li>+7 914-782-22-22 — Kamchatour Hub</li>
-          </ul>
-        </div>
+        ))}
       </div>
 
-      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius-lg)] p-6 mb-6">
-        <div className="flex items-center gap-2 mb-3">
-          <MapPin className="w-6 h-6 text-[var(--accent)]" />
-          <h2 className="text-lg font-bold text-[var(--text-primary)]">Правила безопасности на Камчатке</h2>
-        </div>
-        <ul className="space-y-2 text-[var(--text-secondary)] list-disc list-inside">
-          <li>Всегда сообщайте маршрут и сроки похода оператору или МЧС</li>
-          <li>Не приближайтесь к медведям ближе 100 метров</li>
-          <li>Следите за погодой — она меняется быстро</li>
-          <li>Берите запас еды, воды и тёплой одежды</li>
-          <li>Не ходите на вулканы без сертифицированного гида</li>
-          <li>Держите телефон заряженным, имейте powerbank</li>
+      {/* Pravila bezopasnosti */}
+      <div className="bg-[#21262D] border border-[rgba(255,255,255,0.08)] rounded-2xl p-6 mb-6">
+        <h2 className="font-serif text-xl font-bold text-[#F0F6FC] mb-4 flex items-center gap-2">
+          <Compass className="w-5 h-5 text-[var(--accent)]" />
+          Правила безопасности на Камчатке
+        </h2>
+        <ul className="space-y-3">
+          {[
+            { icon: MapPin, text: 'Всегда сообщайте маршрут и сроки похода оператору или МЧС' },
+            { icon: AlertTriangle, text: 'Не приближайтесь к медведям ближе 100 метров' },
+            { icon: Thermometer, text: 'Следите за погодой — она меняется быстро' },
+            { icon: Shield, text: 'Берите запас еды, воды и тёплой одежды' },
+            { icon: Mountain, text: 'Не ходите на вулканы без сертифицированного гида' },
+            { icon: Phone, text: 'Держите телефон заряженным, имейте powerbank' },
+          ].map(rule => {
+            const Icon = rule.icon;
+            return (
+              <li key={rule.text} className="flex items-start gap-3">
+                <Icon className="w-5 h-5 text-[var(--accent)] mt-0.5 shrink-0" />
+                <span className="text-[#8B949E]">{rule.text}</span>
+              </li>
+            );
+          })}
         </ul>
       </div>
 
       <Link
         href="/hub/safety"
-        className="inline-flex items-center gap-2 min-h-[44px] px-4 py-2 rounded-[var(--radius-md)] bg-[var(--accent)] text-white font-medium hover:bg-[var(--accent-hover)] transition-colors"
+        className="inline-flex items-center gap-2 min-h-[44px] px-6 py-3 rounded-xl border border-[var(--accent)] text-[var(--accent)] font-medium hover:bg-[var(--accent)] hover:text-white transition-colors"
       >
         <Shield className="w-4 h-4" />
         Подробнее о безопасности
