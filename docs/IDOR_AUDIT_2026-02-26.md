@@ -114,3 +114,39 @@
 - Все изменения по Task 1 закоммичены и запушены в `origin/cursor/middleware-security-rules-130a`.
 - Рабочее дерево чистое.
 
+---
+
+## Wave 1 (дополнение): operator booking routes
+
+Проверено в `app/api/operator/bookings/**`:
+
+- `GET /api/operator/bookings` (`route.ts`, query: `tourId`)
+- `PUT /api/operator/bookings/[id]` (`[id]/route.ts`, params: `id`)
+
+### Findings
+
+1. `GET /api/operator/bookings`
+   - `requireOperator` выполняется до SQL-запросов.
+   - Фильтр владения есть в обоих запросах (`t.operator_id = $1`).
+   - При чужом `tourId` возвращается пустой список (anti-enumeration соблюдён).
+   - Нарушений не обнаружено.
+
+2. `PUT /api/operator/bookings/[id]`
+   - До фикса ownership проверялся отдельным pre-check (`verifyBookingOwnership`), но `UPDATE` выполнялся только по `id`.
+   - Риск: объектная проверка не была встроена в модифицирующий SQL.
+
+### Fixes
+
+- `app/api/operator/bookings/[id]/route.ts`:
+  - сохранён guard `requireOperator` до любых SQL.
+  - `operator_id` теперь берётся из JWT-пользователя через `getOperatorPartnerId(session.userId)`.
+  - `UPDATE` усилен ownership-фильтром:
+    - `WHERE bookings.id = $... AND bookings.tour_id = t.id AND t.operator_id = $...`
+  - для `not found / чужой ресурс` возвращается `404` (anti-enumeration).
+  - устранён `ApiResponse<any>` в ответе (`ApiResponse<unknown>`).
+
+### Валидация после фикса Wave 1
+
+- `JWT_SECRET=dummy-secret npm run build` — успешно.
+- `npm run lint` — успешно, без новых ошибок.
+
