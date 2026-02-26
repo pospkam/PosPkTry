@@ -10,16 +10,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
 
   try {
-    const result = await query(`
-      SELECT name, short_description, price, currency, images
-      FROM tours
-      WHERE id = $1
-    `, [id]);
+    const result = await query(`SELECT * FROM tours WHERE id = $1`, [id]);
 
     if (result.rows.length > 0) {
       const tour = result.rows[0];
-      const title = `${tour.name} | Kamchatour`;
-      const description = tour.short_description || `Забронируйте тур "${tour.name}" на Камчатке. Цена: от ${tour.price} ${tour.currency || '₽'}.`;
+      const tourName = tour.title || tour.name || 'Тур';
+      const title = `${tourName} | Kamchatour`;
+      const tourPrice = tour.pricePerDay || tour.price || '';
+      const description = tour.description || tour.short_description || `Забронируйте тур "${tourName}" на Камчатке. Цена: от ${tourPrice} ${tour.currency || '₽'}.`;
       
       let imageUrl = 'https://kamchatour.ru/images/og-default.jpg';
       if (tour.images) {
@@ -65,14 +63,10 @@ export default async function TourDetailsPage({ params }: Props) {
   
   let tourJsonLd = null;
   try {
-    const result = await query(`
-      SELECT name, description, price, currency, images, rating, review_count, duration
-      FROM tours
-      WHERE id = $1
-    `, [id]);
+    const result2 = await query(`SELECT * FROM tours WHERE id = $1`, [id]);
 
-    if (result.rows.length > 0) {
-      const tour = result.rows[0];
+    if (result2.rows.length > 0) {
+      const tour = result2.rows[0];
       
       let images = [];
       if (tour.images) {
@@ -84,12 +78,12 @@ export default async function TourDetailsPage({ params }: Props) {
       tourJsonLd = {
         '@context': 'https://schema.org',
         '@type': 'TouristTrip',
-        name: tour.name,
-        description: tour.description,
+        name: tour.title || tour.name || '',
+        description: tour.fullDescription || tour.description || '',
         image: images.length > 0 ? images : ['https://kamchatour.ru/images/og-default.jpg'],
         offers: {
           '@type': 'Offer',
-          price: tour.price,
+          price: tour.pricePerDay || tour.price || 0,
           priceCurrency: tour.currency || 'RUB',
           availability: 'https://schema.org/InStock',
         },
