@@ -46,6 +46,20 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
 
+    if (tourId) {
+      const ownershipCheck = await query(
+        `SELECT id FROM tours WHERE id = $1 AND operator_id = $2`,
+        [tourId, operatorId]
+      );
+
+      if (ownershipCheck.rows.length === 0) {
+        return NextResponse.json({
+          success: false,
+          error: 'Тур не найден'
+        } as ApiResponse<null>, { status: 404 });
+      }
+    }
+
     let queryText = `
       SELECT 
         ts.id,
