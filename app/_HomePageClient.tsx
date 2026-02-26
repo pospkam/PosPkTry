@@ -1,7 +1,6 @@
 'use client';
 
 import { Suspense } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -47,16 +46,10 @@ export default function HomePageClient() {
     <div className="min-h-screen bg-[#0D1117]">
 
       {/* ======== HERO ======== */}
-      <section className="relative h-screen min-h-[600px] max-h-[900px] overflow-hidden">
-        {/* Foto fon */}
-        <Image
-          src={HERO_IMAGE}
-          alt="Камчатка -- медведи, вулканы, дикая природа"
-          fill
-          priority
-          className="object-cover"
-          sizes="100vw"
-        />
+      <section
+        className="relative h-screen min-h-[600px] max-h-[900px] overflow-hidden bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${HERO_IMAGE})` }}
+      >
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-[#0D1117] via-[#0D1117]/40 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#0D1117]/70 to-transparent" />
