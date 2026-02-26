@@ -37,8 +37,8 @@ export function CategoryChips({ activeCategory }: CategoryChipsProps) {
     <section aria-label="Категории туров" className="pt-4 pb-2">
       {/* Заголовок */}
       <div className="flex items-center justify-between px-4 mb-3">
-        <h2 className="text-[15px] font-bold text-white dark:text-white drop-shadow-sm">Категории</h2>
-        <Link href="/tours" className="text-sm font-medium text-white/70 dark:text-[#7EB3FF]">
+        <h2 className="text-[15px] font-bold text-[var(--text-primary)]">Категории</h2>
+        <Link href="/tours" className="text-sm font-medium text-[var(--accent)]">
           Все →
         </Link>
       </div>
@@ -60,14 +60,14 @@ export function CategoryChips({ activeCategory }: CategoryChipsProps) {
               className={[
                 'flex flex-col items-center justify-center gap-1.5 w-[66px] h-[74px] flex-shrink-0 rounded-2xl transition-all',
                 isActive
-                  ? 'bg-white/30 text-white shadow-lg shadow-white/10 ring-1 ring-white/40'
-                  : 'bg-white/15 dark:bg-white/10 backdrop-blur-md text-white/80 dark:text-gray-200',
+                  ? 'bg-[var(--accent-muted)] text-[var(--accent)] ring-1 ring-[var(--accent)]'
+                  : 'bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)]',
               ].join(' ')}
             >
               <cat.Icon
                 size={22}
                 strokeWidth={1.8}
-                className={isActive ? 'text-white' : 'text-white/80 dark:text-gray-100'}
+                className={isActive ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)]'}
               />
               <span className="text-[10px] font-medium leading-tight text-center">
                 {cat.label}
