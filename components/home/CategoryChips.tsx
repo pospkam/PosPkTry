@@ -32,7 +32,7 @@ export function CategoryChips({ activeCategory }: CategoryChipsProps) {
     <section aria-label="Категории туров" className="pt-4 pb-2">
       <div className="flex items-center justify-between px-4 mb-3">
         <h2 className="text-[15px] font-bold text-white">Категории</h2>
-        <Link href="/tours" className="text-sm font-medium text-[#00D4FF]">
+        <Link href="/tours" className="text-sm font-medium text-[var(--accent)]">
           Все
         </Link>
       </div>
@@ -53,14 +53,14 @@ export function CategoryChips({ activeCategory }: CategoryChipsProps) {
               className={[
                 'flex flex-col items-center justify-center gap-1.5 w-[66px] h-[74px] flex-shrink-0 rounded-2xl transition-all',
                 isActive
-                  ? 'bg-[#00D4FF]/10 text-[#00D4FF] ring-1 ring-[#00D4FF]'
+                  ? 'bg-[var(--accent)]/10 text-[var(--accent)] ring-1 ring-[var(--accent)]'
                   : 'bg-white/8 border border-white/10 text-white/60 hover:border-white/20 hover:text-white/80',
               ].join(' ')}
             >
               <cat.Icon
                 size={22}
                 strokeWidth={1.8}
-                className={isActive ? 'text-[#00D4FF]' : 'text-white/60'}
+                className={isActive ? 'text-[var(--accent)]' : 'text-white/60'}
               />
               <span className="text-[10px] font-medium leading-tight text-center">
                 {cat.label}
