@@ -32,6 +32,12 @@ export async function GET(request: NextRequest) {
     if (userOrResponse instanceof NextResponse) {
       return userOrResponse;
     }
+    if (userOrResponse.role !== 'operator') {
+      return NextResponse.json({
+        success: false,
+        error: 'Недостаточно прав доступа'
+      } as ApiResponse<null>, { status: 403 });
+    }
 
     const operatorId = await getOperatorPartnerId(userOrResponse.userId);
     if (!operatorId) {
