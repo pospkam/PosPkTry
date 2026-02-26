@@ -2,10 +2,12 @@ import { Pool, PoolClient } from 'pg';
 import { config } from '@/lib/config';
 
 // Создаем пул соединений с базой данных
-// SSL включается через DATABASE_SSL=true в env (требуется для Timeweb Cloud)
+// SSL включён по умолчанию в production (Timeweb Cloud требует SSL)
+// Отключить: DATABASE_SSL=false
+const useSSL = config.database.ssl || process.env.NODE_ENV === 'production';
 const pool = new Pool({
   connectionString: config.database.url,
-  ssl: config.database.ssl ? { rejectUnauthorized: false } : false,
+  ssl: useSSL ? { rejectUnauthorized: false } : false,
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 5000,
