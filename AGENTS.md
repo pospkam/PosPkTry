@@ -819,3 +819,23 @@ interface Tour {
 > Статус: MVP реализован, ещё не запущен с реальными пользователями.
 > Главный следующий шаг: деплой → первые бронирования → реальные метрики.
 > Обновлено: Февраль 2026
+
+## Cursor Cloud specific instructions
+
+### Services
+
+| Service | How to start | Port | Notes |
+|---------|-------------|------|-------|
+| Next.js dev server | `npm run dev` | 3000 | Main app; homepage works without DB |
+| PostgreSQL | `sudo docker start kamhub-postgres` (if container exists) or `sudo docker run -d --name kamhub-postgres -e POSTGRES_DB=kamhub -e POSTGRES_USER=kamuser -e POSTGRES_PASSWORD=kampass2024_local -p 5432:5432 postgis/postgis:15-3.3-alpine` | 5432 | Required for API routes; schema in `lib/database/schema.sql` |
+
+### Gotchas
+
+- **docker-compose.yml has a broken `POSTGRES_INITDB_ARGS`**: The `-c shared_preload_libraries=pg_trgm` flag causes `initdb` to fail. Start PostgreSQL directly with `docker run` instead of `docker compose up postgres`.
+- **Middleware requires Upstash Redis**: The middleware (`middleware.ts`) initializes `@upstash/redis` at module level. Without `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` env vars, all API routes (`/api/*`) will crash. The fix in commit `f1e6853` makes Redis rate limiting optional. If this fix is not merged, set dummy Upstash env vars or expect API route errors.
+- **DB schema initialization**: Run `lib/database/schema.sql` against the local PostgreSQL to create all core tables (`users`, `tours`, `bookings`, `partners`, `reviews`, etc.). The root `migrations/` directory has supplementary migrations that depend on these core tables.
+- **`.env.local` minimum required vars**: `DATABASE_URL`, `JWT_SECRET`, `NODE_ENV=development`, `NEXT_PUBLIC_APP_URL=http://localhost:3000`. All AI/weather/payment API keys are optional; the app degrades gracefully.
+- **Tests**: Use `npx vitest --run` (or `npm test`). There are ~39 pre-existing test failures unrelated to setup. 385+ tests pass.
+- **Lint**: `npm run lint` passes with only React Hook dependency warnings (no errors).
+- **Build**: `npm run build` succeeds; `next.config.js` ignores ESLint and TypeScript errors during build.
+- **Docker daemon in Cloud VM**: Requires `fuse-overlayfs` storage driver and `iptables-legacy`. See the Docker setup section in the system instructions for the full recipe.
