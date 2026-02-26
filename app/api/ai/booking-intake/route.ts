@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { ApiResponse } from '@/types';
 import { requireOperator } from '@/lib/auth/middleware';
+// Утилита для обогащения контекста AI описаниями туров из внешних источников
+export { fetchAsMarkdown } from '@/lib/ai/fetchAsMarkdown';
 
 export const dynamic = 'force-dynamic';
 
