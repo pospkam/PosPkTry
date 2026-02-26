@@ -10,6 +10,9 @@ export default {
   theme: {
     extend: {
       colors: {
+        ocean:   '#0EA5E9',
+        volcano: '#64748B',
+        moss:    '#84CC16',
         /* iOS Light Theme */
         kh: {
           bg:          '#C8D4E3',
