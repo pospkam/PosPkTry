@@ -839,3 +839,8 @@ interface Tour {
 - **Lint**: `npm run lint` passes with only React Hook dependency warnings (no errors).
 - **Build**: `npm run build` succeeds; `next.config.js` ignores ESLint and TypeScript errors during build.
 - **Docker daemon in Cloud VM**: Requires `fuse-overlayfs` storage driver and `iptables-legacy`. See the Docker setup section in the system instructions for the full recipe.
+
+## Platform Map
+
+Full platform map: docs/PLATFORM_MAP.md
+Read this before making any changes to routes or pages.
