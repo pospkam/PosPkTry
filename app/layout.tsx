@@ -115,11 +115,26 @@ function ThemeScript() {
   );
 }
 
+function ServiceWorkerScript() {
+  const script = `
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js').catch(function() {});
+      });
+    }
+  `;
+
+  return (
+    <script dangerouslySetInnerHTML={{ __html: script }} />
+  );
+}
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ru" data-theme="dark" suppressHydrationWarning>
       <head>
         <ThemeScript />
+        <ServiceWorkerScript />
       </head>
       <body className={`min-h-screen transition-colors duration-300 ${syne.className}`}>
         <ThemeProvider>
