@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireOperator } from '@/lib/auth/middleware';
-import { verifyBookingOwnership } from '@/lib/auth/operator-helpers';
+import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,18 +20,15 @@ export async function PUT(
       return operatorOrResponse;
     }
     const userId = operatorOrResponse.userId;
-
-    const { id } = await params;
-
-    // Verify ownership
-    const isOwner = await verifyBookingOwnership(userId, id);
-    
-    if (!isOwner) {
+    const operatorId = await getOperatorPartnerId(userId);
+    if (!operatorId) {
       return NextResponse.json({
         success: false,
-        error: 'Бронирование не найдено или у вас нет прав на его изменение'
+        error: 'Партнёрский профиль оператора не найден'
       } as ApiResponse<null>, { status: 404 });
     }
+
+    const { id } = await params;
 
     const body = await request.json();
     const { status, paymentStatus, notes } = body;
@@ -80,15 +77,28 @@ export async function PUT(
       } as ApiResponse<null>, { status: 400 });
     }
 
+    const bookingIdParamIndex = paramIndex++;
+    const operatorIdParamIndex = paramIndex;
     updateValues.push(id);
+    updateValues.push(operatorId);
 
     const result = await query(
       `UPDATE bookings 
        SET ${updateFields.join(', ')}
-       WHERE id = $${paramIndex}
+       FROM tours t
+       WHERE bookings.id = $${bookingIdParamIndex}
+         AND bookings.tour_id = t.id
+         AND t.operator_id = $${operatorIdParamIndex}
        RETURNING *`,
       updateValues
     );
+
+    if (result.rows.length === 0) {
+      return NextResponse.json({
+        success: false,
+        error: 'Бронирование не найдено'
+      } as ApiResponse<null>, { status: 404 });
+    }
 
     // Create notification for status change
     if (status) {
@@ -111,7 +121,7 @@ export async function PUT(
       success: true,
       data: result.rows[0],
       message: 'Бронирование успешно обновлено'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Update booking error:', error);
