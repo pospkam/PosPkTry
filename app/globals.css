@@ -9,6 +9,92 @@
 @import './samsung-weather-theme.css';
 @import './samsung-weather-dynamic.css';
 
+/* =============================================
+   DESIGN SYSTEM — CSS Variables
+   Единый источник цветов, теней, радиусов.
+   Тема управляется атрибутом data-theme на <html>.
+   Дефолт: dark.
+   ============================================= */
+
+:root[data-theme="dark"] {
+  --bg-primary: #0D1117;
+  --bg-secondary: #161B22;
+  --bg-card: #21262D;
+  --bg-hover: #30363D;
+  --text-primary: #F0F6FC;
+  --text-secondary: #8B949E;
+  --text-muted: #484F58;
+  --accent: #00D4FF;
+  --accent-hover: #00B8D9;
+  --accent-muted: rgba(0,212,255,0.1);
+  --success: #3FB950;
+  --warning: #D29922;
+  --danger: #F85149;
+  --salmon: #E8734A;
+  --border: rgba(255,255,255,0.08);
+  --border-strong: rgba(255,255,255,0.16);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+}
+
+:root[data-theme="light"] {
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F6F8FA;
+  --bg-card: #FFFFFF;
+  --bg-hover: #F3F4F6;
+  --text-primary: #1C2128;
+  --text-secondary: #57606A;
+  --text-muted: #8C959F;
+  --accent: #0969DA;
+  --accent-hover: #0550AE;
+  --accent-muted: rgba(9,105,218,0.1);
+  --success: #1A7F37;
+  --warning: #9A6700;
+  --danger: #CF222E;
+  --salmon: #CF4E2A;
+  --border: rgba(0,0,0,0.08);
+  --border-strong: rgba(0,0,0,0.16);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.1);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+}
+
+/* Fallback: если data-theme ещё не установлен, применяем dark */
+:root:not([data-theme]) {
+  --bg-primary: #0D1117;
+  --bg-secondary: #161B22;
+  --bg-card: #21262D;
+  --bg-hover: #30363D;
+  --text-primary: #F0F6FC;
+  --text-secondary: #8B949E;
+  --text-muted: #484F58;
+  --accent: #00D4FF;
+  --accent-hover: #00B8D9;
+  --accent-muted: rgba(0,212,255,0.1);
+  --success: #3FB950;
+  --warning: #D29922;
+  --danger: #F85149;
+  --salmon: #E8734A;
+  --border: rgba(255,255,255,0.08);
+  --border-strong: rgba(255,255,255,0.16);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+}
+
 /* ===== Анимации Home Screen ===== */
 
 /* Staggered fade-in для карточек туров */
