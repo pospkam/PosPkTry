@@ -13,7 +13,7 @@ import { TourCardsRow } from '@/components/home';
 import { ModernTourSearch } from '@/components/ModernTourSearch';
 
 // Kamchatskiye foto dlya hero i sekcij
-const HERO_IMAGE = 'https://images.unsplash.com/photo-1670859526588-4542889c1920?w=1920&q=85';
+const HERO_IMAGE = 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1920&q=85';
 
 const CATEGORIES = [
   { id: 'volcanoes', label: 'Вулканы', Icon: Mountain, href: '/tours?category=volcanoes' },
