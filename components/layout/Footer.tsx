@@ -40,7 +40,7 @@ export function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="bg-[var(--bg-secondary)] border-t border-[var(--border)] mt-auto">
+    <footer className="border-t border-[var(--border)] mt-auto">
       <div className="max-w-7xl mx-auto px-4 py-12">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {FOOTER_SECTIONS.map(section => (

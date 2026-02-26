@@ -3,11 +3,6 @@
 import Link from 'next/link';
 import { Mountain, Waves, Fish, Wind, Footprints, Zap, Sailboat, LucideIcon } from 'lucide-react';
 
-/**
- * CategoryChips — категории туров (iOS light theme).
- * Белые квадратные карточки с Lucide иконками и тёмными подписями.
- */
-
 interface Category {
   id: string;
   label: string;
@@ -35,15 +30,13 @@ interface CategoryChipsProps {
 export function CategoryChips({ activeCategory }: CategoryChipsProps) {
   return (
     <section aria-label="Категории туров" className="pt-4 pb-2">
-      {/* Заголовок */}
       <div className="flex items-center justify-between px-4 mb-3">
-        <h2 className="text-[15px] font-bold text-[var(--text-primary)]">Категории</h2>
-        <Link href="/tours" className="text-sm font-medium text-[var(--accent)]">
-          Все →
+        <h2 className="text-[15px] font-bold text-white">Категории</h2>
+        <Link href="/tours" className="text-sm font-medium text-[#00D4FF]">
+          Все
         </Link>
       </div>
 
-      {/* Горизонтальный скролл */}
       <div
         className="scrollbar-hide flex overflow-x-auto gap-2.5 px-4 pb-2"
         style={{ WebkitOverflowScrolling: 'touch' }}
@@ -60,14 +53,14 @@ export function CategoryChips({ activeCategory }: CategoryChipsProps) {
               className={[
                 'flex flex-col items-center justify-center gap-1.5 w-[66px] h-[74px] flex-shrink-0 rounded-2xl transition-all',
                 isActive
-                  ? 'bg-[var(--accent-muted)] text-[var(--accent)] ring-1 ring-[var(--accent)]'
-                  : 'bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)]',
+                  ? 'bg-[#00D4FF]/10 text-[#00D4FF] ring-1 ring-[#00D4FF]'
+                  : 'bg-white/8 border border-white/10 text-white/60 hover:border-white/20 hover:text-white/80',
               ].join(' ')}
             >
               <cat.Icon
                 size={22}
                 strokeWidth={1.8}
-                className={isActive ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)]'}
+                className={isActive ? 'text-[#00D4FF]' : 'text-white/60'}
               />
               <span className="text-[10px] font-medium leading-tight text-center">
                 {cat.label}
