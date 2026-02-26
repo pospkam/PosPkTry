@@ -52,7 +52,7 @@ export function DesktopHero() {
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Куда хотите поехать?"
-            className="w-full pr-36 py-4 rounded-2xl bg-white/95 dark:bg-[#0D1B2A]/90 backdrop-blur-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] text-base focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50 shadow-xl"
+            className="w-full pr-36 py-4 rounded-2xl bg-white/10 border border-white/10 backdrop-blur-xl text-white placeholder-white/40 text-base focus:outline-none focus:ring-2 focus:ring-[#00D4FF]/30 focus:border-[#00D4FF]/50 shadow-xl"
             style={{ paddingLeft: '3.25rem' }}
           />
           <button
