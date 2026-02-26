@@ -4,7 +4,7 @@ import { ApiResponse } from '@/types';
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/tours/[id] - Получение тура по ID
+// GET /api/tours/[id] -- poluchenie tura po ID
 // Public by design: tour detail page for discovery.
 export async function GET(
   request: NextRequest,
@@ -13,56 +13,57 @@ export async function GET(
   try {
     const { id } = await params;
 
-    const result = await query(`
-      SELECT 
-        id, name, description, short_description, category, difficulty,
-        duration, price, currency, season, coordinates, requirements,
-        included, not_included, max_group_size, min_group_size,
-        rating, review_count, is_active, created_at, updated_at, images
-      FROM tours
-      WHERE id = $1
-    `, [id]);
+    // SELECT * dlya sovmestimosti s obema skhemami (camelCase / snake_case)
+    const result = await query(`SELECT * FROM tours WHERE id = $1`, [id]);
 
     if (result.rows.length === 0) {
       return NextResponse.json({
         success: false,
-        error: 'Tour not found',
+        error: 'Тур не найден',
       } as ApiResponse<null>, { status: 404 });
     }
 
     const row = result.rows[0];
-    
-    let images = [];
-    if (row.images) {
+
+    let images: string[] = [];
+    const rawImages = row.images;
+    if (rawImages) {
       try {
-        images = typeof row.images === 'string' ? JSON.parse(row.images) : row.images;
-      } catch (e) {}
+        images = typeof rawImages === 'string' ? JSON.parse(rawImages) : (Array.isArray(rawImages) ? rawImages : []);
+      } catch {
+        images = [];
+      }
     }
 
+    // Mapping: podderzhka obeih skhem (production camelCase + dev snake_case)
     const tour = {
       id: row.id,
-      name: row.name,
-      title: row.name, // Add title for client compatibility
-      description: row.description,
-      shortDescription: row.short_description,
-      category: row.category,
-      difficulty: row.difficulty,
-      duration: row.duration,
-      price: parseFloat(row.price),
-      currency: row.currency,
+      name: row.title || row.name || '',
+      title: row.title || row.name || '',
+      description: row.fullDescription || row.description || '',
+      shortDescription: row.description || row.short_description || '',
+      category: row.category || '',
+      difficulty: row.difficulty || 'medium',
+      duration: row.minDuration || row.duration || 0,
+      price: parseFloat(row.pricePerDay || row.price || 0),
+      priceOriginal: parseFloat(row.priceOriginal || row.pricePerDay || row.price || 0),
+      currency: row.currency || 'RUB',
       season: row.season || [],
       coordinates: row.coordinates || [],
       requirements: row.requirements || [],
       included: row.included || [],
-      notIncluded: row.not_included || [],
-      maxGroupSize: row.max_group_size,
-      minGroupSize: row.min_group_size,
+      notIncluded: row.notIncluded || row.not_included || [],
+      maxGroupSize: row.maxGroupSize || row.max_group_size || 20,
+      minGroupSize: row.minGroupSize || row.min_group_size || 1,
       rating: parseFloat(row.rating) || 0,
-      reviewCount: row.review_count || 0,
-      isActive: row.is_active,
-      images: images,
-      createdAt: new Date(row.created_at),
-      updatedAt: new Date(row.updated_at),
+      reviewCount: row.review_count || row.reviewCount || 0,
+      isActive: row.is_active ?? true,
+      images,
+      slug: row.slug || row.id,
+      locationName: row.locationName || row.location_name || '',
+      partnerId: row.partnerId || row.partner_id || null,
+      createdAt: new Date(row.createdAt || row.created_at || Date.now()),
+      updatedAt: new Date(row.updatedAt || row.updated_at || Date.now()),
     };
 
     return NextResponse.json({
@@ -71,11 +72,11 @@ export async function GET(
     } as ApiResponse<typeof tour>);
 
   } catch (error) {
-    console.error('Error fetching tour:', error);
+    const msg = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[TOUR_DETAIL_GET]', msg);
     return NextResponse.json({
       success: false,
-      error: 'Failed to fetch tour',
-      message: error instanceof Error ? error.message : 'Unknown error',
+      error: 'Не удалось загрузить тур',
     } as ApiResponse<null>, { status: 500 });
   }
 }
