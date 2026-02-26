@@ -44,7 +44,7 @@ export function MobileNav() {
                 rounded-[var(--radius-sm)]
                 text-xs transition-colors duration-200
                 ${isActive
-                  ? 'text-[var(--accent)]'
+                  ? 'text-lava'
                   : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
                 }
               `}

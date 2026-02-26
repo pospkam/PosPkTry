@@ -23,8 +23,7 @@ export default function AIAssistantPage() {
     const text = input.trim();
     if (!text || loading) return;
 
-    const userMsg: ChatMessage = { role: 'user', content: text };
-    setMessages(prev => [...prev, userMsg]);
+    setMessages(prev => [...prev, { role: 'user', content: text }]);
     setInput('');
     setLoading(true);
 
@@ -58,59 +57,72 @@ export default function AIAssistantPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8 flex flex-col h-[calc(100vh-8rem)] bg-[var(--bg-primary)] text-[var(--text-primary)]">
+    <div className="max-w-3xl mx-auto px-4 py-8 flex flex-col h-[calc(100vh-8rem)] bg-[#0D1117] min-h-screen">
       <div className="flex items-center gap-3 mb-6">
-        <Bot className="w-8 h-8 text-[var(--accent)]" />
+        <Bot className="w-8 h-8 text-[var(--ocean,#00A8CC)]" />
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">AI Помощник</h1>
-          <p className="text-sm text-[var(--text-secondary)]">Спросите о турах, погоде, безопасности на Камчатке</p>
+          <h1 className="font-serif text-2xl font-bold text-[#F0F6FC]">AI Помощник</h1>
+          <p className="text-sm text-[#8B949E]">Спросите о турах, погоде, безопасности на Камчатке</p>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-3 mb-4">
         {messages.length === 0 && (
-          <div className="text-center py-16 text-[var(--text-muted)]">
+          <div className="text-center py-16 text-[#484F58]">
             <Bot className="w-12 h-12 mx-auto mb-4 opacity-30" />
-            <p>Задайте вопрос о Камчатке</p>
+            <p className="mb-4">Задайте вопрос о Камчатке</p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {['Какие вулканы посетить?', 'Лучшее время для рыбалки', 'Что взять в поход?'].map(q => (
+                <button
+                  key={q}
+                  onClick={() => { setInput(q); }}
+                  className="px-3 py-2 rounded-xl border border-[rgba(255,255,255,0.08)] text-[#8B949E] text-sm hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors min-h-[44px]"
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
           </div>
         )}
         {messages.map((msg, i) => (
           <div key={`${msg.role}-${i}`} className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            {msg.role === 'assistant' && <Bot className="w-5 h-5 text-[var(--accent)] mt-1 shrink-0" />}
-            <div className={`max-w-[80%] px-4 py-3 rounded-[var(--radius-lg)] text-sm whitespace-pre-wrap ${
+            {msg.role === 'assistant' && <Bot className="w-5 h-5 text-[var(--ocean,#00A8CC)] mt-1 shrink-0" />}
+            <div className={`max-w-[80%] px-4 py-3 text-sm whitespace-pre-wrap ${
               msg.role === 'user'
-                ? 'bg-[var(--accent)] text-white'
-                : 'bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-primary)]'
+                ? 'bg-[var(--accent)]/20 text-[#F0F6FC] rounded-2xl rounded-br-sm'
+                : 'bg-[#21262D] text-[#F0F6FC] rounded-2xl rounded-bl-sm'
             }`}>
               {msg.content}
             </div>
-            {msg.role === 'user' && <User className="w-5 h-5 text-[var(--text-muted)] mt-1 shrink-0" />}
+            {msg.role === 'user' && <User className="w-5 h-5 text-[#484F58] mt-1 shrink-0" />}
           </div>
         ))}
         {loading && (
-          <div className="flex items-center gap-2 text-[var(--text-muted)] text-sm">
+          <div className="flex items-center gap-2 text-[#484F58] text-sm">
             <Loader2 className="w-4 h-4 animate-spin" /> Думаю...
           </div>
         )}
         <div ref={endRef} />
       </div>
 
-      <form onSubmit={handleSend} className="flex gap-2">
-        <input
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          placeholder="Спросите о Камчатке..."
-          disabled={loading}
-          className="flex-1 min-h-[44px] px-4 bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius-md)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30"
-        />
-        <button
-          type="submit"
-          disabled={loading || !input.trim()}
-          className="min-h-[44px] min-w-[44px] px-4 bg-[var(--accent)] text-white rounded-[var(--radius-md)] disabled:opacity-50 flex items-center justify-center"
-        >
-          <Send className="w-5 h-5" />
-        </button>
-      </form>
+      <div className="sticky bottom-0 bg-[#161B22] border-t border-[rgba(255,255,255,0.08)] -mx-4 px-4 py-3">
+        <form onSubmit={handleSend} className="flex gap-2">
+          <input
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            placeholder="Спросите о Камчатке..."
+            disabled={loading}
+            className="flex-1 min-h-[44px] px-4 bg-[#21262D] border border-[rgba(255,255,255,0.08)] rounded-xl text-[#F0F6FC] placeholder-[#484F58] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30"
+          />
+          <button
+            type="submit"
+            disabled={loading || !input.trim()}
+            className="min-h-[44px] min-w-[44px] px-4 bg-[var(--accent)] text-white rounded-xl disabled:opacity-50 flex items-center justify-center hover:bg-[var(--accent-hover)] transition-colors"
+          >
+            <Send className="w-5 h-5" />
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
