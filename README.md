@@ -66,24 +66,7 @@ npm run type-check
 
 Создайте `.env.local`:
 
-```env
-JWT_SECRET=your_secret_min_32_chars
-DATABASE_URL=postgresql://user:pass@host:5432/kamhub
-NEXTAUTH_SECRET=your_nextauth_secret
-TIMEWEB_TOKEN=your_timeweb_api_token
-MCHS_API_URL=https://your-mchs-endpoint.example/api/register-group
-MCHS_API_TOKEN=your_mchs_api_token
-
-# AI провайдеры
-DEEPSEEK_API_KEY=      # Основной провайдер чата
-OPENAI_API_KEY=        # Эмбеддинги для семантического поиска
-ANTHROPIC_API_KEY=     # Claude Vision для автотеггинга фото
-MINIMAX_API_KEY=
-XAI_API_KEY=
-
-# URL -> Markdown для RAG
-MARKDOWN_NEW_ENDPOINT=https://markdown.new/
-KNOWLEDGE_BASE_SOURCE_URLS=https://fishingkam.ru,https://example.com/news
+WLEDGE_BASE_SOURCE_URLS=https://fishingkam.ru,https://example.com/news
 ```
 
 ---
