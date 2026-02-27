@@ -1,142 +1,195 @@
 'use client';
 
-import { useMediaQuery } from 'react-responsive';
-import { DesktopHero } from '@/components/home/DesktopHero';
-import Image from 'next/image';
-import {
-  HomeHeader,
-  HomeSearchBar,
-  CategoryChips,
-  TourCardsRow,
-  HomeBottomNav,
-} from '@/components/home';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Sun, Moon, User, House, Map, Heart, AlertTriangle } from 'lucide-react';
+import { VolcanoIcon, FishingIcon, ThermalIcon, SnowmobileIcon, JeepIcon } from '@/components/icons';
 
-import { ModernTourSearch } from '@/components/ModernTourSearch';
+const activities = [
+  { icon: VolcanoIcon, label: 'Вулканы', category: 'volcanoes' },
+  { icon: FishingIcon, label: 'Рыбалка', category: 'fishing' },
+  { icon: ThermalIcon, label: 'Термы', category: 'thermal' },
+  { icon: SnowmobileIcon, label: 'Снегоход', category: 'snowmobile' },
+  { icon: JeepIcon, label: 'Джип-туры', category: 'jeep' },
+];
+
+const navItems = [
+  { icon: House, label: 'Главная', href: '/' },
+  { icon: Map, label: 'Карта', href: '/map' },
+  { icon: Heart, label: 'Избранное', href: '/hub/tourist/wishlist' },
+  { icon: User, label: 'Профиль', href: '/profile' },
+  { icon: AlertTriangle, label: 'SOS', href: '/safety', isSos: true },
+];
 
 export default function HomePageClient() {
-  const isDesktop = useMediaQuery({ minWidth: 1024 });
+  const [isDark, setIsDark] = useState(false);
+  const [activeTab, setActiveTab] = useState('/');
+  const router = useRouter();
+
+  useEffect(() => {
+    // Detect mobile and set default light theme
+    const isMobile = window.innerWidth <= 430;
+    const savedTheme = localStorage.getItem('kh-theme');
+    const defaultLight = isMobile && !savedTheme;
+    setIsDark(savedTheme === 'dark' || (!defaultLight && savedTheme !== 'light'));
+  }, []);
+
+  const toggleTheme = () => {
+    const newTheme = !isDark;
+    setIsDark(newTheme);
+    localStorage.setItem('kh-theme', newTheme ? 'dark' : 'light');
+  };
+
+  const handleActivityClick = (category: string) => {
+    router.push(`/tours?category=${category}`);
+  };
+
+  const handleNavClick = (href: string) => {
+    setActiveTab(href);
+    router.push(href);
+  };
+
+  const createRipple = (event: React.MouseEvent) => {
+    const button = event.currentTarget;
+    const circle = document.createElement('span');
+    const diameter = Math.max(button.clientWidth, button.clientHeight);
+    const radius = diameter / 2;
+
+    circle.style.width = circle.style.height = `${diameter}px`;
+    circle.style.left = `${event.clientX - button.offsetLeft - radius}px`;
+    circle.style.top = `${event.clientY - button.offsetTop - radius}px`;
+    circle.classList.add('ripple-effect');
+
+    const ripple = button.getElementsByClassName('ripple-effect')[0];
+    if (ripple) {
+      ripple.remove();
+    }
+
+    button.appendChild(circle);
+  };
 
   return (
-    <div className="min-h-screen w-full relative transition-colors duration-300 lg:max-w-none lg:mx-0">
-
-      {/* ================================================================
-       * FULL-SCREEN BACKGROUND — custom SVG рисунок Камчатки
-       * ================================================================ */}
-      <div className="fixed inset-0 -z-10 dark:hidden">
-        <svg viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice" className="w-full h-full">
-          <defs>
-            <radialGradient id="sky" cx="50%" cy="20%">
-              <stop offset="0%" stop-color="#87CEEB"/>
-              <stop offset="50%" stop-color="#B0C4DE"/>
-              <stop offset="100%" stop-color="#1E3A8A"/>
-            </radialGradient>
-            <radialGradient id="volcano1" cx="30%" cy="80%">
-              <stop offset="0%" stop-color="#FF4500"/>
-              <stop offset="70%" stop-color="#8B0000"/>
-              <stop offset="100%" stop-color="#2F1B14"/>
-            </radialGradient>
-            <radialGradient id="volcano2" cx="70%" cy="75%">
-              <stop offset="0%" stop-color="#FF6347"/>
-              <stop offset="70%" stop-color="#DC143C"/>
-              <stop offset="100%" stop-color="#4A0E0E"/>
-            </radialGradient>
-            <linearGradient id="ocean" x1="0%" y1="90%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#4682B4"/>
-              <stop offset="100%" stop-color="#191970"/>
-            </linearGradient>
-            <filter id="smoke" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur"/>
-              <feOffset in="blur" dx="0" dy="3" result="offsetBlur"/>
-              <feMerge>
-                <feMergeNode in="offsetBlur"/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
-          </defs>
-          {/* Небо */}
-          <rect width="1200" height="400" fill="url(#sky)"/>
-          {/* Горы/вулканы */}
-          <path d="M0 400 Q150 250 300 380 Q450 200 600 390 Q750 220 900 370 Q1050 280 1200 400 L1200 800 L0 800 Z" fill="#2D5016" opacity="0.8"/>
-          {/* Вулкан 1 */}
-          <path d="M250 380 Q280 320 320 380 Q350 300 400 370 L420 400 L250 400 Z" fill="url(#volcano1)"/>
-          <circle cx="320" cy="340" r="15" fill="#FFD700" opacity="0.9" className="animate-ping"/>
-          {/* Дым вулкана 1 */}
-          <ellipse cx="320" cy="320" rx="20" ry="30" fill="#A9A9A9" opacity="0.6" filter="url(#smoke)" className="animate-pulse"/>
-          {/* Вулкан 2 */}
-          <path d="M750 370 Q780 310 820 370 Q850 290 900 360 L920 390 L750 390 Z" fill="url(#volcano2)"/>
-          <circle cx="820" cy="330" r="18" fill="#FFA500" opacity="0.9" className="animate-ping delay-1000"/>
-          {/* Дым вулкана 2 */}
-          <ellipse cx="820" cy="310" rx="25" ry="35" fill="#C0C0C0" opacity="0.5" filter="url(#smoke)" className="animate-pulse delay-500"/>
-          {/* Океан */}
-          <path d="M0 500 Q300 480 600 510 Q900 490 1200 505 L1200 800 L0 800 Z" fill="url(#ocean)"/>
-          {/* Волны */}
-          <path d="M0 520 Q100 510 200 525 Q300 515 400 530 Q500 520 600 535 Q700 525 800 540 Q900 530 1000 545 Q1100 535 1200 550" stroke="#4682B4" strokeWidth="3" fill="none" className="animate-wave"/>
-          <path d="M0 540 Q150 530 300 545 Q450 535 600 550 Q750 540 900 555 Q1050 545 1200 560" stroke="#5F9EA0" strokeWidth="2" fill="none" className="animate-wave delay-1000"/>
-        </svg>
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-[#9BAAC8]/30 backdrop-blur-sm" />
-      </div>
-
-      {/* Dark mode SVG background */}
-      <div className="fixed inset-0 -z-10 hidden dark:block">
-        <svg viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice" className="w-full h-full">
-          {/* Темный градиент небо */}
-          <rect width="1200" height="500" fill="url(#darkSky)"/>
-          {/* ... similar paths with dark colors */}
-        </svg>
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0B1120]/90 to-[#0B1120]" />
-      </div>
-
-      {/* ================================================================
-       * HERO SECTION — верхние 30%: нативное фото видно в центре
-       * По краям — сине-лавандовый padding от фона
-       * ================================================================ */}
-      {isDesktop ? (
-        <DesktopHero />
-      ) : (
-        <div className="relative h-[32vh] min-h-[240px] max-h-[360px] w-full overflow-hidden rounded-b-[32px]">
-          <Image
-            src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=900&q=80"
-            alt="Вулкан Камчатки"
-            fill
-            priority
-            sizes="768px"
-            style={{ objectFit: 'cover', objectPosition: 'center 30%' }}
-          />
-
-          {/* Gradient: прозрачное фото сверху → лавандовый переход снизу */}
-          <div className="absolute inset-0 bg-gradient-to-b from-[#B9C1D6]/30 via-transparent to-[#B9C1D6]/70 dark:from-[#0B1120]/30 dark:to-[#0B1120]" />
-
-          {/* 1. Header */}
-          <HomeHeader />
+    <div className={`min-h-screen ${isDark ? 'dark' : ''}`}>
+      {/* Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-transparent backdrop-blur-md">
+        <div className="flex justify-between items-center px-4 py-3 max-w-md mx-auto">
+          <div className="text-2xl font-bold text-white">KH</div>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-full hover:bg-cyan-400/20 transition-colors duration-200"
+              onMouseDown={createRipple}
+            >
+              {isDark ? <Sun className="w-5 h-5 text-white" /> : <Moon className="w-5 h-5 text-white" />}
+            </button>
+            <button
+              className="p-2 rounded-full hover:bg-cyan-400/20 transition-colors duration-200"
+              onMouseDown={createRipple}
+            >
+              <User className="w-5 h-5 text-white" />
+            </button>
+          </div>
         </div>
-      )}
+      </header>
 
-      {/* ================================================================
-       * 2. Поисковая строка — отдельно между hero и контентом
-       * ================================================================ */}
-      <div className="relative px-4 lg:px-8 -mt-6 lg:mt-0 z-20">
-        <HomeSearchBar />
-      </div>
+      {/* Hero */}
+      <section className="relative h-screen flex items-center justify-center">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: `url('/images/${isDark ? 'dark' : 'light'}.jpg')`,
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 to-black/70" />
+        <div className="relative z-10 text-center text-white px-4">
+          <h1 className="text-4xl font-bold mb-2 drop-shadow-lg">
+            Здесь начинается Россия
+          </h1>
+          <h2 className="text-lg text-white/80 drop-shadow">
+            Камчатка — земля огня и льда
+          </h2>
+        </div>
+      </section>
 
-      {/* ================================================================
-       * ОСНОВНОЙ КОНТЕНТ — без белого overlay, фон просвечивает
-       * ================================================================ */}
-      <main className="relative px-4 lg:px-0 pt-4 pb-28 lg:pb-0">
-        {/* 3. Категории */}
-        <CategoryChips />
+      {/* Activities */}
+      <section className="py-8 px-4 max-w-md mx-auto">
+        <h2 className="text-2xl font-bold text-white mb-6 text-center">
+          Активности Камчатки
+        </h2>
+        <div className="grid grid-cols-2 gap-4">
+          {activities.map((activity) => (
+            <button
+              key={activity.category}
+              onClick={() => handleActivityClick(activity.category)}
+              className="bg-white/15 backdrop-blur-md border border-white/25 rounded-2xl p-4 text-center hover:border-cyan-400 transition-all duration-200 hover:shadow-lg hover:shadow-cyan-400/50"
+              onMouseDown={createRipple}
+            >
+              <activity.icon className="w-8 h-8 mx-auto mb-2 text-white" />
+              <span className="text-sm text-white">{activity.label}</span>
+            </button>
+          ))}
+        </div>
+      </section>
 
-        {/* Интегрированный поиск */}
-        <Suspense fallback={<Loader2 className="animate-spin" />}>
-          <ModernTourSearch />
-        </Suspense>
+      {/* Carousel */}
+      <section className="py-8 px-4 max-w-md mx-auto">
+        <h2 className="text-2xl font-bold text-white mb-6 text-center">
+          Камчатка глазами путешественников
+        </h2>
+        <div className="flex gap-4 overflow-x-auto scrollbar-hide">
+          {/* Placeholder for carousel items */}
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex-shrink-0 w-32 h-24 bg-gray-300 rounded-2xl"></div>
+          ))}
+        </div>
+      </section>
 
-        {/* 4. Карточки туров — 2 колонки */}
-        <TourCardsRow />
-      </main>
+      {/* Bottom Nav - Mobile Only */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-white/20 backdrop-blur-xl border-t border-white/30 rounded-t-3xl mx-4 mb-6 py-3 px-6 max-w-md mx-auto md:hidden">
+        <div className="flex justify-around">
+          {navItems.map((item) => (
+            <button
+              key={item.href}
+              onClick={() => handleNavClick(item.href)}
+              className={`flex flex-col items-center p-2 rounded-lg transition-colors duration-200 ${
+                activeTab === item.href ? 'text-cyan-400' : item.isSos ? 'text-red-500' : 'text-white'
+              }`}
+              onMouseDown={createRipple}
+            >
+              <item.icon className="w-5 h-5" />
+              <span className="text-xs mt-1">{item.label}</span>
+            </button>
+          ))}
+        </div>
+      </nav>
 
-      {/* 5. Нижняя навигация */}
-      {!isDesktop && <HomeBottomNav />}
+      {/* Ripple Styles */}
+      <style jsx>{`
+        .ripple-effect {
+          position: absolute;
+          border-radius: 50%;
+          background-color: rgba(0, 212, 255, 0.3);
+          transform: scale(0);
+          animation: ripple 600ms linear;
+          pointer-events: none;
+        }
+
+        @keyframes ripple {
+          to {
+            transform: scale(4);
+            opacity: 0;
+          }
+        }
+
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </div>
   );
 }

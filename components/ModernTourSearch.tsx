@@ -1,9 +1,15 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
+import { 
+  Search, Mic, Bot, Filter, Clock, Star, X, Calendar, Thermometer, ShieldCheck, 
+  Mountain, Fish, Footprints, PawPrint, Droplets, User, Car, Leaf 
+} from 'lucide-react';
+import { SOSButton } from '@/components/safety/SOSButton'; // Импорт для safety-first
 
 interface SearchFilters {
   query: string;
@@ -14,6 +20,19 @@ interface SearchFilters {
   difficulty?: 'easy' | 'medium' | 'hard' | 'any';
   activity?: string;
   duration?: number;
+  passengers?: number;
+}
+
+interface TransferResult {
+  id: string;
+  routeName: string;
+  fromLocation: string;
+  toLocation: string;
+  departureTime: string;
+  pricePerPerson: number;
+  vehicleType: string;
+  operatorName: string;
+  availableSeats: number;
 }
 
 interface TourResult {
@@ -27,13 +46,86 @@ interface TourResult {
   imageUrl?: string;
   rating?: number;
   reviews?: number;
+  isEco?: boolean; // Добавлено для eco-badge
 }
+
+const TourCard = React.memo(({ result }: { result: TourResult | (TourResult & TransferResult) }) => {
+  const isTransfer = 'vehicleType' in result;
+  return (
+    <motion.div
+      className="tour-result-card bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-2"
+      whileHover={{ scale: 1.02 }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <div className="tour-result-image relative overflow-hidden rounded-t-2xl">
+        {result.imageUrl ? (
+          <Image src={result.imageUrl} alt={result.title} fill className="object-cover" sizes="(max-width: 768px) 100vw, 50vw" />
+        ) : (
+          <div className="w-full h-48 bg-gradient-to-br from-gray-200 to-gray-300 animate-pulse"></div>
+        )}
+        {result.difficulty && !isTransfer && (
+          <span className={`difficulty-badge absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-semibold bg-white/80 text-volcano`}>
+            {result.difficulty === 'easy' ? 'Легко' : result.difficulty === 'medium' ? 'Средне' : 'Сложно'}
+          </span>
+        )}
+        {result.isEco && (
+          <motion.div 
+            className="absolute top-3 right-3 bg-moss text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1"
+            animate={{ scale: [1, 1.05, 1] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            <Leaf size={12} /> Эко-тур
+          </motion.div>
+        )}
+        {isTransfer && (
+          <span className="absolute top-3 right-3 bg-ocean text-white px-2 py-1 rounded-full text-xs font-semibold">
+            <Car size={12} className="inline mr-1" /> Трансфер
+          </span>
+        )}
+      </div>
+      <div className="tour-result-content p-4">
+        <h4 className="text-lg font-semibold text-gray-800 mb-2 line-clamp-2">{result.title}</h4>
+        <p className="tour-description text-sm text-gray-600 mb-3 line-clamp-2">{result.description}</p>
+        {isTransfer && (
+          <div className="transfer-details text-xs text-volcano mb-2 space-y-1">
+            <span><Mountain size={12} className="inline mr-1" /> {result.fromLocation} → {result.toLocation}</span>
+            <span><Clock size={12} className="inline mr-1" /> {result.departureTime}</span>
+            <span><User size={12} className="inline mr-1" /> Мест: {result.availableSeats}</span>
+          </div>
+        )}
+        <div className="tour-meta flex justify-between items-center mb-3">
+          <span className="tour-duration text-sm text-volcano flex items-center gap-1">
+            <Clock size={14} /> {result.duration}
+          </span>
+          {result.rating && (
+            <span className="tour-rating text-sm text-moss flex items-center gap-1">
+              <Star size={14} fill="currentColor" className="text-yellow-500" /> {result.rating}
+              {result.reviews && ` (${result.reviews})`}
+            </span>
+          )}
+        </div>
+        <div className="tour-price text-xl font-bold text-ocean mb-2">
+          от {result.price?.toLocaleString()} ₽
+        </div>
+        {isTransfer && (
+          <div className="operator-info text-xs text-gray-500">
+            Оператор: {result.operatorName}
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+});
 
 export function ModernTourSearch() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get('q') || '';
   const initialActivity = searchParams.get('activity') || '';
-  const initialGuests = searchParams.get('guests') || '';
+  const initialAdults = searchParams.get('adults') || '1';
+  const initialChildren = searchParams.get('children') || '0';
+  const initialGuests = parseInt(initialAdults) + parseInt(initialChildren);
   const initialDateFrom = searchParams.get('dateFrom') || '';
   const initialDateTo = searchParams.get('dateTo') || '';
 
@@ -43,6 +135,7 @@ export function ModernTourSearch() {
     activity: initialActivity || undefined,
     dateFrom: initialDateFrom || undefined,
     dateTo: initialDateTo || undefined,
+    passengers: initialGuests > 0 ? initialGuests : undefined,
   });
   const [results, setResults] = useState<TourResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -55,6 +148,16 @@ export function ModernTourSearch() {
   const [voiceSupported, setVoiceSupported] = useState(false);
   const searchTimeout = useRef<NodeJS.Timeout>();
   const recognitionRef = useRef<any>(null);
+
+  // Memoized activities with icons
+  const activities = useMemo(() => [
+    { id: 'volcano', name: 'Вулканы', icon: <Mountain size={16} /> },
+    { id: 'fishing', name: 'Рыбалка', icon: <Fish size={16} /> },
+    { id: 'hiking', name: 'Треккинг', icon: <Footprints size={16} /> },
+    { id: 'wildlife', name: 'Медведи', icon: <PawPrint size={16} /> },
+    { id: 'geysers', name: 'Гейзеры', icon: <Droplets size={16} /> },
+    { id: 'hot-springs', name: 'Термалы', icon: <Thermometer size={16} /> },
+  ], []);
 
   // Проверка поддержки голосового ввода
   useEffect(() => {
@@ -89,7 +192,7 @@ export function ModernTourSearch() {
 
   // Автопоиск при переходе с главной с параметрами
   useEffect(() => {
-    if (initialQuery || initialActivity) {
+    if (initialQuery || initialActivity || initialGuests > 0) {
       performSearch();
     }
   }, []);
@@ -119,18 +222,56 @@ export function ModernTourSearch() {
   const performSearch = async () => {
     setLoading(true);
     try {
+      // Если есть passengers, ищем трансферы
+      if (filters.passengers && filters.passengers > 0) {
+        const params = new URLSearchParams();
+        if (filters.query) params.append('from', filters.query); // Используем query как from для примера
+        params.append('to', 'Петропавловск-Камчатский'); // Default to
+        if (filters.dateFrom) params.append('date', filters.dateFrom);
+        params.append('passengers', filters.passengers.toString());
+
+        const response = await fetch(`/api/transfers/search?${params}`);
+        const data = await response.json();
+        
+        if (data.success && data.data?.availableTransfers) {
+          setResults(data.data.availableTransfers.map((t: any) => ({
+            id: t.scheduleId,
+            title: `${t.route.fromLocation} → ${t.route.toLocation}`,
+            description: `Трансфер на ${t.vehicle.vehicleType}`,
+            price: t.pricePerPerson * (filters.passengers ?? 1),
+            duration: `${t.route.estimatedDurationMinutes / 60} ч`,
+            difficulty: 'easy',
+            activities: ['transfer'],
+            imageUrl: '/images/transfer-placeholder.jpg',
+            rating: 4.5,
+            reviews: 23,
+            isEco: false, // Добавлено
+            // Добавляем transfer-specific fields
+            routeName: t.route.name,
+            fromLocation: t.route.fromLocation,
+            toLocation: t.route.toLocation,
+            departureTime: t.departureTime,
+            vehicleType: t.vehicle.vehicleType,
+            operatorName: t.operatorName,
+            availableSeats: t.availableSeats,
+          } as TourResult & TransferResult)));
+          return;
+        }
+      }
+
+      // Иначе поиск туров
       const params = new URLSearchParams();
-      if (filters.query) params.append('search', filters.query);
+      if (filters.query) params.append('q', filters.query);
       if (filters.difficulty && filters.difficulty !== 'any') params.append('difficulty', filters.difficulty);
       if (filters.activity) params.append('activity', filters.activity);
       if (filters.priceMin) params.append('priceMin', filters.priceMin.toString());
       if (filters.priceMax) params.append('priceMax', filters.priceMax.toString());
 
-      const response = await fetch(`/api/tours?${params}`);
+      const response = await fetch(`/api/discovery/search?${params}`);
       const data = await response.json();
       
-      if (data.success && data.data?.tours) {
-        setResults(data.data.tours);
+      if (data.success && data.data) {
+        setResults(data.data.map((tour: any) => ({ ...tour, isEco: tour.ecoFriendly || false }))); // Добавлено eco
       }
     } catch (error) {
       console.error('Search error:', error);
@@ -192,315 +333,373 @@ export function ModernTourSearch() {
     }
   };
 
-  const activities = [
-    { id: 'volcano', name: 'Вулканы', icon: '' },
-    { id: 'fishing', name: 'Рыбалка', icon: '' },
-    { id: 'hiking', name: 'Треккинг', icon: '' },
-    { id: 'wildlife', name: 'Медведи', icon: '' },
-    { id: 'geysers', name: 'Гейзеры', icon: '' },
-    { id: 'hot-springs', name: 'Термалы', icon: '' },
-  ];
-
   return (
-    <div className="modern-search-container">
-      {/* AI Помощник */}
-      {showAI && (
-        <div 
-          className="ai-search-modal" 
-          onClick={() => setShowAI(false)}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') setShowAI(false);
-            if (e.key === 'Enter') setShowAI(false);
-          }}
-          aria-label="Закрыть поиск"
-        >
-          <div className="ai-search-content" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
-            <div className="ai-search-header">
-              <div className="ai-search-title">
-                <div className="ai-icon"></div>
-                <div>
-                  <h3>AI Помощник поиска</h3>
-                  <p>Опишите свой идеальный тур, я помогу подобрать!</p>
-                </div>
-              </div>
-              <button onClick={() => setShowAI(false)} className="ai-close">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M18 6 6 18M6 6l12 12"/>
-                </svg>
-              </button>
-            </div>
+    <div className="modern-search-container min-h-screen bg-gray-50 py-8">
+      {/* Sticky SOS Button - safety-first */}
+      <SOSButton className="fixed top-4 right-4 z-50" />
 
-            <div className="ai-search-body">
-              <div className="ai-examples">
-                <p>Примеры запросов:</p>
-                <div className="ai-example-chips">
-                  <button onClick={() => setAiQuery('Хочу увидеть вулкан и медведей за 3 дня')}>
-                     Вулканы + медведи
-                  </button>
-                  <button onClick={() => setAiQuery('Рыбалка для начинающих на выходные')}>
-                     Рыбалка для новичков
-                  </button>
-                  <button onClick={() => setAiQuery('Романтический тур с горячими источниками')}>
-                     Романтический отдых
-                  </button>
-                </div>
-              </div>
-
-              <textarea
-                value={aiQuery}
-                onChange={(e) => setAiQuery(e.target.value)}
-                placeholder="Например: Хочу активный тур на 5 дней с восхождением на вулкан, но без экстрима..."
-                className="ai-input"
-                rows={4}
-              />
-
-              <button 
-                onClick={handleAISearch}
-                disabled={aiLoading || !aiQuery.trim()}
-                className="ai-search-btn"
-              >
-                {aiLoading ? (
-                  <>
-                    <span className="spinner"></span>
-                    Думаю...
-                  </>
-                ) : (
-                  <>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="11" cy="11" r="8"/>
-                      <path d="m21 21-4.35-4.35"/>
-                    </svg>
-                    Найти с помощью AI
-                  </>
-                )}
-              </button>
-
-              {aiResponse && (
-                <div className="ai-response">
-                  <div className="ai-response-header">
-                    <span className="ai-badge">Рекомендация AI</span>
+      {/* AI Помощник - glassmorphism modal */}
+      <AnimatePresence>
+        {showAI && (
+          <motion.div 
+            className="ai-search-modal fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-end sm:items-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowAI(false)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') setShowAI(false);
+            }}
+            aria-label="Закрыть AI-поиск"
+          >
+            <motion.div 
+              className="ai-search-content bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()} 
+              role="dialog" 
+              aria-modal="true"
+              initial={{ scale: 0.95, y: 50 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 50 }}
+            >
+              <div className="ai-search-header flex items-center justify-between p-4 border-b border-white/20">
+                <div className="ai-search-title flex items-center gap-3">
+                  <Bot size={24} className="text-ocean" />
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800">AI Помощник поиска</h3>
+                    <p className="text-sm text-volcano">Опишите свой идеальный тур</p>
                   </div>
-                  <p>{aiResponse}</p>
                 </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+                <button 
+                  onClick={() => setShowAI(false)} 
+                  className="ai-close p-2 hover:bg-white/10 rounded-full transition-colors"
+                  aria-label="Закрыть"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="ai-search-body p-4">
+                <div className="ai-examples mb-4">
+                  <p className="text-sm font-medium text-volcano mb-2">Примеры запросов:</p>
+                  <div className="ai-example-chips flex flex-wrap gap-2">
+                    <motion.button 
+                      onClick={() => setAiQuery('Хочу увидеть вулкан и медведей за 3 дня')}
+                      className="px-3 py-1 bg-gray-100 hover:bg-ocean hover:text-white rounded-full text-sm transition-colors"
+                      whileHover={{ scale: 1.05 }}
+                    >
+                      Вулканы + медведи
+                    </motion.button>
+                    <motion.button 
+                      onClick={() => setAiQuery('Рыбалка для начинающих на выходные')}
+                      className="px-3 py-1 bg-gray-100 hover:bg-ocean hover:text-white rounded-full text-sm transition-colors"
+                      whileHover={{ scale: 1.05 }}
+                    >
+                      Рыбалка для новичков
+                    </motion.button>
+                    <motion.button 
+                      onClick={() => setAiQuery('Романтический тур с горячими источниками')}
+                      className="px-3 py-1 bg-gray-100 hover:bg-ocean hover:text-white rounded-full text-sm transition-colors"
+                      whileHover={{ scale: 1.05 }}
+                    >
+                      Романтический отдых
+                    </motion.button>
+                  </div>
+                </div>
+
+                <textarea
+                  value={aiQuery}
+                  onChange={(e) => setAiQuery(e.target.value)}
+                  placeholder="Например: Хочу активный тур на 5 дней с восхождением на вулкан, но без экстрима..."
+                  className="ai-input w-full p-3 border border-gray-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-ocean text-sm"
+                  rows={4}
+                  aria-label="Запрос для AI"
+                />
+
+                <motion.button 
+                  onClick={handleAISearch}
+                  disabled={aiLoading || !aiQuery.trim()}
+                  className="ai-search-btn w-full mt-3 flex items-center justify-center gap-2 px-4 py-3 bg-ocean text-white rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  {aiLoading ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      Думаю...
+                    </>
+                  ) : (
+                    <>
+                      <Search size={18} />
+                      Найти с помощью AI
+                    </>
+                  )}
+                </motion.button>
+
+                {aiResponse && (
+                  <motion.div 
+                    className="ai-response mt-4 p-4 bg-gray-50 rounded-xl"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                  >
+                    <div className="ai-response-header flex items-center gap-2 mb-2">
+                      <span className="ai-badge bg-moss text-white px-2 py-1 rounded-full text-xs font-medium">Рекомендация AI</span>
+                    </div>
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{aiResponse}</p>
+                  </motion.div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Основной поиск */}
-      <div className="search-main">
-        <div className="search-input-group">
-          <svg className="search-icon-main" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="11" cy="11" r="8"/>
-            <path d="m21 21-4.35-4.35"/>
-          </svg>
+      <div className="search-main max-w-4xl mx-auto px-4">
+        <motion.div 
+          className="search-input-group relative bg-white rounded-2xl shadow-md p-4 flex items-center gap-3 mb-4"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Search size={20} className="text-volcano flex-shrink-0" aria-hidden="true" />
           <input
             type="text"
             value={filters.query}
             onChange={(e) => setFilters(prev => ({ ...prev, query: e.target.value }))}
             placeholder="Куда хотите отправиться? (вулкан, рыбалка, медведи...)"
-            className="search-input-main"
+            className="search-input-main flex-1 outline-none text-base placeholder:text-volcano"
+            aria-label="Поиск туров"
           />
           {voiceSupported && (
-            <button 
+            <motion.button 
               onClick={toggleVoiceInput}
-              className={`voice-input-btn ${isListening ? 'listening' : ''}`}
+              className={`voice-input-btn p-2 rounded-xl transition-colors ${isListening ? 'bg-red-100 text-red-600' : 'text-volcano hover:bg-gray-100'}`}
               title="Голосовой ввод"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              animate={isListening ? { scale: [1, 1.05, 1], backgroundColor: '#fee2e2' } : {}}
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                {isListening ? (
-                  <>
-                    <rect x="9" y="2" width="6" height="20" rx="3"/>
-                    <circle cx="12" cy="12" r="8" opacity="0.3" className="pulse-ring"/>
-                  </>
-                ) : (
-                  <>
-                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
-                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                    <line x1="12" x2="12" y1="19" y2="22"/>
-                  </>
-                )}
-              </svg>
-            </button>
+              <Mic size={18} />
+            </motion.button>
           )}
-          <button 
+          <motion.button 
             onClick={() => setShowAI(true)}
-            className="ai-assistant-btn"
-            title="AI помощник"
+            className="ai-assistant-btn flex items-center gap-1 px-3 py-2 bg-ocean text-white rounded-xl text-sm font-medium hover:bg-ocean/90 transition-colors"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            aria-label="AI помощник"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Z"/>
-              <path d="M12 6v12M6 12h12"/>
-            </svg>
+            <Bot size={16} />
             <span>AI</span>
-          </button>
-          <button 
+          </motion.button>
+          <motion.button 
             onClick={() => setShowFilters(!showFilters)}
-            className={`filters-toggle ${showFilters ? 'active' : ''}`}
+            className={`filters-toggle p-2 rounded-xl transition-colors ${showFilters ? 'bg-volcano text-white' : 'text-volcano hover:bg-gray-100'}`}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            aria-label="Фильтры"
+            aria-expanded={showFilters}
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="4" x2="20" y1="6" y2="6"/>
-              <line x1="4" x2="20" y1="12" y2="12"/>
-              <line x1="4" x2="20" y1="18" y2="18"/>
-            </svg>
-            Фильтры
-          </button>
-        </div>
+            <Filter size={18} />
+            <span className="hidden sm:inline ml-1">Фильтры</span>
+          </motion.button>
+        </motion.div>
 
         {/* Быстрые фильтры - активности */}
-        <div className="quick-filters">
+        <div className="quick-filters flex flex-wrap gap-2 mb-6 justify-center sm:justify-start">
           {activities.map((activity) => (
-            <button
+            <motion.button
               key={activity.id}
               onClick={() => setFilters(prev => ({ 
                 ...prev, 
                 activity: prev.activity === activity.id ? '' : activity.id 
               }))}
-              className={`activity-chip ${filters.activity === activity.id ? 'active' : ''}`}
+              className={`activity-chip flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                filters.activity === activity.id 
+                  ? 'bg-ocean text-white shadow-md' 
+                  : 'bg-gray-100 text-volcano hover:bg-gray-200 hover:shadow-sm'
+              }`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              aria-pressed={filters.activity === activity.id}
             >
-              <span className="activity-icon">{activity.icon}</span>
+              {activity.icon}
               <span>{activity.name}</span>
-            </button>
+            </motion.button>
           ))}
         </div>
 
-        {/* Расширенные фильтры */}
-        {showFilters && (
-          <div className="advanced-filters">
-            <div className="filter-grid">
-              <div className="filter-group">
-                <label htmlFor="filter-difficulty">Сложность</label>
-                <select 
-                  id="filter-difficulty"
-                  value={filters.difficulty}
-                  onChange={(e) => setFilters(prev => ({ ...prev, difficulty: e.target.value as any }))}
-                  className="filter-select"
-                >
-                  <option value="any">Любая</option>
-                  <option value="easy">Легко</option>
-                  <option value="medium">Средне</option>
-                  <option value="hard">Сложно</option>
-                </select>
-              </div>
-
-              <div className="filter-group">
-                <label htmlFor="filter-price-min">Цена от</label>
-                <input
-                  id="filter-price-min"
-                  type="number"
-                  value={filters.priceMin || ''}
-                  onChange={(e) => setFilters(prev => ({ ...prev, priceMin: parseInt(e.target.value) || undefined }))}
-                  placeholder="0"
-                  className="filter-input"
-                />
-              </div>
-
-              <div className="filter-group">
-                <label htmlFor="filter-price-max">Цена до</label>
-                <input
-                  id="filter-price-max"
-                  type="number"
-                  value={filters.priceMax || ''}
-                  onChange={(e) => setFilters(prev => ({ ...prev, priceMax: parseInt(e.target.value) || undefined }))}
-                  placeholder="∞"
-                  className="filter-input"
-                />
-              </div>
-
-              <div className="filter-group">
-                <label htmlFor="filter-duration">Длительность (дней)</label>
-                <input
-                  id="filter-duration"
-                  type="number"
-                  value={filters.duration || ''}
-                  onChange={(e) => setFilters(prev => ({ ...prev, duration: parseInt(e.target.value) || undefined }))}
-                  placeholder="Любая"
-                  className="filter-input"
-                />
-              </div>
-            </div>
-
-            <button 
-              onClick={() => setFilters({ query: '', difficulty: 'any' })}
-              className="clear-filters-btn"
+        {/* Расширенные фильтры - glassmorphism sheet */}
+        <AnimatePresence>
+          {showFilters && (
+            <motion.div 
+              className="advanced-filters bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 mb-6 shadow-xl"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
             >
-       Очистить фильтры
-            </button>
-          </div>
-        )}
+              <div className="filter-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div className="filter-group">
+                  <label htmlFor="filter-difficulty" className="block text-sm font-medium text-volcano mb-1">Сложность</label>
+                  <select 
+                    id="filter-difficulty"
+                    value={filters.difficulty}
+                    onChange={(e) => setFilters(prev => ({ ...prev, difficulty: e.target.value as any }))}
+                    className="filter-select w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-ocean text-sm"
+                    aria-label="Сложность тура"
+                  >
+                    <option value="any">Любая</option>
+                    <option value="easy">Легко</option>
+                    <option value="medium">Средне</option>
+                    <option value="hard">Сложно</option>
+                  </select>
+                </div>
+
+                <div className="filter-group">
+                  <label htmlFor="filter-price-min" className="block text-sm font-medium text-volcano mb-1">Цена от, ₽</label>
+                  <input
+                    id="filter-price-min"
+                    type="number"
+                    value={filters.priceMin || ''}
+                    onChange={(e) => setFilters(prev => ({ ...prev, priceMin: parseInt(e.target.value) || undefined }))}
+                    placeholder="0"
+                    className="filter-input w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-ocean text-sm"
+                    aria-label="Минимальная цена"
+                  />
+                </div>
+
+                <div className="filter-group">
+                  <label htmlFor="filter-price-max" className="block text-sm font-medium text-volcano mb-1">Цена до, ₽</label>
+                  <input
+                    id="filter-price-max"
+                    type="number"
+                    value={filters.priceMax || ''}
+                    onChange={(e) => setFilters(prev => ({ ...prev, priceMax: parseInt(e.target.value) || undefined }))}
+                    placeholder="∞"
+                    className="filter-input w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-ocean text-sm"
+                    aria-label="Максимальная цена"
+                  />
+                </div>
+
+                <div className="filter-group">
+                  <label htmlFor="filter-duration" className="block text-sm font-medium text-volcano mb-1">Длительность, дней</label>
+                  <input
+                    id="filter-duration"
+                    type="number"
+                    value={filters.duration || ''}
+                    onChange={(e) => setFilters(prev => ({ ...prev, duration: parseInt(e.target.value) || undefined }))}
+                    placeholder="Любая"
+                    className="filter-input w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-ocean text-sm"
+                    aria-label="Длительность тура"
+                  />
+                </div>
+
+                <div className="filter-group">
+                  <label htmlFor="filter-passengers" className="block text-sm font-medium text-volcano mb-1">Пассажиры</label>
+                  <input
+                    id="filter-passengers"
+                    type="number"
+                    value={filters.passengers || ''}
+                    onChange={(e) => setFilters(prev => ({ ...prev, passengers: parseInt(e.target.value) || undefined }))}
+                    placeholder="1"
+                    min="1"
+                    max="50"
+                    className="filter-input w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-ocean text-sm"
+                    aria-label="Количество пассажиров"
+                  />
+                </div>
+              </div>
+
+              <motion.button 
+                onClick={() => setFilters({ query: '', difficulty: 'any', activity: '', passengers: undefined, priceMin: undefined, priceMax: undefined, duration: undefined })}
+                className="clear-filters-btn mt-4 px-6 py-3 border border-volcano text-volcano rounded-xl font-medium hover:bg-volcano hover:text-white transition-colors"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                Очистить все фильтры
+              </motion.button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Результаты поиска */}
-      {filters.query && (
-        <div className="search-results">
+      {(filters.query || filters.passengers) && (
+        <div className="search-results max-w-4xl mx-auto px-4">
           {loading ? (
-            <div className="search-loading">
-              <div className="spinner-large"></div>
-              <p>Ищем туры...</p>
-            </div>
+            <motion.div 
+              className="search-loading flex flex-col items-center justify-center py-12 text-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              <div className="w-16 h-16 bg-gradient-to-r from-ocean to-moss rounded-full flex items-center justify-center mb-4 animate-spin">
+                <Search size={24} className="text-white" />
+              </div>
+              <p className="text-xl font-semibold text-volcano mb-2">Ищем варианты...</p>
+              <p className="text-sm text-gray-500">Мгновенный поиск по 100+ турам</p>
+            </motion.div>
           ) : results.length > 0 ? (
             <>
-              <div className="results-header">
-                <h3>Найдено туров: {results.length}</h3>
-              </div>
-              <div className="results-grid">
-                {results.map((tour) => (
-                  <Link key={tour.id} href={`/tours/${tour.id}`} className="tour-result-card">
-                    <div className="tour-result-image">
-                      {tour.imageUrl ? (
-                        <Image src={tour.imageUrl} alt={tour.title} fill className="object-cover" sizes="(max-width: 768px) 100vw, 50vw" />
-                      ) : (
-                        <div className="tour-placeholder"></div>
-                      )}
-                      {tour.difficulty && (
-                        <span className={`difficulty-badge ${tour.difficulty}`}>
-                          {tour.difficulty === 'easy' && ' Легко'}
-                          {tour.difficulty === 'medium' && ' Средне'}
-                          {tour.difficulty === 'hard' && ' Сложно'}
-                        </span>
-                      )}
-                    </div>
-                    <div className="tour-result-content">
-                      <h4>{tour.title}</h4>
-                      <p className="tour-description">{tour.description}</p>
-                      <div className="tour-meta">
-                        <span className="tour-duration">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <circle cx="12" cy="12" r="10"/>
-                            <polyline points="12 6 12 12 16 14"/>
-                          </svg>
-                          {tour.duration}
-                        </span>
-                        {tour.rating && (
-                          <span className="tour-rating">
-                             {tour.rating}
-                            {tour.reviews && ` (${tour.reviews})`}
-                          </span>
-                        )}
-                      </div>
-                      <div className="tour-price">
-                        от {tour.price?.toLocaleString()} ₽
-                      </div>
-                    </div>
-                  </Link>
+              <motion.div 
+                className="results-header flex items-center justify-between mb-8"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <h3 className="text-2xl font-bold text-gray-800">
+                  Найдено: <span className="text-ocean">{results.length}</span> {filters.passengers ? 'трансферов' : 'туров'}
+                </h3>
+                <motion.button 
+                  onClick={() => setShowFilters(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-white border border-volcano text-volcano rounded-xl font-medium hover:shadow-md transition-all"
+                  whileHover={{ scale: 1.02 }}
+                >
+                  <Filter size={16} />
+                  Дополнительные фильтры
+                </motion.button>
+              </motion.div>
+              <motion.div 
+                layout 
+                className="results-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+              >
+                {results.map((result, index) => (
+                  <TourCard key={result.id} result={result} />
                 ))}
-              </div>
+              </motion.div>
             </>
           ) : (
-            <div className="no-results">
-              <div className="no-results-icon"></div>
-              <h3>Ничего не найдено</h3>
-              <p>Попробуйте изменить запрос или воспользуйтесь AI-помощником</p>
-              <button onClick={() => setShowAI(true)} className="try-ai-btn">
-                Попробовать AI поиск
-              </button>
-            </div>
+            <motion.div 
+              className="no-results flex flex-col items-center justify-center py-12 text-center"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+            >
+              <motion.div 
+                className="no-results-icon w-24 h-24 bg-gray-200 rounded-2xl flex items-center justify-center mb-6 animate-pulse"
+                whileHover={{ scale: 1.1 }}
+              >
+                <Search size={32} className="text-volcano" />
+              </motion.div>
+              <h3 className="text-2xl font-bold text-gray-800 mb-3">Ничего не найдено</h3>
+              <p className="text-lg text-volcano mb-6 max-w-md mx-auto">
+                Попробуйте изменить запрос или воспользуйтесь AI-помощником для персональных рекомендаций.
+              </p>
+              <motion.button 
+                onClick={() => setShowAI(true)}
+                className="flex items-center gap-2 px-6 py-3 bg-ocean text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Bot size={20} />
+                Спросить AI-помощника
+              </motion.button>
+            </motion.div>
           )}
         </div>
       )}
     </div>
   );
 }
+

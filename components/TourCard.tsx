@@ -2,181 +2,95 @@
 
 import React from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { Clock, Star, Leaf, Heart, ArrowRight, User } from 'lucide-react';
 import { Tour } from '@/types';
-// import { formatCurrency, formatDuration, formatRating } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 
 interface TourCardProps {
-  tour: Tour;
+  tour: Tour & { isEco?: boolean; ecoPoints?: number };
   className?: string;
-  onClick?: () => void;
 }
 
-export function TourCard({ tour, className, onClick }: TourCardProps) {
-  const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('ru-RU', {
-      style: 'currency',
-      currency: currency,
-    }).format(amount);
-  };
-
-  const formatDuration = (duration: string) => {
-    return duration;
-  };
-
-  const formatRating = (rating: number) => {
-    return rating.toFixed(1);
-  };
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'easy':
-        return 'bg-green-100 text-green-800';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'hard':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getDifficultyText = (difficulty: string) => {
-    switch (difficulty) {
-      case 'easy':
-        return 'Легкий';
-      case 'medium':
-        return 'Средний';
-      case 'hard':
-        return 'Сложный';
-      default:
-        return difficulty;
-    }
-  };
+export function TourCard({ tour, className }: TourCardProps) {
+  const formatCurrency = (amount: number) => new Intl.NumberFormat('ru-RU').format(amount);
 
   return (
-    <div
-      className={cn(
-        'weather-card overflow-hidden cursor-pointer',
-        className
-      )}
-      onClick={onClick}
-      onKeyDown={(e) => e.key === 'Enter' && onClick?.()}
-      role="button"
-      tabIndex={0}
-      aria-label={`Подробнее о туре ${tour.title}`}
-    >
-      {/* Изображение тура */}
-      <div className="relative h-48 bg-gradient-to-br from-slate-800 to-slate-900">
-        {tour.images && tour.images.length > 0 ? (
-          <Image
-            src={tour.images[0]}
+    <Link href={`/tours/${tour.id}`} className="block group">
+      <motion.div
+        className={cn(
+          "tour-card bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 relative min-h-[420px] max-w-sm mx-auto",
+          className
+        )}
+        whileHover={{ y: -8 }}
+        whileTap={{ scale: 0.98 }}
+      >
+        <div className="tour-image relative overflow-hidden h-60">
+          <Image 
+            src={tour.images?.[0] || '/placeholder-tour.jpg'} 
             alt={tour.title}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            fill 
+            className="object-cover group-hover:scale-110 transition-transform duration-500" 
+            sizes="(max-width: 768px) 100vw, 320px"
           />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-green-100">
-            <div className="text-center">
-              <div className="text-4xl mb-2"> </div>
-              <div className="text-gray-600 text-sm">{tour.title}</div>
-            </div>
-          </div>
-        )}
-        
-        {/* Сложность */}
-        <div className="absolute top-3 left-3">
-          <span
-            className={cn(
-              'px-3 py-1 rounded-full text-xs font-bold bg-premium-gold text-premium-black'
-            )}
-          >
-            {getDifficultyText(tour.difficulty)}
-          </span>
-        </div>
-        
-        {/* Рейтинг */}
-        {tour.rating > 0 && (
-          <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full flex items-center space-x-1">
-            <span className="text-premium-gold">★</span>
-            <span className="text-sm font-bold text-white">{tour.rating}</span>
-            <span className="text-xs text-white/70">({tour.reviewsCount})</span>
-          </div>
-        )}
-      </div>
-
-      {/* Контент карточки */}
-      <div className="p-6">
-        {/* Название и цена */}
-        <div className="flex justify-between items-start mb-3">
-          <h3 className="text-lg font-bold text-white line-clamp-2">
-            {tour.title}
-          </h3>
-          <div className="text-right ml-2">
-            <div className="text-xl font-black text-premium-gold">
-              {formatCurrency(tour.priceFrom, 'RUB')}
-            </div>
-            <div className="text-sm text-white/70">за человека</div>
-          </div>
-        </div>
-
-        {/* Описание */}
-        <p className="text-white/70 text-sm mb-4 line-clamp-2">
-          {tour.description}
-        </p>
-
-        {/* Детали тура */}
-        <div className="space-y-2 mb-4">
-          {/* Продолжительность */}
-          <div className="flex items-center text-sm text-white/70">
-            <span className="mr-2"> </span>
-            <span>{tour.duration}</span>
-          </div>
-
-          {/* Размер группы */}
-          <div className="flex items-center text-sm text-white/70">
-            <span className="mr-2"> </span>
-            <span>
-              {tour.minParticipants === tour.maxParticipants
-                ? `${tour.minParticipants} чел.`
-                : `${tour.minParticipants}-${tour.maxParticipants} чел.`}
+          {tour.difficulty && (
+            <span className="absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-semibold bg-white/90 text-volcano shadow-md">
+              {tour.difficulty === 'easy' ? 'Легко' : tour.difficulty === 'medium' ? 'Средне' : 'Сложно'}
             </span>
-          </div>
-
-          {/* Сезон */}
-          {tour.activity && (
-            <div className="flex items-center text-sm text-white/70">
-              <span className="mr-2"> </span>
-              <span>Круглый год</span>
-            </div>
+          )}
+          {tour.isEco && (
+            <motion.div 
+              className="absolute top-4 right-4 bg-moss text-white px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 eco-badge shadow-md"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", bounce: 0.4 }}
+            >
+              <Leaf size={12} />
+              Эко-тур
+            </motion.div>
           )}
         </div>
-
-        {/* Оператор */}
-        {tour.operator && (
-          <div className="flex items-center text-sm text-white/70 mb-4">
-            <span className="mr-2"> </span>
-            <span>{tour.operator.name}</span>
-            {tour.operator.rating > 0 && (
-              <span className="ml-2 text-premium-gold">
-                ★ {formatRating(tour.operator.rating)}
+        <div className="p-6">
+          <h3 className="text-xl font-semibold text-gray-800 mb-3 line-clamp-2 group-hover:text-ocean transition-colors">{tour.title}</h3>
+          <p className="text-sm text-gray-600 mb-4 line-clamp-2">{tour.description}</p>
+          <div className="flex justify-between items-center mb-4">
+            <span className="text-sm text-volcano flex items-center gap-1">
+              <Clock size={16} />
+              {tour.duration}
+            </span>
+            {tour.rating && (
+              <span className="text-sm text-moss flex items-center gap-1 font-semibold">
+                <Star size={16} fill="currentColor" className="text-yellow-500" />
+                {tour.rating}
               </span>
             )}
           </div>
-        )}
-
-        {/* Кнопка бронирования */}
-        <button
-          className="w-full weather-btn weather-btn-primary py-3"
-          onClick={(e) => {
-            e.stopPropagation();
-            // Здесь будет логика бронирования
-          }}
-        >
-          Забронировать
-        </button>
-      </div>
-    </div>
+          <div className="text-2xl font-bold text-ocean mb-3">
+            от {formatCurrency(tour.priceFrom || tour.price)} ₽ / чел.
+          </div>
+          {tour.ecoPoints && (
+            <div className="text-sm font-medium text-moss flex items-center gap-1 mb-4">
+              <Leaf size={16} />
+              +{tour.ecoPoints} pts
+            </div>
+          )}
+          <div className="flex gap-3 pt-4 border-t border-gray-100">
+            <motion.button className="bg-ocean text-white rounded-lg flex-1 py-3 px-4 font-semibold flex items-center justify-center gap-2 hover:bg-ocean/90 transition-all min-h-[44px]" whileHover={{ scale: 1.02 }}>
+              Забронировать
+              <ArrowRight size={16} />
+            </motion.button>
+            <motion.button className="p-3 border-2 border-ocean text-ocean rounded-xl hover:bg-ocean hover:text-white transition-all min-h-[44px] min-w-[44px]" whileHover={{ scale: 1.1 }}>
+              <Heart size={20} />
+            </motion.button>
+          </div>
+        </div>
+        <motion.div 
+          className="absolute inset-0 bg-gradient-to-t from-ocean/5 via-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+          initial={{ opacity: 0 }}
+          whileHover={{ opacity: 1 }}
+        />
+      </motion.div>
+    </Link>
   );
 }

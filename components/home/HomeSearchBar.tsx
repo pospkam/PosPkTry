@@ -22,9 +22,9 @@ export function HomeSearchBar({ onSearch }: HomeSearchBarProps) {
     const q = query.trim();
     if (q) {
       onSearch?.(q);
-      router.push(`/search?q=${encodeURIComponent(q)}`);
+      router.push(`/?q=${encodeURIComponent(q)}`);
     } else {
-      router.push('/search');
+      router.push('/');
     }
   };
 

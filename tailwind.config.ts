@@ -27,9 +27,12 @@ export default {
           'dark-nav':  'rgba(13,27,42,0.95)',
           cyan:        '#00D4FF',
         },
+        ocean: '#0EA5E9',
+        volcano: '#64748B',
+        moss: '#84CC16',
       },
       fontFamily: {
-        sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', '"Segoe UI"', 'Roboto', 'sans-serif'],
+        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', '"Segoe UI"', 'Roboto', 'sans-serif'],
       },
     },
   },

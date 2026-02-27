@@ -1,9 +1,22 @@
 import { Metadata } from 'next';
 import { Syne } from 'next/font/google';
+import { Playfair_Display, Inter } from 'next/font/google';
 
-const syne = Syne({ 
-  subsets: ['latin'], 
+const syne = Syne({
+  subsets: ['latin'],
   weight: ['400', '600', '700'],
+  display: 'swap'
+});
+
+const playfairDisplay = Playfair_Display({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+  display: 'swap'
+});
+
+const inter = Inter({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
   display: 'swap'
 });
 
