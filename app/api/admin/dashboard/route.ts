@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
+import { requireAdmin } from '@/lib/auth/middleware';
 import { DashboardData, DashboardMetrics, DashboardCharts, RecentActivity, AdminAlert } from '@/types/admin';
 import { ApiResponse } from '@/types';
 
@@ -11,6 +12,10 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: NextRequest) {
   try {
+    const adminOrResponse = await requireAdmin(request);
+    if (adminOrResponse instanceof NextResponse) {
+      return adminOrResponse;
+    }
     const { searchParams } = new URL(request.url);
     const period = searchParams.get('period') || '30'; // дней назад
 

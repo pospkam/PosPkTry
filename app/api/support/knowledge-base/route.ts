@@ -6,7 +6,9 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { knowledgeBaseService } from '@/lib/database'
+import { requireRole } from '@/lib/auth/middleware'
 
+// AUTH: GET is public by design — allows unauthenticated users to search help content.
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
@@ -34,9 +36,12 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await requireRole(request, ['admin', 'agent'])
+  if (auth instanceof NextResponse) return auth
+
   try {
     const data = await request.json()
-    const author = request.headers.get('x-user-id') || 'system'
+    const author = auth.userId
 
     const article = await knowledgeBaseService.createArticle(data, author)
 

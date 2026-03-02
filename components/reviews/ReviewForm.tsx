@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { LoadingSpinner } from '@/components/admin/shared';
+import { Star } from 'lucide-react';
 
 interface ReviewFormProps {
   tourId?: string;
@@ -34,13 +35,11 @@ function StarRatingWithHover({
           onMouseLeave={() => onHover(0)}
           className="text-3xl focus:outline-none transition-transform hover:scale-110"
         >
-          <span className={
+          <Star className={`w-10 h-10 ${
             star <= (hoveredRating || rating)
-              ? 'text-yellow-400'
+              ? 'text-yellow-400 fill-yellow-400'
               : 'text-gray-600'
-          }>
-            ★
-          </span>
+          }`} />
         </button>
       ))}
       <span className="ml-3 text-white/70">

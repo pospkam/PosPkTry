@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
+import { requireAuth } from '@/lib/auth/middleware';
 
+/**
+ * POST /api/upload-design - Загрузка дизайн-файлов
+ * AUTH: requireAuth — только авторизованные пользователи
+ */
 export async function POST(request: NextRequest) {
+  const userOrResponse = await requireAuth(request);
+  if (userOrResponse instanceof NextResponse) return userOrResponse;
+
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;

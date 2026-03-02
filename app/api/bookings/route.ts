@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse, Booking } from '@/types';
 import { query } from '@/lib/database';
+import { verifyAuth } from '@/lib/auth';
 
 // GET /api/bookings - Получение бронирований пользователя
 export async function GET(request: NextRequest) {
   try {
-    // Получаем userId из заголовка (должен быть установлен middleware)
-    const userId = request.headers.get('x-user-id');
-
-    if (!userId) {
+    const auth = await verifyAuth(request);
+    if (!auth.isAuthenticated || !auth.userId) {
       return NextResponse.json(
         { success: false, error: 'Пользователь не авторизован' } as ApiResponse<null>,
         { status: 401 }
       );
     }
+    const userId = auth.userId;
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
@@ -121,15 +121,14 @@ export async function GET(request: NextRequest) {
 // POST /api/bookings - Создание нового бронирования
 export async function POST(request: NextRequest) {
   try {
-    // Получаем userId из заголовка
-    const userId = request.headers.get('x-user-id');
-
-    if (!userId) {
+    const auth = await verifyAuth(request);
+    if (!auth.isAuthenticated || !auth.userId) {
       return NextResponse.json(
         { success: false, error: 'Пользователь не авторизован' } as ApiResponse<null>,
         { status: 401 }
       );
     }
+    const userId = auth.userId;
 
     const body = await request.json();
     const { tourId, date, participants, specialRequests } = body;

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
+import { requireRole } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,15 +11,9 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: NextRequest) {
   try {
-    const userId = request.headers.get('X-User-Id');
-    const userRole = request.headers.get('X-User-Role');
-    
-    if (!userId || userRole !== 'guide') {
-      return NextResponse.json({
-        success: false,
-        error: 'Недостаточно прав'
-      } as ApiResponse<null>, { status: 403 });
-    }
+    const guideOrResponse = await requireRole(request, ['guide', 'admin']);
+    if (guideOrResponse instanceof NextResponse) return guideOrResponse;
+    const userId = guideOrResponse.userId;
 
     // Get earnings list
     const earningsResult = await query(

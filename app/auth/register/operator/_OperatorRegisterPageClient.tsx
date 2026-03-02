@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import WeatherBackground from '@/components/WeatherBackground';
+import { CheckCircle2 } from 'lucide-react';
 
 export default function OperatorRegisterPageClient() {
   const router = useRouter();
@@ -96,7 +97,7 @@ export default function OperatorRegisterPageClient() {
         <WeatherBackground />
         <div className="min-h-screen flex items-center justify-center p-4">
           <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 max-w-md w-full border border-white/20 text-center">
-            <div className="text-6xl mb-4">✅</div>
+            <CheckCircle2 className="w-16 h-16 mx-auto mb-4 text-green-400" />
             <h2 className="text-2xl font-bold text-white mb-4">
               Регистрация успешна!
             </h2>

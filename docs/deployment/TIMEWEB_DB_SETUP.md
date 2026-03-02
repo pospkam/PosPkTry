@@ -45,7 +45,7 @@
 
 **Используя токен из файла:**
 ```bash
-TIMEWEB_TOKEN="eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCIsImtpZCI6IjFrYnhacFJNQGJSI0tSbE1xS1lqIn0..."
+TIMEWEB_TOKEN="REPLACE_WITH_TIMEWEB_TOKEN"
 
 curl -X POST https://api.timeweb.cloud/api/v1/dbs \
   -H "Authorization: Bearer $TIMEWEB_TOKEN" \
@@ -110,7 +110,7 @@ psql "postgresql://kamhub_admin:PASSWORD@kamhub-production.timeweb.cloud:5432/ka
 ```bash
 # SSH подключение
 ssh root@5.129.248.224
-# Password: xQvB1pv?yZTjaR
+# Password: REPLACE_WITH_SERVER_PASSWORD
 
 # На сервере установить PostgreSQL client
 apt-get update

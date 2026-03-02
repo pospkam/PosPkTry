@@ -8,6 +8,7 @@ function hashPassword(password: string, salt: string): string {
   return createHash('sha256').update(`${salt}:${password}`).digest('hex');
 }
 
+// PUBLIC: Auth entry point — signup endpoint intentionally public (no token required).
 export async function POST(request: NextRequest) {
   try {
     let body: unknown;

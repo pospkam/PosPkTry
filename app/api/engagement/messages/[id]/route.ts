@@ -12,10 +12,16 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = await verifyAuth(request)
+    const { userId, role } = await verifyAuth(request)
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const message = await messagingService.getMessage(params.id)
+    const { id } = await params
+    const message = role === 'admin'
+      ? await messagingService.getMessage(id)
+      : await messagingService.getMessageForUser(id, userId)
+    if (!message) {
+      return NextResponse.json({ error: 'Message not found' }, { status: 404 })
+    }
 
     return NextResponse.json({
       success: true,
@@ -35,16 +41,32 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = await verifyAuth(request)
+    const { userId, role } = await verifyAuth(request)
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const { id } = await params
+    const existingMessage = role === 'admin'
+      ? await messagingService.getMessage(id)
+      : await messagingService.getMessageForUser(id, userId)
+    if (!existingMessage) {
+      return NextResponse.json({ error: 'Message not found' }, { status: 404 })
+    }
 
     const body = await request.json()
 
     if (body.markAsRead) {
-      await messagingService.markAsRead(params.id, userId)
+      const updated = await messagingService.markAsRead(id, userId, role === 'admin')
+      if (!updated) {
+        return NextResponse.json({ error: 'Message not found' }, { status: 404 })
+      }
     }
 
-    const message = await messagingService.getMessage(params.id)
+    const message = role === 'admin'
+      ? await messagingService.getMessage(id)
+      : await messagingService.getMessageForUser(id, userId)
+    if (!message) {
+      return NextResponse.json({ error: 'Message not found' }, { status: 404 })
+    }
 
     return NextResponse.json({
       success: true,
@@ -64,10 +86,14 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = await verifyAuth(request)
+    const { userId, role } = await verifyAuth(request)
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    await messagingService.deleteMessage(params.id, userId)
+    const { id } = await params
+    const deleted = await messagingService.deleteMessage(id, userId, role === 'admin')
+    if (!deleted) {
+      return NextResponse.json({ error: 'Message not found' }, { status: 404 })
+    }
 
     return NextResponse.json({
       success: true,

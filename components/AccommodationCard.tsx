@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { Car } from 'lucide-react';
 
 interface AccommodationCardProps {
   id: string;
@@ -35,16 +36,16 @@ const typeLabels: Record<string, string> = {
   cottage: 'Коттедж',
 };
 
-const amenityIcons: Record<string, string> = {
-  wifi: '',
-  parking: '🅿',
-  breakfast: '',
-  spa: '',
-  pool: '',
-  gym: '',
-  restaurant: '',
-  bar: '',
-  pets: '',
+const amenityIcons: Record<string, React.ReactNode> = {
+  wifi: null,
+  parking: <Car className="w-4 h-4" />,
+  breakfast: null,
+  spa: null,
+  pool: null,
+  gym: null,
+  restaurant: null,
+  bar: null,
+  pets: null,
 };
 
 export const AccommodationCard: React.FC<AccommodationCardProps> = ({
@@ -169,7 +170,7 @@ export const AccommodationCard: React.FC<AccommodationCardProps> = ({
                 key={amenity}
                 className="px-2 py-1 bg-white/5 rounded-lg text-xs text-white/80 flex items-center gap-1"
               >
-                <span>{amenityIcons[amenity] || '[]'}</span>
+                {amenityIcons[amenity]}
                 <span className="capitalize">{amenity}</span>
               </span>
             ))}

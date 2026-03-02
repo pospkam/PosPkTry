@@ -11,6 +11,7 @@ import {
   EmptyState,
   Column
 } from '@/components/admin/shared';
+import { Star } from 'lucide-react';
 
 interface AdminReview {
   id: string;
@@ -101,12 +102,11 @@ export default function ReviewsManagement() {
       render: (review) => (
         <div className="flex">
           {[...Array(5)].map((_, starIndex) => (
-            <span
+            <Star
               key={`star-${starIndex}`}
-              className={starIndex < review.rating ? 'text-yellow-400' : 'text-white/20'}
-            >
-              ★
-            </span>
+              className={`w-4 h-4 ${starIndex < review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-white/20'}`}
+              strokeWidth={1.5}
+            />
           ))}
         </div>
       )

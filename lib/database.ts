@@ -2,13 +2,40 @@ import { Pool, PoolClient } from 'pg';
 import { config } from '@/lib/config';
 
 // Создаем пул соединений с базой данных
-const pool = new Pool({
-  connectionString: config.database.url,
-  ssl: config.database.ssl ? { rejectUnauthorized: false } : false,
-  max: 20, // Максимальное количество соединений
-  idleTimeoutMillis: 30000, // Таймаут неактивных соединений
-  connectionTimeoutMillis: 2000, // Таймаут установки соединения
-});
+// SSL включён по умолчанию в production (Timeweb Cloud требует SSL)
+// Поддержка спецсимволов в пароле (>=, #, etc.)
+const useSSL = config.database.ssl || process.env.NODE_ENV === 'production';
+
+function buildPoolConfig() {
+  const dbUrl = config.database.url;
+
+  // Парсим URL вручную для поддержки спецсимволов в пароле
+  const match = dbUrl.match(/^postgresql:\/\/([^:]+):(.+)@([^:\/]+):?(\d+)?\/(.+?)(\?.*)?$/);
+  if (match) {
+    return {
+      user: match[1],
+      password: match[2],
+      host: match[3],
+      port: parseInt(match[4] || '5432'),
+      database: match[5],
+      ssl: useSSL ? { rejectUnauthorized: false } : false,
+      max: 20,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 5000,
+    };
+  }
+
+  // Fallback: стандартный connectionString (для URL без спецсимволов)
+  return {
+    connectionString: dbUrl,
+    ssl: useSSL ? { rejectUnauthorized: false } : false,
+    max: 20,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 5000,
+  };
+}
+
+const pool = new Pool(buildPoolConfig());
 
 // Экспортируем функцию для получения пула (для миграционных скриптов)
 export function getPool(): Pool {

@@ -252,8 +252,8 @@ export default function IntegrationsPageClient() {
                           Добавьте API ключи в переменные окружения:
                         </p>
                         <code className="block mt-2 p-2 bg-black/30 rounded text-xs text-white/80">
-                          KAMCHATKA_FISHING_API_KEY=zrefrc2397r0vqpzjpex<br/>
-                          KAMCHATKA_FISHING_API_SECRET=16b2c5b78a22f194e1b5
+                          KAMCHATKA_FISHING_API_KEY=REPLACE_WITH_PARTNER_API_KEY<br/>
+                          KAMCHATKA_FISHING_API_SECRET=REPLACE_WITH_PARTNER_API_SECRET
                         </code>
                       </div>
                     </div>

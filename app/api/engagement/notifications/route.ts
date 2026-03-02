@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
     const unreadOnly = searchParams.get('unreadOnly') === 'true'
 
     const { notifications, total } = await notificationService.list(
+      userId,
       { unreadOnly },
       limit,
       offset
@@ -38,13 +39,16 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await verifyAuth(request)
+    const { userId, role } = await verifyAuth(request)
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await request.json()
+    const targetUserId = role === 'admin' && typeof body.userId === 'string'
+      ? body.userId
+      : userId
 
     const notification = await notificationService.create({
-      userId: body.userId || userId,
+      userId: targetUserId,
       type: body.type,
       title: body.title,
       message: body.message,

@@ -6,8 +6,12 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { slaService } from '@/lib/database'
+import { requireRole } from '@/lib/auth/middleware'
 
 export async function GET(request: NextRequest) {
+  const auth = await requireRole(request, ['admin', 'agent'])
+  if (auth instanceof NextResponse) return auth
+
   try {
     const searchParams = request.nextUrl.searchParams
     const from = searchParams.get('from') ? new Date(searchParams.get('from')!) : undefined
@@ -29,6 +33,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await requireRole(request, ['admin', 'agent'])
+  if (auth instanceof NextResponse) return auth
+
   try {
     const data = await request.json()
 

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { EcoPoint, UserEcoPoints, EcoAchievement, ApiResponse } from '@/types';
+import { requireAdmin } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/eco-points - Получение списка Eco-points
+// GET /api/eco-points - Public (map listing)
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -45,38 +46,35 @@ export async function GET(request: NextRequest) {
 
     const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
 
+    // Таблица eco_points может иметь разную схему в зависимости от миграции.
+    // Используем безопасный SELECT без несуществующих колонок.
     const ecoPointsQuery = `
       SELECT 
         id,
-        name,
-        description,
-        coordinates,
-        category,
-        points,
-        is_active,
-        created_at
+        total_points,
+        co2_saved_kg,
+        trees_equivalent,
+        created_at,
+        updated_at
       FROM eco_points
-      ${whereClause}
       ORDER BY created_at DESC
     `;
 
-    const result = await query(ecoPointsQuery, queryParams);
+    const result = await query(ecoPointsQuery);
 
-    const ecoPoints: EcoPoint[] = result.rows.map(row => ({
+    const ecoPoints = result.rows.map(row => ({
       id: row.id,
-      name: row.name,
-      description: row.description,
-      coordinates: row.coordinates,
-      category: row.category,
-      points: row.points,
-      isActive: row.is_active,
-      createdAt: new Date(row.created_at),
+      totalPoints: row.total_points,
+      co2SavedKg: row.co2_saved_kg,
+      treesEquivalent: row.trees_equivalent,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
     }));
 
     return NextResponse.json({
       success: true,
       data: ecoPoints,
-    } as ApiResponse<EcoPoint[]>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Error fetching eco-points:', error);
@@ -88,9 +86,12 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/eco-points - Создание нового Eco-point
+// POST /api/eco-points - Создание нового Eco-point (admin only)
 export async function POST(request: NextRequest) {
   try {
+    const adminOrResponse = await requireAdmin(request);
+    if (adminOrResponse instanceof NextResponse) return adminOrResponse;
+
     const body = await request.json();
     
     // Валидация обязательных полей

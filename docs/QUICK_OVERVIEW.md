@@ -60,7 +60,7 @@ npm install
 
 # Настройка окружения
 cp .env.example .env.local
-# Заполните: DATABASE_URL, GROQ_API_KEY, др.
+# Заполните: DATABASE_URL, DEEPSEEK_API_KEY, др.
 
 # Миграции БД
 npm run migrate:up
@@ -179,7 +179,7 @@ npm run timeweb:setup    # Настройка сервера
 ```env
 # Обязательные
 DATABASE_URL=postgresql://...
-GROQ_API_KEY=...
+DEEPSEEK_API_KEY=...
 JWT_SECRET=...
 
 # AI
@@ -316,7 +316,7 @@ A: В `.env.local` (не коммитится в git)
 A: В `app/page.tsx` измените импорт CSS файла
 
 **Q: Где AI логика?**  
-A: `app/api/ai/route.ts` (консенсус) + провайдеры в `ai/groq/` и `ai/deepseek/`
+A: `app/api/ai/route.ts` (консенсус) + провайдеры в `ai/deepseek/`
 
 **Q: Как добавить новую роль?**  
 A: В `lib/database/schema.sql` + контекст в `contexts/RoleContext.tsx`

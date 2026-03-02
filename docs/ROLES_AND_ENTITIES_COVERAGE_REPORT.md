@@ -483,7 +483,7 @@
 
 **AI провайдеры:**
 - ✅ `app/api/ai/route.ts` - консенсус AI
-- ✅ `app/api/ai/groq/route.ts` - GROQ (Llama 3.1 70B)
+- ✅ `app/api/ai/deepseek/route.ts` - DeepSeek
 - ✅ `app/api/ai/deepseek/route.ts` - DeepSeek
 - ✅ `app/api/chat/route.ts` - главный чат
 

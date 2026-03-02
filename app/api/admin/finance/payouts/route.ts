@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
+import { requireAdmin } from '@/lib/auth/middleware';
 import { ApiResponse } from '@/types';
 
 export const dynamic = 'force-dynamic';
@@ -9,13 +10,28 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: NextRequest) {
   try {
+    const adminOrResponse = await requireAdmin(request);
+    if (adminOrResponse instanceof NextResponse) {
+      return adminOrResponse;
+    }
     const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status') || 'all'; // all, pending, completed, failed
-    const limit = parseInt(searchParams.get('limit') || '50');
+    const rawStatus = searchParams.get('status') || 'all'; // all, pending, completed, failed
+    const allowedStatuses = new Set(['all', 'pending', 'completed', 'failed']);
+    if (!allowedStatuses.has(rawStatus)) {
+      return NextResponse.json({
+        success: false,
+        error: 'Некорректный статус'
+      } as ApiResponse<null>, { status: 400 });
+    }
 
+    const parsedLimit = Number.parseInt(searchParams.get('limit') || '50', 10);
+    const limit = Number.isFinite(parsedLimit) ? Math.min(Math.max(parsedLimit, 1), 200) : 50;
+
+    const payoutsParams: (string | number)[] = [];
     let whereClause = '';
-    if (status !== 'all') {
-      whereClause = `WHERE status = '${status}'`;
+    if (rawStatus !== 'all') {
+      whereClause = `WHERE p.status = $1`;
+      payoutsParams.push(rawStatus);
     }
 
     const payoutsQuery = `
@@ -47,10 +63,11 @@ export async function GET(request: NextRequest) {
       LEFT JOIN transfer_bookings tb ON p.booking_id = tb.id
       ${whereClause}
       ORDER BY p.created_at DESC
-      LIMIT ${limit}
+      LIMIT $${payoutsParams.length + 1}
     `;
 
-    const payoutsResult = await query(payoutsQuery);
+    payoutsParams.push(limit);
+    const payoutsResult = await query(payoutsQuery, payoutsParams);
 
     // Статистика выплат
     const statsQuery = `
@@ -108,13 +125,18 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    const adminOrResponse = await requireAdmin(request);
+    if (adminOrResponse instanceof NextResponse) {
+      return adminOrResponse;
+    }
     const body = await request.json();
     const { partnerId, bookingId, amount, description } = body;
+    const parsedAmount = Number(amount);
 
-    if (!partnerId || !bookingId || !amount) {
+    if (!partnerId || !bookingId || !Number.isFinite(parsedAmount) || parsedAmount <= 0) {
       return NextResponse.json({
         success: false,
-        error: 'Необходимо указать partnerId, bookingId и amount'
+        error: 'Необходимо указать partnerId, bookingId и корректный amount'
       } as ApiResponse<null>, { status: 400 });
     }
 
@@ -150,7 +172,7 @@ export async function POST(request: NextRequest) {
     const payoutResult = await query(createPayoutQuery, [
       partnerId,
       bookingId,
-      amount,
+      parsedAmount,
       'RUB',
       'pending',
       description || 'Выплата комиссии'

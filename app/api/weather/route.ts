@@ -5,6 +5,7 @@ import { config } from '@/lib/config';
 export const dynamic = 'force-dynamic';
 
 // GET /api/weather - Получение данных о погоде
+// AUTH: Public — weather for tours and trip planning
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);

@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { transferPayments } from '@/lib/payments/transfer-payments';
+import { requireAuth } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
 // POST /api/transfers/payment/confirm - Подтверждение платежа
 export async function POST(request: NextRequest) {
   try {
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) return authResult;
+
     const body = await request.json();
     const { paymentId } = body;
 
@@ -47,6 +51,9 @@ export async function POST(request: NextRequest) {
 // GET /api/transfers/payment/confirm - Проверка статуса платежа
 export async function GET(request: NextRequest) {
   try {
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) return authResult;
+
     const { searchParams } = new URL(request.url);
     const paymentId = searchParams.get('paymentId');
 

@@ -93,10 +93,7 @@ CLOUDPAYMENTS_WEBHOOK_SECRET=ваш_webhook_секрет
 ### 5. **AI PROVIDERS** (AI провайдеры)
 
 ```env
-# GROQ (основной, бесплатный)
-GROQ_API_KEY=gsk_ваш_groq_api_key
-
-# DeepSeek (альтернативный, дешевый)
+# DeepSeek (основной)
 DEEPSEEK_API_KEY=sk-ваш_deepseek_api_key
 
 # OpenRouter (резервный, платный)
@@ -104,13 +101,12 @@ OPENROUTER_API_KEY=sk-or-v1-ваш_openrouter_api_key
 ```
 
 **Где получить:**
-- GROQ: https://console.groq.com/keys (бесплатно, 30 req/min)
 - DeepSeek: https://platform.deepseek.com/ ($0.14/$1.10 за 1M токенов)
 - OpenRouter: https://openrouter.ai/ (платно, мультимодель)
 
 **Рекомендация:** 
-- Для MVP достаточно только GROQ (бесплатный)
-- Для production лучше настроить все 3 для failover
+- Для MVP достаточно только DeepSeek
+- Для production лучше настроить DeepSeek + OpenRouter + Minimax/x.ai для failover
 
 ---
 
@@ -188,8 +184,8 @@ S3_ENDPOINT=https://s3.twcstorage.ru
 S3_REGION=ru-1
 
 # Access Keys (УЖЕ ЕСТЬ у вас!)
-S3_ACCESS_KEY_ID=F2CP4X3X17GVQ1YH5I5D
-S3_SECRET_ACCESS_KEY=72iAsYR4QQCIdaDI9e9AzXnzVvvP8bvPELmrBVzX
+S3_ACCESS_KEY_ID=REPLACE_WITH_S3_ACCESS_KEY
+S3_SECRET_ACCESS_KEY=REPLACE_WITH_S3_SECRET_KEY
 
 # Bucket Name
 S3_BUCKET=kamhub-uploads
@@ -335,7 +331,7 @@ ls -la .env
 ✅ JWT_SECRET
 ✅ CLOUDPAYMENTS_PUBLIC_KEY
 ✅ CLOUDPAYMENTS_API_SECRET
-✅ GROQ_API_KEY (или DEEPSEEK_API_KEY)
+✅ DEEPSEEK_API_KEY
 ✅ NEXT_PUBLIC_YANDEX_MAPS_KEY
 ✅ SMTP_* (все 5 переменных)
 ```

@@ -71,6 +71,7 @@ async function hashPassword(password: string): Promise<string> {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+// PUBLIC: registration endpoint intentionally public for new partner sign-up
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();

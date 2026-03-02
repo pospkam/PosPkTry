@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
       return userOrResponse;
     }
 
-    const partnerId = await getCarsPartnerId(userOrResponse.id);
+    const partnerId = await getCarsPartnerId(userOrResponse.userId);
     if (!partnerId) {
       return NextResponse.json(
         { success: false, error: 'Профиль партнера не найден' } as ApiResponse<null>,
@@ -73,7 +73,7 @@ export async function PUT(request: NextRequest) {
       return userOrResponse;
     }
 
-    const partnerId = await ensureCarsPartnerExists(userOrResponse.id);
+    const partnerId = await ensureCarsPartnerExists(userOrResponse.userId);
 
     const body = await request.json();
     const {

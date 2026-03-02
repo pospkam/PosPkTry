@@ -12,6 +12,7 @@ import {
   EmptyState,
   Column
 } from '@/components/admin/shared';
+import { Star } from 'lucide-react';
 
 interface AdminTour {
   id: string;
@@ -167,7 +168,7 @@ export default function ToursManagement() {
       title: 'Рейтинг',
       render: (tour) => (
         <div className="text-sm">
-          <span className="text-yellow-400">★</span> {tour.rating.toFixed(1)}
+          <Star className="w-4 h-4 text-yellow-400 fill-yellow-400 inline" /> {tour.rating.toFixed(1)}
           <span className="text-white/50 text-xs"> ({tour.reviewCount})</span>
         </div>
       )

@@ -2,21 +2,38 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ChatMessage, ChatSession, ApiResponse } from '@/types';
 import { config } from '@/lib/config';
+import { verifyAuth } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 // GET /api/chat - Получение истории чата
 export async function GET(request: NextRequest) {
   try {
+    const auth = await verifyAuth(request);
+    if (!auth.userId) {
+      return NextResponse.json({
+        success: false,
+        error: 'Unauthorized',
+      } as ApiResponse<null>, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const sessionId = searchParams.get('sessionId');
-    const userId = searchParams.get('userId');
+    const requestedUserId = searchParams.get('userId');
+    const userId = requestedUserId || auth.userId;
 
     if (!sessionId && !userId) {
       return NextResponse.json({
         success: false,
         error: 'Session ID or User ID is required',
       } as ApiResponse<null>, { status: 400 });
+    }
+
+    if (requestedUserId && requestedUserId !== auth.userId && auth.role !== 'admin') {
+      return NextResponse.json({
+        success: false,
+        error: 'Session not found',
+      } as ApiResponse<null>, { status: 404 });
     }
 
     let chatQuery: string;
@@ -39,9 +56,10 @@ export async function GET(request: NextRequest) {
         FROM chat_sessions s
         LEFT JOIN chat_messages m ON s.id = m.session_id
         WHERE s.id = $1
+          ${auth.role === 'admin' ? '' : 'AND s.user_id = $2'}
         ORDER BY m.timestamp ASC
       `;
-      queryParams = [sessionId];
+      queryParams = auth.role === 'admin' ? [sessionId] : [sessionId, auth.userId];
     } else {
       // Получаем последний чат пользователя
       chatQuery = `
@@ -68,6 +86,13 @@ export async function GET(request: NextRequest) {
     const result = await query(chatQuery, queryParams);
 
     if (result.rows.length === 0) {
+      if (sessionId) {
+        return NextResponse.json({
+          success: false,
+          error: 'Session not found',
+        } as ApiResponse<null>, { status: 404 });
+      }
+
       return NextResponse.json({
         success: true,
         data: null,
@@ -122,17 +147,52 @@ export async function GET(request: NextRequest) {
 // POST /api/chat - Отправка сообщения в чат
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { sessionId, userId, message, context } = body;
-
-    if (!message || (!sessionId && !userId)) {
+    const auth = await verifyAuth(request);
+    if (!auth.userId) {
       return NextResponse.json({
         success: false,
-        error: 'Message and sessionId or userId are required',
+        error: 'Unauthorized',
+      } as ApiResponse<null>, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { sessionId, userId: requestedUserId, message, context } = body;
+    const userId = (auth.role === 'admin' && requestedUserId) ? requestedUserId : auth.userId;
+
+    if (!message || !userId) {
+      return NextResponse.json({
+        success: false,
+        error: 'Message and userId are required',
       } as ApiResponse<null>, { status: 400 });
     }
 
+    if (requestedUserId && requestedUserId !== auth.userId && auth.role !== 'admin') {
+      return NextResponse.json({
+        success: false,
+        error: 'Session not found',
+      } as ApiResponse<null>, { status: 404 });
+    }
+
     let currentSessionId = sessionId;
+
+    if (currentSessionId) {
+      const existingSession = auth.role === 'admin'
+        ? await query(
+            'SELECT user_id FROM chat_sessions WHERE id = $1 LIMIT 1',
+            [currentSessionId]
+          )
+        : await query(
+            'SELECT user_id FROM chat_sessions WHERE id = $1 AND user_id = $2 LIMIT 1',
+            [currentSessionId, auth.userId]
+          );
+
+      if (existingSession.rows.length === 0) {
+        return NextResponse.json({
+          success: false,
+          error: 'Session not found',
+        } as ApiResponse<null>, { status: 404 });
+      }
+    }
 
     // Если sessionId не указан, создаем новую сессию
     if (!currentSessionId) {
@@ -228,43 +288,7 @@ async function getAIResponse(message: string, context?: any): Promise<{ content:
 
     const userPrompt = `Пользователь: ${message}`;
 
-    // Пробуем получить ответ от GROQ
-    if (config.ai.groq.apiKey) {
-      try {
-        const response = await fetch(`${config.ai.groq.baseUrl}/chat/completions`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${config.ai.groq.apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: config.ai.groq.model,
-            messages: [
-              { role: 'system', content: systemPrompt },
-              { role: 'user', content: userPrompt }
-            ],
-            max_tokens: config.ai.groq.maxTokens,
-            temperature: config.ai.groq.temperature,
-          }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          return {
-            content: data.choices[0].message.content,
-            metadata: {
-              model: config.ai.groq.model,
-              provider: 'groq',
-              tokens: data.usage?.total_tokens,
-            }
-          };
-        }
-      } catch (error) {
-        console.error('GROQ API error:', error);
-      }
-    }
-
-    // Если GROQ не работает, пробуем DeepSeek
+    // Пробуем получить ответ от DeepSeek
     if (config.ai.deepseek.apiKey) {
       try {
         const response = await fetch(`${config.ai.deepseek.baseUrl}/chat/completions`, {

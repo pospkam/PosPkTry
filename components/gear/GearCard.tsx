@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
+import { Backpack, Star } from 'lucide-react';
 
 interface GearItem {
   id: string;
@@ -54,8 +55,8 @@ export function GearCard({ gear, onRent }: GearCardProps) {
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-4xl">
-            🎒
+          <div className="w-full h-full flex items-center justify-center">
+            <Backpack className="w-16 h-16 text-white/40" />
           </div>
         )}
 
@@ -97,7 +98,7 @@ export function GearCard({ gear, onRent }: GearCardProps) {
 
         {gear.rating && (
           <div className="flex items-center gap-1 mb-3">
-            <span className="text-yellow-400 text-sm">★</span>
+            <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
             <span className="text-white/70 text-sm">{gear.rating.toFixed(1)}</span>
           </div>
         )}

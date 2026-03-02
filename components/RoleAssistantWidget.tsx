@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { callRoleAssistant, ROLE_QUICK_COMMANDS, type RoleType, type AssistantMessage } from '@/lib/ai/role-assistants';
+import { Mountain, Crown, MessageCircle, Bus, Building2, User } from 'lucide-react';
 
 interface RoleAssistantWidgetProps {
   role: RoleType;
@@ -24,13 +25,13 @@ export function RoleAssistantWidget({ role, userId }: RoleAssistantWidgetProps) 
     admin: 'Помощник Администратора'
   };
 
-  const roleIcons: Record<RoleType, string> = {
-    tourist: '',
-    operator: '',
-    agent: '',
-    guide: '🧗',
-    transfer: '',
-    admin: '👑'
+  const roleIcons: Record<RoleType, React.ReactNode> = {
+    tourist: <User className="w-5 h-5" />,
+    operator: <Building2 className="w-5 h-5" />,
+    agent: <MessageCircle className="w-5 h-5" />,
+    guide: <Mountain className="w-5 h-5" />,
+    transfer: <Bus className="w-5 h-5" />,
+    admin: <Crown className="w-5 h-5" />
   };
 
   useEffect(() => {

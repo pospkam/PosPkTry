@@ -3,11 +3,6 @@
 import Link from 'next/link';
 import { Mountain, Waves, Fish, Wind, Footprints, Zap, Sailboat, LucideIcon } from 'lucide-react';
 
-/**
- * CategoryChips — категории туров (iOS light theme).
- * Белые квадратные карточки с Lucide иконками и тёмными подписями.
- */
-
 interface Category {
   id: string;
   label: string;
@@ -35,15 +30,13 @@ interface CategoryChipsProps {
 export function CategoryChips({ activeCategory }: CategoryChipsProps) {
   return (
     <section aria-label="Категории туров" className="pt-4 pb-2">
-      {/* Заголовок */}
       <div className="flex items-center justify-between px-4 mb-3">
-        <h2 className="text-[15px] font-bold text-white dark:text-white drop-shadow-sm">Категории</h2>
-        <Link href="/tours" className="text-sm font-medium text-white/70 dark:text-[#7EB3FF]">
-          Все →
+        <h2 className="text-[15px] font-bold text-white">Категории</h2>
+        <Link href="/tours" className="text-sm font-medium text-[var(--accent)]">
+          Все
         </Link>
       </div>
 
-      {/* Горизонтальный скролл */}
       <div
         className="scrollbar-hide flex overflow-x-auto gap-2.5 px-4 pb-2"
         style={{ WebkitOverflowScrolling: 'touch' }}
@@ -60,14 +53,14 @@ export function CategoryChips({ activeCategory }: CategoryChipsProps) {
               className={[
                 'flex flex-col items-center justify-center gap-1.5 w-[66px] h-[74px] flex-shrink-0 rounded-2xl transition-all',
                 isActive
-                  ? 'bg-white/30 text-white shadow-lg shadow-white/10 ring-1 ring-white/40'
-                  : 'bg-white/15 dark:bg-white/10 backdrop-blur-md text-white/80 dark:text-gray-200',
+                  ? 'bg-[var(--accent)]/10 text-[var(--accent)] ring-1 ring-[var(--accent)]'
+                  : 'bg-white/8 border border-white/10 text-white/60 hover:border-white/20 hover:text-white/80',
               ].join(' ')}
             >
               <cat.Icon
                 size={22}
                 strokeWidth={1.8}
-                className={isActive ? 'text-white' : 'text-white/80 dark:text-gray-100'}
+                className={isActive ? 'text-[var(--accent)]' : 'text-white/60'}
               />
               <span className="text-[10px] font-medium leading-tight text-center">
                 {cat.label}

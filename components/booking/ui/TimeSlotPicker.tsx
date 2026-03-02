@@ -102,7 +102,7 @@ export const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
                 <span className={clsx(
                   isSelected ? 'text-premium-black/70' : 'text-white/70'
                 )}>
-                  🪑 {slot.available} {slot.available === 1 ? 'место' : slot.available <= 4 ? 'места' : 'мест'}
+                  Места: {slot.available} {slot.available === 1 ? 'место' : slot.available <= 4 ? 'места' : 'мест'}
                 </span>
               )}
 

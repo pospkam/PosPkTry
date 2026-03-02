@@ -9,6 +9,7 @@ import { LoadingSpinner, EmptyState } from '@/components/admin/shared';
 import { TourFormData, OperatorTour } from '@/types/operator';
 import { useAuth } from '@/contexts/AuthContext';
 import GenerateTagsButton from '@/components/operator/GenerateTagsButton';
+import { AlertTriangle } from 'lucide-react';
 
 export default function EditTourClient() {
   const { user } = useAuth();
@@ -114,7 +115,7 @@ export default function EditTourClient() {
             </div>
           ) : error ? (
             <EmptyState
-              icon="⚠️"
+              icon={<AlertTriangle className="w-16 h-16 text-red-400" />}
               title="Ошибка загрузки"
               description={error}
               action={{

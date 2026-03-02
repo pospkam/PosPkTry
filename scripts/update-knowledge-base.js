@@ -1,8 +1,9 @@
 /**
  * Скрипт для обновления базы знаний Timeweb AI агента
  * Использование: node scripts/update-knowledge-base.js [type]
- * type: auto (по умолчанию) - собрать документы из проекта
+ * type: auto (по умолчанию) - собрать документы из проекта + внешние URL из env
  * type: file <file_path> - загрузить конкретный файл
+ * type: url <https://...> - конвертировать URL через markdown.new и загрузить в базу знаний
  */
 
 const fs = require('fs');
@@ -11,15 +12,24 @@ const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 require('dotenv').config();
 
 // Настройка S3 клиента для Timeweb Cloud
-const s3Client = new S3Client({
-  region: process.env.S3_REGION || 'ru-1',
-  endpoint: process.env.S3_ENDPOINT || 'https://s3.twcstorage.ru',
-  credentials: {
-    accessKeyId: process.env.S3_ACCESS_KEY || 'F2CP4X3X17GVQ1YH5I5D',
-    secretAccessKey: process.env.S3_SECRET_KEY || '72iAsYR4QQCIdaDI9e9AzXnzVvvP8bvPELmrBVzX',
-  },
-  forcePathStyle: true,
-});
+const s3Region = process.env.S3_REGION || 'ru-1';
+const s3Endpoint = process.env.S3_ENDPOINT || 'https://s3.twcstorage.ru';
+const s3Bucket = process.env.S3_BUCKET;
+const s3AccessKey = process.env.S3_ACCESS_KEY;
+const s3SecretKey = process.env.S3_SECRET_KEY;
+const isS3Configured = Boolean(s3Bucket && s3AccessKey && s3SecretKey);
+
+const s3Client = isS3Configured
+  ? new S3Client({
+      region: s3Region,
+      endpoint: s3Endpoint,
+      credentials: {
+        accessKeyId: s3AccessKey,
+        secretAccessKey: s3SecretKey,
+      },
+      forcePathStyle: true,
+    })
+  : null;
 
 // Структура документа базы знаний
 // interface KnowledgeDocument {
@@ -49,6 +59,49 @@ const log = {
   info: (msg) => console.log(`${colors.blue}i  ${msg}${colors.reset}`),
   step: (msg) => console.log(`${colors.cyan}▶  ${msg}${colors.reset}`),
 };
+
+function parseSourceUrls(rawValue) {
+  if (!rawValue) return [];
+  return rawValue
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+async function convertUrlToMarkdown(url) {
+  const endpoint = process.env.MARKDOWN_NEW_ENDPOINT || 'https://markdown.new/';
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      url,
+      method: 'auto',
+      retain_images: false,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`markdown.new HTTP ${response.status}`);
+  }
+
+  const contentType = response.headers.get('content-type') || '';
+  if (contentType.includes('application/json')) {
+    const json = await response.json();
+    const markdown = json.markdown || json.content || json.data;
+    if (!markdown || !String(markdown).trim()) {
+      throw new Error('markdown.new вернул пустой markdown');
+    }
+    return String(markdown);
+  }
+
+  const text = await response.text();
+  if (!text.trim()) {
+    throw new Error('markdown.new вернул пустой ответ');
+  }
+  return text;
+}
 
 // Получить все документы для базы знаний
 async function collectProjectDocuments() {
@@ -165,16 +218,38 @@ async function collectProjectDocuments() {
     log.warning(`Не удалось подключиться к БД для получения данных: ${error.message}`);
   }
 
+  const externalUrls = parseSourceUrls(process.env.KNOWLEDGE_BASE_SOURCE_URLS);
+  for (const sourceUrl of externalUrls) {
+    try {
+      const markdown = await convertUrlToMarkdown(sourceUrl);
+      documents.push({
+        id: `external_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`,
+        title: `External URL: ${sourceUrl}`,
+        content: markdown,
+        category: 'external_sources',
+        lastUpdated: new Date().toISOString(),
+        source: sourceUrl,
+        url: sourceUrl,
+      });
+    } catch (error) {
+      log.warning(`Не удалось конвертировать URL ${sourceUrl}: ${error.message}`);
+    }
+  }
+
   return documents;
 }
 
 // Загрузить файл в S3 хранилище
 async function uploadToS3(filePath, fileName) {
   try {
+    if (!isS3Configured || !s3Client) {
+      throw new Error('S3 не настроен: укажите S3_BUCKET, S3_ACCESS_KEY и S3_SECRET_KEY');
+    }
+
     const fileContent = fs.readFileSync(filePath);
 
     const command = new PutObjectCommand({
-      Bucket: process.env.S3_BUCKET || 'd9542536-676ee691-7f59-46bb-bf0e-ab64230eec50',
+      Bucket: s3Bucket,
       Key: `knowledge-base/${fileName}`,
       Body: fileContent,
       ContentType: 'text/plain',
@@ -183,7 +258,7 @@ async function uploadToS3(filePath, fileName) {
 
     await s3Client.send(command);
 
-    const fileUrl = `${process.env.S3_ENDPOINT || 'https://s3.twcstorage.ru'}/${process.env.S3_BUCKET || 'd9542536-676ee691-7f59-46bb-bf0e-ab64230eec50'}/knowledge-base/${fileName}`;
+    const fileUrl = `${s3Endpoint}/${s3Bucket}/knowledge-base/${fileName}`;
     return fileUrl;
   } catch (error) {
     log.error(`Ошибка загрузки в S3: ${error.message}`);
@@ -293,13 +368,32 @@ async function main() {
 
       log.success(`Файл загружен в S3: ${fileUrl}`);
 
+    } else if (updateType === 'url') {
+      const sourceUrl = args[1];
+      if (!sourceUrl) {
+        log.error('Укажите URL: node scripts/update-knowledge-base.js url <https://...>');
+        process.exit(1);
+      }
+
+      log.step(`Конвертация URL через markdown.new: ${sourceUrl}`);
+      const markdown = await convertUrlToMarkdown(sourceUrl);
+
+      documents.push({
+        id: `url_${Date.now()}`,
+        title: `URL: ${sourceUrl}`,
+        content: markdown,
+        category: 'external_sources',
+        lastUpdated: new Date().toISOString(),
+        source: sourceUrl,
+        url: sourceUrl,
+      });
     } else if (updateType === 'auto') {
       log.step('Сбор документов из проекта...');
       documents = await collectProjectDocuments();
       log.success(`Собрано ${documents.length} документов`);
 
     } else {
-      log.error('Неверный тип обновления. Используйте: auto или file <file_path>');
+      log.error('Неверный тип обновления. Используйте: auto | file <file_path> | url <https://...>');
       process.exit(1);
     }
 

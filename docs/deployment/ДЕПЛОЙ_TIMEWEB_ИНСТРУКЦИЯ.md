@@ -11,14 +11,14 @@
 ### 1. Данные от Timeweb (у вас есть):
 ```
 ✅ SSH: root@5.129.248.224
-✅ Пароль: xQvB1pv?yZTjaR
+✅ Пароль: REPLACE_WITH_SERVER_PASSWORD
 ✅ Server ID: 5898003
-✅ API Token: eyJhbGciOiJSUzUxMiIs...
+✅ API Token: REPLACE_WITH_TIMEWEB_TOKEN
 
 ✅ S3 Storage:
    - Endpoint: https://s3.twcstorage.ru
-   - Access Key: F2CP4X3X17GVQ1YH5I5D
-   - Secret Key: 72iAsYR4QQCIdaDI9e9AzXnzVvvP8bvPELmrBVzX
+   - Access Key: REPLACE_WITH_S3_ACCESS_KEY
+   - Secret Key: REPLACE_WITH_S3_SECRET_KEY
    
 ✅ Swift Storage:
    - Endpoint: https://swift.twcstorage.ru
@@ -43,7 +43,7 @@ npm test
 ### Подключение по SSH:
 ```bash
 ssh root@5.129.248.224
-# Пароль: xQvB1pv?yZTjaR
+# Пароль: REPLACE_WITH_SERVER_PASSWORD
 ```
 
 ### Первоначальная настройка сервера:
@@ -209,7 +209,7 @@ CLOUDPAYMENTS_API_SECRET=ваш_секретный_ключ
 CLOUDPAYMENTS_WEBHOOK_SECRET=ваш_webhook_секрет
 
 # AI Providers
-GROQ_API_KEY=ваш_groq_api_key
+DEEPSEEK_API_KEY=ваш_deepseek_api_key
 DEEPSEEK_API_KEY=ваш_deepseek_api_key
 OPENROUTER_API_KEY=ваш_openrouter_api_key
 
@@ -231,8 +231,8 @@ TELEGRAM_CHAT_ID=ваш_chat_id
 # S3 Storage (Timeweb)
 S3_ENDPOINT=https://s3.twcstorage.ru
 S3_REGION=ru-1
-S3_ACCESS_KEY_ID=F2CP4X3X17GVQ1YH5I5D
-S3_SECRET_ACCESS_KEY=72iAsYR4QQCIdaDI9e9AzXnzVvvP8bvPELmrBVzX
+S3_ACCESS_KEY_ID=REPLACE_WITH_S3_ACCESS_KEY
+S3_SECRET_ACCESS_KEY=REPLACE_WITH_S3_SECRET_KEY
 S3_BUCKET=kamhub-uploads
 
 # Monitoring

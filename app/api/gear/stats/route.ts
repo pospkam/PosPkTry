@@ -1,22 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse } from '@/types';
 import { getGearStats } from '@/lib/auth/gear-helpers';
+import { requireAuth } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * GET /api/gear/stats - Get comprehensive gear partner statistics
+ * GET /api/gear/stats - Get comprehensive gear partner statistics (auth required)
  */
 export async function GET(request: NextRequest) {
   try {
-    const userId = request.headers.get('X-User-Id');
-    
-    if (!userId) {
-      return NextResponse.json({
-        success: false,
-        error: 'Требуется авторизация'
-      } as ApiResponse<null>, { status: 401 });
-    }
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult.userId;
 
     const stats = await getGearStats(userId);
 

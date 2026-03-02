@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, Eye, EyeOff } from 'lucide-react';
 
 // Модные SVG иконки вместо emoji
 const ROLES = [
@@ -367,7 +367,7 @@ export default function AuthPageClient() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors"
                   >
-                    {showPassword ? '🙈' : '👁️'}
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
               </div>
@@ -498,7 +498,7 @@ export default function AuthPageClient() {
                           onClick={() => setShowPassword(!showPassword)}
                           className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white"
                         >
-                          {showPassword ? '🙈' : '👁️'}
+                          {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                         </button>
                       </div>
                       {formData.password && (
@@ -537,7 +537,7 @@ export default function AuthPageClient() {
                           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                           className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white"
                         >
-                          {showConfirmPassword ? '🙈' : '👁️'}
+                          {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                         </button>
                       </div>
                       {formData.confirmPassword && formData.password !== formData.confirmPassword && (

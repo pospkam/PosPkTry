@@ -33,7 +33,6 @@ TIMEWEB_TOKEN=        # API токен Timeweb Cloud
 
 Опциональные AI-провайдеры:
 ```
-GROQ_API_KEY=
 DEEPSEEK_API_KEY=
 MINIMAX_API_KEY=
 XAI_API_KEY=

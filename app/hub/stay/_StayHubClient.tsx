@@ -6,7 +6,7 @@ import { PublicNav } from '@/components/shared/PublicNav';
 import { AccommodationCard } from '@/components/AccommodationCard';
 import { AccommodationCardSkeleton } from '@/components/AccommodationCardSkeleton';
 import { AccommodationFilters } from '@/components/AccommodationFilters';
-import { Star } from 'lucide-react';
+import { Star, Building2, ClipboardList, Heart } from 'lucide-react';
 
 interface Accommodation {
   id: string;
@@ -236,7 +236,7 @@ export default function StayHubClient() {
                 ) : (
                   <div className="bg-white/15 border border-white/15 rounded-2xl p-12">
                     <div className="text-center text-white/70">
-                      <div className="text-6xl mb-4">🏨</div>
+                      <Building2 className="w-16 h-16 mx-auto mb-4 text-white/50" />
                       <h3 className="text-xl font-bold text-white mb-2">Объекты не найдены</h3>
                       <p className="mb-4">Попробуйте изменить параметры поиска</p>
                       <button
@@ -257,7 +257,7 @@ export default function StayHubClient() {
               <h2 className="text-xl font-bold">Мои бронирования</h2>
               <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
                 <div className="text-center text-white/70 py-8">
-                  <div className="text-4xl mb-2">📋</div>
+                  <div className="text-4xl mb-2 flex justify-center"><ClipboardList className="w-10 h-10 text-white/50" /></div>
                   <p>Здесь будут отображаться ваши бронирования</p>
                 </div>
               </div>
@@ -283,7 +283,7 @@ export default function StayHubClient() {
               ) : (
                 <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
                   <div className="text-center text-white/70 py-8">
-                    <div className="text-4xl mb-2">❤️</div>
+                    <div className="text-4xl mb-2 flex justify-center"><Heart className="w-10 h-10 text-white/50" /></div>
                     <p>Здесь появятся избранные объекты</p>
                   </div>
                 </div>
@@ -296,7 +296,7 @@ export default function StayHubClient() {
               <h2 className="text-xl font-bold">Отзывы</h2>
               <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
                 <div className="text-center text-white/70 py-8">
-                  <div className="text-4xl mb-2"><Star className="w-4 h-4" /></div>
+                  <div className="text-4xl mb-2 flex justify-center"><Star className="w-10 h-10 text-white/50" /></div>
                   <p>Здесь будут ваши отзывы об объектах</p>
                 </div>
               </div>

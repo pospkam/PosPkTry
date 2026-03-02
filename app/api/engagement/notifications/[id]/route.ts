@@ -12,10 +12,16 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = await verifyAuth(request)
+    const { userId, role } = await verifyAuth(request)
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const notification = await notificationService.getById(params.id)
+    const { id } = await params
+    const notification = role === 'admin'
+      ? await notificationService.getById(id)
+      : await notificationService.getByIdForUser(id, userId)
+    if (!notification) {
+      return NextResponse.json({ error: 'Notification not found' }, { status: 404 })
+    }
 
     return NextResponse.json({
       success: true,
@@ -35,20 +41,33 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = await verifyAuth(request)
+    const { userId, role } = await verifyAuth(request)
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const { id } = await params
+    const existingNotification = role === 'admin'
+      ? await notificationService.getById(id)
+      : await notificationService.getByIdForUser(id, userId)
+    if (!existingNotification) {
+      return NextResponse.json({ error: 'Notification not found' }, { status: 404 })
+    }
 
     const body = await request.json()
 
     if (body.markAsRead) {
-      await notificationService.markAsRead(params.id)
+      await notificationService.markAsRead(id, role === 'admin' ? undefined : userId)
     }
 
     if (body.toggleMute !== undefined) {
-      await notificationService.toggleMute(params.id, body.toggleMute)
+      await notificationService.toggleMute(id, body.toggleMute)
     }
 
-    const notification = await notificationService.getById(params.id)
+    const notification = role === 'admin'
+      ? await notificationService.getById(id)
+      : await notificationService.getByIdForUser(id, userId)
+    if (!notification) {
+      return NextResponse.json({ error: 'Notification not found' }, { status: 404 })
+    }
 
     return NextResponse.json({
       success: true,
@@ -68,11 +87,16 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = await verifyAuth(request)
+    const { userId, role } = await verifyAuth(request)
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    // Soft delete by marking as deleted
-    await notificationService.getById(params.id)
+    const { id } = await params
+    const deleted = role === 'admin'
+      ? await notificationService.deleteById(id)
+      : await notificationService.deleteByIdForUser(id, userId)
+    if (!deleted) {
+      return NextResponse.json({ error: 'Notification not found' }, { status: 404 })
+    }
 
     return NextResponse.json({
       success: true,

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { Loader2 } from 'lucide-react';
 
 export default function CarRentalPageClient() {
   const [cars, setCars] = useState([]);
@@ -38,7 +39,7 @@ export default function CarRentalPageClient() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         {loading ? (
           <div className="text-center py-20">
-            <div className="text-4xl mb-4">⏳</div>
+            <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin text-white/70" />
             <p className="text-white/70">Загрузка автомобилей...</p>
           </div>
         ) : cars.length === 0 ? (

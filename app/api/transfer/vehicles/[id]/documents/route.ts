@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { verifyVehicleOwnership } from '@/lib/auth/transfer-helpers';
+import { requireTransferOperator } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,17 +15,12 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = request.headers.get('X-User-Id');
-    const userRole = request.headers.get('X-User-Role');
-    
-    if (!userId || userRole !== 'transfer') {
-      return NextResponse.json({
-        success: false,
-        error: 'Недостаточно прав'
-      } as ApiResponse<null>, { status: 403 });
-    }
+    const authResult = await requireTransferOperator(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult.userId;
 
-    const isOwner = await verifyVehicleOwnership(userId, params.id);
+    const { id } = await params;
+    const isOwner = await verifyVehicleOwnership(userId, id);
     
     if (!isOwner) {
       return NextResponse.json({
@@ -37,7 +33,7 @@ export async function GET(
       `SELECT * FROM vehicle_documents 
        WHERE vehicle_id = $1 
        ORDER BY expiry_date ASC NULLS LAST`,
-      [params.id]
+      [id]
     );
 
     const documents = result.rows.map(row => ({
@@ -78,17 +74,12 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = request.headers.get('X-User-Id');
-    const userRole = request.headers.get('X-User-Role');
-    
-    if (!userId || userRole !== 'transfer') {
-      return NextResponse.json({
-        success: false,
-        error: 'Недостаточно прав'
-      } as ApiResponse<null>, { status: 403 });
-    }
+    const authResult = await requireTransferOperator(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult.userId;
 
-    const isOwner = await verifyVehicleOwnership(userId, params.id);
+    const { id } = await params;
+    const isOwner = await verifyVehicleOwnership(userId, id);
     
     if (!isOwner) {
       return NextResponse.json({
@@ -123,7 +114,7 @@ export async function POST(
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       RETURNING *`,
       [
-        params.id,
+        id,
         type,
         name,
         fileUrl,

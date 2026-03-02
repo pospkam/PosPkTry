@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { Hotel, Home, Building2, TreePine, Palmtree, Tent, Car, Wifi, Coffee, Sparkles, Waves, Dumbbell, Utensils, Wine, Dog, Cigarette } from 'lucide-react';
 
 interface FiltersState {
   type: string[];
@@ -20,27 +21,27 @@ interface AccommodationFiltersProps {
 }
 
 const accommodationTypes = [
-  { value: 'hotel', label: 'Отель', icon: '🏨' },
-  { value: 'hostel', label: 'Хостел', icon: '🏠' },
-  { value: 'apartment', label: 'Апартаменты', icon: '' },
-  { value: 'guesthouse', label: 'Гостевой дом', icon: '🏡' },
-  { value: 'resort', label: 'Курорт', icon: '🏖️' },
-  { value: 'camping', label: 'Кемпинг', icon: '⛺' },
-  { value: 'glamping', label: 'Глэмпинг', icon: '🏕️' },
-  { value: 'cottage', label: 'Коттедж', icon: '🛖' },
+  { value: 'hotel', label: 'Отель', icon: <Hotel className="w-4 h-4" /> },
+  { value: 'hostel', label: 'Хостел', icon: <Home className="w-4 h-4" /> },
+  { value: 'apartment', label: 'Апартаменты', icon: <Building2 className="w-4 h-4" /> },
+  { value: 'guesthouse', label: 'Гостевой дом', icon: <Home className="w-4 h-4" /> },
+  { value: 'resort', label: 'Курорт', icon: <Palmtree className="w-4 h-4" /> },
+  { value: 'camping', label: 'Кемпинг', icon: <Tent className="w-4 h-4" /> },
+  { value: 'glamping', label: 'Глэмпинг', icon: <Tent className="w-4 h-4" /> },
+  { value: 'cottage', label: 'Коттедж', icon: <TreePine className="w-4 h-4" /> },
 ];
 
 const amenitiesList = [
-  { value: 'wifi', label: 'WiFi', icon: '📶' },
-  { value: 'parking', label: 'Парковка', icon: '🅿️' },
-  { value: 'breakfast', label: 'Завтрак', icon: '🍳' },
-  { value: 'spa', label: 'СПА', icon: '💆' },
-  { value: 'pool', label: 'Бассейн', icon: '🏊' },
-  { value: 'gym', label: 'Спортзал', icon: '🏋️' },
-  { value: 'restaurant', label: 'Ресторан', icon: '🍽️' },
-  { value: 'bar', label: 'Бар', icon: '🍸' },
-  { value: 'pets', label: 'С животными', icon: '🐕' },
-  { value: 'smoking', label: 'Курение', icon: '🚬' },
+  { value: 'wifi', label: 'WiFi', icon: <Wifi className="w-4 h-4" /> },
+  { value: 'parking', label: 'Парковка', icon: <Car className="w-4 h-4" /> },
+  { value: 'breakfast', label: 'Завтрак', icon: <Coffee className="w-4 h-4" /> },
+  { value: 'spa', label: 'СПА', icon: <Sparkles className="w-4 h-4" /> },
+  { value: 'pool', label: 'Бассейн', icon: <Waves className="w-4 h-4" /> },
+  { value: 'gym', label: 'Спортзал', icon: <Dumbbell className="w-4 h-4" /> },
+  { value: 'restaurant', label: 'Ресторан', icon: <Utensils className="w-4 h-4" /> },
+  { value: 'bar', label: 'Бар', icon: <Wine className="w-4 h-4" /> },
+  { value: 'pets', label: 'С животными', icon: <Dog className="w-4 h-4" /> },
+  { value: 'smoking', label: 'Курение', icon: <Cigarette className="w-4 h-4" /> },
 ];
 
 const locationZones = [

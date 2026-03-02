@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { z } from 'zod';
+import { requireAdmin } from '@/lib/auth/middleware';
 
 // Валидация входных данных
 const accommodationSchema = z.object({
@@ -37,7 +38,13 @@ const accommodationSchema = z.object({
 
 export const dynamic = 'force-dynamic';
 
+// POST /api/accommodations/create - protected: admin only
 export async function POST(request: NextRequest) {
+  const authResult = await requireAdmin(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const body = await request.json();
     

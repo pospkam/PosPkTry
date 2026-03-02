@@ -5,6 +5,17 @@
 
 **Принцип:** Если агент не видит фичу в этом файле — её не существует и реализовывать не надо. Никаких "планируется", "в будущем", "можно добавить" — только то что в репо прямо сейчас.
 
+## Environment setup для Cloud Agents (обязательно)
+
+- На старте агента выполнять `npm ci` для репозитория.
+- Включать кэш зависимостей, чтобы повторные запуски не переустанавливали пакеты.
+- Кэшировать минимум:
+  - `~/.npm`
+  - `node_modules` (workspace)
+- Ключ кэша строить от хеша `package-lock.json`.
+- Если кэш валиден и `node_modules` уже есть — пропускать переустановку.
+- Цель: `npm run build` должен стартовать сразу, без шага install.
+
 ---
 
 ## Кто ты
@@ -40,7 +51,7 @@ Kamchatour Hub — туристическая платформа для Камч
 | Администратор | /hub/admin | Модерация, пользователи, финансы платформы |
 
 USP:
-- AI-помощник для планирования маршрутов (Groq + DeepSeek)
+- AI-помощник для планирования маршрутов (DeepSeek + Minimax + x.ai)
 - Safety-first: SOS-кнопка с геолокацией → МЧС
 - Real-time погода с алертами (Яндекс Weather)
 - Eco-points gamification за экологичные выборы
@@ -80,8 +91,8 @@ const stack = {
   storage:    'AWS S3',
 
   // AI
-  primary:    'Groq AI (Llama 3.1)',
-  fallback:   'DeepSeek',
+  primary:    'DeepSeek',
+  fallback:   'Minimax + x.ai (Grok)',
   rag:        'PostgreSQL knowledge_base (Камчатка)',
 
   // Интеграции
@@ -116,7 +127,7 @@ kamhub/
 │   │   ├── transfer/               # Трансферы
 │   │   ├── agent/                  # Агентские операции
 │   │   ├── admin/                  # Платформенное управление
-│   │   ├── ai/                     # Groq + DeepSeek
+│   │   ├── ai/                     # DeepSeek + Minimax + x.ai
 │   │   ├── weather/                # Яндекс Weather proxy
 │   │   ├── payments/               # CloudPayments webhook
 │   │   └── safety/                 # ⚠️ SOS — критичный endpoint
@@ -146,7 +157,7 @@ kamhub/
 │   ├── database.ts                 # PostgreSQL client
 │   ├── auth.ts                     # NextAuth config
 │   ├── weather/                    # Яндекс Weather client
-│   ├── ai/                         # Groq + DeepSeek clients, prompts
+│   ├── ai/                         # DeepSeek + Minimax + x.ai clients, prompts
 │   ├── payments/                   # CloudPayments helpers
 │   └── eco/                        # Eco-points логика, constants
 ├── contexts/                       # Auth, Eco, Notifications
@@ -192,7 +203,7 @@ kamhub/
 │       └── CTA (бронировать / wishlist / поделиться)
 │
 ├── /search                     # NLP-поиск ("восхождение в июле")
-├── /ai-assistant               # Чат Groq + DeepSeek
+├── /ai-assistant               # Чат DeepSeek + Minimax + x.ai
 ├── /safety                     # SOS, МЧС, чеклисты, offline maps
 ├── /eco                        # Eco-points, impact dashboard
 │
@@ -295,7 +306,7 @@ CRM для операторов — главный инструмент удер
 ```tsx
 // components/ai/AIChatBubble.tsx — sticky правый нижний угол
 // API: POST /api/ai/chat
-// Groq (Llama 3.1) основной, DeepSeek — fallback
+// DeepSeek основной, Minimax/x.ai — fallback
 // Quick actions: планирование тура / погода / безопасность
 // Conversation history — в стейте сессии
 
@@ -506,7 +517,7 @@ A/B тесты (приоритет):
 
 ### Phase 1 — MVP (реализовано)
 - 91 страница, 208 API endpoints, 6 ролей
-- AI-помощник (Groq + DeepSeek), погода, карты
+- AI-помощник (DeepSeek + Minimax + x.ai), погода, карты
 - SOS, платежи, eco-points
 - Docker + k8s + CI/CD + Sentry
 
@@ -639,7 +650,6 @@ gitpod automations task start deploy
 DATABASE_URL=postgresql://...
 TIMEWEB_API_TOKEN=...
 NEXTAUTH_SECRET=...
-GROQ_API_KEY=...
 DEEPSEEK_API_KEY=...
 MINIMAX_API_KEY=...
 XAI_API_KEY=...
@@ -649,10 +659,9 @@ XAI_API_KEY=...
 
 Платформа поддерживает несколько AI-провайдеров для чата и поиска. Они используются в порядке приоритета:
 
-1. **GROQ** - llama-3.1-70b-versatile
-2. **DeepSeek** - deepseek-chat  
-3. **Minimax** - abab6.5s-chat
-4. **x.ai (Grok)** - grok-4
+1. **DeepSeek** - deepseek-chat
+2. **Minimax** - abab6.5s-chat
+3. **x.ai (Grok)** - grok-4
 
 Если API-ключ не указан, провайдер пропускается. Если все провайдеры недоступны, используется fallback-ответ.
 
@@ -810,3 +819,28 @@ interface Tour {
 > Статус: MVP реализован, ещё не запущен с реальными пользователями.
 > Главный следующий шаг: деплой → первые бронирования → реальные метрики.
 > Обновлено: Февраль 2026
+
+## Cursor Cloud specific instructions
+
+### Services
+
+| Service | How to start | Port | Notes |
+|---------|-------------|------|-------|
+| Next.js dev server | `npm run dev` | 3000 | Main app; homepage works without DB |
+| PostgreSQL | `sudo docker start kamhub-postgres` (if container exists) or `sudo docker run -d --name kamhub-postgres -e POSTGRES_DB=kamhub -e POSTGRES_USER=kamuser -e POSTGRES_PASSWORD=kampass2024_local -p 5432:5432 postgis/postgis:15-3.3-alpine` | 5432 | Required for API routes; schema in `lib/database/schema.sql` |
+
+### Gotchas
+
+- **docker-compose.yml has a broken `POSTGRES_INITDB_ARGS`**: The `-c shared_preload_libraries=pg_trgm` flag causes `initdb` to fail. Start PostgreSQL directly with `docker run` instead of `docker compose up postgres`.
+- **Middleware requires Upstash Redis**: The middleware (`middleware.ts`) initializes `@upstash/redis` at module level. Without `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` env vars, all API routes (`/api/*`) will crash. The fix in commit `f1e6853` makes Redis rate limiting optional. If this fix is not merged, set dummy Upstash env vars or expect API route errors.
+- **DB schema initialization**: Run `lib/database/schema.sql` against the local PostgreSQL to create all core tables (`users`, `tours`, `bookings`, `partners`, `reviews`, etc.). The root `migrations/` directory has supplementary migrations that depend on these core tables.
+- **`.env.local` minimum required vars**: `DATABASE_URL`, `JWT_SECRET`, `NODE_ENV=development`, `NEXT_PUBLIC_APP_URL=http://localhost:3000`. All AI/weather/payment API keys are optional; the app degrades gracefully.
+- **Tests**: Use `npx vitest --run` (or `npm test`). There are ~39 pre-existing test failures unrelated to setup. 385+ tests pass.
+- **Lint**: `npm run lint` passes with only React Hook dependency warnings (no errors).
+- **Build**: `npm run build` succeeds; `next.config.js` ignores ESLint and TypeScript errors during build.
+- **Docker daemon in Cloud VM**: Requires `fuse-overlayfs` storage driver and `iptables-legacy`. See the Docker setup section in the system instructions for the full recipe.
+
+## Platform Map
+
+Full platform map: docs/PLATFORM_MAP.md
+Read this before making any changes to routes or pages.

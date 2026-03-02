@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Weather } from '@/types';
 import { TransferSearchWidget } from '@/components/TransferSearchWidget';
 import { PublicNav } from '@/components/shared/PublicNav';
-import { Star } from 'lucide-react';
+import { Star, Search, Map, Bus, User, Calendar, Ticket, BarChart3 } from 'lucide-react';
 
 export default function TransferDashboardClient() {
   const [weather, setWeather] = useState<Weather | null>(null);
@@ -31,13 +31,13 @@ export default function TransferDashboardClient() {
   };
 
   const tabs = [
-    { id: 'search', name: 'Поиск', icon: '🔍' },
-    { id: 'routes', name: 'Маршруты', icon: '🗺️' },
-    { id: 'vehicles', name: 'Транспорт', icon: '🚌' },
-    { id: 'drivers', name: 'Водители', icon: '👨‍✈️' },
-    { id: 'schedule', name: 'Расписание', icon: '📅' },
-    { id: 'bookings', name: 'Бронирования', icon: '🎫' },
-    { id: 'analytics', name: 'Аналитика', icon: '📊' },
+    { id: 'search', name: 'Поиск', Icon: Search },
+    { id: 'routes', name: 'Маршруты', Icon: Map },
+    { id: 'vehicles', name: 'Транспорт', Icon: Bus },
+    { id: 'drivers', name: 'Водители', Icon: User },
+    { id: 'schedule', name: 'Расписание', Icon: Calendar },
+    { id: 'bookings', name: 'Бронирования', Icon: Ticket },
+    { id: 'analytics', name: 'Аналитика', Icon: BarChart3 },
   ];
 
   const mockRoutes = [
@@ -232,7 +232,7 @@ export default function TransferDashboardClient() {
                   : 'text-white/70 hover:text-white hover:bg-white/10'
               }`}
             >
-              <span className="text-lg">{tab.icon}</span>
+              {React.createElement(tab.Icon, { className: 'w-5 h-5' })}
               <span className="font-medium">{tab.name}</span>
             </button>
           ))}
@@ -501,7 +501,7 @@ export default function TransferDashboardClient() {
                     <p className="text-white/70 text-sm">Всего маршрутов</p>
                     <p className="text-3xl font-bold text-white">{mockRoutes.length}</p>
                   </div>
-                  <div className="text-3xl">🗺️</div>
+                  <div className="text-3xl"><Map className="w-8 h-8" /></div>
                 </div>
               </div>
               
@@ -511,7 +511,7 @@ export default function TransferDashboardClient() {
                     <p className="text-white/70 text-sm">Активных бронирований</p>
                     <p className="text-3xl font-bold text-white">{mockBookings.length}</p>
                   </div>
-                  <div className="text-3xl">🎫</div>
+                  <div className="text-3xl"><Ticket className="w-8 h-8" /></div>
                 </div>
               </div>
               
@@ -521,7 +521,7 @@ export default function TransferDashboardClient() {
                     <p className="text-white/70 text-sm">Доход за месяц</p>
                     <p className="text-3xl font-bold text-white">54000₽</p>
                   </div>
-                  <div className="text-3xl">💰</div>
+                  <div className="text-3xl"><span className="text-premium-gold font-bold">₽</span></div>
                 </div>
               </div>
               
@@ -531,7 +531,7 @@ export default function TransferDashboardClient() {
                     <p className="text-white/70 text-sm">Загрузка транспорта</p>
                     <p className="text-3xl font-bold text-white">85%</p>
                   </div>
-                  <div className="text-3xl">📊</div>
+                  <div className="text-3xl"><BarChart3 className="w-8 h-8" /></div>
                 </div>
               </div>
             </div>

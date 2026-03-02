@@ -42,14 +42,6 @@ export const config = {
         chunkSize: 1000,
       },
     },
-    groq: {
-      apiKey: process.env.GROQ_API_KEY || '',
-      baseUrl: 'https://api.groq.com/openai/v1',
-      model: 'llama-3.1-70b-versatile',
-      maxTokens: parseInt(process.env.AI_MAX_TOKENS || '4000'),
-      temperature: 0.7,
-      timeout: 30000,
-    },
     deepseek: {
       apiKey: process.env.DEEPSEEK_API_KEY || '',
       baseUrl: 'https://api.deepseek.com/v1',
@@ -227,7 +219,7 @@ export const config = {
           styleSrc: ["'self'", "'unsafe-inline'"],
           scriptSrc: ["'self'"],
           imgSrc: ["'self'", "data:", "https:"],
-          connectSrc: ["'self'", "https://api.groq.com", "https://api.deepseek.com"],
+          connectSrc: ["'self'", "https://api.deepseek.com"],
         },
       },
     },
@@ -266,10 +258,6 @@ export function validateConfig(): { isValid: boolean; errors: string[] } {
   }
 
   if (config.app.environment === 'production') {
-    if (!config.ai.groq.apiKey) {
-      errors.push('GROQ_API_KEY is required in production');
-    }
-    
     if (!config.maps.yandex.apiKey) {
       errors.push('YANDEX_MAPS_API_KEY is required in production');
     }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { verifyReviewOwnership } from '@/lib/auth/guide-helpers';
+import { requireRole } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,17 +15,12 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = request.headers.get('X-User-Id');
-    const userRole = request.headers.get('X-User-Role');
-    
-    if (!userId || userRole !== 'guide') {
-      return NextResponse.json({
-        success: false,
-        error: 'Недостаточно прав'
-      } as ApiResponse<null>, { status: 403 });
-    }
+    const guideOrResponse = await requireRole(request, ['guide', 'admin']);
+    if (guideOrResponse instanceof NextResponse) return guideOrResponse;
+    const userId = guideOrResponse.userId;
 
-    const isOwner = await verifyReviewOwnership(userId, params.id);
+    const { id } = await params;
+    const isOwner = await verifyReviewOwnership(userId, id);
     
     if (!isOwner) {
       return NextResponse.json({
@@ -55,7 +51,7 @@ export async function POST(
        SET guide_reply = $1, guide_reply_at = NOW(), updated_at = NOW()
        WHERE id = $2
        RETURNING *`,
-      [reply, params.id]
+      [reply, id]
     );
 
     // Send notification to tourist
@@ -69,7 +65,7 @@ export async function POST(
             review.tourist_id,
             'Гид ответил на ваш отзыв. Посмотрите ответ.',
             JSON.stringify({
-              reviewId: params.id,
+              reviewId: id,
               guideId: review.guide_id
             })
           ]
@@ -104,17 +100,12 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = request.headers.get('X-User-Id');
-    const userRole = request.headers.get('X-User-Role');
-    
-    if (!userId || userRole !== 'guide') {
-      return NextResponse.json({
-        success: false,
-        error: 'Недостаточно прав'
-      } as ApiResponse<null>, { status: 403 });
-    }
+    const guideOrResponse = await requireRole(request, ['guide', 'admin']);
+    if (guideOrResponse instanceof NextResponse) return guideOrResponse;
+    const userId = guideOrResponse.userId;
 
-    const isOwner = await verifyReviewOwnership(userId, params.id);
+    const { id } = await params;
+    const isOwner = await verifyReviewOwnership(userId, id);
     
     if (!isOwner) {
       return NextResponse.json({
@@ -145,7 +136,7 @@ export async function PUT(
        SET guide_reply = $1, updated_at = NOW()
        WHERE id = $2
        RETURNING *`,
-      [reply, params.id]
+      [reply, id]
     );
 
     return NextResponse.json({
@@ -172,17 +163,12 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = request.headers.get('X-User-Id');
-    const userRole = request.headers.get('X-User-Role');
-    
-    if (!userId || userRole !== 'guide') {
-      return NextResponse.json({
-        success: false,
-        error: 'Недостаточно прав'
-      } as ApiResponse<null>, { status: 403 });
-    }
+    const guideOrResponse = await requireRole(request, ['guide', 'admin']);
+    if (guideOrResponse instanceof NextResponse) return guideOrResponse;
+    const userId = guideOrResponse.userId;
 
-    const isOwner = await verifyReviewOwnership(userId, params.id);
+    const { id } = await params;
+    const isOwner = await verifyReviewOwnership(userId, id);
     
     if (!isOwner) {
       return NextResponse.json({
@@ -195,7 +181,7 @@ export async function DELETE(
       `UPDATE guide_reviews 
        SET guide_reply = NULL, guide_reply_at = NULL, updated_at = NOW()
        WHERE id = $1`,
-      [params.id]
+      [id]
     );
 
     return NextResponse.json({

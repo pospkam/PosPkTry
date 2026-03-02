@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Protected } from '@/components/Protected';
 import { PublicNav } from '@/components/shared/PublicNav';
 import { SouvenirCard } from '@/components/souvenirs/SouvenirCard';
+import { ShoppingCart as ShoppingCartIcon } from 'lucide-react';
 import { ShoppingCart } from '@/components/souvenirs/ShoppingCart';
 import { SouvenirCheckout } from '@/components/souvenirs/SouvenirCheckout';
 import { SouvenirFilters } from '@/components/souvenirs/SouvenirFilters';
@@ -201,7 +202,8 @@ export default function SouvenirsHubClient() {
                 onClick={() => setView(view === 'cart' ? 'catalog' : 'cart')}
                 className="relative px-6 py-3 bg-premium-gold hover:bg-premium-gold/80 text-premium-black font-semibold rounded-xl transition-colors"
               >
-                🛒 Корзина
+                <ShoppingCartIcon className="w-5 h-5 inline mr-2" />
+                Корзина
                 {cart.length > 0 && (
                   <span className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-xs">
                     {cart.reduce((sum, item) => sum + item.quantity, 0)}

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { Backpack, Map, Tent, Mountain, Snowflake, Waves, Camera, Shield, Search, Loader2, Check } from 'lucide-react';
 
 interface GearItem {
   id: string;
@@ -42,22 +43,23 @@ export default function GearRentalPageClient() {
   };
 
   const categories = [
-    { id: 'all', name: 'Все снаряжение', icon: '🎒' },
-    { id: 'hiking', name: 'Походное', icon: "" },
-    { id: 'camping', name: 'Кемпинг', icon: '⛺' },
-    { id: 'climbing', name: 'Альпинизм', icon: '🧗' },
-    { id: 'skiing', name: 'Лыжи/Сноуборд', icon: '⛷️' },
-    { id: 'water', name: 'Водное', icon: '🚣' },
-    { id: 'photography', name: 'Фототехника', icon: ' ' },
-    { id: 'safety', name: 'Безопасность', icon: '🦺' },
+    { id: 'all', name: 'Все снаряжение', Icon: Backpack },
+    { id: 'hiking', name: 'Походное', Icon: Map },
+    { id: 'camping', name: 'Кемпинг', Icon: Tent },
+    { id: 'climbing', name: 'Альпинизм', Icon: Mountain },
+    { id: 'skiing', name: 'Лыжи/Сноуборд', Icon: Snowflake },
+    { id: 'water', name: 'Водное', Icon: Waves },
+    { id: 'photography', name: 'Фототехника', Icon: Camera },
+    { id: 'safety', name: 'Безопасность', Icon: Shield },
   ];
 
   return (
     <main className="min-h-screen bg-transparent text-white">
       <div className="bg-white/15 border-b border-white/15">
         <div className="max-w-7xl mx-auto px-6 py-8">
-          <h1 className="text-4xl font-black text-white mb-2">
-            🎒 Прокат снаряжения
+          <h1 className="text-4xl font-black text-white mb-2 flex items-center">
+            <Backpack className="w-10 h-10 inline mr-2" />
+            Прокат снаряжения
           </h1>
           <p className="text-white/70">
             Туристическое оборудование для походов по Камчатке
@@ -78,7 +80,8 @@ export default function GearRentalPageClient() {
                     : 'bg-white/10 hover:bg-white/20 text-white'
                 }`}
               >
-                {cat.icon} {cat.name}
+                {React.createElement(cat.Icon, { className: 'w-4 h-4 inline mr-1' })}
+                {cat.name}
               </button>
             ))}
           </div>
@@ -88,7 +91,7 @@ export default function GearRentalPageClient() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         {loading ? (
           <div className="text-center py-20">
-            <div className="text-4xl mb-4"> </div>
+            <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin text-white/70" />
             <p className="text-white/70">Загрузка снаряжения...</p>
           </div>
         ) : gear.length === 0 ? (
@@ -120,8 +123,9 @@ export default function GearRentalPageClient() {
                     {item.pricePerDay.toLocaleString('ru-RU')} ₽/день
                   </div>
                   
-                  <div className="text-green-400 text-sm">
-                    [✓] Доступно: {item.availableQuantity} шт
+                  <div className="text-green-400 text-sm flex items-center gap-1">
+                    <Check className="w-4 h-4" />
+                    Доступно: {item.availableQuantity} шт
                   </div>
                   
                   <button className="w-full mt-4 px-4 py-2 bg-premium-gold hover:bg-premium-gold/80 text-premium-black font-bold rounded-lg transition-colors">

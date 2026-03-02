@@ -165,11 +165,11 @@ defaultProvider: 'yandex'  // ← Optimized for Kamchatka
 #### 🤖 AI Chat - ГОТОВ ✅
 
 **Статус:** Production-ready  
-**Providers:** GROQ (primary), DeepSeek, OpenRouter
+**Providers:** DeepSeek (primary), Minimax/x.ai, OpenRouter
 
 - ✅ Multi-provider AI система
-- ✅ GROQ API (бесплатно, 14,400 req/day)
-- ✅ Llama 3.1 70B модель
+- ✅ DeepSeek API
+- ✅ Multi-provider fallback
 - ✅ Контекстная память
 - ✅ Потоковая передача (streaming)
 - ✅ Error handling & fallback
@@ -179,7 +179,6 @@ defaultProvider: 'yandex'  // ← Optimized for Kamchatka
 **Файлы:**
 - `app/api/chat/route.ts`
 - `app/api/ai/route.ts`
-- `app/api/ai/groq/route.ts`
 - `components/AIChatWidget.tsx`
 
 #### 📊 Operator Dashboard - ГОТОВ ✅
@@ -523,7 +522,6 @@ npm run db:integrity    # Проверка целостности
 **AI & Chat (3)**
 - ✅ POST `/api/chat`
 - ✅ POST `/api/ai`
-- ✅ POST `/api/ai/groq`
 
 **Loyalty (3)**
 - ✅ GET `/api/loyalty/levels`
@@ -836,7 +834,7 @@ npm run test:run        # Run once
 ```bash
 ⭐ YANDEX_WEATHER_API_KEY       # Weather (9/10 accuracy!)
 ⭐ YANDEX_MAPS_API_KEY          # Maps
-⭐ GROQ_API_KEY                 # AI Chat (FREE!)
+⭐ DEEPSEEK_API_KEY             # AI Chat
 ```
 
 **Опциональные (OPTIONAL):**
@@ -928,10 +926,9 @@ Memory: ~500 MB (2 instances)
    - Геокодирование
    - Маршруты
 
-3. ✅ **GROQ AI**
+3. ✅ **DeepSeek AI**
    - Status: Production-ready
-   - FREE 14,400 req/day
-   - Llama 3.1 70B
+   - Основной провайдер AI
 
 4. ✅ **CloudPayments**
    - Status: Production-ready
@@ -1043,7 +1040,7 @@ Memory: ~500 MB (2 instances)
 # 3. Добавление API ключей в .env.production
 ⚠️ YANDEX_WEATHER_API_KEY     # КРИТИЧНО!
 ⚠️ YANDEX_MAPS_API_KEY        # Обязательно
-○  GROQ_API_KEY                # Рекомендуется
+○  DEEPSEEK_API_KEY            # Рекомендуется
 
 # 4. Перезапуск
 ✅ pm2 restart kamchatour-hub
@@ -1105,7 +1102,7 @@ Yandex Weather:   ~1000₽/мес  (Базовый тариф, 50k req/мес)
 
 **Recommended:**
 ```
-GROQ AI:          БЕСПЛАТНО   (14,400 req/day)
+DeepSeek AI:      low-cost    (pay-as-you-go)
 Yandex Maps:      ~300₽/мес   (базовый)
 ```
 
@@ -1390,7 +1387,7 @@ Detailed Scores:
 5. **Modern tech stack** - Next.js 14, TypeScript, PostgreSQL
 6. **Weather API excellence** - 4 провайдера, точность 9/10 для Камчатки
 7. **Security-first approach** - CSRF, rate limiting, validation
-8. **Multi-provider integrations** - Yandex, GROQ, CloudPayments
+8. **Multi-provider integrations** - Yandex, DeepSeek, CloudPayments
 
 **⚠️ AREAS FOR IMPROVEMENT:**
 1. **Test coverage** - 60% (recommend 80%+)
@@ -1551,7 +1548,7 @@ Detailed Scores:
 **API Keys:**
 - Yandex Weather: https://yandex.ru/dev/weather
 - Yandex Maps: https://yandex.ru/dev/maps
-- GROQ: https://console.groq.com
+- DeepSeek: https://platform.deepseek.com
 - CloudPayments: https://cloudpayments.ru
 
 **Monitoring:**

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { fetchYandexWeather, getTimeOfDay, needsWeatherAnimation, type WeatherData } from '@/lib/weather/yandex-weather';
 import { Sun, Moon, Stars, Rain, Snow, Wind, Thunder } from '@/components/weather/WeatherEffects';
+import { Wind as WindIcon, Droplets } from 'lucide-react';
 
 export default function SamsungWeatherDynamic() {
   const [timeOfDay, setTimeOfDay] = useState<string>('day');
@@ -78,8 +79,8 @@ export default function SamsungWeatherDynamic() {
             <div className="text-lg">{weather.condition}</div>
             <div className="text-sm opacity-80">Ощущается: {weather.feelsLike}°C</div>
             <div className="flex items-center justify-center gap-4 text-sm pt-2 border-t border-white/20">
-              <div>💨 {weather.windSpeed} м/с</div>
-              <div>💧 {weather.humidity}%</div>
+              <div className="flex items-center gap-1"><WindIcon className="w-4 h-4" /> {weather.windSpeed} м/с</div>
+              <div className="flex items-center gap-1"><Droplets className="w-4 h-4" /> {weather.humidity}%</div>
             </div>
             <div className="text-xs opacity-60 pt-1">Петропавловск-Камчатский</div>
           </div>

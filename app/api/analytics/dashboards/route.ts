@@ -1,17 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { dashboardService, metricsService } from '@/lib/database'
+import { dashboardService } from '@/lib/database'
+import { requireAuth } from '@/lib/auth/middleware'
 
 export async function GET(request: NextRequest) {
-  try {
-    const userId = request.headers.get('x-user-id')
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
+  const authOrResponse = await requireAuth(request)
+  if (authOrResponse instanceof NextResponse) return authOrResponse
 
-    const dashboards = await dashboardService.getUserDashboards(userId)
+  try {
+    const dashboards = await dashboardService.getUserDashboards(authOrResponse.userId)
 
     return NextResponse.json({
       success: true,
@@ -26,17 +22,12 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const userId = request.headers.get('x-user-id')
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
+  const authOrResponse = await requireAuth(request)
+  if (authOrResponse instanceof NextResponse) return authOrResponse
 
+  try {
     const data = await request.json()
-    const dashboard = await dashboardService.createDashboard(data, userId)
+    const dashboard = await dashboardService.createDashboard(data, authOrResponse.userId)
 
     return NextResponse.json({
       success: true,

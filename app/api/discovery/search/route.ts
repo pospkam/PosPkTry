@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { searchService } from '@/lib/database';
 
+// Public: поиск туров доступен без аутентификации.
 export async function GET(request: NextRequest) {
   try {
     // Получить параметры из query

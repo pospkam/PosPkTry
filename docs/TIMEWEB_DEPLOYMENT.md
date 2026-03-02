@@ -145,7 +145,6 @@ nano .env
 DATABASE_URL=postgresql://gen_user:PASSWORD@xxxxx.timeweb.cloud:5432/kamhub
 
 # AI API ключи (получите бесплатно)
-GROQ_API_KEY=gsk_your_key_here
 DEEPSEEK_API_KEY=sk_your_key_here
 OPENROUTER_API_KEY=sk-or_your_key_here
 
@@ -515,8 +514,8 @@ systemctl start fail2ban
 - Скидка 10-20%
 - ~11,000₽/год вместо 14,400₽
 
-**Бесплатные альтернативы для разработки:**
-- GROQ API: бесплатно 14k req/день
+**Бесплатные/доступные альтернативы для разработки:**
+- DeepSeek API: низкая стоимость
 - Yandex Maps: бесплатно 25k req/день
 - Open-Meteo: полностью бесплатно
 

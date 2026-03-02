@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
       return userOrResponse;
     }
 
-    const partnerId = await getCarsPartnerId(userOrResponse.id);
+    const partnerId = await getCarsPartnerId(userOrResponse.userId);
     if (!partnerId) {
       return NextResponse.json(
         { success: false, error: 'Партнер категории cars не найден' } as ApiResponse<null>,
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
       return userOrResponse;
     }
 
-    const partnerId = await ensureCarsPartnerExists(userOrResponse.id);
+    const partnerId = await ensureCarsPartnerExists(userOrResponse.userId);
 
     const body = await request.json();
     const {

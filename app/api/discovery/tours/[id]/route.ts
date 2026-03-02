@@ -10,11 +10,13 @@ import {
   TourNotFoundError,
   TourValidationError,
 } from '@/lib/database';
+import { requireOperator } from '@/lib/auth/middleware';
+import { verifyTourOwnership } from '@/lib/auth/operator-helpers';
 
 // ============================================================================
 // GET - ПОЛУЧИТЬ ДЕТАЛИ ТУРА
 // ============================================================================
-
+// Public: детали тура доступны без аутентификации для просмотра.
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -65,35 +67,21 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authOrResponse = await requireOperator(request);
+  if (authOrResponse instanceof NextResponse) return authOrResponse;
+
   try {
     const { id } = await params;
 
-    // Проверка аутентификации
-    const operatorId = request.headers.get('x-operator-id');
-    const role = request.headers.get('x-user-role');
-
-    if (!operatorId) {
+    const isOwner = await verifyTourOwnership(authOrResponse.userId, id);
+    if (!isOwner && authOrResponse.role !== 'admin') {
       return NextResponse.json(
         {
           success: false,
-          error: 'Unauthorized',
-          message: 'Operator ID is required',
+          error: 'Not Found',
+          message: 'Tour not found',
         },
-        { status: 401 }
-      );
-    }
-
-    // Получить тур для проверки владения
-    const tour = await tourService.read(id);
-
-    if (tour.operatorId !== operatorId && role !== 'admin') {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Forbidden',
-          message: 'You can only update your own tours',
-        },
-        { status: 403 }
+        { status: 404 }
       );
     }
 
@@ -155,35 +143,21 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authOrResponse = await requireOperator(request);
+  if (authOrResponse instanceof NextResponse) return authOrResponse;
+
   try {
     const { id } = await params;
 
-    // Проверка аутентификации
-    const operatorId = request.headers.get('x-operator-id');
-    const role = request.headers.get('x-user-role');
-
-    if (!operatorId) {
+    const isOwner = await verifyTourOwnership(authOrResponse.userId, id);
+    if (!isOwner && authOrResponse.role !== 'admin') {
       return NextResponse.json(
         {
           success: false,
-          error: 'Unauthorized',
-          message: 'Operator ID is required',
+          error: 'Not Found',
+          message: 'Tour not found',
         },
-        { status: 401 }
-      );
-    }
-
-    // Получить тур для проверки владения
-    const tour = await tourService.read(id);
-
-    if (tour.operatorId !== operatorId && role !== 'admin') {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Forbidden',
-          message: 'You can only delete your own tours',
-        },
-        { status: 403 }
+        { status: 404 }
       );
     }
 

@@ -6,9 +6,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/database'
+import { bookingService } from '@/lib/database'
 import { authenticateUser } from '@/lib/auth'
-import type { BookingUpdate } from '@/types'
 
 /**
  * GET /api/bookings/[id]
@@ -25,12 +24,12 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get booking
-    const booking = await bookingService.getById(params.id)
+    const { id } = await params
 
-    // Authorization: user can only see their own bookings
-    if (booking.userId !== userId) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    // Ownership is enforced at service layer
+    const booking = await bookingService.getByIdForUser(id, userId)
+    if (!booking) {
+      return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
     }
 
     return NextResponse.json(booking)
@@ -63,22 +62,20 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get booking for authorization
-    const booking = await bookingService.getById(params.id)
-
-    if (booking.userId !== userId) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
+    const { id } = await params
 
     // Parse body
     const body = await request.json()
 
-    // Update booking
-    const updated = await bookingService.update(params.id, {
+    // Ownership is enforced at service layer
+    const updated = await bookingService.updateForUser(id, userId, {
       specialRequests: body.specialRequests,
       dietaryRequirements: body.dietaryRequirements,
       mobilityRequirements: body.mobilityRequirements,
     })
+    if (!updated) {
+      return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
+    }
 
     return NextResponse.json(updated)
   } catch (error) {
@@ -109,19 +106,17 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get booking for authorization
-    const booking = await bookingService.getById(params.id)
-
-    if (booking.userId !== userId) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
+    const { id } = await params
 
     // Parse body
     const body = await request.json()
     const reason = body.reason || 'User requested cancellation'
 
-    // Cancel booking
-    const cancelled = await bookingService.cancel(params.id, reason, userId)
+    // Ownership is enforced at service layer
+    const cancelled = await bookingService.cancel(id, reason, userId)
+    if (!cancelled) {
+      return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
+    }
 
     return NextResponse.json({
       message: 'Booking cancelled successfully',

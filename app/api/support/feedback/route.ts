@@ -6,8 +6,12 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { feedbackService } from '@/lib/database'
+import { requireRole, requireAuth } from '@/lib/auth/middleware'
 
 export async function GET(request: NextRequest) {
+  const auth = await requireRole(request, ['admin', 'agent'])
+  if (auth instanceof NextResponse) return auth
+
   try {
     const searchParams = request.nextUrl.searchParams
 
@@ -33,6 +37,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await requireAuth(request)
+  if (auth instanceof NextResponse) return auth
+
   try {
     const data = await request.json()
 

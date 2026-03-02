@@ -6,7 +6,7 @@ import { Tour, Weather } from '@/types';
 import { AIChatWidget } from '@/components/AIChatWidget';
 import { TransferSearchWidget } from '@/components/TransferSearchWidget';
 import { TouristNav } from '@/components/tourist/TouristNav';
-import { Mountain, Eye, TreePine, Fish, CloudSnow, Waves, Star, Zap, Clock, Wind, Sun, Cloud, CloudRain } from 'lucide-react';
+import { Mountain, Eye, TreePine, Fish, CloudSnow, Waves, Star, Zap, Clock, Wind, Sun, Cloud, CloudRain, Users, Bot, Heart, Target, Droplets, Bus } from 'lucide-react';
 import RecommendationCard, { RecommendationCardSkeleton } from '@/components/tourist/RecommendationCard';
 import type { RecommendedTour, RecommendationStrategy } from '@/lib/recommendations/engine';
 import Link from 'next/link';
@@ -88,17 +88,17 @@ export default function TouristDashboardClient() {
   };
 
   const getWeatherIcon = (condition: string) => {
-    const icons: { [key: string]: string } = {
-      clear: "",
-      mostly_clear: "",
-      partly_cloudy: "",
-      overcast: "",
-      rain: "",
-      snow: '❄️',
-      thunderstorm: '⛈️',
-      fog: '🌫️',
+    const iconMap: { [key: string]: React.ReactNode } = {
+      clear: <Sun className="w-6 h-6" />,
+      mostly_clear: <Cloud className="w-6 h-6" />,
+      partly_cloudy: <Cloud className="w-6 h-6" />,
+      overcast: <Cloud className="w-6 h-6" />,
+      rain: <CloudRain className="w-6 h-6" />,
+      snow: <CloudSnow className="w-6 h-6" />,
+      thunderstorm: <CloudRain className="w-6 h-6" />,
+      fog: <Cloud className="w-6 h-6" />,
     };
-    return icons[condition] || "";
+    return iconMap[condition] || <Cloud className="w-6 h-6" />;
   };
 
   const getSafetyLevelColor = (level: string) => {
@@ -112,11 +112,11 @@ export default function TouristDashboardClient() {
   };
 
   const tabs = [
-    { id: 'tours', name: 'Туры', icon: '🏔️' },
-    { id: 'transfers', name: 'Трансферы', icon: '🚌' },
-    { id: 'weather', name: 'Погода', icon: '' },
-    { id: 'ai', name: 'AI-помощник', icon: '🤖' },
-    { id: 'favorites', name: 'Избранное', icon: '❤️' },
+    { id: 'tours', name: 'Туры', Icon: Mountain },
+    { id: 'transfers', name: 'Трансферы', Icon: Bus },
+    { id: 'weather', name: 'Погода', Icon: Sun },
+    { id: 'ai', name: 'AI-помощник', Icon: Bot },
+    { id: 'favorites', name: 'Избранное', Icon: Heart },
   ];
 
   if (loading) {
@@ -169,7 +169,7 @@ export default function TouristDashboardClient() {
                   : 'text-white/70 hover:text-white hover:bg-white/10'
               }`}
             >
-              <span className="text-lg">{tab.icon}</span>
+              {React.createElement(tab.Icon, { className: 'w-5 h-5' })}
               <span className="font-medium">{tab.name}</span>
             </button>
           ))}
@@ -281,7 +281,7 @@ export default function TouristDashboardClient() {
                     
                     <div className="flex items-center justify-between">
                       <div className="text-sm text-white/70">
-                        <span>👥 {tour.minParticipants}-{tour.maxParticipants} чел.</span>
+                        <span className="flex items-center gap-1"><Users className="w-4 h-4" /> {tour.minParticipants}-{tour.maxParticipants} чел.</span>
                       </div>
                       <button className="px-6 py-2 bg-gradient-to-r from-sky-200 to-cyan-200 text-white rounded-xl hover:from-blue-600 hover:to-cyan-600 transition-colors font-extralight" style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)' }}>
                         Забронировать
@@ -324,13 +324,13 @@ export default function TouristDashboardClient() {
                 </div>
                 
                 <div className="text-center">
-                  <div className="text-2xl mb-2">💧</div>
+                  <div className="text-2xl mb-2"><Droplets className="w-6 h-6" /></div>
                   <div className="text-xl font-bold text-white">{weather.humidity}%</div>
                   <div className="text-white/70">Влажность</div>
                 </div>
                 
                 <div className="text-center">
-                  <div className="text-2xl mb-2">👁️</div>
+                  <div className="text-2xl mb-2"><Eye className="w-6 h-6" /></div>
                   <div className="text-xl font-bold text-white">{weather.visibility} км</div>
                   <div className="text-white/70">Видимость</div>
                 </div>
@@ -398,7 +398,7 @@ export default function TouristDashboardClient() {
         {/* Favorites Tab */}
         {selectedTab === 'favorites' && (
           <div className="text-center py-12">
-            <div className="text-6xl mb-4">❤️</div>
+            <Heart className="w-16 h-16 mx-auto mb-4 text-white/50" />
             <h3 className="text-2xl font-bold text-white mb-2">Избранные туры</h3>
             <p className="text-white/70">Здесь будут ваши избранные туры</p>
           </div>
@@ -407,7 +407,10 @@ export default function TouristDashboardClient() {
         {/* ── Рекомендации ── */}
         <div className="mt-10">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-white">🎯 Рекомендуем вам</h2>
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <Target className="w-5 h-5" />
+              Рекомендуем вам
+            </h2>
             <Link
               href="/tours"
               className="text-sm text-blue-400 hover:text-blue-300 transition-colors"

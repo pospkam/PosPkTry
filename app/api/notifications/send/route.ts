@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { emailService, EmailOptions } from '@/lib/notifications/email-service';
 import { emailTemplates } from '@/lib/notifications/email-templates';
 import { ApiResponse } from '@/types';
+import { requireAdmin } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,10 +14,13 @@ interface SendEmailRequest {
 
 /**
  * POST /api/notifications/send
- * Отправка email уведомлений
+ * Отправка email уведомлений (admin only)
  */
 export async function POST(request: NextRequest) {
   try {
+    const adminOrResponse = await requireAdmin(request);
+    if (adminOrResponse instanceof NextResponse) return adminOrResponse;
+
     const body: SendEmailRequest = await request.json();
 
     if (!body.type || !body.to || !body.data) {

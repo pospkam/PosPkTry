@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
+import { requireOperator } from '@/lib/auth/middleware';
 import { getOperatorPartnerId, verifyTourOwnership } from '@/lib/auth/operator-helpers';
 
 export const dynamic = 'force-dynamic';
+
+const SAFE_DB_COLUMN_REGEX = /^[a-z_][a-z0-9_]*$/;
 
 /**
  * GET /api/operator/tours/[id]
@@ -14,18 +17,16 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = request.headers.get('X-User-Id');
-    const userRole = request.headers.get('X-User-Role');
-    
-    if (!userId || userRole !== 'operator') {
-      return NextResponse.json({
-        success: false,
-        error: 'Недостаточно прав'
-      } as ApiResponse<null>, { status: 403 });
+    const operatorOrResponse = await requireOperator(request);
+    if (operatorOrResponse instanceof NextResponse) {
+      return operatorOrResponse;
     }
+    const userId = operatorOrResponse.userId;
+
+    const { id } = await params;
 
     // Verify ownership
-    const isOwner = await verifyTourOwnership(userId, params.id);
+    const isOwner = await verifyTourOwnership(userId, id);
     
     if (!isOwner) {
       return NextResponse.json({
@@ -49,7 +50,7 @@ export async function GET(
         LEFT JOIN assets a ON ta.asset_id = a.id
         WHERE t.id = $1
         GROUP BY t.id`,
-        [params.id]
+        [id]
       );
 
       if (result.rows.length === 0) {
@@ -109,18 +110,16 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = request.headers.get('X-User-Id');
-    const userRole = request.headers.get('X-User-Role');
-    
-    if (!userId || userRole !== 'operator') {
-      return NextResponse.json({
-        success: false,
-        error: 'Недостаточно прав'
-      } as ApiResponse<null>, { status: 403 });
+    const operatorOrResponse = await requireOperator(request);
+    if (operatorOrResponse instanceof NextResponse) {
+      return operatorOrResponse;
     }
+    const userId = operatorOrResponse.userId;
+
+    const { id } = await params;
 
     // Verify ownership
-    const isOwner = await verifyTourOwnership(userId, params.id);
+    const isOwner = await verifyTourOwnership(userId, id);
     
     if (!isOwner) {
       return NextResponse.json({
@@ -149,8 +148,8 @@ export async function PUT(
       
       const jsonFields = new Set(['season', 'requirements', 'includes', 'excludes', 'coordinates']);
 
-    const updateFields = [];
-    const updateValues = [];
+    const updateFields: string[] = [];
+    const updateValues: unknown[] = [];
     let paramIndex = 1;
 
       for (const [key, value] of Object.entries(body)) {
@@ -164,6 +163,12 @@ export async function PUT(
         
         const mappedKey = fieldMap[key] || key;
         const dbKey = mappedKey.replace(/([A-Z])/g, '_$1').toLowerCase();
+        if (!SAFE_DB_COLUMN_REGEX.test(dbKey)) {
+          return NextResponse.json({
+            success: false,
+            error: 'Некорректное поле обновления'
+          } as ApiResponse<null>, { status: 400 });
+        }
         
         updateFields.push(`${dbKey} = $${paramIndex++}`);
         
@@ -181,12 +186,13 @@ export async function PUT(
       } as ApiResponse<null>, { status: 400 });
     }
 
-    updateValues.push(params.id);
+    const idParamIndex = updateValues.length + 1;
+    updateValues.push(id);
 
     const result = await query(
       `UPDATE tours 
        SET ${updateFields.join(', ')}
-       WHERE id = $${paramIndex}
+       WHERE id = $${idParamIndex}
        RETURNING *`,
       updateValues
     );
@@ -215,18 +221,16 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = request.headers.get('X-User-Id');
-    const userRole = request.headers.get('X-User-Role');
-    
-    if (!userId || userRole !== 'operator') {
-      return NextResponse.json({
-        success: false,
-        error: 'Недостаточно прав'
-      } as ApiResponse<null>, { status: 403 });
+    const operatorOrResponse = await requireOperator(request);
+    if (operatorOrResponse instanceof NextResponse) {
+      return operatorOrResponse;
     }
+    const userId = operatorOrResponse.userId;
+
+    const { id } = await params;
 
     // Verify ownership
-    const isOwner = await verifyTourOwnership(userId, params.id);
+    const isOwner = await verifyTourOwnership(userId, id);
     
     if (!isOwner) {
       return NextResponse.json({
@@ -239,7 +243,7 @@ export async function DELETE(
     const bookingsCheck = await query(
       `SELECT COUNT(*) as count FROM bookings 
        WHERE tour_id = $1 AND status IN ('pending', 'confirmed')`,
-      [params.id]
+      [id]
     );
 
     if (parseInt(bookingsCheck.rows[0].count) > 0) {
@@ -251,7 +255,7 @@ export async function DELETE(
     }
 
     // Delete tour (CASCADE will delete related records)
-    await query('DELETE FROM tours WHERE id = $1', [params.id]);
+    await query('DELETE FROM tours WHERE id = $1', [id]);
 
     return NextResponse.json({
       success: true,

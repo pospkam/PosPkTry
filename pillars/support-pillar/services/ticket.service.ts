@@ -88,8 +88,24 @@ export class TicketService {
   async getTicket(id: string): Promise<Ticket | null> {
     try {
       const result = await this.db.query(
-        `SELECT * FROM support_tickets WHERE id = $1`,
+        `SELECT * FROM support_tickets WHERE id = $1 LIMIT 1`,
         [id]
+      );
+      return (result.rows[0] as Ticket) || null;
+    } catch {
+      return null;
+    }
+  }
+
+  async getTicketForUser(id: string, userId: string): Promise<Ticket | null> {
+    try {
+      const result = await this.db.query(
+        `SELECT *
+         FROM support_tickets
+         WHERE id = $1
+           AND (customer_id = $2 OR agent_id = $2)
+         LIMIT 1`,
+        [id, userId]
       );
       return (result.rows[0] as Ticket) || null;
     } catch {
@@ -109,6 +125,24 @@ export class TicketService {
       return result.rows[0] || null;
     } catch (err) {
       console.error('updateTicket error:', err);
+      throw new Error('Failed to update ticket');
+    }
+  }
+
+  async updateTicketForUser(id: string, userId: string, data: Partial<Ticket>) {
+    try {
+      const result = await this.db.query(
+        `UPDATE support_tickets
+         SET status = COALESCE($3, status), priority = COALESCE($4, priority),
+             agent_id = COALESCE($5, agent_id), updated_at = NOW()
+         WHERE id = $1
+           AND (customer_id = $2 OR agent_id = $2)
+         RETURNING *`,
+        [id, userId, data.status, data.priority, data.agentId]
+      );
+      return result.rows[0] || null;
+    } catch (err) {
+      console.error('updateTicketForUser error:', err);
       throw new Error('Failed to update ticket');
     }
   }

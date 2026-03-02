@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
+import { Backpack } from 'lucide-react';
 
 interface GearItem {
   id: string;
@@ -172,7 +173,7 @@ export function GearBookingForm({ gear, onBookingComplete, onCancel }: GearBooki
                 {gear.imageUrl ? (
                   <Image src={gear.imageUrl} alt={gear.name} fill className="object-cover rounded-lg" sizes="80px" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-2xl">🎒</div>
+                  <div className="w-full h-full flex items-center justify-center"><Backpack className="w-10 h-10 text-white/50" /></div>
                 )}
               </div>
 

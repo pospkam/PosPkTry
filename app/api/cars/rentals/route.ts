@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
         $21, $22, $23, $24, $25, $26, $27, 'pending'
       ) RETURNING id, rental_number`,
       [
-        car.partner_id, carId, userOrResponse.id,
+        car.partner_id, carId, userOrResponse.userId,
         customerName, customerEmail, customerPhone,
         driverLicenseNumber, driverLicenseIssueDate || null, driverLicenseExpiryDate, driverBirthDate,
         additionalDriverName || null, additionalDriverLicense || null,
@@ -213,7 +213,7 @@ export async function GET(request: NextRequest) {
       WHERE cr.user_id = $1
     `;
 
-    const params: any[] = [userOrResponse.id];
+    const params: any[] = [userOrResponse.userId];
     let paramIndex = 2;
 
     if (status) {

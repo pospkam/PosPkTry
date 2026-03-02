@@ -57,7 +57,7 @@ vi /var/www/kamhub/.env
 
 Добавьте ваши ключи:
 ```env
-GROQ_API_KEY=your_key_here
+DEEPSEEK_API_KEY=your_key_here
 DEEPSEEK_API_KEY=your_key_here
 YANDEX_MAPS_API_KEY=your_key_here
 YANDEX_WEATHER_API_KEY=your_key_here

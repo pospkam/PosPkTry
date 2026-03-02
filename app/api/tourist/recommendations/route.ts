@@ -10,28 +10,15 @@ import {
   getCachedRecommendations,
   saveRecommendationsCache,
 } from '@/lib/recommendations/engine';
+import { requireRole } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    // Авторизация — берём userId из заголовков (middleware устанавливает)
-    const userId = request.headers.get('x-user-id');
-    const userRole = request.headers.get('x-user-role');
-
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, error: 'Требуется авторизация' },
-        { status: 401 }
-      );
-    }
-
-    if (userRole && !['tourist', 'admin'].includes(userRole)) {
-      return NextResponse.json(
-        { success: false, error: 'Доступно только для туристов' },
-        { status: 403 }
-      );
-    }
+    const authResult = await requireRole(request, ['tourist', 'admin']);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult.userId;
 
     const limit = Math.min(
       parseInt(request.nextUrl.searchParams.get('limit') ?? '6', 10),

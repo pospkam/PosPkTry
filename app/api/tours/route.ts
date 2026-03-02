@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
+import { requireOperator } from '@/lib/auth/middleware';
+import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,6 +31,7 @@ interface TourResponse {
 }
 
 // GET /api/tours - Получение списка туров
+// Public by design: catalog listing for discovery.
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -40,8 +43,11 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    const whereConditions = ['is_active = true'];
-    const queryParams: any[] = [];
+    // Совместимость со схемами: production (camelCase) и dev (snake_case).
+    // Production: title, pricePerDay, minDuration, maxGroupSize, minGroupSize
+    // Dev: name, price, duration, max_group_size, min_group_size, is_active
+    const whereConditions: string[] = [];
+    const queryParams: unknown[] = [];
     let paramIndex = 1;
 
     if (category) {
@@ -51,19 +57,19 @@ export async function GET(request: NextRequest) {
     }
 
     if (search) {
-      whereConditions.push(`(name ILIKE $${paramIndex} OR description ILIKE $${paramIndex})`);
+      whereConditions.push(`(COALESCE(title, name, '') ILIKE $${paramIndex} OR description ILIKE $${paramIndex})`);
       queryParams.push(`%${search}%`);
       paramIndex++;
     }
 
     if (minPrice) {
-      whereConditions.push(`price >= $${paramIndex}`);
+      whereConditions.push(`COALESCE("pricePerDay", price) >= $${paramIndex}`);
       queryParams.push(parseInt(minPrice));
       paramIndex++;
     }
 
     if (maxPrice) {
-      whereConditions.push(`price <= $${paramIndex}`);
+      whereConditions.push(`COALESCE("pricePerDay", price) <= $${paramIndex}`);
       queryParams.push(parseInt(maxPrice));
       paramIndex++;
     }
@@ -77,14 +83,10 @@ export async function GET(request: NextRequest) {
     const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
 
     const toursQuery = `
-      SELECT 
-        id, name, description, short_description, category, difficulty,
-        duration, price, currency, season, coordinates, requirements,
-        included, not_included, max_group_size, min_group_size,
-        rating, review_count, is_active, created_at, updated_at
+      SELECT *
       FROM tours
       ${whereClause}
-      ORDER BY rating DESC NULLS LAST, created_at DESC
+      ORDER BY "createdAt" DESC NULLS LAST, "updatedAt" DESC NULLS LAST
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
 
@@ -96,28 +98,29 @@ export async function GET(request: NextRequest) {
     const countResult = await query(countQuery, queryParams.slice(0, -2));
     const total = parseInt(countResult.rows[0]?.total || '0');
 
+    // Маппинг строк: поддержка обеих схем
     const tours: TourResponse[] = result.rows.map(row => ({
       id: row.id,
-      name: row.name,
-      description: row.description,
-      shortDescription: row.short_description,
-      category: row.category,
-      difficulty: row.difficulty,
-      duration: row.duration,
-      price: parseFloat(row.price),
-      currency: row.currency,
+      name: row.title || row.name || '',
+      description: row.fullDescription || row.description || '',
+      shortDescription: row.description || row.short_description || '',
+      category: row.category || '',
+      difficulty: row.difficulty || 'medium',
+      duration: row.minDuration || row.duration || 0,
+      price: parseFloat(row.pricePerDay || row.price || 0),
+      currency: row.currency || 'RUB',
       season: row.season || [],
       coordinates: row.coordinates || [],
       requirements: row.requirements || [],
       included: row.included || [],
-      notIncluded: row.not_included || [],
-      maxGroupSize: row.max_group_size,
-      minGroupSize: row.min_group_size,
+      notIncluded: row.notIncluded || row.not_included || [],
+      maxGroupSize: row.maxGroupSize || row.max_group_size || 20,
+      minGroupSize: row.minGroupSize || row.min_group_size || 1,
       rating: parseFloat(row.rating) || 0,
-      reviewCount: row.review_count || 0,
-      isActive: row.is_active,
-      createdAt: new Date(row.created_at),
-      updatedAt: new Date(row.updated_at),
+      reviewCount: row.review_count || row.reviewCount || 0,
+      isActive: row.is_active ?? true,
+      createdAt: new Date(row.createdAt || row.created_at || Date.now()),
+      updatedAt: new Date(row.updatedAt || row.updated_at || Date.now()),
     }));
 
     return NextResponse.json({
@@ -134,17 +137,23 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<{ tours: TourResponse[]; pagination: any }>);
 
   } catch (error) {
-    console.error('Error fetching tours:', error);
+    const errMsg = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[TOURS_GET] Database error:', errMsg, error);
     return NextResponse.json({
       success: false,
-      error: 'Failed to fetch tours',
-      message: error instanceof Error ? error.message : 'Database connection error',
+      error: 'Не удалось загрузить туры',
+      details: process.env.NODE_ENV === 'development' ? errMsg : undefined,
     } as ApiResponse<null>, { status: 500 });
   }
 }
 
-// POST /api/tours - Создание нового тура
+// POST /api/tours - Создание нового тура (protected: operator only)
 export async function POST(request: NextRequest) {
+  const authResult = await requireOperator(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const body = await request.json();
     const {
@@ -166,6 +175,25 @@ export async function POST(request: NextRequest) {
       operatorId,
       guideId,
     } = body;
+
+    let effectiveOperatorId = operatorId;
+    if (authResult.role !== 'admin') {
+      const resolvedOperatorId = await getOperatorPartnerId(authResult.userId);
+      if (!resolvedOperatorId) {
+        return NextResponse.json({
+          success: false,
+          error: 'Профиль оператора не найден',
+        } as ApiResponse<null>, { status: 404 });
+      }
+      effectiveOperatorId = resolvedOperatorId;
+    }
+
+    if (!effectiveOperatorId) {
+      return NextResponse.json({
+        success: false,
+        error: 'operatorId обязателен для администратора',
+      } as ApiResponse<null>, { status: 400 });
+    }
 
     // Валидация обязательных полей
     if (!name || !description || !difficulty || !duration || !price) {
@@ -203,7 +231,7 @@ export async function POST(request: NextRequest) {
       JSON.stringify(notIncluded || []),
       maxGroupSize || 20,
       minGroupSize || 1,
-      operatorId || null,
+      effectiveOperatorId,
       guideId || null,
     ]);
 

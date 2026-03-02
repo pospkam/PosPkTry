@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
 /**
  * GET /api/accommodations/[id]/blocked-dates
  * Получить список забронированных дат для отеля
+ * Public by design: blocked dates for calendar display.
  */
 export async function GET(
   request: NextRequest,

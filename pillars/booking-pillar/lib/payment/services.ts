@@ -38,6 +38,23 @@ export class PaymentService {
     this.db = db || pool;
   }
 
+  private mapTransaction(row: Record<string, unknown> | null): PaymentTransaction | null {
+    if (!row) {
+      return null;
+    }
+
+    return {
+      id: String(row.id),
+      bookingId: String(row.booking_id ?? row.bookingId ?? ''),
+      amount: Number(row.amount ?? 0),
+      currency: String(row.currency ?? 'RUB'),
+      gateway: String(row.gateway ?? ''),
+      status: (row.status as PaymentTransaction['status']) || 'pending',
+      createdAt: new Date(String(row.created_at ?? row.createdAt ?? new Date().toISOString())),
+      updatedAt: new Date(String(row.updated_at ?? row.updatedAt ?? new Date().toISOString())),
+    };
+  }
+
   async initiatePayment(data: PaymentInitData) {
     try {
       const result = await this.db.query(
@@ -74,7 +91,7 @@ export class PaymentService {
       return {
         transactionId,
         status: 'completed' as const,
-        transaction: result.rows[0],
+        transaction: this.mapTransaction(result.rows[0]),
       };
     } catch (err) {
       console.error('verifyPayment error:', err);
@@ -88,7 +105,7 @@ export class PaymentService {
         `SELECT * FROM payment_transactions WHERE id = $1`,
         [id]
       );
-      return result.rows[0] || null;
+      return this.mapTransaction(result.rows[0] ?? null);
     } catch {
       return null;
     }

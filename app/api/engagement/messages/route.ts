@@ -9,7 +9,7 @@ import { verifyAuth } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await verifyAuth(request)
+    const { userId, role } = await verifyAuth(request)
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const searchParams = request.nextUrl.searchParams
@@ -24,12 +24,21 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const { messages, total } = await messagingService.getMessages(
+    const messagesResult = await messagingService.getMessages(
       conversationId,
       {},
       limit,
-      offset
+      offset,
+      role === 'admin' ? undefined : userId
     )
+    if (!messagesResult) {
+      return NextResponse.json(
+        { error: 'Conversation not found' },
+        { status: 404 }
+      )
+    }
+
+    const { messages, total } = messagesResult
 
     return NextResponse.json({
       success: true,
@@ -50,6 +59,19 @@ export async function POST(request: NextRequest) {
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await request.json()
+    if (!body.conversationId || !body.content) {
+      return NextResponse.json(
+        { error: 'conversationId and content are required' },
+        { status: 400 }
+      )
+    }
+
+    if (typeof body.content !== 'string' || body.content.trim().length === 0) {
+      return NextResponse.json(
+        { error: 'content must be a non-empty string' },
+        { status: 400 }
+      )
+    }
 
     const message = await messagingService.sendMessage(
       {
@@ -61,6 +83,12 @@ export async function POST(request: NextRequest) {
       },
       userId
     )
+    if (!message) {
+      return NextResponse.json(
+        { error: 'Conversation not found' },
+        { status: 404 }
+      )
+    }
 
     return NextResponse.json({
       success: true,

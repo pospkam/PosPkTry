@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
           $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, 'pending'
         ) RETURNING id, order_number`,
         [
-          partnerId, userOrResponse.id, customerName, customerEmail, customerPhone,
+          partnerId, userOrResponse.userId, customerName, customerEmail, customerPhone,
           shippingAddressLine1, shippingAddressLine2 || null, shippingCity,
           shippingRegion || null, shippingPostalCode || null,
           subtotal, 0, shippingCost, totalAmount,
@@ -207,7 +207,7 @@ export async function GET(request: NextRequest) {
       WHERE so.user_id = $1
     `;
 
-    const params: any[] = [userOrResponse.id];
+    const params: any[] = [userOrResponse.userId];
     let paramIndex = 2;
 
     if (status) {

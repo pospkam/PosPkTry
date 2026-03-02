@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
+import { requireAuth } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,14 +11,9 @@ export const dynamic = 'force-dynamic';
  */
 export async function POST(request: NextRequest) {
   try {
-    const userId = request.headers.get('X-User-Id');
-    
-    if (!userId) {
-      return NextResponse.json({
-        success: false,
-        error: 'Не авторизован'
-      } as ApiResponse<null>, { status: 401 });
-    }
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult.userId;
 
     const result = await query(
       `UPDATE notifications 

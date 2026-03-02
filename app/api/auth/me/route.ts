@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
  * GET /api/auth/me
  * Get current user info
  */
+// JWT validation required — implemented in handler via verifyToken; returns 401 if missing/invalid.
 export async function GET(request: NextRequest) {
   try {
     // Get token from cookie or header

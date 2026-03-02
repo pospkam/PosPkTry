@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { Bot, Sparkles, AlertTriangle, Check } from 'lucide-react';
 
 interface TourImageTags {
   landscape: string[];
@@ -15,46 +16,42 @@ interface GenerateTagsButtonProps {
 }
 
 const DIFFICULTY_LABELS: Record<string, string> = {
-  easy: '🟢 Лёгкий',
-  moderate: '🟡 Средний',
-  extreme: '🔴 Экстремальный',
+  easy: 'Лёгкий',
+  moderate: 'Средний',
+  extreme: 'Экстремальный',
 };
 
 const TAG_LABELS: Record<string, string> = {
-  // landscape
-  volcano: '🌋 Вулкан',
-  geyser: '♨️ Гейзер',
-  ocean: '🌊 Океан',
-  forest: '🌲 Лес',
-  snow: '❄️ Снег',
-  mountain: '⛰️ Горы',
-  river: '🏞️ Река',
-  lake: '🏔️ Озеро',
-  beach: '🏖️ Пляж',
-  tundra: '🌿 Тундра',
-  // activity
-  hiking: '🥾 Хайкинг',
-  fishing: '🎣 Рыбалка',
-  boat: '⛵ Лодка',
-  helicopter: '🚁 Вертолёт',
-  skiing: '⛷️ Лыжи',
-  camping: '⛺ Кэмпинг',
-  kayaking: '🛶 Каяк',
-  snowmobile: '🏔️ Снегоход',
-  trekking: '🧗 Треккинг',
-  // features
-  wildlife: '🦌 Дикая природа',
-  bears: '🐻 Медведи',
-  salmon: '🐟 Лосось',
-  birds: '🦅 Птицы',
-  volcanology: '🌋 Вулканология',
-  aurora: '🌌 Северное сияние',
-  hot_springs: '♨️ Горячие источники',
-  // season
-  summer: '☀️ Лето',
-  winter: '❄️ Зима',
-  spring: '🌸 Весна',
-  autumn: '🍂 Осень',
+  volcano: 'Вулкан',
+  geyser: 'Гейзер',
+  ocean: 'Океан',
+  forest: 'Лес',
+  snow: 'Снег',
+  mountain: 'Горы',
+  river: 'Река',
+  lake: 'Озеро',
+  beach: 'Пляж',
+  tundra: 'Тундра',
+  hiking: 'Хайкинг',
+  fishing: 'Рыбалка',
+  boat: 'Лодка',
+  helicopter: 'Вертолёт',
+  skiing: 'Лыжи',
+  camping: 'Кэмпинг',
+  kayaking: 'Каяк',
+  snowmobile: 'Снегоход',
+  trekking: 'Треккинг',
+  wildlife: 'Дикая природа',
+  bears: 'Медведи',
+  salmon: 'Лосось',
+  birds: 'Птицы',
+  volcanology: 'Вулканология',
+  aurora: 'Северное сияние',
+  hot_springs: 'Горячие источники',
+  summer: 'Лето',
+  winter: 'Зима',
+  spring: 'Весна',
+  autumn: 'Осень',
 };
 
 function TagBadge({ tag }: { tag: string }) {
@@ -97,7 +94,7 @@ export default function GenerateTagsButton({ tourId }: GenerateTagsButtonProps) 
     <div className="mt-6 p-4 rounded-2xl bg-white/5 border border-white/10">
       <div className="flex items-center justify-between mb-3">
         <div>
-          <h3 className="text-sm font-semibold text-white">🤖 AI-теги фотографий</h3>
+          <h3 className="text-sm font-semibold text-white flex items-center gap-2"><Bot className="w-4 h-4" /> AI-теги фотографий</h3>
           <p className="text-xs text-white/50 mt-0.5">
             Автоматически определяет теги по фото тура
           </p>
@@ -123,14 +120,14 @@ export default function GenerateTagsButton({ tourId }: GenerateTagsButtonProps) 
               Анализирую...
             </>
           ) : (
-            <>✨ Генерировать теги</>
+            <><Sparkles className="w-4 h-4" /> Генерировать теги</>
           )}
         </button>
       </div>
 
       {error && (
         <div className="mt-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-xs">
-          ⚠️ {error}
+          <><AlertTriangle className="w-4 h-4 inline" /> {error}</>
         </div>
       )}
 
@@ -174,8 +171,8 @@ export default function GenerateTagsButton({ tourId }: GenerateTagsButtonProps) 
               </div>
             </div>
           )}
-          <p className="text-xs text-green-400/70 mt-2">
-            ✅ Теги сохранены в базе данных
+          <p className="text-xs text-green-400/70 mt-2 flex items-center gap-1">
+            <Check className="w-4 h-4" /> Теги сохранены в базе данных
           </p>
         </div>
       )}

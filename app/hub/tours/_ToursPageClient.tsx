@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { PublicNav } from '@/components/shared/PublicNav';
+import { X } from 'lucide-react';
 
 export default function ToursPageClient() {
   const [open, setOpen] = useState(false);
@@ -20,13 +21,13 @@ export default function ToursPageClient() {
     setText('');
     
     const prompt = `Составь 2-дневный план по Камчатке. Даты: ${dates}. Гостей: ${guests}. Интересы: ${interests}. Бюджет: ${budget} RUB.`;
-    const r = await fetch('/api/ai/groq', {
+    const r = await fetch('/api/ai', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'llama-3.1-70b', prompt })
+      body: JSON.stringify({ prompt })
     });
     const j = await r.json();
-    setText(j.itinerary || j.error || '');
+    setText(j.answer || j.data?.answer || j.error || '');
     setLoading(false);
   }
 
@@ -49,8 +50,8 @@ export default function ToursPageClient() {
             <div className="bg-[#0b0b0b] border border-white/20 rounded-xl p-6 w-[520px] max-w-[90vw]">
               <div className="flex justify-between items-center mb-4">
                 <b className="text-lg">ai.Kam · подбор маршрута</b>
-                <button onClick={() => setOpen(false)} className="text-white/50 hover:text-white text-xl">
-                  ✕
+                <button onClick={() => setOpen(false)} className="text-white/50 hover:text-white text-xl p-1">
+                  <X className="w-5 h-5" />
                 </button>
               </div>
               

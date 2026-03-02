@@ -2,8 +2,53 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { verifyVehicleOwnership } from '@/lib/auth/transfer-helpers';
+import { requireTransferOperator } from '@/lib/auth/middleware';
+import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
+
+const SAFE_DB_COLUMN_REGEX = /^[a-z_][a-z0-9_]*$/;
+const VEHICLE_STATUSES = ['active', 'maintenance', 'inactive'] as const;
+
+const updateVehicleSchema = z.object({
+  name: z.string().trim().min(1).max(255).optional(),
+  status: z.enum(VEHICLE_STATUSES).optional(),
+  location: z.string().trim().max(255).optional(),
+  features: z.array(z.string().trim().min(1).max(120)).max(50).optional(),
+  images: z.array(z.string().trim().min(1)).max(50).optional(),
+  mileage: z.coerce.number().int().min(0).optional(),
+  lastServiceDate: z.string().trim().optional(),
+  nextServiceDate: z.string().trim().optional(),
+  notes: z.string().max(5000).optional(),
+  year: z.coerce.number().int().min(1950).max(2100).optional(),
+  color: z.string().trim().max(50).optional(),
+  fuelType: z.string().trim().max(50).optional(),
+}).refine(
+  (payload) => Object.keys(payload).length > 0,
+  { message: 'Нет полей для обновления' }
+).superRefine((payload, ctx) => {
+  if (payload.lastServiceDate) {
+    const parsed = new Date(payload.lastServiceDate);
+    if (Number.isNaN(parsed.getTime())) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['lastServiceDate'],
+        message: 'Некорректная дата обслуживания',
+      });
+    }
+  }
+
+  if (payload.nextServiceDate) {
+    const parsed = new Date(payload.nextServiceDate);
+    if (Number.isNaN(parsed.getTime())) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['nextServiceDate'],
+        message: 'Некорректная дата следующего обслуживания',
+      });
+    }
+  }
+});
 
 /**
  * GET /api/transfer/vehicles/[id]
@@ -14,17 +59,12 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = request.headers.get('X-User-Id');
-    const userRole = request.headers.get('X-User-Role');
-    
-    if (!userId || userRole !== 'transfer') {
-      return NextResponse.json({
-        success: false,
-        error: 'Недостаточно прав'
-      } as ApiResponse<null>, { status: 403 });
-    }
+    const authResult = await requireTransferOperator(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult.userId;
 
-    const isOwner = await verifyVehicleOwnership(userId, params.id);
+    const { id } = await params;
+    const isOwner = await verifyVehicleOwnership(userId, id);
     
     if (!isOwner) {
       return NextResponse.json({
@@ -47,7 +87,7 @@ export async function GET(
       LEFT JOIN transfers t ON v.id = t.vehicle_id
       WHERE v.id = $1
       GROUP BY v.id, d.id, d.first_name, d.last_name`,
-      [params.id]
+      [id]
     );
 
     if (result.rows.length === 0) {
@@ -86,9 +126,9 @@ export async function GET(
           name: vehicle.driver_name
         } : null,
         stats: {
-          completedTrips: parseInt(vehicle.completed_trips || 0),
-          cancelledTrips: parseInt(vehicle.cancelled_trips || 0),
-          totalRevenue: parseFloat(vehicle.total_revenue || 0)
+          completedTrips: Number.parseInt(vehicle.completed_trips ?? '0', 10),
+          cancelledTrips: Number.parseInt(vehicle.cancelled_trips ?? '0', 10),
+          totalRevenue: Number.parseFloat(vehicle.total_revenue ?? '0')
         },
         createdAt: vehicle.created_at,
         updatedAt: vehicle.updated_at
@@ -113,17 +153,12 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = request.headers.get('X-User-Id');
-    const userRole = request.headers.get('X-User-Role');
-    
-    if (!userId || userRole !== 'transfer') {
-      return NextResponse.json({
-        success: false,
-        error: 'Недостаточно прав'
-      } as ApiResponse<null>, { status: 403 });
-    }
+    const authResult = await requireTransferOperator(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult.userId;
 
-    const isOwner = await verifyVehicleOwnership(userId, params.id);
+    const { id } = await params;
+    const isOwner = await verifyVehicleOwnership(userId, id);
     
     if (!isOwner) {
       return NextResponse.json({
@@ -133,51 +168,47 @@ export async function PUT(
     }
 
     const body = await request.json();
+    const parsedBody = updateVehicleSchema.safeParse(body);
+    if (!parsedBody.success) {
+      return NextResponse.json({
+        success: false,
+        error: 'Некорректные данные транспорта',
+        details: parsedBody.error.flatten(),
+      } as ApiResponse<null>, { status: 400 });
+    }
 
-    const updateFields = [];
-    const updateValues = [];
-    let paramIndex = 1;
-
-    const allowedFields = [
-      'name', 'status', 'location', 'features', 'images',
-      'mileage', 'lastServiceDate', 'nextServiceDate', 'notes',
-      'year', 'color', 'fuelType'
-    ];
-
+    const updateFields: string[] = [];
+    const updateValues: unknown[] = [];
     const dbFieldMap: Record<string, string> = {
-      licensePlate: 'license_plate',
       fuelType: 'fuel_type',
       lastServiceDate: 'last_service_date',
       nextServiceDate: 'next_service_date'
     };
 
-    for (const [key, value] of Object.entries(body)) {
+    for (const [key, value] of Object.entries(parsedBody.data)) {
       const dbKey = dbFieldMap[key] || key.replace(/([A-Z])/g, '_$1').toLowerCase();
-      
-      if (allowedFields.includes(key)) {
-        updateFields.push(`${dbKey} = $${paramIndex++}`);
-        
-        if (['features', 'images'].includes(key)) {
-          updateValues.push(JSON.stringify(value));
-        } else {
-          updateValues.push(value);
-        }
+      if (!SAFE_DB_COLUMN_REGEX.test(dbKey)) {
+        return NextResponse.json({
+          success: false,
+          error: 'Некорректное поле обновления'
+        } as ApiResponse<null>, { status: 400 });
+      }
+
+      updateFields.push(`${dbKey} = $${updateValues.length + 1}`);
+      if (key === 'features' || key === 'images') {
+        updateValues.push(JSON.stringify(value));
+      } else {
+        updateValues.push(value);
       }
     }
 
-    if (updateFields.length === 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'Нет полей для обновления'
-      } as ApiResponse<null>, { status: 400 });
-    }
-
-    updateValues.push(params.id);
+    const idParamIndex = updateValues.length + 1;
+    updateValues.push(id);
 
     const result = await query(
       `UPDATE vehicles 
        SET ${updateFields.join(', ')}
-       WHERE id = $${paramIndex}
+       WHERE id = $${idParamIndex}
        RETURNING *`,
       updateValues
     );
@@ -206,17 +237,12 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = request.headers.get('X-User-Id');
-    const userRole = request.headers.get('X-User-Role');
-    
-    if (!userId || userRole !== 'transfer') {
-      return NextResponse.json({
-        success: false,
-        error: 'Недостаточно прав'
-      } as ApiResponse<null>, { status: 403 });
-    }
+    const authResult = await requireTransferOperator(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult.userId;
 
-    const isOwner = await verifyVehicleOwnership(userId, params.id);
+    const { id } = await params;
+    const isOwner = await verifyVehicleOwnership(userId, id);
     
     if (!isOwner) {
       return NextResponse.json({
@@ -229,10 +255,10 @@ export async function DELETE(
     const activeTransfers = await query(
       `SELECT COUNT(*) as count FROM transfers 
        WHERE vehicle_id = $1 AND status IN ('pending', 'assigned', 'confirmed', 'in_progress')`,
-      [params.id]
+      [id]
     );
 
-    if (parseInt(activeTransfers.rows[0].count) > 0) {
+    if (Number.parseInt(activeTransfers.rows[0]?.count ?? '0', 10) > 0) {
       return NextResponse.json({
         success: false,
         error: 'Невозможно удалить транспорт с активными трансферами',
@@ -240,7 +266,7 @@ export async function DELETE(
       } as ApiResponse<null>, { status: 400 });
     }
 
-    await query('DELETE FROM vehicles WHERE id = $1', [params.id]);
+    await query('DELETE FROM vehicles WHERE id = $1', [id]);
 
     return NextResponse.json({
       success: true,

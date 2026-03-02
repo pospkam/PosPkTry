@@ -8,12 +8,17 @@ import { telegramService } from '@/lib/notifications/telegram';
 import { transferPayments } from '@/lib/payments/transfer-payments';
 import { matchingEngine } from '@/lib/transfers/matching';
 import { createBookingWithLock } from '@/lib/transfers/booking';
+import { requireAuth } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
 // POST /api/transfers/book - Бронирование трансфера (THREAD-SAFE)
 export async function POST(request: NextRequest) {
   try {
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult.userId;
+
     const body: TransferBookingRequest = await request.json();
     
     // Валидация входных данных
@@ -101,7 +106,7 @@ export async function POST(request: NextRequest) {
       const bookingResult = await createBookingWithLock({
         scheduleId: body.scheduleId,
         passengersCount: body.passengersCount,
-        userId: 'user_123', // TODO: получать из JWT токена
+        userId,
         contactInfo: body.contactInfo,
         specialRequests: body.specialRequests
       });

@@ -65,7 +65,7 @@ graph TB
 - **JWT** - аутентификация
 
 ### AI Integration
-- **GROQ API** - основной AI
+- **DeepSeek API** - основной AI
 - **DeepSeek** - резервный AI
 - **SourceCraft** - семантический поиск
 - **Ollama** - локальные модели

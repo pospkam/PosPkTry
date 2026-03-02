@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
+import { requireOperator } from '@/lib/auth/middleware';
 import { verifyTourOwnership } from '@/lib/auth/operator-helpers';
 
 export const dynamic = 'force-dynamic';
@@ -14,18 +15,16 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string; photoId: string }> }
 ) {
   try {
-    const { id, photoId } = await params;
-    const userRole = request.headers.get('X-User-Role');
-    
-    if (!userId || userRole !== 'operator') {
-      return NextResponse.json({
-        success: false,
-        error: 'Недостаточно прав'
-      } as ApiResponse<null>, { status: 403 });
+    const operatorOrResponse = await requireOperator(request);
+    if (operatorOrResponse instanceof NextResponse) {
+      return operatorOrResponse;
     }
+    const userId = operatorOrResponse.userId;
+
+    const { id, photoId } = await params;
 
     // Verify ownership
-    const isOwner = await verifyTourOwnership(userId, params.id);
+    const isOwner = await verifyTourOwnership(userId, id);
     
     if (!isOwner) {
       return NextResponse.json({
@@ -37,13 +36,19 @@ export async function PATCH(
     const body = await request.json();
     const { alt } = body;
 
-    // Update asset
+    // Обновляем только фото, которое действительно привязано к этому туру.
     const result = await query(
-      `UPDATE assets 
+      `UPDATE assets a
        SET alt = $1
-       WHERE id = $2
+       WHERE a.id = $2
+         AND EXISTS (
+           SELECT 1
+           FROM tour_assets ta
+           WHERE ta.tour_id = $3
+             AND ta.asset_id = a.id
+         )
        RETURNING *`,
-      [alt || '', params.photoId]
+      [alt || '', photoId, id]
     );
 
     if (result.rows.length === 0) {
@@ -77,18 +82,16 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string; photoId: string }> }
 ) {
   try {
-    const userId = request.headers.get('X-User-Id');
-    const userRole = request.headers.get('X-User-Role');
-    
-    if (!userId || userRole !== 'operator') {
-      return NextResponse.json({
-        success: false,
-        error: 'Недостаточно прав'
-      } as ApiResponse<null>, { status: 403 });
+    const operatorOrResponse = await requireOperator(request);
+    if (operatorOrResponse instanceof NextResponse) {
+      return operatorOrResponse;
     }
+    const userId = operatorOrResponse.userId;
+
+    const { id, photoId } = await params;
 
     // Verify ownership
-    const isOwner = await verifyTourOwnership(userId, params.id);
+    const isOwner = await verifyTourOwnership(userId, id);
     
     if (!isOwner) {
       return NextResponse.json({
@@ -97,21 +100,28 @@ export async function DELETE(
       } as ApiResponse<null>, { status: 404 });
     }
 
-    // Remove link between tour and asset
-    await query(
-      'DELETE FROM tour_assets WHERE tour_id = $1 AND asset_id = $2',
-      [params.id, params.photoId]
+    // Удаляем связь только если фото действительно принадлежит этому туру.
+    const unlinkResult = await query(
+      'DELETE FROM tour_assets WHERE tour_id = $1 AND asset_id = $2 RETURNING asset_id',
+      [id, photoId]
     );
+
+    if (unlinkResult.rows.length === 0) {
+      return NextResponse.json({
+        success: false,
+        error: 'Фотография не найдена'
+      } as ApiResponse<null>, { status: 404 });
+    }
 
     // Check if asset is used by other tours
     const usageCheck = await query(
       'SELECT COUNT(*) as count FROM tour_assets WHERE asset_id = $1',
-      [params.photoId]
+      [photoId]
     );
 
     // If not used anywhere else, delete the asset
     if (parseInt(usageCheck.rows[0].count) === 0) {
-      await query('DELETE FROM assets WHERE id = $1', [params.photoId]);
+      await query('DELETE FROM assets WHERE id = $1', [photoId]);
     }
 
     return NextResponse.json({

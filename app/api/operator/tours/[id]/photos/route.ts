@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
+import { requireOperator } from '@/lib/auth/middleware';
 import { verifyTourOwnership } from '@/lib/auth/operator-helpers';
 import crypto from 'crypto';
 
@@ -15,18 +16,16 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = request.headers.get('X-User-Id');
-    const userRole = request.headers.get('X-User-Role');
-    
-    if (!userId || userRole !== 'operator') {
-      return NextResponse.json({
-        success: false,
-        error: 'Недостаточно прав'
-      } as ApiResponse<null>, { status: 403 });
+    const operatorOrResponse = await requireOperator(request);
+    if (operatorOrResponse instanceof NextResponse) {
+      return operatorOrResponse;
     }
+    const userId = operatorOrResponse.userId;
+
+    const { id } = await params;
 
     // Verify ownership
-    const isOwner = await verifyTourOwnership(userId, params.id);
+    const isOwner = await verifyTourOwnership(userId, id);
     
     if (!isOwner) {
       return NextResponse.json({
@@ -49,7 +48,7 @@ export async function GET(
       JOIN tour_assets ta ON a.id = ta.asset_id
       WHERE ta.tour_id = $1
       ORDER BY a.created_at ASC`,
-      [params.id]
+      [id]
     );
 
     const photos = result.rows.map(row => ({
@@ -87,18 +86,16 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = request.headers.get('X-User-Id');
-    const userRole = request.headers.get('X-User-Role');
-    
-    if (!userId || userRole !== 'operator') {
-      return NextResponse.json({
-        success: false,
-        error: 'Недостаточно прав'
-      } as ApiResponse<null>, { status: 403 });
+    const operatorOrResponse = await requireOperator(request);
+    if (operatorOrResponse instanceof NextResponse) {
+      return operatorOrResponse;
     }
+    const userId = operatorOrResponse.userId;
+
+    const { id } = await params;
 
     // Verify ownership
-    const isOwner = await verifyTourOwnership(userId, params.id);
+    const isOwner = await verifyTourOwnership(userId, id);
     
     if (!isOwner) {
       return NextResponse.json({
@@ -147,7 +144,7 @@ export async function POST(
       `INSERT INTO tour_assets (tour_id, asset_id)
        VALUES ($1, $2)
        ON CONFLICT DO NOTHING`,
-      [params.id, assetId]
+      [id, assetId]
     );
 
     // Get created asset

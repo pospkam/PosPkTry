@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
  * POST /api/auth/signout
  * User logout endpoint
  */
+// Idempotent logout — can be called with or without existing token; always clears session/cookie.
 export async function POST(request: NextRequest) {
   try {
     // Get token from cookie or header

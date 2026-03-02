@@ -2,8 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse, PaginatedResponse } from '@/types';
 import { OperatorTour } from '@/types/operator';
+import { requireOperator } from '@/lib/auth/middleware';
+import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
 
 export const dynamic = 'force-dynamic';
+
+const ALLOWED_SORT_FIELDS = new Set([
+  'created_at',
+  'updated_at',
+  'name',
+  'price',
+  'rating',
+  'review_count',
+]);
 
 /**
  * GET /api/operator/tours
@@ -11,9 +22,20 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: NextRequest) {
   try {
+    const userOrResponse = await requireOperator(request);
+    if (userOrResponse instanceof NextResponse) {
+      return userOrResponse;
+    }
+
+    const operatorId = await getOperatorPartnerId(userOrResponse.userId);
+    if (!operatorId) {
+      return NextResponse.json({
+        success: false,
+        error: 'Партнёрский профиль оператора не найден'
+      } as ApiResponse<null>, { status: 404 });
+    }
+
     const { searchParams } = new URL(request.url);
-    
-    const operatorId = searchParams.get('operatorId');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
     const offset = (page - 1) * limit;
@@ -21,15 +43,9 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status'); // 'active', 'inactive', 'all'
     const search = searchParams.get('search');
     const category = searchParams.get('category');
-    const sortBy = searchParams.get('sortBy') || 'created_at';
-    const sortOrder = searchParams.get('sortOrder') || 'desc';
-
-    if (!operatorId) {
-      return NextResponse.json({
-        success: false,
-        error: 'Operator ID is required'
-      } as ApiResponse<null>, { status: 400 });
-    }
+    const requestedSortBy = searchParams.get('sortBy') || 'created_at';
+    const sortBy = ALLOWED_SORT_FIELDS.has(requestedSortBy) ? requestedSortBy : 'created_at';
+    const sortOrder = (searchParams.get('sortOrder') || 'desc').toLowerCase() === 'asc' ? 'ASC' : 'DESC';
 
     const whereConditions: string[] = ['t.operator_id = $1'];
     const queryParams: any[] = [operatorId];
@@ -92,7 +108,7 @@ export async function GET(request: NextRequest) {
       LEFT JOIN assets a ON ti.asset_id = a.id
       ${whereClause}
       GROUP BY t.id
-      ORDER BY t.${sortBy} ${sortOrder.toUpperCase()}
+      ORDER BY t.${sortBy} ${sortOrder}
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
 
@@ -166,14 +182,17 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const operatorId = searchParams.get('operatorId');
+    const userOrResponse = await requireOperator(request);
+    if (userOrResponse instanceof NextResponse) {
+      return userOrResponse;
+    }
 
+    const operatorId = await getOperatorPartnerId(userOrResponse.userId);
     if (!operatorId) {
       return NextResponse.json({
         success: false,
-        error: 'Operator ID is required'
-      } as ApiResponse<null>, { status: 400 });
+        error: 'Партнёрский профиль оператора не найден'
+      } as ApiResponse<null>, { status: 404 });
     }
 
     const body = await request.json();

@@ -6,6 +6,7 @@ import { config } from '@/lib/config';
 export const dynamic = 'force-dynamic';
 
 // GET /api/transfers/search - Поиск доступных трансферов
+// AUTH: публичный — guest может искать трансферы по маршруту/дате без авторизации.
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);

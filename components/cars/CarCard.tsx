@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
+import { Car, Fuel, Users, Star } from 'lucide-react';
 
 interface Car {
   id: string;
@@ -77,8 +78,8 @@ export function CarCard({ car, onRent }: CarCardProps) {
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-4xl">
-            
+          <div className="w-full h-full flex items-center justify-center">
+            <Car className="w-16 h-16 text-white/40" />
           </div>
         )}
 
@@ -113,20 +114,19 @@ export function CarCard({ car, onRent }: CarCardProps) {
         {/* Specs */}
         <div className="grid grid-cols-2 gap-2 mb-4 text-sm">
           <div className="flex items-center gap-1">
-            <span></span>
             <span>{getTransmissionText(car.transmission)}</span>
           </div>
           <div className="flex items-center gap-1">
-            <span>⛽</span>
+            <Fuel className="w-4 h-4" />
             <span>{getFuelTypeText(car.fuelType)}</span>
           </div>
           <div className="flex items-center gap-1">
-            <span></span>
+            <Users className="w-4 h-4" />
             <span>{car.seats} мест</span>
           </div>
           {car.rating && (
             <div className="flex items-center gap-1">
-              <span className="text-yellow-400">★</span>
+              <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
               <span>{car.rating.toFixed(1)}</span>
             </div>
           )}

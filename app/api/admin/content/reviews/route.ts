@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
+import { requireAdmin } from '@/lib/auth/middleware';
 import { ApiResponse, PaginatedResponse } from '@/types';
 
 export const dynamic = 'force-dynamic';
+const ALLOWED_SORT_FIELDS = new Set(['created_at', 'updated_at', 'rating', 'is_verified']);
 
 interface AdminReview {
   id: string;
@@ -22,6 +24,10 @@ interface AdminReview {
  */
 export async function GET(request: NextRequest) {
   try {
+    const adminOrResponse = await requireAdmin(request);
+    if (adminOrResponse instanceof NextResponse) {
+      return adminOrResponse;
+    }
     const { searchParams } = new URL(request.url);
     
     const page = parseInt(searchParams.get('page') || '1');
@@ -29,8 +35,9 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit;
     
     const verified = searchParams.get('verified');
-    const sortBy = searchParams.get('sortBy') || 'created_at';
-    const sortOrder = searchParams.get('sortOrder') || 'desc';
+    const requestedSortBy = searchParams.get('sortBy') || 'created_at';
+    const sortBy = ALLOWED_SORT_FIELDS.has(requestedSortBy) ? requestedSortBy : 'created_at';
+    const sortOrder = (searchParams.get('sortOrder') || 'desc').toLowerCase() === 'asc' ? 'ASC' : 'DESC';
 
     const whereConditions: string[] = [];
     const queryParams: any[] = [];
@@ -72,7 +79,7 @@ export async function GET(request: NextRequest) {
       LEFT JOIN users u ON r.user_id = u.id
       LEFT JOIN tours t ON r.tour_id = t.id
       ${whereClause}
-      ORDER BY r.${sortBy} ${sortOrder.toUpperCase()}
+      ORDER BY r.${sortBy} ${sortOrder}
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
 

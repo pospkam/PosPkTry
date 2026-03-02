@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
+import { Users, Target, Leaf, Mountain, Clock, Circle } from 'lucide-react';
 import type { RecommendedTour, RecommendationStrategy } from '@/lib/recommendations/engine';
 
 interface RecommendationCardProps {
@@ -9,10 +10,10 @@ interface RecommendationCardProps {
   onCardClick?: (tourId: string, strategy: RecommendationStrategy) => void;
 }
 
-const STRATEGY_BADGES: Record<RecommendationStrategy, { icon: string; color: string }> = {
-  SIMILAR_USERS: { icon: '👥', color: 'from-blue-500/30 to-blue-600/20 border-blue-400/30' },
-  TOUR_CONTENT: { icon: '🎯', color: 'from-purple-500/30 to-purple-600/20 border-purple-400/30' },
-  ECO_OPTIMIZED: { icon: '🌿', color: 'from-green-500/30 to-green-600/20 border-green-400/30' },
+const STRATEGY_BADGES: Record<RecommendationStrategy, { icon: React.ReactNode; color: string }> = {
+  SIMILAR_USERS: { icon: <Users className="w-4 h-4" />, color: 'from-blue-500/30 to-blue-600/20 border-blue-400/30' },
+  TOUR_CONTENT: { icon: <Target className="w-4 h-4" />, color: 'from-purple-500/30 to-purple-600/20 border-purple-400/30' },
+  ECO_OPTIMIZED: { icon: <Leaf className="w-4 h-4" />, color: 'from-green-500/30 to-green-600/20 border-green-400/30' },
 };
 
 /** Скелетон загрузки */
@@ -76,15 +77,15 @@ export default function RecommendationCard({ tour, onCardClick }: Recommendation
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-4xl opacity-30">
-            🏔️
+          <div className="w-full h-full flex items-center justify-center opacity-30">
+            <Mountain className="w-16 h-16" />
           </div>
         )}
 
         {/* Eco-баллы badge */}
         {tour.eco_points_reward && tour.eco_points_reward > 0 && (
-          <div className="absolute top-2 right-2 px-2 py-1 rounded-full bg-green-500/80 text-white text-xs font-semibold backdrop-blur-sm">
-            🌿 +{tour.eco_points_reward} эко
+          <div className="absolute top-2 right-2 px-2 py-1 rounded-full bg-green-500/80 text-white text-xs font-semibold backdrop-blur-sm flex items-center gap-1">
+            <Leaf className="w-3 h-3" /> +{tour.eco_points_reward} эко
           </div>
         )}
       </div>
@@ -115,14 +116,13 @@ export default function RecommendationCard({ tour, onCardClick }: Recommendation
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs text-white/50">
-            {tour.duration && <span>⏱ {tour.duration} дн.</span>}
+            {tour.duration && <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {tour.duration} дн.</span>}
             {tour.difficulty && (
-              <span className="capitalize">
-                {tour.difficulty === 'easy'
-                  ? '🟢'
-                  : tour.difficulty === 'moderate'
-                  ? '🟡'
-                  : '🔴'}{' '}
+              <span className="capitalize flex items-center gap-1">
+                <Circle className={`w-2.5 h-2.5 fill-current ${
+                  tour.difficulty === 'easy' ? 'text-green-400' :
+                  tour.difficulty === 'moderate' ? 'text-yellow-400' : 'text-red-400'
+                }`} />
                 {tour.difficulty === 'easy'
                   ? 'лёгкий'
                   : tour.difficulty === 'moderate'

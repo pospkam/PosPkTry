@@ -7,7 +7,7 @@ import { Tour, Review } from '@/types';
 import { WeatherWidget } from '@/components/WeatherWidget';
 import { TourBookingForm } from '@/components/booking/TourBookingForm';
 import { LoadingSpinner } from '@/components/admin/shared';
-import { Star, MapPin } from 'lucide-react';
+import { Star, MapPin, Check, AlertTriangle, Phone, Mail } from 'lucide-react';
 
 export default function TourDetailsPageClient() {
   const params = useParams();
@@ -220,7 +220,7 @@ export default function TourDetailsPageClient() {
                     <ul className="space-y-2">
                       {tour.equipmentIncluded.map((item) => (
                         <li key={item} className="flex items-center gap-2">
-                          <span className="text-green-400">✓</span>
+                          <Check className="w-4 h-4 text-green-400 shrink-0" />
                           <span className="text-white/80">{item}</span>
                         </li>
                       ))}
@@ -246,7 +246,10 @@ export default function TourDetailsPageClient() {
                 {/* Требования безопасности */}
                 {tour.safetyRequirements && (
                   <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-6">
-                    <h2 className="text-2xl font-bold mb-4 text-red-400">⚠️ Требования безопасности</h2>
+                    <h2 className="text-2xl font-bold mb-4 text-red-400 flex items-center gap-2">
+                      <AlertTriangle className="w-6 h-6" />
+                      Требования безопасности
+                    </h2>
                     <p className="text-white/80">{tour.safetyRequirements}</p>
                   </div>
                 )}
@@ -266,16 +269,23 @@ export default function TourDetailsPageClient() {
                         <div key={review.id} className="bg-white/15 border border-white/15 rounded-xl p-4">
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
-                              <span className="text-yellow-400">
-                                {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
+                              <span className="flex text-yellow-400">
+                                {Array.from({ length: 5 }).map((_, i) => (
+                                  <Star
+                                    key={i}
+                                    className={`w-4 h-4 ${i < review.rating ? 'fill-current' : ''}`}
+                                    strokeWidth={1.5}
+                                  />
+                                ))}
                               </span>
                               <span className="text-white/70 text-sm">
                                 {new Date(review.createdAt).toLocaleDateString('ru-RU')}
                               </span>
                             </div>
                             {review.isVerified && (
-                              <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">
-                                ✓ Проверен
+                              <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded flex items-center gap-1">
+                                <Check className="w-3 h-3" />
+                                Проверен
                               </span>
                             )}
                           </div>
@@ -359,15 +369,17 @@ export default function TourDetailsPageClient() {
                   <div className="pt-4 space-y-2">
                     <a
                       href={`tel:${tour.operator.phone}`}
-                      className="block text-white hover:underline text-sm"
+                      className="block text-white hover:underline text-sm flex items-center gap-2"
                     >
-                      📞 {tour.operator.phone}
+                      <Phone className="w-4 h-4" />
+                      {tour.operator.phone}
                     </a>
                     <a
                       href={`mailto:${tour.operator.email}`}
-                      className="block text-white hover:underline text-sm"
+                      className="block text-white hover:underline text-sm flex items-center gap-2"
                     >
-                      ✉️ {tour.operator.email}
+                      <Mail className="w-4 h-4" />
+                      {tour.operator.email}
                     </a>
                   </div>
                 </div>

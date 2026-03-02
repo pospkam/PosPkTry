@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { Star } from 'lucide-react';
 
 interface Tour {
   id: string;
@@ -17,7 +18,7 @@ interface Tour {
 function StarRating({ rating }: { rating: number }) {
   return (
     <div className="flex items-center gap-0.5" aria-label={`Рейтинг: ${rating} из 5`} role="img">
-      <span className="text-amber-400 text-xs">★</span>
+      <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
       <span className="text-[11px] font-semibold text-white/90">{rating.toFixed(1)}</span>
     </div>
   );
@@ -72,8 +73,8 @@ export function TourCardsRow() {
     <section aria-label="Популярные туры" className="py-2">
       {/* Заголовок */}
       <div className="flex items-center justify-between px-4 mb-3">
-        <h2 className="text-[15px] font-bold text-white dark:text-white drop-shadow-sm">Популярные туры</h2>
-        <Link href="/tours" className="text-sm font-medium text-white/70 dark:text-[#7EB3FF]">
+        <h2 className="text-[15px] font-bold text-white">Популярные туры</h2>
+        <Link href="/tours" className="text-sm font-medium text-[var(--accent)]">
           Все →
         </Link>
       </div>
@@ -86,7 +87,7 @@ export function TourCardsRow() {
             href={`/tours?category=${tour.category}`}
             role="listitem"
             aria-label={`${tour.name}, ${tour.price.toLocaleString('ru-RU')} ₽`}
-            className="relative rounded-2xl overflow-hidden shadow-lg shadow-black/20 transition-transform active:scale-[0.97] aspect-[3/4]"
+            className="relative rounded-2xl overflow-hidden shadow-[var(--shadow-md)] transition-transform active:scale-[0.97] aspect-[3/4] bg-[var(--bg-card)]"
           >
             {/* Фото на всю карточку */}
             <Image

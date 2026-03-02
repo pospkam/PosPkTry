@@ -26,9 +26,9 @@
 - 🛒 Магазин снаряжения и сувениров
 
 ### Ключевые фичи
-- 🤖 Роле-ориентированный AI-ассистент с памятью переписки (Groq, DeepSeek)
+- 🤖 Роле-ориентированный AI-ассистент с памятью переписки (DeepSeek, Minimax, x.ai)
 - 🔍 Семантический поиск туров на основе pgvector (RAG)
-- 🖼️ Автотеггинг фото туров через Claude Vision / Groq Vision
+- 🖼️ Автотеггинг фото туров через Claude Vision
 - 🎯 Система персональных рекомендаций (3 стратегии, кэш 24ч)
 - Личные кабинеты: турист, гид, агент, оператор, партнёр, admin
 - Бронирование туров, трансферов, жилья в реальном времени
@@ -42,7 +42,7 @@
 
 ```bash
 # Установка зависимостей
-npm install
+npm ci
 
 # Dev сервер (порт 3000)
 npm run dev
@@ -60,25 +60,74 @@ npm run lint
 npm run type-check
 ```
 
+Для Cloud Agents рекомендуется выполнять `npm ci` на старте и использовать кэш `~/.npm` + `node_modules` по хешу `package-lock.json`.
+
 ### Переменные окружения
 
 Создайте `.env.local`:
 
-```env
-JWT_SECRET=your_secret_min_32_chars
-DATABASE_URL=postgresql://user:pass@host:5432/kamhub
-NEXTAUTH_SECRET=your_nextauth_secret
-TIMEWEB_TOKEN=your_timeweb_api_token
-
-# AI провайдеры
-GROQ_API_KEY=          # Llama 3.1 — чат, эмбеддинги, vision
-DEEPSEEK_API_KEY=      # Fallback для чата
-ANTHROPIC_API_KEY=     # Claude Vision для автотеггинга фото
-MINIMAX_API_KEY=
-XAI_API_KEY=
+WLEDGE_BASE_SOURCE_URLS=https://fishingkam.ru,https://example.com/news
 ```
 
 ---
+
+## Изменения (обновлено 25.02.2026)
+
+### Безопасность API (AUTH/RBAC)
+- Реализована полноценная JWT-авторизация в `lib/auth.ts`:
+  - `authenticateUser` проверяет токен и возвращает валидный `userId`
+  - `authorizeRole` выполняет реальную проверку ролей
+  - `verifyAuth` не доверяет `x-user-id`, работает через JWT
+- Усилен `middleware.ts`:
+  - method-aware публичные API (`GET /api/tours`, `GET /api/partners`, `GET /api/eco-points`, публичные `/api/auth`, `/api/weather`)
+  - role-based доступ к namespace:
+    - `/api/operator/*` — `operator`
+    - `/api/admin/*` — `admin`
+    - `/api/guide/*` — `guide`
+    - `/api/transfer-operator/*` — `transfer_operator`
+    - `/api/agent/*` — `agent`
+  - security headers применяются во всех ветках ответов
+  - middleware проставляет `X-Auth-Verified` после успешной проверки JWT
+
+### IDOR hardening
+- Добавлены ownership-проверки и устранено доверие к клиентским `operatorId/userId` в ключевых GET/PUT/DELETE/POST-эндпоинтах:
+  - `operator/*` (tours, bookings, finance, schedules, publish/deactivate и др.)
+  - `bookings/[id]/cancel`
+  - `payments/[id]/status`
+  - `eco-points/user`
+  - `loyalty/stats`
+  - `chat`
+  - `reviews` (создание только от текущего пользователя)
+  - `support/tickets/[id]`
+  - `engagement/notifications/[id]`
+  - `engagement/messages/[id]`
+
+### МЧС: автоматическая регистрация групп
+- Добавлен модуль регистрации в МЧС:
+  - API: `GET/POST /api/operator/mchs-registrations`
+  - клиент интеграции: `lib/safety/mchs-client.ts`
+  - форма и статус в dashboard оператора: `MchsRegistrationPanel`
+- Поля регистрации:
+  - состав группы
+  - маршрут
+  - даты
+  - контакты гида
+  - экстренные контакты
+
+### Переброс туристов между операторами
+- Добавлен API `app/api/operator/transfer-booking/route.ts`:
+  - `POST` — создать предложение переброса
+  - `PATCH` — принять/отклонить/отменить
+  - `GET` — входящие/исходящие запросы
+- При принятии:
+  - бронирование переводится на тур принимающего оператора
+  - фиксируется комиссия первого оператора (`commission_percent`, `commission_amount`)
+
+### markdown.new в RAG pipeline
+- Добавлена утилита `lib/ai/markdown-new.ts` для конвертации URL в Markdown.
+- Интегрировано в:
+  - `app/api/ai/knowledge-base/route.ts` (режим `type=url` + автообход URL из env)
+  - `scripts/update-knowledge-base.js` (`url <https://...>` и авто-режим)
 
 ## 🏗️ Архитектура
 
@@ -110,7 +159,7 @@ kamhub/
 │   ├── ai/              # AI модули
 │   │   ├── prompts.ts       # Роле-ориентированные промпты + anti-hallucination
 │   │   ├── embeddings.ts    # Генерация эмбеддингов, семантический поиск
-│   │   └── image-tagger.ts  # Автотеггинг фото (Claude/Groq Vision)
+│   │   └── image-tagger.ts  # Автотеггинг фото (Claude Vision)
 │   ├── recommendations/ # Движок рекомендаций
 │   │   └── engine.ts        # 3 стратегии: SimilarUsers, Content, EcoOptimized
 │   ├── auth/            # JWT, helpers
@@ -158,7 +207,7 @@ npx ts-node scripts/index-tours.ts
 
 ### Автотеггинг фото (`POST /api/operator/tours/[id]/generate-tags`)
 
-Анализирует фотографии тура через Claude Vision (fallback: Groq Vision) и сохраняет теги в `ai_tags` JSONB. Доступно только для операторов. Кнопка «Генерировать теги» добавлена в страницу редактирования тура.
+Анализирует фотографии тура через Claude Vision и сохраняет теги в `ai_tags` JSONB. Доступно только для операторов. Кнопка «Генерировать теги» добавлена в страницу редактирования тура.
 
 Теги: `landscape`, `activity`, `difficulty`, `season`, `features`
 
@@ -181,10 +230,9 @@ GET /api/discovery/search?landscape=volcano&activity=hiking
 
 | Провайдер | Модель | Использование |
 |-----------|--------|---------------|
-| Groq | llama-3.1-70b-versatile | Чат, эмбеддинги |
-| Groq | llama-4-scout-17b (vision) | Автотеггинг фото |
+| DeepSeek | deepseek-chat | Чат (основной) |
+| OpenAI | text-embedding-3-small | Эмбеддинги |
 | Anthropic | claude-sonnet-4-6 | Автотеггинг фото (приоритет) |
-| DeepSeek | deepseek-chat | Fallback для чата |
 | Minimax | abab6.5s-chat | Fallback |
 | x.ai | grok-4 | Fallback |
 
@@ -213,6 +261,7 @@ GET /api/discovery/search?landscape=volcano&activity=hiking
 | `03_vector_search.sql` | pgvector + chat_sessions |
 | `04_tour_tags.sql` | ai_tags JSONB + GIN индекс |
 | `05_recommendations_cache.sql` | Кэш рекомендаций в users |
+| `017_create_mchs_and_transfer_booking.sql` | МЧС регистрации + переброс бронирований между операторами |
 
 ---
 
@@ -221,13 +270,23 @@ GET /api/discovery/search?landscape=volcano&activity=hiking
 | Роль | Описание |
 |------|----------|
 | `tourist` | Бронирование, просмотр |
-| `guide` | Управление турами, расписание |
-| `agent` | Комиссии, клиенты |
-| `operator` | Полное управление |
-| `partner` | Партнёр-поставщик |
+| `operator` | Управление турами, бронированиями, финансами, МЧС, transfer-booking |
+| `guide` | Расписание, группы, репутация |
+| `transfer_operator` | Трансферы, автопарк, водители |
+| `agent` | Клиенты, комиссии, ваучеры |
 | `admin` | Администрирование платформы |
 
 ---
+
+## Новые API эндпоинты
+
+| Endpoint | Метод | Назначение |
+|----------|-------|------------|
+| `/api/operator/mchs-registrations` | `GET` | Список и статусы регистраций в МЧС |
+| `/api/operator/mchs-registrations` | `POST` | Создание и автоматическая отправка регистрации в МЧС |
+| `/api/operator/transfer-booking` | `GET` | Входящие/исходящие перебросы бронирований |
+| `/api/operator/transfer-booking` | `POST` | Создать предложение переброса |
+| `/api/operator/transfer-booking` | `PATCH` | Принять/отклонить/отменить предложение |
 
 ## 📱 Основные маршруты
 
@@ -311,7 +370,7 @@ npm run test:coverage      # Покрытие кода
 - ✅ Anti-hallucination правила в промптах для всех 6 ролей
 - ✅ Семантический поиск туров (pgvector + embeddings)
 - ✅ SQL fallback при недоступности векторного поиска
-- ✅ Автотеггинг фотографий туров (Claude Vision / Groq Vision)
+- ✅ Автотеггинг фотографий туров (Claude Vision)
 - ✅ Движок рекомендаций на чистом SQL (3 стратегии)
 - ✅ Кэш рекомендаций 24ч в PostgreSQL
 - ✅ Секция «Рекомендуем вам» в личном кабинете туриста
@@ -337,8 +396,8 @@ npm run test:coverage      # Покрытие кода
 | Testing | Vitest |
 | Monitoring | Sentry |
 | Deploy | Timeweb Cloud Apps |
-| AI Chat | Groq (Llama 3.1) + DeepSeek |
-| AI Vision | Anthropic Claude + Groq Vision |
+| AI Chat | DeepSeek + Minimax + x.ai |
+| AI Vision | Anthropic Claude |
 | AI Search | pgvector (IVFFlat, cosine) |
 
 ---

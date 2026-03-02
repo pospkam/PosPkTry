@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { config } from '@/lib/config'
+import { requireAdmin } from '@/lib/auth/middleware'
+import { convertUrlToMarkdown } from '@/lib/ai/markdown-new'
 import fs from 'fs'
 import path from 'path'
 import { S3Client, PutObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3'
@@ -17,16 +19,57 @@ interface KnowledgeDocument {
   url?: string
 }
 
+function parseSourceUrls(rawValue: string | undefined): string[] {
+  if (!rawValue) {
+    return [];
+  }
+
+  return rawValue
+    .split(',')
+    .map(item => item.trim())
+    .filter(Boolean);
+}
+
+async function collectExternalUrlDocuments(urls: string[]): Promise<KnowledgeDocument[]> {
+  const documents: KnowledgeDocument[] = [];
+
+  for (const sourceUrl of urls) {
+    try {
+      const markdown = await convertUrlToMarkdown(sourceUrl, { method: 'auto', retainImages: false });
+      documents.push({
+        id: `external_${Buffer.from(sourceUrl).toString('base64').replace(/[^a-zA-Z0-9]/g, '').slice(0, 24)}`,
+        title: `External URL: ${sourceUrl}`,
+        content: markdown,
+        category: 'external_sources',
+        lastUpdated: new Date().toISOString(),
+        source: sourceUrl,
+        url: sourceUrl,
+      });
+    } catch (error) {
+      console.error(`Ошибка конвертации URL через markdown.new (${sourceUrl}):`, error);
+    }
+  }
+
+  return documents;
+}
+
 // Настройка S3 клиента для Timeweb Cloud
-const s3Client = new S3Client({
-  region: config.files.s3Region || 'ru-1',
-  endpoint: config.files.s3Endpoint || 'https://s3.twcstorage.ru',
-  credentials: {
-    accessKeyId: process.env.S3_ACCESS_KEY || 'F2CP4X3X17GVQ1YH5I5D',
-    secretAccessKey: process.env.S3_SECRET_KEY || '72iAsYR4QQCIdaDI9e9AzXnzVvvP8bvPELmrBVzX',
-  },
-  forcePathStyle: true,
-})
+const s3AccessKey = process.env.S3_ACCESS_KEY
+const s3SecretKey = process.env.S3_SECRET_KEY
+const s3Endpoint = config.files.s3Endpoint || process.env.S3_ENDPOINT || 'https://s3.twcstorage.ru'
+const s3Bucket = config.files.s3Bucket || process.env.S3_BUCKET
+
+const s3Client = s3AccessKey && s3SecretKey
+  ? new S3Client({
+      region: config.files.s3Region || process.env.S3_REGION || 'ru-1',
+      endpoint: s3Endpoint,
+      credentials: {
+        accessKeyId: s3AccessKey,
+        secretAccessKey: s3SecretKey,
+      },
+      forcePathStyle: true,
+    })
+  : null
 
 // Получить все документы для базы знаний
 async function collectProjectDocuments(): Promise<KnowledgeDocument[]> {
@@ -136,16 +179,26 @@ async function collectProjectDocuments(): Promise<KnowledgeDocument[]> {
     console.error('Ошибка получения данных из БД:', error)
   }
 
+  const externalUrls = parseSourceUrls(process.env.KNOWLEDGE_BASE_SOURCE_URLS)
+  if (externalUrls.length > 0) {
+    const externalDocuments = await collectExternalUrlDocuments(externalUrls)
+    documents.push(...externalDocuments)
+  }
+
   return documents
 }
 
 // Загрузить файл в S3 хранилище
 async function uploadToS3(file: File, fileName: string): Promise<string> {
   try {
+    if (!s3Client || !s3Bucket) {
+      throw new Error('S3 credentials or bucket are not configured')
+    }
+
     const buffer = Buffer.from(await file.arrayBuffer())
 
     const command = new PutObjectCommand({
-      Bucket: config.files.s3Bucket || 'd9542536-676ee691-7f59-46bb-bf0e-ab64230eec50',
+      Bucket: s3Bucket,
       Key: `knowledge-base/${fileName}`,
       Body: buffer,
       ContentType: file.type,
@@ -154,7 +207,7 @@ async function uploadToS3(file: File, fileName: string): Promise<string> {
 
     await s3Client.send(command)
 
-    const fileUrl = `${config.files.s3Endpoint}/${config.files.s3Bucket}/knowledge-base/${fileName}`
+    const fileUrl = `${s3Endpoint}/${s3Bucket}/knowledge-base/${fileName}`
     return fileUrl
   } catch (error) {
     console.error('Ошибка загрузки в S3:', error)
@@ -220,7 +273,11 @@ async function updateKnowledgeBase(documents: KnowledgeDocument[]): Promise<bool
 }
 
 // GET - Получить статус базы знаний
+// AUTH: requireAdmin — чувствительное управление KB и внешние интеграции
 export async function GET(request: NextRequest) {
+  const adminOrResponse = await requireAdmin(request);
+  if (adminOrResponse instanceof NextResponse) return adminOrResponse;
+
   try {
     const { timeweb } = config.ai
 
@@ -251,7 +308,11 @@ export async function GET(request: NextRequest) {
 }
 
 // POST - Обновить базу знаний
+// AUTH: requireAdmin — чувствительное управление KB и внешние интеграции
 export async function POST(request: NextRequest) {
+  const adminOrResponse = await requireAdmin(request);
+  if (adminOrResponse instanceof NextResponse) return adminOrResponse;
+
   try {
     console.log('🔄 Начинаем обновление базы знаний...')
 
@@ -289,6 +350,26 @@ export async function POST(request: NextRequest) {
         url: fileUrl,
       })
 
+    } else if (updateType === 'url') {
+      const sourceUrl = (formData.get('url') as string | null)?.trim()
+
+      if (!sourceUrl) {
+        return NextResponse.json({
+          success: false,
+          error: 'URL is required for type=url'
+        }, { status: 400 })
+      }
+
+      const markdown = await convertUrlToMarkdown(sourceUrl, { method: 'auto', retainImages: false })
+      documents.push({
+        id: `url_${Date.now()}`,
+        title: `URL: ${sourceUrl}`,
+        content: markdown,
+        category: 'external_sources',
+        lastUpdated: new Date().toISOString(),
+        source: sourceUrl,
+        url: sourceUrl,
+      })
     } else {
       // Автоматическое обновление из проекта
       documents = await collectProjectDocuments()

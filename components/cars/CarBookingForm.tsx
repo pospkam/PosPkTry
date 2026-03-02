@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
+import { Fuel, RefreshCw, Car } from 'lucide-react';
 
 interface Car {
   id: string;
@@ -216,7 +217,7 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
                 {car.imageUrl ? (
                   <Image src={car.imageUrl} alt={`${car.brand} ${car.model}`} fill className="object-cover rounded-lg" sizes="80px" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-2xl"></div>
+                  <div className="w-full h-full flex items-center justify-center"><Car className="w-10 h-10 text-white/50" /></div>
                 )}
               </div>
 
@@ -224,10 +225,10 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
                 <h4 className="font-bold text-lg">{car.brand} {car.model}</h4>
                 <p className="text-white/70">{car.year} год</p>
                 <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
-                  <span> {car.transmission === 'automatic' ? 'Автомат' : 'Механика'}</span>
-                  <span>⛽ {car.fuelType === 'petrol' ? 'Бензин' : car.fuelType === 'diesel' ? 'Дизель' : car.fuelType === 'electric' ? 'Электро' : 'Гибрид'}</span>
-                  <span> {car.seats} мест</span>
-                  <span>🔄 {car.category === 'economy' ? 'Эконом' : car.category === 'comfort' ? 'Комфорт' : car.category === 'business' ? 'Бизнес' : car.category === 'suv' ? 'Внедорожник' : 'Люкс'}</span>
+                  <span>{car.transmission === 'automatic' ? 'Автомат' : 'Механика'}</span>
+                  <span className="flex items-center gap-1"><Fuel className="w-4 h-4" /> {car.fuelType === 'petrol' ? 'Бензин' : car.fuelType === 'diesel' ? 'Дизель' : car.fuelType === 'electric' ? 'Электро' : 'Гибрид'}</span>
+                  <span>{car.seats} мест</span>
+                  <span className="flex items-center gap-1"><RefreshCw className="w-4 h-4" /> {car.category === 'economy' ? 'Эконом' : car.category === 'comfort' ? 'Комфорт' : car.category === 'business' ? 'Бизнес' : car.category === 'suv' ? 'Внедорожник' : 'Люкс'}</span>
                 </div>
               </div>
             </div>

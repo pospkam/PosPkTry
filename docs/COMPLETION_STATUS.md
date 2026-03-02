@@ -262,7 +262,7 @@ npm run migrate:up
 ### 2. Проверить .env файлы
 Убедитесь, что все API ключи настроены:
 - ✅ DATABASE_URL
-- ✅ AI API ключи (GROQ, DeepSeek, OpenRouter)
+- ✅ AI API ключи (DeepSeek, OpenRouter, fallback providers)
 - ✅ Yandex Maps API
 - ✅ CloudPayments ключи
 

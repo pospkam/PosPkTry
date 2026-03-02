@@ -6,10 +6,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { z } from 'zod';
+import { requireOperator } from '@/lib/auth/middleware';
+import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
 
 // Валидация входных данных
 const tourSchema = z.object({
-  operatorId: z.string().uuid('Неверный ID оператора'),
+  operatorId: z.string().uuid('Неверный ID оператора').optional(),
   name: z.string().min(3, 'Название тура должно быть минимум 3 символа'),
   description: z.string().min(10, 'Описание должно быть минимум 10 символов'),
   shortDescription: z.string().optional(),
@@ -33,7 +35,13 @@ const tourSchema = z.object({
 
 export const dynamic = 'force-dynamic';
 
+// POST /api/tours/create - protected: operator only
 export async function POST(request: NextRequest) {
+  const authResult = await requireOperator(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const body = await request.json();
     
@@ -69,10 +77,29 @@ export async function POST(request: NextRequest) {
       images,
     } = validationResult.data;
 
+    let effectiveOperatorId = operatorId;
+    if (authResult.role !== 'admin') {
+      const resolvedOperatorId = await getOperatorPartnerId(authResult.userId);
+      if (!resolvedOperatorId) {
+        return NextResponse.json(
+          { success: false, error: 'Профиль оператора не найден' },
+          { status: 404 }
+        );
+      }
+      effectiveOperatorId = resolvedOperatorId;
+    }
+
+    if (!effectiveOperatorId) {
+      return NextResponse.json(
+        { success: false, error: 'operatorId обязателен для администратора' },
+        { status: 400 }
+      );
+    }
+
     // Проверяем, существует ли оператор
     const operatorCheck = await query(
       'SELECT id FROM partners WHERE id = $1 AND category = $2',
-      [operatorId, 'operator']
+      [effectiveOperatorId, 'operator']
     );
 
     if (operatorCheck.rows.length === 0) {
@@ -92,7 +119,7 @@ export async function POST(request: NextRequest) {
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, NOW(), NOW())
       RETURNING id`,
       [
-        operatorId,
+        effectiveOperatorId,
         name,
         description,
         shortDescription || description.substring(0, 100),

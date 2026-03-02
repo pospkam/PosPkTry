@@ -80,7 +80,6 @@ ssh root@your-server-ip
 DATABASE_URL=postgresql://user:password@host:5432/kamhub
 
 # AI API ключи
-GROQ_API_KEY=gsk_...
 DEEPSEEK_API_KEY=sk-...
 OPENROUTER_API_KEY=sk-or-...
 
@@ -138,7 +137,6 @@ npm run migrate:up
 ```env
 # .env
 DATABASE_URL=postgresql://kamhub:kamhub123@postgres:5432/kamhub
-GROQ_API_KEY=gsk_...
 DEEPSEEK_API_KEY=sk-...
 OPENROUTER_API_KEY=sk-or-...
 YANDEX_MAPS_API_KEY=...
@@ -332,15 +330,7 @@ npm run db:test
 
 ## 🔑 ПОЛУЧЕНИЕ API КЛЮЧЕЙ
 
-### 1. GROQ API (AI) - БЕСПЛАТНО ⭐
-
-1. Зайдите на https://console.groq.com
-2. Sign Up → Create API Key
-3. Скопируйте ключ → `GROQ_API_KEY=gsk_...`
-
-**Лимиты:** 14,400 запросов/день бесплатно
-
-### 2. DeepSeek API (AI) - ПЛАТНО
+### 1. DeepSeek API (AI)
 
 1. https://platform.deepseek.com
 2. Пополните баланс ($5 минимум)
@@ -478,8 +468,8 @@ psql $DATABASE_URL -c "CREATE EXTENSION IF NOT EXISTS postgis"
 
 ```bash
 # Проверьте ключи
-curl https://api.groq.com/openai/v1/models \
-  -H "Authorization: Bearer $GROQ_API_KEY"
+curl https://api.deepseek.com/v1/models \
+  -H "Authorization: Bearer $DEEPSEEK_API_KEY"
 
 # Должен вернуть список моделей
 ```

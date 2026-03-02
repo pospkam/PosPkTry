@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
+import { requireAdmin } from '@/lib/auth/middleware';
 import { ApiResponse } from '@/types';
 
 export const dynamic = 'force-dynamic';
@@ -12,6 +13,10 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const adminOrResponse = await requireAdmin(request);
+    if (adminOrResponse instanceof NextResponse) {
+      return adminOrResponse;
+    }
     const { id } = await params;
 
     const templateQuery = `
@@ -66,6 +71,10 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const adminOrResponse = await requireAdmin(request);
+    if (adminOrResponse instanceof NextResponse) {
+      return adminOrResponse;
+    }
     const { id } = await params;
     const body = await request.json();
     const { name, subject, type, htmlContent, textContent, variables, isActive } = body;
@@ -131,6 +140,10 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const adminOrResponse = await requireAdmin(request);
+    if (adminOrResponse instanceof NextResponse) {
+      return adminOrResponse;
+    }
     const { id } = await params;
 
     const deleteQuery = `
