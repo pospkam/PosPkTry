@@ -369,10 +369,9 @@ earningsBreakdown: [{
 ### 1. Аутентификация и авторизация
 ```typescript
 // Все endpoints проверяют:
-const userId = request.headers.get('X-User-Id');
-const userRole = request.headers.get('X-User-Role');
+const user = await authenticateUser(request);
 
-if (!userId || userRole !== 'guide') {
+if (!user || user.role !== 'guide') {
   return 403 Forbidden;
 }
 ```

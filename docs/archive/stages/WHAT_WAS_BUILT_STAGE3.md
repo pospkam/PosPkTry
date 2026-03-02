@@ -193,7 +193,7 @@ GET    /api/discovery/search/similar             Like this tour
 ## 🔐 Security
 
 **Authentication**
-- Header-based: `x-user-id`, `x-operator-id`
+- JWT-based: `Authorization: Bearer <token>`
 - Verified on every request
 - Returns 401 if missing
 

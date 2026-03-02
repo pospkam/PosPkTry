@@ -242,13 +242,13 @@ TourStats
                    │
          ┌─────────▼─────────┐
          │ Has auth header?  │
-         │ (x-user-id OR    │
-         │  x-operator-id)  │
+         │ (Authorization:  │
+         │  Bearer <token>) │
          └─────────┬─────────┘
                    │
         ┌──────────▼──────────┐
         │  Check user role    │
-        │  (x-user-role)      │
+        │  (from JWT payload) │
         └─────────┬───────────┘
                    │
         ┌──────────▼──────────┐

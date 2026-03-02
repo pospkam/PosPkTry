@@ -32,6 +32,12 @@ export async function GET(request: NextRequest) {
     if (userOrResponse instanceof NextResponse) {
       return userOrResponse;
     }
+    if (userOrResponse.role !== 'operator') {
+      return NextResponse.json({
+        success: false,
+        error: 'Недостаточно прав доступа'
+      } as ApiResponse<null>, { status: 403 });
+    }
 
     const operatorId = await getOperatorPartnerId(userOrResponse.userId);
     if (!operatorId) {
@@ -45,6 +51,20 @@ export async function GET(request: NextRequest) {
     const tourId = searchParams.get('tourId');
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
+
+    if (tourId) {
+      const ownershipCheck = await query(
+        `SELECT id FROM tours WHERE id = $1 AND operator_id = $2`,
+        [tourId, operatorId]
+      );
+
+      if (ownershipCheck.rows.length === 0) {
+        return NextResponse.json({
+          success: false,
+          error: 'Тур не найден'
+        } as ApiResponse<null>, { status: 404 });
+      }
+    }
 
     let queryText = `
       SELECT 

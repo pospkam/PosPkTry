@@ -151,24 +151,6 @@ export async function getUserFromRequest(request: RequestLike): Promise<JWTPaylo
       return payload;
     }
   }
-  
-  // Fallback разрешен только если middleware явно отметил запрос как проверенный
-  const authVerifiedByMiddleware = getHeader(request, 'x-auth-verified') === 'true';
-  if (!authVerifiedByMiddleware) {
-    return null;
-  }
 
-  const headerUserId = getHeader(request, 'x-user-id');
-  const headerEmail = getHeader(request, 'x-user-email');
-  const headerRole = getHeader(request, 'x-user-role');
-  
-  if (headerUserId && headerRole) {
-    return {
-      userId: headerUserId,
-      email: headerEmail || '',
-      role: headerRole,
-    };
-  }
-  
   return null;
 }

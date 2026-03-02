@@ -218,11 +218,9 @@ Coverage:
 ### Authentication
 
 ```
-Mechanism: Header-based
+Mechanism: JWT-based
 Headers:
-  ├─ x-user-id (for users)
-  ├─ x-operator-id (for operators)
-  └─ x-user-role (user|operator|moderator|admin)
+  └─ Authorization: Bearer <token>
 
 Implementation:
   ├─ Check on every endpoint ✅

@@ -87,7 +87,7 @@ grep -r "TODO:" app/ lib/ pillars/
 grep -r "console\.log" app/ lib/ pillars/
 
 # Поиск всех missing role checks
-grep -r "x-user-role" app/api/admin/
+grep -r "requireAdmin" app/api/admin/
 ```
 
 ---

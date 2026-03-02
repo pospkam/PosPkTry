@@ -7,43 +7,58 @@ import { NextRequest, NextResponse } from 'next/server';
 import { tagTourPhotos } from '@/lib/ai/image-tagger';
 import { query } from '@/lib/database';
 import { requireOperator } from '@/lib/auth/middleware';
-import { verifyTourOwnership } from '@/lib/auth/operator-helpers';
+import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
 
 export const dynamic = 'force-dynamic';
+
+async function getStrictOperatorId(request: NextRequest): Promise<string | NextResponse> {
+  const operatorOrResponse = await requireOperator(request);
+  if (operatorOrResponse instanceof NextResponse) {
+    return operatorOrResponse;
+  }
+
+  if (operatorOrResponse.role !== 'operator') {
+    return NextResponse.json(
+      { success: false, error: 'Недостаточно прав доступа' },
+      { status: 403 }
+    );
+  }
+
+  const operatorId = await getOperatorPartnerId(operatorOrResponse.userId);
+  if (!operatorId) {
+    return NextResponse.json(
+      { success: false, error: 'Партнёрский профиль оператора не найден' },
+      { status: 404 }
+    );
+  }
+
+  return operatorId;
+}
 
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const operatorOrResponse = await requireOperator(request);
-    if (operatorOrResponse instanceof NextResponse) {
-      return operatorOrResponse;
+    const operatorIdOrResponse = await getStrictOperatorId(request);
+    if (operatorIdOrResponse instanceof NextResponse) {
+      return operatorIdOrResponse;
     }
-    const userId = operatorOrResponse.userId;
-    const userRole = operatorOrResponse.role;
+    const operatorId = operatorIdOrResponse;
 
     const tourId = params.id;
 
-    if (userRole !== 'admin') {
-      const isOwner = await verifyTourOwnership(userId, tourId);
-      if (!isOwner) {
-        return NextResponse.json(
-          { success: false, error: 'Тур не найден' },
-          { status: 404 }
-        );
-      }
-    }
-
-    // Получаем данные тура и проверяем владельца
+    // Получаем данные тура только при подтверждённом владении.
     const tourResult = await query<{
       id: string;
       title: string;
       photos: string[];
       images: string[];
     }>(
-      `SELECT id, title, photos, images FROM tours WHERE id = $1`,
-      [tourId]
+      `SELECT id, title, photos, images
+       FROM tours
+       WHERE id = $1 AND operator_id = $2`,
+      [tourId, operatorId]
     );
 
     if (tourResult.rows.length === 0) {
@@ -73,8 +88,10 @@ export async function POST(
 
     // Сохраняем в БД
     await query(
-      `UPDATE tours SET ai_tags = $1::jsonb, updated_at = NOW() WHERE id = $2`,
-      [JSON.stringify(tags), tourId]
+      `UPDATE tours
+       SET ai_tags = $1::jsonb, updated_at = NOW()
+       WHERE id = $2 AND operator_id = $3`,
+      [JSON.stringify(tags), tourId, operatorId]
     );
 
     return NextResponse.json({
@@ -101,27 +118,18 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const operatorOrResponse = await requireOperator(request);
-    if (operatorOrResponse instanceof NextResponse) {
-      return operatorOrResponse;
+    const operatorIdOrResponse = await getStrictOperatorId(request);
+    if (operatorIdOrResponse instanceof NextResponse) {
+      return operatorIdOrResponse;
     }
-    const userId = operatorOrResponse.userId;
-    const userRole = operatorOrResponse.role;
+    const operatorId = operatorIdOrResponse;
     const tourId = params.id;
 
-    if (userRole !== 'admin') {
-      const isOwner = await verifyTourOwnership(userId, tourId);
-      if (!isOwner) {
-        return NextResponse.json(
-          { success: false, error: 'Тур не найден' },
-          { status: 404 }
-        );
-      }
-    }
-
     const result = await query<{ ai_tags: Record<string, unknown> }>(
-      `SELECT ai_tags FROM tours WHERE id = $1`,
-      [tourId]
+      `SELECT ai_tags
+       FROM tours
+       WHERE id = $1 AND operator_id = $2`,
+      [tourId, operatorId]
     );
 
     if (result.rows.length === 0) {

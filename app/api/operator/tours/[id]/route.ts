@@ -2,11 +2,40 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireOperator } from '@/lib/auth/middleware';
-import { getOperatorPartnerId, verifyTourOwnership } from '@/lib/auth/operator-helpers';
+import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
 
 export const dynamic = 'force-dynamic';
 
 const SAFE_DB_COLUMN_REGEX = /^[a-z_][a-z0-9_]*$/;
+
+async function getStrictOperatorContext(
+  request: NextRequest
+): Promise<{ userId: string; operatorId: string } | NextResponse> {
+  const operatorOrResponse = await requireOperator(request);
+  if (operatorOrResponse instanceof NextResponse) {
+    return operatorOrResponse;
+  }
+
+  if (operatorOrResponse.role !== 'operator') {
+    return NextResponse.json({
+      success: false,
+      error: 'Недостаточно прав доступа'
+    } as ApiResponse<null>, { status: 403 });
+  }
+
+  const operatorId = await getOperatorPartnerId(operatorOrResponse.userId);
+  if (!operatorId) {
+    return NextResponse.json({
+      success: false,
+      error: 'Партнёрский профиль оператора не найден'
+    } as ApiResponse<null>, { status: 404 });
+  }
+
+  return {
+    userId: operatorOrResponse.userId,
+    operatorId,
+  };
+}
 
 /**
  * GET /api/operator/tours/[id]
@@ -17,23 +46,13 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const operatorOrResponse = await requireOperator(request);
-    if (operatorOrResponse instanceof NextResponse) {
-      return operatorOrResponse;
+    const operatorContext = await getStrictOperatorContext(request);
+    if (operatorContext instanceof NextResponse) {
+      return operatorContext;
     }
-    const userId = operatorOrResponse.userId;
+    const { operatorId } = operatorContext;
 
     const { id } = await params;
-
-    // Verify ownership
-    const isOwner = await verifyTourOwnership(userId, id);
-    
-    if (!isOwner) {
-      return NextResponse.json({
-        success: false,
-        error: 'Тур не найден или у вас нет прав на его просмотр'
-      } as ApiResponse<null>, { status: 404 });
-    }
 
     // Get tour with full details
       const result = await query(
@@ -48,9 +67,9 @@ export async function GET(
         FROM tours t
         LEFT JOIN tour_assets ta ON t.id = ta.tour_id
         LEFT JOIN assets a ON ta.asset_id = a.id
-        WHERE t.id = $1
+        WHERE t.id = $1 AND t.operator_id = $2
         GROUP BY t.id`,
-        [id]
+        [id, operatorId]
       );
 
       if (result.rows.length === 0) {
@@ -90,7 +109,7 @@ export async function GET(
       return NextResponse.json({
         success: true,
         data: tour
-      } as ApiResponse<any>);
+      } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Get tour error:', error);
@@ -110,23 +129,13 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const operatorOrResponse = await requireOperator(request);
-    if (operatorOrResponse instanceof NextResponse) {
-      return operatorOrResponse;
+    const operatorContext = await getStrictOperatorContext(request);
+    if (operatorContext instanceof NextResponse) {
+      return operatorContext;
     }
-    const userId = operatorOrResponse.userId;
+    const { operatorId } = operatorContext;
 
     const { id } = await params;
-
-    // Verify ownership
-    const isOwner = await verifyTourOwnership(userId, id);
-    
-    if (!isOwner) {
-      return NextResponse.json({
-        success: false,
-        error: 'Тур не найден или у вас нет прав на его редактирование'
-      } as ApiResponse<null>, { status: 404 });
-    }
 
     const body = await request.json();
 
@@ -187,21 +196,31 @@ export async function PUT(
     }
 
     const idParamIndex = updateValues.length + 1;
+    const operatorIdParamIndex = updateValues.length + 2;
     updateValues.push(id);
+    updateValues.push(operatorId);
 
     const result = await query(
       `UPDATE tours 
        SET ${updateFields.join(', ')}
        WHERE id = $${idParamIndex}
+         AND operator_id = $${operatorIdParamIndex}
        RETURNING *`,
       updateValues
     );
+
+    if (result.rows.length === 0) {
+      return NextResponse.json({
+        success: false,
+        error: 'Тур не найден'
+      } as ApiResponse<null>, { status: 404 });
+    }
 
     return NextResponse.json({
       success: true,
       data: result.rows[0],
       message: 'Тур успешно обновлён'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Update tour error:', error);
@@ -221,21 +240,23 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const operatorOrResponse = await requireOperator(request);
-    if (operatorOrResponse instanceof NextResponse) {
-      return operatorOrResponse;
+    const operatorContext = await getStrictOperatorContext(request);
+    if (operatorContext instanceof NextResponse) {
+      return operatorContext;
     }
-    const userId = operatorOrResponse.userId;
+    const { operatorId } = operatorContext;
 
     const { id } = await params;
 
-    // Verify ownership
-    const isOwner = await verifyTourOwnership(userId, id);
-    
-    if (!isOwner) {
+    const tourOwnershipResult = await query(
+      `SELECT id FROM tours WHERE id = $1 AND operator_id = $2`,
+      [id, operatorId]
+    );
+
+    if (tourOwnershipResult.rows.length === 0) {
       return NextResponse.json({
         success: false,
-        error: 'Тур не найден или у вас нет прав на его удаление'
+        error: 'Тур не найден'
       } as ApiResponse<null>, { status: 404 });
     }
 
@@ -255,7 +276,17 @@ export async function DELETE(
     }
 
     // Delete tour (CASCADE will delete related records)
-    await query('DELETE FROM tours WHERE id = $1', [id]);
+    const deleteResult = await query(
+      'DELETE FROM tours WHERE id = $1 AND operator_id = $2 RETURNING id',
+      [id, operatorId]
+    );
+
+    if (deleteResult.rows.length === 0) {
+      return NextResponse.json({
+        success: false,
+        error: 'Тур не найден'
+      } as ApiResponse<null>, { status: 404 });
+    }
 
     return NextResponse.json({
       success: true,

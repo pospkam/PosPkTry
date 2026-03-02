@@ -36,24 +36,23 @@ p.email as operator_email
 #### 2. Missing Admin Role Check (ИСПРАВЛЕНО)
 **Файл:** `/app/api/admin/users/route.ts`
 **Проблема:** GET/POST методы не проверяют, что пользователь - администратор
-**Решение:** Добавил проверку x-user-role и x-user-id в начало обоих методов
+**Решение:** Добавил JWT-проверку пользователя и роли в начало обоих методов
 **Статус:** ✅ ГОТОВО
 **Уровень:** БЛОКИРУЮЩИЙ
 **Влияние:** Защищает admin endpoint от неавторизованного доступа
 
 **Добавлен код:**
 ```typescript
-const userId = request.headers.get('x-user-id');
-const userRole = request.headers.get('x-user-role');
+const user = await authenticateUser(request);
 
-if (!userId) {
+if (!user) {
   return NextResponse.json(
     { success: false, error: 'Unauthorized' },
     { status: 401 }
   );
 }
 
-if (userRole !== 'admin') {
+if (user.role !== 'admin') {
   return NextResponse.json(
     { success: false, error: 'Forbidden: admin access required' },
     { status: 403 }
