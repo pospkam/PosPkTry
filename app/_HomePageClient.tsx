@@ -1,195 +1,638 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Sun, Moon, User, House, Map, Heart, AlertTriangle } from 'lucide-react';
-import { VolcanoIcon, FishingIcon, ThermalIcon, SnowmobileIcon, JeepIcon } from '@/components/icons';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { Sun, Moon, UserCircle, House, Map, Heart, User, AlertTriangle } from 'lucide-react';
+import { VolcanoIcon } from '@/components/icons/VolcanoIcon';
+import { FishingIcon } from '@/components/icons/FishingIcon';
+import { ThermalIcon } from '@/components/icons/ThermalIcon';
+import { SnowmobileIcon } from '@/components/icons/SnowmobileIcon';
+import { JeepIcon } from '@/components/icons/JeepIcon';
 
-const activities = [
-  { icon: VolcanoIcon, label: 'Вулканы', category: 'volcanoes' },
-  { icon: FishingIcon, label: 'Рыбалка', category: 'fishing' },
-  { icon: ThermalIcon, label: 'Термы', category: 'thermal' },
-  { icon: SnowmobileIcon, label: 'Снегоход', category: 'snowmobile' },
-  { icon: JeepIcon, label: 'Джип-туры', category: 'jeep' },
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type Theme = 'light' | 'dark';
+
+interface Activity {
+  icon: React.ReactNode;
+  label: string;
+  href: string;
+}
+
+interface NavItem {
+  icon: React.ElementType;
+  label: string;
+  href: string;
+  sos?: boolean;
+}
+
+interface CarouselImage {
+  src: string;
+  alt: string;
+}
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const ACTIVITIES: Activity[] = [
+  { icon: <VolcanoIcon className="w-8 h-8" />, label: 'Вулканы', href: '/tours?category=volcanoes' },
+  { icon: <FishingIcon className="w-8 h-8" />, label: 'Рыбалка', href: '/tours?category=fishing' },
+  { icon: <ThermalIcon className="w-8 h-8" />, label: 'Термы', href: '/tours?category=thermal' },
+  { icon: <SnowmobileIcon className="w-8 h-8" />, label: 'Снегоход', href: '/tours?category=snowmobile' },
+  { icon: <JeepIcon className="w-8 h-8" />, label: 'Джип-туры', href: '/tours?category=jeep' },
 ];
 
-const navItems = [
-  { icon: House, label: 'Главная', href: '/' },
+const CAROUSEL_IMAGES: CarouselImage[] = [
+  { src: '/images/carousel/1.jpg', alt: 'Камчатка — дикая природа' },
+  { src: '/images/carousel/2.jpg', alt: 'Камчатка — вулканы' },
+  { src: '/images/carousel/3.jpg', alt: 'Камчатка — медведи' },
+  { src: '/images/carousel/4.jpg', alt: 'Камчатка — гейзеры' },
+  { src: '/images/carousel/5.jpg', alt: 'Камчатка — горные реки' },
+];
+
+const NAV_ITEMS: NavItem[] = [
+  { icon: House, label: 'Домой', href: '/' },
   { icon: Map, label: 'Карта', href: '/map' },
   { icon: Heart, label: 'Избранное', href: '/hub/tourist/wishlist' },
-  { icon: User, label: 'Профиль', href: '/profile' },
-  { icon: AlertTriangle, label: 'SOS', href: '/safety', isSos: true },
+  { icon: User, label: 'ЛК', href: '/profile' },
+  { icon: AlertTriangle, label: 'СОС', href: '/safety', sos: true },
 ];
 
-export default function HomePageClient() {
-  const [isDark, setIsDark] = useState(false);
-  const [activeTab, setActiveTab] = useState('/');
-  const router = useRouter();
+// ─── Ripple Utility ───────────────────────────────────────────────────────────
 
-  useEffect(() => {
-    // Detect mobile and set default light theme
-    const isMobile = window.innerWidth <= 430;
-    const savedTheme = localStorage.getItem('kh-theme');
-    const defaultLight = isMobile && !savedTheme;
-    setIsDark(savedTheme === 'dark' || (!defaultLight && savedTheme !== 'light'));
-  }, []);
+function spawnRipple(
+  e: React.MouseEvent<HTMLElement>,
+  container: HTMLElement,
+  color = 'rgba(0,212,255,0.3)'
+): void {
+  const rect = container.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height) * 2;
+  const x = e.clientX - rect.left - size / 2;
+  const y = e.clientY - rect.top - size / 2;
+  const ripple = document.createElement('span');
+  ripple.style.cssText = `
+    position:absolute;border-radius:50%;
+    width:${size}px;height:${size}px;
+    left:${x}px;top:${y}px;
+    background:${color};
+    transform:scale(0);
+    animation:kh-ripple 600ms linear forwards;
+    pointer-events:none;
+  `;
+  container.style.overflow = 'hidden';
+  container.appendChild(ripple);
+  setTimeout(() => ripple.remove(), 650);
+}
 
-  const toggleTheme = () => {
-    const newTheme = !isDark;
-    setIsDark(newTheme);
-    localStorage.setItem('kh-theme', newTheme ? 'dark' : 'light');
-  };
+// ─── Activity Card ────────────────────────────────────────────────────────────
 
-  const handleActivityClick = (category: string) => {
-    router.push(`/tours?category=${category}`);
-  };
+interface ActivityCardProps {
+  activity: Activity;
+  clicked: boolean;
+  onCardClick: (e: React.MouseEvent<HTMLAnchorElement>, href: string) => void;
+}
 
-  const handleNavClick = (href: string) => {
-    setActiveTab(href);
-    router.push(href);
-  };
+function ActivityCard({ activity, clicked, onCardClick }: ActivityCardProps) {
+  const ref = useRef<HTMLAnchorElement>(null);
 
-  const createRipple = (event: React.MouseEvent) => {
-    const button = event.currentTarget;
-    const circle = document.createElement('span');
-    const diameter = Math.max(button.clientWidth, button.clientHeight);
-    const radius = diameter / 2;
-
-    circle.style.width = circle.style.height = `${diameter}px`;
-    circle.style.left = `${event.clientX - button.offsetLeft - radius}px`;
-    circle.style.top = `${event.clientY - button.offsetTop - radius}px`;
-    circle.classList.add('ripple-effect');
-
-    const ripple = button.getElementsByClassName('ripple-effect')[0];
-    if (ripple) {
-      ripple.remove();
-    }
-
-    button.appendChild(circle);
-  };
+  const handleClick = useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>) => {
+      if (ref.current) spawnRipple(e, ref.current);
+      onCardClick(e, activity.href);
+    },
+    [activity.href, onCardClick]
+  );
 
   return (
-    <div className={`min-h-screen ${isDark ? 'dark' : ''}`}>
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-transparent backdrop-blur-md">
-        <div className="flex justify-between items-center px-4 py-3 max-w-md mx-auto">
-          <div className="text-2xl font-bold text-white">KH</div>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-full hover:bg-cyan-400/20 transition-colors duration-200"
-              onMouseDown={createRipple}
-            >
-              {isDark ? <Sun className="w-5 h-5 text-white" /> : <Moon className="w-5 h-5 text-white" />}
-            </button>
-            <button
-              className="p-2 rounded-full hover:bg-cyan-400/20 transition-colors duration-200"
-              onMouseDown={createRipple}
-            >
-              <User className="w-5 h-5 text-white" />
-            </button>
-          </div>
-        </div>
-      </header>
+    <a
+      ref={ref}
+      href={activity.href}
+      onClick={handleClick}
+      className="activity-card"
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '8px',
+        background: 'rgba(255,255,255,0.15)',
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
+        border: clicked ? '1px solid #00D4FF' : '1px solid rgba(255,255,255,0.25)',
+        borderRadius: '16px',
+        padding: '16px 12px',
+        color: 'white',
+        textDecoration: 'none',
+        cursor: 'pointer',
+        transition: 'border-color 200ms ease, filter 200ms ease',
+        filter: clicked ? 'drop-shadow(0 0 8px #00D4FF)' : 'none',
+        position: 'relative',
+        overflow: 'hidden',
+        userSelect: 'none',
+      }}
+    >
+      {activity.icon}
+      <span
+        style={{
+          fontFamily: "var(--font-inter, 'Inter', sans-serif)",
+          fontSize: '12px',
+          fontWeight: 500,
+          textAlign: 'center',
+          lineHeight: 1.2,
+        }}
+      >
+        {activity.label}
+      </span>
+    </a>
+  );
+}
 
-      {/* Hero */}
-      <section className="relative h-screen flex items-center justify-center">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage: `url('/images/${isDark ? 'dark' : 'light'}.jpg')`,
-          }}
+// ─── Carousel Item ────────────────────────────────────────────────────────────
+
+interface CarouselItemProps {
+  img: CarouselImage;
+  onOpen: (src: string) => void;
+}
+
+function CarouselItem({ img, onOpen }: CarouselItemProps) {
+  return (
+    <button
+      type="button"
+      aria-label={img.alt}
+      onClick={() => onOpen(img.src)}
+      style={{
+        width: '120px',
+        minWidth: '120px',
+        aspectRatio: '3/4',
+        borderRadius: '16px',
+        overflow: 'hidden',
+        border: 'none',
+        padding: 0,
+        cursor: 'pointer',
+        flexShrink: 0,
+        position: 'relative',
+        transition: 'transform 200ms ease',
+        background: 'rgba(255,255,255,0.1)',
+      }}
+    >
+      <Image
+        src={img.src}
+        alt={img.alt}
+        fill
+        sizes="120px"
+        style={{ objectFit: 'cover', objectPosition: 'center' }}
+      />
+    </button>
+  );
+}
+
+// ─── Lightbox ─────────────────────────────────────────────────────────────────
+
+interface LightboxProps {
+  src: string;
+  onClose: () => void;
+}
+
+function Lightbox({ src, onClose }: LightboxProps) {
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [onClose]);
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      aria-label="Закрыть изображение"
+      onClick={onClose}
+      onKeyDown={(e) => e.key === 'Enter' && onClose()}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 9999,
+        background: 'rgba(0,0,0,0.92)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: 'zoom-out',
+        animation: 'kh-fade-in 200ms ease forwards',
+      }}
+    >
+      <div
+        role="presentation"
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          position: 'relative',
+          width: 'min(90vw,90vh)',
+          height: 'min(90vw,90vh)',
+          borderRadius: '16px',
+          overflow: 'hidden',
+        }}
+      >
+        <Image
+          src={src}
+          alt="Полноэкранное изображение"
+          fill
+          sizes="(max-width:768px) 90vw, 90vh"
+          style={{ objectFit: 'contain' }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 to-black/70" />
-        <div className="relative z-10 text-center text-white px-4">
-          <h1 className="text-4xl font-bold mb-2 drop-shadow-lg">
+      </div>
+    </div>
+  );
+}
+
+// ─── Bottom Nav ───────────────────────────────────────────────────────────────
+
+function BottomNav({ activePath }: { activePath: string }) {
+  const handleNavClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
+    spawnRipple(e, e.currentTarget, 'rgba(0,212,255,0.25)');
+  }, []);
+
+  return (
+    <nav
+      className="md:hidden"
+      aria-label="Основная навигация"
+      style={{
+        position: 'fixed',
+        bottom: '32px',
+        left: '16px',
+        right: '16px',
+        zIndex: 100,
+        background: 'rgba(255,255,255,0.2)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255,255,255,0.3)',
+        borderRadius: '50px',
+        padding: '12px 24px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-around',
+      }}
+    >
+      {NAV_ITEMS.map((item) => {
+        const Icon = item.icon;
+        const isActive = activePath === item.href;
+        const isSos = item.sos === true;
+        return (
+          <a
+            key={item.href}
+            href={item.href}
+            aria-label={item.label}
+            onClick={handleNavClick}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '2px',
+              color: isSos ? '#ef4444' : isActive ? '#00D4FF' : 'rgba(255,255,255,0.8)',
+              textDecoration: 'none',
+              transition: 'color 200ms ease',
+              position: 'relative',
+              overflow: 'hidden',
+              padding: '4px 8px',
+              borderRadius: '12px',
+            }}
+          >
+            <Icon size={20} strokeWidth={1.5} />
+            <span
+              style={{
+                fontFamily: "var(--font-inter,'Inter',sans-serif)",
+                fontSize: '10px',
+                fontWeight: 500,
+              }}
+            >
+              {item.label}
+            </span>
+          </a>
+        );
+      })}
+    </nav>
+  );
+}
+
+// ─── Footer ───────────────────────────────────────────────────────────────────
+
+function Footer() {
+  const links = [
+    { label: 'Туры', href: '/tours' },
+    { label: 'Карта', href: '/map' },
+    { label: 'Безопасность', href: '/safety' },
+    { label: 'Экология', href: '/eco' },
+    { label: 'О нас', href: '/partner' },
+  ];
+  return (
+    <footer
+      className="hidden md:block"
+      style={{
+        background: 'rgba(0,0,0,0.4)',
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
+        padding: '24px 40px',
+        borderTop: '1px solid rgba(255,255,255,0.1)',
+      }}
+    >
+      <div
+        style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '16px',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
+        <span
+          style={{
+            fontFamily: "var(--font-playfair,'Playfair Display',serif)",
+            fontSize: '18px',
+            fontWeight: 700,
+            color: 'white',
+          }}
+        >
+          KH
+        </span>
+        <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+          {links.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              style={{
+                fontFamily: "var(--font-inter,'Inter',sans-serif)",
+                fontSize: '14px',
+                color: 'rgba(255,255,255,0.6)',
+                textDecoration: 'none',
+                transition: 'color 200ms ease',
+              }}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </div>
+        <span
+          style={{
+            fontFamily: "var(--font-inter,'Inter',sans-serif)",
+            fontSize: '13px',
+            color: 'rgba(255,255,255,0.4)',
+          }}
+        >
+          {new Date().getFullYear()} Kamchatour
+        </span>
+      </div>
+    </footer>
+  );
+}
+
+// ─── Main Export ──────────────────────────────────────────────────────────────
+
+export default function HomePageClient() {
+  const [theme, setTheme] = useState<Theme>('light');
+  const [mounted, setMounted] = useState(false);
+  const [clickedActivity, setClickedActivity] = useState<string | null>(null);
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('kh-theme') as Theme | null;
+    if (saved === 'light' || saved === 'dark') {
+      setTheme(saved);
+    } else {
+      setTheme('light');
+    }
+    setMounted(true);
+    requestAnimationFrame(() => setVisible(true));
+  }, []);
+
+  const toggleTheme = useCallback(() => {
+    setTheme((prev) => {
+      const next: Theme = prev === 'light' ? 'dark' : 'light';
+      localStorage.setItem('kh-theme', next);
+      return next;
+    });
+  }, []);
+
+  const handleHeaderRipple = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    spawnRipple(e, e.currentTarget, 'rgba(0,212,255,0.3)');
+  }, []);
+
+  const handleActivityClick = useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+      e.preventDefault();
+      setClickedActivity(href);
+      setTimeout(() => { window.location.href = href; }, 300);
+    },
+    []
+  );
+
+  const openLightbox = useCallback((src: string) => setLightboxSrc(src), []);
+  const closeLightbox = useCallback(() => setLightboxSrc(null), []);
+
+  if (!mounted) {
+    return <div style={{ minHeight: '100dvh', background: '#0B1120' }} />;
+  }
+
+  const bgImage = theme === 'dark' ? '/images/dark.jpg' : '/images/light.jpg';
+
+  return (
+    <>
+      <style>{`
+        @keyframes kh-ripple { to { transform:scale(1); opacity:0; } }
+        @keyframes kh-fade-in { from { opacity:0; } to { opacity:1; } }
+        @keyframes kh-slide-up { from { opacity:0; transform:translateY(40px); } to { opacity:1; transform:translateY(0); } }
+        .activity-card:hover { border-color:#00D4FF !important; filter:drop-shadow(0 0 6px rgba(0,212,255,0.4)) !important; }
+        .header-btn:hover { border-color:rgba(0,212,255,0.6) !important; }
+        .header-btn:hover svg { filter:drop-shadow(0 0 6px #00D4FF); }
+        .carousel-track { scrollbar-width:none; -ms-overflow-style:none; }
+        .carousel-track::-webkit-scrollbar { display:none; }
+        .kh-page { animation: kh-slide-up 400ms ease forwards; }
+      `}</style>
+
+      <div
+        className={visible ? 'kh-page' : ''}
+        style={{ minHeight: '100dvh', position: 'relative', display: 'flex', flexDirection: 'column' }}
+      >
+        {/* Background */}
+        <div style={{ position: 'fixed', inset: 0, zIndex: 0 }}>
+          <Image
+            src={bgImage}
+            alt="Камчатка"
+            fill
+            priority
+            sizes="100vw"
+            style={{ objectFit: 'cover', objectPosition: 'center', transition: 'opacity 600ms ease' }}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 30%, transparent 55%, rgba(0,0,0,0.7) 100%)',
+            }}
+          />
+        </div>
+
+        {/* Header */}
+        <header
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
+            padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          }}
+        >
+          <Link
+            href="/"
+            aria-label="Kamchatour — главная"
+            style={{
+              fontFamily: "var(--font-playfair,'Playfair Display',serif)",
+              fontSize: '24px', fontWeight: 700, color: 'white',
+              textDecoration: 'none', letterSpacing: '0.02em',
+              textShadow: '0 2px 8px rgba(0,0,0,0.4)',
+            }}
+          >
+            KH
+          </Link>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <button
+              type="button"
+              aria-label={theme === 'light' ? 'Переключить на тёмную тему' : 'Переключить на светлую тему'}
+              className="header-btn"
+              onClick={(e) => { handleHeaderRipple(e); toggleTheme(); }}
+              style={{
+                width: '40px', height: '40px', borderRadius: '50%',
+                border: '1px solid rgba(255,255,255,0.3)',
+                background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', color: 'white',
+                position: 'relative', overflow: 'hidden',
+                transition: 'border-color 200ms ease',
+              }}
+            >
+              {theme === 'light' ? <Moon size={18} strokeWidth={1.5} /> : <Sun size={18} strokeWidth={1.5} />}
+            </button>
+            <Link
+              href="/profile"
+              aria-label="Личный кабинет"
+              className="header-btn"
+              style={{
+                width: '40px', height: '40px', borderRadius: '50%',
+                border: '1px solid rgba(255,255,255,0.3)',
+                background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'white', textDecoration: 'none',
+                transition: 'border-color 200ms ease',
+              }}
+            >
+              <UserCircle size={18} strokeWidth={1.5} />
+            </Link>
+          </div>
+        </header>
+
+        {/* Hero */}
+        <section
+          aria-label="Главный экран"
+          style={{
+            position: 'relative', zIndex: 1, height: '100dvh',
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            textAlign: 'center', padding: '0 24px 100px',
+          }}
+        >
+          <h1
+            style={{
+              fontFamily: "var(--font-playfair,'Playfair Display',serif)",
+              fontSize: 'clamp(28px,8vw,56px)', fontWeight: 700,
+              color: 'white', margin: '0 0 12px', lineHeight: 1.15,
+              textShadow: '0 2px 8px rgba(0,0,0,0.6)', maxWidth: '640px',
+            }}
+          >
             Здесь начинается Россия
           </h1>
-          <h2 className="text-lg text-white/80 drop-shadow">
+          <p
+            style={{
+              fontFamily: "var(--font-inter,'Inter',sans-serif)",
+              fontSize: 'clamp(14px,4vw,18px)', fontWeight: 400,
+              color: 'rgba(255,255,255,0.8)', margin: 0, letterSpacing: '0.01em',
+            }}
+          >
             Камчатка — земля огня и льда
+          </p>
+        </section>
+
+        {/* Activities */}
+        <section
+          aria-label="Активности Камчатки"
+          style={{ position: 'relative', zIndex: 1, padding: '40px 20px 24px' }}
+        >
+          <h2
+            style={{
+              fontFamily: "var(--font-playfair,'Playfair Display',serif)",
+              fontSize: 'clamp(20px,5vw,28px)', fontWeight: 700,
+              color: 'white', margin: '0 0 20px', textAlign: 'center',
+              textShadow: '0 1px 4px rgba(0,0,0,0.5)',
+            }}
+          >
+            Активности Камчатки
           </h2>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3,1fr)',
+              gap: '12px',
+              maxWidth: '430px',
+              margin: '0 auto',
+            }}
+          >
+            {ACTIVITIES.map((activity) => (
+              <ActivityCard
+                key={activity.href}
+                activity={activity}
+                clicked={clickedActivity === activity.href}
+                onCardClick={handleActivityClick}
+              />
+            ))}
+          </div>
+        </section>
+
+        {/* Carousel */}
+        <section
+          aria-label="Камчатка глазами путешественников"
+          style={{ position: 'relative', zIndex: 1, padding: '32px 0 24px' }}
+        >
+          <h2
+            style={{
+              fontFamily: "var(--font-playfair,'Playfair Display',serif)",
+              fontSize: 'clamp(18px,5vw,26px)', fontWeight: 700,
+              color: 'white', margin: '0 0 16px', textAlign: 'center',
+              padding: '0 20px', textShadow: '0 1px 4px rgba(0,0,0,0.5)',
+            }}
+          >
+            Камчатка глазами путешественников
+          </h2>
+          <div
+            className="carousel-track"
+            style={{
+              display: 'flex', gap: '12px',
+              overflowX: 'auto', padding: '0 20px 8px',
+              scrollSnapType: 'x mandatory',
+            }}
+          >
+            {CAROUSEL_IMAGES.map((img) => (
+              <div key={img.src} style={{ scrollSnapAlign: 'start' }}>
+                <CarouselItem img={img} onOpen={openLightbox} />
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Footer spacer for mobile nav */}
+        <div style={{ position: 'relative', zIndex: 1, marginTop: 'auto' }}>
+          <Footer />
         </div>
-      </section>
+        <div className="md:hidden" style={{ height: '112px' }} />
+      </div>
 
-      {/* Activities */}
-      <section className="py-8 px-4 max-w-md mx-auto">
-        <h2 className="text-2xl font-bold text-white mb-6 text-center">
-          Активности Камчатки
-        </h2>
-        <div className="grid grid-cols-2 gap-4">
-          {activities.map((activity) => (
-            <button
-              key={activity.category}
-              onClick={() => handleActivityClick(activity.category)}
-              className="bg-white/15 backdrop-blur-md border border-white/25 rounded-2xl p-4 text-center hover:border-cyan-400 transition-all duration-200 hover:shadow-lg hover:shadow-cyan-400/50"
-              onMouseDown={createRipple}
-            >
-              <activity.icon className="w-8 h-8 mx-auto mb-2 text-white" />
-              <span className="text-sm text-white">{activity.label}</span>
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {/* Carousel */}
-      <section className="py-8 px-4 max-w-md mx-auto">
-        <h2 className="text-2xl font-bold text-white mb-6 text-center">
-          Камчатка глазами путешественников
-        </h2>
-        <div className="flex gap-4 overflow-x-auto scrollbar-hide">
-          {/* Placeholder for carousel items */}
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex-shrink-0 w-32 h-24 bg-gray-300 rounded-2xl"></div>
-          ))}
-        </div>
-      </section>
-
-      {/* Bottom Nav - Mobile Only */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white/20 backdrop-blur-xl border-t border-white/30 rounded-t-3xl mx-4 mb-6 py-3 px-6 max-w-md mx-auto md:hidden">
-        <div className="flex justify-around">
-          {navItems.map((item) => (
-            <button
-              key={item.href}
-              onClick={() => handleNavClick(item.href)}
-              className={`flex flex-col items-center p-2 rounded-lg transition-colors duration-200 ${
-                activeTab === item.href ? 'text-cyan-400' : item.isSos ? 'text-red-500' : 'text-white'
-              }`}
-              onMouseDown={createRipple}
-            >
-              <item.icon className="w-5 h-5" />
-              <span className="text-xs mt-1">{item.label}</span>
-            </button>
-          ))}
-        </div>
-      </nav>
-
-      {/* Ripple Styles */}
-      <style jsx>{`
-        .ripple-effect {
-          position: absolute;
-          border-radius: 50%;
-          background-color: rgba(0, 212, 255, 0.3);
-          transform: scale(0);
-          animation: ripple 600ms linear;
-          pointer-events: none;
-        }
-
-        @keyframes ripple {
-          to {
-            transform: scale(4);
-            opacity: 0;
-          }
-        }
-
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
-    </div>
+      <BottomNav activePath="/" />
+      {lightboxSrc && <Lightbox src={lightboxSrc} onClose={closeLightbox} />}
+    </>
   );
 }

@@ -1,25 +1,21 @@
-import { Metadata } from 'next';
-import { Suspense } from 'react';
+import type { Metadata } from 'next';
 import HomePageClient from './_HomePageClient';
 
 export const metadata: Metadata = {
   title: 'Kamchatour — Туры на Камчатку | Рыбалка, Вулканы, Природа',
-  description: 'Туры на Камчатку: рыбалка на лосося, восхождения на вулканы, горячие источники. Бронирование онлайн. Лучшие туры Камчатки.',
+  description:
+    'Камчатка — земля огня и льда. Вулканы, рыбалка, термальные источники, джип-туры и снегоходные маршруты.',
   keywords: [
     'туры на Камчатку',
     'рыбалка Камчатка',
     'вулканы',
-    'отдых на Камчатке',
     'горячие источники',
-    'дикая природа',
-    'фьорды Камчатки',
+    'джип-туры',
+    'снегоход',
   ],
 };
 
 export default function Page() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <HomePageClient />
-    </Suspense>
-  );
+  return <HomePageClient />;
 }
+

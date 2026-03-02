@@ -9,15 +9,17 @@ const syne = Syne({
 });
 
 const playfairDisplay = Playfair_Display({
-  subsets: ['latin'],
+  subsets: ['latin', 'cyrillic'],
   weight: ['400', '700'],
-  display: 'swap'
+  display: 'swap',
+  variable: '--font-playfair',
 });
 
 const inter = Inter({
-  subsets: ['latin'],
+  subsets: ['latin', 'cyrillic'],
   weight: ['400', '500', '600'],
-  display: 'swap'
+  display: 'swap',
+  variable: '--font-inter',
 });
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://kamchatour.ru';
@@ -103,7 +105,7 @@ import { ThemeProvider } from '@/contexts/ThemeContext'
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ru" suppressHydrationWarning>
-      <body className={`min-h-screen transition-colors duration-300 ${syne.className}`}>
+      <body className={`min-h-screen transition-colors duration-300 ${syne.className} ${playfairDisplay.variable} ${inter.variable}`}>
         <ThemeProvider>
           <AuthProvider>
             <RoleProvider>
