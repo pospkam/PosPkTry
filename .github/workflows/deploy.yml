@@ -1,0 +1,59 @@
+name: Deploy to Timeweb Cloud
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Timeweb Cloud App deploy
+        run: |
+          # Получить список приложений
+          APPS=$(curl -s -f \
+            -H "Authorization: Bearer ${{ secrets.TIMEWEB_TOKEN }}" \
+            "https://api.timeweb.cloud/api/v1/apps")
+
+          APP_ID=$(echo "$APPS" | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          apps = data.get('apps', [])
+          for app in apps:
+              name = app.get('name', '')
+              if 'pospk' in name.lower() or 'kamhub' in name.lower() or 'kamchat' in name.lower():
+                  print(app['id'])
+                  break
+          if not apps:
+              print('')
+          elif len(apps) == 1:
+              print(apps[0]['id'])
+          " 2>/dev/null || echo "")
+
+          if [ -z "$APP_ID" ]; then
+            echo "App ID not found, getting first app..."
+            APP_ID=$(echo "$APPS" | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          apps = data.get('apps', [])
+          if apps:
+              print(apps[0]['id'])
+          " 2>/dev/null || echo "")
+          fi
+
+          if [ -z "$APP_ID" ]; then
+            echo "ERROR: Could not find Timeweb app"
+            echo "Available apps: $APPS"
+            exit 1
+          fi
+
+          echo "Deploying app ID: $APP_ID"
+
+          RESULT=$(curl -s -f -X POST \
+            -H "Authorization: Bearer ${{ secrets.TIMEWEB_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            "https://api.timeweb.cloud/api/v1/apps/$APP_ID/deploy")
+
+          echo "Deploy result: $RESULT"
+          echo "Deploy triggered successfully"
