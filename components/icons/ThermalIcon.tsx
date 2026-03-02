@@ -52,31 +52,3 @@ export const ThermalIcon: React.FC<ThermalIconProps> = ({ className = 'w-6 h-6' 
     />
   </svg>
 );
-    <path
-      d="M12 10V14"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-    />
-    <path
-      d="M12 18V22"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-    />
-    <circle cx="12" cy="8" r="2" stroke="currentColor" strokeWidth="2" />
-    <circle cx="12" cy="16" r="2" stroke="currentColor" strokeWidth="2" />
-    <path
-      d="M8 4L16 4"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-    />
-    <path
-      d="M8 20L16 20"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-    />
-  </svg>
-);

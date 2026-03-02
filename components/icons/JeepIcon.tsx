@@ -52,25 +52,3 @@ export const JeepIcon: React.FC<JeepIconProps> = ({ className = 'w-6 h-6' }) => 
     />
   </svg>
 );
-    <circle cx="6" cy="16" r="2" stroke="currentColor" strokeWidth="2" />
-    <circle cx="18" cy="16" r="2" stroke="currentColor" strokeWidth="2" />
-    <path
-      d="M2 12H22"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-    />
-    <path
-      d="M8 8V6"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-    />
-    <path
-      d="M16 8V6"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-    />
-  </svg>
-);
