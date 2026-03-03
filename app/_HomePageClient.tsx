@@ -29,6 +29,7 @@ interface NavItem {
 interface CarouselImage {
   src: string;
   alt: string;
+  webp?: string;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -42,11 +43,11 @@ const ACTIVITIES: Activity[] = [
 ];
 
 const CAROUSEL_IMAGES: CarouselImage[] = [
-  { src: '/images/carousel/1.jpg', alt: 'Камчатка — дикая природа' },
-  { src: '/images/carousel/2.jpg', alt: 'Камчатка — вулканы' },
-  { src: '/images/carousel/3.jpg', alt: 'Камчатка — медведи' },
-  { src: '/images/carousel/4.jpg', alt: 'Камчатка — гейзеры' },
-  { src: '/images/carousel/5.jpg', alt: 'Камчатка — горные реки' },
+  { src: '/images/carousel/1.jpg', alt: 'Камчатка — дикая природа', webp: '/images/carousel/1.webp' },
+  { src: '/images/carousel/2.jpg', alt: 'Камчатка — вулканы', webp: '/images/carousel/2.webp' },
+  { src: '/images/carousel/3.jpg', alt: 'Камчатка — медведи', webp: '/images/carousel/3.webp' },
+  { src: '/images/carousel/4.jpg', alt: 'Камчатка — гейзеры', webp: '/images/carousel/4.webp' },
+  { src: '/images/carousel/5.jpg', alt: 'Камчатка — горные реки', webp: '/images/carousel/5.webp' },
 ];
 
 const NAV_ITEMS: NavItem[] = [
@@ -185,14 +186,18 @@ function CarouselItem({ img, onOpen }: CarouselItemProps) {
           }}
         />
       ) : (
-        <Image
-          src={img.src}
-          alt={img.alt}
-          fill
-          sizes="120px"
-          style={{ objectFit: 'cover', objectPosition: 'center' }}
-          onError={() => setError(true)}
-        />
+        <picture>
+          {img.webp && <source srcSet={img.webp} type="image/webp" />}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={img.src}
+            alt={img.alt}
+            loading="lazy"
+            decoding="async"
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
+            onError={() => setError(true)}
+          />
+        </picture>
       )}
     </button>
   );
@@ -433,7 +438,8 @@ export default function HomePageClient() {
     return <div style={{ minHeight: '100dvh', background: '#0B1120' }} />;
   }
 
-  const bgImage = theme === 'dark' ? '/images/dark.jpg' : '/images/light.jpg';
+  // Адаптивные фоны: WebP + JPG fallback, 3 размера (mobile/tablet/desktop)
+  const isDark = theme === 'dark';
 
   return (
     <>
@@ -453,16 +459,49 @@ export default function HomePageClient() {
         className={visible ? 'kh-page' : ''}
         style={{ minHeight: '100dvh', position: 'relative', display: 'flex', flexDirection: 'column' }}
       >
-        {/* Background */}
+        {/* Background -- адаптивные размеры: 640/1024/1920, WebP + JPG fallback */}
         <div style={{ position: 'fixed', inset: 0, zIndex: 0 }}>
-          <Image
-            src={bgImage}
-            alt="Камчатка"
-            fill
-            priority
-            sizes="100vw"
-            style={{ objectFit: 'cover', objectPosition: 'center', transition: 'opacity 600ms ease' }}
-          />
+          <picture>
+            {isDark ? (
+              <>
+                <source
+                  type="image/webp"
+                  srcSet="/images/bg/dark-640.webp 640w, /images/bg/dark-1024.webp 1024w, /images/bg/dark-1920.webp 1920w"
+                  sizes="100vw"
+                />
+                <source
+                  type="image/jpeg"
+                  srcSet="/images/bg/dark-640.jpg 640w, /images/bg/dark-1024.jpg 1024w, /images/bg/dark-1920.jpg 1920w"
+                  sizes="100vw"
+                />
+              </>
+            ) : (
+              <>
+                <source
+                  type="image/webp"
+                  srcSet="/images/bg/light-480.webp 480w, /images/bg/light-768.webp 768w, /images/bg/light-832.webp 832w"
+                  sizes="100vw"
+                />
+                <source
+                  type="image/jpeg"
+                  srcSet="/images/bg/light-480.jpg 480w, /images/bg/light-768.jpg 768w, /images/bg/light-832.jpg 832w"
+                  sizes="100vw"
+                />
+              </>
+            )}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={isDark ? '/images/dark.jpg' : '/images/light.jpg'}
+              alt="Камчатка"
+              fetchPriority="high"
+              decoding="async"
+              style={{
+                position: 'absolute', inset: 0, width: '100%', height: '100%',
+                objectFit: 'cover', objectPosition: 'center',
+                transition: 'opacity 600ms ease',
+              }}
+            />
+          </picture>
           <div
             style={{
               position: 'absolute',
