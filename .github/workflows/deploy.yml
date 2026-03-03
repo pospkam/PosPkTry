@@ -1,5 +1,9 @@
 name: Deploy to Timeweb Cloud
 
+# Timeweb Cloud auto-deploy включён (is_auto_deploy: true)
+# Деплой запускается автоматически через webhook при push в main
+# Этот workflow только проверяет статус деплоя
+
 on:
   push:
     branches: [main]
@@ -9,55 +13,35 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Update env vars
+      - name: Check deploy status
         run: |
           APP_ID="159529"
           TOKEN="${{ secrets.TIMEWEB_TOKEN }}"
 
           if [ -z "$TOKEN" ]; then
-            echo "ERROR: TIMEWEB_TOKEN secret is not set in GitHub repository settings"
-            echo "Go to: https://github.com/pospkam/PosPkTry/settings/secrets/actions"
-            exit 1
+            echo "TIMEWEB_TOKEN not set — skip status check"
+            echo "Deploy runs automatically via Timeweb webhook"
+            exit 0
           fi
 
-          echo "Updating env vars for app $APP_ID"
-          HTTP=$(curl -s -o /tmp/env_resp.json -w "%{http_code}" -X PATCH \
+          echo "Timeweb auto-deploy is enabled for app $APP_ID"
+          echo "Checking current app status..."
+
+          HTTP=$(curl -s -o /tmp/app_status.json -w "%{http_code}" \
             -H "Authorization: Bearer $TOKEN" \
-            -H "Content-Type: application/json" \
-            "https://api.timeweb.cloud/api/v1/apps/$APP_ID" \
-            -d '{
-              "envs": {
-                "NODE_ENV": "production",
-                "DATABASE_URL": "postgresql://kamuser:kampass2024_local@94.228.112.62:5432/kamhub",
-                "DATABASE_SSL": "false",
-                "JWT_SECRET": "kamhub_jwt_secret_production_2026_secure_key_32ch",
-                "NEXTAUTH_SECRET": "kamhub_nextauth_secret_production_2026_key",
-                "NEXTAUTH_URL": "https://pospkam-pospktry-c1f3.twc1.net",
-                "NEXT_PUBLIC_APP_URL": "https://pospkam-pospktry-c1f3.twc1.net",
-                "NEXT_TELEMETRY_DISABLED": "1"
-              }
-            }')
-          echo "Env update HTTP $HTTP: $(cat /tmp/env_resp.json)"
-          # Не прерываем workflow если env update вернул ошибку — деплоим в любом случае
+            "https://api.timeweb.cloud/api/v1/apps/$APP_ID")
 
-      - name: Trigger deploy
-        run: |
-          APP_ID="159529"
-          TOKEN="${{ secrets.TIMEWEB_TOKEN }}"
-          echo "Triggering deployment for app $APP_ID"
-
-          HTTP=$(curl -s -o /tmp/deploy_resp.json -w "%{http_code}" -X POST \
-            -H "Authorization: Bearer $TOKEN" \
-            -H "Content-Type: application/json" \
-            "https://api.timeweb.cloud/api/v1/apps/$APP_ID/deployments")
-          echo "Deploy HTTP $HTTP: $(cat /tmp/deploy_resp.json)"
-
-          if [ "$HTTP" -ge 200 ] && [ "$HTTP" -lt 300 ]; then
-            echo "Deploy triggered successfully"
-          elif [ "$HTTP" = "409" ]; then
-            echo "Deploy already in progress (409) — OK"
+          if [ "$HTTP" = "200" ]; then
+            STATUS=$(python3 -c "import json; d=json.load(open('/tmp/app_status.json')); print(d['app']['status'])" 2>/dev/null || echo "unknown")
+            COMMIT=$(python3 -c "import json; d=json.load(open('/tmp/app_status.json')); print(d['app']['commit_sha'][:7])" 2>/dev/null || echo "unknown")
+            DOMAIN=$(python3 -c "import json; d=json.load(open('/tmp/app_status.json')); print(d['app']['domains'][0]['fqdn'])" 2>/dev/null || echo "unknown")
+            echo "App status: $STATUS"
+            echo "Latest commit: $COMMIT"
+            echo "Domain: https://$DOMAIN"
           else
-            echo "Deploy failed with HTTP $HTTP"
-            cat /tmp/deploy_resp.json
-            exit 1
+            echo "Could not check status (HTTP $HTTP) — deploy still runs via webhook"
           fi
+
+          echo ""
+          echo "Deploy is managed by Timeweb Cloud webhook (auto-deploy)"
+          echo "Site: https://pospkam-pospktry-c1f3.twc1.net"
