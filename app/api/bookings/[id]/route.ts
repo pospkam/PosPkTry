@@ -1,137 +1,224 @@
 /**
  * Bookings API - Detail Operations
- * GET /api/bookings/[id] - Get booking details
- * PUT /api/bookings/[id] - Update booking
- * DELETE /api/bookings/[id] - Cancel booking
+ * GET /api/bookings/[id] - Get booking details (with logs)
+ * PUT /api/bookings/[id] - Update booking (special requests only, pending status)
+ * DELETE /api/bookings/[id] - Cancel booking (delegates to cancel service)
  */
 
-import { NextRequest, NextResponse } from 'next/server'
-import { bookingService } from '@/lib/database'
-import { authenticateUser } from '@/lib/auth'
+import { NextRequest, NextResponse } from 'next/server';
+import { verifyAuth } from '@/lib/auth';
+import { query } from '@/lib/database';
+import {
+  getBookingById,
+  getBookingForUser,
+  cancelBooking,
+} from '@/lib/bookings/booking.service';
+import { ApiResponse } from '@/types';
 
 /**
  * GET /api/bookings/[id]
- * Get booking details by ID
+ * Детали бронирования с логами переходов статусов.
+ * tourist — только свои, operator — туры своего партнёра, admin — всё.
  */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Authentication
-    const userId = await authenticateUser(request)
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const auth = await verifyAuth(request);
+    if (!auth.isAuthenticated || !auth.userId || !auth.role) {
+      return NextResponse.json(
+        { success: false, error: 'Требуется аутентификация' } as ApiResponse<null>,
+        { status: 401 }
+      );
     }
 
-    const { id } = await params
+    const { id } = await params;
 
-    // Ownership is enforced at service layer
-    const booking = await bookingService.getByIdForUser(id, userId)
-    if (!booking) {
-      return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
+    // Для туриста — проверяем владение
+    if (auth.role === 'tourist') {
+      const booking = await getBookingForUser(id, auth.userId);
+      if (!booking) {
+        return NextResponse.json(
+          { success: false, error: 'Бронирование не найдено' } as ApiResponse<null>,
+          { status: 404 }
+        );
+      }
+      return NextResponse.json({ success: true, data: booking });
     }
 
-    return NextResponse.json(booking)
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('not found')) {
-      return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
+    // Для оператора — проверяем что тур принадлежит его партнёру
+    if (auth.role === 'operator') {
+      const booking = await getBookingById(id);
+      if (!booking) {
+        return NextResponse.json(
+          { success: false, error: 'Бронирование не найдено' } as ApiResponse<null>,
+          { status: 404 }
+        );
+      }
+      // Проверяем владение туром
+      const ownerCheck = await query(
+        `SELECT 1 FROM tours t
+         JOIN partners p ON t.operator_id = p.id
+         WHERE t.id = $1 AND p.user_id = $2`,
+        [booking.tour.id, auth.userId]
+      );
+      if (ownerCheck.rows.length === 0) {
+        return NextResponse.json(
+          { success: false, error: 'Бронирование не найдено' } as ApiResponse<null>,
+          { status: 404 }
+        );
+      }
+      return NextResponse.json({ success: true, data: booking });
     }
 
-    console.error('Failed to get booking:', error)
+    // Для админа — полный доступ
+    if (auth.role === 'admin') {
+      const booking = await getBookingById(id);
+      if (!booking) {
+        return NextResponse.json(
+          { success: false, error: 'Бронирование не найдено' } as ApiResponse<null>,
+          { status: 404 }
+        );
+      }
+      return NextResponse.json({ success: true, data: booking });
+    }
+
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to get booking' },
+      { success: false, error: 'Недостаточно прав' } as ApiResponse<null>,
+      { status: 403 }
+    );
+  } catch (error) {
+    console.error('[BOOKINGS_GET_ID]', error);
+    return NextResponse.json(
+      { success: false, error: 'Ошибка при получении бронирования' } as ApiResponse<null>,
       { status: 500 }
-    )
+    );
   }
 }
 
 /**
  * PUT /api/bookings/[id]
- * Update booking details (special requests, dietary requirements, etc.)
- * Can only update pending bookings
+ * Обновить бронирование (только specialRequests, только в статусе pending)
+ * Только владелец бронирования.
  */
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Authentication
-    const userId = await authenticateUser(request)
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const auth = await verifyAuth(request);
+    if (!auth.isAuthenticated || !auth.userId) {
+      return NextResponse.json(
+        { success: false, error: 'Требуется аутентификация' } as ApiResponse<null>,
+        { status: 401 }
+      );
     }
 
-    const { id } = await params
+    const { id } = await params;
+    const body = await request.json();
 
-    // Parse body
-    const body = await request.json()
-
-    // Ownership is enforced at service layer
-    const updated = await bookingService.updateForUser(id, userId, {
-      specialRequests: body.specialRequests,
-      dietaryRequirements: body.dietaryRequirements,
-      mobilityRequirements: body.mobilityRequirements,
-    })
-    if (!updated) {
-      return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
+    // Проверяем владение и статус
+    const booking = await getBookingForUser(id, auth.userId);
+    if (!booking) {
+      return NextResponse.json(
+        { success: false, error: 'Бронирование не найдено' } as ApiResponse<null>,
+        { status: 404 }
+      );
     }
 
-    return NextResponse.json(updated)
+    if (booking.status !== 'pending') {
+      return NextResponse.json(
+        { success: false, error: 'Можно редактировать только бронирование в статусе ожидания' } as ApiResponse<null>,
+        { status: 409 }
+      );
+    }
+
+    const specialRequests = typeof body.specialRequests === 'string' ? body.specialRequests : null;
+
+    await query(
+      `UPDATE bookings SET special_requests = $2, updated_at = NOW() WHERE id = $1`,
+      [id, specialRequests]
+    );
+
+    const updated = await getBookingForUser(id, auth.userId);
+
+    return NextResponse.json({
+      success: true,
+      data: updated,
+      message: 'Бронирование обновлено',
+    });
   } catch (error) {
-    if (error instanceof Error && error.message.includes('not found')) {
-      return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
-    }
-
-    console.error('Failed to update booking:', error)
+    console.error('[BOOKINGS_PUT]', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to update booking' },
+      { success: false, error: 'Ошибка при обновлении бронирования' } as ApiResponse<null>,
       { status: 500 }
-    )
+    );
   }
 }
 
 /**
  * DELETE /api/bookings/[id]
- * Cancel booking and process refund
+ * Отменить бронирование (делегирует в cancelBooking)
+ * Только владелец.
  */
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Authentication
-    const userId = await authenticateUser(request)
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const auth = await verifyAuth(request);
+    if (!auth.isAuthenticated || !auth.userId) {
+      return NextResponse.json(
+        { success: false, error: 'Требуется аутентификация' } as ApiResponse<null>,
+        { status: 401 }
+      );
     }
 
-    const { id } = await params
+    const { id } = await params;
 
-    // Parse body
-    const body = await request.json()
-    const reason = body.reason || 'User requested cancellation'
-
-    // Ownership is enforced at service layer
-    const cancelled = await bookingService.cancel(id, reason, userId)
-    if (!cancelled) {
-      return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
+    // Проверяем владение
+    const existing = await getBookingForUser(id, auth.userId);
+    if (!existing) {
+      return NextResponse.json(
+        { success: false, error: 'Бронирование не найдено' } as ApiResponse<null>,
+        { status: 404 }
+      );
     }
+
+    let reason = 'Отменено пользователем';
+    try {
+      const body = await request.json();
+      if (typeof body.reason === 'string') {
+        reason = body.reason;
+      }
+    } catch {
+      // Тело необязательно для DELETE
+    }
+
+    const { booking, refund } = await cancelBooking(id, auth.userId, 'tourist', reason);
 
     return NextResponse.json({
-      message: 'Booking cancelled successfully',
-      booking: cancelled,
-      refundAmount: cancelled.refundAmount,
-    })
+      success: true,
+      data: { booking, refund },
+      message: refund.amount > 0
+        ? `Бронирование отменено. ${refund.reason}`
+        : 'Бронирование отменено. Возврат не предусмотрен.',
+    });
   } catch (error) {
-    if (error instanceof Error && error.message.includes('not found')) {
-      return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
+    const message = error instanceof Error ? error.message : 'Ошибка';
+
+    if (message.includes('Недопустимый переход') || message.includes('Нельзя изменить')) {
+      return NextResponse.json(
+        { success: false, error: message } as ApiResponse<null>,
+        { status: 409 }
+      );
     }
 
-    console.error('Failed to cancel booking:', error)
+    console.error('[BOOKINGS_DELETE]', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to cancel booking' },
+      { success: false, error: 'Ошибка при отмене бронирования' } as ApiResponse<null>,
       { status: 500 }
-    )
+    );
   }
 }

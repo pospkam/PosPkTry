@@ -21,7 +21,7 @@
     rgba(20, 20, 20, 0.98) 50%,
     rgba(10, 10, 10, 0.97) 100%
   );
-  backdrop-filter: blur(30px);
+  backdrop-filter: blur(10px);
   border: 1.5px solid rgba(212, 175, 55, 0.3);
   border-radius: 16px;
   width: 100%;

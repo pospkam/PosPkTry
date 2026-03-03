@@ -1,116 +1,72 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { ApiResponse, Booking } from '@/types';
-import { query } from '@/lib/database';
-import { verifyAuth } from '@/lib/auth';
+/**
+ * API Routes для бронирований
+ *
+ * GET  /api/bookings — список бронирований (ролевой доступ)
+ *   tourist  — видит свои
+ *   operator — видит бронирования на свои туры
+ *   admin    — видит всё
+ *
+ * POST /api/bookings — создать бронирование (роль: tourist)
+ */
 
-// GET /api/bookings - Получение бронирований пользователя
+import { NextRequest, NextResponse } from 'next/server';
+import { ApiResponse } from '@/types';
+import { verifyAuth } from '@/lib/auth';
+import {
+  listBookings,
+  createBooking,
+} from '@/lib/bookings/booking.service';
+import type { BookingWithDetails, CreateBookingInput } from '@/types/booking.types';
+
+// GET /api/bookings — Получение бронирований с ролевой фильтрацией
 export async function GET(request: NextRequest) {
   try {
     const auth = await verifyAuth(request);
-    if (!auth.isAuthenticated || !auth.userId) {
+    if (!auth.isAuthenticated || !auth.userId || !auth.role) {
       return NextResponse.json(
         { success: false, error: 'Пользователь не авторизован' } as ApiResponse<null>,
         { status: 401 }
       );
     }
-    const userId = auth.userId;
 
-    const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status');
-    const limit = parseInt(searchParams.get('limit') || '10');
-    const offset = parseInt(searchParams.get('offset') || '0');
-
-    let queryText = `
-      SELECT
-        b.id,
-        b.user_id as "userId",
-        b.tour_id as "tourId",
-        b.date,
-        b.participants,
-        b.total_price as "totalPrice",
-        b.status,
-        b.payment_status as "paymentStatus",
-        b.special_requests as "specialRequests",
-        b.created_at as "createdAt",
-        b.updated_at as "updatedAt",
-        t.name as "tourTitle",
-        t.description as "tourDescription",
-        t.difficulty as "tourDifficulty",
-        t.duration,
-        t.price as "tourPrice",
-        t.max_group_size as "maxParticipants",
-        t.min_group_size as "minParticipants",
-        t.rating as "tourRating",
-        t.review_count as "reviewsCount",
-        p.name as "operatorName",
-        p.rating as "operatorRating"
-      FROM bookings b
-      LEFT JOIN tours t ON b.tour_id = t.id
-      LEFT JOIN partners p ON t.operator_id = p.id
-      WHERE b.user_id = $1
-    `;
-
-    const params = [userId];
-
-    if (status) {
-      queryText += ` AND b.status = $2`;
-      params.push(status);
+    // Определяем роль для фильтрации
+    const roleMap: Record<string, 'tourist' | 'operator' | 'admin'> = {
+      tourist: 'tourist',
+      operator: 'operator',
+      admin: 'admin',
+    };
+    const listRole = roleMap[auth.role];
+    if (!listRole) {
+      return NextResponse.json(
+        { success: false, error: 'Роль не имеет доступа к бронированиям' } as ApiResponse<null>,
+        { status: 403 }
+      );
     }
 
-    queryText += `
-      ORDER BY b.created_at DESC
-      LIMIT $${params.length + 1} OFFSET $${params.length + 2}
-    `;
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get('status') ?? undefined;
+    const limit = Math.min(parseInt(searchParams.get('limit') || '10', 10), 100);
+    const offset = Math.max(parseInt(searchParams.get('offset') || '0', 10), 0);
 
-    params.push(limit, offset);
-
-    const result = await query(queryText, params);
-
-    const bookings: Booking[] = result.rows.map(row => ({
-      id: row.id,
-      userId: row.userId,
-      tourId: row.tourId,
-      tour: {
-        id: row.tourId,
-        title: row.tourTitle || 'Неизвестный тур',
-        description: row.tourDescription || '',
-        activity: 'hiking', // TODO: добавить в БД
-        duration: `${row.duration} часов`,
-        difficulty: row.tourDifficulty || 'medium',
-        priceFrom: parseFloat(row.tourPrice) || 0,
-        priceTo: parseFloat(row.tourPrice) || 0,
-        maxParticipants: row.maxParticipants || 20,
-        minParticipants: row.minParticipants || 1,
-        images: [], // TODO: добавить из tour_assets
-        rating: parseFloat(row.tourRating) || 0,
-        reviewsCount: row.reviewsCount || 0,
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        operator: {
-          id: row.tourId, // TODO: исправить на operator_id
-          name: row.operatorName || 'Неизвестный оператор',
-          rating: parseFloat(row.operatorRating) || 0,
-          phone: '', // TODO: добавить в БД
-          email: '', // TODO: добавить в БД
-        },
-      },
-      date: new Date(row.date),
-      participants: row.participants,
-      totalPrice: parseFloat(row.totalPrice),
-      status: row.status,
-      paymentStatus: row.paymentStatus,
-      specialRequests: row.specialRequests,
-      createdAt: new Date(row.createdAt),
-      updatedAt: new Date(row.updatedAt),
-    }));
+    const { bookings, total } = await listBookings({
+      userId: auth.userId,
+      role: listRole,
+      status,
+      limit,
+      offset,
+    });
 
     return NextResponse.json({
       success: true,
-      data: bookings,
-    } as ApiResponse<Booking[]>);
+      data: {
+        bookings,
+        total,
+        limit,
+        offset,
+      },
+    } as ApiResponse<{ bookings: BookingWithDetails[]; total: number; limit: number; offset: number }>);
   } catch (error) {
-    console.error('Error fetching bookings:', error);
+    console.error('[BOOKINGS_GET]', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка при получении бронирований' } as ApiResponse<null>,
       { status: 500 }
@@ -118,83 +74,79 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/bookings - Создание нового бронирования
+// POST /api/bookings — Создание нового бронирования (только tourist)
 export async function POST(request: NextRequest) {
   try {
     const auth = await verifyAuth(request);
-    if (!auth.isAuthenticated || !auth.userId) {
+    if (!auth.isAuthenticated || !auth.userId || !auth.role) {
       return NextResponse.json(
         { success: false, error: 'Пользователь не авторизован' } as ApiResponse<null>,
         { status: 401 }
       );
     }
-    const userId = auth.userId;
+
+    // Только туристы могут создавать бронирования
+    if (auth.role !== 'tourist' && auth.role !== 'admin') {
+      return NextResponse.json(
+        { success: false, error: 'Только туристы могут создавать бронирования' } as ApiResponse<null>,
+        { status: 403 }
+      );
+    }
 
     const body = await request.json();
-    const { tourId, date, participants, specialRequests } = body;
+    const { tourId, date, participants, specialRequests } = body as Record<string, unknown>;
 
     // Валидация входных данных
-    if (!tourId || !date || !participants || participants < 1) {
+    if (
+      typeof tourId !== 'string' || !tourId ||
+      typeof date !== 'string' || !date ||
+      typeof participants !== 'number' || participants < 1
+    ) {
       return NextResponse.json(
-        { success: false, error: 'Неверные данные бронирования' } as ApiResponse<null>,
+        { success: false, error: 'Неверные данные бронирования. Обязательные поля: tourId (string), date (string YYYY-MM-DD), participants (number >= 1)' } as ApiResponse<null>,
         { status: 400 }
       );
     }
 
-    // Проверяем существование тура
-    const tourCheck = await query('SELECT id, price, max_group_size FROM tours WHERE id = $1', [tourId]);
-    if (tourCheck.rows.length === 0) {
+    // Валидация формата даты
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       return NextResponse.json(
-        { success: false, error: 'Тур не найден' } as ApiResponse<null>,
-        { status: 404 }
+        { success: false, error: 'Дата должна быть в формате YYYY-MM-DD' } as ApiResponse<null>,
+        { status: 400 }
       );
     }
 
-    const tour = tourCheck.rows[0];
-    const totalPrice = tour.price * participants;
+    const input: CreateBookingInput = {
+      tourId,
+      date,
+      participants,
+      specialRequests: typeof specialRequests === 'string' ? specialRequests : undefined,
+    };
 
-    // Проверяем доступность на эту дату
-    const availabilityCheck = await query(`
-      SELECT COUNT(*) as booked_count
-      FROM bookings
-      WHERE tour_id = $1 AND date = $2 AND status IN ('pending', 'confirmed')
-    `, [tourId, date]);
+    const booking = await createBooking(auth.userId, input);
 
-    const bookedCount = parseInt(availabilityCheck.rows[0].booked_count);
-    if (bookedCount + participants > tour.max_group_size) {
+    return NextResponse.json({
+      success: true,
+      data: booking,
+      message: 'Бронирование создано. Ожидает подтверждения оператором.',
+    } as ApiResponse<BookingWithDetails>, { status: 201 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Внутренняя ошибка сервера';
+
+    if (message.includes('не найден') || message.includes('не активен')) {
       return NextResponse.json(
-        { success: false, error: 'Недостаточно мест на выбранную дату' } as ApiResponse<null>,
+        { success: false, error: message } as ApiResponse<null>,
+        { status: 404 }
+      );
+    }
+    if (message.includes('Недостаточно мест')) {
+      return NextResponse.json(
+        { success: false, error: message } as ApiResponse<null>,
         { status: 409 }
       );
     }
 
-    // Создаем бронирование в транзакции
-    const result = await query(`
-      INSERT INTO bookings (user_id, tour_id, date, participants, total_price, special_requests)
-      VALUES ($1, $2, $3, $4, $5, $6)
-      RETURNING id, created_at
-    `, [userId, tourId, date, participants, totalPrice, specialRequests]);
-
-    const newBooking = result.rows[0];
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        id: newBooking.id,
-        userId,
-        tourId,
-        date,
-        participants,
-        totalPrice,
-        status: 'pending',
-        paymentStatus: 'pending',
-        specialRequests,
-        createdAt: newBooking.created_at,
-      },
-      message: 'Бронирование создано. Перейдите к оплате.',
-    } as ApiResponse<any>);
-  } catch (error) {
-    console.error('Error creating booking:', error);
+    console.error('[BOOKINGS_POST]', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка при создании бронирования' } as ApiResponse<null>,
       { status: 500 }
