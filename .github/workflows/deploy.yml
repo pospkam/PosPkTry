@@ -9,51 +9,55 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Timeweb Cloud App deploy
+      - name: Update env vars
         run: |
-          # Получить список приложений
-          APPS=$(curl -s -f \
-            -H "Authorization: Bearer ${{ secrets.TIMEWEB_TOKEN }}" \
-            "https://api.timeweb.cloud/api/v1/apps")
+          APP_ID="159529"
+          TOKEN="${{ secrets.TIMEWEB_TOKEN }}"
 
-          APP_ID=$(echo "$APPS" | python3 -c "
-          import json, sys
-          data = json.load(sys.stdin)
-          apps = data.get('apps', [])
-          for app in apps:
-              name = app.get('name', '')
-              if 'pospk' in name.lower() or 'kamhub' in name.lower() or 'kamchat' in name.lower():
-                  print(app['id'])
-                  break
-          if not apps:
-              print('')
-          elif len(apps) == 1:
-              print(apps[0]['id'])
-          " 2>/dev/null || echo "")
-
-          if [ -z "$APP_ID" ]; then
-            echo "App ID not found, getting first app..."
-            APP_ID=$(echo "$APPS" | python3 -c "
-          import json, sys
-          data = json.load(sys.stdin)
-          apps = data.get('apps', [])
-          if apps:
-              print(apps[0]['id'])
-          " 2>/dev/null || echo "")
-          fi
-
-          if [ -z "$APP_ID" ]; then
-            echo "ERROR: Could not find Timeweb app"
-            echo "Available apps: $APPS"
+          if [ -z "$TOKEN" ]; then
+            echo "ERROR: TIMEWEB_TOKEN secret is not set in GitHub repository settings"
+            echo "Go to: https://github.com/pospkam/PosPkTry/settings/secrets/actions"
             exit 1
           fi
 
-          echo "Deploying app ID: $APP_ID"
-
-          RESULT=$(curl -s -f -X POST \
-            -H "Authorization: Bearer ${{ secrets.TIMEWEB_TOKEN }}" \
+          echo "Updating env vars for app $APP_ID"
+          HTTP=$(curl -s -o /tmp/env_resp.json -w "%{http_code}" -X PATCH \
+            -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json" \
-            "https://api.timeweb.cloud/api/v1/apps/$APP_ID/deploy")
+            "https://api.timeweb.cloud/api/v1/apps/$APP_ID" \
+            -d '{
+              "envs": {
+                "NODE_ENV": "production",
+                "DATABASE_URL": "postgresql://kamuser:kampass2024_local@94.228.112.62:5432/kamhub",
+                "DATABASE_SSL": "false",
+                "JWT_SECRET": "kamhub_jwt_secret_production_2026_secure_key_32ch",
+                "NEXTAUTH_SECRET": "kamhub_nextauth_secret_production_2026_key",
+                "NEXTAUTH_URL": "https://pospkam-pospktry-c1f3.twc1.net",
+                "NEXT_PUBLIC_APP_URL": "https://pospkam-pospktry-c1f3.twc1.net",
+                "NEXT_TELEMETRY_DISABLED": "1"
+              }
+            }')
+          echo "Env update HTTP $HTTP: $(cat /tmp/env_resp.json)"
+          # Не прерываем workflow если env update вернул ошибку — деплоим в любом случае
 
-          echo "Deploy result: $RESULT"
-          echo "Deploy triggered successfully"
+      - name: Trigger deploy
+        run: |
+          APP_ID="159529"
+          TOKEN="${{ secrets.TIMEWEB_TOKEN }}"
+          echo "Triggering deployment for app $APP_ID"
+
+          HTTP=$(curl -s -o /tmp/deploy_resp.json -w "%{http_code}" -X POST \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            "https://api.timeweb.cloud/api/v1/apps/$APP_ID/deployments")
+          echo "Deploy HTTP $HTTP: $(cat /tmp/deploy_resp.json)"
+
+          if [ "$HTTP" -ge 200 ] && [ "$HTTP" -lt 300 ]; then
+            echo "Deploy triggered successfully"
+          elif [ "$HTTP" = "409" ]; then
+            echo "Deploy already in progress (409) — OK"
+          else
+            echo "Deploy failed with HTTP $HTTP"
+            cat /tmp/deploy_resp.json
+            exit 1
+          fi

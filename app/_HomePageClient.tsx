@@ -9,10 +9,9 @@ import { FishingIcon } from '@/components/icons/FishingIcon';
 import { ThermalIcon } from '@/components/icons/ThermalIcon';
 import { SnowmobileIcon } from '@/components/icons/SnowmobileIcon';
 import { JeepIcon } from '@/components/icons/JeepIcon';
+import { useTheme } from '@/contexts/ThemeContext';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
-type Theme = 'light' | 'dark';
 
 interface Activity {
   icon: React.ReactNode;
@@ -154,11 +153,13 @@ interface CarouselItemProps {
 }
 
 function CarouselItem({ img, onOpen }: CarouselItemProps) {
+  const [error, setError] = useState(false);
+
   return (
     <button
       type="button"
       aria-label={img.alt}
-      onClick={() => onOpen(img.src)}
+      onClick={() => !error && onOpen(img.src)}
       style={{
         width: '120px',
         minWidth: '120px',
@@ -167,20 +168,32 @@ function CarouselItem({ img, onOpen }: CarouselItemProps) {
         overflow: 'hidden',
         border: 'none',
         padding: 0,
-        cursor: 'pointer',
+        cursor: error ? 'default' : 'pointer',
         flexShrink: 0,
         position: 'relative',
         transition: 'transform 200ms ease',
         background: 'rgba(255,255,255,0.1)',
       }}
     >
-      <Image
-        src={img.src}
-        alt={img.alt}
-        fill
-        sizes="120px"
-        style={{ objectFit: 'cover', objectPosition: 'center' }}
-      />
+      {error ? (
+        <div
+          style={{
+            width: '100%',
+            height: '100%',
+            background: 'rgba(255,255,255,0.08)',
+            borderRadius: '16px',
+          }}
+        />
+      ) : (
+        <Image
+          src={img.src}
+          alt={img.alt}
+          fill
+          sizes="120px"
+          style={{ objectFit: 'cover', objectPosition: 'center' }}
+          onError={() => setError(true)}
+        />
+      )}
     </button>
   );
 }
@@ -388,29 +401,16 @@ function Footer() {
 // ─── Main Export ──────────────────────────────────────────────────────────────
 
 export default function HomePageClient() {
-  const [theme, setTheme] = useState<Theme>('light');
+  // Используем единый ThemeContext вместо дублирующегося локального стейта
+  const { theme, toggleTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [clickedActivity, setClickedActivity] = useState<string | null>(null);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem('kh-theme') as Theme | null;
-    if (saved === 'light' || saved === 'dark') {
-      setTheme(saved);
-    } else {
-      setTheme('light');
-    }
     setMounted(true);
     requestAnimationFrame(() => setVisible(true));
-  }, []);
-
-  const toggleTheme = useCallback(() => {
-    setTheme((prev) => {
-      const next: Theme = prev === 'light' ? 'dark' : 'light';
-      localStorage.setItem('kh-theme', next);
-      return next;
-    });
   }, []);
 
   const handleHeaderRipple = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {

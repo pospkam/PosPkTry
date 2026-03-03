@@ -43,7 +43,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const saved = localStorage.getItem('kh-theme') as Theme | null;
-    const initial: Theme = saved ?? 'dark';
+    // Дефолт: light на мобильном (< 768px), dark на десктопе
+    const systemDefault: Theme = window.innerWidth < 768 ? 'light' : 'dark';
+    const initial: Theme = saved ?? systemDefault;
     setTheme(initial);
     applyThemeToDOM(initial);
     setMounted(true);
