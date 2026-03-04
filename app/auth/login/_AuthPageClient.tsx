@@ -382,7 +382,7 @@ export default function AuthPageClient() {
             </form>
 
             <div className="text-center mt-6">
-              <Link href="/demo" className="text-blue-400 hover:text-blue-300 text-sm transition-colors">
+              <Link href="/demo" className="text-sm font-medium transition-colors">
                 Демо-режим (без регистрации)
               </Link>
             </div>

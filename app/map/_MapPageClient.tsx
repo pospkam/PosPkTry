@@ -126,7 +126,7 @@ export default function MapPageClient() {
         <div className="px-4 py-3 flex items-center justify-between">
           {/* Левая часть - логотип и название */}
           <div className="flex items-center gap-4">
-            <Link href="/" className="text-xl font-bold text-blue-600 hover:text-blue-700">
+            <Link href="/" className="text-xl font-bold">
               KamHub
             </Link>
             <span className="text-gray-300">|</span>

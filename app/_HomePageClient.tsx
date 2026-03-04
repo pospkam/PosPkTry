@@ -411,11 +411,9 @@ export default function HomePageClient() {
   const [mounted, setMounted] = useState(false);
   const [clickedActivity, setClickedActivity] = useState<string | null>(null);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
-  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    requestAnimationFrame(() => setVisible(true));
   }, []);
 
   const handleHeaderRipple = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
@@ -438,9 +436,6 @@ export default function HomePageClient() {
     return <div style={{ minHeight: '100dvh', background: '#0B1120' }} />;
   }
 
-  // Адаптивные фоны: WebP + JPG fallback, 3 размера (mobile/tablet/desktop)
-  const isDark = theme === 'dark';
-
   return (
     <>
       <style>{`
@@ -452,65 +447,27 @@ export default function HomePageClient() {
         .header-btn:hover svg { filter:drop-shadow(0 0 6px #00D4FF); }
         .carousel-track { scrollbar-width:none; -ms-overflow-style:none; }
         .carousel-track::-webkit-scrollbar { display:none; }
-        .kh-page { animation: kh-slide-up 400ms ease forwards; }
       `}</style>
 
-      <div
-        className={visible ? 'kh-page' : ''}
-        style={{ minHeight: '100dvh', position: 'relative', display: 'flex', flexDirection: 'column' }}
-      >
-        {/* Background -- адаптивные размеры: 640/1024/1920, WebP + JPG fallback */}
-        <div style={{ position: 'fixed', inset: 0, zIndex: 0 }}>
+      <main className="relative min-h-[100dvh] w-full pb-20">
+        {/* ФОН - ФИКСИРОВАННЫЙ СЗАДИ */}
+        <div className="fixed inset-0 w-full h-full -z-10 bg-black">
           <picture>
-            {isDark ? (
-              <>
-                <source
-                  type="image/webp"
-                  srcSet="/images/bg/dark-640.webp 640w, /images/bg/dark-1024.webp 1024w, /images/bg/dark-1920.webp 1920w"
-                  sizes="100vw"
-                />
-                <source
-                  type="image/jpeg"
-                  srcSet="/images/bg/dark-640.jpg 640w, /images/bg/dark-1024.jpg 1024w, /images/bg/dark-1920.jpg 1920w"
-                  sizes="100vw"
-                />
-              </>
-            ) : (
-              <>
-                <source
-                  type="image/webp"
-                  srcSet="/images/bg/light-480.webp 480w, /images/bg/light-768.webp 768w, /images/bg/light-832.webp 832w"
-                  sizes="100vw"
-                />
-                <source
-                  type="image/jpeg"
-                  srcSet="/images/bg/light-480.jpg 480w, /images/bg/light-768.jpg 768w, /images/bg/light-832.jpg 832w"
-                  sizes="100vw"
-                />
-              </>
-            )}
+            <source media="(max-width: 480px)" srcSet={theme === 'dark' ? '/images/dark-mobile.webp' : '/images/light-mobile.webp'} type="image/webp" />
+            <source media="(max-width: 768px)" srcSet={theme === 'dark' ? '/images/dark-tablet.webp' : '/images/light-tablet.webp'} type="image/webp" />
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={isDark ? '/images/dark.jpg' : '/images/light.jpg'}
+              src={theme === 'dark' ? '/images/dark.jpg' : '/images/light.jpg'}
               alt="Камчатка"
-              fetchPriority="high"
-              decoding="async"
-              style={{
-                position: 'absolute', inset: 0, width: '100%', height: '100%',
-                objectFit: 'cover', objectPosition: 'center',
-                transition: 'opacity 600ms ease',
-              }}
+              className="fixed inset-0 w-full h-full object-cover object-center -z-10"
             />
           </picture>
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              background: 'linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 30%, transparent 55%, rgba(0,0,0,0.7) 100%)',
-            }}
-          />
+          {/* Затемнение поверх картинки (опционально, для читаемости текста) */}
+          <div className="absolute inset-0 bg-black/40" />
         </div>
 
+        {/* КОНТЕНТ (Поверх фона) */}
+        <div className="relative z-10 flex flex-col items-center w-full px-4 pt-16">
         {/* Header */}
         <header
           style={{
@@ -570,7 +527,6 @@ export default function HomePageClient() {
         <section
           aria-label="Главный экран"
           style={{
-            position: 'relative', zIndex: 1,
             display: 'flex', flexDirection: 'column',
             alignItems: 'center', justifyContent: 'center',
             textAlign: 'center', padding: '100px 24px 40px',
@@ -600,7 +556,7 @@ export default function HomePageClient() {
         {/* Activities */}
         <section
           aria-label="Активности Камчатки"
-          style={{ position: 'relative', zIndex: 1, padding: '40px 20px 24px' }}
+          style={{ padding: '40px 20px 24px' }}
         >
           <h2
             style={{
@@ -635,7 +591,7 @@ export default function HomePageClient() {
         {/* Carousel */}
         <section
           aria-label="Камчатка глазами путешественников"
-          style={{ position: 'relative', zIndex: 1, padding: '32px 0 24px' }}
+          style={{ padding: '32px 0 24px' }}
         >
           <h2
             style={{
@@ -664,11 +620,12 @@ export default function HomePageClient() {
         </section>
 
         {/* Footer spacer for mobile nav */}
-        <div style={{ position: 'relative', zIndex: 1, marginTop: 'auto' }}>
+        <div style={{ marginTop: 'auto' }}>
           <Footer />
         </div>
         <div className="md:hidden" style={{ height: '112px' }} />
-      </div>
+        </div>
+      </main>
 
       <BottomNav activePath="/" />
       {lightboxSrc && <Lightbox src={lightboxSrc} onClose={closeLightbox} />}

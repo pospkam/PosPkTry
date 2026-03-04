@@ -19,6 +19,7 @@ import {
   BookingLogEntry,
   RefundResult,
   CreateBookingInput,
+  RescheduleBookingInput,
   ALLOWED_TRANSITIONS,
   TERMINAL_STATUSES,
   CANCELLED_STATUSES,
@@ -329,6 +330,143 @@ export async function cancelBooking(
     const booking = normalizeBookingRow(updated.rows[0]);
 
     return { booking, refund };
+  });
+}
+
+/**
+ * Переброс бронирования на другой тур/дату
+ * - Роль: оператор или админ
+ * - Проверяет владение туром (для оператора)
+ * - Проверяет доступность мест
+ * - Пересчитывает цену и сбрасывает payment_status, если изменилась
+ */
+export async function rescheduleBooking(
+  bookingId: string,
+  actorId: string,
+  role: 'operator' | 'admin',
+  input: RescheduleBookingInput
+): Promise<BookingWithDetails> {
+  const targetDate = new Date(input.targetDate);
+  if (Number.isNaN(targetDate.getTime())) {
+    throw new Error('Некорректная дата для переброса');
+  }
+
+  return transaction(async (client) => {
+    const bookingResult = await client.query(
+      `SELECT b.*, t.operator_id AS tour_operator_id, t.max_group_size, t.price AS tour_price, t.name AS tour_name
+       FROM bookings b
+       JOIN tours t ON b.tour_id = t.id
+       WHERE b.id = $1
+       FOR UPDATE`,
+      [bookingId]
+    );
+
+    if (bookingResult.rows.length === 0) {
+      throw new Error('Бронирование не найдено');
+    }
+
+    const bookingRow = bookingResult.rows[0];
+    const currentStatus = String(bookingRow.status) as BookingStatus;
+
+    if (TERMINAL_STATUSES.has(currentStatus) || CANCELLED_STATUSES.has(currentStatus)) {
+      throw new Error('Нельзя перебросить завершённое или отменённое бронирование');
+    }
+
+    const currentParticipants = Number(bookingRow.participants ?? bookingRow.guests_count ?? 0) || 0;
+    const participants = input.participants ?? currentParticipants;
+    if (participants < 1) {
+      throw new Error('Количество участников должно быть не менее 1');
+    }
+
+    // Проверяем владение текущим туром оператором
+    if (role === 'operator') {
+      const ownsCurrent = await client.query(
+        `SELECT 1 FROM tours t JOIN partners p ON t.operator_id = p.id WHERE t.id = $1 AND p.user_id = $2`,
+        [bookingRow.tour_id, actorId]
+      );
+
+      if (ownsCurrent.rows.length === 0) {
+        throw new Error('Недостаточно прав для переброса бронирования');
+      }
+    }
+
+    // Получаем целевой тур
+    const targetTourResult = await client.query(
+      `SELECT id, operator_id, max_group_size, price, name, is_active FROM tours WHERE id = $1`,
+      [input.targetTourId]
+    );
+
+    if (targetTourResult.rows.length === 0) {
+      throw new Error('Целевой тур не найден');
+    }
+
+    const targetTour = targetTourResult.rows[0];
+
+    if (!targetTour.is_active) {
+      throw new Error('Целевой тур не активен');
+    }
+
+    // Проверяем владение целевым туром оператором
+    if (role === 'operator') {
+      const ownsTarget = await client.query(
+        `SELECT 1 FROM partners p WHERE p.id = $1 AND p.user_id = $2`,
+        [targetTour.operator_id, actorId]
+      );
+
+      if (ownsTarget.rows.length === 0) {
+        throw new Error('Недостаточно прав для переброса бронирования');
+      }
+    }
+
+    // Проверяем вместимость
+    const bookedResult = await client.query(
+      `SELECT COALESCE(SUM(participants), 0) AS booked
+       FROM bookings
+       WHERE tour_id = $1
+         AND date = $2
+         AND status IN ('pending','confirmed')
+         AND id <> $3`,
+      [targetTour.id, input.targetDate, bookingId]
+    );
+
+    const bookedCount = Number(bookedResult.rows[0].booked);
+    if (bookedCount + participants > Number(targetTour.max_group_size)) {
+      throw new Error('Недостаточно мест на выбранную дату');
+    }
+
+    const newTotalPrice = Number(targetTour.price) * participants;
+    const oldTotalPrice = Number(bookingRow.total_price ?? 0);
+    const nextPaymentStatus = newTotalPrice === oldTotalPrice
+      ? String(bookingRow.payment_status ?? 'pending')
+      : 'pending';
+
+    const nextStatus = currentStatus;
+
+    await client.query(
+      `UPDATE bookings
+       SET tour_id = $1,
+           date = $2,
+           start_date = $2,
+           participants = $3,
+           guests_count = $3,
+           total_price = $4,
+           payment_status = $5,
+           status = $6,
+           updated_at = NOW()
+       WHERE id = $7`,
+      [targetTour.id, input.targetDate, participants, newTotalPrice, nextPaymentStatus, nextStatus, bookingId]
+    );
+
+    const comment = input.comment ?? `Переброс на тур "${targetTour.name}" (${input.targetDate}), участников: ${participants}`;
+
+    await logStatusChange(client, bookingId, currentStatus, nextStatus, actorId, comment);
+
+    const updated = await client.query(
+      `${BOOKING_SELECT} WHERE b.id = $1`,
+      [bookingId]
+    );
+
+    return normalizeBookingRow(updated.rows[0]);
   });
 }
 

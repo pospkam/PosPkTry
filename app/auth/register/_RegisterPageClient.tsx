@@ -247,14 +247,14 @@ function RegisterForm() {
         {/* Login Link */}
         <div className="text-center text-sm">
           <span className="text-gray-600">Уже есть аккаунт? </span>
-          <Link href="/auth/login" className="text-blue-600 hover:text-blue-700 font-medium">
+          <Link href="/auth/login" className="font-medium transition-colors">
             Войти
           </Link>
         </div>
 
         {/* Back to Home */}
         <div className="text-center">
-          <Link href="/" className="text-sm text-gray-500 hover:text-gray-700">
+          <Link href="/" className="text-sm transition-colors">
             ← Вернуться на главную
           </Link>
         </div>

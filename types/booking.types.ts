@@ -91,6 +91,13 @@ export interface CreateBookingInput {
   specialRequests?: string;
 }
 
+export interface RescheduleBookingInput {
+  targetTourId: string;
+  targetDate: string;
+  participants?: number;
+  comment?: string;
+}
+
 export interface CancelBookingResult {
   booking: BookingWithDetails;
   refund: RefundResult;
