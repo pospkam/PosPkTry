@@ -107,7 +107,6 @@ const HelicopterIcon = () => (
   </svg>
 )
 
-👌, [04.03.2026 14:36]
 const MarineIcon = () => (
   <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
     stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -197,7 +196,6 @@ function PhotoCarousel() {
                 transition: 'transform 200ms ease',
               }}
 
-👌, [04.03.2026 14:36]
 >
               {isReal ? (
                 <img
@@ -312,7 +310,6 @@ export default function HomePage() {
             </button>
             {/* личный кабинет */}
 
-👌, [04.03.2026 14:36]
 <button
               onClick={(e) => { ripple(e); router.push('/profile') }}
               className="kh-header-btn relative text-white transition-all duration-200
@@ -412,7 +409,6 @@ export default function HomePage() {
                   key={href}
                   onClick={(e) => { ripple(e); router.push(href) }}
 
-👌, [04.03.2026 14:36]
 className="kh-nav-btn relative flex flex-col items-center gap-1
                              min-w-[44px] min-h-[44px] justify-center transition-all duration-200 overflow-hidden"
                   style={{ color }}
