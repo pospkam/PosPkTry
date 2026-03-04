@@ -96,39 +96,7 @@ const JeepIcon = () => (
   </svg>
 )
 
-const HelicopterIcon = () => (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M2 8 L16 8" />
-    <path d="M18 8 L22 8" />
-    <path d="M9 8 L9 6" />
-    <path d="M5 12 Q5 15 8 15 L16 15 Q19 15 19 12 L19 10 Q17 8 9 8 Q5 8 5 10 Z" />
-    <path d="M8 15 L6 20 L18 20 L16 15" />
-    <path d="M20 6 L22 4" />
-  </svg>
-)
 
-const MarineIcon = () => (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 2 L12 10" />
-    <path d="M8 5 L12 2 L16 5" />
-    <path d="M6 10 L18 10" />
-    <path d="M4 10 Q7 10 8 13 L16 13 Q17 10 20 10" />
-    <path d="M3 17 Q6 14 9 17 Q12 20 15 17 Q18 14 21 17" />
-    <path d="M3 21 Q6 18 9 21 Q12 24 15 21 Q18 18 21 21" />
-  </svg>
-)
-
-const RaftingIcon = () => (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 3 L9 9 L15 9 Z" />
-    <path d="M12 9 L12 13" />
-    <path d="M5 13 L19 13 Q20 13 20 14 L20 16 Q20 17 19 17 L5 17 Q4 17 4 16 L4 14 Q4 13 5 13 Z" />
-    <path d="M3 20 Q6 17 9 20 Q12 23 15 20 Q18 17 21 20" />
-  </svg>
-)
 
 // ─────────────────────────────────────────────
 // ДАННЫЕ
@@ -139,9 +107,6 @@ const ACTIVITIES = [
   { id: 'thermal',   label: 'Термы',     Icon: ThermalIcon,    href: '/tours?category=thermal'    },
   { id: 'snowmobile',label: 'Снегоход',  Icon: SnowmobileIcon, href: '/tours?category=snowmobile' },
   { id: 'jeep',      label: 'Джип-туры', Icon: JeepIcon,       href: '/tours?category=jeep'       },
-  { id: 'helicopter',label: 'Вертолёты', Icon: HelicopterIcon, href: '/tours?category=helicopter' },
-  { id: 'marine',    label: 'Морские',   Icon: MarineIcon,     href: '/tours?category=marine'     },
-  { id: 'rafting',   label: 'Сплавы',    Icon: RaftingIcon,    href: '/tours?category=rafting'    },
 ]
 
 const NAV_ITEMS = [
@@ -275,12 +240,13 @@ export default function HomePage() {
       `}</style>
 
       <div
-        className="relative min-h-screen"
+        className="relative"
         style={{
           backgroundImage: `url('${bgImage}')`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
+          minHeight: '100dvh',
         }}
       >
         {/* ── верхний градиент ── */}
@@ -332,13 +298,13 @@ export default function HomePage() {
             className="font-playfair text-white font-bold text-4xl leading-tight mb-2"
             style={{ textShadow: '0 2px 16px rgba(0,0,0,0.85)' }}
           >
-            Здесь начинается<br />Россия
+            Камчатка не для туристов
           </h1>
           <p
             className="text-white/80 text-lg"
             style={{ textShadow: '0 1px 8px rgba(0,0,0,0.7)' }}
           >
-            Камчатка — земля огня и льда
+            Дикая природа. Настоящие маршруты.
           </p>
         </section>
 

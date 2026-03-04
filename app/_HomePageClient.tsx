@@ -570,10 +570,10 @@ export default function HomePageClient() {
         <section
           aria-label="Главный экран"
           style={{
-            position: 'relative', zIndex: 1, height: '100dvh',
+            position: 'relative', zIndex: 1,
             display: 'flex', flexDirection: 'column',
             alignItems: 'center', justifyContent: 'center',
-            textAlign: 'center', padding: '0 24px 100px',
+            textAlign: 'center', padding: '100px 24px 40px',
           }}
         >
           <h1
@@ -584,7 +584,7 @@ export default function HomePageClient() {
               textShadow: '0 2px 8px rgba(0,0,0,0.6)', maxWidth: '640px',
             }}
           >
-            Здесь начинается Россия
+            Камчатка не для туристов
           </h1>
           <p
             style={{
@@ -593,7 +593,7 @@ export default function HomePageClient() {
               color: 'rgba(255,255,255,0.8)', margin: 0, letterSpacing: '0.01em',
             }}
           >
-            Камчатка — земля огня и льда
+            Дикая природа. Настоящие маршруты.
           </p>
         </section>
 

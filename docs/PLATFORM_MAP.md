@@ -251,14 +251,6 @@ Trebuyetsya YANDEX_MAPS_API_KEY.
 
 ---
 
-### `/shop` -- Magazin suvenirov
-### `/gear` -- Arenda snaryazheniya
-### `/cars` -- Arenda avtomobilej
-
-Dopolnitel'nye servisy platformy.
-
----
-
 ### `/partner/register` -- Registraciya partnera
 
 Forma dlya novyh operatorov/gidov.
