@@ -17,7 +17,7 @@ function useRipple() {
     const ripple = document.createElement('span')
     const rect = el.getBoundingClientRect()
     const size = Math.max(rect.width, rect.height)
-    ripple.style.cssText = 
+    ripple.style.cssText = `
       position:absolute;
       width:${size}px;height:${size}px;
       left:${e.clientX - rect.left - size / 2}px;
@@ -27,6 +27,7 @@ function useRipple() {
       transform:scale(0);
       animation:kh-ripple 600ms ease-out forwards;
       pointer-events:none;
+    `
     
     el.appendChild(ripple)
     setTimeout(() => ripple.remove(), 600)
@@ -165,7 +166,7 @@ function PhotoCarousel() {
 
   const items = CAROUSEL_IMAGES.length > 0
     ? CAROUSEL_IMAGES
-    : Array.from({ length: 5 }, (_, i) => __placeholder__${i})
+    : Array.from({ length: 5 }, (_, i) => `__placeholder__${i}`)
 
   return (
     <section className="px-4 pb-6">
@@ -181,7 +182,7 @@ function PhotoCarousel() {
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {items.map((src, i) => {
-          const isReal = !src.startsWiplaceholderer__')
+          const isReal = !src.startsWith('__placeholder__')
           return (
             <div
               key={i}
@@ -200,7 +201,7 @@ function PhotoCarousel() {
               {isReal ? (
                 <img
                   src={src}
-                  alt={Камчатка ${i + 1}}
+                  alt={`Камчатка ${i + 1}`}
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -250,7 +251,7 @@ export default function HomePage() {
   return (
     <>
       {/* ── глобальные анимации ── */}
-      <style>{
+      <style>{`
         @keyframes kh-ripple {
           to { transform: scale(4); opacity: 0; }
         }
@@ -271,12 +272,12 @@ export default function HomePage() {
           filter: drop-shadow(0 0 6px #00D4FF);
         }
         .kh-nav-btn:hover { color: #00D4FF; }
-      }</style>
+      `}</style>
 
       <div
         className="relative min-h-screen"
         style={{
-          backgroundImage: url('${bgImage}'),
+          backgroundImage: `url('${bgImage}')`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
