@@ -5,10 +5,6 @@
 /* Kamchatour Hub — дизайн-токены главного экрана */
 @import './home-variables.css';
 
-/* SAMSUNG WEATHER THEME - ДИНАМИЧЕСКАЯ ТЕМА */
-@import './samsung-weather-theme.css';
-@import './samsung-weather-dynamic.css';
-
 /* =============================================
    DESIGN SYSTEM — Kamchatka Palette
    Огонь вулканов + холод океана.
