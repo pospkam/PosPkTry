@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Protected } from '@/components/Protected';
+import { Protected } from '@/components/auth/Protected';
 import { User, Loader2, Save, Lock } from 'lucide-react';
 
 const INPUT_CLASS =

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Protected } from '@/components/Protected';
+import { Protected } from '@/components/auth/Protected';
 import { GearProviderNav } from '@/components/gear-provider/GearProviderNav';
 import { LoadingSpinner } from '@/components/admin/shared';
 import { Package, Calendar, DollarSign, Star, TrendingUp, AlertCircle } from 'lucide-react';

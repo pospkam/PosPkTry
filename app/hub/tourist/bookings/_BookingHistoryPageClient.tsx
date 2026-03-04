@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Protected } from '@/components/Protected';
+import { Protected } from '@/components/auth/Protected';
 import { LoadingSpinner } from '@/components/admin/shared';
 import { TouristNav } from '@/components/tourist/TouristNav';
 import { Booking } from '@/types';

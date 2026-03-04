@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Protected } from '@/components/Protected';
+import { Protected } from '@/components/auth/Protected';
 import { TransferOperatorNav } from '@/components/transfer-operator/TransferOperatorNav';
 import { TransferOperatorMetricsGrid } from '@/components/transfer-operator/Dashboard/TransferOperatorMetricsGrid';
 import { LoadingSpinner } from '@/components/admin/shared';

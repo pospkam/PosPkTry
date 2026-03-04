@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Protected } from '@/components/Protected';
+import { Protected } from '@/components/auth/Protected';
 import { Users, Star, Loader2, Search, UserCheck, UserX } from 'lucide-react';
 
 interface Guide {

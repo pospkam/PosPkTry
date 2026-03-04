@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Tour, Weather } from '@/types';
-import { AIChatWidget } from '@/components/AIChatWidget';
-import { TransferSearchWidget } from '@/components/TransferSearchWidget';
+import { AIChatWidget } from '@/components/ai/AIChatWidget';
+import { TransferSearchWidget } from '@/components/transfer-operator/TransferSearchWidget';
 import { TouristNav } from '@/components/tourist/TouristNav';
 import { Mountain, Eye, TreePine, Fish, CloudSnow, Waves, Star, Zap, Clock, Wind, Sun, Cloud, CloudRain, Users, Bot, Heart, Target, Droplets, Bus } from 'lucide-react';
 import RecommendationCard, { RecommendationCardSkeleton } from '@/components/tourist/RecommendationCard';

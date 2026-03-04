@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { AdminProtected } from '@/components/AdminProtected';
+import { AdminProtected } from '@/components/auth/AdminProtected';
 import { AdminNav } from '@/components/admin/AdminNav';
 import {
   DataTable,

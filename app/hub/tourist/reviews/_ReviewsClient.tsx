@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Protected } from '@/components/Protected';
+import { Protected } from '@/components/auth/Protected';
 import { MessageSquare, Star, Loader2 } from 'lucide-react';
 
 // Демо-данные отзывов туриста

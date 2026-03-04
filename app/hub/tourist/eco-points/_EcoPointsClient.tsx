@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Protected } from '@/components/Protected';
+import { Protected } from '@/components/auth/Protected';
 import { Leaf, Loader2, TreePine, Recycle, Camera, Users, Mountain } from 'lucide-react';
 
 // Действия, за которые начисляются эко-баллы

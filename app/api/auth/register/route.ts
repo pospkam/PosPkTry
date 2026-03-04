@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { hash } from 'bcryptjs';
 import { SignJWT } from 'jose';
-import { pool } from '@/lib/db';
+import { pool } from '@/lib/database';
 
 const jwtSecret = process.env.JWT_SECRET;
 

@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import WeatherBackground from '@/components/WeatherBackground';
+import WeatherBackground from '@/components/weather/WeatherBackground';
 import { CheckCircle2 } from 'lucide-react';
 
 export default function OperatorRegisterPageClient() {

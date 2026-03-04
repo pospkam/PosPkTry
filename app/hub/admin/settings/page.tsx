@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { AdminProtected } from '@/components/AdminProtected';
+import { AdminProtected } from '@/components/auth/AdminProtected';
 import { AdminNav } from '@/components/admin/AdminNav';
 import { SystemSettings } from '@/components/admin/Settings/SystemSettings';
 import { EmailTemplatesManager } from '@/components/admin/Settings/EmailTemplatesManager';

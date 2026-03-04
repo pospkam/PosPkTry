@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Protected } from '@/components/Protected';
+import { Protected } from '@/components/auth/Protected';
 import { Shield, Check, X, Loader2, Star, Flag, MessageSquare } from 'lucide-react';
 
 interface PendingReview { id: string; touristName: string; tourName: string; rating: number; text: string; date: string; flagged: boolean; }

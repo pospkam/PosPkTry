@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Protected } from '@/components/Protected';
+import { Protected } from '@/components/auth/Protected';
 import { User, Save, Loader2, Languages, Award, Mountain } from 'lucide-react';
 
 interface ProfileForm {

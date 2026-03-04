@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { AdminProtected } from '@/components/AdminProtected';
+import { AdminProtected } from '@/components/auth/AdminProtected';
 import { AdminNav } from '@/components/admin/AdminNav';
 import { Partner } from '@/types';
 import {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Protected } from '@/components/Protected';
+import { Protected } from '@/components/auth/Protected';
 import { Route, Plus, Loader2, MapPin, Clock, Banknote, Trash2 } from 'lucide-react';
 
 interface TransferRoute {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Protected } from '@/components/Protected';
+import { Protected } from '@/components/auth/Protected';
 import { Bell, Loader2, CheckCheck } from 'lucide-react';
 
 // Демо-данные уведомлений

@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import { Suspense } from 'react';
-import { ModernTourSearch } from '@/components/ModernTourSearch';
+import { ModernTourSearch } from '@/components/shared/ModernTourSearch';
 
 export const metadata: Metadata = {
   title: 'Поиск туров | Kamchatour',

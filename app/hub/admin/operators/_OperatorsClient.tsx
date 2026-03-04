@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Protected } from '@/components/Protected';
+import { Protected } from '@/components/auth/Protected';
 import { Building2, Search, Loader2, CheckCircle2, Ban, MapPin } from 'lucide-react';
 
 interface Operator { id: string; name: string; status: 'active' | 'pending' | 'suspended'; toursCount: number; revenue: number; region: string; }

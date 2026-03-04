@@ -123,7 +123,7 @@ export default function AuthClient() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault(); setLoading(true); setError('');
     try {
-      const response = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(loginData) });
+      const response = await fetch('/api/auth/signin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(loginData) });
       const data = await response.json();
       if (!data.success) throw new Error(data.error || 'Ошибка входа');
       router.push('/partner/dashboard');

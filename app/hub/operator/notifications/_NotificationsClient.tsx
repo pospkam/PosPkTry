@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Protected } from '@/components/Protected';
+import { Protected } from '@/components/auth/Protected';
 import { Bell, CheckCheck, Loader2, Calendar, XCircle, Star, ArrowRightLeft } from 'lucide-react';
 
 type NType = 'booking' | 'cancellation' | 'review' | 'transfer';

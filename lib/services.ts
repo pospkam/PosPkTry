@@ -4,7 +4,7 @@
  * TODO: Заменить реальными реализациями из pillars/
  */
 
-import { pool } from '@/lib/db';
+import { pool } from '@/lib/db-pool';
 
 // ========================================
 // Error Classes

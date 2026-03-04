@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Protected } from '@/components/Protected';
+import { Protected } from '@/components/auth/Protected';
 import { OperatorNav } from '@/components/operator/OperatorNav';
 import { TourForm } from '@/components/operator/Tours/TourForm';
 import { LoadingSpinner, EmptyState } from '@/components/admin/shared';

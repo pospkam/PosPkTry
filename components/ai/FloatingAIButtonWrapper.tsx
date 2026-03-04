@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 
 const FloatingAIButton = dynamic(
-  () => import('@/components/FloatingAIButton').then(mod => ({ default: mod.default })),
+  () => import('@/components/ai/FloatingAIButton').then(mod => ({ default: mod.default })),
   { ssr: false }
 );
 

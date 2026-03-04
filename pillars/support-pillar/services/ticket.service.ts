@@ -4,7 +4,7 @@
  */
 
 import { Pool } from 'pg';
-import { pool } from '@/lib/db';
+import { pool } from '@/lib/db-pool';
 
 export interface Ticket {
   id: string;

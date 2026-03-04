@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Tour, Review } from '@/types';
-import { WeatherWidget } from '@/components/WeatherWidget';
+import { WeatherWidget } from '@/components/weather/WeatherWidget';
 import { TourBookingForm } from '@/components/booking/TourBookingForm';
 import { LoadingSpinner } from '@/components/admin/shared';
 import { Star, MapPin, Check, AlertTriangle, Phone, Mail } from 'lucide-react';

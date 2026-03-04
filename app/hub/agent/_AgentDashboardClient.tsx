@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Protected } from '@/components/Protected';
+import { Protected } from '@/components/auth/Protected';
 import { AgentNav } from '@/components/agent/AgentNav';
 import { AgentMetricsGrid } from '@/components/agent/Dashboard/AgentMetricsGrid';
 import { RecentClientsTable } from '@/components/agent/Dashboard/RecentClientsTable';

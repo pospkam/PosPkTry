@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Weather } from '@/types';
-import { TransferSearchWidget } from '@/components/TransferSearchWidget';
+import { TransferSearchWidget } from '@/components/transfer-operator/TransferSearchWidget';
 import { PublicNav } from '@/components/shared/PublicNav';
 import { Star, Search, Map, Bus, User, Calendar, Ticket, BarChart3 } from 'lucide-react';
 

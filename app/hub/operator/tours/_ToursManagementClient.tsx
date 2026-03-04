@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { Protected } from '@/components/Protected';
+import { Protected } from '@/components/auth/Protected';
 import { OperatorNav } from '@/components/operator/OperatorNav';
 import {
   DataTable,

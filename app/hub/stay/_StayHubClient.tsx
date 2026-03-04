@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Protected } from '@/components/Protected';
+import { Protected } from '@/components/auth/Protected';
 import { PublicNav } from '@/components/shared/PublicNav';
-import { AccommodationCard } from '@/components/AccommodationCard';
-import { AccommodationCardSkeleton } from '@/components/AccommodationCardSkeleton';
-import { AccommodationFilters } from '@/components/AccommodationFilters';
+import { AccommodationCard } from '@/components/shared/AccommodationCard';
+import { AccommodationCardSkeleton } from '@/components/shared/AccommodationCardSkeleton';
+import { AccommodationFilters } from '@/components/shared/AccommodationFilters';
 import { Star, Building2, ClipboardList, Heart } from 'lucide-react';
 
 interface Accommodation {

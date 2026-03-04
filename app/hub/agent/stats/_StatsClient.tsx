@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Protected } from '@/components/Protected';
+import { Protected } from '@/components/auth/Protected';
 import { BarChart3, TrendingUp, Loader2, Users, Repeat, DollarSign } from 'lucide-react';
 
 interface MonthCommission { month: string; amount: number; }

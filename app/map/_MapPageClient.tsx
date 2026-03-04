@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import YandexMap from '@/components/YandexMap';
+import YandexMap from '@/components/shared/YandexMap';
 import Link from 'next/link';
 
 // Типы активностей

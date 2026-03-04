@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Protected } from '@/components/Protected';
+import { Protected } from '@/components/auth/Protected';
 import { StayProviderNav } from '@/components/stay-provider/StayProviderNav';
 import { LoadingSpinner } from '@/components/admin/shared';
 

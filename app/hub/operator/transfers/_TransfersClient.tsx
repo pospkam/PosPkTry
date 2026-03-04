@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Protected } from '@/components/Protected';
+import { Protected } from '@/components/auth/Protected';
 import {
   ArrowRightLeft, Send, Check, X, Loader2, Plus,
   ArrowUpRight, ArrowDownLeft,

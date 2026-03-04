@@ -24,7 +24,7 @@ const inter = Inter({
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://kamchatour.ru';
 
-import FloatingAIButtonWrapper from '@/components/FloatingAIButtonWrapper';
+import FloatingAIButtonWrapper from '@/components/ai/FloatingAIButtonWrapper';
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),

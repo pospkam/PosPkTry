@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
-import { Protected } from '@/components/Protected';
+import { Protected } from '@/components/auth/Protected';
 import {
   Bot, Send, Loader2, CheckCircle2, Clock, User,
 } from 'lucide-react';

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Protected } from '@/components/Protected';
+import { Protected } from '@/components/auth/Protected';
 import { OperatorNav } from '@/components/operator/OperatorNav';
 import { OperatorMetricsGrid } from '@/components/operator/Dashboard/OperatorMetricsGrid';
 import { RecentBookingsTable } from '@/components/operator/Dashboard/RecentBookingsTable';

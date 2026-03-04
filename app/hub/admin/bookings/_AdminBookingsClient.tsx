@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Protected } from '@/components/Protected';
+import { Protected } from '@/components/auth/Protected';
 import { Calendar, Loader2, Search, Download, Filter } from 'lucide-react';
 
 type BStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled';

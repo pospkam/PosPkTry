@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic';
 
 // Динамический импорт AIChatWidget для оптимизации
 const AIChatWidget = dynamic(
-  () => import('@/components/AIChatWidget').then(m => ({ default: m.AIChatWidget })),
+  () => import('@/components/ai/AIChatWidget').then(m => ({ default: m.AIChatWidget })),
   {
   ssr: false,
   loading: () => (
