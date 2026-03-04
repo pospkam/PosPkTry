@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import {
-  Sun, Moon, UserCircle,
-  House, Map, Heart, User, AlertTriangle
+  Sun, Moon, UserCircle, Search, X, Camera,
+  Map, Heart, User, AlertTriangle
 } from 'lucide-react'
 import { useTheme } from '@/contexts/ThemeContext'
 
@@ -110,7 +110,7 @@ const ACTIVITIES = [
 ]
 
 const NAV_ITEMS = [
-  { label: 'Домой',    Icon: House,          href: '/',                      danger: false },
+  { label: 'Поиск',    Icon: Search,         href: '#search',                danger: false },
   { label: 'Карта',    Icon: Map,            href: '/map',                   danger: false },
   { label: 'Избранное',Icon: Heart,          href: '/hub/tourist/wishlist',  danger: false },
   { label: 'ЛК',       Icon: User,           href: '/profile',               danger: false },
@@ -158,11 +158,13 @@ function PhotoCarousel() {
                 height: 160,
                 cursor: isReal ? 'pointer' : 'default',
                 background: 'rgba(255,255,255,0.1)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
                 border: '1px solid rgba(255,255,255,0.2)',
+                borderRadius: 16,
                 transition: 'transform 200ms ease',
               }}
-
->
+            >
               {isReal ? (
                 <img
                   src={src}
@@ -171,7 +173,7 @@ function PhotoCarousel() {
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
-                  <span className="text-white/30 text-xs">Фото</span>
+                  <Camera size={28} className="text-white/40" />
                 </div>
               )}
             </div>
@@ -207,6 +209,8 @@ export default function HomePage() {
   const pathname = usePathname()
   const ripple  = useRipple()
   const [mounted, setMounted] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [selectedActivity, setSelectedActivity] = useState<string | null>(null)
 
   useEffect(() => { setMounted(true) }, [])
   if (!mounted) return null
@@ -227,10 +231,13 @@ export default function HomePage() {
           from { transform: scale(0.85); opacity: 0; }
           to   { transform: scale(1);    opacity: 1; }
         }
+        @keyframes kh-slide-up {
+          from { opacity: 0; transform: translateY(100%); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
         .kh-hide-scroll::-webkit-scrollbar { display: none; }
         .kh-activity:hover {
-          border-color: rgba(0,212,255,0.6) !important;
-          box-shadow: 0 0 14px rgba(0,212,255,0.35);
+          border-color: rgba(0,212,255,0.5) !important;
         }
         .kh-header-btn:hover {
           color: #00D4FF;
@@ -298,14 +305,14 @@ export default function HomePage() {
             className="font-playfair text-white font-bold text-4xl leading-tight mb-2"
             style={{ textShadow: '0 2px 16px rgba(0,0,0,0.85)' }}
           >
-            Камчатка не для туристов
+            Здесь начинается Россия
           </h1>
-          <p
-            className="text-white/80 text-lg"
+          <h2
+            className="text-white/80 text-lg font-normal"
             style={{ textShadow: '0 1px 8px rgba(0,0,0,0.7)' }}
           >
-            Дикая природа. Настоящие маршруты.
-          </p>
+            Камчатка — земля огня и льда
+          </h2>
         </section>
 
         {/* ── АКТИВНОСТИ ── */}
@@ -317,29 +324,38 @@ export default function HomePage() {
             Активности Камчатки
           </h2>
           <div
-            className="flex gap-3 overflow-x-auto pb-1 kh-hide-scroll"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            className="flex flex-wrap justify-center gap-3 mx-auto"
+            style={{ maxWidth: 340 }}
           >
-            {ACTIVITIES.map(({ id, label, Icon, href }) => (
-              <button
-                key={id}
-                onClick={(e) => { ripple(e); router.push(href) }}
-                className="kh-activity relative flex-shrink-0 flex flex-col items-center justify-center
-                           gap-2 py-4 px-3 text-white transition-all duration-200"
-                style={{
-                  minWidth: 80,
-                  background: 'rgba(255,255,255,0.15)',
-                  backdropFilter: 'blur(10px)',
-                  WebkitBackdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255,255,255,0.25)',
-                  borderRadius: 16,
-                  overflow: 'hidden',
-                }}
-              >
-                <Icon />
-                <span className="text-xs font-medium leading-tight text-center whitespace-nowrap">{label}</span>
-              </button>
-            ))}
+            {ACTIVITIES.map(({ id, label, Icon, href }) => {
+              const isSelected = selectedActivity === id
+              return (
+                <button
+                  key={id}
+                  onClick={(e) => {
+                    ripple(e)
+                    setSelectedActivity(prev => prev === id ? null : id)
+                    setTimeout(() => router.push(href), 300)
+                  }}
+                  className="kh-activity relative flex flex-col items-center justify-center
+                             gap-2 py-4 px-3 text-white transition-all duration-200"
+                  style={{
+                    width: 100,
+                    background: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.15)',
+                    backdropFilter: 'blur(10px)',
+                    WebkitBackdropFilter: 'blur(10px)',
+                    border: isSelected ? '1px solid rgba(0,212,255,0.8)' : '1px solid rgba(255,255,255,0.25)',
+                    borderRadius: 16,
+                    overflow: 'hidden',
+                    boxShadow: isSelected ? '0 0 12px rgba(0,212,255,0.4)' : 'none',
+                    color: isSelected ? '#00D4FF' : 'white',
+                  }}
+                >
+                  <Icon />
+                  <span className="text-xs font-medium leading-tight text-center whitespace-nowrap">{label}</span>
+                </button>
+              )
+            })}
           </div>
         </section>
 
@@ -357,9 +373,9 @@ export default function HomePage() {
           <div
             className="flex items-center justify-around px-4 py-2"
             style={{
-              background: 'rgba(255,255,255,0.2)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
+              background: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.2)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
               border: '1px solid rgba(255,255,255,0.3)',
               borderRadius: 50,
               width: 'calc(100% - 32px)',
@@ -374,9 +390,11 @@ export default function HomePage() {
               return (
                 <button
                   key={href}
-                  onClick={(e) => { ripple(e); router.push(href) }}
-
-className="kh-nav-btn relative flex flex-col items-center gap-1
+                  onClick={(e) => {
+                    ripple(e)
+                    if (href === '#search') { setSearchOpen(true) } else { router.push(href) }
+                  }}
+                  className="kh-nav-btn relative flex flex-col items-center gap-1
                              min-w-[44px] min-h-[44px] justify-center transition-all duration-200 overflow-hidden"
                   style={{ color }}
                 >
@@ -413,6 +431,42 @@ className="kh-nav-btn relative flex flex-col items-center gap-1
           </div>
         </footer>
       </div>
+
+      {/* Search Modal */}
+      {searchOpen && (
+        <div
+          className="fixed inset-0 z-50 flex flex-col"
+          style={{
+            background: isDark ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.7)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            animation: 'kh-slide-up 300ms ease forwards',
+          }}
+        >
+          <div className="flex items-center justify-between px-5 pt-5 pb-3">
+            <h2
+              className="font-playfair text-white text-xl font-bold"
+              style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}
+            >
+              Поиск туров
+            </h2>
+            <button
+              onClick={() => setSearchOpen(false)}
+              className="text-white min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full"
+              style={{
+                background: 'rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.2)',
+              }}
+              aria-label="Закрыть поиск"
+            >
+              <X size={20} />
+            </button>
+          </div>
+          <div className="flex-1 flex items-center justify-center px-4">
+            <p className="text-white/60 text-base text-center">Выберите даты и активности</p>
+          </div>
+        </div>
+      )}
     </>
   )
 }
