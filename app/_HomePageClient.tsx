@@ -9,6 +9,10 @@ import { FishingIcon } from '@/components/icons/FishingIcon';
 import { ThermalIcon } from '@/components/icons/ThermalIcon';
 import { SnowmobileIcon } from '@/components/icons/SnowmobileIcon';
 import { JeepIcon } from '@/components/icons/JeepIcon';
+import { BearIcon } from '@/components/icons/BearIcon';
+import { TrekkingIcon } from '@/components/icons/TrekkingIcon';
+import { HelicopterIcon } from '@/components/icons/HelicopterIcon';
+import ActivityCarousel from '@/components/ui/ActivityCarousel';
 import { useTheme } from '@/contexts/ThemeContext';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -40,6 +44,9 @@ const ACTIVITIES: Activity[] = [
   { icon: <ThermalIcon className="w-8 h-8" />, label: 'Термы', href: '/tours?category=thermal' },
   { icon: <SnowmobileIcon className="w-8 h-8" />, label: 'Снегоход', href: '/tours?category=snowmobile' },
   { icon: <JeepIcon className="w-8 h-8" />, label: 'Джип-туры', href: '/tours?category=jeep' },
+  { icon: <BearIcon className="w-8 h-8" />, label: 'Медведи', href: '/tours?category=bears' },
+  { icon: <TrekkingIcon className="w-8 h-8" />, label: 'Треккинг', href: '/tours?category=trekking' },
+  { icon: <HelicopterIcon className="w-8 h-8" />, label: 'Вертолёт', href: '/tours?category=helicopter' },
 ];
 
 const CAROUSEL_IMAGES: CarouselImage[] = [
@@ -84,67 +91,7 @@ function spawnRipple(
   setTimeout(() => ripple.remove(), 650);
 }
 
-// ─── Activity Card ────────────────────────────────────────────────────────────
-
-interface ActivityCardProps {
-  activity: Activity;
-  clicked: boolean;
-  onCardClick: (e: React.MouseEvent<HTMLAnchorElement>, href: string) => void;
-}
-
-function ActivityCard({ activity, clicked, onCardClick }: ActivityCardProps) {
-  const ref = useRef<HTMLAnchorElement>(null);
-
-  const handleClick = useCallback(
-    (e: React.MouseEvent<HTMLAnchorElement>) => {
-      if (ref.current) spawnRipple(e, ref.current);
-      onCardClick(e, activity.href);
-    },
-    [activity.href, onCardClick]
-  );
-
-  return (
-    <a
-      ref={ref}
-      href={activity.href}
-      onClick={handleClick}
-      className="activity-card"
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '8px',
-        background: 'rgba(255,255,255,0.15)',
-        backdropFilter: 'blur(10px)',
-        WebkitBackdropFilter: 'blur(10px)',
-        border: clicked ? '1px solid #00D4FF' : '1px solid rgba(255,255,255,0.25)',
-        borderRadius: '16px',
-        padding: '16px 12px',
-        color: 'white',
-        textDecoration: 'none',
-        cursor: 'pointer',
-        transition: 'border-color 200ms ease, filter 200ms ease',
-        filter: clicked ? 'drop-shadow(0 0 8px #00D4FF)' : 'none',
-        position: 'relative',
-        overflow: 'hidden',
-        userSelect: 'none',
-      }}
-    >
-      {activity.icon}
-      <span
-        style={{
-          fontFamily: "var(--font-inter, 'Inter', sans-serif)",
-          fontSize: '12px',
-          fontWeight: 500,
-          textAlign: 'center',
-          lineHeight: 1.2,
-        }}
-      >
-        {activity.label}
-      </span>
-    </a>
-  );
-}
+// ─── Activity Card (legacy removed - using ActivityCarousel) ──────────────────
 
 // ─── Carousel Item ────────────────────────────────────────────────────────────
 
@@ -447,9 +394,11 @@ export default function HomePageClient() {
         .header-btn:hover svg { filter:drop-shadow(0 0 6px #00D4FF); }
         .carousel-track { scrollbar-width:none; -ms-overflow-style:none; }
         .carousel-track::-webkit-scrollbar { display:none; }
+        .activity-carousel-track { scrollbar-width:none; -ms-overflow-style:none; }
+        .activity-carousel-track::-webkit-scrollbar { display:none; }
       `}</style>
 
-      <main className="relative min-h-[100dvh] w-full pb-20">
+      <main className="relative min-h-[100dvh] w-full pb-[100px]">
         {/* ФОН - ФИКСИРОВАННЫЙ СЗАДИ */}
         <div className="fixed inset-0 w-full h-full -z-10 bg-black">
           <picture>
@@ -553,10 +502,10 @@ export default function HomePageClient() {
           </p>
         </section>
 
-        {/* Activities */}
+        {/* Activities - Auto-scroll carousel */}
         <section
           aria-label="Активности Камчатки"
-          style={{ padding: '40px 20px 24px' }}
+          style={{ padding: '40px 0 24px', width: '100%' }}
         >
           <h2
             style={{
@@ -564,28 +513,16 @@ export default function HomePageClient() {
               fontSize: 'clamp(20px,5vw,28px)', fontWeight: 700,
               color: 'white', margin: '0 0 20px', textAlign: 'center',
               textShadow: '0 1px 4px rgba(0,0,0,0.5)',
+              padding: '0 20px',
             }}
           >
             Активности Камчатки
           </h2>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3,1fr)',
-              gap: '12px',
-              maxWidth: '430px',
-              margin: '0 auto',
-            }}
-          >
-            {ACTIVITIES.map((activity) => (
-              <ActivityCard
-                key={activity.href}
-                activity={activity}
-                clicked={clickedActivity === activity.href}
-                onCardClick={handleActivityClick}
-              />
-            ))}
-          </div>
+          <ActivityCarousel
+            activities={ACTIVITIES}
+            onActivityClick={handleActivityClick}
+            clickedActivity={clickedActivity}
+          />
         </section>
 
         {/* Carousel */}
@@ -623,7 +560,7 @@ export default function HomePageClient() {
         <div style={{ marginTop: 'auto' }}>
           <Footer />
         </div>
-        <div className="md:hidden" style={{ height: '112px' }} />
+        <div className="md:hidden" style={{ height: '120px' }} />
         </div>
       </main>
 

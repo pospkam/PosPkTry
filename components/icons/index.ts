@@ -5,3 +5,6 @@ export { FishingIcon } from './FishingIcon';
 export { ThermalIcon } from './ThermalIcon';
 export { SnowmobileIcon } from './SnowmobileIcon';
 export { JeepIcon } from './JeepIcon';
+export { BearIcon } from './BearIcon';
+export { TrekkingIcon } from './TrekkingIcon';
+export { HelicopterIcon } from './HelicopterIcon';
