@@ -280,12 +280,6 @@ async function sendRealBookingNotifications(
       });
     }
 
-    console.log('Уведомления отправлены успешно:', {
-      bookingId: booking.id,
-      smsSent: !!contactInfo.phone,
-      emailSent: !!contactInfo.email,
-      telegramSent: !!driver.telegram_chat_id
-    });
 
   } catch (error) {
     console.error('Error sending real notifications:', error);

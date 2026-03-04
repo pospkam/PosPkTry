@@ -47,7 +47,6 @@ export default function OperatorDashboardClient() {
 
   const handleViewBookingDetails = (booking: OperatorBooking) => {
     // TODO: Открыть модальное окно с деталями
-    console.log('Viewing booking details:', booking);
   };
 
   return (

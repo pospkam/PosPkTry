@@ -82,11 +82,6 @@ class EmailService {
 
       const info = await transporter.sendMail(mailOptions);
 
-      console.log('Email sent successfully:', {
-        messageId: info.messageId,
-        to: options.to,
-        subject: options.subject
-      });
 
       return {
         success: true,
@@ -111,7 +106,6 @@ class EmailService {
       if (!transporter) return false;
 
       await transporter.verify();
-      console.log('SMTP connection verified');
       return true;
     } catch (error) {
       console.error('SMTP verification failed:', error);

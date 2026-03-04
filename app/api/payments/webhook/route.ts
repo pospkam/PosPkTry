@@ -216,11 +216,6 @@ async function handleSuccessfulPayment(webhook: CloudPaymentsWebhook) {
       // Не прерываем выполнение при ошибке email
     }
 
-    console.log('Payment processed successfully:', {
-      paymentId,
-      transactionId,
-      bookingId: payment.booking_id
-    });
 
   } catch (error) {
     console.error('Error handling successful payment:', error);
@@ -288,7 +283,6 @@ async function handleFailedPayment(webhook: CloudPaymentsWebhook) {
       // Не прерываем выполнение при ошибке email
     }
 
-    console.log('Failed payment recorded:', paymentId);
 
   } catch (error) {
     console.error('Error handling failed payment:', error);
@@ -320,7 +314,6 @@ async function handlePendingPayment(webhook: CloudPaymentsWebhook) {
       paymentId
     ]);
 
-    console.log('Payment pending:', paymentId);
 
   } catch (error) {
     console.error('Error handling pending payment:', error);

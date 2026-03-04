@@ -325,7 +325,6 @@ export class TransferPaymentSystem {
       };
 
       // Заглушка для демонстрации
-      console.log('CloudPayments payment creation:', cloudPaymentsData);
       
       return {
         success: true,
@@ -347,7 +346,6 @@ export class TransferPaymentSystem {
   }> {
     try {
       // Здесь будет реальный запрос к CloudPayments API
-      console.log('Checking CloudPayments status for:', paymentId);
       
       // Заглушка для демонстрации
       return { status: 'success' };
@@ -369,7 +367,6 @@ export class TransferPaymentSystem {
   }> {
     try {
       // Здесь будет реальная интеграция с CloudPayments API для возвратов
-      console.log('CloudPayments refund creation:', request);
       
       return { success: true };
 
@@ -419,13 +416,11 @@ export class TransferPaymentSystem {
   // Резервирование средств
   private async reserveFunds(paymentId: string, amount: number): Promise<void> {
     // Здесь будет логика резервирования средств
-    console.log('Reserving funds:', { paymentId, amount });
   }
 
   // Освобождение зарезервированных средств
   private async releaseFunds(paymentId: string): Promise<void> {
     // Здесь будет логика освобождения средств
-    console.log('Releasing funds:', paymentId);
   }
 
   // Отмена записи платежа
@@ -439,7 +434,6 @@ export class TransferPaymentSystem {
   // Отправка уведомлений о платеже
   private async sendPaymentNotifications(paymentId: string, status: string): Promise<void> {
     // Здесь будет отправка уведомлений о статусе платежа
-    console.log('Sending payment notifications:', { paymentId, status });
   }
 
   // Получение статистики платежей

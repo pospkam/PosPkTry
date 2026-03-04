@@ -115,7 +115,6 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    console.log('  Планирование поездки:', { query: body.query, days: body.days });
 
     // Шаг 1: Анализ запроса через AI
     const userIntent = await analyzeUserIntent(body.query, body);

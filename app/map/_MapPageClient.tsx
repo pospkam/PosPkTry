@@ -99,13 +99,9 @@ export default function MapPageClient() {
   const filteredMarkers = activeFilter === 'all' 
     ? KAMCHATKA_MARKERS 
     : KAMCHATKA_MARKERS.filter(marker => {
-        console.log('Checking marker:', marker.title, 'activity:', marker.activity, 'filter:', activeFilter, 'match:', marker.activity === activeFilter);
         return marker.activity === activeFilter;
       });
 
-  console.log('Active filter:', activeFilter);
-  console.log('Filtered markers count:', filteredMarkers.length);
-  console.log('Filtered markers:', filteredMarkers.map(m => m.title));
 
   if (!isExpanded) {
     return (

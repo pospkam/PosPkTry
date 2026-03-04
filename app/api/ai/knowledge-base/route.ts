@@ -220,7 +220,6 @@ async function updateKnowledgeBase(documents: KnowledgeDocument[]): Promise<bool
   const { timeweb } = config.ai
 
   if (!timeweb.knowledgeBase.enabled) {
-    console.log('База знаний отключена в конфигурации')
     return false
   }
 
@@ -233,7 +232,6 @@ async function updateKnowledgeBase(documents: KnowledgeDocument[]): Promise<bool
       chunks.push(documents.slice(i, i + chunkSize))
     }
 
-    console.log(`Отправка ${documents.length} документов в ${chunks.length} чанках`)
 
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i]
@@ -259,7 +257,6 @@ async function updateKnowledgeBase(documents: KnowledgeDocument[]): Promise<bool
       }
 
       const result = await response.json()
-      console.log(`[✓] Чанк ${i + 1}/${chunks.length} отправлен:`, result.message || 'OK')
 
       // Небольшая задержка между запросами
       await new Promise(resolve => setTimeout(resolve, 1000))
@@ -314,7 +311,6 @@ export async function POST(request: NextRequest) {
   if (adminOrResponse instanceof NextResponse) return adminOrResponse;
 
   try {
-    console.log('🔄 Начинаем обновление базы знаний...')
 
     const formData = await request.formData()
     const updateType = formData.get('type') as string || 'auto'
@@ -331,7 +327,6 @@ export async function POST(request: NextRequest) {
         }, { status: 400 })
       }
 
-      console.log(`  Загрузка файла: ${file.name}`)
 
       // Загружаем файл в S3
       const fileName = `${Date.now()}_${file.name}`
@@ -375,21 +370,18 @@ export async function POST(request: NextRequest) {
       documents = await collectProjectDocuments()
     }
 
-    console.log(`📚 Собрано ${documents.length} документов`)
 
     // Ограничиваем количество документов
     const maxDocs = config.ai.timeweb.knowledgeBase.maxDocuments
     const limitedDocuments = documents.slice(0, maxDocs)
 
     if (documents.length > maxDocs) {
-      console.log(`! Ограничено до ${maxDocs} документов (было ${documents.length})`)
     }
 
     // Обновляем базу знаний
     const success = await updateKnowledgeBase(limitedDocuments)
 
     if (success) {
-      console.log('[✓] База знаний успешно обновлена!')
       return NextResponse.json({
         success: true,
         message: 'База знаний обновлена',

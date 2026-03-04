@@ -212,7 +212,6 @@ export default function UsersManagement() {
                 data={users}
                 onRowClick={(user) => {
                   // Navigate to user details
-                  console.log('View user:', user.id);
                 }}
               />
 

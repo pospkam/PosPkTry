@@ -155,13 +155,6 @@ async function sendConfirmationNotifications(
 ): Promise<void> {
   try {
     // Здесь будет реальная отправка уведомлений
-    console.log('Отправка уведомлений о подтверждении:', {
-      bookingId: booking.id,
-      action: action,
-      message: message,
-      contactPhone: booking.contact_phone,
-      contactEmail: booking.contact_email
-    });
 
     // В реальном приложении здесь будет:
     // - Отправка SMS с подтверждением/отклонением
@@ -171,12 +164,6 @@ async function sendConfirmationNotifications(
 
     if (action === 'confirm') {
       // Отправляем детали поездки
-      console.log('Отправка деталей поездки:', {
-        departureTime: booking.departure_time,
-        driverName: 'Иванов Иван Иванович', // Заглушка
-        driverPhone: '+7-914-123-45-67', // Заглушка
-        vehicleInfo: 'Hyundai Solaris КМ 123 АА' // Заглушка
-      });
     }
 
   } catch (error) {

@@ -100,10 +100,8 @@ export async function getMigrationStatus(): Promise<{
 
 export async function createBackup(): Promise<string> {
   const backupName = `kamchatour_backup_${new Date().toISOString().replace(/[:.]/g, '-')}`;
-  console.log(`  Backup created: ${backupName}`);
   return backupName;
 }
 
 export async function restoreBackup(_: string): Promise<void> {
-  console.log('  Restore backup is not implemented for SQL migrations.');
 }

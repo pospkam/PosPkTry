@@ -111,7 +111,6 @@ export async function createIndexes(): Promise<void> {
   for (const indexQuery of indexes) {
     try {
       await query(indexQuery);
-      console.log(`Index created: ${indexQuery}`);
     } catch (error) {
       console.error(`Failed to create index: ${indexQuery}`, error);
     }
@@ -131,7 +130,6 @@ export async function cleanupOldData(): Promise<void> {
   for (const cleanupQuery of cleanupQueries) {
     try {
       const result = await query(cleanupQuery);
-      console.log(`Cleanup completed: ${result.rowCount} rows affected`);
     } catch (error) {
       console.error(`Cleanup failed: ${cleanupQuery}`, error);
     }

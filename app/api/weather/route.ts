@@ -62,7 +62,6 @@ async function getWeatherData(
 
   for (const provider of uniqueProviders) {
     try {
-      console.log(`Trying weather provider: ${provider}`);
       
       switch (provider) {
         case 'openMeteo':

@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     if (process.env.NODE_ENV === 'production') {
       const { stdout, stderr } = await execAsync('/usr/local/bin/kamhub-update');
       
-      console.log('Deployment stdout:', stdout);
+      console.error('Deployment stdout:', stdout);
       if (stderr) console.error('Deployment stderr:', stderr);
 
       return NextResponse.json({

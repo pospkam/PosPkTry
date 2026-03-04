@@ -59,11 +59,6 @@ export async function POST(request: NextRequest) {
     // Получаем подпись из header
     const signature = request.headers.get('X-Content-HMAC');
     
-    console.log('📨 CloudPayments webhook received', {
-      signature: signature ? 'present' : 'MISSING',
-      bodyLength: rawBody.length,
-      timestamp: new Date().toISOString()
-    });
     
     //   ВАЛИДАЦИЯ WEBHOOK
     const validation = await processCloudPaymentsWebhook(rawBody, signature);
@@ -80,13 +75,6 @@ export async function POST(request: NextRequest) {
     
     const webhookData = validation.data!;
     
-    console.log('[✓] Webhook validated', {
-      transactionId: webhookData.TransactionId,
-      amount: webhookData.Amount,
-      status: webhookData.Status,
-      invoiceId: webhookData.InvoiceId,
-      testMode: webhookData.TestMode
-    });
     
     //   ОБРАБОТКА WEBHOOK В ТРАНЗАКЦИИ
     const result = await transaction(async (client) => {
@@ -174,11 +162,6 @@ export async function POST(request: NextRequest) {
                    'Ваше бронирование подтверждено! Платеж получен.', NOW())
         `, [bookingId, booking.user_id, booking.operator_id]);
         
-        console.log('[✓] Payment confirmed', {
-          bookingId,
-          transactionId,
-          amount: webhookData.Amount
-        });
         
       } else if (webhookData.Status === 'Declined') {
         // ОТКЛОНЕННЫЙ ПЛАТЕЖ
@@ -214,11 +197,6 @@ export async function POST(request: NextRequest) {
         const { cancelBooking } = await import('@/lib/transfers/booking');
         await cancelBooking(bookingId, `Payment declined: ${webhookData.Reason}`);
         
-        console.log('[✗] Payment declined', {
-          bookingId,
-          transactionId,
-          reason: webhookData.Reason
-        });
       }
       
       return { success: true };
@@ -237,7 +215,6 @@ export async function POST(request: NextRequest) {
     });
   } finally {
     const duration = Date.now() - startTime;
-    console.log(`  Webhook processed in ${duration}ms`);
   }
 }
 
