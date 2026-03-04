@@ -5,7 +5,8 @@
 
 import bcrypt from 'bcryptjs';
 
-const SALT_ROUNDS = 10;
+// Align bcrypt cost across the app; 12 is baseline for production workloads.
+const SALT_ROUNDS = 12;
 
 /**
  * Hash a password

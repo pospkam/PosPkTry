@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { hash } from 'bcryptjs';
 import { SignJWT } from 'jose';
 import { pool } from '@/lib/database';
+import { hashPassword } from '@/lib/auth/password';
 
 const jwtSecret = process.env.JWT_SECRET;
 
@@ -70,8 +70,8 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Хешируем пароль
-    const hashedPassword = await hash(password, 12);
+    // Хешируем пароль единым методом
+    const hashedPassword = await hashPassword(password);
     
     // Создаем пользователя
     const result = await client.query(

@@ -11,8 +11,9 @@ const paramsSchema = z.object({ id: z.string().uuid() });
 
 /**
  * PATCH /api/operator/transfer-booking/[id]/reject
- * Отклонение входящего переброса бронирования.
- * Ownership: WHERE id = $1 AND to_operator_id = $2
+ * Отклонение входящего переброса бронирования через operator_booking_transfers.
+ * Ownership: to_operator_user_id === текущий пользователь.
+ * После отклонения — уведомляем отправителя.
  */
 export async function PATCH(
   request: NextRequest,
@@ -39,12 +40,12 @@ export async function PATCH(
     }
 
     // Ownership: только получатель может отклонить, и только в статусе pending
-    const result = await query<{ id: string; status: string }>(
-      `UPDATE booking_transfers
-       SET status = 'rejected', updated_at = now()
-       WHERE id = $1 AND to_operator_id = $2 AND status = 'pending'
-       RETURNING id, status`,
-      [parsed.data.id, operatorId]
+    const result = await query<{ id: string; status: string; from_operator_user_id: string }>(
+      `UPDATE operator_booking_transfers
+       SET status = 'rejected', responded_at = NOW(), updated_at = NOW()
+       WHERE id = $1 AND to_operator_user_id = $2 AND status = 'pending'
+       RETURNING id, status, from_operator_user_id`,
+      [parsed.data.id, userOrResponse.userId]
     );
 
     if (result.rows.length === 0) {
@@ -53,6 +54,20 @@ export async function PATCH(
         { status: 404 }
       );
     }
+
+    // Уведомление отправителю об отклонении
+    const fromUserId = result.rows[0].from_operator_user_id;
+    await query(
+      `INSERT INTO notifications (user_id, type, title, message, priority, action_url)
+       VALUES ($1, $2, $3, $4, 'normal', $5)`,
+      [
+        fromUserId,
+        'booking_transfer_rejected',
+        'Переброс отклонён',
+        'Ваш запрос на переброс бронирования отклонён',
+        '/hub/operator/transfers',
+      ]
+    );
 
     return NextResponse.json({
       success: true,
