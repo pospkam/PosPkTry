@@ -1,5 +1,7 @@
 import { Metadata } from 'next';
 
+export const dynamic = 'force-dynamic';
+
 // Server Component - fetch data on server instead of useEffect
 async function getApiSpec() {
   try {
