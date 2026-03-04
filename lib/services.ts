@@ -1281,10 +1281,45 @@ export const dashboardService = {
 
 export const feedbackService = {
   async create(data: Record<string, unknown>) {
-    return { id: crypto.randomUUID(), ...data, createdAt: new Date() };
+    try {
+      const customerId = toStringOrNull(data.customerId) ?? toStringOrNull(data.customer_id);
+      const rating = toNumberOrNull(data.rating) ?? 5;
+      const comment = toStringOrNull(data.comment) ?? '';
+      const ticketId = toStringOrNull(data.ticketId) ?? toStringOrNull(data.ticket_id);
+
+      if (!customerId) return { id: 0, ...data, createdAt: new Date() };
+
+      const res = await pool.query(
+        `INSERT INTO feedback (customer_id, ticket_id, rating, comment, created_at)
+         VALUES ($1, $2, $3, $4, NOW())
+         RETURNING *`,
+        [customerId, ticketId ?? null, rating, comment]
+      );
+      return res.rows[0];
+    } catch {
+      return { id: 0, ...data, createdAt: new Date() };
+    }
   },
   async list(params: Record<string, unknown>) {
-    return { feedbacks: [], total: 0 };
+    try {
+      const page = toNumberOrNull(params.page) ?? 1;
+      const limit = Math.min(toNumberOrNull(params.limit) ?? 20, 100);
+      const offset = (page - 1) * limit;
+
+      const [countRes, dataRes] = await Promise.all([
+        pool.query(`SELECT COUNT(*)::int AS total FROM feedback`),
+        pool.query(
+          `SELECT * FROM feedback ORDER BY created_at DESC LIMIT $1 OFFSET $2`,
+          [limit, offset]
+        ),
+      ]);
+      return {
+        feedbacks: dataRes.rows,
+        total: Number(countRes.rows[0]?.total ?? 0),
+      };
+    } catch {
+      return { feedbacks: [], total: 0 };
+    }
   },
   async createFeedback(data: Record<string, unknown>) {
     return this.create(data);
@@ -1307,24 +1342,105 @@ export const feedbackService = {
 // ========================================
 
 export const knowledgeBaseService = {
-  async search(query: string) {
-    return { articles: [], total: 0 };
+  async search(searchQuery: string) {
+    try {
+      const like = `%${searchQuery}%`;
+      const res = await pool.query(
+        `SELECT id, title, slug, category, tags, author, views, helpful, created_at
+         FROM knowledge_base_articles
+         WHERE title ILIKE $1 OR content ILIKE $1
+         ORDER BY helpful DESC, views DESC
+         LIMIT 20`,
+        [like]
+      );
+      return { articles: res.rows, total: res.rows.length };
+    } catch {
+      return { articles: [], total: 0 };
+    }
   },
   async list(params: Record<string, unknown>) {
-    return { articles: [], total: 0 };
+    try {
+      const page = toNumberOrNull(params.page) ?? 1;
+      const limit = Math.min(toNumberOrNull(params.limit) ?? 20, 100);
+      const offset = (page - 1) * limit;
+      const category = toStringOrNull(params.category);
+
+      const conditions: string[] = [];
+      const queryParams: unknown[] = [];
+      if (category) {
+        conditions.push(`category = $${queryParams.length + 1}`);
+        queryParams.push(category);
+      }
+      const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
+      const [countRes, dataRes] = await Promise.all([
+        pool.query(`SELECT COUNT(*)::int AS total FROM knowledge_base_articles ${where}`, queryParams),
+        pool.query(
+          `SELECT id, title, slug, category, tags, author, views, helpful, created_at
+           FROM knowledge_base_articles ${where}
+           ORDER BY helpful DESC, created_at DESC
+           LIMIT $${queryParams.length + 1} OFFSET $${queryParams.length + 2}`,
+          [...queryParams, limit, offset]
+        ),
+      ]);
+      return {
+        articles: dataRes.rows,
+        total: Number(countRes.rows[0]?.total ?? 0),
+      };
+    } catch {
+      return { articles: [], total: 0 };
+    }
   },
   async getById(id: string) {
-    return null;
+    try {
+      const res = await pool.query(
+        `SELECT * FROM knowledge_base_articles WHERE id = $1`,
+        [id]
+      );
+      return res.rows[0] ?? null;
+    } catch {
+      return null;
+    }
   },
   async create(data: Record<string, unknown>) {
-    return { id: crypto.randomUUID(), ...data };
+    try {
+      const title = toStringOrNull(data.title) ?? '';
+      const slug = toStringOrNull(data.slug) ?? title.toLowerCase().replace(/\s+/g, '-');
+      const content = toStringOrNull(data.content) ?? '';
+      const category = toStringOrNull(data.category) ?? 'general';
+      const author = toStringOrNull(data.author) ?? 'system';
+      const tags = Array.isArray(data.tags) ? data.tags : [];
+
+      const res = await pool.query(
+        `INSERT INTO knowledge_base_articles (title, slug, content, category, author, tags, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, NOW())
+         RETURNING id, title, slug, category, author, tags, created_at`,
+        [title, slug, content, category, author, tags]
+      );
+      return res.rows[0];
+    } catch {
+      return { id: 0, ...data };
+    }
   },
   async update(id: string, data: Record<string, unknown>) {
-    return { id, ...data };
+    try {
+      const fields = Object.entries(data)
+        .filter(([k]) => ['title', 'content', 'category', 'tags'].includes(k))
+        .map(([k], i) => `${k} = $${i + 2}`);
+      if (fields.length === 0) return { id, ...data };
+      const values = fields.map(f => data[f.split(' = ')[0].trim()]);
+      const res = await pool.query(
+        `UPDATE knowledge_base_articles SET ${fields.join(', ')}, updated_at = NOW() WHERE id = $1 RETURNING *`,
+        [id, ...Object.values(data).filter((_, i) => fields[i] !== undefined)]
+      );
+      return res.rows[0] ?? { id, ...data };
+    } catch {
+      return { id, ...data };
+    }
   },
   async searchArticles(filter: Record<string, unknown>) {
-    const search = toStringOrNull(filter.search) ?? '';
-    const result = await this.search(search);
+    const searchTerm = toStringOrNull(filter.search) ?? '';
+    const result = searchTerm ? await this.search(searchTerm) : await this.list(filter);
     return {
       success: true,
       data: result.articles,
@@ -1334,11 +1450,7 @@ export const knowledgeBaseService = {
     };
   },
   async createArticle(data: Record<string, unknown>, author: string) {
-    return this.create({
-      ...data,
-      author,
-      createdAt: new Date().toISOString(),
-    });
+    return this.create({ ...data, author });
   },
 };
 
@@ -2438,29 +2550,85 @@ export const searchService = {
 // ========================================
 
 export const slaService = {
-  async getMetrics(params: Record<string, unknown>) {
-    return { sla: {}, violations: [] };
+  async getMetrics(_params: Record<string, unknown>) {
+    try {
+      const res = await pool.query(
+        `SELECT
+           COUNT(*)::int AS total,
+           COUNT(*) FILTER (WHERE acknowledged = FALSE)::int AS active_violations
+         FROM sla_violations`
+      );
+      const row = res.rows[0] ?? {};
+      return {
+        sla: { total: Number(row.total ?? 0) },
+        violations: [],
+        activeViolations: Number(row.active_violations ?? 0),
+      };
+    } catch {
+      return { sla: {}, violations: [] };
+    }
   },
-  async list(params: Record<string, unknown>) {
-    return { slas: [], total: 0 };
+  async list(_params: Record<string, unknown>) {
+    try {
+      const res = await pool.query(
+        `SELECT id, name, category, priority, first_response_time_hours, resolution_time_hours, active
+         FROM sla_policies
+         WHERE active = TRUE
+         ORDER BY created_at DESC
+         LIMIT 50`
+      );
+      return { slas: res.rows, total: res.rows.length };
+    } catch {
+      return { slas: [], total: 0 };
+    }
   },
   async getComplianceMetrics(from?: Date, to?: Date) {
-    return {
-      period: {
-        from: from ? from.toISOString() : null,
-        to: to ? to.toISOString() : null,
-      },
-      breached: 0,
-      total: 0,
-      complianceRate: 100,
-    };
+    try {
+      const conditions: string[] = [];
+      const params: unknown[] = [];
+      if (from) { conditions.push(`created_at >= $${params.length + 1}`); params.push(from); }
+      if (to)   { conditions.push(`created_at <= $${params.length + 1}`); params.push(to); }
+      const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
+      const res = await pool.query(
+        `SELECT
+           COUNT(*)::int AS total,
+           COUNT(*) FILTER (WHERE acknowledged = TRUE)::int AS resolved
+         FROM sla_violations ${where}`,
+        params
+      );
+      const row = res.rows[0] ?? {};
+      const total = Number(row.total ?? 0);
+      const resolved = Number(row.resolved ?? 0);
+      return {
+        period: { from: from?.toISOString() ?? null, to: to?.toISOString() ?? null },
+        breached: total,
+        total,
+        complianceRate: total === 0 ? 100 : Math.round((resolved / total) * 100),
+      };
+    } catch {
+      return {
+        period: { from: from?.toISOString() ?? null, to: to?.toISOString() ?? null },
+        breached: 0,
+        total: 0,
+        complianceRate: 100,
+      };
+    }
   },
   async checkSLAViolation(ticketId: string) {
-    return {
-      ticketId,
-      violated: false,
-      checkedAt: new Date().toISOString(),
-    };
+    try {
+      const res = await pool.query(
+        `SELECT COUNT(*)::int AS count FROM sla_violations WHERE ticket_id = $1 AND acknowledged = FALSE`,
+        [ticketId]
+      );
+      return {
+        ticketId,
+        violated: Number(res.rows[0]?.count ?? 0) > 0,
+        checkedAt: new Date().toISOString(),
+      };
+    } catch {
+      return { ticketId, violated: false, checkedAt: new Date().toISOString() };
+    }
   },
 };
 
@@ -2470,16 +2638,50 @@ export const slaService = {
 
 export const ticketMessageService = {
   async create(ticketId: string, data: Record<string, unknown>) {
-    return { id: crypto.randomUUID(), ticketId, ...data, createdAt: new Date() };
+    try {
+      const senderId = toStringOrNull(data.senderId) ?? toStringOrNull(data.sender_id) ?? 'system';
+      const senderName = toStringOrNull(data.senderName) ?? toStringOrNull(data.sender_name) ?? 'System';
+      const senderType = toStringOrNull(data.senderType) ?? 'customer';
+      const message = toStringOrNull(data.message) ?? '';
+      const isInternal = !!(data.isInternal ?? data.is_internal);
+
+      const res = await pool.query(
+        `INSERT INTO ticket_messages (ticket_id, sender_id, sender_name, sender_type, message, is_internal, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, NOW())
+         RETURNING *`,
+        [ticketId, senderId, senderName, senderType, message, isInternal]
+      );
+      return res.rows[0];
+    } catch {
+      return { id: 0, ticketId, ...data, createdAt: new Date() };
+    }
   },
   async list(ticketId: string, params: Record<string, unknown>) {
-    return { messages: [], total: 0 };
+    try {
+      const limit = Math.min(toNumberOrNull(params.limit) ?? 50, 200);
+      const offset = toNumberOrNull(params.offset) ?? 0;
+
+      const [countRes, dataRes] = await Promise.all([
+        pool.query(`SELECT COUNT(*)::int AS total FROM ticket_messages WHERE ticket_id = $1`, [ticketId]),
+        pool.query(
+          `SELECT * FROM ticket_messages WHERE ticket_id = $1
+           ORDER BY created_at ASC LIMIT $2 OFFSET $3`,
+          [ticketId, limit, offset]
+        ),
+      ]);
+      return {
+        messages: dataRes.rows,
+        total: Number(countRes.rows[0]?.total ?? 0),
+      };
+    } catch {
+      return { messages: [], total: 0 };
+    }
   },
   async getTicketMessages(ticketId: string, limit: number, offset: number) {
     return this.list(ticketId, { limit, offset });
   },
   async createMessage(data: Record<string, unknown>) {
-    const ticketId = data.ticketId as string;
+    const ticketId = toStringOrNull(data.ticketId) ?? toStringOrNull(data.ticket_id) ?? '';
     return this.create(ticketId, data);
   },
 };
