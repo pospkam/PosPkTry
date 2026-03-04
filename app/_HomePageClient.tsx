@@ -505,7 +505,7 @@ export default function HomePageClient() {
         {/* Activities - Auto-scroll carousel */}
         <section
           aria-label="Активности Камчатки"
-          style={{ padding: '40px 0 24px', width: '100%' }}
+          style={{ padding: '40px 0 100px', width: '100%' }}
         >
           <h2
             style={{
