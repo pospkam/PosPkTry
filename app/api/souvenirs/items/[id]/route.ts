@@ -94,7 +94,7 @@ export async function PUT(
 
     const body = await request.json();
     const updates: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
     let paramIndex = 1;
 
     const allowedFields = [

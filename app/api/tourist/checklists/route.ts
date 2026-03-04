@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     const tripId = searchParams.get('tripId');
 
     let queryText = `SELECT * FROM tourist_checklists WHERE tourist_id = $1`;
-    const params: any[] = [profile.id];
+    const params: unknown[] = [profile.id];
 
     if (tripId) {
       queryText += ` AND trip_id = $2`;
@@ -129,7 +129,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const updates: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
     let paramIndex = 1;
 
     if (name !== undefined) {

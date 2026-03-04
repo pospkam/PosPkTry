@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     }
 
     let chatQuery: string;
-    let queryParams: any[];
+    let queryParams: unknown[];
 
     if (sessionId) {
       // Получаем чат по sessionId
@@ -272,7 +272,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Функция для получения ответа от AI
-async function getAIResponse(message: string, context?: any): Promise<{ content: string; metadata?: any }> {
+async function getAIResponse(message: string, context?: Record<string, unknown>): Promise<{ content: string; metadata?: Record<string, unknown> }> {
   try {
     // Формируем промпт с контекстом Камчатки
     const systemPrompt = `Ты - AI-гид по Камчатке. Твоя задача - помогать туристам планировать путешествия, отвечать на вопросы о достопримечательностях, погоде, безопасности и местных особенностях.

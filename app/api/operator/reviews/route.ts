@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
       WHERE t.operator_id = $1
     `;
 
-    const params: any[] = [operatorId];
+    const params: unknown[] = [operatorId];
     let paramIndex = 2;
 
     // Rating filter
@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
       JOIN tours t ON r.tour_id = t.id
       WHERE t.operator_id = $1
     `;
-    const countParams: any[] = [operatorId];
+    const countParams: unknown[] = [operatorId];
     let countIndex = 2;
 
     if (rating) {

@@ -204,7 +204,7 @@ async function getOpenWeatherMapData(lat: number, lng: number, location?: string
   const current = data.current;
 
   // Почасовой прогноз
-  const hourlyForecast: WeatherHourly[] = data.hourly.slice(0, 24).map((hour: any) => ({
+  const hourlyForecast: WeatherHourly[] = data.hourly.slice(0, 24).map((hour: Record<string, unknown>) => ({
     time: new Date(hour.dt * 1000).toISOString(),
     temperature: Math.round(hour.temp),
     feelsLike: Math.round(hour.feels_like),
@@ -215,7 +215,7 @@ async function getOpenWeatherMapData(lat: number, lng: number, location?: string
   }));
 
   // Дневной прогноз
-  const forecast: WeatherForecast[] = data.daily.slice(0, 7).map((day: any) => ({
+  const forecast: WeatherForecast[] = data.daily.slice(0, 7).map((day: Record<string, unknown>) => ({
     date: new Date(day.dt * 1000),
     temperature: {
       min: Math.round(day.temp.min),
@@ -232,7 +232,7 @@ async function getOpenWeatherMapData(lat: number, lng: number, location?: string
   }));
 
   // Алерты
-  const alerts: WeatherAlert[] = (data.alerts || []).map((alert: any) => ({
+  const alerts: WeatherAlert[] = (data.alerts || []).map((alert: Record<string, unknown>) => ({
     event: alert.event,
     severity: 'moderate' as const,
     urgency: 'expected' as const,
@@ -292,7 +292,7 @@ async function getWeatherApiData(lat: number, lng: number, location?: string): P
   const location_data = data.location;
 
   // Почасовой прогноз (24 часа)
-  const hourlyForecast: WeatherHourly[] = data.forecast.forecastday[0].hour.map((hour: any) => ({
+  const hourlyForecast: WeatherHourly[] = data.forecast.forecastday[0].hour.map((hour: Record<string, unknown>) => ({
     time: hour.time,
     temperature: Math.round(hour.temp_c),
     feelsLike: Math.round(hour.feelslike_c),
@@ -303,7 +303,7 @@ async function getWeatherApiData(lat: number, lng: number, location?: string): P
   }));
 
   // Дневной прогноз
-  const forecast: WeatherForecast[] = data.forecast.forecastday.map((day: any) => ({
+  const forecast: WeatherForecast[] = data.forecast.forecastday.map((day: Record<string, unknown>) => ({
     date: new Date(day.date),
     temperature: {
       min: Math.round(day.day.mintemp_c),
@@ -320,7 +320,7 @@ async function getWeatherApiData(lat: number, lng: number, location?: string): P
   }));
 
   // Алерты
-  const alerts: WeatherAlert[] | undefined = data.alerts?.alert?.map((alert: any) => ({
+  const alerts: WeatherAlert[] | undefined = data.alerts?.alert?.map((alert: Record<string, unknown>) => ({
     event: alert.event,
     severity: alert.severity?.toLowerCase() || 'moderate',
     urgency: alert.urgency?.toLowerCase() || 'expected',
@@ -401,7 +401,7 @@ async function getYandexWeather(lat: number, lng: number, location?: string): Pr
     cloudCover: fact.cloudness * 12.5, // Yandex дает 0-8, конвертируем в %
     sunrise: data.forecast?.parts?.[0]?.sunrise,
     sunset: data.forecast?.parts?.[0]?.sunset,
-    forecast: data.forecasts?.map((day: any) => ({
+    forecast: data.forecasts?.map((day: Record<string, unknown>) => ({
       date: new Date(day.date),
       temperature: {
         min: day.parts.day.temp_min,

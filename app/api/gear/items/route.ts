@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       SELECT * FROM gear_items 
       WHERE partner_id = $1
     `;
-    const params: any[] = [partnerId];
+    const params: unknown[] = [partnerId];
     let paramIndex = 2;
 
     if (category) {

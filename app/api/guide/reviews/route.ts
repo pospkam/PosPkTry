@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
       WHERE gr.guide_id = $1 AND gr.is_public = true
     `;
 
-    const params: any[] = [guideId];
+    const params: unknown[] = [guideId];
     const paramIndex = 2;
 
     // Apply filters

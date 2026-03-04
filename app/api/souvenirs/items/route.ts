@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
       WHERE s.partner_id = $1
     `;
 
-    const params: any[] = [partnerId];
+    const params: unknown[] = [partnerId];
     let paramIndex = 2;
 
     if (status === 'active') {

@@ -207,7 +207,7 @@ export async function GET(request: NextRequest) {
       WHERE so.user_id = $1
     `;
 
-    const params: any[] = [userOrResponse.userId];
+    const params: unknown[] = [userOrResponse.userId];
     let paramIndex = 2;
 
     if (status) {

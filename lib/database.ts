@@ -7,16 +7,16 @@ export function getPool(): Pool {
 }
 
 // Интерфейс для результата запроса
-export interface QueryResult<T = any> {
+export interface QueryResult<T = Record<string, unknown>> {
   rows: T[];
   rowCount: number | null;
   command: string;
 }
 
 // Функция для выполнения запросов
-export async function query<T = any>(
+export async function query<T = Record<string, unknown>>(
   text: string,
-  params?: any[]
+  params?: unknown[]
 ): Promise<QueryResult<T>> {
   const client = await pool.connect();
   try {
@@ -240,14 +240,14 @@ export async function checkDataIntegrity(): Promise<{
 }
 
 // Функция для экспорта данных
-export async function exportData(tableName: string): Promise<QueryResult<any>> {
+export async function exportData(tableName: string): Promise<QueryResult<Record<string, unknown>>> {
   return query(`SELECT * FROM ${tableName} ORDER BY created_at DESC`);
 }
 
 // Функция для импорта данных
 export async function importData(
   tableName: string,
-  data: any[],
+  data: Record<string, unknown>[],
   columns: string[]
 ): Promise<void> {
   if (data.length === 0) return;

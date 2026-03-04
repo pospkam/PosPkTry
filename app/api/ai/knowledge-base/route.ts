@@ -125,7 +125,7 @@ async function collectProjectDocuments(): Promise<KnowledgeDocument[]> {
       LIMIT 50
     `)
 
-    tours.rows.forEach((tour: any) => {
+    tours.rows.forEach((tour: Record<string, unknown>) => {
       documents.push({
         id: `tour_${tour.id}`,
         title: `Тур: ${tour.name}`,
@@ -158,7 +158,7 @@ async function collectProjectDocuments(): Promise<KnowledgeDocument[]> {
       LIMIT 20
     `)
 
-    operators.rows.forEach((operator: any) => {
+    operators.rows.forEach((operator: Record<string, unknown>) => {
       documents.push({
         id: `operator_${operator.id}`,
         title: `Оператор: ${operator.name}`,

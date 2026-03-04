@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
         AND ta.date <= $3
     `;
 
-    const params: any[] = [operatorId, startDate, endDate];
+    const params: unknown[] = [operatorId, startDate, endDate];
     let paramIndex = 4;
 
     if (tourId) {

@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
 
     // Строим WHERE условия
     const whereConditions: string[] = [];
-    const queryParams: any[] = [];
+    const queryParams: unknown[] = [];
     let paramIndex = 1;
 
     if (status === 'active') {

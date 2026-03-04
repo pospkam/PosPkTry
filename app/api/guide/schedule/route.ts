@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
       WHERE gs.guide_id = $1
     `;
 
-    const params: any[] = [guideId];
+    const params: unknown[] = [guideId];
     let paramIndex = 2;
 
     if (dateFrom) {
@@ -205,7 +205,7 @@ export async function POST(request: NextRequest) {
         tour_id, booking_id, max_participants, location, location_name, notes, status
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, `;
     
-    const insertParams: any[] = [
+    const insertParams: unknown[] = [
       guideId,
       startTime,
       endTime,

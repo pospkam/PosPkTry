@@ -69,8 +69,8 @@ export async function GET(request: NextRequest) {
       agentName: row.agent_name,
       totalAmount: parseFloat(row.total_amount),
       commissions: (row.commissions || [])
-        .filter((commission: any) => commission.id !== null)
-        .map((commission: any) => ({
+        .filter((commission: Record<string, unknown>) => commission.id !== null)
+        .map((commission: Record<string, unknown>) => ({
           id: commission.id,
           agentId: row.agent_id,
           bookingId: commission.bookingId,

@@ -231,10 +231,10 @@ function generateConfirmationCode(): string {
 
 // Функция для отправки реальных уведомлений
 async function sendRealBookingNotifications(
-  booking: any, 
-  schedule: any, 
-  driver: any,
-  contactInfo: any
+  booking: Record<string, unknown>,
+  schedule: Record<string, unknown>,
+  driver: Record<string, unknown> | null,
+  contactInfo: Record<string, unknown>
 ): Promise<void> {
   try {
     // Отправка SMS уведомления пассажиру
@@ -288,7 +288,7 @@ async function sendRealBookingNotifications(
 }
 
 // Функция для создания тестового бронирования
-function createMockBooking(request: TransferBookingRequest): any {
+function createMockBooking(request: TransferBookingRequest): Record<string, unknown> {
   const confirmationCode = generateConfirmationCode();
   const totalPrice = 1500 * request.passengersCount; // Заглушка цены
 

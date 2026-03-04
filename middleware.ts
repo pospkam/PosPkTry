@@ -11,7 +11,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 import { Ratelimit } from '@upstash/ratelimit';
-import { Redis } from '@upstash/redis';
+import { Redis } from '@upstash/redis/cloudflare';
 
 // JWT_SECRET читается в runtime, не при сборке
 function getJWTSecret(): Uint8Array {

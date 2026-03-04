@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       WHERE operator_id = $1
     `;
 
-    const params: any[] = [operatorId];
+    const params: unknown[] = [operatorId];
 
     if (active === 'true') {
       queryStr += ` AND is_active = true`;

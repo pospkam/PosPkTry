@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     const itemType = searchParams.get('type');
 
     let queryText = `SELECT * FROM tourist_wishlist WHERE tourist_id = $1`;
-    const params: any[] = [profile.id];
+    const params: unknown[] = [profile.id];
 
     if (itemType) {
       queryText += ` AND item_type = $2`;

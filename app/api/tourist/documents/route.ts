@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     const documentType = searchParams.get('type');
 
     let queryText = `SELECT * FROM tourist_documents WHERE tourist_id = $1`;
-    const params: any[] = [profile.id];
+    const params: unknown[] = [profile.id];
 
     if (documentType) {
       queryText += ` AND document_type = $2`;

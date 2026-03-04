@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
       WHERE d.operator_id = $1
     `;
 
-    const params: any[] = [operatorId];
+    const params: unknown[] = [operatorId];
     let paramIndex = 2;
 
     if (driverId) {

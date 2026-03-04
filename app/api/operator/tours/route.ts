@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
     const sortOrder = (searchParams.get('sortOrder') || 'desc').toLowerCase() === 'asc' ? 'ASC' : 'DESC';
 
     const whereConditions: string[] = ['t.operator_id = $1'];
-    const queryParams: any[] = [operatorId];
+    const queryParams: unknown[] = [operatorId];
     let paramIndex = 2;
 
     if (status === 'active') {

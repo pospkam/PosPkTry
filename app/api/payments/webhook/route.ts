@@ -125,7 +125,7 @@ async function handleSuccessfulPayment(webhook: CloudPaymentsWebhook) {
     // Отправляем email уведомление о подтверждении оплаты
     try {
       // Получаем детали бронирования для email
-      let bookingDetails: any = null;
+      let bookingDetails: Record<string, unknown> | null = null;
       let emailSubject = '';
       let emailContent = '';
 

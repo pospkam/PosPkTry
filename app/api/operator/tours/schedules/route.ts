@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
       JOIN tours t ON ts.tour_id = t.id
       WHERE t.operator_id = $1
     `;
-    const values: any[] = [operatorId];
+    const values: unknown[] = [operatorId];
     let paramIndex = 2;
 
     if (tourId) {

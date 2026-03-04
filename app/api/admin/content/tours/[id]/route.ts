@@ -34,7 +34,7 @@ export async function PUT(
 
     // Строим динамический UPDATE
     const updates: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
     let paramIndex = 1;
 
     if (body.name !== undefined) {

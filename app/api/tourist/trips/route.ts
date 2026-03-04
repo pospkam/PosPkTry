@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
       WHERE tt.tourist_id = $1
     `;
 
-    const params: any[] = [profile.id];
+    const params: unknown[] = [profile.id];
     let paramIndex = 2;
 
     if (status) {

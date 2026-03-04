@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
       WHERE user_id = $1
     `;
 
-    const params: any[] = [userId];
+    const params: unknown[] = [userId];
     let paramIndex = 2;
 
     if (unreadOnly) {

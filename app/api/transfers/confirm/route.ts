@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
 
 // Функция для отправки уведомлений о подтверждении (заглушка)
 async function sendConfirmationNotifications(
-  booking: any, 
+  booking: Record<string, unknown>, 
   action: string, 
   message?: string
 ): Promise<void> {

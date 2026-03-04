@@ -90,7 +90,7 @@ export async function PUT(request: NextRequest) {
     } = body;
 
     const updates: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
     let paramIndex = 1;
 
     if (companyName !== undefined) {

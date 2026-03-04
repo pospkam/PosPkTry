@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
 
     // Строим WHERE условия
     const whereConditions: string[] = ['is_active = true'];
-    const queryParams: any[] = [];
+    const queryParams: unknown[] = [];
     let paramIndex = 1;
 
     if (category) {
