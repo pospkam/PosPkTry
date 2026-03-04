@@ -5,50 +5,70 @@
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/pospkam/PosPkTry)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.4-blue)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-15-blue)](https://nextjs.org/)
+[![Production](https://img.shields.io/badge/prod-Timeweb%20Cloud-orange)](https://pospkam-pospktry-c1f3.twc1.net)
 
 ---
 
-## Что это
+## О проекте
 
-**Kamchatour Hub** — туристическая платформа для Камчатки, объединяющая:
-- Туристов (поиск туров, бронирование, безопасность)
-- Туроператоров (CRM, управление турами, аналитика)
-- Гидов (расписание, группы, заработок)
-- Трансферных операторов (автопарк, водители, маршруты)
-- Агентов (клиенты, ваучеры, комиссионные)
-- Администраторов (модерация, финансы, настройки)
+**Kamchatour Hub** — туристическая платформа Камчатки, объединяющая 6 типов пользователей в единой экосистеме.
 
-**Стек:** Next.js 15, TypeScript 5.4, PostgreSQL, Tailwind CSS
+| Роль | Функционал |
+|------|------------|
+| **Турист** | Поиск туров, бронирование, отзывы, eco-points, история |
+| **Туроператор** | CRM, управление турами, календарь, аналитика |
+| **Гид** | Расписание, группы, заработок, профиль, репутация |
+| **Трансфер-оператор** | Автопарк, водители, маршруты, расписание |
+| **Агент** | Клиенты, ваучеры, комиссионные, статистика |
+| **Администратор** | Модерация, пользователи, финансы платформы |
+
+**Продакшен:** https://pospkam-pospktry-c1f3.twc1.net
+
+---
+
+## Стек
+
+| Слой | Технологии |
+|------|-----------|
+| Frontend | Next.js 15 (App Router), React 18, TypeScript 5.4, Tailwind CSS |
+| Backend | Next.js API Routes, PostgreSQL (прямой SQL) |
+| Auth | JWT (jose) + bcrypt, 6 ролей |
+| AI | DeepSeek (primary), Minimax, xAI Grok (fallback) |
+| Платежи | CloudPayments |
+| Карты | Яндекс.Карты |
+| Погода | Яндекс Weather API (proxy, кэш 6ч) |
+| Деплой | Timeweb Cloud, Docker, Kubernetes |
 
 ---
 
 ## Быстрый старт
 
-### Разработка
-
 ```bash
-# Клонировать
 git clone https://github.com/pospkam/PosPkTry.git
 cd PosPkTry
-
-# Установить зависимости
 npm install
-
-# Настроить окружение
 cp .env.local.example .env.local
-# Заполните JWT_SECRET и DATABASE_URL
-
-# Запустить
+# Заполните DATABASE_URL, JWT_SECRET, NEXTAUTH_SECRET
 npm run dev
 ```
 
 Откройте http://localhost:3000
 
-### Production сборка
+### Команды
 
 ```bash
-npm run build
-npm start
+npm run dev      # Dev сервер (порт 3000)
+npm run build    # Production сборка
+npm run lint     # ESLint
+npm test         # Vitest
+```
+
+### Docker
+
+```bash
+docker-compose up   # Next.js + PostgreSQL
+npm run migrate     # SQL миграции
+npm run db:seed     # Тестовые данные
 ```
 
 ---
@@ -57,169 +77,87 @@ npm start
 
 ```
 PosPkTry/
-├── app/                    # Next.js App Router (Основная)
-│   ├── page.tsx           # Главная страница (мобильная версия)
-│   ├── api/               # API routes (~280 endpoints)
-│   ├── api-docs/          # Swagger документация
-│   ├── auth/              # Авторизация (login, register)
-│   ├── hub/               # Dashboards по ролям
-│   │   ├── tourist/       # Dashboard туриста
-│   │   ├── operator/       # CRM оператора
-│   │   ├── guide/         # Dashboard гида
-│   │   ├── transfer/      # Dashboard трансфера
-│   │   └── admin/         # Админ-панель
-│   ├── tours/             # Каталог туров
-│   └── ...
+├── app/
+│   ├── page.tsx               # Главная страница
+│   ├── api/                   # 226 API endpoints
+│   │   ├── auth/              # login, register, me
+│   │   ├── tours/             # Каталог туров
+│   │   ├── bookings/          # Бронирования
+│   │   ├── operator/          # CRM оператора
+│   │   ├── guide/             # Dashboard гида
+│   │   ├── transfer/          # Трансферы (оператор)
+│   │   ├── transfers/         # Трансферы (клиент)
+│   │   ├── agent/             # Агентские операции
+│   │   ├── admin/             # Платформенное управление
+│   │   ├── ai/                # DeepSeek + Minimax + xAI
+│   │   ├── weather/           # Яндекс Weather proxy
+│   │   ├── payments/          # CloudPayments webhook
+│   │   └── safety/            # SOS endpoint
+│   ├── hub/                   # Dashboards (89 страниц всего)
+│   │   ├── tourist/
+│   │   ├── operator/
+│   │   ├── guide/
+│   │   ├── transfer-operator/
+│   │   ├── agent/
+│   │   └── admin/
+│   ├── tours/[id]/            # Детальная страница тура
+│   ├── search/                # NLP-поиск
+│   ├── ai-assistant/          # AI чат
+│   ├── safety/                # SOS, МЧС
+│   └── eco/                   # Eco-points dashboard
 │
-├── components/            # React компоненты
-│   ├── home/             # Компоненты главной страницы
-│   ├── ui/               # UI kit
-│   ├── weather/          # Погодные виджеты
-│   ├── admin/            # Компоненты админки
-│   └── icons/            # Иконки (Lucide React)
+├── components/                # 90 React компонентов
+│   ├── home/                  # Компоненты главной
+│   ├── ui/                    # Button, Card, Modal, Input
+│   ├── layout/                # HubLayout, HubSidebar
+│   ├── ai/                    # AIChatBubble, ChatMessage
+│   ├── eco/                   # EcoPointsDashboard
+│   ├── safety/                # SOSButton, EmergencyModal
+│   ├── tours/                 # TourCard, TourFilters
+│   └── weather/               # WeatherWidget
 │
-├── lib/                  # Утилиты и логика
-│   ├── database.ts       # Подключение к PostgreSQL
-│   ├── auth/             # JWT авторизация
-│   └── ...
+├── lib/
+│   ├── database.ts            # PostgreSQL клиент + re-exports
+│   ├── db-pool.ts             # Pool singleton
+│   ├── services.ts            # Service layer (18 сервисов)
+│   ├── auth/                  # JWT логика
+│   ├── payments/              # CloudPayments helpers
+│   └── notifications/         # Email, SMS, Telegram
 │
-├── contexts/            # React контексты
-├── types/               # TypeScript типы
-├── scripts/             # Утилиты
-├── database/            # SQL схемы и миграции
-├── k8s/                 # Kubernetes конфиги
-└── docs/                # Документация
+├── migrations/                # 8 SQL миграций
+├── pillars/                   # Доменные модули
+│   ├── booking-pillar/
+│   ├── engagement-pillar/
+│   └── support-pillar/
+├── k8s/                       # Kubernetes конфиги
+└── monitoring/                # Grafana + Prometheus
 ```
-
----
-
-## Главная страница
-
-Новая мобильная версия с iOS-подобным дизайном:
-
-```tsx
-// app/page.tsx
-import { HomeHeader, HomeSearchBar, CategoryChips, TourCardsRow, HomeBottomNav } from '@/components/home';
-
-export default function HomePage() {
-  return (
-    <div className="max-w-[768px] mx-auto">
-      <HomeHeader />
-      <HomeSearchBar />
-      <CategoryChips />
-      <TourCardsRow />
-      <HomeBottomNav />
-    </div>
-  );
-}
-```
-
-### Компоненты (`components/home/`)
-
-- `HomeHeader.tsx` — шапка с аватаром и переключателем темы
-- `HomeSearchBar.tsx` — поисковая строка
-- `CategoryChips.tsx` — 7 категорий (Вулканы, Медведи, Рыбалка, Термы, Треккинг, Вертолёт, Рафтинг)
-- `TourCardsRow.tsx` — горизонтальный скролл туров
-- `HomeBottomNav.tsx` — нижняя навигация
-
-### Темы
-
-- **Светлая:** фон `#C8D4E3`, белые карточки
-- **Тёмная:** фон `#0B1120`, glassmorphism, синие акценты
-
----
-
-## Документация
-
-См. полный индекс: [docs/README.md](docs/README.md)
-
-**Основные разделы:**
-- [Design](docs/design/) — UX исследования, wireframes
-- [Architecture](docs/architecture/) — архитектура системы
-- [Deployment](docs/deployment/) — инструкции по деплою
-
----
-
-## Функциональность
-
-### По ролям
-
-| Роль | Функционал |
-|------|------------|
-| **Турист** | Поиск, бронирование, отзывы, история поездок |
-| **Туроператор** | CRM, управление турами, календарь, аналитика |
-| **Гид** | Расписание, группы, заработок, профиль |
-| **Трансфер** | Автопарк, водители, маршруты, расписание |
-| **Агент** | Клиенты, ваучеры, комиссионные, статистика |
-| **Админ** | Модерация, пользователи, финансы, настройки |
-
-### Общие сервисы
-
-- AI-помощник (Groq AI, DeepSeek, Minimax, xAI)
-- Погода (Яндекс Weather API)
-- Интерактивная карта (Яндекс.Карты)
-- Платежи (CloudPayments)
-- Eco-points система
-- SOS/МЧС безопасность
-
----
-
-## Технологии
-
-### Frontend
-- Next.js 15 (App Router)
-- React 18
-- TypeScript 5.4
-- Tailwind CSS 3.4
-- Lucide React (иконки)
-
-### Backend
-- Next.js API Routes (~280 endpoints)
-- PostgreSQL с PostGIS
-- Node.js + Edge Runtime
-
-### Интеграции
-- Яндекс.Карты
-- Яндекс Weather API
-- CloudPayments
-- Groq AI (Llama 3.1)
-- DeepSeek AI
-- Minimax AI
-- xAI (Grok)
-
-### DevOps
-- GitHub Actions
-- Docker
-- Kubernetes (k8s/)
-- Timeweb Cloud
 
 ---
 
 ## API
 
-### Swagger документация
+### Swagger
 
-```bash
-# Запустить сервер и открыть
+```
 GET /api-docs
 ```
 
-### Основные endpoints
+### Ключевые endpoints
 
-**Auth:**
-- `POST /api/auth/login` — Авторизация
-- `POST /api/auth/register` — Регистрация
-- `GET /api/auth/me` — Текущий пользователь
-
-**Tours:**
-- `GET /api/tours` — Список туров
-- `GET /api/tours/[id]` — Детали тура
-
-**Bookings:**
-- `POST /api/bookings` — Создать бронирование
-- `GET /api/bookings/my` — Мои бронирования
-
-**Всего:** ~280 API routes
+| Группа | Endpoint | Описание |
+|--------|----------|----------|
+| Auth | `POST /api/auth/login` | Авторизация |
+| Auth | `POST /api/auth/register` | Регистрация |
+| Auth | `GET /api/auth/me` | Текущий пользователь |
+| Tours | `GET /api/tours` | Список туров с фильтрами |
+| Tours | `GET /api/tours/[id]` | Детали тура |
+| Bookings | `POST /api/bookings` | Создать бронирование |
+| Bookings | `GET /api/bookings/my` | Мои бронирования |
+| AI | `POST /api/ai/chat` | AI-помощник |
+| Weather | `GET /api/weather` | Погода (proxy) |
+| Safety | `POST /api/safety/sos` | SOS сигнал → МЧС |
+| Payments | `POST /api/payments/webhook` | CloudPayments webhook |
 
 ---
 
@@ -228,684 +166,101 @@ GET /api-docs
 ### Основные таблицы
 
 ```sql
-users               -- Пользователи всех ролей
-partners            -- Партнёры
-tours               -- Туры
-bookings            -- Бронирования
-reviews             -- Отзывы
-transfers           -- Трансферы
-transfer_schedules  -- Расписание трансферов
+users               -- UUID, email, role, bcrypt hash
+partners            -- Операторы/агенты, verified
+tours               -- Туры, цены, eco_points_reward
+bookings            -- Бронирования, payment_status
+reviews             -- Отзывы, рейтинги, фото
+transfers           -- Трансферные маршруты
 vehicles            -- Автопарк
-chat_sessions       -- AI чат
-notifications       -- Уведомления
+drivers             -- Водители
+chat_sessions       -- AI чат (messages JSONB)
+eco_points          -- Eco-points транзакции
+notifications       -- Push-уведомления
 ```
 
-### Миграции
-
-16+ миграций в `lib/database/`
-
----
-
-## Статус проекта
-
-### Текущее состояние (18 февраля 2026)
-
-```
-✅ Сборка: Работает
-✅ Lint: 0 ошибок
-✅ TypeScript: Core API routes мигрированы на Next.js 15 params: Promise
-✅ API: ~280 endpoints
-✅ Роли: 6 ролей реализованы
-✅ JWT: Безопасные secrets (обязательный JWT_SECRET)
-✅ Swagger: Добавлена документация /api-docs
-```
-
-### Что работает
-
-- [x] Авторизация и регистрация (JWT)
-- [x] Dashboards для всех 6 ролей
-- [x] Каталог и поиск туров
-- [x] Бронирование
-- [x] Платежи (CloudPayments)
-- [x] AI-помощник (Groq, DeepSeek, Minimax)
-- [x] Погода (Яндекс API)
-- [x] Карты (Яндекс.Карты)
-- [x] Админ-панель
-- [x] Трансферы
-- [x] Мобильная главная страница
-
-### В разработке
-
-- [ ] Полная интеграция платежей
-- [ ] E2E тестирование
-- [ ] Мобильное приложение
-- [ ] Push уведомления
-- [ ] API интеграция для главной страницы (туры из БД)
-
----
-
-## Команды
+### Правила миграций
 
 ```bash
-# Разработка
-npm run dev              # Dev сервер (порт 3000)
-
-# Сборка
-npm run build            # Production сборка
-npm start                # Production запуск
-
-# Качество кода
-npm run lint             # ESLint
-npm run type-check       # TypeScript
-
-# Тестирование
-npm test                 # Vitest
-npm run test:ui          # Vitest UI
-
-# Деплой
-npm run docker:build     # Docker образ
-npm run k8s:apply        # Kubernetes
+# Только добавлять новые (020_...), существующие не трогать
+npm run migrate
 ```
 
 ---
 
-## Переменные окружения
+## Статус
 
-```bash
-# Обязательные
-DATABASE_URL=postgresql://...    # PostgreSQL
-JWT_SECRET=                     # Секрет для JWT (обязательно!)
-
-# Опциональные
-GROQ_API_KEY=
-DEEPSEEK_API_KEY=
-MINIMAX_API_KEY=
-XAI_API_KEY=
-YANDEX_WEATHER_API_KEY=
-YANDEX_MAPS_API_KEY=
-CLOUDPAYMENTS_PUBLIC_ID=
-```
-
----
-
-## 🤖 Timeweb MCP Server
-
-Автоматизированное управление деплоем через GitHub Copilot.
-
-### Возможности
-
-- 🔍 **Проверка статуса** приложения в Timeweb Cloud
-- 📋 **Получение логов** (build/runtime) в реальном времени
-- 🚀 **Триггер деплоя** одной командой
-- ⚙️ **Обновление переменных окружения** без ручного входа
-- 📊 **История деплоев** и коммитов
-
-### Настройка
-
-1. **Установите зависимости MCP:**
-   ```bash
-   npm install -g @modelcontextprotocol/cli
-   ```
-
-2. **Создайте конфигурацию в `.cursor/mcp_settings.json`:**
-   ```json
-   {
-     "mcpServers": {
-       "timeweb": {
-         "command": "node",
-         "args": ["path/to/timeweb-mcp-server/dist/index.js"],
-         "env": {
-           "TIMEWEB_API_TOKEN": "${TIMEWEB_TOKEN}"
-         }
-       }
-     }
-   }
-   ```
-
-3. **Добавьте токен в `.env.local`:**
-   ```bash
-   TIMEWEB_TOKEN=your_timeweb_api_token_here
-   ```
-
-### Использование в Copilot
+**Актуально на 4 марта 2026:**
 
 ```
-@copilot Проверь статус деплоя на Timeweb
-@copilot Покажи последние логи приложения
-@copilot Запусти деплой на production
-@copilot Обнови переменную окружения NODE_ENV=production
+Pages:          89
+API endpoints:  226
+Сервисы:        18 (все реализованы, stub-заглушки удалены)
+Роли:           6
+Миграции:       8
+Build:          passing (0 ошибок)
+console.log:    0 (удалены из всех production файлов)
 ```
 
-### Информация о приложении
-
-- **Timeweb App ID:** `125051`
-- **Production URL:** https://pospk-kamhub-70c4.twc1.net
-- **Платформа:** Timeweb Cloud Apps
-
----
-
-## Безопасность
-
-- JWT токены с обязательным secret
-- Роли и права доступа (6 ролей)
-- Валидация входных данных (Zod)
-- SQL injection защита (параметризованные запросы)
-- CORS настройки
-- Security headers в middleware
-
----
-
-## Вклад в проект
-
-1. Fork репозитория
-2. Создайте feature ветку
-3. Commit изменения
-4. Push в ветку
-5. Откройте Pull Request
-
----
-
-## Статистика
-
-```
-Страницы: 91+
-API routes: ~280
-TypeScript файлы: 634
-Компоненты: 100+
-Миграции БД: 16+
-```
-
----
-
-## Лицензия
-
-MIT License
-
----
-
-## Контакты
-
-- **GitHub**: [pospkam/PosPkTry](https://github.com/pospkam/PosPkTry)
-- **Production**: https://pospk-kamhub-c8e0.twc1.net
-
----
-
-**Обновлено:** 18 февраля 2026
-**Статус:** Active development
-
----
-
-## Быстрый старт
-
-### Разработка
-
-```bash
-# Клонировать
-git clone https://github.com/PosPk/kamhub.git
-cd kamhub
-
-# Установить зависимости
-npm install
-
-# Настроить окружение
-cp .env.local.example .env.local
-# Заполните .env.local своими данными
-
-# Запустить
-npm run dev
-```
-
-Откройте http://localhost:3000
-
-### Production сборка
-
-```bash
-npm run build
-npm start
-```
-
----
-
-## Структура проекта
-
-```
-kamhub/
-├── app/                    # Next.js App Router
-│   ├── page.tsx           # Главная страница
-│   ├── api/               # API routes (208 endpoints)
-│   ├── auth/              # Авторизация (login, register)
-│   ├── hub/               # Dashboards по ролям
-│   │   ├── tourist/       # Dashboard туриста
-│   │   ├── operator/      # CRM оператора
-│   │   ├── guide/         # Dashboard гида
-│   │   ├── transfer-operator/  # Dashboard трансфера
-│   │   ├── agent/         # Dashboard агента
-│   │   └── admin/         # Админ-панель
-│   ├── tours/             # Каталог туров
-│   ├── search/            # Умный поиск
-│   └── ...                # Другие страницы (91 всего)
-│
-├── components/            # React компоненты
-│   ├── ui/               # UI kit (кнопки, карточки)
-│   ├── weather/          # Погодные виджеты
-│   ├── admin/            # Компоненты админки
-│   └── icons/            # Иконки (Lucide React)
-│
-├── lib/                  # Утилиты и логика
-│   ├── database.ts       # Подключение к БД
-│   ├── auth.ts           # Авторизация
-│   ├── weather/          # Погодные API (Яндекс)
-│   └── ...
-│
-├── docs/                 # Документация (организована)
-│   ├── design/           # UX исследования, wireframes
-│   ├── architecture/     # Архитектура системы
-│   ├── deployment/       # Инструкции по деплою
-│   └── archive/          # Старые документы (STAGE, PHASE)
-│
-├── scripts/              # Утилиты
-├── database/             # SQL схемы
-└── k8s/                  # Kubernetes конфиги
-```
-
----
-
-## Документация
-
-### Актуальная (создано 17 февраля 2026)
-
-**Дизайн и UX:**
-- [UX исследование главной страницы](docs/design/UX_RESEARCH_HOMEPAGE_DECISIONS.md) - Анализ пользователей и барьеров
-- [Wireframe + Tailwind прототип](docs/design/HOMEPAGE_WIREFRAME_PROTOTYPE.md) - Полная спецификация дизайна
-- [Обоснование дизайн-решений](docs/design/DESIGN_RATIONALE.md) - Почему именно так
-
-**Разработка:**
-- [Быстрый старт тестирования](docs/QUICK_START_TESTS.md)
-- [Аудит всех страниц](docs/PAGES_AUDIT_2026-02-02.md) - Проверка 91 страницы
-
-**Деплой:**
-- [Деплой на Timeweb](docs/deployment/TIMEWEB_DEPLOY_NOW.md)
-- [Быстрый деплой](docs/deployment/DEPLOY_QUICKSTART.md)
-
-**Архитектура:**
-- [Анализ ролей и сущностей](docs/architecture/ENTITIES_AND_ROLES_ANALYSIS.md)
-- [Миграция auth](docs/architecture/AUTH_MIGRATION_ANALYSIS.md)
-
-**Отчёты:**
-- [Итоги сессии 17 февраля 2026](docs/SESSION_SUMMARY_2026-02-02.md)
-
-### Навигация
-
-См. полный индекс: [docs/README.md](docs/README.md)
-
----
-
-## Функциональность
-
-### По ролям
-
-**Турист:**
-- Поиск и фильтрация туров
-- Бронирование с оплатой
-- Личный кабинет
-- История поездок
-- Отзывы и рейтинги
-
-**Туроператор:**
-- CRM система
-- Управление турами
-- Календарь бронирований
-- Финансовая аналитика
-- Управление гидами
-- Система уведомлений
-
-**Гид:**
-- Расписание туров
-- Управление группами
-- Отслеживание заработка
-- Профиль и рейтинги
-
-**Трансфер оператор:**
-- Управление автопарком
-- Управление водителями
-- Маршруты и расписание
-- Бронирования трансферов
-
-**Агент:**
-- База клиентов
-- Ваучеры и продажи
-- Отслеживание комиссионных
-- Статистика продаж
-
-**Администратор:**
-- Модерация контента (туры, партнёры, отзывы)
-- Управление пользователями
-- Финансовая отчётность
-- Настройки платформы
-
-### Общие сервисы
-
-- AI-помощник (Groq AI, DeepSeek)
-- Погода (Яндекс Weather API)
-- Интерактивная карта (Яндекс.Карты)
-- Платежи (CloudPayments)
-- Eco-points система
-- Безопасность (SOS, МЧС)
-
----
-
-## Технологии
-
-### Frontend
-- Next.js 14 (App Router)
-- React 18
-- TypeScript
-- Tailwind CSS
-- Lucide React (иконки)
-
-### Backend
-- Next.js API Routes (208 endpoints)
-- PostgreSQL
-- Prisma ORM (планируется)
-
-### Интеграции
-- Яндекс.Карты
-- Яндекс Weather API
-- CloudPayments
-- Groq AI (Llama 3.1)
-- DeepSeek AI
-
-### DevOps
-- GitHub Actions (CI/CD)
-- Docker
-- Kubernetes (k8s/)
-- Timeweb Cloud
-
----
-
-## API
-
-### Основные endpoints
-
-**Auth:**
-- `POST /api/auth/login` - Авторизация
-- `POST /api/auth/register` - Регистрация
-- `GET /api/auth/me` - Текущий пользователь
-
-**Tours:**
-- `GET /api/discovery/tours` - Список туров
-- `GET /api/discovery/tours/[id]` - Детали тура
-- `POST /api/discovery/search` - Поиск туров
-
-**Bookings:**
-- `POST /api/bookings` - Создать бронирование
-- `GET /api/bookings/my` - Мои бронирования
-- `POST /api/bookings/[id]/cancel` - Отменить
-
-**Operator:**
-- `GET /api/operator/dashboard` - Dashboard данные
-- `GET /api/operator/tours` - Туры оператора
-- `POST /api/operator/tours` - Создать тур
-
-**Всего:** 208 API routes
-
----
-
-## База данных
-
-### Основные таблицы
-
-```sql
-users               -- Пользователи всех ролей
-partners            -- Партнёры (операторы, агенты)
-tours               -- Туры
-bookings            -- Бронирования
-reviews             -- Отзывы
-transfers           -- Трансферы
-vehicles            -- Автопарк
-chat_sessions       -- AI чат
-notifications       -- Уведомления
-```
-
-### Миграции
-
-16 миграций в `lib/database/migrations/`
-
-Применить: `npm run migrate` (если настроено)
-
----
-
-## Статус проекта
-
-### Текущее состояние (17 февраля 2026)
-
-```
-✅ Сборка: Работает (npm run build успешен)
-✅ Страницы: 91 страница собирается
-✅ API: 208 endpoints
-✅ Роли: 6 ролей полностью реализованы
-✅ Документация: Организована и актуальна
-✅ Git: Чист (2 ветки, без призраков)
-```
-
-### Что работает
-
-- [x] Авторизация и регистрация
-- [x] Dashboards для всех 6 ролей
-- [x] Каталог и поиск туров
-- [x] Бронирование (базовое)
-- [x] Платежи (CloudPayments)
-- [x] AI-помощник (Groq, DeepSeek)
-- [x] Погода (Яндекс API)
-- [x] Карты (Яндекс.Карты)
-- [x] Админ-панель (модерация, финансы)
-- [x] Трансферы (управление)
-
-### В разработке
-
-- [ ] Полная интеграция платежей
-- [ ] E2E тестирование
-- [ ] Мобильное приложение
-- [ ] Push уведомления
-
----
-
-## Дизайн
-
-### Концепция
-
-**Стиль:** Минималистичный, профессиональный (вдохновлён Samsung Weather)
-
-**Цветовая палитра:**
-- Океан (#0EA5E9) - Primary actions
-- Вулкан (#64748B) - Secondary elements
-- Мох (#84CC16) - Success states
-- 10 оттенков серого - Нейтральная база
-
-**Типографика:** Inter (9 размеров)
-
-**Принципы:**
-- Информация по запросу (progressive disclosure)
-- Снижение тревожности (спокойные цвета)
-- Доверие через прозрачность
-- Факты, а не маркетинг
-
-Подробнее: [docs/design/](docs/design/)
-
----
-
-## Команды разработки
-
-```bash
-# Разработка
-npm run dev              # Запустить dev сервер (http://localhost:3000)
-
-# Сборка
-npm run build            # Production сборка
-npm start                # Запустить production
-
-# Качество кода
-npm run lint             # ESLint проверка
-npm run type-check       # TypeScript проверка (если настроено)
-
-# Тестирование
-npm test                 # Запустить тесты (если настроено)
-```
+### Реализовано
+
+- [x] JWT авторизация + 6 ролей
+- [x] Dashboards всех ролей
+- [x] Каталог туров с фильтрами
+- [x] Бронирование + CloudPayments
+- [x] AI-помощник (DeepSeek / Minimax / xAI)
+- [x] Погода Яндекс API
+- [x] Яндекс.Карты с маршрутами
+- [x] SOS кнопка → МЧС 112
+- [x] Eco-points геймификация
+- [x] База знаний поддержки
+- [x] Партнёр: fishingkam.ru (11 туров в БД)
+
+### Phase 2 (не реализовано)
+
+- [ ] E2E тестирование (Playwright)
+- [ ] Push-уведомления (Firebase FCM)
+- [ ] Redis кэш
+- [ ] Международная версия (EN, ZH)
+- [ ] Real-time tracking групп (WebSockets)
 
 ---
 
 ## Деплой
 
-### Timeweb Cloud (рекомендуется)
-
-См. подробную инструкцию: [docs/deployment/TIMEWEB_DEPLOY_NOW.md](docs/deployment/TIMEWEB_DEPLOY_NOW.md)
-
-### Docker
-
-```bash
-docker build -t kamhub .
-docker run -p 3000:3000 kamhub
-```
+Push в `main` → GitHub Actions → автодеплой на Timeweb Cloud.
 
 ### Переменные окружения
 
-Скопируйте `.env.local.example` в `.env.local` и заполните:
-
 ```bash
-DATABASE_URL=              # PostgreSQL connection
-NEXTAUTH_SECRET=           # Auth secret
-GROQ_API_KEY=             # AI assistant
-YANDEX_WEATHER_API_KEY=   # Погода
-YANDEX_MAPS_API_KEY=      # Карты
-CLOUDPAYMENTS_PUBLIC_ID=  # Платежи
+DATABASE_URL=postgresql://...
+JWT_SECRET=...             # обязательно, min 32 символа
+NEXTAUTH_SECRET=...
+DEEPSEEK_API_KEY=...
+MINIMAX_API_KEY=...
+XAI_API_KEY=...
+YANDEX_WEATHER_API_KEY=...
+CLOUDPAYMENTS_PUBLIC_ID=...
+CLOUDPAYMENTS_API_SECRET=...
+NEXT_PUBLIC_YANDEX_MAPS_API_KEY=...
 ```
 
 ---
 
-## 🤖 Timeweb MCP Server
+## Правила разработки
 
-Автоматизированное управление деплоем через GitHub Copilot.
-
-### Возможности
-
-- 🔍 **Проверка статуса** приложения в Timeweb Cloud
-- 📋 **Получение логов** (build/runtime) в реальном времени
-- 🚀 **Триггер деплоя** одной командой
-- ⚙️ **Обновление переменных окружения** без ручного входа
-- 📊 **История деплоев** и коммитов
-
-### Настройка
-
-1. **Установите зависимости MCP:**
-   ```bash
-   npm install -g @modelcontextprotocol/cli
-   ```
-
-2. **Создайте конфигурацию в `.cursor/mcp_settings.json`:**
-   ```json
-   {
-     "mcpServers": {
-       "timeweb": {
-         "command": "node",
-         "args": ["path/to/timeweb-mcp-server/dist/index.js"],
-         "env": {
-           "TIMEWEB_API_TOKEN": "${TIMEWEB_TOKEN}"
-         }
-       }
-     }
-   }
-   ```
-
-3. **Добавьте токен в `.env.local`:**
-   ```bash
-   TIMEWEB_TOKEN=your_timeweb_api_token_here
-   ```
-
-### Использование в Copilot
-
-```
-@copilot Проверь статус деплоя на Timeweb
-@copilot Покажи последние логи приложения
-@copilot Запусти деплой на production
-@copilot Обнови переменную окружения NODE_ENV=production
-```
-
-### Информация о приложении
-
-- **Timeweb App ID:** `125051`
-- **Production URL:** https://pospk-kamhub-70c4.twc1.net
-- **Платформа:** Timeweb Cloud Apps
+- TypeScript strict, `any` запрещён — использовать `unknown` + type guard
+- SQL всегда параметризованный: `$1, $2`, без конкатенации строк
+- Роль только из JWT (`session.user.role`), не из тела запроса
+- `console.log` запрещён в production коде (использовать `console.error`)
+- Новые фичи БД → новая миграция `020_...`, существующие не изменять
+- `middleware.ts`, `lib/auth.ts`, `app/api/payments/`, `app/api/safety/sos` — не трогать без явной задачи
+- Компоненты без `'use client'` — server по умолчанию; client только для интерактивности
 
 ---
 
-## Безопасность
+## Партнёры
 
-- JWT токены для авторизации
-- Роли и права доступа (6 ролей)
-- Валидация всех входных данных
-- Rate limiting на API
-- CORS настройки
-- SQL injection защита (через ORM)
-
----
-
-## Производительность
-
-### Текущие метрики
-
-```
-Bundle size: 87.4 kB (First Load JS)
-Страниц: 91 (собираются успешно)
-API routes: 208
-Build time: ~12 секунд
-```
-
-### Оптимизации
-
-- Static generation где возможно
-- Dynamic imports для тяжёлых компонентов
-- Image optimization (Next.js Image)
-- CSS modules и Tailwind purge
-
----
-
-## Вклад в проект
-
-1. Fork репозитория
-2. Создайте feature ветку (`git checkout -b feature/amazing-feature`)
-3. Commit изменения (`git commit -m 'Add amazing feature'`)
-4. Push в ветку (`git push origin feature/amazing-feature`)
-5. Откройте Pull Request
-
----
-
-## Статистика
-
-**По состоянию на 17 февраля 2026:**
-
-```
-Страницы: 91 (54 app pages + 37 значимых API)
-API endpoints: 208
-Компоненты: 100+
-Миграции БД: 16
-Документации: 302 файла (организованно в docs/)
-Ветки: 2 (main + рабочая)
-```
-
----
-
-## Лицензия
-
-MIT License
-
----
-
-## Контакты
-
-- **GitHub**: [PosPk/kamhub](https://github.com/PosPk/kamhub)
-- **Issues**: [github.com/PosPk/kamhub/issues](https://github.com/PosPk/kamhub/issues)
-
----
-
-**Обновлено:** 17 февраля 2026  
-**Статус:** Production ready (с минимальными доработками)
+**Камчатская Рыбалка** (fishingkam.ru)  
+Контакты: +7 914-782-22-22, +7 999-299-70-07  
+11 туров загружены в БД.
