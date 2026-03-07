@@ -1,0 +1,18 @@
+  # ============================================================================
+  # CrewAI Agent Service (Python)
+  # ============================================================================
+  crewai:
+    image: python:3.11-slim
+    container_name: kamhub-crewai
+    restart: unless-stopped
+    working_dir: /crew
+    volumes:
+      - ./crew:/crew
+    command: sh -c "pip install --no-cache-dir crewai crewai-tools llama-index && tail -f /dev/null"
+    ports:
+      - '8001:8001' # (зарезервировано для API, если потребуется)
+    networks:
+      - kamhub_network
+    depends_on:
+      - postgres
+      - redis

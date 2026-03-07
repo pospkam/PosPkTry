@@ -501,6 +501,32 @@ export default function HomePageClient() {
           >
             Дикая природа. Настоящие маршруты.
           </p>
+
+          {/* CTA + AI */}
+          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginTop: 32 }}>
+            <a
+              href="/tours"
+              className="px-7 py-3 rounded-full bg-ocean text-white font-semibold text-lg shadow-lg hover:bg-ocean/90 transition min-w-[160px] text-center"
+              style={{ textDecoration: 'none' }}
+            >
+              Найти тур
+            </a>
+            <button
+              type="button"
+              className="px-7 py-3 rounded-full bg-volcano text-white font-semibold text-lg shadow-lg hover:bg-volcano/90 transition min-w-[160px] text-center flex items-center gap-2"
+              style={{ outline: 'none', border: 'none', cursor: 'pointer' }}
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  const btn = document.querySelector('[aria-label="AI помощник"]') as HTMLElement;
+                  if (btn) btn.click();
+                }
+              }}
+              aria-label="Спросить AI"
+            >
+              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M12 19c.7-1.2 1.1-2.6 1.1-4.1 0-3.9-3.1-7-7-7S-1 11-1 14.9c0 1.5.4 2.9 1.1 4.1"/><circle cx="5" cy="14.9" r="7"/></svg>
+              Спросить AI
+            </button>
+          </div>
         </section>
 
         {/* Featured Reviews */}
