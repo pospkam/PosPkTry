@@ -1,9 +1,21 @@
+
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { UserEcoPoints, EcoAchievement, ApiResponse } from '@/types';
 import { verifyAuth } from '@/lib/auth';
 
-export const dynamic = 'force-dynamic';
+
+
+/**
+ * Получение eco-points пользователя (Kamchatour Hub)
+ * @route GET /api/eco-points/user
+ * @param {NextRequest} request - HTTP-запрос (ожидает JWT)
+ * @returns {Promise<NextResponse>} JSON с балансом eco-points, уровнем, достижениями
+ * @throws 401 если неавторизован, 404 если нет доступа к чужим eco-points, 500 при ошибке БД
+ * @example
+ * // GET /api/eco-points/user?userId=...
+ * // Response: { success: true, data: { userId, totalPoints, level, achievements, lastActivity } }
+ */
 
 // GET /api/eco-points/user - Получение Eco-points пользователя
 export async function GET(request: NextRequest) {
@@ -118,7 +130,20 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/eco-points/user - Добавление очков пользователю
+/**
+ * Добавление eco-points пользователю (Kamchatour Hub)
+ * @route POST /api/eco-points/user
+ * @param {NextRequest} request - HTTP-запрос (ожидает JWT)
+ * @body {string} userId - ID пользователя (опционально, если не текущий)
+ * @body {number} points - Количество начисляемых баллов
+ * @body {string} activity - Тип активности (например, 'leave_review')
+ * @body {string} ecoPointId - ID eco-действия (опционально)
+ * @returns {Promise<NextResponse>} JSON с обновлённым балансом, уровнем, новыми достижениями
+ * @throws 401 если неавторизован, 404 если нет доступа, 400 если не хватает данных, 500 при ошибке БД
+ * @example
+ * // POST /api/eco-points/user { userId, points, activity, ecoPointId }
+ * // Response: { success: true, data: { userId, totalPoints, level, newAchievements, lastActivity } }
+ */
 export async function POST(request: NextRequest) {
   try {
     const auth = await verifyAuth(request);

@@ -1,9 +1,12 @@
 'use client';
 
-// ===========================================
-// ВЫБОР КОЛИЧЕСТВА ГОСТЕЙ
-// KamHub - Guest Selector Component
-// ===========================================
+/**
+ * GuestSelector — компонент выбора количества гостей для Kamchatour Hub
+ * @param {GuestSelectorProps} props
+ * @returns {JSX.Element}
+ * @remarks
+ * - Accessibility: role для контейнера, aria-label для секций и итогов, aria-live для динамического текста
+ */
 
 import React, { useState } from 'react';
 import clsx from 'clsx';
@@ -90,9 +93,9 @@ export const GuestSelector: React.FC<GuestSelectorProps> = ({
   };
 
   return (
-    <div className={clsx('space-y-4', className)}>
+    <div className={clsx('space-y-4', className)} role="group" aria-label="Выбор количества гостей">
       {/* Взрослые */}
-      <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-lg">
+      <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-lg" aria-label="Взрослые">
         <div>
           <div className="text-white font-medium">Взрослые</div>
           <div className="text-white/60 text-sm">от 13 лет</div>
@@ -129,7 +132,7 @@ export const GuestSelector: React.FC<GuestSelectorProps> = ({
       </div>
 
       {/* Дети */}
-      <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-lg">
+      <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-lg" aria-label="Дети">
         <div>
           <div className="text-white font-medium">Дети</div>
           <div className="text-white/60 text-sm">от 0 до 12 лет</div>
@@ -167,7 +170,7 @@ export const GuestSelector: React.FC<GuestSelectorProps> = ({
 
       {/* Возраст детей */}
       {showAges && children > 0 && (
-        <div className="p-4 bg-white/5 border border-white/10 rounded-lg space-y-3">
+        <div className="p-4 bg-white/5 border border-white/10 rounded-lg space-y-3" aria-label="Возраст детей">
           <div className="text-white font-medium mb-3">
             Укажите возраст детей на момент заезда
           </div>
@@ -193,7 +196,7 @@ export const GuestSelector: React.FC<GuestSelectorProps> = ({
       )}
 
       {/* Итого */}
-      <div className="text-center text-white/70 text-sm">
+      <div className="text-center text-white/70 text-sm" aria-label="Итого гостей" aria-live="polite">
         Всего гостей: {adults + children} из {maxGuests}
       </div>
     </div>

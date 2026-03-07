@@ -48,6 +48,14 @@ const amenityIcons: Record<string, React.ReactNode> = {
   pets: null,
 };
 
+/**
+ * AccommodationCard — карточка размещения для Kamchatour Hub
+ * @param {AccommodationCardProps} props
+ * @returns {JSX.Element}
+ * @remarks
+ * - Accessibility: alt для изображений, aria-label для кнопок, семантика для отзывов и цены
+ * - UX: избранное, hover, skeleton, glassmorphism
+ */
 export const AccommodationCard: React.FC<AccommodationCardProps> = ({
   id,
   name,
@@ -116,7 +124,7 @@ export const AccommodationCard: React.FC<AccommodationCardProps> = ({
                 ? 'bg-red-500/90 text-white' 
                 : 'bg-black/30 text-white/70 hover:bg-black/50 hover:text-white'}
             `}
-            aria-label="Добавить в избранное"
+            aria-label={isFavorite ? "Убрать из избранного" : "Добавить в избранное"}
           >
             <svg
               className="w-6 h-6"
@@ -190,7 +198,7 @@ export const AccommodationCard: React.FC<AccommodationCardProps> = ({
                   <div className="px-2 py-1 bg-premium-gold/20 rounded-lg">
                     <span className="text-premium-gold font-bold">{rating.toFixed(1)}</span>
                   </div>
-                  <div className="text-xs text-white/60">
+                  <div className="text-xs text-white/60" aria-label={`Количество отзывов: ${reviewCount}`}>
                     {reviewCount > 0 && (
                       <span>{reviewCount} отзыв{reviewCount % 10 === 1 && reviewCount !== 11 ? '' : reviewCount % 10 >= 2 && reviewCount % 10 <= 4 && (reviewCount < 10 || reviewCount > 20) ? 'а' : 'ов'}</span>
                     )}
@@ -202,7 +210,7 @@ export const AccommodationCard: React.FC<AccommodationCardProps> = ({
             </div>
             
             {/* Цена */}
-            <div className="text-right">
+            <div className="text-right" aria-label={`Цена от ${pricePerNight.from} рублей за ночь`}>
               <div className="text-xs text-white/60 mb-1">от</div>
               <div className="flex items-baseline gap-1">
                 <span className="text-2xl font-black text-premium-gold">

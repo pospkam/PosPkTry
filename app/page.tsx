@@ -1,338 +1,407 @@
-'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
-import {
-  Sun, Moon, UserCircle, Search, X, Camera,
-  Map, Heart, User, AlertTriangle
-} from 'lucide-react'
-import { useTheme } from '@/contexts/ThemeContext'
+import type { Metadata } from 'next'
 
-// ─────────────────────────────────────────────
-// RIPPLE
-// ─────────────────────────────────────────────
-function useRipple() {
-  return (e: React.MouseEvent<HTMLElement>) => {
-    const el = e.currentTarget
-    const ripple = document.createElement('span')
-    const rect = el.getBoundingClientRect()
-    const size = Math.max(rect.width, rect.height)
-    ripple.style.cssText = `
-      position:absolute;
-      width:${size}px;height:${size}px;
-      left:${e.clientX - rect.left - size / 2}px;
-      top:${e.clientY - rect.top - size / 2}px;
-      background:rgba(0,212,255,0.3);
-      border-radius:50%;
-      transform:scale(0);
-      animation:kh-ripple 600ms ease-out forwards;
-      pointer-events:none;
-    `
-    
-    el.appendChild(ripple)
-    setTimeout(() => ripple.remove(), 600)
-  }
+import HomePageClient from './_HomePageClient'
+
+export const metadata: Metadata = {
+  title: 'Kamchatour Hub — Туры на Камчатку | Рыбалка, вулканы, экология',
+  description: 'Единая платформа туризма Камчатки. 6 ролей пользователей, AI-помощник, SOS с геолокацией, eco-points, реальные гиды и операторы.',
+  keywords: 'туры Камчатка, рыбалка Камчатка, вулканы, горячие источники, гиды Камчатка, безопасный туризм',
+  openGraph: {
+    title: 'Kamchatour Hub — Туры на Камчатку',
+    description: 'Рыбалка на чавычу, восхождения на вулканы, термальные источники. Бронирование онлайн с гарантией безопасности.',
+    images: [
+      {
+        url: '/images/og-hero.webp',
+        width: 1200,
+        height: 630,
+        alt: 'Камчатка — туры и приключения',
+      },
+    ],
+    type: 'website',
+    locale: 'ru_RU',
+    siteName: 'Kamchatour Hub',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Kamchatour Hub — Туры на Камчатку',
+    images: ['/images/og-hero.webp'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  alternates: {
+    canonical: '/',
+  },
 }
 
-// ─────────────────────────────────────────────
-// SVG ИКОНКИ АКТИВНОСТЕЙ (stroke only, no fill)
-// ─────────────────────────────────────────────
-const VolcanoIcon = () => (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 2c0 0-1 2-1 4" />
-    <path d="M12 2c0 0 1 2 1 4" />
-    <path d="M11 6 L5 20 L19 20 L13 6 Z" />
-    <path d="M3 20 Q6 17 9 20 Q12 23 15 20 Q18 17 21 20" />
-  </svg>
-)
+export default function Page() {
+  return <HomePageClient />
+}
 
-const FishingIcon = () => (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M4 4 L4 14" />
-    <path d="M4 4 Q10 2 12 8" />
-    <path d="M12 8 Q14 14 10 16" />
-    <circle cx="10" cy="17" r="1.5" />
-    <path d="M3 20 Q6 17 9 20 Q12 23 15 20 Q18 17 21 20" />
-  </svg>
-)
-
-const ThermalIcon = () => (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M8 2 Q8 4 9 5 Q10 6 9 8" />
-    <path d="M12 2 Q12 4 13 5 Q14 6 13 8" />
-    <path d="M16 2 Q16 4 17 5 Q18 6 17 8" />
-    <path d="M4 16 Q4 13 7 12 L17 12 Q20 13 20 16 L20 18 Q20 20 17 20 L7 20 Q4 20 4 18 Z" />
-    <path d="M4 16 Q2 18 4 20" />
-    <path d="M20 16 Q22 18 20 20" />
-  </svg>
-)
-
-const SnowmobileIcon = () => (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M2 13 Q7 9 12 10 L20 10 Q22 10 22 13 L22 15 L2 15 Z" />
-    <path d="M10 10 L12 6 L17 6 Q19 6 19 8 L19 10" />
-    <circle cx="6" cy="18" r="2" />
-    <circle cx="18" cy="18" r="2" />
-    <path d="M2 15 L0 18" />
-    <path d="M8 15 L8 16" />
-    <path d="M16 15 L16 16" />
-  </svg>
-)
-
-const JeepIcon = () => (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M3 17 L3 12 Q3 9 5 9 L8 6 L16 6 L19 9 Q21 9 21 12 L21 17" />
-    <path d="M1 17 L23 17" />
-    <circle cx="6" cy="19.5" r="2" />
-    <circle cx="18" cy="19.5" r="2" />
-    <path d="M8 6 L8 9 L16 9 L16 6" />
-    <path d="M12 9 L12 6" />
-    <path d="M3 13 L21 13" />
-  </svg>
-)
-
-
-
-// ─────────────────────────────────────────────
-// ДАННЫЕ
-// ─────────────────────────────────────────────
-const ACTIVITIES = [
-  { id: 'volcanoes',  label: 'Вулканы',   Icon: VolcanoIcon,    href: '/tours?category=volcanoes'  },
-  { id: 'fishing',   label: 'Рыбалка',   Icon: FishingIcon,    href: '/tours?category=fishing'    },
-  { id: 'thermal',   label: 'Термы',     Icon: ThermalIcon,    href: '/tours?category=thermal'    },
-  { id: 'snowmobile',label: 'Снегоход',  Icon: SnowmobileIcon, href: '/tours?category=snowmobile' },
-  { id: 'jeep',      label: 'Джип-туры', Icon: JeepIcon,       href: '/tours?category=jeep'       },
-]
-
-const NAV_ITEMS = [
-  { label: 'Поиск',    Icon: Search,         href: '#search',                danger: false },
-  { label: 'Карта',    Icon: Map,            href: '/map',                   danger: false },
-  { label: 'Избранное',Icon: Heart,          href: '/hub/tourist/wishlist',  danger: false },
-  { label: 'ЛК',       Icon: User,           href: '/profile',               danger: false },
-  { label: 'СОС',      Icon: AlertTriangle,  href: '/safety',                danger: true  },
-]
-
-// ─────────────────────────────────────────────
-// КАРУСЕЛЬ
-// ─────────────────────────────────────────────
-// Добавь реальные пути сюда когда загрузишь файлы:
-const CAROUSEL_IMAGES: string[] = [
-  // '/images/carousel/photo1.jpg',
-  // '/images/carousel/photo2.jpg',
-]
-
-function PhotoCarousel() {
-  const [selected, setSelected] = useState<string | null>(null)
-
-  const items = CAROUSEL_IMAGES.length > 0
-    ? CAROUSEL_IMAGES
-    : Array.from({ length: 5 }, (_, i) => `__placeholder__${i}`)
-
+// --- Header ---
+function Header() {
   return (
-    <section className="px-4 pb-6">
-      <h2
-        className="font-playfair text-white text-xl font-bold text-center mb-3"
-        style={{ textShadow: '0 2px 8px rgba(0,0,0,0.7)' }}
-      >
-        Камчатка глазами путешественников
-      </h2>
-
-      <div
-        className="flex gap-3 overflow-x-auto pb-1"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-      >
-        {items.map((src, i) => {
-          const isReal = !src.startsWith('__placeholder__')
-          return (
-            <div
-              key={i}
-              onClick={() => isReal ? setSelected(src) : null}
-              className="flex-shrink-0 rounded-2xl overflow-hidden"
-              style={{
-                minWidth: 120,
-                height: 160,
-                cursor: isReal ? 'pointer' : 'default',
-                background: 'rgba(255,255,255,0.1)',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255,255,255,0.2)',
-                borderRadius: 16,
-                transition: 'transform 200ms ease',
-              }}
-            >
-              {isReal ? (
-                <img
-                  src={src}
-                  alt={`Камчатка ${i + 1}`}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Camera size={28} className="text-white/40" />
-                </div>
-              )}
-            </div>
-          )
-        })}
+    <header className="fixed top-0 left-0 w-full z-30 flex items-center justify-between px-4 h-14"
+      style={{
+        maxWidth: 430,
+        margin: "0 auto",
+        background: "rgba(13,27,42,0.85)",
+        backdropFilter: "blur(10px)",
+        WebkitBackdropFilter: "blur(10px)",
+        borderBottom: "1px solid var(--kh-nav-border)",
+      }}>
+      <span className="font-bold text-2xl tracking-tight" style={{ color: "#00D4FF", fontFamily: 'Playfair Display, serif' }}>КН</span>
+      <div className="flex gap-2">
+        <button className="relative p-2 rounded-full bg-white/10 border border-white/20 backdrop-blur-md" aria-label="Переключить тему">
+          <Sun className="w-5 h-5 text-cyan-300" />
+        </button>
+        <button className="relative p-2 rounded-full bg-white/10 border border-white/20 backdrop-blur-md" aria-label="Профиль">
+          <User className="w-5 h-5 text-cyan-300" />
+        </button>
       </div>
+    </header>
+  )
+}
 
-      {selected && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
-          onClick={() => setSelected(null)}
-          style={{ animation: 'kh-fade 300ms ease' }}
-        >
-          <img
-            src={selected}
-            alt="Камчатка"
-            className="max-w-full max-h-full object-contain rounded-2xl"
-            style={{ animation: 'kh-scale 300ms ease' }}
-            onClick={(e) => e.stopPropagation()}
-          />
-        </div>
-      )}
+// --- Hero Section ---
+function Hero({ onSearch }: { onSearch: () => void }) {
+  const ripple = useRipple()
+  return (
+    <section className="pt-20 pb-6 flex flex-col items-center text-center" style={{ maxWidth: 430, margin: "0 auto" }}>
+      <h1 className="font-playfair text-3xl font-bold mb-2 text-white" style={{ letterSpacing: "-0.01em" }}>
+        Здесь начинается Россия
+      </h1>
+      <div className="text-base text-white/70 mb-6">Камчатка — земля огня и льда</div>
+      <button
+        className="relative flex items-center gap-2 px-6 py-3 rounded-full bg-white/10 border border-cyan-400/20 text-white font-semibold text-base shadow-md backdrop-blur-md"
+        style={{ boxShadow: "0 2px 16px 0 rgba(0,212,255,0.10)" }}
+        onClick={e => { ripple(e); onSearch() }}
+      >
+        <Search className="w-5 h-5 text-cyan-300" />
+        <span>Поиск маршрута</span>
+      </button>
     </section>
   )
 }
 
-// ─────────────────────────────────────────────
-// ГЛАВНАЯ СТРАНИЦА
-// ─────────────────────────────────────────────
-export default function HomePage() {
-  const { isDark, toggleTheme } = useTheme()
-  const router  = useRouter()
-  const pathname = usePathname()
-  const ripple  = useRipple()
-  const [mounted, setMounted] = useState(false)
-  const [searchOpen, setSearchOpen] = useState(false)
-  const [selectedActivity, setSelectedActivity] = useState<string | null>(null)
+// --- Activities Carousel ---
+const ACTIVITIES = [
+  { id: 'volcanoes', label: 'Вулканы', icon: <Sun />, color: 'from-cyan-400 to-blue-500' },
+  { id: 'fishing', label: 'Рыбалка', icon: <Heart />, color: 'from-blue-400 to-cyan-500' },
+  { id: 'thermal', label: 'Термы', icon: <Moon />, color: 'from-cyan-400 to-amber-300' },
+  { id: 'geysers', label: 'Гейзеры', icon: <AlertTriangle />, color: 'from-cyan-400 to-pink-400' },
+  { id: 'bears', label: 'Медведи', icon: <User />, color: 'from-yellow-400 to-orange-400' },
+  { id: 'trekking', label: 'Треккинг', icon: <Map />, color: 'from-green-400 to-cyan-400' },
+  { id: 'helicopter', label: 'Вертолёт', icon: <Bot />, color: 'from-cyan-400 to-purple-400' },
+  { id: 'sea', label: 'Морские прогулки', icon: <Camera />, color: 'from-blue-400 to-cyan-400' },
+]
 
-  useEffect(() => { setMounted(true) }, [])
-  if (!mounted) return null
+function ActivitiesCarousel() {
+  const [center, setCenter] = useState(0)
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const count = ACTIVITIES.length
 
-  const bgImage = isDark ? '/images/dark.jpg' : '/images/light.jpg'
+  // Auto-scroll
+  useEffect(() => {
+    intervalRef.current = setInterval(() => {
+      setCenter(c => (c + 1) % count)
+    }, 2200)
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
+  }, [count])
+
+  // Swipe support
+  const startX = useRef<number | null>(null)
+  const handleTouchStart = (e: React.TouchEvent) => {
+    startX.current = e.touches[0].clientX
+    if (intervalRef.current) clearInterval(intervalRef.current)
+  }
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (startX.current !== null) {
+      const dx = e.changedTouches[0].clientX - startX.current
+      if (Math.abs(dx) > 40) {
+        setCenter(c => (c + (dx < 0 ? 1 : -1) + count) % count)
+      }
+    }
+    intervalRef.current = setInterval(() => {
+      setCenter(c => (c + 1) % count)
+    }, 2200)
+  }
 
   return (
-    <>
-      {/* ── глобальные анимации ── */}
+    <section className="w-full px-0 py-2 flex flex-col items-center" style={{ maxWidth: 430, margin: "0 auto" }}>
+      <div
+        className="flex items-center justify-center gap-0 w-full overflow-x-hidden relative"
+        style={{ height: 120 }}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
+        {ACTIVITIES.map((a, i) => {
+          const pos = (i - center + count) % count
+          const isCenter = pos === 0
+          const style = isCenter
+            ? {
+                transform: "scale(1.1) translateY(-6px)",
+                zIndex: 2,
+                boxShadow: "0 0 22px 0 rgba(0,212,255,0.4)",
+                border: "2px solid #00D4FF",
+                background: "rgba(0,212,255,0.08)",
+              }
+            : {
+                transform: "scale(0.88)",
+                opacity: 0.7,
+                zIndex: 1,
+              }
+          return (
+            <div
+              key={a.id}
+              className="flex flex-col items-center justify-center mx-1 rounded-2xl transition-all duration-300"
+              style={{ width: 88, height: 104, ...style }}
+            >
+              <div className="w-14 h-14 flex items-center justify-center rounded-xl bg-white/10 border border-cyan-400/20 mb-2">
+                {a.icon}
+              </div>
+              <span className="text-white text-xs font-semibold text-center" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.4)" }}>{a.label}</span>
+            </div>
+          )
+        })}
+      </div>
+      <div className="flex gap-1 mt-2 justify-center">
+        {ACTIVITIES.map((_, i) => (
+          <span key={i} className={"w-2 h-2 rounded-full " + (i === center ? "bg-cyan-400" : "bg-white/20")}></span>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+// --- Photo Section ---
+function PhotoSection() {
+  return (
+    <section className="px-4 pb-6">
+      <h2 className="font-playfair text-white text-xl font-bold text-center mb-3" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.7)' }}>
+        Камчатка глазами путешественников
+      </h2>
+      <div className="flex gap-3 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div
+            key={i}
+            className="flex-shrink-0 rounded-2xl overflow-hidden bg-white/10 border border-white/20"
+            style={{ minWidth: 138, height: 172, borderRadius: 20, backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}
+          >
+            <div className="w-full h-full flex items-center justify-center">
+              <Camera size={32} className="text-white/40" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+// --- Bottom Navbar ---
+const NAV_ITEMS = [
+  { label: 'Поиск', Icon: Search, href: '#search', danger: false },
+  { label: 'Карта', Icon: Map, href: '/map', danger: false },
+  { label: 'Избранное', Icon: Heart, href: '/hub/tourist/wishlist', danger: false },
+  { label: 'ЛК', Icon: User, href: '/profile', danger: false },
+  { label: 'СОС', Icon: AlertTriangle, href: '/safety', danger: true },
+]
+
+function BottomNavbar() {
+  const [active, setActive] = useState(0)
+  const ripple = useRipple()
+  return (
+    <nav
+      className="fixed left-1/2 bottom-4 z-40 flex items-center justify-between px-2 py-1 w-[98vw] max-w-[420px] h-[64px] rounded-full"
+      style={{
+        transform: "translateX(-50%)",
+        background: "var(--kh-nav-bg)",
+        border: "1.5px solid var(--kh-nav-border)",
+        boxShadow: "0 4px 24px 0 rgba(0,0,0,0.18)",
+        backdropFilter: "blur(10px)",
+        WebkitBackdropFilter: "blur(10px)",
+      }}
+    >
+      {NAV_ITEMS.map((item, i) => (
+        <button
+          key={item.label}
+          className={
+            "flex flex-col items-center justify-center flex-1 px-2 py-1 relative " +
+            (item.danger ? "text-red-500" : (i === active ? "text-cyan-400" : "text-white/80"))
+          }
+          style={{ minWidth: 56 }}
+          onClick={e => { ripple(e); setActive(i) }}
+        >
+          <item.Icon className="w-6 h-6 mb-0.5" />
+          <span className="text-xs font-medium leading-none">{item.label}</span>
+        </button>
+      ))}
+    </nav>
+  )
+}
+
+// --- AI Assistant Button ---
+function AIAssistantButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      className="fixed z-50 right-6 bottom-24 w-14 h-14 rounded-full flex items-center justify-center border-2 border-cyan-400 shadow-lg bg-white/10 backdrop-blur-md"
+      style={{
+        boxShadow: "0 0 24px 0 rgba(0,212,255,0.25)",
+        animation: "ai-glow 2.2s infinite alternate"
+      }}
+      onClick={onClick}
+      aria-label="AI Assistant"
+    >
+      <Bot className="w-7 h-7 text-cyan-400" />
+    </button>
+  )
+}
+
+// --- Main Page ---
+export default function HomePage() {
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [aiOpen, setAiOpen] = useState(false)
+  return (
+    <div
+      className="min-h-screen w-full flex flex-col items-center"
+      style={{
+        background: "linear-gradient(158deg,#050e1f 0%,#1c0800 52%,#060e20 100%)",
+        maxWidth: 430,
+        margin: "0 auto",
+        paddingBottom: 96,
+      }}
+    >
+      <Header />
+      <main className="w-full flex-1 flex flex-col items-center" style={{ marginTop: 56 }}>
+        <Hero onSearch={() => setSearchOpen(true)} />
+        <ActivitiesCarousel />
+        <PhotoSection />
+      </main>
+      <BottomNavbar />
+      <AIAssistantButton onClick={() => setAiOpen(true)} />
+      {/* Модальные окна (SearchModal, AI Modal) — реализовать отдельно */}
+      {searchOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="bg-white rounded-2xl p-6 max-w-xs w-full text-black relative">
+            <button className="absolute top-2 right-2" onClick={() => setSearchOpen(false)}><X className="w-5 h-5" /></button>
+            <div className="font-bold text-lg mb-2">Поиск маршрута</div>
+            <div className="text-sm text-gray-600 mb-4">(Заглушка: здесь будет поиск)</div>
+            <input className="w-full border rounded px-3 py-2 mb-2" placeholder="Ключевое слово..." />
+            <button className="w-full py-2 rounded bg-cyan-400 text-white font-semibold">Искать</button>
+          </div>
+        </div>
+      )}
+      {aiOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="bg-white rounded-2xl p-6 max-w-xs w-full text-black relative">
+            <button className="absolute top-2 right-2" onClick={() => setAiOpen(false)}><X className="w-5 h-5" /></button>
+            <div className="font-bold text-lg mb-2">AI-помощник</div>
+            <div className="text-sm text-gray-600 mb-4">(Заглушка: здесь будет чат-бот)</div>
+            <button className="w-full py-2 rounded bg-cyan-400 text-white font-semibold">Начать диалог</button>
+          </div>
+        </div>
+      )}
+      {/* Ripple effect keyframes */}
       <style>{`
         @keyframes kh-ripple {
-          to { transform: scale(4); opacity: 0; }
+          to { transform: scale(2.2); opacity: 0; }
         }
-        @keyframes kh-fade {
-          from { opacity: 0; } to { opacity: 1; }
+        @keyframes ai-glow {
+          0% { box-shadow: 0 0 24px 0 rgba(0,212,255,0.25); }
+          100% { box-shadow: 0 0 44px 0 rgba(0,212,255,0.45); }
         }
-        @keyframes kh-scale {
-          from { transform: scale(0.85); opacity: 0; }
-          to   { transform: scale(1);    opacity: 1; }
-        }
-        @keyframes kh-slide-up {
-          from { opacity: 0; transform: translateY(100%); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        .kh-hide-scroll::-webkit-scrollbar { display: none; }
-        .kh-activity:hover {
-          border-color: rgba(0,212,255,0.5) !important;
-        }
-        .kh-header-btn:hover {
-          color: #00D4FF;
-          filter: drop-shadow(0 0 6px #00D4FF);
-        }
-        .kh-nav-btn:hover { color: #00D4FF; }
       `}</style>
+    </div>
+  )
+// Удалён ошибочный фрагмент, который был вне функции
 
-      <div
-        className="relative"
-        style={{
-          backgroundImage: `url('${bgImage}')`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          minHeight: '100dvh',
-        }}
-      >
-        {/* ── верхний градиент ── */}
-        <div
-          className="fixed top-0 left-0 right-0 h-28 pointer-events-none z-10"
-          style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.55), transparent)' }}
-        />
-
-        {/* ── ХЕДЕР ── */}
-        <header className="fixed top-0 left-0 right-0 z-20 flex items-center justify-between px-4 h-14">
-          <span className="font-playfair text-white text-2xl font-bold tracking-wide"
-            style={{ textShadow: '0 1px 8px rgba(0,0,0,0.5)' }}>
-            КН
-          </span>
-          <div className="flex items-center gap-2">
-            {/* переключатель темы */}
-            <button
-              onClick={(e) => { ripple(e); toggleTheme() }}
-              className="kh-header-btn relative text-white transition-all duration-200
-                         flex items-center justify-center min-h-[44px] min-w-[44px] rounded-full overflow-hidden"
-              style={{
-                background: 'rgba(255,255,255,0.12)',
-                backdropFilter: 'blur(8px)',
-                border: '1px solid rgba(255,255,255,0.25)',
-              }}
-            >
-              {isDark ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
-            {/* личный кабинет */}
-
-<button
-              onClick={(e) => { ripple(e); router.push('/profile') }}
-              className="kh-header-btn relative text-white transition-all duration-200
-                         flex items-center justify-center min-h-[44px] min-w-[44px] rounded-full overflow-hidden"
-              style={{
-                background: 'rgba(255,255,255,0.12)',
-                backdropFilter: 'blur(8px)',
-                border: '1px solid rgba(255,255,255,0.25)',
-              }}
-            >
-              <UserCircle size={20} />
-            </button>
-          </div>
-        </header>
-
-        {/* ── HERO ── */}
-        <section className="relative flex flex-col items-center text-center px-4 pt-20 pb-6">
-          <h1
-            className="font-playfair text-white font-bold text-4xl leading-tight mb-2"
-            style={{ textShadow: '0 2px 16px rgba(0,0,0,0.85)' }}
-          >
-            Здесь начинается Россия
-          </h1>
-          <h2
-            className="text-white/80 text-lg font-normal"
-            style={{ textShadow: '0 1px 8px rgba(0,0,0,0.7)' }}
-          >
-            Камчатка — земля огня и льда
-          </h2>
-        </section>
-
-        {/* ── АКТИВНОСТИ ── */}
-        <section className="px-4 pb-6">
-          <h2
-            className="font-playfair text-white text-xl font-bold text-center mb-4"
-            style={{ textShadow: '0 2px 8px rgba(0,0,0,0.7)' }}
-          >
-            Активности Камчатки
-          </h2>
+// --- Photo Section ---
+function PhotoSection() {
+  return (
+    <section className="px-4 pb-6">
+      <h2 className="font-playfair text-white text-xl font-bold text-center mb-3" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.7)' }}>
+        Камчатка глазами путешественников
+      </h2>
+      <div className="flex gap-3 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        {Array.from({ length: 4 }).map((_, i) => (
           <div
-            className="flex flex-wrap justify-center gap-3 mx-auto"
-            style={{ maxWidth: 340 }}
+            key={i}
+            className="flex-shrink-0 rounded-2xl overflow-hidden bg-white/10 border border-white/20"
+            style={{ minWidth: 138, height: 172, borderRadius: 20, backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}
           >
-            {ACTIVITIES.map(({ id, label, Icon, href }) => {
-              const isSelected = selectedActivity === id
-              return (
-                <button
-                  key={id}
-                  onClick={(e) => {
+            <div className="w-full h-full flex items-center justify-center">
+              <Camera size={32} className="text-white/40" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+// --- Bottom Navbar ---
+const NAV_ITEMS = [
+  { label: 'Поиск', Icon: Search, href: '#search', danger: false },
+  { label: 'Карта', Icon: Map, href: '/map', danger: false },
+  { label: 'Избранное', Icon: Heart, href: '/hub/tourist/wishlist', danger: false },
+  { label: 'ЛК', Icon: User, href: '/profile', danger: false },
+  { label: 'СОС', Icon: AlertTriangle, href: '/safety', danger: true },
+]
+
+function BottomNavbar() {
+  const [active, setActive] = useState(0)
+  const ripple = useRipple()
+  return (
+    <nav
+      className="fixed left-1/2 bottom-4 z-40 flex items-center justify-between px-2 py-1 w-[98vw] max-w-[420px] h-[64px] rounded-full"
+      style={{
+        transform: "translateX(-50%)",
+        background: "var(--kh-nav-bg)",
+        border: "1.5px solid var(--kh-nav-border)",
+        boxShadow: "0 4px 24px 0 rgba(0,0,0,0.18)",
+        backdropFilter: "blur(10px)",
+        WebkitBackdropFilter: "blur(10px)",
+      }}
+    >
+      {NAV_ITEMS.map((item, i) => (
+        <button
+          key={item.label}
+          className={
+            "flex flex-col items-center justify-center flex-1 px-2 py-1 relative " +
+            (item.danger ? "text-red-500" : (i === active ? "text-cyan-400" : "text-white/80"))
+          }
+          style={{ minWidth: 56 }}
+          onClick={e => { ripple(e); setActive(i) }}
+        >
+          <item.Icon className="w-6 h-6 mb-0.5" />
+          <span className="text-xs font-medium leading-none">{item.label}</span>
+        </button>
+      ))}
+    </nav>
+  )
+}
+
+// --- AI Assistant Button ---
+function AIAssistantButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      className="fixed z-50 right-6 bottom-24 w-14 h-14 rounded-full flex items-center justify-center border-2 border-cyan-400 shadow-lg bg-white/10 backdrop-blur-md"
+      style={{
+        boxShadow: "0 0 24px 0 rgba(0,212,255,0.25)",
+        animation: "ai-glow 2.2s infinite alternate"
+      }}
+      onClick={onClick}
+      aria-label="AI Assistant"
+    >
+      <Bot className="w-7 h-7 text-cyan-400" />
+    </button>
+  )
+}
+
+// --- Main Page ---
+// Оставляем только server component с metadata и импортом HomePageClient
                     ripple(e)
                     setSelectedActivity(prev => prev === id ? null : id)
                     setTimeout(() => router.push(href), 300)

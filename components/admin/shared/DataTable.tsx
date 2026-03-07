@@ -20,6 +20,16 @@ export interface DataTableProps<T> {
   className?: string;
 }
 
+/**
+ * DataTable — универсальная таблица для админки Kamchatour Hub
+ * @template T — тип строки (должен содержать id)
+ * @param {DataTableProps<T>} props
+ * @returns {JSX.Element}
+ * @remarks
+ * - Поддержка сортировки, кастомных рендеров, skeleton loading
+ * - Accessibility: th/td, aria-label на sortable, min touch target
+ * - UX: glassmorphism, адаптивность, hover, empty state
+ */
 export function DataTable<T extends { id: string | number }>({
   columns,
   data,

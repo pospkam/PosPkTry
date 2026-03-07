@@ -16,8 +16,12 @@ interface ActivityCarouselProps {
   clickedActivity: string | null;
 }
 
-// -- Ripple utility (local) --
-
+/**
+ * Вспомогательная функция для ripple-эффекта (клик по карточке)
+ * @param {React.MouseEvent<HTMLElement>} e - Событие клика
+ * @param {HTMLElement} container - Контейнер для ripple
+ * @param {string} color - Цвет ripple
+ */
 function spawnRipple(
   e: React.MouseEvent<HTMLElement>,
   container: HTMLElement,
@@ -52,6 +56,15 @@ const SCROLL_SPEED = 0.5; // px per frame (smooth)
 
 // -- Component --
 
+/**
+ * Карусель активностей для главной/каталога (glassmorphism, ripple, accessibility)
+ * @param {ActivityCarouselProps} props
+ * @returns {JSX.Element}
+ * @remarks
+ * - Использует glassmorphism, ripple-эффект, auto-scroll
+ * - Производительность: оптимизировано для 60fps, но при большом количестве карточек возможны лаги на слабых устройствах
+ * - Accessibility: каждая карточка снабжена aria-label, поддерживает клавиатуру
+ */
 export default function ActivityCarousel({
   activities,
   onActivityClick,

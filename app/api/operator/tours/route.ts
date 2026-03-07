@@ -17,8 +17,18 @@ const ALLOWED_SORT_FIELDS = new Set([
 ]);
 
 /**
- * GET /api/operator/tours
- * Получение списка туров оператора
+ * Получение списка туров оператора (Kamchatour Hub)
+ * @route GET /api/operator/tours
+ * @param {NextRequest} request - HTTP-запрос (ожидает JWT)
+ * @returns {Promise<NextResponse>} JSON с пагинированным списком туров
+ * @throws 401 если неавторизован, 404 если нет профиля, 500 при ошибке БД
+ * @security
+ * - Все SQL-запросы строго параметризованы ($1, $2, ...)
+ * - Поля сортировки whitelisted (ALLOWED_SORT_FIELDS)
+ * - WHERE-условия строятся только из разрешённых параметров
+ * @example
+ * // GET /api/operator/tours?page=1&limit=20&status=active
+ * // Response: { success: true, data: { data: [...], pagination: {...} } }
  */
 export async function GET(request: NextRequest) {
   try {
@@ -171,14 +181,21 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * POST /api/operator/tours
- * Создание нового тура
- * 
- * Бизнес-логика на основе партнера fishingkam.ru:
- * - Минимальная группа: 5 человек
- * - Сезонность с разными ценами
- * - Включено/не включено в стоимость
- * - Виды рыб по сезонам
+ * Создание нового тура (Kamchatour Hub)
+ * @route POST /api/operator/tours
+ * @param {NextRequest} request - HTTP-запрос (ожидает JWT)
+ * @body {string} name - Название тура
+ * @body {string} description - Описание
+ * @body {string} category - Категория
+ * ... (другие поля)
+ * @returns {Promise<NextResponse>} JSON с созданным туром
+ * @throws 401 если неавторизован, 404 если нет профиля, 400 если невалидно, 500 при ошибке БД
+ * @security
+ * - Все SQL-запросы строго параметризованы
+ * - Валидация входных данных
+ * @example
+ * // POST /api/operator/tours { name, ... }
+ * // Response: { success: true, data: { ...tour } }
  */
 export async function POST(request: NextRequest) {
   try {

@@ -5,6 +5,7 @@
 
 /**
  * Получить CSRF токен из cookie
+ * @returns {string | null} CSRF токен или null, если не найден
  */
 export function getCsrfToken(): string | null {
   if (typeof document === 'undefined') {
@@ -17,6 +18,7 @@ export function getCsrfToken(): string | null {
 
 /**
  * Загрузить CSRF токен с сервера если его нет
+ * @returns {Promise<string | null>} CSRF токен или null
  */
 export async function ensureCsrfToken(): Promise<string | null> {
   let token = getCsrfToken();
@@ -36,7 +38,11 @@ export async function ensureCsrfToken(): Promise<string | null> {
 }
 
 /**
- * Обертка для fetch с автоматическим добавлением CSRF токена
+ * fetchWithCsrf — обертка для fetch с автоматическим добавлением CSRF токена
+ * @param {string} url - URL запроса
+ * @param {RequestInit} options - опции fetch
+ * @returns {Promise<Response>} Ответ fetch
+ * @throws {Error} если CSRF токен не получен
  */
 export async function fetchWithCsrf(
   url: string,
@@ -68,9 +74,10 @@ export async function fetchWithCsrf(
 import * as React from 'react';
 
 /**
- * React hook для CSRF токена
+ * React hook для получения CSRF токена
+ * @returns {string | null} CSRF токен
  */
-export function useCsrfToken() {
+export function useCsrfToken(): string | null {
   const [token, setToken] = React.useState<string | null>(null);
   
   React.useEffect(() => {

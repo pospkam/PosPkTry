@@ -6,6 +6,16 @@
 // ===========================================
 
 import React from 'react';
+
+/**
+ * Базовый компонент календаря для выбора дат.
+ * Используется в формах бронирования и фильтрах.
+ * Поддерживает выбор диапазона, ограничения по датам, кастомизацию дней и локализацию.
+ *
+ * @component
+ * @param {BaseCalendarProps} props
+ * @returns {JSX.Element}
+ */
 import DatePicker, { registerLocale } from 'react-datepicker';
 import { ru } from 'date-fns/locale';
 import styles from './calendar.module.css';
@@ -14,6 +24,9 @@ import clsx from 'clsx';
 // Регистрация русской локали
 registerLocale('ru', ru);
 
+/**
+ * Пропсы для BaseCalendar
+ */
 export interface BaseCalendarProps {
   // Основные пропсы
   selected?: Date | null;
@@ -53,6 +66,12 @@ export interface BaseCalendarProps {
   calendarClassName?: string;
 }
 
+/**
+ * Базовый календарь KamHub
+ * - Поддержка диапазона дат, inline/попап, кастомизация дней
+ * - Локализация: ru
+ * - Для бронирований, фильтров, отчетов
+ */
 export const BaseCalendar: React.FC<BaseCalendarProps> = ({
   selected,
   startDate,
@@ -87,6 +106,8 @@ export const BaseCalendar: React.FC<BaseCalendarProps> = ({
         },
         className
       )}
+      role="group"
+      aria-label="Календарь выбора дат"
     >
       <DatePicker
         {...({
@@ -114,6 +135,8 @@ export const BaseCalendar: React.FC<BaseCalendarProps> = ({
           calendarClassName,
           showPopperArrow: false,
         } as any)}
+        aria-label="Выбор даты или диапазона дат"
+        calendarStartDay={1} // UX: неделя начинается с понедельника
       />
     </div>
   );

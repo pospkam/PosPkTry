@@ -1,9 +1,13 @@
 'use client';
 
-// ===========================================
-// ВЫБОР ВРЕМЕНИ (TimeSlotPicker)
-// KamHub - Time Slot Picker Component
-// ===========================================
+/**
+ * TimeSlotPicker — компонент выбора времени для Kamchatour Hub
+ * @param {TimeSlotPickerProps} props
+ * @returns {JSX.Element}
+ * @remarks
+ * - Accessibility: aria-label для кнопок, role для контейнера, aria-disabled для недоступных слотов
+ * - UX: визуальное выделение выбранного и недоступного слота
+ */
 
 import React, { useState } from 'react';
 import clsx from 'clsx';
@@ -41,7 +45,7 @@ export const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
 
   if (slots.length === 0) {
     return (
-      <div className={clsx('text-center py-12', className)}>
+      <div className={clsx('text-center py-12', className)} role="status" aria-label="Нет доступных слотов времени">
         <div className="text-white/50 text-lg mb-2"></div>
         <div className="text-white/70">Нет доступных слотов времени</div>
       </div>
@@ -49,7 +53,7 @@ export const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
   }
 
   return (
-    <div className={clsx('space-y-3', className)}>
+    <div className={clsx('space-y-3', className)} role="group" aria-label="Выбор времени">
       <div className="text-white font-medium mb-4">
         Выберите время:
       </div>
@@ -63,6 +67,8 @@ export const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
             key={slot.id}
             onClick={() => handleSelect(slot)}
             disabled={isSoldOut}
+            aria-label={`Время: ${slot.time}, ${isSoldOut ? 'недоступно' : isSelected ? 'выбрано' : 'доступно'}`}
+            aria-disabled={isSoldOut}
             className={clsx(
               'w-full p-4 rounded-xl border-2 transition-all text-left',
               {

@@ -22,6 +22,14 @@ declare global {
   }
 }
 
+/**
+ * YandexMap — компонент Яндекс.Карты для Kamchatour Hub
+ * @param {YandexMapProps} props
+ * @returns {JSX.Element}
+ * @remarks
+ * - Accessibility: role="region", aria-label для карты и состояния загрузки, семантика для ошибок
+ * - UX: skeleton при загрузке, обработка ошибок API ключа
+ */
 export default function YandexMap({
   center = [53.0444, 158.6483], // Петропавловск-Камчатский по умолчанию
   zoom = 12,
@@ -88,7 +96,7 @@ export default function YandexMap({
 
   if (!apiKey) {
     return (
-      <div className={`bg-gray-100 rounded-2xl flex items-center justify-center ${className}`} style={{ height }}>
+      <div className={`bg-gray-100 rounded-2xl flex items-center justify-center ${className}`} style={{ height }} role="region" aria-label="Карта временно недоступна">
         <div className="text-center p-8">
           <p className="text-gray-600 mb-2">Карта временно недоступна</p>
           <p className="text-sm text-gray-500">API ключ не настроен</p>
@@ -104,10 +112,9 @@ export default function YandexMap({
         strategy="afterInteractive"
         onLoad={() => setIsLoaded(true)}
       />
-      
-      <div className={`relative rounded-2xl overflow-hidden shadow-xl ${className}`} style={{ height }}>
+      <div className={`relative rounded-2xl overflow-hidden shadow-xl ${className}`} style={{ height }} role="region" aria-label="Карта Камчатки">
         {!isLoaded && (
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-100 to-cyan-100 flex items-center justify-center z-10">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-100 to-cyan-100 flex items-center justify-center z-10" role="status" aria-label="Загрузка карты">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent mb-4 mx-auto"></div>
               <p className="text-blue-600 font-semibold">Загрузка карты...</p>

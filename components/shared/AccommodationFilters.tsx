@@ -59,6 +59,14 @@ const sortOptions = [
   { value: 'name_asc', label: 'По алфавиту' },
 ];
 
+/**
+ * AccommodationFilters — фильтры размещения для Kamchatour Hub
+ * @param {AccommodationFiltersProps} props
+ * @returns {JSX.Element}
+ * @remarks
+ * - Accessibility: label/id для всех input/select, aria-label для кнопок, семантика для фильтров
+ * - UX: сброс, подсчёт активных фильтров, адаптивность
+ */
 export const AccommodationFilters: React.FC<AccommodationFiltersProps> = ({
   filters,
   onFiltersChange,
@@ -169,6 +177,7 @@ export const AccommodationFilters: React.FC<AccommodationFiltersProps> = ({
                       ? 'bg-premium-gold text-premium-black'
                       : 'bg-white/5 text-white/80 hover:bg-white/10'}
                   `}
+                  aria-label={filters.type.includes(type.value) ? `Убрать фильтр: ${type.label}` : `Добавить фильтр: ${type.label}`}
                 >
                   <span>{type.icon}</span>
                   <span>{type.label}</span>
@@ -296,6 +305,7 @@ export const AccommodationFilters: React.FC<AccommodationFiltersProps> = ({
                       ? 'bg-premium-gold text-premium-black'
                       : 'bg-white/5 text-white/80 hover:bg-white/10'}
                   `}
+                  aria-label={filters.amenities.includes(amenity.value) ? `Убрать удобство: ${amenity.label}` : `Добавить удобство: ${amenity.label}`}
                 >
                   <span>{amenity.icon}</span>
                   <span>{amenity.label}</span>

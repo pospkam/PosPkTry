@@ -5,7 +5,16 @@ import { requireAdmin } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/eco-points - Public (map listing)
+/**
+ * Получение списка eco-points (публично, для карты/каталога)
+ * @route GET /api/eco-points
+ * @param {NextRequest} request - HTTP-запрос
+ * @returns {Promise<NextResponse>} JSON с массивом eco-points
+ * @throws 500 при ошибке БД
+ * @example
+ * // GET /api/eco-points?category=cleanup&lat=53.0&lng=158.6&radius=5000
+ * // Response: { success: true, data: [ ...ecoPoints ] }
+ */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);

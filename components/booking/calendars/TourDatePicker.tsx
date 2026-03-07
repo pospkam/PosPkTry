@@ -1,9 +1,12 @@
 'use client';
 
-// ===========================================
-// КАЛЕНДАРЬ ДЛЯ ТУРОВ (TourDatePicker)
-// KamHub - Tour Date Picker
-// ===========================================
+/**
+ * TourDatePicker — календарь выбора даты тура для Kamchatour Hub
+ * @param {TourDatePickerProps} props
+ * @returns {JSX.Element}
+ * @remarks
+ * - Accessibility: role, aria-label для секций, aria-live для ошибок и динамических данных
+ */
 
 import React, { useState, useEffect } from 'react';
 import { BaseCalendar } from './BaseCalendar';
@@ -203,9 +206,9 @@ export const TourDatePicker: React.FC<TourDatePickerProps> = ({
     : null;
 
   return (
-    <div className={className}>
+    <div className={className} role="region" aria-label="Календарь выбора даты тура">
       {/* Информация о туре */}
-      <div className="mb-6 p-4 bg-white/5 border border-white/10 rounded-lg">
+      <div className="mb-6 p-4 bg-white/5 border border-white/10 rounded-lg" aria-label="Информация о туре">
         <div className="text-white/70 text-sm mb-1">
           {tourType === 'group' ? 'Групповой тур' : 'Индивидуальный тур'}
         </div>
@@ -216,11 +219,11 @@ export const TourDatePicker: React.FC<TourDatePickerProps> = ({
 
       {/* Выбранная дата */}
       {selectedDate && (
-        <div className="mb-6">
+        <div className="mb-6" aria-label="Выбранная дата">
           <span className="block text-sm text-white/70 mb-2">
             Дата начала тура
           </span>
-          <div className="px-4 py-3 bg-premium-gold/10 border border-premium-gold/30 rounded-lg text-white font-medium">
+          <div className="px-4 py-3 bg-premium-gold/10 border border-premium-gold/30 rounded-lg text-white font-medium" aria-live="polite">
             {formatDisplayDate(selectedDate)}
           </div>
         </div>
@@ -240,7 +243,7 @@ export const TourDatePicker: React.FC<TourDatePickerProps> = ({
 
       {/* Легенда для групповых туров */}
       {tourType === 'group' && !loading && (
-        <div className="mt-4 p-4 bg-white/5 border border-white/10 rounded-lg">
+        <div className="mt-4 p-4 bg-white/5 border border-white/10 rounded-lg" aria-label="Легенда доступности">
           <div className="text-white/70 text-sm mb-3">Легенда:</div>
           <div className="grid grid-cols-2 gap-2 text-sm">
             <div className="flex items-center gap-2">
@@ -265,7 +268,7 @@ export const TourDatePicker: React.FC<TourDatePickerProps> = ({
 
       {/* Информация о выбранной дате (групповой тур) */}
       {selectedDateInfo && tourType === 'group' && (
-        <div className="mt-6 p-4 bg-premium-gold/10 border border-premium-gold/30 rounded-lg">
+        <div className="mt-6 p-4 bg-premium-gold/10 border border-premium-gold/30 rounded-lg" aria-label="Информация о выбранной дате">
           <div className="text-white font-medium mb-3">Информация о туре:</div>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
@@ -302,7 +305,7 @@ export const TourDatePicker: React.FC<TourDatePickerProps> = ({
 
       {/* Выбор времени (индивидуальный тур) */}
       {tourType === 'individual' && selectedDate && (
-        <div className="mt-6">
+        <div className="mt-6" aria-label="Выбор времени для индивидуального тура">
           {loadingSlots ? (
             <div className="text-center py-8">
               <div className="w-8 h-8 border-4 border-white/20 border-t-premium-gold rounded-full animate-spin mx-auto mb-4"></div>
@@ -320,14 +323,14 @@ export const TourDatePicker: React.FC<TourDatePickerProps> = ({
 
       {/* Предупреждение о погоде */}
       {tourType === 'individual' && selectedDate && (
-        <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-sm text-yellow-200">
+        <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-sm text-yellow-200" role="alert" aria-live="polite">
           ! Погодные условия проверяются за 24 часа до тура
         </div>
       )}
 
       {/* Ошибка */}
       {error && (
-        <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-sm text-red-200">
+        <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-sm text-red-200" role="alert" aria-live="assertive">
           ! {error}
         </div>
       )}

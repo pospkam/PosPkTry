@@ -23,11 +23,18 @@ const navItems: NavItem[] = [
   { name: 'Безопасность', path: '/hub/safety', icon: Shield },
 ];
 
+/**
+ * PublicNav — публичная навигация для Kamchatour Hub
+ * @returns {JSX.Element}
+ * @remarks
+ * - Accessibility: aria-label для навигации и активных ссылок, семантика для иконок и ссылок
+ * - UX: sticky, адаптивность, активное состояние
+ */
 export function PublicNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="bg-white/5 border-b border-white/10 sticky top-0 z-10">
+    <nav className="bg-white/5 border-b border-white/10 sticky top-0 z-10" aria-label="Главная навигация">
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between h-16">
           <Link href="/" className="text-2xl font-black text-premium-gold">
@@ -43,6 +50,8 @@ export function PublicNav() {
                 <Link
                   key={item.path}
                   href={item.path}
+                  aria-current={isActive ? 'page' : undefined}
+                  aria-label={item.name}
                   className={clsx(
                     'px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 text-sm',
                     isActive
@@ -50,7 +59,7 @@ export function PublicNav() {
                       : 'text-white/70 hover:bg-white/10 hover:text-white'
                   )}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className="w-4 h-4" aria-hidden="true" />
                   <span className="hidden md:inline">{item.name}</span>
                 </Link>
               );

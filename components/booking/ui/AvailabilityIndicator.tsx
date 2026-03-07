@@ -1,9 +1,12 @@
 'use client';
 
-// ===========================================
-// ИНДИКАТОР ДОСТУПНОСТИ
-// KamHub - Availability Indicator Component
-// ===========================================
+/**
+ * AvailabilityIndicator — индикатор доступности мест для Kamchatour Hub
+ * @param {AvailabilityIndicatorProps} props
+ * @returns {JSX.Element}
+ * @remarks
+ * - Accessibility: aria-label для индикатора, role для контейнера, aria-live для динамического текста
+ */
 
 import React from 'react';
 import clsx from 'clsx';
@@ -53,7 +56,7 @@ export const AvailabilityIndicator: React.FC<AvailabilityIndicatorProps> = ({
   };
 
   return (
-    <div className={clsx('flex items-center gap-2', className)}>
+    <div className={clsx('flex items-center gap-2', className)} role="status" aria-label="Индикатор доступности мест">
       {/* Индикатор */}
       <div
         className={clsx(
@@ -69,12 +72,12 @@ export const AvailabilityIndicator: React.FC<AvailabilityIndicatorProps> = ({
 
       {/* Текст */}
       {showText && (
-        <span className="text-sm text-white/70">{text}</span>
+        <span className="text-sm text-white/70" aria-live="polite">{text}</span>
       )}
 
       {/* Количество мест */}
       {showCount && (
-        <span className="text-sm text-white/70">
+        <span className="text-sm text-white/70" aria-live="polite">
           {available > 0 ? `${available} из ${total}` : 'Нет мест'}
         </span>
       )}

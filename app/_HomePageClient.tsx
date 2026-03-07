@@ -472,6 +472,7 @@ export default function HomePageClient() {
           </div>
         </header>
 
+
         {/* Hero */}
         <section
           aria-label="Главный экран"
@@ -501,6 +502,16 @@ export default function HomePageClient() {
             Дикая природа. Настоящие маршруты.
           </p>
         </section>
+
+        {/* Featured Reviews */}
+        {typeof window !== 'undefined' && <>(
+          {require('../components/FeaturedReviews').default()}
+        )</>}
+
+        {/* Popular Tours */}
+        {typeof window !== 'undefined' && <>(
+          {require('../components/PopularTours').default()}
+        )</>}
 
         {/* Activities - Auto-scroll carousel */}
         <section

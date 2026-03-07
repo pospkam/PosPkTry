@@ -1,9 +1,12 @@
 'use client';
 
-// ===========================================
-// КАЛЕНДАРЬ ДЛЯ ОТЕЛЕЙ (StayDatePicker)
-// KamHub - Accommodation Date Picker
-// ===========================================
+/**
+ * StayDatePicker — календарь выбора дат проживания для Kamchatour Hub
+ * @param {StayDatePickerProps} props
+ * @returns {JSX.Element}
+ * @remarks
+ * - Accessibility: role, aria-label для секций, aria-live для ошибок и динамических данных
+ */
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { BaseCalendar } from './BaseCalendar';
@@ -195,9 +198,9 @@ export const StayDatePicker: React.FC<StayDatePickerProps> = ({
   const nights = calculateNights(checkIn, checkOut);
 
   return (
-    <div className={className}>
+    <div className={className} role="region" aria-label="Календарь выбора дат проживания">
       {/* Выбранные даты */}
-      <div className="mb-6 grid grid-cols-2 gap-4">
+      <div className="mb-6 grid grid-cols-2 gap-4" aria-label="Выбранные даты">
         <div>
           <span className="block text-sm text-white/70 mb-2">Заезд</span>
           <div className="px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white">
@@ -227,14 +230,14 @@ export const StayDatePicker: React.FC<StayDatePickerProps> = ({
 
       {/* Минимум ночей */}
       {minNights > 1 && (
-        <div className="mt-4 text-sm text-white/70">
+        <div className="mt-4 text-sm text-white/70" aria-label="Минимальное количество ночей" aria-live="polite">
           ! Минимальное количество ночей: {minNights}
         </div>
       )}
 
       {/* Ошибка */}
       {error && (
-        <div className={styles.error}>
+        <div className={styles.error} role="alert" aria-live="assertive">
           <span className={styles.errorIcon}>!</span>
           <span>{error}</span>
         </div>
@@ -242,7 +245,7 @@ export const StayDatePicker: React.FC<StayDatePickerProps> = ({
 
       {/* Разбивка цены */}
       {showPriceBreakdown && pricing && !error && (
-        <div className={styles.priceInfo}>
+        <div className={styles.priceInfo} aria-label="Разбивка цены" aria-live="polite">
           <div className={styles.priceRow}>
             <span className={styles.priceLabel}>
               {formatPrice(pricing.pricePerNight)} × {pricing.nights} {getNightsLabel(pricing.nights)}

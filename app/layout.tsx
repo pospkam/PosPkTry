@@ -113,6 +113,41 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </RoleProvider>
           </AuthProvider>
         </ThemeProvider>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "TouristInformationCenter",
+              "name": "Kamchatour Hub",
+              "description": "Туристическая платформа Камчатки для туристов, операторов, гидов.",
+              "url": "https://kamchatour.ru",
+              "logo": "https://kamchatour.ru/logo-kamchatka.svg",
+              "address": {
+                "@type": "PostalAddress",
+                "addressCountry": "RU",
+                "addressRegion": "Камчатский край"
+              },
+              "telephone": "+7 (914) 782-22-22",
+              "sameAs": [
+                "https://t.me/kamchatourhub",
+                "https://vk.com/kamchatourhub"
+              ],
+              "touristInformationOptions": [
+                "tourBooking",
+                "guideServices",
+                "safetyInformation"
+              ],
+              "hasTour": [
+                {
+                  "@type": "Offer",
+                  "name": "Рыбалка на Камчатке",
+                  "url": "/tours?category=fishing"
+                }
+              ]
+            })
+          }}
+        />
       </body>
     </html>
   )

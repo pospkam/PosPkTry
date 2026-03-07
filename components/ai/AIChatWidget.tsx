@@ -11,6 +11,19 @@ interface AIChatWidgetProps {
   className?: string;
 }
 
+/**
+ * AIChatWidget — чат-ассистент для Kamchatour Hub (туризм, безопасность, погода)
+ * @param {AIChatWidgetProps} props
+ * @returns {JSX.Element}
+ * @remarks
+ * - Использует anti-hallucination промпт (см. lib/ai/prompts.ts)
+ * - Всегда упоминает SOS/МЧС при вопросах о безопасности
+ * - Не даёт медицинских советов, только "Проконсультируйтесь с врачом"
+ * - Быстрые действия: планирование тура, погода, безопасность
+ * - Accessibility: role="dialog", aria-label для окна, aria-live для сообщений, aria-label для кнопок и иконок
+ * - TODO: Интегрировать с API /api/ai/chat, передавать роль и историю
+ * - TODO: Показывать алерт, если ассистент не может ответить (anti-hallucination)
+ */
 export function AIChatWidget({ isOpen = false, onClose, className }: AIChatWidgetProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
@@ -28,10 +41,13 @@ export function AIChatWidget({ isOpen = false, onClose, className }: AIChatWidge
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: '100%', opacity: 0 }}
           transition={{ type: "spring", damping: 25, stiffness: 500 }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="AI-чат помощник Камчатки"
         >
           <div className="flex items-center justify-between p-6 border-b border-white/20 rounded-t-2xl">
             <div className="flex items-center gap-3">
-              <Bot size={24} className="text-ocean" />
+              <Bot size={24} className="text-ocean" aria-hidden="true" />
               <div>
                 <h3 className="text-lg font-semibold text-gray-800">AI-помощник Камчатки</h3>
                 <p className="text-sm text-volcano">Спросите о турах и безопасности</p>
@@ -44,22 +60,22 @@ export function AIChatWidget({ isOpen = false, onClose, className }: AIChatWidge
               whileTap={{ scale: 0.95 }}
               aria-label="Закрыть чат"
             >
-              <X size={20} />
+              <X size={20} aria-hidden="true" />
             </motion.button>
           </div>
-          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+          <div className="flex-1 overflow-y-auto p-6 space-y-4" aria-live="polite">
             {/* Messages */}
             {messages.map((msg) => (
-              <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : ''}`}>
+              <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : ''}`}> 
                 <div className={`max-w-xs p-3 rounded-2xl ${
                   msg.role === 'user' ? 'bg-ocean text-white' : 'bg-gray-100 text-gray-800'
-                }`}>
+                }`} aria-label={msg.role === 'user' ? 'Ваше сообщение' : 'Ответ AI'}>
                   {msg.content}
                 </div>
               </div>
             ))}
             {isLoading && (
-              <div className="flex gap-1">
+              <div className="flex gap-1" aria-label="AI печатает...">
                 <div className="w-2 h-2 bg-volcano rounded-full animate-bounce" style={{animationDelay: '0s'}} />
                 <div className="w-2 h-2 bg-volcano rounded-full animate-bounce" style={{animationDelay: '0.1s'}} />
                 <div className="w-2 h-2 bg-volcano rounded-full animate-bounce" style={{animationDelay: '0.2s'}} />
@@ -74,23 +90,24 @@ export function AIChatWidget({ isOpen = false, onClose, className }: AIChatWidge
                 onChange={(e) => setInputMessage(e.target.value)}
                 placeholder="Спросите о Камчатке..."
                 className="flex-1 px-4 py-3 rounded-full bg-white/50 border border-white/20 focus:outline-none focus:ring-2 focus:ring-ocean placeholder-volcano text-sm"
+                aria-label="Сообщение для AI"
               />
-              <motion.button className="p-3 bg-gray-100 hover:bg-ocean hover:text-white rounded-full" whileHover={{ scale: 1.05 }}>
-                <Mic size={18} />
+              <motion.button className="p-3 bg-gray-100 hover:bg-ocean hover:text-white rounded-full" whileHover={{ scale: 1.05 }} aria-label="Голосовой ввод">
+                <Mic size={18} aria-hidden="true" />
               </motion.button>
-              <motion.button className="p-3 bg-ocean text-white rounded-full" whileHover={{ scale: 1.05 }} onClick={() => {/* send */}}>
-                <Send size={18} />
+              <motion.button className="p-3 bg-ocean text-white rounded-full" whileHover={{ scale: 1.05 }} onClick={() => {/* send */}} aria-label="Отправить сообщение">
+                <Send size={18} aria-hidden="true" />
               </motion.button>
             </div>
             <div className="flex gap-2">
-              <motion.button className="flex-1 px-3 py-2 bg-gray-100 hover:bg-ocean hover:text-white rounded-full text-xs font-medium flex items-center gap-1 justify-center min-h-[36px]" whileHover={{ scale: 1.05 }}>
-                <Calendar size={14} /> Планировать тур
+              <motion.button className="flex-1 px-3 py-2 bg-gray-100 hover:bg-ocean hover:text-white rounded-full text-xs font-medium flex items-center gap-1 justify-center min-h-[36px]" whileHover={{ scale: 1.05 }} aria-label="Планировать тур">
+                <Calendar size={14} aria-hidden="true" /> Планировать тур
               </motion.button>
-              <motion.button className="flex-1 px-3 py-2 bg-gray-100 hover:bg-ocean hover:text-white rounded-full text-xs font-medium flex items-center gap-1 justify-center min-h-[36px]" whileHover={{ scale: 1.05 }}>
-                <Thermometer size={14} /> Погода
+              <motion.button className="flex-1 px-3 py-2 bg-gray-100 hover:bg-ocean hover:text-white rounded-full text-xs font-medium flex items-center gap-1 justify-center min-h-[36px]" whileHover={{ scale: 1.05 }} aria-label="Погода">
+                <Thermometer size={14} aria-hidden="true" /> Погода
               </motion.button>
-              <motion.button className="flex-1 px-3 py-2 bg-gray-100 hover:bg-ocean hover:text-white rounded-full text-xs font-medium flex items-center gap-1 justify-center min-h-[36px]" whileHover={{ scale: 1.05 }}>
-                <ShieldCheck size={14} /> Безопасность
+              <motion.button className="flex-1 px-3 py-2 bg-gray-100 hover:bg-ocean hover:text-white rounded-full text-xs font-medium flex items-center gap-1 justify-center min-h-[36px]" whileHover={{ scale: 1.05 }} aria-label="Безопасность">
+                <ShieldCheck size={14} aria-hidden="true" /> Безопасность
               </motion.button>
             </div>
           </div>

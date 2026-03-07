@@ -49,6 +49,14 @@ interface TourResult {
   isEco?: boolean; // Добавлено для eco-badge
 }
 
+/**
+ * TourCard — карточка тура/трансфера для поиска (glassmorphism, eco, a11y)
+ * @param {{ result: TourResult | (TourResult & TransferResult) }}
+ * @returns {JSX.Element}
+ * @remarks
+ * - Accessibility: alt для изображений, aria-label для badge, role для карточки
+ * - UX: eco-badge, skeleton, rating, price
+ */
 const TourCard = React.memo(({ result }: { result: TourResult | (TourResult & TransferResult) }) => {
   const isTransfer = 'vehicleType' in result;
   return (
@@ -58,15 +66,17 @@ const TourCard = React.memo(({ result }: { result: TourResult | (TourResult & Tr
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
+      role="article"
+      aria-label={result.title}
     >
       <div className="tour-result-image relative overflow-hidden rounded-t-2xl">
         {result.imageUrl ? (
           <Image src={result.imageUrl} alt={result.title} fill className="object-cover" sizes="(max-width: 768px) 100vw, 50vw" />
         ) : (
-          <div className="w-full h-48 bg-gradient-to-br from-gray-200 to-gray-300 animate-pulse"></div>
+          <div className="w-full h-48 bg-gradient-to-br from-gray-200 to-gray-300 animate-pulse" aria-label="Загрузка изображения" />
         )}
         {result.difficulty && !isTransfer && (
-          <span className={`difficulty-badge absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-semibold bg-white/80 text-volcano`}>
+          <span className={`difficulty-badge absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-semibold bg-white/80 text-volcano`} aria-label={`Сложность: ${result.difficulty}`}>
             {result.difficulty === 'easy' ? 'Легко' : result.difficulty === 'medium' ? 'Средне' : 'Сложно'}
           </span>
         )}
@@ -75,13 +85,14 @@ const TourCard = React.memo(({ result }: { result: TourResult | (TourResult & Tr
             className="absolute top-3 right-3 bg-moss text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1"
             animate={{ scale: [1, 1.05, 1] }}
             transition={{ duration: 2, repeat: Infinity }}
+            aria-label="Экологичный тур"
           >
-            <Leaf size={12} /> Эко-тур
+            <Leaf size={12} aria-hidden="true" /> Эко-тур
           </motion.div>
         )}
         {isTransfer && (
-          <span className="absolute top-3 right-3 bg-ocean text-white px-2 py-1 rounded-full text-xs font-semibold">
-            <Car size={12} className="inline mr-1" /> Трансфер
+          <span className="absolute top-3 right-3 bg-ocean text-white px-2 py-1 rounded-full text-xs font-semibold" aria-label="Трансфер">
+            <Car size={12} className="inline mr-1" aria-hidden="true" /> Трансфер
           </span>
         )}
       </div>
@@ -119,6 +130,14 @@ const TourCard = React.memo(({ result }: { result: TourResult | (TourResult & Tr
   );
 });
 
+/**
+ * ModernTourSearch — поисковый компонент для туров Kamchatour Hub
+ * @returns {JSX.Element}
+ * @remarks
+ * - Включает фильтры, AI-помощника, голосовой ввод, SOS
+ * - UX: loading, empty, error alerts, glassmorphism
+ * - Accessibility: aria-label, alt, min touch target, role для алертов и модалей
+ */
 export function ModernTourSearch() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get('q') || '';
@@ -139,6 +158,7 @@ export function ModernTourSearch() {
   });
   const [results, setResults] = useState<TourResult[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [showAI, setShowAI] = useState(false);
   const [aiQuery, setAiQuery] = useState('');
@@ -150,6 +170,19 @@ export function ModernTourSearch() {
   const recognitionRef = useRef<any>(null);
 
   // Memoized activities with icons
+    // Пример error handling для поиска (можно расширить на другие async действия)
+    async function handleSearch() {
+      setLoading(true);
+      setError(null);
+      try {
+        // ...логика поиска (fetch, фильтрация)
+        // setResults(...)
+      } catch (e) {
+        setError('Ошибка поиска туров. Попробуйте ещё раз.');
+      } finally {
+        setLoading(false);
+      }
+    }
   const activities = useMemo(() => [
     { id: 'volcano', name: 'Вулканы', icon: <Mountain size={16} /> },
     { id: 'fishing', name: 'Рыбалка', icon: <Fish size={16} /> },
@@ -336,7 +369,7 @@ export function ModernTourSearch() {
   return (
     <div className="modern-search-container min-h-screen bg-gray-50 py-8">
       {/* Sticky SOS Button - safety-first */}
-      <SOSButton className="fixed top-4 right-4 z-50" />
+      <SOSButton className="fixed top-4 right-4 z-50" aria-label="SOS — экстренная помощь" />
 
       {/* AI Помощник - glassmorphism modal */}
       <AnimatePresence>
@@ -347,18 +380,18 @@ export function ModernTourSearch() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setShowAI(false)}
-            role="button"
+            role="dialog"
+            aria-modal="true"
+            aria-label="AI-поиск туров"
             tabIndex={0}
             onKeyDown={(e) => {
               if (e.key === 'Escape') setShowAI(false);
             }}
-            aria-label="Закрыть AI-поиск"
           >
             <motion.div 
               className="ai-search-content bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()} 
-              role="dialog" 
-              aria-modal="true"
+              role="document"
               initial={{ scale: 0.95, y: 50 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 50 }}
@@ -374,9 +407,9 @@ export function ModernTourSearch() {
                 <button 
                   onClick={() => setShowAI(false)} 
                   className="ai-close p-2 hover:bg-white/10 rounded-full transition-colors"
-                  aria-label="Закрыть"
+                  aria-label="Закрыть AI-поиск"
                 >
-                  <X size={20} />
+                  <X size={20} aria-hidden="true" />
                 </button>
               </div>
 
@@ -442,6 +475,8 @@ export function ModernTourSearch() {
                     className="ai-response mt-4 p-4 bg-gray-50 rounded-xl"
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
+                    role="status"
+                    aria-label="Ответ AI"
                   >
                     <div className="ai-response-header flex items-center gap-2 mb-2">
                       <span className="ai-badge bg-moss text-white px-2 py-1 rounded-full text-xs font-medium">Рекомендация AI</span>
@@ -470,17 +505,20 @@ export function ModernTourSearch() {
             placeholder="Куда хотите отправиться? (вулкан, рыбалка, медведи...)"
             className="search-input-main flex-1 outline-none text-base placeholder:text-volcano"
             aria-label="Поиск туров"
+            autoComplete="off"
           />
           {voiceSupported && (
             <motion.button 
               onClick={toggleVoiceInput}
               className={`voice-input-btn p-2 rounded-xl transition-colors ${isListening ? 'bg-red-100 text-red-600' : 'text-volcano hover:bg-gray-100'}`}
               title="Голосовой ввод"
+              aria-label="Голосовой ввод"
+              aria-pressed={isListening}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
               animate={isListening ? { scale: [1, 1.05, 1], backgroundColor: '#fee2e2' } : {}}
             >
-              <Mic size={18} />
+              <Mic size={18} aria-hidden="true" />
             </motion.button>
           )}
           <motion.button 
@@ -633,6 +671,8 @@ export function ModernTourSearch() {
               className="search-loading flex flex-col items-center justify-center py-12 text-center"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
+              role="status"
+              aria-label="Загрузка результатов поиска"
             >
               <div className="w-16 h-16 bg-gradient-to-r from-ocean to-moss rounded-full flex items-center justify-center mb-4 animate-spin">
                 <Search size={24} className="text-white" />
@@ -675,6 +715,8 @@ export function ModernTourSearch() {
               className="no-results flex flex-col items-center justify-center py-12 text-center"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
+              role="alert"
+              aria-label="Ничего не найдено"
             >
               <motion.div 
                 className="no-results-icon w-24 h-24 bg-gray-200 rounded-2xl flex items-center justify-center mb-6 animate-pulse"
