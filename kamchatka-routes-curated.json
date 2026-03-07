@@ -1,0 +1,354 @@
+[
+  {
+    "category": "vulkani",
+    "title": "Вулкан Горелый",
+    "description": "Кратеры с кислотными озерами, фумаролы, лавовые пещеры, водопад Снежный Барс.",
+    "coord": "52.558804, 158.036912",
+    "url": "https://extraguide.ru/sightmap/?z=14&pt=52.558804,158.036912&t=Вулкан Горелый",
+    "source": "extraguide.ru"
+  },
+  {
+    "category": "vulkani",
+    "title": "Вулкан Мутновский",
+    "description": "4 кратера, фумаролы, грязевые ванны, кислотный водопад.",
+    "coord": "52.448701, 158.194196",
+    "url": "https://extraguide.ru/sightmap/?z=14&pt=52.448701,158.194196&t=Вулкан Мутновский",
+    "source": "extraguide.ru"
+  },
+  {
+    "category": "vulkani",
+    "title": "Вулкан Авачинский",
+    "description": "Вершина с фумаролами, экструзия Верблюд, панорамные виды.",
+    "coord": "53.255368, 158.836209",
+    "url": "https://extraguide.ru/sightmap/?z=14&pt=53.255368,158.836209&t=Вулкан Авачинский",
+    "source": "extraguide.ru"
+  },
+  {
+    "category": "vulkani",
+    "title": "Вулкан Корякский",
+    "description": "Панорамы с перевала, леса каменной березы.",
+    "coord": "53.321647, 158.712611",
+    "url": "https://extraguide.ru/sightmap/?z=14&pt=53.321647,158.712611&t=Корякская сопка",
+    "source": "extraguide.ru"
+  },
+  {
+    "category": "vulkani",
+    "title": "Вулкан Козельский",
+    "description": "Потухший вулкан, ледник в кратере, треккинг.",
+    "coord": "53.226398, 158.887020",
+    "url": "https://extraguide.ru/sightmap/?z=14&pt=53.226398,158.887020&t=Козельский вулкан",
+    "source": "extraguide.ru"
+  },
+  {
+    "category": "vulkani",
+    "title": "Вулкан Вилючинский",
+    "description": "Полосатые склоны, снежники, Зелёное озеро.",
+    "coord": "52.705210, 158.281558",
+    "url": "https://extraguide.ru/sightmap/?z=14&pt=52.705210,158.281558&t=Вилючинский вулкан",
+    "source": "extraguide.ru"
+  },
+  {
+    "category": "vulkani",
+    "title": "Вулкан Ключевская сопка",
+    "description": "Самый высокий активный вулкан Евразии, частые извержения.",
+    "coord": "56.056798, 160.640627",
+    "url": "https://spkam.com/stati-o-kamchatke/dostoprimechatelnosti",
+    "source": "spkam.com"
+  },
+  {
+    "category": "vulkani",
+    "title": "Вулкан Толбачик",
+    "description": "Массив с кратерами и лавовыми полями.",
+    "coord": "55.817869, 160.390152",
+    "url": "https://extraguide.ru/sightmap/?z=14&pt=55.817869,160.390152&t=Вулкан Толбачик",
+    "source": "extraguide.ru"
+  },
+  {
+    "category": "vulkani",
+    "title": "Вулкан Шивелуч",
+    "description": "Активный стратовулкан с мощными пепловыми выбросами.",
+    "coord": "56.638140, 161.315340",
+    "url": "https://extraguide.ru/sightmap/?z=14&pt=56.638140,161.315340&t=Вулкан Шивелуч",
+    "source": "extraguide.ru"
+  },
+  {
+    "category": "vulkani",
+    "title": "Вулкан Безымянный",
+    "description": "Разрушенный кратер, активные лавовые процессы.",
+    "coord": "55.970729, 160.595050",
+    "url": "https://extraguide.ru/sightmap/?z=14&pt=55.970729,160.595050&t=Вулкан Безымянный",
+    "source": "extraguide.ru"
+  },
+  {
+    "category": "vulkani",
+    "title": "Вулкан Опала",
+    "description": "Фумаролы и минеральные источники.",
+    "coord": "52.543110, 157.339242",
+    "url": "https://extraguide.ru/sightmap/?z=14&pt=52.543110,157.339242&t=Вулкан Опала",
+    "source": "extraguide.ru"
+  },
+  {
+    "category": "vulkani",
+    "title": "Вулкан Карымский",
+    "description": "Активный вулкан, рядом озеро в кальдере.",
+    "coord": "54.048010, 159.442758",
+    "url": "https://spkam.com/stati-o-kamchatke/dostoprimechatelnosti",
+    "source": "spkam.com"
+  },
+  {
+    "category": "vulkani",
+    "title": "Вулкан Ксудач",
+    "description": "Кальдера с озерами и термальной активностью.",
+    "coord": "51.804000, 157.566000",
+    "url": "",
+    "source": "manual"
+  },
+  {
+    "category": "vulkani",
+    "title": "Вулкан Бакенинг",
+    "description": "Пешеходный маршрут на вулкан Бакенинг.",
+    "coord": "",
+    "url": "https://idilesom.com/kam/places/2640",
+    "source": "idilesom.com"
+  },
+  {
+    "category": "vulkani",
+    "title": "Вилючинский перевал",
+    "description": "Популярная тропа с видами на вулканы и долины.",
+    "coord": "",
+    "url": "https://idilesom.com/kam/places/6322",
+    "source": "idilesom.com"
+  },
+  {
+    "category": "geyzery",
+    "title": "Долина гейзеров",
+    "description": "Фумаролы и гейзеры, включая Великан и Врата Ада.",
+    "coord": "54.436566, 160.139931",
+    "url": "https://extraguide.ru/sightmap/?z=14&pt=54.436566,160.139931&t=Долина Гейзеров",
+    "source": "extraguide.ru"
+  },
+  {
+    "category": "geyzery",
+    "title": "Дачные горячие источники",
+    "description": "Малая долина гейзеров с фумарольными полями.",
+    "coord": "52.530214, 158.191865",
+    "url": "https://extraguide.ru/sightmap/?z=14&pt=52.530214,158.191865&t=Дачные горячие источники",
+    "source": "extraguide.ru"
+  },
+  {
+    "category": "geyzery",
+    "title": "Кальдера вулкана Узон",
+    "description": "Котловина с термальными проявлениями, озерами и грязевыми котлами.",
+    "coord": "54.473352, 160.015796",
+    "url": "https://spkam.com/stati-o-kamchatke/dostoprimechatelnosti",
+    "source": "spkam.com"
+  },
+  {
+    "category": "medvedi",
+    "title": "Курильское озеро",
+    "description": "Нерест нерки и наблюдение за бурым медведем.",
+    "coord": "51.455546, 157.098724",
+    "url": "https://spkam.com/stati-o-kamchatke/dostoprimechatelnosti",
+    "source": "spkam.com"
+  },
+  {
+    "category": "medvedi",
+    "title": "Озеро Толмачева",
+    "description": "Ягодные тундры и сезонные выходы медведей.",
+    "coord": "52.611123, 157.659057",
+    "url": "https://extraguide.ru/sightmap/?z=14&pt=52.611123,157.659057&t=Озеро Толмачёва",
+    "source": "extraguide.ru"
+  },
+  {
+    "category": "medvedi",
+    "title": "Озеро Начикинское",
+    "description": "Нерестилища и маршруты наблюдения за медведями.",
+    "coord": "53.000828, 157.844095",
+    "url": "https://extraguide.ru/sightmap/?z=14&pt=53.000828,157.844095&t=Озеро Начикинское",
+    "source": "extraguide.ru"
+  },
+  {
+    "category": "rybalka",
+    "title": "Река Быстрая",
+    "description": "Сплав и рыбалка на лососевых видах.",
+    "coord": "",
+    "url": "",
+    "source": "manual"
+  },
+  {
+    "category": "rybalka",
+    "title": "Бухта Русская",
+    "description": "Морская рыбалка и наблюдение за скалистыми берегами.",
+    "coord": "",
+    "url": "https://idilesom.com/kam/places/6707",
+    "source": "idilesom.com"
+  },
+  {
+    "category": "rybalka",
+    "title": "Остров Старичков",
+    "description": "Рыбалка и морская прогулка в районе птичьих базаров.",
+    "coord": "",
+    "url": "",
+    "source": "manual"
+  },
+  {
+    "category": "rybalka",
+    "title": "Бухта Тихая",
+    "description": "Локальные рыболовные маршруты в тихой бухте.",
+    "coord": "",
+    "url": "",
+    "source": "manual"
+  },
+  {
+    "category": "rybalka",
+    "title": "Авачинская бухта",
+    "description": "Крабовое сафари и морская рыбалка.",
+    "coord": "52.962572, 158.558029",
+    "url": "https://extraguide.ru/sightmap/?z=14&pt=52.962572,158.558029&t=Авачинская бухта",
+    "source": "extraguide.ru"
+  },
+  {
+    "category": "termalnye_istochniki",
+    "title": "Природный парк Налычево",
+    "description": "Система термальных источников и долинный маршрут.",
+    "coord": "53.214421, 159.247224",
+    "url": "https://extraguide.ru/sightmap/?z=14&pt=53.214421,159.247224&t=Природный парк «Налычево»",
+    "source": "extraguide.ru"
+  },
+  {
+    "category": "termalnye_istochniki",
+    "title": "Малкинские источники",
+    "description": "Дикие термальные купели в долине реки Ключевка.",
+    "coord": "53.322369, 157.539144",
+    "url": "https://extraguide.ru/sightmap/?z=14&pt=53.322369,157.539144&t=Малкинские горячие минеральные источники",
+    "source": "extraguide.ru"
+  },
+  {
+    "category": "termalnye_istochniki",
+    "title": "Верхне-Паратунские источники",
+    "description": "Термальный район с теплым водопадом и ваннами.",
+    "coord": "52.823721, 158.163596",
+    "url": "https://extraguide.ru/sightmap/?z=14&pt=52.823721,158.163596&t=Верхне-Паратунские термальные источники",
+    "source": "extraguide.ru"
+  },
+  {
+    "category": "termalnye_istochniki",
+    "title": "Паратунка",
+    "description": "Курортная зона с термальной инфраструктурой.",
+    "coord": "52.962327, 158.254245",
+    "url": "https://spkam.com/stati-o-kamchatke/dostoprimechatelnosti",
+    "source": "spkam.com"
+  },
+  {
+    "category": "trekking",
+    "title": "Горный массив Вачкажец",
+    "description": "Цирки, озера и панорамные тропы.",
+    "coord": "53.059728, 157.922027",
+    "url": "https://extraguide.ru/sightmap/?z=14&pt=53.059728,157.922027&t=Горный массив Вачкажец",
+    "source": "extraguide.ru"
+  },
+  {
+    "category": "trekking",
+    "title": "Авачинский перевал",
+    "description": "Подход к экструзии Верблюд и классические треки.",
+    "coord": "",
+    "url": "https://idilesom.com/kam/places/6018",
+    "source": "idilesom.com"
+  },
+  {
+    "category": "trekking",
+    "title": "Маршрут Пиначево - Центральный",
+    "description": "Тропа в Налычевском парке с постепенным набором высоты.",
+    "coord": "",
+    "url": "https://idilesom.com/kam/places/3490",
+    "source": "idilesom.com"
+  },
+  {
+    "category": "trekking",
+    "title": "Экструзия Верблюд",
+    "description": "Короткий трек к вулканической экструзии между вулканами.",
+    "coord": "",
+    "url": "https://idilesom.com/kam/places/2147",
+    "source": "idilesom.com"
+  },
+  {
+    "category": "trekking",
+    "title": "Озеро Срединное",
+    "description": "Комбинированный маршрут авто плюс пешая часть.",
+    "coord": "",
+    "url": "https://idilesom.com/kam/places/2332",
+    "source": "idilesom.com"
+  },
+  {
+    "category": "trekking",
+    "title": "Лавовые пещеры вулкана Горелый",
+    "description": "Пешеходный доступ к лавовым трубам и гротам.",
+    "coord": "",
+    "url": "https://idilesom.com/kam/places/2716",
+    "source": "idilesom.com"
+  },
+  {
+    "category": "vertoletnye_tury",
+    "title": "Долина гейзеров и кальдера Узон",
+    "description": "Вертолетный маршрут с посадками у гейзеров и в кальдере.",
+    "coord": "",
+    "url": "",
+    "source": "manual"
+  },
+  {
+    "category": "vertoletnye_tury",
+    "title": "Курильское озеро (вертолет)",
+    "description": "Вертолетный маршрут для наблюдения за медведями.",
+    "coord": "",
+    "url": "",
+    "source": "manual"
+  },
+  {
+    "category": "vertoletnye_tury",
+    "title": "Облет Мутновского и Горелого",
+    "description": "Воздушный маршрут над активными вулканическими районами.",
+    "coord": "",
+    "url": "",
+    "source": "manual"
+  },
+  {
+    "category": "morskie_progulki",
+    "title": "Бухта Русская (морская прогулка)",
+    "description": "Морская прогулка с рыбалкой и осмотром скал.",
+    "coord": "",
+    "url": "https://idilesom.com/kam/places/6707",
+    "source": "idilesom.com"
+  },
+  {
+    "category": "morskie_progulki",
+    "title": "Остров Старичков (морская прогулка)",
+    "description": "Птичьи базары и прибрежные скалы.",
+    "coord": "",
+    "url": "",
+    "source": "manual"
+  },
+  {
+    "category": "morskie_progulki",
+    "title": "Бухта Тихая (морская прогулка)",
+    "description": "Маршрут к гротам и спокойным прибрежным акваториям.",
+    "coord": "",
+    "url": "",
+    "source": "manual"
+  },
+  {
+    "category": "morskie_progulki",
+    "title": "Мыс Зеленый",
+    "description": "Маршрут наблюдения за касатками и морскими птицами.",
+    "coord": "",
+    "url": "",
+    "source": "manual"
+  },
+  {
+    "category": "morskie_progulki",
+    "title": "Скалы Три Брата",
+    "description": "Классическая морская точка в Авачинской бухте.",
+    "coord": "52.893005, 158.689030",
+    "url": "https://spkam.com/stati-o-kamchatke/dostoprimechatelnosti",
+    "source": "spkam.com"
+  }
+]

@@ -1,16 +1,15 @@
 #!/usr/bin/env node
 /**
- * Инициализация RAG базы знаний для агентов
- * - Генерирует embeddings для всех маршрутов
- * - Загружает в pgvector для семантического поиска
- * - Подготавливает knowledge base для CrewAI
+ * Сборка базы знаний для агентов из инкрементной таблицы agent_route_knowledge.
+ * Если таблица не заполнена, используется fallback на kamchatka_routes.
  *
- * Запуск: npx ts-node scripts/setup-agent-rag.ts
+ * Запуск:
+ *   node scripts/sync-agent-route-knowledge.js
+ *   npx ts-node scripts/setup-agent-rag.ts
  */
 
 import { config } from 'dotenv';
-import { readFileSync, writeFileSync } from 'fs';
-import path from 'path';
+import { writeFileSync } from 'fs';
 
 config({ path: '.env.local' });
 
@@ -19,155 +18,160 @@ if (!DATABASE_URL) {
   throw new Error('DATABASE_URL не установлена в .env.local');
 }
 
-interface Place {
+interface RouteRow {
   id: string;
-  name: string;
-  description: string;
+  title: string;
+  description: string | null;
   category: string;
-  category_slug: string;
   lat: number | null;
   lng: number | null;
-  district: string | null;
-  length_km: number | null;
-  duration: string;
-  difficulty: string;
-  images: string[];
+  source_url: string | null;
+  source_name: string | null;
+  payload?: Record<string, unknown>;
+  search_text?: string;
 }
 
-interface EmbeddingData {
+interface KnowledgeTour {
   id: string;
   name: string;
   description: string;
   category: string;
-  text: string; // Для embedding
+  difficulty: string;
+  duration: string;
+  coordinates: [number, number] | null;
+  district: string | null;
+  length_km: number | null;
+  source_url: string | null;
+  source_name: string | null;
+  searchText: string;
   metadata: {
     category: string;
-    difficulty: string;
-    duration: string;
     coordinates?: [number, number];
-    district?: string;
-    length_km?: number;
+    source_url?: string;
+    source_name?: string;
   };
 }
 
-/**
- * Подготавливает текст для embedding
- */
-function prepareText(place: Place): string {
+function buildSearchText(route: RouteRow): string {
   const parts = [
-    place.name,
-    `Категория: ${place.category}`,
-    `Сложность: ${place.difficulty}`,
-    `Длительность: ${place.duration}`,
-    place.length_km ? `Расстояние: ${place.length_km} км` : '',
-    place.district ? `Район: ${place.district}` : '',
-    place.description || '',
+    route.title,
+    `Категория: ${route.category}`,
+    route.description || '',
+    route.source_name ? `Источник: ${route.source_name}` : '',
+    route.lat !== null && route.lng !== null ? `Координаты: ${route.lat}, ${route.lng}` : '',
   ].filter(Boolean);
 
   return parts.join('\n');
 }
 
-/**
- * Преобразует места в формат для embeddings
- */
-function procesPlaces(places: Place[]): EmbeddingData[] {
-  return places.map((place) => ({
-    id: place.id,
-    name: place.name,
-    description: place.description,
-    category: place.category,
-    text: prepareText(place),
+function toKnowledgeTour(route: RouteRow): KnowledgeTour {
+  const coordinates =
+    route.lat !== null && route.lng !== null ? ([route.lat, route.lng] as [number, number]) : null;
+
+  const searchText = route.search_text || buildSearchText(route);
+
+  return {
+    id: route.id,
+    name: route.title,
+    description: route.description || '',
+    category: route.category,
+    difficulty: 'Не указано',
+    duration: 'Не указано',
+    coordinates,
+    district: null,
+    length_km: null,
+    source_url: route.source_url || null,
+    source_name: route.source_name || null,
+    searchText,
     metadata: {
-      category: place.category,
-      difficulty: place.difficulty,
-      duration: place.duration,
-      ...(place.lat && place.lng && { coordinates: [place.lat, place.lng] }),
-      ...(place.district && { district: place.district }),
-      ...(place.length_km && { length_km: place.length_km }),
+      category: route.category,
+      ...(coordinates ? { coordinates } : {}),
+      ...(route.source_url ? { source_url: route.source_url } : {}),
+      ...(route.source_name ? { source_name: route.source_name } : {}),
     },
-  }));
+  };
 }
 
-/**
- * Сохраняет данные для CrewAI
- */
-async function saveForCrewAI(embeddings: EmbeddingData[]) {
+async function loadRoutes(pool: { query: (sql: string) => Promise<{ rows: RouteRow[] }> }) {
+  try {
+    const result = await pool.query(`
+      SELECT
+        COALESCE(route_id::text, route_dedupe_key) AS id,
+        title,
+        description,
+        category,
+        lat,
+        lng,
+        source_url,
+        source_name,
+        payload,
+        search_text
+      FROM agent_route_knowledge
+      ORDER BY category, title
+    `);
+
+    if (result.rows.length > 0) {
+      return result.rows;
+    }
+  } catch {
+    // Fallback ниже, если таблица agent_route_knowledge еще не создана.
+  }
+
+  const fallbackResult = await pool.query(`
+    SELECT
+      id::text AS id,
+      title,
+      description,
+      category,
+      lat,
+      lng,
+      source_url,
+      source_name,
+      metadata AS payload,
+      NULL::text AS search_text
+    FROM kamchatka_routes
+    ORDER BY category, title
+  `);
+
+  return fallbackResult.rows;
+}
+
+async function saveForCrewAI(tours: KnowledgeTour[]) {
   const crewaiData = {
     timestamp: new Date().toISOString(),
-    total: embeddings.length,
-    categories: [...new Set(embeddings.map((e) => e.category))],
-    tours: embeddings.map((e) => ({
-      id: e.id,
-      name: e.name,
-      category: e.category,
-      metadata: e.metadata,
-      searchText: e.text,
-    })),
+    total: tours.length,
+    categories: [...new Set(tours.map((tour) => tour.category))],
+    tours,
   };
 
   writeFileSync('crew/knowledge-base.json', JSON.stringify(crewaiData, null, 2));
-  console.log('✅ Сохранено crew/knowledge-base.json для обучения агентов');
+  console.log('knowledge-base.json updated');
 }
 
-/**
- * Основная функция
- */
 async function main() {
-  console.log('🚀 Инициализация RAG базы знаний для агентов...\n');
-
-  // Подключаемся к БД через Node.js (чтобы избежать проблем с psql)
   const { Pool } = require('pg');
   const pool = new Pool({ connectionString: DATABASE_URL });
 
   try {
-    // 1. Загружаем маршруты из таблицы places
-    console.log('📥 Загружаю маршруты из БД...');
-    const result = await pool.query(`
-      SELECT 
-        id, name, description, category, category_slug, 
-        lat, lng, district, length_km, duration, difficulty, images
-      FROM places
-      ORDER BY category, name
-    `);
+    const routes = await loadRoutes(pool);
+    const tours = routes.map(toKnowledgeTour);
 
-    const places: Place[] = result.rows;
-    console.log(`✅ Загружено: ${places.length} маршрутов\n`);
+    await saveForCrewAI(tours);
 
-    // 2. Готовим данные для embeddings
-    console.log('🔄 Подготавливаю данные для embeddings...');
-    const embeddings = procesPlaces(places);
-
-    // 3. Статистика
-    console.log('\n📊 Статистика:');
-    const byCategory = embeddings.reduce(
-      (acc, e) => {
-        if (!acc[e.category]) acc[e.category] = 0;
-        acc[e.category]++;
+    const byCategory = tours.reduce(
+      (acc, item) => {
+        acc[item.category] = (acc[item.category] || 0) + 1;
         return acc;
       },
       {} as Record<string, number>,
     );
 
-    Object.entries(byCategory).forEach(([cat, count]) => {
-      console.log(`  ${cat}: ${count}`);
+    console.log(`total routes: ${tours.length}`);
+    Object.entries(byCategory).forEach(([category, count]) => {
+      console.log(`${category}: ${count}`);
     });
-
-    const withCoords = embeddings.filter((e) => e.metadata.coordinates).length;
-    console.log(`  С координатами: ${withCoords}/${embeddings.length}`);
-
-    // 4. Сохраняем для CrewAI
-    console.log('\n💾 Сохраняю для CrewAI...');
-    await saveForCrewAI(embeddings);
-
-    // 5. Создаём индекс для pgvector (если его ещё нет)
-    console.log('\n🔍 Проверяю pgvector...');
-    await pool.query('CREATE EXTENSION IF NOT EXISTS vector');
-    console.log('✅ pgvector готов\n');
-
-    console.log('✨ RAG база готова к обучению агентов!');
-    console.log('Следующий шаг: npx ts-node scripts/train-agents.ts');
   } catch (error) {
-    console.error('❌ Ошибка:', error);
+    console.error('RAG setup failed:', error);
     process.exit(1);
   } finally {
     await pool.end();

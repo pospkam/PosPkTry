@@ -11,26 +11,15 @@ metadata:
     nginx.ingress.kubernetes.io/rate-limit: "100"
     nginx.ingress.kubernetes.io/limit-rps: "50"
     nginx.ingress.kubernetes.io/enable-cors: "true"
-    nginx.ingress.kubernetes.io/cors-allow-origin: "https://kamhub.com,https://www.kamhub.com"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://pospkam-pospktry-c1f3.twc1.net"
     nginx.ingress.kubernetes.io/proxy-body-size: "50m"
 spec:
   tls:
   - hosts:
-    - api.kamhub.com
-    - www.api.kamhub.com
+    - pospkam-pospktry-c1f3.twc1.net
     secretName: kamhub-tls-cert
   rules:
-  - host: api.kamhub.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: kamhub-api
-            port:
-              number: 80
-  - host: www.api.kamhub.com
+  - host: pospkam-pospktry-c1f3.twc1.net
     http:
       paths:
       - path: /
@@ -149,7 +138,7 @@ metadata:
 spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
-    email: admin@kamhub.com
+    email: admin@pospkam-pospktry-c1f3.twc1.net
     privateKeySecretRef:
       name: letsencrypt-prod
     solvers:

@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   # ============================================================================
-  # PostgreSQL Database with PostGIS (enhanced from KamChatour)
+  # PostgreSQL Database with PostGIS
   # ============================================================================
   postgres:
     image: postgis/postgis:15-3.3-alpine
@@ -13,7 +13,6 @@ services:
       POSTGRES_USER: kamuser
       POSTGRES_PASSWORD: ${DB_PASSWORD:-kampass2024_local}
       PGDATA: /var/lib/postgresql/data/pgdata
-      POSTGRES_INITDB_ARGS: '-c shared_preload_libraries=pg_trgm'
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./migrations:/docker-entrypoint-initdb.d:ro
@@ -31,7 +30,7 @@ services:
   # Next.js Application
   # ============================================================================
   app:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
     container_name: kamhub-app
@@ -43,15 +42,15 @@ services:
       DATABASE_URL: postgresql://kamuser:${DB_PASSWORD:-kampass2024_local}@postgres:5432/kamhub
       DATABASE_SSL: 'false'
       DATABASE_MAX_CONNECTIONS: '20'
-      
+
       # Redis
       REDIS_URL: redis://:${REDIS_PASSWORD:-redis_password_local}@redis:6379
-      
+
       # Application
       NODE_ENV: development
       NEXT_PUBLIC_APP_URL: ${APP_URL:-http://localhost:3000}
       LOG_LEVEL: debug
-      
+
       # Security
       JWT_SECRET: ${JWT_SECRET:-change-this-secret-in-production-12345678}
       JWT_EXPIRES_IN: '7d'
@@ -86,10 +85,44 @@ services:
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
+      test: ['CMD', 'redis-cli', '-a', '${REDIS_PASSWORD:-redis_password_local}', 'ping']
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - kamhub_network
+
+  # ============================================================================
+  # PostgreSQL Exporter (для Prometheus)
+  # ============================================================================
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: kamhub-postgres-exporter
+    restart: unless-stopped
+    environment:
+      DATA_SOURCE_NAME: postgresql://kamuser:${DB_PASSWORD:-kampass2024_local}@postgres:5432/kamhub?sslmode=disable
+    ports:
+      - '9187:9187'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - kamhub_network
+
+  # ============================================================================
+  # Redis Exporter (для Prometheus)
+  # ============================================================================
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: kamhub-redis-exporter
+    restart: unless-stopped
+    environment:
+      REDIS_ADDR: redis://redis:6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_password_local}
+    ports:
+      - '9121:9121'
+    depends_on:
+      - redis
     networks:
       - kamhub_network
 
@@ -104,6 +137,7 @@ services:
       - '9090:9090'
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
       - prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -114,6 +148,8 @@ services:
       - kamhub_network
     depends_on:
       - app
+      - postgres-exporter
+      - redis-exporter
 
   # ============================================================================
   # Grafana Dashboards
@@ -156,6 +192,33 @@ services:
       - kamhub_network
     depends_on:
       - postgres
+
+  # ============================================================================
+  # CrewAI Agent Service (Python)
+  # ============================================================================
+  crewai:
+    build:
+      context: ./crew
+      dockerfile: Dockerfile
+    container_name: kamhub-crewai
+    restart: unless-stopped
+    working_dir: /crew
+    volumes:
+      - ./crew:/crew
+    ports:
+      - '8001:8001'
+    environment:
+      DATABASE_URL: postgresql://kamuser:${DB_PASSWORD:-kampass2024_local}@postgres:5432/kamhub
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_password_local}@redis:6379
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    networks:
+      - kamhub_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
 volumes:
   postgres_data:

@@ -16,7 +16,7 @@ rule_files:
 
 scrape_configs:
   # ============================================================================
-  # Application Metrics (Next.js with prom-client)
+  # Application Metrics (Next.js)
   # ============================================================================
   - job_name: 'kamhub-app'
     static_configs:
@@ -30,19 +30,19 @@ scrape_configs:
         replacement: 'kamhub-app'
 
   # ============================================================================
-  # PostgreSQL Exporter
+  # PostgreSQL Exporter (prometheuscommunity/postgres-exporter)
   # ============================================================================
   - job_name: 'postgres'
     static_configs:
-      - targets: ['postgres:5432']
+      - targets: ['postgres-exporter:9187']
     metrics_path: '/metrics'
 
   # ============================================================================
-  # Redis Exporter
+  # Redis Exporter (oliver006/redis_exporter)
   # ============================================================================
   - job_name: 'redis'
     static_configs:
-      - targets: ['redis:6379']
+      - targets: ['redis-exporter:9121']
     metrics_path: '/metrics'
 
   # ============================================================================

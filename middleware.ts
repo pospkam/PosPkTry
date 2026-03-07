@@ -230,9 +230,8 @@ export async function middleware(request: NextRequest) {
       
       return applySecurityHeaders(NextResponse.next());
       
-    } catch (error) {
-      console.error('JWT verification failed:', error);
-      
+    } catch {
+
       // Clear invalid token
       if (isProtectedRoute) {
         const url = request.nextUrl.clone();

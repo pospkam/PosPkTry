@@ -14,6 +14,9 @@
     "test:unit": "vitest --include '**/*.test.ts' --exclude '**/*.integration.test.ts' --run",
     "db:setup": "bash scripts/setup-database.sh",
     "db:migrate": "psql $DATABASE_URL -f scripts/apply-new-schemas.sql",
+    "db:import:kamchatka-routes": "node scripts/import-kamchatka-routes.js",
+    "db:sync:agent-routes": "node scripts/sync-agent-route-knowledge.js",
+    "ai:setup-agent-rag": "npx ts-node scripts/setup-agent-rag.ts",
     "sentry:sourcemaps": "sentry-cli sourcemaps upload --org kamhub --project nextjs .next",
     "postbuild": "echo Sentry sourcemaps skipped",
     "ai:update-knowledge": "node scripts/update-knowledge-base.js",
@@ -31,6 +34,8 @@
     "docker:build:prod": "docker build -t kamhub:$(git rev-parse --short HEAD) -t kamhub:latest .",
     "docker:push": "docker push kamhub:latest",
     "docker:run": "docker run -p 3000:3000 -e NODE_ENV=development kamhub:latest",
+    "migrate": "npm run db:migrate",
+    "db:seed": "node scripts/seed.js",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
