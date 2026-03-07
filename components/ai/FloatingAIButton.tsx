@@ -37,35 +37,7 @@ export default function FloatingAIButton() {
         )}
       </button>
 
-      {/* AI.Kam Chat Widget */}
-      {showAIChat && (
-        <div className="fixed bottom-24 right-6 z-50 w-96 h-[600px] bg-white/95 backdrop-blur-2xl rounded-3xl shadow-2xl border border-gray-200/50 overflow-hidden">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-500 p-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/20 backdrop-blur-xl rounded-full flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h3 className="text-white font-semibold">AI.Kam</h3>
-                <p className="text-white/80 text-xs">Твой AI помощник</p>
-              </div>
-            </div>
-            <button 
-              onClick={() => setShowAIChat(false)}
-              className="w-8 h-8 hover:bg-white/20 rounded-full flex items-center justify-center transition-all"
-              aria-label="Закрыть"
-            >
-              <X className="w-5 h-5 text-white" />
-            </button>
-          </div>
-
-          {/* Chat Content */}
-          <div className="h-[calc(100%-64px)]">
-            <AIChatWidget />
-          </div>
-        </div>
-      )}
+      <AIChatWidget isOpen={showAIChat} onClose={() => setShowAIChat(false)} />
     </>
   );
 }
