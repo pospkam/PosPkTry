@@ -2,7 +2,7 @@ name: Deploy to Timeweb Cloud
 
 # Timeweb Cloud auto-deploy включён (is_auto_deploy: true)
 # Деплой запускается автоматически через webhook при push в main
-# Этот workflow только проверяет статус деплоя
+# Этот workflow синхронизирует env vars и проверяет статус деплоя
 
 on:
   push:
@@ -13,6 +13,39 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Sync env vars to Timeweb
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          APP_ID="159529"
+          TOKEN="${{ secrets.TIMEWEB_TOKEN }}"
+
+          if [ -z "$TOKEN" ]; then
+            echo "TIMEWEB_TOKEN not set — skip env sync"
+            exit 0
+          fi
+
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "ANTHROPIC_API_KEY not set in secrets — skip"
+            exit 0
+          fi
+
+          echo "Syncing ANTHROPIC_API_KEY to Timeweb app $APP_ID..."
+
+          HTTP=$(curl -s -o /tmp/env_response.json -w "%{http_code}" \
+            -X PUT \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"envs\":[{\"name\":\"ANTHROPIC_API_KEY\",\"value\":\"$ANTHROPIC_API_KEY\"}]}" \
+            "https://api.timeweb.cloud/api/v1/apps/$APP_ID/envs")
+
+          if [ "$HTTP" = "200" ] || [ "$HTTP" = "201" ] || [ "$HTTP" = "204" ]; then
+            echo "✅ ANTHROPIC_API_KEY synced to Timeweb (HTTP $HTTP)"
+          else
+            echo "⚠️  Env sync returned HTTP $HTTP — check Timeweb panel manually"
+            cat /tmp/env_response.json 2>/dev/null || true
+          fi
+
       - name: Check deploy status
         run: |
           APP_ID="159529"
