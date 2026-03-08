@@ -620,9 +620,62 @@ async function scrapeZimaletDirect() {
   }));
 }
 
+async function scrapeKamchatintourDirect() {
+  console.log('\n📍 kamchatintour.ru (HTML/Bitrix)');
+  const BASE = 'https://kamchatintour.ru';
+
+  // Category slugs — listing pages, NOT individual tours
+  const KNOWN_CATS = new Set([
+    'vulkany', 'rybalka', 'vertoletnye', 'trekking',
+    'morskie', 'zima', 'leto', 'individualnye-tury', 'gruppovye-tury',
+  ]);
+
+  // Catalog pages to harvest links from (categories + Bitrix pagination)
+  const listPages = [
+    `${BASE}/tours/`,
+    `${BASE}/tours/?PAGEN_1=2`,
+    `${BASE}/tours/?PAGEN_1=3`,
+    `${BASE}/tours/vulkany/`,
+    `${BASE}/tours/rybalka/`,
+    `${BASE}/tours/vertoletnye/`,
+    `${BASE}/tours/trekking/`,
+    `${BASE}/tours/morskie/`,
+    `${BASE}/tours/zima/`,
+    `${BASE}/tours/leto/`,
+    `${BASE}/tours/individualnye-tury/`,
+    `${BASE}/tours/gruppovye-tury/`,
+  ];
+
+  const tourLinks = new Set();
+  for (const listUrl of listPages) {
+    await new Promise(r => setTimeout(r, 600));
+    const res = await fetchUrl(listUrl);
+    if (!res?.html) continue;
+    const links = extractLinksDirect(res.html, listUrl, p => {
+      const m = p.match(/^\/tours\/([^/]+)\/?$/);
+      return !!(m && !KNOWN_CATS.has(m[1]));
+    });
+    links.forEach(l => tourLinks.add(l));
+  }
+  console.log(`  → ссылок на туры: ${tourLinks.size}`);
+
+  const routes = [];
+  for (const link of [...tourLinks]) {
+    await new Promise(r => setTimeout(r, 700));
+    const res = await fetchUrl(link);
+    if (!res?.html) continue;
+    const route = parseGenericPage(res.html, link);
+    if (route?.title) {
+      console.log(`  + ${route.title.slice(0, 60)} [${route.category}]`);
+      routes.push(route);
+    }
+  }
+  return routes;
+}
+
 async function runDirectMode() {
   console.log('🔧 Direct Mode (без AI) — HTML + GraphQL');
-  console.log(`   Сайты: mestechkokam.ru, zimaletokamchatka.ru`);
+  console.log(`   Сайты: mestechkokam.ru, zimaletokamchatka.ru, kamchatintour.ru`);
   if (DRY_RUN) console.log('   ⚠️  DRY RUN — в БД не пишем');
   console.log('─'.repeat(55));
 
@@ -632,8 +685,9 @@ async function runDirectMode() {
   let totalSaved = 0, totalExisting = 0;
 
   for (const { fn, name } of [
-    { fn: scrapeMestechkokamDirect, name: 'mestechkokam.ru' },
-    { fn: scrapeZimaletDirect,      name: 'zimaletokamchatka.ru' },
+    { fn: scrapeMestechkokamDirect,     name: 'mestechkokam.ru' },
+    { fn: scrapeZimaletDirect,          name: 'zimaletokamchatka.ru' },
+    { fn: scrapeKamchatintourDirect,    name: 'kamchatintour.ru' },
   ]) {
     let routes;
     try { routes = await fn(); } catch (e) { console.error(`  ✗ ${name}: ${e.message}`); continue; }
