@@ -185,8 +185,7 @@ export function StayBookingForm({
     }
   };
 
-  const handlePaymentSuccess = async (transactionId: number) => {
-    console.log('Payment successful:', transactionId);
+  const handlePaymentSuccess = async (_transactionId: number) => {
     setError(null);
     // TODO: Редирект на страницу подтверждения или показать сообщение об успехе
   };

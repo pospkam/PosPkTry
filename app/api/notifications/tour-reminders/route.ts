@@ -31,15 +31,16 @@ export async function POST(request: NextRequest) {
         p.name as operator_name,
         p.phone as operator_phone,
         p.email as operator_email,
-        -- TODO: Добавить user email из users таблицы
-        'user@example.com' as user_email,
-        'Иван Иванов' as user_name
+        u.email as user_email,
+        COALESCE(u.name, u.email) as user_name
       FROM bookings b
       JOIN tours t ON b.tour_id = t.id
       JOIN partners p ON t.operator_id = p.id
+      JOIN users u ON b.user_id = u.id
       WHERE DATE(b.start_date) = $1
         AND b.status = 'confirmed'
         AND b.payment_status = 'paid'
+        AND u.email IS NOT NULL
     `;
 
     const bookingsResult = await query(bookingsQuery, [tomorrowStr]);

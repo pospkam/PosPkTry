@@ -71,17 +71,14 @@ export function CloudPaymentsWidget({
 
     const options = {
       onSuccess: (options: any) => {
-        console.log('Payment successful:', options);
         setProcessing(false);
         onSuccess(options.transactionId);
       },
       onFail: (reason: string, options: any) => {
-        console.log('Payment failed:', reason, options);
         setProcessing(false);
         onFail(reason, options?.reasonCode);
       },
       onComplete: (paymentResult: any, options: any) => {
-        console.log('Payment completed:', paymentResult, options);
         setProcessing(false);
         if (onComplete) onComplete();
       }

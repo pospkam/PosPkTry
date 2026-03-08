@@ -336,7 +336,7 @@ function TransferCard({ transfer }: { transfer: TransferOption }) {
   const handleBooking = async () => {
     setIsBooking(true);
     // Здесь будет логика бронирования
-    console.log('Booking transfer:', transfer.scheduleId);
+    // TODO: бронирование transfer.scheduleId
     // Временная заглушка
     setTimeout(() => {
       setIsBooking(false);

@@ -214,10 +214,11 @@ export async function POST(
 
     // Получаем email пользователя из базы
     const userResult = await query('SELECT email, name FROM users WHERE id = $1', [userId]);
-    const userEmail = userResult.rows[0]?.email || 'user@example.com';
+    const userEmail = userResult.rows[0]?.email ?? null;
     const userName = userResult.rows[0]?.name || 'Гость';
 
     // Отправляем email подтверждение бронирования
+    if (userEmail) {
     try {
       await emailService.sendEmail({
         to: userEmail,
@@ -234,9 +235,9 @@ export async function POST(
           <p>Ожидайте дальнейших инструкций по оплате.</p>
         `
       });
-    } catch (emailError) {
-      console.error('Error sending booking confirmation email:', emailError);
+    } catch (_emailError) {
       // Не прерываем выполнение при ошибке email
+    }
     }
 
     // Создаем платеж через CloudPayments (передаём токен из входящего запроса)

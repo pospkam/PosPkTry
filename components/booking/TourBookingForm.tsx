@@ -145,8 +145,7 @@ export function TourBookingForm({
     }
   };
 
-  const handlePaymentSuccess = async (transactionId: number) => {
-    console.log('Payment successful:', transactionId);
+  const handlePaymentSuccess = async (_transactionId: number) => {
     alert('Оплата прошла успешно! Бронирование подтверждено.');
     // TODO: Редирект на страницу подтверждения
   };
