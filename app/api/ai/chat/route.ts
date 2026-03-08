@@ -9,6 +9,63 @@ import { query } from '@/lib/database';
 
 export const dynamic = 'force-dynamic';
 
+// ── Anthropic Claude (primary) ─────────────────────────────────
+async function callAnthropic(messages: ChatMessage[]): Promise<string | null> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) return null;
+
+  try {
+    // Extract system message — buildMessageHistory puts it first with role:'system'
+    const systemMsg = messages.find(m => m.role === 'system');
+    const turns = messages.filter(m => m.role !== 'system');
+
+    // Anthropic requires messages to start with 'user' and alternate user/assistant
+    const firstUserIdx = turns.findIndex(m => m.role === 'user');
+    const clean = firstUserIdx >= 0 ? turns.slice(firstUserIdx) : turns;
+    const lastSix = clean.slice(-6);
+
+    if (!lastSix.length) return null;
+
+    const anthropicMessages = lastSix.map(m => ({
+      role: m.role as 'user' | 'assistant',
+      content: m.content,
+    }));
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-opus-4-6',
+        max_tokens: 800,
+        temperature: 0.4,
+        ...(systemMsg ? { system: systemMsg.content } : {}),
+        messages: anthropicMessages,
+      }),
+    });
+
+    if (!res.ok) return null;
+
+    const data: unknown = await res.json();
+    if (
+      data !== null &&
+      typeof data === 'object' &&
+      'content' in data &&
+      Array.isArray((data as Record<string, unknown>).content)
+    ) {
+      const content = (data as { content: Array<Record<string, unknown>> }).content;
+      const item = content[0];
+      return typeof item?.text === 'string' ? item.text : null;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 // ── DeepSeek fallback ──────────────────────────────────────────
 async function callDeepSeek(messages: ChatMessage[]): Promise<string | null> {
   const apiKey = process.env.DEEPSEEK_API_KEY;
@@ -203,8 +260,9 @@ export async function POST(request: NextRequest) {
     const systemPrompt = getSystemPrompt(safeRole);
     const messagesForAI = buildMessageHistory(systemPrompt, history, 10);
 
-    // Вызываем AI — DeepSeek → Minimax → xAI → OpenRouter → fallback
-    let answer = await callDeepSeek(messagesForAI);
+    // Вызываем AI — Anthropic → DeepSeek → Minimax → xAI → OpenRouter → fallback
+    let answer = await callAnthropic(messagesForAI);
+    if (!answer) answer = await callDeepSeek(messagesForAI);
     if (!answer) answer = await callMinimax(messagesForAI);
     if (!answer) answer = await callXai(messagesForAI);
     if (!answer) answer = await callOpenrouter(messagesForAI);

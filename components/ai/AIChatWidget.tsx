@@ -20,6 +20,14 @@ interface AIChatWidgetProps {
 
 const SESSION_STORAGE_KEY = 'kamhub_ai_session_id';
 
+const CREW_KEYWORDS = ['вулкан','маршрут','тур','рыбалк','поход','термы','гейзер','планир','поездк','путешеств'];
+const CREW_STEPS = ['Анализирую запрос...', 'Ищу маршруты...', 'Составляю план...', 'Проверяю план...', 'Форматирую...'];
+
+function isTourPlanningQuery(text: string): boolean {
+  const lower = text.toLowerCase();
+  return text.trim().length > 15 && CREW_KEYWORDS.some(kw => lower.includes(kw));
+}
+
 function createSessionId(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID();
@@ -31,7 +39,10 @@ export function AIChatWidget({ isOpen = false, onClose, className, userId }: AIC
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isCrewMode, setIsCrewMode] = useState(false);
+  const [crewStepIdx, setCrewStepIdx] = useState(0);
   const [sessionId, setSessionId] = useState('');
+  const crewIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -74,6 +85,13 @@ export function AIChatWidget({ isOpen = false, onClose, className, userId }: AIC
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
+  // Cleanup crew interval on unmount
+  useEffect(() => {
+    return () => {
+      if (crewIntervalRef.current) clearInterval(crewIntervalRef.current);
+    };
+  }, []);
+
   const callAI = async (text: string) => {
     if (!text || isLoading) return;
 
@@ -83,54 +101,110 @@ export function AIChatWidget({ isOpen = false, onClose, className, userId }: AIC
     ]);
     setIsLoading(true);
 
-    try {
-      const response = await fetch('/api/ai/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: text,
-          sessionId: sessionId || createSessionId(),
-          role: 'tourist',
-          userId: userId ?? null,
-        }),
-      });
+    const crewMode = isTourPlanningQuery(text);
+    setIsCrewMode(crewMode);
 
-      if (!response.ok) {
-        throw new Error(`AI endpoint error: ${response.status}`);
-      }
+    if (crewMode) {
+      // Crew pipeline — 5-агентный пайплайн планирования
+      setCrewStepIdx(0);
+      crewIntervalRef.current = setInterval(() => {
+        setCrewStepIdx(prev => Math.min(prev + 1, CREW_STEPS.length - 1));
+      }, 4000);
 
-      const payload: unknown = await response.json();
-      let aiText = 'Не удалось получить ответ. Попробуйте снова.';
+      try {
+        const response = await fetch('/api/ai/crew-plan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: text, groupSize: 1, durationDays: 3 }),
+        });
 
-      if (payload && typeof payload === 'object') {
-        const obj = payload as Record<string, unknown>;
-        if (typeof obj.answer === 'string' && obj.answer.trim()) {
-          aiText = obj.answer;
-        } else if (
-          obj.data &&
-          typeof obj.data === 'object' &&
-          typeof (obj.data as Record<string, unknown>).answer === 'string'
-        ) {
-          aiText = (obj.data as Record<string, unknown>).answer as string;
+        if (crewIntervalRef.current) { clearInterval(crewIntervalRef.current); crewIntervalRef.current = null; }
+
+        if (!response.ok) throw new Error(`crew-plan error: ${response.status}`);
+
+        const payload: unknown = await response.json();
+        let aiText = 'Не удалось получить ответ агентов. Попробуйте снова.';
+
+        if (payload && typeof payload === 'object') {
+          const obj = payload as Record<string, unknown>;
+          if (obj.success && obj.data && typeof obj.data === 'object') {
+            const data = obj.data as Record<string, unknown>;
+            if (typeof data.formatted === 'string' && data.formatted.trim()) {
+              aiText = data.formatted;
+            }
+          }
         }
-      }
 
-      setMessages(prev => [
-        ...prev,
-        { id: (Date.now() + 1).toString(), text: aiText, role: 'ai', timestamp: new Date() },
-      ]);
-    } catch {
-      setMessages(prev => [
-        ...prev,
-        {
-          id: (Date.now() + 1).toString(),
-          text: 'Сервис временно недоступен. Попробуйте снова через минуту.',
-          role: 'ai',
-          timestamp: new Date(),
-        },
-      ]);
-    } finally {
-      setIsLoading(false);
+        setMessages(prev => [
+          ...prev,
+          { id: (Date.now() + 1).toString(), text: aiText, role: 'ai', timestamp: new Date() },
+        ]);
+      } catch {
+        if (crewIntervalRef.current) { clearInterval(crewIntervalRef.current); crewIntervalRef.current = null; }
+        setMessages(prev => [
+          ...prev,
+          {
+            id: (Date.now() + 1).toString(),
+            text: 'Сервис планирования временно недоступен. Попробуйте снова через минуту.',
+            role: 'ai',
+            timestamp: new Date(),
+          },
+        ]);
+      } finally {
+        setIsLoading(false);
+        setIsCrewMode(false);
+      }
+    } else {
+      // Обычный AI-чат
+      try {
+        const response = await fetch('/api/ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: text,
+            sessionId: sessionId || createSessionId(),
+            role: 'tourist',
+            userId: userId ?? null,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`AI endpoint error: ${response.status}`);
+        }
+
+        const payload: unknown = await response.json();
+        let aiText = 'Не удалось получить ответ. Попробуйте снова.';
+
+        if (payload && typeof payload === 'object') {
+          const obj = payload as Record<string, unknown>;
+          if (typeof obj.answer === 'string' && obj.answer.trim()) {
+            aiText = obj.answer;
+          } else if (
+            obj.data &&
+            typeof obj.data === 'object' &&
+            typeof (obj.data as Record<string, unknown>).answer === 'string'
+          ) {
+            aiText = (obj.data as Record<string, unknown>).answer as string;
+          }
+        }
+
+        setMessages(prev => [
+          ...prev,
+          { id: (Date.now() + 1).toString(), text: aiText, role: 'ai', timestamp: new Date() },
+        ]);
+      } catch {
+        setMessages(prev => [
+          ...prev,
+          {
+            id: (Date.now() + 1).toString(),
+            text: 'Сервис временно недоступен. Попробуйте снова через минуту.',
+            role: 'ai',
+            timestamp: new Date(),
+          },
+        ]);
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -158,7 +232,7 @@ export function AIChatWidget({ isOpen = false, onClose, className, userId }: AIC
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className={`fixed bottom-6 right-6 w-96 h-[520px] glassmorphism shadow-2xl z-50 ${className || ''}`}
+          className={`fixed bottom-44 left-4 right-4 max-h-[65vh] sm:bottom-6 sm:left-auto sm:right-6 sm:w-96 sm:h-[520px] sm:max-h-none flex flex-col overflow-hidden glassmorphism shadow-2xl z-50 ${className || ''}`}
           initial={{ y: '100%', opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: '100%', opacity: 0 }}
@@ -167,7 +241,7 @@ export function AIChatWidget({ isOpen = false, onClose, className, userId }: AIC
           aria-modal="true"
           aria-label="AI-чат помощник Камчатки"
         >
-          <div className="flex items-center justify-between p-6 border-b border-white/20 rounded-t-2xl">
+          <div className="flex items-center justify-between p-4 sm:p-6 border-b border-white/20 rounded-t-2xl flex-shrink-0">
             <div className="flex items-center gap-3">
               <Bot size={24} className="text-ocean" aria-hidden="true" />
               <div>
@@ -186,7 +260,7 @@ export function AIChatWidget({ isOpen = false, onClose, className, userId }: AIC
             </motion.button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-6 space-y-4" aria-live="polite">
+          <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 space-y-4" aria-live="polite">
             {messages.map((msg) => (
               <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div
@@ -207,16 +281,33 @@ export function AIChatWidget({ isOpen = false, onClose, className, userId }: AIC
 
             {isLoading && (
               <div className="flex justify-start">
-                <div className="bg-slate-800/60 px-4 py-3 rounded-2xl flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin text-cyan-400" />
-                  <span className="text-sm text-gray-400">AI думает...</span>
+                <div className="bg-slate-800/60 px-4 py-3 rounded-2xl">
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-cyan-400" />
+                    <span className="text-sm text-gray-400">
+                      {isCrewMode ? 'Агенты думают...' : 'AI думает...'}
+                    </span>
+                  </div>
+                  {isCrewMode && (
+                    <>
+                      <div className="flex gap-1 mt-2">
+                        {CREW_STEPS.map((_, i) => (
+                          <div
+                            key={i}
+                            className={`h-1.5 flex-1 rounded-full transition-colors duration-500 ${i <= crewStepIdx ? 'bg-cyan-400' : 'bg-white/20'}`}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-xs text-gray-500 mt-1 block">{CREW_STEPS[crewStepIdx]}</span>
+                    </>
+                  )}
                 </div>
               </div>
             )}
             <div ref={messagesEndRef} />
           </div>
 
-          <form onSubmit={handleSubmit} className="p-6 border-t border-white/20">
+          <form onSubmit={handleSubmit} className="p-4 sm:p-6 border-t border-white/20 flex-shrink-0">
             <div className="flex items-center gap-2 mb-3">
               <input
                 ref={inputRef}
