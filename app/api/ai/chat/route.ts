@@ -12,21 +12,27 @@ export const dynamic = 'force-dynamic';
 // ── Anthropic Claude (primary) ─────────────────────────────────
 async function callAnthropic(messages: ChatMessage[]): Promise<string | null> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return null;
+  if (!apiKey) {
+    console.error('[AI] ANTHROPIC_API_KEY не установлен');
+    return null;
+  }
 
   try {
     // Extract system message — buildMessageHistory puts it first with role:'system'
     const systemMsg = messages.find(m => m.role === 'system');
     const turns = messages.filter(m => m.role !== 'system');
 
-    // Anthropic requires messages to start with 'user' and alternate user/assistant
+    // Anthropic requires messages to start with 'user' and alternate user/assistant.
+    // slice(-6) may begin with an assistant message after several exchanges — fix that.
     const firstUserIdx = turns.findIndex(m => m.role === 'user');
     const clean = firstUserIdx >= 0 ? turns.slice(firstUserIdx) : turns;
-    const lastSix = clean.slice(-6);
+    const window = clean.slice(-6);
+    const startIdx = window.findIndex(m => m.role === 'user');
+    const trimmed = startIdx > 0 ? window.slice(startIdx) : window;
 
-    if (!lastSix.length) return null;
+    if (!trimmed.length) return null;
 
-    const anthropicMessages = lastSix.map(m => ({
+    const anthropicMessages = trimmed.map(m => ({
       role: m.role as 'user' | 'assistant',
       content: m.content,
     }));
@@ -47,7 +53,11 @@ async function callAnthropic(messages: ChatMessage[]): Promise<string | null> {
       }),
     });
 
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      console.error(`[AI] Anthropic ${res.status}:`, errText.slice(0, 300));
+      return null;
+    }
 
     const data: unknown = await res.json();
     if (
@@ -61,7 +71,8 @@ async function callAnthropic(messages: ChatMessage[]): Promise<string | null> {
       return typeof item?.text === 'string' ? item.text : null;
     }
     return null;
-  } catch {
+  } catch (e) {
+    console.error('[AI] Anthropic exception:', e instanceof Error ? e.message : String(e));
     return null;
   }
 }
@@ -72,6 +83,7 @@ async function callDeepSeek(messages: ChatMessage[]): Promise<string | null> {
   if (!apiKey) return null;
 
   try {
+    const payload = messages.map(({ role, content }) => ({ role, content }));
     const res = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -82,14 +94,19 @@ async function callDeepSeek(messages: ChatMessage[]): Promise<string | null> {
         model: 'deepseek-chat',
         temperature: 0.4,
         max_tokens: 800,
-        messages,
+        messages: payload,
       }),
     });
 
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      console.error(`[AI] DeepSeek ${res.status}:`, errText.slice(0, 200));
+      return null;
+    }
     const data = await res.json();
     return data?.choices?.[0]?.message?.content ?? null;
-  } catch {
+  } catch (e) {
+    console.error('[AI] DeepSeek exception:', e instanceof Error ? e.message : String(e));
     return null;
   }
 }
@@ -100,6 +117,7 @@ async function callMinimax(messages: ChatMessage[]): Promise<string | null> {
   if (!apiKey) return null;
 
   try {
+    const payload = messages.map(({ role, content }) => ({ role, content }));
     const res = await fetch('https://api.minimax.chat/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -110,14 +128,19 @@ async function callMinimax(messages: ChatMessage[]): Promise<string | null> {
         model: 'abab6.5s-chat',
         temperature: 0.4,
         max_tokens: 800,
-        messages,
+        messages: payload,
       }),
     });
 
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      console.error(`[AI] Minimax ${res.status}:`, errText.slice(0, 200));
+      return null;
+    }
     const data = await res.json();
     return data?.choices?.[0]?.message?.content ?? null;
-  } catch {
+  } catch (e) {
+    console.error('[AI] Minimax exception:', e instanceof Error ? e.message : String(e));
     return null;
   }
 }
@@ -128,6 +151,7 @@ async function callXai(messages: ChatMessage[]): Promise<string | null> {
   if (!apiKey) return null;
 
   try {
+    const payload = messages.map(({ role, content }) => ({ role, content }));
     const res = await fetch('https://api.x.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -138,14 +162,19 @@ async function callXai(messages: ChatMessage[]): Promise<string | null> {
         model: 'grok-4',
         temperature: 0.4,
         max_tokens: 800,
-        messages,
+        messages: payload,
       }),
     });
 
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      console.error(`[AI] xAI ${res.status}:`, errText.slice(0, 200));
+      return null;
+    }
     const data = await res.json();
     return data?.choices?.[0]?.message?.content ?? null;
-  } catch {
+  } catch (e) {
+    console.error('[AI] xAI exception:', e instanceof Error ? e.message : String(e));
     return null;
   }
 }
@@ -156,6 +185,7 @@ async function callOpenrouter(messages: ChatMessage[]): Promise<string | null> {
   if (!apiKey) return null;
 
   try {
+    const payload = messages.map(({ role, content }) => ({ role, content }));
     const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -166,14 +196,19 @@ async function callOpenrouter(messages: ChatMessage[]): Promise<string | null> {
         model: 'anthropic/claude-3.5-sonnet',
         temperature: 0.4,
         max_tokens: 800,
-        messages,
+        messages: payload,
       }),
     });
 
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      console.error(`[AI] OpenRouter ${res.status}:`, errText.slice(0, 200));
+      return null;
+    }
     const data = await res.json();
     return data?.choices?.[0]?.message?.content ?? null;
-  } catch {
+  } catch (e) {
+    console.error('[AI] OpenRouter exception:', e instanceof Error ? e.message : String(e));
     return null;
   }
 }
