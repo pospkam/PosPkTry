@@ -327,7 +327,7 @@ const INTENT_PARSER_PROMPT = `Ты парсер намерений турист�
 {
   "intent": "search|recommendation|booking|info",
   "criteria": {
-    "category": "Вулканы|Рыбалка|Термы|Снегоход|Джип|Экотур|Треккинг|Медведи|Гейзеры|Горы|Реки|Озёра|null",
+    "category": "vulkani|rybalka|termalnye_istochniki|snegohod|dzhip|eco|trekking|medvedi|geyzery|mountains|rivers|lakes|morskie_progulki|vertoletnye_tury|null",
     "difficulty": "Лёгкий|Средний|Сложный|Очень сложный|null",
     "duration": "Несколько часов|Целый день|Несколько дней|Больше недели|null",
     "season": "Лето|Осень|Зима|Весна|null",
