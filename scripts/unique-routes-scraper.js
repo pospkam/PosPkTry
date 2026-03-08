@@ -36,8 +36,8 @@ function loadDotEnv() {
     if (fs.existsSync(full)) {
       fs.readFileSync(full, 'utf8').split('\n').forEach(line => {
         const m = line.match(/^([A-Z_][A-Z0-9_]*)=(.*)$/);
-        if (m && !process.env[m[1]])
-          process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
+        // .env.local ВСЕГДА имеет приоритет над shell-переменными
+        if (m) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
       });
       break;
     }
