@@ -28,6 +28,8 @@
     "ai:scrape-unique": "node scripts/unique-routes-scraper.js",
     "ai:scrape-unique:dry": "node scripts/unique-routes-scraper.js --dry-run",
     "ai:scrape-unique:stats": "node scripts/unique-routes-scraper.js --stats",
+    "ai:scrape-unique:direct": "node scripts/unique-routes-scraper.js --direct",
+    "ai:scrape-unique:direct:dry": "node scripts/unique-routes-scraper.js --direct --dry-run",
     "security:audit": "bash scripts/security/audit.sh",
     "security:detect-secrets": "bash scripts/security/detect-secrets.sh",
     "test:load": "bash load-tests/k6/run-load-test.sh",

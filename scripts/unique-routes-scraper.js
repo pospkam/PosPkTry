@@ -2,22 +2,17 @@
 /**
  * scripts/unique-routes-scraper.js
  *
- * Агент-скрапер: парсит ТОЛЬКО те маршруты, которых ещё нет в БД.
+ * Скрапер: парсит ТОЛЬКО те маршруты, которых ещё нет в БД.
  * Целевые сайты:
- *   - tripadvisor.ru  — достопримечательности и туры Камчатки
- *   - mestechkokam.ru — местные маршруты
- *
- * Инструменты:
- *   fetch_url        — скачать страницу
- *   extract_links    — найти ссылки на маршруты
- *   check_new_routes — отфильтровать уже существующие (по dedupe_key)
- *   save_new_routes  — сохранить только новые (INSERT, без UPDATE)
- *   get_stats        — статистика БД
+ *   - tripadvisor.ru       — достопримечательности Камчатки (HTML/JSON-LD)
+ *   - mestechkokam.ru      — местные маршруты (HTML)
+ *   - zimaletokamchatka.ru — туры и программы (GraphQL API)
  *
  * Запуск:
- *   node scripts/unique-routes-scraper.js
- *   node scripts/unique-routes-scraper.js --dry-run
- *   node scripts/unique-routes-scraper.js --stats
+ *   node scripts/unique-routes-scraper.js            — AI агент (claude-opus-4-6)
+ *   node scripts/unique-routes-scraper.js --direct   — без AI (HTML + GraphQL)
+ *   node scripts/unique-routes-scraper.js --dry-run  — без записи в БД
+ *   node scripts/unique-routes-scraper.js --stats    — только статистика
  */
 
 'use strict';
@@ -49,10 +44,11 @@ const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const DATABASE_URL      = process.env.DATABASE_URL;
 const DRY_RUN           = process.argv.includes('--dry-run');
 const STATS_ONLY        = process.argv.includes('--stats');
+const DIRECT_MODE       = process.argv.includes('--direct');
 const MODEL             = 'claude-opus-4-6';
 
-if (!ANTHROPIC_API_KEY) { console.error('❌ ANTHROPIC_API_KEY не задан'); process.exit(1); }
-if (!DATABASE_URL)      { console.error('❌ DATABASE_URL не задан');      process.exit(1); }
+if (!DIRECT_MODE && !ANTHROPIC_API_KEY) { console.error('❌ ANTHROPIC_API_KEY не задан (или используй --direct)'); process.exit(1); }
+if (!DATABASE_URL) { console.error('❌ DATABASE_URL не задан'); process.exit(1); }
 
 // ── PostgreSQL ───────────────────────────────────────────────
 const pool = new Pool({
@@ -504,6 +500,159 @@ lakes | morskie_progulki | vertoletnye_tury | combo
 - TripAdvisor: ищи JSON-LD Schema.org в тексте — там есть name, description, geo`;
 
 // ─────────────────────────────────────────────────────────────
+// DIRECT MODE — детерминированный скрапинг без AI
+// ─────────────────────────────────────────────────────────────
+
+const KEYWORD_RULES_DIRECT = [
+  { cat: 'vulkani',              re: /вулкан|volcano|eruption|лавов/i },
+  { cat: 'geyzery',              re: /гейзер|geyser/i },
+  { cat: 'termalnye_istochniki', re: /терм|горячий источник|горячие источник/i },
+  { cat: 'medvedi',              re: /медвед|медвежий/i },
+  { cat: 'rybalka',              re: /рыбалк|рыбн|fishing|лосось|salmon/i },
+  { cat: 'snegohod',             re: /снегоход/i },
+  { cat: 'vertoletnye_tury',     re: /вертолет|вертолётн|helicopter/i },
+  { cat: 'morskie_progulki',     re: /морск|яхт|кит|whale|круиз/i },
+  { cat: 'rivers',               re: /сплав|рафтинг|kayak|каяк|реке/i },
+  { cat: 'lakes',                re: /озеро|кальдера/i },
+  { cat: 'mountains',            re: /перевал|вершин|хребет|восхожден/i },
+  { cat: 'trekking',             re: /трекинг|hiking|пешеход/i },
+  { cat: 'dzhip',                re: /джип|jeep|вездеход|внедорожник/i },
+];
+
+const ZIMALET_CAT_MAP = {
+  'Рыбалка': 'rybalka', 'Пешая прогулка': 'trekking', 'Сплав': 'rivers',
+  'Термальные источники': 'termalnye_istochniki', 'Этнокультурный туризм': 'eco',
+  'Морская прогулка': 'morskie_progulki', 'Конная прогулка': 'eco',
+  'Восхождение': 'mountains', 'На джипе': 'dzhip', 'Обзорная экскурсия': 'eco',
+};
+
+function detectCategoryDirect(name, apiCats) {
+  for (const { cat, re } of KEYWORD_RULES_DIRECT) {
+    if (re.test(name)) return cat;
+  }
+  for (const ac of (apiCats || [])) {
+    const mapped = ZIMALET_CAT_MAP[ac.name];
+    if (mapped) return mapped;
+  }
+  return 'eco';
+}
+
+function parseGenericPage(html, url) {
+  let doc;
+  try { doc = new JSDOM(html, { url }).window.document; } catch { return null; }
+  const h1      = doc.querySelector('h1');
+  const ogTitle = doc.querySelector('meta[property="og:title"]');
+  const title   = (h1?.textContent ?? ogTitle?.content ?? '').trim().slice(0, 120);
+  if (!title || title.length < 5) return null;
+  const ogDesc   = doc.querySelector('meta[property="og:description"]');
+  const metaDesc = doc.querySelector('meta[name="description"]');
+  const firstP   = [...doc.querySelectorAll('p')].find(p => p.textContent.trim().length > 40);
+  const desc     = (ogDesc?.content ?? metaDesc?.content ?? firstP?.textContent ?? '').trim().slice(0, 300);
+  return { title, description: desc || null, category: detectCategoryDirect(title, []), source_url: url };
+}
+
+function extractLinksDirect(html, baseUrl, filterFn) {
+  const links = new Set();
+  try {
+    const dom  = new JSDOM(html, { url: baseUrl });
+    const base = new URL(baseUrl);
+    for (const a of dom.window.document.querySelectorAll('a[href]')) {
+      try {
+        const href = new URL(a.href, baseUrl);
+        if (href.hostname === base.hostname &&
+            !href.href.match(/\.(pdf|jpg|png|gif|zip|doc|css|js)$/i) &&
+            filterFn(href.pathname)) {
+          links.add(href.href.replace(/#.*$/, ''));
+        }
+      } catch { /* ignore */ }
+    }
+  } catch { /* ignore */ }
+  return [...links];
+}
+
+async function scrapeMestechkokamDirect() {
+  console.log('\n📍 mestechkokam.ru (HTML)');
+  const START = 'https://mestechkokam.ru/';
+  const page  = await fetchUrl(START);
+  if (!page?.html) { console.log('  ✗ не загрузился'); return []; }
+  const links = extractLinksDirect(page.html, START, p =>
+    /\/(tour|marshrut|route|trek|pohod|program|ekskursi|aktivnosti)/i.test(p)
+  );
+  console.log(`  → ссылок: ${links.length}`);
+  const routes = [];
+  for (const link of links.slice(0, 50)) {
+    await new Promise(r => setTimeout(r, 700));
+    const res = await fetchUrl(link);
+    if (!res?.html) continue;
+    const route = parseGenericPage(res.html, link);
+    if (route?.title) { console.log(`  + ${route.title.slice(0, 60)} [${route.category}]`); routes.push(route); }
+  }
+  return routes;
+}
+
+async function scrapeZimaletDirect() {
+  console.log('\n📍 zimaletokamchatka.ru (GraphQL)');
+  const res = await fetch('https://app.zimaletokamchatka.ru/graphql', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'User-Agent':   'Mozilla/5.0 Chrome/124.0.0.0',
+      'Origin':       'https://zimaletokamchatka.ru',
+    },
+    body: JSON.stringify({ query: `{
+      tours    { name alias summary categories { name } }
+      programs { name alias summary categories { name } }
+      charters { name alias summary categories { name } }
+    }` }),
+  });
+  if (!res.ok) { console.log(`  ✗ GraphQL ${res.status}`); return []; }
+  const data = await res.json();
+  const tours    = (data.data?.tours    || []).map(t => ({ ...t, _type: 'tours' }));
+  const programs = (data.data?.programs || []).map(t => ({ ...t, _type: 'programs' }));
+  const charters = (data.data?.charters || []).map(t => ({ ...t, _type: 'charters' }));
+  const all = [...tours, ...programs, ...charters].filter(t => t.name && t.alias);
+  console.log(`  → найдено: ${all.length}`);
+  return all.map(t => ({
+    title:       t.name.trim().slice(0, 200),
+    description: (t.summary || '').trim().slice(0, 300) || null,
+    category:    detectCategoryDirect(t.name, t.categories),
+    source_url:  `https://zimaletokamchatka.ru/${t._type}/${t.alias}`,
+  }));
+}
+
+async function runDirectMode() {
+  console.log('🔧 Direct Mode (без AI) — HTML + GraphQL');
+  console.log(`   Сайты: mestechkokam.ru, zimaletokamchatka.ru`);
+  if (DRY_RUN) console.log('   ⚠️  DRY RUN — в БД не пишем');
+  console.log('─'.repeat(55));
+
+  const statsBefore = await getDBStats();
+  console.log(`\n📊 В БД сейчас: ${statsBefore.total} маршрутов`);
+
+  let totalSaved = 0, totalExisting = 0;
+
+  for (const { fn, name } of [
+    { fn: scrapeMestechkokamDirect, name: 'mestechkokam.ru' },
+    { fn: scrapeZimaletDirect,      name: 'zimaletokamchatka.ru' },
+  ]) {
+    let routes;
+    try { routes = await fn(); } catch (e) { console.error(`  ✗ ${name}: ${e.message}`); continue; }
+    if (!routes.length) { console.log(`  → ${name}: маршрутов не найдено`); continue; }
+
+    console.log(`\n  → ${name}: найдено ${routes.length}, проверяем дубликаты...`);
+    const result = await saveNewRoutes(routes, name);
+    console.log(`  ✅ ${name}: сохранено ${result.saved}, уже было: ${result.already_in_db ?? 0}`);
+    totalSaved    += result.saved;
+    totalExisting += result.already_in_db ?? 0;
+  }
+
+  const statsAfter = await getDBStats();
+  console.log('\n' + '═'.repeat(55));
+  console.log(`📊 Итог: было ${statsBefore.total} → стало ${statsAfter.total}`);
+  console.log(`   Новых: ${totalSaved}  |  Уже были: ${totalExisting}`);
+}
+
+// ─────────────────────────────────────────────────────────────
 // MAIN
 // ─────────────────────────────────────────────────────────────
 
@@ -514,6 +663,11 @@ async function main() {
     for (const [cat, cnt] of Object.entries(s.by_category))
       console.log(`   ${cat.padEnd(26)}: ${cnt}`);
     await pool.end();
+    return;
+  }
+
+  if (DIRECT_MODE) {
+    try { await runDirectMode(); } finally { await pool.end(); }
     return;
   }
 
