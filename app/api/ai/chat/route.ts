@@ -135,7 +135,7 @@ async function callXai(messages: ChatMessage[]): Promise<string | null> {
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'grok-beta',
+        model: 'grok-4',
         temperature: 0.4,
         max_tokens: 800,
         messages,

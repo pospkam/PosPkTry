@@ -38,8 +38,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ success: false, error: 'Invalid token' }, { status: 400 });
-  } catch (error) {
-    console.error('[MFA_VERIFY]', error);
+  } catch {
     return NextResponse.json({ error: 'Internal Error' }, { status: 500 });
   }
 }

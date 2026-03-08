@@ -9,7 +9,15 @@ import { availabilityService } from '@/lib/database'
 import { authenticateUser, authorizeRole } from '@/lib/auth'
 import { verifyTourOwnership } from '@/lib/auth/operator-helpers'
 import { z } from 'zod'
-import type { AvailabilitySearch } from '@/lib/database' // TODO: fix import path - lib/availability/types'
+interface AvailabilitySearch extends Record<string, unknown> {
+  tourId: string;
+  dateFrom?: Date;
+  dateTo?: Date;
+  minAvailableSpaces?: number;
+  maxPrice?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
 
 const availabilityQuerySchema = z.object({
   tourId: z.string().trim().min(1),
@@ -136,7 +144,6 @@ export async function GET(request: NextRequest) {
       count: slots.length,
     })
   } catch (error) {
-    console.error('Failed to search availability:', error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to search availability' },
       { status: 500 }
@@ -214,7 +221,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(slot, { status: 201 })
   } catch (error) {
-    console.error('Failed to create availability slot:', error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to create availability slot' },
       { status: 500 }

@@ -45,6 +45,18 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category');
+    // Нормализация slug-категорий (homepage и agent_route_knowledge используют разные slugs)
+    const SLUG_TO_CANON: Record<string, string> = {
+      vulkani:              'volcanoes',
+      rybalka:              'fishing',
+      termalnye_istochniki: 'thermal',
+      geyzery:              'geysers',
+      snegohod:             'snowmobile',
+      dzhip:                'jeep',
+      medvedi:              'wildlife',
+      trekking:             'adventure',
+    };
+    const normalizedCategory = category ? (SLUG_TO_CANON[category] ?? category) : null;
     const search = searchParams.get('search');
     const minPrice = searchParams.get('minPrice');
     const maxPrice = searchParams.get('maxPrice');
@@ -59,9 +71,9 @@ export async function GET(request: NextRequest) {
     const queryParams: unknown[] = [];
     let paramIndex = 1;
 
-    if (category) {
+    if (normalizedCategory) {
       whereConditions.push(`t.category = $${paramIndex}`);
-      queryParams.push(category);
+      queryParams.push(normalizedCategory);
       paramIndex++;
     }
 

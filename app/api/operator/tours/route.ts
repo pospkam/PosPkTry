@@ -282,7 +282,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Валидация категории
-    const validCategories = ['fishing', 'hunting', 'adventure', 'eco', 'cultural', 'family'];
+    const validCategories = ['volcanoes', 'fishing', 'thermal', 'mountains', 'geysers', 'rivers', 'lakes', 'eco', 'adventure', 'combo', 'snowmobile', 'jeep', 'wildlife', 'cultural', 'hunting', 'family'];
     if (body.category && !validCategories.includes(body.category)) {
       errors.push(`Категория должна быть одной из: ${validCategories.join(', ')}`);
     }
@@ -337,9 +337,10 @@ export async function POST(request: NextRequest) {
         is_active,
         includes,
         excludes,
+        images,
         created_at,
         updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, NOW(), NOW())
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, NOW(), NOW())
       RETURNING id, name, slug, is_active, created_at
     `;
 
@@ -371,7 +372,8 @@ export async function POST(request: NextRequest) {
       body.routeId || null,
       false,
       JSON.stringify(defaultIncludes),
-      JSON.stringify(defaultExcludes)
+      JSON.stringify(defaultExcludes),
+      JSON.stringify(body.images || [])
     ];
 
     const result = await query(insertQuery, values);

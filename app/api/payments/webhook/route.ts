@@ -205,20 +205,25 @@ async function handleSuccessfulPayment(webhook: CloudPaymentsWebhook) {
       }
 
       if (bookingDetails) {
-        await emailService.sendEmail({
-          to: 'user@example.com', // TODO: Получить email из payment.user_id
-          subject: emailSubject,
-          html: emailContent
-        });
+        const userEmailResult = await query(
+          'SELECT email FROM users WHERE id = $1',
+          [payment.user_id]
+        );
+        const userEmail = userEmailResult.rows[0]?.email ?? '';
+        if (userEmail) {
+          await emailService.sendEmail({
+            to: userEmail,
+            subject: emailSubject,
+            html: emailContent
+          });
+        }
       }
-    } catch (emailError) {
-      console.error('Error sending payment confirmation email:', emailError);
+    } catch (_emailError) {
       // Не прерываем выполнение при ошибке email
     }
 
 
   } catch (error) {
-    console.error('Error handling successful payment:', error);
     throw error;
   }
 }
@@ -265,21 +270,27 @@ async function handleFailedPayment(webhook: CloudPaymentsWebhook) {
         const payment = paymentDetails.rows[0];
         const failureReason = webhook.Reason || 'Платёж был отклонён';
 
-        await emailService.sendEmail({
-          to: 'user@example.com', // TODO: Получить email из payment.user_id
-          subject: `Платёж не прошёл - ID ${paymentId.substring(0, 8)}`,
-          html: `
-            <h2>К сожалению, платёж не прошёл</h2>
-            <p><strong>ID платежа:</strong> ${paymentId}</p>
-            <p><strong>Сумма:</strong> ${payment.amount.toLocaleString('ru-RU')} ₽</p>
-            <p><strong>Причина:</strong> ${failureReason}</p>
-            <p>Попробуйте оплатить снова или свяжитесь с поддержкой.</p>
-            <p><strong>Служба поддержки:</strong> support@kamhub.ru</p>
-          `
-        });
+        const userEmailResult = await query(
+          'SELECT email FROM users WHERE id = $1',
+          [payment.user_id]
+        );
+        const userEmail = userEmailResult.rows[0]?.email ?? '';
+        if (userEmail) {
+          await emailService.sendEmail({
+            to: userEmail,
+            subject: `Платёж не прошёл - ID ${paymentId.substring(0, 8)}`,
+            html: `
+              <h2>К сожалению, платёж не прошёл</h2>
+              <p><strong>ID платежа:</strong> ${paymentId}</p>
+              <p><strong>Сумма:</strong> ${payment.amount.toLocaleString('ru-RU')} ₽</p>
+              <p><strong>Причина:</strong> ${failureReason}</p>
+              <p>Попробуйте оплатить снова или свяжитесь с поддержкой.</p>
+              <p><strong>Служба поддержки:</strong> support@kamhub.ru</p>
+            `
+          });
+        }
       }
-    } catch (emailError) {
-      console.error('Error sending payment failure email:', emailError);
+    } catch (_emailError) {
       // Не прерываем выполнение при ошибке email
     }
 
