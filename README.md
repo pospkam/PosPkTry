@@ -66,7 +66,15 @@ npm run db:migrate                     # Применить все SQL мигр�
 npm run db:import:kamchatka-routes     # Импорт маршрутов из партнёров
 npm run db:import:kamchatka-routes:reset  # Сброс + повторный импорт
 npm run db:sync:agent-routes           # Синхронизация agent_route_knowledge
-npm run ai:setup-agent-rag             # Инициализация RAG-индекса
+
+# Скрапинг маршрутов (без AI, 3 источника)
+npm run ai:scrape-unique:direct        # mestechkokam + zimaletokamchatka + kamchatintour
+npm run ai:scrape-unique:direct:dry    # Dry-run (в БД не пишет)
+npm run ai:scrape-unique:stats         # Статистика по категориям
+
+# Обучение агентов
+npm run ai:setup-agent-rag             # Пересобрать crew/knowledge-base.json
+# python3 crew/agent-trainer.py        # Пересобрать crew/agents.json (5 агентов)
 ```
 
 ### Docker
@@ -137,10 +145,13 @@ PosPkTry/
 │
 ├── lib/database/migrations/   # 22 SQL миграции (001–022)
 ├── scripts/
-│   ├── apply-new-schemas.sql          # Точка входа для npm run db:migrate
-│   ├── import-kamchatka-routes.js     # Импорт 129+ маршрутов из партнёров
-│   ├── sync-agent-route-knowledge.js  # Наполнение agent_route_knowledge
-│   └── setup-agent-rag.ts             # RAG-индекс для crew-агентов
+│   ├── apply-new-schemas.sql              # Точка входа для npm run db:migrate
+│   ├── import-kamchatka-routes.js         # Импорт маршрутов из партнёров
+│   ├── unique-routes-scraper.js           # Скрапер 3 сайтов (--direct / AI)
+│   ├── sync-agent-route-knowledge.js      # Наполнение agent_route_knowledge
+│   ├── setup-agent-rag.ts                 # RAG-индекс → crew/knowledge-base.json
+│   ├── update-knowledge-base.js           # Пуш документов в Timeweb AI (опц.)
+│   └── agent-trainer.py (crew/)           # Генерация crew/agents.json
 ├── k8s/                       # Kubernetes конфиги
 └── monitoring/                # Grafana + Prometheus
 ```
@@ -196,23 +207,29 @@ kamchatka_routes        -- 129 спарсенных маршрутов (14 ка�
 agent_route_knowledge   -- RAG-индекс для crew-агентов
 ```
 
-### Категории маршрутов (kamchatka_routes)
+### Категории маршрутов (agent_route_knowledge — 259 маршрутов, 3 источника)
 
-| Категория | Маршрутов |
-|-----------|-----------|
-| vulkani | 30 |
-| termalnye_istochniki | 19 |
-| lakes | 15 |
-| eco | 14 |
-| mountains | 12 |
-| geyzery | 10 |
-| rivers | 7 |
-| trekking | 6 |
-| rybalka / fishing | 5 + 10 туров |
-| morskie_progulki | 5 |
-| medvedi | 3 |
-| vertoletnye_tury | 3 |
-| snegohod / jeep | — |
+| Категория | Маршрутов | Источники |
+|-----------|-----------|-----------|
+| vulkani | 49 | mestechkokam, kamchatintour, visitkamchatka |
+| eco | 62 | все источники |
+| termalnye_istochniki | 26 | kamchatintour, zimaletokamchatka |
+| morskie_progulki | 16 | mestechkokam, kamchatintour |
+| lakes | 16 | kamchatintour, visitkamchatka |
+| mountains | 15 | kamchatintour, idilesom |
+| geyzery | 14 | mestechkokam, kamchatintour |
+| rybalka | 14 | kamchatintour, zimaletokamchatka |
+| trekking | 10 | kamchatintour, zimaletokamchatka |
+| dzhip | 10 | kamchatintour |
+| rivers | 8 | kamchatintour, zimaletokamchatka |
+| snegohod | 8 | mestechkokam, kamchatintour |
+| vertoletnye_tury | 6 | mestechkokam, kamchatintour |
+| medvedi | 5 | visitkamchatka |
+
+**Источники скрапинга:**
+- `mestechkokam.ru` — HTML-скрапинг (JSDOM)
+- `zimaletokamchatka.ru` — GraphQL API (Strapi CMS)
+- `kamchatintour.ru` — HTML-скрапинг (Bitrix SSR)
 
 ### Миграции
 
@@ -230,12 +247,13 @@ npm run db:migrate
 **Актуально на 8 марта 2026:**
 
 ```
-Миграции:       22 (001–022)
-Маршруты в БД:  129 (14 категорий)
-Туры в БД:      11 (fishingkam.ru)
-Иконки:         16 SVG-категорий
-Build:          passing
-console.log:    0 (запрещены в prod)
+Миграции:         23 (001–023)
+Маршруты в БД:    259 (agent_route_knowledge, 14 категорий, 3 источника)
+Туры в БД:        11 (fishingkam.ru)
+Иконки:           16 SVG-категорий
+Build:            passing
+console.log:      0 (запрещены в prod)
+Агентов (crew):   5 (knowledge-base.json — 259 маршрутов)
 ```
 
 ### Реализовано
@@ -253,7 +271,11 @@ console.log:    0 (запрещены в prod)
 - [x] Яндекс.Карты с маршрутами
 - [x] Eco-points геймификация
 - [x] База знаний поддержки
-- [x] 129 маршрутов: 14 категорий (kamchatka_routes + categoryAliases)
+- [x] **259 маршрутов**: 14 категорий (agent_route_knowledge) — 3 источника
+- [x] **Скрапер `--direct`**: mestechkokam.ru (HTML) + zimaletokamchatka.ru (GraphQL) + kamchatintour.ru (Bitrix HTML)
+- [x] **Дедупликация маршрутов**: 2 уровня — dedupe_key + нормализованный title
+- [x] **Crew-агенты обучены**: crew/knowledge-base.json (259), crew/agents.json (5 агентов)
+- [x] **Timeweb MCP Server**: деплой через AI без прямого API-токена в коде
 - [x] agent_route_knowledge таблица + sync-скрипт для RAG
 - [x] Главная: 14 активностей с реальными категориями из БД, ordered by count
 - [x] 16 SVG-иконок категорий (Volcano, Thermal, Lake, Eco, Mountain, Geyser, River, SeaWalk, ...)
@@ -321,6 +343,19 @@ CLOUDPAYMENTS_API_SECRET=...
 
 ### Март 2026 (текущий спринт)
 
+- **Скрапер маршрутов `--direct`**: добавлен режим без AI — 3 источника:
+  - `mestechkokam.ru` — HTML + JSDOM, +32 маршрута
+  - `zimaletokamchatka.ru` — GraphQL (Strapi CMS), +23 маршрута
+  - `kamchatintour.ru` — Bitrix SSR, 12 страниц каталога, +73 маршрута
+- **Итог**: 149 → 204 → **259 маршрутов** (14 категорий)
+- **Дедупликация**: 2-уровневая — `route_dedupe_key` + нормализованный заголовок (ё→е, strip non-alnum); удалено 18 дублей из БД
+- **Crew-агенты обучены**: `crew/knowledge-base.json` (129→259), `crew/agents.json` regenerated (5 агентов, 97/259 с координатами)
+- **Timeweb MCP Server**: задокументирован в CLAUDE.md и AGENTS.md; `TIMEWEB_TOKEN` хранится только в MCP-конфиге
+- **update-knowledge-base.js**: исправлены `loadDotEnv()`, несуществующие колонки (`location`, `contact_info`→`contact`)
+- **npm scripts**: добавлены `ai:scrape-unique:direct`, `ai:scrape-unique:direct:dry`
+
+### Март 2026 (предыдущие записи)
+
 - **AIChatWidget**: подключён к реальному `/api/ai/chat`, sessionId в localStorage, история сессии сохраняется в БД; быстрые кнопки (Планировать тур / Погода / Безопасность) отправляют пресет-запросы
 - **AI fallback chain**: DeepSeek → Minimax → xAI Grok → OpenRouter (claude-3.5-sonnet)
 - **Profile API**: реализован `GET /api/profile` + `PUT /api/profile`; страница профиля использует реальные данные
@@ -367,7 +402,7 @@ CrewAI: 5 агентов sequential
 
 | Этап | Задачи | Результат |
 |------|--------|-----------|
-| 1. Подготовка | CrewAI container, DeepSeek integration, RAG-индекс из 129 маршрутов | crew запущен локально |
+| 1. Подготовка | CrewAI container, DeepSeek integration, RAG-индекс из 259 маршрутов | crew запущен локально |
 | 2. MVP агента | 5 агентов, 5–7 шагов, тест 30–50 запросов | агент отвечает в консоли |
 | 3. Интеграция | `/api/agent` endpoint, streaming в чате, Redis кэш, LangSmith | агент интегрирован в dev |
 | 4. Production | Deploy на Timeweb, A/B-тест, 2–3 tool (цены, партнёрские API) | агент в production |

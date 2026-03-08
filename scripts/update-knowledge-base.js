@@ -9,7 +9,18 @@
 const fs = require('fs');
 const path = require('path');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
-require('dotenv').config();
+
+// Читаем .env.local (приоритет выше, чем shell-переменные)
+function loadDotEnv() {
+  try {
+    const data = fs.readFileSync(path.join(__dirname, '../.env.local'), 'utf8');
+    for (const line of data.split('\n')) {
+      const m = line.match(/^([A-Z_][A-Z0-9_]*)=(.*)$/);
+      if (m) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
+    }
+  } catch { /* нет .env.local — продолжаем с env shell */ }
+}
+loadDotEnv();
 
 // Настройка S3 клиента для Timeweb Cloud
 const s3Region = process.env.S3_REGION || 'ru-1';
@@ -157,7 +168,6 @@ async function collectProjectDocuments() {
         price,
         duration,
         difficulty,
-        location,
         category
       FROM tours
       LIMIT 50
@@ -173,7 +183,6 @@ async function collectProjectDocuments() {
 Цена: ${tour.price} ₽
 Длительность: ${tour.duration} дней
 Сложность: ${tour.difficulty || 'Не указана'}
-Местоположение: ${tour.location || 'Камчатка'}
 Категория: ${tour.category || 'Экскурсионный'}
         `,
         category: 'tours',
@@ -188,11 +197,10 @@ async function collectProjectDocuments() {
         id,
         name,
         description,
-        contact_info,
-        specialization,
+        contact,
+        category,
         rating
       FROM partners
-      WHERE role = 'operator'
       LIMIT 20
     `);
 
@@ -203,8 +211,8 @@ async function collectProjectDocuments() {
         content: `
 Название: ${operator.name}
 Описание: ${operator.description || 'Нет описания'}
-Специализация: ${operator.specialization || 'Туры'}
-Контакты: ${operator.contact_info || 'Не указаны'}
+Категория: ${operator.category || 'Туры'}
+Контакты: ${operator.contact || 'Не указаны'}
 Рейтинг: ${operator.rating || 'Не оценен'}
         `,
         category: 'operators',

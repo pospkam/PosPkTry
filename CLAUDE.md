@@ -12,21 +12,21 @@
 
 **Стек:**
 - Next.js (App Router), TypeScript, Tailwind CSS
-- PostgreSQL, Prisma ORM
+- PostgreSQL — прямой SQL через `lib/database.ts` (не Prisma)
 - JWT auth, 6 ролей: admin / operator / guide / tourist / moderator / support
 - Деплой: Timeweb Cloud → pospkam-pospktry-c1f3.twc1.net
 - CI/CD: GitHub → автодеплой
 
 **Архитектура:**
-- 87 страниц, разбиты по ролям и активностям
-- 5 категорий туров: Вулканы / Рыбалка / Термы / Снегоход / Джип
+- 91 страница, разбита по ролям и активностям
+- 14 категорий маршрутов: vulkani / geyzery / termalnye_istochniki / rybalka / snegohod / dzhip / morskie_progulki / trekking / lakes / mountains / rivers / medvedi / vertoletnye_tury / eco
 - API routes в `/app/api/`
 - Публичные изображения в `/public/images/`
 
 **Прочитай перед стартом:**
-- `prisma/schema.prisma` — структура БД
-- `src/lib/auth.ts` — логика JWT
-- `src/types/index.ts` — типы проекта
+- `lib/database.ts` — PostgreSQL клиент
+- `lib/auth.ts` — логика JWT
+- `crew/knowledge-base.json` — база знаний агентов (259 маршрутов)
 
 ---
 
@@ -62,19 +62,19 @@
 - TypeScript строгий, без `any`
 - Все API routes с валидацией входных данных
 - JWT проверка на каждом защищённом маршруте
-- Prisma транзакции для связанных операций
+- SQL только параметризованный: `$1, $2` — никогда конкатенация
 - Обработка ошибок с понятными сообщениями на русском
 
 **Запрещено:**
 - `console.log` в продакшн-коде
-- Хардкод строк подключения и секретов — только через `.env`
-- Прямые SQL-запросы мимо Prisma
-- Изменение схемы БД без миграции
+- Хардкод строк подключения и секретов — только через `.env.local`
+- Изменение схемы БД без миграции (следующая: `024_...sql`)
+- Читать `kamchatka_routes` напрямую — только через `v_kamchatka_routes_api`
 
 **Стиль:**
-- Компоненты в `src/components/`, атомарно
-- Хуки в `src/hooks/`
-- Утилиты в `src/lib/`
+- Компоненты в `components/`, атомарно
+- Хуки в `hooks/`
+- Утилиты в `lib/`
 - Именование: `kebab-case` для файлов, `PascalCase` для компонентов
 
 ---
@@ -113,6 +113,49 @@
 ## 8. ДЕПЛОЙ (Deploy)
 
 - Проверь: `npm run build` без ошибок
-- Миграции: `npx prisma migrate deploy`
+- Миграции: `node scripts/apply-new-schemas.sql` (или через psql)
 - Переменные окружения заданы на Timeweb Cloud
 - Push в `main` → автодеплой через GitHub Actions
+
+### Timeweb MCP Server
+
+Для управления деплоем через AI-агентов используется **Timeweb MCP Server**:
+- Токен: `TIMEWEB_TOKEN` (в `.cursor/mcp.json` или `.vscode/mcp.json`, **не** в `.env.local`)
+- Команды: `create_timeweb_app`, `get_deploy_settings`, `add_vcs_provider`
+- Не использовать прямой `TIMEWEB_API_TOKEN` в скриптах — только через MCP
+
+```json
+{
+  "mcpServers": {
+    "timeweb-mcp-server": {
+      "command": "npx",
+      "args": ["timeweb-mcp-server"],
+      "env": { "TIMEWEB_TOKEN": "your-timeweb-token" }
+    }
+  }
+}
+```
+
+---
+
+## 9. МАРШРУТЫ (Routes Knowledge)
+
+**Текущее состояние БД:**
+- `agent_route_knowledge`: **259 маршрутов**, 14 категорий
+- Источники: mestechkokam.ru (HTML), zimaletokamchatka.ru (GraphQL/Strapi), kamchatintour.ru (HTML/Bitrix)
+
+**Workflow обновления базы знаний агентов:**
+```bash
+# 1. Скрапинг новых маршрутов (без AI)
+npm run ai:scrape-unique:direct
+
+# 2. Пересобрать knowledge-base.json (259 маршрутов)
+npm run ai:setup-agent-rag
+
+# 3. Регенерировать конфиги 5 агентов
+python3 crew/agent-trainer.py
+```
+
+**Дедупликация** работает на двух уровнях:
+1. По `route_dedupe_key` (hostname:slug)
+2. По нормализованному заголовку (lowercase + ё→е + strip non-alnum)

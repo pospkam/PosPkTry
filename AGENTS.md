@@ -68,7 +68,7 @@ API endpoints:  210+
 Роли:           6 (полностью реализованы)
 БД миграций:    23 (прямой SQL)
 Туров в БД:     11 (10 рыбалка, 1 комбо)
-Маршрутов:      129 (kamchatka_routes + agent_route_knowledge)
+Маршрутов:      259 (agent_route_knowledge, 14 категорий, 3 источника)
 Контрибьюторы:  3
 ---
 
@@ -591,9 +591,14 @@ npm run db:seed    # Тестовые данные
 1. Единый источник чтения маршрутов: `v_kamchatka_routes_api`.
 2. Группы маршрутов брать только из `v_kamchatka_route_groups_api`.
 3. Не читать `kamchatka_routes` напрямую в новых API/скриптах, кроме импорта.
-4. Полная синхронизация базы маршрутов: `npm run db:import:kamchatka-routes -- --reset`.
-5. После импорта всегда запускать `npm run db:sync:agent-routes`.
+4. Скрапинг новых маршрутов: `npm run ai:scrape-unique:direct` (3 источника, без AI).
+5. После скрапинга — обновить базу знаний агентов:
+   ```bash
+   npm run ai:setup-agent-rag   # → crew/knowledge-base.json (259 маршрутов)
+   python3 crew/agent-trainer.py  # → crew/agents.json (5 агентов)
+   ```
 6. Для RAG использовать `agent_route_knowledge`, fallback только на `v_kamchatka_routes_api`.
+7. Дедупликация двухуровневая: по `route_dedupe_key` (hostname:slug) + по нормализованному заголовку.
 
 ---
 
@@ -605,31 +610,32 @@ npm run db:seed    # Тестовые данные
 
 Timeweb Cloud Apps автоматически деплоит при push в main.
 
-### MCP Server (опционально)
+### MCP Server (управление деплоем)
 
-Проект включает MCP сервер для управления Timeweb Cloud через GitHub Copilot:
+Для управления деплоем на Timeweb Cloud через AI-агентов:
 
-```bash
-# Установить зависимости
-npm install @modelcontextprotocol/sdk
-
-# Настроить токен
-export TIMEWEB_TOKEN="your_timeweb_api_token"
-
-# Запустить MCP сервер
-node timeweb-mcp-server.ts
+```json
+{
+  "mcpServers": {
+    "timeweb-mcp-server": {
+      "command": "npx",
+      "args": ["timeweb-mcp-server"],
+      "env": { "TIMEWEB_TOKEN": "your_timeweb_api_token" }
+    }
+  }
+}
 ```
+Токен `TIMEWEB_TOKEN` хранится только в конфиге MCP (`.cursor/mcp.json` или `.vscode/mcp.json`), **не** в `.env.local` и **не** в коде.
 
 **Доступные инструменты:**
-- `get_app_status` — получить статус приложения
-- `get_logs` — получить логи (build/runtime)
-- `trigger_deploy` — запустить деплой
-- `update_env_vars` — обновить переменные окружения
-- `get_deployments` — получить список деплоев
+- `create_timeweb_app` — создать приложение (автоопределяет framework)
+- `add_vcs_provider` — подключить репозиторий
+- `get_deploy_settings` — настройки деплоя
+- `get_deployments` — список деплоев
 
 ```bash
-# Ручной деплой через API
-gitpod automations task start deploy
+# Ручной деплой через git
+git push origin main   # → GitHub Actions → Timeweb автодеплой
 ```
 
 ## Правила кода
@@ -664,11 +670,11 @@ gitpod automations task start deploy
 
 ```
 DATABASE_URL=postgresql://...
-TIMEWEB_API_TOKEN=...
 NEXTAUTH_SECRET=...
 DEEPSEEK_API_KEY=...
 MINIMAX_API_KEY=...
 XAI_API_KEY=...
+# TIMEWEB_TOKEN — только в .cursor/mcp.json или .vscode/mcp.json (не здесь)
 ```
 
 ### AI Providers
