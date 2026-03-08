@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { AgentClient, ClientFormData } from '@/types';
+import toast from 'react-hot-toast';
 
 interface ClientFormModalProps {
   client: AgentClient | null;
@@ -43,7 +44,7 @@ export function ClientFormModal({ client, onClose, onSave }: ClientFormModalProp
     e.preventDefault();
 
     if (!formData.name || !formData.email) {
-      alert('Пожалуйста, заполните имя и email');
+      toast.error('Пожалуйста, заполните имя и email');
       return;
     }
 
@@ -64,11 +65,11 @@ export function ClientFormModal({ client, onClose, onSave }: ClientFormModalProp
       if (result.success) {
         onSave();
       } else {
-        alert(`Ошибка: ${result.error}`);
+        toast.error(`Ошибка: ${result.error}`);
       }
     } catch (error) {
       console.error('Error saving client:', error);
-      alert('Ошибка при сохранении клиента');
+      toast.error('Ошибка при сохранении клиента');
     } finally {
       setSaving(false);
     }

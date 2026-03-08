@@ -7,6 +7,7 @@ import { GearCard } from '@/components/gear/GearCard';
 import { GearFilters } from '@/components/gear/GearFilters';
 import { GearBookingForm } from '@/components/gear/GearBookingForm';
 import { LoadingSpinner } from '@/components/admin/shared';
+import toast from 'react-hot-toast';
 
 interface GearItem {
   id: string;
@@ -68,7 +69,7 @@ export default function GearHubClient() {
   const handleBookingComplete = () => {
     setShowBookingForm(false);
     setSelectedGear(null);
-    alert('Заявка на аренду отправлена! Мы свяжемся с вами для подтверждения.');
+    toast.success('Заявка на аренду отправлена! Мы свяжемся с вами для подтверждения.');
     fetchGear(); // Обновляем данные
   };
 

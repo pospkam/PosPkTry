@@ -6,6 +6,7 @@ import { GuestSelector } from './ui/GuestSelector';
 import { LoadingSpinner } from '@/components/admin/shared';
 import { CloudPaymentsWidget } from '@/components/payments/CloudPaymentsWidget';
 import { useAuth } from '@/contexts/AuthContext';
+import toast from 'react-hot-toast';
 
 interface TourBookingFormProps {
   tourId: string;
@@ -110,7 +111,7 @@ export function TourBookingForm({
     e.preventDefault();
 
     if (!selectedDate) {
-      alert('Пожалуйста, выберите дату');
+      toast.error('Пожалуйста, выберите дату');
       return;
     }
 
@@ -118,7 +119,7 @@ export function TourBookingForm({
     const spotsLeft = getSpotsLeft(selectedDate);
 
     if (totalGuests > spotsLeft) {
-      alert(`Недостаточно мест. Доступно: ${spotsLeft}`);
+      toast.error(`Недостаточно мест. Доступно: ${spotsLeft}`);
       return;
     }
 
@@ -139,20 +140,20 @@ export function TourBookingForm({
       setShowPayment(true);
     } catch (error) {
       console.error('Error submitting booking:', error);
-      alert('Ошибка при создании бронирования');
+      toast.error('Ошибка при создании бронирования');
     } finally {
       setSubmitting(false);
     }
   };
 
   const handlePaymentSuccess = async (_transactionId: number) => {
-    alert('Оплата прошла успешно! Бронирование подтверждено.');
+    toast.success('Оплата прошла успешно! Бронирование подтверждено.');
     // TODO: Редирект на страницу подтверждения
   };
 
   const handlePaymentFail = (reason: string) => {
     console.error('Payment failed:', reason);
-    alert(`Ошибка оплаты: ${reason}`);
+    toast.error(`Ошибка оплаты: ${reason}`);
     setShowPayment(false);
   };
 

@@ -3,16 +3,17 @@
 import React, { useState } from 'react';
 import { Protected } from '@/components/auth/Protected';
 import { OperatorNav } from '@/components/operator/OperatorNav';
-import { 
-  FileText, 
-  Download, 
-  Calendar, 
-  TrendingUp, 
-  Users, 
+import {
+  FileText,
+  Download,
+  Calendar,
+  TrendingUp,
+  Users,
   Wallet,
   BarChart3,
   PieChart
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface ReportType {
   id: string;
@@ -82,7 +83,7 @@ export default function ReportsPageClient() {
     setGenerating(false);
     
     // В реальности здесь будет скачивание файла
-    alert(`Отчет "${reportTypes.find(r => r.id === selectedReport)?.name}" сгенерирован`);
+    toast.success(`Отчет "${reportTypes.find(r => r.id === selectedReport)?.name}" сгенерирован`);
   };
 
   return (

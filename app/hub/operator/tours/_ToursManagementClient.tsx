@@ -15,6 +15,7 @@ import {
 } from '@/components/admin/shared';
 import { OperatorTour } from '@/types/operator';
 import { useAuth } from '@/contexts/AuthContext';
+import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { Users, Plus, Star } from 'lucide-react';
 
@@ -93,11 +94,11 @@ export default function ToursManagementClient() {
       if (response.ok) {
         fetchTours();
       } else {
-        alert(result.message || 'Ошибка при удалении тура');
+        toast.error(result.message || 'Ошибка при удалении тура');
       }
     } catch (error) {
       console.error('Error deleting tour:', error);
-      alert('Ошибка при удалении тура');
+      toast.error('Ошибка при удалении тура');
     }
   };
 

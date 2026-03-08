@@ -7,6 +7,7 @@ import { OperatorNav } from '@/components/operator/OperatorNav';
 import { TourForm } from '@/components/operator/Tours/TourForm';
 import { TourFormData } from '@/types/operator';
 import { useAuth } from '@/contexts/AuthContext';
+import toast from 'react-hot-toast';
 
 export default function NewTourClient() {
   const { user } = useAuth();
@@ -25,7 +26,7 @@ export default function NewTourClient() {
       const result = await response.json();
 
       if (result.success) {
-        alert('Тур успешно создан!');
+        toast.success('Тур успешно создан!');
         router.push('/hub/operator/tours');
       } else {
         throw new Error(result.error || 'Failed to create tour');

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { DataTable } from '../shared/DataTable';
 import { LoadingSpinner } from '../shared/LoadingSpinner';
 import { StatusBadge } from '../shared/StatusBadge';
+import toast from 'react-hot-toast';
 
 interface EmailTemplate {
   id: string;
@@ -67,13 +68,13 @@ export function EmailTemplatesManager() {
         fetchTemplates();
         setEditingTemplate(null);
         setShowCreateForm(false);
-        alert(isNew ? 'Шаблон создан успешно' : 'Шаблон обновлен успешно');
+        toast.success(isNew ? 'Шаблон создан успешно' : 'Шаблон обновлен успешно');
       } else {
-        alert(`Ошибка: ${result.error}`);
+        toast.error(`Ошибка: ${result.error}`);
       }
     } catch (err) {
       console.error('Error saving template:', err);
-      alert('Ошибка при сохранении шаблона');
+      toast.error('Ошибка при сохранении шаблона');
     }
   };
 
@@ -89,13 +90,13 @@ export function EmailTemplatesManager() {
 
       if (result.success) {
         fetchTemplates();
-        alert('Шаблон удален успешно');
+        toast.success('Шаблон удален успешно');
       } else {
-        alert(`Ошибка: ${result.error}`);
+        toast.error(`Ошибка: ${result.error}`);
       }
     } catch (err) {
       console.error('Error deleting template:', err);
-      alert('Ошибка при удалении шаблона');
+      toast.error('Ошибка при удалении шаблона');
     }
   };
 
@@ -247,7 +248,7 @@ function EmailTemplateForm({ template, onSave, onCancel }: EmailTemplateFormProp
     e.preventDefault();
 
     if (!formData.name || !formData.subject || !formData.type || !formData.htmlContent) {
-      alert('Пожалуйста, заполните все обязательные поля');
+      toast.error('Пожалуйста, заполните все обязательные поля');
       return;
     }
 

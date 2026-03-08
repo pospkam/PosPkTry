@@ -8,6 +8,7 @@ import { TourForm } from '@/components/operator/Tours/TourForm';
 import { LoadingSpinner, EmptyState } from '@/components/admin/shared';
 import { TourFormData, OperatorTour } from '@/types/operator';
 import { useAuth } from '@/contexts/AuthContext';
+import toast from 'react-hot-toast';
 import GenerateTagsButton from '@/components/operator/GenerateTagsButton';
 import { AlertTriangle } from 'lucide-react';
 
@@ -59,7 +60,7 @@ export default function EditTourClient() {
       const result = await response.json();
 
       if (result.success) {
-        alert('Тур успешно обновлён!');
+        toast.success('Тур успешно обновлён!');
         router.push('/hub/operator/tours');
       } else {
         throw new Error(result.error || 'Failed to update tour');

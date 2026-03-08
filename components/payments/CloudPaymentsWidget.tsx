@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Script from 'next/script';
+import toast from 'react-hot-toast';
 
 interface CloudPaymentsWidgetProps {
   amount: number;
@@ -45,12 +46,12 @@ export function CloudPaymentsWidget({
 
   const handlePayment = () => {
     if (!scriptLoaded || !window.cp) {
-      alert('Платёжная система загружается, попробуйте через несколько секунд');
+      toast.error('Платёжная система загружается, попробуйте через несколько секунд');
       return;
     }
 
     if (!publicId) {
-      alert('Платёжная система не настроена. Свяжитесь с администратором.');
+      toast.error('Платёжная система не настроена. Свяжитесь с администратором.');
       return;
     }
 

@@ -100,6 +100,7 @@ import { AuthProvider } from '@/contexts/AuthContext'
 import { OrdersProvider } from '@/contexts/OrdersContext'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import FloatingAIButtonWrapper from '@/components/ai/FloatingAIButtonWrapper'
+import { Toaster } from 'react-hot-toast'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -111,6 +112,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <OrdersProvider>
                 {children}
                 <FloatingAIButtonWrapper />
+                <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
               </OrdersProvider>
             </RoleProvider>
           </AuthProvider>

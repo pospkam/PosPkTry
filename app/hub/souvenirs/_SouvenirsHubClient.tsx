@@ -9,6 +9,7 @@ import { ShoppingCart } from '@/components/souvenirs/ShoppingCart';
 import { SouvenirCheckout } from '@/components/souvenirs/SouvenirCheckout';
 import { SouvenirFilters } from '@/components/souvenirs/SouvenirFilters';
 import { LoadingSpinner } from '@/components/admin/shared';
+import toast from 'react-hot-toast';
 
 interface Souvenir {
   id: string;
@@ -121,7 +122,7 @@ export default function SouvenirsHubClient() {
   const handleOrderComplete = () => {
     setCart([]);
     setView('catalog');
-    alert('Заказ успешно оформлен! Мы свяжемся с вами в ближайшее время.');
+    toast.success('Заказ успешно оформлен! Мы свяжемся с вами в ближайшее время.');
   };
 
   // Фильтрация и сортировка товаров

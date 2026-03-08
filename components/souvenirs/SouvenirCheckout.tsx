@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
+import toast from 'react-hot-toast';
 
 interface CartItem {
   id: string;
@@ -99,14 +100,14 @@ export function SouvenirCheckout({ items, onBack, onOrderComplete }: SouvenirChe
       const result = await response.json();
 
       if (result.success) {
-        alert(`Заказ #${result.data.orderId} успешно создан! Мы свяжемся с вами в ближайшее время.`);
+        toast.success(`Заказ #${result.data.orderId} успешно создан! Мы свяжемся с вами в ближайшее время.`);
         onOrderComplete();
       } else {
         throw new Error(result.error || 'Ошибка создания заказа');
       }
     } catch (error) {
       console.error('Order creation error:', error);
-      alert('Произошла ошибка при создании заказа. Попробуйте позже.');
+      toast.error('Произошла ошибка при создании заказа. Попробуйте позже.');
     } finally {
       setLoading(false);
     }

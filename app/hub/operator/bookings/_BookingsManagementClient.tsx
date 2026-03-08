@@ -15,6 +15,7 @@ import {
 import { OperatorBooking } from '@/types/operator';
 import { Check } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import toast from 'react-hot-toast';
 
 export default function BookingsManagementClient() {
   const { user } = useAuth();
@@ -70,14 +71,14 @@ export default function BookingsManagementClient() {
       const result = await response.json();
 
       if (response.ok) {
-        alert(result.message || 'Статус обновлён успешно');
+        toast.success(result.message || 'Статус обновлён успешно');
         fetchBookings();
       } else {
-        alert(result.error || 'Ошибка при обновлении');
+        toast.error(result.error || 'Ошибка при обновлении');
       }
     } catch (error) {
       console.error('Error updating booking:', error);
-      alert('Ошибка при обновлении бронирования');
+      toast.error('Ошибка при обновлении бронирования');
     }
   };
 

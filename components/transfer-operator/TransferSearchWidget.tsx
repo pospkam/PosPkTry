@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { TransferSearchRequest, TransferOption, TransferSearchResponse } from '@/types/transfer';
 import { ChevronDown, ChevronRight, Search, Clock, Star, Car, CarFront, Bus } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface TransferSearchWidgetProps {
   className?: string;
@@ -340,7 +341,7 @@ function TransferCard({ transfer }: { transfer: TransferOption }) {
     // Временная заглушка
     setTimeout(() => {
       setIsBooking(false);
-      alert('Функция бронирования будет реализована в следующем этапе');
+      toast('Функция бронирования будет реализована в следующем этапе');
     }, 1000);
   };
 

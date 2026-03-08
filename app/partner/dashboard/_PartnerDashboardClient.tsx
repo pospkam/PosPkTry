@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Mountain, Bus, Building2, Backpack, Loader2, ClipboardList, Lightbulb, Clock } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface Partner {
   id: string;
@@ -199,7 +200,7 @@ export default function PartnerDashboardClient() {
                   </div>
                 </div>
                 <button
-                  onClick={() => alert('Форма добавления трансфера в разработке')}
+                  onClick={() => toast.error('Форма добавления трансфера в разработке')}
                   className="px-6 py-3 bg-premium-gold text-premium-black font-bold rounded-xl hover:bg-premium-gold/90 transition-colors"
                 >
                   + Добавить маршрут
@@ -251,7 +252,7 @@ export default function PartnerDashboardClient() {
                   </div>
                 </div>
                 <button
-                  onClick={() => alert('Форма добавления снаряжения в разработке')}
+                  onClick={() => toast.error('Форма добавления снаряжения в разработке')}
                   className="px-6 py-3 bg-premium-gold text-premium-black font-bold rounded-xl hover:bg-premium-gold/90 transition-colors"
                 >
                   + Добавить снаряжение

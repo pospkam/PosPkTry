@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { DataTable } from '../shared/DataTable';
 import { LoadingSpinner } from '../shared/LoadingSpinner';
 import { StatusBadge } from '../shared/StatusBadge';
+import toast from 'react-hot-toast';
 
 interface Payout {
   id: string;
@@ -76,13 +77,13 @@ export function PayoutsManager() {
 
       if (result.success) {
         fetchPayouts(); // Обновляем список
-        alert('Выплата создана успешно');
+        toast.success('Выплата создана успешно');
       } else {
-        alert(`Ошибка: ${result.error}`);
+        toast.error(`Ошибка: ${result.error}`);
       }
     } catch (err) {
       console.error('Error creating payout:', err);
-      alert('Ошибка при создании выплаты');
+      toast.error('Ошибка при создании выплаты');
     }
   };
 

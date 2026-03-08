@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { Fuel, RefreshCw, Car } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface Car {
   id: string;
@@ -174,14 +175,14 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
       const result = await response.json();
 
       if (result.success) {
-        alert(`Заявка на аренду #${result.data.rentalId} создана! Мы свяжемся с вами для подтверждения. Не забудьте залог ${car.deposit.toLocaleString('ru-RU')} ₽.`);
+        toast.success(`Заявка на аренду #${result.data.rentalId} создана! Мы свяжемся с вами для подтверждения. Не забудьте залог ${car.deposit.toLocaleString('ru-RU')} ₽.`);
         onBookingComplete();
       } else {
         throw new Error(result.error || 'Ошибка создания заявки');
       }
     } catch (error) {
       console.error('Car booking error:', error);
-      alert('Произошла ошибка при создании заявки. Попробуйте позже.');
+      toast.error('Произошла ошибка при создании заявки. Попробуйте позже.');
     } finally {
       setLoading(false);
     }

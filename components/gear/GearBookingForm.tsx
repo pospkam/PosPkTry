@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { Backpack } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface GearItem {
   id: string;
@@ -130,14 +131,14 @@ export function GearBookingForm({ gear, onBookingComplete, onCancel }: GearBooki
       const result = await response.json();
 
       if (result.success) {
-        alert(`Заявка на аренду #${result.data.rentalId} создана! Мы свяжемся с вами для подтверждения.`);
+        toast.success(`Заявка на аренду #${result.data.rentalId} создана! Мы свяжемся с вами для подтверждения.`);
         onBookingComplete();
       } else {
         throw new Error(result.error || 'Ошибка создания заявки');
       }
     } catch (error) {
       console.error('Booking error:', error);
-      alert('Произошла ошибка при создании заявки. Попробуйте позже.');
+      toast.error('Произошла ошибка при создании заявки. Попробуйте позже.');
     } finally {
       setLoading(false);
     }

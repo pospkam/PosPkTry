@@ -7,6 +7,7 @@ import { CarCard } from '@/components/cars/CarCard';
 import { CarFilters } from '@/components/cars/CarFilters';
 import { CarBookingForm } from '@/components/cars/CarBookingForm';
 import { LoadingSpinner } from '@/components/admin/shared';
+import toast from 'react-hot-toast';
 
 interface Car {
   id: string;
@@ -75,7 +76,7 @@ export default function CarsHubClient() {
   const handleBookingComplete = () => {
     setView('catalog');
     setSelectedCar(null);
-    alert('Заявка на аренду автомобиля отправлена! Мы свяжемся с вами для подтверждения.');
+    toast.success('Заявка на аренду автомобиля отправлена! Мы свяжемся с вами для подтверждения.');
     fetchCars(); // Обновляем данные
   };
 

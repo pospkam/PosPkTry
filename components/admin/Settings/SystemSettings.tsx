@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { LoadingSpinner } from '../shared/LoadingSpinner';
+import toast from 'react-hot-toast';
 
 interface SystemSettings {
   [category: string]: {
@@ -77,13 +78,13 @@ export function SystemSettings() {
       if (result.success) {
         setChanges({});
         fetchSettings(); // Перезагружаем настройки
-        alert('Настройки сохранены успешно');
+        toast.success('Настройки сохранены успешно');
       } else {
-        alert(`Ошибка: ${result.error}`);
+        toast.error(`Ошибка: ${result.error}`);
       }
     } catch (err) {
       console.error('Error saving settings:', err);
-      alert('Ошибка при сохранении настроек');
+      toast.error('Ошибка при сохранении настроек');
     } finally {
       setSaving(false);
     }

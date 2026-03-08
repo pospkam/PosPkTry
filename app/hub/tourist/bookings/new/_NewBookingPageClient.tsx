@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { TouristNav } from '@/components/tourist/TouristNav';
+import toast from 'react-hot-toast';
 
 function NewBookingForm() {
   const router = useRouter();
@@ -45,7 +46,7 @@ function NewBookingForm() {
     e.preventDefault();
     
     if (!user) {
-      alert('Необходимо войти в систему');
+      toast.error('Необходимо войти в систему');
       router.push('/auth/login');
       return;
     }
@@ -70,14 +71,14 @@ function NewBookingForm() {
       const result = await response.json();
 
       if (result.success) {
-        alert('Бронирование создано успешно!');
+        toast.success('Бронирование создано успешно!');
         router.push('/hub/tourist/bookings');
       } else {
-        alert(result.error || 'Ошибка при создании бронирования');
+        toast.error(result.error || 'Ошибка при создании бронирования');
       }
     } catch (error) {
       console.error('Booking error:', error);
-      alert('Ошибка при создании бронирования');
+      toast.error('Ошибка при создании бронирования');
     } finally {
       setSubmitting(false);
     }

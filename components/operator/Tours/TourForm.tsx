@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { TourFormData } from '@/types/operator';
+import toast from 'react-hot-toast';
 
 interface KamchatkaRoute {
   id: string;
@@ -88,7 +89,7 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
     
     // Валидация
     if (!formData.name || !formData.description || !formData.price) {
-      alert('Пожалуйста, заполните все обязательные поля');
+      toast.error('Пожалуйста, заполните все обязательные поля');
       return;
     }
 
@@ -97,7 +98,7 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
       await onSubmit(formData);
     } catch (error) {
       console.error('Error submitting form:', error);
-      alert('Ошибка при сохранении тура');
+      toast.error('Ошибка при сохранении тура');
     } finally {
       setLoading(false);
     }

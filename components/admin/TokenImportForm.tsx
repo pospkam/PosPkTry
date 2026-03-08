@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Key, Eye, EyeOff, Check, AlertCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface TokenImportFormProps {
   onTokenSaved?: (token: string) => void;
@@ -63,7 +64,7 @@ export function TokenImportForm({ onTokenSaved }: TokenImportFormProps) {
 
       if (response.ok) {
         setError('');
-        alert('Токен работает! Подключение к Timeweb Cloud успешно.');
+        toast.success('Токен работает! Подключение к Timeweb Cloud успешно.');
       } else if (response.status === 401) {
         setError('Неверный токен (401 Unauthorized)');
       } else if (response.status === 403) {
