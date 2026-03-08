@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import ToursPageClient from './_ToursPageClient';
 
 export const metadata: Metadata = {
@@ -8,5 +9,9 @@ export const metadata: Metadata = {
 };
 
 export default function ToursPage() {
-  return <ToursPageClient />;
+  return (
+    <Suspense>
+      <ToursPageClient />
+    </Suspense>
+  );
 }

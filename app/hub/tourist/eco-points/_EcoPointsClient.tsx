@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { Protected } from '@/components/auth/Protected';
 import { Leaf, Loader2, TreePine, Recycle, Camera, Users, Mountain } from 'lucide-react';
 
-// Действия, за которые начисляются эко-баллы
 interface EcoAction {
   id: string;
   label: string;
@@ -21,8 +20,6 @@ const ECO_ACTIONS: EcoAction[] = [
   { id: 'group_transfer', label: 'Групповой трансфер вместо личного', points: 20, icon: 'users' },
 ];
 
-// Текущий баланс и уровень
-const CURRENT_POINTS = 350;
 const NEXT_LEVEL = 500;
 
 function ActionIcon({ type, className }: { type: EcoAction['icon']; className?: string }) {
@@ -40,14 +37,26 @@ function ActionIcon({ type, className }: { type: EcoAction['icon']; className?: 
 
 export default function EcoPointsClient() {
   const [loading, setLoading] = useState(true);
+  const [currentPoints, setCurrentPoints] = useState(0);
+  const [error, setError] = useState('');
 
-  // Имитация загрузки данных
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 500);
-    return () => clearTimeout(timer);
+    const fetchPoints = async () => {
+      try {
+        const res = await fetch('/api/eco-points/user');
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Ошибка загрузки');
+        setCurrentPoints(data.data?.totalPoints ?? 0);
+      } catch {
+        setError('Не удалось загрузить эко-баллы');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPoints();
   }, []);
 
-  const progressPercent = Math.min((CURRENT_POINTS / NEXT_LEVEL) * 100, 100);
+  const progressPercent = Math.min((currentPoints / NEXT_LEVEL) * 100, 100);
 
   return (
     <Protected roles={['tourist', 'admin']}>
@@ -82,50 +91,50 @@ export default function EcoPointsClient() {
               />
               <p
                 className="text-5xl font-bold"
-                style={{ color: 'var(--text-primary)' }}
+                style={{ color: error ? 'var(--danger)' : 'var(--text-primary)' }}
               >
-                {CURRENT_POINTS}
+                {error ? '—' : currentPoints}
               </p>
               <p
                 className="text-sm mt-1"
                 style={{ color: 'var(--text-muted)' }}
               >
-                эко-баллов
+                {error ? error : 'эко-баллов'}
               </p>
 
-              {/* Прогресс-бар до следующего уровня */}
-              <div className="mt-6 max-w-md mx-auto">
-                <div className="flex justify-between text-sm mb-1">
-                  <span style={{ color: 'var(--text-secondary)' }}>
-                    До следующего уровня
-                  </span>
-                  <span style={{ color: 'var(--text-secondary)' }}>
-                    {CURRENT_POINTS} / {NEXT_LEVEL}
-                  </span>
-                </div>
-                <div
-                  className="w-full h-3 rounded-full overflow-hidden"
-                  style={{ backgroundColor: 'var(--border)' }}
-                >
+              {!error && (
+                <div className="mt-6 max-w-md mx-auto">
+                  <div className="flex justify-between text-sm mb-1">
+                    <span style={{ color: 'var(--text-secondary)' }}>
+                      До следующего уровня
+                    </span>
+                    <span style={{ color: 'var(--text-secondary)' }}>
+                      {currentPoints} / {NEXT_LEVEL}
+                    </span>
+                  </div>
                   <div
-                    className="h-full rounded-full transition-all"
-                    style={{
-                      width: `${progressPercent}%`,
-                      backgroundColor: 'var(--success)',
-                    }}
-                  />
+                    className="w-full h-3 rounded-full overflow-hidden"
+                    style={{ backgroundColor: 'var(--border)' }}
+                  >
+                    <div
+                      className="h-full rounded-full transition-all"
+                      style={{
+                        width: `${progressPercent}%`,
+                        backgroundColor: 'var(--success)',
+                      }}
+                    />
+                  </div>
+                  <p
+                    className="text-xs mt-2"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
+                    500 баллов = скидка 10% на следующий тур
+                  </p>
                 </div>
-                <p
-                  className="text-xs mt-2"
-                  style={{ color: 'var(--text-muted)' }}
-                >
-                  {/* Бонусы за достижение уровня */}
-                  500 баллов = скидка 10% на следующий тур
-                </p>
-              </div>
+              )}
             </div>
 
-            {/* Список действий для начисления баллов */}
+            {/* Список действий */}
             <div>
               <h2
                 className="text-lg font-semibold mb-4"
@@ -148,10 +157,7 @@ export default function EcoPointsClient() {
                       className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
                       style={{ backgroundColor: 'var(--bg-primary)' }}
                     >
-                      <ActionIcon
-                        type={action.icon}
-                        className="w-5 h-5"
-                      />
+                      <ActionIcon type={action.icon} className="w-5 h-5" />
                     </div>
 
                     <span

@@ -1,22 +1,28 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, AlertTriangle, SlidersHorizontal } from 'lucide-react';
+import { Search, AlertTriangle, SlidersHorizontal, Sun, Moon, User, House, Map, Heart } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import { useTheme } from '@/contexts/ThemeContext';
 import { TourCard, TourCardData } from '@/components/tours/TourCard';
 
 const CATEGORIES = [
-  { value: '', label: 'Все категории' },
-  { value: 'fishing',    label: 'Рыбалка' },
-  { value: 'volcanoes',  label: 'Вулканы' },
-  { value: 'thermal',    label: 'Термы' },
-  { value: 'trekking',   label: 'Треккинг' },
-  { value: 'helicopter', label: 'Вертолёт' },
-  { value: 'bears',      label: 'Медведи' },
-  { value: 'lakes',      label: 'Озёра' },
-  { value: 'mountains',  label: 'Горы' },
-  { value: 'rivers',     label: 'Реки' },
-  { value: 'eco',        label: 'Эко-тур' },
-  { value: 'combo',      label: 'Комбо' },
+  { value: '',                     label: 'Все категории' },
+  { value: 'vulkani',              label: 'Вулканы' },
+  { value: 'rybalka',              label: 'Рыбалка' },
+  { value: 'termalnye_istochniki', label: 'Термы' },
+  { value: 'geyzery',              label: 'Гейзеры' },
+  { value: 'trekking',             label: 'Треккинг' },
+  { value: 'vertoletnye_tury',     label: 'Вертолёт' },
+  { value: 'medvedi',              label: 'Медведи' },
+  { value: 'morskie_progulki',     label: 'Море' },
+  { value: 'snegohod',             label: 'Снегоход' },
+  { value: 'dzhip',                label: 'Джип' },
+  { value: 'lakes',                label: 'Озёра' },
+  { value: 'mountains',            label: 'Горы' },
+  { value: 'rivers',               label: 'Реки' },
+  { value: 'eco',                  label: 'Эко-тур' },
 ];
 
 interface ApiTour {
@@ -60,6 +66,9 @@ function toCardData(t: ApiTour): TourCardData {
 }
 
 export default function ToursPageClient() {
+  const searchParams = useSearchParams();
+  const { isDark, toggleTheme } = useTheme();
+
   const [tours, setTours] = useState<ApiTour[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -68,7 +77,7 @@ export default function ToursPageClient() {
   const LIMIT = 18;
 
   const [search, setSearch]     = useState('');
-  const [category, setCategory] = useState('');
+  const [category, setCategory] = useState(() => searchParams.get('category') ?? '');
   const [difficulty, setDifficulty] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
 
@@ -128,12 +137,29 @@ export default function ToursPageClient() {
   }
 
   return (
-    <div className="min-h-screen">
-      {/* Шапка */}
-      <div className="bg-white/10 backdrop-blur-sm border-b border-white/15">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-1">Туры по Камчатке</h1>
-          <p className="text-white/60 text-lg">Вулканы, реки, термы и дикая природа</p>
+    <div className="min-h-screen pb-24 md:pb-0">
+      {/* Навигационная шапка */}
+      <header style={{ background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.15)', position: 'sticky', top: 0, zIndex: 50 }}>
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+          <Link href="/" style={{ fontFamily: "var(--font-playfair,'Playfair Display',serif)", fontSize: '1.4rem', fontWeight: 700, color: '#fff', textDecoration: 'none' }}>
+            KH
+          </Link>
+          <h1 className="text-lg font-bold text-white hidden sm:block">Туры по Камчатке</h1>
+          <div className="flex items-center gap-3">
+            <button onClick={toggleTheme} className="text-white/70 hover:text-white transition-colors" aria-label="Переключить тему">
+              {isDark ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+            <Link href="/profile" className="text-white/70 hover:text-white transition-colors" aria-label="Профиль">
+              <User size={20} />
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      {/* Подзаголовок */}
+      <div className="bg-white/5 border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <p className="text-white/60">Вулканы, реки, термы и дикая природа</p>
         </div>
       </div>
 
@@ -240,6 +266,22 @@ export default function ToursPageClient() {
           </>
         )}
       </div>
+
+      {/* Bottom nav (mobile) */}
+      <nav className="md:hidden" aria-label="Основная навигация" style={{ position: 'fixed', bottom: '32px', left: '16px', right: '16px', zIndex: 100, background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: '50px', padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-around' }}>
+        {([
+          { icon: House, label: 'Домой', href: '/' },
+          { icon: Map, label: 'Карта', href: '/map' },
+          { icon: Heart, label: 'Избранное', href: '/hub/tourist/wishlist' },
+          { icon: User, label: 'ЛК', href: '/profile' },
+          { icon: AlertTriangle, label: 'СОС', href: '/safety', sos: true },
+        ] as { icon: React.ElementType; label: string; href: string; sos?: boolean }[]).map(({ icon: Icon, label, href, sos }) => (
+          <Link key={href} href={href} aria-label={label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', color: sos ? '#ef4444' : href === '/tours' ? '#00D4FF' : 'rgba(255,255,255,0.8)', textDecoration: 'none', padding: '4px 8px', borderRadius: '12px' }}>
+            <Icon size={20} strokeWidth={1.5} />
+            <span style={{ fontFamily: "var(--font-inter,'Inter',sans-serif)", fontSize: '10px', fontWeight: 500 }}>{label}</span>
+          </Link>
+        ))}
+      </nav>
     </div>
   );
 }

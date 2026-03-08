@@ -1,11 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import YandexMap from '@/components/shared/YandexMap';
 import Link from 'next/link';
 
-// Типы активностей
-type ActivityType = 'all' | 'volcano' | 'nature' | 'geyser' | 'ocean' | 'thermal';
+type ActivityType = 'all' | 'volcano' | 'nature' | 'geyser' | 'ocean' | 'thermal' | 'wildlife' | 'trekking' | 'heli' | 'winter';
 
 interface Marker {
   coords: [number, number];
@@ -15,93 +14,77 @@ interface Marker {
   color: string;
 }
 
-// Маркеры с активностями
-const KAMCHATKA_MARKERS: Marker[] = [
-  {
-    coords: [53.0444, 158.6483],
-    title: 'Петропавловск-Камчатский',
-    description: 'Столица Камчатского края',
-    activity: 'nature',
-    color: 'blue'
-  },
-  {
-    coords: [53.1574, 158.3866],
-    title: 'Авачинская бухта',
-    description: 'Одна из крупнейших бухт мира',
-    activity: 'ocean',
-    color: 'blue'
-  },
-  {
-    coords: [53.2550, 158.6474],
-    title: 'Вулкан Авачинский',
-    description: 'Действующий вулкан высотой 2741 м',
-    activity: 'volcano',
-    color: 'orange'
-  },
-  {
-    coords: [53.2869, 158.7030],
-    title: 'Вулкан Корякский',
-    description: 'Действующий вулкан высотой 3456 м',
-    activity: 'volcano',
-    color: 'orange'
-  },
-  {
-    coords: [54.7595, 160.2658],
-    title: 'Долина Гейзеров',
-    description: 'Одно из семи чудес России',
-    activity: 'geyser',
-    color: 'green'
-  },
-  {
-    coords: [52.0803, 157.9786],
-    title: 'Курильское озеро',
-    description: 'Место нереста лосося и обитания медведей',
-    activity: 'nature',
-    color: 'green'
-  },
-  {
-    coords: [52.9328, 158.0444],
-    title: 'Мутновская ГеоЭС',
-    description: 'Термальные источники',
-    activity: 'thermal',
-    color: 'red'
-  },
-  {
-    coords: [53.3833, 158.8833],
-    title: 'Налычевская долина',
-    description: 'Природный парк с термальными источниками',
-    activity: 'thermal',
-    color: 'red'
-  }
-];
-
-// Функция подсчета маркеров по активности
-const getCountForActivity = (activity: ActivityType): number => {
-  if (activity === 'all') return KAMCHATKA_MARKERS.length;
-  return KAMCHATKA_MARKERS.filter(m => m.activity === activity).length;
+// Map DB category slugs → UI activity type + color
+const CATEGORY_MAP: Record<string, { activity: ActivityType; color: string }> = {
+  vulkani:               { activity: 'volcano',  color: 'orange' },
+  geyzery:               { activity: 'geyser',   color: 'green' },
+  termalnye_istochniki:  { activity: 'thermal',  color: 'red' },
+  morskie_progulki:      { activity: 'ocean',    color: 'blue' },
+  rybalka:               { activity: 'nature',   color: 'blue' },
+  medvedi:               { activity: 'wildlife', color: 'brown' },
+  trekking:              { activity: 'trekking', color: 'green' },
+  vertoletnye_tury:      { activity: 'heli',     color: 'purple' },
+  snegohod:              { activity: 'winter',   color: 'cyan' },
+  dzhip:                 { activity: 'nature',   color: 'gray' },
+  lakes:                 { activity: 'nature',   color: 'blue' },
+  mountains:             { activity: 'trekking', color: 'gray' },
+  rivers:                { activity: 'nature',   color: 'blue' },
+  eco:                   { activity: 'nature',   color: 'green' },
 };
 
-// Фильтры активностей
-const ACTIVITY_FILTERS: Array<{ id: ActivityType; name: string; count: number }> = [
-  { id: 'all', name: 'Все точки', count: getCountForActivity('all') },
-  { id: 'volcano', name: 'Вулканы', count: getCountForActivity('volcano') },
-  { id: 'nature', name: 'Природа', count: getCountForActivity('nature') },
-  { id: 'geyser', name: 'Гейзеры', count: getCountForActivity('geyser') },
-  { id: 'ocean', name: 'Океан', count: getCountForActivity('ocean') },
-  { id: 'thermal', name: 'Термальные источники', count: getCountForActivity('thermal') }
+const ACTIVITY_FILTERS: Array<{ id: ActivityType; name: string }> = [
+  { id: 'all',      name: 'Все точки' },
+  { id: 'volcano',  name: 'Вулканы' },
+  { id: 'nature',   name: 'Природа' },
+  { id: 'geyser',   name: 'Гейзеры' },
+  { id: 'ocean',    name: 'Океан' },
+  { id: 'thermal',  name: 'Термальные' },
+  { id: 'wildlife', name: 'Животные' },
+  { id: 'trekking', name: 'Треккинг' },
+  { id: 'heli',     name: 'Вертолёт' },
+  { id: 'winter',   name: 'Зима' },
 ];
 
 export default function MapPageClient() {
   const [isExpanded, setIsExpanded] = useState(true);
   const [activeFilter, setActiveFilter] = useState<ActivityType>('all');
+  const [allMarkers, setAllMarkers] = useState<Marker[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Фильтрация маркеров с проверкой
-  const filteredMarkers = activeFilter === 'all' 
-    ? KAMCHATKA_MARKERS 
-    : KAMCHATKA_MARKERS.filter(marker => {
-        return marker.activity === activeFilter;
-      });
+  useEffect(() => {
+    const fetchRoutes = async () => {
+      try {
+        const res = await fetch('/api/kamchatka-routes?limit=500');
+        const data = await res.json();
+        if (!data.success) return;
+        const markers: Marker[] = (data.data ?? [])
+          .filter((r: { lat: number | null; lng: number | null }) => r.lat != null && r.lng != null)
+          .map((r: { title: string; description: string; category: string; lat: number; lng: number }) => {
+            const mapping = CATEGORY_MAP[r.category] ?? { activity: 'nature' as ActivityType, color: 'blue' };
+            return {
+              coords: [r.lat, r.lng] as [number, number],
+              title: r.title,
+              description: r.description ?? '',
+              activity: mapping.activity,
+              color: mapping.color,
+            };
+          });
+        setAllMarkers(markers);
+      } catch {
+        // Keep empty on error
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRoutes();
+  }, []);
 
+  const filteredMarkers = activeFilter === 'all'
+    ? allMarkers
+    : allMarkers.filter(m => m.activity === activeFilter);
+
+  const countFor = (activity: ActivityType) =>
+    activity === 'all' ? allMarkers.length : allMarkers.filter(m => m.activity === activity).length;
 
   if (!isExpanded) {
     return (
@@ -124,7 +107,6 @@ export default function MapPageClient() {
       {/* Панель управления */}
       <div className="absolute top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm">
         <div className="px-4 py-3 flex items-center justify-between">
-          {/* Левая часть - логотип и название */}
           <div className="flex items-center gap-4">
             <Link href="/" className="text-xl font-bold">
               KamHub
@@ -133,7 +115,6 @@ export default function MapPageClient() {
             <h1 className="text-lg font-semibold text-gray-800">Карта Камчатки</h1>
           </div>
 
-          {/* Кнопка свернуть */}
           <button
             onClick={() => setIsExpanded(false)}
             className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
@@ -161,7 +142,7 @@ export default function MapPageClient() {
               <span className={`ml-2 text-xs ${
                 activeFilter === filter.id ? 'text-blue-200' : 'text-gray-500'
               }`}>
-                ({filter.count})
+                ({loading ? '…' : countFor(filter.id)})
               </span>
             </button>
           ))}
@@ -182,7 +163,10 @@ export default function MapPageClient() {
       {/* Счетчик активных точек */}
       <div className="absolute bottom-4 left-4 z-40 bg-white rounded-lg shadow-lg px-4 py-2 border border-gray-200">
         <p className="text-sm text-gray-600">
-          Показано точек: <span className="font-bold text-blue-600">{filteredMarkers.length}</span>
+          {loading
+            ? 'Загрузка маршрутов...'
+            : <><span>Показано точек: </span><span className="font-bold text-blue-600">{filteredMarkers.length}</span></>
+          }
         </p>
       </div>
     </div>

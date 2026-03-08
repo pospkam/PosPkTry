@@ -1,12 +1,16 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { Sun, Moon, House, Map, Heart, User, AlertTriangle } from 'lucide-react';
 import { Protected } from '@/components/auth/Protected';
 import { LoadingSpinner } from '@/components/admin/shared';
-import { User } from '@/types';
+import { useTheme } from '@/contexts/ThemeContext';
+import { User as UserType } from '@/types';
 
 export default function ProfilePageClient() {
-  const [user, setUser] = useState<User | null>(null);
+  const { isDark, toggleTheme } = useTheme();
+  const [user, setUser] = useState<UserType | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -38,7 +42,7 @@ export default function ProfilePageClient() {
       }
 
       const data = result.data;
-      const loadedUser: User = {
+      const loadedUser: UserType = {
         id: data.id,
         email: data.email,
         name: data.name,
@@ -127,12 +131,19 @@ export default function ProfilePageClient() {
 
   return (
     <Protected roles={['tourist', 'operator', 'agent', 'guide', 'transfer', 'admin']}>
-      <main className="min-h-screen bg-transparent text-white">
-        {/* Header */}
-        <div className="bg-white/15 border-b border-white/15 p-6">
-          <h1 className="text-3xl font-black text-white">Мой профиль</h1>
-          <p className="text-white/70">Управление личными данными и предпочтениями</p>
-        </div>
+      <main className="min-h-screen bg-transparent text-white pb-24 md:pb-0">
+        {/* Навигационная шапка */}
+        <header style={{ background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.15)', position: 'sticky', top: 0, zIndex: 50 }}>
+          <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+            <Link href="/" style={{ fontFamily: "var(--font-playfair,'Playfair Display',serif)", fontSize: '1.4rem', fontWeight: 700, color: '#fff', textDecoration: 'none' }}>
+              KH
+            </Link>
+            <h1 className="text-lg font-bold text-white">Мой профиль</h1>
+            <button onClick={toggleTheme} className="text-white/70 hover:text-white transition-colors" aria-label="Переключить тему">
+              {isDark ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+          </div>
+        </header>
 
         <div className="max-w-4xl mx-auto px-6 py-8">
           {message && (
@@ -273,6 +284,22 @@ export default function ProfilePageClient() {
             </button>
           </form>
         </div>
+
+        {/* Bottom nav (mobile) */}
+        <nav className="md:hidden" aria-label="Основная навигация" style={{ position: 'fixed', bottom: '32px', left: '16px', right: '16px', zIndex: 100, background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: '50px', padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-around' }}>
+          {([
+            { icon: House, label: 'Домой', href: '/' },
+            { icon: Map, label: 'Карта', href: '/map' },
+            { icon: Heart, label: 'Избранное', href: '/hub/tourist/wishlist' },
+            { icon: User, label: 'ЛК', href: '/profile', active: true },
+            { icon: AlertTriangle, label: 'СОС', href: '/safety', sos: true },
+          ] as { icon: React.ElementType; label: string; href: string; active?: boolean; sos?: boolean }[]).map(({ icon: Icon, label, href, active, sos }) => (
+            <Link key={href} href={href} aria-label={label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', color: sos ? '#ef4444' : active ? '#00D4FF' : 'rgba(255,255,255,0.8)', textDecoration: 'none', padding: '4px 8px', borderRadius: '12px' }}>
+              <Icon size={20} strokeWidth={1.5} />
+              <span style={{ fontFamily: "var(--font-inter,'Inter',sans-serif)", fontSize: '10px', fontWeight: 500 }}>{label}</span>
+            </Link>
+          ))}
+        </nav>
       </main>
     </Protected>
   );

@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { Protected } from '@/components/auth/Protected';
 import { Bell, Loader2, CheckCheck } from 'lucide-react';
 
-// Демо-данные уведомлений
 interface Notification {
   id: string;
   title: string;
@@ -13,48 +12,45 @@ interface Notification {
   read: boolean;
 }
 
-const DEMO_NOTIFICATIONS: Notification[] = [
-  {
-    id: '1',
-    title: 'Бронирование подтверждено',
-    message: 'Ваше бронирование тура "Восхождение на Авачинский вулкан" подтверждено.',
-    time: '2026-02-25T14:30:00',
-    read: false,
-  },
-  {
-    id: '2',
-    title: 'Начислены эко-баллы',
-    message: 'Вам начислено 50 эко-баллов за отзыв о туре.',
-    time: '2026-02-24T10:00:00',
-    read: false,
-  },
-  {
-    id: '3',
-    title: 'Скидка на тур',
-    message: 'Специальное предложение: скидка 15% на морскую рыбалку до конца месяца.',
-    time: '2026-02-20T09:15:00',
-    read: true,
-  },
-];
-
 type FilterTab = 'all' | 'unread';
 
 export default function NotificationsClient() {
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState<FilterTab>('all');
+  const [error, setError] = useState('');
 
-  // Имитация загрузки данных
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setNotifications(DEMO_NOTIFICATIONS);
-      setLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
+    const fetchNotifications = async () => {
+      try {
+        const res = await fetch('/api/notifications?limit=50');
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Ошибка загрузки');
+        const items: Notification[] = (data.data?.notifications ?? []).map((n: {
+          id: string; title: string; message: string; createdAt: string; isRead: boolean;
+        }) => ({
+          id: n.id,
+          title: n.title,
+          message: n.message,
+          time: n.createdAt,
+          read: n.isRead,
+        }));
+        setNotifications(items);
+      } catch {
+        setError('Не удалось загрузить уведомления');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchNotifications();
   }, []);
 
-  // Пометить все как прочитанные
-  const handleReadAll = () => {
+  const handleReadAll = async () => {
+    try {
+      await fetch('/api/notifications/mark-all-read', { method: 'POST' });
+    } catch {
+      // silent — update locally anyway
+    }
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
@@ -124,6 +120,16 @@ export default function NotificationsClient() {
               className="w-8 h-8 animate-spin"
               style={{ color: 'var(--accent)' }}
             />
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <Bell
+              className="w-16 h-16 mb-4"
+              style={{ color: 'var(--text-muted)' }}
+            />
+            <p className="text-lg" style={{ color: 'var(--text-muted)' }}>
+              {error}
+            </p>
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">
