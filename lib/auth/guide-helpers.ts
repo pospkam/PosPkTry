@@ -28,7 +28,7 @@ export async function getGuidePartnerId(userId: string): Promise<string | null> 
 /**
  * Get guide partner record with full details
  */
-export async function getGuidePartnerByUserId(userId: string): Promise<any | null> {
+export async function getGuidePartnerByUserId(userId: string): Promise<Record<string, unknown> | null> {
   try {
     const result = await query(
       `SELECT 
@@ -184,7 +184,7 @@ export async function checkScheduleConflicts(
   excludeId?: string
 ): Promise<boolean> {
   try {
-    const params: any[] = [guideId, startTime, endTime];
+    const params: (string | null)[] = [guideId, startTime, endTime];
     const paramIndex = 4;
     
     let queryStr = `
@@ -221,7 +221,7 @@ export async function hasTourDayConflict(params: {
   }
 
   try {
-    const queryParams: any[] = [guideId, tourId, startTime];
+    const queryParams: (string | null)[] = [guideId, tourId, startTime];
     let queryStr = `
       SELECT 1
       FROM guide_schedule
@@ -287,7 +287,7 @@ export async function recordGuideEarnings(
 /**
  * Get guide statistics
  */
-export async function getGuideStats(userId: string): Promise<any> {
+export async function getGuideStats(userId: string): Promise<Record<string, unknown>> {
   try {
     const guideId = await getGuidePartnerId(userId);
     
@@ -377,7 +377,7 @@ export async function getGuideStats(userId: string): Promise<any> {
 /**
  * Get guide's weekly availability pattern
  */
-export async function getGuideAvailability(guideId: string): Promise<any[]> {
+export async function getGuideAvailability(guideId: string): Promise<Record<string, unknown>[]> {
   try {
     const result = await query(
       `SELECT 
@@ -441,7 +441,7 @@ export async function findAvailableGuides(
   specialization?: string,
   language?: string,
   location?: { lat: number; lng: number; radiusKm?: number }
-): Promise<any[]> {
+): Promise<Record<string, unknown>[]> {
   try {
     let queryStr = `
       SELECT 
@@ -462,7 +462,7 @@ export async function findAvailableGuides(
         AND p.is_available = true
     `;
     
-    const params: any[] = [startTime, endTime];
+    const params: (string | number)[] = [startTime, endTime];
     let paramIndex = 3;
     
     if (specialization) {
@@ -526,7 +526,7 @@ export async function findAvailableGuides(
 /**
  * Get guide's expertise zones for map display
  */
-export async function getGuideExpertiseZones(guideId: string): Promise<any[]> {
+export async function getGuideExpertiseZones(guideId: string): Promise<Record<string, unknown>[]> {
   try {
     // Get tours associated with this guide
     const result = await query(

@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { Protected } from '@/components/auth/Protected';
 import { GearProviderNav } from '@/components/gear-provider/GearProviderNav';
 import { LoadingSpinner } from '@/components/admin/shared';
 import { Package, Calendar, DollarSign, Star, TrendingUp, AlertCircle } from 'lucide-react';
+import { useApiFetch } from '@/hooks/use-api-fetch';
 
 interface DashboardMetrics {
   totalItems: number;
@@ -16,34 +17,22 @@ interface DashboardMetrics {
   pendingReturns: number;
 }
 
+const EMPTY_METRICS: DashboardMetrics = {
+  totalItems: 0,
+  availableItems: 0,
+  activeRentals: 0,
+  totalRevenue: 0,
+  averageRating: 0,
+  pendingReturns: 0,
+};
+
 export default function GearProviderDashboardClient() {
-  const [metrics, setMetrics] = useState<DashboardMetrics>({
-    totalItems: 0,
-    availableItems: 0,
-    activeRentals: 0,
-    totalRevenue: 0,
-    averageRating: 0,
-    pendingReturns: 0,
-  });
-  const [loading, setLoading] = useState(true);
+  const { data: metrics, loading } = useApiFetch<{ metrics?: DashboardMetrics }, DashboardMetrics>(
+    '/api/gear-provider/dashboard',
+    (d) => d?.metrics ?? EMPTY_METRICS,
+  );
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
-  const fetchDashboardData = async () => {
-    try {
-      const response = await fetch('/api/gear-provider/dashboard');
-      const data = await response.json();
-      if (data.success && data.data?.metrics) {
-        setMetrics(data.data.metrics);
-      }
-    } catch (error) {
-      console.error('Error fetching dashboard:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const m = metrics ?? EMPTY_METRICS;
 
   if (loading) {
     return (
@@ -71,39 +60,39 @@ export default function GearProviderDashboardClient() {
             <MetricCard
               icon={Package}
               label="Всего позиций"
-              value={metrics.totalItems}
-              subValue={`${metrics.availableItems} доступно`}
+              value={m.totalItems}
+              subValue={`${m.availableItems} доступно`}
               color="text-premium-gold"
             />
             <MetricCard
               icon={Calendar}
               label="Активные аренды"
-              value={metrics.activeRentals}
+              value={m.activeRentals}
               color="text-blue-400"
             />
             <MetricCard
               icon={AlertCircle}
               label="Ожидают возврата"
-              value={metrics.pendingReturns}
+              value={m.pendingReturns}
               color="text-orange-400"
             />
             <MetricCard
               icon={DollarSign}
               label="Доход за месяц"
-              value={`${metrics.totalRevenue.toLocaleString('ru-RU')} ₽`}
+              value={`${m.totalRevenue.toLocaleString('ru-RU')} ₽`}
               color="text-green-400"
             />
             <MetricCard
               icon={Star}
               label="Средний рейтинг"
-              value={metrics.averageRating.toFixed(1)}
+              value={m.averageRating.toFixed(1)}
               color="text-yellow-400"
             />
             <MetricCard
               icon={TrendingUp}
               label="Загрузка"
-              value={metrics.totalItems > 0 
-                ? `${Math.round((metrics.activeRentals / metrics.totalItems) * 100)}%` 
+              value={m.totalItems > 0
+                ? `${Math.round((m.activeRentals / m.totalItems) * 100)}%`
                 : '0%'}
               color="text-purple-400"
             />

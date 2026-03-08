@@ -28,7 +28,7 @@ export async function getTransferPartnerId(userId: string): Promise<string | nul
 /**
  * Get transfer partner record with full details
  */
-export async function getTransferPartnerByUserId(userId: string): Promise<any | null> {
+export async function getTransferPartnerByUserId(userId: string): Promise<Record<string, unknown> | null> {
   try {
     const result = await query(
       `SELECT 
@@ -217,7 +217,7 @@ export async function checkDriverAvailability(
       AND type != 'available'
     `;
     
-    const params: any[] = [driverId, date, startTime, endTime];
+    const params: (string | number | null)[] = [driverId, date, startTime, endTime];
     
     if (excludeScheduleId) {
       queryStr += ` AND id != $5`;
@@ -342,7 +342,7 @@ export async function calculateTransferPrice(
 /**
  * Get transfer operator statistics
  */
-export async function getTransferStats(userId: string): Promise<any> {
+export async function getTransferStats(userId: string): Promise<Record<string, unknown>> {
   try {
     const operatorId = await getTransferPartnerId(userId);
     
@@ -419,7 +419,7 @@ export async function findAvailableVehicle(
       AND v.capacity >= $2
     `;
     
-    const params: any[] = [operatorId, passengers];
+    const params: (string | number | null)[] = [operatorId, passengers];
     let paramIndex = 3;
     
     if (vehicleType) {
@@ -466,7 +466,7 @@ export async function findAvailableDriver(
       AND d.status = 'active'
     `;
     
-    const params: any[] = [operatorId];
+    const params: (string | number | null)[] = [operatorId];
     let paramIndex = 2;
     
     // Prefer driver assigned to the vehicle

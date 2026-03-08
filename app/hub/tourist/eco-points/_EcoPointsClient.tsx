@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { Protected } from '@/components/auth/Protected';
 import { Leaf, Loader2, TreePine, Recycle, Camera, Users, Mountain } from 'lucide-react';
+import { useApiFetch } from '@/hooks/use-api-fetch';
 
 interface EcoAction {
   id: string;
@@ -36,27 +36,17 @@ function ActionIcon({ type, className }: { type: EcoAction['icon']; className?: 
 }
 
 export default function EcoPointsClient() {
-  const [loading, setLoading] = useState(true);
-  const [currentPoints, setCurrentPoints] = useState(0);
-  const [error, setError] = useState('');
+  const { data: currentPoints, loading, error } = useApiFetch<
+    { totalPoints?: number },
+    number
+  >(
+    '/api/eco-points/user',
+    (d) => d?.totalPoints ?? 0,
+    { errorMessage: 'Не удалось загрузить эко-баллы' },
+  );
 
-  useEffect(() => {
-    const fetchPoints = async () => {
-      try {
-        const res = await fetch('/api/eco-points/user');
-        const data = await res.json();
-        if (!data.success) throw new Error(data.error || 'Ошибка загрузки');
-        setCurrentPoints(data.data?.totalPoints ?? 0);
-      } catch {
-        setError('Не удалось загрузить эко-баллы');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPoints();
-  }, []);
-
-  const progressPercent = Math.min((currentPoints / NEXT_LEVEL) * 100, 100);
+  const points = currentPoints ?? 0;
+  const progressPercent = Math.min((points / NEXT_LEVEL) * 100, 100);
 
   return (
     <Protected roles={['tourist', 'admin']}>
@@ -93,7 +83,7 @@ export default function EcoPointsClient() {
                 className="text-5xl font-bold"
                 style={{ color: error ? 'var(--danger)' : 'var(--text-primary)' }}
               >
-                {error ? '—' : currentPoints}
+                {error ? '—' : points}
               </p>
               <p
                 className="text-sm mt-1"
@@ -109,7 +99,7 @@ export default function EcoPointsClient() {
                       До следующего уровня
                     </span>
                     <span style={{ color: 'var(--text-secondary)' }}>
-                      {currentPoints} / {NEXT_LEVEL}
+                      {points} / {NEXT_LEVEL}
                     </span>
                   </div>
                   <div

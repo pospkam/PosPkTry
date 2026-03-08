@@ -1,35 +1,51 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
 import { Protected } from '@/components/auth/Protected';
 import { StayProviderNav } from '@/components/stay-provider/StayProviderNav';
 import { LoadingSpinner } from '@/components/admin/shared';
+import { useApiFetch } from '@/hooks/use-api-fetch';
+
+interface StayMetrics {
+  totalAccommodations: number;
+  totalBookings: number;
+  totalRooms: number;
+  monthlyRevenue: number;
+}
+
+interface StayBooking {
+  id: string;
+  accommodation_name: string;
+  check_in_date: string;
+  check_out_date: string;
+  total_price: number;
+  status: string;
+}
+
+interface StayDashboardData {
+  metrics: StayMetrics;
+  recentBookings: StayBooking[];
+}
+
+interface StayDashboardApiResponse {
+  metrics: StayMetrics;
+  recentBookings: StayBooking[];
+}
+
+const EMPTY_METRICS: StayMetrics = {
+  totalAccommodations: 0,
+  totalBookings: 0,
+  totalRooms: 0,
+  monthlyRevenue: 0,
+};
 
 export default function StayProviderDashboardClient() {
-  const [metrics, setMetrics] = useState<any>(null);
-  const [bookings, setBookings] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data, loading } = useApiFetch<StayDashboardApiResponse, StayDashboardData>(
+    '/api/stay-provider/dashboard',
+    (d) => ({ metrics: d?.metrics ?? EMPTY_METRICS, recentBookings: d?.recentBookings ?? [] }),
+  );
 
-  useEffect(() => {
-    fetchDashboard();
-  }, []);
-
-  const fetchDashboard = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/stay-provider/dashboard');
-      const result = await response.json();
-
-      if (result.success) {
-        setMetrics(result.data.metrics);
-        setBookings(result.data.recentBookings || []);
-      }
-    } catch (err) {
-      console.error('Error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const metrics = data?.metrics ?? EMPTY_METRICS;
+  const bookings = data?.recentBookings ?? [];
 
   if (loading) {
     return (
@@ -54,19 +70,19 @@ export default function StayProviderDashboardClient() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div className="bg-white/15 border border-white/15 rounded-xl p-6">
               <p className="text-white/50 text-sm mb-2">Объектов</p>
-              <p className="text-4xl font-black text-white">{metrics?.totalAccommodations || 0}</p>
+              <p className="text-4xl font-black text-white">{metrics.totalAccommodations}</p>
             </div>
             <div className="bg-white/15 border border-white/15 rounded-xl p-6">
               <p className="text-white/50 text-sm mb-2">Бронирований</p>
-              <p className="text-4xl font-black text-green-400">{metrics?.totalBookings || 0}</p>
+              <p className="text-4xl font-black text-green-400">{metrics.totalBookings}</p>
             </div>
             <div className="bg-white/15 border border-white/15 rounded-xl p-6">
               <p className="text-white/50 text-sm mb-2">Номеров</p>
-              <p className="text-4xl font-black text-blue-400">{metrics?.totalRooms || 0}</p>
+              <p className="text-4xl font-black text-blue-400">{metrics.totalRooms}</p>
             </div>
             <div className="bg-white/15 border border-white/15 rounded-xl p-6">
               <p className="text-white/50 text-sm mb-2">Доход</p>
-              <p className="text-4xl font-black text-white">{((metrics?.monthlyRevenue || 0) / 1000).toFixed(0)}K ₽</p>
+              <p className="text-4xl font-black text-white">{(metrics.monthlyRevenue / 1000).toFixed(0)}K ₽</p>
             </div>
           </div>
 
@@ -82,12 +98,19 @@ export default function StayProviderDashboardClient() {
                       <div>
                         <h3 className="font-semibold">{booking.accommodation_name}</h3>
                         <p className="text-sm text-white/70">
-                          {new Date(booking.check_in_date).toLocaleDateString('ru-RU')} - {new Date(booking.check_out_date).toLocaleDateString('ru-RU')}
+                          {new Date(booking.check_in_date).toLocaleDateString('ru-RU')} -{' '}
+                          {new Date(booking.check_out_date).toLocaleDateString('ru-RU')}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xl font-bold text-white">{booking.total_price.toLocaleString('ru-RU')} ₽</p>
-                        <span className={`text-xs px-2 py-1 rounded-full ${booking.status === 'confirmed' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
+                        <p className="text-xl font-bold text-white">
+                          {booking.total_price.toLocaleString('ru-RU')} ₽
+                        </p>
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          booking.status === 'confirmed'
+                            ? 'bg-green-500/20 text-green-400'
+                            : 'bg-yellow-500/20 text-yellow-400'
+                        }`}>
                           {booking.status}
                         </span>
                       </div>

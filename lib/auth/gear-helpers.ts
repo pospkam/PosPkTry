@@ -28,7 +28,7 @@ export async function getGearPartnerId(userId: string): Promise<string | null> {
 /**
  * Get gear partner record with full details
  */
-export async function getGearPartnerByUserId(userId: string): Promise<any | null> {
+export async function getGearPartnerByUserId(userId: string): Promise<Record<string, unknown> | null> {
   try {
     const result = await query(
       `SELECT 
@@ -252,7 +252,7 @@ export async function calculateRentalCost(
 /**
  * Get gear partner statistics
  */
-export async function getGearStats(userId: string): Promise<any> {
+export async function getGearStats(userId: string): Promise<Record<string, unknown>> {
   try {
     const partnerId = await getGearPartnerId(userId);
     
@@ -367,7 +367,7 @@ export async function findAvailableGear(
   minPrice?: number,
   maxPrice?: number,
   tags?: string[]
-): Promise<any[]> {
+): Promise<Record<string, unknown>[]> {
   try {
     let queryStr = `
       SELECT 
@@ -392,7 +392,7 @@ export async function findAvailableGear(
         AND gi.available_quantity > 0
     `;
     
-    const params: any[] = [];
+    const params: (string | number | null)[] = [];
     let paramIndex = 1;
     
     if (category) {

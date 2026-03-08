@@ -8,7 +8,7 @@ import { query } from '@/lib/database';
 /**
  * Get or create tourist profile
  */
-export async function getTouristProfile(userId: string): Promise<any | null> {
+export async function getTouristProfile(userId: string): Promise<Record<string, unknown> | null> {
   try {
     let result = await query(
       `SELECT * FROM tourist_profiles WHERE user_id = $1`,
@@ -76,7 +76,7 @@ export async function awardAchievement(
   achievementName: string,
   achievementDescription: string,
   pointsEarned: number,
-  metadata: any = {}
+  metadata: Record<string, unknown> = {}
 ): Promise<boolean> {
   try {
     const profile = await getTouristProfile(userId);
@@ -142,7 +142,7 @@ export async function checkTripAchievements(userId: string): Promise<void> {
 /**
  * Get expiring documents
  */
-export async function getExpiringDocuments(userId: string, daysBeforeExpiry: number = 30): Promise<any[]> {
+export async function getExpiringDocuments(userId: string, daysBeforeExpiry: number = 30): Promise<Record<string, unknown>[]> {
   try {
     const profile = await getTouristProfile(userId);
     if (!profile) return [];
@@ -183,7 +183,7 @@ export async function markDocumentReminderSent(documentId: string): Promise<void
 /**
  * Get tourist recommendations
  */
-export async function getTouristRecommendations(userId: string, limit: number = 10): Promise<any> {
+export async function getTouristRecommendations(userId: string, limit: number = 10): Promise<Record<string, unknown>> {
   try {
     const profile = await getTouristProfile(userId);
     if (!profile) return { tours: [], accommodations: [] };
@@ -198,7 +198,7 @@ export async function getTouristRecommendations(userId: string, limit: number = 
       WHERE t.is_active = TRUE
     `;
 
-    const params: any[] = [];
+    const params: (string | number | string[])[] = [];
     let paramIndex = 1;
 
     if (interests.length > 0) {
@@ -241,7 +241,7 @@ export function calculateLoyaltyDiscount(loyaltyTier: string, amount: number): n
 /**
  * Get tourist travel stats
  */
-export async function getTouristTravelStats(userId: string): Promise<any> {
+export async function getTouristTravelStats(userId: string): Promise<Record<string, unknown>> {
   try {
     const profile = await getTouristProfile(userId);
     if (!profile) return null;
@@ -352,7 +352,7 @@ export function validateDocumentData(data: {
 /**
  * Get upcoming trips with reminders
  */
-export async function getUpcomingTripsWithReminders(userId: string, daysAhead: number = 7): Promise<any[]> {
+export async function getUpcomingTripsWithReminders(userId: string, daysAhead: number = 7): Promise<Record<string, unknown>[]> {
   try {
     const profile = await getTouristProfile(userId);
     if (!profile) return [];

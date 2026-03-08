@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Protected } from '@/components/auth/Protected';
 import { GuideNav } from '@/components/guide/GuideNav';
 import { LoadingSpinner } from '@/components/admin/shared';
 import { DollarSign, TrendingUp, Calendar, Download } from 'lucide-react';
+import { useApiFetch } from '@/hooks/use-api-fetch';
 
 interface EarningsSummary {
   totalEarnings: number;
@@ -21,41 +22,39 @@ interface EarningsItem {
   status: 'paid' | 'pending';
 }
 
+interface EarningsApiResponse {
+  summary: EarningsSummary;
+  items: EarningsItem[];
+}
+
+interface EarningsData {
+  summary: EarningsSummary;
+  earnings: EarningsItem[];
+}
+
+const EMPTY_SUMMARY: EarningsSummary = {
+  totalEarnings: 0,
+  pendingPayment: 0,
+  toursCompleted: 0,
+  averagePerTour: 0,
+};
+
 export default function GuideEarningsPageClient() {
-  const [summary, setSummary] = useState<EarningsSummary>({
-    totalEarnings: 0,
-    pendingPayment: 0,
-    toursCompleted: 0,
-    averagePerTour: 0,
-  });
-  const [earnings, setEarnings] = useState<EarningsItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('month');
 
-  useEffect(() => {
-    fetchEarnings();
-  }, [period]);
+  const { data, loading } = useApiFetch<EarningsApiResponse, EarningsData>(
+    `/api/guide/earnings?period=${period}`,
+    (d) => ({ summary: d?.summary ?? EMPTY_SUMMARY, earnings: d?.items ?? [] }),
+  );
 
-  const fetchEarnings = async () => {
-    try {
-      const response = await fetch(`/api/guide/earnings?period=${period}`);
-      const data = await response.json();
-      if (data.success && data.data) {
-        setSummary(data.data.summary);
-        setEarnings(data.data.items);
-      }
-    } catch (error) {
-      console.error('Error fetching earnings:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const summary = data?.summary ?? EMPTY_SUMMARY;
+  const earnings = data?.earnings ?? [];
 
   return (
     <Protected roles={['guide', 'operator', 'admin']}>
       <main className="min-h-screen bg-transparent text-white">
         <GuideNav />
-        
+
         <div className="bg-white/15 border-b border-white/15 p-6">
           <div className="flex items-center justify-between">
             <div>

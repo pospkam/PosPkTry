@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Protected } from '@/components/auth/Protected';
 import { GuideNav } from '@/components/guide/GuideNav';
 import { LoadingSpinner } from '@/components/admin/shared';
 import { Calendar, Clock, MapPin, Users } from 'lucide-react';
+import { useApiFetch } from '@/hooks/use-api-fetch';
 
 interface ScheduleItem {
   id: string;
@@ -16,52 +17,39 @@ interface ScheduleItem {
   status: 'upcoming' | 'in_progress' | 'completed';
 }
 
+function getStatusColor(status: string) {
+  switch (status) {
+    case 'upcoming': return 'bg-blue-500/20 text-blue-400';
+    case 'in_progress': return 'bg-green-500/20 text-green-400';
+    case 'completed': return 'bg-white/10 text-white/50';
+    default: return 'bg-white/10 text-white/50';
+  }
+}
+
+function getStatusLabel(status: string) {
+  switch (status) {
+    case 'upcoming': return 'Предстоит';
+    case 'in_progress': return 'В процессе';
+    case 'completed': return 'Завершен';
+    default: return status;
+  }
+}
+
 export default function GuideSchedulePageClient() {
-  const [schedule, setSchedule] = useState<ScheduleItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
-  useEffect(() => {
-    fetchSchedule();
-  }, [selectedDate]);
+  const { data: schedule, loading } = useApiFetch<ScheduleItem[], ScheduleItem[]>(
+    `/api/guide/schedule?date=${selectedDate}`,
+    (d) => d ?? [],
+  );
 
-  const fetchSchedule = async () => {
-    try {
-      const response = await fetch(`/api/guide/schedule?date=${selectedDate}`);
-      const data = await response.json();
-      if (data.success && data.data) {
-        setSchedule(data.data);
-      }
-    } catch (error) {
-      console.error('Error fetching schedule:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'upcoming': return 'bg-blue-500/20 text-blue-400';
-      case 'in_progress': return 'bg-green-500/20 text-green-400';
-      case 'completed': return 'bg-white/10 text-white/50';
-      default: return 'bg-white/10 text-white/50';
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'upcoming': return 'Предстоит';
-      case 'in_progress': return 'В процессе';
-      case 'completed': return 'Завершен';
-      default: return status;
-    }
-  };
+  const items = schedule ?? [];
 
   return (
     <Protected roles={['guide', 'operator', 'admin']}>
       <main className="min-h-screen bg-transparent text-white">
         <GuideNav />
-        
+
         <div className="bg-white/15 border-b border-white/15 p-6">
           <h1 className="text-3xl font-black text-white">Расписание</h1>
           <p className="text-white/70">Ваши предстоящие туры</p>
@@ -80,7 +68,7 @@ export default function GuideSchedulePageClient() {
 
           {loading ? (
             <LoadingSpinner message="Загрузка расписания..." />
-          ) : schedule.length === 0 ? (
+          ) : items.length === 0 ? (
             <div className="bg-white/10 border border-white/20 rounded-xl p-12 text-center">
               <Calendar className="w-16 h-16 mx-auto mb-4 text-white/30" />
               <h2 className="text-xl font-bold mb-2">Нет запланированных туров</h2>
@@ -88,8 +76,8 @@ export default function GuideSchedulePageClient() {
             </div>
           ) : (
             <div className="space-y-4">
-              {schedule.map((item) => (
-                <div 
+              {items.map((item) => (
+                <div
                   key={item.id}
                   className="bg-white/10 border border-white/20 rounded-xl p-6 hover:bg-white/15 transition-colors"
                 >

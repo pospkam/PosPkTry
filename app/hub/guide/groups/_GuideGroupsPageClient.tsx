@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Protected } from '@/components/auth/Protected';
 import { GuideNav } from '@/components/guide/GuideNav';
 import { LoadingSpinner } from '@/components/admin/shared';
 import { Users, Calendar, Phone, Mail } from 'lucide-react';
+import { useApiFetch } from '@/hooks/use-api-fetch';
 
 interface GroupMember {
   id: string;
@@ -22,33 +23,20 @@ interface Group {
 }
 
 export default function GuideGroupsPageClient() {
-  const [groups, setGroups] = useState<Group[]>([]);
-  const [loading, setLoading] = useState(true);
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchGroups();
-  }, []);
+  const { data: groups, loading } = useApiFetch<Group[], Group[]>(
+    '/api/guide/groups',
+    (d) => d ?? [],
+  );
 
-  const fetchGroups = async () => {
-    try {
-      const response = await fetch('/api/guide/groups');
-      const data = await response.json();
-      if (data.success && data.data) {
-        setGroups(data.data);
-      }
-    } catch (error) {
-      console.error('Error fetching groups:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const list = groups ?? [];
 
   return (
     <Protected roles={['guide', 'operator', 'admin']}>
       <main className="min-h-screen bg-transparent text-white">
         <GuideNav />
-        
+
         <div className="bg-white/15 border-b border-white/15 p-6">
           <h1 className="text-3xl font-black text-white">Мои группы</h1>
           <p className="text-white/70">Участники предстоящих туров</p>
@@ -57,7 +45,7 @@ export default function GuideGroupsPageClient() {
         <div className="max-w-7xl mx-auto px-6 py-8">
           {loading ? (
             <LoadingSpinner message="Загрузка групп..." />
-          ) : groups.length === 0 ? (
+          ) : list.length === 0 ? (
             <div className="bg-white/10 border border-white/20 rounded-xl p-12 text-center">
               <Users className="w-16 h-16 mx-auto mb-4 text-white/30" />
               <h2 className="text-xl font-bold mb-2">Нет активных групп</h2>
@@ -65,8 +53,8 @@ export default function GuideGroupsPageClient() {
             </div>
           ) : (
             <div className="space-y-4">
-              {groups.map((group) => (
-                <div 
+              {list.map((group) => (
+                <div
                   key={group.id}
                   className="bg-white/10 border border-white/20 rounded-xl overflow-hidden"
                 >
@@ -101,7 +89,7 @@ export default function GuideGroupsPageClient() {
                       )}
                       <div className="space-y-3">
                         {group.members.map((member) => (
-                          <div 
+                          <div
                             key={member.id}
                             className="flex items-center justify-between p-3 bg-white/5 rounded-lg"
                           >

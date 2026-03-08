@@ -1,94 +1,70 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Protected } from '@/components/auth/Protected';
 import { LoadingSpinner } from '@/components/admin/shared';
 import { TouristNav } from '@/components/tourist/TouristNav';
 import { Booking } from '@/types';
 import { Calendar, Users } from 'lucide-react';
+import { useApiFetch } from '@/hooks/use-api-fetch';
 
 export default function BookingHistoryPageClient() {
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'past' | 'cancelled'>('all');
 
-  useEffect(() => {
-    fetchBookings();
-  }, []);
+  const { data: bookings, loading } = useApiFetch<Booking[], Booking[]>(
+    '/api/bookings',
+    (d) => d ?? [],
+  );
 
-  const fetchBookings = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/bookings');
-      const result = await response.json();
-
-      if (result.success) {
-        setBookings(result.data || []);
-      }
-    } catch (err) {
-      console.error('Error fetching bookings:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const list = bookings ?? [];
 
   const getStatusBadge = (status: string) => {
-    const styles = {
+    const styles: Record<string, string> = {
       pending: 'bg-yellow-500/20 text-yellow-400',
       confirmed: 'bg-green-500/20 text-green-400',
       completed: 'bg-blue-500/20 text-blue-400',
-      cancelled: 'bg-red-500/20 text-red-400'
+      cancelled: 'bg-red-500/20 text-red-400',
     };
-    
-    const labels = {
+    const labels: Record<string, string> = {
       pending: 'Ожидает',
       confirmed: 'Подтверждено',
       completed: 'Завершено',
-      cancelled: 'Отменено'
+      cancelled: 'Отменено',
     };
-
     return (
-      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${styles[status as keyof typeof styles]}`}>
-        {labels[status as keyof typeof labels] || status}
+      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${styles[status] ?? ''}`}>
+        {labels[status] ?? status}
       </span>
     );
   };
 
   const getPaymentBadge = (status: string) => {
-    const styles = {
+    const styles: Record<string, string> = {
       pending: 'bg-yellow-500/20 text-yellow-400',
       paid: 'bg-green-500/20 text-green-400',
-      refunded: 'bg-gray-500/20 text-gray-400'
+      refunded: 'bg-gray-500/20 text-gray-400',
     };
-    
-    const labels = {
+    const labels: Record<string, string> = {
       pending: 'Не оплачено',
       paid: 'Оплачено',
-      refunded: 'Возврат'
+      refunded: 'Возврат',
     };
-
     return (
-      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${styles[status as keyof typeof styles]}`}>
-        {labels[status as keyof typeof labels] || status}
+      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${styles[status] ?? ''}`}>
+        {labels[status] ?? status}
       </span>
     );
   };
 
-  const filteredBookings = bookings.filter(booking => {
+  const filteredBookings = list.filter((booking) => {
     if (filter === 'all') return true;
-    
     const today = new Date();
     const bookingDate = new Date(booking.date);
-    
     switch (filter) {
-      case 'upcoming':
-        return bookingDate >= today && booking.status !== 'cancelled';
-      case 'past':
-        return bookingDate < today || booking.status === 'completed';
-      case 'cancelled':
-        return booking.status === 'cancelled';
-      default:
-        return true;
+      case 'upcoming': return bookingDate >= today && booking.status !== 'cancelled';
+      case 'past': return bookingDate < today || booking.status === 'completed';
+      case 'cancelled': return booking.status === 'cancelled';
+      default: return true;
     }
   });
 
@@ -106,64 +82,37 @@ export default function BookingHistoryPageClient() {
     <Protected roles={['tourist']}>
       <main className="min-h-screen bg-transparent text-white">
         <TouristNav />
-        {/* Header */}
         <div className="bg-white/15 border-b border-white/15 p-6">
           <h1 className="text-3xl font-black text-white">Мои бронирования</h1>
           <p className="text-white/70">История ваших бронирований и заказов</p>
         </div>
 
-        {/* Filters */}
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex gap-3 mb-6">
-            <button
-              onClick={() => setFilter('all')}
-              className={`px-6 py-2 rounded-xl font-semibold transition-colors ${
-                filter === 'all'
-                  ? 'bg-premium-gold text-premium-black'
-                  : 'bg-white/10 hover:bg-white/20 text-white'
-              }`}
-            >
-              Все ({bookings.length})
-            </button>
-            <button
-              onClick={() => setFilter('upcoming')}
-              className={`px-6 py-2 rounded-xl font-semibold transition-colors ${
-                filter === 'upcoming'
-                  ? 'bg-premium-gold text-premium-black'
-                  : 'bg-white/10 hover:bg-white/20 text-white'
-              }`}
-            >
-              Предстоящие
-            </button>
-            <button
-              onClick={() => setFilter('past')}
-              className={`px-6 py-2 rounded-xl font-semibold transition-colors ${
-                filter === 'past'
-                  ? 'bg-premium-gold text-premium-black'
-                  : 'bg-white/10 hover:bg-white/20 text-white'
-              }`}
-            >
-              Прошедшие
-            </button>
-            <button
-              onClick={() => setFilter('cancelled')}
-              className={`px-6 py-2 rounded-xl font-semibold transition-colors ${
-                filter === 'cancelled'
-                  ? 'bg-premium-gold text-premium-black'
-                  : 'bg-white/10 hover:bg-white/20 text-white'
-              }`}
-            >
-              Отменённые
-            </button>
+            {(['all', 'upcoming', 'past', 'cancelled'] as const).map((f) => {
+              const labels = { all: `Все (${list.length})`, upcoming: 'Предстоящие', past: 'Прошедшие', cancelled: 'Отменённые' };
+              return (
+                <button
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  className={`px-6 py-2 rounded-xl font-semibold transition-colors ${
+                    filter === f
+                      ? 'bg-premium-gold text-premium-black'
+                      : 'bg-white/10 hover:bg-white/20 text-white'
+                  }`}
+                >
+                  {labels[f]}
+                </button>
+              );
+            })}
           </div>
 
-          {/* Bookings List */}
           {filteredBookings.length === 0 ? (
             <div className="bg-white/15 border border-white/15 rounded-2xl p-12 text-center">
               <Calendar className="w-16 h-16 mx-auto mb-4 text-white/50" />
               <p className="text-white/70 text-lg">У вас пока нет бронирований</p>
               <button
-                onClick={() => window.location.href = '/hub/tourist'}
+                onClick={() => { window.location.href = '/hub/tourist'; }}
                 className="mt-6 px-8 py-3 bg-premium-gold text-premium-black rounded-xl font-semibold hover:bg-premium-gold/80 transition-colors"
               >
                 Начать путешествие
@@ -180,8 +129,14 @@ export default function BookingHistoryPageClient() {
                     <div>
                       <h3 className="text-xl font-bold mb-2">{booking.tour?.title || 'Тур'}</h3>
                       <div className="flex items-center gap-4 text-sm text-white/70">
-                        <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {new Date(booking.date).toLocaleDateString('ru-RU')}</span>
-                        <span className="flex items-center gap-1"><Users className="w-4 h-4" /> {booking.participants} чел</span>
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-4 h-4" />
+                          {new Date(booking.date).toLocaleDateString('ru-RU')}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Users className="w-4 h-4" />
+                          {booking.participants} чел
+                        </span>
                       </div>
                     </div>
                     <div className="text-right">
@@ -202,7 +157,6 @@ export default function BookingHistoryPageClient() {
                     </div>
                   )}
 
-                  {/* Действия */}
                   <div className="mt-4 pt-4 border-t border-white/15 flex gap-3">
                     <button className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm transition-colors">
                       Подробнее
@@ -227,4 +181,3 @@ export default function BookingHistoryPageClient() {
     </Protected>
   );
 }
-

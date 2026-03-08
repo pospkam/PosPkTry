@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { Protected } from '@/components/auth/Protected';
 import { MessageSquare, Star, Loader2 } from 'lucide-react';
+import { useApiFetch } from '@/hooks/use-api-fetch';
 
 interface Review {
   id: string;
@@ -10,6 +10,10 @@ interface Review {
   rating: number;
   comment: string;
   createdAt: string;
+}
+
+interface ReviewsApiResponse {
+  reviews: Review[];
 }
 
 function StarRating({ rating }: { rating: number }) {
@@ -30,35 +34,13 @@ function StarRating({ rating }: { rating: number }) {
 }
 
 export default function ReviewsClient() {
-  const [loading, setLoading] = useState(true);
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [error, setError] = useState('');
+  const { data: reviews, loading, error } = useApiFetch<ReviewsApiResponse, Review[]>(
+    '/api/reviews/my',
+    (d) => (d?.reviews ?? []).map((r) => ({ ...r, comment: r.comment ?? '' })),
+    { errorMessage: 'Не удалось загрузить отзывы' },
+  );
 
-  useEffect(() => {
-    const fetchReviews = async () => {
-      try {
-        const res = await fetch('/api/reviews/my');
-        const data = await res.json();
-        if (!data.success) throw new Error(data.error || 'Ошибка загрузки');
-        setReviews(
-          (data.data?.reviews ?? []).map((r: {
-            id: string; tourName: string | null; rating: number; comment: string; createdAt: string;
-          }) => ({
-            id: r.id,
-            tourName: r.tourName,
-            rating: r.rating,
-            comment: r.comment ?? '',
-            createdAt: r.createdAt,
-          }))
-        );
-      } catch {
-        setError('Не удалось загрузить отзывы');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchReviews();
-  }, []);
+  const list = reviews ?? [];
 
   return (
     <Protected roles={['tourist', 'admin']}>
@@ -87,7 +69,7 @@ export default function ReviewsClient() {
               {error}
             </p>
           </div>
-        ) : reviews.length === 0 ? (
+        ) : list.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">
             <MessageSquare
               className="w-16 h-16 mb-4"
@@ -102,7 +84,7 @@ export default function ReviewsClient() {
           </div>
         ) : (
           <div className="space-y-4">
-            {reviews.map((review) => (
+            {list.map((review) => (
               <div
                 key={review.id}
                 className="rounded-2xl border p-5"

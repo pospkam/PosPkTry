@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Protected } from '@/components/auth/Protected';
 import { Bell, Loader2, CheckCheck } from 'lucide-react';
+import { useApiFetch } from '@/hooks/use-api-fetch';
 
 interface Notification {
   id: string;
@@ -12,54 +13,49 @@ interface Notification {
   read: boolean;
 }
 
+interface NotificationsApiResponse {
+  notifications: Array<{
+    id: string;
+    title: string;
+    message: string;
+    createdAt: string;
+    isRead: boolean;
+  }>;
+}
+
 type FilterTab = 'all' | 'unread';
 
 export default function NotificationsClient() {
-  const [loading, setLoading] = useState(true);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState<FilterTab>('all');
-  const [error, setError] = useState('');
 
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const res = await fetch('/api/notifications?limit=50');
-        const data = await res.json();
-        if (!data.success) throw new Error(data.error || 'Ошибка загрузки');
-        const items: Notification[] = (data.data?.notifications ?? []).map((n: {
-          id: string; title: string; message: string; createdAt: string; isRead: boolean;
-        }) => ({
-          id: n.id,
-          title: n.title,
-          message: n.message,
-          time: n.createdAt,
-          read: n.isRead,
-        }));
-        setNotifications(items);
-      } catch {
-        setError('Не удалось загрузить уведомления');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchNotifications();
-  }, []);
+  const { data: notifications, loading, error, setData } = useApiFetch<
+    NotificationsApiResponse,
+    Notification[]
+  >(
+    '/api/notifications?limit=50',
+    (d) => (d?.notifications ?? []).map((n) => ({
+      id: n.id,
+      title: n.title,
+      message: n.message,
+      time: n.createdAt,
+      read: n.isRead,
+    })),
+    { errorMessage: 'Не удалось загрузить уведомления' },
+  );
+
+  const list = notifications ?? [];
 
   const handleReadAll = async () => {
+    setData((prev) => (prev ?? []).map((n) => ({ ...n, read: true })));
     try {
       await fetch('/api/notifications/mark-all-read', { method: 'POST' });
     } catch {
-      // silent — update locally anyway
+      // silent — already updated optimistically
     }
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
-  const filtered =
-    filter === 'unread'
-      ? notifications.filter((n) => !n.read)
-      : notifications;
-
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const filtered = filter === 'unread' ? list.filter((n) => !n.read) : list;
+  const unreadCount = list.filter((n) => !n.read).length;
 
   return (
     <Protected roles={['tourist', 'admin']}>

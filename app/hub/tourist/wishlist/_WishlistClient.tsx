@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Protected } from '@/components/auth/Protected';
 import { Heart, Loader2, MapPin, ExternalLink } from 'lucide-react';
+import { useApiFetch } from '@/hooks/use-api-fetch';
 
 interface WishlistItem {
   id: string;
@@ -30,28 +30,16 @@ const TYPE_HREFS: Record<string, (id: string) => string> = {
 };
 
 export default function WishlistClient() {
-  const [loading, setLoading] = useState(true);
-  const [items, setItems] = useState<WishlistItem[]>([]);
-  const [error, setError] = useState('');
+  const { data, loading, error, setData } = useApiFetch<WishlistItem[], WishlistItem[]>(
+    '/api/tourist/wishlist',
+    (d) => d ?? [],
+    { errorMessage: 'Не удалось загрузить избранное' },
+  );
 
-  useEffect(() => {
-    const fetchWishlist = async () => {
-      try {
-        const res = await fetch('/api/tourist/wishlist');
-        const data = await res.json();
-        if (!data.success) throw new Error(data.error || 'Ошибка загрузки');
-        setItems(data.data ?? []);
-      } catch {
-        setError('Не удалось загрузить избранное');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchWishlist();
-  }, []);
+  const items = data ?? [];
 
   const handleRemove = async (itemId: string) => {
-    setItems((prev) => prev.filter((t) => t.id !== itemId));
+    setData((prev) => (prev ?? []).filter((t) => t.id !== itemId));
     try {
       await fetch(`/api/tourist/wishlist?id=${itemId}`, { method: 'DELETE' });
     } catch {
