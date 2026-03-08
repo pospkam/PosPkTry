@@ -1,0 +1,68 @@
+{
+  "timestamp": "2026-03-08T15:06:00.000Z",
+  "description": "Ресурсы для обучения AI coding агентов и улучшения кодовой базы проекта",
+  "categories": {
+    "software_design_principles": {
+      "description": "SOLID, DRY, KISS, модульность",
+      "resources": [
+        { "url": "https://github.com/donnemartin/system-design-primer", "title": "System Design Primer" },
+        { "url": "https://github.com/charlax/professional-programming", "title": "Professional Programming" },
+        { "url": "https://github.com/ashishps1/awesome-low-level-design", "title": "Awesome Low-Level Design" },
+        { "url": "https://github.com/kawser2133/SOLID-design-principles", "title": "SOLID Design Principles" }
+      ]
+    },
+    "typescript_patterns": {
+      "description": "GoF-паттерны на TypeScript, масштабируемые приложения",
+      "resources": [
+        { "url": "https://github.com/RefactoringGuru/design-patterns-typescript", "title": "Refactoring.Guru TS patterns" },
+        { "url": "https://github.com/torokmark/design_patterns_in_typescript", "title": "Design Patterns in TypeScript" },
+        { "url": "https://github.com/PacktPublishing/TypeScript-5-Design-Patterns-and-Best-Practices", "title": "TS 5 Patterns Book Code" },
+        { "url": "https://refactoring.guru/design-patterns/typescript", "title": "Refactoring.Guru Catalog" }
+      ]
+    },
+    "react_nextjs_best_practices": {
+      "description": "Компоненты, state, performance, SSR, accessibility",
+      "resources": [
+        { "url": "https://blog.logrocket.com/react-design-patterns", "title": "React Design Patterns Guide" },
+        { "url": "https://www.perssondennis.com/articles/21-fantastic-react-design-patterns-and-when-to-use-them", "title": "21 React Design Patterns" },
+        { "url": "https://dev.to/nithya_iyer/5-design-patterns-for-building-scalable-nextjs-applications-1c80", "title": "5 Scalable Next.js Patterns" },
+        { "url": "https://strapi.io/blog/react-and-nextjs-in-2025-modern-best-practices", "title": "React & Next.js 2025 Best Practices" },
+        { "url": "https://cursor.directory/optimized-nextjs-typescript-best-practices-modern-ui-ux", "title": "Optimized Next.js TS Best Practices" }
+      ]
+    },
+    "postgresql_design": {
+      "description": "Схемы, индексы, нормализация, partitioning",
+      "resources": [
+        { "url": "https://www.tigerdata.com/learn/guide-to-postgresql-database-design", "title": "PostgreSQL Database Design Guide" },
+        { "url": "https://www.instaclustr.com/education/postgresql/top-10-postgresql-best-practices-for-2025", "title": "Top 10 PostgreSQL Best Practices 2025" },
+        { "url": "https://www.codecademy.com/learn/paths/design-databases-with-postgresql", "title": "Codecademy: Design Databases with PostgreSQL" }
+      ]
+    },
+    "crewai_agents": {
+      "description": "Multi-agent системы, tools, memory, RAG",
+      "resources": [
+        { "url": "https://docs.crewai.com/en/concepts/agents", "title": "CrewAI Agents Docs" },
+        { "url": "https://docs.crewai.com/", "title": "CrewAI Documentation" },
+        { "url": "https://learn.crewai.com/", "title": "CrewAI Multi Agent Course" },
+        { "url": "https://www.deeplearning.ai/courses/design-develop-and-deploy-multi-agent-systems-with-crewai", "title": "DeepLearning.AI CrewAI Course" },
+        { "url": "https://www.digitalocean.com/community/tutorials/crewai-crash-course-role-based-agent-orchestration", "title": "DigitalOcean CrewAI Crash Course" }
+      ]
+    },
+    "ai_coding_agents": {
+      "description": "Тренировка AI агентов для кодирования",
+      "resources": [
+        { "url": "https://github.com/microsoft/ai-agents-for-beginners", "title": "Microsoft AI Agents for Beginners" },
+        { "url": "https://github.com/ghuntley/how-to-build-a-coding-agent", "title": "How to Build a Coding Agent" },
+        { "url": "https://github.com/panaversity/learn-agentic-ai", "title": "Learn Agentic AI" },
+        { "url": "https://github.blog/ai-and-ml/github-copilot/github-copilot-coding-agent-101-getting-started-with-agentic-workflows-on-github", "title": "Copilot Coding Agent 101" }
+      ]
+    },
+    "multi_role_apps": {
+      "description": "RBAC, auth, multi-tenant для 6 ролей",
+      "resources": [
+        { "url": "https://frontegg.com/guides/multi-tenant-architecture", "title": "Multi-Tenant Architecture Guide" },
+        { "url": "https://scand.com/company/blog/how-to-build-scalable-web-applications", "title": "Building Scalable Web Apps" }
+      ]
+    }
+  }
+}

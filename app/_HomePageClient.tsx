@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Sun, Moon, UserCircle, House, Map, Heart, User, AlertTriangle } from 'lucide-react';
+import { Sun, Moon, UserCircle } from 'lucide-react';
 import { VolcanoIcon } from '@/components/icons/VolcanoIcon';
 import { FishingIcon } from '@/components/icons/FishingIcon';
 import { ThermalIcon } from '@/components/icons/ThermalIcon';
@@ -20,6 +20,7 @@ import { RiverIcon } from '@/components/icons/RiverIcon';
 import { SeaWalkIcon } from '@/components/icons/SeaWalkIcon';
 import ActivityCarousel from '@/components/ui/ActivityCarousel';
 import { useTheme } from '@/contexts/ThemeContext';
+import BottomNav from '@/components/shared/BottomNav';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -27,13 +28,6 @@ interface Activity {
   icon: React.ReactNode;
   label: string;
   href: string;
-}
-
-interface NavItem {
-  icon: React.ElementType;
-  label: string;
-  href: string;
-  sos?: boolean;
 }
 
 interface CarouselImage {
@@ -68,14 +62,6 @@ const CAROUSEL_IMAGES: CarouselImage[] = [
   { src: '/images/carousel/3.jpg', alt: 'Камчатка — медведи', webp: '/images/carousel/3.webp' },
   { src: '/images/carousel/4.jpg', alt: 'Камчатка — гейзеры', webp: '/images/carousel/4.webp' },
   { src: '/images/carousel/5.jpg', alt: 'Камчатка — горные реки', webp: '/images/carousel/5.webp' },
-];
-
-const NAV_ITEMS: NavItem[] = [
-  { icon: House, label: 'Домой', href: '/' },
-  { icon: Map, label: 'Карта', href: '/map' },
-  { icon: Heart, label: 'Избранное', href: '/hub/tourist/wishlist' },
-  { icon: User, label: 'ЛК', href: '/profile' },
-  { icon: AlertTriangle, label: 'СОС', href: '/safety', sos: true },
 ];
 
 // ─── Ripple Utility ───────────────────────────────────────────────────────────
@@ -218,75 +204,6 @@ function Lightbox({ src, onClose }: LightboxProps) {
         />
       </div>
     </div>
-  );
-}
-
-// ─── Bottom Nav ───────────────────────────────────────────────────────────────
-
-function BottomNav({ activePath }: { activePath: string }) {
-  const handleNavClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
-    spawnRipple(e, e.currentTarget, 'rgba(0,212,255,0.25)');
-  }, []);
-
-  return (
-    <nav
-      className="md:hidden"
-      aria-label="Основная навигация"
-      style={{
-        position: 'fixed',
-        bottom: '32px',
-        left: '16px',
-        right: '16px',
-        zIndex: 100,
-        background: 'rgba(255,255,255,0.2)',
-        backdropFilter: 'blur(10px)',
-        WebkitBackdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255,255,255,0.3)',
-        borderRadius: '50px',
-        padding: '12px 24px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-around',
-      }}
-    >
-      {NAV_ITEMS.map((item) => {
-        const Icon = item.icon;
-        const isActive = activePath === item.href;
-        const isSos = item.sos === true;
-        return (
-          <a
-            key={item.href}
-            href={item.href}
-            aria-label={item.label}
-            onClick={handleNavClick}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '2px',
-              color: isSos ? '#ef4444' : isActive ? '#00D4FF' : 'rgba(255,255,255,0.8)',
-              textDecoration: 'none',
-              transition: 'color 200ms ease',
-              position: 'relative',
-              overflow: 'hidden',
-              padding: '4px 8px',
-              borderRadius: '12px',
-            }}
-          >
-            <Icon size={20} strokeWidth={1.5} />
-            <span
-              style={{
-                fontFamily: "var(--font-inter,'Inter',sans-serif)",
-                fontSize: '10px',
-                fontWeight: 500,
-              }}
-            >
-              {item.label}
-            </span>
-          </a>
-        );
-      })}
-    </nav>
   );
 }
 
@@ -604,7 +521,7 @@ export default function HomePageClient() {
         </div>
       </main>
 
-      <BottomNav activePath="/" />
+      <BottomNav activePath="/" onNavClick={(e) => spawnRipple(e, e.currentTarget, 'rgba(0,212,255,0.25)')} />
       {lightboxSrc && <Lightbox src={lightboxSrc} onClose={closeLightbox} />}
     </>
   );

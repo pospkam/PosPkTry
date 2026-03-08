@@ -4,31 +4,13 @@ import { useState, useEffect } from 'react';
 import { Protected } from '@/components/auth/Protected';
 import { MessageSquare, Star, Loader2 } from 'lucide-react';
 
-// Демо-данные отзывов туриста
 interface Review {
   id: string;
-  tourName: string;
+  tourName: string | null;
   rating: number;
-  text: string;
-  date: string;
+  comment: string;
+  createdAt: string;
 }
-
-const DEMO_REVIEWS: Review[] = [
-  {
-    id: '1',
-    tourName: 'Восхождение на Авачинский вулкан',
-    rating: 5,
-    text: 'Незабываемое впечатление! Гид был профессиональным, виды потрясающие.',
-    date: '2026-01-15',
-  },
-  {
-    id: '2',
-    tourName: 'Морская рыбалка на Тихом океане',
-    rating: 4,
-    text: 'Отличная рыбалка, поймали много рыбы. Хотелось бы чуть больше времени на воде.',
-    date: '2025-12-20',
-  },
-];
 
 function StarRating({ rating }: { rating: number }) {
   return (
@@ -50,14 +32,32 @@ function StarRating({ rating }: { rating: number }) {
 export default function ReviewsClient() {
   const [loading, setLoading] = useState(true);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [error, setError] = useState('');
 
-  // Имитация загрузки данных
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setReviews(DEMO_REVIEWS);
-      setLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
+    const fetchReviews = async () => {
+      try {
+        const res = await fetch('/api/reviews/my');
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Ошибка загрузки');
+        setReviews(
+          (data.data?.reviews ?? []).map((r: {
+            id: string; tourName: string | null; rating: number; comment: string; createdAt: string;
+          }) => ({
+            id: r.id,
+            tourName: r.tourName,
+            rating: r.rating,
+            comment: r.comment ?? '',
+            createdAt: r.createdAt,
+          }))
+        );
+      } catch {
+        setError('Не удалось загрузить отзывы');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchReviews();
   }, []);
 
   return (
@@ -76,6 +76,16 @@ export default function ReviewsClient() {
               className="w-8 h-8 animate-spin"
               style={{ color: 'var(--accent)' }}
             />
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <MessageSquare
+              className="w-16 h-16 mb-4"
+              style={{ color: 'var(--text-muted)' }}
+            />
+            <p className="text-lg" style={{ color: 'var(--text-muted)' }}>
+              {error}
+            </p>
           </div>
         ) : reviews.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">
@@ -106,24 +116,26 @@ export default function ReviewsClient() {
                     className="font-semibold text-base"
                     style={{ color: 'var(--text-primary)' }}
                   >
-                    {review.tourName}
+                    {review.tourName ?? 'Тур'}
                   </h3>
                   <span
                     className="text-sm"
                     style={{ color: 'var(--text-muted)' }}
                   >
-                    {new Date(review.date).toLocaleDateString('ru-RU')}
+                    {new Date(review.createdAt).toLocaleDateString('ru-RU')}
                   </span>
                 </div>
 
                 <StarRating rating={review.rating} />
 
-                <p
-                  className="mt-3 text-sm"
-                  style={{ color: 'var(--text-secondary)' }}
-                >
-                  {review.text}
-                </p>
+                {review.comment && (
+                  <p
+                    className="mt-3 text-sm"
+                    style={{ color: 'var(--text-secondary)' }}
+                  >
+                    {review.comment}
+                  </p>
+                )}
               </div>
             ))}
           </div>
