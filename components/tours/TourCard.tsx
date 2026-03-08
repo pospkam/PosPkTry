@@ -78,7 +78,7 @@ export function TourCard({ tour, href }: TourCardProps) {
   return (
     <div className="group bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl overflow-hidden hover:border-premium-gold/50 transition-all duration-300 hover:shadow-xl hover:shadow-premium-gold/10 flex flex-col">
       {/* Изображение */}
-      <div className="relative h-52 overflow-hidden">
+      <div className="relative aspect-[4/3] overflow-hidden">
         {hasImage ? (
           <Image
             src={tour.images[0]}

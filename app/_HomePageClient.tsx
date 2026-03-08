@@ -516,7 +516,7 @@ export default function HomePageClient() {
           </p>
 
           {/* CTA + AI */}
-          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginTop: 32 }}>
+          <div className="flex flex-wrap justify-center gap-4 mt-8">
             <a
               href="/tours"
               className="px-7 py-3 rounded-full bg-ocean text-white font-semibold text-lg shadow-lg hover:bg-ocean/90 transition min-w-[160px] text-center"

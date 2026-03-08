@@ -99,6 +99,7 @@ import { RoleProvider } from '@/contexts/RoleContext'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { OrdersProvider } from '@/contexts/OrdersContext'
 import { ThemeProvider } from '@/contexts/ThemeContext'
+import FloatingAIButtonWrapper from '@/components/ai/FloatingAIButtonWrapper'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -109,6 +110,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <RoleProvider>
               <OrdersProvider>
                 {children}
+                <FloatingAIButtonWrapper />
               </OrdersProvider>
             </RoleProvider>
           </AuthProvider>

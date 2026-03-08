@@ -136,9 +136,9 @@ export default function TouristDashboardClient() {
       {/* Header */}
       <div className="bg-white/15 backdrop-blur-2xl border-b border-white/15" style={{ backdropFilter: 'blur(10px)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-              <h1 className="text-3xl font-extralight text-white" style={{ textShadow: '0 2px 6px rgba(0, 0, 0, 0.15)' }}>Добро пожаловать, Турист!</h1>
+              <h1 className="text-xl sm:text-3xl font-extralight text-white" style={{ textShadow: '0 2px 6px rgba(0, 0, 0, 0.15)' }}>Добро пожаловать, Турист!</h1>
               <p className="text-white/80 mt-1" style={{ textShadow: '0 1px 4px rgba(0, 0, 0, 0.1)' }}>Откройте для себя удивительную Камчатку</p>
             </div>
             <div className="flex items-center space-x-4">
@@ -158,19 +158,19 @@ export default function TouristDashboardClient() {
 
       {/* Tabs */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex space-x-1 bg-white/15 rounded-xl p-1 mb-8">
+        <div className="flex overflow-x-auto space-x-1 bg-white/15 rounded-xl p-1 mb-8">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setSelectedTab(tab.id)}
-              className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-lg transition-colors ${
+              className={`flex-1 shrink-0 flex items-center justify-center space-x-2 py-3 px-3 sm:px-4 rounded-lg transition-colors ${
                 selectedTab === tab.id
                   ? 'bg-gradient-to-r from-sky-200 to-cyan-200 text-white'
                   : 'text-white/70 hover:text-white hover:bg-white/10'
               }`}
             >
               {React.createElement(tab.Icon, { className: 'w-5 h-5' })}
-              <span className="font-medium">{tab.name}</span>
+              <span className="font-medium hidden sm:inline">{tab.name}</span>
             </button>
           ))}
         </div>
@@ -361,7 +361,7 @@ export default function TouristDashboardClient() {
             {weather.forecast && weather.forecast.length > 0 && (
               <div className="bg-white/15 rounded-2xl p-6">
                 <h3 className="text-xl font-bold text-white mb-6">Прогноз на неделю</h3>
-                <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-4">
                   {weather.forecast.map((day) => (
                     <div key={day.date.toISOString()} className="text-center">
                       <div className="text-sm text-white/70 mb-2">

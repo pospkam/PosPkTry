@@ -1,10 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { clsx } from 'clsx';
-import { Home, Map, Car, Tent, Shield, Gift, Hotel, Bus, LucideIcon } from 'lucide-react';
+import { Home, Map, Car, Tent, Shield, Gift, Hotel, Bus, Menu, X, LucideIcon } from 'lucide-react';
 
 interface NavItem {
   name: string;
@@ -13,39 +13,43 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { name: 'Главная', path: '/', icon: Home },
-  { name: 'Туры', path: '/hub/tours', icon: Map },
-  { name: 'Трансферы', path: '/hub/transfer', icon: Bus },
-  { name: 'Авто', path: '/hub/cars', icon: Car },
-  { name: 'Снаряжение', path: '/hub/gear', icon: Tent },
-  { name: 'Жильё', path: '/hub/stay', icon: Hotel },
-  { name: 'Сувениры', path: '/hub/souvenirs', icon: Gift },
-  { name: 'Безопасность', path: '/hub/safety', icon: Shield },
+  { name: 'Главная',      path: '/',             icon: Home   },
+  { name: 'Туры',         path: '/hub/tours',     icon: Map    },
+  { name: 'Трансферы',    path: '/hub/transfer',  icon: Bus    },
+  { name: 'Авто',         path: '/hub/cars',       icon: Car    },
+  { name: 'Снаряжение',   path: '/hub/gear',       icon: Tent   },
+  { name: 'Жильё',        path: '/hub/stay',       icon: Hotel  },
+  { name: 'Сувениры',     path: '/hub/souvenirs',  icon: Gift   },
+  { name: 'Безопасность', path: '/hub/safety',     icon: Shield },
 ];
 
 /**
- * PublicNav — публичная навигация для Kamchatour Hub
- * @returns {JSX.Element}
- * @remarks
- * - Accessibility: aria-label для навигации и активных ссылок, семантика для иконок и ссылок
- * - UX: sticky, адаптивность, активное состояние
+ * PublicNav — публичная навигация Kamchatour Hub
+ * Desktop (md+): полная строка со ссылками + кнопки Войти/Регистрация
+ * Mobile (<md):  логотип + кнопка-гамбургер → раскрывающееся меню
  */
 export function PublicNav() {
   const pathname = usePathname();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <nav className="bg-white/5 border-b border-white/10 sticky top-0 z-10" aria-label="Главная навигация">
-      <div className="max-w-7xl mx-auto px-6">
+    <nav
+      className="bg-white/5 border-b border-white/10 sticky top-0 z-40"
+      aria-label="Главная навигация"
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
-          <Link href="/" className="text-2xl font-black text-premium-gold">
+
+          {/* Логотип */}
+          <Link href="/" className="text-2xl font-black text-premium-gold shrink-0">
             KamHub
           </Link>
 
-          <div className="flex items-center space-x-1">
+          {/* Desktop: ссылки */}
+          <div className="hidden md:flex items-center space-x-1">
             {navItems.map((item) => {
               const isActive = pathname === item.path;
               const Icon = item.icon;
-
               return (
                 <Link
                   key={item.path}
@@ -60,28 +64,87 @@ export function PublicNav() {
                   )}
                 >
                   <Icon className="w-4 h-4" aria-hidden="true" />
-                  <span className="hidden md:inline">{item.name}</span>
+                  <span>{item.name}</span>
                 </Link>
               );
             })}
           </div>
 
-          <div className="flex items-center gap-3">
-            <Link 
-              href="/auth/login" 
+          {/* Desktop: кнопки auth */}
+          <div className="hidden md:flex items-center gap-3">
+            <Link
+              href="/auth/login"
               className="px-4 py-2 text-white/70 hover:text-white transition-colors text-sm"
             >
               Войти
             </Link>
-            <Link 
-              href="/auth/register" 
+            <Link
+              href="/auth/register"
               className="px-4 py-2 bg-premium-gold hover:bg-premium-gold/80 text-premium-black rounded-lg transition-colors text-sm font-medium"
             >
               Регистрация
             </Link>
           </div>
+
+          {/* Mobile: гамбургер */}
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="md:hidden p-2 rounded-lg text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+            aria-label={isMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
+            aria-expanded={isMenuOpen}
+          >
+            {isMenuOpen
+              ? <X className="w-6 h-6" aria-hidden="true" />
+              : <Menu className="w-6 h-6" aria-hidden="true" />
+            }
+          </button>
         </div>
       </div>
+
+      {/* Mobile: раскрывающееся меню */}
+      {isMenuOpen && (
+        <div className="md:hidden border-t border-white/10 bg-white/5 backdrop-blur-sm px-4 py-3">
+          <div className="space-y-1 mb-3">
+            {navItems.map((item) => {
+              const isActive = pathname === item.path;
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.path}
+                  href={item.path}
+                  onClick={() => setIsMenuOpen(false)}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={clsx(
+                    'flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all',
+                    isActive
+                      ? 'bg-premium-gold text-premium-black'
+                      : 'text-white/70 hover:bg-white/10 hover:text-white'
+                  )}
+                >
+                  <Icon className="w-5 h-5 shrink-0" aria-hidden="true" />
+                  {item.name}
+                </Link>
+              );
+            })}
+          </div>
+          <div className="flex gap-3 pt-3 border-t border-white/10">
+            <Link
+              href="/auth/login"
+              onClick={() => setIsMenuOpen(false)}
+              className="flex-1 px-4 py-2 text-center text-white/70 hover:text-white border border-white/20 rounded-lg transition-colors text-sm"
+            >
+              Войти
+            </Link>
+            <Link
+              href="/auth/register"
+              onClick={() => setIsMenuOpen(false)}
+              className="flex-1 px-4 py-2 text-center bg-premium-gold hover:bg-premium-gold/80 text-premium-black rounded-lg transition-colors text-sm font-medium"
+            >
+              Регистрация
+            </Link>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }
