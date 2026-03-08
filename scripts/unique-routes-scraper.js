@@ -453,6 +453,11 @@ const SYSTEM_PROMPT = `Ты агент-скрапер туристических
    - Ищи ссылки с /tour/ /marshrut/ /route/ /trek/ /pohod/
    - source_name: "mestechkokam.ru"
 
+3. ZIMALETOKAMCHATKA (https://zimaletokamchatka.ru/)
+   - Сезонные туры и маршруты Камчатки (зима/лето)
+   - Ищи ссылки с /tour/ /marshrut/ /program/ /ekskursii/ /pohod/
+   - source_name: "zimaletokamchatka.ru"
+
 ═══ АЛГОРИТМ ═══
 
 Шаг 1. get_stats → посмотри что уже есть
@@ -514,13 +519,14 @@ async function main() {
 
   console.log('🤖 Unique-Routes Scraper — только новые маршруты');
   console.log(`   Модель : ${MODEL}`);
-  console.log(`   Сайты  : tripadvisor.ru, mestechkokam.ru`);
+  console.log(`   Сайты  : tripadvisor.ru, mestechkokam.ru, zimaletokamchatka.ru`);
   if (DRY_RUN) console.log('   ⚠️  DRY RUN — в БД не пишем');
   console.log('─'.repeat(55));
 
-  const task = `Обойди два сайта и сохрани только НОВЫЕ маршруты Камчатки:
+  const task = `Обойди три сайта и сохрани только НОВЫЕ маршруты Камчатки:
 1. TripAdvisor: https://www.tripadvisor.ru/Attractions-g298491-Activities-Kamchatka_Krai_Far_Eastern_District.html
 2. Mestechkokam: https://mestechkokam.ru/
+3. ZimaletоKamchatka: https://zimaletokamchatka.ru/
 
 Алгоритм: get_stats → fetch каждый сайт → extract_links → fetch страниц маршрутов → check_new_routes → save_new_routes.
 Сохраняй только маршруты, которых нет в БД (check_new_routes обязателен перед save_new_routes).`;
