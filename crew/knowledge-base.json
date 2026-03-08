@@ -1,7 +1,8 @@
 {
-  "timestamp": "2026-03-08T02:13:12.546Z",
-  "total": 129,
+  "timestamp": "2026-03-08T10:59:39.708Z",
+  "total": 259,
   "categories": [
+    "dzhip",
     "eco",
     "geyzery",
     "lakes",
@@ -10,12 +11,374 @@
     "mountains",
     "rivers",
     "rybalka",
+    "snegohod",
     "termalnye_istochniki",
     "trekking",
     "vertoletnye_tury",
     "vulkani"
   ],
   "tours": [
+    {
+      "id": "mestechkokam.ru:горный-массив-вачкажец-на-камчатке.-экскурсия-«флора-и-фауна»",
+      "name": "Горный массив Вачкажец на Камчатке. Экскурсия «Флора и фауна»",
+      "description": "Приглашаем на автомобильную экскурсию на горный массив Вачкажец и озеро Тахколоч на Камчатке. Активный джип тур по горной местности.",
+      "category": "dzhip",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://mestechkokam.ru/ekskursii/avtomobilnye-ekskursii/gornyj-massiv-vachkazhecz-flora-i-fauna/",
+      "source_name": "mestechkokam.ru",
+      "searchText": "Горный массив Вачкажец на Камчатке. Экскурсия «Флора и фауна» Приглашаем на автомобильную экскурсию на горный массив Вачкажец и озеро Тахколоч на Камчатке. Активный джип тур по горной местности. dzhip",
+      "metadata": {
+        "category": "dzhip",
+        "source_url": "https://mestechkokam.ru/ekskursii/avtomobilnye-ekskursii/gornyj-massiv-vachkazhecz-flora-i-fauna/",
+        "source_name": "mestechkokam.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:дачные-источники-(на-вездеходе)",
+      "name": "Дачные источники (на вездеходе)",
+      "description": "Джип-тур к Дачным источникам. Зимний тур к Мутновскому вулкану — уникальная возможность увидеть заснеженные геотермальные поля Камчатки. Узнайте подробности маршрута и программу тура.",
+      "category": "dzhip",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/Dachnyer_wnter/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Дачные источники (на вездеходе) Джип-тур к Дачным источникам. Зимний тур к Мутновскому вулкану — уникальная возможность увидеть заснеженные геотермальные поля Камчатки. Узнайте подробности маршрута и программу тура. dzhip",
+      "metadata": {
+        "category": "dzhip",
+        "source_url": "https://kamchatintour.ru/tours/Dachnyer_wnter/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:дачные-источники,-каньон-опасный-(на-вездеходе)",
+      "name": "Дачные источники, каньон Опасный (на вездеходе)",
+      "description": "Джип-тур к каньону Опасный у подножия Мутновского вулкана. Узнайте подробности маршрута и программу тура. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "dzhip",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/Mutnovksy_winter/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Дачные источники, каньон Опасный (на вездеходе) Джип-тур к каньону Опасный у подножия Мутновского вулкана. Узнайте подробности маршрута и программу тура. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 dzhip",
+      "metadata": {
+        "category": "dzhip",
+        "source_url": "https://kamchatintour.ru/tours/Mutnovksy_winter/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:дачные-источники,-каньон-опасный-(на-внедорожнике)",
+      "name": "Дачные источники, каньон Опасный (на внедорожнике)",
+      "description": "Экскурсия 'Дачные источники и каньон Опасный' – путешествие на внедорожниках к горячим термальным источникам и живописному каньону с водопадами. Уникальная природа и адреналин! Узнайте цены и забронируйте тур на сайте или по телефону: +7 (495) 920-33-35.",
+      "category": "dzhip",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/Dachniye_Opasny/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Дачные источники, каньон Опасный (на внедорожнике) Экскурсия 'Дачные источники и каньон Опасный' – путешествие на внедорожниках к горячим термальным источникам и живописному каньону с водопадами. Уникальная природа и адреналин! Узнайте цены и забронируйте тур на сайте или по телефону: +7 (495) 920-33-35. dzhip",
+      "metadata": {
+        "category": "dzhip",
+        "source_url": "https://kamchatintour.ru/tours/Dachniye_Opasny/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "mestechkokam.ru:джип-тур-на-толбачик-2025",
+      "name": "Джип-тур на Толбачик 2025",
+      "description": "Джип тур Толбачик Приглашаем туристов в уникальный джип тур Толбачик Standard по Камчатке.",
+      "category": "dzhip",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://mestechkokam.ru/ekskursii/avtomobilnye-ekskursii/tolbachik-standard/",
+      "source_name": "mestechkokam.ru",
+      "searchText": "Джип-тур на Толбачик 2025 Джип тур Толбачик Приглашаем туристов в уникальный джип тур Толбачик Standard по Камчатке. dzhip",
+      "metadata": {
+        "category": "dzhip",
+        "source_url": "https://mestechkokam.ru/ekskursii/avtomobilnye-ekskursii/tolbachik-standard/",
+        "source_name": "mestechkokam.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:джип-туры",
+      "name": "Джип-туры",
+      "description": "Отправьтесь в захватывающий джип-тур по Камчатке! Маршруты по бездорожью, вулканам и живописным долинам. Групповые и индивидуальные туры с опытными гидами.",
+      "category": "dzhip",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/gipy/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Джип-туры Отправьтесь в захватывающий джип-тур по Камчатке! Маршруты по бездорожью, вулканам и живописным долинам. Групповые и индивидуальные туры с опытными гидами. dzhip",
+      "metadata": {
+        "category": "dzhip",
+        "source_url": "https://kamchatintour.ru/tours/gipy/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "mestechkokam.ru:джип-туры-по-камчатке",
+      "name": "Джип-туры по Камчатке",
+      "description": "Джип туры по Камчатке — незабываемые впечатления и эмоции вместе с нашей командой «Местечко Камчатка». Бронируйте экскурсии на сайте",
+      "category": "dzhip",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://mestechkokam.ru/ekskursii/avtomobilnye-ekskursii/",
+      "source_name": "mestechkokam.ru",
+      "searchText": "Джип-туры по Камчатке Джип туры по Камчатке — незабываемые впечатления и эмоции вместе с нашей командой «Местечко Камчатка». Бронируйте экскурсии на сайте dzhip",
+      "metadata": {
+        "category": "dzhip",
+        "source_url": "https://mestechkokam.ru/ekskursii/avtomobilnye-ekskursii/",
+        "source_name": "mestechkokam.ru"
+      }
+    },
+    {
+      "id": "mestechkokam.ru:халактырский-пляж",
+      "name": "Халактырский пляж",
+      "description": "Приглашаем в джип тур на Халактырский пляж на комфортном авто с опытным гидом. Незабываемая экскурсия для туристов",
+      "category": "dzhip",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://mestechkokam.ru/ekskursii/avtomobilnye-ekskursii/halaktyrskij-plyazh/",
+      "source_name": "mestechkokam.ru",
+      "searchText": "Халактырский пляж Приглашаем в джип тур на Халактырский пляж на комфортном авто с опытным гидом. Незабываемая экскурсия для туристов dzhip",
+      "metadata": {
+        "category": "dzhip",
+        "source_url": "https://mestechkokam.ru/ekskursii/avtomobilnye-ekskursii/halaktyrskij-plyazh/",
+        "source_name": "mestechkokam.ru"
+      }
+    },
+    {
+      "id": "mestechkokam.ru:экскурсия-на-мыс-маячный-на-камчатке",
+      "name": "Экскурсия на мыс Маячный на Камчатке",
+      "description": "Джип-тур к мысу Маячный и к скалам Три Брата. Поездка на автомобиле повышенной проходимости к Петропавловскому маяку",
+      "category": "dzhip",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://mestechkokam.ru/ekskursii/avtomobilnye-ekskursii/mys-mayachnyj/",
+      "source_name": "mestechkokam.ru",
+      "searchText": "Экскурсия на мыс Маячный на Камчатке Джип-тур к мысу Маячный и к скалам Три Брата. Поездка на автомобиле повышенной проходимости к Петропавловскому маяку dzhip",
+      "metadata": {
+        "category": "dzhip",
+        "source_url": "https://mestechkokam.ru/ekskursii/avtomobilnye-ekskursii/mys-mayachnyj/",
+        "source_name": "mestechkokam.ru"
+      }
+    },
+    {
+      "id": "mestechkokam.ru:экскурсия-на-озеро-толмачево-на-камчатке",
+      "name": "Экскурсия на озеро Толмачево на Камчатке",
+      "description": "Отправляйтесь с нами в увлекательный джип-тур на Толмачево озеро — уникальное место Камчатского полуострова.",
+      "category": "dzhip",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://mestechkokam.ru/ekskursii/avtomobilnye-ekskursii/tolmachyovo-ozero/",
+      "source_name": "mestechkokam.ru",
+      "searchText": "Экскурсия на озеро Толмачево на Камчатке Отправляйтесь с нами в увлекательный джип-тур на Толмачево озеро — уникальное место Камчатского полуострова. dzhip",
+      "metadata": {
+        "category": "dzhip",
+        "source_url": "https://mestechkokam.ru/ekskursii/avtomobilnye-ekskursii/tolmachyovo-ozero/",
+        "source_name": "mestechkokam.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:spa-отдых-и-приключения-на-камчатке-зимой",
+      "name": "SPA отдых и приключения на Камчатке зимой",
+      "description": "SPA отдых и приключения на Камчатке зимой. В этом туре вы совместите отдых на горячих источниках со знакомством с прекрасной зимней Камчаткой! Лучшие цены на отдых и путешествия по Камчатке. Забронировать места можно на сайте или по телефону: +7 (4152) 20-10-10.",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/SPA_winter/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "SPA отдых и приключения на Камчатке зимой SPA отдых и приключения на Камчатке зимой. В этом туре вы совместите отдых на горячих источниках со знакомством с прекрасной зимней Камчаткой! Лучшие цены на отдых и путешествия по Камчатке. Забронировать места можно на сайте или по телефону: +7 (4152) 20-10-10. eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/SPA_winter/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:sup-туры",
+      "name": "SUP-туры",
+      "description": "SUP-туры по живописным бухтам и рекам Камчатки. Обучение для новичков, прокат снаряжения и незабываемые впечатления на воде. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/sup-tury/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "SUP-туры SUP-туры по живописным бухтам и рекам Камчатки. Обучение для новичков, прокат снаряжения и незабываемые впечатления на воде. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/sup-tury/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "zimaletokamchatka.ru:«фортуна-камчатки.-зима»",
+      "name": "«Фортуна Камчатки. Зима»",
+      "description": "Тур по Камчатке с 4 экскурсими на вулканы, горячие источники и катание на собачьих упряжках, с удобным проживанием и трансферами, без лишних затрат.",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://zimaletokamchatka.ru/programs/fortuna_kamchatki_zima",
+      "source_name": "zimaletokamchatka.ru",
+      "searchText": "«Фортуна Камчатки. Зима» Тур по Камчатке с 4 экскурсими на вулканы, горячие источники и катание на собачьих упряжках, с удобным проживанием и трансферами, без лишних затрат. eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://zimaletokamchatka.ru/programs/fortuna_kamchatki_zima",
+        "source_name": "zimaletokamchatka.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:активные",
+      "name": "Активные",
+      "description": "Сплав, трекинг, восхождения и снегоходы – насыщенные активные туры по Камчатке. Для любителей экстрима и природы. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/aktivnye/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Активные Сплав, трекинг, восхождения и снегоходы – насыщенные активные туры по Камчатке. Для любителей экстрима и природы. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/aktivnye/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:без-палаток",
+      "name": "Без палаток",
+      "description": "Путешествия по Камчатке без палаток с проживанием в гостиницах и гестхаусах. Все достопримечательности без кемпинга и палаток. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/bez-palatok/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Без палаток Путешествия по Камчатке без палаток с проживанием в гостиницах и гестхаусах. Все достопримечательности без кемпинга и палаток. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/bez-palatok/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:вип-туры",
+      "name": "ВИП-туры",
+      "description": "Премиум-туры по Камчатке с максимальным комфортом. Частные экскурсии, VIP-обслуживание и уникальные маршруты. Ваш отдых – по высшему стандарту!",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/vip/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "ВИП-туры Премиум-туры по Камчатке с максимальным комфортом. Частные экскурсии, VIP-обслуживание и уникальные маршруты. Ваш отдых – по высшему стандарту! eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/vip/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:весенние-туры-на-камчатку",
+      "name": "Весенние туры на Камчатку",
+      "description": "Организация весенних туров на Камчатку: авторские путешествия, экскурсии по Петропавловску-Камчатскому, джип-туры и туры на вулканы. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/vesna/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Весенние туры на Камчатку Организация весенних туров на Камчатку: авторские путешествия, экскурсии по Петропавловску-Камчатскому, джип-туры и туры на вулканы. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/vesna/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:весенний-микс",
+      "name": "Весенний микс",
+      "description": "Откройте Камчатку весной с туром «Весенний Микс». Вулканы, горячие источники и природа, просыпающаяся после зимы. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/spring_mix/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Весенний микс Откройте Камчатку весной с туром «Весенний Микс». Вулканы, горячие источники и природа, просыпающаяся после зимы. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/spring_mix/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:вода-и-пламя",
+      "name": "Вода и пламя",
+      "description": "Уникальный тур «Вода и Пламя»: Восхождение на вулкан, горячие источники и морские путешествия по Камчатке. Наслаждайтесь контрастами дикой природы полуострова. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/water_and_flame/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Вода и пламя Уникальный тур «Вода и Пламя»: Восхождение на вулкан, горячие источники и морские путешествия по Камчатке. Наслаждайтесь контрастами дикой природы полуострова. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/water_and_flame/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
     {
       "id": "74f79c54-49cf-47ab-93c8-083dd645fce3",
       "name": "Волшебный мир зимы",
@@ -42,6 +405,44 @@
       }
     },
     {
+      "id": "kamchatintour.ru:гастрономические",
+      "name": "Гастрономические",
+      "description": "Дегустация камчатских деликатесов – красная икра, краб, дикоросы. Экскурсии на фермы и в рестораны с местной кухней. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/gastronomicheskie/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Гастрономические Дегустация камчатских деликатесов – красная икра, краб, дикоросы. Экскурсии на фермы и в рестораны с местной кухней. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/gastronomicheskie/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "mestechkokam.ru:групповые-туры-на-камчатку",
+      "name": "Групповые туры на Камчатку",
+      "description": "Отправьтесь в незабываемое групповое путешествие по Камчатке. Делитесь эмоциями, открывайте новые горизонты и проводите дни среди уникальной природы вместе с яркой командой и опытными гидами.",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://mestechkokam.ru/ekskursii/gruppovye-tury/",
+      "source_name": "mestechkokam.ru",
+      "searchText": "Групповые туры на Камчатку Отправьтесь в незабываемое групповое путешествие по Камчатке. Делитесь эмоциями, открывайте новые горизонты и проводите дни среди уникальной природы вместе с яркой командой и опытными гидами. eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://mestechkokam.ru/ekskursii/gruppovye-tury/",
+        "source_name": "mestechkokam.ru"
+      }
+    },
+    {
       "id": "dc1e6f70-6152-45d4-9448-4647f2060e81",
       "name": "Зимник Анавгай - Тигиль",
       "description": "Это Зимник Анавгай - Тигиль в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.",
@@ -64,6 +465,63 @@
           "0.0000000"
         ],
         "source_name": "idilesom"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:зимняя-обзорная-экскурсия-по-петропавловску-камчатскому",
+      "name": "Зимняя обзорная экскурсия по Петропавловску-Камчатскому",
+      "description": "Откройте для себя Петропавловск-Камчатский с Камчатинтур. Исследуйте исторические и культурные достопримечательности города во время увлекательной экскурсии. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/City_sightseeing/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Зимняя обзорная экскурсия по Петропавловску-Камчатскому Откройте для себя Петропавловск-Камчатский с Камчатинтур. Исследуйте исторические и культурные достопримечательности города во время увлекательной экскурсии. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/City_sightseeing/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:из-осени-в-зиму",
+      "name": "Из осени в зиму",
+      "description": "Путешествие на Камчатку в ноябре с Камчатинтур. Откройте для себя волшебные зимние пейзажи и уникальные туры по этому удивительному региону. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/Kamchatka_november/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Из осени в зиму Путешествие на Камчатку в ноябре с Камчатинтур. Откройте для себя волшебные зимние пейзажи и уникальные туры по этому удивительному региону. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/Kamchatka_november/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:июньская-мозаика",
+      "name": "Июньская мозаика",
+      "description": "Тур «Июньская мозаика» на Камчатке — идеальный выбор для тех, кто хочет исследовать природу полуострова в начале лета. Вулканические пейзажи, дикая природа и термальные источники. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/june_mosaic/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Июньская мозаика Тур «Июньская мозаика» на Камчатке — идеальный выбор для тех, кто хочет исследовать природу полуострова в начале лета. Вулканические пейзажи, дикая природа и термальные источники. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/june_mosaic/",
+        "source_name": "kamchatintour.ru"
       }
     },
     {
@@ -114,6 +572,196 @@
           "152.6085205"
         ],
         "source_name": "idilesom"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:камчатка---вкус-лета",
+      "name": "Камчатка - Вкус Лета",
+      "description": "Тур 'Камчатка — Вкус Лета': настоящее летнее приключение среди вулканов, термальных источников и дикой природы. Трекинги, выходы в море, дегустация морепродуктов и незабываемые пейзажи! Узнайте больше о программе и датах.",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/kamchatka_taste_of_summer/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Камчатка - Вкус Лета Тур 'Камчатка — Вкус Лета': настоящее летнее приключение среди вулканов, термальных источников и дикой природы. Трекинги, выходы в море, дегустация морепродуктов и незабываемые пейзажи! Узнайте больше о программе и датах. eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/kamchatka_taste_of_summer/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:камчатка---зимние-приключения-(индивидуально)",
+      "name": "Камчатка - Зимние приключения (индивидуально)",
+      "description": "Тур «Камчатка. Зимние приключения (комфорт-тур)» приглашает в активную программу путешествий по Камчатке, исследуя вулканы, леса и уникальные природные объекты региона. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/Kamchatka-winter-adevntures/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Камчатка - Зимние приключения (индивидуально) Тур «Камчатка. Зимние приключения (комфорт-тур)» приглашает в активную программу путешествий по Камчатке, исследуя вулканы, леса и уникальные природные объекты региона. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/Kamchatka-winter-adevntures/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "zimaletokamchatka.ru:камчатка-5-экскурсий---8-дней,-чартер-из-москвы",
+      "name": "Камчатка 5 экскурсий - 8 дней, чартер из Москвы",
+      "description": "Комфортный тур по Камчатке с авиабилетами из Москвы. Вулканы, гейзеры, морской круиз , Халактырский пляж.",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://zimaletokamchatka.ru/charters/kamchatka_5_jekskursij",
+      "source_name": "zimaletokamchatka.ru",
+      "searchText": "Камчатка 5 экскурсий - 8 дней, чартер из Москвы Комфортный тур по Камчатке с авиабилетами из Москвы. Вулканы, гейзеры, морской круиз , Халактырский пляж. eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://zimaletokamchatka.ru/charters/kamchatka_5_jekskursij",
+        "source_name": "zimaletokamchatka.ru"
+      }
+    },
+    {
+      "id": "zimaletokamchatka.ru:камчатка-лайт---8-дней,-чартер-из-москвы",
+      "name": "Камчатка Лайт - 8 дней, чартер из Москвы",
+      "description": "Тур с авиабилетами из Москвы. для первого знакомства с Камчаткой и путешествия с детьми.",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://zimaletokamchatka.ru/charters/kamchatka_lajt",
+      "source_name": "zimaletokamchatka.ru",
+      "searchText": "Камчатка Лайт - 8 дней, чартер из Москвы Тур с авиабилетами из Москвы. для первого знакомства с Камчаткой и путешествия с детьми. eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://zimaletokamchatka.ru/charters/kamchatka_lajt",
+        "source_name": "zimaletokamchatka.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:камчатка-индивидуально",
+      "name": "Камчатка индивидуально",
+      "description": "Путешествуйте по Камчатке в индивидуальных малых группах с Kamchatintour. Мы предлагаем персонализированные туры, которые позволят вам насладиться природой и уникальными достопримечательностями без лишней суеты. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/kamchatka_small_groups/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Камчатка индивидуально Путешествуйте по Камчатке в индивидуальных малых группах с Kamchatintour. Мы предлагаем персонализированные туры, которые позволят вам насладиться природой и уникальными достопримечательностями без лишней суеты. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/kamchatka_small_groups/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:камчатка.-главное-путешествие",
+      "name": "Камчатка. Главное путешествие",
+      "description": "Тур Камчатка. Главное путешествие — путешествие к вулканам, гейзерам и дикой природе Камчатки. Восхождения, джип-туры, морские прогулки и уникальные фото-возможности. Узнайте больше о программе и датах.",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/Amazing_Kamchatka/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Камчатка. Главное путешествие Тур Камчатка. Главное путешествие — путешествие к вулканам, гейзерам и дикой природе Камчатки. Восхождения, джип-туры, морские прогулки и уникальные фото-возможности. Узнайте больше о программе и датах. eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/Amazing_Kamchatka/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:камчатка.-зимняя-сказка",
+      "name": "Камчатка. Зимняя сказка",
+      "description": "Зимний тур 'Сказка Камчатки' – снегоходные сафари к вулканам, катание на собачьих упряжках, термальные купели под снегом. Встречайте волшебство северной зимы! Узнайте цены и забронируйте тур на сайте или по телефону: +7 (495) 920-33-35.",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/Winter_Fairy_Tale/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Камчатка. Зимняя сказка Зимний тур 'Сказка Камчатки' – снегоходные сафари к вулканам, катание на собачьих упряжках, термальные купели под снегом. Встречайте волшебство северной зимы! Узнайте цены и забронируйте тур на сайте или по телефону: +7 (495) 920-33-35. eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/Winter_Fairy_Tale/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:камчатка.-осенняя-палитра",
+      "name": "Камчатка. Осенняя палитра",
+      "description": "Тур «Осенняя палитра» приглашает насладиться красками осени на Камчатке, исследуя вулканы, леса и уникальные природные объекты региона. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/Autumn_palette/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Камчатка. Осенняя палитра Тур «Осенняя палитра» приглашает насладиться красками осени на Камчатке, исследуя вулканы, леса и уникальные природные объекты региона. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/Autumn_palette/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:катание-на-собачьих-упряжках,-купание-в-зеленовских-озерках",
+      "name": "Катание на собачьих упряжках, купание в Зеленовских озерках",
+      "description": "Этнографическая экскурсия в Озерки с Kamchatintour — это возможность познакомиться с культурой коренных народов Камчатки, насладиться природой и традициями региона. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/Etno_ozerki/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Катание на собачьих упряжках, купание в Зеленовских озерках Этнографическая экскурсия в Озерки с Kamchatintour — это возможность познакомиться с культурой коренных народов Камчатки, насладиться природой и традициями региона. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/Etno_ozerki/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "zimaletokamchatka.ru:конная-прогулка-«дорогой-через-мёртвый-лес»,-ланч",
+      "name": "Конная прогулка «Дорогой через мёртвый лес», ланч",
+      "description": "Конный тур через Мертвый лес с возможностью увидеть диких животных, цветущий лес и нерест лосося.",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://zimaletokamchatka.ru/tours/dorogoj_cherez_mjortvyj_les",
+      "source_name": "zimaletokamchatka.ru",
+      "searchText": "Конная прогулка «Дорогой через мёртвый лес», ланч Конный тур через Мертвый лес с возможностью увидеть диких животных, цветущий лес и нерест лосося. eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://zimaletokamchatka.ru/tours/dorogoj_cherez_mjortvyj_les",
+        "source_name": "zimaletokamchatka.ru"
       }
     },
     {
@@ -192,28 +840,98 @@
       }
     },
     {
-      "id": "9a12dbcb-07fc-43b7-93ae-f7045a9e4f58",
-      "name": "Маршрут Пиначево - Центральный",
-      "description": "Это Маршрут Пиначево - Центральный в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.",
+      "id": "kamchatintour.ru:многодневный-тур",
+      "name": "Многодневный тур",
+      "description": "Полное погружение в природу Камчатки – многодневные туры с трекингом, вулканами, рыбалкой и термальными источниками. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
       "category": "eco",
       "difficulty": "Не указано",
       "duration": "Не указано",
-      "coordinates": [
-        "0.0000000",
-        "0.0000000"
-      ],
+      "coordinates": null,
       "district": null,
       "length_km": null,
-      "source_url": null,
-      "source_name": "idilesom",
-      "searchText": "Маршрут Пиначево - Центральный\nКатегория: eco\nЭто Маршрут Пиначево - Центральный в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.\nИсточник: idilesom\nКоординаты: 0.0000000, 0.0000000",
+      "source_url": "https://kamchatintour.ru/tours/mnogodnevnyj-tur/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Многодневный тур Полное погружение в природу Камчатки – многодневные туры с трекингом, вулканами, рыбалкой и термальными источниками. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 eco",
       "metadata": {
         "category": "eco",
-        "coordinates": [
-          "0.0000000",
-          "0.0000000"
-        ],
-        "source_name": "idilesom"
+        "source_url": "https://kamchatintour.ru/tours/mnogodnevnyj-tur/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:мыс-маячный.-три-брата",
+      "name": "Мыс Маячный. Три Брата",
+      "description": "Откройте для себя красоту мыса Маячный на Камчатке! Этот тур подарит вам уникальные пейзажи Тихого океана, возможность наблюдать за морскими обитателями и насладиться уединением на краю земли. Забронируйте тур и отправьтесь в незабываемое приключение!",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/Mayachny_cape/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Мыс Маячный. Три Брата Откройте для себя красоту мыса Маячный на Камчатке! Этот тур подарит вам уникальные пейзажи Тихого океана, возможность наблюдать за морскими обитателями и насладиться уединением на краю земли. Забронируйте тур и отправьтесь в незабываемое приключение! eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/Mayachny_cape/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:наблюдение-за-птицами",
+      "name": "Наблюдение за птицами",
+      "description": "Орнитологические экскурсии с наблюдением за птицами Камчатки – орланы, чайки, лебеди. Лучшие места для фотосъемки. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/nablyudenie-za-pticami/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Наблюдение за птицами Орнитологические экскурсии с наблюдением за птицами Камчатки – орланы, чайки, лебеди. Лучшие места для фотосъемки. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/nablyudenie-za-pticami/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:наблюдение-цветов",
+      "name": "Наблюдение цветов",
+      "description": "Ботанические туры по Камчатке – цветущие луга, эндемичные растения и уникальные пейзажи. Экскурсии с натуралистами. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/nablyudenie-cvetov/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Наблюдение цветов Ботанические туры по Камчатке – цветущие луга, эндемичные растения и уникальные пейзажи. Экскурсии с натуралистами. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/nablyudenie-cvetov/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:надлюдение-за-животными",
+      "name": "Надлюдение за животными",
+      "description": "Уникальные туры с наблюдением за камчатскими медведями, китами и морскими котиками. Фотосафари с гидами-натуралистами. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/nadlyudeie-za-zhivotnymi/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Надлюдение за животными Уникальные туры с наблюдением за камчатскими медведями, китами и морскими котиками. Фотосафари с гидами-натуралистами. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/nadlyudeie-za-zhivotnymi/",
+        "source_name": "kamchatintour.ru"
       }
     },
     {
@@ -242,6 +960,63 @@
       }
     },
     {
+      "id": "kamchatintour.ru:национальный-маршрут-\"камчатка---здеcь-начинается-россия\"",
+      "name": "Национальный маршрут \"Камчатка - здеcь начинается Россия\"",
+      "description": "Национальный маршрут Камчатка - здеcь начинается Россия от Камчатинтур. Исследуйте Камчатку и откройте для себя природные чудеса этого региона. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/nachinaetsa_rossiya/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Национальный маршрут \"Камчатка - здеcь начинается Россия\" Национальный маршрут Камчатка - здеcь начинается Россия от Камчатинтур. Исследуйте Камчатку и откройте для себя природные чудеса этого региона. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/nachinaetsa_rossiya/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:однодневный-тур",
+      "name": "Однодневный тур",
+      "description": "Лучшие однодневные туры по Камчатке – вулканы, горячие источники, треккинг. Без палаток, с трансфером и гидом. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/odnodnevnyj-tur/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Однодневный тур Лучшие однодневные туры по Камчатке – вулканы, горячие источники, треккинг. Без палаток, с трансфером и гидом. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/odnodnevnyj-tur/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:осенние-туры-на-камчатку",
+      "name": "Осенние туры на Камчатку",
+      "description": "Организация осенних туров на Камчатку: авторские путешествия, экскурсии по Петропавловску-Камчатскому, джип-туры и туры на вулканы. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/osen/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Осенние туры на Камчатку Организация осенних туров на Камчатку: авторские путешествия, экскурсии по Петропавловску-Камчатскому, джип-туры и туры на вулканы. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/osen/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
       "id": "3b3633ec-871a-401d-bd68-021d889435ea",
       "name": "Под Козельский вулкан",
       "description": "Это Под Козельский вулкан в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.",
@@ -264,6 +1039,120 @@
           "0.0000000"
         ],
         "source_name": "idilesom"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:поездка-на-халактырский-пляж",
+      "name": "Поездка на Халактырский пляж",
+      "description": "Летняя экскурсия по Тихому океану — поездка на пляж с черным песком и живописными пейзажами Камчатки. Узнайте больше о программе. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/Pacific_ocean_summer_excursion/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Поездка на Халактырский пляж Летняя экскурсия по Тихому океану — поездка на пляж с черным песком и живописными пейзажами Камчатки. Узнайте больше о программе. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/Pacific_ocean_summer_excursion/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:поездка-на-мыс-маячный",
+      "name": "Поездка на мыс Маячный",
+      "description": "Летний тур на мыс Маячный — увлекательное путешествие с потрясающими видами на Камчатку и Тихий океан. Узнайте больше о маршруте и программе тура. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/Mayachny_summer/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Поездка на мыс Маячный Летний тур на мыс Маячный — увлекательное путешествие с потрясающими видами на Камчатку и Тихий океан. Узнайте больше о маршруте и программе тура. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/Mayachny_summer/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:предновогодняя-камчатка",
+      "name": "Предновогодняя Камчатка",
+      "description": "Окунитесь в атмосферу предновогодней Камчатки! Уникальные зимние пейзажи, заснеженные вулканы и горячие источники. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/Kamchatka_december/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Предновогодняя Камчатка Окунитесь в атмосферу предновогодней Камчатки! Уникальные зимние пейзажи, заснеженные вулканы и горячие источники. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/Kamchatka_december/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:спа-отдых-и-приключения-на-камчатке",
+      "name": "СПА-отдых и приключения на Камчатке",
+      "description": "SPA-тур на Камчатку: отдых в термальных источниках, массажи и релакс в окружении вулканов. Идеальный тур для восстановления сил. Узнайте больше о программе и датах. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/SPA_Kamchatka/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "СПА-отдых и приключения на Камчатке SPA-тур на Камчатку: отдых в термальных источниках, массажи и релакс в окружении вулканов. Идеальный тур для восстановления сил. Узнайте больше о программе и датах. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/SPA_Kamchatka/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:серфинг",
+      "name": "Серфинг",
+      "description": "Уникальный серфинг на Камчатке – лучшие споты для новичков и профи. Теплые гидрокостюмы, инструктаж и мощные волны Тихого океана. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/serfing/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Серфинг Уникальный серфинг на Камчатке – лучшие споты для новичков и профи. Теплые гидрокостюмы, инструктаж и мощные волны Тихого океана. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/serfing/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:собачьи-упряжки",
+      "name": "Собачьи упряжки",
+      "description": "Настоящее зимнее приключение – катание на собачьих упряжках по Камчатке. Знакомство с хаски, северные пейзажи и уютные турбазы. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/sobachyi-upryazhki/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Собачьи упряжки Настоящее зимнее приключение – катание на собачьих упряжках по Камчатке. Знакомство с хаски, северные пейзажи и уютные турбазы. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/sobachyi-upryazhki/",
+        "source_name": "kamchatintour.ru"
       }
     },
     {
@@ -292,6 +1181,44 @@
       }
     },
     {
+      "id": "kamchatintour.ru:сёрфинг-в-тихом-океане",
+      "name": "Сёрфинг в Тихом океане",
+      "description": "Испытайте серфинг на Камчатке с Kamchatintour. Насладитесь адреналином, катаясь по волнам на одном из самых уникальных и красивых серфинг-спотов мира. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/surfing/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Сёрфинг в Тихом океане Испытайте серфинг на Камчатке с Kamchatintour. Насладитесь адреналином, катаясь по волнам на одном из самых уникальных и красивых серфинг-спотов мира. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/surfing/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:теплая-камчатка-зимой-(лагуна)",
+      "name": "Теплая Камчатка зимой (Лагуна)",
+      "description": "Теплая Камчатка зимой (Лагуна). Самое вкусное предложение низкого сезона – отдохнуть на Камчатке 6 дней всего за 60 тысяч рублей. Лучшие цены на отдых и путешествия по Камчатке. Забронировать места можно на сайте или по телефону: +7 (4152) 20-10-10.",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/Warm--winter/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Теплая Камчатка зимой (Лагуна) Теплая Камчатка зимой (Лагуна). Самое вкусное предложение низкого сезона – отдохнуть на Камчатке 6 дней всего за 60 тысяч рублей. Лучшие цены на отдых и путешествия по Камчатке. Забронировать места можно на сайте или по телефону: +7 (4152) 20-10-10. eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/Warm--winter/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
       "id": "318bd72a-1bae-4c40-8ac7-cf1f90ed6bb7",
       "name": "Тихоокеанское кольцо",
       "description": "Это Тихоокеанское кольцо в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.",
@@ -314,6 +1241,82 @@
           "0.0000000"
         ],
         "source_name": "idilesom"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:треккинг-к-горе-вачкажец",
+      "name": "Треккинг к горе Вачкажец",
+      "description": "Отправьтесь в захватывающюю экскурсию к горе Вахкажец на Камчатке! Насладитесь пешим походом через живописные альпийские луга и уникальные ландшафты. Идеально для любителей активного отдыха и красивых пейзажей. Забронируйте тур уже сегодня!",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/Vachkazhets_mount_tour/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Треккинг к горе Вачкажец Отправьтесь в захватывающюю экскурсию к горе Вахкажец на Камчатке! Насладитесь пешим походом через живописные альпийские луга и уникальные ландшафты. Идеально для любителей активного отдыха и красивых пейзажей. Забронируйте тур уже сегодня! eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/Vachkazhets_mount_tour/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:треккинг-на-гору-верблюд-(лето,-осень)",
+      "name": "Треккинг на гору Верблюд (лето, осень)",
+      "description": "Покорите гору Верблюд на Камчатке с Камчатинтур. Это уникальное восхождение предлагает великолепные виды и интересные природные образования, сделав ваш поход незабываемым. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/Camel_mountain/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Треккинг на гору Верблюд (лето, осень) Покорите гору Верблюд на Камчатке с Камчатинтур. Это уникальное восхождение предлагает великолепные виды и интересные природные образования, сделав ваш поход незабываемым. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/Camel_mountain/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "mestechkokam.ru:туры-на-камчатку-в-августе",
+      "name": "Туры на Камчатку в августе",
+      "description": "Туры на Камчатку в августе. Насыщенные программы и лучшие виды полуострова. Наши профессиональные гиды раскроют всю красоту Камчатки",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://mestechkokam.ru/ekskursii/tury-v-avguste/",
+      "source_name": "mestechkokam.ru",
+      "searchText": "Туры на Камчатку в августе Туры на Камчатку в августе. Насыщенные программы и лучшие виды полуострова. Наши профессиональные гиды раскроют всю красоту Камчатки eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://mestechkokam.ru/ekskursii/tury-v-avguste/",
+        "source_name": "mestechkokam.ru"
+      }
+    },
+    {
+      "id": "mestechkokam.ru:туры-на-камчатку-с-детьми",
+      "name": "Туры на Камчатку с детьми",
+      "description": "Отправьтесь в незабываемое путешествие с детьми на Камчатку! Организуем безопасный и комфортный отдых для всей семьи. Забронируйте тур уже сегодня!",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://mestechkokam.ru/ekskursii/tury-na-kamchatku-s-detmi/",
+      "source_name": "mestechkokam.ru",
+      "searchText": "Туры на Камчатку с детьми Отправьтесь в незабываемое путешествие с детьми на Камчатку! Организуем безопасный и комфортный отдых для всей семьи. Забронируйте тур уже сегодня! eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://mestechkokam.ru/ekskursii/tury-na-kamchatku-s-detmi/",
+        "source_name": "mestechkokam.ru"
       }
     },
     {
@@ -367,6 +1370,139 @@
       }
     },
     {
+      "id": "kamchatintour.ru:экскурсии",
+      "name": "Экскурсии",
+      "description": "Авторские экскурсии по Камчатке – вулканы, долина гейзеров, термальные источники. Групповые и индивидуальные туры. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/ekskursii/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Экскурсии Авторские экскурсии по Камчатке – вулканы, долина гейзеров, термальные источники. Групповые и индивидуальные туры. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/ekskursii/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:экскурсия-по-петропавловску-камчатскому-с-обедом",
+      "name": "Экскурсия по Петропавловску-Камчатскому с обедом",
+      "description": "Летний тур по Петропавловску-Камчатскому с Kamchatintour — это отличная возможность узнать больше о главном городе Камчатки, его истории и культуре. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/City_tour_summer/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Экскурсия по Петропавловску-Камчатскому с обедом Летний тур по Петропавловску-Камчатскому с Kamchatintour — это отличная возможность узнать больше о главном городе Камчатки, его истории и культуре. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/City_tour_summer/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "zimaletokamchatka.ru:экскурсия-по-городу-с-дегустацией-камчатских-крафтовых-сыров-и-деликатесов",
+      "name": "Экскурсия по городу с дегустацией камчатских крафтовых сыров и деликатесов",
+      "description": "Обзорная экскурсия по Петропавловску-Камчатскому с посещением смотровых площадок, музея «Вулканариум», сыроварни «Аристель» и «Деликатесов Востока».",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://zimaletokamchatka.ru/tours/ekskursiya_po_gorodu_s_degustatsiey_kamchatskikh_kraftovykh_syrov_i_delikatesov",
+      "source_name": "zimaletokamchatka.ru",
+      "searchText": "Экскурсия по городу с дегустацией камчатских крафтовых сыров и деликатесов Обзорная экскурсия по Петропавловску-Камчатскому с посещением смотровых площадок, музея «Вулканариум», сыроварни «Аристель» и «Деликатесов Востока». eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://zimaletokamchatka.ru/tours/ekskursiya_po_gorodu_s_degustatsiey_kamchatskikh_kraftovykh_syrov_i_delikatesov",
+        "source_name": "zimaletokamchatka.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:этническая-экскурсия",
+      "name": "Этническая экскурсия",
+      "description": "Погрузитесь в культуру коренных народов Камчатки с туром «Этническая летняя экскурсия»! Узнайте о традициях, попробуйте блюда местной кухни и познакомьтесь с уникальным наследием региона. Идеальный выбор для тех, кто хочет глубже понять историю и культуру Камчатки. Забронировать места можно на сайте",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/Ethnic_summer_excursion/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Этническая экскурсия Погрузитесь в культуру коренных народов Камчатки с туром «Этническая летняя экскурсия»! Узнайте о традициях, попробуйте блюда местной кухни и познакомьтесь с уникальным наследием региона. Идеальный выбор для тех, кто хочет глубже понять историю и культуру Камчатки. Забронировать места можно на сайте eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/Ethnic_summer_excursion/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:этнические",
+      "name": "Этнические",
+      "description": "Знакомство с культурой ительменов, коряков и эвенов. Национальные танцы, ремесла и традиционная кухня Камчатки. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "eco",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/etnicheskie/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Этнические Знакомство с культурой ительменов, коряков и эвенов. Национальные танцы, ремесла и традиционная кухня Камчатки. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 eco",
+      "metadata": {
+        "category": "eco",
+        "source_url": "https://kamchatintour.ru/tours/etnicheskie/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:вертолетная-экскурсия-в-долину-гейзеров,-налычевскую-долину",
+      "name": "Вертолетная экскурсия в Долину Гейзеров, Налычевскую долину",
+      "description": "Откройте Долину гейзеров в июне с Камчатинтур. Вертолетный тур позволит вам увидеть самые красивые гейзеры и пейзажи Камчатки. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "geyzery",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/valley_of_geysers_tour_june/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Вертолетная экскурсия в Долину Гейзеров, Налычевскую долину Откройте Долину гейзеров в июне с Камчатинтур. Вертолетный тур позволит вам увидеть самые красивые гейзеры и пейзажи Камчатки. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 geyzery",
+      "metadata": {
+        "category": "geyzery",
+        "source_url": "https://kamchatintour.ru/tours/valley_of_geysers_tour_june/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:вертолетная-экскурсия-в-долину-гейзеров,-узон,-налычево",
+      "name": "Вертолетная экскурсия в Долину Гейзеров, Узон, Налычево",
+      "description": "Откройте для себя Долину гейзеров на Камчатке с Камчатинтур. Восхититесь уникальным природным чудом во время увлекательной экскурсии, наслаждаясь видами гейзеров и дикой природы. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "geyzery",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/valley_of_geysers_tour/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Вертолетная экскурсия в Долину Гейзеров, Узон, Налычево Откройте для себя Долину гейзеров на Камчатке с Камчатинтур. Восхититесь уникальным природным чудом во время увлекательной экскурсии, наслаждаясь видами гейзеров и дикой природы. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 geyzery",
+      "metadata": {
+        "category": "geyzery",
+        "source_url": "https://kamchatintour.ru/tours/valley_of_geysers_tour/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
       "id": "812b3c0a-39cf-4758-bf15-04496639154b",
       "name": "Верхне-Кошелевские парогидротермальные источники",
       "description": "Это Верхне-Кошелевские парогидротермальные источники в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.",
@@ -389,6 +1525,25 @@
           "0.0000000"
         ],
         "source_name": "idilesom"
+      }
+    },
+    {
+      "id": "807f2f60-a92f-4726-9986-67cfe944a2e8",
+      "name": "Гейзеры Камчатки",
+      "description": "Организатор: Министерство туризма Камчатского края. Сезон: Летний сезон. Долина гейзеров",
+      "category": "geyzery",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://visitkamchatka.ru",
+      "source_name": "visitkamchatka.ru",
+      "searchText": "Гейзеры Камчатки\nКатегория: geyzery\nОрганизатор: Министерство туризма Камчатского края. Сезон: Летний сезон. Долина гейзеров\nИсточник: visitkamchatka.ru",
+      "metadata": {
+        "category": "geyzery",
+        "source_url": "https://visitkamchatka.ru",
+        "source_name": "visitkamchatka.ru"
       }
     },
     {
@@ -415,31 +1570,6 @@
         ],
         "source_url": "https://extraguide.ru/sightmap/?z=14&pt=52.530214,158.191865&t=Дачные горячие источники",
         "source_name": "extraguide.ru"
-      }
-    },
-    {
-      "id": "c8c8a967-aede-4949-983e-df844ac630aa",
-      "name": "Долина гейзеров",
-      "description": "Это Долина гейзеров в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.",
-      "category": "geyzery",
-      "difficulty": "Не указано",
-      "duration": "Не указано",
-      "coordinates": [
-        "0.0000000",
-        "0.0000000"
-      ],
-      "district": null,
-      "length_km": null,
-      "source_url": null,
-      "source_name": "idilesom",
-      "searchText": "Долина гейзеров\nКатегория: geyzery\nЭто Долина гейзеров в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.\nИсточник: idilesom\nКоординаты: 0.0000000, 0.0000000",
-      "metadata": {
-        "category": "geyzery",
-        "coordinates": [
-          "0.0000000",
-          "0.0000000"
-        ],
-        "source_name": "idilesom"
       }
     },
     {
@@ -492,6 +1622,25 @@
         ],
         "source_url": "https://spkam.com/stati-o-kamchatke/dostoprimechatelnosti",
         "source_name": "spkam.com"
+      }
+    },
+    {
+      "id": "zimaletokamchatka.ru:малая-долина-гейзеров-(на-вездеходе)",
+      "name": "Малая долина гейзеров (на вездеходе)",
+      "description": "Зимняя экскурсия в Малую долину гейзеров: удивительное путешествие по Камчатке",
+      "category": "geyzery",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://zimaletokamchatka.ru/tours/malaya_dolina_geyzierov_na_vezdekhode",
+      "source_name": "zimaletokamchatka.ru",
+      "searchText": "Малая долина гейзеров (на вездеходе) Зимняя экскурсия в Малую долину гейзеров: удивительное путешествие по Камчатке geyzery",
+      "metadata": {
+        "category": "geyzery",
+        "source_url": "https://zimaletokamchatka.ru/tours/malaya_dolina_geyzierov_na_vezdekhode",
+        "source_name": "zimaletokamchatka.ru"
       }
     },
     {
@@ -620,6 +1769,25 @@
       }
     },
     {
+      "id": "mestechkokam.ru:экскурсия-в-долину-гейзеров-на-камчатке",
+      "name": "Экскурсия в Долину Гейзеров на Камчатке",
+      "description": "Погрузитесь в магию Долины Гейзеров на Камчатке. Поразительные впечатления от полёта на вертолёте и наслаждение от созерцания прелестей дикой природы надолго укоренятся в вашей памяти!",
+      "category": "geyzery",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://mestechkokam.ru/ekskursii/vertolyotnye-ekskursii/v-dolinu-gejzerov-elizovo/",
+      "source_name": "mestechkokam.ru",
+      "searchText": "Экскурсия в Долину Гейзеров на Камчатке Погрузитесь в магию Долины Гейзеров на Камчатке. Поразительные впечатления от полёта на вертолёте и наслаждение от созерцания прелестей дикой природы надолго укоренятся в вашей памяти! geyzery",
+      "metadata": {
+        "category": "geyzery",
+        "source_url": "https://mestechkokam.ru/ekskursii/vertolyotnye-ekskursii/v-dolinu-gejzerov-elizovo/",
+        "source_name": "mestechkokam.ru"
+      }
+    },
+    {
       "id": "8223da5d-3232-4d24-a84f-5a6948a51850",
       "name": "Голубые озёра на Камчатке!",
       "description": "Это Голубые озёра на Камчатке! в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.",
@@ -720,6 +1888,25 @@
       }
     },
     {
+      "id": "kamchatintour.ru:начикинское-озеро-(джип-тур)",
+      "name": "Начикинское озеро (джип-тур)",
+      "description": "Отправьтесь в увлекательный тур к Начикинскому озеру на Камчатке! Идеальный отдых для любителей спокойствия и красивых пейзажей. Забронируйте тур и погрузитесь в гармонию с природой!",
+      "category": "lakes",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/Nachikinskoye_lake/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Начикинское озеро (джип-тур) Отправьтесь в увлекательный тур к Начикинскому озеру на Камчатке! Идеальный отдых для любителей спокойствия и красивых пейзажей. Забронируйте тур и погрузитесь в гармонию с природой! lakes",
+      "metadata": {
+        "category": "lakes",
+        "source_url": "https://kamchatintour.ru/tours/Nachikinskoye_lake/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
       "id": "791db434-2613-4159-9054-16ee4e40bd0a",
       "name": "Озеро Большой Кар",
       "description": "Это Озеро Большой Кар в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.",
@@ -785,56 +1972,6 @@
       "source_url": null,
       "source_name": "idilesom",
       "searchText": "Озеро Курильское\nКатегория: lakes\nЭто Озеро Курильское в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.\nИсточник: idilesom\nКоординаты: 0.0000000, 0.0000000",
-      "metadata": {
-        "category": "lakes",
-        "coordinates": [
-          "0.0000000",
-          "0.0000000"
-        ],
-        "source_name": "idilesom"
-      }
-    },
-    {
-      "id": "21f10480-e762-48a3-8e35-aeacb722b840",
-      "name": "Озеро Начикинское",
-      "description": "Это Озеро Начикинское в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.",
-      "category": "lakes",
-      "difficulty": "Не указано",
-      "duration": "Не указано",
-      "coordinates": [
-        "0.0000000",
-        "0.0000000"
-      ],
-      "district": null,
-      "length_km": null,
-      "source_url": null,
-      "source_name": "idilesom",
-      "searchText": "Озеро Начикинское\nКатегория: lakes\nЭто Озеро Начикинское в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.\nИсточник: idilesom\nКоординаты: 0.0000000, 0.0000000",
-      "metadata": {
-        "category": "lakes",
-        "coordinates": [
-          "0.0000000",
-          "0.0000000"
-        ],
-        "source_name": "idilesom"
-      }
-    },
-    {
-      "id": "da0c8fc4-fbb2-4f3c-a00e-5bdb27ef7edb",
-      "name": "Озеро Срединное",
-      "description": "Это Озеро Срединное в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.",
-      "category": "lakes",
-      "difficulty": "Не указано",
-      "duration": "Не указано",
-      "coordinates": [
-        "0.0000000",
-        "0.0000000"
-      ],
-      "district": null,
-      "length_km": null,
-      "source_url": null,
-      "source_name": "idilesom",
-      "searchText": "Озеро Срединное\nКатегория: lakes\nЭто Озеро Срединное в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.\nИсточник: idilesom\nКоординаты: 0.0000000, 0.0000000",
       "metadata": {
         "category": "lakes",
         "coordinates": [
@@ -945,6 +2082,25 @@
       }
     },
     {
+      "id": "kamchatintour.ru:озеро-толмачёва-(джип-тур)",
+      "name": "Озеро Толмачёва (джип-тур)",
+      "description": "Экскурсия на озеро Толмачёва с Камчатинтур — это возможность увидеть живописную природу Камчатки и уникальное озеро, окруженное вулканами. Насладитесь пешими прогулками и потрясающими видами. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "lakes",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/Tolmachevo_lake/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Озеро Толмачёва (джип-тур) Экскурсия на озеро Толмачёва с Камчатинтур — это возможность увидеть живописную природу Камчатки и уникальное озеро, окруженное вулканами. Насладитесь пешими прогулками и потрясающими видами. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 lakes",
+      "metadata": {
+        "category": "lakes",
+        "source_url": "https://kamchatintour.ru/tours/Tolmachevo_lake/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
       "id": "4491fd8b-7548-4e17-a1c5-19d46e10647f",
       "name": "Поход на горное озеро Кар",
       "description": "Это Поход на горное озеро Кар в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.",
@@ -995,6 +2151,44 @@
       }
     },
     {
+      "id": "mestechkokam.ru:тур-на-курильское-озеро-на-камчатке",
+      "name": "Тур на Курильское озеро на Камчатке",
+      "description": "Отправляйтесь в незабываемую экскурсию на Озеро Курильское! Насладитесь невероятными видами и красотами этого уникального места на Камчатке.",
+      "category": "lakes",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://mestechkokam.ru/ekskursii/vertolyotnye-ekskursii/ozero-kurilskoe/",
+      "source_name": "mestechkokam.ru",
+      "searchText": "Тур на Курильское озеро на Камчатке Отправляйтесь в незабываемую экскурсию на Озеро Курильское! Насладитесь невероятными видами и красотами этого уникального места на Камчатке. lakes",
+      "metadata": {
+        "category": "lakes",
+        "source_url": "https://mestechkokam.ru/ekskursii/vertolyotnye-ekskursii/ozero-kurilskoe/",
+        "source_name": "mestechkokam.ru"
+      }
+    },
+    {
+      "id": "zimaletokamchatka.ru:двухдневный-сплав-по-реке-быстрая-на-камчатке:-рыбалка,-медведи-и-дикая-природа",
+      "name": "Двухдневный сплав по реке Быстрая на Камчатке: рыбалка, медведи и дикая природа",
+      "description": "Сплав на Камчатке — это безопасное погружение в дикую природу Камчатки. Вас ждет захватывающая рыбалка, возможность увидеть медведей и ночь под камчатскими звездами у жаркого костра.",
+      "category": "medvedi",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://zimaletokamchatka.ru/programs/dvuhdnevnyj-splav-po-reke-bystroj-malkinskoj",
+      "source_name": "zimaletokamchatka.ru",
+      "searchText": "Двухдневный сплав по реке Быстрая на Камчатке: рыбалка, медведи и дикая природа Сплав на Камчатке — это безопасное погружение в дикую природу Камчатки. Вас ждет захватывающая рыбалка, возможность увидеть медведей и ночь под камчатскими звездами у жаркого костра. medvedi",
+      "metadata": {
+        "category": "medvedi",
+        "source_url": "https://zimaletokamchatka.ru/programs/dvuhdnevnyj-splav-po-reke-bystroj-malkinskoj",
+        "source_name": "zimaletokamchatka.ru"
+      }
+    },
+    {
       "id": "57029378-cd71-4cf0-b6cc-c5a43de13214",
       "name": "Курильское озеро",
       "description": "Нерест нерки и наблюдение за бурым медведем.",
@@ -1018,6 +2212,25 @@
         ],
         "source_url": "https://spkam.com/stati-o-kamchatke/dostoprimechatelnosti",
         "source_name": "spkam.com"
+      }
+    },
+    {
+      "id": "f33295d4-247d-471c-a93a-23e4b11310b5",
+      "name": "Медведи Камчатки",
+      "description": "Организатор: Министерство туризма Камчатского края. Сезон: Летний сезон",
+      "category": "medvedi",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://visitkamchatka.ru",
+      "source_name": "visitkamchatka.ru",
+      "searchText": "Медведи Камчатки\nКатегория: medvedi\nОрганизатор: Министерство туризма Камчатского края. Сезон: Летний сезон\nИсточник: visitkamchatka.ru",
+      "metadata": {
+        "category": "medvedi",
+        "source_url": "https://visitkamchatka.ru",
+        "source_name": "visitkamchatka.ru"
       }
     },
     {
@@ -1110,6 +2323,120 @@
       }
     },
     {
+      "id": "8c1210c4-2ca0-4468-bdc4-c10b8ff9c497",
+      "name": "Долиновка-Побережье Тихого океана",
+      "description": "Организатор: Министерство туризма Камчатского края. Сезон: Зимний сезон",
+      "category": "morskie_progulki",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://visitkamchatka.ru",
+      "source_name": "visitkamchatka.ru",
+      "searchText": "Долиновка-Побережье Тихого океана\nКатегория: morskie_progulki\nОрганизатор: Министерство туризма Камчатского края. Сезон: Зимний сезон\nИсточник: visitkamchatka.ru",
+      "metadata": {
+        "category": "morskie_progulki",
+        "source_url": "https://visitkamchatka.ru",
+        "source_name": "visitkamchatka.ru"
+      }
+    },
+    {
+      "id": "zimaletokamchatka.ru:камчатка-стандарт---8-дней,-чартер-москва",
+      "name": "Камчатка Стандарт - 8 дней, чартер Москва",
+      "description": "Идеальный тур для семей с детьми с авиабилетами из Москвы.  Малая долина гейзеров, морской круиз, обзорная экскурсия по городу и берег Тихого океана.",
+      "category": "morskie_progulki",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://zimaletokamchatka.ru/charters/kamchatka-standart-charter-iz-moskvy",
+      "source_name": "zimaletokamchatka.ru",
+      "searchText": "Камчатка Стандарт - 8 дней, чартер Москва Идеальный тур для семей с детьми с авиабилетами из Москвы.  Малая долина гейзеров, морской круиз, обзорная экскурсия по городу и берег Тихого океана. morskie_progulki",
+      "metadata": {
+        "category": "morskie_progulki",
+        "source_url": "https://zimaletokamchatka.ru/charters/kamchatka-standart-charter-iz-moskvy",
+        "source_name": "zimaletokamchatka.ru"
+      }
+    },
+    {
+      "id": "mestechkokam.ru:морская-прогулка-в-бухту-русская-на-камчатке",
+      "name": "Морская прогулка в бухту Русская на Камчатке",
+      "description": "Круиз на комфортабельной яхте вдоль побережья Камчатки в бухту Русскую, морские экскурсии и туры.",
+      "category": "morskie_progulki",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://mestechkokam.ru/ekskursii/morskie-progulki/buhta-russkaya/",
+      "source_name": "mestechkokam.ru",
+      "searchText": "Морская прогулка в бухту Русская на Камчатке Круиз на комфортабельной яхте вдоль побережья Камчатки в бухту Русскую, морские экскурсии и туры. morskie_progulki",
+      "metadata": {
+        "category": "morskie_progulki",
+        "source_url": "https://mestechkokam.ru/ekskursii/morskie-progulki/buhta-russkaya/",
+        "source_name": "mestechkokam.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:морская-прогулка-в-район-бухты-русской",
+      "name": "Морская прогулка в район бухты Русской",
+      "description": "Насладитесь морским круизом в бухту Русская на Камчатке. Уникальные виды, наблюдение за морскими животными и потрясающие природные ландшафты. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "morskie_progulki",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/Sea_cruise_Russian_bay/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Морская прогулка в район бухты Русской Насладитесь морским круизом в бухту Русская на Камчатке. Уникальные виды, наблюдение за морскими животными и потрясающие природные ландшафты. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 morskie_progulki",
+      "metadata": {
+        "category": "morskie_progulki",
+        "source_url": "https://kamchatintour.ru/tours/Sea_cruise_Russian_bay/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:морская-прогулка-к-острову-старичков",
+      "name": "Морская прогулка к острову Старичков",
+      "description": "Морская прогулка к острову Старичков — это возможность увидеть уникальную природу Камчатки и ее морских обитателей. Узнайте больше о маршруте и программе тура. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "morskie_progulki",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/Boat_trip_Starichkov/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Морская прогулка к острову Старичков Морская прогулка к острову Старичков — это возможность увидеть уникальную природу Камчатки и ее морских обитателей. Узнайте больше о маршруте и программе тура. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 morskie_progulki",
+      "metadata": {
+        "category": "morskie_progulki",
+        "source_url": "https://kamchatintour.ru/tours/Boat_trip_Starichkov/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "zimaletokamchatka.ru:морской-круиз-к-острову-старичков",
+      "name": "Морской круиз к острову Старичков",
+      "description": "Морской круиз к острову Старичков с наблюдением за морскими птицами, белоплечими орланами и морскими млекопитающими, рыбалкой и обедом из свежевыловленной рыбы.",
+      "category": "morskie_progulki",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://zimaletokamchatka.ru/tours/morskoj_kruiz_k_ostrovu_starichkov",
+      "source_name": "zimaletokamchatka.ru",
+      "searchText": "Морской круиз к острову Старичков Морской круиз к острову Старичков с наблюдением за морскими птицами, белоплечими орланами и морскими млекопитающими, рыбалкой и обедом из свежевыловленной рыбы. morskie_progulki",
+      "metadata": {
+        "category": "morskie_progulki",
+        "source_url": "https://zimaletokamchatka.ru/tours/morskoj_kruiz_k_ostrovu_starichkov",
+        "source_name": "zimaletokamchatka.ru"
+      }
+    },
+    {
       "id": "1ae39392-ab47-4ede-b7b8-b1b3b3ef50b6",
       "name": "Мыс Зеленый",
       "description": "Маршрут наблюдения за касатками и морскими птицами.",
@@ -1128,6 +2455,44 @@
       }
     },
     {
+      "id": "390986e7-370e-4a09-97ed-6034ac5fdd2d",
+      "name": "Мыс Маячный",
+      "description": "Организатор: Министерство туризма Камчатского края. Сезон: Зимний сезон",
+      "category": "morskie_progulki",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://visitkamchatka.ru",
+      "source_name": "visitkamchatka.ru",
+      "searchText": "Мыс Маячный\nКатегория: morskie_progulki\nОрганизатор: Министерство туризма Камчатского края. Сезон: Зимний сезон\nИсточник: visitkamchatka.ru",
+      "metadata": {
+        "category": "morskie_progulki",
+        "source_url": "https://visitkamchatka.ru",
+        "source_name": "visitkamchatka.ru"
+      }
+    },
+    {
+      "id": "82ed6f99-bf81-404b-a7ee-e7f62a3386aa",
+      "name": "Озеро Приливное – Халактырский пляж",
+      "description": "Организатор: Министерство туризма Камчатского края. Сезон: Зимний сезон",
+      "category": "morskie_progulki",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://visitkamchatka.ru",
+      "source_name": "visitkamchatka.ru",
+      "searchText": "Озеро Приливное – Халактырский пляж\nКатегория: morskie_progulki\nОрганизатор: Министерство туризма Камчатского края. Сезон: Зимний сезон\nИсточник: visitkamchatka.ru",
+      "metadata": {
+        "category": "morskie_progulki",
+        "source_url": "https://visitkamchatka.ru",
+        "source_name": "visitkamchatka.ru"
+      }
+    },
+    {
       "id": "a01235ac-8944-494d-9148-c77427d5d1bb",
       "name": "Остров Старичков (морская прогулка)",
       "description": "Птичьи базары и прибрежные скалы.",
@@ -1143,6 +2508,25 @@
       "metadata": {
         "category": "morskie_progulki",
         "source_name": "manual"
+      }
+    },
+    {
+      "id": "b6429ce0-1c2c-42ef-87af-b44366f3d81b",
+      "name": "Побережье Тихого океана",
+      "description": "Организатор: Министерство туризма Камчатского края. Сезон: Летний сезон",
+      "category": "morskie_progulki",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://visitkamchatka.ru",
+      "source_name": "visitkamchatka.ru",
+      "searchText": "Побережье Тихого океана\nКатегория: morskie_progulki\nОрганизатор: Министерство туризма Камчатского края. Сезон: Летний сезон\nИсточник: visitkamchatka.ru",
+      "metadata": {
+        "category": "morskie_progulki",
+        "source_url": "https://visitkamchatka.ru",
+        "source_name": "visitkamchatka.ru"
       }
     },
     {
@@ -1169,6 +2553,44 @@
         ],
         "source_url": "https://spkam.com/stati-o-kamchatke/dostoprimechatelnosti",
         "source_name": "spkam.com"
+      }
+    },
+    {
+      "id": "bc314f94-c58d-4618-b748-09943918f04d",
+      "name": "Смотровая с видом на Тихий океан",
+      "description": "Организатор: Министерство туризма Камчатского края. Сезон: Зимний сезон",
+      "category": "morskie_progulki",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://visitkamchatka.ru",
+      "source_name": "visitkamchatka.ru",
+      "searchText": "Смотровая с видом на Тихий океан\nКатегория: morskie_progulki\nОрганизатор: Министерство туризма Камчатского края. Сезон: Зимний сезон\nИсточник: visitkamchatka.ru",
+      "metadata": {
+        "category": "morskie_progulki",
+        "source_url": "https://visitkamchatka.ru",
+        "source_name": "visitkamchatka.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:тематический-тур-для-туристов-из-китая-«земля-драконов»",
+      "name": "Тематический тур для туристов из Китая «Земля драконов»",
+      "description": "Тур «Земля Драконов» с Камчатинтур — это уникальная возможность исследовать вулканические пейзажи и дикие земли Камчатки. Погрузитесь в незабываемое приключение. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "morskie_progulki",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/zemlya_drakonov/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Тематический тур для туристов из Китая «Земля драконов» Тур «Земля Драконов» с Камчатинтур — это уникальная возможность исследовать вулканические пейзажи и дикие земли Камчатки. Погрузитесь в незабываемое приключение. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 morskie_progulki",
+      "metadata": {
+        "category": "morskie_progulki",
+        "source_url": "https://kamchatintour.ru/tours/zemlya_drakonov/",
+        "source_name": "kamchatintour.ru"
       }
     },
     {
@@ -1222,6 +2644,25 @@
       }
     },
     {
+      "id": "kamchatintour.ru:восхождения",
+      "name": "Восхождения",
+      "description": "Профессиональные туры с восхождением на вулканы Камчатки. Подходит для новичков и опытных альпинистов. Гарантируем безопасность, яркие впечатления и помощь гидов. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "mountains",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/voshozhdeniya/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Восхождения Профессиональные туры с восхождением на вулканы Камчатки. Подходит для новичков и опытных альпинистов. Гарантируем безопасность, яркие впечатления и помощь гидов. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 mountains",
+      "metadata": {
+        "category": "mountains",
+        "source_url": "https://kamchatintour.ru/tours/voshozhdeniya/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
       "id": "c641d567-a03f-4b4f-8b45-f2bdf9a2453f",
       "name": "Гора Летняя Поперечная",
       "description": "Это Гора Летняя Поперечная в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.",
@@ -1247,28 +2688,41 @@
       }
     },
     {
-      "id": "98e45e6b-7398-43ca-b8a4-13a74c1e9936",
-      "name": "Горный массив Вачкажец",
-      "description": "Это Горный массив Вачкажец в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.",
+      "id": "ae251e80-9620-474f-ba32-7a7282b6e200",
+      "name": "Горные вершины",
+      "description": "Сезон: Летний сезон",
       "category": "mountains",
       "difficulty": "Не указано",
       "duration": "Не указано",
-      "coordinates": [
-        "0.0000000",
-        "0.0000000"
-      ],
+      "coordinates": null,
       "district": null,
       "length_km": null,
-      "source_url": null,
-      "source_name": "idilesom",
-      "searchText": "Горный массив Вачкажец\nКатегория: mountains\nЭто Горный массив Вачкажец в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.\nИсточник: idilesom\nКоординаты: 0.0000000, 0.0000000",
+      "source_url": "https://visitkamchatka.ru",
+      "source_name": "visitkamchatka.ru",
+      "searchText": "Горные вершины\nКатегория: mountains\nСезон: Летний сезон\nИсточник: visitkamchatka.ru",
       "metadata": {
         "category": "mountains",
-        "coordinates": [
-          "0.0000000",
-          "0.0000000"
-        ],
-        "source_name": "idilesom"
+        "source_url": "https://visitkamchatka.ru",
+        "source_name": "visitkamchatka.ru"
+      }
+    },
+    {
+      "id": "zimaletokamchatka.ru:земля-без-дорог",
+      "name": "Земля без дорог",
+      "description": "Топ комфортных зимних туров, подходящий для людей разного возраста и любого уровня физической подготовки.",
+      "category": "mountains",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://zimaletokamchatka.ru/programs/zemlya_bez_dorog",
+      "source_name": "zimaletokamchatka.ru",
+      "searchText": "Земля без дорог Топ комфортных зимних туров, подходящий для людей разного возраста и любого уровня физической подготовки. mountains",
+      "metadata": {
+        "category": "mountains",
+        "source_url": "https://zimaletokamchatka.ru/programs/zemlya_bez_dorog",
+        "source_name": "zimaletokamchatka.ru"
       }
     },
     {
@@ -1319,6 +2773,25 @@
           "0.0000000"
         ],
         "source_name": "idilesom"
+      }
+    },
+    {
+      "id": "zimaletokamchatka.ru:майская-камчатка",
+      "name": "Майская Камчатка",
+      "description": "Комфортный тур без ночевок в палатках и сложных пеших переходов.",
+      "category": "mountains",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://zimaletokamchatka.ru/programs/maiskaya_kamchatka",
+      "source_name": "zimaletokamchatka.ru",
+      "searchText": "Майская Камчатка Комфортный тур без ночевок в палатках и сложных пеших переходов. mountains",
+      "metadata": {
+        "category": "mountains",
+        "source_url": "https://zimaletokamchatka.ru/programs/maiskaya_kamchatka",
+        "source_name": "zimaletokamchatka.ru"
       }
     },
     {
@@ -1597,28 +3070,22 @@
       }
     },
     {
-      "id": "5c565460-ac31-4b88-b1b6-986a6d1db7e9",
+      "id": "kamchatintour.ru:сплав-по-реке-быстрая",
       "name": "Сплав по реке Быстрая",
-      "description": "Это Сплав по реке Быстрая в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.",
+      "description": "Отправляйтесь со сплавом по реке Быстрая вместе с Kamchatintour. Насладитесь рыбалкой, наблюдением за дикой природой и потрясающими пейзажами Камчатки в ходе увлекательного тура. Забронировать места можно на сайте или по телефону: +7 (4152) 20-10-10.",
       "category": "rivers",
       "difficulty": "Не указано",
       "duration": "Не указано",
-      "coordinates": [
-        "57.1700700",
-        "152.0095978"
-      ],
+      "coordinates": null,
       "district": null,
       "length_km": null,
-      "source_url": null,
-      "source_name": "idilesom",
-      "searchText": "Сплав по реке Быстрая\nКатегория: rivers\nЭто Сплав по реке Быстрая в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.\nИсточник: idilesom\nКоординаты: 57.1700700, 152.0095978",
+      "source_url": "https://kamchatintour.ru/tours/Bystraya_floating/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Сплав по реке Быстрая Отправляйтесь со сплавом по реке Быстрая вместе с Kamchatintour. Насладитесь рыбалкой, наблюдением за дикой природой и потрясающими пейзажами Камчатки в ходе увлекательного тура. Забронировать места можно на сайте или по телефону: +7 (4152) 20-10-10. rivers",
       "metadata": {
         "category": "rivers",
-        "coordinates": [
-          "57.1700700",
-          "152.0095978"
-        ],
-        "source_name": "idilesom"
+        "source_url": "https://kamchatintour.ru/tours/Bystraya_floating/",
+        "source_name": "kamchatintour.ru"
       }
     },
     {
@@ -1644,6 +3111,25 @@
           "0.0000000"
         ],
         "source_name": "idilesom"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:сплавы",
+      "name": "Сплавы",
+      "description": "Экстремальные и спокойные сплавы по рекам Камчатки. Рафтинг для новичков и профессионалов. Рыбалка, природа и адреналин! Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "rivers",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/splavy/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Сплавы Экстремальные и спокойные сплавы по рекам Камчатки. Рафтинг для новичков и профессионалов. Рыбалка, природа и адреналин! Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 rivers",
+      "metadata": {
+        "category": "rivers",
+        "source_url": "https://kamchatintour.ru/tours/splavy/",
+        "source_name": "kamchatintour.ru"
       }
     },
     {
@@ -1710,6 +3196,63 @@
       }
     },
     {
+      "id": "zimaletokamchatka.ru:в-поисках-драконов-комфортный-тур-на-камчатку-с-проживанием-в-отелях",
+      "name": "В поисках драконов  Комфортный тур на Камчатку с проживанием в отелях",
+      "description": "Комфортный тур без палаток и сложных пеших маршрутов с лучшими однодневными экскурсиями.",
+      "category": "rybalka",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://zimaletokamchatka.ru/programs/v-poiskah-drakonov-komfortnyj-tur-na-kamchatku-s-prozhivaniem-v-otelyah",
+      "source_name": "zimaletokamchatka.ru",
+      "searchText": "В поисках драконов  Комфортный тур на Камчатку с проживанием в отелях Комфортный тур без палаток и сложных пеших маршрутов с лучшими однодневными экскурсиями. rybalka",
+      "metadata": {
+        "category": "rybalka",
+        "source_url": "https://zimaletokamchatka.ru/programs/v-poiskah-drakonov-komfortnyj-tur-na-kamchatku-s-prozhivaniem-v-otelyah",
+        "source_name": "zimaletokamchatka.ru"
+      }
+    },
+    {
+      "id": "zimaletokamchatka.ru:легкое-путешествие-по-камчатке",
+      "name": "Легкое путешествие по Камчатке",
+      "description": "Тур для семей с детьми, включающий посещение вулканов, термальных источников, этнической деревни и отдых на побережье Тихого океана.",
+      "category": "rybalka",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://zimaletokamchatka.ru/programs/legkoe_puteshestvie_po_kamchatke",
+      "source_name": "zimaletokamchatka.ru",
+      "searchText": "Легкое путешествие по Камчатке Тур для семей с детьми, включающий посещение вулканов, термальных источников, этнической деревни и отдых на побережье Тихого океана. rybalka",
+      "metadata": {
+        "category": "rybalka",
+        "source_url": "https://zimaletokamchatka.ru/programs/legkoe_puteshestvie_po_kamchatke",
+        "source_name": "zimaletokamchatka.ru"
+      }
+    },
+    {
+      "id": "mestechkokam.ru:морские-прогулки-на-камчатке",
+      "name": "Морские прогулки\nна Камчатке",
+      "description": "Предлагаем морские прогулки, рыбалку, туры по Тихому океану на Камчатке на комфортабельном катере и яхте.",
+      "category": "rybalka",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://mestechkokam.ru/ekskursii/morskie-progulki/",
+      "source_name": "mestechkokam.ru",
+      "searchText": "Морские прогулки\nна Камчатке Предлагаем морские прогулки, рыбалку, туры по Тихому океану на Камчатке на комфортабельном катере и яхте. rybalka",
+      "metadata": {
+        "category": "rybalka",
+        "source_url": "https://mestechkokam.ru/ekskursii/morskie-progulki/",
+        "source_name": "mestechkokam.ru"
+      }
+    },
+    {
       "id": "41aac825-cbe2-4f31-8a2f-fa2dd108a6e0",
       "name": "Остров Старичков",
       "description": "Рыбалка и морская прогулка в районе птичьих базаров.",
@@ -1728,6 +3271,44 @@
       }
     },
     {
+      "id": "zimaletokamchatka.ru:первое-знакомство-с-камчаткой",
+      "name": "Первое знакомство с Камчаткой",
+      "description": "Максимум ярких эмоций за 5 дней: восхождение на вулкан, морской круиз, сплав, рыбалка, горячие источники.",
+      "category": "rybalka",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://zimaletokamchatka.ru/programs/pervoe_znakomstvo_s_kamchatkoi",
+      "source_name": "zimaletokamchatka.ru",
+      "searchText": "Первое знакомство с Камчаткой Максимум ярких эмоций за 5 дней: восхождение на вулкан, морской круиз, сплав, рыбалка, горячие источники. rybalka",
+      "metadata": {
+        "category": "rybalka",
+        "source_url": "https://zimaletokamchatka.ru/programs/pervoe_znakomstvo_s_kamchatkoi",
+        "source_name": "zimaletokamchatka.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:подледная-рыбалка",
+      "name": "Подледная рыбалка",
+      "description": "Подледная рыбалка на Камчатке. Приглашаем окунуться в мир суровых, но прекрасных ландшафтов и почувствовать всю прелесть рыбной ловли на замерзших водоемах. Лучшие цены на отдых и путешествия по Камчатке. Забронировать места можно на сайте или по телефону: +7 (4152) 20-10-10.",
+      "category": "rybalka",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/ice_fishing/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Подледная рыбалка Подледная рыбалка на Камчатке. Приглашаем окунуться в мир суровых, но прекрасных ландшафтов и почувствовать всю прелесть рыбной ловли на замерзших водоемах. Лучшие цены на отдых и путешествия по Камчатке. Забронировать места можно на сайте или по телефону: +7 (4152) 20-10-10. rybalka",
+      "metadata": {
+        "category": "rybalka",
+        "source_url": "https://kamchatintour.ru/tours/ice_fishing/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
       "id": "0e471edd-7982-4e35-b8b8-423e0f383833",
       "name": "Река Быстрая",
       "description": "Сплав и рыбалка на лососевых видах.",
@@ -1743,6 +3324,234 @@
       "metadata": {
         "category": "rybalka",
         "source_name": "manual"
+      }
+    },
+    {
+      "id": "ec54754e-ffcb-4ab4-9300-2e92d7352cd5",
+      "name": "Рыбалка на Камчатке",
+      "description": "Организатор: Министерство туризма Камчатского края. Сезон: Летний сезон. Нерка, семга",
+      "category": "rybalka",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://visitkamchatka.ru",
+      "source_name": "visitkamchatka.ru",
+      "searchText": "Рыбалка на Камчатке\nКатегория: rybalka\nОрганизатор: Министерство туризма Камчатского края. Сезон: Летний сезон. Нерка, семга\nИсточник: visitkamchatka.ru",
+      "metadata": {
+        "category": "rybalka",
+        "source_url": "https://visitkamchatka.ru",
+        "source_name": "visitkamchatka.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:рыбалка-на-краба",
+      "name": "Рыбалка на краба",
+      "description": "Отправьтесь в увлекательный тур «Летняя крабовая рыбалка» на Камчатке! Попробуйте себя в роли рыбака, насладитесь свежими морепродуктами и проведите время на живописном побережье. Идеальное приключение для любителей активного отдыха и гастрономических впечатлений. Забронировать места можно на сайте ",
+      "category": "rybalka",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/Crab_fishing_summer/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Рыбалка на краба Отправьтесь в увлекательный тур «Летняя крабовая рыбалка» на Камчатке! Попробуйте себя в роли рыбака, насладитесь свежими морепродуктами и проведите время на живописном побережье. Идеальное приключение для любителей активного отдыха и гастрономических впечатлений. Забронировать места можно на сайте  rybalka",
+      "metadata": {
+        "category": "rybalka",
+        "source_url": "https://kamchatintour.ru/tours/Crab_fishing_summer/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:рыбалка-на-реке-паратунке",
+      "name": "Рыбалка на реке Паратунке",
+      "description": "Откройте для себя рыбалку на реке Паратунке на Камчатке! Ловля лосося и других видов рыб в окружении живописной природы. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "rybalka",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/Fishing_Paratunka/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Рыбалка на реке Паратунке Откройте для себя рыбалку на реке Паратунке на Камчатке! Ловля лосося и других видов рыб в окружении живописной природы. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 rybalka",
+      "metadata": {
+        "category": "rybalka",
+        "source_url": "https://kamchatintour.ru/tours/Fishing_Paratunka/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "mestechkokam.ru:экскурсия-на-остров-старичков-на-камчатке",
+      "name": "Экскурсия на остров Старичков на Камчатке",
+      "description": "Морская прогулка на остров Старичков позволит вам увидеть легендарные птичьи базары, лежбища морских тюленей, лучшие места для рыбалки.",
+      "category": "rybalka",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://mestechkokam.ru/ekskursii/morskie-progulki/ostrov-starichkov/",
+      "source_name": "mestechkokam.ru",
+      "searchText": "Экскурсия на остров Старичков на Камчатке Морская прогулка на остров Старичков позволит вам увидеть легендарные птичьи базары, лежбища морских тюленей, лучшие места для рыбалки. rybalka",
+      "metadata": {
+        "category": "rybalka",
+        "source_url": "https://mestechkokam.ru/ekskursii/morskie-progulki/ostrov-starichkov/",
+        "source_name": "mestechkokam.ru"
+      }
+    },
+    {
+      "id": "d2b8a891-7ad2-4566-9d92-d8f33648d443",
+      "name": "Горный массив Вачкажец (лыжный)",
+      "description": "Организатор: Министерство туризма Камчатского края. Сезон: Зимний сезон",
+      "category": "snegohod",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://visitkamchatka.ru",
+      "source_name": "visitkamchatka.ru",
+      "searchText": "Горный массив Вачкажец (лыжный)\nКатегория: snegohod\nОрганизатор: Министерство туризма Камчатского края. Сезон: Зимний сезон\nИсточник: visitkamchatka.ru",
+      "metadata": {
+        "category": "snegohod",
+        "source_url": "https://visitkamchatka.ru",
+        "source_name": "visitkamchatka.ru"
+      }
+    },
+    {
+      "id": "8ed9e725-b135-4539-9fe6-35a3ea4e7a86",
+      "name": "Горный массив Вачкажец (снегоходный)",
+      "description": "Организатор: Министерство туризма Камчатского края. Сезон: Зимний сезон",
+      "category": "snegohod",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://visitkamchatka.ru",
+      "source_name": "visitkamchatka.ru",
+      "searchText": "Горный массив Вачкажец (снегоходный)\nКатегория: snegohod\nОрганизатор: Министерство туризма Камчатского края. Сезон: Зимний сезон\nИсточник: visitkamchatka.ru",
+      "metadata": {
+        "category": "snegohod",
+        "source_url": "https://visitkamchatka.ru",
+        "source_name": "visitkamchatka.ru"
+      }
+    },
+    {
+      "id": "73897994-f605-42cb-b87e-79de169f7982",
+      "name": "Лавовая падь",
+      "description": "Организатор: Министерство туризма Камчатского края. Сезон: Зимний сезон",
+      "category": "snegohod",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://visitkamchatka.ru",
+      "source_name": "visitkamchatka.ru",
+      "searchText": "Лавовая падь\nКатегория: snegohod\nОрганизатор: Министерство туризма Камчатского края. Сезон: Зимний сезон\nИсточник: visitkamchatka.ru",
+      "metadata": {
+        "category": "snegohod",
+        "source_url": "https://visitkamchatka.ru",
+        "source_name": "visitkamchatka.ru"
+      }
+    },
+    {
+      "id": "mestechkokam.ru:мыс-маячный,-тихий-океан",
+      "name": "Мыс Маячный, Тихий океан",
+      "description": "Погрузитесь в зимнюю сказку на уникальной снегоходной экскурсии к мысу Маячному, где встречаются снежные просторы и бескрайние воды Тихого океана.",
+      "category": "snegohod",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://mestechkokam.ru/ekskursii/snegohodnye-ekskursii/mys-mayachnyj-tihij-okean/",
+      "source_name": "mestechkokam.ru",
+      "searchText": "Мыс Маячный, Тихий океан Погрузитесь в зимнюю сказку на уникальной снегоходной экскурсии к мысу Маячному, где встречаются снежные просторы и бескрайние воды Тихого океана. snegohod",
+      "metadata": {
+        "category": "snegohod",
+        "source_url": "https://mestechkokam.ru/ekskursii/snegohodnye-ekskursii/mys-mayachnyj-tihij-okean/",
+        "source_name": "mestechkokam.ru"
+      }
+    },
+    {
+      "id": "zimaletokamchatka.ru:снегоходная-экскурсия-к-горному-массиву-вачкажец",
+      "name": "Снегоходная экскурсия к горному массиву Вачкажец",
+      "description": "Захватывающее путешествие среди заснеженных вершин, первозданной природы и кристально чистого воздуха к одному из красивейших уголков Камчатки. Живописные цирки: скальные останцы, словно стражи, охраняющие покой гор; снежные поля, простирающиеся до самого горизонта.",
+      "category": "snegohod",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://zimaletokamchatka.ru/tours/snegokhodnaya-ekskursiya-k-gornomu-massivu-vachkazhets",
+      "source_name": "zimaletokamchatka.ru",
+      "searchText": "Снегоходная экскурсия к горному массиву Вачкажец Захватывающее путешествие среди заснеженных вершин, первозданной природы и кристально чистого воздуха к одному из красивейших уголков Камчатки. Живописные цирки: скальные останцы, словно стражи, охраняющие покой гор; снежные поля, простирающиеся до самого горизонта. snegohod",
+      "metadata": {
+        "category": "snegohod",
+        "source_url": "https://zimaletokamchatka.ru/tours/snegokhodnaya-ekskursiya-k-gornomu-massivu-vachkazhets",
+        "source_name": "zimaletokamchatka.ru"
+      }
+    },
+    {
+      "id": "zimaletokamchatka.ru:снегоходное-сафари",
+      "name": "Снегоходное сафари",
+      "description": "Исследуйте Камчатку: вулканы, термальные источники, катание на собачьих упряжках и знакомство с культурой коренных народов.",
+      "category": "snegohod",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://zimaletokamchatka.ru/programs/snegokhodnoe_safari",
+      "source_name": "zimaletokamchatka.ru",
+      "searchText": "Снегоходное сафари Исследуйте Камчатку: вулканы, термальные источники, катание на собачьих упряжках и знакомство с культурой коренных народов. snegohod",
+      "metadata": {
+        "category": "snegohod",
+        "source_url": "https://zimaletokamchatka.ru/programs/snegokhodnoe_safari",
+        "source_name": "zimaletokamchatka.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:снегоходные-туры",
+      "name": "Снегоходные туры",
+      "description": "Зимние снегоходные туры по Камчатке – вулканы, горячие источники, заснеженные долины. Прокат техники и сопровождение гидов. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "snegohod",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/snegohodnye-tury/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Снегоходные туры Зимние снегоходные туры по Камчатке – вулканы, горячие источники, заснеженные долины. Прокат техники и сопровождение гидов. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 snegohod",
+      "metadata": {
+        "category": "snegohod",
+        "source_url": "https://kamchatintour.ru/tours/snegohodnye-tury/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "mestechkokam.ru:снегоходные-туры-по-камчатке",
+      "name": "Снегоходные туры по Камчатке",
+      "description": "Снегоходные туры по Камчатке — незабываемые впечатления и эмоции вместе с нашей командой «Местечко Камчатка». Бронируйте экскурсии на сайте.",
+      "category": "snegohod",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://mestechkokam.ru/ekskursii/snegohodnye-ekskursii/",
+      "source_name": "mestechkokam.ru",
+      "searchText": "Снегоходные туры по Камчатке Снегоходные туры по Камчатке — незабываемые впечатления и эмоции вместе с нашей командой «Местечко Камчатка». Бронируйте экскурсии на сайте. snegohod",
+      "metadata": {
+        "category": "snegohod",
+        "source_url": "https://mestechkokam.ru/ekskursii/snegohodnye-ekskursii/",
+        "source_name": "mestechkokam.ru"
       }
     },
     {
@@ -1897,6 +3706,25 @@
       }
     },
     {
+      "id": "kamchatintour.ru:дачные-термальные-источники-(на-вахтовке)",
+      "name": "Дачные термальные источники (на вахтовке)",
+      "description": "Экскурсия в Дачные термальные источники (на вахтовке) с Камчатинтур — это идеальный способ увидеть дикие красоты Камчатки и насладиться природными горячими источниками. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "termalnye_istochniki",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/Dachnye_Spokoyny/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Дачные термальные источники (на вахтовке) Экскурсия в Дачные термальные источники (на вахтовке) с Камчатинтур — это идеальный способ увидеть дикие красоты Камчатки и насладиться природными горячими источниками. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 termalnye_istochniki",
+      "metadata": {
+        "category": "termalnye_istochniki",
+        "source_url": "https://kamchatintour.ru/tours/Dachnye_Spokoyny/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
       "id": "191ccd49-6dba-4ac3-85ee-8410a967a252",
       "name": "Зеленовские озерки",
       "description": "Это Зеленовские озерки в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.",
@@ -1919,6 +3747,25 @@
           "0.0000000"
         ],
         "source_name": "idilesom"
+      }
+    },
+    {
+      "id": "5fcc59ff-39a1-44de-a6f6-0ddc2c289677",
+      "name": "Карымшинские источники",
+      "description": "Организатор: Министерство туризма Камчатского края. Сезон: Зимний сезон",
+      "category": "termalnye_istochniki",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://visitkamchatka.ru",
+      "source_name": "visitkamchatka.ru",
+      "searchText": "Карымшинские источники\nКатегория: termalnye_istochniki\nОрганизатор: Министерство туризма Камчатского края. Сезон: Зимний сезон\nИсточник: visitkamchatka.ru",
+      "metadata": {
+        "category": "termalnye_istochniki",
+        "source_url": "https://visitkamchatka.ru",
+        "source_name": "visitkamchatka.ru"
       }
     },
     {
@@ -1947,6 +3794,25 @@
       }
     },
     {
+      "id": "zimaletokamchatka.ru:код-зимы:-камчатка",
+      "name": "Код зимы: Камчатка",
+      "description": "Топ зимних туров по Камчатке для людей любого возраста и уровня физической подготовки.",
+      "category": "termalnye_istochniki",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://zimaletokamchatka.ru/programs/kod_zimy_kamchatka",
+      "source_name": "zimaletokamchatka.ru",
+      "searchText": "Код зимы: Камчатка Топ зимних туров по Камчатке для людей любого возраста и уровня физической подготовки. termalnye_istochniki",
+      "metadata": {
+        "category": "termalnye_istochniki",
+        "source_url": "https://zimaletokamchatka.ru/programs/kod_zimy_kamchatka",
+        "source_name": "zimaletokamchatka.ru"
+      }
+    },
+    {
       "id": "acc718ad-925e-4b1c-8223-94650ca87714",
       "name": "Конно-пешеходный трехдневный тур",
       "description": "Это Конно-пешеходный трехдневный тур в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.",
@@ -1969,6 +3835,25 @@
           "0.0000000"
         ],
         "source_name": "idilesom"
+      }
+    },
+    {
+      "id": "zimaletokamchatka.ru:курильское-озеро,-озеро-ксудач,-ходуткинские-горячие-источники",
+      "name": "Курильское озеро, озеро Ксудач, Ходуткинские горячие источники",
+      "description": "Вертолетная экскурсия к Курильскому озеру для наблюдения за бурыми медведями и нерестом нерки с посещением кратера вулкана Ксудач и купанием в горячих источниках Ходутки.",
+      "category": "termalnye_istochniki",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://zimaletokamchatka.ru/tours/kurilskoe_ozero_ozero_ksudach_khodutkinskie_goryachie_istochniki",
+      "source_name": "zimaletokamchatka.ru",
+      "searchText": "Курильское озеро, озеро Ксудач, Ходуткинские горячие источники Вертолетная экскурсия к Курильскому озеру для наблюдения за бурыми медведями и нерестом нерки с посещением кратера вулкана Ксудач и купанием в горячих источниках Ходутки. termalnye_istochniki",
+      "metadata": {
+        "category": "termalnye_istochniki",
+        "source_url": "https://zimaletokamchatka.ru/tours/kurilskoe_ozero_ozero_ksudach_khodutkinskie_goryachie_istochniki",
+        "source_name": "zimaletokamchatka.ru"
       }
     },
     {
@@ -2175,6 +4060,25 @@
       }
     },
     {
+      "id": "zimaletokamchatka.ru:сплав-по-реке-быстрая-и-горячие-источники",
+      "name": "Сплав по реке Быстрая и горячие источники",
+      "description": "Однодневный сплав по живописной реке на Камчатке с посещением горячих источников для отдыха и восстановления. Прекрасная возможность увидеть медведей и порыбачить.",
+      "category": "termalnye_istochniki",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://zimaletokamchatka.ru/tours/splav_po_reke_bystroy_i_goryachie_istochniki",
+      "source_name": "zimaletokamchatka.ru",
+      "searchText": "Сплав по реке Быстрая и горячие источники Однодневный сплав по живописной реке на Камчатке с посещением горячих источников для отдыха и восстановления. Прекрасная возможность увидеть медведей и порыбачить. termalnye_istochniki",
+      "metadata": {
+        "category": "termalnye_istochniki",
+        "source_url": "https://zimaletokamchatka.ru/tours/splav_po_reke_bystroy_i_goryachie_istochniki",
+        "source_name": "zimaletokamchatka.ru"
+      }
+    },
+    {
       "id": "b1daff1c-4dd5-45f0-8993-a875acde18a6",
       "name": "Таловские термальные источники",
       "description": "Это Таловские термальные источники в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.",
@@ -2200,6 +4104,25 @@
       }
     },
     {
+      "id": "d845b872-1b2c-40c6-afa9-b2494454e111",
+      "name": "Термальные источники Нальчева",
+      "description": "Организатор: Министерство туризма Камчатского края. Сезон: Летний сезон",
+      "category": "termalnye_istochniki",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://visitkamchatka.ru",
+      "source_name": "visitkamchatka.ru",
+      "searchText": "Термальные источники Нальчева\nКатегория: termalnye_istochniki\nОрганизатор: Министерство туризма Камчатского края. Сезон: Летний сезон\nИсточник: visitkamchatka.ru",
+      "metadata": {
+        "category": "termalnye_istochniki",
+        "source_url": "https://visitkamchatka.ru",
+        "source_name": "visitkamchatka.ru"
+      }
+    },
+    {
       "id": "1c6721ea-caaf-4edf-b9f0-b48b378219c6",
       "name": "Тимоновские термальные источники",
       "description": "Это Тимоновские термальные источники в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.",
@@ -2222,6 +4145,25 @@
           "151.0515900"
         ],
         "source_name": "idilesom"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:туры-на-термальные-источники",
+      "name": "Туры на термальные источники",
+      "description": "Погрузитесь в целебные воды камчатских термальных источников. Однодневные и многодневные туры с посещением лучших локаций. Расслабление среди дикой природы!",
+      "category": "termalnye_istochniki",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/termalnye-istochniki/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Туры на термальные источники Погрузитесь в целебные воды камчатских термальных источников. Однодневные и многодневные туры с посещением лучших локаций. Расслабление среди дикой природы! termalnye_istochniki",
+      "metadata": {
+        "category": "termalnye_istochniki",
+        "source_url": "https://kamchatintour.ru/tours/termalnye-istochniki/",
+        "source_name": "kamchatintour.ru"
       }
     },
     {
@@ -2267,6 +4209,25 @@
         ],
         "source_url": "https://extraguide.ru/sightmap/?z=14&pt=53.059728,157.922027&t=Горный массив Вачкажец",
         "source_name": "extraguide.ru"
+      }
+    },
+    {
+      "id": "mestechkokam.ru:индивидуальные-туры-на-камчатку",
+      "name": "Индивидуальные туры на Камчатку",
+      "description": "Откройте для себя дикую и величественную Камчатку в формате индивидуального путешествия. Вас ждут захватывающие маршруты в сопровождении опытных гидов.",
+      "category": "trekking",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://mestechkokam.ru/ekskursii/individualnye-tury/",
+      "source_name": "mestechkokam.ru",
+      "searchText": "Индивидуальные туры на Камчатку Откройте для себя дикую и величественную Камчатку в формате индивидуального путешествия. Вас ждут захватывающие маршруты в сопровождении опытных гидов. trekking",
+      "metadata": {
+        "category": "trekking",
+        "source_url": "https://mestechkokam.ru/ekskursii/individualnye-tury/",
+        "source_name": "mestechkokam.ru"
       }
     },
     {
@@ -2327,6 +4288,63 @@
       }
     },
     {
+      "id": "mestechkokam.ru:туры-на-камчатку-в-июле",
+      "name": "Туры на Камчатку в июле",
+      "description": "Июль на Камчатке — лучшее время для насыщенных экскурсий и знакомства с дикой природой. Яркие маршруты и незабываемые впечатления ждут вас. Забронируйте тур заранее и окунитесь в лето Камчатки!",
+      "category": "trekking",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://mestechkokam.ru/ekskursii/tury-v-iyule/",
+      "source_name": "mestechkokam.ru",
+      "searchText": "Туры на Камчатку в июле Июль на Камчатке — лучшее время для насыщенных экскурсий и знакомства с дикой природой. Яркие маршруты и незабываемые впечатления ждут вас. Забронируйте тур заранее и окунитесь в лето Камчатки! trekking",
+      "metadata": {
+        "category": "trekking",
+        "source_url": "https://mestechkokam.ru/ekskursii/tury-v-iyule/",
+        "source_name": "mestechkokam.ru"
+      }
+    },
+    {
+      "id": "mestechkokam.ru:туры-на-камчатку-в-июне",
+      "name": "Туры на Камчатку в июне",
+      "description": "Июнь на Камчатке — отличное время для активного отдыха и знакомства с уникальной природой полуострова. Яркие экскурсии, комфортные условия и захватывающие маршруты сделают ваше путешествие незабываемым.",
+      "category": "trekking",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://mestechkokam.ru/ekskursii/tury-v-iyune/",
+      "source_name": "mestechkokam.ru",
+      "searchText": "Туры на Камчатку в июне Июнь на Камчатке — отличное время для активного отдыха и знакомства с уникальной природой полуострова. Яркие экскурсии, комфортные условия и захватывающие маршруты сделают ваше путешествие незабываемым. trekking",
+      "metadata": {
+        "category": "trekking",
+        "source_url": "https://mestechkokam.ru/ekskursii/tury-v-iyune/",
+        "source_name": "mestechkokam.ru"
+      }
+    },
+    {
+      "id": "mestechkokam.ru:туры-на-камчатку-летом-2025",
+      "name": "Туры на Камчатку летом 2025",
+      "description": "Планируйте незабываемый отдых на Камчатке летом 2025 года! Узнайте актуальные цены на туры, лучшие экскурсионные маршруты и авторские туры. Откройте для себя уникальные возможности для отдыха на Камчатке этим летом!",
+      "category": "trekking",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://mestechkokam.ru/ekskursii/tury-na-kamchatku-letom/",
+      "source_name": "mestechkokam.ru",
+      "searchText": "Туры на Камчатку летом 2025 Планируйте незабываемый отдых на Камчатке летом 2025 года! Узнайте актуальные цены на туры, лучшие экскурсионные маршруты и авторские туры. Откройте для себя уникальные возможности для отдыха на Камчатке этим летом! trekking",
+      "metadata": {
+        "category": "trekking",
+        "source_url": "https://mestechkokam.ru/ekskursii/tury-na-kamchatku-letom/",
+        "source_name": "mestechkokam.ru"
+      }
+    },
+    {
       "id": "44d07c8f-5678-48ea-9654-59df1041599c",
       "name": "Экструзия Верблюд",
       "description": "Короткий трек к вулканической экструзии между вулканами.",
@@ -2343,6 +4361,63 @@
         "category": "trekking",
         "source_url": "https://idilesom.com/kam/places/2147",
         "source_name": "idilesom.com"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:вертолетная-экскурсия-на-курильское-озеро",
+      "name": "Вертолетная экскурсия на Курильское озеро",
+      "description": "Экскурсия на Курильское озеро — одно из самых живописных мест Камчатки. Наблюдение за медведями, уникальная природа и незабываемые впечатления. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "vertoletnye_tury",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/Kuril_lake_tour/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Вертолетная экскурсия на Курильское озеро Экскурсия на Курильское озеро — одно из самых живописных мест Камчатки. Наблюдение за медведями, уникальная природа и незабываемые впечатления. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 vertoletnye_tury",
+      "metadata": {
+        "category": "vertoletnye_tury",
+        "source_url": "https://kamchatintour.ru/tours/Kuril_lake_tour/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "mestechkokam.ru:вертолётные-экскурсии-на-камчатке",
+      "name": "Вертолётные экскурсии на Камчатке",
+      "description": "Незабываемые вертолетные экскурсии на Камчатке. Бронируйте туры на вертолете, узнавайте цены, маршруты и даты полетов в 2025 году.",
+      "category": "vertoletnye_tury",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://mestechkokam.ru/ekskursii/vertolyotnye-ekskursii/",
+      "source_name": "mestechkokam.ru",
+      "searchText": "Вертолётные экскурсии на Камчатке Незабываемые вертолетные экскурсии на Камчатке. Бронируйте туры на вертолете, узнавайте цены, маршруты и даты полетов в 2025 году. vertoletnye_tury",
+      "metadata": {
+        "category": "vertoletnye_tury",
+        "source_url": "https://mestechkokam.ru/ekskursii/vertolyotnye-ekskursii/",
+        "source_name": "mestechkokam.ru"
+      }
+    },
+    {
+      "id": "75676cee-d94d-420a-af78-f7ecd624f5a1",
+      "name": "Вертолётный тур",
+      "description": "Организатор: Министерство туризма Камчатского края. Сезон: Летний сезон",
+      "category": "vertoletnye_tury",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://visitkamchatka.ru",
+      "source_name": "visitkamchatka.ru",
+      "searchText": "Вертолётный тур\nКатегория: vertoletnye_tury\nОрганизатор: Министерство туризма Камчатского края. Сезон: Летний сезон\nИсточник: visitkamchatka.ru",
+      "metadata": {
+        "category": "vertoletnye_tury",
+        "source_url": "https://visitkamchatka.ru",
+        "source_name": "visitkamchatka.ru"
       }
     },
     {
@@ -2425,6 +4500,63 @@
       }
     },
     {
+      "id": "zimaletokamchatka.ru:вертолетная-облет-вулканов-горелый-и-мутновский,-ходуткинские-горячие-источники",
+      "name": "Вертолетная облет вулканов Горелый и Мутновский, Ходуткинские горячие источники",
+      "description": "Возможность увидеть вулканические ландшафты с высоты птичьего полёта и прикоснуться к первозданной силе природы в горячем источнике у вулкана Ходутка. Погрузитесь в мир огненной Камчатки — там, где земля творит историю прямо на ваших глазах! «Огненное сердце Камчатки»: облёт вулканов Мутновский и Го",
+      "category": "vulkani",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://zimaletokamchatka.ru/tours/vertoletnaya-oblet-vulkanov-gorelyy-i-mutnovskiy-khodutkinskie-goryachie-istochniki",
+      "source_name": "zimaletokamchatka.ru",
+      "searchText": "Вертолетная облет вулканов Горелый и Мутновский, Ходуткинские горячие источники Возможность увидеть вулканические ландшафты с высоты птичьего полёта и прикоснуться к первозданной силе природы в горячем источнике у вулкана Ходутка. Погрузитесь в мир огненной Камчатки — там, где земля творит историю прямо на ваших глазах! «Огненное сердце Камчатки»: облёт вулканов Мутновский и Го vulkani",
+      "metadata": {
+        "category": "vulkani",
+        "source_url": "https://zimaletokamchatka.ru/tours/vertoletnaya-oblet-vulkanov-gorelyy-i-mutnovskiy-khodutkinskie-goryachie-istochniki",
+        "source_name": "zimaletokamchatka.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:вертолетная-экскурсия-к-толбачинскому-вулкану",
+      "name": "Вертолетная экскурсия к Толбачинскому вулкану",
+      "description": "Вертолетный тур на вулкан Толбачик от Камчатинтур. Уникальная возможность увидеть Камчатку с высоты и исследовать ее природные красоты. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "vulkani",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/tolbachik_heli/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Вертолетная экскурсия к Толбачинскому вулкану Вертолетный тур на вулкан Толбачик от Камчатинтур. Уникальная возможность увидеть Камчатку с высоты и исследовать ее природные красоты. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 vulkani",
+      "metadata": {
+        "category": "vulkani",
+        "source_url": "https://kamchatintour.ru/tours/tolbachik_heli/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "8020f1a5-d086-40a8-bfa3-fadc359dce29",
+      "name": "Вилючинский водопад",
+      "description": "Организатор: Министерство туризма Камчатского края. Сезон: Зимний сезон",
+      "category": "vulkani",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://visitkamchatka.ru",
+      "source_name": "visitkamchatka.ru",
+      "searchText": "Вилючинский водопад\nКатегория: vulkani\nОрганизатор: Министерство туризма Камчатского края. Сезон: Зимний сезон\nИсточник: visitkamchatka.ru",
+      "metadata": {
+        "category": "vulkani",
+        "source_url": "https://visitkamchatka.ru",
+        "source_name": "visitkamchatka.ru"
+      }
+    },
+    {
       "id": "9d719c27-6cf3-468c-9f54-790d79ad63f9",
       "name": "Вилючинский вулкан",
       "description": "Это Вилючинский вулкан в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.",
@@ -2469,78 +4601,79 @@
       }
     },
     {
-      "id": "c78bc092-000a-44ba-afec-f38e82bb78c9",
-      "name": "Вилючинский перевал",
-      "description": "Это Вилючинский перевал в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.",
-      "category": "vulkani",
-      "difficulty": "Не указано",
-      "duration": "Не указано",
-      "coordinates": [
-        "58.2052200",
-        "152.1984406"
-      ],
-      "district": null,
-      "length_km": null,
-      "source_url": null,
-      "source_name": "idilesom",
-      "searchText": "Вилючинский перевал\nКатегория: vulkani\nЭто Вилючинский перевал в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.\nИсточник: idilesom\nКоординаты: 58.2052200, 152.1984406",
-      "metadata": {
-        "category": "vulkani",
-        "coordinates": [
-          "58.2052200",
-          "152.1984406"
-        ],
-        "source_name": "idilesom"
-      }
-    },
-    {
-      "id": "2a888900-d26a-4cea-83ea-41c26011c34d",
+      "id": "zimaletokamchatka.ru:восхождение-на-авачинский-вулкан",
       "name": "Восхождение на Авачинский вулкан",
-      "description": "Это Восхождение на Авачинский вулкан в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.",
+      "description": "Восхождение на Авачинский — это испытание, доступное каждому, кто готов бросить вызов своим силам и выносливости. Это возможность почувствовать себя частью чего-то грандиозного, первозданного. Взглянуть на мир с высоты птичьего полета, прикоснуться к вечности и унести с собой не только фотографии, н",
       "category": "vulkani",
       "difficulty": "Не указано",
       "duration": "Не указано",
-      "coordinates": [
-        "0.0000000",
-        "0.0000000"
-      ],
+      "coordinates": null,
       "district": null,
       "length_km": null,
-      "source_url": null,
-      "source_name": "idilesom",
-      "searchText": "Восхождение на Авачинский вулкан\nКатегория: vulkani\nЭто Восхождение на Авачинский вулкан в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.\nИсточник: idilesom\nКоординаты: 0.0000000, 0.0000000",
+      "source_url": "https://zimaletokamchatka.ru/tours/voskhozhdenie-na-avachinskiy-vulkan",
+      "source_name": "zimaletokamchatka.ru",
+      "searchText": "Восхождение на Авачинский вулкан Восхождение на Авачинский — это испытание, доступное каждому, кто готов бросить вызов своим силам и выносливости. Это возможность почувствовать себя частью чего-то грандиозного, первозданного. Взглянуть на мир с высоты птичьего полета, прикоснуться к вечности и унести с собой не только фотографии, н vulkani",
       "metadata": {
         "category": "vulkani",
-        "coordinates": [
-          "0.0000000",
-          "0.0000000"
-        ],
-        "source_name": "idilesom"
+        "source_url": "https://zimaletokamchatka.ru/tours/voskhozhdenie-na-avachinskiy-vulkan",
+        "source_name": "zimaletokamchatka.ru"
       }
     },
     {
-      "id": "7977eb76-53b4-43fd-bf43-068370bce8f7",
-      "name": "Вулкан Авачинский",
-      "description": "Это Вулкан Авачинский в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.",
+      "id": "kamchatintour.ru:восхождение-на-авачинский-вулкан-1-день",
+      "name": "Восхождение на Авачинский вулкан 1 день",
+      "description": "Однодневный тур на Авачинский вулкан — идеальный выбор для активного отдыха на Камчатке. Узнайте больше о маршруте восхождения и деталях программы. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
       "category": "vulkani",
       "difficulty": "Не указано",
       "duration": "Не указано",
-      "coordinates": [
-        "0.0000000",
-        "0.0000000"
-      ],
+      "coordinates": null,
       "district": null,
       "length_km": null,
-      "source_url": null,
-      "source_name": "idilesom",
-      "searchText": "Вулкан Авачинский\nКатегория: vulkani\nЭто Вулкан Авачинский в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.\nИсточник: idilesom\nКоординаты: 0.0000000, 0.0000000",
+      "source_url": "https://kamchatintour.ru/tours/Avacha_vlc_ascending_1day/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Восхождение на Авачинский вулкан 1 день Однодневный тур на Авачинский вулкан — идеальный выбор для активного отдыха на Камчатке. Узнайте больше о маршруте восхождения и деталях программы. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 vulkani",
       "metadata": {
         "category": "vulkani",
-        "coordinates": [
-          "0.0000000",
-          "0.0000000"
-        ],
-        "source_name": "idilesom"
+        "source_url": "https://kamchatintour.ru/tours/Avacha_vlc_ascending_1day/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:восхождение-на-авачинский-вулкан-2-дня",
+      "name": "Восхождение на Авачинский вулкан 2 дня",
+      "description": "Двухдневное восхождение на Авачинский вулкан — одно из самых ярких приключений на Камчатке. Узнайте детали тура, маршрута и подготовки к нему. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "vulkani",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/Avacha_vlc_ascending_2days/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Восхождение на Авачинский вулкан 2 дня Двухдневное восхождение на Авачинский вулкан — одно из самых ярких приключений на Камчатке. Узнайте детали тура, маршрута и подготовки к нему. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 vulkani",
+      "metadata": {
+        "category": "vulkani",
+        "source_url": "https://kamchatintour.ru/tours/Avacha_vlc_ascending_2days/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:восхождение-на-вулкан-горелый",
+      "name": "Восхождение на вулкан Горелый",
+      "description": "Восхождение на вулкан Горелый — захватывающее приключение для любителей активного отдыха на Камчатке. Узнайте больше о маршруте и программе тура. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "vulkani",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/Gorely_volcano_tour/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Восхождение на вулкан Горелый Восхождение на вулкан Горелый — захватывающее приключение для любителей активного отдыха на Камчатке. Узнайте больше о маршруте и программе тура. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 vulkani",
+      "metadata": {
+        "category": "vulkani",
+        "source_url": "https://kamchatintour.ru/tours/Gorely_volcano_tour/",
+        "source_name": "kamchatintour.ru"
       }
     },
     {
@@ -2586,31 +4719,6 @@
         "category": "vulkani",
         "source_url": "https://idilesom.com/kam/places/2640",
         "source_name": "idilesom.com"
-      }
-    },
-    {
-      "id": "786070cd-8f9c-4bc9-b653-e7a6d1cb2460",
-      "name": "Вулкан Бакенинг",
-      "description": "Это Вулкан Бакенинг в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.",
-      "category": "vulkani",
-      "difficulty": "Не указано",
-      "duration": "Не указано",
-      "coordinates": [
-        "0.0000000",
-        "0.0000000"
-      ],
-      "district": null,
-      "length_km": null,
-      "source_url": null,
-      "source_name": "idilesom",
-      "searchText": "Вулкан Бакенинг\nКатегория: vulkani\nЭто Вулкан Бакенинг в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.\nИсточник: idilesom\nКоординаты: 0.0000000, 0.0000000",
-      "metadata": {
-        "category": "vulkani",
-        "coordinates": [
-          "0.0000000",
-          "0.0000000"
-        ],
-        "source_name": "idilesom"
       }
     },
     {
@@ -2663,31 +4771,6 @@
         ],
         "source_url": "https://extraguide.ru/sightmap/?z=14&pt=52.705210,158.281558&t=Вилючинский вулкан",
         "source_name": "extraguide.ru"
-      }
-    },
-    {
-      "id": "e7262efa-07db-4ea7-a89e-0285eb1c10d3",
-      "name": "Вулкан Горелый",
-      "description": "Это Вулкан Горелый в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.",
-      "category": "vulkani",
-      "difficulty": "Не указано",
-      "duration": "Не указано",
-      "coordinates": [
-        "0.0000000",
-        "0.0000000"
-      ],
-      "district": null,
-      "length_km": null,
-      "source_url": null,
-      "source_name": "idilesom",
-      "searchText": "Вулкан Горелый\nКатегория: vulkani\nЭто Вулкан Горелый в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.\nИсточник: idilesom\nКоординаты: 0.0000000, 0.0000000",
-      "metadata": {
-        "category": "vulkani",
-        "coordinates": [
-          "0.0000000",
-          "0.0000000"
-        ],
-        "source_name": "idilesom"
       }
     },
     {
@@ -2758,57 +4841,6 @@
       "source_url": null,
       "source_name": "idilesom",
       "searchText": "Вулкан Ключевская сопка\nКатегория: vulkani\nЭто Вулкан Ключевская сопка в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.\nИсточник: idilesom\nКоординаты: 0.0000000, 0.0000000",
-      "metadata": {
-        "category": "vulkani",
-        "coordinates": [
-          "0.0000000",
-          "0.0000000"
-        ],
-        "source_name": "idilesom"
-      }
-    },
-    {
-      "id": "413a7499-22c9-4058-8c60-880d64e9b875",
-      "name": "Вулкан Ключевская сопка",
-      "description": "Самый высокий активный вулкан Евразии, частые извержения.",
-      "category": "vulkani",
-      "difficulty": "Не указано",
-      "duration": "Не указано",
-      "coordinates": [
-        "56.0567980",
-        "160.6406270"
-      ],
-      "district": null,
-      "length_km": null,
-      "source_url": "https://spkam.com/stati-o-kamchatke/dostoprimechatelnosti",
-      "source_name": "spkam.com",
-      "searchText": "Вулкан Ключевская сопка\nКатегория: vulkani\nСамый высокий активный вулкан Евразии, частые извержения.\nИсточник: spkam.com\nКоординаты: 56.0567980, 160.6406270",
-      "metadata": {
-        "category": "vulkani",
-        "coordinates": [
-          "56.0567980",
-          "160.6406270"
-        ],
-        "source_url": "https://spkam.com/stati-o-kamchatke/dostoprimechatelnosti",
-        "source_name": "spkam.com"
-      }
-    },
-    {
-      "id": "446f76f0-a647-46f8-b687-c4b189911d83",
-      "name": "Вулкан Козельский",
-      "description": "Это Вулкан Козельский в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.",
-      "category": "vulkani",
-      "difficulty": "Не указано",
-      "duration": "Не указано",
-      "coordinates": [
-        "0.0000000",
-        "0.0000000"
-      ],
-      "district": null,
-      "length_km": null,
-      "source_url": null,
-      "source_name": "idilesom",
-      "searchText": "Вулкан Козельский\nКатегория: vulkani\nЭто Вулкан Козельский в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.\nИсточник: idilesom\nКоординаты: 0.0000000, 0.0000000",
       "metadata": {
         "category": "vulkani",
         "coordinates": [
@@ -2948,6 +4980,25 @@
       }
     },
     {
+      "id": "kamchatintour.ru:вулкан-плоский-толбачик",
+      "name": "Вулкан Плоский Толбачик",
+      "description": "Экскурсия на вулкан Толбачик — незабываемый тур по лавовым полям и кратерам Камчатки. Узнайте подробности и подготовьтесь к приключению на вершину. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "vulkani",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/Tolbachik/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Вулкан Плоский Толбачик Экскурсия на вулкан Толбачик — незабываемый тур по лавовым полям и кратерам Камчатки. Узнайте подробности и подготовьтесь к приключению на вершину. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 vulkani",
+      "metadata": {
+        "category": "vulkani",
+        "source_url": "https://kamchatintour.ru/tours/Tolbachik/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
       "id": "d89c7ef2-355c-4924-8259-29c80b0aae76",
       "name": "Вулкан Толбачик",
       "description": "Массив с кратерами и лавовыми полями.",
@@ -2971,31 +5022,6 @@
         ],
         "source_url": "https://extraguide.ru/sightmap/?z=14&pt=55.817869,160.390152&t=Вулкан Толбачик",
         "source_name": "extraguide.ru"
-      }
-    },
-    {
-      "id": "b7c04a4f-c2f3-4f89-976f-4aef28246358",
-      "name": "Вулкан Шивелуч",
-      "description": "Это Вулкан Шивелуч в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.",
-      "category": "vulkani",
-      "difficulty": "Не указано",
-      "duration": "Не указано",
-      "coordinates": [
-        "56.5564900",
-        "150.9741516"
-      ],
-      "district": null,
-      "length_km": null,
-      "source_url": null,
-      "source_name": "idilesom",
-      "searchText": "Вулкан Шивелуч\nКатегория: vulkani\nЭто Вулкан Шивелуч в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.\nИсточник: idilesom\nКоординаты: 56.5564900, 150.9741516",
-      "metadata": {
-        "category": "vulkani",
-        "coordinates": [
-          "56.5564900",
-          "150.9741516"
-        ],
-        "source_name": "idilesom"
       }
     },
     {
@@ -3025,6 +5051,25 @@
       }
     },
     {
+      "id": "zimaletokamchatka.ru:две-стороны-вулкана-толбачик",
+      "name": "Две стороны Вулкана Толбачик",
+      "description": "",
+      "category": "vulkani",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://zimaletokamchatka.ru/programs/dve_storoni_vulkana_tolbachik",
+      "source_name": "zimaletokamchatka.ru",
+      "searchText": "Две стороны Вулкана Толбачик  vulkani",
+      "metadata": {
+        "category": "vulkani",
+        "source_url": "https://zimaletokamchatka.ru/programs/dve_storoni_vulkana_tolbachik",
+        "source_name": "zimaletokamchatka.ru"
+      }
+    },
+    {
       "id": "5a0088aa-7f48-4934-ab82-d5979153f5f7",
       "name": "Корякский Вулкан",
       "description": "Это Корякский Вулкан в Камчатском крае. Место, которое стоит посмотреть. Маршрут и все подробности на ИдиЛесом.",
@@ -3047,6 +5092,120 @@
           "150.0256348"
         ],
         "source_name": "idilesom"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:лагерь-под-авачинским-вулканом",
+      "name": "Лагерь под Авачинским вулканом",
+      "description": "Живите у подножия Авачинского вулкана! Походы, восхождения, термальные источники и ночевка в палатках с видом на огненную гору. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "vulkani",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/lager-pod-Avchinskim-vulkanom/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Лагерь под Авачинским вулканом Живите у подножия Авачинского вулкана! Походы, восхождения, термальные источники и ночевка в палатках с видом на огненную гору. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 vulkani",
+      "metadata": {
+        "category": "vulkani",
+        "source_url": "https://kamchatintour.ru/tours/lager-pod-Avchinskim-vulkanom/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "zimaletokamchatka.ru:мини-долина-гейзеров-и-подножие-вулкана-мутновский-(вездеход)",
+      "name": "Мини долина гейзеров и подножие вулкана Мутновский (вездеход)",
+      "description": "Этот маршрут проведёт вас по зимним локациям южной группы вулканов — к району Мутновского вулкана, в Мини Долину Гейзеров и к каньону Опасный, где можно увидеть живое дыхание земли: пар, гейзеры и фумаролы.",
+      "category": "vulkani",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://zimaletokamchatka.ru/tours/mini-dolina-geyzerov-i-podnozhie-vulkana-mutnovskiy-vezdekhod",
+      "source_name": "zimaletokamchatka.ru",
+      "searchText": "Мини долина гейзеров и подножие вулкана Мутновский (вездеход) Этот маршрут проведёт вас по зимним локациям южной группы вулканов — к району Мутновского вулкана, в Мини Долину Гейзеров и к каньону Опасный, где можно увидеть живое дыхание земли: пар, гейзеры и фумаролы. vulkani",
+      "metadata": {
+        "category": "vulkani",
+        "source_url": "https://zimaletokamchatka.ru/tours/mini-dolina-geyzerov-i-podnozhie-vulkana-mutnovskiy-vezdekhod",
+        "source_name": "zimaletokamchatka.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:облет-южной-группы-вулканов,-ксудач,-ходутка",
+      "name": "Облет Южной  группы вулканов, Ксудач, Ходутка",
+      "description": "Облет южной группы вулканов от Камчатинтур. Уникальная возможность увидеть вулканы Камчатки с высоты птичьего полета. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "vulkani",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/Flyby_of_the_Southern_group_of_volcanoes/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Облет Южной  группы вулканов, Ксудач, Ходутка Облет южной группы вулканов от Камчатинтур. Уникальная возможность увидеть вулканы Камчатки с высоты птичьего полета. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 vulkani",
+      "metadata": {
+        "category": "vulkani",
+        "source_url": "https://kamchatintour.ru/tours/Flyby_of_the_Southern_group_of_volcanoes/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "mestechkokam.ru:облёт-вулканов-вилючинский,-мутновский-и-горелый",
+      "name": "Облёт вулканов Вилючинский, Мутновский и Горелый",
+      "description": "Закажите вертолетную экскурсию на вулканы Вилючинский, Мутновский и Горелый на Камчатке! Насладитесь потрясающими видами на эти величественные вулканы.",
+      "category": "vulkani",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://mestechkokam.ru/ekskursii/vertolyotnye-ekskursii/oblyot-vulkanov-vilyuchinskij-mutnovskij-i-gorelyj/",
+      "source_name": "mestechkokam.ru",
+      "searchText": "Облёт вулканов Вилючинский, Мутновский и Горелый Закажите вертолетную экскурсию на вулканы Вилючинский, Мутновский и Горелый на Камчатке! Насладитесь потрясающими видами на эти величественные вулканы. vulkani",
+      "metadata": {
+        "category": "vulkani",
+        "source_url": "https://mestechkokam.ru/ekskursii/vertolyotnye-ekskursii/oblyot-vulkanov-vilyuchinskij-mutnovskij-i-gorelyj/",
+        "source_name": "mestechkokam.ru"
+      }
+    },
+    {
+      "id": "mestechkokam.ru:облёт-вулканов-корякский,-авачинский-с-купанием-в-налычевских-источниках",
+      "name": "Облёт вулканов Корякский, Авачинский с купанием в Налычевских источниках",
+      "description": "Отправляйтесь на незабываемую вертолетную экскурсию на вулканы Корякский и Авачинский на Камчатке! Насладитесь потрясающими видами на эти величественные вулканы, а также окунитесь в горячие Налычевские геотермальные источники для полного релакса.",
+      "category": "vulkani",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://mestechkokam.ru/ekskursii/vertolyotnye-ekskursii/oblyot-vulkanov-koryakskij-avachinskij-s-kupaniem-v-nalychevskih-geotermalnyh-istochnikah/",
+      "source_name": "mestechkokam.ru",
+      "searchText": "Облёт вулканов Корякский, Авачинский с купанием в Налычевских источниках Отправляйтесь на незабываемую вертолетную экскурсию на вулканы Корякский и Авачинский на Камчатке! Насладитесь потрясающими видами на эти величественные вулканы, а также окунитесь в горячие Налычевские геотермальные источники для полного релакса. vulkani",
+      "metadata": {
+        "category": "vulkani",
+        "source_url": "https://mestechkokam.ru/ekskursii/vertolyotnye-ekskursii/oblyot-vulkanov-koryakskij-avachinskij-s-kupaniem-v-nalychevskih-geotermalnyh-istochnikah/",
+        "source_name": "mestechkokam.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:поездка-к-подножию-авачинского-вулкана-на-снегоходе-или-ратраке",
+      "name": "Поездка к подножию Авачинского вулкана на снегоходе или ратраке",
+      "description": "Зимнее восхождение на вулкан Авачинская сопка с Камчатинтур — это захватывающее приключение среди заснеженных горных пейзажей Камчатки. Забронировать места можно на сайте или по телефону: +7 (4152) 20-10-10.",
+      "category": "vulkani",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/Avacha_volcano_in_winter/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Поездка к подножию Авачинского вулкана на снегоходе или ратраке Зимнее восхождение на вулкан Авачинская сопка с Камчатинтур — это захватывающее приключение среди заснеженных горных пейзажей Камчатки. Забронировать места можно на сайте или по телефону: +7 (4152) 20-10-10. vulkani",
+      "metadata": {
+        "category": "vulkani",
+        "source_url": "https://kamchatintour.ru/tours/Avacha_volcano_in_winter/",
+        "source_name": "kamchatintour.ru"
       }
     },
     {
@@ -3147,6 +5306,234 @@
           "150.0256348"
         ],
         "source_name": "idilesom"
+      }
+    },
+    {
+      "id": "mestechkokam.ru:снегоходная-экскурсия-на-авачинский-перевал-на-камчатке",
+      "name": "Снегоходная экскурсия на Авачинский перевал на Камчатке",
+      "description": "Поднимитесь на снегоходах на вершину экструзии Верблюд и насладитесь потрясающими видами на Авачинский и Корякский вулканы, Тихий океан и города Петропавловск-Камчатский и Елизово.",
+      "category": "vulkani",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://mestechkokam.ru/ekskursii/snegohodnye-ekskursii/avachinskij-pereval/",
+      "source_name": "mestechkokam.ru",
+      "searchText": "Снегоходная экскурсия на Авачинский перевал на Камчатке Поднимитесь на снегоходах на вершину экструзии Верблюд и насладитесь потрясающими видами на Авачинский и Корякский вулканы, Тихий океан и города Петропавловск-Камчатский и Елизово. vulkani",
+      "metadata": {
+        "category": "vulkani",
+        "source_url": "https://mestechkokam.ru/ekskursii/snegohodnye-ekskursii/avachinskij-pereval/",
+        "source_name": "mestechkokam.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:тур-туристический-лагерь-у-подножия-авачинского-вулкана-(лето)",
+      "name": "Тур туристический лагерь у подножия Авачинского вулкана (лето)",
+      "description": "Летний тур в базовый лагерь Авачинского вулкана — идеальный выбор для любителей активного отдыха на природе. Восхождения, пешие прогулки и незабываемые виды. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "vulkani",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/Avacha_Base_Camp_Summer/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Тур туристический лагерь у подножия Авачинского вулкана (лето) Летний тур в базовый лагерь Авачинского вулкана — идеальный выбор для любителей активного отдыха на природе. Восхождения, пешие прогулки и незабываемые виды. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 vulkani",
+      "metadata": {
+        "category": "vulkani",
+        "source_url": "https://kamchatintour.ru/tours/Avacha_Base_Camp_Summer/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:туристический-лагерь-у-подножия-авачинского-вулкана-(зима)",
+      "name": "Туристический лагерь у подножия Авачинского вулкана (зима)",
+      "description": "Зимний туристический лагерь у подножия Авачинского вулкана с Камчатинтур — это идеальное место для зимнего отдыха среди величественных гор Камчатки. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "vulkani",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/Tourist_camp_at_the_foot_of_the_Avacha_volcano_winter/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Туристический лагерь у подножия Авачинского вулкана (зима) Зимний туристический лагерь у подножия Авачинского вулкана с Камчатинтур — это идеальное место для зимнего отдыха среди величественных гор Камчатки. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 vulkani",
+      "metadata": {
+        "category": "vulkani",
+        "source_url": "https://kamchatintour.ru/tours/Tourist_camp_at_the_foot_of_the_Avacha_volcano_winter/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "kamchatintour.ru:туристический-лагерь-у-подножия-авачинского-вулкана-(лето)",
+      "name": "Туристический лагерь у подножия Авачинского вулкана (лето)",
+      "description": "Летний туристический лагерь у подножия Авачинского вулкана с Камчатинтур — отличная возможность для отдыха на природе, наслаждаясь видами и чистым воздухом Камчатки. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35",
+      "category": "vulkani",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://kamchatintour.ru/tours/Tourist_camp_at_the_foot_of_the_Avacha_volcano_summer/",
+      "source_name": "kamchatintour.ru",
+      "searchText": "Туристический лагерь у подножия Авачинского вулкана (лето) Летний туристический лагерь у подножия Авачинского вулкана с Камчатинтур — отличная возможность для отдыха на природе, наслаждаясь видами и чистым воздухом Камчатки. Забронировать места можно на сайте или по телефону: +7 (495) 920 33-35 vulkani",
+      "metadata": {
+        "category": "vulkani",
+        "source_url": "https://kamchatintour.ru/tours/Tourist_camp_at_the_foot_of_the_Avacha_volcano_summer/",
+        "source_name": "kamchatintour.ru"
+      }
+    },
+    {
+      "id": "mestechkokam.ru:туры-на-камчатку-в-сентябре",
+      "name": "Туры на Камчатку в сентябре",
+      "description": "Тур на Камчатку в сентябре 2025 — яркие краски осени, вулканы, медведи и горячие источники. Бронируйте экскурсии по уникальным маршрутам уже сейчас!",
+      "category": "vulkani",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://mestechkokam.ru/ekskursii/tury-v-sentyabre/",
+      "source_name": "mestechkokam.ru",
+      "searchText": "Туры на Камчатку в сентябре Тур на Камчатку в сентябре 2025 — яркие краски осени, вулканы, медведи и горячие источники. Бронируйте экскурсии по уникальным маршрутам уже сейчас! vulkani",
+      "metadata": {
+        "category": "vulkani",
+        "source_url": "https://mestechkokam.ru/ekskursii/tury-v-sentyabre/",
+        "source_name": "mestechkokam.ru"
+      }
+    },
+    {
+      "id": "mestechkokam.ru:туры-на-камчатку-из-москвы-в-2025",
+      "name": "Туры на Камчатку из Москвы в 2025",
+      "description": "Откройте Камчатку с её вулканами, горячими источниками и захватывающими пейзажами. Путешествие в сердце дикой природы России подарит незабываемые впечатления.",
+      "category": "vulkani",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://mestechkokam.ru/ekskursii/tury-iz-moskvy/",
+      "source_name": "mestechkokam.ru",
+      "searchText": "Туры на Камчатку из Москвы в 2025 Откройте Камчатку с её вулканами, горячими источниками и захватывающими пейзажами. Путешествие в сердце дикой природы России подарит незабываемые впечатления. vulkani",
+      "metadata": {
+        "category": "vulkani",
+        "source_url": "https://mestechkokam.ru/ekskursii/tury-iz-moskvy/",
+        "source_name": "mestechkokam.ru"
+      }
+    },
+    {
+      "id": "mestechkokam.ru:туры-на-вулканы-камчатки",
+      "name": "Туры на вулканы Камчатки",
+      "description": "Откройте для себя захватывающие туры на вулканы Камчатки! Присоединяйтесь к экспедициям и восхождениям на вулканы Камчатки, чтобы пережить уникальные приключения и насладиться впечатляющими видами. Забронируйте тур уже сегодня!",
+      "category": "vulkani",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://mestechkokam.ru/ekskursii/tury-na-vulkany/",
+      "source_name": "mestechkokam.ru",
+      "searchText": "Туры на вулканы Камчатки Откройте для себя захватывающие туры на вулканы Камчатки! Присоединяйтесь к экспедициям и восхождениям на вулканы Камчатки, чтобы пережить уникальные приключения и насладиться впечатляющими видами. Забронируйте тур уже сегодня! vulkani",
+      "metadata": {
+        "category": "vulkani",
+        "source_url": "https://mestechkokam.ru/ekskursii/tury-na-vulkany/",
+        "source_name": "mestechkokam.ru"
+      }
+    },
+    {
+      "id": "mestechkokam.ru:туры-по-камчатке-из-петропавловска-камчатского",
+      "name": "Туры по Камчатке из Петропавловска-Камчатского",
+      "description": "Туры по Камчатке из Петропавловска-Камчатского — вулканы, горячие источники, океан, медведи. Забронируйте своё приключение уже сегодня!",
+      "category": "vulkani",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://mestechkokam.ru/ekskursii/tury-iz-petropavlovska-kamchatskogo/",
+      "source_name": "mestechkokam.ru",
+      "searchText": "Туры по Камчатке из Петропавловска-Камчатского Туры по Камчатке из Петропавловска-Камчатского — вулканы, горячие источники, океан, медведи. Забронируйте своё приключение уже сегодня! vulkani",
+      "metadata": {
+        "category": "vulkani",
+        "source_url": "https://mestechkokam.ru/ekskursii/tury-iz-petropavlovska-kamchatskogo/",
+        "source_name": "mestechkokam.ru"
+      }
+    },
+    {
+      "id": "mestechkokam.ru:экскурсия-в-малую-долину-гейзеров-на-камчатке",
+      "name": "Экскурсия в Малую Долину Гейзеров на Камчатке",
+      "description": "Приглашаем на автомобильную экскурсию к Малой Долине Гейзеров (дачным геотермальным источникам). Активный джип тур с видом на вулканы",
+      "category": "vulkani",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://mestechkokam.ru/ekskursii/avtomobilnye-ekskursii/dachnye-geotermalnye-istochniki/",
+      "source_name": "mestechkokam.ru",
+      "searchText": "Экскурсия в Малую Долину Гейзеров на Камчатке Приглашаем на автомобильную экскурсию к Малой Долине Гейзеров (дачным геотермальным источникам). Активный джип тур с видом на вулканы vulkani",
+      "metadata": {
+        "category": "vulkani",
+        "source_url": "https://mestechkokam.ru/ekskursii/avtomobilnye-ekskursii/dachnye-geotermalnye-istochniki/",
+        "source_name": "mestechkokam.ru"
+      }
+    },
+    {
+      "id": "mestechkokam.ru:экскурсия-к-вулкану-толбачик-на-вертолете",
+      "name": "Экскурсия к вулкану Толбачик на вертолете",
+      "description": "Закажите вертолетную экскурсию на вулкан Толбачик на Камчатке! Насладитесь невероятными видами на этот уникальный вулкан и окружающую природу",
+      "category": "vulkani",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://mestechkokam.ru/ekskursii/vertolyotnye-ekskursii/vertolyotnaya-ekskursiya-k-vulkanu-tolbachik/",
+      "source_name": "mestechkokam.ru",
+      "searchText": "Экскурсия к вулкану Толбачик на вертолете Закажите вертолетную экскурсию на вулкан Толбачик на Камчатке! Насладитесь невероятными видами на этот уникальный вулкан и окружающую природу vulkani",
+      "metadata": {
+        "category": "vulkani",
+        "source_url": "https://mestechkokam.ru/ekskursii/vertolyotnye-ekskursii/vertolyotnaya-ekskursiya-k-vulkanu-tolbachik/",
+        "source_name": "mestechkokam.ru"
+      }
+    },
+    {
+      "id": "mestechkokam.ru:экскурсия-на-авачинский-перевал-на-камчатке",
+      "name": "Экскурсия на Авачинский перевал на Камчатке",
+      "description": "Поднимитесь на внедорожниках на вершину экструзии Верблюд и насладитесь потрясающими видами на Авачинский и Корякский вулканы, Тихий океан и города Петропавловск-Камчатский и Елизово.",
+      "category": "vulkani",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://mestechkokam.ru/ekskursii/avtomobilnye-ekskursii/avachinskij-pereval/",
+      "source_name": "mestechkokam.ru",
+      "searchText": "Экскурсия на Авачинский перевал на Камчатке Поднимитесь на внедорожниках на вершину экструзии Верблюд и насладитесь потрясающими видами на Авачинский и Корякский вулканы, Тихий океан и города Петропавловск-Камчатский и Елизово. vulkani",
+      "metadata": {
+        "category": "vulkani",
+        "source_url": "https://mestechkokam.ru/ekskursii/avtomobilnye-ekskursii/avachinskij-pereval/",
+        "source_name": "mestechkokam.ru"
+      }
+    },
+    {
+      "id": "mestechkokam.ru:экскурсия-на-вулкан-горелый-на-камчатке",
+      "name": "Экскурсия на вулкан Горелый на Камчатке",
+      "description": "Уникальный джип тур на Вулкан Горелый. Захватывающая автомобильная экскурсия с туроператором «Местечко Камчатка».",
+      "category": "vulkani",
+      "difficulty": "Не указано",
+      "duration": "Не указано",
+      "coordinates": null,
+      "district": null,
+      "length_km": null,
+      "source_url": "https://mestechkokam.ru/ekskursii/avtomobilnye-ekskursii/vulkan-gorelyj-tajna-kratera/",
+      "source_name": "mestechkokam.ru",
+      "searchText": "Экскурсия на вулкан Горелый на Камчатке Уникальный джип тур на Вулкан Горелый. Захватывающая автомобильная экскурсия с туроператором «Местечко Камчатка». vulkani",
+      "metadata": {
+        "category": "vulkani",
+        "source_url": "https://mestechkokam.ru/ekskursii/avtomobilnye-ekskursii/vulkan-gorelyj-tajna-kratera/",
+        "source_name": "mestechkokam.ru"
       }
     }
   ]
