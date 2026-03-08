@@ -310,7 +310,7 @@ export async function cancelBooking(
     );
 
     // Если переходим в refunded, логируем и этот переход
-    if (finalStatus === 'refunded' && cancelStatus !== 'refunded') {
+    if (finalStatus === 'refunded' && (cancelStatus as BookingStatus) !== 'refunded') {
       await logStatusChange(
         client,
         bookingId,

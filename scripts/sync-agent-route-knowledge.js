@@ -87,7 +87,7 @@ async function main() {
 
     const routesResult = await client.query(`
       SELECT
-        id,
+        route_id AS id,
         category,
         title,
         description,
@@ -95,10 +95,10 @@ async function main() {
         lng,
         source_url,
         source_name,
-        dedupe_key,
-        updated_at
-      FROM kamchatka_routes
-      ORDER BY category, title
+        route_dedupe_key AS dedupe_key,
+        source_updated_at AS updated_at
+      FROM v_kamchatka_routes_api
+      ORDER BY category, category_position
     `);
 
     for (const row of routesResult.rows) {
@@ -122,7 +122,7 @@ async function main() {
       const payload = {
         route_id: row.id,
         dedupe_key: row.dedupe_key,
-        imported_from: 'kamchatka_routes',
+        imported_from: 'v_kamchatka_routes_api',
       };
 
       const upsertResult = await client.query(

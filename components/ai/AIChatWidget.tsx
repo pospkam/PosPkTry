@@ -15,6 +15,7 @@ interface AIChatWidgetProps {
   isOpen?: boolean;
   onClose?: () => void;
   className?: string;
+  userId?: string;
 }
 
 const SESSION_STORAGE_KEY = 'kamhub_ai_session_id';
@@ -26,7 +27,7 @@ function createSessionId(): string {
   return `session-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-export function AIChatWidget({ isOpen = false, onClose, className }: AIChatWidgetProps) {
+export function AIChatWidget({ isOpen = false, onClose, className, userId }: AIChatWidgetProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -73,20 +74,13 @@ export function AIChatWidget({ isOpen = false, onClose, className }: AIChatWidge
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmedInput = input.trim();
-    if (!trimmedInput || isLoading) return;
+  const callAI = async (text: string) => {
+    if (!text || isLoading) return;
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      text: trimmedInput,
-      role: 'user',
-      timestamp: new Date(),
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
+    setMessages(prev => [
+      ...prev,
+      { id: Date.now().toString(), text, role: 'user', timestamp: new Date() },
+    ]);
     setIsLoading(true);
 
     try {
@@ -94,9 +88,10 @@ export function AIChatWidget({ isOpen = false, onClose, className }: AIChatWidge
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: trimmedInput,
+          message: text,
           sessionId: sessionId || createSessionId(),
           role: 'tourist',
+          userId: userId ?? null,
         }),
       });
 
@@ -120,24 +115,31 @@ export function AIChatWidget({ isOpen = false, onClose, className }: AIChatWidge
         }
       }
 
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: aiText,
-        role: 'ai',
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, aiMessage]);
+      setMessages(prev => [
+        ...prev,
+        { id: (Date.now() + 1).toString(), text: aiText, role: 'ai', timestamp: new Date() },
+      ]);
     } catch {
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: 'Сервис временно недоступен. Попробуйте снова через минуту.',
-        role: 'ai',
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages(prev => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          text: 'Сервис временно недоступен. Попробуйте снова через минуту.',
+          role: 'ai',
+          timestamp: new Date(),
+        },
+      ]);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmedInput = input.trim();
+    if (!trimmedInput) return;
+    setInput('');
+    await callAI(trimmedInput);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -145,6 +147,11 @@ export function AIChatWidget({ isOpen = false, onClose, className }: AIChatWidge
       e.preventDefault();
       handleSubmit(e as unknown as React.FormEvent);
     }
+  };
+
+  const sendQuickMessage = (text: string) => {
+    setInput('');
+    callAI(text);
   };
 
   return (
@@ -234,26 +241,32 @@ export function AIChatWidget({ isOpen = false, onClose, className }: AIChatWidge
             </div>
             <div className="flex gap-2">
               <motion.button
-                className="flex-1 px-3 py-2 bg-gray-100 hover:bg-ocean hover:text-white rounded-full text-xs font-medium flex items-center gap-1 justify-center min-h-[36px]"
+                className="flex-1 px-3 py-2 bg-gray-100 hover:bg-ocean hover:text-white rounded-full text-xs font-medium flex items-center gap-1 justify-center min-h-[36px] disabled:opacity-50"
                 whileHover={{ scale: 1.05 }}
                 aria-label="Планировать тур"
                 type="button"
+                disabled={isLoading}
+                onClick={() => sendQuickMessage('Помоги спланировать тур на Камчатку: даты, бюджет, интересы')}
               >
                 <Calendar size={14} aria-hidden="true" /> Планировать тур
               </motion.button>
               <motion.button
-                className="flex-1 px-3 py-2 bg-gray-100 hover:bg-ocean hover:text-white rounded-full text-xs font-medium flex items-center gap-1 justify-center min-h-[36px]"
+                className="flex-1 px-3 py-2 bg-gray-100 hover:bg-ocean hover:text-white rounded-full text-xs font-medium flex items-center gap-1 justify-center min-h-[36px] disabled:opacity-50"
                 whileHover={{ scale: 1.05 }}
                 aria-label="Погода"
                 type="button"
+                disabled={isLoading}
+                onClick={() => sendQuickMessage('Какая погода на Камчатке? Когда лучший сезон для поездки?')}
               >
                 <Thermometer size={14} aria-hidden="true" /> Погода
               </motion.button>
               <motion.button
-                className="flex-1 px-3 py-2 bg-gray-100 hover:bg-ocean hover:text-white rounded-full text-xs font-medium flex items-center gap-1 justify-center min-h-[36px]"
+                className="flex-1 px-3 py-2 bg-gray-100 hover:bg-ocean hover:text-white rounded-full text-xs font-medium flex items-center gap-1 justify-center min-h-[36px] disabled:opacity-50"
                 whileHover={{ scale: 1.05 }}
                 aria-label="Безопасность"
                 type="button"
+                disabled={isLoading}
+                onClick={() => sendQuickMessage('Расскажи о безопасности на Камчатке: медведи, вулканы, снаряжение')}
               >
                 <ShieldCheck size={14} aria-hidden="true" /> Безопасность
               </motion.button>

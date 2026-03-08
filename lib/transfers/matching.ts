@@ -373,7 +373,7 @@ export class TransferMatchingEngine {
         [driverId]
       );
       
-      return result.rows.length > 0 && result.rows[0].is_available;
+      return result.rows.length > 0 && (result.rows[0].is_available as boolean);
     } catch (error) {
       console.error('Driver availability check error:', error);
       return false;
@@ -417,14 +417,14 @@ export class TransferMatchingEngine {
       `);
 
       return {
-        totalBookings: parseInt(result.rows[0].total_bookings),
-        successfulMatches: parseInt(result.rows[0].successful_matches),
-        averageResponseTime: parseFloat(result.rows[0].average_response_time || 0),
+        totalBookings: parseInt(result.rows[0].total_bookings as string),
+        successfulMatches: parseInt(result.rows[0].successful_matches as string),
+        averageResponseTime: parseFloat(String(result.rows[0].average_response_time ?? 0)),
         topDrivers: topDriversResult.rows.map(row => ({
-          driverId: row.driver_id,
-          name: row.name,
-          matches: parseInt(row.matches),
-          averageScore: parseFloat(row.average_score)
+          driverId: row.driver_id as string,
+          name: row.name as string,
+          matches: parseInt(row.matches as string),
+          averageScore: parseFloat(row.average_score as string)
         }))
       };
 

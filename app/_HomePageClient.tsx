@@ -12,6 +12,12 @@ import { JeepIcon } from '@/components/icons/JeepIcon';
 import { BearIcon } from '@/components/icons/BearIcon';
 import { TrekkingIcon } from '@/components/icons/TrekkingIcon';
 import { HelicopterIcon } from '@/components/icons/HelicopterIcon';
+import { LakeIcon } from '@/components/icons/LakeIcon';
+import { EcoIcon } from '@/components/icons/EcoIcon';
+import { MountainIcon } from '@/components/icons/MountainIcon';
+import { GeyserIcon } from '@/components/icons/GeyserIcon';
+import { RiverIcon } from '@/components/icons/RiverIcon';
+import { SeaWalkIcon } from '@/components/icons/SeaWalkIcon';
 import ActivityCarousel from '@/components/ui/ActivityCarousel';
 import { useTheme } from '@/contexts/ThemeContext';
 
@@ -38,15 +44,22 @@ interface CarouselImage {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
+// Категории из реальной БД (kamchatka_routes), отсортированы по количеству маршрутов
 const ACTIVITIES: Activity[] = [
-  { icon: <VolcanoIcon className="w-8 h-8" />, label: 'Вулканы', href: '/tours?category=volcanoes' },
-  { icon: <FishingIcon className="w-8 h-8" />, label: 'Рыбалка', href: '/tours?category=fishing' },
-  { icon: <ThermalIcon className="w-8 h-8" />, label: 'Термы', href: '/tours?category=thermal' },
-  { icon: <SnowmobileIcon className="w-8 h-8" />, label: 'Снегоход', href: '/tours?category=snowmobile' },
-  { icon: <JeepIcon className="w-8 h-8" />, label: 'Джип-туры', href: '/tours?category=jeep' },
-  { icon: <BearIcon className="w-8 h-8" />, label: 'Медведи', href: '/tours?category=bears' },
-  { icon: <TrekkingIcon className="w-8 h-8" />, label: 'Треккинг', href: '/tours?category=trekking' },
-  { icon: <HelicopterIcon className="w-8 h-8" />, label: 'Вертолёт', href: '/tours?category=helicopter' },
+  { icon: <VolcanoIcon className="w-8 h-8" />,   label: 'Вулканы',     href: '/tours?category=vulkani' },           // 30
+  { icon: <ThermalIcon className="w-8 h-8" />,   label: 'Термы',       href: '/tours?category=termalnye_istochniki' }, // 19
+  { icon: <LakeIcon className="w-8 h-8" />,      label: 'Озёра',       href: '/tours?category=lakes' },              // 15
+  { icon: <EcoIcon className="w-8 h-8" />,       label: 'Эко-туры',    href: '/tours?category=eco' },                // 14
+  { icon: <MountainIcon className="w-8 h-8" />,  label: 'Горы',        href: '/tours?category=mountains' },          // 12
+  { icon: <GeyserIcon className="w-8 h-8" />,    label: 'Гейзеры',     href: '/tours?category=geyzery' },            // 10
+  { icon: <RiverIcon className="w-8 h-8" />,     label: 'Реки',        href: '/tours?category=rivers' },             // 7
+  { icon: <TrekkingIcon className="w-8 h-8" />,  label: 'Треккинг',    href: '/tours?category=trekking' },           // 6
+  { icon: <FishingIcon className="w-8 h-8" />,   label: 'Рыбалка',     href: '/tours?category=fishing' },            // 5 routes + 10 tours
+  { icon: <SeaWalkIcon className="w-8 h-8" />,   label: 'Море',        href: '/tours?category=morskie_progulki' },   // 5
+  { icon: <BearIcon className="w-8 h-8" />,      label: 'Медведи',     href: '/tours?category=medvedi' },            // 3
+  { icon: <HelicopterIcon className="w-8 h-8" />, label: 'Вертолёт',   href: '/tours?category=vertoletnye_tury' },  // 3
+  { icon: <SnowmobileIcon className="w-8 h-8" />, label: 'Снегоход',   href: '/tours?category=snowmobile' },
+  { icon: <JeepIcon className="w-8 h-8" />,      label: 'Джип-туры',   href: '/tours?category=jeep' },
 ];
 
 const CAROUSEL_IMAGES: CarouselImage[] = [
@@ -528,16 +541,6 @@ export default function HomePageClient() {
             </button>
           </div>
         </section>
-
-        {/* Featured Reviews */}
-        {typeof window !== 'undefined' && <>(
-          {require('../components/FeaturedReviews').default()}
-        )</>}
-
-        {/* Popular Tours */}
-        {typeof window !== 'undefined' && <>(
-          {require('../components/PopularTours').default()}
-        )</>}
 
         {/* Activities - Auto-scroll carousel */}
         <section

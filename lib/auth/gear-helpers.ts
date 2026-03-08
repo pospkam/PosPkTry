@@ -18,7 +18,7 @@ export async function getGearPartnerId(userId: string): Promise<string | null> {
       [userId]
     );
     
-    return result.rows[0]?.id || null;
+    return (result.rows[0]?.id as string | undefined) ?? null;
   } catch (error) {
     console.error('Error getting gear partner ID:', error);
     return null;
@@ -62,7 +62,7 @@ export async function getGearPartnerByUserId(userId: string): Promise<any | null
       category: partner.category,
       description: partner.description,
       contact: partner.contact,
-      rating: parseFloat(partner.rating),
+      rating: parseFloat(partner.rating as string),
       reviewCount: partner.review_count,
       isVerified: partner.is_verified,
       logoAssetId: partner.logo_asset_id,
@@ -88,7 +88,7 @@ export async function ensureGearPartnerExists(userId: string, userName: string, 
     );
     
     if (existing.rows.length > 0) {
-      return existing.rows[0].id;
+      return existing.rows[0].id as string;
     }
     
     // Create new partner record
@@ -107,7 +107,7 @@ export async function ensureGearPartnerExists(userId: string, userName: string, 
       ]
     );
     
-    return result.rows[0].id;
+    return result.rows[0].id as string;
   } catch (error) {
     console.error('Error ensuring gear partner exists:', error);
     throw error;
@@ -173,7 +173,7 @@ export async function checkGearAvailability(
       [gearItemId, startDate, endDate]
     );
     
-    const minAvailable = parseInt(result.rows[0]?.min_available || 0);
+    const minAvailable = parseInt(String(result.rows[0]?.min_available ?? 0));
     return minAvailable >= quantity;
   } catch (error) {
     console.error('Error checking gear availability:', error);
@@ -219,22 +219,22 @@ export async function calculateRentalCost(
     
     if (gear.price_per_month && remainingDays >= 30) {
       const months = Math.floor(remainingDays / 30);
-      rentalCost += months * parseFloat(gear.price_per_month);
+      rentalCost += months * parseFloat(gear.price_per_month as string);
       remainingDays -= months * 30;
     }
     
     if (gear.price_per_week && remainingDays >= 7) {
       const weeks = Math.floor(remainingDays / 7);
-      rentalCost += weeks * parseFloat(gear.price_per_week);
+      rentalCost += weeks * parseFloat(gear.price_per_week as string);
       remainingDays -= weeks * 7;
     }
     
-    rentalCost += remainingDays * parseFloat(gear.price_per_day);
+    rentalCost += remainingDays * parseFloat(gear.price_per_day as string);
     rentalCost *= quantity;
     
-    const depositAmount = parseFloat(gear.deposit_amount || 0) * quantity;
-    const insuranceCost = includeInsurance 
-      ? days * parseFloat(gear.insurance_cost_per_day || 0) * quantity 
+    const depositAmount = parseFloat(String(gear.deposit_amount ?? 0)) * quantity;
+    const insuranceCost = includeInsurance
+      ? days * parseFloat(String(gear.insurance_cost_per_day ?? 0)) * quantity
       : 0;
     
     return {
@@ -300,8 +300,8 @@ export async function getGearStats(userId: string): Promise<any> {
     
     const monthlyTrends = trendsResult.rows.map(row => ({
       month: row.month,
-      rentalsCount: parseInt(row.rentals_count),
-      revenue: parseFloat(row.revenue || 0)
+      rentalsCount: parseInt(row.rentals_count as string),
+      revenue: parseFloat(String(row.revenue ?? 0))
     }));
     
     // Top rented items
@@ -325,29 +325,29 @@ export async function getGearStats(userId: string): Promise<any> {
       name: row.name,
       category: row.category,
       rentalCount: row.rental_count,
-      totalRevenue: parseFloat(row.total_revenue || 0),
-      rating: parseFloat(row.rating || 0)
+      totalRevenue: parseFloat(String(row.total_revenue ?? 0)),
+      rating: parseFloat(String(row.rating ?? 0))
     }));
     
     return {
       items: {
-        total: parseInt(stats.total_items || 0),
-        active: parseInt(stats.active_items || 0)
+        total: parseInt(String(stats.total_items ?? 0)),
+        active: parseInt(String(stats.active_items ?? 0))
       },
       rentals: {
-        total: parseInt(stats.total_rentals || 0),
-        active: parseInt(stats.active_rentals || 0),
-        completed: parseInt(stats.completed_rentals || 0),
-        pending: parseInt(stats.pending_rentals || 0)
+        total: parseInt(String(stats.total_rentals ?? 0)),
+        active: parseInt(String(stats.active_rentals ?? 0)),
+        completed: parseInt(String(stats.completed_rentals ?? 0)),
+        pending: parseInt(String(stats.pending_rentals ?? 0))
       },
       revenue: {
-        total: parseFloat(stats.total_revenue || 0),
-        depositsHeld: parseFloat(stats.deposits_held || 0),
+        total: parseFloat(String(stats.total_revenue ?? 0)),
+        depositsHeld: parseFloat(String(stats.deposits_held ?? 0)),
         monthlyTrends
       },
       reviews: {
-        total: parseInt(stats.total_reviews || 0),
-        avgRating: parseFloat(stats.avg_rating || 0).toFixed(2)
+        total: parseInt(String(stats.total_reviews ?? 0)),
+        avgRating: parseFloat(String(stats.avg_rating ?? 0)).toFixed(2)
       },
       topItems
     };
@@ -445,15 +445,15 @@ export async function findAvailableGear(
       category: row.category,
       subcategory: row.subcategory,
       brand: row.brand,
-      pricePerDay: parseFloat(row.price_per_day),
-      pricePerWeek: row.price_per_week ? parseFloat(row.price_per_week) : null,
+      pricePerDay: parseFloat(row.price_per_day as string),
+      pricePerWeek: row.price_per_week ? parseFloat(row.price_per_week as string) : null,
       images: row.images,
       condition: row.condition,
       availableQuantity: row.available_quantity,
-      rating: parseFloat(row.rating),
+      rating: parseFloat(row.rating as string),
       reviewCount: row.review_count,
       partnerName: row.partner_name,
-      partnerRating: parseFloat(row.partner_rating)
+      partnerRating: parseFloat(row.partner_rating as string)
     }));
   } catch (error) {
     console.error('Error finding available gear:', error);

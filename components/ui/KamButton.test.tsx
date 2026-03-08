@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
+import '@testing-library/jest-dom/vitest';
 import { KamButton } from './KamButton';
 import { render, fireEvent } from '@testing-library/react';
 

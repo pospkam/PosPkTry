@@ -44,6 +44,20 @@ export interface Tour {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  // Привязка к маршруту
+  routeId?: string;
+  route?: {
+    id: string;
+    title: string;
+    category: string;
+    lat?: number;
+    lng?: number;
+    sourceUrl?: string;
+  };
+  // Optional legacy/API fields for backwards compatibility
+  category?: string;
+  price?: number;
+  name?: string;
   operator: {
     id: string;
     name: string;

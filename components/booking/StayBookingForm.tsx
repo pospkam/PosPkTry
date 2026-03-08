@@ -5,6 +5,7 @@ import { StayDatePicker } from './calendars/StayDatePicker';
 import { GuestSelector } from './ui/GuestSelector';
 import { LoadingSpinner } from '@/components/admin/shared';
 import { CloudPaymentsWidget } from '@/components/payments/CloudPaymentsWidget';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface StayBookingFormProps {
   accommodationId: string;
@@ -47,6 +48,7 @@ export function StayBookingForm({
   const [paymentId, setPaymentId] = useState<string | null>(null);
   const [showPayment, setShowPayment] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchAvailability();
@@ -325,8 +327,8 @@ export function StayBookingForm({
             currency="RUB"
             description={`Бронирование: ${accommodationName}`}
             invoiceId={paymentId}
-            accountId="user-id" // TODO: Получить из сессии
-            email="user@example.com" // TODO: Получить из сессии
+            accountId={user?.id ?? ''}
+            email={user?.email ?? ''}
             onSuccess={handlePaymentSuccess}
             onFail={handlePaymentFail}
             buttonText={`Оплатить ${totalPrice.toLocaleString('ru-RU')} ₽`}

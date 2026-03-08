@@ -1,24 +1,73 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldCheck, Phone, User, MapPin, AlertTriangle } from 'lucide-react';
+import { ShieldCheck, Phone, User, MapPin, AlertTriangle, Loader2, CheckCircle } from 'lucide-react';
 
+type SosStatus = 'idle' | 'locating' | 'sending' | 'sent' | 'error';
 
-/**
- * SOSButton — экстренная кнопка для вызова помощи
- * @returns {JSX.Element}
- * @remarks
- * - Интеграция с API POST /api/safety/sos для логирования события SOS (см. AGENTS.md)
- * - Rate-limiting: 1 раз в 10 минут на пользователя, хранить timestamp последнего запроса
- * - При нажатии "Отправить координаты" — получать геолокацию через navigator.geolocation, отправлять на сервер
- * - Обработка ошибок отправки (уведомление пользователю, не скрывать модалку при ошибке)
- * - Логировать все попытки вызова SOS (даже если API не ответил)
- * - Для production — тестировать только на staging!
- * - Accessibility: role="dialog", aria-label для модального окна, aria-label для кнопок и иконок, aria-live для алертов
- */
 function SOSButton({ className = '' }: { className?: string }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [sosStatus, setSosStatus] = useState<SosStatus>('idle');
+  const [coords, setCoords] = useState<{ lat: number; lng: number; accuracy: number } | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handleSendCoords = useCallback(async () => {
+    if (sosStatus === 'sending' || sosStatus === 'sent') return;
+
+    setSosStatus('locating');
+    setErrorMsg(null);
+
+    let position: GeolocationPosition | null = null;
+
+    if (typeof navigator !== 'undefined' && navigator.geolocation) {
+      try {
+        position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 8000,
+            maximumAge: 0,
+          });
+        });
+        setCoords({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+        });
+      } catch {
+        // Геолокация недоступна — отправляем без координат
+      }
+    }
+
+    setSosStatus('sending');
+
+    try {
+      const res = await fetch('/api/safety/sos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lat: position?.coords.latitude ?? null,
+          lng: position?.coords.longitude ?? null,
+          accuracy: position?.coords.accuracy ?? null,
+        }),
+      });
+
+      if (res.status === 429) {
+        setErrorMsg('SOS уже отправлен. Повторите через 10 минут.');
+        setSosStatus('error');
+        return;
+      }
+
+      setSosStatus('sent');
+    } catch {
+      setErrorMsg('Ошибка отправки. Звоните 112 напрямую.');
+      setSosStatus('error');
+    }
+  }, [sosStatus]);
+
+  const coordsLabel = coords
+    ? `${coords.lat.toFixed(5)}° N, ${coords.lng.toFixed(5)}° E (±${Math.round(coords.accuracy)} м)`
+    : 'Координаты не определены';
 
   return (
     <>
@@ -31,6 +80,7 @@ function SOSButton({ className = '' }: { className?: string }) {
       >
         SOS
       </motion.button>
+
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -54,45 +104,88 @@ function SOSButton({ className = '' }: { className?: string }) {
                 <ShieldCheck size={28} className="text-red-600" aria-hidden="true" />
                 <h2 className="text-xl font-bold text-gray-800">Экстренная помощь</h2>
               </div>
-              <p className="text-sm text-volcano mb-6 p-3 bg-gray-50 rounded-lg">
+
+              <p className="text-sm text-gray-600 mb-6 p-3 bg-gray-50 rounded-lg">
                 <MapPin size={16} className="inline mr-2" aria-hidden="true" />
-                Ваши координаты: 53.0148° N, 158.6542° E
+                {coordsLabel}
               </p>
+
               <div className="space-y-3 mb-8">
-                <motion.button className="w-full flex items-center justify-between p-4 bg-red-600 text-white rounded-xl font-semibold min-h-[44px]" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} aria-label="Позвонить в МЧС 112">
+                <motion.a
+                  href="tel:112"
+                  className="w-full flex items-center justify-between p-4 bg-red-600 text-white rounded-xl font-semibold min-h-[44px]"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  aria-label="Позвонить в МЧС 112"
+                >
                   <div className="flex items-center gap-3">
                     <Phone size={20} aria-hidden="true" />
                     МЧС: 112
                   </div>
                   <span>ЗВОНОК</span>
-                </motion.button>
-                <motion.button className="w-full flex items-center justify-between p-4 bg-red-600 text-white rounded-xl font-semibold min-h-[44px]" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} aria-label="Позвонить в скорую 103">
+                </motion.a>
+
+                <motion.a
+                  href="tel:103"
+                  className="w-full flex items-center justify-between p-4 bg-red-600 text-white rounded-xl font-semibold min-h-[44px]"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  aria-label="Позвонить в скорую 103"
+                >
                   <div className="flex items-center gap-3">
                     <Phone size={20} aria-hidden="true" />
                     Скорая: 103
                   </div>
                   <span>ЗВОНОК</span>
-                </motion.button>
-                <motion.button className="w-full flex items-center justify-between p-4 bg-ocean text-white rounded-xl font-semibold min-h-[44px]" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} aria-label="Связаться с гидом">
+                </motion.a>
+
+                <motion.button
+                  className="w-full flex items-center justify-between p-4 bg-blue-600 text-white rounded-xl font-semibold min-h-[44px]"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  aria-label="Связаться с гидом"
+                >
                   <div className="flex items-center gap-3">
                     <User size={20} aria-hidden="true" />
                     Связаться с гидом
                   </div>
                   <span>ЧАТ</span>
                 </motion.button>
-                <motion.button className="w-full flex items-center justify-between p-4 bg-moss text-white rounded-xl font-semibold min-h-[44px]" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} aria-label="Отправить координаты">
+
+                <motion.button
+                  className="w-full flex items-center justify-between p-4 bg-green-700 text-white rounded-xl font-semibold min-h-[44px] disabled:opacity-60"
+                  whileHover={{ scale: sosStatus === 'sent' ? 1 : 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleSendCoords}
+                  disabled={sosStatus === 'sending' || sosStatus === 'locating' || sosStatus === 'sent'}
+                  aria-label="Отправить координаты"
+                >
                   <div className="flex items-center gap-3">
-                    <MapPin size={20} aria-hidden="true" />
-                    Отправить координаты
+                    {sosStatus === 'sent' ? (
+                      <CheckCircle size={20} aria-hidden="true" />
+                    ) : (sosStatus === 'locating' || sosStatus === 'sending') ? (
+                      <Loader2 size={20} className="animate-spin" aria-hidden="true" />
+                    ) : (
+                      <MapPin size={20} aria-hidden="true" />
+                    )}
+                    {sosStatus === 'locating' && 'Определяю координаты...'}
+                    {sosStatus === 'sending' && 'Отправляю...'}
+                    {sosStatus === 'sent' && 'Координаты отправлены'}
+                    {(sosStatus === 'idle' || sosStatus === 'error') && 'Отправить координаты'}
                   </div>
-                  <span>ОТПРАВИТЬ</span>
+                  {(sosStatus === 'idle' || sosStatus === 'error') && <span>ОТПРАВИТЬ</span>}
                 </motion.button>
               </div>
+
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-4" aria-live="polite">
                 <AlertTriangle size={20} className="text-amber-600 inline mr-2 mb-2 block" aria-hidden="true" />
-                <p className="text-sm text-amber-700 leading-relaxed">
-                  Если нет связи: оставайтесь на месте · свисток 3 сигнала · сохраняйте тепло
-                </p>
+                {errorMsg ? (
+                  <p className="text-sm text-red-700 leading-relaxed">{errorMsg}</p>
+                ) : (
+                  <p className="text-sm text-amber-700 leading-relaxed">
+                    Если нет связи: оставайтесь на месте · свисток 3 сигнала · сохраняйте тепло
+                  </p>
+                )}
               </div>
             </motion.div>
           </motion.div>
@@ -101,3 +194,6 @@ function SOSButton({ className = '' }: { className?: string }) {
     </>
   );
 }
+
+export { SOSButton };
+export default SOSButton;

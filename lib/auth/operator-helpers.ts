@@ -19,7 +19,7 @@ export async function getOperatorPartnerId(userId: string): Promise<string | nul
     );
     
     if (result.rows.length > 0) {
-      return result.rows[0].id;
+      return result.rows[0].id as string;
     }
     
     // Auto-create partner profile if missing
@@ -45,7 +45,7 @@ export async function getOperatorPartnerId(userId: string): Promise<string | nul
       [userId, user.name || 'Оператор', JSON.stringify(contact)]
     );
     
-    return partnerResult.rows[0]?.id || null;
+    return (partnerResult.rows[0]?.id as string | undefined) ?? null;
   } catch (error) {
     console.error('Error getting operator partner ID:', error);
     return null;
@@ -64,7 +64,7 @@ export async function getGuidePartnerId(userId: string): Promise<string | null> 
       [userId]
     );
     
-    return result.rows[0]?.id || null;
+    return (result.rows[0]?.id as string | undefined) ?? null;
   } catch (error) {
     console.error('Error getting guide partner ID:', error);
     return null;
@@ -83,7 +83,7 @@ export async function getTransferPartnerId(userId: string): Promise<string | nul
       [userId]
     );
     
-    return result.rows[0]?.id || null;
+    return (result.rows[0]?.id as string | undefined) ?? null;
   } catch (error) {
     console.error('Error getting transfer partner ID:', error);
     return null;
@@ -136,7 +136,7 @@ export async function getPartnerByUserId(userId: string, category?: string): Pro
       category: partner.category,
       description: partner.description,
       contact: partner.contact,
-      rating: parseFloat(partner.rating),
+      rating: parseFloat(partner.rating as string),
       reviewCount: partner.review_count,
       isVerified: partner.is_verified,
       logoAssetId: partner.logo_asset_id,
@@ -162,7 +162,7 @@ export async function ensurePartnerExists(userId: string, userName: string, user
     );
     
     if (existing.rows.length > 0) {
-      return existing.rows[0].id;
+      return existing.rows[0].id as string;
     }
     
     // Map role to category
@@ -191,7 +191,7 @@ export async function ensurePartnerExists(userId: string, userName: string, user
       ]
     );
     
-    return result.rows[0].id;
+    return result.rows[0].id as string;
   } catch (error) {
     console.error('Error ensuring partner exists:', error);
     throw error;
@@ -264,10 +264,10 @@ export async function getOperatorStats(userId: string): Promise<any> {
         totalTours: cached.total_tours,
         activeTours: cached.active_tours,
         totalBookings: cached.total_bookings,
-        totalRevenue: parseFloat(cached.total_revenue),
-        avgRating: parseFloat(cached.avg_rating),
+        totalRevenue: parseFloat(cached.total_revenue as string),
+        avgRating: parseFloat(cached.avg_rating as string),
         totalReviews: cached.total_reviews,
-        completionRate: parseFloat(cached.completion_rate)
+        completionRate: parseFloat(cached.completion_rate as string)
       };
     }
     
@@ -334,13 +334,13 @@ export async function getOperatorStats(userId: string): Promise<any> {
     );
     
     return {
-      totalTours: parseInt(stats.total_tours),
-      activeTours: parseInt(stats.active_tours),
-      totalBookings: parseInt(stats.total_bookings),
-      totalRevenue: parseFloat(stats.total_revenue),
-      avgRating: parseFloat(stats.avg_rating),
-      totalReviews: parseInt(stats.total_reviews),
-      completionRate: parseFloat(stats.completion_rate)
+      totalTours: parseInt(String(stats.total_tours ?? 0)),
+      activeTours: parseInt(String(stats.active_tours ?? 0)),
+      totalBookings: parseInt(String(stats.total_bookings ?? 0)),
+      totalRevenue: parseFloat(String(stats.total_revenue ?? 0)),
+      avgRating: parseFloat(String(stats.avg_rating ?? 0)),
+      totalReviews: parseInt(String(stats.total_reviews ?? 0)),
+      completionRate: parseFloat(String(stats.completion_rate ?? 0))
     };
   } catch (error) {
     console.error('Error getting operator stats:', error);

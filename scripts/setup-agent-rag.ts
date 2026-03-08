@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Сборка базы знаний для агентов из инкрементной таблицы agent_route_knowledge.
- * Если таблица не заполнена, используется fallback на kamchatka_routes.
+ * Если таблица не заполнена, используется fallback на единый view v_kamchatka_routes_api.
  *
  * Запуск:
  *   node scripts/sync-agent-route-knowledge.js
@@ -119,7 +119,7 @@ async function loadRoutes(pool: { query: (sql: string) => Promise<{ rows: RouteR
 
   const fallbackResult = await pool.query(`
     SELECT
-      id::text AS id,
+      route_id::text AS id,
       title,
       description,
       category,
@@ -129,8 +129,8 @@ async function loadRoutes(pool: { query: (sql: string) => Promise<{ rows: RouteR
       source_name,
       metadata AS payload,
       NULL::text AS search_text
-    FROM kamchatka_routes
-    ORDER BY category, title
+    FROM v_kamchatka_routes_api
+    ORDER BY category, category_position
   `);
 
   return fallbackResult.rows;

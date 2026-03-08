@@ -225,7 +225,7 @@ export async function checkDataIntegrity(): Promise<{
       WHERE act.id IS NULL AND p.id IS NULL
     `);
     
-    if (orphanedAssets.rows[0].count > 0) {
+    if ((orphanedAssets.rows[0].count as number) > 0) {
       issues.push(`Found ${orphanedAssets.rows[0].count} orphaned assets`);
     }
     

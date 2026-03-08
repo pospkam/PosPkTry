@@ -46,7 +46,7 @@ async function createMigrationsTable(): Promise<void> {
 
 async function getExecutedMigrations(): Promise<string[]> {
   const result = await query(`SELECT version FROM ${MIGRATIONS_TABLE} ORDER BY version`);
-  return result.rows.map((row) => row.version);
+  return result.rows.map((row) => row.version as string);
 }
 
 async function markMigrationAsExecuted(version: string, name: string): Promise<void> {

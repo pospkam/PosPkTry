@@ -78,7 +78,7 @@ export function WeatherWidget({
       <div className="flex items-center gap-4 mb-4">
         <Icon size={compact ? 32 : 48} className={hasAlert ? 'text-red-600' : 'text-ocean'} />
         <div>
-          <p className="text-3xl md:text-4xl font-bold text-gray-800">{weather.temp}°</p>
+          <p className="text-3xl md:text-4xl font-bold text-gray-800">{weather.temperature}°</p>
           <p className="text-sm text-volcano capitalize">{weather.condition}</p>
         </div>
       </div>
@@ -97,16 +97,16 @@ export function WeatherWidget({
             </div>
             <div className="flex items-center gap-2 text-volcano">
               <Wind size={16} />
-              {weather.wind} м/с
+              {weather.windSpeed} м/с
             </div>
             <div className="text-volcano">{weather.visibility} км</div>
           </div>
           <div className="grid grid-cols-3 gap-4 pt-4 border-t border-white/20">
             {weather.forecast.slice(0, 3).map((day, i) => (
               <motion.div key={i} className="text-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.1 }}>
-                <p className="text-xs text-volcano">{day.day}</p>
+                <p className="text-xs text-volcano">{new Date(day.date).toLocaleDateString('ru-RU', { weekday: 'short' })}</p>
                 <Sun size={20} className="mx-auto mb-1 text-ocean" />
-                <p className="font-semibold">{day.min}°–{day.max}°</p>
+                <p className="font-semibold">{day.temperature.min}°–{day.temperature.max}°</p>
               </motion.div>
             ))}
           </div>

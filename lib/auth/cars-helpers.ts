@@ -14,7 +14,7 @@ export async function getCarsPartnerId(userId: string): Promise<string | null> {
       `SELECT id FROM partners WHERE user_id = $1 AND category = 'cars' LIMIT 1`,
       [userId]
     );
-    return result.rows.length > 0 ? result.rows[0].id : null;
+    return result.rows.length > 0 ? (result.rows[0].id as string) : null;
   } catch (error) {
     console.error('Error getting cars partner ID:', error);
     return null;
@@ -44,7 +44,7 @@ export async function ensureCarsPartnerExists(userId: string): Promise<string> {
        RETURNING id`,
       [userId, user.name || 'Партнёр автопарка', JSON.stringify(contact)]
     );
-    partnerId = result.rows[0].id;
+    partnerId = result.rows[0].id as string;
   }
   
   return partnerId as string;
@@ -110,10 +110,10 @@ export async function checkCarAvailability(
     let allAvailable = true;
 
     for (const row of result.rows) {
-      if (row.available_quantity > 0) {
-        availableDates.push(new Date(row.date));
+      if ((row.available_quantity as number) > 0) {
+        availableDates.push(new Date(row.date as string));
       } else {
-        unavailableDates.push(new Date(row.date));
+        unavailableDates.push(new Date(row.date as string));
         allAvailable = false;
       }
     }
@@ -163,7 +163,13 @@ export async function calculateRentalCost(
       throw new Error('Car not found');
     }
 
-    const car = carResult.rows[0];
+    const car = carResult.rows[0] as {
+      price_per_day: number;
+      price_per_week: number | null;
+      price_per_month: number | null;
+      insurance_daily_cost: number | null;
+      deposit_amount: number;
+    };
     let rentalCost = 0;
 
     // Calculate optimal pricing

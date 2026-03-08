@@ -90,7 +90,7 @@ export class LoyaltySystem {
         ) AND status = 'success'
       `, [userId]);
 
-      const totalSpent = parseFloat(spentResult.rows[0].total_spent);
+      const totalSpent = parseFloat(spentResult.rows[0].total_spent as string);
 
       // Получаем текущий уровень
       const currentLevel = this.getUserLevel(totalSpent);
@@ -107,9 +107,9 @@ export class LoyaltySystem {
         WHERE user_id = $1 AND (expires_at IS NULL OR expires_at > NOW())
       `, [userId]);
 
-      const totalEarned = parseInt(pointsResult.rows[0].total_earned);
-      const totalRedeemed = parseInt(pointsResult.rows[0].total_redeemed);
-      const availablePoints = parseInt(pointsResult.rows[0].available_points);
+      const totalEarned = parseInt(pointsResult.rows[0].total_earned as string);
+      const totalRedeemed = parseInt(pointsResult.rows[0].total_redeemed as string);
+      const availablePoints = parseInt(pointsResult.rows[0].available_points as string);
 
       // Получаем последние транзакции
       const transactionsResult = await query(`
@@ -120,14 +120,14 @@ export class LoyaltySystem {
       `, [userId]);
 
       const transactions = transactionsResult.rows.map(row => ({
-        id: row.id,
-        userId: row.user_id,
-        type: row.type,
-        amount: parseInt(row.amount),
-        description: row.description,
-        bookingId: row.booking_id,
-        createdAt: row.created_at,
-        expiresAt: row.expires_at
+        id: row.id as string,
+        userId: row.user_id as string,
+        type: row.type as 'earn' | 'redeem' | 'expire' | 'refund',
+        amount: parseInt(row.amount as string),
+        description: row.description as string,
+        bookingId: row.booking_id as string | undefined,
+        createdAt: row.created_at as Date,
+        expiresAt: row.expires_at as Date | undefined
       }));
 
       return {
@@ -323,7 +323,15 @@ export class LoyaltySystem {
         };
       }
 
-      const promo = promoResult.rows[0];
+      const promo = promoResult.rows[0] as {
+        id: string;
+        discount_type: string;
+        discount_value: number;
+        max_uses: number;
+        current_uses: number;
+        is_active: boolean;
+        expires_at: string | null;
+      };
 
       if (promo.current_uses >= promo.max_uses) {
         return {
@@ -390,14 +398,20 @@ export class LoyaltySystem {
         )
       `, [operatorId]);
 
-      const row = result.rows[0];
+      const row = result.rows[0] as {
+        total_users: string;
+        active_users: string;
+        total_points_earned: string;
+        total_points_redeemed: string;
+        average_order_value: string;
+      };
       return {
         totalUsers: parseInt(row.total_users),
         activeUsers: parseInt(row.active_users),
         totalPointsEarned: parseInt(row.total_points_earned),
         totalPointsRedeemed: parseInt(row.total_points_redeemed),
         averageOrderValue: parseFloat(row.average_order_value),
-        retentionRate: row.total_users > 0 ? (row.active_users / row.total_users) : 0
+        retentionRate: parseInt(row.total_users) > 0 ? (parseInt(row.active_users) / parseInt(row.total_users)) : 0
       };
 
     } catch (error) {

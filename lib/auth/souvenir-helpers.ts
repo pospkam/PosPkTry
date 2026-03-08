@@ -14,7 +14,7 @@ export async function getSouvenirPartnerId(userId: string): Promise<string | nul
       `SELECT id FROM partners WHERE user_id = $1 AND category = 'souvenir' LIMIT 1`,
       [userId]
     );
-    return result.rows.length > 0 ? result.rows[0].id : null;
+    return result.rows.length > 0 ? (result.rows[0].id as string) : null;
   } catch (error) {
     console.error('Error getting souvenir partner ID:', error);
     return null;
@@ -44,7 +44,7 @@ export async function ensureSouvenirPartnerExists(userId: string): Promise<strin
        RETURNING id`,
       [userId, user.name || 'Souvenir Partner', JSON.stringify(contact)]
     );
-    partnerId = result.rows[0].id;
+    partnerId = result.rows[0].id as string;
   }
   
   return partnerId as string;
@@ -108,8 +108,13 @@ export async function checkSouvenirStock(souvenirId: string, quantity: number): 
       return { available: false, currentStock: 0, availableQuantity: 0 };
     }
 
-    const item = result.rows[0];
-    
+    const item = result.rows[0] as {
+      is_active: boolean;
+      stock_quantity: number;
+      available_quantity: number;
+      reserved_quantity: number;
+    };
+
     return {
       available: item.is_active && item.available_quantity >= quantity,
       currentStock: item.stock_quantity,
@@ -151,7 +156,14 @@ export async function calculateOrderTotal(items: Array<{
         continue;
       }
 
-      const souvenir = result.rows[0];
+      const souvenir = result.rows[0] as {
+        id: string;
+        name: string;
+        price: number;
+        discount_price: number | null;
+        is_active: boolean;
+        available_quantity: number;
+      };
 
       if (!souvenir.is_active) {
         errors.push(`Товар "${souvenir.name}" недоступен`);
@@ -217,7 +229,18 @@ export async function applyCouponDiscount(
       return { valid: false, discountAmount: 0, error: 'Купон не найден' };
     }
 
-    const coupon = result.rows[0];
+    const coupon = result.rows[0] as {
+      id: string;
+      discount_type: string;
+      discount_value: number;
+      min_purchase: number | null;
+      max_discount: number | null;
+      valid_from: string;
+      valid_to: string;
+      usage_limit: number | null;
+      used_count: number;
+      is_active: boolean;
+    };
     const now = new Date();
 
     if (!coupon.is_active) {
@@ -466,7 +489,7 @@ export async function updateSouvenirStock(
       throw new Error('Souvenir not found');
     }
 
-    const newQuantity = Math.max(0, currentResult.rows[0].stock_quantity + quantityChange);
+    const newQuantity = Math.max(0, (currentResult.rows[0].stock_quantity as number) + quantityChange);
 
     await query(
       `UPDATE souvenirs SET stock_quantity = $1 WHERE id = $2`,

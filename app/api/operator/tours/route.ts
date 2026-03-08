@@ -109,15 +109,21 @@ export async function GET(request: NextRequest) {
         t.review_count,
         t.created_at,
         t.updated_at,
+        t.route_id,
+        kr.title     AS route_title,
+        kr.category  AS route_category,
+        kr.lat       AS route_lat,
+        kr.lng       AS route_lng,
         COALESCE(COUNT(DISTINCT b.id), 0) as bookings_count,
         COALESCE(SUM(CASE WHEN b.status IN ('confirmed', 'completed') THEN b.total_price ELSE 0 END), 0) as total_revenue,
         ARRAY_AGG(DISTINCT a.url) FILTER (WHERE a.url IS NOT NULL) as images
       FROM tours t
+      LEFT JOIN kamchatka_routes kr ON t.route_id = kr.id
       LEFT JOIN bookings b ON t.id = b.tour_id
       LEFT JOIN tour_images ti ON t.id = ti.tour_id
       LEFT JOIN assets a ON ti.asset_id = a.id
       ${whereClause}
-      GROUP BY t.id
+      GROUP BY t.id, kr.id
       ORDER BY t.${sortBy} ${sortOrder}
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
@@ -152,7 +158,15 @@ export async function GET(request: NextRequest) {
       bookingsCount: parseInt(row.bookings_count) || 0,
       totalRevenue: parseFloat(row.total_revenue) || 0,
       createdAt: new Date(row.created_at),
-      updatedAt: new Date(row.updated_at)
+      updatedAt: new Date(row.updated_at),
+      routeId: (row.route_id as string | null) ?? undefined,
+      route: row.route_id ? {
+        id: row.route_id as string,
+        title: row.route_title as string,
+        category: row.route_category as string,
+        lat: row.route_lat != null ? parseFloat(row.route_lat as string) : undefined,
+        lng: row.route_lng != null ? parseFloat(row.route_lng as string) : undefined,
+      } : undefined,
     }));
 
     const response: PaginatedResponse<OperatorTour> = {
@@ -319,16 +333,16 @@ export async function POST(request: NextRequest) {
         price,
         currency,
         season,
+        route_id,
         is_active,
         includes,
         excludes,
         created_at,
         updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW(), NOW())
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, NOW(), NOW())
       RETURNING id, name, slug, is_active, created_at
     `;
 
-    // Стандартные включения/исключения на основе fishingkam.ru
     const defaultIncludes = body.includes || [
       'Размещение на базе',
       'Комплект снаряжения',
@@ -354,7 +368,8 @@ export async function POST(request: NextRequest) {
       body.price,
       body.currency || 'RUB',
       body.season || 'year-round',
-      false, // Новые туры создаются как черновики (draft)
+      body.routeId || null,
+      false,
       JSON.stringify(defaultIncludes),
       JSON.stringify(defaultExcludes)
     ];

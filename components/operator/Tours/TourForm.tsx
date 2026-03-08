@@ -1,7 +1,17 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TourFormData } from '@/types/operator';
+
+interface KamchatkaRoute {
+  id: string;
+  title: string;
+  category: string;
+  description: string;
+  lat: number | null;
+  lng: number | null;
+  sourceName: string | null;
+}
 
 interface TourFormProps {
   initialData?: Partial<TourFormData>;
@@ -12,10 +22,11 @@ interface TourFormProps {
 
 export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: TourFormProps) {
   const [loading, setLoading] = useState(false);
+  const [routes, setRoutes] = useState<KamchatkaRoute[]>([]);
   const [formData, setFormData] = useState<TourFormData>({
     name: initialData?.name || '',
     description: initialData?.description || '',
-    category: initialData?.category || 'adventure',
+    category: initialData?.category || 'fishing',
     difficulty: initialData?.difficulty || 'medium',
     duration: initialData?.duration || 4,
     maxGroupSize: initialData?.maxGroupSize || 15,
@@ -25,8 +36,23 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
     includes: initialData?.includes || [],
     excludes: initialData?.excludes || [],
     itinerary: initialData?.itinerary || [],
-    images: initialData?.images || []
+    images: initialData?.images || [],
+    routeId: initialData?.routeId || '',
   });
+
+  // Загрузка маршрутов при смене категории
+  useEffect(() => {
+    const fetchRoutes = async () => {
+      try {
+        const res = await fetch(`/api/kamchatka-routes?category=${formData.category}&limit=100`);
+        const json = await res.json();
+        if (json.success) setRoutes(json.data);
+      } catch {
+        setRoutes([]);
+      }
+    };
+    fetchRoutes();
+  }, [formData.category]);
 
   const [newInclude, setNewInclude] = useState('');
   const [newExclude, setNewExclude] = useState('');
@@ -125,11 +151,19 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
                 onChange={(e) => handleChange('category', e.target.value)}
                 className="w-full px-4 py-3 bg-white/10 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
               >
-                <option value="adventure">Приключения</option>
-                <option value="nature">Природа</option>
-                <option value="culture">Культура</option>
-                <option value="extreme">Экстрим</option>
-                <option value="relaxation">Отдых</option>
+                <option value="fishing">Рыбалка</option>
+                <option value="volcanoes">Вулканы</option>
+                <option value="thermal">Термы / Горячие источники</option>
+                <option value="trekking">Треккинг / Пешие туры</option>
+                <option value="snowmobile">Снегоход</option>
+                <option value="jeep">Джип-туры</option>
+                <option value="helicopter">Вертолётные туры</option>
+                <option value="bears">Медведи / Дикая природа</option>
+                <option value="lakes">Озёра</option>
+                <option value="mountains">Горы</option>
+                <option value="rivers">Реки</option>
+                <option value="eco">Эко-туры</option>
+                <option value="combo">Комбо-тур</option>
               </select>
             </div>
 
@@ -138,7 +172,7 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
               <select
                 id="tour-difficulty"
                 value={formData.difficulty}
-                onChange={(e) => handleChange('difficulty', e.target.value as any)}
+                onChange={(e) => handleChange('difficulty', e.target.value as 'easy' | 'medium' | 'hard')}
                 className="w-full px-4 py-3 bg-white/10 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
               >
                 <option value="easy">Легко</option>
@@ -146,6 +180,30 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
                 <option value="hard">Сложно</option>
               </select>
             </div>
+          </div>
+
+          {/* Базовый маршрут */}
+          <div>
+            <label htmlFor="tour-route" className="block text-white/70 mb-2">
+              Базовый маршрут
+              <span className="ml-2 text-white/40 text-sm font-normal">(необязательно — маршрут из каталога Камчатки)</span>
+            </label>
+            <select
+              id="tour-route"
+              value={formData.routeId || ''}
+              onChange={(e) => handleChange('routeId', e.target.value || undefined)}
+              className="w-full px-4 py-3 bg-white/10 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+            >
+              <option value="">— без привязки к маршруту —</option>
+              {routes.map(r => (
+                <option key={r.id} value={r.id}>
+                  {r.title}{r.sourceName ? ` (${r.sourceName})` : ''}
+                </option>
+              ))}
+            </select>
+            {routes.length === 0 && (
+              <p className="text-white/30 text-sm mt-1">Нет маршрутов для категории «{formData.category}»</p>
+            )}
           </div>
         </div>
       </section>

@@ -28,6 +28,15 @@ interface TourResponse {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  routeId: string | null;
+  route: {
+    id: string;
+    title: string;
+    category: string;
+    lat: number | null;
+    lng: number | null;
+    sourceUrl: string | null;
+  } | null;
 }
 
 // GET /api/tours - Получение списка туров
@@ -51,31 +60,31 @@ export async function GET(request: NextRequest) {
     let paramIndex = 1;
 
     if (category) {
-      whereConditions.push(`category = $${paramIndex}`);
+      whereConditions.push(`t.category = $${paramIndex}`);
       queryParams.push(category);
       paramIndex++;
     }
 
     if (search) {
-      whereConditions.push(`(COALESCE(title, name, '') ILIKE $${paramIndex} OR description ILIKE $${paramIndex})`);
+      whereConditions.push(`(COALESCE(t.title, t.name, '') ILIKE $${paramIndex} OR t.description ILIKE $${paramIndex})`);
       queryParams.push(`%${search}%`);
       paramIndex++;
     }
 
     if (minPrice) {
-      whereConditions.push(`COALESCE("pricePerDay", price) >= $${paramIndex}`);
+      whereConditions.push(`COALESCE(t."pricePerDay", t.price) >= $${paramIndex}`);
       queryParams.push(parseInt(minPrice));
       paramIndex++;
     }
 
     if (maxPrice) {
-      whereConditions.push(`COALESCE("pricePerDay", price) <= $${paramIndex}`);
+      whereConditions.push(`COALESCE(t."pricePerDay", t.price) <= $${paramIndex}`);
       queryParams.push(parseInt(maxPrice));
       paramIndex++;
     }
 
     if (difficulty) {
-      whereConditions.push(`difficulty = $${paramIndex}`);
+      whereConditions.push(`t.difficulty = $${paramIndex}`);
       queryParams.push(difficulty);
       paramIndex++;
     }
@@ -83,10 +92,18 @@ export async function GET(request: NextRequest) {
     const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
 
     const toursQuery = `
-      SELECT *
-      FROM tours
+      SELECT
+        t.*,
+        kr.id        AS route_kr_id,
+        kr.title     AS route_title,
+        kr.category  AS route_category,
+        kr.lat       AS route_lat,
+        kr.lng       AS route_lng,
+        kr.source_url AS route_source_url
+      FROM tours t
+      LEFT JOIN kamchatka_routes kr ON t.route_id = kr.id
       ${whereClause}
-      ORDER BY "createdAt" DESC NULLS LAST, "updatedAt" DESC NULLS LAST
+      ORDER BY t."createdAt" DESC NULLS LAST, t."updatedAt" DESC NULLS LAST
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
 
@@ -94,7 +111,7 @@ export async function GET(request: NextRequest) {
 
     const result = await query(toursQuery, queryParams);
 
-    const countQuery = `SELECT COUNT(*) as total FROM tours ${whereClause}`;
+    const countQuery = `SELECT COUNT(*) as total FROM tours t LEFT JOIN kamchatka_routes kr ON t.route_id = kr.id ${whereClause}`;
     const countResult = await query(countQuery, queryParams.slice(0, -2));
     const total = parseInt(countResult.rows[0]?.total || '0');
 
@@ -121,6 +138,15 @@ export async function GET(request: NextRequest) {
       isActive: row.is_active ?? true,
       createdAt: new Date(row.createdAt || row.created_at || Date.now()),
       updatedAt: new Date(row.updatedAt || row.updated_at || Date.now()),
+      routeId: (row.route_id as string | null) ?? null,
+      route: row.route_kr_id ? {
+        id: row.route_kr_id as string,
+        title: row.route_title as string,
+        category: row.route_category as string,
+        lat: row.route_lat != null ? parseFloat(row.route_lat as string) : null,
+        lng: row.route_lng != null ? parseFloat(row.route_lng as string) : null,
+        sourceUrl: (row.route_source_url as string | null) ?? null,
+      } : null,
     }));
 
     return NextResponse.json({
@@ -174,6 +200,7 @@ export async function POST(request: NextRequest) {
       minGroupSize,
       operatorId,
       guideId,
+      routeId,
     } = body;
 
     let effectiveOperatorId = operatorId;
@@ -208,10 +235,10 @@ export async function POST(request: NextRequest) {
         name, description, short_description, category, difficulty,
         duration, price, currency, season, coordinates,
         requirements, included, not_included,
-        max_group_size, min_group_size, operator_id, guide_id,
+        max_group_size, min_group_size, operator_id, guide_id, route_id,
         is_active, created_at, updated_at
       ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, true, NOW(), NOW()
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, true, NOW(), NOW()
       ) RETURNING id
     `;
 
@@ -233,6 +260,7 @@ export async function POST(request: NextRequest) {
       minGroupSize || 1,
       effectiveOperatorId,
       guideId || null,
+      routeId || null,
     ]);
 
     return NextResponse.json({

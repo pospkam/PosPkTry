@@ -165,6 +165,14 @@ export interface OperatorTour {
   totalRevenue: number;
   createdAt: Date;
   updatedAt: Date;
+  routeId?: string;
+  route?: {
+    id: string;
+    title: string;
+    category: string;
+    lat?: number;
+    lng?: number;
+  };
 }
 
 // Форма создания/редактирования тура
@@ -187,6 +195,7 @@ export interface TourFormData {
     activities: string[];
   }[];
   images: File[] | string[];
+  routeId?: string;
 }
 
 

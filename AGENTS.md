@@ -62,10 +62,13 @@ USP:
 ## Текущее состояние (факты)
 
 Build:          ✅ npm run build проходит
+TypeScript:     ✅ 0 ошибок (tsc --noEmit)
 Страниц:        91 (App Router)
-API endpoints:  208
+API endpoints:  210+
 Роли:           6 (полностью реализованы)
-БД миграций:    16 (прямой SQL)
+БД миграций:    23 (прямой SQL)
+Туров в БД:     11 (10 рыбалка, 1 комбо)
+Маршрутов:      129 (kamchatka_routes + agent_route_knowledge)
 Контрибьюторы:  3
 ---
 
@@ -447,7 +450,7 @@ try {
 ```sql
 users               -- id UUID, email, password_hash, role, created_at, deleted_at
 partners            -- id, user_id, type(operator|agent), company_name, verified
-tours               -- id, operator_id, title, description, price, status, eco_points_reward
+tours               -- id, operator_id, title, description, price, status, eco_points_reward, route_id (FK→kamchatka_routes)
 bookings            -- id, tour_id, tourist_id, status, payment_status, created_at
 reviews             -- id, booking_id, tourist_id, rating, text, photos JSONB
 transfers           -- id, transfer_operator_id, from_location, to_location, price
@@ -456,11 +459,19 @@ drivers             -- id, transfer_operator_id, user_id, license_number
 chat_sessions       -- id, user_id, messages JSONB, model_used, created_at
 eco_points          -- id, user_id, points, action_type, reference_id, created_at
 notifications       -- id, user_id, type, payload JSONB, read_at
+sos_events          -- id, user_id, lat, lng, status, created_at
+
+-- Маршруты (постоянные единицы — география Камчатки)
+kamchatka_routes         -- id, title, category, lat, lng, source_url, source_name
+agent_route_knowledge    -- id, route_id (FK), title, category, description, full_text (GIN FTS)
+v_kamchatka_routes_api   -- VIEW: нормализованные данные для API
+v_kamchatka_route_groups_api -- VIEW: группировка по категориям
 
 -- UUID для всех id (gen_random_uuid())
 -- created_at + updated_at на каждой таблице
 -- Soft delete через deleted_at
--- Новая фича = новая миграция (017_...) — существующие не трогать
+-- Новая фича = новая миграция (024_...) — существующие не трогать
+-- Туры читать маршруты только из v_kamchatka_routes_api (не напрямую из kamchatka_routes)
 ```
 
 ---
@@ -543,7 +554,7 @@ A/B тесты (приоритет):
 - lib/auth.ts — JWT логика
 - app/api/payments/ — CloudPayments webhook
 - app/api/safety/sos — SOS (изменения → staging, не prod)
-- migrations/001–016 — только добавлять новые
+- migrations/001–023 — только добавлять новые (следующая: 024_...)
 
 ---
 
@@ -575,18 +586,20 @@ npm run db:seed    # Тестовые данные
 9. Новые env переменные → .env.local.example
 10. Бизнес-логику комментируй (eco-points, комиссии, роли)
 
+### Единые правила маршрутов (для агентов и API)
+
+1. Единый источник чтения маршрутов: `v_kamchatka_routes_api`.
+2. Группы маршрутов брать только из `v_kamchatka_route_groups_api`.
+3. Не читать `kamchatka_routes` напрямую в новых API/скриптах, кроме импорта.
+4. Полная синхронизация базы маршрутов: `npm run db:import:kamchatka-routes -- --reset`.
+5. После импорта всегда запускать `npm run db:sync:agent-routes`.
+6. Для RAG использовать `agent_route_knowledge`, fallback только на `v_kamchatka_routes_api`.
+
 ---
 
 > Статус: MVP реализован, ещё не запущен с реальными пользователями.
 > Главный следующий шаг: деплой → первые бронирования → реальные метрики.
-> Обновлено: Февраль 2026
-
-## База данных
-
-**Хост:** 8ad609fcbfd2ad0bd069be47.twc1.net  
-**Таблицы:** tours, users, partners, bookings, transfers
-
-Миграции в `lib/database/migrations/`
+> Обновлено: Март 2026
 
 ## Деплой
 
@@ -639,10 +652,13 @@ gitpod automations task start deploy
 
 | Endpoint | Описание |
 |----------|----------|
-| GET /api/tours | Список туров с фильтрами |
-| GET /api/tours/[id] | Детали тура |
-| POST /api/tours | Создание тура |
-| GET /api/operator/tours | Туры оператора |
+| GET /api/tours | Список туров с фильтрами (category, difficulty, maxPrice, search) |
+| GET /api/tours/[id] | Детали тура (JOIN с kamchatka_routes + partners) |
+| POST /api/tours | Создание тура (operator) |
+| GET /api/operator/tours | Туры оператора (авторизация) |
+| GET /api/kamchatka-routes | Публичный список маршрутов из v_kamchatka_routes_api |
+| GET /api/profile | Профиль текущего пользователя |
+| POST /api/safety/sos | SOS-сигнал с геолокацией |
 
 ## Environment Variables
 
@@ -786,13 +802,20 @@ border-radius: 20px;
 ```typescript
 interface Tour {
   id: string;
-  name: string;
+  name: string;           // нормализованное имя (title || name из БД)
   description: string;
-  price: number;
-  duration: number;
-  location: string;
+  price: number;          // pricePerDay || price
+  duration: number;       // в днях
   rating: number;
+  reviewCount: number;
   images: string[];
+  included: string[];
+  maxGroupSize: number;
+  minGroupSize: number;
+  difficulty: 'easy' | 'medium' | 'hard';
+  routeId?: string;
+  route?: { id: string; title: string; category: string; lat?: number; lng?: number } | null;
+  operator?: { id: string; name: string; rating: number; phone: string; email: string } | null;
 }
 ```
 
@@ -815,10 +838,6 @@ interface Tour {
 - Международная версия (EN, ZH)
 
 ---
-
-> Статус: MVP реализован, ещё не запущен с реальными пользователями.
-> Главный следующий шаг: деплой → первые бронирования → реальные метрики.
-> Обновлено: Февраль 2026
 
 ## Cursor Cloud specific instructions
 

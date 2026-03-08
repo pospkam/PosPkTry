@@ -458,14 +458,21 @@ export class TransferPaymentSystem {
         WHERE created_at >= NOW() - INTERVAL '${period}'
       `);
 
-      const row = result.rows[0];
+      const row = result.rows[0] as {
+        total_payments: string;
+        successful_payments: string;
+        total_amount: string | null;
+        average_amount: string | null;
+        refunds: string;
+        refund_amount: string | null;
+      };
       return {
         totalPayments: parseInt(row.total_payments),
         successfulPayments: parseInt(row.successful_payments),
-        totalAmount: parseFloat(row.total_amount || 0),
-        averageAmount: parseFloat(row.average_amount || 0),
+        totalAmount: parseFloat(String(row.total_amount ?? 0)),
+        averageAmount: parseFloat(String(row.average_amount ?? 0)),
         refunds: parseInt(row.refunds),
-        refundAmount: parseFloat(row.refund_amount || 0)
+        refundAmount: parseFloat(String(row.refund_amount ?? 0))
       };
 
     } catch (error) {

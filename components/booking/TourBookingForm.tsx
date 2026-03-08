@@ -5,6 +5,7 @@ import { TourDatePicker } from './calendars/TourDatePicker';
 import { GuestSelector } from './ui/GuestSelector';
 import { LoadingSpinner } from '@/components/admin/shared';
 import { CloudPaymentsWidget } from '@/components/payments/CloudPaymentsWidget';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface TourBookingFormProps {
   tourId: string;
@@ -50,6 +51,7 @@ export function TourBookingForm({
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [paymentId, setPaymentId] = useState<string | null>(null);
   const [showPayment, setShowPayment] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchAvailability();
@@ -257,8 +259,8 @@ export function TourBookingForm({
             currency="RUB"
             description={`Бронирование тура: ${tourName}`}
             invoiceId={paymentId || bookingId}
-            accountId="user-id" // TODO: Получить из сессии
-            email="user@example.com" // TODO: Получить из сессии
+            accountId={user?.id ?? ''}
+            email={user?.email ?? ''}
             onSuccess={handlePaymentSuccess}
             onFail={handlePaymentFail}
             buttonText={`Оплатить ${calculateTotalPrice().toLocaleString('ru-RU')} ₽`}

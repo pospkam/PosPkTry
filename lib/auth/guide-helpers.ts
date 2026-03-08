@@ -18,7 +18,7 @@ export async function getGuidePartnerId(userId: string): Promise<string | null> 
       [userId]
     );
     
-    return result.rows[0]?.id || null;
+    return (result.rows[0]?.id as string | undefined) ?? null;
   } catch (error) {
     console.error('Error getting guide partner ID:', error);
     return null;
@@ -70,7 +70,7 @@ export async function getGuidePartnerByUserId(userId: string): Promise<any | nul
       category: partner.category,
       description: partner.description,
       contact: partner.contact,
-      rating: parseFloat(partner.rating),
+      rating: parseFloat(partner.rating as string),
       reviewCount: partner.review_count,
       isVerified: partner.is_verified,
       logoAssetId: partner.logo_asset_id,
@@ -80,10 +80,10 @@ export async function getGuidePartnerByUserId(userId: string): Promise<any | nul
       specializations: partner.specializations,
       bio: partner.bio,
       location: partner.latitude && partner.longitude ? {
-        lat: parseFloat(partner.latitude),
-        lng: parseFloat(partner.longitude)
+        lat: parseFloat(partner.latitude as string),
+        lng: parseFloat(partner.longitude as string)
       } : null,
-      totalEarnings: parseFloat(partner.total_earnings || 0),
+      totalEarnings: parseFloat(String(partner.total_earnings ?? 0)),
       isAvailable: partner.is_available,
       createdAt: partner.created_at,
       updatedAt: partner.updated_at
@@ -106,7 +106,7 @@ export async function ensureGuidePartnerExists(userId: string, userName: string,
     );
     
     if (existing.rows.length > 0) {
-      return existing.rows[0].id;
+      return existing.rows[0].id as string;
     }
     
     // Create new partner record
@@ -126,7 +126,7 @@ export async function ensureGuidePartnerExists(userId: string, userName: string,
       ]
     );
     
-    return result.rows[0].id;
+    return result.rows[0].id as string;
   } catch (error) {
     console.error('Error ensuring guide partner exists:', error);
     throw error;
@@ -277,7 +277,7 @@ export async function recordGuideEarnings(
       [guideId, bookingId, tourId, amount, commissionRate, date]
     );
     
-    return result.rows[0].id;
+    return result.rows[0].id as string;
   } catch (error) {
     console.error('Error recording guide earnings:', error);
     throw error;
@@ -334,8 +334,8 @@ export async function getGuideStats(userId: string): Promise<any> {
     
     const monthlyTrends = trendsResult.rows.map(row => ({
       month: row.month,
-      toursCount: parseInt(row.tours_count),
-      earnings: parseFloat(row.earnings || 0)
+      toursCount: parseInt(row.tours_count as string),
+      earnings: parseFloat(String(row.earnings ?? 0))
     }));
     
     // Upcoming schedule
@@ -350,23 +350,23 @@ export async function getGuideStats(userId: string): Promise<any> {
     
     return {
       tours: {
-        completed: parseInt(stats.completed_tours || 0),
-        scheduled: parseInt(stats.scheduled_tours || 0),
-        active: parseInt(stats.active_tours || 0)
+        completed: parseInt(String(stats.completed_tours ?? 0)),
+        scheduled: parseInt(String(stats.scheduled_tours ?? 0)),
+        active: parseInt(String(stats.active_tours ?? 0))
       },
       reviews: {
-        total: parseInt(stats.total_reviews || 0),
-        avgRating: parseFloat(stats.avg_rating || 0).toFixed(2)
+        total: parseInt(String(stats.total_reviews ?? 0)),
+        avgRating: parseFloat(String(stats.avg_rating ?? 0)).toFixed(2)
       },
       earnings: {
-        totalPaid: parseFloat(stats.total_paid_earnings || 0),
-        pending: parseFloat(stats.pending_earnings || 0),
+        totalPaid: parseFloat(String(stats.total_paid_earnings ?? 0)),
+        pending: parseFloat(String(stats.pending_earnings ?? 0)),
         monthlyTrends
       },
       certifications: {
-        verified: parseInt(stats.verified_certifications || 0)
+        verified: parseInt(String(stats.verified_certifications ?? 0))
       },
-      upcoming: parseInt(upcomingResult.rows[0].count || 0)
+      upcoming: parseInt(String(upcomingResult.rows[0].count ?? 0))
     };
   } catch (error) {
     console.error('Error getting guide stats:', error);
@@ -505,15 +505,15 @@ export async function findAvailableGuides(
     return result.rows.map(row => ({
       id: row.id,
       name: row.name,
-      rating: parseFloat(row.rating),
+      rating: parseFloat(row.rating as string),
       reviewCount: row.review_count,
       experienceYears: row.experience_years,
       specializations: row.specializations,
       languages: row.languages,
       bio: row.bio,
       location: row.latitude && row.longitude ? {
-        lat: parseFloat(row.latitude),
-        lng: parseFloat(row.longitude)
+        lat: parseFloat(row.latitude as string),
+        lng: parseFloat(row.longitude as string)
       } : null,
       logoUrl: row.logo_url
     }));
@@ -548,8 +548,8 @@ export async function getGuideExpertiseZones(guideId: string): Promise<any[]> {
       tourId: row.id,
       title: row.title,
       location: {
-        lat: parseFloat(row.latitude),
-        lng: parseFloat(row.longitude)
+        lat: parseFloat(row.latitude as string),
+        lng: parseFloat(row.longitude as string)
       },
       duration: row.duration,
       difficultyLevel: row.difficulty_level

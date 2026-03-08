@@ -170,15 +170,23 @@ export default function AuthPageClient() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await signIn(email, password);
+      const response = await fetch('/api/auth/signin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: loginData.email, password: loginData.password }),
+      });
+      const data = await response.json();
+      if (data.mfaRequired) {
+        setShowMfa(true);
+      }
     } catch (err) {
-      if (err.message === 'MFA required') {
+      if ((err as Error).message === 'MFA required') {
         setShowMfa(true);
       } else {
-        setError(err.message);
+        setError((err as Error).message);
       }
     }
   };

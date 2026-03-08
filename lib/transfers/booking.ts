@@ -402,7 +402,7 @@ export async function checkAvailability(
       return { available: false, seatsLeft: 0 };
     }
 
-    const seatsLeft = result.rows[0].available_seats;
+    const seatsLeft = result.rows[0].available_seats as number;
     return {
       available: seatsLeft >= passengersCount,
       seatsLeft

@@ -31,6 +31,7 @@ const tourSchema = z.object({
   included: z.array(z.string()).optional().default([]),
   notIncluded: z.array(z.string()).optional().default([]),
   images: z.array(z.string().url()).optional().default([]),
+  routeId: z.string().uuid('Неверный ID маршрута').optional(),
 });
 
 export const dynamic = 'force-dynamic';
@@ -75,6 +76,7 @@ export async function POST(request: NextRequest) {
       included,
       notIncluded,
       images,
+      routeId,
     } = validationResult.data;
 
     let effectiveOperatorId = operatorId;
@@ -114,9 +116,9 @@ export async function POST(request: NextRequest) {
       `INSERT INTO tours (
         operator_id, name, description, short_description, difficulty, duration,
         price, currency, max_group_size, min_group_size, season, coordinates,
-        requirements, included, not_included, is_active, created_at, updated_at
+        requirements, included, not_included, route_id, is_active, created_at, updated_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, NOW(), NOW())
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, NOW(), NOW())
       RETURNING id`,
       [
         effectiveOperatorId,
@@ -134,6 +136,7 @@ export async function POST(request: NextRequest) {
         JSON.stringify(requirements),
         JSON.stringify(included),
         JSON.stringify(notIncluded),
+        routeId || null,
         true, // is_active
       ]
     );

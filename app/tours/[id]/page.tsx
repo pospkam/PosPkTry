@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       const tourName = tour.title || tour.name || 'Тур';
       const title = `${tourName} | Kamchatour`;
       const tourPrice = tour.pricePerDay || tour.price || '';
-      const description = tour.description || tour.short_description || `Забронируйте тур "${tourName}" на Камчатке. Цена: от ${tourPrice} ${tour.currency || '₽'}.`;
+      const description = (tour.description || tour.short_description || `Забронируйте тур "${tourName}" на Камчатке. Цена: от ${tourPrice} ${tour.currency || '₽'}.`) as string;
       
       let imageUrl = 'https://kamchatour.ru/images/og-default.jpg';
       if (tour.images) {
@@ -61,7 +61,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function TourDetailsPage({ params }: Props) {
   const { id } = await params;
   
-  let tourJsonLd = null;
+  let tourJsonLd: Record<string, unknown> | null = null;
   try {
     const result2 = await query(`SELECT * FROM tours WHERE id = $1`, [id]);
 

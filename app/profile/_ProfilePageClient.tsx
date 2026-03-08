@@ -30,36 +30,39 @@ export default function ProfilePageClient() {
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      // TODO: Реальный API endpoint
-      // const response = await fetch('/api/profile');
-      // const result = await response.json();
-      
-      // Mock данные пока
-      const mockUser: User = {
-        id: 'user-1',
-        email: 'user@example.com',
-        name: 'Демо Пользователь',
-        role: 'tourist',
+      const response = await fetch('/api/profile');
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error ?? 'Ошибка загрузки профиля');
+      }
+
+      const data = result.data;
+      const loadedUser: User = {
+        id: data.id,
+        email: data.email,
+        name: data.name,
+        role: data.role,
         preferences: {
-          interests: ['вулканы', 'рыбалка'],
-          budget: { min: 10000, max: 50000 },
-          difficulty: 'medium',
-          season: ['summer'],
-          groupSize: 2
+          interests: data.preferences?.interests ?? [],
+          budget: data.preferences?.budget ?? { min: 5000, max: 50000 },
+          difficulty: data.preferences?.difficulty ?? 'medium',
+          season: data.preferences?.season ?? [],
+          groupSize: data.preferences?.groupSize ?? 2,
         },
-        createdAt: new Date(),
-        updatedAt: new Date()
+        createdAt: new Date(data.createdAt),
+        updatedAt: new Date(data.updatedAt),
       };
 
-      setUser(mockUser);
+      setUser(loadedUser);
       setFormData({
-        name: mockUser.name,
-        email: mockUser.email,
-        phone: '',
-        preferences: mockUser.preferences
+        name: loadedUser.name,
+        email: loadedUser.email,
+        phone: data.phone ?? '',
+        preferences: loadedUser.preferences,
       });
-    } catch (err) {
-      console.error('Error fetching profile:', err);
+    } catch {
+      setMessage('Ошибка загрузки профиля');
     } finally {
       setLoading(false);
     }
@@ -71,21 +74,25 @@ export default function ProfilePageClient() {
     setMessage(null);
 
     try {
-      // TODO: Реальный API endpoint
-      // const response = await fetch('/api/profile', {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(formData)
-      // });
+      const response = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          phone: formData.phone,
+          preferences: formData.preferences,
+        }),
+      });
 
-      // Имитация сохранения
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.error ?? 'Ошибка сохранения');
+      }
 
       setMessage('Профиль успешно обновлён');
       setTimeout(() => setMessage(null), 3000);
     } catch (err) {
-      console.error('Error saving profile:', err);
-      setMessage('Ошибка сохранения профиля');
+      setMessage(err instanceof Error ? err.message : 'Ошибка сохранения профиля');
     } finally {
       setSaving(false);
     }

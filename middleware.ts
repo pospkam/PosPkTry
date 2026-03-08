@@ -35,6 +35,7 @@ const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/partners': ['GET'],
   '/api/eco-points': ['GET'],
   '/api/ai/chat': ['POST'],
+  '/api/safety': 'ALL',
 };
 
 const API_ROLE_REQUIREMENTS: Record<string, AuthRole> = {

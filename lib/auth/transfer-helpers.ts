@@ -18,7 +18,7 @@ export async function getTransferPartnerId(userId: string): Promise<string | nul
       [userId]
     );
     
-    return result.rows[0]?.id || null;
+    return (result.rows[0]?.id as string | undefined) ?? null;
   } catch (error) {
     console.error('Error getting transfer partner ID:', error);
     return null;
@@ -62,7 +62,7 @@ export async function getTransferPartnerByUserId(userId: string): Promise<any | 
       category: partner.category,
       description: partner.description,
       contact: partner.contact,
-      rating: parseFloat(partner.rating),
+      rating: parseFloat(partner.rating as string),
       reviewCount: partner.review_count,
       isVerified: partner.is_verified,
       logoAssetId: partner.logo_asset_id,
@@ -88,7 +88,7 @@ export async function ensureTransferPartnerExists(userId: string, userName: stri
     );
     
     if (existing.rows.length > 0) {
-      return existing.rows[0].id;
+      return existing.rows[0].id as string;
     }
     
     // Create new partner record
@@ -107,7 +107,7 @@ export async function ensureTransferPartnerExists(userId: string, userName: stri
       ]
     );
     
-    return result.rows[0].id;
+    return result.rows[0].id as string;
   } catch (error) {
     console.error('Error ensuring transfer partner exists:', error);
     throw error;
@@ -314,11 +314,11 @@ export async function calculateTransferPrice(
     }
     
     const route = result.rows[0];
-    let price = parseFloat(route.base_price);
-    
+    let price = parseFloat(route.base_price as string);
+
     // Add distance-based pricing if available
     if (route.price_per_km && route.distance) {
-      price += parseFloat(route.price_per_km) * parseFloat(route.distance);
+      price += parseFloat(route.price_per_km as string) * parseFloat(route.distance as string);
     }
     
     // Add passenger multiplier if more than 4 passengers
@@ -374,23 +374,23 @@ export async function getTransferStats(userId: string): Promise<any> {
     
     return {
       vehicles: {
-        total: parseInt(stats.total_vehicles || 0),
-        active: parseInt(stats.active_vehicles || 0)
+        total: parseInt(String(stats.total_vehicles ?? 0)),
+        active: parseInt(String(stats.active_vehicles ?? 0))
       },
       drivers: {
-        total: parseInt(stats.total_drivers || 0),
-        active: parseInt(stats.active_drivers || 0)
+        total: parseInt(String(stats.total_drivers ?? 0)),
+        active: parseInt(String(stats.active_drivers ?? 0))
       },
       transfers: {
-        total: parseInt(stats.total_transfers || 0),
-        completed: parseInt(stats.completed_transfers || 0),
-        pending: parseInt(stats.pending_transfers || 0),
-        cancelled: parseInt(stats.cancelled_transfers || 0)
+        total: parseInt(String(stats.total_transfers ?? 0)),
+        completed: parseInt(String(stats.completed_transfers ?? 0)),
+        pending: parseInt(String(stats.pending_transfers ?? 0)),
+        cancelled: parseInt(String(stats.cancelled_transfers ?? 0))
       },
       revenue: {
-        total: parseFloat(stats.total_revenue || 0)
+        total: parseFloat(String(stats.total_revenue ?? 0))
       },
-      rating: parseFloat(stats.avg_rating || 0).toFixed(2)
+      rating: parseFloat(String(stats.avg_rating ?? 0)).toFixed(2)
     };
   } catch (error) {
     console.error('Error getting transfer stats:', error);
@@ -434,9 +434,9 @@ export async function findAvailableVehicle(
     
     // Check availability for each vehicle
     for (const vehicle of vehicles.rows) {
-      const isAvailable = await checkVehicleAvailability(vehicle.id, date, startTime, endTime);
+      const isAvailable = await checkVehicleAvailability(vehicle.id as string, date, startTime, endTime);
       if (isAvailable) {
-        return vehicle.id;
+        return vehicle.id as string;
       }
     }
     
@@ -482,9 +482,9 @@ export async function findAvailableDriver(
     
     // Check availability for each driver
     for (const driver of drivers.rows) {
-      const isAvailable = await checkDriverAvailability(driver.id, date, startTime, endTime);
+      const isAvailable = await checkDriverAvailability(driver.id as string, date, startTime, endTime);
       if (isAvailable) {
-        return driver.id;
+        return driver.id as string;
       }
     }
     
