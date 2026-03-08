@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json({
       success: true,
       data: userData
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
     // Set HTTP-only cookie with token
     response.cookies.set('auth_token', token, {

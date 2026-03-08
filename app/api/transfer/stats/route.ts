@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
       success: true,
       data: stats,
       message: 'Статистика трансферов в разработке'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Get transfer stats error:', error);

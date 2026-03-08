@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
         count: uploadedFiles.length
       },
       message: 'Файлы успешно загружены'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Error uploading files:', error);

@@ -52,7 +52,7 @@ export async function GET(
           updatedAt: row.updated_at
         }
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Error fetching email template:', error);
@@ -121,7 +121,7 @@ export async function PUT(
         updatedAt: template.updated_at
       },
       message: 'Email шаблон обновлен успешно'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Error updating email template:', error);
@@ -164,7 +164,7 @@ export async function DELETE(
     return NextResponse.json({
       success: true,
       message: 'Email шаблон удален успешно'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Error deleting email template:', error);

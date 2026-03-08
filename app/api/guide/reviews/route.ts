@@ -153,7 +153,7 @@ export async function GET(request: NextRequest) {
           totalPages: Math.ceil(totalCount / limit)
         }
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Get reviews error:', error);

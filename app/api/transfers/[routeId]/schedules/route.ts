@@ -95,7 +95,7 @@ export async function GET(
             price: parseFloat(route.base_price)
           }))
         }
-      } as ApiResponse<any>);
+      } as ApiResponse<unknown>);
     }
 
     return NextResponse.json({
@@ -105,7 +105,7 @@ export async function GET(
         date,
         schedules
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Error fetching schedules:', error);

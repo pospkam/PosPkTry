@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
         limit,
         offset
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Get admin bookings error:', error);

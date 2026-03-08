@@ -114,7 +114,7 @@ export async function GET(
         createdAt: transfer.created_at,
         updatedAt: transfer.updated_at
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Get transfer error:', error);
@@ -252,7 +252,7 @@ export async function PUT(
       success: true,
       data: result.rows[0],
       message: 'Трансфер успешно обновлён'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Update transfer error:', error);

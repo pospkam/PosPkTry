@@ -133,7 +133,7 @@ export async function GET(
         createdAt: vehicle.created_at,
         updatedAt: vehicle.updated_at
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Get vehicle error:', error);
@@ -217,7 +217,7 @@ export async function PUT(
       success: true,
       data: result.rows[0],
       message: 'Транспорт успешно обновлён'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Update vehicle error:', error);

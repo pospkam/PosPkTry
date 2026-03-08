@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: { schedule }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Get schedule error:', error);
@@ -232,7 +232,7 @@ export async function POST(request: NextRequest) {
       success: true,
       data: result.rows[0],
       message: 'Мероприятие успешно добавлено в расписание'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error: any) {
     console.error('Create schedule error:', error);

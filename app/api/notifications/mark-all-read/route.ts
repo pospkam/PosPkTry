@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
         marked: result.rows.length
       },
       message: `Отмечено ${result.rows.length} уведомлений`
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Mark all read error:', error);

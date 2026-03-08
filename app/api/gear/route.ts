@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
         offset,
         hasMore: offset + limit < total
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
   } catch (error) {
     console.error('Error fetching gear:', error);
     return NextResponse.json(

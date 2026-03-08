@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: { templates }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Get templates error:', error);
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
       success: true,
       data: result.rows[0],
       message: 'Шаблон создан'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Create template error:', error);

@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
         partner,
         stats
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Get gear profile error:', error);
@@ -116,7 +116,7 @@ export async function PUT(request: NextRequest) {
       success: true,
       data: { partner: updatedPartner },
       message: 'Профиль успешно обновлён'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Update gear profile error:', error);

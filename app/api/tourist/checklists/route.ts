@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: result.rows
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
   } catch (error) {
     console.error('Error fetching checklists:', error);
     return NextResponse.json(
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: result.rows[0]
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
   } catch (error) {
     console.error('Error creating checklist:', error);
     return NextResponse.json(
@@ -163,7 +163,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: result.rows[0]
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
   } catch (error) {
     console.error('Error updating checklist:', error);
     return NextResponse.json(

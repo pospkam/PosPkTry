@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
         clients,
         total: clients.length
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Error fetching agent clients:', error);
@@ -173,7 +173,7 @@ export async function POST(request: NextRequest) {
         createdAt: newClient.created_at
       },
       message: 'Клиент успешно создан'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Error creating agent client:', error);

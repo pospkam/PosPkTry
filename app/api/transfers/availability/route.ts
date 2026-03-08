@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
           route: { from, to },
           slots: []
         }
-      } as ApiResponse<any>);
+      } as ApiResponse<unknown>);
     }
 
     // Для каждого времени проверяем занятость
@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
         vehicleType: vehicleType || 'any',
         slots
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Error checking transfer availability:', error);

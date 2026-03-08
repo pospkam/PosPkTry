@@ -167,7 +167,7 @@ export async function GET(request: NextRequest) {
           totalPages: Math.ceil(totalCount / limit)
         }
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Get vehicles error:', error);
@@ -261,7 +261,7 @@ export async function POST(request: NextRequest) {
       success: true,
       data: result.rows[0],
       message: 'Транспорт успешно добавлен'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Create vehicle error:', error);

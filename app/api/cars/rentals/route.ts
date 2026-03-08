@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
         costs,
         message: 'Заявка на аренду создана'
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
   } catch (error) {
     console.error('Error creating car rental:', error);
     return NextResponse.json(
@@ -237,7 +237,7 @@ export async function GET(request: NextRequest) {
           offset
         }
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
   } catch (error) {
     console.error('Error fetching car rentals:', error);
     return NextResponse.json(

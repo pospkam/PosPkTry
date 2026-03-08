@@ -1,14 +1,18 @@
 {
-  "timestamp": "2026-03-08T15:06:00.000Z",
-  "description": "Ресурсы для обучения AI coding агентов и улучшения кодовой базы проекта",
+  "timestamp": "2026-03-08T16:44:00.000Z",
+  "description": "Ресурсы для обучения AI coding агентов и улучшения кодовой базы проекта (v3 — 52 ресурса)",
   "categories": {
     "software_design_principles": {
-      "description": "SOLID, DRY, KISS, модульность",
+      "description": "SOLID, DRY, KISS, модульность, системный дизайн",
       "resources": [
         { "url": "https://github.com/donnemartin/system-design-primer", "title": "System Design Primer" },
         { "url": "https://github.com/charlax/professional-programming", "title": "Professional Programming" },
         { "url": "https://github.com/ashishps1/awesome-low-level-design", "title": "Awesome Low-Level Design" },
-        { "url": "https://github.com/kawser2133/SOLID-design-principles", "title": "SOLID Design Principles" }
+        { "url": "https://github.com/kawser2133/SOLID-design-principles", "title": "SOLID Design Principles" },
+        { "url": "https://github.com/aai-institute/beyond-jupyter", "title": "Beyond Jupyter — Design Principles for ML/Web" },
+        { "url": "https://github.com/chabrovs/software-design-principles-and-patterns", "title": "Software Design Principles & Patterns" },
+        { "url": "https://github.com/robinstickel/awesome-design-principles", "title": "Awesome Design Principles (UI/UX + Software)" },
+        { "url": "https://gist.github.com/Pen-y-Fan/c99a94102fee9fd132265578b20885a1", "title": "Learning Plan for Design Patterns" }
       ]
     },
     "typescript_patterns": {
@@ -17,7 +21,11 @@
         { "url": "https://github.com/RefactoringGuru/design-patterns-typescript", "title": "Refactoring.Guru TS patterns" },
         { "url": "https://github.com/torokmark/design_patterns_in_typescript", "title": "Design Patterns in TypeScript" },
         { "url": "https://github.com/PacktPublishing/TypeScript-5-Design-Patterns-and-Best-Practices", "title": "TS 5 Patterns Book Code" },
-        { "url": "https://refactoring.guru/design-patterns/typescript", "title": "Refactoring.Guru Catalog" }
+        { "url": "https://refactoring.guru/design-patterns/typescript", "title": "Refactoring.Guru Catalog" },
+        { "url": "https://github.com/rustkas/design-patterns-in-typescript", "title": "Design Patterns in TS (Web-Dev Series)" },
+        { "url": "https://github.com/manikbajaj/typescript-design-patterns", "title": "GoF Patterns Course in TS" },
+        { "url": "https://github.com/Yash-Handa/Design-Patterns-in-JavaScript-and-TypeScript", "title": "23 Patterns in JS/TS" },
+        { "url": "https://www.youtube.com/watch?v=QGcp9rIDxW0", "title": "Complete TS Design Patterns Video Course" }
       ]
     },
     "react_nextjs_best_practices": {
@@ -27,15 +35,22 @@
         { "url": "https://www.perssondennis.com/articles/21-fantastic-react-design-patterns-and-when-to-use-them", "title": "21 React Design Patterns" },
         { "url": "https://dev.to/nithya_iyer/5-design-patterns-for-building-scalable-nextjs-applications-1c80", "title": "5 Scalable Next.js Patterns" },
         { "url": "https://strapi.io/blog/react-and-nextjs-in-2025-modern-best-practices", "title": "React & Next.js 2025 Best Practices" },
-        { "url": "https://cursor.directory/optimized-nextjs-typescript-best-practices-modern-ui-ux", "title": "Optimized Next.js TS Best Practices" }
+        { "url": "https://cursor.directory/optimized-nextjs-typescript-best-practices-modern-ui-ux", "title": "Optimized Next.js TS Best Practices" },
+        { "url": "https://medium.com/@GoutamSingha/next-js-best-practices-in-2025-build-faster-cleaner-scalable-apps-7efbad2c3820", "title": "Next.js Best Practices 2025 (Medium)" },
+        { "url": "https://www.telerik.com/blogs/react-design-patterns-best-practices", "title": "Telerik: React Patterns & Best Practices 2025" },
+        { "url": "https://dev.to/shahharsh/best-practices-for-react-js-and-next-js-development-29eo", "title": "Dev.to: React/Next.js Best Practices" },
+        { "url": "https://medium.com/@PedalsUp/mastering-next-js-best-practices-for-clean-scalable-and-type-safe-development-626257980e60", "title": "Mastering Next.js: Clean & Scalable Dev" }
       ]
     },
     "postgresql_design": {
-      "description": "Схемы, индексы, нормализация, partitioning",
+      "description": "Схемы, индексы, нормализация, partitioning, performance",
       "resources": [
         { "url": "https://www.tigerdata.com/learn/guide-to-postgresql-database-design", "title": "PostgreSQL Database Design Guide" },
         { "url": "https://www.instaclustr.com/education/postgresql/top-10-postgresql-best-practices-for-2025", "title": "Top 10 PostgreSQL Best Practices 2025" },
-        { "url": "https://www.codecademy.com/learn/paths/design-databases-with-postgresql", "title": "Codecademy: Design Databases with PostgreSQL" }
+        { "url": "https://www.codecademy.com/learn/paths/design-databases-with-postgresql", "title": "Codecademy: Design Databases with PostgreSQL" },
+        { "url": "https://aditya-sunjava.medium.com/best-practices-for-postgresql-database-design-to-ensure-performance-scalability-and-efficiency-333a91f0b67d", "title": "PostgreSQL Design for Performance & Scalability" },
+        { "url": "https://blog.anayrat.info/en/2024/02/12/recommended-resources-to-improve-your-knowledge-of-databases-and-postgresql", "title": "Recommended DB & PostgreSQL Resources" },
+        { "url": "https://learn.microsoft.com/en-us/azure/well-architected/service-guides/postgresql", "title": "Azure Well-Architected: PostgreSQL Best Practices" }
       ]
     },
     "crewai_agents": {
@@ -45,23 +60,40 @@
         { "url": "https://docs.crewai.com/", "title": "CrewAI Documentation" },
         { "url": "https://learn.crewai.com/", "title": "CrewAI Multi Agent Course" },
         { "url": "https://www.deeplearning.ai/courses/design-develop-and-deploy-multi-agent-systems-with-crewai", "title": "DeepLearning.AI CrewAI Course" },
-        { "url": "https://www.digitalocean.com/community/tutorials/crewai-crash-course-role-based-agent-orchestration", "title": "DigitalOcean CrewAI Crash Course" }
+        { "url": "https://www.digitalocean.com/community/tutorials/crewai-crash-course-role-based-agent-orchestration", "title": "DigitalOcean CrewAI Crash Course" },
+        { "url": "https://www.youtube.com/watch?v=I90xJlzAUW0", "title": "CrewAI Tutorial: Multiple Agents (Video)" },
+        { "url": "https://crewai.com/open-source", "title": "CrewAI Open Source Guides & Examples" },
+        { "url": "https://www.coursera.org/learn/design-develop-and-deploy-multi-agent-systems-with-crewai", "title": "Coursera: Multi-Agent Systems with CrewAI" }
       ]
     },
     "ai_coding_agents": {
-      "description": "Тренировка AI агентов для кодирования",
+      "description": "Тренировка AI агентов для кодирования, agentic workflows",
       "resources": [
-        { "url": "https://github.com/microsoft/ai-agents-for-beginners", "title": "Microsoft AI Agents for Beginners" },
+        { "url": "https://github.com/microsoft/ai-agents-for-beginners", "title": "Microsoft AI Agents for Beginners (12 уроков)" },
         { "url": "https://github.com/ghuntley/how-to-build-a-coding-agent", "title": "How to Build a Coding Agent" },
-        { "url": "https://github.com/panaversity/learn-agentic-ai", "title": "Learn Agentic AI" },
-        { "url": "https://github.blog/ai-and-ml/github-copilot/github-copilot-coding-agent-101-getting-started-with-agentic-workflows-on-github", "title": "Copilot Coding Agent 101" }
+        { "url": "https://github.com/panaversity/learn-agentic-ai", "title": "Learn Agentic AI (OpenAI SDK)" },
+        { "url": "https://github.blog/ai-and-ml/github-copilot/github-copilot-coding-agent-101-getting-started-with-agentic-workflows-on-github", "title": "Copilot Coding Agent 101" },
+        { "url": "https://github.com/avinash201199/free-ai-agents-resources", "title": "Free AI Agents Resources Collection" },
+        { "url": "https://github.com/panaversity/learn-low-code-agentic-ai", "title": "Learn Low-Code Agentic AI" },
+        { "url": "https://learn.microsoft.com/en-us/training/modules/github-copilot-code-agent", "title": "Microsoft Learn: GitHub Copilot Coding Agent" }
       ]
     },
     "multi_role_apps": {
       "description": "RBAC, auth, multi-tenant для 6 ролей",
       "resources": [
         { "url": "https://frontegg.com/guides/multi-tenant-architecture", "title": "Multi-Tenant Architecture Guide" },
-        { "url": "https://scand.com/company/blog/how-to-build-scalable-web-applications", "title": "Building Scalable Web Apps" }
+        { "url": "https://scand.com/company/blog/how-to-build-scalable-web-applications", "title": "Building Scalable Web Apps" },
+        { "url": "https://stackoverflow.com/questions/48467948/what-is-the-best-approach-to-create-a-role-based-web-application", "title": "SO: Best Approach to Role-Based Web App" },
+        { "url": "https://stackerhq.com/blog/multi-user-app-builders", "title": "Multi-User App Builders & Role-Based Access" }
+      ]
+    },
+    "design_to_code": {
+      "description": "AI-native дизайн → код, Figma-to-React, MCP-интеграция с агентами",
+      "resources": [
+        { "url": "https://github.com/ZSeven-W/openpencil", "title": "OpenPencil — open-source AI-native vector design tool" },
+        { "url": "https://openpencil.dev", "title": "OpenPencil — desktop/web app, MCP server for agents" },
+        { "url": "https://pencil.dev", "title": "Pencil.dev — Prompt Gallery, design-as-code examples" },
+        { "url": "https://github.com/nicolo-ribaudo/tc39-figma-to-code", "title": "Figma-to-Code ecosystem resources" }
       ]
     }
   }

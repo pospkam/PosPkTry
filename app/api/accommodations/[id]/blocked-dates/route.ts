@@ -85,7 +85,7 @@ export async function GET(
         blockedDates,
         blockedCount: blockedDates.length
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Error fetching blocked dates:', error);

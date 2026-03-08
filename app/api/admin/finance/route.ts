@@ -142,7 +142,7 @@ export async function GET(request: NextRequest) {
           customerName: row.customer_name
         }))
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Error fetching admin finance data:', error);

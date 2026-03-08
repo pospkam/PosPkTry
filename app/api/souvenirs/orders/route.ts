@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
           totalAmount,
           message: 'Заказ создан'
         }
-      } as ApiResponse<any>);
+      } as ApiResponse<unknown>);
     } catch (error) {
       await query('ROLLBACK');
       throw error;
@@ -231,7 +231,7 @@ export async function GET(request: NextRequest) {
           offset
         }
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
   } catch (error) {
     console.error('Error fetching souvenir orders:', error);
     return NextResponse.json(

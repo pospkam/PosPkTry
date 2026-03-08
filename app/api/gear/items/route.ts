@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: { items: result.rows }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Get gear items error:', error);
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
       success: true,
       data: result.rows[0],
       message: 'Снаряжение успешно добавлено'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Create gear item error:', error);

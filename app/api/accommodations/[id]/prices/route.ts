@@ -104,7 +104,7 @@ export async function GET(
         basePrice: parseFloat(accommodation.price_per_night),
         prices
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Error fetching prices:', error);

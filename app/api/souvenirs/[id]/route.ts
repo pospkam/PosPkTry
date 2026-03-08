@@ -34,7 +34,7 @@ export async function GET(
     return NextResponse.json({
       success: true,
       data: { souvenir }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
   } catch (error) {
     return NextResponse.json({
       success: false,
@@ -63,7 +63,7 @@ export async function PUT(
     return NextResponse.json({
       success: true,
       message: 'Обновлено'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
   } catch (error) {
     return NextResponse.json({
       success: false,
@@ -86,7 +86,7 @@ export async function DELETE(
     return NextResponse.json({
       success: true,
       message: 'Удалено'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
   } catch (error) {
     return NextResponse.json({
       success: false,

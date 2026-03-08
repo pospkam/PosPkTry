@@ -219,7 +219,7 @@ export async function GET(request: NextRequest) {
         recentReviews: recentReviews.rows,
         damageReports: damageReports.rows
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
   } catch (error) {
     console.error('Error fetching cars stats:', error);
     return NextResponse.json(

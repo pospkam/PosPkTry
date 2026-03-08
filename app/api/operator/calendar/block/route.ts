@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
         dates
       },
       message: `Заблокировано ${dates.length} дат`
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Block dates error:', error);

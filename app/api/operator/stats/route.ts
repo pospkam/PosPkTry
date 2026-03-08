@@ -123,7 +123,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: stats
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Get operator stats error:', error);

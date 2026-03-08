@@ -141,7 +141,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: { drivers }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Get drivers error:', error);
@@ -220,7 +220,7 @@ export async function POST(request: NextRequest) {
       success: true,
       data: result.rows[0],
       message: 'Водитель успешно добавлен'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Create driver error:', error);

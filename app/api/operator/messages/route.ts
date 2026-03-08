@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: { messages }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Get messages error:', error);
@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
       success: true,
       data: result.rows[0],
       message: 'Сообщение отправлено'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Send message error:', error);

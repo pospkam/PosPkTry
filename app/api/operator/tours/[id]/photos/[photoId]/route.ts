@@ -62,7 +62,7 @@ export async function PATCH(
       success: true,
       data: result.rows[0],
       message: 'Фотография обновлена'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Update photo error:', error);

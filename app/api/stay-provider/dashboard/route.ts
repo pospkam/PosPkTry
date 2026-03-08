@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
         recentBookings: bookingsResult.rows,
         occupancy: occupancyResult.rows
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Error fetching stay provider dashboard:', error);

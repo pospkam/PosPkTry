@@ -67,7 +67,7 @@ export async function PUT(
     return NextResponse.json({
       success: true,
       data: result.rows[0]
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Update notification error:', error);

@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
         total_points: profile.loyalty_points,
         current_tier: profile.loyalty_tier
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
   } catch (error) {
     console.error('Error fetching achievements:', error);
     return NextResponse.json(

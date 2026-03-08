@@ -254,7 +254,7 @@ export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface ChatSession {
@@ -282,7 +282,7 @@ export interface GuideSchedule {
   participantsCount: number;
   maxParticipants?: number;
   status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
-  weatherConditions?: any;
+  weatherConditions?: Record<string, unknown>;
   safetyNotes?: string;
   specialRequirements?: string;
   createdAt: Date;
@@ -295,11 +295,11 @@ export interface GuideGroup {
   id: string;
   scheduleId: string;
   groupName?: string;
-  participants: any[];
-  emergencyContacts: any[];
-  experienceLevels: any;
+  participants: Record<string, unknown>[];
+  emergencyContacts: Record<string, unknown>[];
+  experienceLevels: Record<string, unknown>;
   specialNeeds?: string;
-  equipmentChecklist: any[];
+  equipmentChecklist: Record<string, unknown>[];
   status: 'forming' | 'ready' | 'departed' | 'returned';
   createdAt: Date;
   updatedAt: Date;

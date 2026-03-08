@@ -88,7 +88,7 @@ export async function POST(
       success: true,
       data: result.rows[0],
       message: 'Ответ успешно добавлен'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Reply to review error:', error);

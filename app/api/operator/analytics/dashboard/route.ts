@@ -262,7 +262,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: dashboard
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Get operator analytics error:', error);

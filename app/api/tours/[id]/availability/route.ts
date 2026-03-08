@@ -129,7 +129,7 @@ export async function GET(
         maxGroupSize: parseInt(tour.max_group_size),
         minGroupSize: parseInt(tour.min_group_size)
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Error checking availability:', error);

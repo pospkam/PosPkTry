@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
         offset: filters.offset,
         hasMore: souvenirs.length === filters.limit
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
   } catch (error) {
     console.error('Error fetching souvenirs:', error);
     return NextResponse.json(

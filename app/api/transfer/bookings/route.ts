@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
       success: true,
       data: { bookings },
       message: 'Система трансферов в разработке. Используйте основную систему бронирований.'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Get transfer bookings error:', error);

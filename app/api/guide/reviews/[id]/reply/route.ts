@@ -80,7 +80,7 @@ export async function POST(
       success: true,
       data: result.rows[0],
       message: 'Ответ успешно опубликован'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Reply to review error:', error);
@@ -143,7 +143,7 @@ export async function PUT(
       success: true,
       data: result.rows[0],
       message: 'Ответ успешно обновлён'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Update reply error:', error);

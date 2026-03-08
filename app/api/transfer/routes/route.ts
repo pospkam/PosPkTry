@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: { routes }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Get routes error:', error);
@@ -158,7 +158,7 @@ export async function POST(request: NextRequest) {
       success: true,
       data: result.rows[0],
       message: 'Маршрут успешно создан'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Create route error:', error);

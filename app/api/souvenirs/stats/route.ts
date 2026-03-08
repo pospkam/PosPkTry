@@ -203,7 +203,7 @@ export async function GET(request: NextRequest) {
         inventoryActivity: inventoryActivity.rows,
         popularTags: popularTags.rows
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
   } catch (error) {
     console.error('Error fetching souvenir stats:', error);
     return NextResponse.json(

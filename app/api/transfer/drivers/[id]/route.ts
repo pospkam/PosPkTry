@@ -117,7 +117,7 @@ export async function GET(
         createdAt: driver.created_at,
         updatedAt: driver.updated_at
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Get driver error:', error);
@@ -202,7 +202,7 @@ export async function PUT(
       success: true,
       data: result.rows[0],
       message: 'Водитель успешно обновлён'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Update driver error:', error);

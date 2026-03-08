@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: { cart }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
   } catch (error) {
     return NextResponse.json({
       success: false,
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Добавлено в корзину'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
   } catch (error) {
     return NextResponse.json({
       success: false,

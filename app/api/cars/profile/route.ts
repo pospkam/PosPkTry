@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
         profile: profileResult.rows[0],
         stats
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
   } catch (error) {
     console.error('Error fetching cars profile:', error);
     return NextResponse.json(
@@ -170,7 +170,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: result.rows[0]
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
   } catch (error) {
     console.error('Error updating cars profile:', error);
     return NextResponse.json(

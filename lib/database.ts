@@ -239,8 +239,25 @@ export async function checkDataIntegrity(): Promise<{
   };
 }
 
+// Whitelist of tables allowed for export/import (prevent SQL injection)
+const SAFE_TABLES = new Set([
+  'activities', 'partners', 'assets', 'tours', 'users',
+  'bookings', 'reviews', 'notifications', 'tourist_wishlist',
+  'guide_schedule', 'guide_earnings', 'guide_groups',
+  'support_tickets', 'audit_logs', 'agent_route_knowledge',
+  'eco_points_log', 'user_sessions',
+]);
+
+// Validate identifier (table/column name): alphanumeric + underscores only
+function isValidIdentifier(name: string): boolean {
+  return /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name);
+}
+
 // Функция для экспорта данных
 export async function exportData(tableName: string): Promise<QueryResult<Record<string, unknown>>> {
+  if (!SAFE_TABLES.has(tableName)) {
+    throw new Error(`Table "${tableName}" is not in the export whitelist`);
+  }
   return query(`SELECT * FROM ${tableName} ORDER BY created_at DESC`);
 }
 
@@ -251,22 +268,31 @@ export async function importData(
   columns: string[]
 ): Promise<void> {
   if (data.length === 0) return;
-  
+
+  if (!SAFE_TABLES.has(tableName)) {
+    throw new Error(`Table "${tableName}" is not in the import whitelist`);
+  }
+  for (const col of columns) {
+    if (!isValidIdentifier(col)) {
+      throw new Error(`Invalid column name: "${col}"`);
+    }
+  }
+
   const placeholders = data.map((_, index) => {
-    const rowPlaceholders = columns.map((_, colIndex) => 
+    const rowPlaceholders = columns.map((_, colIndex) =>
       `$${index * columns.length + colIndex + 1}`
     ).join(', ');
     return `(${rowPlaceholders})`;
   }).join(', ');
-  
+
   const queryText = `
     INSERT INTO ${tableName} (${columns.join(', ')})
     VALUES ${placeholders}
     ON CONFLICT DO NOTHING
   `;
-  
+
   const values = data.flatMap(row => columns.map(col => row[col]));
-  
+
   await query(queryText, values);
 }
 

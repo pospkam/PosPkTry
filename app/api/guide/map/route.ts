@@ -147,7 +147,7 @@ export async function GET(request: NextRequest) {
         popularLocations,
         activityTrail
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Get guide map data error:', error);

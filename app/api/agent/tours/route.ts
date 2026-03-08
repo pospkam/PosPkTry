@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: { tours }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Get agent tours error:', error);

@@ -204,7 +204,7 @@ export async function GET(request: NextRequest) {
         recentTransfers,
         vehicleUtilization
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Dashboard analytics error:', error);

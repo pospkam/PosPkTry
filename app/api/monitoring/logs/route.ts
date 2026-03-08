@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: { logs, count: logs.length }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Error fetching logs:', error);

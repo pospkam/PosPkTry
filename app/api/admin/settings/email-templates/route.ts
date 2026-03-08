@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
           updatedAt: row.updated_at
         }))
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Error fetching email templates:', error);
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
         createdAt: template.created_at
       },
       message: 'Email шаблон создан успешно'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Error creating email template:', error);

@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: { bookings }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Get bookings error:', error);

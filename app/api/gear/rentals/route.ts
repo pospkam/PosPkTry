@@ -236,7 +236,7 @@ export async function GET(request: NextRequest) {
         rentals: result.rows,
         count: result.rows.length
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Error fetching gear rentals:', error);

@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
         notifications,
         unreadCount: parseInt(countResult.rows[0].unread_count)
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Get notifications error:', error);
@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
       success: true,
       data: result.rows[0],
       message: 'Уведомление создано'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Create notification error:', error);

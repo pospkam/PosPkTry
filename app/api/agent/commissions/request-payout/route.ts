@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
         createdAt: newPayout.created_at,
       },
       message: 'Запрос на выплату комиссионных успешно создан',
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
   } catch (error) {
     console.error('Error requesting commission payout:', error);
     return NextResponse.json(

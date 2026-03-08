@@ -59,7 +59,7 @@ export async function GET(
     return NextResponse.json({
       success: true,
       data: result.rows[0]
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
   } catch (error) {
     console.error('Error fetching souvenir:', error);
     return NextResponse.json(
@@ -142,7 +142,7 @@ export async function PUT(
     return NextResponse.json({
       success: true,
       data: result.rows[0]
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
   } catch (error) {
     console.error('Error updating souvenir:', error);
     return NextResponse.json(
@@ -197,7 +197,7 @@ export async function DELETE(
     return NextResponse.json({
       success: true,
       data: { message: 'Товар деактивирован' }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
   } catch (error) {
     console.error('Error deleting souvenir:', error);
     return NextResponse.json(

@@ -321,7 +321,7 @@ export interface TransferNotificationRequest {
   userId: string;
   operatorId: string;
   type: string;
-  data: Record<string, any>;
+  data: Record<string, unknown>;
 }
 
 // =============================================
@@ -380,7 +380,7 @@ export interface TransferIntegration {
   apiKey: string;
   webhookUrl?: string;
   isActive: boolean;
-  settings: Record<string, any>;
+  settings: Record<string, unknown>;
 }
 
 export interface TransferWebhookPayload {

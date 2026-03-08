@@ -134,7 +134,7 @@ export async function GET(
           totalPages: Math.ceil(totalCount / limit)
         }
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Get tour reviews error:', error);
@@ -211,7 +211,7 @@ export async function POST(
       success: true,
       data: result.rows[0],
       message: 'Отзыв успешно добавлен'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Create review error:', error);

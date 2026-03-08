@@ -93,7 +93,7 @@ export async function GET(
               available: tour.max_group_size
             }]
           }
-        } as ApiResponse<any>);
+        } as ApiResponse<unknown>);
       }
 
       const slots: TimeSlot[] = groupResult.rows.map((row: any) => ({
@@ -112,7 +112,7 @@ export async function GET(
           tourType: 'group',
           slots
         }
-      } as ApiResponse<any>);
+      } as ApiResponse<unknown>);
     }
 
     // Для индивидуальных туров возвращаем несколько временных слотов
@@ -132,7 +132,7 @@ export async function GET(
         tourType: 'individual',
         slots: defaultSlots
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Error fetching time slots:', error);

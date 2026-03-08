@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
           pendingAmount: parseFloat(stats.pending_amount)
         }
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Error fetching payouts:', error);
@@ -188,7 +188,7 @@ export async function POST(request: NextRequest) {
         createdAt: payout.created_at
       },
       message: 'Выплата создана успешно'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Error creating payout:', error);

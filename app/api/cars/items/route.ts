@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
           hasMore: offset + limit < parseInt(countResult.rows[0].count)
         }
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
   } catch (error) {
     console.error('Error fetching cars:', error);
     return NextResponse.json(
@@ -235,7 +235,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: result.rows[0]
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
   } catch (error) {
     console.error('Error creating car:', error);
     return NextResponse.json(

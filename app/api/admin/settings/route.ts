@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
           updatedAt: row.updated_at
         }))
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Error fetching settings:', error);
@@ -106,7 +106,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Настройки обновлены успешно'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Error updating settings:', error);

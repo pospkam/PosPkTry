@@ -54,7 +54,7 @@ export async function GET(
     return NextResponse.json({
       success: true,
       data: { documents }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Get driver documents error:', error);
@@ -130,7 +130,7 @@ export async function POST(
       success: true,
       data: result.rows[0],
       message: 'Документ успешно добавлен'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Create driver document error:', error);

@@ -134,7 +134,7 @@ export async function GET(
         availability,
         totalRooms: parseInt(accommodation.total_rooms) || 10
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Error checking availability:', error);

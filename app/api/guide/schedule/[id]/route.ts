@@ -77,7 +77,7 @@ export async function GET(
         createdAt: row.created_at,
         updatedAt: row.updated_at
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Get schedule entry error:', error);
@@ -252,7 +252,7 @@ export async function PUT(
       success: true,
       data: result.rows[0],
       message: 'Расписание успешно обновлено'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Update schedule error:', error);

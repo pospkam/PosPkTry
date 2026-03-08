@@ -216,7 +216,7 @@ export async function POST(request: NextRequest) {
         updatedAt: newReview.updated_at,
       },
       message: 'Спасибо за отзыв! Он будет опубликован после модерации.',
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
   } catch (error) {
     console.error('Error creating review:', error);
     return NextResponse.json(

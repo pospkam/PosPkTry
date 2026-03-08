@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
           commissionRate: parseFloat(s.commission_rate),
           settings: s.settings
         }
-      } as ApiResponse<any>);
+      } as ApiResponse<unknown>);
     }
 
     const s = result.rows[0];
@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
         commissionRate: parseFloat(s.commission_rate),
         settings: s.settings
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Get operator settings error:', error);
@@ -177,7 +177,7 @@ export async function PUT(request: NextRequest) {
       success: true,
       data: result.rows[0],
       message: 'Настройки успешно обновлены'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Update operator settings error:', error);

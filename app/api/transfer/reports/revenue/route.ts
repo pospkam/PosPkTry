@@ -197,7 +197,7 @@ export async function GET(request: NextRequest) {
         byVehicle,
         paymentDistribution
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Revenue report error:', error);

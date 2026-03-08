@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
         bookings,
         total: bookings.length
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Error fetching agent bookings:', error);
@@ -272,7 +272,7 @@ export async function POST(request: NextRequest) {
         createdAt: newBooking.created_at
       },
       message: 'Бронирование успешно создано'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Error creating agent booking:', error);

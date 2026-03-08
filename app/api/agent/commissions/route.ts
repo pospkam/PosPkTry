@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
         },
         total: commissions.length
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Error fetching agent commissions:', error);

@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
         recent_reviews: recentReviews.rows,
         upcoming_trips: upcomingTrips.rows
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
   } catch (error) {
     console.error('Error fetching tourist stats:', error);
     return NextResponse.json(

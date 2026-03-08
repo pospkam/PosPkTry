@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
         createdAt: user.created_at,
         updatedAt: user.updated_at
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Get user error:', error);

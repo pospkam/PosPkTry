@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: { groups }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Get guide groups error:', error);
@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
         updatedAt: row.updated_at
       },
       message: 'Группа создана'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Create group error:', error);

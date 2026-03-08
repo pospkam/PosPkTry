@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
         vouchers,
         total: vouchers.length
       }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Error fetching agent vouchers:', error);
@@ -198,7 +198,7 @@ export async function POST(request: NextRequest) {
         createdAt: newVoucher.created_at
       },
       message: 'Ваучер успешно создан'
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
 
   } catch (error) {
     console.error('Error creating voucher:', error);

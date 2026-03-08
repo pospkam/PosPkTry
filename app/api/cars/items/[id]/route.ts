@@ -59,7 +59,7 @@ export async function GET(
     return NextResponse.json({
       success: true,
       data: result.rows[0]
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
   } catch (error) {
     console.error('Error fetching car:', error);
     return NextResponse.json(
@@ -160,7 +160,7 @@ export async function PUT(
     return NextResponse.json({
       success: true,
       data: result.rows[0]
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
   } catch (error) {
     console.error('Error updating car:', error);
     return NextResponse.json(
@@ -214,7 +214,7 @@ export async function DELETE(
     return NextResponse.json({
       success: true,
       data: { message: 'Автомобиль удален' }
-    } as ApiResponse<any>);
+    } as ApiResponse<unknown>);
   } catch (error) {
     console.error('Error deleting car:', error);
     return NextResponse.json(
