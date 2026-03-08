@@ -68,18 +68,39 @@ function makeDedupeKey(sourceUrl, title) {
   }
 }
 
+function normTitle(t) {
+  return (t || '').trim().toLowerCase()
+    .replace(/ё/g, 'е')
+    .replace(/[^а-яa-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 // ── Проверить какие маршруты ещё не в БД ─────────────────────
 async function filterNewRoutes(routes) {
   if (!routes?.length) return [];
   const client = await pool.connect();
   try {
-    const keys = routes.map(r => makeDedupeKey(r.source_url, r.title));
-    const res  = await client.query(
+    const keys         = routes.map(r => makeDedupeKey(r.source_url, r.title));
+    const normTitles   = routes.map(r => normTitle(r.title));
+
+    // Проверка 1: по dedupe_key
+    const resKeys = await client.query(
       `SELECT route_dedupe_key FROM agent_route_knowledge WHERE route_dedupe_key = ANY($1)`,
       [keys]
     );
-    const existingKeys = new Set(res.rows.map(r => r.route_dedupe_key));
-    return routes.filter((r, i) => !existingKeys.has(keys[i]));
+    const existingKeys = new Set(resKeys.rows.map(r => r.route_dedupe_key));
+
+    // Проверка 2: по нормализованному заголовку (исключает дубли из разных источников)
+    const resTitles = await client.query(
+      `SELECT lower(regexp_replace(translate(title,'ё','е'),'[^а-яa-z0-9]+',' ','g')) AS nt
+       FROM agent_route_knowledge`
+    );
+    const existingNormTitles = new Set(resTitles.rows.map(r => (r.nt || '').trim()));
+
+    return routes.filter((r, i) =>
+      !existingKeys.has(keys[i]) && !existingNormTitles.has(normTitles[i])
+    );
   } finally {
     client.release();
   }
