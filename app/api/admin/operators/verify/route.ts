@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { requireAdmin } from '@/lib/auth/middleware';
+import { emailService } from '@/lib/notifications/email-service';
 
 export const dynamic = 'force-dynamic';
 
@@ -70,7 +71,24 @@ export async function POST(request: NextRequest) {
         WHERE id = $1
       `, [operator.user_id]);
 
-      // TODO: Отправить email об одобрении
+      // Отправляем email об одобрении
+      if (operator.email) {
+        try {
+          await emailService.sendEmail({
+            to: operator.email,
+            subject: 'Ваша заявка на регистрацию оператора одобрена — KamchatourHub',
+            html: `
+              <h2>Поздравляем! Ваша заявка одобрена</h2>
+              <p>Здравствуйте, <strong>${operator.name}</strong>!</p>
+              <p>Компания <strong>${operator.company_name}</strong> успешно верифицирована на платформе KamchatourHub.</p>
+              <p>Теперь вы можете войти в личный кабинет и начать размещать туры.</p>
+              <p><a href="${process.env.NEXT_PUBLIC_APP_URL || ''}/auth/login" style="color:#00D4FF">Войти в кабинет</a></p>
+            `,
+          });
+        } catch {
+          // Не прерываем выполнение при ошибке email
+        }
+      }
 
       return NextResponse.json({
         success: true,
@@ -95,7 +113,24 @@ export async function POST(request: NextRequest) {
         WHERE id = $1
       `, [operator.user_id]);
 
-      // TODO: Отправить email об отклонении
+      // Отправляем email об отклонении
+      if (operator.email) {
+        try {
+          await emailService.sendEmail({
+            to: operator.email,
+            subject: 'Ваша заявка на регистрацию оператора отклонена — KamchatourHub',
+            html: `
+              <h2>Заявка отклонена</h2>
+              <p>Здравствуйте, <strong>${operator.name}</strong>!</p>
+              <p>К сожалению, заявка компании <strong>${operator.company_name}</strong> не прошла верификацию.</p>
+              ${reason ? `<p><strong>Причина:</strong> ${reason}</p>` : ''}
+              <p>Если у вас есть вопросы, свяжитесь с нами: <a href="mailto:support@kamhub.ru">support@kamhub.ru</a></p>
+            `,
+          });
+        } catch {
+          // Не прерываем выполнение при ошибке email
+        }
+      }
 
       return NextResponse.json({
         success: true,

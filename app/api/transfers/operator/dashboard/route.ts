@@ -348,7 +348,7 @@ function createMockDashboard(): TransferOperatorDashboard {
         status: 'pending',
         specialRequests: 'Детское кресло',
         contactPhone: '+7-914-123-45-67',
-        contactEmail: 'client@example.com',
+        contactEmail: 'client@kamchatka.ru',
         confirmationCode: 'ABC123',
         createdAt: new Date(),
         updatedAt: new Date()
@@ -376,7 +376,7 @@ function createMockDashboard(): TransferOperatorDashboard {
         operatorId: 'operator_1',
         name: 'Иванов Иван Иванович',
         phone: '+7-914-123-45-67',
-        email: 'ivanov@example.com',
+        email: 'ivanov@kamtransfer.ru',
         licenseNumber: '1234567890',
         languages: ['ru', 'en'],
         rating: 4.8,

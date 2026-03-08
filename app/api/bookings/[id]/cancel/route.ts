@@ -15,6 +15,7 @@ import { ApiResponse } from '@/types';
 import { verifyAuth } from '@/lib/auth';
 import { query } from '@/lib/database';
 import { cancelBooking } from '@/lib/bookings/booking.service';
+import { emailService } from '@/lib/notifications/email-service';
 import type { AuthRole } from '@/lib/auth';
 
 export async function POST(
@@ -91,7 +92,30 @@ export async function POST(
       reason
     );
 
-    // TODO: уведомить туриста по email о возврате средств
+    // Уведомляем туриста по email о возврате средств
+    const userEmail = booking.tourist?.email;
+    if (userEmail) {
+      try {
+        await emailService.sendEmail({
+          to: userEmail,
+          subject: `Бронирование отменено: ${booking.tour.title}`,
+          html: `
+            <h2>Ваше бронирование отменено</h2>
+            <p><strong>Тур:</strong> ${booking.tour.title}</p>
+            <p><strong>Дата:</strong> ${booking.date.toLocaleDateString('ru-RU')}</p>
+            <p><strong>Участники:</strong> ${booking.participants}</p>
+            ${reason ? `<p><strong>Причина:</strong> ${reason}</p>` : ''}
+            ${refund.amount > 0
+              ? `<p><strong>Возврат:</strong> ${refund.amount.toLocaleString('ru-RU')} ₽ — ${refund.reason}</p>`
+              : '<p>Возврат средств не предусмотрен условиями отмены.</p>'
+            }
+            <p>Если у вас есть вопросы — <a href="mailto:support@kamhub.ru">support@kamhub.ru</a></p>
+          `,
+        });
+      } catch {
+        // Не прерываем выполнение при ошибке email
+      }
+    }
 
     return NextResponse.json({
       success: true,
