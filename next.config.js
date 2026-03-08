@@ -30,6 +30,10 @@ const nextConfig = {
       'node_modules/@swc/core/**',
       'node_modules/sharp/**',
       'node_modules/@img/**',
+      'node_modules/@aws-sdk/**',
+      'node_modules/@smithy/**',
+      'node_modules/@aws-crypto/**',
+      'node_modules/fast-xml-parser/**',
     ],
   },
 

@@ -169,7 +169,7 @@ export const config = {
     },
     sms: {
       smsRu: {
-        apiId: process.env.SMS_RU_API_ID || '',
+        apiId: process.env.SMS_RU_API_KEY || '',
         baseUrl: 'https://sms.ru/sms/send',
       },
     },
