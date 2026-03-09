@@ -187,7 +187,7 @@ export default function ToursManagement() {
         <div className="flex space-x-2">
           <button
             onClick={() => handleToggleActive(tour.id, tour.isActive)}
-            className="px-3 py-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg text-xs font-medium transition-colors"
+            className="px-3 py-1 bg-cyber-cyan/20 hover:bg-cyber-cyan/30 text-cyber-cyan rounded-lg text-xs font-medium transition-colors"
           >
             {tour.isActive ? 'Деакт.' : 'Акт.'}
           </button>

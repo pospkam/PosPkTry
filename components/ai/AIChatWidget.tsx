@@ -281,7 +281,7 @@ export function AIChatWidget({ isOpen = false, onClose, className, userId }: AIC
 
             {isLoading && (
               <div className="flex justify-start">
-                <div className="bg-slate-800/60 px-4 py-3 rounded-2xl">
+                <div className="bg-white/10 px-4 py-3 rounded-2xl">
                   <div className="flex items-center gap-2">
                     <Loader2 className="w-4 h-4 animate-spin text-cyber-cyan" />
                     <span className="text-sm text-white/50">

@@ -94,7 +94,7 @@ function SOSButton({ className = '' }: { className?: string }) {
             aria-label="Экстренная помощь — SOS"
           >
             <motion.div
-              className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full max-h-[90vh] overflow-y-auto"
+              className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8 max-w-md w-full max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -177,12 +177,12 @@ function SOSButton({ className = '' }: { className?: string }) {
                 </motion.button>
               </div>
 
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4" aria-live="polite">
-                <AlertTriangle size={20} className="text-amber-600 inline mr-2 mb-2 block" aria-hidden="true" />
+              <div className="bg-premium-gold/10 border border-premium-gold/30 rounded-xl p-4" aria-live="polite">
+                <AlertTriangle size={20} className="text-premium-gold inline mr-2 mb-2 block" aria-hidden="true" />
                 {errorMsg ? (
-                  <p className="text-sm text-red-700 leading-relaxed">{errorMsg}</p>
+                  <p className="text-sm text-red-400 leading-relaxed">{errorMsg}</p>
                 ) : (
-                  <p className="text-sm text-amber-700 leading-relaxed">
+                  <p className="text-sm text-premium-gold/80 leading-relaxed">
                     Если нет связи: оставайтесь на месте · свисток 3 сигнала · сохраняйте тепло
                   </p>
                 )}

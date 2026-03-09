@@ -150,7 +150,7 @@ export function EmailTemplatesManager() {
         <div className="flex gap-2">
           <button
             onClick={() => setEditingTemplate(template)}
-            className="px-3 py-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded text-sm transition-colors"
+            className="px-3 py-1 bg-cyber-cyan/20 hover:bg-cyber-cyan/30 text-cyber-cyan rounded text-sm transition-colors"
           >
             Изменить
           </button>

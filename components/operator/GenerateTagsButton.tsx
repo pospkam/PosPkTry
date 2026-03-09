@@ -110,10 +110,10 @@ export default function GenerateTagsButton({ tourId }: GenerateTagsButtonProps) 
           aria-label="Сгенерировать AI-теги для фотографий тура"
           className="
             flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium
-            bg-gradient-to-r from-blue-500/80 to-purple-500/80
-            hover:from-blue-500 hover:to-purple-500
+            bg-gradient-to-r from-cyber-cyan/80 to-premium-gold/80
+            hover:from-cyber-cyan hover:to-premium-gold
             disabled:opacity-50 disabled:cursor-not-allowed
-            text-white transition-all duration-200
+            text-premium-black transition-all duration-200
           "
         >
           {loading ? (

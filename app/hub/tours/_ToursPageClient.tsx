@@ -59,7 +59,7 @@ export default function ToursPageClient() {
                 <input 
                   name="dates" 
                   placeholder="Даты" 
-                  className="w-full px-4 py-3 rounded-lg bg-white text-black"
+                  className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60"
                 />
                 <input 
                   name="guests" 
@@ -67,18 +67,18 @@ export default function ToursPageClient() {
                   type="number" 
                   min={1} 
                   defaultValue={2} 
-                  className="w-full px-4 py-3 rounded-lg bg-white text-black"
+                  className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60"
                 />
                 <input 
                   name="interests" 
                   placeholder="Интересы (вулканы, рыбалка...)" 
-                  className="w-full px-4 py-3 rounded-lg bg-white text-black"
+                  className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60"
                 />
                 <input 
                   name="budget" 
                   placeholder="Бюджет (RUB)" 
                   type="number" 
-                  className="w-full px-4 py-3 rounded-lg bg-white text-black"
+                  className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60"
                 />
                 <button 
                   type="submit" 

@@ -68,7 +68,7 @@ export default function GearProviderDashboardClient() {
               icon={Calendar}
               label="Активные аренды"
               value={m.activeRentals}
-              color="text-blue-400"
+              color="text-cyber-cyan"
             />
             <MetricCard
               icon={AlertCircle}

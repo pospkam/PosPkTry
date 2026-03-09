@@ -106,7 +106,7 @@ export default function IntegrationsPageClient() {
   const getPartnerIcon = (type: string) => {
     switch (type) {
       case 'fishing-tours':
-        return <Fish className="w-8 h-8 text-blue-400" />;
+        return <Fish className="w-8 h-8 text-cyber-cyan" />;
       default:
         return <Package className="w-8 h-8 text-white/40" />;
     }

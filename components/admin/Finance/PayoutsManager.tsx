@@ -174,8 +174,8 @@ export function PayoutsManager() {
             <div className="text-2xl font-bold text-yellow-400">{stats.pendingPayouts}</div>
             <div className="text-white/60 text-sm">Ожидают</div>
           </div>
-          <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-blue-400">
+          <div className="bg-cyber-cyan/10 border border-cyber-cyan/30 rounded-xl p-4 text-center">
+            <div className="text-2xl font-bold text-cyber-cyan">
               {stats.totalPaid.toLocaleString('ru-RU')} ₽
             </div>
             <div className="text-white/60 text-sm">Выплачено</div>

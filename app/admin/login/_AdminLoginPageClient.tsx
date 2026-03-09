@@ -62,7 +62,7 @@ export default function AdminLoginPageClient() {
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-amber-500/20 to-yellow-500/20 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-br from-cyber-cyan/10 to-cyber-cyan/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
       </div>
 
       <div className="w-full max-w-md">
@@ -163,12 +163,12 @@ export default function AdminLoginPageClient() {
           </div>
 
           {/* Security Notice */}
-          <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 backdrop-blur-2xl border border-blue-500/30 rounded-2xl p-4">
-            <div className="flex items-start gap-3 text-blue-300">
+          <div className="bg-gradient-to-br from-cyber-cyan/10 to-cyber-cyan/5 backdrop-blur-2xl border border-cyber-cyan/30 rounded-2xl p-4">
+            <div className="flex items-start gap-3 text-cyber-cyan">
               <Shield className="w-5 h-5 flex-shrink-0 mt-0.5" />
               <div className="text-sm">
                 <p className="font-semibold mb-1">Защищённый доступ</p>
-                <p className="text-blue-300/70">
+                <p className="text-cyber-cyan/70">
                   Все действия в панели администратора логируются и защищены двухфакторной авторизацией.
                 </p>
               </div>

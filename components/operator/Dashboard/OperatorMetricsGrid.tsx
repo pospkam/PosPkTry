@@ -103,8 +103,8 @@ export function OperatorMetricsGrid({ metrics, loading = false }: OperatorMetric
         title="Всего бронирований"
         value={metrics.totalBookings}
         icon={CalendarCheck}
-        iconColor="text-blue-400"
-        bgColor="bg-blue-500/20"
+        iconColor="text-cyber-cyan"
+        bgColor="bg-cyber-cyan/20"
       />
 
       <MetricCard

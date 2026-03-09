@@ -117,7 +117,7 @@ export default function FishingToursPageClient() {
       />
 
       {/* Hero */}
-      <div className="relative bg-gradient-to-b from-blue-900/50 to-transparent py-12">
+      <div className="relative bg-gradient-to-b from-[#0a1628]/50 to-transparent py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4 mb-4">
             <div className="p-4 bg-premium-gold/20 rounded-2xl">

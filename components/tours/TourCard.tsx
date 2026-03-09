@@ -88,7 +88,7 @@ export function TourCard({ tour, href }: TourCardProps) {
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-blue-900 to-cyan-800 flex items-center justify-center">
+          <div className="w-full h-full bg-gradient-to-br from-[#0a1628] to-[#0B1120] flex items-center justify-center">
             <Mountain className="w-16 h-16 text-white/30" />
           </div>
         )}

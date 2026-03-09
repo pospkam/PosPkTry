@@ -156,7 +156,7 @@ export function RevenueChart({ period = '30', type = 'all' }: RevenueChartProps)
               <p className="text-white/60 text-sm">Общий доход</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-blue-400">
+              <p className="text-2xl font-bold text-cyber-cyan">
                 {dailyData.reduce((sum, day) => sum + day.transactions, 0)}
               </p>
               <p className="text-white/60 text-sm">Всего транзакций</p>

@@ -25,7 +25,7 @@ export function AgentMetricsGrid({ metrics }: AgentMetricsGridProps) {
       label: 'Активные брони',
       value: metrics.activeBookings,
       icon: ' ',
-      color: 'text-blue-400'
+      color: 'text-cyber-cyan'
     },
     {
       label: 'Комиссия (всего)',

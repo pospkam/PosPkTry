@@ -313,7 +313,7 @@ export default function OperatorRegisterPageClient() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 rounded-xl bg-white text-blue-600 font-semibold hover:bg-white/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-4 rounded-xl bg-premium-gold text-premium-black font-semibold hover:bg-premium-gold/80 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Регистрация...' : 'Зарегистрироваться'}
             </button>

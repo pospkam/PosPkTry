@@ -85,7 +85,7 @@ export default function AdminDashboard() {
       title: 'Партнёры',
       description: 'Верификация',
       link: '/hub/admin/content/partners',
-      gradient: 'from-blue-400 via-indigo-500 to-purple-500',
+      gradient: 'from-cyber-cyan via-cyber-cyan/70 to-premium-gold',
       badge: data?.pendingPartners && data.pendingPartners > 0 ? data.pendingPartners : null
     },
     {
@@ -109,7 +109,7 @@ export default function AdminDashboard() {
       title: 'Настройки',
       description: 'Конфигурация',
       link: '/hub/admin/settings',
-      gradient: 'from-slate-400 via-gray-500 to-zinc-500',
+      gradient: 'from-white/30 via-white/20 to-white/10',
       badge: null
     },
   ];
@@ -149,7 +149,7 @@ export default function AdminDashboard() {
             <AlertCircle className="w-10 h-10 text-white" strokeWidth={2.5} />
           </div>
           <h2 className="text-2xl font-black text-white mb-4">Ошибка загрузки</h2>
-          <p className="text-gray-300 mb-6">{error}</p>
+          <p className="text-white/70 mb-6">{error}</p>
           <button
             onClick={fetchData}
             className="px-8 py-4 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white rounded-2xl font-bold hover:shadow-2xl hover:shadow-violet-500/50 transition-all transform hover:scale-105"
@@ -291,7 +291,7 @@ export default function AdminDashboard() {
                       </div>
                     )}
                   </div>
-                  <p className="text-gray-400 text-sm font-semibold mb-2">{stat.label}</p>
+                  <p className="text-white/50 text-sm font-semibold mb-2">{stat.label}</p>
                   <p className="text-3xl font-black text-white">
                     {stat.value}
                   </p>
@@ -327,7 +327,7 @@ export default function AdminDashboard() {
                       </div>
                       <div>
                         <p className="text-white font-bold text-lg group-hover:text-violet-300 transition-colors">{tour.title}</p>
-                        <p className="text-gray-400 text-sm">{tour.bookings} бронирований</p>
+                        <p className="text-white/50 text-sm">{tour.bookings} бронирований</p>
                       </div>
                     </div>
                     <p className="text-2xl font-black bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
@@ -344,7 +344,7 @@ export default function AdminDashboard() {
         <div className="backdrop-blur-2xl bg-black/40 rounded-3xl border border-white/30 shadow-2xl overflow-hidden">
           <div className="px-8 py-6 bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 border-b border-white/20">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-slate-700 to-gray-900 rounded-2xl flex items-center justify-center shadow-lg">
+              <div className="w-14 h-14 bg-gradient-to-br from-white/15 to-white/5 rounded-2xl flex items-center justify-center shadow-lg">
                 <Wrench className="w-7 h-7 text-white" strokeWidth={2.5} />
               </div>
               <h2 className="text-2xl font-black bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
@@ -379,7 +379,7 @@ export default function AdminDashboard() {
                       <h3 className="text-xl font-black text-white mb-2">
                         {tool.title}
                       </h3>
-                      <p className="text-gray-300 text-sm mb-5 font-medium">
+                      <p className="text-white/60 text-sm mb-5 font-medium">
                         {tool.description}
                       </p>
                       <div className="flex items-center gap-2 text-violet-400 group-hover:text-fuchsia-300 transition-colors font-bold">
@@ -399,7 +399,7 @@ export default function AdminDashboard() {
           <div className="backdrop-blur-2xl bg-black/40 rounded-3xl border border-white/30 shadow-2xl overflow-hidden">
             <div className="px-8 py-6 bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 border-b border-white/20">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg">
+                <div className="w-14 h-14 bg-gradient-to-br from-cyber-cyan to-cyber-cyan/70 rounded-2xl flex items-center justify-center shadow-lg">
                   <Clock className="w-7 h-7 text-white" strokeWidth={2.5} />
                 </div>
                 <h2 className="text-2xl font-black bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
@@ -419,8 +419,8 @@ export default function AdminDashboard() {
                     </div>
                     <div className="flex-1">
                       <p className="text-white font-bold">{activity.title}</p>
-                      <p className="text-gray-300 text-sm">{activity.description}</p>
-                      <p className="text-gray-500 text-xs mt-1">
+                      <p className="text-white/60 text-sm">{activity.description}</p>
+                      <p className="text-white/40 text-xs mt-1">
                         {new Date(activity.timestamp).toLocaleString('ru-RU')}
                       </p>
                     </div>

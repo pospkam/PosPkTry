@@ -5,7 +5,7 @@ import { PublicNav } from '@/components/shared/PublicNav';
 
 export default function SettingsPageClient() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800">
+    <main className="min-h-screen bg-gradient-to-b from-premium-black to-[#0B1120]">
       <PublicNav />
       
       <div className="max-w-4xl mx-auto px-4 py-12">

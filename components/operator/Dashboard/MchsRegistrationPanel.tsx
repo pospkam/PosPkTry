@@ -371,7 +371,7 @@ export function MchsRegistrationPanel() {
   }
 
   // -- Стиль input-полей --
-  const inputClasses = 'mt-1 w-full min-h-[44px] bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-ocean/50';
+  const inputClasses = 'mt-1 w-full min-h-[44px] bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60';
 
   return (
     <section className="bg-white/15 border border-white/15 rounded-2xl p-6">

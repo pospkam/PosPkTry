@@ -268,11 +268,11 @@ export default function PartnerDashboardClient() {
         </div>
 
         {/* Help Section */}
-        <div className="mt-8 p-6 bg-blue-500/10 border border-blue-500/30 rounded-xl">
+        <div className="mt-8 p-6 bg-cyber-cyan/10 border border-cyber-cyan/30 rounded-xl">
           <div className="flex items-start gap-4">
-            <Lightbulb className="w-8 h-8 text-blue-400 shrink-0" />
+            <Lightbulb className="w-8 h-8 text-cyber-cyan shrink-0" />
             <div>
-              <h3 className="font-bold text-blue-400 mb-2">Следующие шаги:</h3>
+              <h3 className="font-bold text-cyber-cyan mb-2">Следующие шаги:</h3>
               <ul className="space-y-1 text-sm text-white/70">
                 <li>1. Дождитесь одобрения заявки администратором</li>
                 <li>2. После одобрения добавьте свои туры, объекты размещения и снаряжение</li>

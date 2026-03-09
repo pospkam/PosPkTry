@@ -80,8 +80,8 @@ export function TokenImportForm({ onTokenSaved }: TokenImportFormProps) {
   return (
     <div className="max-w-md mx-auto p-6 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20">
       <div className="flex items-center gap-3 mb-6">
-        <div className="p-3 bg-blue-500/20 rounded-xl">
-          <Key className="w-6 h-6 text-blue-400" />
+        <div className="p-3 bg-cyber-cyan/20 rounded-xl">
+          <Key className="w-6 h-6 text-cyber-cyan" />
         </div>
         <div>
           <h2 className="text-xl font-bold text-white">Timeweb Cloud API</h2>
@@ -105,7 +105,7 @@ export function TokenImportForm({ onTokenSaved }: TokenImportFormProps) {
                 setError('');
               }}
               placeholder="Введите ваш API токен"
-              className="w-full px-4 py-3 pr-12 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/30 focus:outline-none focus:border-blue-500/50"
+              className="w-full px-4 py-3 pr-12 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/30 focus:outline-none focus:border-cyber-cyan/50"
             />
             <button
               type="button"
@@ -156,7 +156,7 @@ export function TokenImportForm({ onTokenSaved }: TokenImportFormProps) {
             href="https://timeweb.cloud/my/settings/tokens" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="text-blue-400 hover:underline"
+            className="text-cyber-cyan hover:underline"
           >
             личном кабинете Timeweb
           </a>

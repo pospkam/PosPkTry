@@ -73,7 +73,7 @@ function RegisterForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-premium-black to-[#0B1120] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white/10 backdrop-blur-2xl border border-white/20 p-8 rounded-2xl shadow-2xl">
         {/* Header */}
         <div className="text-center">
@@ -264,7 +264,7 @@ function RegisterForm() {
 export default function RegisterPageClient() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-premium-black to-[#0B1120] flex items-center justify-center">
         <div className="text-cyber-cyan text-xl">Загрузка...</div>
       </div>
     }>

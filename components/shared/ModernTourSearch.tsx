@@ -72,7 +72,7 @@ const TourCard = React.memo(({ result }: { result: TourResult | (TourResult & Tr
         {result.imageUrl ? (
           <Image src={result.imageUrl} alt={result.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 100vw, 50vw" />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-blue-900 to-cyan-800 flex items-center justify-center" aria-label="Нет изображения">
+          <div className="w-full h-full bg-gradient-to-br from-[#0a1628] to-[#0B1120] flex items-center justify-center" aria-label="Нет изображения">
             <Mountain size={48} className="text-white/30" />
           </div>
         )}
@@ -515,13 +515,13 @@ export function ModernTourSearch() {
           {voiceSupported && (
             <motion.button 
               onClick={toggleVoiceInput}
-              className={`voice-input-btn p-2 rounded-xl transition-colors ${isListening ? 'bg-red-100 text-red-600' : 'text-white/60 hover:bg-white/10'}`}
+              className={`voice-input-btn p-2 rounded-xl transition-colors ${isListening ? 'bg-red-500/20 text-red-400' : 'text-white/60 hover:bg-white/10'}`}
               title="Голосовой ввод"
               aria-label="Голосовой ввод"
               aria-pressed={isListening}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
-              animate={isListening ? { scale: [1, 1.05, 1], backgroundColor: '#fee2e2' } : {}}
+              animate={isListening ? { scale: [1, 1.05, 1], backgroundColor: 'rgba(239,68,68,0.2)' } : {}}
             >
               <Mic size={18} aria-hidden="true" />
             </motion.button>
@@ -697,7 +697,7 @@ export function ModernTourSearch() {
                 </h3>
                 <motion.button 
                   onClick={() => setShowFilters(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/20 text-white rounded-xl font-medium hover:shadow-md transition-all"
+                  className="flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/20 text-white rounded-xl font-medium hover:shadow-[0_0_16px_rgba(0,212,255,0.15)] transition-all"
                   whileHover={{ scale: 1.02 }}
                 >
                   <Filter size={16} />
