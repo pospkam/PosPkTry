@@ -4,7 +4,8 @@
  * Используется для отладки на продакшен окружении.
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,7 +32,9 @@ async function testAnthropic(key: string): Promise<{ ok: boolean; status: number
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const authResult = await requireAdmin(request);
+  if (authResult instanceof NextResponse) return authResult;
   const keys = {
     ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
     DEEPSEEK_API_KEY: process.env.DEEPSEEK_API_KEY,

@@ -79,7 +79,7 @@ export const config = {
 
   // Настройки аутентификации
   auth: {
-    jwtSecret: process.env.JWT_SECRET || 'your-secret-key',
+    jwtSecret: process.env.JWT_SECRET || '',
     jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
     refreshTokenExpiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN || '30d',
     passwordMinLength: 8,

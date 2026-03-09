@@ -111,23 +111,30 @@ async function callDeepSeek(messages: ChatMessage[]): Promise<string | null> {
   }
 }
 
-// ── Minimax fallback ──────────────────────────────────────────
+// ── Minimax (primary) ─────────────────────────────────────────
 async function callMinimax(messages: ChatMessage[]): Promise<string | null> {
   const apiKey = process.env.MINIMAX_API_KEY;
   if (!apiKey) return null;
 
   try {
-    const payload = messages.map(({ role, content }) => ({ role, content }));
-    const res = await fetch('https://api.minimax.chat/v1/chat/completions', {
+    const systemMsg = messages.find(m => m.role === 'system');
+    const turns = messages.filter(m => m.role !== 'system');
+    const payload = turns.map(({ role, content }) => ({
+      role: role === 'assistant' ? 'assistant' : 'user',
+      content,
+    }));
+
+    const res = await fetch('https://api.minimaxi.chat/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'abab6.5s-chat',
+        model: 'MiniMax-Text-01',
         temperature: 0.4,
         max_tokens: 800,
+        ...(systemMsg ? { system_prompt: systemMsg.content } : {}),
         messages: payload,
       }),
     });
@@ -295,11 +302,11 @@ export async function POST(request: NextRequest) {
     const systemPrompt = getSystemPrompt(safeRole);
     const messagesForAI = buildMessageHistory(systemPrompt, history, 10);
 
-    // Вызываем AI — Anthropic → DeepSeek → Minimax → xAI → OpenRouter → fallback
-    let answer = await callAnthropic(messagesForAI);
-    if (!answer) answer = await callDeepSeek(messagesForAI);
-    if (!answer) answer = await callMinimax(messagesForAI);
+    // Вызываем AI — Minimax → xAI → Anthropic → DeepSeek → OpenRouter → fallback
+    let answer = await callMinimax(messagesForAI);
     if (!answer) answer = await callXai(messagesForAI);
+    if (!answer) answer = await callAnthropic(messagesForAI);
+    if (!answer) answer = await callDeepSeek(messagesForAI);
     if (!answer) answer = await callOpenrouter(messagesForAI);
     if (!answer) {
       answer = 'Извините, сервис временно недоступен. Попробуйте позже или обратитесь в поддержку.';
