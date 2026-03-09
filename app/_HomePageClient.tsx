@@ -2,19 +2,13 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { Search, UserCircle, MapPin, Heart, Home, Sun, Moon } from 'lucide-react';
+import { Search, UserCircle, MapPin, Heart, Home, Sun, Moon, Mountain, Fish, Droplets, Waves, Anchor, Snowflake } from 'lucide-react';
 import { useInView } from '@/hooks/useInView';
 import { useTheme } from '@/contexts/ThemeContext';
 import SOSButton from '@/components/shared/SOSButton';
 import Logo from '@/components/shared/Logo';
-import { VolcanoIcon }    from '@/components/icons/VolcanoIcon';
-import { FishingIcon }    from '@/components/icons/FishingIcon';
-import { ThermalIcon }    from '@/components/icons/ThermalIcon';
-import { RiverIcon }      from '@/components/icons/RiverIcon';
-import { SeaWalkIcon }    from '@/components/icons/SeaWalkIcon';
 import { BearIcon }       from '@/components/icons/BearIcon';
 import { HelicopterIcon } from '@/components/icons/HelicopterIcon';
-import { SnowmobileIcon } from '@/components/icons/SnowmobileIcon';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -121,14 +115,14 @@ function CheckCircleIcon() {
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
 const ACTIVITIES: Activity[] = [
-  { icon: <VolcanoIcon    className="w-8 h-8" />, label: 'Вулканы',   href: '/tours?category=vulkani' },
-  { icon: <FishingIcon    className="w-8 h-8" />, label: 'Рыбалка',   href: '/tours?category=rybalka' },
-  { icon: <ThermalIcon    className="w-8 h-8" />, label: 'Термы',     href: '/tours?category=termalnye_istochniki' },
-  { icon: <RiverIcon      className="w-8 h-8" />, label: 'Сплавы',    href: '/tours?category=rivers' },
-  { icon: <SeaWalkIcon    className="w-8 h-8" />, label: 'Морские',   href: '/tours?category=morskie_progulki' },
-  { icon: <BearIcon       className="w-8 h-8" />, label: 'Медведи',   href: '/tours?category=medvedi' },
-  { icon: <HelicopterIcon className="w-8 h-8" />, label: 'Вертолёты', href: '/tours?category=vertoletnye_tury' },
-  { icon: <SnowmobileIcon className="w-8 h-8" />, label: 'Снегоход',  href: '/tours?category=snegohod' },
+  { icon: <Mountain    size={32} strokeWidth={1.5} />, label: 'Вулканы',   href: '/tours?category=vulkani' },
+  { icon: <Fish        size={32} strokeWidth={1.5} />, label: 'Рыбалка',   href: '/tours?category=rybalka' },
+  { icon: <Droplets    size={32} strokeWidth={1.5} />, label: 'Термы',     href: '/tours?category=termalnye_istochniki' },
+  { icon: <Waves       size={32} strokeWidth={1.5} />, label: 'Сплавы',    href: '/tours?category=rivers' },
+  { icon: <Anchor      size={32} strokeWidth={1.5} />, label: 'Морские',   href: '/tours?category=morskie_progulki' },
+  { icon: <BearIcon       className="w-8 h-8" />,     label: 'Медведи',   href: '/tours?category=medvedi' },
+  { icon: <HelicopterIcon className="w-8 h-8" />,     label: 'Вертолёты', href: '/tours?category=vertoletnye_tury' },
+  { icon: <Snowflake   size={32} strokeWidth={1.5} />, label: 'Снегоход',  href: '/tours?category=snegohod' },
 ];
 
 const BENTO_ITEMS: BentoItem[] = [
@@ -229,14 +223,12 @@ function StickyHeader({ scrolled }: { scrolled: boolean }) {
       borderBottom: scrolled ? '1px solid var(--kh-border)' : '1px solid transparent',
       transition: 'background 300ms ease, backdrop-filter 300ms ease, border-color 300ms ease',
     }}>
-      {/* Logo — SVG mountain range inside orange rounded square */}
+      {/* Logo — SVG mountain range, no background */}
       <Link href="/" aria-label="KamchatourHub" style={{
-        width: '38px', height: '38px', borderRadius: '10px',
-        background: 'linear-gradient(135deg, var(--kh-accent) 0%, #b83500 100%)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        textDecoration: 'none', flexShrink: 0, padding: '5px',
+        textDecoration: 'none', flexShrink: 0,
       }}>
-        <Logo size={20} />
+        <Logo size={24} />
       </Link>
 
       {/* Search pill */}
