@@ -302,10 +302,10 @@ export async function POST(request: NextRequest) {
     const systemPrompt = getSystemPrompt(safeRole);
     const messagesForAI = buildMessageHistory(systemPrompt, history, 10);
 
-    // Вызываем AI — Minimax → xAI → Anthropic → DeepSeek → OpenRouter → fallback
-    let answer = await callMinimax(messagesForAI);
-    if (!answer) answer = await callXai(messagesForAI);
+    // Вызываем AI — xAI → Anthropic → Minimax → DeepSeek → OpenRouter → fallback
+    let answer = await callXai(messagesForAI);
     if (!answer) answer = await callAnthropic(messagesForAI);
+    if (!answer) answer = await callMinimax(messagesForAI);
     if (!answer) answer = await callDeepSeek(messagesForAI);
     if (!answer) answer = await callOpenrouter(messagesForAI);
     if (!answer) {
