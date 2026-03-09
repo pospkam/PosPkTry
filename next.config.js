@@ -5,6 +5,10 @@ const nextConfig = {
   poweredByHeader: false,
   compress: true,
 
+  // ONNX Runtime (used by @huggingface/transformers) has native Node.js addons
+  // that cannot be bundled by webpack — must be resolved at runtime.
+  serverExternalPackages: ['onnxruntime-node', '@huggingface/transformers'],
+
   // Игнорировать ESLint и TypeScript ошибки во время сборки
   eslint: {
     ignoreDuringBuilds: true,
@@ -34,6 +38,7 @@ const nextConfig = {
       'node_modules/@smithy/**',
       'node_modules/@aws-crypto/**',
       'node_modules/fast-xml-parser/**',
+      'node_modules/onnxruntime-node/bin/**',
     ],
   },
 
@@ -41,8 +46,14 @@ const nextConfig = {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || '',
   },
 
-  webpack: (config) => {
+  webpack: (config, { isServer }) => {
     config.resolve.fallback = { fs: false, net: false, tls: false };
+    if (isServer) {
+      config.externals = [
+        ...(Array.isArray(config.externals) ? config.externals : []),
+        'onnxruntime-node',
+      ];
+    }
     return config;
   },
 

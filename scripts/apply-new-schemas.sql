@@ -29,3 +29,6 @@
 \ir ../lib/database/migrations/022_alter_chat_sessions_add_columns.sql
 \ir ../lib/database/migrations/add_partner_legal_fields.sql
 \ir ../lib/database/migrations/fix_tours_schema.sql
+\ir ../lib/database/migrations/023_add_route_id_to_tours.sql
+\ir ../lib/database/migrations/024_create_kamchatka_routes.sql
+\ir ../lib/database/migrations/025_add_embedding_to_agent_routes.sql

@@ -30,6 +30,8 @@
     "ai:scrape-unique:stats": "node scripts/unique-routes-scraper.js --stats",
     "ai:scrape-unique:direct": "node scripts/unique-routes-scraper.js --direct",
     "ai:scrape-unique:direct:dry": "node scripts/unique-routes-scraper.js --direct --dry-run",
+    "ai:index-embeddings": "npx tsx scripts/index-route-embeddings.ts",
+    "ai:index-embeddings:force": "npx tsx scripts/index-route-embeddings.ts --force",
     "security:audit": "bash scripts/security/audit.sh",
     "security:detect-secrets": "bash scripts/security/detect-secrets.sh",
     "test:load": "bash load-tests/k6/run-load-test.sh",
@@ -49,6 +51,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.927.0",
+    "@huggingface/transformers": "^3.8.1",
     "@types/node": "^20.11.25",
     "@types/nodemailer": "^6.4.14",
     "@types/pg": "^8.16.0",

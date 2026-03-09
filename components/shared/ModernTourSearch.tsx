@@ -121,9 +121,13 @@ const TourCard = React.memo(({ result }: { result: TourResult | (TourResult & Tr
           </span>
         </div>
         <div className="mt-auto pt-3 border-t border-white/10">
-          <span className="text-lg font-black text-premium-gold">
-            от {result.price?.toLocaleString('ru-RU')} ₽
-          </span>
+          {result.price > 0 ? (
+            <span className="text-lg font-black text-premium-gold">
+              от {result.price?.toLocaleString('ru-RU')} ₽
+            </span>
+          ) : (
+            <span className="text-sm font-medium text-white/50">По запросу</span>
+          )}
           {isTransfer && (
             <div className="text-xs text-white/50 mt-1">
               Оператор: {result.operatorName}
@@ -163,6 +167,7 @@ export function ModernTourSearch() {
   });
   const [results, setResults] = useState<TourResult[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searchMode, setSearchMode] = useState<'sql' | 'semantic' | 'fulltext_fallback' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [showAI, setShowAI] = useState(false);
@@ -257,20 +262,50 @@ export function ModernTourSearch() {
     };
   }, [filters]);
 
+  /** Определяет, нужен ли семантический поиск (текстовый запрос без фильтров) */
+  const isSemanticQuery = (f: SearchFilters): boolean => {
+    const hasText = f.query.length >= 3;
+    const hasFilters = !!(f.difficulty && f.difficulty !== 'any') || !!f.priceMin || !!f.priceMax;
+    return hasText && !hasFilters && !f.passengers;
+  };
+
+  /** Маппинг route из semantic search в TourResult для отображения */
+  const mapRouteToTourResult = (route: {
+    id: string;
+    title: string;
+    description: string | null;
+    category: string;
+    sourceUrl: string | null;
+    sourceName: string | null;
+    similarity: number;
+  }): TourResult => ({
+    id: route.id,
+    title: route.title,
+    description: route.description || '',
+    price: 0, // маршруты без цены — "По запросу"
+    duration: '',
+    difficulty: '',
+    activities: [route.category],
+    rating: route.similarity,
+    reviews: 0,
+    isEco: route.category === 'eco',
+  });
+
   const performSearch = async () => {
     setLoading(true);
+    setSearchMode(null);
     try {
       // Если есть passengers, ищем трансферы
       if (filters.passengers && filters.passengers > 0) {
         const params = new URLSearchParams();
-        if (filters.query) params.append('from', filters.query); // Используем query как from для примера
-        params.append('to', 'Петропавловск-Камчатский'); // Default to
+        if (filters.query) params.append('from', filters.query);
+        params.append('to', 'Петропавловск-Камчатский');
         if (filters.dateFrom) params.append('date', filters.dateFrom);
         params.append('passengers', filters.passengers.toString());
 
         const response = await fetch(`/api/transfers/search?${params}`);
         const data = await response.json();
-        
+
         if (data.success && data.data?.availableTransfers) {
           setResults(data.data.availableTransfers.map((t: any) => ({
             id: t.scheduleId,
@@ -283,8 +318,7 @@ export function ModernTourSearch() {
             imageUrl: '/images/transfer-placeholder.jpg',
             rating: 4.5,
             reviews: 23,
-            isEco: false, // Добавлено
-            // Добавляем transfer-specific fields
+            isEco: false,
             routeName: t.route.name,
             fromLocation: t.route.fromLocation,
             toLocation: t.route.toLocation,
@@ -293,11 +327,26 @@ export function ModernTourSearch() {
             operatorName: t.operatorName,
             availableSeats: t.availableSeats,
           } as TourResult & TransferResult)));
+          setSearchMode('sql');
           return;
         }
       }
 
-      // Иначе поиск туров
+      // Семантический поиск для текстовых запросов без фильтров
+      if (isSemanticQuery(filters)) {
+        const semResponse = await fetch(
+          `/api/discovery/semantic-search?q=${encodeURIComponent(filters.query)}&limit=20`
+        );
+        const semData = await semResponse.json();
+
+        if (semData.success && semData.data && semData.data.length > 0) {
+          setResults(semData.data.map(mapRouteToTourResult));
+          setSearchMode(semData.meta?.mode === 'semantic' ? 'semantic' : 'fulltext_fallback');
+          return;
+        }
+      }
+
+      // SQL поиск (фильтры или fallback)
       const params = new URLSearchParams();
       if (filters.query) params.append('q', filters.query);
       if (filters.difficulty && filters.difficulty !== 'any') params.append('difficulty', filters.difficulty);
@@ -307,12 +356,13 @@ export function ModernTourSearch() {
 
       const response = await fetch(`/api/discovery/search?${params}`);
       const data = await response.json();
-      
+
       if (data.success && data.data) {
-        setResults(data.data.map((tour: any) => ({ ...tour, isEco: tour.ecoFriendly || false }))); // Добавлено eco
+        setResults(data.data.map((tour: any) => ({ ...tour, isEco: tour.ecoFriendly || false })));
       }
-    } catch (error) {
-      console.error('Search error:', error);
+      setSearchMode('sql');
+    } catch {
+      setError('Ошибка поиска');
     } finally {
       setLoading(false);
     }
@@ -704,6 +754,15 @@ export function ModernTourSearch() {
                   Дополнительные фильтры
                 </motion.button>
               </motion.div>
+              {searchMode === 'semantic' && (
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-cyber-cyan/15 border border-cyber-cyan/30 text-cyber-cyan text-sm font-medium rounded-full">
+                    <Bot size={14} />
+                    AI-поиск
+                  </span>
+                  <span className="text-white/40 text-sm">по 259 маршрутам Камчатки</span>
+                </div>
+              )}
               <motion.div 
                 layout 
                 className="results-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"

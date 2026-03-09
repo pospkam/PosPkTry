@@ -1,100 +1,110 @@
 /**
  * GET /api/discovery/semantic-search
- * Семантический поиск туров по естественному языковому запросу
- * 
+ * Семантический поиск маршрутов по естественному языковому запросу.
+ *
+ * Источник: agent_route_knowledge (259 маршрутов, Камчатка).
+ * Модель: Xenova/paraphrase-multilingual-MiniLM-L12-v2 (384 dims, русский).
+ * Fallback: PostgreSQL tsvector (русский GIN индекс).
+ *
  * Params:
- *   q=string           — запрос (например "тур к вулканам для семьи с детьми")
- *   limit=number       — количество результатов (default: 5, max: 20)
- *   fallback=1         — также выполнить SQL-поиск, если нет векторных результатов
+ *   q=string     — запрос ("рыбалка у вулкана", "медведи осень")
+ *   limit=number — количество результатов (default: 10, max: 50)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { semanticSearch } from '@/lib/ai/embeddings';
+import { semanticSearch, type SemanticSearchResult } from '@/lib/ai/embeddings';
 import { query } from '@/lib/database';
 
 export const dynamic = 'force-dynamic';
 
-/** Резервный SQL-поиск при недоступности векторного */
-async function sqlFallbackSearch(
+/** Fallback: русский полнотекстовый поиск по GIN индексу agent_route_knowledge */
+async function tsvectorFallback(
   queryText: string,
   limit: number
-): Promise<import('@/lib/ai/embeddings').SemanticSearchResult[]> {
-  const like = `%${queryText}%`;
+): Promise<SemanticSearchResult[]> {
   const result = await query<{
     id: string;
     title: string;
-    description: string;
-    price: number;
-    difficulty: string;
-    duration: number;
+    description: string | null;
     category: string;
-    location: string;
-    tags: string[];
+    source_url: string | null;
+    source_name: string | null;
+    lat: string | null;
+    lng: string | null;
   }>(
-    `SELECT id, title, description, price, difficulty, duration,
-            category, location, tags
-     FROM tours
-     WHERE is_active = true
-       AND (
-         title ILIKE $1
-         OR description ILIKE $1
-         OR category ILIKE $1
-         OR location ILIKE $1
-       )
-     ORDER BY rating DESC NULLS LAST, created_at DESC
+    `SELECT id, title, description, category, source_url, source_name, lat, lng
+     FROM agent_route_knowledge
+     WHERE to_tsvector('russian', search_text) @@ plainto_tsquery('russian', $1)
+     ORDER BY ts_rank(to_tsvector('russian', search_text), plainto_tsquery('russian', $1)) DESC
      LIMIT $2`,
-    [like, limit]
+    [queryText, limit]
   );
 
-  return result.rows.map((row) => ({ ...row, similarity: 0 }));
+  return result.rows.map((row) => ({
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    category: row.category,
+    sourceUrl: row.source_url,
+    sourceName: row.source_name,
+    lat: row.lat != null ? parseFloat(row.lat) : null,
+    lng: row.lng != null ? parseFloat(row.lng) : null,
+    similarity: 0,
+  }));
 }
 
-// Public: семантический поиск туров доступен без аутентификации.
+// Public: семантический поиск маршрутов, без аутентификации.
 export async function GET(request: NextRequest) {
+  const sp = request.nextUrl.searchParams;
+  const queryText = sp.get('q')?.trim() ?? '';
+  const limit = Math.min(Math.max(parseInt(sp.get('limit') ?? '10', 10), 1), 50);
+
+  if (!queryText) {
+    return NextResponse.json(
+      { success: false, error: 'Параметр q обязателен' },
+      { status: 400 }
+    );
+  }
+
+  if (queryText.length > 500) {
+    return NextResponse.json(
+      { success: false, error: 'Запрос слишком длинный (макс. 500 символов)' },
+      { status: 400 }
+    );
+  }
+
   try {
-    const sp = request.nextUrl.searchParams;
-    const queryText = sp.get('q')?.trim() ?? '';
-    const limit = Math.min(parseInt(sp.get('limit') ?? '5', 10), 20);
-    const withFallback = sp.get('fallback') !== '0';
-
-    if (!queryText) {
-      return NextResponse.json(
-        { success: false, error: 'Параметр q обязателен' },
-        { status: 400 }
-      );
-    }
-
-    // Семантический поиск
     const results = await semanticSearch(queryText, limit);
 
-    // Если нет результатов и разрешён fallback — используем SQL
-    if (results.length === 0 && withFallback) {
-      const fallbackResults = await sqlFallbackSearch(queryText, limit);
+    if (results.length > 0) {
       return NextResponse.json({
         success: true,
-        data: fallbackResults,
-        meta: {
-          mode: 'sql_fallback',
-          query: queryText,
-          count: fallbackResults.length,
-        },
+        data: results,
+        meta: { mode: 'semantic', query: queryText, count: results.length },
       });
     }
 
+    // Fallback: русский tsvector
+    const fallbackResults = await tsvectorFallback(queryText, limit);
     return NextResponse.json({
       success: true,
-      data: results,
-      meta: {
-        mode: 'semantic',
-        query: queryText,
-        count: results.length,
-      },
+      data: fallbackResults,
+      meta: { mode: 'fulltext_fallback', query: queryText, count: fallbackResults.length },
     });
-  } catch (error) {
-    console.error('Semantic search route error:', error);
-    return NextResponse.json(
-      { success: false, error: 'Ошибка семантического поиска' },
-      { status: 500 }
-    );
+  } catch {
+    // If model fails to load — graceful fallback to tsvector
+    try {
+      const fallbackResults = await tsvectorFallback(queryText, limit);
+      return NextResponse.json({
+        success: true,
+        data: fallbackResults,
+        meta: { mode: 'fulltext_fallback', query: queryText, count: fallbackResults.length },
+      });
+    } catch {
+      return NextResponse.json(
+        { success: false, error: 'Ошибка поиска. Попробуйте позже.' },
+        { status: 500 }
+      );
+    }
   }
 }
