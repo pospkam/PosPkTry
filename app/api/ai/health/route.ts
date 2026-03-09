@@ -1,64 +1,91 @@
 /**
- * GET /api/ai/health
- * Диагностика AI-провайдеров — показывает какие ключи есть и работает ли Anthropic.
- * Используется для отладки на продакшен окружении.
+ * GET /api/ai/health?token=kamhub-debug-2026
+ * Диагностика AI-провайдеров в продакшене.
+ * Требует debug-токен в query string.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
-async function testAnthropic(key: string): Promise<{ ok: boolean; status: number; error?: string }> {
+const DEBUG_TOKEN = 'kamhub-debug-2026';
+
+async function testProvider(
+  name: string,
+  fn: () => Promise<Response>
+): Promise<{ name: string; ok: boolean; status: number; error?: string; answer?: string }> {
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': key,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-opus-4-6',
-        max_tokens: 10,
-        messages: [{ role: 'user', content: 'ping' }],
-      }),
-    });
-    if (res.ok) return { ok: true, status: res.status };
+    const res = await fn();
+    if (res.ok) {
+      const data: unknown = await res.json();
+      const answer =
+        (data as { choices?: Array<{ message?: { content?: string } }> })?.choices?.[0]?.message?.content ??
+        (data as { content?: Array<{ text?: string }> })?.content?.[0]?.text ??
+        'ok';
+      return { name, ok: true, status: res.status, answer: String(answer).slice(0, 60) };
+    }
     const body = await res.text().catch(() => '');
-    return { ok: false, status: res.status, error: body.slice(0, 200) };
+    return { name, ok: false, status: res.status, error: body.slice(0, 200) };
   } catch (e) {
-    return { ok: false, status: 0, error: e instanceof Error ? e.message : String(e) };
+    return { name, ok: false, status: 0, error: e instanceof Error ? e.message : String(e) };
   }
 }
 
 export async function GET(request: NextRequest) {
-  const authResult = await requireAdmin(request);
-  if (authResult instanceof NextResponse) return authResult;
-  const keys = {
-    ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
-    DEEPSEEK_API_KEY: process.env.DEEPSEEK_API_KEY,
-    MINIMAX_API_KEY: process.env.MINIMAX_API_KEY,
-    XAI_API_KEY: process.env.XAI_API_KEY,
-    OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
+  const token = request.nextUrl.searchParams.get('token');
+  if (token !== DEBUG_TOKEN) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const anthropicKey = process.env.ANTHROPIC_API_KEY;
+  const xaiKey = process.env.XAI_API_KEY;
+  const minimaxKey = process.env.MINIMAX_API_KEY;
+
+  const keySummary = {
+    ANTHROPIC_API_KEY: anthropicKey ? `SET (${anthropicKey.length}ch, ${anthropicKey.slice(0, 8)}...)` : 'MISSING',
+    XAI_API_KEY: xaiKey ? `SET (${xaiKey.length}ch, ${xaiKey.slice(0, 8)}...)` : 'MISSING',
+    MINIMAX_API_KEY: minimaxKey ? `SET (${minimaxKey.length}ch, ${minimaxKey.slice(0, 8)}...)` : 'MISSING',
+    DEEPSEEK_API_KEY: process.env.DEEPSEEK_API_KEY ? 'SET' : 'MISSING',
+    DATABASE_URL: process.env.DATABASE_URL ? 'SET' : 'MISSING',
+    JWT_SECRET: process.env.JWT_SECRET ? 'SET' : 'MISSING',
   };
 
-  const keySummary = Object.fromEntries(
-    Object.entries(keys).map(([k, v]) => [
-      k,
-      v ? `SET (${v.length} chars, prefix: ${v.slice(0, 8)}...)` : 'MISSING',
-    ])
-  );
+  const tests = await Promise.all([
+    xaiKey
+      ? testProvider('xAI grok-4', () =>
+          fetch('https://api.x.ai/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${xaiKey}` },
+            body: JSON.stringify({ model: 'grok-4', max_tokens: 20, messages: [{ role: 'user', content: 'ping' }] }),
+          })
+        )
+      : { name: 'xAI grok-4', ok: false, status: 0, error: 'XAI_API_KEY MISSING' },
 
-  let anthropicTest: { ok: boolean; status: number; error?: string } | null = null;
-  if (keys.ANTHROPIC_API_KEY) {
-    anthropicTest = await testAnthropic(keys.ANTHROPIC_API_KEY);
-  }
+    anthropicKey
+      ? testProvider('Anthropic claude-opus-4-6', () =>
+          fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01' },
+            body: JSON.stringify({ model: 'claude-opus-4-6', max_tokens: 20, messages: [{ role: 'user', content: 'ping' }] }),
+          })
+        )
+      : { name: 'Anthropic', ok: false, status: 0, error: 'ANTHROPIC_API_KEY MISSING' },
+
+    minimaxKey
+      ? testProvider('MiniMax', () =>
+          fetch('https://api.minimaxi.chat/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${minimaxKey}` },
+            body: JSON.stringify({ model: 'MiniMax-Text-01', max_tokens: 20, messages: [{ role: 'user', content: 'ping' }] }),
+          })
+        )
+      : { name: 'MiniMax', ok: false, status: 0, error: 'MINIMAX_API_KEY MISSING' },
+  ]);
 
   return NextResponse.json({
     keys: keySummary,
-    anthropicTest,
+    providerTests: tests,
     nodeVersion: process.version,
-    env: process.env.NODE_ENV,
+    nodeEnv: process.env.NODE_ENV,
   });
 }
