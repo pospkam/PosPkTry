@@ -1,101 +1,124 @@
 /**
  * KamchatourHub — Design Tokens (Homepage)
- * Volcanic Expedition Aesthetic — National Geographic × Lindblad style.
- * Only used by homepage (_HomePageClient.tsx).
+ * Volcanic Expedition Aesthetic — dark default, warm light option.
  */
 
+/* ═══ Dark theme (default) ═══════════════════════════════════════════════════ */
+
 :root {
-  /* ── Backgrounds ─────────────────────────────── */
+  /* Backgrounds */
   --kh-bg:       #0A0A0A;
   --kh-surface:  #141414;
   --kh-surface2: #1C1C1E;
 
-  /* ── Typography ──────────────────────────────── */
+  /* Typography */
   --kh-text:     #F0EDE8;
   --kh-text-dim: #8A8680;
 
-  /* ── Accents ─────────────────────────────────── */
-  --kh-accent:  #E8530E;           /* volcanic orange — primary CTA */
-  --kh-accent2: #2D7DD2;           /* deep ocean blue */
-  --kh-ice:     #C8E6F5;           /* glacial highlight */
-  --kh-danger:  #DC2626;           /* SOS */
+  /* Accents */
+  --kh-accent:   #E8530E;
+  --kh-accent2:  #2D7DD2;
+  --kh-ice:      #C8E6F5;
+  --kh-danger:   #DC2626;
 
-  /* ── Derived/utility ─────────────────────────── */
+  /* Derived */
   --kh-accent-glow:   rgba(232,83,14,0.35);
   --kh-accent2-glow:  rgba(45,125,210,0.25);
   --kh-border:        rgba(240,237,232,0.08);
   --kh-border-strong: rgba(240,237,232,0.14);
 
-  /* ── Timing ──────────────────────────────────── */
+  /* Component-level */
+  --kh-header-bg:           rgba(10,10,10,0.88);
+  --kh-search-bg:           rgba(255,255,255,0.07);
+  --kh-hero-top-gradient:   linear-gradient(to bottom, rgba(10,10,10,0.65) 0%, transparent 45%);
+  --kh-activity-hover-bg:    rgba(232,83,14,0.06);
+  --kh-activity-hover-border: rgba(232,83,14,0.2);
+  --kh-nav-bg:              rgba(20,20,20,0.9);
+  --kh-nav-shadow:          0 8px 32px rgba(0,0,0,0.5);
+
+  /* Timing */
   --kh-ease: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* ── Animated hero gradient ─────────────────────── */
-@keyframes kh-hero-glow {
-  0%   { opacity: 1; transform: translate(-5%, 8%) scale(1);    }
-  33%  { opacity: 0.7; transform: translate(5%, -4%) scale(1.1); }
-  66%  { opacity: 0.9; transform: translate(-8%, 2%) scale(0.95); }
-  100% { opacity: 1; transform: translate(-5%, 8%) scale(1);    }
-}
-@keyframes kh-hero-glow2 {
-  0%   { opacity: 0.8; transform: translate(8%, -6%) scale(1.05); }
-  33%  { opacity: 1;   transform: translate(-4%, 10%) scale(0.95); }
-  66%  { opacity: 0.6; transform: translate(6%, 4%) scale(1.1);   }
-  100% { opacity: 0.8; transform: translate(8%, -6%) scale(1.05); }
+/* ═══ Light theme ════════════════════════════════════════════════════════════ */
+
+[data-theme="light"] {
+  --kh-bg:       #F5F2ED;
+  --kh-surface:  #FFFFFF;
+  --kh-surface2: #EDE9E3;
+
+  --kh-text:     #1A1714;
+  --kh-text-dim: #6B6560;
+
+  --kh-accent:   #D44A0C;
+  --kh-accent2:  #2568B0;
+  --kh-ice:      #E3F1FA;
+
+  --kh-accent-glow:   rgba(212,74,12,0.25);
+  --kh-border:        rgba(0,0,0,0.07);
+  --kh-border-strong: rgba(0,0,0,0.12);
+
+  --kh-header-bg:             rgba(245,242,237,0.88);
+  --kh-search-bg:             rgba(0,0,0,0.04);
+  --kh-hero-top-gradient:     linear-gradient(to bottom, rgba(245,242,237,0.5) 0%, transparent 40%);
+  --kh-activity-hover-bg:      rgba(212,74,12,0.06);
+  --kh-activity-hover-border:  rgba(212,74,12,0.15);
+  --kh-nav-bg:                rgba(255,255,255,0.9);
+  --kh-nav-shadow:            0 8px 32px rgba(0,0,0,0.1);
 }
 
-/* ── Infinite marquee ───────────────────────────── */
+/* Film grain: lighter on light theme */
+[data-theme="light"] .kh-film-grain {
+  opacity: 0.02;
+}
+[data-theme="dark"] .kh-film-grain,
+:root .kh-film-grain {
+  opacity: 0.035;
+}
+
+/* ═══ Keyframes ══════════════════════════════════════════════════════════════ */
+
+@keyframes kh-hero-glow {
+  0%   { opacity: 1;   transform: translate(-5%, 8%) scale(1);     }
+  33%  { opacity: 0.7; transform: translate(5%, -4%) scale(1.1);   }
+  66%  { opacity: 0.9; transform: translate(-8%, 2%) scale(0.95);  }
+  100% { opacity: 1;   transform: translate(-5%, 8%) scale(1);     }
+}
+
 @keyframes kh-marquee {
-  from { transform: translateX(0); }
+  from { transform: translateX(0);    }
   to   { transform: translateX(-50%); }
 }
 
-/* ── Film grain ─────────────────────────────────── */
 @keyframes kh-grain {
-  0%   { transform: translate(0,    0);   }
-  10%  { transform: translate(-3%,  1%);  }
-  20%  { transform: translate(2%,  -3%);  }
-  30%  { transform: translate(-1%,  4%);  }
-  40%  { transform: translate(3%,  -1%);  }
-  50%  { transform: translate(-4%,  3%);  }
-  60%  { transform: translate(1%,  -2%);  }
-  70%  { transform: translate(-2%,  2%);  }
-  80%  { transform: translate(4%,  -4%);  }
-  90%  { transform: translate(-1%,  1%);  }
-  100% { transform: translate(0,    0);   }
+  0%   { transform: translate(0,   0);   }
+  10%  { transform: translate(-5%,-10%); }
+  30%  { transform: translate(3%,  5%);  }
+  50%  { transform: translate(-3%, 15%); }
+  70%  { transform: translate(8%, -5%);  }
+  90%  { transform: translate(-8%, 10%); }
+  100% { transform: translate(0,   0);   }
 }
 
-/* ── SOS pulse ──────────────────────────────────── */
 @keyframes kh-sos-pulse {
-  0%   { box-shadow: 0 0 0 0   rgba(220,38,38,0.7);  }
-  60%  { box-shadow: 0 0 0 12px rgba(220,38,38,0);    }
-  100% { box-shadow: 0 0 0 0   rgba(220,38,38,0);     }
+  0%   { box-shadow: 0 0 0 0   rgba(220,38,38,0.7); }
+  60%  { box-shadow: 0 0 0 12px rgba(220,38,38,0);   }
+  100% { box-shadow: 0 0 0 0   rgba(220,38,38,0);    }
 }
 
-/* ── Scroll reveal ──────────────────────────────── */
+/* ═══ Scroll reveal ══════════════════════════════════════════════════════════ */
+
 .kh-reveal {
   opacity: 0;
   transform: translateY(40px);
   transition: opacity 0.8s var(--kh-ease), transform 0.8s var(--kh-ease);
 }
-.kh-reveal.kh-visible {
-  opacity: 1;
-  transform: translateY(0);
-}
+.kh-reveal.kh-visible { opacity: 1; transform: translateY(0); }
 .kh-reveal-d1 { transition-delay: 0.1s; }
 .kh-reveal-d2 { transition-delay: 0.2s; }
 .kh-reveal-d3 { transition-delay: 0.3s; }
 .kh-reveal-d4 { transition-delay: 0.4s; }
 
-/* Respect prefers-reduced-motion */
 @media (prefers-reduced-motion: reduce) {
-  .kh-reveal {
-    opacity: 0;
-    transform: none;
-    transition: opacity 0.4s ease;
-  }
+  .kh-reveal { transform: none; transition: opacity 0.4s ease; }
 }
-
-/* ── Misc utilities ─────────────────────────────── */
-.kh-scrollbar-none          { scrollbar-width: none; -ms-overflow-style: none; }
-.kh-scrollbar-none::-webkit-scrollbar { display: none; }
