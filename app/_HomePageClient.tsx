@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Sun, Moon, UserCircle } from 'lucide-react';
 import { VolcanoIcon } from '@/components/icons/VolcanoIcon';
 import { FishingIcon } from '@/components/icons/FishingIcon';
@@ -215,7 +216,7 @@ function Footer() {
     { label: 'Карта', href: '/map' },
     { label: 'Безопасность', href: '/safety' },
     { label: 'Экология', href: '/eco' },
-    { label: 'О нас', href: '/partner' },
+    { label: 'Партнёрам', href: '/partner/register' },
   ];
   return (
     <footer
@@ -285,6 +286,7 @@ function Footer() {
 export default function HomePageClient() {
   // Используем единый ThemeContext вместо дублирующегося локального стейта
   const { theme, toggleTheme } = useTheme();
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [clickedActivity, setClickedActivity] = useState<string | null>(null);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
@@ -301,7 +303,7 @@ export default function HomePageClient() {
     (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
       e.preventDefault();
       setClickedActivity(href);
-      setTimeout(() => { window.location.href = href; }, 300);
+      setTimeout(() => { router.push(href); }, 300);
     },
     []
   );
@@ -332,8 +334,7 @@ export default function HomePageClient() {
         {/* ФОН - ФИКСИРОВАННЫЙ СЗАДИ */}
         <div className="fixed inset-0 w-full h-full -z-10 bg-black">
           <picture>
-            <source media="(max-width: 480px)" srcSet={theme === 'dark' ? '/images/dark-mobile.webp' : '/images/light-mobile.webp'} type="image/webp" />
-            <source media="(max-width: 768px)" srcSet={theme === 'dark' ? '/images/dark-tablet.webp' : '/images/light-tablet.webp'} type="image/webp" />
+            <source srcSet={theme === 'dark' ? '/images/dark.webp' : '/images/light.webp'} type="image/webp" />
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={theme === 'dark' ? '/images/dark.jpg' : '/images/light.jpg'}
@@ -346,12 +347,16 @@ export default function HomePageClient() {
         </div>
 
         {/* КОНТЕНТ (Поверх фона) */}
-        <div className="relative z-10 flex flex-col items-center w-full px-4 pt-16">
+        <div className="relative z-10 flex flex-col items-center w-full px-4 pt-[72px]">
         {/* Header */}
         <header
           style={{
             position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
-            padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            background: 'rgba(255,255,255,0.12)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            borderBottom: '1px solid rgba(255,255,255,0.15)',
           }}
         >
           <Link
@@ -409,7 +414,7 @@ export default function HomePageClient() {
           style={{
             display: 'flex', flexDirection: 'column',
             alignItems: 'center', justifyContent: 'center',
-            textAlign: 'center', padding: '100px 24px 40px',
+            textAlign: 'center', padding: '60px 24px 32px',
           }}
         >
           <h1
@@ -443,8 +448,8 @@ export default function HomePageClient() {
             </a>
             <button
               type="button"
-              className="px-7 py-3 rounded-full bg-volcano text-white font-semibold text-lg shadow-lg hover:bg-volcano/90 transition min-w-[160px] text-center flex items-center gap-2"
-              style={{ outline: 'none', border: 'none', cursor: 'pointer' }}
+              className="px-7 py-3 rounded-full bg-white/15 border border-white/20 text-white font-semibold text-lg shadow-lg hover:bg-white/25 hover:shadow-[0_0_20px_rgba(0,212,255,0.3)] transition-all min-w-[160px] text-center flex items-center justify-center gap-2"
+              style={{ outline: 'none', cursor: 'pointer' }}
               onClick={() => {
                 if (typeof window !== 'undefined') {
                   const btn = document.querySelector('[aria-label="AI помощник"]') as HTMLElement;
@@ -453,7 +458,7 @@ export default function HomePageClient() {
               }}
               aria-label="Спросить AI"
             >
-              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M12 19c.7-1.2 1.1-2.6 1.1-4.1 0-3.9-3.1-7-7-7S-1 11-1 14.9c0 1.5.4 2.9 1.1 4.1"/><circle cx="5" cy="14.9" r="7"/></svg>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 8V4H8"/><rect x="2" y="2" width="20" height="20" rx="5"/><path d="m2 22 5.5-5.5"/><path d="M14 18h2"/><path d="M14 14h4"/></svg>
               Спросить AI
             </button>
           </div>
@@ -462,7 +467,7 @@ export default function HomePageClient() {
         {/* Activities - Auto-scroll carousel */}
         <section
           aria-label="Активности Камчатки"
-          style={{ padding: '40px 0 100px', width: '100%' }}
+          style={{ padding: '24px 0 40px', width: '100%' }}
         >
           <h2
             style={{
@@ -485,7 +490,7 @@ export default function HomePageClient() {
         {/* Carousel */}
         <section
           aria-label="Камчатка глазами путешественников"
-          style={{ padding: '32px 0 24px' }}
+          style={{ padding: '24px 0 32px' }}
         >
           <h2
             style={{

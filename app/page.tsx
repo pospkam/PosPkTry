@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     description: 'Рыбалка на чавычу, восхождения на вулканы, термальные источники. Бронирование онлайн с гарантией безопасности.',
     images: [
       {
-        url: '/images/og-hero.webp',
+        url: '/images/dark.jpg',
         width: 1200,
         height: 630,
         alt: 'Камчатка — туры и приключения',
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Kamchatour Hub — Туры на Камчатку',
-    images: ['/images/og-hero.webp'],
+    images: ['/images/dark.jpg'],
   },
   robots: {
     index: true,
