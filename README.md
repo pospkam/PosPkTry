@@ -244,9 +244,10 @@ npm run db:migrate
 
 ## Статус
 
-**Актуально на 8 марта 2026:**
+**Актуально на 9 марта 2026:**
 
 ```
+Страницы:         86 (все 86/86 унифицированы)
 Миграции:         23 (001–023)
 Маршруты в БД:    259 (agent_route_knowledge, 14 категорий, 3 источника)
 Туры в БД:        11 (fishingkam.ru)
@@ -254,7 +255,48 @@ npm run db:migrate
 Build:            passing
 console.log:      0 (запрещены в prod)
 Агентов (crew):   5 (knowledge-base.json — 259 маршрутов)
+Дизайн-нарушения: 0 (полный аудит 86 страниц + 100 компонентов)
 ```
+
+### Дизайн-система
+
+Единая тёмная тема с glassmorphism + cyberpunk-акцентами. Все 86 страниц и 100+ компонентов приведены к стандарту.
+
+**Токены (tailwind.config.ts):**
+
+| Токен | Значение | Назначение |
+|-------|----------|-----------|
+| `cyber-cyan` | `#00D4FF` | Focus rings, active states, info-акценты, neon glow |
+| `premium-gold` | `#d4af37` | Цены, CTA-кнопки, primary actions |
+| `premium-black` | `#0a0a0a` | Текст на gold/cyan кнопках |
+
+**Компоненты:**
+
+| Элемент | Классы |
+|---------|--------|
+| Карточки | `bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl` |
+| Инпуты | `bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:ring-cyber-cyan/60` |
+| Текст | `text-white` → `/70` → `/60` → `/50` → `/40` |
+| Основная кнопка | `bg-premium-gold text-premium-black hover:bg-premium-gold/80` |
+| CTA-градиент | `bg-gradient-to-r from-cyber-cyan/80 to-premium-gold text-premium-black` |
+| Info-панель | `bg-cyber-cyan/10 border border-cyber-cyan/30 text-cyber-cyan` |
+| Hover glow | `hover:shadow-[0_0_16px_rgba(212,175,55,0.4)]` |
+
+**Навигация:**
+
+| Контекст | Компонент |
+|----------|-----------|
+| Публичные страницы | Glassmorphism header (KH + тема + ЛК) + `<BottomNav />` |
+| Hub role pages | `<HubLayout>` sidebar (desktop) + mobile nav (provided by role layout) |
+| Hub feature pages | `<PublicNav />` + `<BottomNav />` |
+| Серверные страницы | `<PageShell>` — client-обёртка с header + BottomNav |
+
+**Аудит (9 марта 2026):**
+- 86 UI-страниц проверены по CSS-токенам (0 нарушений)
+- 86 UI-страниц проверены по структуре навигации (0 нарушений)
+- 24 layout-файла — чистые
+- 100+ shared-компонентов — чистые
+- Семантические цвета сохранены (StatusBadge, RevenueChart, WeatherBackground)
 
 ### Реализовано
 
@@ -281,6 +323,9 @@ console.log:      0 (запрещены в prod)
 - [x] 16 SVG-иконок категорий (Volcano, Thermal, Lake, Eco, Mountain, Geyser, River, SeaWalk, ...)
 - [x] TourForm: 13 категорий приведены к реальной таксономии БД
 - [x] Мониторинг: Grafana + Prometheus (docker-compose)
+- [x] **Дизайн-унификация**: 86/86 страниц — единые токены, навигация, фоны
+- [x] **PageShell**: переиспользуемая client-обёртка для server-страниц
+- [x] **Cyberpunk-акценты**: `cyber-cyan` (#00D4FF) neon glow на фокус и активных элементах
 
 ### Phase 2 (не реализовано)
 
