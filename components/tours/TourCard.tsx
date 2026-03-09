@@ -162,10 +162,16 @@ export function TourCard({ tour, href }: TourCardProps) {
 
         {/* Цена */}
         <div className="mb-4">
-          <span className="text-xl font-black text-premium-gold">
-            от {formatPrice(tour.price, tour.currency)}
-          </span>
-          <span className="text-xs text-white/50 ml-1">/чел</span>
+          {tour.price > 0 ? (
+            <>
+              <span className="text-xl font-black text-premium-gold">
+                от {formatPrice(tour.price, tour.currency)}
+              </span>
+              <span className="text-xs text-white/50 ml-1">/чел</span>
+            </>
+          ) : (
+            <span className="text-lg font-bold text-white/60">По запросу</span>
+          )}
         </div>
 
         {/* Кнопки */}

@@ -16,8 +16,8 @@ interface TourResponse {
   duration: number;
   price: number;
   currency: string;
-  season: any[];
-  coordinates: any[];
+  season: unknown[];
+  coordinates: unknown[];
   requirements: string[];
   included: string[];
   notIncluded: string[];
@@ -28,138 +28,149 @@ interface TourResponse {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
-  routeId: string | null;
-  route: {
-    id: string;
-    title: string;
-    category: string;
-    lat: number | null;
-    lng: number | null;
-    sourceUrl: string | null;
-  } | null;
+  sourceUrl: string | null;
+  sourceName: string | null;
+  source: 'tour' | 'route';
 }
 
-// GET /api/tours - Получение списка туров
-// Public by design: catalog listing for discovery.
+// Slug-маппинг категорий homepage → agent_route_knowledge
+const SLUG_TO_ARK: Record<string, string> = {
+  vulkani:              'vulkani',
+  rybalka:              'rybalka',
+  termalnye_istochniki: 'termalnye_istochniki',
+  geyzery:              'geyzery',
+  snegohod:             'snegohod',
+  dzhip:                'dzhip',
+  medvedi:              'medvedi',
+  trekking:             'trekking',
+  morskie_progulki:     'morskie_progulki',
+  vertoletnye_tury:     'vertoletnye_tury',
+  lakes:                'lakes',
+  mountains:            'mountains',
+  rivers:               'rivers',
+  eco:                  'eco',
+  // Canonical → slug
+  volcanoes:            'vulkani',
+  fishing:              'rybalka',
+  thermal:              'termalnye_istochniki',
+  geysers:              'geyzery',
+  snowmobile:           'snegohod',
+  jeep:                 'dzhip',
+  wildlife:             'medvedi',
+  adventure:            'trekking',
+  helicopter:           'vertoletnye_tury',
+};
+
+// GET /api/tours — Каталог маршрутов и туров
+// Основной источник: agent_route_knowledge (259 маршрутов)
+// Дополнительно: tours таблица (опциональная)
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category');
-    // Нормализация slug-категорий (homepage и agent_route_knowledge используют разные slugs)
-    const SLUG_TO_CANON: Record<string, string> = {
-      vulkani:              'volcanoes',
-      rybalka:              'fishing',
-      termalnye_istochniki: 'thermal',
-      geyzery:              'geysers',
-      snegohod:             'snowmobile',
-      dzhip:                'jeep',
-      medvedi:              'wildlife',
-      trekking:             'adventure',
-    };
-    const normalizedCategory = category ? (SLUG_TO_CANON[category] ?? category) : null;
     const search = searchParams.get('search');
-    const minPrice = searchParams.get('minPrice');
-    const maxPrice = searchParams.get('maxPrice');
-    const difficulty = searchParams.get('difficulty');
-    const limit = parseInt(searchParams.get('limit') || '20');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 50);
+    const offset = Math.max(parseInt(searchParams.get('offset') || '0'), 0);
 
-    // Совместимость со схемами: production (camelCase) и dev (snake_case).
-    // Production: title, pricePerDay, minDuration, maxGroupSize, minGroupSize
-    // Dev: name, price, duration, max_group_size, min_group_size, is_active
     const whereConditions: string[] = [];
     const queryParams: unknown[] = [];
     let paramIndex = 1;
 
-    if (normalizedCategory) {
-      whereConditions.push(`t.category = $${paramIndex}`);
-      queryParams.push(normalizedCategory);
+    if (category) {
+      const arkCategory = SLUG_TO_ARK[category] ?? category;
+      whereConditions.push(`ark.category = $${paramIndex}`);
+      queryParams.push(arkCategory);
       paramIndex++;
     }
 
     if (search) {
-      whereConditions.push(`(t.name ILIKE $${paramIndex} OR t.description ILIKE $${paramIndex})`);
+      whereConditions.push(
+        `(ark.title ILIKE $${paramIndex} OR ark.search_text ILIKE $${paramIndex})`
+      );
       queryParams.push(`%${search}%`);
       paramIndex++;
     }
 
-    if (minPrice) {
-      whereConditions.push(`t.price >= $${paramIndex}`);
-      queryParams.push(parseInt(minPrice));
-      paramIndex++;
-    }
+    const whereClause = whereConditions.length > 0
+      ? `WHERE ${whereConditions.join(' AND ')}`
+      : '';
 
-    if (maxPrice) {
-      whereConditions.push(`t.price <= $${paramIndex}`);
-      queryParams.push(parseInt(maxPrice));
-      paramIndex++;
-    }
-
-    if (difficulty) {
-      whereConditions.push(`t.difficulty = $${paramIndex}`);
-      queryParams.push(difficulty);
-      paramIndex++;
-    }
-
-    const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
-
-    const toursQuery = `
+    // Основной запрос: agent_route_knowledge
+    const routesQuery = `
       SELECT
-        t.*,
-        kr.id        AS route_kr_id,
-        kr.title     AS route_title,
-        kr.category  AS route_category,
-        kr.lat       AS route_lat,
-        kr.lng       AS route_lng,
-        kr.source_url AS route_source_url
-      FROM tours t
-      LEFT JOIN kamchatka_routes kr ON t.route_id = kr.id
+        ark.id,
+        ark.title,
+        ark.description,
+        ark.category,
+        ark.lat,
+        ark.lng,
+        ark.source_url,
+        ark.source_name,
+        ark.payload,
+        ark.created_at,
+        ark.updated_at
+      FROM agent_route_knowledge ark
       ${whereClause}
-      ORDER BY t.created_at DESC NULLS LAST, t.updated_at DESC NULLS LAST
+      ORDER BY ark.title ASC
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
-
     queryParams.push(limit, offset);
 
-    const result = await query(toursQuery, queryParams);
+    const result = await query(routesQuery, queryParams);
 
-    const countQuery = `SELECT COUNT(*) as total FROM tours t LEFT JOIN kamchatka_routes kr ON t.route_id = kr.id ${whereClause}`;
+    // Подсчёт
+    const countQuery = `SELECT COUNT(*)::int AS total FROM agent_route_knowledge ark ${whereClause}`;
     const countResult = await query(countQuery, queryParams.slice(0, -2));
     const total = parseInt(countResult.rows[0]?.total || '0');
 
-    // Маппинг строк: поддержка обеих схем
-    const tours: TourResponse[] = result.rows.map(row => ({
-      id: row.id,
-      name: row.name || '',
-      description: row.description || '',
-      shortDescription: row.short_description || '',
-      category: row.category || '',
-      difficulty: row.difficulty || 'medium',
-      duration: row.duration || 0,
-      price: parseFloat(row.price || 0),
-      currency: row.currency || 'RUB',
-      season: row.season || [],
-      coordinates: row.coordinates || [],
-      requirements: row.requirements || [],
-      included: row.included || [],
-      notIncluded: row.not_included || [],
-      maxGroupSize: row.max_group_size || 20,
-      minGroupSize: row.min_group_size || 1,
-      rating: parseFloat(row.rating) || 0,
-      reviewCount: row.review_count || 0,
-      isActive: row.is_active ?? true,
-      createdAt: new Date(row.created_at || Date.now()),
-      updatedAt: new Date(row.updated_at || Date.now()),
-      routeId: (row.route_id as string | null) ?? null,
-      route: row.route_kr_id ? {
-        id: row.route_kr_id as string,
-        title: row.route_title as string,
-        category: row.route_category as string,
-        lat: row.route_lat != null ? parseFloat(row.route_lat as string) : null,
-        lng: row.route_lng != null ? parseFloat(row.route_lng as string) : null,
-        sourceUrl: (row.route_source_url as string | null) ?? null,
-      } : null,
-    }));
+    const tours: TourResponse[] = result.rows.map(row => {
+      const payload = (typeof row.payload === 'object' && row.payload !== null)
+        ? row.payload as Record<string, unknown>
+        : {};
+
+      const price = typeof payload.price === 'number' ? payload.price
+        : typeof payload.price_from === 'number' ? payload.price_from
+        : 0;
+
+      const duration = typeof payload.duration === 'number' ? payload.duration
+        : typeof payload.duration_hours === 'number' ? payload.duration_hours
+        : 0;
+
+      const difficulty = typeof payload.difficulty === 'string' ? payload.difficulty : 'medium';
+      const images = Array.isArray(payload.images) ? payload.images as string[] : [];
+      const included = Array.isArray(payload.included) ? payload.included as string[] : [];
+      const season = Array.isArray(payload.season) ? payload.season : [];
+
+      return {
+        id: row.id as string,
+        name: (row.title as string) || '',
+        description: (row.description as string) || '',
+        shortDescription: ((row.description as string) || '').slice(0, 200),
+        category: (row.category as string) || '',
+        difficulty: difficulty as string,
+        duration,
+        price,
+        currency: 'RUB',
+        season,
+        coordinates: (row.lat && row.lng)
+          ? [{ lat: parseFloat(row.lat as string), lng: parseFloat(row.lng as string) }]
+          : [],
+        requirements: [],
+        included,
+        notIncluded: [],
+        maxGroupSize: typeof payload.max_group === 'number' ? payload.max_group : 20,
+        minGroupSize: 1,
+        rating: typeof payload.rating === 'number' ? payload.rating : 0,
+        reviewCount: typeof payload.review_count === 'number' ? payload.review_count : 0,
+        isActive: true,
+        createdAt: new Date(row.created_at as string || Date.now()),
+        updatedAt: new Date(row.updated_at as string || Date.now()),
+        sourceUrl: (row.source_url as string | null) ?? null,
+        sourceName: (row.source_name as string | null) ?? null,
+        source: 'route' as const,
+        images,
+      };
+    });
 
     return NextResponse.json({
       success: true,
@@ -172,11 +183,10 @@ export async function GET(request: NextRequest) {
           hasMore: offset + limit < total,
         },
       },
-    } as ApiResponse<{ tours: TourResponse[]; pagination: any }>);
+    } as ApiResponse<{ tours: TourResponse[]; pagination: { total: number; limit: number; offset: number; hasMore: boolean } }>);
 
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[TOURS_GET] Database error:', errMsg, error);
     return NextResponse.json({
       success: false,
       error: 'Не удалось загрузить туры',
@@ -185,7 +195,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/tours - Создание нового тура (protected: operator only)
+// POST /api/tours — Создание нового тура (protected: operator only)
 export async function POST(request: NextRequest) {
   const authResult = await requireOperator(request);
   if (authResult instanceof NextResponse) {
@@ -234,20 +244,19 @@ export async function POST(request: NextRequest) {
       } as ApiResponse<null>, { status: 400 });
     }
 
-    // Валидация обязательных полей
     if (!name || !description || !difficulty || !duration || !price) {
       return NextResponse.json({
         success: false,
-        error: 'Missing required fields: name, description, difficulty, duration, price',
+        error: 'Обязательные поля: name, description, difficulty, duration, price',
       } as ApiResponse<null>, { status: 400 });
     }
 
     const insertQuery = `
       INSERT INTO tours (
-        name, description, short_description, category, difficulty,
+        title, description, short_description, category, difficulty,
         duration, price, currency, season, coordinates,
         requirements, included, not_included,
-        max_group_size, min_group_size, operator_id, guide_id, route_id,
+        max_participants, min_participants, operator_id, guide_id, route_id,
         is_active, created_at, updated_at
       ) VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, true, NOW(), NOW()
@@ -279,16 +288,14 @@ export async function POST(request: NextRequest) {
       success: true,
       data: {
         id: result.rows[0].id,
-        message: 'Tour created successfully',
+        message: 'Тур создан успешно',
       },
     } as ApiResponse<{ id: string; message: string }>);
 
   } catch (error) {
-    console.error('Error creating tour:', error);
     return NextResponse.json({
       success: false,
-      error: 'Failed to create tour',
-      message: error instanceof Error ? error.message : 'Unknown error',
+      error: 'Не удалось создать тур',
     } as ApiResponse<null>, { status: 500 });
   }
 }

@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Sun, Moon, UserCircle } from 'lucide-react';
+import Logo from '@/components/shared/Logo';
 import { VolcanoIcon } from '@/components/icons/VolcanoIcon';
 import { FishingIcon } from '@/components/icons/FishingIcon';
 import { ThermalIcon } from '@/components/icons/ThermalIcon';
@@ -240,16 +241,7 @@ function Footer() {
           justifyContent: 'space-between',
         }}
       >
-        <span
-          style={{
-            fontFamily: "var(--font-playfair,'Playfair Display',serif)",
-            fontSize: '18px',
-            fontWeight: 700,
-            color: 'white',
-          }}
-        >
-          KH
-        </span>
+        <Logo size={24} />
         <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
           {links.map((link) => (
             <Link
@@ -362,14 +354,9 @@ export default function HomePageClient() {
           <Link
             href="/"
             aria-label="Kamchatour — главная"
-            style={{
-              fontFamily: "var(--font-playfair,'Playfair Display',serif)",
-              fontSize: '24px', fontWeight: 700, color: 'white',
-              textDecoration: 'none', letterSpacing: '0.02em',
-              textShadow: '0 2px 8px rgba(0,0,0,0.4)',
-            }}
+            style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}
           >
-            KH
+            <Logo size={32} />
           </Link>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             <button
@@ -420,22 +407,14 @@ export default function HomePageClient() {
           <h1
             style={{
               fontFamily: "var(--font-playfair,'Playfair Display',serif)",
-              fontSize: 'clamp(28px,8vw,56px)', fontWeight: 700,
-              color: 'white', margin: '0 0 12px', lineHeight: 1.15,
+              fontSize: 'clamp(22px,6vw,40px)', fontWeight: 600,
+              color: 'white', margin: 0, lineHeight: 1.2,
               textShadow: '0 2px 8px rgba(0,0,0,0.6)', maxWidth: '640px',
-            }}
-          >
-            Камчатка не для туристов
-          </h1>
-          <p
-            style={{
-              fontFamily: "var(--font-inter,'Inter',sans-serif)",
-              fontSize: 'clamp(14px,4vw,18px)', fontWeight: 400,
-              color: 'rgba(255,255,255,0.8)', margin: 0, letterSpacing: '0.01em',
+              letterSpacing: '0.01em',
             }}
           >
             Дикая природа. Настоящие маршруты.
-          </p>
+          </h1>
 
           {/* CTA + AI */}
           <div className="flex flex-wrap justify-center gap-4 mt-8">
