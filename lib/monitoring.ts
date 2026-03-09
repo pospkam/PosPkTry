@@ -14,7 +14,7 @@ interface LogEntry {
   timestamp: Date;
   level: keyof LogLevel;
   message: string;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
   userId?: string;
   sessionId?: string;
   requestId?: string;
@@ -25,12 +25,12 @@ interface PerformanceMetric {
   value: number;
   unit: string;
   timestamp: Date;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
 }
 
 interface ErrorReport {
   error: Error;
-  context: Record<string, any>;
+  context: Record<string, unknown>;
   userId?: string;
   sessionId?: string;
   requestId?: string;
@@ -43,7 +43,7 @@ class MonitoringSystem {
   private errors: ErrorReport[] = [];
 
   // Логирование
-  log(level: keyof LogLevel, message: string, context?: Record<string, any>) {
+  log(level: keyof LogLevel, message: string, context?: Record<string, unknown>) {
     const entry: LogEntry = {
       timestamp: new Date(),
       level,
@@ -55,7 +55,7 @@ class MonitoringSystem {
 
     // Отправка в консоль для разработки
     if (process.env.NODE_ENV === 'development') {
-      (console as any)[level](`[${entry.timestamp.toISOString()}] ${message}`, context);
+      (console as Record<string, (...args: unknown[]) => void>)[level.toLowerCase()]?.(`[${entry.timestamp.toISOString()}] ${message}`, context);
     }
 
     // Отправка в внешний сервис для продакшена
@@ -65,7 +65,7 @@ class MonitoringSystem {
   }
 
   // Метрики производительности
-  recordMetric(name: string, value: number, unit: string, context?: Record<string, any>) {
+  recordMetric(name: string, value: number, unit: string, context?: Record<string, unknown>) {
     const metric: PerformanceMetric = {
       name,
       value,
@@ -83,7 +83,7 @@ class MonitoringSystem {
   }
 
   // Обработка ошибок
-  reportError(error: Error, context?: Record<string, any>) {
+  reportError(error: Error, context?: Record<string, unknown>) {
     const errorReport: ErrorReport = {
       error,
       context: context || {},
@@ -192,29 +192,32 @@ export type { LogEntry, PerformanceMetric, ErrorReport };
 
 // Утилиты для удобства
 export const logger = {
-  error: (message: string, context?: Record<string, any>) => 
+  error: (message: string, context?: Record<string, unknown>) => 
     monitoring.log('ERROR', message, context),
-  warn: (message: string, context?: Record<string, any>) => 
+  warn: (message: string, context?: Record<string, unknown>) => 
     monitoring.log('WARN', message, context),
-  info: (message: string, context?: Record<string, any>) => 
+  info: (message: string, context?: Record<string, unknown>) => 
     monitoring.log('INFO', message, context),
-  debug: (message: string, context?: Record<string, any>) => 
+  debug: (message: string, context?: Record<string, unknown>) => 
     monitoring.log('DEBUG', message, context),
 };
 
 export const metrics = {
-  record: (name: string, value: number, unit: string, context?: Record<string, any>) =>
+  record: (name: string, value: number, unit: string, context?: Record<string, unknown>) =>
     monitoring.recordMetric(name, value, unit, context),
 };
 
 export const errors = {
-  report: (error: Error, context?: Record<string, any>) =>
+  report: (error: Error, context?: Record<string, unknown>) =>
     monitoring.reportError(error, context),
 };
 
 // Middleware для Next.js API routes
-export function withMonitoring(handler: Function) {
-  return async (req: any, res: any) => {
+type MonitoredRequest = { method?: string; url?: string };
+type MonitoredHandler = (req: MonitoredRequest, res: unknown) => Promise<unknown>;
+
+export function withMonitoring(handler: MonitoredHandler) {
+  return async (req: MonitoredRequest, res: unknown) => {
     const startTime = Date.now();
     const requestId = Math.random().toString(36).substr(2, 9);
 

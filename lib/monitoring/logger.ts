@@ -7,7 +7,7 @@ export interface LogEntry {
   level: LogLevel;
   message: string;
   timestamp: Date;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
   userId?: string;
   requestId?: string;
 }
@@ -15,7 +15,7 @@ export interface LogEntry {
 class Logger {
   private logs: LogEntry[] = [];
 
-  log(level: LogLevel, message: string, context?: Record<string, any>) {
+  log(level: LogLevel, message: string, context?: Record<string, unknown>) {
     const entry: LogEntry = {
       level,
       message,
@@ -39,7 +39,7 @@ class Logger {
     }
   }
 
-  error(message: string, error?: Error, context?: Record<string, any>) {
+  error(message: string, error?: Error, context?: Record<string, unknown>) {
     this.log('error', message, {
       ...context,
       error: error ? {
@@ -50,15 +50,15 @@ class Logger {
     });
   }
 
-  warn(message: string, context?: Record<string, any>) {
+  warn(message: string, context?: Record<string, unknown>) {
     this.log('warn', message, context);
   }
 
-  info(message: string, context?: Record<string, any>) {
+  info(message: string, context?: Record<string, unknown>) {
     this.log('info', message, context);
   }
 
-  debug(message: string, context?: Record<string, any>) {
+  debug(message: string, context?: Record<string, unknown>) {
     if (process.env.NODE_ENV === 'development') {
       this.log('debug', message, context);
     }

@@ -56,8 +56,8 @@ export function DataTable<T extends { id: string | number }>({
     if (!sortKey) return data;
 
     return [...data].sort((a, b) => {
-      const aValue = (a as any)[sortKey];
-      const bValue = (b as any)[sortKey];
+      const aValue = (a as Record<string, unknown>)[sortKey];
+      const bValue = (b as Record<string, unknown>)[sortKey];
 
       if (aValue === bValue) return 0;
 
@@ -136,7 +136,7 @@ export function DataTable<T extends { id: string | number }>({
                   <td key={column.key} className="px-6 py-4 text-sm text-white/80">
                     {column.render
                       ? column.render(item)
-                      : String((item as any)[column.key] ?? '-')}
+                      : String((item as Record<string, unknown>)[column.key] ?? '-')}
                   </td>
                 ))}
               </tr>

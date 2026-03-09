@@ -1,75 +1,76 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
 import { Protected } from '@/components/auth/Protected';
 import { TransferOperatorNav } from '@/components/transfer-operator/TransferOperatorNav';
 import { DataTable } from '@/components/admin/shared/DataTable';
 import { LoadingSpinner } from '@/components/admin/shared/LoadingSpinner';
 import { StatusBadge } from '@/components/admin/shared/StatusBadge';
 import { Star } from 'lucide-react';
+import { useApiFetch } from '@/hooks/use-api-fetch';
+
+interface Driver {
+  id: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  rating: number;
+  totalTrips: number;
+  status: string;
+  licenseExpiry: string;
+}
+
+interface DriversApiResponse {
+  drivers: Driver[];
+}
 
 export default function DriversPageClient() {
-  const [drivers, setDrivers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data: drivers, loading } = useApiFetch<DriversApiResponse, Driver[]>(
+    '/api/transfer-operator/drivers',
+    (d) => d?.drivers ?? [],
+  );
 
-  useEffect(() => {
-    fetchDrivers();
-  }, []);
-
-  const fetchDrivers = async () => {
-    try {
-      const response = await fetch('/api/transfer-operator/drivers');
-      const result = await response.json();
-      if (result.success) {
-        setDrivers(result.data.drivers);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const list = drivers ?? [];
 
   const columns = [
     {
       key: 'name',
       header: 'Водитель',
-      render: (d: any) => (
+      render: (d: Driver) => (
         <div>
           <div className="font-medium text-white">{d.firstName} {d.lastName}</div>
           <div className="text-white/60 text-sm">{d.phone}</div>
         </div>
-      )
+      ),
     },
     {
       key: 'rating',
       header: 'Рейтинг',
-      render: (d: any) => (
+      render: (d: Driver) => (
         <div className="flex items-center gap-1">
           <span><Star className="w-4 h-4" /></span>
           <span className="text-white">{d.rating?.toFixed(1)}</span>
         </div>
-      )
+      ),
     },
     {
       key: 'totalTrips',
       header: 'Поездок',
-      render: (d: any) => <div className="text-white">{d.totalTrips}</div>
+      render: (d: Driver) => <div className="text-white">{d.totalTrips}</div>,
     },
     {
       key: 'status',
       header: 'Статус',
-      render: (d: any) => <StatusBadge status={d.status} />
+      render: (d: Driver) => <StatusBadge status={d.status} />,
     },
     {
       key: 'licenseExpiry',
       header: 'Лицензия до',
-      render: (d: any) => (
+      render: (d: Driver) => (
         <div className="text-white/70 text-sm">
           {new Date(d.licenseExpiry).toLocaleDateString('ru-RU')}
         </div>
-      )
-    }
+      ),
+    },
   ];
 
   return (
@@ -77,13 +78,11 @@ export default function DriversPageClient() {
       <main className="min-h-screen bg-transparent text-white">
         <TransferOperatorNav />
         <div className="max-w-7xl mx-auto p-6">
-          <h1 className="text-3xl font-black text-white mb-6">
-            Водители
-          </h1>
+          <h1 className="text-3xl font-black text-white mb-6">Водители</h1>
           {loading ? (
             <LoadingSpinner message="Загрузка..." />
           ) : (
-            <DataTable data={drivers} columns={columns} emptyMessage="Нет водителей" />
+            <DataTable<Driver> data={list} columns={columns} emptyMessage="Нет водителей" />
           )}
         </div>
       </main>

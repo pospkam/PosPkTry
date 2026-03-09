@@ -67,7 +67,7 @@ export interface RecentActivity {
     name: string;
     avatar?: string;
   };
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface AdminAlert {
@@ -156,7 +156,7 @@ export interface Transaction {
   bookingId?: string;
   createdAt: Date;
   completedAt?: Date;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface PayoutRequest {

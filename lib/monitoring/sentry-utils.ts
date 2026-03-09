@@ -12,7 +12,7 @@ export function captureError(
   error: Error,
   context?: {
     tags?: Record<string, string>;
-    extra?: Record<string, any>;
+    extra?: Record<string, unknown>;
     user?: { id: string; email?: string; role?: string };
     level?: 'fatal' | 'error' | 'warning' | 'info' | 'debug';
   }
@@ -55,7 +55,7 @@ export function captureMessage(
   level: 'fatal' | 'error' | 'warning' | 'info' | 'debug' = 'info',
   context?: {
     tags?: Record<string, string>;
-    extra?: Record<string, any>;
+    extra?: Record<string, unknown>;
   }
 ) {
   Sentry.withScope((scope) => {
@@ -81,7 +81,7 @@ export function captureMessage(
 export function startTransaction(
   name: string,
   op: string,
-  data?: Record<string, any>
+  data?: Record<string, unknown>
 ) {
   const transaction = Sentry.startTransaction({
     name,
@@ -104,7 +104,7 @@ export function addBreadcrumb(
   message: string,
   category: string,
   level: 'fatal' | 'error' | 'warning' | 'info' | 'debug' = 'info',
-  data?: Record<string, any>
+  data?: Record<string, unknown>
 ) {
   Sentry.addBreadcrumb({
     message,
@@ -144,7 +144,7 @@ export function setTag(key: string, value: string) {
 /**
  * Устанавливает глобальный контекст
  */
-export function setContext(name: string, context: Record<string, any>) {
+export function setContext(name: string, context: Record<string, unknown>) {
   Sentry.setContext(name, context);
 }
 

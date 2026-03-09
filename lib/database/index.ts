@@ -9,7 +9,7 @@ const pool = new Pool({
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
 
-export const query = async <T = Record<string, any>>(
+export const query = async <T = Record<string, unknown>>(
   text: string,
   params?: any[]
 ): Promise<{ rows: T[]; rowCount: number }> => {

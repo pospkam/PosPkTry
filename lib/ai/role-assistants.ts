@@ -13,7 +13,7 @@ export interface AssistantMessage {
 export interface AssistantContext {
   role: RoleType;
   userId?: string;
-  additionalData?: Record<string, any>;
+  additionalData?: Record<string, unknown>;
 }
 
 // =============================================
