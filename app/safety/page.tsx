@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { AlertTriangle, Phone, MapPin, Shield, Mountain, Thermometer, Compass } from 'lucide-react';
 import Link from 'next/link';
+import PageShell from '@/components/shared/PageShell';
 
 export const metadata: Metadata = {
   title: 'Безопасность | Kamchatour',
@@ -10,7 +11,8 @@ export const metadata: Metadata = {
 
 export default function SafetyPage() {
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 bg-transparent min-h-screen">
+    <PageShell title="Безопасность">
+    <div className="max-w-4xl mx-auto px-4 py-8 bg-transparent">
       <div className="flex items-center gap-3 mb-8">
         <Shield className="w-8 h-8 text-[var(--danger)]" />
         <h1 className="font-serif text-3xl font-bold text-[#F0F6FC]">Безопасность</h1>
@@ -87,5 +89,6 @@ export default function SafetyPage() {
         Подробнее о безопасности
       </Link>
     </div>
+    </PageShell>
   );
 }

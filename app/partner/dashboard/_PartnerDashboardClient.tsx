@@ -2,8 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Mountain, Bus, Building2, Backpack, Loader2, ClipboardList, Lightbulb, Clock } from 'lucide-react';
+import { Mountain, Bus, Building2, Backpack, Loader2, ClipboardList, Lightbulb, Clock, Sun, Moon, User } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useTheme } from '@/contexts/ThemeContext';
+import BottomNav from '@/components/shared/BottomNav';
+import Link from 'next/link';
 
 interface Partner {
   id: string;
@@ -25,6 +28,7 @@ const ROLE_INFO = {
 
 export default function PartnerDashboardClient() {
   const router = useRouter();
+  const { isDark, toggleTheme } = useTheme();
   const [loading, setLoading] = useState(true);
   const [partners, setPartners] = useState<Partner[]>([]);
   const [companyName, setCompanyName] = useState('');
@@ -112,7 +116,18 @@ export default function PartnerDashboardClient() {
   }
 
   return (
-    <main className="min-h-screen bg-transparent text-white p-6">
+    <div className="min-h-screen pb-24 md:pb-0">
+      <header style={{ background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.15)', position: 'sticky', top: 0, zIndex: 50 }}>
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+          <Link href="/" style={{ fontFamily: "var(--font-playfair,'Playfair Display',serif)", fontSize: '1.4rem', fontWeight: 700, color: '#fff', textDecoration: 'none' }}>KH</Link>
+          <h1 className="text-lg font-bold text-white hidden sm:block">Панель партнёра</h1>
+          <div className="flex items-center gap-3">
+            <button onClick={toggleTheme} className="text-white/70 hover:text-white transition-colors" aria-label="Переключить тему">{isDark ? <Sun size={20} /> : <Moon size={20} />}</button>
+            <Link href="/profile" className="text-white/70 hover:text-white transition-colors" aria-label="Личный кабинет"><User size={20} /></Link>
+          </div>
+        </div>
+      </header>
+    <main className="bg-transparent text-white p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -284,5 +299,7 @@ export default function PartnerDashboardClient() {
         </div>
       </div>
     </main>
+      <BottomNav activePath="/" />
+    </div>
   );
 }

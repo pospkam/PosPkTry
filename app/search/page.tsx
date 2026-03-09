@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { Suspense } from 'react';
 import { ModernTourSearch } from '@/components/shared/ModernTourSearch';
+import PageShell from '@/components/shared/PageShell';
 
 export const metadata: Metadata = {
   title: 'Поиск туров | Kamchatour',
@@ -10,7 +11,8 @@ export const metadata: Metadata = {
 
 export default function SearchPage() {
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 bg-[var(--bg-primary)] text-[var(--text-primary)] min-h-screen">
+    <PageShell title="Поиск">
+    <div className="max-w-4xl mx-auto px-4 py-8 bg-transparent text-[var(--text-primary)]">
       <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-6">
         Поиск туров
       </h1>
@@ -18,5 +20,6 @@ export default function SearchPage() {
         <ModernTourSearch />
       </Suspense>
     </div>
+    </PageShell>
   );
 }

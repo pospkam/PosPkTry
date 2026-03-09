@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import PageShell from '@/components/shared/PageShell';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,14 +27,17 @@ export default async function ApiDocsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-premium-black to-premium-gold/10 flex items-center justify-center">
+      <PageShell title="API Документация">
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
         <div className="text-red-400 text-xl">Ошибка: {error}</div>
       </div>
+      </PageShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-premium-black to-premium-gold/10">
+    <PageShell title="API Документация">
+    <div className="bg-transparent">
       <div className="max-w-7xl mx-auto px-6 py-12">
         <h1 className="text-4xl font-black text-white mb-4">API Documentation</h1>
         <p className="text-white/70 text-lg mb-8">
@@ -60,5 +64,6 @@ export default async function ApiDocsPage() {
         </div>
       </div>
     </div>
+    </PageShell>
   );
 }

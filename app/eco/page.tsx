@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import { Leaf, TreePine, Award, TrendingUp } from 'lucide-react';
+import PageShell from '@/components/shared/PageShell';
 
 export const metadata: Metadata = {
   title: 'Экология | Kamchatour',
@@ -18,7 +19,8 @@ const ECO_ACTIONS = [
 
 export default function EcoPage() {
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 bg-[var(--bg-primary)] text-[var(--text-primary)] min-h-screen">
+    <PageShell title="Эко-туризм">
+    <div className="max-w-4xl mx-auto px-4 py-8 bg-transparent text-[var(--text-primary)]">
       <div className="flex items-center gap-3 mb-6">
         <Leaf className="w-8 h-8 text-[var(--success)]" />
         <h1 className="text-3xl font-bold text-[var(--text-primary)]">Экология</h1>
@@ -61,5 +63,6 @@ export default function EcoPage() {
         })}
       </div>
     </div>
+    </PageShell>
   );
 }

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
+import PageShell from '@/components/shared/PageShell';
 
 export const metadata = {
   title: 'Условия комиссионного вознаграждения | KamHub',
@@ -8,7 +9,8 @@ export const metadata = {
 
 export default function CommissionPage() {
   return (
-    <main className="min-h-screen bg-transparent text-white py-12 px-4">
+    <PageShell title="Комиссии">
+    <main className="bg-transparent text-white py-12 px-4">
       <div className="max-w-3xl mx-auto">
         <Link href="/" className="inline-flex items-center text-premium-gold hover:text-premium-gold/80 mb-8">
           <ChevronLeft className="w-5 h-5 mr-1" />
@@ -135,5 +137,6 @@ export default function CommissionPage() {
         </div>
       </div>
     </main>
+    </PageShell>
   );
 }
