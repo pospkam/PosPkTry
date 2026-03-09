@@ -322,7 +322,7 @@ export default function GuideDashboardClient() {
                               <span className={`px-2 py-1 rounded-full text-xs ${
                                 participant.experience === 'Опытный'
                                   ? 'bg-green-500/20 text-green-400'
-                                  : 'bg-blue-500/20 text-blue-400'
+                                  : 'bg-white/20 text-white/70'
                               }`}>
                                 {participant.experience}
                               </span>
@@ -491,7 +491,7 @@ export default function GuideDashboardClient() {
                   <h4 className="text-lg font-bold text-white">Рекомендации для гидов</h4>
                   <span className={`text-lg font-bold ${
                     weather.safetyLevel === 'excellent' ? 'text-green-400' :
-                    weather.safetyLevel === 'good' ? 'text-blue-400' :
+                    weather.safetyLevel === 'good' ? 'text-white/70' :
                     weather.safetyLevel === 'difficult' ? 'text-yellow-400' : 'text-red-400'
                   }`}>
                     {weather.safetyLevel === 'excellent' && 'Отличные условия'}
@@ -522,15 +522,15 @@ export default function GuideDashboardClient() {
                 <div className="space-y-4">
                   <div>
                     <label htmlFor="guide-name" className="block text-white/70 text-sm mb-2">Имя</label>
-                    <input id="guide-name" defaultValue="" placeholder="Ваше имя" className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300" />
+                    <input id="guide-name" defaultValue="" placeholder="Ваше имя" className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold" />
                   </div>
                   <div>
                     <label htmlFor="guide-phone" className="block text-white/70 text-sm mb-2">Телефон</label>
-                    <input id="guide-phone" defaultValue="" placeholder="+7 (XXX) XXX-XX-XX" className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300" />
+                    <input id="guide-phone" defaultValue="" placeholder="+7 (XXX) XXX-XX-XX" className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold" />
                   </div>
                   <div>
                     <label htmlFor="guide-email" className="block text-white/70 text-sm mb-2">Email</label>
-                    <input id="guide-email" defaultValue="" placeholder="your@email.com" className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300" />
+                    <input id="guide-email" defaultValue="" placeholder="your@email.com" className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold" />
                   </div>
                 </div>
               </div>
@@ -540,7 +540,7 @@ export default function GuideDashboardClient() {
                 <div className="space-y-4">
                   <div>
                     <label htmlFor="guide-specialization" className="block text-white/70 text-sm mb-2">Специализация</label>
-                    <select id="guide-specialization" className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300">
+                    <select id="guide-specialization" className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold">
                       <option>Горные походы</option>
                       <option>Экскурсии</option>
                       <option>Дикая природа</option>
@@ -549,11 +549,11 @@ export default function GuideDashboardClient() {
                   </div>
                   <div>
                     <label htmlFor="guide-experience" className="block text-white/70 text-sm mb-2">Опыт работы</label>
-                    <input id="guide-experience" defaultValue="" placeholder="Например: 5 лет" className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300" />
+                    <input id="guide-experience" defaultValue="" placeholder="Например: 5 лет" className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold" />
                   </div>
                   <div>
                     <label htmlFor="guide-languages" className="block text-white/70 text-sm mb-2">Языки</label>
-                    <input id="guide-languages" defaultValue="" placeholder="Русский, Английский" className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300" />
+                    <input id="guide-languages" defaultValue="" placeholder="Русский, Английский" className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold" />
                   </div>
                 </div>
               </div>

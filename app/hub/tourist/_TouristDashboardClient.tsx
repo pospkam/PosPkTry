@@ -130,11 +130,11 @@ export default function TouristDashboardClient() {
   const getSafetyLevelColor = (level: string) => {
     const colors: { [key: string]: string } = {
       excellent: 'text-green-400',
-      good: 'text-blue-400',
+      good: 'text-white/70',
       difficult: 'text-yellow-400',
       dangerous: 'text-red-400',
     };
-    return colors[level] || 'text-gray-400';
+    return colors[level] || 'text-white/40';
   };
 
   const tabs = [
@@ -191,7 +191,7 @@ export default function TouristDashboardClient() {
               onClick={() => setSelectedTab(tab.id)}
               className={`flex-1 shrink-0 flex items-center justify-center space-x-2 py-3 px-3 sm:px-4 rounded-lg transition-colors ${
                 selectedTab === tab.id
-                  ? 'bg-gradient-to-r from-sky-200 to-cyan-200 text-white'
+                  ? 'bg-white/20 text-white'
                   : 'text-white/70 hover:text-white hover:bg-white/10'
               }`}
             >
@@ -214,7 +214,7 @@ export default function TouristDashboardClient() {
                     id="filter-activity"
                     value={filters.activity}
                     onChange={(e) => setFilters({ ...filters, activity: e.target.value })}
-                    className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300"
+                    className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
                   >
                     <option value="">Все активности</option>
                     <option value="hiking">Пешие походы</option>
@@ -231,7 +231,7 @@ export default function TouristDashboardClient() {
                     id="filter-difficulty"
                     value={filters.difficulty}
                     onChange={(e) => setFilters({ ...filters, difficulty: e.target.value })}
-                    className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300"
+                    className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
                   >
                     <option value="">Любая сложность</option>
                     <option value="easy">Легкая</option>
@@ -246,7 +246,7 @@ export default function TouristDashboardClient() {
                     type="number"
                     value={filters.priceRange[1]}
                     onChange={(e) => setFilters({ ...filters, priceRange: [filters.priceRange[0], parseInt(e.target.value)] })}
-                    className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300"
+                    className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
                     placeholder="50000"
                   />
                 </div>

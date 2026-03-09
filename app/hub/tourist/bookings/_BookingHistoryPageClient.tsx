@@ -22,7 +22,7 @@ export default function BookingHistoryPageClient() {
     const styles: Record<string, string> = {
       pending: 'bg-yellow-500/20 text-yellow-400',
       confirmed: 'bg-green-500/20 text-green-400',
-      completed: 'bg-blue-500/20 text-blue-400',
+      completed: 'bg-premium-gold/20 text-premium-gold',
       cancelled: 'bg-red-500/20 text-red-400',
     };
     const labels: Record<string, string> = {
@@ -42,7 +42,7 @@ export default function BookingHistoryPageClient() {
     const styles: Record<string, string> = {
       pending: 'bg-yellow-500/20 text-yellow-400',
       paid: 'bg-green-500/20 text-green-400',
-      refunded: 'bg-gray-500/20 text-gray-400',
+      refunded: 'bg-white/10 text-white/40',
     };
     const labels: Record<string, string> = {
       pending: 'Не оплачено',

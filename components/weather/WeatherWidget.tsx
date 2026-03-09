@@ -78,14 +78,14 @@ export function WeatherWidget({
       <div className="flex items-center gap-4 mb-4">
         <Icon size={compact ? 32 : 48} className={hasAlert ? 'text-red-600' : 'text-ocean'} />
         <div>
-          <p className="text-3xl md:text-4xl font-bold text-gray-800">{weather.temperature}°</p>
+          <p className="text-3xl md:text-4xl font-bold text-white">{weather.temperature}°</p>
           <p className="text-sm text-volcano capitalize">{weather.condition}</p>
         </div>
       </div>
       {hasAlert && (
-        <motion.div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4" animate={{ scale: [1, 1.02, 1] }} transition={{ repeat: Infinity, duration: 3 }}>
+        <motion.div className="bg-red-500/20 border border-red-400/30 rounded-xl p-4 mb-4" animate={{ scale: [1, 1.02, 1] }} transition={{ repeat: Infinity, duration: 3 }}>
           <AlertTriangle size={20} className="text-red-600 inline mr-2" />
-          <span className="text-sm font-medium text-red-700">Штормовое предупреждение!</span>
+          <span className="text-sm font-medium text-red-300">Штормовое предупреждение!</span>
         </motion.div>
       )}
       {!compact && (

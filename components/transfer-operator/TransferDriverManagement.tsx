@@ -129,7 +129,7 @@ export function TransferDriverManagement({ operatorId, onDataChange }: TransferD
               <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
                 driver.status === 'available' ? 'bg-green-500/20 text-green-400' :
                 driver.status === 'busy' ? 'bg-yellow-500/20 text-yellow-400' :
-                'bg-gray-500/20 text-gray-400'
+                'bg-white/10 text-white/40'
               }`}>
                 {driver.status === 'available' ? 'Доступен' : 
                  driver.status === 'busy' ? 'Занят' : 'Оффлайн'}

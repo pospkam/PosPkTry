@@ -111,7 +111,7 @@ export function RecentBookingsTable({ bookings, onViewDetails }: RecentBookingsT
       render: (booking) => (
         <button
           onClick={() => onViewDetails && onViewDetails(booking)}
-          className="px-3 py-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg text-xs font-medium transition-colors"
+          className="px-3 py-1 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-medium transition-colors"
         >
           Детали
         </button>

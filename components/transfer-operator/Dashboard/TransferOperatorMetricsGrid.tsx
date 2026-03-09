@@ -66,7 +66,7 @@ export function TransferOperatorMetricsGrid({ period = '30', metrics: metricsPro
       label: 'Активные',
       value: metrics.activeBookings,
       icon: Car,
-      color: 'text-blue-400'
+      color: 'text-premium-gold'
     },
     {
       label: 'Доступно водителей',

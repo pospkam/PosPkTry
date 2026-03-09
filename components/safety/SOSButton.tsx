@@ -102,10 +102,10 @@ function SOSButton({ className = '' }: { className?: string }) {
             >
               <div className="flex items-center gap-3 mb-6">
                 <ShieldCheck size={28} className="text-red-600" aria-hidden="true" />
-                <h2 className="text-xl font-bold text-gray-800">Экстренная помощь</h2>
+                <h2 className="text-xl font-bold text-white">Экстренная помощь</h2>
               </div>
 
-              <p className="text-sm text-gray-600 mb-6 p-3 bg-gray-50 rounded-lg">
+              <p className="text-sm text-white/70 mb-6 p-3 bg-white/10 rounded-lg">
                 <MapPin size={16} className="inline mr-2" aria-hidden="true" />
                 {coordsLabel}
               </p>
@@ -140,7 +140,7 @@ function SOSButton({ className = '' }: { className?: string }) {
                 </motion.a>
 
                 <motion.button
-                  className="w-full flex items-center justify-between p-4 bg-blue-600 text-white rounded-xl font-semibold min-h-[44px]"
+                  className="w-full flex items-center justify-between p-4 bg-white/10 hover:bg-white/20 text-white rounded-xl font-semibold min-h-[44px]"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   aria-label="Связаться с гидом"

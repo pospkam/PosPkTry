@@ -19,7 +19,7 @@ interface ScheduleItem {
 
 function getStatusColor(status: string) {
   switch (status) {
-    case 'upcoming': return 'bg-blue-500/20 text-blue-400';
+    case 'upcoming': return 'bg-premium-gold/20 text-premium-gold';
     case 'in_progress': return 'bg-green-500/20 text-green-400';
     case 'completed': return 'bg-white/10 text-white/50';
     default: return 'bg-white/10 text-white/50';

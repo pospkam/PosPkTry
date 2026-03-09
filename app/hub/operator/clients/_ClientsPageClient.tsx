@@ -90,7 +90,7 @@ export default function ClientsPageClient() {
       case 'active':
         return <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-bold">Активный</span>;
       case 'inactive':
-        return <span className="px-2 py-1 bg-gray-500/20 text-gray-400 rounded-full text-xs font-bold">Неактивный</span>;
+        return <span className="px-2 py-1 bg-white/10 text-white/40 rounded-full text-xs font-bold">Неактивный</span>;
       default:
         return null;
     }
@@ -122,8 +122,8 @@ export default function ClientsPageClient() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
             <div className="bg-white/10 border border-white/20 rounded-xl p-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-500/20 rounded-lg">
-                  <Users className="w-5 h-5 text-blue-400" />
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <Users className="w-5 h-5 text-white/70" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{clients.length}</p>

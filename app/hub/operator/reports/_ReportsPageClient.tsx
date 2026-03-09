@@ -29,7 +29,7 @@ const reportTypes: ReportType[] = [
     name: 'Отчет по бронированиям',
     description: 'Детальная статистика бронирований за период',
     icon: <Calendar className="w-6 h-6" />,
-    color: 'bg-blue-500/20 text-blue-400',
+    color: 'bg-white/20 text-white',
   },
   {
     id: 'revenue',
@@ -57,7 +57,7 @@ const reportTypes: ReportType[] = [
     name: 'Аналитический отчет',
     description: 'Тренды, прогнозы, рекомендации',
     icon: <TrendingUp className="w-6 h-6" />,
-    color: 'bg-cyan-500/20 text-cyan-400',
+    color: 'bg-white/20 text-white',
   },
   {
     id: 'summary',

@@ -172,7 +172,7 @@ export default function FishingTourDetailPageClient() {
                     priority
                   />
                 ) : (
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-900 to-cyan-800 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-white/10 border border-white/20 flex items-center justify-center">
                     <Fish className="w-24 h-24 text-white/20" />
                   </div>
                 )}
@@ -208,7 +208,7 @@ export default function FishingTourDetailPageClient() {
                 <span className={`px-3 py-1 rounded-full text-sm font-semibold ${difficulty.color}`}>
                   {difficulty.text}
                 </span>
-                <span className="px-3 py-1 rounded-full text-sm bg-blue-500/20 text-blue-400 flex items-center gap-1">
+                <span className="px-3 py-1 rounded-full text-sm bg-premium-gold/20 text-premium-gold flex items-center gap-1">
                   <Fish className="w-4 h-4" />
                   Рыбалка
                 </span>

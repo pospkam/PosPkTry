@@ -50,9 +50,9 @@ export function TransferOperatorDashboard({ data }: TransferOperatorDashboardPro
                     <td className="py-3 px-4">
                       <span className={`px-2 py-1 rounded-full text-xs ${
                         booking.status === 'completed' ? 'bg-green-500/20 text-green-400' :
-                        booking.status === 'active' ? 'bg-blue-500/20 text-blue-400' :
+                        booking.status === 'active' ? 'bg-premium-gold/20 text-premium-gold' :
                         booking.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                        'bg-gray-500/20 text-gray-400'
+                        'bg-white/10 text-white/40'
                       }`}>
                         {booking.status}
                       </span>

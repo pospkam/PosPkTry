@@ -224,7 +224,7 @@ export default function ToursManagementClient() {
         <div className="flex space-x-2">
           <Link
             href={`/hub/operator/tours/${tour.id}`}
-            className="px-3 py-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg text-xs font-medium transition-colors"
+            className="px-3 py-1 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-medium transition-colors"
           >
             Изменить
           </Link>
@@ -288,7 +288,7 @@ export default function ToursManagementClient() {
                   setCategoryFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300"
+                className="px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
               >
                 <option value="">Все категории</option>
                 <option value="adventure">Приключения</option>
@@ -303,7 +303,7 @@ export default function ToursManagementClient() {
                   setStatusFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300"
+                className="px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
               >
                 <option value="all">Все статусы</option>
                 <option value="active">Активные</option>

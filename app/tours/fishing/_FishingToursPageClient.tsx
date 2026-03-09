@@ -243,7 +243,7 @@ export default function FishingToursPageClient() {
         )}
 
         {/* Контактный баннер */}
-        <div className="mt-12 bg-gradient-to-r from-blue-900/50 to-cyan-900/50 border border-white/20 rounded-2xl p-8 text-center">
+        <div className="mt-12 bg-white/10 border border-white/20 rounded-2xl p-8 text-center">
           <h2 className="text-2xl font-bold mb-2">Не нашли подходящий тур?</h2>
           <p className="text-white/70 mb-6">Подберём индивидуальную программу рыбалки на Камчатке</p>
           <div className="flex flex-wrap gap-3 justify-center text-sm text-white/50">

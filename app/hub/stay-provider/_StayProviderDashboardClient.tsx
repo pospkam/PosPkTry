@@ -78,7 +78,7 @@ export default function StayProviderDashboardClient() {
             </div>
             <div className="bg-white/15 border border-white/15 rounded-xl p-6">
               <p className="text-white/50 text-sm mb-2">Номеров</p>
-              <p className="text-4xl font-black text-blue-400">{metrics.totalRooms}</p>
+              <p className="text-4xl font-black text-premium-gold">{metrics.totalRooms}</p>
             </div>
             <div className="bg-white/15 border border-white/15 rounded-xl p-6">
               <p className="text-white/50 text-sm mb-2">Доход</p>

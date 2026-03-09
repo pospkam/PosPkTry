@@ -98,10 +98,10 @@ export default function BookingIntakeClient() {
     <Protected roles={['operator', 'admin']}>
       <div className="max-w-6xl mx-auto p-6">
         <div className="flex items-center gap-3 mb-6">
-          <Bot className="w-6 h-6 text-sky-400" />
+          <Bot className="w-6 h-6 text-premium-gold" />
           <h1 className="text-2xl font-bold text-white">AI Приём заявок</h1>
           {provider && (
-            <span className="text-xs px-2 py-1 rounded-full bg-sky-500/15 text-sky-300 border border-sky-400/30">
+            <span className="text-xs px-2 py-1 rounded-full bg-white/20 text-white/70 border border-white/20">
               {provider}
             </span>
           )}
@@ -112,7 +112,7 @@ export default function BookingIntakeClient() {
           <div className="lg:col-span-2 bg-white/5 border border-white/10 rounded-2xl flex flex-col h-[600px]">
             <div className="p-4 border-b border-white/10 flex items-center justify-between">
               <h2 className="text-sm font-semibold text-white">Тестовый чат</h2>
-              <button onClick={startNewChat} className="text-xs text-sky-400 hover:text-sky-300 min-h-[44px] px-3">
+              <button onClick={startNewChat} className="text-xs text-premium-gold hover:text-premium-gold/80 min-h-[44px] px-3">
                 Новый чат
               </button>
             </div>
@@ -130,11 +130,11 @@ export default function BookingIntakeClient() {
                   key={`msg-${i}-${msg.role}`}
                   className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  {msg.role === 'assistant' && <Bot className="w-5 h-5 text-sky-400 mt-1 shrink-0" />}
+                  {msg.role === 'assistant' && <Bot className="w-5 h-5 text-premium-gold mt-1 shrink-0" />}
                   <div
                     className={`max-w-[80%] px-3 py-2 rounded-xl text-sm whitespace-pre-wrap ${
                       msg.role === 'user'
-                        ? 'bg-sky-600 text-white'
+                        ? 'bg-white/20 text-white'
                         : 'bg-white/10 text-white/90'
                     }`}
                   >
@@ -158,13 +158,13 @@ export default function BookingIntakeClient() {
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 placeholder="Сообщение от туриста..."
-                className="flex-1 min-h-[44px] px-3 py-2 bg-white/10 border border-white/15 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-sky-400/30"
+                className="flex-1 min-h-[44px] px-3 py-2 bg-white/10 border border-white/15 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-premium-gold/30"
                 disabled={loading}
               />
               <button
                 type="submit"
                 disabled={loading || !input.trim()}
-                className="min-h-[44px] min-w-[44px] px-3 rounded-xl bg-sky-500 text-white disabled:opacity-50 flex items-center justify-center"
+                className="min-h-[44px] min-w-[44px] px-3 rounded-xl bg-premium-gold text-premium-black disabled:opacity-50 flex items-center justify-center"
               >
                 <Send className="w-5 h-5" />
               </button>

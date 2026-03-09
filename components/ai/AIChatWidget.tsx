@@ -245,7 +245,7 @@ export function AIChatWidget({ isOpen = false, onClose, className, userId }: AIC
             <div className="flex items-center gap-3">
               <Bot size={24} className="text-ocean" aria-hidden="true" />
               <div>
-                <h3 className="text-lg font-semibold text-gray-800">AI-помощник Камчатки</h3>
+                <h3 className="text-lg font-semibold text-white">AI-помощник Камчатки</h3>
                 <p className="text-sm text-volcano">Спросите о турах и безопасности</p>
               </div>
             </div>
@@ -265,7 +265,7 @@ export function AIChatWidget({ isOpen = false, onClose, className, userId }: AIC
               <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div
                   className={`max-w-xs p-3 rounded-2xl ${
-                    msg.role === 'user' ? 'bg-ocean text-white' : 'bg-gray-100 text-gray-800'
+                    msg.role === 'user' ? 'bg-white/20 text-white' : 'bg-white/10 text-white/90'
                   }`}
                   aria-label={msg.role === 'user' ? 'Ваше сообщение' : 'Ответ AI'}
                 >
@@ -284,7 +284,7 @@ export function AIChatWidget({ isOpen = false, onClose, className, userId }: AIC
                 <div className="bg-slate-800/60 px-4 py-3 rounded-2xl">
                   <div className="flex items-center gap-2">
                     <Loader2 className="w-4 h-4 animate-spin text-cyan-400" />
-                    <span className="text-sm text-gray-400">
+                    <span className="text-sm text-white/50">
                       {isCrewMode ? 'Агенты думают...' : 'AI думает...'}
                     </span>
                   </div>
@@ -294,11 +294,11 @@ export function AIChatWidget({ isOpen = false, onClose, className, userId }: AIC
                         {CREW_STEPS.map((_, i) => (
                           <div
                             key={i}
-                            className={`h-1.5 flex-1 rounded-full transition-colors duration-500 ${i <= crewStepIdx ? 'bg-cyan-400' : 'bg-white/20'}`}
+                            className={`h-1.5 flex-1 rounded-full transition-colors duration-500 ${i <= crewStepIdx ? 'bg-premium-gold' : 'bg-white/20'}`}
                           />
                         ))}
                       </div>
-                      <span className="text-xs text-gray-500 mt-1 block">{CREW_STEPS[crewStepIdx]}</span>
+                      <span className="text-xs text-white/50 mt-1 block">{CREW_STEPS[crewStepIdx]}</span>
                     </>
                   )}
                 </div>
@@ -315,13 +315,13 @@ export function AIChatWidget({ isOpen = false, onClose, className, userId }: AIC
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Спросите о Камчатке..."
-                className="flex-1 px-4 py-3 rounded-full bg-white/50 border border-white/20 focus:outline-none focus:ring-2 focus:ring-ocean placeholder-volcano text-sm"
+                className="flex-1 px-4 py-3 rounded-full bg-white/10 border border-white/20 focus:outline-none focus:ring-2 focus:ring-premium-gold placeholder:text-white/40 text-white text-sm"
                 aria-label="Сообщение для AI"
                 disabled={isLoading}
                 autoFocus
               />
               <motion.button
-                className="p-3 bg-ocean text-white rounded-full disabled:opacity-50"
+                className="p-3 bg-premium-gold text-premium-black rounded-full disabled:opacity-50"
                 whileHover={{ scale: 1.05 }}
                 aria-label="Отправить сообщение"
                 type="submit"
@@ -332,7 +332,7 @@ export function AIChatWidget({ isOpen = false, onClose, className, userId }: AIC
             </div>
             <div className="flex gap-2">
               <motion.button
-                className="flex-1 px-3 py-2 bg-gray-100 hover:bg-ocean hover:text-white rounded-full text-xs font-medium flex items-center gap-1 justify-center min-h-[36px] disabled:opacity-50"
+                className="flex-1 px-3 py-2 bg-white/10 hover:bg-white/20 text-white/80 hover:text-white rounded-full text-xs font-medium flex items-center gap-1 justify-center min-h-[36px] disabled:opacity-50"
                 whileHover={{ scale: 1.05 }}
                 aria-label="Планировать тур"
                 type="button"
@@ -342,7 +342,7 @@ export function AIChatWidget({ isOpen = false, onClose, className, userId }: AIC
                 <Calendar size={14} aria-hidden="true" /> Планировать тур
               </motion.button>
               <motion.button
-                className="flex-1 px-3 py-2 bg-gray-100 hover:bg-ocean hover:text-white rounded-full text-xs font-medium flex items-center gap-1 justify-center min-h-[36px] disabled:opacity-50"
+                className="flex-1 px-3 py-2 bg-white/10 hover:bg-white/20 text-white/80 hover:text-white rounded-full text-xs font-medium flex items-center gap-1 justify-center min-h-[36px] disabled:opacity-50"
                 whileHover={{ scale: 1.05 }}
                 aria-label="Погода"
                 type="button"
@@ -352,7 +352,7 @@ export function AIChatWidget({ isOpen = false, onClose, className, userId }: AIC
                 <Thermometer size={14} aria-hidden="true" /> Погода
               </motion.button>
               <motion.button
-                className="flex-1 px-3 py-2 bg-gray-100 hover:bg-ocean hover:text-white rounded-full text-xs font-medium flex items-center gap-1 justify-center min-h-[36px] disabled:opacity-50"
+                className="flex-1 px-3 py-2 bg-white/10 hover:bg-white/20 text-white/80 hover:text-white rounded-full text-xs font-medium flex items-center gap-1 justify-center min-h-[36px] disabled:opacity-50"
                 whileHover={{ scale: 1.05 }}
                 aria-label="Безопасность"
                 type="button"

@@ -15,7 +15,7 @@ const fetcher = (url: string) => fetch(url).then(r => r.json());
 export default function FeaturedReviews() {
   const { data, isLoading, error } = useSWR<Review[]>("/api/reviews?top=4", fetcher, { refreshInterval: 600000 });
 
-  if (isLoading) return <div className="text-center text-gray-400 py-8">Загрузка отзывов…</div>;
+  if (isLoading) return <div className="text-center text-white/50 py-8">Загрузка отзывов…</div>;
   if (error) return <div className="text-center text-red-500 py-8">Ошибка загрузки отзывов</div>;
   if (!data || data.length === 0) return null;
 
@@ -29,7 +29,7 @@ export default function FeaturedReviews() {
               {review.tourist.avatarUrl ? (
                 <Image src={review.tourist.avatarUrl} alt={review.tourist.name} width={40} height={40} className="rounded-full object-cover" />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-bold">{review.tourist.name[0]}</div>
+                <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white font-bold">{review.tourist.name[0]}</div>
               )}
               <span className="font-semibold text-white">{review.tourist.name}</span>
               <span className="ml-auto text-yellow-400 font-bold">{'★'.repeat(review.rating)}</span>

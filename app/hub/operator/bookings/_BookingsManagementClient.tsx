@@ -211,7 +211,7 @@ export default function BookingsManagementClient() {
             <>
               <button
                 onClick={() => handleUpdateStatus(booking.id, 'completed')}
-                className="px-3 py-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg text-xs font-medium transition-colors"
+                className="px-3 py-1 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-medium transition-colors"
               >
                 Завершить
               </button>
@@ -272,7 +272,7 @@ export default function BookingsManagementClient() {
                   setStatusFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300"
+                className="px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
               >
                 <option value="all">Все статусы</option>
                 <option value="pending">Ожидают подтверждения</option>
@@ -318,7 +318,7 @@ export default function BookingsManagementClient() {
                 </div>
                 <div className="bg-white/15 border border-white/15 rounded-xl p-4">
                   <p className="text-white/60 text-sm">Завершены</p>
-                  <p className="text-2xl font-bold text-blue-400">
+                  <p className="text-2xl font-bold text-premium-gold">
                     {bookings.filter(b => b.status === 'completed').length}
                   </p>
                 </div>

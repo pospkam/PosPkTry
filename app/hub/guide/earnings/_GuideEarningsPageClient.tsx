@@ -104,7 +104,7 @@ export default function GuideEarningsPageClient() {
                 <div className="bg-white/10 border border-white/20 rounded-xl p-6">
                   <div className="flex items-center justify-between mb-3">
                     <Calendar className="w-8 h-8 text-white/50" />
-                    <span className="text-3xl font-black text-blue-400">
+                    <span className="text-3xl font-black text-premium-gold">
                       {summary.toursCompleted}
                     </span>
                   </div>

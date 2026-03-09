@@ -40,7 +40,7 @@ function statusBadge(s: TransferStatus): string {
     pending: 'bg-yellow-500/15 text-yellow-300 border border-yellow-400/30',
     accepted: 'bg-green-500/15 text-green-300 border border-green-400/30',
     rejected: 'bg-red-500/15 text-red-300 border border-red-400/30',
-    completed: 'bg-sky-500/15 text-sky-300 border border-sky-400/30',
+    completed: 'bg-white/20 text-white/70 border border-white/20',
   };
   return map[s] ?? '';
 }
@@ -152,19 +152,19 @@ export default function TransfersClient() {
     }
   }
 
-  const inputCls = 'w-full min-h-[44px] px-3 py-2 bg-white/10 border border-white/15 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-sky-400/30';
+  const inputCls = 'w-full min-h-[44px] px-3 py-2 bg-white/10 border border-white/15 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-premium-gold/30';
 
   return (
     <Protected roles={['operator', 'admin']}>
       <div className="max-w-5xl mx-auto p-6 space-y-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <ArrowRightLeft className="w-6 h-6 text-sky-400" />
+            <ArrowRightLeft className="w-6 h-6 text-premium-gold" />
             <h1 className="text-2xl font-bold text-white">Переброс бронирований</h1>
           </div>
           <button
             onClick={() => setShowForm(!showForm)}
-            className="min-h-[44px] px-4 py-2 rounded-xl bg-sky-500 text-white font-medium inline-flex items-center gap-2 hover:bg-sky-600 transition-colors"
+            className="min-h-[44px] px-4 py-2 rounded-xl bg-premium-gold text-premium-black font-medium inline-flex items-center gap-2 hover:bg-premium-gold/80 transition-colors"
           >
             <Plus className="w-4 h-4" />
             Предложить переброс
@@ -199,7 +199,7 @@ export default function TransfersClient() {
                 <input value={form.message} onChange={e => setForm(p => ({ ...p, message: e.target.value }))} className={inputCls} placeholder="Опционально" />
               </label>
             </div>
-            <button type="submit" disabled={submitting} className="min-h-[44px] px-4 py-2 rounded-xl bg-sky-500 text-white font-medium inline-flex items-center gap-2 disabled:opacity-50">
+            <button type="submit" disabled={submitting} className="min-h-[44px] px-4 py-2 rounded-xl bg-premium-gold text-premium-black font-medium inline-flex items-center gap-2 disabled:opacity-50">
               {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               Отправить
             </button>
@@ -215,7 +215,7 @@ export default function TransfersClient() {
             {/* Исходящие */}
             <section>
               <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-                <ArrowUpRight className="w-5 h-5 text-sky-400" />
+                <ArrowUpRight className="w-5 h-5 text-premium-gold" />
                 Исходящие ({outgoing.length})
               </h2>
               {outgoing.length === 0 ? (

@@ -17,7 +17,7 @@ const fetcher = (url: string) => fetch(url).then(r => r.json());
 export default function PopularTours() {
   const { data, isLoading, error } = useSWR<Tour[]>("/api/tours/popular?priceMin=true&limit=6", fetcher, { refreshInterval: 600000 });
 
-  if (isLoading) return <div className="text-center text-gray-400 py-8">Загрузка туров…</div>;
+  if (isLoading) return <div className="text-center text-white/50 py-8">Загрузка туров…</div>;
   if (error) return <div className="text-center text-red-500 py-8">Ошибка загрузки туров</div>;
   if (!data || data.length === 0) return null;
 

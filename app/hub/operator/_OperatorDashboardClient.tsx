@@ -71,7 +71,7 @@ export default function OperatorDashboardClient() {
               <select
                 value={period}
                 onChange={(e) => setPeriod(e.target.value)}
-                className="px-4 py-3 bg-white/10 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300 transition-colors"
+                className="px-4 py-3 bg-white/10 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold transition-colors"
               >
                 <option value="7">Последние 7 дней</option>
                 <option value="30">Последние 30 дней</option>
@@ -217,7 +217,7 @@ export default function OperatorDashboardClient() {
                   />
                 ) : (
                   <EmptyState
-                    icon={<Calendar className="w-12 h-12 text-sky-300" />}
+                    icon={<Calendar className="w-12 h-12 text-white/50" />}
                     title="Нет бронирований"
                     description="Бронирования появятся здесь"
                   />

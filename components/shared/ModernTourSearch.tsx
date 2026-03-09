@@ -93,7 +93,7 @@ const TourCard = React.memo(({ result }: { result: TourResult | (TourResult & Tr
           </motion.div>
         )}
         {isTransfer && (
-          <span className="absolute top-3 right-3 bg-ocean text-white px-2 py-1 rounded-full text-xs font-semibold" aria-label="Трансфер">
+          <span className="absolute top-3 right-3 bg-white/10 text-white px-2 py-1 rounded-full text-xs font-semibold" aria-label="Трансфер">
             <Car size={12} className="inline mr-1" aria-hidden="true" /> Трансфер
           </span>
         )}
@@ -372,7 +372,7 @@ export function ModernTourSearch() {
   };
 
   return (
-    <div className="modern-search-container min-h-screen bg-gray-50 py-8">
+    <div className="modern-search-container min-h-screen bg-transparent py-8">
       {/* Sticky SOS Button - safety-first */}
       <SOSButton className="fixed top-4 right-4 z-50" aria-label="SOS — экстренная помощь" />
 
@@ -403,10 +403,10 @@ export function ModernTourSearch() {
             >
               <div className="ai-search-header flex items-center justify-between p-4 border-b border-white/20">
                 <div className="ai-search-title flex items-center gap-3">
-                  <Bot size={24} className="text-ocean" />
+                  <Bot size={24} className="text-premium-gold" />
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-800">AI Помощник поиска</h3>
-                    <p className="text-sm text-volcano">Опишите свой идеальный тур</p>
+                    <h3 className="text-lg font-semibold text-white">AI Помощник поиска</h3>
+                    <p className="text-sm text-white/70">Опишите свой идеальный тур</p>
                   </div>
                 </div>
                 <button 
@@ -420,25 +420,25 @@ export function ModernTourSearch() {
 
               <div className="ai-search-body p-4">
                 <div className="ai-examples mb-4">
-                  <p className="text-sm font-medium text-volcano mb-2">Примеры запросов:</p>
+                  <p className="text-sm font-medium text-white/70 mb-2">Примеры запросов:</p>
                   <div className="ai-example-chips flex flex-wrap gap-2">
                     <motion.button 
                       onClick={() => setAiQuery('Хочу увидеть вулкан и медведей за 3 дня')}
-                      className="px-3 py-1 bg-gray-100 hover:bg-ocean hover:text-white rounded-full text-sm transition-colors"
+                      className="px-3 py-1 bg-white/10 hover:bg-white/20 text-white/80 hover:text-white rounded-full text-sm transition-colors"
                       whileHover={{ scale: 1.05 }}
                     >
                       Вулканы + медведи
                     </motion.button>
                     <motion.button 
                       onClick={() => setAiQuery('Рыбалка для начинающих на выходные')}
-                      className="px-3 py-1 bg-gray-100 hover:bg-ocean hover:text-white rounded-full text-sm transition-colors"
+                      className="px-3 py-1 bg-white/10 hover:bg-white/20 text-white/80 hover:text-white rounded-full text-sm transition-colors"
                       whileHover={{ scale: 1.05 }}
                     >
                       Рыбалка для новичков
                     </motion.button>
                     <motion.button 
                       onClick={() => setAiQuery('Романтический тур с горячими источниками')}
-                      className="px-3 py-1 bg-gray-100 hover:bg-ocean hover:text-white rounded-full text-sm transition-colors"
+                      className="px-3 py-1 bg-white/10 hover:bg-white/20 text-white/80 hover:text-white rounded-full text-sm transition-colors"
                       whileHover={{ scale: 1.05 }}
                     >
                       Романтический отдых
@@ -450,7 +450,7 @@ export function ModernTourSearch() {
                   value={aiQuery}
                   onChange={(e) => setAiQuery(e.target.value)}
                   placeholder="Например: Хочу активный тур на 5 дней с восхождением на вулкан, но без экстрима..."
-                  className="ai-input w-full p-3 border border-gray-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-ocean text-sm"
+                  className="ai-input w-full p-3 border border-white/20 rounded-xl bg-white/10 text-white placeholder:text-white/40 resize-none focus:outline-none focus:ring-2 focus:ring-premium-gold text-sm"
                   rows={4}
                   aria-label="Запрос для AI"
                 />
@@ -458,7 +458,7 @@ export function ModernTourSearch() {
                 <motion.button 
                   onClick={handleAISearch}
                   disabled={aiLoading || !aiQuery.trim()}
-                  className="ai-search-btn w-full mt-3 flex items-center justify-center gap-2 px-4 py-3 bg-ocean text-white rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="ai-search-btn w-full mt-3 flex items-center justify-center gap-2 px-4 py-3 bg-premium-gold text-premium-black rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
@@ -477,7 +477,7 @@ export function ModernTourSearch() {
 
                 {aiResponse && (
                   <motion.div 
-                    className="ai-response mt-4 p-4 bg-gray-50 rounded-xl"
+                    className="ai-response mt-4 p-4 bg-white/10 rounded-xl"
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     role="status"
@@ -486,7 +486,7 @@ export function ModernTourSearch() {
                     <div className="ai-response-header flex items-center gap-2 mb-2">
                       <span className="ai-badge bg-moss text-white px-2 py-1 rounded-full text-xs font-medium">Рекомендация AI</span>
                     </div>
-                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{aiResponse}</p>
+                    <p className="text-sm text-white/90 whitespace-pre-wrap">{aiResponse}</p>
                   </motion.div>
                 )}
               </div>
@@ -498,24 +498,24 @@ export function ModernTourSearch() {
       {/* Основной поиск */}
       <div className="search-main max-w-4xl mx-auto px-4">
         <motion.div 
-          className="search-input-group relative bg-white rounded-2xl shadow-md p-4 flex items-center gap-3 mb-4"
+          className="search-input-group relative bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4 flex items-center gap-3 mb-4"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <Search size={20} className="text-volcano flex-shrink-0" aria-hidden="true" />
+          <Search size={20} className="text-white/60 flex-shrink-0" aria-hidden="true" />
           <input
             type="text"
             value={filters.query}
             onChange={(e) => setFilters(prev => ({ ...prev, query: e.target.value }))}
             placeholder="Куда хотите отправиться? (вулкан, рыбалка, медведи...)"
-            className="search-input-main flex-1 outline-none text-base placeholder:text-volcano"
+            className="search-input-main flex-1 outline-none text-base text-white placeholder:text-white/40 bg-transparent"
             aria-label="Поиск туров"
             autoComplete="off"
           />
           {voiceSupported && (
             <motion.button 
               onClick={toggleVoiceInput}
-              className={`voice-input-btn p-2 rounded-xl transition-colors ${isListening ? 'bg-red-100 text-red-600' : 'text-volcano hover:bg-gray-100'}`}
+              className={`voice-input-btn p-2 rounded-xl transition-colors ${isListening ? 'bg-red-100 text-red-600' : 'text-white/60 hover:bg-white/10'}`}
               title="Голосовой ввод"
               aria-label="Голосовой ввод"
               aria-pressed={isListening}
@@ -528,7 +528,7 @@ export function ModernTourSearch() {
           )}
           <motion.button 
             onClick={() => setShowAI(true)}
-            className="ai-assistant-btn flex items-center gap-1 px-3 py-2 bg-ocean text-white rounded-xl text-sm font-medium hover:bg-ocean/90 transition-colors"
+            className="ai-assistant-btn flex items-center gap-1 px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-sm font-medium transition-colors"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             aria-label="AI помощник"
@@ -538,7 +538,7 @@ export function ModernTourSearch() {
           </motion.button>
           <motion.button 
             onClick={() => setShowFilters(!showFilters)}
-            className={`filters-toggle p-2 rounded-xl transition-colors ${showFilters ? 'bg-volcano text-white' : 'text-volcano hover:bg-gray-100'}`}
+            className={`filters-toggle p-2 rounded-xl transition-colors ${showFilters ? 'bg-white/20 text-white' : 'text-white/60 hover:bg-white/10'}`}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             aria-label="Фильтры"
@@ -559,9 +559,9 @@ export function ModernTourSearch() {
                 activity: prev.activity === activity.id ? '' : activity.id 
               }))}
               className={`activity-chip flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-                filters.activity === activity.id 
-                  ? 'bg-ocean text-white shadow-md' 
-                  : 'bg-gray-100 text-volcano hover:bg-gray-200 hover:shadow-sm'
+                filters.activity === activity.id
+                  ? 'bg-premium-gold text-premium-black'
+                  : 'bg-white/10 text-white/80 hover:bg-white/20'
               }`}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -585,12 +585,12 @@ export function ModernTourSearch() {
             >
               <div className="filter-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 <div className="filter-group">
-                  <label htmlFor="filter-difficulty" className="block text-sm font-medium text-volcano mb-1">Сложность</label>
+                  <label htmlFor="filter-difficulty" className="block text-sm font-medium text-white/70 mb-1">Сложность</label>
                   <select 
                     id="filter-difficulty"
                     value={filters.difficulty}
                     onChange={(e) => setFilters(prev => ({ ...prev, difficulty: e.target.value as any }))}
-                    className="filter-select w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-ocean text-sm"
+                    className="filter-select w-full p-3 border border-white/20 rounded-xl bg-white/10 text-white focus:outline-none focus:ring-2 focus:ring-premium-gold text-sm"
                     aria-label="Сложность тура"
                   >
                     <option value="any">Любая</option>
@@ -601,46 +601,46 @@ export function ModernTourSearch() {
                 </div>
 
                 <div className="filter-group">
-                  <label htmlFor="filter-price-min" className="block text-sm font-medium text-volcano mb-1">Цена от, ₽</label>
+                  <label htmlFor="filter-price-min" className="block text-sm font-medium text-white/70 mb-1">Цена от, ₽</label>
                   <input
                     id="filter-price-min"
                     type="number"
                     value={filters.priceMin || ''}
                     onChange={(e) => setFilters(prev => ({ ...prev, priceMin: parseInt(e.target.value) || undefined }))}
                     placeholder="0"
-                    className="filter-input w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-ocean text-sm"
+                    className="filter-input w-full p-3 border border-white/20 rounded-xl bg-white/10 text-white focus:outline-none focus:ring-2 focus:ring-premium-gold text-sm"
                     aria-label="Минимальная цена"
                   />
                 </div>
 
                 <div className="filter-group">
-                  <label htmlFor="filter-price-max" className="block text-sm font-medium text-volcano mb-1">Цена до, ₽</label>
+                  <label htmlFor="filter-price-max" className="block text-sm font-medium text-white/70 mb-1">Цена до, ₽</label>
                   <input
                     id="filter-price-max"
                     type="number"
                     value={filters.priceMax || ''}
                     onChange={(e) => setFilters(prev => ({ ...prev, priceMax: parseInt(e.target.value) || undefined }))}
                     placeholder="∞"
-                    className="filter-input w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-ocean text-sm"
+                    className="filter-input w-full p-3 border border-white/20 rounded-xl bg-white/10 text-white focus:outline-none focus:ring-2 focus:ring-premium-gold text-sm"
                     aria-label="Максимальная цена"
                   />
                 </div>
 
                 <div className="filter-group">
-                  <label htmlFor="filter-duration" className="block text-sm font-medium text-volcano mb-1">Длительность, дней</label>
+                  <label htmlFor="filter-duration" className="block text-sm font-medium text-white/70 mb-1">Длительность, дней</label>
                   <input
                     id="filter-duration"
                     type="number"
                     value={filters.duration || ''}
                     onChange={(e) => setFilters(prev => ({ ...prev, duration: parseInt(e.target.value) || undefined }))}
                     placeholder="Любая"
-                    className="filter-input w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-ocean text-sm"
+                    className="filter-input w-full p-3 border border-white/20 rounded-xl bg-white/10 text-white focus:outline-none focus:ring-2 focus:ring-premium-gold text-sm"
                     aria-label="Длительность тура"
                   />
                 </div>
 
                 <div className="filter-group">
-                  <label htmlFor="filter-passengers" className="block text-sm font-medium text-volcano mb-1">Пассажиры</label>
+                  <label htmlFor="filter-passengers" className="block text-sm font-medium text-white/70 mb-1">Пассажиры</label>
                   <input
                     id="filter-passengers"
                     type="number"
@@ -649,7 +649,7 @@ export function ModernTourSearch() {
                     placeholder="1"
                     min="1"
                     max="50"
-                    className="filter-input w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-ocean text-sm"
+                    className="filter-input w-full p-3 border border-white/20 rounded-xl bg-white/10 text-white focus:outline-none focus:ring-2 focus:ring-premium-gold text-sm"
                     aria-label="Количество пассажиров"
                   />
                 </div>
@@ -657,7 +657,7 @@ export function ModernTourSearch() {
 
               <motion.button 
                 onClick={() => setFilters({ query: '', difficulty: 'any', activity: '', passengers: undefined, priceMin: undefined, priceMax: undefined, duration: undefined })}
-                className="clear-filters-btn mt-4 px-6 py-3 border border-volcano text-volcano rounded-xl font-medium hover:bg-volcano hover:text-white transition-colors"
+                className="clear-filters-btn mt-4 px-6 py-3 border border-white/20 text-white/70 rounded-xl font-medium hover:bg-white/10 hover:text-white transition-colors"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -682,8 +682,8 @@ export function ModernTourSearch() {
               <div className="w-16 h-16 bg-gradient-to-r from-ocean to-moss rounded-full flex items-center justify-center mb-4 animate-spin">
                 <Search size={24} className="text-white" />
               </div>
-              <p className="text-xl font-semibold text-volcano mb-2">Ищем варианты...</p>
-              <p className="text-sm text-gray-500">Мгновенный поиск по 100+ турам</p>
+              <p className="text-xl font-semibold text-white mb-2">Ищем варианты...</p>
+              <p className="text-sm text-white/60">Мгновенный поиск по 100+ турам</p>
             </motion.div>
           ) : results.length > 0 ? (
             <>
@@ -692,12 +692,12 @@ export function ModernTourSearch() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
               >
-                <h3 className="text-2xl font-bold text-gray-800">
-                  Найдено: <span className="text-ocean">{results.length}</span> {filters.passengers ? 'трансферов' : 'туров'}
+                <h3 className="text-2xl font-bold text-white">
+                  Найдено: <span className="text-premium-gold">{results.length}</span> {filters.passengers ? 'трансферов' : 'туров'}
                 </h3>
                 <motion.button 
                   onClick={() => setShowFilters(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-white border border-volcano text-volcano rounded-xl font-medium hover:shadow-md transition-all"
+                  className="flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/20 text-white rounded-xl font-medium hover:shadow-md transition-all"
                   whileHover={{ scale: 1.02 }}
                 >
                   <Filter size={16} />
@@ -724,18 +724,18 @@ export function ModernTourSearch() {
               aria-label="Ничего не найдено"
             >
               <motion.div 
-                className="no-results-icon w-24 h-24 bg-gray-200 rounded-2xl flex items-center justify-center mb-6 animate-pulse"
+                className="no-results-icon w-24 h-24 bg-white/10 rounded-2xl flex items-center justify-center mb-6 animate-pulse"
                 whileHover={{ scale: 1.1 }}
               >
-                <Search size={32} className="text-volcano" />
+              <Search size={32} className="text-white/40" />
               </motion.div>
-              <h3 className="text-2xl font-bold text-gray-800 mb-3">Ничего не найдено</h3>
-              <p className="text-lg text-volcano mb-6 max-w-md mx-auto">
+              <h3 className="text-2xl font-bold text-white mb-3">Ничего не найдено</h3>
+              <p className="text-lg text-white/60 mb-6 max-w-md mx-auto">
                 Попробуйте изменить запрос или воспользуйтесь AI-помощником для персональных рекомендаций.
               </p>
               <motion.button 
                 onClick={() => setShowAI(true)}
-                className="flex items-center gap-2 px-6 py-3 bg-ocean text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"
+                className="flex items-center gap-2 px-6 py-3 bg-premium-gold text-premium-black rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.98 }}
               >
