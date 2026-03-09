@@ -30,6 +30,9 @@ export default {
         ocean: '#0EA5E9',
         volcano: '#64748B',
         moss: '#84CC16',
+        /* Premium card design tokens — used across TourCard, AccommodationCard etc. */
+        'premium-gold':  '#d4af37',
+        'premium-black': '#0a0a0a',
       },
       fontFamily: {
         sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', '"Segoe UI"', 'Roboto', 'sans-serif'],

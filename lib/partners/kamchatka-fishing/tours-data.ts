@@ -4,7 +4,29 @@
  * Контакты: +7 914-782-22-22 (Анатолий), +7 999-299-70-07 (Александр)
  */
 
-import { FishingTourData } from '@/components/fishing/FishingTourCard';
+export interface FishingTourData {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  priceOld?: number;
+  duration: number;
+  location: string;
+  coordinates?: { lat: number; lng: number };
+  fishTypes: string[];
+  season: { start: string; end: string };
+  maxParticipants: number;
+  minParticipants?: number;
+  includes: string[];
+  notIncluded?: string[];
+  requirements: string[];
+  images: string[];
+  difficulty: 'easy' | 'medium' | 'hard';
+  rating?: number;
+  reviewsCount?: number;
+  partner?: string;
+  type?: 'daily' | 'multi' | 'family';
+}
 
 export const PARTNER_INFO = {
   id: 'kamchatka-fishing',
