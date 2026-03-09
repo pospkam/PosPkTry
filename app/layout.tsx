@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { Syne } from 'next/font/google';
+import { Syne, Outfit } from 'next/font/google';
 import { Playfair_Display, Inter } from 'next/font/google';
 
 const syne = Syne({
@@ -20,6 +20,13 @@ const inter = Inter({
   weight: ['400', '500', '600'],
   display: 'swap',
   variable: '--font-inter',
+});
+
+const outfit = Outfit({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+  variable: '--font-outfit',
 });
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://kamchatour.ru';
@@ -105,7 +112,7 @@ import { Toaster } from 'react-hot-toast'
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ru" suppressHydrationWarning>
-      <body className={`min-h-screen transition-colors duration-300 ${syne.className} ${playfairDisplay.variable} ${inter.variable}`}>
+      <body className={`min-h-screen transition-colors duration-300 ${syne.className} ${playfairDisplay.variable} ${inter.variable} ${outfit.variable}`}>
         <ThemeProvider>
           <AuthProvider>
             <RoleProvider>

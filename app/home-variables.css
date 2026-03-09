@@ -1,53 +1,101 @@
 /**
- * Kamchatour Hub — CSS Custom Properties (Design Tokens)
- * Единый источник истины для цветовой палитры и дизайн-токенов главного экрана.
- * Все компоненты Home Screen используют эти переменные напрямую.
- *
- * @see AGENTS.md — Visual Identity section
+ * KamchatourHub — Design Tokens (Homepage)
+ * Volcanic Expedition Aesthetic — National Geographic × Lindblad style.
+ * Only used by homepage (_HomePageClient.tsx).
  */
 
 :root {
-  /* === Фоновые цвета === */
-  --kh-bg-deep: #0B1120;
-  --kh-bg-dark: #0D1B2A;
-  --kh-bg-gradient: linear-gradient(180deg, var(--kh-bg-deep) 0%, var(--kh-bg-dark) 100%);
+  /* ── Backgrounds ─────────────────────────────── */
+  --kh-bg:       #0A0A0A;
+  --kh-surface:  #141414;
+  --kh-surface2: #1C1C1E;
 
-  /* === Акцентные цвета === */
-  --kh-accent-cyan: #00D4FF;
-  --kh-accent-cyan-glow: rgba(0, 212, 255, 0.3);
-  --kh-accent-cyan-border: rgba(0, 212, 255, 0.2);
-  --kh-accent-cyan-border-hover: rgba(0, 212, 255, 0.6);
-  --kh-accent-gold: #FFD700;
-  --kh-accent-amber: #FFC107;
+  /* ── Typography ──────────────────────────────── */
+  --kh-text:     #F0EDE8;
+  --kh-text-dim: #8A8680;
 
-  /* === Текст === */
-  --kh-text-primary: #FFFFFF;
-  --kh-text-secondary: rgba(255, 255, 255, 0.6);
-  --kh-text-muted: rgba(255, 255, 255, 0.4);
+  /* ── Accents ─────────────────────────────────── */
+  --kh-accent:  #E8530E;           /* volcanic orange — primary CTA */
+  --kh-accent2: #2D7DD2;           /* deep ocean blue */
+  --kh-ice:     #C8E6F5;           /* glacial highlight */
+  --kh-danger:  #DC2626;           /* SOS */
 
-  /* === Карточки / Glassmorphism === */
-  --kh-card-bg: rgba(255, 255, 255, 0.07);
-  --kh-card-border: 1px solid rgba(0, 212, 255, 0.15);
-  --kh-card-radius: 20px;
-  --kh-card-blur: blur(10px);
+  /* ── Derived/utility ─────────────────────────── */
+  --kh-accent-glow:   rgba(232,83,14,0.35);
+  --kh-accent2-glow:  rgba(45,125,210,0.25);
+  --kh-border:        rgba(240,237,232,0.08);
+  --kh-border-strong: rgba(240,237,232,0.14);
 
-  /* === Нижняя навигация === */
-  --kh-nav-bg: rgba(13, 27, 42, 0.95);
-  --kh-nav-border: rgba(0, 212, 255, 0.1);
-  --kh-nav-height: 64px;
-
-  /* === Кнопки и чипы === */
-  --kh-chip-radius: 16px;
-  --kh-btn-radius: 50px;
-  --kh-chip-bg: rgba(255, 255, 255, 0.08);
-  --kh-chip-border: rgba(0, 212, 255, 0.2);
-
-  /* === Поиск === */
-  --kh-search-bg: rgba(255, 255, 255, 0.1);
-  --kh-search-border: rgba(0, 212, 255, 0.3);
-
-  /* === Анимации === */
-  --kh-transition-fast: 0.2s ease;
-  --kh-transition-card: 0.25s ease;
-  --kh-transition-page: 0.35s ease;
+  /* ── Timing ──────────────────────────────────── */
+  --kh-ease: cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+/* ── Animated hero gradient ─────────────────────── */
+@keyframes kh-hero-glow {
+  0%   { opacity: 1; transform: translate(-5%, 8%) scale(1);    }
+  33%  { opacity: 0.7; transform: translate(5%, -4%) scale(1.1); }
+  66%  { opacity: 0.9; transform: translate(-8%, 2%) scale(0.95); }
+  100% { opacity: 1; transform: translate(-5%, 8%) scale(1);    }
+}
+@keyframes kh-hero-glow2 {
+  0%   { opacity: 0.8; transform: translate(8%, -6%) scale(1.05); }
+  33%  { opacity: 1;   transform: translate(-4%, 10%) scale(0.95); }
+  66%  { opacity: 0.6; transform: translate(6%, 4%) scale(1.1);   }
+  100% { opacity: 0.8; transform: translate(8%, -6%) scale(1.05); }
+}
+
+/* ── Infinite marquee ───────────────────────────── */
+@keyframes kh-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ── Film grain ─────────────────────────────────── */
+@keyframes kh-grain {
+  0%   { transform: translate(0,    0);   }
+  10%  { transform: translate(-3%,  1%);  }
+  20%  { transform: translate(2%,  -3%);  }
+  30%  { transform: translate(-1%,  4%);  }
+  40%  { transform: translate(3%,  -1%);  }
+  50%  { transform: translate(-4%,  3%);  }
+  60%  { transform: translate(1%,  -2%);  }
+  70%  { transform: translate(-2%,  2%);  }
+  80%  { transform: translate(4%,  -4%);  }
+  90%  { transform: translate(-1%,  1%);  }
+  100% { transform: translate(0,    0);   }
+}
+
+/* ── SOS pulse ──────────────────────────────────── */
+@keyframes kh-sos-pulse {
+  0%   { box-shadow: 0 0 0 0   rgba(220,38,38,0.7);  }
+  60%  { box-shadow: 0 0 0 12px rgba(220,38,38,0);    }
+  100% { box-shadow: 0 0 0 0   rgba(220,38,38,0);     }
+}
+
+/* ── Scroll reveal ──────────────────────────────── */
+.kh-reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s var(--kh-ease), transform 0.8s var(--kh-ease);
+}
+.kh-reveal.kh-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.kh-reveal-d1 { transition-delay: 0.1s; }
+.kh-reveal-d2 { transition-delay: 0.2s; }
+.kh-reveal-d3 { transition-delay: 0.3s; }
+.kh-reveal-d4 { transition-delay: 0.4s; }
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .kh-reveal {
+    opacity: 0;
+    transform: none;
+    transition: opacity 0.4s ease;
+  }
+}
+
+/* ── Misc utilities ─────────────────────────────── */
+.kh-scrollbar-none          { scrollbar-width: none; -ms-overflow-style: none; }
+.kh-scrollbar-none::-webkit-scrollbar { display: none; }
