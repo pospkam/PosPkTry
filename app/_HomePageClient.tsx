@@ -292,7 +292,7 @@ function HeroSection({ scrollY }: { scrollY: number }) {
       {/* Photo layer with parallax */}
       <div aria-hidden="true" style={{ position: 'absolute', left: 0, right: 0, top: '-5%', height: '115%', zIndex: 0, transform: `translateY(${scrollY * 0.18}px)`, willChange: 'transform', pointerEvents: 'none' }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/images/dark.webp" alt="" width={1920} height={1080} loading="eager" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%', display: 'block' }} />
+        <img src="/images/hero-volcano.webp" alt="" width={1920} height={1080} loading="eager" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%', display: 'block' }} />
       </div>
 
       {/* Top gradient overlay */}
