@@ -1,19 +1,58 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
-import { Tour, Weather } from '@/types';
+import { Weather } from '@/types';
 import { AIChatWidget } from '@/components/ai/AIChatWidget';
 import { TransferSearchWidget } from '@/components/transfer-operator/TransferSearchWidget';
 import { TouristNav } from '@/components/tourist/TouristNav';
-import { Mountain, Eye, TreePine, Fish, CloudSnow, Waves, Star, Zap, Clock, Wind, Sun, Cloud, CloudRain, Users, Bot, Heart, Target, Droplets, Bus } from 'lucide-react';
+import { Mountain, Eye, CloudSnow, Wind, Sun, Cloud, CloudRain, Bot, Heart, Target, Droplets, Bus } from 'lucide-react';
 import RecommendationCard, { RecommendationCardSkeleton } from '@/components/tourist/RecommendationCard';
-import type { RecommendedTour, RecommendationStrategy } from '@/lib/recommendations/engine';
+import type { RecommendedTour } from '@/lib/recommendations/engine';
 import Link from 'next/link';
-import { ActivityIcon, WeatherIcon } from '@/components/icons';
+import { TourCard, TourCardData } from '@/components/tours/TourCard';
+
+interface ApiTour {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  difficulty: string;
+  duration: number;
+  price: number;
+  currency: string;
+  maxGroupSize: number;
+  minGroupSize: number;
+  rating: number;
+  reviewCount: number;
+  images: string[];
+  included: string[];
+  season: unknown[];
+  route?: { id: string; title: string; category: string } | null;
+}
+
+function toCardData(t: ApiTour): TourCardData {
+  return {
+    id:           t.id,
+    name:         t.name,
+    description:  t.description,
+    category:     t.category,
+    difficulty:   (t.difficulty as 'easy' | 'medium' | 'hard') || 'medium',
+    duration:     t.duration,
+    price:        t.price,
+    currency:     t.currency || 'RUB',
+    maxGroupSize: t.maxGroupSize || 20,
+    minGroupSize: t.minGroupSize || 1,
+    rating:       t.rating || 0,
+    reviewCount:  t.reviewCount || 0,
+    images:       t.images || [],
+    included:     t.included || [],
+    season:       t.season || [],
+    route:        t.route ?? null,
+  };
+}
 
 export default function TouristDashboardClient() {
-  const [tours, setTours] = useState<Tour[]>([]);
+  const [tours, setTours] = useState<ApiTour[]>([]);
   const [weather, setWeather] = useState<Weather | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState('tours');
@@ -72,19 +111,6 @@ export default function TouristDashboardClient() {
     } finally {
       setRecsLoading(false);
     }
-  };
-
-  const getActivityIcon = (activity: string) => {
-    return <ActivityIcon activity={activity} className="w-5 h-5" />;
-  };
-
-  const getDifficultyColor = (difficulty: string) => {
-    const colors: { [key: string]: string } = {
-      easy: 'text-green-400',
-      medium: 'text-yellow-400',
-      hard: 'text-red-400',
-    };
-    return colors[difficulty] || 'text-gray-400';
   };
 
   const getWeatherIcon = (condition: string) => {
@@ -230,65 +256,7 @@ export default function TouristDashboardClient() {
             {/* Tours Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {tours.map((tour) => (
-                <div key={tour.id} className="bg-white/15 rounded-2xl overflow-hidden border border-white/15 hover:border-white/50 transition-colors" style={{ backdropFilter: 'blur(10px)' }}>
-                  <div className="aspect-video bg-gradient-to-br from-blue-500/20 to-cyan-500/20 relative">
-                    {tour.images && tour.images.length > 0 ? (
-                      <Image
-                        src={tour.images[0]}
-                        alt={tour.title}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <span className="text-6xl">{getActivityIcon(tour.activity)}</span>
-                      </div>
-                    )}
-                    <div className="absolute top-4 right-4 bg-white/30 backdrop-blur-2xl text-white px-3 py-1 rounded-full text-sm font-extralight" style={{ backdropFilter: 'blur(10px)', textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)' }}>
-                      {tour.priceFrom.toLocaleString()}₽
-                    </div>
-                  </div>
-                  
-                  <div className="p-6">
-                    <div className="flex items-start justify-between mb-3">
-                      <h3 className="text-xl font-bold text-white">{tour.title}</h3>
-                      <div className="flex items-center space-x-1">
-                        <span className="text-white"><Star className="w-4 h-4" /></span>
-                        <span className="text-white font-bold">{tour.rating}</span>
-                        <span className="text-white/50">({tour.reviewsCount})</span>
-                      </div>
-                    </div>
-                    
-                    <p className="text-white/70 text-sm mb-4 line-clamp-2">{tour.description}</p>
-                    
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center space-x-4 text-sm text-white/70">
-                        <span className="flex items-center space-x-1">
-                          <span>{getActivityIcon(tour.activity)}</span>
-                          <span className="capitalize">{tour.activity}</span>
-                        </span>
-                        <span className={`flex items-center space-x-1 ${getDifficultyColor(tour.difficulty)}`}>
-                          <span></span>
-                          <span className="capitalize">{tour.difficulty}</span>
-                        </span>
-                        <span className="flex items-center space-x-1">
-                          <span></span>
-                          <span>{tour.duration}</span>
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm text-white/70">
-                        <span className="flex items-center gap-1"><Users className="w-4 h-4" /> {tour.minParticipants}-{tour.maxParticipants} чел.</span>
-                      </div>
-                      <button className="px-6 py-2 bg-gradient-to-r from-sky-200 to-cyan-200 text-white rounded-xl hover:from-blue-600 hover:to-cyan-600 transition-colors font-extralight" style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)' }}>
-                        Забронировать
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                <TourCard key={tour.id} tour={toCardData(tour)} />
               ))}
             </div>
           </div>
@@ -413,7 +381,7 @@ export default function TouristDashboardClient() {
             </h2>
             <Link
               href="/tours"
-              className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+              className="text-sm text-premium-gold/80 hover:text-premium-gold transition-colors"
             >
               Смотреть все →
             </Link>

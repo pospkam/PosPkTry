@@ -58,10 +58,10 @@ export default function RecommendationCard({ tour, onCardClick }: Recommendation
       onClick={handleClick}
       className="
         group relative rounded-2xl overflow-hidden
-        bg-white/5 border border-white/10
-        hover:border-white/25 hover:bg-white/10
+        bg-white/10 border border-white/20
+        hover:border-premium-gold/50 hover:bg-white/10
         cursor-pointer transition-all duration-300
-        hover:shadow-lg hover:shadow-black/20
+        hover:shadow-xl hover:shadow-premium-gold/10
         hover:-translate-y-0.5
       "
     >
@@ -104,7 +104,7 @@ export default function RecommendationCard({ tour, onCardClick }: Recommendation
           <span className="text-white/80">{tour.strategyLabel}</span>
         </div>
 
-        <h3 className="text-sm font-semibold text-white line-clamp-2 mb-1 group-hover:text-blue-300 transition-colors">
+        <h3 className="text-sm font-semibold text-white line-clamp-2 mb-1 group-hover:text-premium-gold transition-colors">
           {tour.title}
         </h3>
 
@@ -133,7 +133,7 @@ export default function RecommendationCard({ tour, onCardClick }: Recommendation
           </div>
 
           {tour.price && (
-            <span className="text-sm font-bold text-white">
+            <span className="text-sm font-bold text-premium-gold">
               {tour.price.toLocaleString('ru-RU')} ₽
             </span>
           )}

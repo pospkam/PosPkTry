@@ -61,27 +61,29 @@ const TourCard = React.memo(({ result }: { result: TourResult | (TourResult & Tr
   const isTransfer = 'vehicleType' in result;
   return (
     <motion.div
-      className="tour-result-card bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-2"
-      whileHover={{ scale: 1.02 }}
+      className="tour-result-card bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl overflow-hidden hover:border-premium-gold/50 transition-all duration-300 hover:shadow-xl hover:shadow-premium-gold/10 flex flex-col"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       role="article"
       aria-label={result.title}
     >
-      <div className="tour-result-image relative overflow-hidden rounded-t-2xl">
+      <div className="tour-result-image relative aspect-[4/3] overflow-hidden">
         {result.imageUrl ? (
-          <Image src={result.imageUrl} alt={result.title} fill className="object-cover" sizes="(max-width: 768px) 100vw, 50vw" />
+          <Image src={result.imageUrl} alt={result.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 100vw, 50vw" />
         ) : (
-          <div className="w-full h-48 bg-gradient-to-br from-gray-200 to-gray-300 animate-pulse" aria-label="Загрузка изображения" />
+          <div className="w-full h-full bg-gradient-to-br from-blue-900 to-cyan-800 flex items-center justify-center" aria-label="Нет изображения">
+            <Mountain size={48} className="text-white/30" />
+          </div>
         )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
         {result.difficulty && !isTransfer && (
-          <span className={`difficulty-badge absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-semibold bg-white/80 text-volcano`} aria-label={`Сложность: ${result.difficulty}`}>
+          <span className={`difficulty-badge absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-bold bg-black/60 backdrop-blur-sm text-white/90`} aria-label={`Сложность: ${result.difficulty}`}>
             {result.difficulty === 'easy' ? 'Легко' : result.difficulty === 'medium' ? 'Средне' : 'Сложно'}
           </span>
         )}
         {result.isEco && (
-          <motion.div 
+          <motion.div
             className="absolute top-3 right-3 bg-moss text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1"
             animate={{ scale: [1, 1.05, 1] }}
             transition={{ duration: 2, repeat: Infinity }}
@@ -95,36 +97,39 @@ const TourCard = React.memo(({ result }: { result: TourResult | (TourResult & Tr
             <Car size={12} className="inline mr-1" aria-hidden="true" /> Трансфер
           </span>
         )}
+        {result.rating && (
+          <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-1">
+            <Star size={12} fill="currentColor" className="text-premium-gold" />
+            <span className="text-white text-xs font-bold">{result.rating}</span>
+            {result.reviews && <span className="text-white/50 text-xs">({result.reviews})</span>}
+          </div>
+        )}
       </div>
-      <div className="tour-result-content p-4">
-        <h4 className="text-lg font-semibold text-gray-800 mb-2 line-clamp-2">{result.title}</h4>
-        <p className="tour-description text-sm text-gray-600 mb-3 line-clamp-2">{result.description}</p>
+      <div className="tour-result-content p-4 flex flex-col flex-1">
+        <h4 className="text-base font-bold text-white mb-1 line-clamp-2 group-hover:text-premium-gold transition-colors">{result.title}</h4>
+        <p className="tour-description text-sm text-white/60 mb-3 line-clamp-2">{result.description}</p>
         {isTransfer && (
-          <div className="transfer-details text-xs text-volcano mb-2 space-y-1">
+          <div className="transfer-details text-xs text-white/60 mb-2 space-y-1">
             <span><Mountain size={12} className="inline mr-1" /> {result.fromLocation} → {result.toLocation}</span>
             <span><Clock size={12} className="inline mr-1" /> {result.departureTime}</span>
             <span><User size={12} className="inline mr-1" /> Мест: {result.availableSeats}</span>
           </div>
         )}
-        <div className="tour-meta flex justify-between items-center mb-3">
-          <span className="tour-duration text-sm text-volcano flex items-center gap-1">
+        <div className="tour-meta flex justify-between items-center mb-3 text-sm text-white/60">
+          <span className="flex items-center gap-1">
             <Clock size={14} /> {result.duration}
           </span>
-          {result.rating && (
-            <span className="tour-rating text-sm text-moss flex items-center gap-1">
-              <Star size={14} fill="currentColor" className="text-yellow-500" /> {result.rating}
-              {result.reviews && ` (${result.reviews})`}
-            </span>
+        </div>
+        <div className="mt-auto pt-3 border-t border-white/10">
+          <span className="text-lg font-black text-premium-gold">
+            от {result.price?.toLocaleString('ru-RU')} ₽
+          </span>
+          {isTransfer && (
+            <div className="text-xs text-white/50 mt-1">
+              Оператор: {result.operatorName}
+            </div>
           )}
         </div>
-        <div className="tour-price text-xl font-bold text-ocean mb-2">
-          от {result.price?.toLocaleString()} ₽
-        </div>
-        {isTransfer && (
-          <div className="operator-info text-xs text-gray-500">
-            Оператор: {result.operatorName}
-          </div>
-        )}
       </div>
     </motion.div>
   );
