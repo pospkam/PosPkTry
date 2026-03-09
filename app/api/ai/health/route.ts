@@ -37,21 +37,31 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const openrouterKey = process.env.OPENROUTER_API_KEY;
   const deepseekKey = process.env.DEEPSEEK_API_KEY;
   const minimaxKey = process.env.MINIMAX_API_KEY;
   const xaiKey = process.env.XAI_API_KEY;
-  const anthropicKey = process.env.ANTHROPIC_API_KEY;
 
   const keySummary = {
+    OPENROUTER_API_KEY: openrouterKey ? `SET (${openrouterKey.length}ch, ${openrouterKey.slice(0, 8)}...)` : 'MISSING',
     DEEPSEEK_API_KEY: deepseekKey ? `SET (${deepseekKey.length}ch, ${deepseekKey.slice(0, 8)}...)` : 'MISSING',
     MINIMAX_API_KEY: minimaxKey ? `SET (${minimaxKey.length}ch, ${minimaxKey.slice(0, 8)}...)` : 'MISSING',
     XAI_API_KEY: xaiKey ? `SET (${xaiKey.length}ch, ${xaiKey.slice(0, 8)}...)` : 'MISSING',
-    ANTHROPIC_API_KEY: anthropicKey ? `SET (${anthropicKey.length}ch, ${anthropicKey.slice(0, 8)}...)` : 'MISSING',
     DATABASE_URL: process.env.DATABASE_URL ? 'SET' : 'MISSING',
     JWT_SECRET: process.env.JWT_SECRET ? 'SET' : 'MISSING',
   };
 
   const tests = await Promise.all([
+    openrouterKey
+      ? testProvider('OpenRouter', () =>
+          fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${openrouterKey}` },
+            body: JSON.stringify({ model: 'anthropic/claude-3.5-sonnet', max_tokens: 20, messages: [{ role: 'user', content: 'ping' }] }),
+          })
+        )
+      : { name: 'OpenRouter', ok: false, status: 0, error: 'OPENROUTER_API_KEY MISSING' },
+
     deepseekKey
       ? testProvider('DeepSeek', () =>
           fetch('https://api.deepseek.com/v1/chat/completions', {
@@ -71,16 +81,6 @@ export async function GET(request: NextRequest) {
           })
         )
       : { name: 'MiniMax', ok: false, status: 0, error: 'MINIMAX_API_KEY MISSING' },
-
-    xaiKey
-      ? testProvider('xAI grok-4', () =>
-          fetch('https://api.x.ai/v1/chat/completions', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${xaiKey}` },
-            body: JSON.stringify({ model: 'grok-4', max_tokens: 20, messages: [{ role: 'user', content: 'ping' }] }),
-          })
-        )
-      : { name: 'xAI grok-4', ok: false, status: 0, error: 'XAI_API_KEY MISSING' },
   ]);
 
   return NextResponse.json({

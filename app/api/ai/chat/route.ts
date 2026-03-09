@@ -302,14 +302,14 @@ export async function POST(request: NextRequest) {
     const systemPrompt = getSystemPrompt(safeRole);
     const messagesForAI = buildMessageHistory(systemPrompt, history, 10);
 
-    // Вызываем AI — DeepSeek → Minimax → xAI → Anthropic → OpenRouter → fallback
-    // DeepSeek и Minimax — китайские, работают с серверов в России
-    // xAI и Anthropic — заблокированы из России (403)
-    let answer = await callDeepSeek(messagesForAI);
+    // OpenRouter — прокси через US серверы, обходит гео-блокировку России
+    // DeepSeek/Minimax — китайские, прямой доступ из России
+    // xAI/Anthropic — заблокированы напрямую из России
+    let answer = await callOpenrouter(messagesForAI);
+    if (!answer) answer = await callDeepSeek(messagesForAI);
     if (!answer) answer = await callMinimax(messagesForAI);
     if (!answer) answer = await callXai(messagesForAI);
     if (!answer) answer = await callAnthropic(messagesForAI);
-    if (!answer) answer = await callOpenrouter(messagesForAI);
     if (!answer) {
       answer = 'Извините, сервис временно недоступен. Попробуйте позже или обратитесь в поддержку.';
     }
