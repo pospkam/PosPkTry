@@ -13,9 +13,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Sync env vars to Timeweb
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      - name: Sync ALL env vars to Timeweb
         run: |
           APP_ID="159529"
           TOKEN="${{ secrets.TIMEWEB_TOKEN }}"
@@ -25,25 +23,58 @@ jobs:
             exit 0
           fi
 
-          if [ -z "$ANTHROPIC_API_KEY" ]; then
-            echo "ANTHROPIC_API_KEY not set in secrets — skip"
+          # Строим JSON массив только из переменных которые реально заданы
+          ENVS="["
+          FIRST=1
+
+          add_env() {
+            local NAME="$1"
+            local VALUE="$2"
+            if [ -n "$VALUE" ]; then
+              if [ "$FIRST" = "0" ]; then ENVS="$ENVS,"; fi
+              ENVS="$ENVS{\"name\":\"$NAME\",\"value\":\"$VALUE\"}"
+              FIRST=0
+            fi
+          }
+
+          add_env "ANTHROPIC_API_KEY"    "${{ secrets.ANTHROPIC_API_KEY }}"
+          add_env "MINIMAX_API_KEY"      "${{ secrets.MINIMAX_API_KEY }}"
+          add_env "XAI_API_KEY"          "${{ secrets.XAI_API_KEY }}"
+          add_env "DEEPSEEK_API_KEY"     "${{ secrets.DEEPSEEK_API_KEY }}"
+          add_env "OPENROUTER_API_KEY"   "${{ secrets.OPENROUTER_API_KEY }}"
+          add_env "DATABASE_URL"         "${{ secrets.DATABASE_URL }}"
+          add_env "DATABASE_SSL"         "${{ secrets.DATABASE_SSL }}"
+          add_env "JWT_SECRET"           "${{ secrets.JWT_SECRET }}"
+          add_env "NEXTAUTH_SECRET"      "${{ secrets.NEXTAUTH_SECRET }}"
+          add_env "NEXTAUTH_URL"         "${{ secrets.NEXTAUTH_URL }}"
+          add_env "NEXT_PUBLIC_APP_URL"  "${{ secrets.NEXT_PUBLIC_APP_URL }}"
+          add_env "SMTP_HOST"            "${{ secrets.SMTP_HOST }}"
+          add_env "SMTP_PORT"            "${{ secrets.SMTP_PORT }}"
+          add_env "NODE_ENV"             "production"
+
+          ENVS="$ENVS]"
+
+          if [ "$FIRST" = "1" ]; then
+            echo "No env vars to sync — all secrets empty"
             exit 0
           fi
 
-          echo "Syncing ANTHROPIC_API_KEY to Timeweb app $APP_ID..."
+          echo "Syncing env vars to Timeweb app $APP_ID..."
 
           HTTP=$(curl -s -o /tmp/env_response.json -w "%{http_code}" \
             -X PUT \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json" \
-            -d "{\"envs\":[{\"name\":\"ANTHROPIC_API_KEY\",\"value\":\"$ANTHROPIC_API_KEY\"}]}" \
+            -d "{\"envs\":$ENVS}" \
             "https://api.timeweb.cloud/api/v1/apps/$APP_ID/envs")
 
           if [ "$HTTP" = "200" ] || [ "$HTTP" = "201" ] || [ "$HTTP" = "204" ]; then
-            echo "✅ ANTHROPIC_API_KEY synced to Timeweb (HTTP $HTTP)"
+            echo "✅ Env vars synced to Timeweb (HTTP $HTTP)"
           else
-            echo "⚠️  Env sync returned HTTP $HTTP — check Timeweb panel manually"
+            echo "⚠️  Env sync returned HTTP $HTTP"
             cat /tmp/env_response.json 2>/dev/null || true
+            echo ""
+            echo "Переменные можно выставить вручную: https://timeweb.cloud/my/apps/$APP_ID/settings"
           fi
 
       - name: Check deploy status
@@ -57,8 +88,7 @@ jobs:
             exit 0
           fi
 
-          echo "Timeweb auto-deploy is enabled for app $APP_ID"
-          echo "Checking current app status..."
+          echo "Checking Timeweb app $APP_ID status..."
 
           HTTP=$(curl -s -o /tmp/app_status.json -w "%{http_code}" \
             -H "Authorization: Bearer $TOKEN" \
@@ -67,14 +97,9 @@ jobs:
           if [ "$HTTP" = "200" ]; then
             STATUS=$(python3 -c "import json; d=json.load(open('/tmp/app_status.json')); print(d['app']['status'])" 2>/dev/null || echo "unknown")
             COMMIT=$(python3 -c "import json; d=json.load(open('/tmp/app_status.json')); print(d['app']['commit_sha'][:7])" 2>/dev/null || echo "unknown")
-            DOMAIN=$(python3 -c "import json; d=json.load(open('/tmp/app_status.json')); print(d['app']['domains'][0]['fqdn'])" 2>/dev/null || echo "unknown")
-            echo "App status: $STATUS"
-            echo "Latest commit: $COMMIT"
-            echo "Domain: https://$DOMAIN"
+            echo "Status: $STATUS | Commit: $COMMIT"
           else
             echo "Could not check status (HTTP $HTTP) — deploy still runs via webhook"
           fi
 
-          echo ""
-          echo "Deploy is managed by Timeweb Cloud webhook (auto-deploy)"
           echo "Site: https://pospkam-pospktry-c1f3.twc1.net"
