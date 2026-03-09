@@ -4,7 +4,6 @@ import React, { useState, useEffect, Suspense } from 'react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { TouristNav } from '@/components/tourist/TouristNav';
 import toast from 'react-hot-toast';
 
 function NewBookingForm() {
@@ -115,7 +114,6 @@ function NewBookingForm() {
 
   return (
     <div className="min-h-screen bg-premium-black">
-      <TouristNav />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="mb-8">

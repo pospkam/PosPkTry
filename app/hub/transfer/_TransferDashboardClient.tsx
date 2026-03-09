@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Weather } from '@/types';
 import { TransferSearchWidget } from '@/components/transfer-operator/TransferSearchWidget';
 import { PublicNav } from '@/components/shared/PublicNav';
+import BottomNav from '@/components/shared/BottomNav';
 import { Star, Search, Map, Bus, User, Calendar, Ticket, BarChart3 } from 'lucide-react';
 
 export default function TransferDashboardClient() {
@@ -190,7 +191,7 @@ export default function TransferDashboardClient() {
   }
 
   return (
-    <div className="min-h-screen bg-transparent">
+    <div className="min-h-screen bg-transparent pb-24 md:pb-0">
       <PublicNav />
       {/* Header */}
       <div className="bg-gradient-to-r from-premium-black to-premium-gold/10 border-b border-white/15/20">
@@ -584,6 +585,7 @@ export default function TransferDashboardClient() {
           </div>
         )}
       </div>
+      <BottomNav activePath="/" />
     </div>
   );
 }

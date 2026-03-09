@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { Weather } from '@/types';
-import { GuideNav } from '@/components/guide/GuideNav';
 import { Star, Wind, AlertTriangle, AlertCircle, DollarSign, BarChart3, TrendingUp, Droplets, Eye, Calendar, Users, User, Cloud, Loader2 } from 'lucide-react';
 
 interface ScheduleItem {
@@ -166,7 +165,6 @@ export default function GuideDashboardClient() {
 
   return (
     <div className="min-h-screen bg-transparent">
-      <GuideNav />
       {/* Header */}
       <div className="bg-gradient-to-r from-premium-black to-premium-gold/10 border-b border-white/15">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">

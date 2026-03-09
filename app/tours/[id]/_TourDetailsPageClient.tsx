@@ -9,7 +9,11 @@ import { LoadingSpinner } from '@/components/admin/shared';
 import {
   Star, MapPin, Clock, Users, Check, X,
   AlertTriangle, Phone, Mail, ChevronLeft,
+  Sun, Moon, User,
 } from 'lucide-react';
+import { useTheme } from '@/contexts/ThemeContext';
+import BottomNav from '@/components/shared/BottomNav';
+import Link from 'next/link';
 
 interface ApiTour {
   id: string;
@@ -78,6 +82,7 @@ export default function TourDetailsPageClient() {
   const params = useParams();
   const router = useRouter();
   const tourId = params.id as string;
+  const { isDark, toggleTheme } = useTheme();
 
   const [tour, setTour] = useState<ApiTour | null>(null);
   const [reviews, setReviews] = useState<ApiReview[]>([]);
@@ -159,7 +164,26 @@ export default function TourDetailsPageClient() {
   const heroImage = tour.images[0] || null;
 
   return (
-    <div className="min-h-screen text-white">
+    <div className="min-h-screen pb-24 md:pb-0">
+      {/* Standard header */}
+      <header style={{ background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.15)', position: 'sticky', top: 0, zIndex: 50 }}>
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+          <Link href="/" style={{ fontFamily: "var(--font-playfair,'Playfair Display',serif)", fontSize: '1.4rem', fontWeight: 700, color: '#fff', textDecoration: 'none' }}>
+            KH
+          </Link>
+          <h1 className="text-lg font-bold text-white hidden sm:block">Детали тура</h1>
+          <div className="flex items-center gap-3">
+            <button onClick={toggleTheme} className="text-white/70 hover:text-white transition-colors" aria-label="Переключить тему">
+              {isDark ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+            <Link href="/profile" className="text-white/70 hover:text-white transition-colors" aria-label="Личный кабинет">
+              <User size={20} />
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      <div className="text-white">
       {/* Шапка */}
       <div className="bg-white/10 backdrop-blur-sm border-b border-white/15">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -474,6 +498,9 @@ export default function TourDetailsPageClient() {
           </div>
         </div>
       </div>
+      </div>
+
+      <BottomNav activePath="/tours" />
     </div>
   );
 }

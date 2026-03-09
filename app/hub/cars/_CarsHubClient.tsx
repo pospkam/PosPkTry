@@ -7,6 +7,7 @@ import { CarCard } from '@/components/cars/CarCard';
 import { CarFilters } from '@/components/cars/CarFilters';
 import { CarBookingForm } from '@/components/cars/CarBookingForm';
 import { LoadingSpinner } from '@/components/admin/shared';
+import BottomNav from '@/components/shared/BottomNav';
 import toast from 'react-hot-toast';
 
 interface Car {
@@ -151,7 +152,7 @@ export default function CarsHubClient() {
 
   return (
     <Protected roles={['tourist', 'admin']}>
-      <main className="min-h-screen bg-transparent text-white">
+      <main className="min-h-screen bg-transparent text-white pb-24 md:pb-0">
         <PublicNav />
         {/* Header */}
         <div className="bg-white/15 border-b border-white/15 p-6">
@@ -220,6 +221,7 @@ export default function CarsHubClient() {
             />
           ) : null}
         </div>
+        <BottomNav activePath="/hub/cars" />
       </main>
     </Protected>
   );

@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { Weather } from '@/types';
 import { AIChatWidget } from '@/components/ai/AIChatWidget';
 import { TransferSearchWidget } from '@/components/transfer-operator/TransferSearchWidget';
-import { TouristNav } from '@/components/tourist/TouristNav';
 import { Mountain, Eye, CloudSnow, Wind, Sun, Cloud, CloudRain, Bot, Heart, Target, Droplets, Bus } from 'lucide-react';
 import RecommendationCard, { RecommendationCardSkeleton } from '@/components/tourist/RecommendationCard';
 import type { RecommendedTour } from '@/lib/recommendations/engine';
@@ -158,7 +157,6 @@ export default function TouristDashboardClient() {
 
   return (
     <div className="min-h-screen bg-transparent">
-      <TouristNav />
       {/* Header */}
       <div className="bg-white/15 backdrop-blur-2xl border-b border-white/15" style={{ backdropFilter: 'blur(10px)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">

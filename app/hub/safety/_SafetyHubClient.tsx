@@ -3,12 +3,13 @@
 import React, { useState } from 'react';
 import { MapPin, Mountain as Volcano, Sun, Cloud, CloudRain, Wind, Flame, AlertTriangle, Truck } from 'lucide-react';
 import { PublicNav } from '@/components/shared/PublicNav';
+import BottomNav from '@/components/shared/BottomNav';
 
 export default function SafetyHubClient() {
   const [activeTab, setActiveTab] = useState('sos');
 
   return (
-    <main className="min-h-screen bg-transparent text-white">
+    <main className="min-h-screen bg-transparent text-white pb-24 md:pb-0">
       <PublicNav />
       {/* Header */}
       <div className="bg-white/15 border-b border-white/15 p-6">
@@ -119,6 +120,7 @@ export default function SafetyHubClient() {
           </div>
         )}
       </div>
+      <BottomNav activePath="/" />
     </main>
   );
 }

@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { Protected } from '@/components/auth/Protected';
 import { LoadingSpinner } from '@/components/admin/shared';
-import { TouristNav } from '@/components/tourist/TouristNav';
 import { Booking } from '@/types';
 import { Calendar, Users } from 'lucide-react';
 import { useApiFetch } from '@/hooks/use-api-fetch';
@@ -81,7 +80,6 @@ export default function BookingHistoryPageClient() {
   return (
     <Protected roles={['tourist']}>
       <main className="min-h-screen bg-transparent text-white">
-        <TouristNav />
         <div className="bg-white/15 border-b border-white/15 p-6">
           <h1 className="text-3xl font-black text-white">Мои бронирования</h1>
           <p className="text-white/70">История ваших бронирований и заказов</p>

@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { Protected } from '@/components/auth/Protected';
-import { GuideNav } from '@/components/guide/GuideNav';
 import { LoadingSpinner } from '@/components/admin/shared';
 import { Users, Calendar, Phone, Mail } from 'lucide-react';
 import { useApiFetch } from '@/hooks/use-api-fetch';
@@ -35,8 +34,6 @@ export default function GuideGroupsPageClient() {
   return (
     <Protected roles={['guide', 'operator', 'admin']}>
       <main className="min-h-screen bg-transparent text-white">
-        <GuideNav />
-
         <div className="bg-white/15 border-b border-white/15 p-6">
           <h1 className="text-3xl font-black text-white">Мои группы</h1>
           <p className="text-white/70">Участники предстоящих туров</p>

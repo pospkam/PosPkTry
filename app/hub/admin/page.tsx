@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { AdminNav } from '@/components/admin/AdminNav';
 import { Shield, Users, FileText, DollarSign, Settings, CheckCircle, Clock, TrendingUp, TrendingDown, Package, Map, Wrench, AlertCircle, ArrowRight, Sparkles, Star, RefreshCw } from 'lucide-react';
 
 interface Metrics {
@@ -118,9 +117,9 @@ export default function AdminDashboard() {
     return (
       <main className="min-h-screen relative overflow-hidden">
         {/* Animated Gradient Background */}
-        <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-violet-900"></div>
-        <div className="fixed inset-0 bg-[radial-gradient(circle_at_top_right,rgba(167,139,250,0.15),transparent_50%)]"></div>
-        <div className="fixed inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(249,168,212,0.15),transparent_50%)]"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-violet-900"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(167,139,250,0.15),transparent_50%)]"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(249,168,212,0.15),transparent_50%)]"></div>
         
         <div className="relative min-h-screen flex items-center justify-center">
           <div className="text-center">
@@ -141,8 +140,8 @@ export default function AdminDashboard() {
     return (
       <main className="min-h-screen relative overflow-hidden flex items-center justify-center p-6">
         {/* Animated Gradient Background */}
-        <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-violet-900"></div>
-        <div className="fixed inset-0 bg-[radial-gradient(circle_at_top_right,rgba(167,139,250,0.15),transparent_50%)]"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-violet-900"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(167,139,250,0.15),transparent_50%)]"></div>
         
         <div className="relative max-w-md w-full backdrop-blur-2xl bg-black/40 rounded-3xl shadow-2xl border border-white/30 p-8 text-center">
           <div className="w-20 h-20 bg-gradient-to-br from-red-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl">
@@ -200,11 +199,10 @@ export default function AdminDashboard() {
 
   return (
     <main className="min-h-screen relative overflow-hidden">
-      <AdminNav />
       {/* КАМЧАТКА: Фоновое изображение вулканов */}
-      <div className="fixed inset-0 bg-gradient-to-br from-[#2C1810] via-[#1a2634] to-[#0f1821]"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-[#2C1810] via-[#1a2634] to-[#0f1821]"></div>
       <div 
-        className="fixed inset-0 opacity-20 bg-cover bg-center bg-no-repeat"
+        className="absolute inset-0 opacity-20 bg-cover bg-center bg-no-repeat"
         style={{
           backgroundImage: `url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><defs><linearGradient id="volcano" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:%23DC143C;stop-opacity:0.3"/><stop offset="100%" style="stop-color:%23FF4500;stop-opacity:0.1"/></linearGradient></defs><polygon points="200,800 400,200 600,800" fill="url(%23volcano)"/><polygon points="700,800 900,150 1100,800" fill="url(%23volcano)" opacity="0.8"/><circle cx="400" cy="180" r="30" fill="%23FF6347" opacity="0.6"/><circle cx="900" cy="130" r="40" fill="%23FF4500" opacity="0.5"/></svg>')`,
           filter: 'blur(2px)'
@@ -212,11 +210,11 @@ export default function AdminDashboard() {
       ></div>
       
       {/* Камчатские цвета: охра, лава, океан, мох */}
-      <div className="fixed inset-0 bg-[radial-gradient(circle_at_top_right,rgba(205,133,63,0.15),transparent_50%)]"></div>
-      <div className="fixed inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(30,144,255,0.1),transparent_50%)]"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(205,133,63,0.15),transparent_50%)]"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(30,144,255,0.1),transparent_50%)]"></div>
       
       {/* Плавающие частицы - вулканический пепел */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-20 w-72 h-72 bg-[#CD853F]/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-20 right-20 w-96 h-96 bg-[#DC143C]/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
         <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-[#556B2F]/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>

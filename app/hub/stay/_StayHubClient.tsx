@@ -7,6 +7,7 @@ import { AccommodationCard } from '@/components/shared/AccommodationCard';
 import { AccommodationCardSkeleton } from '@/components/shared/AccommodationCardSkeleton';
 import { AccommodationFilters } from '@/components/shared/AccommodationFilters';
 import { Star, Building2, ClipboardList, Heart } from 'lucide-react';
+import BottomNav from '@/components/shared/BottomNav';
 
 interface Accommodation {
   id: string;
@@ -127,7 +128,7 @@ export default function StayHubClient() {
 
   return (
     <Protected roles={['tourist', 'admin']}>
-      <main className="min-h-screen bg-transparent text-white">
+      <main className="min-h-screen bg-transparent text-white pb-24 md:pb-0">
         <PublicNav />
         {/* Header */}
         <div className="bg-white/15 border-b border-white/15 p-6">
@@ -303,6 +304,7 @@ export default function StayHubClient() {
             </div>
           )}
         </div>
+        <BottomNav activePath="/hub/stay" />
       </main>
     </Protected>
   );

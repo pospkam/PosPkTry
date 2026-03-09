@@ -1,6 +1,8 @@
 'use client';
 
 import { Protected } from '@/components/auth/Protected';
+import { PublicNav } from '@/components/shared/PublicNav';
+import BottomNav from '@/components/shared/BottomNav';
 import { StayProviderNav } from '@/components/stay-provider/StayProviderNav';
 import { LoadingSpinner } from '@/components/admin/shared';
 import { useApiFetch } from '@/hooks/use-api-fetch';
@@ -59,7 +61,8 @@ export default function StayProviderDashboardClient() {
 
   return (
     <Protected roles={['stay', 'operator', 'admin']}>
-      <main className="min-h-screen bg-transparent text-white">
+      <main className="min-h-screen bg-transparent text-white pb-24 md:pb-0">
+        <PublicNav />
         <StayProviderNav />
         <div className="bg-white/15 border-b border-white/15 p-6">
           <h1 className="text-3xl font-black text-white">Dashboard Размещений</h1>
@@ -121,6 +124,7 @@ export default function StayProviderDashboardClient() {
             )}
           </div>
         </div>
+        <BottomNav activePath="/hub/stay" />
       </main>
     </Protected>
   );

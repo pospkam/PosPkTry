@@ -3,6 +3,8 @@
 import React from 'react';
 import Link from 'next/link';
 import { Protected } from '@/components/auth/Protected';
+import { PublicNav } from '@/components/shared/PublicNav';
+import BottomNav from '@/components/shared/BottomNav';
 import { GearProviderNav } from '@/components/gear-provider/GearProviderNav';
 import { LoadingSpinner } from '@/components/admin/shared';
 import { Package, Calendar, DollarSign, Star, TrendingUp, AlertCircle } from 'lucide-react';
@@ -46,9 +48,10 @@ export default function GearProviderDashboardClient() {
 
   return (
     <Protected roles={['gear', 'operator', 'admin']}>
-      <main className="min-h-screen bg-transparent text-white">
+      <main className="min-h-screen bg-transparent text-white pb-24 md:pb-0">
+        <PublicNav />
         <GearProviderNav />
-        
+
         <div className="bg-white/15 border-b border-white/15 p-6">
           <h1 className="text-3xl font-black text-white">Dashboard проката</h1>
           <p className="text-white/70">Управление снаряжением и арендой</p>
@@ -103,14 +106,14 @@ export default function GearProviderDashboardClient() {
             <div className="bg-white/10 border border-white/20 rounded-xl p-6">
               <h2 className="text-xl font-bold mb-4">Быстрые действия</h2>
               <div className="space-y-3">
-                <Link 
-                  href="/hub/gear-provider/items/new" 
+                <Link
+                  href="/hub/gear-provider/items/new"
                   className="block w-full px-4 py-3 bg-premium-gold text-premium-black font-medium rounded-lg text-center hover:bg-premium-gold/80 transition-colors"
                 >
                   Добавить снаряжение
                 </Link>
-                <Link 
-                  href="/hub/gear-provider/bookings" 
+                <Link
+                  href="/hub/gear-provider/bookings"
                   className="block w-full px-4 py-3 bg-white/10 text-white font-medium rounded-lg text-center hover:bg-white/20 transition-colors"
                 >
                   Просмотреть бронирования
@@ -126,6 +129,7 @@ export default function GearProviderDashboardClient() {
             </div>
           </div>
         </div>
+        <BottomNav activePath="/hub/gear" />
       </main>
     </Protected>
   );

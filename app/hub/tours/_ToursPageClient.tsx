@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { PublicNav } from '@/components/shared/PublicNav';
+import BottomNav from '@/components/shared/BottomNav';
 import { X } from 'lucide-react';
 
 export default function ToursPageClient() {
@@ -32,7 +33,7 @@ export default function ToursPageClient() {
   }
 
   return (
-    <main className="min-h-screen bg-premium-black text-white">
+    <main className="min-h-screen bg-premium-black text-white pb-24 md:pb-0">
       <PublicNav />
       
       <div className="max-w-7xl mx-auto px-6 py-8">
@@ -98,7 +99,7 @@ export default function ToursPageClient() {
           </div>
         )}
       </div>
+      <BottomNav activePath="/tours" />
     </main>
   );
 }
-

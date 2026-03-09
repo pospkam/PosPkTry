@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { Protected } from '@/components/auth/Protected';
-import { GuideNav } from '@/components/guide/GuideNav';
 import { LoadingSpinner } from '@/components/admin/shared';
 import { DollarSign, TrendingUp, Calendar, Download } from 'lucide-react';
 import { useApiFetch } from '@/hooks/use-api-fetch';
@@ -53,8 +52,6 @@ export default function GuideEarningsPageClient() {
   return (
     <Protected roles={['guide', 'operator', 'admin']}>
       <main className="min-h-screen bg-transparent text-white">
-        <GuideNav />
-
         <div className="bg-white/15 border-b border-white/15 p-6">
           <div className="flex items-center justify-between">
             <div>
