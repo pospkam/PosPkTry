@@ -78,19 +78,19 @@ export async function GET(request: NextRequest) {
     }
 
     if (search) {
-      whereConditions.push(`(COALESCE(t.title, t.name, '') ILIKE $${paramIndex} OR t.description ILIKE $${paramIndex})`);
+      whereConditions.push(`(t.name ILIKE $${paramIndex} OR t.description ILIKE $${paramIndex})`);
       queryParams.push(`%${search}%`);
       paramIndex++;
     }
 
     if (minPrice) {
-      whereConditions.push(`COALESCE(t."pricePerDay", t.price) >= $${paramIndex}`);
+      whereConditions.push(`t.price >= $${paramIndex}`);
       queryParams.push(parseInt(minPrice));
       paramIndex++;
     }
 
     if (maxPrice) {
-      whereConditions.push(`COALESCE(t."pricePerDay", t.price) <= $${paramIndex}`);
+      whereConditions.push(`t.price <= $${paramIndex}`);
       queryParams.push(parseInt(maxPrice));
       paramIndex++;
     }
@@ -115,7 +115,7 @@ export async function GET(request: NextRequest) {
       FROM tours t
       LEFT JOIN kamchatka_routes kr ON t.route_id = kr.id
       ${whereClause}
-      ORDER BY t."createdAt" DESC NULLS LAST, t."updatedAt" DESC NULLS LAST
+      ORDER BY t.created_at DESC NULLS LAST, t.updated_at DESC NULLS LAST
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
 
@@ -130,26 +130,26 @@ export async function GET(request: NextRequest) {
     // Маппинг строк: поддержка обеих схем
     const tours: TourResponse[] = result.rows.map(row => ({
       id: row.id,
-      name: row.title || row.name || '',
-      description: row.fullDescription || row.description || '',
-      shortDescription: row.description || row.short_description || '',
+      name: row.name || '',
+      description: row.description || '',
+      shortDescription: row.short_description || '',
       category: row.category || '',
       difficulty: row.difficulty || 'medium',
-      duration: row.minDuration || row.duration || 0,
-      price: parseFloat(row.pricePerDay || row.price || 0),
+      duration: row.duration || 0,
+      price: parseFloat(row.price || 0),
       currency: row.currency || 'RUB',
       season: row.season || [],
       coordinates: row.coordinates || [],
       requirements: row.requirements || [],
       included: row.included || [],
-      notIncluded: row.notIncluded || row.not_included || [],
-      maxGroupSize: row.maxGroupSize || row.max_group_size || 20,
-      minGroupSize: row.minGroupSize || row.min_group_size || 1,
+      notIncluded: row.not_included || [],
+      maxGroupSize: row.max_group_size || 20,
+      minGroupSize: row.min_group_size || 1,
       rating: parseFloat(row.rating) || 0,
-      reviewCount: row.review_count || row.reviewCount || 0,
+      reviewCount: row.review_count || 0,
       isActive: row.is_active ?? true,
-      createdAt: new Date(row.createdAt || row.created_at || Date.now()),
-      updatedAt: new Date(row.updatedAt || row.updated_at || Date.now()),
+      createdAt: new Date(row.created_at || Date.now()),
+      updatedAt: new Date(row.updated_at || Date.now()),
       routeId: (row.route_id as string | null) ?? null,
       route: row.route_kr_id ? {
         id: row.route_kr_id as string,

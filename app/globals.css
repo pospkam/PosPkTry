@@ -44,25 +44,29 @@
 }
 
 :root[data-theme="light"] {
-  --bg-primary: #FFFFFF;
-  --bg-secondary: #F6F8FA;
-  --bg-card: #FFFFFF;
-  --bg-hover: #F3F4F6;
-  --text-primary: #1C2128;
-  --text-secondary: #57606A;
-  --text-muted: #8C959F;
-  --accent: #D4623C;       /* lava -- тёплее для светлой темы */
-  --accent-hover: #C0522E;
-  --accent-muted: rgba(212,98,60,0.1);
-  --ocean: #0969DA;
-  --success: #1A7F37;
-  --warning: #9A6700;
-  --danger: #CF222E;
-  --border: rgba(0,0,0,0.08);
-  --border-strong: rgba(0,0,0,0.16);
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
-  --shadow-md: 0 4px 16px rgba(0,0,0,0.1);
-  --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+  /* Light = тёплая Камчатка (рассвет), чуть светлее dark */
+  --bg-primary: #111820;   /* dawn -- чуть теплее чем ночь */
+  --bg-secondary: #1A2130; /* dusk -- фон секций */
+  --bg-card: #242C3A;      /* slate -- карточки */
+  --bg-hover: #333D4D;     /* mist -- hover */
+
+  --text-primary: #F0F6FC; /* snow */
+  --text-secondary: #9BA3AE;
+  --text-muted: #5C6470;
+
+  --accent: #E8854A;       /* lava -- теплее, рассветный */
+  --accent-hover: #D4733C;
+  --accent-muted: rgba(232,133,74,0.12);
+  --ocean: #00B8E0;        /* ocean -- ярче для «дневной» темы */
+  --success: #3FB950;
+  --warning: #D29922;
+  --danger: #F85149;
+
+  --border: rgba(255,255,255,0.08);
+  --border-strong: rgba(255,255,255,0.16);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 20px;
@@ -895,13 +899,13 @@ body {
 
 /* Scrollbar pod temnuyu/svetluyu temu */
 :root[data-theme="light"] ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.03);
+  background: rgba(255, 255, 255, 0.03);
 }
 :root[data-theme="light"] ::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.15);
 }
 :root[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.25);
+  background: rgba(255, 255, 255, 0.25);
 }
 
 /* ===== Star field effect for hero section ===== */

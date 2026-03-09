@@ -121,18 +121,48 @@ export default function ToursPageClient() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6">
-        <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-8 text-center max-w-md">
-          <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-red-400" />
-          <h2 className="text-xl font-bold text-white mb-2">Ошибка загрузки</h2>
-          <p className="text-white/70 mb-4">{error}</p>
-          <button
-            onClick={() => { setError(''); fetchTours(true); }}
-            className="px-6 py-3 bg-premium-gold hover:bg-premium-gold/80 text-premium-black font-bold rounded-xl transition-colors"
-          >
-            Повторить
-          </button>
+      <div className="min-h-screen pb-24 md:pb-0">
+        {/* Навигационная шапка */}
+        <header style={{ background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.15)', position: 'sticky', top: 0, zIndex: 50 }}>
+          <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <Link href="/" style={{ fontFamily: "var(--font-playfair,'Playfair Display',serif)", fontSize: '1.4rem', fontWeight: 700, color: '#fff', textDecoration: 'none' }}>
+              KH
+            </Link>
+            <h1 className="text-lg font-bold text-white hidden sm:block">Туры по Камчатке</h1>
+            <div className="flex items-center gap-3">
+              <button onClick={toggleTheme} className="text-white/70 hover:text-white transition-colors" aria-label="Переключить тему">
+                {isDark ? <Sun size={20} /> : <Moon size={20} />}
+              </button>
+              <Link href="/profile" className="text-white/70 hover:text-white transition-colors" aria-label="Профиль">
+                <User size={20} />
+              </Link>
+            </div>
+          </div>
+        </header>
+
+        <div className="flex items-center justify-center p-6" style={{ minHeight: 'calc(100vh - 160px)' }}>
+          <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-8 text-center max-w-md">
+            <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-premium-gold" />
+            <h2 className="text-xl font-bold text-white mb-2">Не удалось загрузить туры</h2>
+            <p className="text-white/60 mb-6">Проверьте подключение к интернету или попробуйте позже</p>
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={() => { setError(''); fetchTours(true); }}
+                className="px-6 py-3 bg-premium-gold hover:bg-premium-gold/80 text-premium-black font-bold rounded-xl transition-colors"
+              >
+                Повторить
+              </button>
+              <Link
+                href="/"
+                className="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium rounded-xl transition-colors"
+              >
+                На главную
+              </Link>
+            </div>
+          </div>
         </div>
+
+        <BottomNav activePath="/tours" />
       </div>
     );
   }
