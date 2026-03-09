@@ -62,7 +62,7 @@ function formatPrice(price: number): string {
   return new Intl.NumberFormat('ru-RU').format(price) + ' ₽';
 }
 
-/* ─── Компактная карточка маршрута ─── */
+/* ─── Карточка маршрута ─── */
 function RouteCard({ tour }: { tour: ApiTour }) {
   const cat = CATEGORY_LABELS[tour.category] ?? tour.category;
   const desc = (tour.description || tour.shortDescription || '').slice(0, 120);
@@ -70,10 +70,14 @@ function RouteCard({ tour }: { tour: ApiTour }) {
   return (
     <Link
       href={`/tours/${tour.id}`}
-      className="group block bg-white/8 border border-white/12 rounded-2xl overflow-hidden hover:border-white/30 hover:bg-white/12 transition-all duration-200"
+      className="group block rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-black/30 hover:-translate-y-0.5"
+      style={{
+        background: 'var(--bg-card)',
+        border: '1px solid var(--border)',
+      }}
     >
-      {/* Изображение / placeholder */}
-      <div className="relative aspect-[16/9] overflow-hidden bg-gradient-to-br from-[#0f1923] to-[#0B1120]">
+      {/* Фото / placeholder */}
+      <div className="relative aspect-[16/9] overflow-hidden" style={{ background: 'var(--bg-secondary)' }}>
         {tour.images && tour.images.length > 0 ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -84,39 +88,41 @@ function RouteCard({ tour }: { tour: ApiTour }) {
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <Mountain className="w-10 h-10 text-white/15" />
+            <Mountain className="w-10 h-10" style={{ color: 'var(--text-muted)' }} />
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
 
-        {/* Badge категории */}
-        <span className="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-black/50 backdrop-blur-sm text-white/90">
+        {/* Badge */}
+        <span className="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-black/50 backdrop-blur-sm" style={{ color: 'var(--text-primary)' }}>
           {cat}
         </span>
       </div>
 
       {/* Контент */}
       <div className="p-4">
-        <h3 className="text-[15px] font-bold text-white line-clamp-2 leading-snug group-hover:text-[#00D4FF] transition-colors">
-          {tour.name}
+        <h3
+          className="text-[15px] font-bold line-clamp-2 leading-snug transition-colors"
+          style={{ color: 'var(--text-primary)' }}
+        >
+          <span className="group-hover:text-[var(--ocean)]">{tour.name}</span>
         </h3>
 
         {desc && (
-          <p className="mt-1.5 text-[13px] text-white/50 line-clamp-2 leading-relaxed">
+          <p className="mt-1.5 text-[13px] line-clamp-2 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
             {desc}
           </p>
         )}
 
-        {/* Нижняя строка: цена */}
         <div className="mt-3 flex items-center justify-between">
           {tour.price > 0 ? (
-            <span className="text-[15px] font-bold text-premium-gold">
+            <span className="text-[15px] font-bold" style={{ color: 'var(--accent)' }}>
               от {formatPrice(tour.price)}
             </span>
           ) : (
-            <span className="text-[13px] font-medium text-white/40">По запросу</span>
+            <span className="text-[13px] font-medium" style={{ color: 'var(--text-muted)' }}>По запросу</span>
           )}
-          <span className="text-[12px] text-white/30 group-hover:text-white/50 transition-colors">
+          <span className="text-[12px] transition-colors" style={{ color: 'var(--text-muted)' }}>
             Подробнее →
           </span>
         </div>
@@ -176,13 +182,13 @@ export default function ToursPageClient() {
   const hasFilters = search || category;
 
   return (
-    <div className="min-h-screen pb-24 md:pb-0">
+    <div className="min-h-screen pb-24 md:pb-0" style={{ background: 'var(--bg-primary)' }}>
       {/* ── Хедер ── */}
       <header style={{
-        background: 'rgba(255,255,255,0.1)',
+        background: 'rgba(255,255,255,0.08)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
-        borderBottom: '1px solid rgba(255,255,255,0.1)',
+        borderBottom: '1px solid var(--border)',
         position: 'sticky', top: 0, zIndex: 50,
       }}>
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -190,29 +196,64 @@ export default function ToursPageClient() {
             <Logo size={28} />
           </Link>
           <div className="flex items-center gap-3">
-            <button onClick={toggleTheme} className="text-white/60 hover:text-white transition-colors" aria-label="Переключить тему">
-              {isDark ? <Sun size={18} /> : <Moon size={18} />}
+            <button
+              onClick={toggleTheme}
+              className="w-9 h-9 rounded-full flex items-center justify-center transition-colors"
+              style={{
+                background: 'rgba(255,255,255,0.08)',
+                border: '1px solid var(--border)',
+                color: 'var(--text-secondary)',
+              }}
+              aria-label="Переключить тему"
+            >
+              {isDark ? <Sun size={16} /> : <Moon size={16} />}
             </button>
-            <Link href="/profile" className="text-white/60 hover:text-white transition-colors" aria-label="Профиль">
-              <User size={18} />
+            <Link
+              href="/profile"
+              className="w-9 h-9 rounded-full flex items-center justify-center transition-colors"
+              style={{
+                background: 'rgba(255,255,255,0.08)',
+                border: '1px solid var(--border)',
+                color: 'var(--text-secondary)',
+              }}
+              aria-label="Профиль"
+            >
+              <User size={16} />
             </Link>
           </div>
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto px-4 pt-5 pb-8">
-        {/* ── Заголовок ── */}
-        <h1 className="text-2xl font-bold text-white mb-5">Маршруты Камчатки</h1>
+      {/* ── Шапка страницы с градиентом ── */}
+      <div style={{
+        background: 'linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%)',
+        borderBottom: '1px solid var(--border)',
+      }}>
+        <div className="max-w-6xl mx-auto px-4 pt-6 pb-5">
+          <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
+            Маршруты Камчатки
+          </h1>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+            {loading && tours.length === 0 ? 'Загрузка каталога...' : `${total} маршрутов в каталоге`}
+          </p>
+        </div>
+      </div>
 
+      <div className="max-w-6xl mx-auto px-4 pt-5 pb-8">
         {/* ── Поиск ── */}
         <div className="relative mb-4">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-muted)' }} />
           <input
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Вулканы, рыбалка, медведи..."
-            className="w-full pl-10 pr-4 py-2.5 bg-white/8 border border-white/10 rounded-xl text-white placeholder-white/30 text-sm focus:outline-none focus:border-white/25 transition-colors"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm focus:outline-none transition-colors"
+            style={{
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border)',
+              color: 'var(--text-primary)',
+            }}
           />
         </div>
 
@@ -225,11 +266,12 @@ export default function ToursPageClient() {
                 <button
                   key={c.value}
                   onClick={() => setCategory(isActive ? '' : c.value)}
-                  className={`px-3.5 py-1.5 rounded-lg text-[13px] font-medium whitespace-nowrap transition-all ${
-                    isActive
-                      ? 'bg-white/20 text-white border border-white/25'
-                      : 'text-white/45 hover:text-white/70 hover:bg-white/5'
-                  }`}
+                  className="px-3.5 py-1.5 rounded-lg text-[13px] font-medium whitespace-nowrap transition-all"
+                  style={{
+                    background: isActive ? 'var(--accent-muted)' : 'transparent',
+                    border: isActive ? '1px solid var(--accent)' : '1px solid transparent',
+                    color: isActive ? 'var(--accent)' : 'var(--text-secondary)',
+                  }}
                 >
                   {c.label}
                 </button>
@@ -238,32 +280,37 @@ export default function ToursPageClient() {
           </div>
         </div>
 
-        {/* ── Инфо-строка ── */}
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-[13px] text-white/35">
-            {loading && tours.length === 0 ? '\u00A0' : `${total} маршрутов`}
-          </p>
-          {hasFilters && (
+        {/* ── Сброс ── */}
+        {hasFilters && (
+          <div className="mb-4 text-right">
             <button
               onClick={() => { setSearch(''); setCategory(''); }}
-              className="text-[12px] text-white/30 hover:text-white/60 transition-colors"
+              className="text-[12px] transition-colors hover:underline"
+              style={{ color: 'var(--text-muted)' }}
             >
-              Сбросить
+              Сбросить фильтры
             </button>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* ── Контент ── */}
         {error ? (
-          /* Ошибка — inline, не отдельная страница */
           <div className="py-16 text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-xl mb-4">
-              <span className="text-sm text-red-400/80">{error}</span>
+            <div
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl mb-4"
+              style={{ background: 'rgba(248,81,73,0.1)', border: '1px solid rgba(248,81,73,0.2)' }}
+            >
+              <span className="text-sm" style={{ color: 'var(--danger)' }}>{error}</span>
             </div>
             <div>
               <button
                 onClick={() => { setError(''); fetchTours(true); }}
-                className="inline-flex items-center gap-2 mt-2 px-5 py-2.5 bg-white/8 hover:bg-white/15 border border-white/10 text-white/70 text-sm font-medium rounded-xl transition-colors"
+                className="inline-flex items-center gap-2 mt-2 px-5 py-2.5 text-sm font-medium rounded-xl transition-colors"
+                style={{
+                  background: 'var(--bg-card)',
+                  border: '1px solid var(--border-strong)',
+                  color: 'var(--text-primary)',
+                }}
               >
                 <RefreshCw className="w-4 h-4" />
                 Повторить
@@ -271,35 +318,33 @@ export default function ToursPageClient() {
             </div>
           </div>
         ) : loading && tours.length === 0 ? (
-          /* Skeleton */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="rounded-2xl overflow-hidden">
-                <div className="aspect-[16/9] bg-white/5 animate-pulse" />
+              <div key={i} className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                <div className="aspect-[16/9] animate-pulse" style={{ background: 'var(--bg-hover)' }} />
                 <div className="p-4 space-y-2">
-                  <div className="h-4 bg-white/5 rounded animate-pulse w-3/4" />
-                  <div className="h-3 bg-white/5 rounded animate-pulse w-full" />
-                  <div className="h-3 bg-white/5 rounded animate-pulse w-1/2" />
+                  <div className="h-4 rounded animate-pulse w-3/4" style={{ background: 'var(--bg-hover)' }} />
+                  <div className="h-3 rounded animate-pulse w-full" style={{ background: 'var(--bg-hover)' }} />
+                  <div className="h-3 rounded animate-pulse w-1/2" style={{ background: 'var(--bg-hover)' }} />
                 </div>
               </div>
             ))}
           </div>
         ) : tours.length === 0 ? (
-          /* Пусто */
           <div className="py-20 text-center">
-            <Mountain className="w-10 h-10 mx-auto mb-3 text-white/15" />
-            <p className="text-white/40 text-sm mb-3">Ничего не найдено</p>
+            <Mountain className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+            <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>Ничего не найдено</p>
             {hasFilters && (
               <button
                 onClick={() => { setSearch(''); setCategory(''); }}
-                className="text-[13px] text-white/30 hover:text-white/60 underline underline-offset-2 transition-colors"
+                className="text-[13px] underline underline-offset-2 transition-colors"
+                style={{ color: 'var(--text-muted)' }}
               >
                 Сбросить фильтры
               </button>
             )}
           </div>
         ) : (
-          /* Карточки */
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {tours.map(tour => (
@@ -312,7 +357,12 @@ export default function ToursPageClient() {
                 <button
                   onClick={() => fetchTours(false)}
                   disabled={loading}
-                  className="px-6 py-2.5 bg-white/8 hover:bg-white/15 border border-white/10 text-white/60 text-sm font-medium rounded-xl transition-colors disabled:opacity-40"
+                  className="px-6 py-2.5 text-sm font-medium rounded-xl transition-all disabled:opacity-40"
+                  style={{
+                    background: 'var(--bg-card)',
+                    border: '1px solid var(--border-strong)',
+                    color: 'var(--text-primary)',
+                  }}
                 >
                   {loading ? 'Загрузка...' : `Ещё ${total - tours.length}`}
                 </button>
