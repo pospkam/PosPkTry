@@ -80,7 +80,7 @@ export default function AIAssistantPage() {
         </div>
       </header>
 
-    <div className="max-w-3xl mx-auto px-4 py-8 flex flex-col h-[calc(100vh-8rem)] bg-[#0D1117]">
+    <div className="max-w-3xl mx-auto px-4 py-8 flex flex-col h-[calc(100vh-8rem)] bg-transparent">
       <div className="flex items-center gap-3 mb-6">
         <Bot className="w-8 h-8 text-[var(--ocean,#00A8CC)]" />
         <div>

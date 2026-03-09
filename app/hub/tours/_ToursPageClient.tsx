@@ -33,7 +33,7 @@ export default function ToursPageClient() {
   }
 
   return (
-    <main className="min-h-screen bg-premium-black text-white pb-24 md:pb-0">
+    <main className="min-h-screen bg-transparent text-white pb-24 md:pb-0">
       <PublicNav />
       
       <div className="max-w-7xl mx-auto px-6 py-8">

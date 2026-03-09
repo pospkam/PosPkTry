@@ -85,7 +85,7 @@ function NewBookingForm() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-premium-black flex items-center justify-center">
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-premium-gold border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-white text-lg">Загрузка...</p>
@@ -96,7 +96,7 @@ function NewBookingForm() {
 
   if (!tour) {
     return (
-      <div className="min-h-screen bg-premium-black flex items-center justify-center">
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-white mb-4">Тур не найден</h2>
           <button
@@ -113,7 +113,7 @@ function NewBookingForm() {
   const totalPrice = tour.price * formData.participants;
 
   return (
-    <div className="min-h-screen bg-premium-black">
+    <div className="min-h-screen bg-transparent">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="mb-8">
@@ -237,7 +237,7 @@ function NewBookingForm() {
 export default function NewBookingPageClient() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-premium-black flex items-center justify-center">
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
         <div className="w-16 h-16 border-4 border-premium-gold border-t-transparent rounded-full animate-spin"></div>
       </div>
     }>
