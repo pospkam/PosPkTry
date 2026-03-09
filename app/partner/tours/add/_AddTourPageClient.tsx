@@ -166,7 +166,7 @@ export default function AddTourPageClient() {
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300"
+                  className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60"
                   placeholder="Рыбалка на реке Быстрая"
                 />
               </div>
@@ -180,7 +180,7 @@ export default function AddTourPageClient() {
                   type="text"
                   value={formData.shortDescription}
                   onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
-                  className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300"
+                  className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60"
                   placeholder="Незабываемая рыбалка в горной реке"
                   maxLength={100}
                 />
@@ -197,7 +197,7 @@ export default function AddTourPageClient() {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={6}
-                  className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 resize-none"
+                  className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60 resize-none"
                   placeholder="Детальное описание тура, маршрута, особенностей..."
                 />
               </div>
@@ -214,7 +214,7 @@ export default function AddTourPageClient() {
                     min="1"
                     value={formData.duration}
                     onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) || 1 })}
-                    className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300"
+                    className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60"
                   />
                 </div>
 
@@ -230,7 +230,7 @@ export default function AddTourPageClient() {
                     step="100"
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300"
+                    className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60"
                     placeholder="15000"
                   />
                 </div>
@@ -246,7 +246,7 @@ export default function AddTourPageClient() {
                     max="100"
                     value={formData.maxGroupSize}
                     onChange={(e) => setFormData({ ...formData, maxGroupSize: parseInt(e.target.value) || 10 })}
-                    className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300"
+                    className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60"
                   />
                 </div>
               </div>
@@ -311,7 +311,7 @@ export default function AddTourPageClient() {
                 value={currentIncluded}
                 onChange={(e) => setCurrentIncluded(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addItem('included', currentIncluded))}
-                className="flex-1 px-4 py-2 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300"
+                className="flex-1 px-4 py-2 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60"
                 placeholder="Трансфер, обед, снаряжение..."
               />
               <button
@@ -348,7 +348,7 @@ export default function AddTourPageClient() {
                 value={currentNotIncluded}
                 onChange={(e) => setCurrentNotIncluded(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addItem('notIncluded', currentNotIncluded))}
-                className="flex-1 px-4 py-2 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300"
+                className="flex-1 px-4 py-2 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60"
                 placeholder="Личные расходы, алкоголь..."
               />
               <button
@@ -385,7 +385,7 @@ export default function AddTourPageClient() {
                 value={currentImage}
                 onChange={(e) => setCurrentImage(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addImage())}
-                className="flex-1 px-4 py-2 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300"
+                className="flex-1 px-4 py-2 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60"
                 placeholder="https://example.com/image.jpg"
               />
               <button

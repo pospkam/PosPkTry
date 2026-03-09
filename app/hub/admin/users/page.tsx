@@ -180,7 +180,7 @@ export default function UsersManagement() {
                   setRoleFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300"
+                className="px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60"
               >
                 <option value="">Все роли</option>
                 <option value="tourist">Турист</option>

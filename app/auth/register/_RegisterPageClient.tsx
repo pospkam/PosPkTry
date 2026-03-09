@@ -73,17 +73,17 @@ function RegisterForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-2xl">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 bg-white/10 backdrop-blur-2xl border border-white/20 p-8 rounded-2xl shadow-2xl">
         {/* Header */}
         <div className="text-center">
           <Link href="/" className="inline-block mb-4">
-            <div className="text-3xl font-bold text-blue-600">KamHub</div>
+            <div className="text-3xl font-bold text-cyber-cyan">KamHub</div>
           </Link>
-          <h2 className="text-3xl font-bold text-gray-900">
+          <h2 className="text-3xl font-bold text-white">
             {isTourist ? 'Регистрация туриста' : 'Регистрация бизнеса'}
           </h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-2 text-sm text-white/60">
             {isTourist 
               ? 'Создайте аккаунт для бронирования туров' 
               : 'Создайте аккаунт для предоставления услуг'}
@@ -92,7 +92,7 @@ function RegisterForm() {
 
         {/* Error Message */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg">
             {error}
           </div>
         )}
@@ -101,7 +101,7 @@ function RegisterForm() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Email */}
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="email" className="block text-sm font-medium text-white/70 mb-1">
               Email *
             </label>
             <input
@@ -110,14 +110,14 @@ function RegisterForm() {
               required
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-cyber-cyan/60 focus:border-transparent outline-none transition text-white placeholder:text-white/40"
               placeholder="your@email.com"
             />
           </div>
 
           {/* Name */}
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="name" className="block text-sm font-medium text-white/70 mb-1">
               {isTourist ? 'Ваше имя *' : 'Контактное лицо *'}
             </label>
             <input
@@ -126,14 +126,14 @@ function RegisterForm() {
               required
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-cyber-cyan/60 focus:border-transparent outline-none transition text-white placeholder:text-white/40"
               placeholder={isTourist ? 'Иван Иванов' : 'Иван Петров'}
             />
           </div>
 
           {/* Phone */}
           <div>
-            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="phone" className="block text-sm font-medium text-white/70 mb-1">
               Телефон
             </label>
             <input
@@ -141,7 +141,7 @@ function RegisterForm() {
               type="tel"
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-cyber-cyan/60 focus:border-transparent outline-none transition text-white placeholder:text-white/40"
               placeholder="+7 (999) 123-45-67"
             />
           </div>
@@ -150,7 +150,7 @@ function RegisterForm() {
           {isBusiness && (
             <>
               <div>
-                <label htmlFor="company_name" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="company_name" className="block text-sm font-medium text-white/70 mb-1">
                   Название компании
                 </label>
                 <input
@@ -158,13 +158,13 @@ function RegisterForm() {
                   type="text"
                   value={formData.company_name}
                   onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-cyber-cyan/60 focus:border-transparent outline-none transition text-white placeholder:text-white/40"
                   placeholder="ООО Камчатка Тур"
                 />
               </div>
 
               <div>
-                <label htmlFor="inn" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="inn" className="block text-sm font-medium text-white/70 mb-1">
                   ИНН
                 </label>
                 <input
@@ -172,20 +172,20 @@ function RegisterForm() {
                   type="text"
                   value={formData.inn}
                   onChange={(e) => setFormData({ ...formData, inn: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-cyber-cyan/60 focus:border-transparent outline-none transition text-white placeholder:text-white/40"
                   placeholder="1234567890"
                 />
               </div>
 
               <div>
-                <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="role" className="block text-sm font-medium text-white/70 mb-1">
                   Тип услуг *
                 </label>
                 <select
                   id="role"
                   value={formData.role}
                   onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-cyber-cyan/60 focus:border-transparent outline-none transition text-white placeholder:text-white/40"
                 >
                     <option value="operator">Туроператор</option>
                     <option value="guide">Гид</option>
@@ -198,7 +198,7 @@ function RegisterForm() {
 
           {/* Password */}
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="password" className="block text-sm font-medium text-white/70 mb-1">
               Пароль *
             </label>
             <input
@@ -207,14 +207,14 @@ function RegisterForm() {
               required
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-cyber-cyan/60 focus:border-transparent outline-none transition text-white placeholder:text-white/40"
               placeholder="Минимум 6 символов"
             />
           </div>
 
           {/* Password Confirm */}
           <div>
-            <label htmlFor="password_confirm" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="password_confirm" className="block text-sm font-medium text-white/70 mb-1">
               Подтвердите пароль *
             </label>
             <input
@@ -223,7 +223,7 @@ function RegisterForm() {
               required
               value={formData.password_confirm}
               onChange={(e) => setFormData({ ...formData, password_confirm: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-cyber-cyan/60 focus:border-transparent outline-none transition text-white placeholder:text-white/40"
               placeholder="Повторите пароль"
             />
           </div>
@@ -232,12 +232,10 @@ function RegisterForm() {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full py-3 px-4 rounded-lg font-bold text-white transition-all ${
-              loading 
-                ? 'bg-gray-400 cursor-not-allowed' 
-                : isTourist
-                  ? 'bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-xl'
-                  : 'bg-amber-600 hover:bg-amber-700 shadow-lg hover:shadow-xl'
+            className={`w-full py-3 px-4 rounded-lg font-bold transition-all ${
+              loading
+                ? 'bg-white/20 text-white/60 cursor-not-allowed'
+                : 'bg-gradient-to-r from-cyber-cyan/80 to-premium-gold text-premium-black hover:shadow-[0_0_24px_rgba(0,212,255,0.35)] transition-shadow'
             }`}
           >
             {loading ? 'Регистрация...' : 'Зарегистрироваться'}
@@ -246,7 +244,7 @@ function RegisterForm() {
 
         {/* Login Link */}
         <div className="text-center text-sm">
-          <span className="text-gray-600">Уже есть аккаунт? </span>
+          <span className="text-white/60">Уже есть аккаунт? </span>
           <Link href="/auth/login" className="font-medium transition-colors">
             Войти
           </Link>
@@ -266,8 +264,8 @@ function RegisterForm() {
 export default function RegisterPageClient() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-blue-600 text-xl">Загрузка...</div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
+        <div className="text-cyber-cyan text-xl">Загрузка...</div>
       </div>
     }>
       <RegisterForm />

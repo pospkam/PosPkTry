@@ -88,10 +88,10 @@ export default function MapPageClient() {
 
   if (!isExpanded) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-black/90 flex items-center justify-center">
         <button
           onClick={() => setIsExpanded(true)}
-          className="px-8 py-4 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-lg flex items-center gap-3"
+          className="px-8 py-4 bg-premium-gold text-premium-black rounded-xl font-semibold hover:bg-premium-gold/80 hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-shadow shadow-lg flex items-center gap-3"
         >
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
@@ -103,21 +103,21 @@ export default function MapPageClient() {
   }
 
   return (
-    <div className="fixed inset-0 bg-white">
+    <div className="fixed inset-0 bg-[#0B1120]">
       {/* Панель управления */}
-      <div className="absolute top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+      <div className="absolute top-0 left-0 right-0 z-50 bg-black/60 backdrop-blur-md border-b border-white/20 shadow-sm">
         <div className="px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/" className="text-xl font-bold">
               KamHub
             </Link>
-            <span className="text-gray-300">|</span>
-            <h1 className="text-lg font-semibold text-gray-800">Карта Камчатки</h1>
+            <span className="text-white/40">|</span>
+            <h1 className="text-lg font-semibold text-white/90">Карта Камчатки</h1>
           </div>
 
           <button
             onClick={() => setIsExpanded(false)}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/15 text-white/80 rounded-lg transition-colors"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -134,13 +134,13 @@ export default function MapPageClient() {
               onClick={() => setActiveFilter(filter.id)}
               className={`px-4 py-2 rounded-lg font-medium transition-all ${
                 activeFilter === filter.id
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-cyber-cyan text-black shadow-md'
+                  : 'bg-white/10 text-white/80 hover:bg-white/15'
               }`}
             >
               {filter.name}
               <span className={`ml-2 text-xs ${
-                activeFilter === filter.id ? 'text-blue-200' : 'text-gray-500'
+                activeFilter === filter.id ? 'text-white/70' : 'text-white/60'
               }`}>
                 ({loading ? '…' : countFor(filter.id)})
               </span>
@@ -161,11 +161,11 @@ export default function MapPageClient() {
       </div>
 
       {/* Счетчик активных точек */}
-      <div className="absolute bottom-4 left-4 z-40 bg-white rounded-lg shadow-lg px-4 py-2 border border-gray-200">
-        <p className="text-sm text-gray-600">
+      <div className="absolute bottom-4 left-4 z-40 bg-black/60 backdrop-blur-md rounded-lg shadow-lg px-4 py-2 border border-white/20">
+        <p className="text-sm text-white/70">
           {loading
             ? 'Загрузка маршрутов...'
-            : <><span>Показано точек: </span><span className="font-bold text-blue-600">{filteredMarkers.length}</span></>
+            : <><span>Показано точек: </span><span className="font-bold text-cyber-cyan">{filteredMarkers.length}</span></>
           }
         </p>
       </div>

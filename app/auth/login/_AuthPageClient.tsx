@@ -17,7 +17,7 @@ const ROLES = [
       </svg>
     ),
     description: 'Организация туров', 
-    gradient: 'from-sky-200 to-cyan-200' 
+    gradient: 'from-cyber-cyan/80 to-premium-gold' 
   },
   { 
     id: 'transfer', 
@@ -310,7 +310,7 @@ export default function AuthPageClient() {
               onClick={() => { setMode('login'); setStep(1); setError(''); }}
               className={`flex-1 py-3 rounded-xl font-bold transition-all duration-300 ${
                 mode === 'login'
-                  ? 'bg-gradient-to-r from-sky-200 to-cyan-200 text-premium-black shadow-lg'
+                  ? 'bg-gradient-to-r from-cyber-cyan/80 to-premium-gold text-premium-black shadow-lg'
                   : 'text-white/70 hover:text-white hover:bg-white/10'
               }`}
             >
@@ -320,7 +320,7 @@ export default function AuthPageClient() {
               onClick={() => { setMode('register'); setStep(1); setError(''); }}
               className={`flex-1 py-3 rounded-xl font-bold transition-all duration-300 ${
                 mode === 'register'
-                  ? 'bg-gradient-to-r from-sky-200 to-cyan-200 text-premium-black shadow-lg'
+                  ? 'bg-gradient-to-r from-cyber-cyan/80 to-premium-gold text-premium-black shadow-lg'
                   : 'text-white/70 hover:text-white hover:bg-white/10'
               }`}
             >
@@ -353,7 +353,7 @@ export default function AuthPageClient() {
                   required
                   value={loginData.email}
                   onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
-                  className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-transparent text-white placeholder-white/40 transition-all"
+                  className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60 focus:border-transparent text-white placeholder-white/40 transition-all"
                   placeholder="info@kamchatka-fishing.ru"
                 />
               </div>
@@ -367,7 +367,7 @@ export default function AuthPageClient() {
                     required
                     value={loginData.password}
                     onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                    className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-transparent text-white placeholder-white/40 transition-all"
+                    className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60 focus:border-transparent text-white placeholder-white/40 transition-all"
                     placeholder="••••••••"
                   />
                   <button
@@ -383,7 +383,7 @@ export default function AuthPageClient() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-4 bg-gradient-to-r from-sky-200 to-cyan-200 text-premium-black font-bold rounded-xl hover:shadow-lg hover:shadow-blue-500/50 disabled:opacity-50 transition-all transform hover:scale-105"
+                className="w-full py-4 bg-gradient-to-r from-cyber-cyan/80 to-premium-gold text-premium-black font-bold rounded-xl hover:shadow-lg hover:shadow-cyber-cyan/30 disabled:opacity-50 transition-all transform hover:scale-105"
               >
                 {loading ? 'Вход...' : 'Войти'}
               </button>
@@ -407,7 +407,7 @@ export default function AuthPageClient() {
                   <div key={s} className="flex items-center flex-1">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${
                       step > s ? 'bg-green-500 text-white' :
-                      step === s ? 'bg-gradient-to-r from-sky-200 to-cyan-200 text-premium-black' :
+                      step === s ? 'bg-gradient-to-r from-cyber-cyan/80 to-premium-gold text-premium-black' :
                       'bg-white/10 text-white/40'
                     }`}>
                       {step > s ? <Check className="w-6 h-6" /> : s}
@@ -449,7 +449,7 @@ export default function AuthPageClient() {
                       required
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 text-white placeholder-white/40"
+                      className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60 text-white placeholder-white/40"
                       placeholder="Камчатская рыбалка"
                     />
                   </div>
@@ -465,7 +465,7 @@ export default function AuthPageClient() {
                         required
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 text-white placeholder-white/40"
+                        className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60 text-white placeholder-white/40"
                         placeholder="info@example.ru"
                       />
                     </div>
@@ -480,7 +480,7 @@ export default function AuthPageClient() {
                         required
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 text-white placeholder-white/40"
+                        className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60 text-white placeholder-white/40"
                         placeholder="+7 (999) 123-45-67"
                       />
                     </div>
@@ -498,7 +498,7 @@ export default function AuthPageClient() {
                           required
                           value={formData.password}
                           onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                          className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 text-white placeholder-white/40"
+                          className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60 text-white placeholder-white/40"
                           placeholder="Минимум 8 символов"
                         />
                         <button
@@ -537,7 +537,7 @@ export default function AuthPageClient() {
                           required
                           value={formData.confirmPassword}
                           onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                          className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 text-white placeholder-white/40"
+                          className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60 text-white placeholder-white/40"
                           placeholder="Повторите пароль"
                         />
                         <button
@@ -625,7 +625,7 @@ export default function AuthPageClient() {
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                       rows={4}
-                      className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 resize-none text-white placeholder-white/40"
+                      className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60 resize-none text-white placeholder-white/40"
                       placeholder="Расскажите о вашей компании, опыте работы, преимуществах..."
                     />
                   </div>
@@ -640,7 +640,7 @@ export default function AuthPageClient() {
                         type="text"
                         value={formData.address}
                         onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                        className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 text-white placeholder-white/40"
+                        className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60 text-white placeholder-white/40"
                         placeholder="г. Петропавловск-Камчатский"
                       />
                     </div>
@@ -654,7 +654,7 @@ export default function AuthPageClient() {
                         type="url"
                         value={formData.website}
                         onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                        className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 text-white placeholder-white/40"
+                        className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60 text-white placeholder-white/40"
                         placeholder="https://example.ru"
                       />
                     </div>
@@ -681,7 +681,7 @@ export default function AuthPageClient() {
 
                       <div className="flex-1">
                         <label htmlFor="logo-upload" className="cursor-pointer">
-                          <span className="px-6 py-3 bg-gradient-to-r from-sky-200 to-cyan-200 text-premium-black font-bold rounded-xl inline-flex items-center gap-2 hover:shadow-lg transition-all">
+                          <span className="px-6 py-3 bg-gradient-to-r from-cyber-cyan/80 to-premium-gold text-premium-black font-bold rounded-xl inline-flex items-center gap-2 hover:shadow-lg transition-all">
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                             </svg>
@@ -730,7 +730,7 @@ export default function AuthPageClient() {
                   <button
                     type="button"
                     onClick={handleNextStep}
-                    className="flex-1 px-6 py-4 bg-gradient-to-r from-sky-200 to-cyan-200 text-premium-black rounded-xl hover:shadow-xl transition-all font-bold flex items-center justify-center gap-2"
+                    className="flex-1 px-6 py-4 bg-gradient-to-r from-cyber-cyan/80 to-premium-gold text-premium-black rounded-xl hover:shadow-xl transition-all font-bold flex items-center justify-center gap-2"
                   >
                     Далее
                     <ChevronRight className="w-5 h-5" />

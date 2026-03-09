@@ -147,10 +147,10 @@ export default function FinancePageClient() {
                 onChange={(e) => setPeriod(e.target.value)}
                 className="px-4 py-3 bg-white/10 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
               >
-                <option value="7" className="bg-gray-900">Последние 7 дней</option>
-                <option value="30" className="bg-gray-900">Последние 30 дней</option>
-                <option value="90" className="bg-gray-900">Последние 90 дней</option>
-                <option value="365" className="bg-gray-900">Последний год</option>
+                <option value="7" className="bg-white/10">Последние 7 дней</option>
+                <option value="30" className="bg-white/10">Последние 30 дней</option>
+                <option value="90" className="bg-white/10">Последние 90 дней</option>
+                <option value="365" className="bg-white/10">Последний год</option>
               </select>
             </div>
           </div>

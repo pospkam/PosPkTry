@@ -200,7 +200,7 @@ export default function ToursPageClient() {
               className="px-4 py-2.5 bg-white/10 border border-white/15 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-premium-gold/50"
             >
               {CATEGORIES.map(c => (
-                <option key={c.value} value={c.value} className="bg-gray-900">{c.label}</option>
+                <option key={c.value} value={c.value} className="bg-black">{c.label}</option>
               ))}
             </select>
 
@@ -210,10 +210,10 @@ export default function ToursPageClient() {
               onChange={e => setDifficulty(e.target.value)}
               className="px-4 py-2.5 bg-white/10 border border-white/15 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-premium-gold/50"
             >
-              <option value="" className="bg-gray-900">Любая сложность</option>
-              <option value="easy"   className="bg-gray-900">Лёгкий</option>
-              <option value="medium" className="bg-gray-900">Средний</option>
-              <option value="hard"   className="bg-gray-900">Сложный</option>
+              <option value="" className="bg-black">Любая сложность</option>
+              <option value="easy"   className="bg-black">Лёгкий</option>
+              <option value="medium" className="bg-black">Средний</option>
+              <option value="hard"   className="bg-black">Сложный</option>
             </select>
 
             {/* Цена до */}

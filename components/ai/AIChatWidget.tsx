@@ -243,7 +243,7 @@ export function AIChatWidget({ isOpen = false, onClose, className, userId }: AIC
         >
           <div className="flex items-center justify-between p-4 sm:p-6 border-b border-white/20 rounded-t-2xl flex-shrink-0">
             <div className="flex items-center gap-3">
-              <Bot size={24} className="text-ocean" aria-hidden="true" />
+              <Bot size={24} className="text-cyber-cyan" aria-hidden="true" />
               <div>
                 <h3 className="text-lg font-semibold text-white">AI-помощник Камчатки</h3>
                 <p className="text-sm text-volcano">Спросите о турах и безопасности</p>
@@ -283,7 +283,7 @@ export function AIChatWidget({ isOpen = false, onClose, className, userId }: AIC
               <div className="flex justify-start">
                 <div className="bg-slate-800/60 px-4 py-3 rounded-2xl">
                   <div className="flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin text-cyan-400" />
+                    <Loader2 className="w-4 h-4 animate-spin text-cyber-cyan" />
                     <span className="text-sm text-white/50">
                       {isCrewMode ? 'Агенты думают...' : 'AI думает...'}
                     </span>

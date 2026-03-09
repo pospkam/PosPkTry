@@ -44,7 +44,7 @@ export default function AdminFinanceClient() {
                   <select
                     value={period}
                     onChange={(e) => setPeriod(e.target.value)}
-                    className="px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-sky-300"
+                    className="px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60"
                   >
                     <option value="7">7 дней</option>
                     <option value="30">30 дней</option>

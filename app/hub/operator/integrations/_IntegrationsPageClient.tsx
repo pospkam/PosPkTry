@@ -100,7 +100,7 @@ export default function IntegrationsPageClient() {
     if (!configured) return <AlertCircle className="w-5 h-5 text-yellow-400" />;
     if (status === 'ok') return <CheckCircle className="w-5 h-5 text-green-400" />;
     if (status === 'error') return <XCircle className="w-5 h-5 text-red-400" />;
-    return <AlertCircle className="w-5 h-5 text-gray-400" />;
+    return <AlertCircle className="w-5 h-5 text-white/40" />;
   };
 
   const getPartnerIcon = (type: string) => {
@@ -108,7 +108,7 @@ export default function IntegrationsPageClient() {
       case 'fishing-tours':
         return <Fish className="w-8 h-8 text-blue-400" />;
       default:
-        return <Package className="w-8 h-8 text-gray-400" />;
+        return <Package className="w-8 h-8 text-white/40" />;
     }
   };
 
@@ -219,7 +219,7 @@ export default function IntegrationsPageClient() {
                       !partner.configured ? 'text-yellow-400' :
                       partner.sync.status === 'ok' ? 'text-green-400' :
                       partner.sync.status === 'error' ? 'text-red-400' :
-                      'text-gray-400'
+                      'text-white/40'
                     }`}>
                       {!partner.configured ? 'Не настроено' :
                        partner.sync.status === 'ok' ? 'Активно' :

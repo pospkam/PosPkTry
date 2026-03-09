@@ -140,7 +140,7 @@ function getStatusLabel(status: MchsStatus): string {
 function getStatusClasses(status: MchsStatus): string {
   const classes: Record<MchsStatus, string> = {
     pending: 'bg-volcano/20 text-volcano border border-volcano/30',
-    submitted: 'bg-ocean/20 text-ocean border border-ocean/30',
+    submitted: 'bg-premium-gold/20 text-premium-gold border border-premium-gold/30',
     confirmed: 'bg-moss/20 text-moss border border-moss/30',
     rejected: 'bg-red-600/20 text-red-400 border border-red-600/30',
   };
@@ -405,9 +405,9 @@ export function MchsRegistrationPanel() {
               <p className="text-xs text-white/60">Ожидает</p>
               <p className="text-xl font-semibold text-volcano">{summary.pending}</p>
             </div>
-            <div className="bg-ocean/15 rounded-xl p-3">
+            <div className="bg-white/10 rounded-xl p-3">
               <p className="text-xs text-white/60">Отправлено</p>
-              <p className="text-xl font-semibold text-ocean">{summary.submitted}</p>
+              <p className="text-xl font-semibold text-premium-gold">{summary.submitted}</p>
             </div>
             <div className="bg-moss/15 rounded-xl p-3">
               <p className="text-xs text-white/60">Подтверждено</p>
@@ -424,7 +424,7 @@ export function MchsRegistrationPanel() {
             <button
               type="button"
               onClick={() => setShowForm(true)}
-              className="min-h-[44px] min-w-[44px] px-4 py-2 rounded-xl bg-ocean text-white font-medium inline-flex items-center gap-2 hover:bg-ocean/80 transition-colors"
+              className="min-h-[44px] min-w-[44px] px-4 py-2 rounded-xl bg-premium-gold text-premium-black font-medium inline-flex items-center gap-2 hover:bg-premium-gold/80 transition-colors"
             >
               <Plus className="w-4 h-4" />
               Новая регистрация
@@ -634,7 +634,7 @@ export function MchsRegistrationPanel() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="min-h-[44px] min-w-[44px] px-4 py-2 rounded-xl bg-ocean text-white font-medium inline-flex items-center gap-2 disabled:opacity-60 hover:bg-ocean/80 transition-colors"
+                className="min-h-[44px] min-w-[44px] px-4 py-2 rounded-xl bg-premium-gold text-premium-black font-medium inline-flex items-center gap-2 disabled:opacity-60 hover:bg-premium-gold/80 transition-colors"
               >
                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 Отправить в МЧС
@@ -677,7 +677,7 @@ export function MchsRegistrationPanel() {
                       {formatDate(item.startDate)} -- {formatDate(item.endDate)} | создано: {formatDate(item.createdAt)}
                     </p>
                     {item.mchsReference && (
-                      <p className="text-xs text-ocean">Ref: {item.mchsReference}</p>
+                      <p className="text-xs text-cyber-cyan">Ref: {item.mchsReference}</p>
                     )}
                     <div>
                       <button
@@ -726,7 +726,7 @@ export function MchsRegistrationPanel() {
                   </p>
                 )}
                 {selectedDetails.mchsReference && (
-                  <p className="text-xs text-ocean">
+                  <p className="text-xs text-cyber-cyan">
                     МЧС Ref: {selectedDetails.mchsReference}
                   </p>
                 )}

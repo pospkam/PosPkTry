@@ -33,6 +33,8 @@ export default {
         /* Premium card design tokens — used across TourCard, AccommodationCard etc. */
         'premium-gold':  '#d4af37',
         'premium-black': '#0a0a0a',
+        /* Cyberpunk accent — cyan neon for focus rings, active states, glow effects */
+        'cyber-cyan':    '#00D4FF',
       },
       fontFamily: {
         sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', '"Segoe UI"', 'Roboto', 'sans-serif'],

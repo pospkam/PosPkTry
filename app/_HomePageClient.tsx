@@ -436,7 +436,7 @@ export default function HomePageClient() {
           <div className="flex flex-wrap justify-center gap-4 mt-8">
             <a
               href="/tours"
-              className="px-7 py-3 rounded-full bg-ocean text-white font-semibold text-lg shadow-lg hover:bg-ocean/90 transition min-w-[160px] text-center"
+              className="px-7 py-3 rounded-full bg-premium-gold text-premium-black font-semibold text-lg shadow-lg hover:bg-premium-gold/80 hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-shadow min-w-[160px] text-center"
               style={{ textDecoration: 'none' }}
             >
               Найти тур

@@ -76,7 +76,7 @@ export function WeatherWidget({
   return (
     <motion.div className={`glassmorphism p-6 ${className} ${hasAlert ? 'border-red-200 bg-red-50/50 animate-pulse' : ''}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       <div className="flex items-center gap-4 mb-4">
-        <Icon size={compact ? 32 : 48} className={hasAlert ? 'text-red-600' : 'text-ocean'} />
+        <Icon size={compact ? 32 : 48} className={hasAlert ? 'text-red-400' : 'text-cyber-cyan'} />
         <div>
           <p className="text-3xl md:text-4xl font-bold text-white">{weather.temperature}°</p>
           <p className="text-sm text-volcano capitalize">{weather.condition}</p>
@@ -105,7 +105,7 @@ export function WeatherWidget({
             {weather.forecast.slice(0, 3).map((day, i) => (
               <motion.div key={i} className="text-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.1 }}>
                 <p className="text-xs text-volcano">{new Date(day.date).toLocaleDateString('ru-RU', { weekday: 'short' })}</p>
-                <Sun size={20} className="mx-auto mb-1 text-ocean" />
+                <Sun size={20} className="mx-auto mb-1 text-cyber-cyan" />
                 <p className="font-semibold">{day.temperature.min}°–{day.temperature.max}°</p>
               </motion.div>
             ))}
