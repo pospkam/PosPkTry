@@ -1,15 +1,23 @@
 'use client';
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { Search, UserCircle, MapPin, Heart, Home } from 'lucide-react';
 import { useInView } from '@/hooks/useInView';
 import SOSButton from '@/components/shared/SOSButton';
+import { VolcanoIcon }    from '@/components/icons/VolcanoIcon';
+import { FishingIcon }    from '@/components/icons/FishingIcon';
+import { ThermalIcon }    from '@/components/icons/ThermalIcon';
+import { RiverIcon }      from '@/components/icons/RiverIcon';
+import { SeaWalkIcon }    from '@/components/icons/SeaWalkIcon';
+import { BearIcon }       from '@/components/icons/BearIcon';
+import { HelicopterIcon } from '@/components/icons/HelicopterIcon';
+import { SnowmobileIcon } from '@/components/icons/SnowmobileIcon';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface Activity {
-  emoji: string;
+  icon: React.ReactNode;
   label: string;
   href: string;
 }
@@ -35,14 +43,14 @@ interface FeedItem {
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
 const ACTIVITIES: Activity[] = [
-  { emoji: '🌋', label: 'Вулканы',       href: '/tours?category=vulkani' },
-  { emoji: '🎣', label: 'Рыбалка',       href: '/tours?category=rybalka' },
-  { emoji: '♨️', label: 'Термы',         href: '/tours?category=termalnye_istochniki' },
-  { emoji: '🏔', label: 'Сплавы',        href: '/tours?category=rivers' },
-  { emoji: '🚤', label: 'Морские',       href: '/tours?category=morskie_progulki' },
-  { emoji: '🐻', label: 'Медведи',       href: '/tours?category=medvedi' },
-  { emoji: '🚁', label: 'Вертолёты',     href: '/tours?category=vertoletnye_tury' },
-  { emoji: '🛷', label: 'Снегоход',      href: '/tours?category=snegohod' },
+  { icon: <VolcanoIcon    className="w-8 h-8" />, label: 'Вулканы',   href: '/tours?category=vulkani' },
+  { icon: <FishingIcon    className="w-8 h-8" />, label: 'Рыбалка',   href: '/tours?category=rybalka' },
+  { icon: <ThermalIcon    className="w-8 h-8" />, label: 'Термы',     href: '/tours?category=termalnye_istochniki' },
+  { icon: <RiverIcon      className="w-8 h-8" />, label: 'Сплавы',    href: '/tours?category=rivers' },
+  { icon: <SeaWalkIcon    className="w-8 h-8" />, label: 'Морские',   href: '/tours?category=morskie_progulki' },
+  { icon: <BearIcon       className="w-8 h-8" />, label: 'Медведи',   href: '/tours?category=medvedi' },
+  { icon: <HelicopterIcon className="w-8 h-8" />, label: 'Вертолёты', href: '/tours?category=vertoletnye_tury' },
+  { icon: <SnowmobileIcon className="w-8 h-8" />, label: 'Снегоход',  href: '/tours?category=snegohod' },
 ];
 
 const BENTO_ITEMS: BentoItem[] = [
@@ -178,6 +186,7 @@ function MountainSilhouette({ parallax }: MountainSilhouetteProps) {
       aria-hidden="true"
       style={{
         position: 'absolute', bottom: 0, left: 0, right: 0,
+        zIndex: 3,
         transform: `translateY(${parallax * -0.12}px)`,
         transition: 'transform 0.05s linear',
         pointerEvents: 'none',
@@ -310,21 +319,56 @@ function HeroSection({ scrollY }: { scrollY: number }) {
         position: 'relative', width: '100%',
         minHeight: '100dvh', overflow: 'hidden',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: 'radial-gradient(ellipse 80% 60% at 50% 80%, #1a0800 0%, var(--kh-bg) 60%)',
+        background: 'var(--kh-bg)',
       }}
     >
-      {/* Animated volcanic glow — lava */}
+      {/* ── Photo layer — parallax container (110% tall so translateY never shows gap) ── */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute', left: 0, right: 0,
+          top: '-5%', height: '115%',
+          zIndex: 0,
+          transform: `translateY(${scrollY * 0.18}px)`,
+          willChange: 'transform',
+          pointerEvents: 'none',
+        }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/dark.webp"
+          alt=""
+          width={1920}
+          height={1080}
+          loading="eager"
+          style={{
+            position: 'absolute', inset: 0,
+            width: '100%', height: '100%',
+            objectFit: 'cover', objectPosition: 'center top',
+            display: 'block',
+          }}
+        />
+      </div>
+
+      {/* ── Top gradient: darken sky so white text is readable ── */}
       <div aria-hidden="true" style={{
-        position: 'absolute', inset: '-50%',
-        background: 'radial-gradient(ellipse 55% 40% at 30% 65%, rgba(232,83,14,0.22) 0%, transparent 70%)',
-        animation: 'kh-hero-glow 14s ease-in-out infinite',
+        position: 'absolute', inset: 0, zIndex: 1,
+        background: 'linear-gradient(to bottom, rgba(10,10,10,0.80) 0%, rgba(10,10,10,0.25) 40%, transparent 65%)',
         pointerEvents: 'none',
       }} />
-      {/* Animated ocean glow */}
+
+      {/* ── Bottom gradient: blend photo → dark page bg ── */}
       <div aria-hidden="true" style={{
-        position: 'absolute', inset: '-50%',
-        background: 'radial-gradient(ellipse 50% 35% at 70% 35%, rgba(45,125,210,0.18) 0%, transparent 70%)',
-        animation: 'kh-hero-glow2 17s ease-in-out infinite',
+        position: 'absolute', inset: 0, zIndex: 1,
+        background: 'linear-gradient(to top, #0A0A0A 0%, rgba(10,10,10,0.45) 22%, transparent 42%)',
+        pointerEvents: 'none',
+      }} />
+
+      {/* ── Animated volcanic glow overlay (subtle, enhances lava feel) ── */}
+      <div aria-hidden="true" style={{
+        position: 'absolute', inset: 0, zIndex: 2,
+        background: 'radial-gradient(ellipse 50% 35% at 50% 55%, rgba(232,83,14,0.07) 0%, transparent 70%)',
+        animation: 'kh-hero-glow 12s ease-in-out infinite',
         pointerEvents: 'none',
       }} />
 
@@ -528,8 +572,12 @@ function ActivityCard({ activity }: { activity: Activity }) {
         cursor: 'pointer',
       }}
     >
-      <span style={{ fontSize: '28px', lineHeight: 1, filter: hovered ? 'saturate(1.3)' : 'none', transition: 'filter 200ms ease' }}>
-        {activity.emoji}
+      <span style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: hovered ? 'var(--kh-accent)' : 'var(--kh-text-dim)',
+        transition: 'color 200ms ease',
+      }}>
+        {activity.icon}
       </span>
       <span style={{
         fontSize: '12px', fontWeight: 600,
