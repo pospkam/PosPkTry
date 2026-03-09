@@ -36,7 +36,7 @@ export function CarCard({ car, onRent }: CarCardProps) {
       case 'business': return 'text-purple-400';
       case 'suv': return 'text-orange-400';
       case 'luxury': return 'text-yellow-400';
-      default: return 'text-gray-400';
+      default: return 'text-white/40';
     }
   };
 

@@ -142,7 +142,7 @@ export function TokenImportForm({ onTokenSaved }: TokenImportFormProps) {
           <button
             onClick={handleSave}
             disabled={!token.trim()}
-            className="flex-1 px-4 py-3 bg-blue-500 hover:bg-blue-600 rounded-xl text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 px-4 py-3 bg-premium-gold hover:bg-premium-gold/80 rounded-xl text-premium-black font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Сохранить
           </button>

@@ -29,7 +29,7 @@ export function GearCard({ gear, onRent }: GearCardProps) {
       case 'new': return 'text-green-400';
       case 'good': return 'text-yellow-400';
       case 'fair': return 'text-orange-400';
-      default: return 'text-gray-400';
+      default: return 'text-white/40';
     }
   };
 

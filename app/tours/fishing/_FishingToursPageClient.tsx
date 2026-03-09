@@ -167,7 +167,7 @@ export default function FishingToursPageClient() {
               className="px-4 py-2.5 bg-white/10 border border-white/15 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-premium-gold/50"
             >
               {DIFFICULTIES.map(d => (
-                <option key={d.value} value={d.value} className="bg-gray-900">{d.label}</option>
+                <option key={d.value} value={d.value} className="bg-black">{d.label}</option>
               ))}
             </select>
 

@@ -183,10 +183,10 @@ export default function ClientsPageClient() {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:border-premium-gold"
             >
-              <option value="all" className="bg-gray-900">Все статусы</option>
-              <option value="vip" className="bg-gray-900">VIP</option>
-              <option value="active" className="bg-gray-900">Активные</option>
-              <option value="inactive" className="bg-gray-900">Неактивные</option>
+              <option value="all" className="bg-black">Все статусы</option>
+              <option value="vip" className="bg-black">VIP</option>
+              <option value="active" className="bg-black">Активные</option>
+              <option value="inactive" className="bg-black">Неактивные</option>
             </select>
           </div>
 
