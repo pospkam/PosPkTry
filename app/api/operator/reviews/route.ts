@@ -3,6 +3,7 @@ import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireOperator } from '@/lib/auth/middleware';
 import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
+import { OpReviewListRow, OpReviewStatsRow, CountRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
       WHERE t.operator_id = $1
     `;
 
-    const params: unknown[] = [operatorId];
+    const params: (string | number | boolean | null)[] = [operatorId];
     let paramIndex = 2;
 
     // Rating filter
@@ -82,7 +83,7 @@ export async function GET(request: NextRequest) {
     `;
     params.push(limit, offset);
 
-    const result = await query(queryStr, params);
+    const result = await query<OpReviewListRow>(queryStr, params);
 
     // Get total count
     let countQuery = `
@@ -91,7 +92,7 @@ export async function GET(request: NextRequest) {
       JOIN tours t ON r.tour_id = t.id
       WHERE t.operator_id = $1
     `;
-    const countParams: unknown[] = [operatorId];
+    const countParams: (string | number | boolean | null)[] = [operatorId];
     let countIndex = 2;
 
     if (rating) {
@@ -105,7 +106,7 @@ export async function GET(request: NextRequest) {
       countParams.push(tourId);
     }
 
-    const countResult = await query(countQuery, countParams);
+    const countResult = await query<CountRow>(countQuery, countParams);
     const totalCount = parseInt(countResult.rows[0].count);
 
     const reviews = result.rows.map(row => ({
@@ -124,7 +125,7 @@ export async function GET(request: NextRequest) {
     }));
 
     // Get rating distribution
-    const statsResult = await query(
+    const statsResult = await query<OpReviewStatsRow>(
       `SELECT 
         COUNT(*) as total_reviews,
         AVG(r.rating) as avg_rating,
@@ -147,7 +148,7 @@ export async function GET(request: NextRequest) {
         reviews,
         stats: {
           totalReviews: parseInt(stats.total_reviews),
-          avgRating: parseFloat(stats.avg_rating || 0).toFixed(2),
+          avgRating: parseFloat(stats.avg_rating ?? '0').toFixed(2),
           distribution: {
             5: parseInt(stats.five_stars),
             4: parseInt(stats.four_stars),

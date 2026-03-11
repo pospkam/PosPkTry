@@ -219,7 +219,6 @@
     "app/api/loyalty/**/*",
     "app/api/monitoring/**/*",
     "app/api/notifications/**/*",
-    "app/api/operator/**/*",
     "app/api/partner/**/*",
     "app/api/partners/**/*",
     "app/api/ping/**/*",

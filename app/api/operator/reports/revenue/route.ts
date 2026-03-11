@@ -3,6 +3,12 @@ import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireOperator } from '@/lib/auth/middleware';
 import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
+import {
+  OpRevenueSummaryRow,
+  OpRevenueTimelineRow,
+  OpRevenueByTourRow,
+  OpPaymentStatusRow,
+} from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,7 +25,7 @@ export async function GET(request: NextRequest) {
     const userId = operatorOrResponse.userId;
 
     const operatorId = await getOperatorPartnerId(userId);
-    
+
     if (!operatorId) {
       return NextResponse.json({
         success: false,
@@ -45,8 +51,8 @@ export async function GET(request: NextRequest) {
         dateGrouping = `DATE(b.created_at)`;
     }
 
-    const revenueResult = await query(
-      `SELECT 
+    const revenueResult = await query<OpRevenueTimelineRow>(
+      `SELECT
         ${dateGrouping} as period,
         COUNT(*) as bookings_count,
         COUNT(DISTINCT b.tour_id) as tours_count,
@@ -66,8 +72,8 @@ export async function GET(request: NextRequest) {
     );
 
     // Get revenue by tour
-    const byTourResult = await query(
-      `SELECT 
+    const byTourResult = await query<OpRevenueByTourRow>(
+      `SELECT
         t.id as tour_id,
         t.name as tour_name,
         COUNT(*) as bookings_count,
@@ -87,8 +93,8 @@ export async function GET(request: NextRequest) {
     );
 
     // Get payment methods distribution
-    const paymentStatusResult = await query(
-      `SELECT 
+    const paymentStatusResult = await query<OpPaymentStatusRow>(
+      `SELECT
         payment_status,
         COUNT(*) as count,
         SUM(total_price) as total
@@ -103,8 +109,8 @@ export async function GET(request: NextRequest) {
     );
 
     // Get overall summary
-    const summaryResult = await query(
-      `SELECT 
+    const summaryResult = await query<OpRevenueSummaryRow>(
+      `SELECT
         COUNT(*) as total_bookings,
         SUM(b.total_price) as total_revenue,
         SUM(CASE WHEN b.payment_status = 'paid' THEN b.total_price ELSE 0 END) as paid_revenue,
@@ -132,13 +138,13 @@ export async function GET(request: NextRequest) {
       },
       summary: {
         totalBookings: parseInt(summary.total_bookings),
-        totalRevenue: parseFloat(summary.total_revenue || 0),
-        paidRevenue: parseFloat(summary.paid_revenue || 0),
-        pendingRevenue: parseFloat(summary.pending_revenue || 0),
-        refundedRevenue: parseFloat(summary.refunded_revenue || 0),
-        avgBookingValue: parseFloat(summary.avg_booking_value || 0),
-        minBookingValue: parseFloat(summary.min_booking_value || 0),
-        maxBookingValue: parseFloat(summary.max_booking_value || 0)
+        totalRevenue: parseFloat(summary.total_revenue ?? '0'),
+        paidRevenue: parseFloat(summary.paid_revenue ?? '0'),
+        pendingRevenue: parseFloat(summary.pending_revenue ?? '0'),
+        refundedRevenue: parseFloat(summary.refunded_revenue ?? '0'),
+        avgBookingValue: parseFloat(summary.avg_booking_value ?? '0'),
+        minBookingValue: parseFloat(summary.min_booking_value ?? '0'),
+        maxBookingValue: parseFloat(summary.max_booking_value ?? '0')
       },
       timeline: revenueResult.rows.map(row => ({
         period: row.period,

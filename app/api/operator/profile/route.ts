@@ -3,6 +3,7 @@ import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireOperator } from '@/lib/auth/middleware';
 import { getPartnerByUserId, ensurePartnerExists } from '@/lib/auth/operator-helpers';
+import { OpProfileUserRow, OpSettingsRow, OpProfileStatsRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,7 +20,7 @@ export async function GET(request: NextRequest) {
     const userId = operatorOrResponse.userId;
 
     // Get user data
-    const userResult = await query(
+    const userResult = await query<OpProfileUserRow>(
       'SELECT id, email, name, role, preferences, created_at FROM users WHERE id = $1',
       [userId]
     );
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get operator settings
-    const settingsResult = await query(
+    const settingsResult = await query<OpSettingsRow>(
       'SELECT * FROM operator_settings WHERE user_id = $1',
       [userId]
     );
@@ -66,7 +67,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get statistics
-    const statsResult = await query(
+    const statsResult = await query<OpProfileStatsRow>(
       `SELECT 
         COUNT(DISTINCT t.id) as total_tours,
         COUNT(DISTINCT CASE WHEN t.is_active THEN t.id END) as active_tours,
@@ -96,12 +97,12 @@ export async function GET(request: NextRequest) {
       partner: partner,
       settings: settings,
       statistics: {
-        totalTours: parseInt(stats.total_tours || 0),
-        activeTours: parseInt(stats.active_tours || 0),
-        totalBookings: parseInt(stats.total_bookings || 0),
-        totalRevenue: parseFloat(stats.total_revenue || 0),
-        avgRating: parseFloat(stats.avg_rating || 0).toFixed(2),
-        totalReviews: parseInt(stats.total_reviews || 0)
+        totalTours: parseInt(stats.total_tours ?? '0'),
+        activeTours: parseInt(stats.active_tours ?? '0'),
+        totalBookings: parseInt(stats.total_bookings ?? '0'),
+        totalRevenue: parseFloat(stats.total_revenue ?? '0'),
+        avgRating: parseFloat(stats.avg_rating ?? '0').toFixed(2),
+        totalReviews: parseInt(stats.total_reviews ?? '0')
       }
     };
 

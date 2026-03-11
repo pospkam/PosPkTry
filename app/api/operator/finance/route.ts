@@ -4,6 +4,7 @@ import { ApiResponse } from '@/types';
 import { FinanceData, Transaction } from '@/types/operator';
 import { requireOperator } from '@/lib/auth/middleware';
 import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
+import { OpFinanceRow, OpTransactionRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,7 +47,7 @@ export async function GET(request: NextRequest) {
         AND b.created_at >= $2
     `;
 
-    const financeResult = await query(financeQuery, [operatorId, startDate]);
+    const financeResult = await query<OpFinanceRow>(financeQuery, [operatorId, startDate]);
     const financeRow = financeResult.rows[0];
 
     // Транзакции
@@ -68,14 +69,14 @@ export async function GET(request: NextRequest) {
       LIMIT 50
     `;
 
-    const transactionsResult = await query(transactionsQuery, [operatorId, startDate]);
+    const transactionsResult = await query<OpTransactionRow>(transactionsQuery, [operatorId, startDate]);
     
     const transactions: Transaction[] = transactionsResult.rows.map(row => ({
       id: row.id,
-      type: row.type,
+      type: row.type as Transaction['type'],
       amount: parseFloat(row.amount),
       status: row.status === 'paid' ? 'completed' : 'pending',
-      date: new Date(row.date),
+      date: new Date(String(row.date)),
       description: row.description,
       bookingId: row.booking_id
     }));

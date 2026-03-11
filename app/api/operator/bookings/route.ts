@@ -4,6 +4,7 @@ import { ApiResponse, PaginatedResponse } from '@/types';
 import { OperatorBooking } from '@/types/operator';
 import { requireOperator } from '@/lib/auth/middleware';
 import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
+import { OpBookingListRow, CountRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,7 +49,7 @@ export async function GET(request: NextRequest) {
     const sortOrder = (searchParams.get('sortOrder') || 'desc').toLowerCase() === 'asc' ? 'ASC' : 'DESC';
 
     const whereConditions: string[] = ['t.operator_id = $1'];
-    const queryParams: unknown[] = [operatorId];
+    const queryParams: (string | number | boolean | null)[] = [operatorId];
     let paramIndex = 2;
 
     if (status && status !== 'all') {
@@ -80,8 +81,8 @@ export async function GET(request: NextRequest) {
       ${whereClause}
     `;
 
-    const countResult = await query(countQuery, queryParams);
-    const total = parseInt(countResult.rows[0].total);
+    const countResult = await query<CountRow>(countQuery, queryParams);
+    const total = parseInt(countResult.rows[0].count);
 
     // Получение бронирований
     const bookingsQuery = `
@@ -110,7 +111,7 @@ export async function GET(request: NextRequest) {
     `;
 
     queryParams.push(limit, offset);
-    const bookingsResult = await query(bookingsQuery, queryParams);
+    const bookingsResult = await query<OpBookingListRow>(bookingsQuery, queryParams);
 
     const bookings: OperatorBooking[] = bookingsResult.rows.map(row => ({
       id: row.id,
@@ -119,15 +120,15 @@ export async function GET(request: NextRequest) {
       userId: row.user_id,
       userName: row.user_name,
       userEmail: row.user_email,
-      userPhone: row.user_phone,
-      date: new Date(row.date),
+      userPhone: row.user_phone ?? undefined,
+      date: new Date(String(row.date)),
       guestsCount: parseInt(row.guests_count) || 1,
       totalPrice: parseFloat(row.total_price),
-      status: row.status,
-      paymentStatus: row.payment_status,
-      notes: row.notes,
-      createdAt: new Date(row.created_at),
-      updatedAt: new Date(row.updated_at)
+      status: row.status as OperatorBooking['status'],
+      paymentStatus: row.payment_status as OperatorBooking['paymentStatus'],
+      notes: row.notes ?? undefined,
+      createdAt: new Date(String(row.created_at)),
+      updatedAt: new Date(String(row.updated_at))
     }));
 
     const response: PaginatedResponse<OperatorBooking> = {

@@ -118,7 +118,7 @@ export async function GET(request: NextRequest) {
 
     if (!queryValidation.success) {
       return NextResponse.json(
-        { success: false, error: queryValidation.error.issues } as ApiResponse<null>,
+        { success: false, error: queryValidation.error.issues } as unknown as ApiResponse<null>,
         { status: 400 }
       );
     }
@@ -223,7 +223,7 @@ export async function POST(request: NextRequest) {
 
     if (!validation.success) {
       return NextResponse.json(
-        { success: false, error: validation.error.issues } as ApiResponse<null>,
+        { success: false, error: validation.error.issues } as unknown as ApiResponse<null>,
         { status: 400 }
       );
     }

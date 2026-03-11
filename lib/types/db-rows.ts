@@ -498,3 +498,557 @@ export interface AvailabilityDateRow {
   spots_left: string;
   status: string;
 }
+
+// ──────────────────────────────────────────────────────────
+// Operator — Analytics Dashboard
+// ──────────────────────────────────────────────────────────
+
+export interface OpAnalyticsOverviewRow {
+  total_tours: string;
+  active_tours: string;
+  total_bookings: string;
+  pending_bookings: string;
+  confirmed_bookings: string;
+  completed_bookings: string;
+  cancelled_bookings: string;
+  total_revenue: string;
+  paid_revenue: string;
+  pending_revenue: string;
+  avg_booking_value: string;
+}
+
+export interface OpAnalyticsTrendRow {
+  date: Date;
+  bookings_count: string;
+  revenue: string | null;
+  unique_customers: string;
+}
+
+export interface OpAnalyticsTopTourRow {
+  id: string;
+  name: string;
+  bookings_count: string;
+  revenue: string | null;
+  avg_rating: string | null;
+  reviews_count: string;
+}
+
+export interface OpAnalyticsRecentBookingRow {
+  id: string;
+  status: string;
+  payment_status: string;
+  total_price: string;
+  created_at: Date;
+  start_date: Date | null;
+  guests_count: string;
+  tour_name: string;
+  customer_name: string;
+  customer_email: string;
+}
+
+export interface OpAnalyticsConversionRow {
+  pending: string;
+  confirmed: string;
+  completed: string;
+  cancelled: string;
+}
+
+export interface OpAnalyticsCustomersRow {
+  total_customers: string;
+  repeat_customers: string;
+}
+
+export interface OpAnalyticsReviewsRow {
+  total_reviews: string;
+  avg_rating: string | null;
+  five_star: string;
+  four_star: string;
+  three_star: string;
+  two_star: string;
+  one_star: string;
+  replied_count: string;
+}
+
+// ──────────────────────────────────────────────────────────
+// Operator — Dashboard
+// ──────────────────────────────────────────────────────────
+
+export interface OpDashboardMetricsRow {
+  total_tours: string;
+  active_tours: string;
+  total_bookings: string;
+  pending_bookings: string;
+  confirmed_bookings: string;
+  completed_bookings: string;
+  cancelled_bookings: string;
+  total_revenue: string;
+  monthly_revenue: string;
+  avg_rating: string;
+  total_reviews: string;
+}
+
+export interface OpDashboardBookingRow {
+  id: string;
+  tour_id: string;
+  tour_name: string;
+  user_id: string;
+  user_name: string;
+  user_email: string;
+  date: Date;
+  guests_count: string;
+  total_price: string;
+  status: string;
+  payment_status: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface OpDashboardTopTourRow {
+  tour_id: string;
+  tour_name: string;
+  bookings_count: string;
+  revenue: string;
+  avg_rating: string;
+  review_count: string;
+  completion_rate: string | null;
+}
+
+export interface OpDashboardChartRow {
+  date: Date;
+  value: string;
+}
+
+export interface OpDashboardUpcomingTourRow {
+  tour_id: string;
+  tour_name: string;
+  date: Date;
+  bookings_count: string;
+  capacity: number;
+}
+
+// ──────────────────────────────────────────────────────────
+// Operator — Reviews Stats
+// ──────────────────────────────────────────────────────────
+
+export interface OpReviewsStatsOverallRow {
+  total_reviews: string;
+  avg_rating: string | null;
+  five_star: string;
+  four_star: string;
+  three_star: string;
+  two_star: string;
+  one_star: string;
+  replied: string;
+  pending_reply: string;
+  verified: string;
+  recent_reviews: string;
+}
+
+export interface OpReviewsByTourRow {
+  id: string;
+  name: string;
+  reviews_count: string;
+  avg_rating: string | null;
+  recent_count: string;
+}
+
+export interface OpReviewsTrendRow {
+  date: Date;
+  reviews_count: string;
+  avg_rating: string;
+}
+
+export interface OpNegativeReviewRow {
+  id: string;
+  rating: number;
+  comment: string | null;
+  created_at: Date;
+  tour_id: string;
+  tour_name: string;
+  user_name: string;
+}
+
+export interface OpResponseTimeRow {
+  avg_response_hours: string | null;
+  min_response_hours: string | null;
+  max_response_hours: string | null;
+}
+
+// ──────────────────────────────────────────────────────────
+// Operator — Revenue Report
+// ──────────────────────────────────────────────────────────
+
+export interface OpRevenueSummaryRow {
+  total_bookings: string;
+  total_revenue: string | null;
+  paid_revenue: string | null;
+  pending_revenue: string | null;
+  refunded_revenue: string | null;
+  avg_booking_value: string | null;
+  min_booking_value: string | null;
+  max_booking_value: string | null;
+}
+
+export interface OpRevenueTimelineRow {
+  period: Date;
+  bookings_count: string;
+  tours_count: string;
+  total_revenue: string;
+  paid_revenue: string;
+  pending_revenue: string;
+  avg_booking_value: string;
+}
+
+export interface OpRevenueByTourRow {
+  tour_id: string;
+  tour_name: string;
+  bookings_count: string;
+  total_revenue: string;
+  paid_revenue: string;
+  avg_booking_value: string;
+}
+
+export interface OpPaymentStatusRow {
+  payment_status: string;
+  count: string;
+  total: string;
+}
+
+// ──────────────────────────────────────────────────────────
+// Operator — Bookings Report
+// ──────────────────────────────────────────────────────────
+
+export interface OpBookingStatusRow {
+  status: string;
+  count: string;
+  revenue: string | null;
+}
+
+export interface OpBookingFunnelRow {
+  pending: string;
+  confirmed: string;
+  completed: string;
+  cancelled: string;
+  confirmation_rate: string;
+  completion_rate: string;
+  cancellation_rate: string;
+}
+
+export interface OpLeadTimeRow {
+  avg_lead_time_days: string | null;
+  min_lead_time_days: string | null;
+  max_lead_time_days: string | null;
+}
+
+export interface OpGuestsDistributionRow {
+  group_size: string;
+  count: string;
+}
+
+export interface OpRepeatCustomersRow {
+  total_customers: string;
+  repeat_customers: string;
+}
+
+// ──────────────────────────────────────────────────────────
+// Operator — Tours List
+// ──────────────────────────────────────────────────────────
+
+export interface OpTourListRow {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  difficulty: string;
+  duration: number;
+  max_group_size: number;
+  min_group_size: number;
+  price: string;
+  currency: string;
+  is_active: boolean;
+  rating: string;
+  review_count: string;
+  created_at: Date;
+  updated_at: Date;
+  route_id: string | null;
+  route_title: string | null;
+  route_category: string | null;
+  route_lat: string | null;
+  route_lng: string | null;
+  bookings_count: string;
+  total_revenue: string;
+  images: string[] | null;
+}
+
+export interface OpTourCreateRow {
+  id: string;
+  name: string;
+  slug: string;
+  is_active: boolean;
+  created_at: Date;
+}
+
+// ──────────────────────────────────────────────────────────
+// Operator — Stats
+// ──────────────────────────────────────────────────────────
+
+export interface OpStatsToursRow {
+  total: string;
+  active: string;
+}
+
+export interface OpStatsBookingsRow {
+  total: string;
+  pending: string;
+  confirmed: string;
+  completed: string;
+  cancelled: string;
+}
+
+export interface OpStatsRevenueRow {
+  total_revenue: string;
+  pending_revenue: string;
+  monthly_revenue: string;
+}
+
+export interface OpStatsRecentBookingRow {
+  id: string;
+  date: Date;
+  participants: number;
+  total_price: string;
+  status: string;
+  tour_name: string;
+  user_name: string;
+}
+
+export interface OpStatsPartnerInfoRow {
+  id: string;
+  name: string;
+  rating: string;
+  review_count: string;
+}
+
+// ──────────────────────────────────────────────────────────
+// Operator — Tours Schedules
+// ──────────────────────────────────────────────────────────
+
+export interface OpTourScheduleRow {
+  id: string;
+  tour_id: string;
+  tour_name: string;
+  start_date: Date;
+  end_date: Date;
+  price: string;
+  available_spots: number;
+  booked_spots: string;
+  status: string | null;
+  season: string;
+}
+
+export interface OpTourOwnerRow {
+  id: string;
+}
+
+export interface OpTourForScheduleRow {
+  id: string;
+  name: string;
+  operator_id: string;
+}
+
+export interface OpScheduleInsertRow {
+  id: string;
+  start_date: Date;
+  end_date: Date;
+  price: string;
+  max_participants: number;
+  status: string;
+}
+
+// ──────────────────────────────────────────────────────────
+// Operator — Reviews List
+// ──────────────────────────────────────────────────────────
+
+export interface OpReviewListRow {
+  id: string;
+  tour_id: string;
+  tour_name: string;
+  user_id: string;
+  user_name: string;
+  user_email: string;
+  rating: number;
+  comment: string | null;
+  is_verified: boolean;
+  created_at: Date;
+  updated_at: Date;
+  photos: string[];
+}
+
+export interface OpReviewStatsRow {
+  total_reviews: string;
+  avg_rating: string | null;
+  five_stars: string;
+  four_stars: string;
+  three_stars: string;
+  two_stars: string;
+  one_star: string;
+}
+
+// ──────────────────────────────────────────────────────────
+// Operator — Profile
+// ──────────────────────────────────────────────────────────
+
+export interface OpProfileUserRow {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  preferences: Record<string, unknown> | null;
+  created_at: Date;
+}
+
+export interface OpSettingsRow {
+  auto_confirm_bookings: boolean;
+  booking_lead_time: number;
+  cancellation_policy: string;
+  refund_policy: string;
+  min_group_size: number;
+  max_advance_booking_days: number;
+  timezone: string;
+  currency: string;
+  commission_rate: string;
+  settings: Record<string, unknown> | null;
+}
+
+export interface OpProfileStatsRow {
+  total_tours: string;
+  active_tours: string;
+  total_bookings: string;
+  total_revenue: string;
+  avg_rating: string;
+  total_reviews: string;
+}
+
+// ──────────────────────────────────────────────────────────
+// Operator — Finance
+// ──────────────────────────────────────────────────────────
+
+export interface OpFinanceRow {
+  total_revenue: string;
+  pending_payouts: string;
+  completed_payouts: string;
+  commission: string;
+  net_income: string;
+}
+
+export interface OpTransactionRow {
+  id: string;
+  type: string;
+  amount: string;
+  status: string;
+  date: Date;
+  description: string;
+  booking_id: string;
+}
+
+// ──────────────────────────────────────────────────────────
+// Operator — Bookings List
+// ──────────────────────────────────────────────────────────
+
+export interface OpBookingListRow {
+  id: string;
+  tour_id: string;
+  tour_name: string;
+  user_id: string;
+  user_name: string;
+  user_email: string;
+  user_phone: string | null;
+  date: Date;
+  guests_count: string;
+  total_price: string;
+  status: string;
+  payment_status: string;
+  notes: string | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
+// ──────────────────────────────────────────────────────────
+// Operator — Calendar
+// ──────────────────────────────────────────────────────────
+
+export interface OpCalendarRow {
+  id: string;
+  tour_id: string;
+  tour_name: string;
+  max_group_size: number;
+  date: Date;
+  available_spots: number;
+  is_blocked: boolean;
+  block_reason: string | null;
+  price_override: string | null;
+  notes: string | null;
+  booked_spots: string;
+}
+
+// ──────────────────────────────────────────────────────────
+// Operator — Tour Publish / Detail / Photos
+// ──────────────────────────────────────────────────────────
+
+export interface OpTourPublishRow {
+  id: string;
+  name: string;
+  description: string;
+  price: string;
+  is_active: boolean;
+  operator_id: string;
+}
+
+export interface OpTourDetailRow {
+  id: string;
+  name: string;
+  description: string;
+  short_description: string | null;
+  category: string | null;
+  difficulty: string;
+  duration: number;
+  price: string;
+  currency: string;
+  season: string[] | null;
+  requirements: string[] | null;
+  included: string[] | null;
+  not_included: string[] | null;
+  coordinates: number[][] | null;
+  max_group_size: number;
+  min_group_size: number;
+  is_active: boolean;
+  rating: string;
+  review_count: string;
+  images: string[];
+  image_details: Record<string, unknown>[];
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface OpPhotoRow {
+  id: string;
+  url: string;
+  mime_type: string;
+  size: string;
+  width: number | null;
+  height: number | null;
+  alt: string | null;
+  created_at: Date;
+}
+
+export interface OpAssetIdRow {
+  id: string;
+}
+
+export interface OpUnlinkRow {
+  asset_id: string;
+}
+
+export interface OpAssetUsageRow {
+  count: string;
+}
+

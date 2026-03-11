@@ -3,6 +3,13 @@ import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireOperator } from '@/lib/auth/middleware';
 import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
+import {
+  OpBookingStatusRow,
+  OpBookingFunnelRow,
+  OpLeadTimeRow,
+  OpGuestsDistributionRow,
+  OpRepeatCustomersRow,
+} from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,7 +39,7 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('endDate') || new Date().toISOString();
 
     // Bookings by status
-    const statusResult = await query(
+    const statusResult = await query<OpBookingStatusRow>(
       `SELECT 
         status,
         COUNT(*) as count,
@@ -47,7 +54,7 @@ export async function GET(request: NextRequest) {
     );
 
     // Conversion funnel
-    const funnelResult = await query(
+    const funnelResult = await query<OpBookingFunnelRow>(
       `WITH funnel AS (
         SELECT 
           COUNT(*) FILTER (WHERE status = 'pending') as pending,
@@ -73,7 +80,7 @@ export async function GET(request: NextRequest) {
     );
 
     // Lead time analysis
-    const leadTimeResult = await query(
+    const leadTimeResult = await query<OpLeadTimeRow>(
       `SELECT 
         AVG(EXTRACT(DAY FROM (start_date - created_at::DATE))) as avg_lead_time_days,
         MIN(EXTRACT(DAY FROM (start_date - created_at::DATE))) as min_lead_time_days,
@@ -89,7 +96,7 @@ export async function GET(request: NextRequest) {
     );
 
     // Guests distribution
-    const guestsResult = await query(
+    const guestsResult = await query<OpGuestsDistributionRow>(
       `SELECT 
         CASE 
           WHEN COALESCE(guests_count, participants) = 1 THEN '1'
@@ -110,7 +117,7 @@ export async function GET(request: NextRequest) {
     );
 
     // Repeat customers
-    const repeatCustomersResult = await query(
+    const repeatCustomersResult = await query<OpRepeatCustomersRow>(
       `SELECT 
         COUNT(DISTINCT user_id) as total_customers,
         COUNT(DISTINCT CASE WHEN booking_count > 1 THEN user_id END) as repeat_customers
@@ -141,7 +148,7 @@ export async function GET(request: NextRequest) {
       statusDistribution: statusResult.rows.map(row => ({
         status: row.status,
         count: parseInt(row.count),
-        revenue: parseFloat(row.revenue || 0)
+        revenue: parseFloat(row.revenue ?? '0')
       })),
       conversionFunnel: {
         pending: parseInt(funnel.pending),
@@ -153,9 +160,9 @@ export async function GET(request: NextRequest) {
         cancellationRate: parseFloat(funnel.cancellation_rate).toFixed(2)
       },
       leadTime: {
-        avgDays: parseFloat(leadTime.avg_lead_time_days || 0).toFixed(1),
-        minDays: parseInt(leadTime.min_lead_time_days || 0),
-        maxDays: parseInt(leadTime.max_lead_time_days || 0)
+        avgDays: parseFloat(leadTime.avg_lead_time_days ?? '0').toFixed(1),
+        minDays: parseInt(leadTime.min_lead_time_days ?? '0'),
+        maxDays: parseInt(leadTime.max_lead_time_days ?? '0')
       },
       guestsDistribution: guestsResult.rows.map(row => ({
         groupSize: row.group_size,
@@ -164,8 +171,8 @@ export async function GET(request: NextRequest) {
       customers: {
         total: parseInt(repeatCustomers.total_customers),
         repeat: parseInt(repeatCustomers.repeat_customers),
-        repeatRate: repeatCustomers.total_customers > 0 
-          ? ((repeatCustomers.repeat_customers / repeatCustomers.total_customers) * 100).toFixed(2)
+        repeatRate: parseInt(repeatCustomers.total_customers) > 0
+          ? ((parseInt(repeatCustomers.repeat_customers) / parseInt(repeatCustomers.total_customers)) * 100).toFixed(2)
           : '0.00'
       }
     };

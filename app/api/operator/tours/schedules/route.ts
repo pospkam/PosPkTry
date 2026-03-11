@@ -3,6 +3,12 @@ import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireOperator } from '@/lib/auth/middleware';
 import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
+import {
+  OpTourScheduleRow,
+  OpTourOwnerRow,
+  OpTourForScheduleRow,
+  OpScheduleInsertRow,
+} from '@/lib/types/db-rows';
 
 interface TourSchedule {
   id: string;
@@ -53,7 +59,7 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('endDate');
 
     if (tourId) {
-      const ownershipCheck = await query(
+      const ownershipCheck = await query<OpTourOwnerRow>(
         `SELECT id FROM tours WHERE id = $1 AND operator_id = $2`,
         [tourId, operatorId]
       );
@@ -85,7 +91,7 @@ export async function GET(request: NextRequest) {
       JOIN tours t ON ts.tour_id = t.id
       WHERE t.operator_id = $1
     `;
-    const values: unknown[] = [operatorId];
+    const values: (string | number | boolean | null)[] = [operatorId];
     let paramIndex = 2;
 
     if (tourId) {
@@ -108,7 +114,7 @@ export async function GET(request: NextRequest) {
 
     queryText += ` ORDER BY ts.start_date ASC`;
 
-    const result = await query(queryText, values);
+    const result = await query<OpTourScheduleRow>(queryText, values);
 
     const schedules: TourSchedule[] = result.rows.map(row => ({
       id: row.id,
@@ -117,9 +123,9 @@ export async function GET(request: NextRequest) {
       start_date: row.start_date,
       end_date: row.end_date,
       price: parseFloat(row.price),
-      available_spots: row.available_spots - row.booked_spots,
+      available_spots: row.available_spots - parseInt(row.booked_spots),
       booked_spots: parseInt(row.booked_spots),
-      status: row.available_spots <= row.booked_spots ? 'full' : row.status || 'open',
+      status: row.available_spots <= parseInt(row.booked_spots) ? 'full' : (row.status ?? 'open') as 'open' | 'full' | 'cancelled',
       season: row.season
     }));
 
@@ -209,7 +215,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Проверяем что тур принадлежит оператору
-    const tourResult = await query(
+    const tourResult = await query<OpTourForScheduleRow>(
       `SELECT id, name, operator_id FROM tours WHERE id = $1`,
       [body.tourId]
     );
@@ -229,7 +235,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Создаем расписание
-    const insertResult = await query(
+    const insertResult = await query<OpScheduleInsertRow>(
       `INSERT INTO tour_availability (
         tour_id,
         start_date,

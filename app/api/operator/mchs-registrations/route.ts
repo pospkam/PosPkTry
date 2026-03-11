@@ -277,7 +277,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, error: error.issues } as ApiResponse<null>,
+        { success: false, error: error.issues } as unknown as ApiResponse<null>,
         { status: 400 }
       );
     }

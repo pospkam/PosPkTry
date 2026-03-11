@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireOperator } from '@/lib/auth/middleware';
-import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
+import { getOperatorPartnerId, verifyTourOwnership } from '@/lib/auth/operator-helpers';
+import { OpUnlinkRow, OpAssetUsageRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -103,7 +104,7 @@ export async function DELETE(
     const { id, photoId } = await params;
 
     // Удаляем связь только если фото действительно принадлежит этому туру.
-    const unlinkResult = await query(
+    const unlinkResult = await query<OpUnlinkRow>(
       `DELETE FROM tour_assets ta
        USING tours t
        WHERE ta.tour_id = t.id
@@ -122,7 +123,7 @@ export async function DELETE(
     }
 
     // Check if asset is used by other tours
-    const usageCheck = await query(
+    const usageCheck = await query<OpAssetUsageRow>(
       'SELECT COUNT(*) as count FROM tour_assets WHERE asset_id = $1',
       [photoId]
     );

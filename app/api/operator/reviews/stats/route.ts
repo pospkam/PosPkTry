@@ -3,6 +3,13 @@ import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireOperator } from '@/lib/auth/middleware';
 import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
+import {
+  OpReviewsStatsOverallRow,
+  OpReviewsByTourRow,
+  OpReviewsTrendRow,
+  OpNegativeReviewRow,
+  OpResponseTimeRow,
+} from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,7 +26,7 @@ export async function GET(request: NextRequest) {
     const userId = operatorOrResponse.userId;
 
     const operatorId = await getOperatorPartnerId(userId);
-    
+
     if (!operatorId) {
       return NextResponse.json({
         success: false,
@@ -32,8 +39,8 @@ export async function GET(request: NextRequest) {
     const startDate = new Date(Date.now() - parseInt(period) * 24 * 60 * 60 * 1000).toISOString();
 
     // Overall statistics
-    const overallResult = await query(
-      `SELECT 
+    const overallResult = await query<OpReviewsStatsOverallRow>(
+      `SELECT
         COUNT(*) as total_reviews,
         AVG(rating) as avg_rating,
         COUNT(*) FILTER (WHERE rating = 5) as five_star,
@@ -54,8 +61,8 @@ export async function GET(request: NextRequest) {
     const overall = overallResult.rows[0];
 
     // Reviews by tour
-    const byTourResult = await query(
-      `SELECT 
+    const byTourResult = await query<OpReviewsByTourRow>(
+      `SELECT
         t.id,
         t.name,
         COUNT(r.id) as reviews_count,
@@ -72,8 +79,8 @@ export async function GET(request: NextRequest) {
     );
 
     // Reviews trend (last 30 days)
-    const trendResult = await query(
-      `SELECT 
+    const trendResult = await query<OpReviewsTrendRow>(
+      `SELECT
         DATE(r.created_at) as date,
         COUNT(*) as reviews_count,
         AVG(r.rating) as avg_rating
@@ -87,8 +94,8 @@ export async function GET(request: NextRequest) {
     );
 
     // Recent negative reviews (rating <= 3, no reply)
-    const negativeResult = await query(
-      `SELECT 
+    const negativeResult = await query<OpNegativeReviewRow>(
+      `SELECT
         r.id,
         r.rating,
         r.comment,
@@ -108,8 +115,8 @@ export async function GET(request: NextRequest) {
     );
 
     // Response time analysis
-    const responseTimeResult = await query(
-      `SELECT 
+    const responseTimeResult = await query<OpResponseTimeRow>(
+      `SELECT
         AVG(EXTRACT(EPOCH FROM (operator_reply_at - created_at))/3600) as avg_response_hours,
         MIN(EXTRACT(EPOCH FROM (operator_reply_at - created_at))/3600) as min_response_hours,
         MAX(EXTRACT(EPOCH FROM (operator_reply_at - created_at))/3600) as max_response_hours

@@ -4,6 +4,7 @@ import { ApiResponse } from '@/types';
 import { requireOperator } from '@/lib/auth/middleware';
 import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
 import crypto from 'crypto';
+import { OpPhotoRow, OpAssetIdRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -64,8 +65,8 @@ export async function GET(
       } as ApiResponse<null>, { status: 404 });
     }
 
-    const result = await query(
-      `SELECT 
+    const result = await query<OpPhotoRow>(
+      `SELECT
         a.id,
         a.url,
         a.mime_type,
@@ -147,7 +148,7 @@ export async function POST(
     const sha256 = crypto.createHash('sha256').update(url).digest('hex');
 
     // Check if asset already exists
-    const existingAsset = await query(
+    const existingAsset = await query<OpAssetIdRow>(
       'SELECT id FROM assets WHERE sha256 = $1',
       [sha256]
     );
@@ -158,7 +159,7 @@ export async function POST(
       assetId = existingAsset.rows[0].id;
     } else {
       // Create new asset
-      const assetResult = await query(
+      const assetResult = await query<OpAssetIdRow>(
         `INSERT INTO assets (url, mime_type, sha256, size, width, height, alt)
          VALUES ($1, $2, $3, $4, $5, $6, $7)
          RETURNING id`,

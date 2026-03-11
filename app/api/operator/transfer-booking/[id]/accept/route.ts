@@ -39,7 +39,7 @@ export async function PATCH(
     const parsed = paramsSchema.safeParse(await params);
     if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: parsed.error.issues } as ApiResponse<null>,
+        { success: false, error: parsed.error.issues } as unknown as ApiResponse<null>,
         { status: 400 }
       );
     }
