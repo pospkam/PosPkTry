@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     if (authResult instanceof NextResponse) return authResult;
     const userId = authResult.userId;
 
-    const userResult = await query(
+    const userResult = await query<{ id: string; email: string; name: string; created_at: Date }>(
       'SELECT id, email, name, created_at FROM users WHERE id = $1',
       [userId]
     );
@@ -78,7 +78,7 @@ export async function PUT(request: NextRequest) {
 
     let partner = await getGearPartnerByUserId(userId);
     if (!partner) {
-      const userResult = await query('SELECT name, email FROM users WHERE id = $1', [userId]);
+      const userResult = await query<{ name: string; email: string }>('SELECT name, email FROM users WHERE id = $1', [userId]);
       await ensureGearPartnerExists(userId, userResult.rows[0].name, userResult.rows[0].email);
       partner = await getGearPartnerByUserId(userId);
     }
@@ -103,7 +103,7 @@ export async function PUT(request: NextRequest) {
     }
 
     if (updateFields.length > 0) {
-      updateValues.push(partner.id);
+      updateValues.push(partner!.id);
       await query(
         `UPDATE partners SET ${updateFields.join(', ')}, updated_at = NOW() WHERE id = $${paramIndex}`,
         updateValues

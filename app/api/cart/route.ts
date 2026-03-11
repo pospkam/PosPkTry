@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { sessionId, souvenirId, quantity } = body;
 
-    const souvenir = await query('SELECT * FROM souvenirs WHERE id = $1', [souvenirId]);
+    const souvenir = await query<{ price: string }>('SELECT * FROM souvenirs WHERE id = $1', [souvenirId]);
     if (souvenir.rows.length === 0) {
       return NextResponse.json({
         success: false,

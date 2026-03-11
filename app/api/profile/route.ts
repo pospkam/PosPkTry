@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
       createdAt: u.created_at,
       updatedAt: u.updated_at,
     },
-  } as ApiResponse<Partial<User> & { phone: string }>);
+  } as unknown as ApiResponse<Partial<User> & { phone: string }>);
 }
 
 /**

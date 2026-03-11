@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
       ${whereClause}
     `;
     
-    const countResult = await query(countQuery, queryParams);
+    const countResult = await query<{ total: string }>(countQuery, queryParams);
     const total = parseInt(countResult.rows[0].total);
 
     // Получаем партнеров с пагинацией
@@ -82,32 +82,37 @@ export async function GET(request: NextRequest) {
     `;
 
     queryParams.push(limit, offset);
-    const partnersResult = await query(partnersQuery, queryParams);
+    const partnersResult = await query<{
+      id: string; name: string; category: string; description: string | null;
+      contact: Record<string, unknown> | null; rating: string | null; review_count: string;
+      is_verified: boolean; created_at: string; updated_at: string;
+      images: (string | null)[] | null; logo_url: string | null;
+    }>(partnersQuery, queryParams);
 
     const partners: Partner[] = partnersResult.rows.map(row => ({
       id: row.id,
       name: row.name,
-      category: row.category,
-      description: row.description,
-      contact: row.contact,
-      rating: row.rating,
-      reviewCount: row.review_count,
+      category: row.category as Partner['category'],
+      description: row.description ?? '',
+      contact: (row.contact ?? {}) as unknown as import('@/types').ContactInfo,
+      rating: parseFloat(row.rating ?? '0'),
+      reviewCount: parseInt(row.review_count),
       isVerified: row.is_verified,
-      logo: row.logo_url ? { 
-        id: 'temp-id', 
-        url: row.logo_url, 
-        mimeType: 'image/jpeg', 
-        sha256: '', 
-        size: 0, 
-        createdAt: new Date() 
+      logo: row.logo_url ? {
+        id: 'temp-id',
+        url: row.logo_url,
+        mimeType: 'image/jpeg',
+        sha256: '',
+        size: 0,
+        createdAt: new Date()
       } : undefined,
-      images: row.images.filter(Boolean).map((url: string) => ({ 
-        id: 'temp-id', 
-        url, 
-        mimeType: 'image/jpeg', 
-        sha256: '', 
-        size: 0, 
-        createdAt: new Date() 
+      images: (row.images ?? []).filter((url): url is string => !!url).map((url) => ({
+        id: 'temp-id',
+        url,
+        mimeType: 'image/jpeg',
+        sha256: '',
+        size: 0,
+        createdAt: new Date()
       })),
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.updated_at),

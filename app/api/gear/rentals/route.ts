@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     const rentalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
 
     // Проверяем доступность снаряжения
-    const availabilityCheck = await query(`
+    const availabilityCheck = await query<{ available_quantity: number; price_per_day: string; price_per_week: string }>(`
       SELECT available_quantity, price_per_day, price_per_week
       FROM gear
       WHERE id = $1

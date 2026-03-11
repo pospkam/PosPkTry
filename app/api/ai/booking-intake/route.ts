@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
 
     if (!validation.success) {
       return NextResponse.json(
-        { success: false, error: validation.error.issues } as ApiResponse<null>,
+        { success: false, error: validation.error.issues } as unknown as ApiResponse<null>,
         { status: 400 }
       );
     }

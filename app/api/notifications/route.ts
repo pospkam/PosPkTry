@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
     const result = await query(queryStr, params);
 
     // Get unread count
-    const countResult = await query(
+    const countResult = await query<{ unread_count: string }>(
       `SELECT COUNT(*) as unread_count
        FROM notifications
        WHERE user_id = $1 AND is_read = false AND is_archived = false`,

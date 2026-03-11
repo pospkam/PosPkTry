@@ -56,12 +56,12 @@ async function collectExternalUrlDocuments(urls: string[]): Promise<KnowledgeDoc
 // Настройка S3 клиента для Timeweb Cloud
 const s3AccessKey = process.env.S3_ACCESS_KEY
 const s3SecretKey = process.env.S3_SECRET_KEY
-const s3Endpoint = config.files.s3Endpoint || process.env.S3_ENDPOINT || 'https://s3.twcstorage.ru'
-const s3Bucket = config.files.s3Bucket || process.env.S3_BUCKET
+const s3Endpoint = process.env.S3_ENDPOINT || 'https://s3.twcstorage.ru'
+const s3Bucket = process.env.S3_BUCKET
 
 const s3Client = s3AccessKey && s3SecretKey
   ? new S3Client({
-      region: config.files.s3Region || process.env.S3_REGION || 'ru-1',
+      region: process.env.S3_REGION || 'ru-1',
       endpoint: s3Endpoint,
       credentials: {
         accessKeyId: s3AccessKey,
@@ -284,8 +284,8 @@ export async function GET(request: NextRequest) {
       knowledgeBaseEnabled: timeweb.knowledgeBase.enabled,
       maxDocuments: timeweb.knowledgeBase.maxDocuments,
       chunkSize: timeweb.knowledgeBase.chunkSize,
-      s3Bucket: config.files.s3Bucket,
-      s3Endpoint: config.files.s3Endpoint,
+      s3Bucket: process.env.S3_BUCKET,
+      s3Endpoint: process.env.S3_ENDPOINT,
       lastUpdate: null, // TODO: хранить в БД
       documentCount: 0, // TODO: получить из БД
     }

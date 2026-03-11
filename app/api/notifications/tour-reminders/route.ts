@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
         AND u.email IS NOT NULL
     `;
 
-    const bookingsResult = await query(bookingsQuery, [tomorrowStr]);
+    const bookingsResult = await query<{ id: string; user_email: string; tour_name: string; start_date: string; guests_count: number; total_price: string; duration: number; operator_name: string; operator_phone: string | null; operator_email: string | null; user_name: string; }>(bookingsQuery, [tomorrowStr]);
 
     if (bookingsResult.rows.length === 0) {
       return NextResponse.json({

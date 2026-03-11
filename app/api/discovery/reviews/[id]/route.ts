@@ -76,15 +76,17 @@ export async function PUT(
     const { id } = await params;
 
     const review = await reviewService.read(id);
+    if (!review) {
+      return NextResponse.json(
+        { success: false, error: 'Not Found', message: 'Review not found' },
+        { status: 404 }
+      );
+    }
     const authorId = review.userId ?? review.user_id;
 
     if (authorId !== authOrResponse.userId) {
       return NextResponse.json(
-        {
-          success: false,
-          error: 'Not Found',
-          message: 'Review not found',
-        },
+        { success: false, error: 'Not Found', message: 'Review not found' },
         { status: 404 }
       );
     }
@@ -154,6 +156,12 @@ export async function DELETE(
     const { id } = await params;
 
     const review = await reviewService.read(id);
+    if (!review) {
+      return NextResponse.json(
+        { success: false, error: 'Not Found', message: 'Review not found' },
+        { status: 404 }
+      );
+    }
     const authorId = review.userId ?? review.user_id;
 
     if (authorId !== authOrResponse.userId && authOrResponse.role !== 'admin') {
