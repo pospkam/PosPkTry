@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
-import { TransferSearchRequest, TransferSearchResponse, TransferOption, SearchMetadata } from '@/types/transfer';
+import { TransferSearchRequest, TransferSearchResponse, TransferOption, SearchMetadata, TransferVehicle } from '@/types/transfer';
 import { config } from '@/lib/config';
 
 export const dynamic = 'force-dynamic';
@@ -162,7 +162,18 @@ export async function GET(request: NextRequest) {
 
       scheduleQuery += ` ORDER BY s.price_per_person ASC, s.departure_time ASC`;
 
-      const scheduleResult = await query(scheduleQuery, queryParams);
+      const scheduleResult = await query<{
+        id: string; route_id: string; name: string; from_location: string; to_location: string;
+        from_coordinates: { x: string; y: string }; to_coordinates: { x: string; y: string };
+        distance_km: string; estimated_duration_minutes: number; is_active: boolean;
+        vehicle_id: string; operator_id: string; vehicle_type: string; make: string; model: string;
+        year: number; capacity: number; features: string[]; license_plate: string;
+        driver_id: string; phone: string; email: string | null; license_number: string;
+        languages: string[]; rating: string; total_trips: number;
+        departure_time: string; arrival_time: string; price_per_person: string;
+        available_seats: number; operator_name: string; operator_phone: string; operator_email: string;
+        created_at: Date; updated_at: Date;
+      }>(scheduleQuery, queryParams);
 
       // Преобразуем результаты в формат API
       const availableTransfers: TransferOption[] = scheduleResult.rows.map(row => ({
@@ -189,7 +200,7 @@ export async function GET(request: NextRequest) {
         vehicle: {
           id: row.vehicle_id,
           operatorId: row.operator_id,
-          vehicleType: row.vehicle_type,
+          vehicleType: row.vehicle_type as TransferVehicle['vehicleType'],
           make: row.make,
           model: row.model,
           year: row.year,
@@ -205,7 +216,7 @@ export async function GET(request: NextRequest) {
           operatorId: row.operator_id,
           name: row.name,
           phone: row.phone,
-          email: row.email,
+          email: row.email ?? undefined,
           licenseNumber: row.license_number,
           languages: row.languages || [],
           rating: parseFloat(row.rating),

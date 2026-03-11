@@ -235,7 +235,11 @@ async function selectTours(
     `;
     
     const params = budget ? [allowedDifficulty, budget * 0.3] : [allowedDifficulty];
-    const result = await query(sql, params);
+    const result = await query<{
+      id: string; name: string; description: string | null; duration: number;
+      price: string; difficulty: string; operator_id: string; rating: string;
+      coordinates: unknown;
+    }>(sql, params);
     
     return result.rows.map(row => ({
       id: row.id,
@@ -246,7 +250,7 @@ async function selectTours(
       difficulty: row.difficulty,
       operator_id: row.operator_id,
       rating: parseFloat(row.rating),
-      coordinates: row.coordinates || []
+      coordinates: (row.coordinates as TourCard['coordinates']) || []
     }));
     
   } catch (error) {
@@ -286,7 +290,10 @@ async function selectAccommodations(
     `;
     
     const params = budget ? [budget / days] : [];
-    const result = await query(sql, params);
+    const result = await query<{
+      id: string; name: string; type: string; address: string;
+      price_per_night: string; rating: string; amenities: unknown; coordinates: unknown;
+    }>(sql, params);
     
     return result.rows.map(row => ({
       id: row.id,
@@ -295,8 +302,8 @@ async function selectAccommodations(
       address: row.address,
       price_per_night: parseFloat(row.price_per_night),
       rating: parseFloat(row.rating),
-      amenities: row.amenities || [],
-      coordinates: row.coordinates || { lat: 53.0, lng: 158.6 }
+      amenities: (row.amenities as string[]) || [],
+      coordinates: (row.coordinates as AccommodationCard['coordinates']) || { lat: 53.0, lng: 158.6 }
     }));
     
   } catch (error) {
@@ -334,7 +341,10 @@ async function selectTransfers(
       LIMIT 20
     `;
     
-    const result = await query(sql, []);
+    const result = await query<{
+      id: string; route_name: string; from_location: string; to_location: string;
+      distance_km: string; duration_minutes: number; price_per_person: string; vehicle_type: string | null;
+    }>(sql, []);
     
     return result.rows.map(row => ({
       id: row.id,

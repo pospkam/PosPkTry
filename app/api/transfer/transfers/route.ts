@@ -81,7 +81,16 @@ export async function GET(request: NextRequest) {
     `;
     params.push(limit, offset);
 
-    const result = await query(queryStr, params);
+    const result = await query<{
+      id: string; booking_reference: string; client_name: string; client_phone: string;
+      client_email: string | null; pickup_location: string; dropoff_location: string;
+      pickup_datetime: Date; dropoff_datetime: Date | null; passengers: number; luggage: number;
+      price: string; status: string; payment_status: string; vehicle_id: string | null;
+      vehicle_name: string | null; vehicle_plate: string | null; driver_id: string | null;
+      driver_name: string | null; driver_phone: string | null; route_id: string | null;
+      route_name: string | null; special_requests: string | null; rating: number | null;
+      created_at: Date; updated_at: Date;
+    }>(queryStr, params);
 
     const transfers = result.rows.map(row => ({
       id: row.id,

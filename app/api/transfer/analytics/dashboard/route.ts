@@ -26,8 +26,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Overview stats
-    const overviewResult = await query(
-      `SELECT 
+    const overviewResult = await query<{ active_vehicles: string; active_drivers: string; total_transfers: string; completed_transfers: string; pending_transfers: string; active_transfers: string; total_revenue: string; revenue_30d: string; avg_rating: string }>(
+      `SELECT
         COUNT(DISTINCT v.id) FILTER (WHERE v.status = 'active') as active_vehicles,
         COUNT(DISTINCT d.id) FILTER (WHERE d.status = 'active') as active_drivers,
         COUNT(DISTINCT t.id) as total_transfers,
@@ -48,14 +48,14 @@ export async function GET(request: NextRequest) {
     const overview = overviewResult.rows[0];
 
     // Daily trends (last 30 days)
-    const trendsResult = await query(
-      `SELECT 
+    const trendsResult = await query<{ date: Date; bookings: string; completed: string; revenue: string }>(
+      `SELECT
         DATE(t.created_at) as date,
         COUNT(*) as bookings,
         COUNT(*) FILTER (WHERE t.status = 'completed') as completed,
         COALESCE(SUM(t.price) FILTER (WHERE t.payment_status = 'paid'), 0) as revenue
       FROM transfers t
-      WHERE t.operator_id = $1 
+      WHERE t.operator_id = $1
       AND t.created_at >= CURRENT_DATE - INTERVAL '30 days'
       GROUP BY DATE(t.created_at)
       ORDER BY date ASC`,
@@ -70,8 +70,8 @@ export async function GET(request: NextRequest) {
     }));
 
     // Top routes
-    const topRoutesResult = await query(
-      `SELECT 
+    const topRoutesResult = await query<{ id: string; name: string; from_location: string; to_location: string; transfers_count: string; revenue: string; avg_rating: string }>(
+      `SELECT
         r.id,
         r.name,
         r.from_location,
@@ -99,8 +99,8 @@ export async function GET(request: NextRequest) {
     }));
 
     // Top drivers
-    const topDriversResult = await query(
-      `SELECT 
+    const topDriversResult = await query<{ id: string; name: string; rating: string; completed_trips: number; avg_driver_rating: string; transfers_count: string }>(
+      `SELECT
         d.id,
         d.first_name || ' ' || d.last_name as name,
         d.rating,
@@ -123,12 +123,12 @@ export async function GET(request: NextRequest) {
       rating: parseFloat(row.rating),
       completedTrips: row.completed_trips,
       avgDriverRating: parseFloat(row.avg_driver_rating),
-      transfersCount: parseInt(row.transfers_count || 0)
+      transfersCount: parseInt(row.transfers_count || '0')
     }));
 
     // Recent transfers
-    const recentResult = await query(
-      `SELECT 
+    const recentResult = await query<{ id: string; booking_reference: string; client_name: string; pickup_location: string; dropoff_location: string; pickup_datetime: Date; status: string; price: string; driver_name: string }>(
+      `SELECT
         t.id,
         t.booking_reference,
         t.client_name,
@@ -159,8 +159,8 @@ export async function GET(request: NextRequest) {
     }));
 
     // Vehicle utilization
-    const utilizationResult = await query(
-      `SELECT 
+    const utilizationResult = await query<{ id: string; name: string; license_plate: string; completed_trips: string; active_trips: string; revenue: string }>(
+      `SELECT
         v.id,
         v.name,
         v.license_plate,
@@ -179,8 +179,8 @@ export async function GET(request: NextRequest) {
       id: row.id,
       name: row.name,
       licensePlate: row.license_plate,
-      completedTrips: parseInt(row.completed_trips || 0),
-      activeTrips: parseInt(row.active_trips || 0),
+      completedTrips: parseInt(row.completed_trips || '0'),
+      activeTrips: parseInt(row.active_trips || '0'),
       revenue: parseFloat(row.revenue)
     }));
 
@@ -188,15 +188,15 @@ export async function GET(request: NextRequest) {
       success: true,
       data: {
         overview: {
-          activeVehicles: parseInt(overview.active_vehicles || 0),
-          activeDrivers: parseInt(overview.active_drivers || 0),
-          totalTransfers: parseInt(overview.total_transfers || 0),
-          completedTransfers: parseInt(overview.completed_transfers || 0),
-          pendingTransfers: parseInt(overview.pending_transfers || 0),
-          activeTransfers: parseInt(overview.active_transfers || 0),
-          totalRevenue: parseFloat(overview.total_revenue || 0),
-          revenue30d: parseFloat(overview.revenue_30d || 0),
-          avgRating: parseFloat(overview.avg_rating || 0)
+          activeVehicles: parseInt(overview.active_vehicles || '0'),
+          activeDrivers: parseInt(overview.active_drivers || '0'),
+          totalTransfers: parseInt(overview.total_transfers || '0'),
+          completedTransfers: parseInt(overview.completed_transfers || '0'),
+          pendingTransfers: parseInt(overview.pending_transfers || '0'),
+          activeTransfers: parseInt(overview.active_transfers || '0'),
+          totalRevenue: parseFloat(overview.total_revenue || '0'),
+          revenue30d: parseFloat(overview.revenue_30d || '0'),
+          avgRating: parseFloat(overview.avg_rating || '0')
         },
         dailyTrends,
         topRoutes,

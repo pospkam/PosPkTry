@@ -74,7 +74,16 @@ export async function GET(
     }
 
     // Get vehicle with stats
-    const result = await query(
+    const result = await query<{
+      id: string; name: string; type: string; license_plate: string; capacity: number;
+      category: string; status: string; location: string | null; features: unknown;
+      images: unknown; year: number | null; color: string | null; mileage: number | null;
+      fuel_type: string | null; vin: string | null; purchase_date: Date | null;
+      last_service_date: Date | null; next_service_date: Date | null; notes: string | null;
+      driver_id: string | null; driver_name: string | null;
+      completed_trips: string; cancelled_trips: string; total_revenue: string;
+      created_at: Date; updated_at: Date;
+    }>(
       `SELECT 
         v.*,
         d.id as driver_id,
@@ -252,7 +261,7 @@ export async function DELETE(
     }
 
     // Check for active transfers
-    const activeTransfers = await query(
+    const activeTransfers = await query<{ count: string }>(
       `SELECT COUNT(*) as count FROM transfers 
        WHERE vehicle_id = $1 AND status IN ('pending', 'assigned', 'confirmed', 'in_progress')`,
       [id]

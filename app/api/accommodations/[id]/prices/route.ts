@@ -39,7 +39,7 @@ export async function GET(
       FROM accommodations
       WHERE id = $1
     `;
-    const accommResult = await query(accommQuery, [id]);
+    const accommResult = await query<{ id: string; name: string; price_per_night: string; is_active: boolean }>(accommQuery, [id]);
 
     if (accommResult.rows.length === 0) {
       return NextResponse.json({
@@ -81,7 +81,7 @@ export async function GET(
       ORDER BY ds.date
     `;
 
-    const pricesResult = await query(pricesQuery, [
+    const pricesResult = await query<{ date: string; price: string; price_type: 'regular' | 'peak' | 'discount' }>(pricesQuery, [
       startDate,
       endDate,
       id,

@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
 
     const result = await query(queryText, params);
 
-    const countResult = await query(
+    const countResult = await query<{ count: string }>(
       `SELECT COUNT(*) FROM souvenirs WHERE partner_id = $1`,
       [partnerId]
     );

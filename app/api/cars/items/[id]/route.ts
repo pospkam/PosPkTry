@@ -137,7 +137,7 @@ export async function PUT(
 
     // If quantity changed, update available_quantity
     if (body.quantity !== undefined) {
-      const currentResult = await query(
+      const currentResult = await query<{ quantity: number; available_quantity: number }>(
         `SELECT quantity, available_quantity FROM cars WHERE id = $1`,
         [carId]
       );
@@ -195,9 +195,9 @@ export async function DELETE(
     }
 
     // Check for active rentals
-    const activeCheck = await query(
-      `SELECT COUNT(*) as count 
-       FROM car_rentals 
+    const activeCheck = await query<{ count: string }>(
+      `SELECT COUNT(*) as count
+       FROM car_rentals
        WHERE car_id = $1 AND status IN ('active', 'confirmed')`,
       [carId]
     );

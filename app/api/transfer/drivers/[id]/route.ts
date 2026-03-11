@@ -51,8 +51,19 @@ export async function GET(
       } as ApiResponse<null>, { status: 404 });
     }
 
-    const result = await query(
-      `SELECT 
+    const result = await query<{
+      id: string; first_name: string; last_name: string; phone: string; email: string;
+      date_of_birth: Date | null; license_number: string; license_category: string;
+      license_issue_date: Date | null; license_expiry: Date | null; experience: number;
+      languages: string[] | null; rating: string | null; avg_driver_rating: string;
+      total_trips: number; completed_trips: string; cancelled_trips: string;
+      total_revenue: string; status: string; vehicle_id: string | null;
+      vehicle_name: string | null; vehicle_plate: string | null;
+      emergency_contact: Record<string, unknown> | null; address: string | null;
+      city: string | null; hire_date: Date | null; notes: string | null;
+      created_at: Date; updated_at: Date;
+    }>(
+      `SELECT
         d.*,
         v.name as vehicle_name,
         v.license_plate as vehicle_plate,
@@ -237,8 +248,8 @@ export async function DELETE(
     }
 
     // Check for active transfers
-    const activeTransfers = await query(
-      `SELECT COUNT(*) as count FROM transfers 
+    const activeTransfers = await query<{ count: string }>(
+      `SELECT COUNT(*) as count FROM transfers
        WHERE driver_id = $1 AND status IN ('pending', 'assigned', 'confirmed', 'in_progress')`,
       [id]
     );

@@ -29,8 +29,22 @@ export async function GET(
       } as ApiResponse<null>, { status: 404 });
     }
 
-    const result = await query(
-      `SELECT 
+    const result = await query<{
+      id: string; booking_reference: string; client_name: string; client_phone: string;
+      client_email: string | null; user_id: string | null; user_email: string | null;
+      pickup_location: string; dropoff_location: string; pickup_datetime: Date;
+      dropoff_datetime: Date | null; actual_pickup_time: Date | null; actual_dropoff_time: Date | null;
+      passengers: number; luggage: number; price: string; status: string;
+      payment_status: string; payment_method: string | null;
+      vehicle_id: string | null; vehicle_name: string | null; vehicle_plate: string | null; vehicle_type: string | null;
+      driver_id: string | null; driver_name: string | null; driver_phone: string | null; driver_rating: string | null;
+      route_id: string | null; route_name: string | null; route_distance: string | null; route_duration: unknown;
+      special_requests: string | null; notes: string | null; actual_distance: unknown; actual_duration: unknown;
+      rating: number | null; feedback: string | null; cancellation_reason: string | null;
+      cancelled_by: string | null; cancelled_at: Date | null; assigned_at: Date | null;
+      confirmed_at: Date | null; completed_at: Date | null; created_at: Date; updated_at: Date;
+    }>(
+      `SELECT
         t.*,
         v.name as vehicle_name,
         v.license_plate as vehicle_plate,
@@ -91,12 +105,12 @@ export async function GET(
           id: transfer.driver_id,
           name: transfer.driver_name,
           phone: transfer.driver_phone,
-          rating: parseFloat(transfer.driver_rating)
+          rating: parseFloat(transfer.driver_rating ?? '0')
         } : null,
         route: transfer.route_id ? {
           id: transfer.route_id,
           name: transfer.route_name,
-          distance: parseFloat(transfer.route_distance),
+          distance: parseFloat(transfer.route_distance ?? '0'),
           estimatedDuration: transfer.route_duration
         } : null,
         specialRequests: transfer.special_requests,
@@ -160,7 +174,7 @@ export async function PUT(
     };
 
     if (body.status) {
-      const currentResult = await query(
+      const currentResult = await query<{ status: string }>(
         'SELECT status FROM transfers WHERE id = $1',
         [id]
       );

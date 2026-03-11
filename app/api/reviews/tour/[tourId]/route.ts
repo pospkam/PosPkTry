@@ -79,12 +79,20 @@ export async function GET(
       countParams.push(parseInt(rating));
     }
 
-    const countResult = await query(countQuery, countParams);
+    const countResult = await query<{ count: string }>(countQuery, countParams);
     const totalCount = parseInt(countResult.rows[0].count);
 
     // Get rating summary
-    const summaryResult = await query(
-      `SELECT 
+    const summaryResult = await query<{
+      total_reviews: string;
+      avg_rating: string | null;
+      five_star: string;
+      four_star: string;
+      three_star: string;
+      two_star: string;
+      one_star: string;
+    }>(
+      `SELECT
         COUNT(*) as total_reviews,
         AVG(rating) as avg_rating,
         COUNT(*) FILTER (WHERE rating = 5) as five_star,

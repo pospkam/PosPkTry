@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
-import { TransferOperatorDashboard, TransferOperatorStats } from '@/types/transfer';
+import { TransferOperatorDashboard, TransferOperatorStats, TransferBooking, TransferVehicle, TransferNotification } from '@/types/transfer';
 import { config } from '@/lib/config';
 import { requireTransferOperator } from '@/lib/auth/middleware';
 import { getTransferPartnerId } from '@/lib/auth/transfer-helpers';
@@ -46,7 +46,11 @@ export async function GET(request: NextRequest) {
         WHERE o.id = $1
       `;
 
-      const statsResult = await query(statsQuery, [operatorId]);
+      const statsResult = await query<{
+        total_vehicles: string; total_drivers: string; total_routes: string; total_schedules: string;
+        total_bookings: string; total_revenue: string; avg_driver_rating: string;
+        pending_bookings: string; active_bookings: string; completed_bookings: string; cancelled_bookings: string;
+      }>(statsQuery, [operatorId]);
       const stats = statsResult.rows[0];
 
       // Получаем активные бронирования
@@ -62,7 +66,13 @@ export async function GET(request: NextRequest) {
         LIMIT 20
       `;
 
-      const activeBookingsResult = await query(activeBookingsQuery, [operatorId]);
+      const activeBookingsResult = await query<{
+        id: string; user_id: string; operator_id: string; route_id: string; vehicle_id: string;
+        driver_id: string; schedule_id: string; booking_date: string; departure_time: string;
+        passengers_count: number; total_price: string; status: string; special_requests: string | null;
+        contact_phone: string; contact_email: string; confirmation_code: string;
+        created_at: Date; updated_at: Date;
+      }>(activeBookingsQuery, [operatorId]);
 
       // Получаем транспортные средства
       const vehiclesQuery = `
@@ -77,7 +87,11 @@ export async function GET(request: NextRequest) {
         ORDER BY v.created_at DESC
       `;
 
-      const vehiclesResult = await query(vehiclesQuery, [operatorId]);
+      const vehiclesResult = await query<{
+        id: string; operator_id: string; vehicle_type: string; make: string; model: string;
+        year: number; capacity: number; features: string[]; license_plate: string;
+        is_active: boolean; created_at: Date; updated_at: Date;
+      }>(vehiclesQuery, [operatorId]);
 
       // Получаем водителей
       const driversQuery = `
@@ -93,7 +107,11 @@ export async function GET(request: NextRequest) {
         ORDER BY d.created_at DESC
       `;
 
-      const driversResult = await query(driversQuery, [operatorId]);
+      const driversResult = await query<{
+        id: string; operator_id: string; name: string; phone: string; email: string | null;
+        license_number: string; languages: string[]; avg_rating: string; total_trips: number;
+        is_active: boolean; created_at: Date; updated_at: Date;
+      }>(driversQuery, [operatorId]);
 
       // Получаем маршруты
       const routesQuery = `
@@ -108,7 +126,12 @@ export async function GET(request: NextRequest) {
         ORDER BY r.created_at DESC
       `;
 
-      const routesResult = await query(routesQuery, []);
+      const routesResult = await query<{
+        id: string; name: string; from_location: string; to_location: string;
+        from_coordinates: { x: string; y: string }; to_coordinates: { x: string; y: string };
+        distance_km: string; estimated_duration_minutes: number; is_active: boolean;
+        created_at: Date; updated_at: Date;
+      }>(routesQuery, []);
 
       // Получаем недавние бронирования
       const recentBookingsQuery = `
@@ -123,7 +146,13 @@ export async function GET(request: NextRequest) {
         LIMIT 10
       `;
 
-      const recentBookingsResult = await query(recentBookingsQuery, [operatorId]);
+      const recentBookingsResult = await query<{
+        id: string; user_id: string; operator_id: string; route_id: string; vehicle_id: string;
+        driver_id: string; schedule_id: string; booking_date: string; departure_time: string;
+        passengers_count: number; total_price: string; status: string; special_requests: string | null;
+        contact_phone: string; contact_email: string; confirmation_code: string;
+        created_at: Date; updated_at: Date;
+      }>(recentBookingsQuery, [operatorId]);
 
       // Получаем предстоящие рейсы
       const upcomingSchedulesQuery = `
@@ -138,7 +167,11 @@ export async function GET(request: NextRequest) {
         LIMIT 10
       `;
 
-      const upcomingSchedulesResult = await query(upcomingSchedulesQuery, [operatorId]);
+      const upcomingSchedulesResult = await query<{
+        id: string; route_id: string; vehicle_id: string; driver_id: string;
+        departure_time: string; arrival_time: string; price_per_person: string;
+        available_seats: number; is_active: boolean; created_at: Date; updated_at: Date;
+      }>(upcomingSchedulesQuery, [operatorId]);
 
       // Получаем уведомления
       const notificationsQuery = `
@@ -150,7 +183,11 @@ export async function GET(request: NextRequest) {
         LIMIT 20
       `;
 
-      const notificationsResult = await query(notificationsQuery, [operatorId]);
+      const notificationsResult = await query<{
+        id: string; booking_id: string; user_id: string; operator_id: string;
+        type: string; title: string; message: string; is_read: boolean;
+        sent_at: Date | null; created_at: Date;
+      }>(notificationsQuery, [operatorId]);
 
       // Формируем статистику
       const operatorStats: TransferOperatorStats = {
@@ -185,8 +222,8 @@ export async function GET(request: NextRequest) {
           departureTime: row.departure_time,
           passengersCount: row.passengers_count,
           totalPrice: parseFloat(row.total_price),
-          status: row.status,
-          specialRequests: row.special_requests,
+          status: row.status as TransferBooking['status'],
+          specialRequests: row.special_requests ?? undefined,
           contactPhone: row.contact_phone,
           contactEmail: row.contact_email,
           confirmationCode: row.confirmation_code,
@@ -196,7 +233,7 @@ export async function GET(request: NextRequest) {
         vehicles: vehiclesResult.rows.map(row => ({
           id: row.id,
           operatorId: row.operator_id,
-          vehicleType: row.vehicle_type,
+          vehicleType: row.vehicle_type as TransferVehicle['vehicleType'],
           make: row.make,
           model: row.model,
           year: row.year,
@@ -212,7 +249,7 @@ export async function GET(request: NextRequest) {
           operatorId: row.operator_id,
           name: row.name,
           phone: row.phone,
-          email: row.email,
+          email: row.email ?? undefined,
           licenseNumber: row.license_number,
           languages: row.languages || [],
           rating: parseFloat(row.avg_rating) || 0,
@@ -252,8 +289,8 @@ export async function GET(request: NextRequest) {
           departureTime: row.departure_time,
           passengersCount: row.passengers_count,
           totalPrice: parseFloat(row.total_price),
-          status: row.status,
-          specialRequests: row.special_requests,
+          status: row.status as TransferBooking['status'],
+          specialRequests: row.special_requests ?? undefined,
           contactPhone: row.contact_phone,
           contactEmail: row.contact_email,
           confirmationCode: row.confirmation_code,
@@ -278,7 +315,7 @@ export async function GET(request: NextRequest) {
           bookingId: row.booking_id,
           userId: row.user_id,
           operatorId: row.operator_id,
-          type: row.type,
+          type: row.type as TransferNotification['type'],
           title: row.title,
           message: row.message,
           isRead: row.is_read,

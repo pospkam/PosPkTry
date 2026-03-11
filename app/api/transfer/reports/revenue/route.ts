@@ -30,7 +30,10 @@ export async function GET(request: NextRequest) {
     const dateTo = searchParams.get('dateTo') || new Date().toISOString().split('T')[0];
 
     // Revenue by date
-    const timelineResult = await query(
+    const timelineResult = await query<{
+      date: Date; transfers_count: string; total_revenue: string | null;
+      paid_revenue: string | null; pending_revenue: string | null;
+    }>(
       `SELECT 
         DATE(t.completed_at) as date,
         COUNT(*) as transfers_count,
@@ -50,13 +53,16 @@ export async function GET(request: NextRequest) {
     const timeline = timelineResult.rows.map(row => ({
       date: row.date,
       transfersCount: parseInt(row.transfers_count),
-      totalRevenue: parseFloat(row.total_revenue || 0),
-      paidRevenue: parseFloat(row.paid_revenue || 0),
-      pendingRevenue: parseFloat(row.pending_revenue || 0)
+      totalRevenue: parseFloat(row.total_revenue ?? '0'),
+      paidRevenue: parseFloat(row.paid_revenue ?? '0'),
+      pendingRevenue: parseFloat(row.pending_revenue ?? '0')
     }));
 
     // Revenue by route
-    const byRouteResult = await query(
+    const byRouteResult = await query<{
+      id: string | null; name: string | null; from_location: string | null; to_location: string | null;
+      transfers_count: string; total_revenue: string | null; paid_revenue: string | null; avg_price: string | null;
+    }>(
       `SELECT 
         r.id,
         r.name,
@@ -82,13 +88,16 @@ export async function GET(request: NextRequest) {
       fromLocation: row.from_location,
       toLocation: row.to_location,
       transfersCount: parseInt(row.transfers_count),
-      totalRevenue: parseFloat(row.total_revenue || 0),
-      paidRevenue: parseFloat(row.paid_revenue || 0),
-      avgPrice: parseFloat(row.avg_price || 0)
+      totalRevenue: parseFloat(row.total_revenue ?? '0'),
+      paidRevenue: parseFloat(row.paid_revenue ?? '0'),
+      avgPrice: parseFloat(row.avg_price ?? '0')
     }));
 
     // Revenue by driver
-    const byDriverResult = await query(
+    const byDriverResult = await query<{
+      id: string; name: string; transfers_count: string;
+      total_revenue: string | null; paid_revenue: string | null;
+    }>(
       `SELECT 
         d.id,
         d.first_name || ' ' || d.last_name as name,
@@ -109,12 +118,15 @@ export async function GET(request: NextRequest) {
       driverId: row.id,
       driverName: row.name,
       transfersCount: parseInt(row.transfers_count),
-      totalRevenue: parseFloat(row.total_revenue || 0),
-      paidRevenue: parseFloat(row.paid_revenue || 0)
+      totalRevenue: parseFloat(row.total_revenue ?? '0'),
+      paidRevenue: parseFloat(row.paid_revenue ?? '0')
     }));
 
     // Revenue by vehicle
-    const byVehicleResult = await query(
+    const byVehicleResult = await query<{
+      id: string; name: string; license_plate: string; transfers_count: string;
+      total_revenue: string | null; paid_revenue: string | null;
+    }>(
       `SELECT 
         v.id,
         v.name,
@@ -137,12 +149,14 @@ export async function GET(request: NextRequest) {
       vehicleName: row.name,
       licensePlate: row.license_plate,
       transfersCount: parseInt(row.transfers_count),
-      totalRevenue: parseFloat(row.total_revenue || 0),
-      paidRevenue: parseFloat(row.paid_revenue || 0)
+      totalRevenue: parseFloat(row.total_revenue ?? '0'),
+      paidRevenue: parseFloat(row.paid_revenue ?? '0')
     }));
 
     // Payment status distribution
-    const paymentStatsResult = await query(
+    const paymentStatsResult = await query<{
+      payment_status: string; count: string; total: string | null;
+    }>(
       `SELECT 
         payment_status,
         COUNT(*) as count,
@@ -158,11 +172,14 @@ export async function GET(request: NextRequest) {
     const paymentDistribution = paymentStatsResult.rows.map(row => ({
       status: row.payment_status,
       count: parseInt(row.count),
-      total: parseFloat(row.total || 0)
+      total: parseFloat(row.total ?? '0')
     }));
 
     // Summary
-    const summaryResult = await query(
+    const summaryResult = await query<{
+      total_transfers: string; completed_transfers: string; total_revenue: string | null;
+      paid_revenue: string | null; pending_revenue: string | null; avg_transfer_price: string | null;
+    }>(
       `SELECT 
         COUNT(*) as total_transfers,
         COUNT(*) FILTER (WHERE status = 'completed') as completed_transfers,
@@ -184,12 +201,12 @@ export async function GET(request: NextRequest) {
       data: {
         period: { from: dateFrom, to: dateTo },
         summary: {
-          totalTransfers: parseInt(summary.total_transfers || 0),
-          completedTransfers: parseInt(summary.completed_transfers || 0),
-          totalRevenue: parseFloat(summary.total_revenue || 0),
-          paidRevenue: parseFloat(summary.paid_revenue || 0),
-          pendingRevenue: parseFloat(summary.pending_revenue || 0),
-          avgTransferPrice: parseFloat(summary.avg_transfer_price || 0)
+          totalTransfers: parseInt(summary.total_transfers ?? '0'),
+          completedTransfers: parseInt(summary.completed_transfers ?? '0'),
+          totalRevenue: parseFloat(summary.total_revenue ?? '0'),
+          paidRevenue: parseFloat(summary.paid_revenue ?? '0'),
+          pendingRevenue: parseFloat(summary.pending_revenue ?? '0'),
+          avgTransferPrice: parseFloat(summary.avg_transfer_price ?? '0')
         },
         timeline,
         byRoute,

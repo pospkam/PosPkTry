@@ -197,20 +197,6 @@
     "sentry.client.config.ts",
     "sentry.edge.config.ts",
     "sentry.server.config.ts",
-    "timeweb-mcp-server.ts",
-    "app/api/accommodations/**/*",
-    "app/api/agent/**/*",
-    "app/api/cars/**/*",
-    "app/api/chat/**/*",
-    "app/api/eco-points/**/*",
-    "app/api/reviews/**/*",
-    "app/api/souvenirs/**/*",
-    "app/api/stay-provider/**/*",
-    "app/api/transfer/**/*",
-    "app/api/transfer-operator/**/*",
-    "app/api/transfers/**/*",
-    "app/api/trip/**/*",
-    "app/api/weather/**/*",
-    "app/api/webhooks/**/*"
+    "timeweb-mcp-server.ts"
   ]
 }

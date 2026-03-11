@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
-import { ApiResponse, AgentDashboardData } from '@/types';
+import { ApiResponse, AgentDashboardData, AgentClient } from '@/types';
 import { requireAgent } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
@@ -39,12 +39,19 @@ export async function GET(request: NextRequest) {
         AND c.created_at >= NOW() - INTERVAL '${period} days'
     `;
 
-    const metricsResult = await query(metricsQuery, [agentId]);
+    const metricsResult = await query<{
+      total_clients: string; active_clients: string; total_bookings: string;
+      pending_bookings: string; confirmed_bookings: string; completed_bookings: string;
+      cancelled_bookings: string; total_revenue: string; avg_booking_value: string;
+      total_commission: string; pending_commission: string;
+    }>(metricsQuery, [agentId]);
     const metrics = metricsResult.rows[0];
 
     // Расчет конверсии (отношение завершенных бронирований к общему числу)
-    const conversionRate = metrics.total_bookings > 0
-      ? (metrics.completed_bookings / metrics.total_bookings) * 100
+    const totalBookingsNum = parseInt(metrics.total_bookings);
+    const completedBookingsNum = parseInt(metrics.completed_bookings);
+    const conversionRate = totalBookingsNum > 0
+      ? (completedBookingsNum / totalBookingsNum) * 100
       : 0;
 
     // Недавние бронирования (последние 10)
@@ -77,7 +84,14 @@ export async function GET(request: NextRequest) {
       LIMIT 10
     `;
 
-    const recentBookingsResult = await query(recentBookingsQuery, [agentId]);
+    const recentBookingsResult = await query<{
+      id: string; client_id: string; client_name: string; client_email: string;
+      tour_id: string; tour_name: string; tour_operator: string;
+      booking_date: unknown; tour_date: unknown; guests_count: unknown;
+      total_price: string; agent_commission: string; commission_status: unknown;
+      status: unknown; payment_status: unknown; notes: unknown;
+      created_at: unknown; updated_at: unknown;
+    }>(recentBookingsQuery, [agentId]);
 
     // Недавние клиенты (последние 5)
     const recentClientsQuery = `
@@ -102,7 +116,12 @@ export async function GET(request: NextRequest) {
       LIMIT 5
     `;
 
-    const recentClientsResult = await query(recentClientsQuery, [agentId]);
+    const recentClientsResult = await query<{
+      id: string; name: string; email: string; phone: string | null; company: string | null;
+      total_bookings: string; total_spent: string; last_booking: unknown;
+      status: string; notes: string | null; tags: string | null; source: string;
+      created_at: unknown; updated_at: unknown;
+    }>(recentClientsQuery, [agentId]);
 
     // Предстоящие бронирования (на ближайшие 7 дней)
     const upcomingBookingsQuery = `
@@ -124,7 +143,10 @@ export async function GET(request: NextRequest) {
       LIMIT 10
     `;
 
-    const upcomingBookingsResult = await query(upcomingBookingsQuery, [agentId]);
+    const upcomingBookingsResult = await query<{
+      id: string; client_name: string; tour_name: string; tour_date: unknown;
+      total_price: string; agent_commission: string;
+    }>(upcomingBookingsQuery, [agentId]);
 
     // График доходов за последние 30 дней
     const revenueChartQuery = `
@@ -140,7 +162,9 @@ export async function GET(request: NextRequest) {
       ORDER BY date DESC
     `;
 
-    const revenueChartResult = await query(revenueChartQuery, [agentId]);
+    const revenueChartResult = await query<{
+      date: unknown; revenue: string; commission: string;
+    }>(revenueChartQuery, [agentId]);
 
     // График комиссий за последние 30 дней
     const commissionChartQuery = `
@@ -155,7 +179,9 @@ export async function GET(request: NextRequest) {
       ORDER BY date DESC
     `;
 
-    const commissionChartResult = await query(commissionChartQuery, [agentId]);
+    const commissionChartResult = await query<{
+      date: unknown; amount: string;
+    }>(commissionChartQuery, [agentId]);
 
     // Ожидающие выплаты комиссий
     const pendingCommissionsQuery = `
@@ -177,7 +203,11 @@ export async function GET(request: NextRequest) {
       LIMIT 5
     `;
 
-    const pendingCommissionsResult = await query(pendingCommissionsQuery, [agentId]);
+    const pendingCommissionsResult = await query<{
+      id: string; agent_id: string; agent_name: string; total_amount: string;
+      status: string; payment_method: unknown; payout_date: unknown;
+      created_at: unknown; updated_at: unknown;
+    }>(pendingCommissionsQuery, [agentId]);
 
     const dashboardData: AgentDashboardData = {
       metrics: {
@@ -219,17 +249,17 @@ export async function GET(request: NextRequest) {
         id: row.id,
         name: row.name,
         email: row.email,
-        phone: row.phone,
-        company: row.company,
+        phone: row.phone ?? undefined,
+        company: row.company ?? undefined,
         totalBookings: parseInt(row.total_bookings),
         totalSpent: parseFloat(row.total_spent),
         lastBooking: row.last_booking,
-        status: row.status,
-        notes: row.notes,
+        status: row.status as AgentClient['status'],
+        notes: row.notes ?? undefined,
         tags: JSON.parse(row.tags || '[]'),
         source: row.source,
-        createdAt: row.created_at,
-        updatedAt: row.updated_at
+        createdAt: row.created_at as Date | undefined,
+        updatedAt: row.updated_at as Date | undefined
       })),
       upcomingBookings: upcomingBookingsResult.rows.map(row => ({
         id: row.id,

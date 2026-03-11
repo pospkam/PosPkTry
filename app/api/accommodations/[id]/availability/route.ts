@@ -42,7 +42,7 @@ export async function GET(
       FROM accommodations
       WHERE id = $1
     `;
-    const accommResult = await query(accommQuery, [id]);
+    const accommResult = await query<{ id: string; name: string; total_rooms: string; price_per_night: string; is_active: boolean }>(accommQuery, [id]);
 
     if (accommResult.rows.length === 0) {
       return NextResponse.json({
@@ -95,7 +95,7 @@ export async function GET(
       ORDER BY ds.date
     `;
 
-    const availResult = await query(availabilityQuery, [
+    const availResult = await query<{ date: string; booked: string; total_rooms: number; rooms_left: string; status: string }>(availabilityQuery, [
       checkIn,
       checkOut,
       id,

@@ -16,9 +16,9 @@ export async function GET(request: NextRequest) {
     const userId = authResult.userId;
 
     // Get operator's partner info
-    const partnerResult = await query(
-      `SELECT id, name, rating, review_count FROM partners 
-       WHERE category = 'transfer' 
+    const partnerResult = await query<{ id: string; name: string; rating: string; review_count: string }>(
+      `SELECT id, name, rating, review_count FROM partners
+       WHERE category = 'transfer'
        AND contact->>'email' = (SELECT email FROM users WHERE id = $1)
        LIMIT 1`,
       [userId]

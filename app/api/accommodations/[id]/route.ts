@@ -17,7 +17,15 @@ export async function GET(
     const { id } = await params;
     
     // Получаем основную информацию
-    const accommodationResult = await query(
+    const accommodationResult = await query<{
+      id: string; name: string; type: string; description: string; short_description: string;
+      address: string; coordinates: unknown; location_zone: string; star_rating: unknown;
+      total_rooms: unknown; check_in_time: unknown; check_out_time: unknown;
+      price_per_night_from: string; price_per_night_to: string | null; currency: string;
+      amenities: unknown; languages: unknown; rating: string | null; review_count: unknown;
+      is_verified: boolean; partner_name: string | null; partner_email: string | null;
+      partner_phone: string | null; images: unknown; created_at: unknown; updated_at: unknown;
+    }>(
       `SELECT 
         a.*,
         p.name as partner_name,
@@ -49,7 +57,11 @@ export async function GET(
     const accommodation = accommodationResult.rows[0];
     
     // Получаем список номеров
-    const roomsResult = await query(
+    const roomsResult = await query<{
+      id: string; name: string; room_type: string; description: string | null; size_sqm: unknown;
+      max_guests: unknown; beds_configuration: unknown; amenities: unknown; view: unknown;
+      available_rooms: unknown; price_per_night: string; is_active: boolean;
+    }>(
       `SELECT 
         id,
         name,
@@ -70,7 +82,10 @@ export async function GET(
     );
     
     // Получаем отзывы (последние 10)
-    const reviewsResult = await query(
+    const reviewsResult = await query<{
+      id: string; rating: string; comment: unknown; created_at: unknown;
+      user_name: string | null; user_email: string | null;
+    }>(
       `SELECT 
         r.id,
         r.rating,
@@ -87,7 +102,11 @@ export async function GET(
     );
     
     // Получаем похожие объекты (того же типа, в той же зоне)
-    const similarResult = await query(
+    const similarResult = await query<{
+      id: string; name: string; type: string; short_description: string; address: string;
+      price_per_night_from: string; currency: string; rating: string | null; review_count: unknown;
+      images: Array<{ url: string }> | null;
+    }>(
       `SELECT 
         a.id,
         a.name,

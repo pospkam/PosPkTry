@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
       WHERE agent_id = $1 AND status = 'pending'
     `;
 
-    const commissionsResult = await query(pendingCommissionsQuery, [agentId]);
+    const commissionsResult = await query<{ id: string; amount: string }>(pendingCommissionsQuery, [agentId]);
 
     if (commissionsResult.rows.length === 0) {
       return NextResponse.json(
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       RETURNING id, created_at
     `;
 
-    const payoutResult = await query(createPayoutQuery, [
+    const payoutResult = await query<{ id: string; created_at: unknown }>(createPayoutQuery, [
       payoutId,
       agentId,
       totalAmount,

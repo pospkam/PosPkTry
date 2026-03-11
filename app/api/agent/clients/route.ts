@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
 
     let whereClause = 'WHERE agent_id = $1';
-    const params = [agentId];
+    const params: (string | number)[] = [agentId];
 
     if (status !== 'all') {
       whereClause += ` AND status = $${params.length + 1}`;
@@ -56,23 +56,28 @@ export async function GET(request: NextRequest) {
     `;
 
     params.push(limit);
-    const clientsResult = await query(clientsQuery, params);
+    const clientsResult = await query<{
+      id: string; name: string; email: string; phone: string | null; company: string | null;
+      total_bookings: string; total_spent: string; last_booking: unknown;
+      status: string; notes: string | null; tags: string | null; source: string;
+      created_at: unknown; updated_at: unknown;
+    }>(clientsQuery, params);
 
     const clients: AgentClient[] = clientsResult.rows.map(row => ({
       id: row.id,
       name: row.name,
       email: row.email,
-      phone: row.phone,
-      company: row.company,
+      phone: row.phone ?? undefined,
+      company: row.company ?? undefined,
       totalBookings: parseInt(row.total_bookings),
       totalSpent: parseFloat(row.total_spent),
       lastBooking: row.last_booking,
-      status: row.status,
-      notes: row.notes,
+      status: row.status as AgentClient['status'],
+      notes: row.notes ?? undefined,
       tags: JSON.parse(row.tags || '[]'),
       source: row.source,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at
+      createdAt: row.created_at as Date | undefined,
+      updatedAt: row.updated_at as Date | undefined
     }));
 
     return NextResponse.json({

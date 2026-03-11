@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
 
     let whereClause = 'WHERE b.agent_id = $1';
-    const params = [agentId];
+    const params: (string | number)[] = [agentId];
 
     if (status !== 'all') {
       whereClause += ` AND b.status = $${params.length + 1}`;
@@ -63,7 +63,14 @@ export async function GET(request: NextRequest) {
     `;
 
     params.push(limit);
-    const bookingsResult = await query(bookingsQuery, params);
+    const bookingsResult = await query<{
+      id: string; client_id: string; client_name: string; client_email: string;
+      tour_id: string; tour_name: string; tour_operator: string;
+      booking_date: unknown; tour_date: unknown; guests_count: unknown;
+      total_price: string; agent_commission: string; commission_status: unknown;
+      status: unknown; payment_status: unknown; notes: unknown;
+      created_at: unknown; updated_at: unknown;
+    }>(bookingsQuery, params);
 
     const bookings: AgentBooking[] = bookingsResult.rows.map(row => ({
       id: row.id,
@@ -131,7 +138,7 @@ export async function POST(request: NextRequest) {
       WHERE t.id = $1
     `;
 
-    const tourResult = await query(tourQuery, [tourId]);
+    const tourResult = await query<{ price: string; commission_rate: string }>(tourQuery, [tourId]);
     if (tourResult.rows.length === 0) {
       return NextResponse.json({
         success: false,
@@ -145,7 +152,7 @@ export async function POST(request: NextRequest) {
     // TODO: Добавить проверку доступности
 
     // Рассчитываем стоимость
-    let totalPrice = tour.price * guestsCount;
+    let totalPrice = parseFloat(tour.price) * guestsCount;
     let discountAmount = 0;
 
     // Применяем ваучер если указан
@@ -157,17 +164,17 @@ export async function POST(request: NextRequest) {
           AND (usage_limit IS NULL OR used_count < usage_limit)
       `;
 
-      const voucherResult = await query(voucherQuery, [voucherCode]);
+      const voucherResult = await query<{ id: string; discountType: string; discountValue: string; maxDiscount: string | null }>(voucherQuery, [voucherCode]);
       if (voucherResult.rows.length > 0) {
         const voucher = voucherResult.rows[0];
         if (voucher.discountType === 'percentage') {
-          discountAmount = totalPrice * (voucher.discountValue / 100);
+          discountAmount = totalPrice * (parseFloat(voucher.discountValue) / 100);
         } else {
-          discountAmount = Math.min(voucher.discountValue, totalPrice);
+          discountAmount = Math.min(parseFloat(voucher.discountValue), totalPrice);
         }
 
-        if (voucher.maxDiscount && discountAmount > voucher.maxDiscount) {
-          discountAmount = voucher.maxDiscount;
+        if (voucher.maxDiscount && discountAmount > parseFloat(voucher.maxDiscount)) {
+          discountAmount = parseFloat(voucher.maxDiscount);
         }
 
         totalPrice -= discountAmount;
@@ -192,7 +199,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Рассчитываем комиссию агента (стандартная ставка 10%, или индивидуальная из настроек)
-    const agentCommissionRate = tour.commission_rate || 0.10; // Из настроек партнера или 10%
+    const agentCommissionRate = parseFloat(tour.commission_rate) || 0.10; // Из настроек партнера или 10%
     const agentCommission = totalPrice * agentCommissionRate;
 
     // Создаем бронирование
@@ -224,7 +231,7 @@ export async function POST(request: NextRequest) {
       RETURNING id, created_at
     `;
 
-    const bookingResult = await query(createBookingQuery, [
+    const bookingResult = await query<{ id: string; created_at: unknown }>(createBookingQuery, [
       bookingId,
       agentId,
       clientId,

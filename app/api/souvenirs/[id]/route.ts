@@ -12,7 +12,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const result = await query(
+    const result = await query<{ id: string; price: string; images: string | null; tags: string | null; [key: string]: unknown }>(
       'SELECT * FROM souvenirs WHERE id = $1',
       [id]
     );

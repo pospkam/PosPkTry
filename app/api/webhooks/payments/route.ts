@@ -7,6 +7,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { paymentService } from '@/lib/database'
 import crypto from 'crypto'
 
+type PaymentServiceWithWebhook = {
+  handleWebhook(gateway: string, data: Record<string, unknown>): Promise<void>;
+};
+const ps = paymentService as unknown as PaymentServiceWithWebhook;
+
 /**
  * POST /api/webhooks/payments
  * Handle webhooks from payment gateways (Yandex Kassa, Stripe, etc.)
@@ -42,7 +47,7 @@ export async function POST(request: NextRequest) {
         break
       default:
         // Generic handling
-        await paymentService.handleWebhook(gateway as any, body)
+        await ps.handleWebhook(gateway, body)
     }
 
     // Return 200 OK to acknowledge receipt
@@ -80,7 +85,7 @@ async function handleYandexKassaWebhook(body: any, signature: string | null): Pr
   const transactionId = body.label || body.operation_id
 
   if (body.notification_type === 'payment.succeeded') {
-    await paymentService.handleWebhook('yandex_kassa', {
+    await ps.handleWebhook('yandex_kassa', {
       transaction_id: transactionId,
       status: 'success',
       amount: body.amount,
@@ -88,7 +93,7 @@ async function handleYandexKassaWebhook(body: any, signature: string | null): Pr
       datetime: body.datetime,
     })
   } else if (body.notification_type === 'payment.failed') {
-    await paymentService.handleWebhook('yandex_kassa', {
+    await ps.handleWebhook('yandex_kassa', {
       transaction_id: transactionId,
       status: 'failed',
       amount: body.amount,
@@ -124,7 +129,7 @@ async function handleStripeWebhook(body: any, signature: string | null): Promise
   if (!charge) return
 
   if (eventType === 'charge.succeeded') {
-    await paymentService.handleWebhook('stripe', {
+    await ps.handleWebhook('stripe', {
       transaction_id: charge.id,
       status: 'completed',
       amount: charge.amount / 100, // Convert from cents
@@ -132,7 +137,7 @@ async function handleStripeWebhook(body: any, signature: string | null): Promise
       booking_id: charge.metadata?.booking_id,
     })
   } else if (eventType === 'charge.failed') {
-    await paymentService.handleWebhook('stripe', {
+    await ps.handleWebhook('stripe', {
       transaction_id: charge.id,
       status: 'failed',
       amount: charge.amount / 100,
@@ -171,7 +176,7 @@ async function handleSberbankWebhook(body: any, signature: string | null): Promi
     status = 'refunded'
   }
 
-  await paymentService.handleWebhook('sberbank', {
+  await ps.handleWebhook('sberbank', {
     transaction_id: order.orderNumber,
     status,
     amount: order.orderAmount / 100, // Convert from kopecks

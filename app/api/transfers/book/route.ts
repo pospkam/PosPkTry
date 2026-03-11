@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { TransferBookingRequest, TransferBookingResponse } from '@/types/transfer';
+import { TransferBooking } from '@/types/transfer';
 import { config } from '@/lib/config';
 import { smsService } from '@/lib/notifications/sms';
 import { emailService } from '@/lib/notifications/email';
@@ -199,11 +200,11 @@ export async function POST(request: NextRequest) {
       const response: TransferBookingResponse = {
         success: true,
         data: {
-          bookingId: mockBooking.id,
-          status: mockBooking.status,
-          confirmationCode: mockBooking.confirmationCode,
-          totalPrice: mockBooking.totalPrice,
-          bookingDetails: mockBooking
+          bookingId: mockBooking.id as string,
+          status: mockBooking.status as string,
+          confirmationCode: mockBooking.confirmationCode as string,
+          totalPrice: mockBooking.totalPrice as number,
+          bookingDetails: mockBooking as unknown as TransferBooking
         }
       };
 
@@ -239,44 +240,44 @@ async function sendRealBookingNotifications(
   try {
     // Отправка SMS уведомления пассажиру
     if (contactInfo.phone) {
-      await smsService.sendBookingConfirmation(contactInfo.phone, {
-        confirmationCode: booking.confirmation_code,
-        route: `${schedule.from_location} → ${schedule.to_location}`,
-        date: schedule.departure_date,
-        time: schedule.departure_time,
-        driverName: driver.name,
-        driverPhone: driver.phone
+      await smsService.sendBookingConfirmation(contactInfo.phone as string, {
+        confirmationCode: booking.confirmation_code as string,
+        route: `${String(schedule.from_location)} → ${String(schedule.to_location)}`,
+        date: schedule.departure_date as string,
+        time: schedule.departure_time as string,
+        driverName: driver?.name as string ?? '',
+        driverPhone: driver?.phone as string ?? ''
       });
     }
 
     // Отправка Email уведомления пассажиру
     if (contactInfo.email) {
-      await emailService.sendBookingConfirmation(contactInfo.email, {
-        id: booking.id,
-        confirmationCode: booking.confirmation_code,
-        route: `${schedule.from_location} → ${schedule.to_location}`,
-        date: schedule.departure_date,
-        time: schedule.departure_time,
-        passengers: booking.passengers_count,
-        price: parseFloat(booking.total_price),
-        driverName: driver.name,
-        driverPhone: driver.phone,
-        meetingPoint: schedule.meeting_point || 'Уточните у водителя'
+      await emailService.sendBookingConfirmation(contactInfo.email as string, {
+        id: booking.id as string,
+        confirmationCode: booking.confirmation_code as string,
+        route: `${String(schedule.from_location)} → ${String(schedule.to_location)}`,
+        date: schedule.departure_date as string,
+        time: schedule.departure_time as string,
+        passengers: booking.passengers_count as number,
+        price: parseFloat(booking.total_price as string),
+        driverName: driver?.name as string ?? '',
+        driverPhone: driver?.phone as string ?? '',
+        meetingPoint: schedule.meeting_point as string ?? 'Уточните у водителя'
       });
     }
 
     // Отправка Telegram уведомления водителю
-    if (driver.telegram_chat_id) {
-      await telegramService.sendDriverNotification(driver.telegram_chat_id, {
-        id: booking.id,
-        route: `${schedule.from_location} → ${schedule.to_location}`,
-        date: schedule.departure_date,
-        time: schedule.departure_time,
-        passengers: booking.passengers_count,
-        price: parseFloat(booking.total_price),
-        passengerName: contactInfo.name || 'Не указано',
-        passengerPhone: contactInfo.phone,
-        meetingPoint: schedule.meeting_point || 'Уточните у пассажира'
+    if (driver && driver.telegram_chat_id) {
+      await telegramService.sendDriverNotification(driver.telegram_chat_id as string, {
+        id: booking.id as string,
+        route: `${String(schedule.from_location)} → ${String(schedule.to_location)}`,
+        date: schedule.departure_date as string,
+        time: schedule.departure_time as string,
+        passengers: booking.passengers_count as number,
+        price: parseFloat(booking.total_price as string),
+        passengerName: contactInfo.name as string ?? 'Не указано',
+        passengerPhone: contactInfo.phone as string,
+        meetingPoint: schedule.meeting_point as string ?? 'Уточните у пассажира'
       });
     }
 

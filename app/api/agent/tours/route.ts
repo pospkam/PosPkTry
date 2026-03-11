@@ -15,7 +15,12 @@ export async function GET(request: NextRequest) {
     if (userOrResponse instanceof NextResponse) return userOrResponse;
 
     // Get all active tours with commission info
-    const result = await query(
+    const result = await query<{
+      id: string; name: string; description: string; difficulty: string;
+      duration: string; price: string; max_group_size: number; min_group_size: number;
+      rating: string; review_count: number; is_active: boolean;
+      operator_name: string; operator_rating: string; images: (string | null)[];
+    }>(
       `SELECT 
         t.id,
         t.name,

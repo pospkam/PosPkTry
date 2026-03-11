@@ -16,8 +16,8 @@ export async function GET(request: NextRequest) {
     const userId = authResult.userId;
 
     // Get operator's partner ID
-    const partnerResult = await query(
-      `SELECT id FROM partners WHERE category = 'transfer' 
+    const partnerResult = await query<{ id: string }>(
+      `SELECT id FROM partners WHERE category = 'transfer'
        AND contact->>'email' = (SELECT email FROM users WHERE id = $1)
        LIMIT 1`,
       [userId]
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
 
     // Note: Transfer bookings need a separate table in database
     // For now, return mock data structure
-    const bookings = [];
+    const bookings: Record<string, unknown>[] = [];
 
     return NextResponse.json({
       success: true,

@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
         RETURNING *
       `;
 
-      const updateResult = await query(updateBookingQuery, [newStatus, body.bookingId]);
+      const updateResult = await query<{ id: string; status: string }>(updateBookingQuery, [newStatus, body.bookingId]);
       const updatedBooking = updateResult.rows[0];
 
       // Если бронирование отклонено, возвращаем места в расписание

@@ -113,7 +113,14 @@ export async function GET(request: NextRequest) {
     `;
     params.push(limit, offset);
 
-    const result = await query(queryStr, params);
+    const result = await query<{
+      id: string; first_name: string; last_name: string; phone: string; email: string | null;
+      license_number: string; license_expiry: Date | null; experience: number;
+      languages: string[] | null; rating: string | null; total_trips: number;
+      completed_trips: string; active_trips: string; status: string;
+      vehicle_id: string | null; vehicle_name: string | null; vehicle_plate: string | null;
+      hire_date: Date | null; created_at: Date; updated_at: Date;
+    }>(queryStr, params);
 
     const drivers = result.rows.map(row => ({
       id: row.id,

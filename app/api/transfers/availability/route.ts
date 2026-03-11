@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
     `;
 
     const queryParams = vehicleType ? [from, to, vehicleType] : [from, to];
-    const transfersResult = await query(transfersQuery, queryParams);
+    const transfersResult = await query<{ id: string; vehicle_type: string; capacity: number; price: string; available_times: unknown }>(transfersQuery, queryParams);
 
     if (transfersResult.rows.length === 0) {
       return NextResponse.json({
@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
           AND status IN ('confirmed', 'pending')
       `;
 
-      const bookingsResult = await query(bookingsQuery, [date, time, from, to]);
+      const bookingsResult = await query<{ booked_count: string }>(bookingsQuery, [date, time, from, to]);
       const bookedCount = parseInt(bookingsResult.rows[0].booked_count) || 0;
 
       // Предположим, у нас 5 машин на каждый слот
@@ -89,7 +89,7 @@ export async function GET(request: NextRequest) {
         time,
         available,
         vehiclesLeft,
-        price: parseFloat(transfersResult.rows[0]?.price || 0)
+        price: parseFloat(transfersResult.rows[0]?.price ?? '0')
       });
     }
 

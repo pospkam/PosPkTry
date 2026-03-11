@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
 
     let whereClause = 'WHERE created_by = $1';
-    const params = [agentId];
+    const params: (string | number)[] = [agentId];
 
     if (status === 'active') {
       whereClause += ' AND is_active = true AND valid_to >= NOW()';
@@ -57,13 +57,20 @@ export async function GET(request: NextRequest) {
     `;
 
     params.push(limit);
-    const vouchersResult = await query(vouchersQuery, params);
+    const vouchersResult = await query<{
+      id: string; code: string; name: string; description: string | null;
+      discount_type: string; discount_value: string; min_purchase: string | null;
+      max_discount: string | null; valid_from: unknown; valid_to: unknown;
+      usage_limit: string | null; used_count: string; is_active: boolean;
+      applicable_tours: string | null; applicable_clients: string | null;
+      created_by: string; created_at: unknown; updated_at: unknown;
+    }>(vouchersQuery, params);
 
     const vouchers: Voucher[] = vouchersResult.rows.map(row => ({
       id: row.id,
       code: row.code,
       name: row.name,
-      description: row.description,
+      description: row.description ?? undefined,
       discountType: row.discount_type,
       discountValue: parseFloat(row.discount_value),
       minPurchase: row.min_purchase ? parseFloat(row.min_purchase) : undefined,

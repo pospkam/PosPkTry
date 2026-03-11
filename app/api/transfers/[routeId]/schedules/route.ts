@@ -38,7 +38,7 @@ export async function GET(
       FROM routes
       WHERE id = $1
     `;
-    const routeResult = await query(routeQuery, [routeId]);
+    const routeResult = await query<{ id: string; from_location: string; to_location: string; base_price: string; is_active: boolean }>(routeQuery, [routeId]);
 
     if (routeResult.rows.length === 0) {
       return NextResponse.json({
@@ -73,7 +73,7 @@ export async function GET(
       ORDER BY ts.departure_time
     `;
 
-    const schedulesResult = await query(schedulesQuery, [date, routeId]);
+    const schedulesResult = await query<{ id: string; time: string; total_seats: string; price: string; booked_seats: string }>(schedulesQuery, [date, routeId]);
 
     const schedules: TimeSlot[] = schedulesResult.rows.map(row => ({
       time: row.time.substring(0, 5), // Преобразуем HH:MM:SS в HH:MM

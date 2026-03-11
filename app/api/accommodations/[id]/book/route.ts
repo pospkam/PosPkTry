@@ -101,7 +101,10 @@ export async function POST(
     }
     
     // Проверяем существование объекта и номера
-    const roomCheckResult = await query(
+    const roomCheckResult = await query<{
+      id: string; accommodation_id: string; name: string; max_guests: number;
+      available_rooms: number; price_per_night: string; accommodation_name: string; is_active: boolean;
+    }>(
       `SELECT 
         r.id,
         r.accommodation_id,
@@ -139,7 +142,7 @@ export async function POST(
     }
     
     // Проверяем доступность на выбранные даты
-    const availabilityCheck = await query(
+    const availabilityCheck = await query<{ bookings: string }>(
       `SELECT COUNT(*) as bookings
        FROM accommodation_bookings
        WHERE room_id = $1
@@ -169,7 +172,7 @@ export async function POST(
     const totalPrice = pricePerNight * nights;
     
     // Создаём бронирование
-    const bookingResult = await query(
+    const bookingResult = await query<{ id: string }>(
       `INSERT INTO accommodation_bookings (
         user_id,
         accommodation_id,
@@ -213,7 +216,7 @@ export async function POST(
     const bookingId = bookingResult.rows[0].id;
 
     // Получаем email пользователя из базы
-    const userResult = await query('SELECT email, name FROM users WHERE id = $1', [userId]);
+    const userResult = await query<{ email: string; name: string }>('SELECT email, name FROM users WHERE id = $1', [userId]);
     const userEmail = userResult.rows[0]?.email ?? null;
     const userName = userResult.rows[0]?.name || 'Гость';
 

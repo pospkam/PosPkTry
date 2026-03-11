@@ -204,7 +204,7 @@ async function getOpenWeatherMapData(lat: number, lng: number, location?: string
   const current = data.current;
 
   // Почасовой прогноз
-  const hourlyForecast: WeatherHourly[] = data.hourly.slice(0, 24).map((hour: Record<string, unknown>) => ({
+  const hourlyForecast: WeatherHourly[] = data.hourly.slice(0, 24).map((hour: { dt: number; temp: number; feels_like: number; weather: Array<{ main: string }>; rain?: Record<string, number>; snow?: Record<string, number>; wind_speed: number; humidity: number }) => ({
     time: new Date(hour.dt * 1000).toISOString(),
     temperature: Math.round(hour.temp),
     feelsLike: Math.round(hour.feels_like),
@@ -215,7 +215,7 @@ async function getOpenWeatherMapData(lat: number, lng: number, location?: string
   }));
 
   // Дневной прогноз
-  const forecast: WeatherForecast[] = data.daily.slice(0, 7).map((day: Record<string, unknown>) => ({
+  const forecast: WeatherForecast[] = data.daily.slice(0, 7).map((day: { dt: number; temp: { min: number; max: number }; weather: Array<{ main: string; description: string }>; rain?: number; snow?: number; pop?: number; wind_speed: number; humidity: number; sunrise: number; sunset: number }) => ({
     date: new Date(day.dt * 1000),
     temperature: {
       min: Math.round(day.temp.min),
@@ -232,7 +232,7 @@ async function getOpenWeatherMapData(lat: number, lng: number, location?: string
   }));
 
   // Алерты
-  const alerts: WeatherAlert[] = (data.alerts || []).map((alert: Record<string, unknown>) => ({
+  const alerts: WeatherAlert[] = (data.alerts || []).map((alert: { event: string; description: string; start: number; end: number }) => ({
     event: alert.event,
     severity: 'moderate' as const,
     urgency: 'expected' as const,
@@ -292,7 +292,7 @@ async function getWeatherApiData(lat: number, lng: number, location?: string): P
   const location_data = data.location;
 
   // Почасовой прогноз (24 часа)
-  const hourlyForecast: WeatherHourly[] = data.forecast.forecastday[0].hour.map((hour: Record<string, unknown>) => ({
+  const hourlyForecast: WeatherHourly[] = data.forecast.forecastday[0].hour.map((hour: { time: string; temp_c: number; feelslike_c: number; condition: { code: number }; precip_mm: number; wind_kph: number; humidity: number }) => ({
     time: hour.time,
     temperature: Math.round(hour.temp_c),
     feelsLike: Math.round(hour.feelslike_c),
@@ -303,7 +303,7 @@ async function getWeatherApiData(lat: number, lng: number, location?: string): P
   }));
 
   // Дневной прогноз
-  const forecast: WeatherForecast[] = data.forecast.forecastday.map((day: Record<string, unknown>) => ({
+  const forecast: WeatherForecast[] = data.forecast.forecastday.map((day: { date: string; day: { mintemp_c: number; maxtemp_c: number; condition: { code: number; text: string }; totalprecip_mm: number; daily_chance_of_rain?: number; daily_chance_of_snow?: number; maxwind_kph: number; avghumidity: number }; astro: { sunrise: string; sunset: string } }) => ({
     date: new Date(day.date),
     temperature: {
       min: Math.round(day.day.mintemp_c),
@@ -320,7 +320,7 @@ async function getWeatherApiData(lat: number, lng: number, location?: string): P
   }));
 
   // Алерты
-  const alerts: WeatherAlert[] | undefined = data.alerts?.alert?.map((alert: Record<string, unknown>) => ({
+  const alerts: WeatherAlert[] | undefined = data.alerts?.alert?.map((alert: { event: string; severity?: string; urgency?: string; desc: string; effective: number; expires: number }) => ({
     event: alert.event,
     severity: alert.severity?.toLowerCase() || 'moderate',
     urgency: alert.urgency?.toLowerCase() || 'expected',
@@ -401,7 +401,7 @@ async function getYandexWeather(lat: number, lng: number, location?: string): Pr
     cloudCover: fact.cloudness * 12.5, // Yandex дает 0-8, конвертируем в %
     sunrise: data.forecast?.parts?.[0]?.sunrise,
     sunset: data.forecast?.parts?.[0]?.sunset,
-    forecast: data.forecasts?.map((day: Record<string, unknown>) => ({
+    forecast: data.forecasts?.map((day: { date: string; parts: { day: { temp_min: number; temp_max: number; condition: string; prec_mm: number; prec_prob: number; wind_speed: number; humidity: number } } }) => ({
       date: new Date(day.date),
       temperature: {
         min: day.parts.day.temp_min,

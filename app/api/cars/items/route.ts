@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
     const result = await query(queryText, params);
 
     // Get total count
-    const countResult = await query(
+    const countResult = await query<{ count: string }>(
       `SELECT COUNT(*) FROM cars WHERE partner_id = $1`,
       [partnerId]
     );

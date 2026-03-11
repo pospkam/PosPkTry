@@ -112,7 +112,13 @@ export async function GET(request: NextRequest) {
     `;
     params.push(limit, offset);
 
-    const result = await query(queryStr, params);
+    const result = await query<{
+      id: string; name: string; type: string; license_plate: string; capacity: number;
+      category: string; status: string; location: string | null; features: unknown;
+      images: unknown; year: number | null; color: string | null; mileage: number | null;
+      fuel_type: string | null; last_service_date: Date | null; next_service_date: Date | null;
+      completed_trips: string; active_trips: string; created_at: Date; updated_at: Date;
+    }>(queryStr, params);
 
     // Get total count
     let countQuery = `SELECT COUNT(*) FROM vehicles WHERE operator_id = $1`;
@@ -130,7 +136,7 @@ export async function GET(request: NextRequest) {
       countParams.push(type);
     }
 
-    const countResult = await query(countQuery, countParams);
+    const countResult = await query<{ count: string }>(countQuery, countParams);
     const totalCount = Number.parseInt(countResult.rows[0]?.count ?? '0', 10);
 
     const vehicles = result.rows.map(row => ({

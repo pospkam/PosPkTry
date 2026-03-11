@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
       [userId, limit, offset]
     );
 
-    const countResult = await query(
+    const countResult = await query<{ total: string }>(
       `SELECT COUNT(*) as total FROM reviews WHERE user_id = $1`,
       [userId]
     );

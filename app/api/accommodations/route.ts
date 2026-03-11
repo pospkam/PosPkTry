@@ -159,7 +159,7 @@ export async function GET(request: NextRequest) {
     const orderBy = ACCOMMODATIONS_SORT_SQL[sort];
 
     // Получаем общее количество
-    const countResult = await query(
+    const countResult = await query<{ total: string }>(
       `SELECT COUNT(*) as total FROM accommodations ${whereClause}`,
       params
     );
@@ -201,7 +201,13 @@ export async function GET(request: NextRequest) {
     
     params.push(limit, offset);
     
-    const result = await query(accommodationsQuery, params);
+    const result = await query<{
+      id: string; name: string; type: string; description: string | null; short_description: string | null;
+      address: string; coordinates: unknown; location_zone: string; star_rating: unknown;
+      price_per_night_from: string; price_per_night_to: string | null; currency: string;
+      amenities: unknown; rating: string | null; review_count: unknown;
+      created_at: unknown; partner_name: string | null; images: unknown;
+    }>(accommodationsQuery, params);
     
     // Форматируем данные
     const accommodations = result.rows.map(row => ({

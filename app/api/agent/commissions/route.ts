@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
 
     let whereClause = 'WHERE agent_id = $1';
-    const params = [agentId];
+    const params: (string | number)[] = [agentId];
 
     if (status !== 'all') {
       whereClause += ` AND status = $${params.length + 1}`;
@@ -47,7 +47,12 @@ export async function GET(request: NextRequest) {
     `;
 
     params.push(limit);
-    const commissionsResult = await query(commissionsQuery, params);
+    const commissionsResult = await query<{
+      id: string; agent_id: string; booking_id: string;
+      amount: string; rate: string; status: string;
+      paid_at: unknown; payout_reference: unknown; notes: unknown;
+      created_at: unknown; updated_at: unknown;
+    }>(commissionsQuery, params);
 
     const commissions: AgentCommission[] = commissionsResult.rows.map(row => ({
       id: row.id,
@@ -73,7 +78,7 @@ export async function GET(request: NextRequest) {
       WHERE agent_id = $1
     `;
 
-    const statsResult = await query(statsQuery, [agentId]);
+    const statsResult = await query<{ total_paid: string; total_pending: string; total_all: string }>(statsQuery, [agentId]);
     const stats = statsResult.rows[0];
 
     return NextResponse.json({

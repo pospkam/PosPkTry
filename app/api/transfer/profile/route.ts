@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     const userId = authResult.userId;
 
     // Get user details
-    const userResult = await query(
+    const userResult = await query<{ id: string; email: string; name: string; created_at: Date }>(
       'SELECT id, email, name, created_at FROM users WHERE id = $1',
       [userId]
     );
@@ -93,7 +93,7 @@ export async function PUT(request: NextRequest) {
     // Get or create partner
     let partner = await getTransferPartnerByUserId(userId);
     if (!partner) {
-      const userResult = await query('SELECT name, email FROM users WHERE id = $1', [userId]);
+      const userResult = await query<{ name: string; email: string }>('SELECT name, email FROM users WHERE id = $1', [userId]);
       const user = userResult.rows[0];
       await ensureTransferPartnerExists(userId, user.name, user.email);
       partner = await getTransferPartnerByUserId(userId);
@@ -120,10 +120,10 @@ export async function PUT(request: NextRequest) {
     }
 
     if (updateFields.length > 0) {
-      updateValues.push(partner.id);
-      
+      updateValues.push(partner!.id);
+
       await query(
-        `UPDATE partners 
+        `UPDATE partners
          SET ${updateFields.join(', ')}
          WHERE id = $${paramIndex}`,
         updateValues

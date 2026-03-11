@@ -43,7 +43,15 @@ export async function GET(request: NextRequest) {
       FROM accommodation_stats, booking_stats
     `;
 
-    const metricsResult = await query(metricsQuery, [providerId]);
+    const metricsResult = await query<{
+      total_accommodations: string;
+      active_accommodations: string;
+      total_rooms: string;
+      total_bookings: string;
+      confirmed_bookings: string;
+      total_revenue: string;
+      monthly_revenue: string;
+    }>(metricsQuery, [providerId]);
     const metrics = metricsResult.rows[0] || {};
 
     // Последние бронирования

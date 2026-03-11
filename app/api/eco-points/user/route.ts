@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
       WHERE user_id = $1
     `;
 
-    const userResult = await query(userQuery, [userId]);
+    const userResult = await query<{ user_id: string; total_points: number; level: number; last_activity: string }>(userQuery, [userId]);
 
     if (userResult.rows.length === 0) {
       // Создаем нового пользователя
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
         RETURNING *
       `;
       
-      const newUserResult = await query(createUserQuery, [userId]);
+      const newUserResult = await query<{ user_id: string; total_points: number; level: number; last_activity: string }>(createUserQuery, [userId]);
       const userData = newUserResult.rows[0];
 
       return NextResponse.json({
@@ -96,7 +96,7 @@ export async function GET(request: NextRequest) {
       ORDER BY ua.unlocked_at DESC
     `;
 
-    const achievementsResult = await query(achievementsQuery, [userId]);
+    const achievementsResult = await query<{ id: string; name: string; description: string; points: number; unlocked_at: string }>(achievementsQuery, [userId]);
 
     const achievements: EcoAchievement[] = achievementsResult.rows.map(row => ({
       id: row.id,
@@ -219,7 +219,7 @@ export async function POST(request: NextRequest) {
       WHERE user_id = $1
     `;
 
-    const userResult = await query(userQuery, [userId]);
+    const userResult = await query<{ user_id: string; total_points: number; level: number; last_activity: string }>(userQuery, [userId]);
     const userData = userResult.rows[0];
 
     // Получаем новые достижения
@@ -237,7 +237,7 @@ export async function POST(request: NextRequest) {
       ORDER BY ua.unlocked_at DESC
     `;
 
-    const achievementsResult = await query(newAchievementsQuery, [userId]);
+    const achievementsResult = await query<{ id: string; name: string; description: string; points: number; unlocked_at: string }>(newAchievementsQuery, [userId]);
     const newAchievements = achievementsResult.rows.map(row => ({
       id: row.id,
       name: row.name,

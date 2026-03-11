@@ -176,8 +176,8 @@ export async function DELETE(
     }
 
     // Check for active orders
-    const activeCheck = await query(
-      `SELECT COUNT(*) as count 
+    const activeCheck = await query<{ count: string }>(
+      `SELECT COUNT(*) as count
        FROM souvenir_order_items soi
        JOIN souvenir_orders so ON soi.order_id = so.id
        WHERE soi.souvenir_id = $1 AND so.status IN ('pending', 'confirmed', 'processing', 'packed', 'shipped')`,

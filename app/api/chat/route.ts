@@ -83,7 +83,18 @@ export async function GET(request: NextRequest) {
       queryParams = [userId];
     }
 
-    const result = await query(chatQuery, queryParams);
+    const result = await query<{
+      session_id: string;
+      user_id: string;
+      context: ChatSession['context'] | null;
+      session_created_at: string;
+      session_updated_at: string;
+      message_id: string | null;
+      role: 'user' | 'assistant';
+      content: string;
+      timestamp: string;
+      metadata: Record<string, unknown> | null;
+    }>(chatQuery, queryParams);
 
     if (result.rows.length === 0) {
       if (sessionId) {
@@ -202,7 +213,7 @@ export async function POST(request: NextRequest) {
         RETURNING id
       `;
       
-      const sessionResult = await query(createSessionQuery, [userId, JSON.stringify(context || {})]);
+      const sessionResult = await query<{ id: string }>(createSessionQuery, [userId, JSON.stringify(context || {})]);
       currentSessionId = sessionResult.rows[0].id;
     }
 
@@ -213,7 +224,7 @@ export async function POST(request: NextRequest) {
       RETURNING id, timestamp
     `;
 
-    const messageResult = await query(saveMessageQuery, [
+    const messageResult = await query<{ id: string; timestamp: string }>(saveMessageQuery, [
       currentSessionId,
       'user',
       message,
@@ -232,7 +243,7 @@ export async function POST(request: NextRequest) {
     const aiResponse = await getAIResponse(message, context);
 
     // Сохраняем ответ AI
-    const aiMessageResult = await query(saveMessageQuery, [
+    const aiMessageResult = await query<{ id: string; timestamp: string }>(saveMessageQuery, [
       currentSessionId,
       'assistant',
       aiResponse.content,

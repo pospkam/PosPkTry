@@ -46,7 +46,15 @@ export async function GET(request: NextRequest) {
 
     queryStr += ` ORDER BY transfers_count DESC, average_rating DESC`;
 
-    const result = await query(queryStr, params);
+    const result = await query<{
+      id: string; name: string; from_location: string; to_location: string;
+      from_coordinates: unknown; to_coordinates: unknown; distance: string;
+      estimated_duration: unknown; base_price: string; price_per_km: string | null;
+      price_per_hour: string | null; popular: boolean; transfers_count: number;
+      average_rating: string; is_active: boolean; weather_dependent: boolean;
+      stops: unknown; description: string | null; notes: string | null;
+      created_at: Date; updated_at: Date;
+    }>(queryStr, params);
 
     const routes = result.rows.map(row => ({
       id: row.id,
