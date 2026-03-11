@@ -8,7 +8,7 @@
  *   2. Класс `dark` на <html> -- для Tailwind darkMode: 'class'
  *
  * Сохраняется в localStorage['kh-theme'].
- * Дефолт: dark.
+ * Дефолт: light.
  */
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
@@ -22,9 +22,9 @@ interface ThemeContextValue {
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
-  theme: 'dark',
+  theme: 'light',
   toggleTheme: () => {},
-  isDark: true,
+  isDark: false,
 });
 
 function applyThemeToDOM(theme: Theme): void {
@@ -38,12 +38,12 @@ function applyThemeToDOM(theme: Theme): void {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('dark');
+  const [theme, setTheme] = useState<Theme>('light');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('kh-theme') as Theme | null;
-    const initial: Theme = saved ?? 'dark';
+    const initial: Theme = saved ?? 'light';
     setTheme(initial);
     applyThemeToDOM(initial);
     setMounted(true);

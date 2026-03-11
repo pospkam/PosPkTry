@@ -19,7 +19,7 @@ export default function Logo({ size = 36, className }: LogoProps) {
       {/* Main mountain range */}
       <polyline
         points="2,30 12,12 19,22 28,4 37,22 43,14 54,30"
-        stroke="white"
+        stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -31,7 +31,7 @@ export default function Logo({ size = 36, className }: LogoProps) {
         y1="30"
         x2="56"
         y2="30"
-        stroke="white"
+        stroke="currentColor"
         strokeWidth="0.5"
         opacity="0.3"
       />

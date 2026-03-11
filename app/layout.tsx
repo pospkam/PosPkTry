@@ -1,12 +1,5 @@
 import { Metadata } from 'next';
-import { Syne, Outfit } from 'next/font/google';
-import { Playfair_Display, Inter } from 'next/font/google';
-
-const syne = Syne({
-  subsets: ['latin'],
-  weight: ['400', '600', '700'],
-  display: 'swap'
-});
+import { Outfit, Playfair_Display } from 'next/font/google';
 
 const playfairDisplay = Playfair_Display({
   subsets: ['latin', 'cyrillic'],
@@ -15,16 +8,9 @@ const playfairDisplay = Playfair_Display({
   variable: '--font-playfair',
 });
 
-const inter = Inter({
-  subsets: ['latin', 'cyrillic'],
-  weight: ['400', '500', '600'],
-  display: 'swap',
-  variable: '--font-inter',
-});
-
 const outfit = Outfit({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
+  weight: ['300', '400', '500', '600', '700'],
   display: 'swap',
   variable: '--font-outfit',
 });
@@ -112,7 +98,7 @@ import { Toaster } from 'react-hot-toast'
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ru" suppressHydrationWarning>
-      <body className={`min-h-screen transition-colors duration-300 ${syne.className} ${playfairDisplay.variable} ${inter.variable} ${outfit.variable}`}>
+      <body className={`min-h-screen transition-colors duration-300 ${outfit.className} ${playfairDisplay.variable} ${outfit.variable}`}>
         <ThemeProvider>
           <AuthProvider>
             <RoleProvider>

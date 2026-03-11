@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     description: 'Рыбалка на чавычу, восхождения на вулканы, термальные источники. Бронирование онлайн с гарантией безопасности.',
     images: [
       {
-        url: '/images/dark.jpg',
+        url: '/images/hero/hero-light.jpg',
         width: 1200,
         height: 630,
         alt: 'Камчатка — туры и приключения',

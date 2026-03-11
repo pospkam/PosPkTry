@@ -11,11 +11,11 @@ export default function SOSButton() {
       aria-label="SOS — экстренная помощь"
       style={{
         position: 'fixed',
-        bottom: '88px',
-        right: '20px',
+        bottom: '76px',
+        right: '16px',
         zIndex: 90,
-        width: '48px',
-        height: '48px',
+        width: '42px',
+        height: '42px',
         borderRadius: '50%',
         display: 'flex',
         alignItems: 'center',
