@@ -52,37 +52,8 @@ const CATEGORY_IMAGES: Record<string, string> = {
   eco:                  '/images/gallery/aurora.jpg',
 };
 
-// Slug-маппинг категорий homepage → agent_route_knowledge
-const SLUG_TO_ARK: Record<string, string> = {
-  vulkani:              'vulkani',
-  rybalka:              'rybalka',
-  termalnye_istochniki: 'termalnye_istochniki',
-  geyzery:              'geyzery',
-  snegohod:             'snegohod',
-  dzhip:                'dzhip',
-  medvedi:              'medvedi',
-  trekking:             'trekking',
-  morskie_progulki:     'morskie_progulki',
-  vertoletnye_tury:     'vertoletnye_tury',
-  lakes:                'lakes',
-  mountains:            'mountains',
-  rivers:               'rivers',
-  eco:                  'eco',
-  // Canonical → slug
-  volcanoes:            'vulkani',
-  fishing:              'rybalka',
-  thermal:              'termalnye_istochniki',
-  geysers:              'geyzery',
-  snowmobile:           'snegohod',
-  jeep:                 'dzhip',
-  wildlife:             'medvedi',
-  adventure:            'trekking',
-  helicopter:           'vertoletnye_tury',
-};
-
-// GET /api/tours — Каталог маршрутов и туров
-// Основной источник: agent_route_knowledge (259 маршрутов)
-// Дополнительно: tours таблица (опциональная)
+// GET /api/tours — Каталог туров (из таблицы tours)
+// Источник: tours таблица + информация об операторе из partners
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -91,106 +62,98 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 50);
     const offset = Math.max(parseInt(searchParams.get('offset') || '0'), 0);
 
-    const whereConditions: string[] = [];
+    const whereConditions: string[] = ['t.is_active = true'];
     const queryParams: (string | number)[] = [];
     let paramIndex = 1;
 
     if (category) {
-      const arkCategory = SLUG_TO_ARK[category] ?? category;
-      whereConditions.push(`ark.category = $${paramIndex}`);
-      queryParams.push(arkCategory);
+      whereConditions.push(`t.category = $${paramIndex}`);
+      queryParams.push(category);
       paramIndex++;
     }
 
     if (search) {
       whereConditions.push(
-        `(ark.title ILIKE $${paramIndex} OR ark.search_text ILIKE $${paramIndex})`
+        `(t.name ILIKE $${paramIndex} OR t.description ILIKE $${paramIndex})`
       );
       queryParams.push(`%${search}%`);
       paramIndex++;
     }
 
-    const whereClause = whereConditions.length > 0
-      ? `WHERE ${whereConditions.join(' AND ')}`
-      : '';
+    const whereClause = `WHERE ${whereConditions.join(' AND ')}`;
 
-    // Основной запрос: agent_route_knowledge
-    const routesQuery = `
+    // Основной запрос: tours таблица
+    const toursQuery = `
       SELECT
-        ark.id,
-        ark.title,
-        ark.description,
-        ark.category,
-        ark.lat,
-        ark.lng,
-        ark.source_url,
-        ark.source_name,
-        ark.payload,
-        ark.created_at,
-        ark.updated_at
-      FROM agent_route_knowledge ark
+        t.id,
+        t.name,
+        t.description,
+        t.short_description,
+        t.category,
+        t.difficulty,
+        t.duration,
+        t.price,
+        t.currency,
+        t.season,
+        t.coordinates,
+        t.requirements,
+        t.included,
+        t.not_included,
+        t.max_group_size,
+        t.min_group_size,
+        t.rating,
+        t.review_count,
+        t.is_active,
+        t.created_at,
+        t.updated_at,
+        p.name as operator_name
+      FROM tours t
+      LEFT JOIN partners p ON t.operator_id = p.id
       ${whereClause}
-      ORDER BY ark.title ASC
+      ORDER BY t.created_at DESC
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
     queryParams.push(limit, offset);
 
-    const result = await query(routesQuery, queryParams);
+    const result = await query(toursQuery, queryParams);
 
     // Подсчёт
-    const countQuery = `SELECT COUNT(*)::int AS total FROM agent_route_knowledge ark ${whereClause}`;
+    const countQuery = `SELECT COUNT(*)::int AS total FROM tours t ${whereClause}`;
     const countResult = await query<TotalRow>(countQuery, queryParams.slice(0, -2));
     const total = parseInt(countResult.rows[0]?.total ?? '0');
 
     const tours: TourResponse[] = result.rows.map(row => {
-      const payload = (typeof row.payload === 'object' && row.payload !== null)
-        ? row.payload as Record<string, unknown>
-        : {};
-
-      const price = typeof payload.price === 'number' ? payload.price
-        : typeof payload.price_from === 'number' ? payload.price_from
-        : 0;
-
-      const duration = typeof payload.duration === 'number' ? payload.duration
-        : typeof payload.duration_hours === 'number' ? payload.duration_hours
-        : 0;
-
-      const difficulty = typeof payload.difficulty === 'string' ? payload.difficulty : 'medium';
-      const rawImages = Array.isArray(payload.images) ? payload.images as string[] : [];
-      const images = rawImages.length > 0
-        ? rawImages
-        : (CATEGORY_IMAGES[row.category as string] ? [CATEGORY_IMAGES[row.category as string]] : []);
-      const included = Array.isArray(payload.included) ? payload.included as string[] : [];
-      const season = Array.isArray(payload.season) ? payload.season : [];
+      const included = Array.isArray(row.included) ? (row.included as string[]) : [];
+      const notIncluded = Array.isArray(row.not_included) ? (row.not_included as string[]) : [];
+      const season = Array.isArray(row.season) ? row.season : [];
+      const coordinates = Array.isArray(row.coordinates) ? row.coordinates : [];
 
       return {
         id: row.id as string,
-        name: (row.title as string) || '',
+        name: (row.name as string) || '',
         description: (row.description as string) || '',
-        shortDescription: ((row.description as string) || '').slice(0, 200),
+        shortDescription: (row.short_description as string) || '',
         category: (row.category as string) || '',
-        difficulty: difficulty as string,
-        duration,
-        price,
-        currency: 'RUB',
+        difficulty: (row.difficulty as string) || 'medium',
+        duration: typeof row.duration === 'number' ? row.duration : 0,
+        price: typeof row.price === 'string' ? parseFloat(row.price as string) : (row.price as number),
+        currency: (row.currency as string) || 'RUB',
         season,
-        coordinates: (row.lat && row.lng)
-          ? [{ lat: parseFloat(row.lat as string), lng: parseFloat(row.lng as string) }]
-          : [],
-        requirements: [],
+        coordinates,
+        requirements: Array.isArray(row.requirements) ? (row.requirements as string[]) : [],
         included,
-        notIncluded: [],
-        maxGroupSize: typeof payload.max_group === 'number' ? payload.max_group : 20,
-        minGroupSize: 1,
-        rating: typeof payload.rating === 'number' ? payload.rating : 0,
-        reviewCount: typeof payload.review_count === 'number' ? payload.review_count : 0,
-        isActive: true,
-        createdAt: new Date(row.created_at as string || Date.now()),
-        updatedAt: new Date(row.updated_at as string || Date.now()),
-        sourceUrl: (row.source_url as string | null) ?? null,
-        sourceName: (row.source_name as string | null) ?? null,
-        source: 'route' as const,
-        images,
+        notIncluded,
+        maxGroupSize: typeof row.max_group_size === 'number' ? row.max_group_size : 20,
+        minGroupSize: typeof row.min_group_size === 'number' ? row.min_group_size : 1,
+        rating: typeof row.rating === 'string' ? parseFloat(row.rating as string) : (row.rating as number),
+        reviewCount: typeof row.review_count === 'number' ? row.review_count : 0,
+        isActive: row.is_active === true,
+        createdAt: new Date(row.created_at as string),
+        updatedAt: new Date(row.updated_at as string),
+        sourceUrl: null,
+        sourceName: row.operator_name as string | null,
+        source: 'tour' as const,
+        images: [CATEGORY_IMAGES[row.category as string] || '/images/activities/volcanoes.jpg'],
       };
     });
 
