@@ -95,8 +95,11 @@ ESLint включён полностью. TypeScript включён для вс�
 ### Итерация 3 ✅ ЗАВЕРШЕНО (commit 65a40e4)
 5. ✅ Исправить `app/api/bookings/` + `app/api/payments/` (9 ошибок → 0)
 
-### Итерация 4
-6. Исправить `app/api/tours/`, `app/api/operator/` (~200 ошибок)
+### Итерация 4 ✅ ЗАВЕРШЕНО (commit 9fb365f, branch fix/api-ts-errors-p1-tours)
+6. ✅ Исправить `app/api/tours/` (24 ошибки → 0, 5 файлов)
+
+### Итерация 5 (следующая)
+7. Исправить `app/api/operator/` (P1)
 
 ---
 
