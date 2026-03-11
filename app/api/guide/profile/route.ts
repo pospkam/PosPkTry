@@ -3,6 +3,7 @@ import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { getGuidePartnerByUserId, ensureGuidePartnerExists, getGuideStats } from '@/lib/auth/guide-helpers';
 import { requireRole } from '@/lib/auth/middleware';
+import { GuideUserRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
     const userId = guideOrResponse.userId;
 
     // Get user details
-    const userResult = await query(
+    const userResult = await query<GuideUserRow>(
       'SELECT id, email, name, created_at FROM users WHERE id = $1',
       [userId]
     );
@@ -116,7 +117,7 @@ export async function PUT(request: NextRequest) {
     // Get or create partner
     let partner = await getGuidePartnerByUserId(userId);
     if (!partner) {
-      const userResult = await query('SELECT name, email FROM users WHERE id = $1', [userId]);
+      const userResult = await query<{ name: string; email: string }>('SELECT name, email FROM users WHERE id = $1', [userId]);
       const user = userResult.rows[0];
       await ensureGuidePartnerExists(userId, user.name, user.email);
       partner = await getGuidePartnerByUserId(userId);
@@ -174,7 +175,7 @@ export async function PUT(request: NextRequest) {
     }
 
     if (updateFields.length > 0) {
-      updateValues.push(partner.id);
+      updateValues.push(partner!.id);
       
       await query(
         `UPDATE partners 

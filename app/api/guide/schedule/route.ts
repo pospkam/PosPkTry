@@ -3,6 +3,7 @@ import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { getGuidePartnerId, checkScheduleConflicts, hasTourDayConflict } from '@/lib/auth/guide-helpers';
 import { requireRole } from '@/lib/auth/middleware';
+import { GuideScheduleRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest) {
       WHERE gs.guide_id = $1
     `;
 
-    const params: unknown[] = [guideId];
+    const params: (string | number | null)[] = [guideId];
     let paramIndex = 2;
 
     if (dateFrom) {
@@ -66,7 +67,7 @@ export async function GET(request: NextRequest) {
 
     queryStr += ` ORDER BY gs.start_time ASC`;
 
-    const result = await query(queryStr, params);
+    const result = await query<GuideScheduleRow>(queryStr, params);
 
     const schedule = result.rows.map(row => ({
       id: row.id,

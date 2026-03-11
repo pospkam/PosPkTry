@@ -3,6 +3,7 @@ import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { verifyScheduleOwnership, checkScheduleConflicts, hasTourDayConflict } from '@/lib/auth/guide-helpers';
 import { requireRole } from '@/lib/auth/middleware';
+import { GuideScheduleRow, GuideScheduleCheckRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,8 +30,8 @@ export async function GET(
       } as ApiResponse<null>, { status: 404 });
     }
 
-    const result = await query(
-      `SELECT 
+    const result = await query<GuideScheduleRow>(
+      `SELECT
         gs.*,
         t.title as tour_title,
         b.status as booking_status,
@@ -113,7 +114,7 @@ export async function PUT(
 
       const body = await request.json();
 
-      const scheduleResult = await query(
+      const scheduleResult = await query<GuideScheduleCheckRow>(
         'SELECT guide_id, start_time, end_time, tour_id FROM guide_schedule WHERE id = $1',
         [id]
       );
@@ -127,8 +128,8 @@ export async function PUT(
         } as ApiResponse<null>, { status: 404 });
       }
 
-      const nextStartTime = body.startTime ?? scheduleRow.start_time;
-      const nextEndTime = body.endTime ?? scheduleRow.end_time;
+      const nextStartTime = (body.startTime as string | undefined) ?? scheduleRow.start_time;
+      const nextEndTime = (body.endTime as string | undefined) ?? scheduleRow.end_time;
 
       if (!nextStartTime || !nextEndTime) {
         return NextResponse.json({
@@ -171,7 +172,7 @@ export async function PUT(
           } as ApiResponse<null>, { status: 409 });
         }
 
-        const nextTourId = body.tourId ?? scheduleRow.tour_id;
+        const nextTourId = (body.tourId as string | undefined) ?? scheduleRow.tour_id;
         if (await hasTourDayConflict({
           guideId,
           tourId: nextTourId,
