@@ -61,7 +61,9 @@ export function DataTable<T extends { id: string | number }>({
 
       if (aValue === bValue) return 0;
 
-      const comparison = aValue > bValue ? 1 : -1;
+      const aComp = aValue as string | number;
+      const bComp = bValue as string | number;
+      const comparison = aComp > bComp ? 1 : -1;
       return sortDirection === 'asc' ? comparison : -comparison;
     });
   }, [data, sortKey, sortDirection]);

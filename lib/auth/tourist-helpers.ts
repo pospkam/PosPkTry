@@ -111,7 +111,7 @@ export async function checkTripAchievements(userId: string): Promise<void> {
     const profile = await getTouristProfile(userId);
     if (!profile) return;
 
-    const tripCount = profile.total_trips;
+    const tripCount = Number(profile.total_trips ?? 0);
 
     const achievements = [
       { type: 'first_trip', name: 'Первая поездка', description: 'Совершили первую поездку на Камчатку', threshold: 1, points: 100 },
@@ -189,7 +189,7 @@ export async function getTouristRecommendations(userId: string, limit: number = 
     if (!profile) return { tours: [], accommodations: [] };
 
     const preferences = profile.preferences || {};
-    const interests = profile.interests || [];
+    const interests = (profile.interests as string[]) || [];
 
     let toursQuery = `
       SELECT t.*, p.name as partner_name
@@ -241,7 +241,7 @@ export function calculateLoyaltyDiscount(loyaltyTier: string, amount: number): n
 /**
  * Get tourist travel stats
  */
-export async function getTouristTravelStats(userId: string): Promise<Record<string, unknown>> {
+export async function getTouristTravelStats(userId: string): Promise<Record<string, unknown> | null> {
   try {
     const profile = await getTouristProfile(userId);
     if (!profile) return null;

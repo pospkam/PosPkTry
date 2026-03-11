@@ -252,7 +252,7 @@ export async function calculateRentalCost(
 /**
  * Get gear partner statistics
  */
-export async function getGearStats(userId: string): Promise<Record<string, unknown>> {
+export async function getGearStats(userId: string): Promise<Record<string, unknown> | null> {
   try {
     const partnerId = await getGearPartnerId(userId);
     
@@ -392,7 +392,7 @@ export async function findAvailableGear(
         AND gi.available_quantity > 0
     `;
     
-    const params: (string | number | null)[] = [];
+    const params: (string | number | null | string[])[] = [];
     let paramIndex = 1;
     
     if (category) {

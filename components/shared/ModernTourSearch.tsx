@@ -138,6 +138,7 @@ const TourCard = React.memo(({ result }: { result: TourResult | (TourResult & Tr
     </motion.div>
   );
 });
+TourCard.displayName = 'TourCard';
 
 /**
  * ModernTourSearch — поисковый компонент для туров Kamchatour Hub

@@ -55,7 +55,7 @@ class MonitoringSystem {
 
     // Отправка в консоль для разработки
     if (process.env.NODE_ENV === 'development') {
-      (console as Record<string, (...args: unknown[]) => void>)[level.toLowerCase()]?.(`[${entry.timestamp.toISOString()}] ${message}`, context);
+      (console as unknown as Record<string, (...args: unknown[]) => void>)[level.toLowerCase()]?.(`[${entry.timestamp.toISOString()}] ${message}`, context);
     }
 
     // Отправка в внешний сервис для продакшена

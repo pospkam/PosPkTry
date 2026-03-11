@@ -9,12 +9,12 @@ const nextConfig = {
   // that cannot be bundled by webpack — must be resolved at runtime.
   serverExternalPackages: ['onnxruntime-node', '@huggingface/transformers'],
 
-  // Игнорировать ESLint и TypeScript ошибки во время сборки
+  // Проверки качества при сборке — включены
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
 
   // unoptimized: убирает sharp/@img (~33MB) из standalone — критично для Timeweb лимита 50MB

@@ -6,6 +6,8 @@
     "prefer-const": "error",
     "no-var": "error",
     "no-console": "off",
-    "no-debugger": "error"
+    "no-debugger": "error",
+    "react/display-name": "warn",
+    "@next/next/no-img-element": "warn"
   }
 }

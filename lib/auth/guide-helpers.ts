@@ -287,7 +287,7 @@ export async function recordGuideEarnings(
 /**
  * Get guide statistics
  */
-export async function getGuideStats(userId: string): Promise<Record<string, unknown>> {
+export async function getGuideStats(userId: string): Promise<Record<string, unknown> | null> {
   try {
     const guideId = await getGuidePartnerId(userId);
     

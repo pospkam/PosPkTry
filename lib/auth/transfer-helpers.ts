@@ -342,7 +342,7 @@ export async function calculateTransferPrice(
 /**
  * Get transfer operator statistics
  */
-export async function getTransferStats(userId: string): Promise<Record<string, unknown>> {
+export async function getTransferStats(userId: string): Promise<Record<string, unknown> | null> {
   try {
     const operatorId = await getTransferPartnerId(userId);
     

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Logo from '@/components/shared/Logo';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Flower, Leaf, Snowflake, Sun, Moon, CheckCircle2, XCircle, Circle, User } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
