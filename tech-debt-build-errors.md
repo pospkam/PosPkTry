@@ -85,16 +85,18 @@ ESLint включён полностью. TypeScript включён для вс�
 
 ### Итерация 1 (следующий PR)
 Убрать `app/api/**/*` из exclusions для группы критичных файлов:
-1. Исправить `app/api/bookings/`, `app/api/payments/`, `app/api/auth/` (~200 ошибок)
-2. Создать typed interfaces для DB row результатов в `lib/types/db-rows.ts`
-3. Обновить tsconfig: заменить полный exclude на более точное исключение
+1. ✅ Исправить `app/api/bookings/`, `app/api/payments/`, `app/api/auth/` (~200 ошибок)
+2. ✅ Создать typed interfaces для DB row результатов в `lib/types/db-rows.ts`
+3. ✅ Обновить tsconfig: заменить полный exclude на более точное исключение
 
-### Итерация 2
-4. Исправить `app/api/tours/`, `app/api/operator/` (~200 ошибок)
+### Итерация 2 ✅ ЗАВЕРШЕНО (commit 7ed818e)
+4. ✅ Исправить `app/api/auth/` + `app/api/admin/` (128 ошибок → 0)
 
-### Итерация 3
-5. Исправить оставшиеся API routes (~450 ошибок)
-6. Убрать `app/api/**/*` из tsconfig exclude полностью
+### Итерация 3 ✅ ЗАВЕРШЕНО (commit 65a40e4)
+5. ✅ Исправить `app/api/bookings/` + `app/api/payments/` (9 ошибок → 0)
+
+### Итерация 4
+6. Исправить `app/api/tours/`, `app/api/operator/` (~200 ошибок)
 
 ---
 
