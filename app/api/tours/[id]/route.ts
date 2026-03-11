@@ -72,8 +72,8 @@ export async function GET(
       images:           parseJsonField(row.images) as string[],
       slug:             (row.slug || '') as string,
       locationName:     (row.locationName || row.location_name || '') as string,
-      createdAt:        new Date(row.createdAt || row.created_at || Date.now()),
-      updatedAt:        new Date(row.updatedAt || row.updated_at || Date.now()),
+      createdAt:        new Date(String(row.createdAt ?? row.created_at ?? Date.now())),
+      updatedAt:        new Date(String(row.updatedAt ?? row.updated_at ?? Date.now())),
 
       // Маршрут из kamchatka_routes
       routeId: (row.route_id as string | null) ?? null,

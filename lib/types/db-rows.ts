@@ -445,3 +445,56 @@ export interface PaymentWebhookReturnRow {
 export interface EmailRow {
   email: string;
 }
+
+// ──────────────────────────────────────────────────────────
+// Tours (user-facing)
+// ──────────────────────────────────────────────────────────
+
+/** SELECT id, name, price, max_group_size, min_group_size, is_active, operator_name, operator_email */
+export interface TourBookCheckRow {
+  id: string;
+  name: string;
+  price: string;
+  max_group_size: number;
+  min_group_size: number;
+  is_active: boolean;
+  operator_name: string;
+  operator_email: string;
+}
+
+/** SELECT id, name, max_group_size, tour_type, is_active */
+export interface TourTimeslotRow {
+  id: string;
+  name: string;
+  max_group_size: number;
+  tour_type: string;
+  is_active: boolean;
+}
+
+/** tour_dates + booking aggregate for group time-slots */
+export interface GroupDateRow {
+  id: string;
+  tour_date: Date;
+  booked_guests: string;
+  max_capacity: string;
+  spots_left: string;
+}
+
+/** SELECT id, name, max_group_size, min_group_size, price, is_active */
+export interface TourCheckRow {
+  id: string;
+  name: string;
+  max_group_size: number;
+  min_group_size: number;
+  price: string;
+  is_active: boolean;
+}
+
+/** Date-series availability row from CTE query */
+export interface AvailabilityDateRow {
+  date: string;
+  booked: string;
+  max_capacity: string;
+  spots_left: string;
+  status: string;
+}

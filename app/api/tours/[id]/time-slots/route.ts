@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
+import { TourTimeslotRow, GroupDateRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,7 +41,7 @@ export async function GET(
       FROM tours
       WHERE id = $1
     `;
-    const tourResult = await query(tourQuery, [id]);
+    const tourResult = await query<TourTimeslotRow>(tourQuery, [id]);
 
     if (tourResult.rows.length === 0) {
       return NextResponse.json({
@@ -75,7 +76,7 @@ export async function GET(
         GROUP BY td.id, td.tour_date
       `;
 
-      const groupResult = await query(groupDatesQuery, [id, tour.max_group_size, date]);
+      const groupResult = await query<GroupDateRow>(groupDatesQuery, [id, tour.max_group_size, date]);
 
       if (groupResult.rows.length === 0) {
         // Если нет фиксированной даты, возвращаем стандартный слот
@@ -96,7 +97,7 @@ export async function GET(
         } as ApiResponse<unknown>);
       }
 
-      const slots: TimeSlot[] = groupResult.rows.map((row: any) => ({
+      const slots: TimeSlot[] = groupResult.rows.map((row) => ({
         id: row.id,
         time: '09:00', // Групповые туры начинаются в 09:00
         capacity: parseInt(row.max_capacity),

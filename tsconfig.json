@@ -232,7 +232,6 @@
     "app/api/support/**/*",
     "app/api/telegram/**/*",
     "app/api/tourist/**/*",
-    "app/api/tours/**/*",
     "app/api/transfer/**/*",
     "app/api/transfer-operator/**/*",
     "app/api/transfers/**/*",

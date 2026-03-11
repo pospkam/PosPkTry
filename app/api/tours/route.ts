@@ -3,6 +3,7 @@ import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireOperator } from '@/lib/auth/middleware';
 import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
+import { TotalRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -73,7 +74,7 @@ export async function GET(request: NextRequest) {
     const offset = Math.max(parseInt(searchParams.get('offset') || '0'), 0);
 
     const whereConditions: string[] = [];
-    const queryParams: unknown[] = [];
+    const queryParams: (string | number)[] = [];
     let paramIndex = 1;
 
     if (category) {
@@ -120,8 +121,8 @@ export async function GET(request: NextRequest) {
 
     // Подсчёт
     const countQuery = `SELECT COUNT(*)::int AS total FROM agent_route_knowledge ark ${whereClause}`;
-    const countResult = await query(countQuery, queryParams.slice(0, -2));
-    const total = parseInt(countResult.rows[0]?.total || '0');
+    const countResult = await query<TotalRow>(countQuery, queryParams.slice(0, -2));
+    const total = parseInt(countResult.rows[0]?.total ?? '0');
 
     const tours: TourResponse[] = result.rows.map(row => {
       const payload = (typeof row.payload === 'object' && row.payload !== null)
