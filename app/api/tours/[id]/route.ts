@@ -3,6 +3,24 @@ import { query } from '@/lib/database';
 
 export const dynamic = 'force-dynamic';
 
+// Локальные изображения-заглушки по категориям
+const CATEGORY_IMAGES: Record<string, string> = {
+  vulkani:              '/images/activities/volcanoes.jpg',
+  geyzery:              '/images/activities/volcanoes.jpg',
+  rybalka:              '/images/activities/fishing.jpg',
+  termalnye_istochniki: '/images/activities/hotsprings.jpg',
+  dzhip:                '/images/activities/jeep.jpg',
+  snegohod:             '/images/activities/snowmobile.jpg',
+  morskie_progulki:     '/images/activities/sea.jpg',
+  vertoletnye_tury:     '/images/activities/helicopter.jpg',
+  trekking:             '/images/gallery/camp-sunset.jpg',
+  mountains:            '/images/gallery/stela.jpg',
+  rivers:               '/images/bento/khalaktyr.jpg',
+  lakes:                '/images/gallery/bay-sunset.jpg',
+  medvedi:              '/images/gallery/road-winter.jpg',
+  eco:                  '/images/gallery/aurora.jpg',
+};
+
 // GET /api/tours/[id] — публичный, без авторизации
 export async function GET(
   _request: NextRequest,
@@ -32,12 +50,74 @@ export async function GET(
       [id]
     );
 
+    // ── Фолбэк: маршрут из agent_route_knowledge ──────────────────────────────
     if (result.rows.length === 0) {
-      return NextResponse.json(
-        { success: false, error: 'Тур не найден' },
-        { status: 404 }
-      );
+      const arkResult = await query<{
+        id: string; title: string; description: string | null;
+        category: string; lat: string | null; lng: string | null;
+        source_url: string | null; source_name: string | null;
+        payload: Record<string, unknown> | null;
+        created_at: Date; updated_at: Date;
+      }>('SELECT * FROM agent_route_knowledge WHERE id = $1', [id]);
+
+      if (arkResult.rows.length === 0) {
+        return NextResponse.json(
+          { success: false, error: 'Тур не найден' },
+          { status: 404 }
+        );
+      }
+
+      const ark = arkResult.rows[0];
+      const payload = (typeof ark.payload === 'object' && ark.payload !== null)
+        ? ark.payload as Record<string, unknown>
+        : {};
+
+      const price = typeof payload.price === 'number' ? payload.price
+        : typeof payload.price_from === 'number' ? payload.price_from : 0;
+      const duration = typeof payload.duration === 'number' ? payload.duration
+        : typeof payload.duration_hours === 'number' ? payload.duration_hours : 0;
+      const rawImages = Array.isArray(payload.images) ? payload.images as string[] : [];
+      const images = rawImages.length > 0
+        ? rawImages
+        : (CATEGORY_IMAGES[ark.category] ? [CATEGORY_IMAGES[ark.category]] : []);
+
+      const tour = {
+        id: ark.id,
+        name: ark.title,
+        description: ark.description || '',
+        shortDescription: (ark.description || '').slice(0, 200),
+        category: ark.category,
+        difficulty: (typeof payload.difficulty === 'string' ? payload.difficulty : 'medium') as 'easy' | 'medium' | 'hard',
+        duration,
+        price,
+        currency: 'RUB',
+        season: Array.isArray(payload.season) ? payload.season : [],
+        coordinates: ark.lat && ark.lng
+          ? [{ lat: parseFloat(ark.lat), lng: parseFloat(ark.lng) }]
+          : [],
+        requirements: [],
+        included: Array.isArray(payload.included) ? payload.included as string[] : [],
+        notIncluded: [],
+        maxGroupSize: typeof payload.max_group === 'number' ? payload.max_group : 20,
+        minGroupSize: 1,
+        rating: typeof payload.rating === 'number' ? payload.rating : 0,
+        reviewCount: typeof payload.review_count === 'number' ? payload.review_count : 0,
+        isActive: true,
+        images,
+        slug: '',
+        locationName: '',
+        createdAt: new Date(String(ark.created_at)),
+        updatedAt: new Date(String(ark.updated_at)),
+        routeId: null,
+        route: null,
+        operator: null,
+        sourceUrl: ark.source_url,
+        sourceName: ark.source_name,
+      };
+
+      return NextResponse.json({ success: true, data: tour });
     }
+    // ─────────────────────────────────────────────────────────────────────────
 
     const row = result.rows[0];
 
@@ -48,6 +128,11 @@ export async function GET(
       }
       return [];
     };
+
+    const rawImages = parseJsonField(row.images) as string[];
+    const images = rawImages.length > 0
+      ? rawImages
+      : (CATEGORY_IMAGES[row.category as string] ? [CATEGORY_IMAGES[row.category as string]] : []);
 
     const tour = {
       id:               row.id as string,
@@ -69,7 +154,7 @@ export async function GET(
       rating:           parseFloat(String(row.rating || 0)),
       reviewCount:      parseInt(String(row.review_count || row.reviewCount || 0)),
       isActive:         (row.is_active ?? true) as boolean,
-      images:           parseJsonField(row.images) as string[],
+      images,
       slug:             (row.slug || '') as string,
       locationName:     (row.locationName || row.location_name || '') as string,
       createdAt:        new Date(String(row.createdAt ?? row.created_at ?? Date.now())),
@@ -105,3 +190,4 @@ export async function GET(
     );
   }
 }
+

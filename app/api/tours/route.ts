@@ -34,6 +34,24 @@ interface TourResponse {
   source: 'tour' | 'route';
 }
 
+// Локальные изображения-заглушки по категориям
+const CATEGORY_IMAGES: Record<string, string> = {
+  vulkani:              '/images/activities/volcanoes.jpg',
+  geyzery:              '/images/activities/volcanoes.jpg',
+  rybalka:              '/images/activities/fishing.jpg',
+  termalnye_istochniki: '/images/activities/hotsprings.jpg',
+  dzhip:                '/images/activities/jeep.jpg',
+  snegohod:             '/images/activities/snowmobile.jpg',
+  morskie_progulki:     '/images/activities/sea.jpg',
+  vertoletnye_tury:     '/images/activities/helicopter.jpg',
+  trekking:             '/images/gallery/camp-sunset.jpg',
+  mountains:            '/images/gallery/stela.jpg',
+  rivers:               '/images/bento/khalaktyr.jpg',
+  lakes:                '/images/gallery/bay-sunset.jpg',
+  medvedi:              '/images/gallery/road-winter.jpg',
+  eco:                  '/images/gallery/aurora.jpg',
+};
+
 // Slug-маппинг категорий homepage → agent_route_knowledge
 const SLUG_TO_ARK: Record<string, string> = {
   vulkani:              'vulkani',
@@ -138,7 +156,10 @@ export async function GET(request: NextRequest) {
         : 0;
 
       const difficulty = typeof payload.difficulty === 'string' ? payload.difficulty : 'medium';
-      const images = Array.isArray(payload.images) ? payload.images as string[] : [];
+      const rawImages = Array.isArray(payload.images) ? payload.images as string[] : [];
+      const images = rawImages.length > 0
+        ? rawImages
+        : (CATEGORY_IMAGES[row.category as string] ? [CATEGORY_IMAGES[row.category as string]] : []);
       const included = Array.isArray(payload.included) ? payload.included as string[] : [];
       const season = Array.isArray(payload.season) ? payload.season : [];
 
