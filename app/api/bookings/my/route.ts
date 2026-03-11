@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { verifyAuth } from '@/lib/auth';
+import { BookingMyRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
     }
     const userId = auth.userId;
 
-    const result = await query(
+    const result = await query<BookingMyRow>(
       `SELECT 
         b.id,
         b.date,
@@ -66,7 +67,7 @@ export async function GET(request: NextRequest) {
         description: row.tour_description,
         difficulty: row.tour_difficulty,
         duration: row.tour_duration,
-        images: row.tour_images.filter(Boolean)
+        images: Array.isArray(row.tour_images) ? row.tour_images.filter(Boolean) : []
       },
       operator: {
         name: row.operator_name,

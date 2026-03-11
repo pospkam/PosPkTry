@@ -380,3 +380,68 @@ export interface UserUpdateRow {
   role: string;
   updated_at: Date;
 }
+
+// ──────────────────────────────────────────────────────────
+// Bookings (user-facing)
+// ──────────────────────────────────────────────────────────
+
+export interface BookingMyRow {
+  id: string;
+  date: Date;
+  participants: number;
+  total_price: string;
+  status: string;
+  payment_status: string;
+  special_requests: string | null;
+  created_at: Date;
+  updated_at: Date;
+  tour_id: string;
+  tour_name: string;
+  tour_description: string | null;
+  tour_difficulty: string | null;
+  tour_duration: number | null;
+  tour_images: (string | null)[] | null;
+  operator_name: string | null;
+  operator_contact: Record<string, unknown> | null;
+  user_id: string;
+}
+
+// ──────────────────────────────────────────────────────────
+// Payments
+// ──────────────────────────────────────────────────────────
+
+export interface PaymentRow {
+  id: string;
+  booking_id: string;
+  booking_type: string;
+  user_id: string;
+  amount: string;
+  currency: string;
+  status: string;
+  payment_method: string | null;
+  transaction_id: string | null;
+  failure_reason: string | null;
+  payment_data: Record<string, unknown> | null;
+  created_at: Date;
+  completed_at: Date | null;
+  updated_at: Date;
+}
+
+export interface BookingForPaymentRow {
+  id: string;
+  user_id: string;
+  total_price: string;
+  status: string;
+  payment_status: string;
+}
+
+/** RETURNING clause from UPDATE payments — only the fields returned by the webhook handler */
+export interface PaymentWebhookReturnRow {
+  booking_id: string;
+  booking_type: string;
+  user_id: string;
+}
+
+export interface EmailRow {
+  email: string;
+}

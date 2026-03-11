@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { verifyAuth } from '@/lib/auth';
+import { PaymentRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,7 +43,7 @@ export async function GET(
       WHERE id = $1
     `;
 
-    const result = await query(paymentQuery, [id]);
+    const result = await query<PaymentRow>(paymentQuery, [id]);
 
     if (result.rows.length === 0) {
       return NextResponse.json({

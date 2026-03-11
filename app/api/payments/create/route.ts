@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { verifyAuth } from '@/lib/auth';
+import { BookingForPaymentRow, PaymentRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -59,7 +60,7 @@ export async function POST(request: NextRequest) {
         } as ApiResponse<null>, { status: 400 });
     }
 
-    const bookingResult = await query(bookingQuery, [body.bookingId]);
+    const bookingResult = await query<BookingForPaymentRow>(bookingQuery, [body.bookingId]);
 
     if (bookingResult.rows.length === 0) {
       return NextResponse.json({
@@ -102,7 +103,7 @@ export async function POST(request: NextRequest) {
       RETURNING id, status, created_at
     `;
 
-    const paymentResult = await query(paymentQuery, [
+    const paymentResult = await query<PaymentRow>(paymentQuery, [
       body.bookingId,
       body.bookingType,
       userId,

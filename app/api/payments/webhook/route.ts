@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { processCloudPaymentsWebhook, CloudPaymentsWebhook } from '@/lib/payments/cloudpayments-webhook';
 import { emailService } from '@/lib/notifications/email-service';
+import { PaymentWebhookReturnRow, PaymentRow, EmailRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -79,7 +80,7 @@ async function handleSuccessfulPayment(webhook: CloudPaymentsWebhook) {
       RETURNING booking_id, booking_type, user_id
     `;
 
-    const paymentResult = await query(updatePaymentQuery, [
+    const paymentResult = await query<PaymentWebhookReturnRow>(updatePaymentQuery, [
       transactionId.toString(),
       JSON.stringify(webhook),
       paymentId
@@ -205,7 +206,7 @@ async function handleSuccessfulPayment(webhook: CloudPaymentsWebhook) {
       }
 
       if (bookingDetails) {
-        const userEmailResult = await query(
+        const userEmailResult = await query<EmailRow>(
           'SELECT email FROM users WHERE id = $1',
           [payment.user_id]
         );
@@ -257,7 +258,7 @@ async function handleFailedPayment(webhook: CloudPaymentsWebhook) {
     // Отправляем email о неуспешном платеже
     try {
       // Получаем детали платежа для email
-      const paymentDetails = await query(`
+      const paymentDetails = await query<PaymentRow>(`
         SELECT p.*, b.booking_type
         FROM payments p
         LEFT JOIN bookings b ON p.booking_id = b.id AND p.booking_type = 'tour'
@@ -270,7 +271,7 @@ async function handleFailedPayment(webhook: CloudPaymentsWebhook) {
         const payment = paymentDetails.rows[0];
         const failureReason = webhook.Reason || 'Платёж был отклонён';
 
-        const userEmailResult = await query(
+        const userEmailResult = await query<EmailRow>(
           'SELECT email FROM users WHERE id = $1',
           [payment.user_id]
         );
@@ -282,7 +283,7 @@ async function handleFailedPayment(webhook: CloudPaymentsWebhook) {
             html: `
               <h2>К сожалению, платёж не прошёл</h2>
               <p><strong>ID платежа:</strong> ${paymentId}</p>
-              <p><strong>Сумма:</strong> ${payment.amount.toLocaleString('ru-RU')} ₽</p>
+              <p><strong>Сумма:</strong> ${parseFloat(payment.amount).toLocaleString('ru-RU')} ₽</p>
               <p><strong>Причина:</strong> ${failureReason}</p>
               <p>Попробуйте оплатить снова или свяжитесь с поддержкой.</p>
               <p><strong>Служба поддержки:</strong> support@kamhub.ru</p>
