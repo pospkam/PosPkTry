@@ -98,8 +98,11 @@ ESLint включён полностью. TypeScript включён для вс�
 ### Итерация 4 ✅ ЗАВЕРШЕНО (commit 9fb365f, branch fix/api-ts-errors-p1-tours)
 6. ✅ Исправить `app/api/tours/` (24 ошибки → 0, 5 файлов)
 
-### Итерация 5 (следующая)
-7. Исправить `app/api/operator/` (P1)
+### Итерация 5 ✅ ЗАВЕРШЕНО (commit 80787d5, branch fix/api-ts-errors-iteration-5-operator)
+7. ✅ Исправить `app/api/operator/` (231 ошибка → 0, 23 файла, 40+ новых интерфейсов в db-rows.ts)
+
+### Итерация 6 (следующая)
+8. Исправить `app/api/guide/`, `app/api/tourist/`, `app/api/support/` (P2)
 
 ---
 
