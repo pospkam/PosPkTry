@@ -142,3 +142,140 @@ async function getStats(id: string): Promise<Record<string, unknown> | null> {
   if (!found) return null; // OK
 }
 ```
+
+---
+
+## Топ-10 паттернов фиксов
+
+### 1. DB row без типа → typed interface
+```typescript
+// ❌
+const r = await pool.query('SELECT id, status FROM bookings WHERE id=$1', [id]);
+const b = r.rows[0];
+b.status; // unknown
+
+// ✅ (рекомендуется — создать в lib/types/db-rows.ts)
+interface BookingRow { id: string; status: string; total_price: number; }
+const r = await pool.query<BookingRow>('SELECT ...', [id]);
+r.rows[0].status; // string
+```
+
+### 2. `return null` в функции с non-nullable return type
+```typescript
+// ❌
+async function find(id: string): Promise<Tour> { return null; }
+
+// ✅
+async function find(id: string): Promise<Tour | null> { return null; }
+```
+
+### 3. `any` → `unknown` + type guard
+```typescript
+// ❌
+function process(data: any) { return data.name; }
+
+// ✅
+function process(data: unknown) {
+  if (typeof data === 'object' && data && 'name' in data)
+    return (data as { name: string }).name;
+}
+```
+
+### 4. `req.body` / `JSON.parse` → typed zod или assertion
+```typescript
+// ❌
+const { email } = await req.json(); // unknown
+
+// ✅ быстрый
+const body = await req.json() as { email: string; password: string };
+const { email, password } = body;
+```
+
+### 5. `Object is possibly null/undefined` → optional chaining
+```typescript
+// ❌
+const name = user.profile.name;
+
+// ✅
+const name = user?.profile?.name ?? '';
+```
+
+### 6. `string[] not assignable to (string|number|null)[]`
+```typescript
+// ❌
+function foo(ids: (string|number|null)[]) {}
+const arr: string[] = ['a'];
+foo(arr); // error
+
+// ✅
+foo(arr as (string|number|null)[]);
+// или расширить тип параметра: ids: string[]
+```
+
+### 7. Implicit `any` в catch
+```typescript
+// ❌
+} catch (e) { console.error(e.message); } // e is unknown
+
+// ✅
+} catch (e) {
+  const msg = e instanceof Error ? e.message : String(e);
+  console.error(msg);
+}
+```
+
+### 8. `Promise<void>` vs `Promise<NextResponse>`
+```typescript
+// ❌
+export async function GET(): Promise<void> {
+  return NextResponse.json({}); // Type 'NextResponse' not assignable
+}
+
+// ✅
+export async function GET(): Promise<NextResponse> {
+  return NextResponse.json({});
+}
+// или просто убрать return type — Next.js выводит его сам
+```
+
+### 9. Array.prototype методы на `unknown`
+```typescript
+// ❌
+const tags = profile.tags; // unknown
+tags.map(t => t); // error
+
+// ✅
+const tags = Array.isArray(profile.tags) ? profile.tags as string[] : [];
+```
+
+### 10. Missing return type на async handler
+```typescript
+// ❌ (ESLint @typescript-eslint/explicit-function-return-type)
+export async function POST(req: NextRequest) { ... }
+
+// ✅
+export async function POST(req: NextRequest): Promise<NextResponse> { ... }
+```
+
+---
+
+## Ветка и PR для Итерации 1
+
+```
+Ветка:  fix/api-ts-errors-p0-bookings-payments-auth
+PR:     fix: TypeScript errors in P0 API routes (bookings, payments, auth)
+```
+
+**Описание PR:**
+```
+## Summary
+- Fix ~200 TS errors in app/api/bookings/, app/api/payments/, app/api/auth/
+- Create lib/types/db-rows.ts with typed interfaces for DB query results
+- Update tsconfig.json: replace `app/api/**/*` with more targeted excludes
+
+## Test plan
+- [ ] npm run build exits 0
+- [ ] Booking flow works end-to-end
+- [ ] Payment status updates correctly
+- [ ] Login/logout not broken
+```
