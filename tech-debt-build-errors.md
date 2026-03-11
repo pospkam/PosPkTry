@@ -101,8 +101,12 @@ ESLint включён полностью. TypeScript включён для вс�
 ### Итерация 5 ✅ ЗАВЕРШЕНО (commit 80787d5, branch fix/api-ts-errors-iteration-5-operator)
 7. ✅ Исправить `app/api/operator/` (231 ошибка → 0, 23 файла, 40+ новых интерфейсов в db-rows.ts)
 
-### Итерация 6 (следующая)
-8. Исправить `app/api/guide/`, `app/api/tourist/`, `app/api/support/` (P2)
+### Итерация 6 ✅ ЗАВЕРШЕНО (commit 406f728, branch fix/api-ts-errors-iteration-6)
+8. ✅ Исправить `app/api/guide/` (40 ошибок → 0, 8 файлов), `app/api/tourist/achievements/` (5 ошибок → 0), `app/api/support/` (0 ошибок, уже чисто)
+   - Добавлено 10 новых интерфейсов в db-rows.ts: GuideEarningRow, GuideEarningStatsRow, GuideLocationRow, GuideScheduleRow, GuideScheduleCheckRow, GuideScheduleLocationRow, GuidePopularLocationRow, GuideActivityTrailRow, GuideUserRow, GuideReviewStatsRow, TouristAchievementRow
+
+### Итерация 7 (следующая)
+9. Исправить оставшиеся директории (P3): `app/api/ai/`, `app/api/analytics/`, `app/api/notifications/`, `app/api/profile/`, `app/api/reviews/`, и другие
 
 ---
 
