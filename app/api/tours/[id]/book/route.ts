@@ -15,6 +15,7 @@ import { z } from 'zod';
 import { emailService } from '@/lib/notifications/email-service';
 import { requireAuth } from '@/lib/auth/middleware';
 import { getTokenFromRequest } from '@/lib/auth';
+import { TourBookCheckRow } from '@/lib/types/db-rows';
 
 // Валидация входных данных
 const bookingSchema = z.object({
@@ -64,7 +65,7 @@ export async function POST(
     const totalParticipants = adults + children;
 
     // Проверяем существование тура
-    const tourCheckResult = await query(
+    const tourCheckResult = await query<TourBookCheckRow>(
       `SELECT
         t.id,
         t.name,
@@ -111,7 +112,7 @@ export async function POST(
     }
 
     // Проверяем доступность на выбранную дату
-    const availabilityCheck = await query(
+    const availabilityCheck = await query<{ bookings: string }>(
       `SELECT COUNT(*) as bookings
        FROM bookings
        WHERE tour_id = $1
@@ -120,7 +121,7 @@ export async function POST(
       [tourId, date]
     );
 
-    const existingBookings = parseInt(availabilityCheck.rows[0]?.bookings || '0');
+    const existingBookings = parseInt(availabilityCheck.rows[0]?.bookings ?? '0');
     const availableSpots = tour.max_group_size - existingBookings;
 
     if (totalParticipants > availableSpots) {
@@ -173,7 +174,7 @@ export async function POST(
     const bookingId = bookingResult.rows[0].id;
 
     // Получаем email пользователя
-    const userResult = await query('SELECT email, name FROM users WHERE id = $1', [userId]);
+    const userResult = await query<{ email: string; name: string }>('SELECT email, name FROM users WHERE id = $1', [userId]);
     const userEmail = userResult.rows[0]?.email ?? null;
     const userName = userResult.rows[0]?.name || 'Гость';
 

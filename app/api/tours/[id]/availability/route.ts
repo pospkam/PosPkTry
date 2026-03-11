@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
+import { TourCheckRow, AvailabilityDateRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,7 +42,7 @@ export async function GET(
       FROM tours
       WHERE id = $1
     `;
-    const tourResult = await query(tourQuery, [id]);
+    const tourResult = await query<TourCheckRow>(tourQuery, [id]);
 
     if (tourResult.rows.length === 0) {
       return NextResponse.json({
@@ -93,7 +94,7 @@ export async function GET(
       ORDER BY ds.date
     `;
 
-    const availResult = await query(availabilityQuery, [
+    const availResult = await query<AvailabilityDateRow>(availabilityQuery, [
       startDate,
       endDate,
       id,
@@ -126,8 +127,8 @@ export async function GET(
         tourId: id,
         tourName: tour.name,
         availability,
-        maxGroupSize: parseInt(tour.max_group_size),
-        minGroupSize: parseInt(tour.min_group_size)
+        maxGroupSize: tour.max_group_size,
+        minGroupSize: tour.min_group_size
       }
     } as ApiResponse<unknown>);
 
