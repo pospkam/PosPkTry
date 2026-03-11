@@ -1,10 +1,10 @@
 # Tech Debt: TypeScript Build Errors in API Routes
 
 **Дата анализа:** 11 марта 2026
-**Общее количество TS ошибок в `app/api/`:** ~847 → ~372 (исправлено ~460 в итерациях 2-7)
+**Общее количество TS ошибок в `app/api/`:** ~847 → **0** (все исправлены в итерациях 2-8)
 
-Файлы `app/api/**/*` — только 13 оставшихся dir исключены из `tsconfig.json` (`exclude`). Остальные уже type-checked.
-ESLint включён полностью. TypeScript включён для всей кодовой базы **кроме** 13 оставшихся API dir.
+**`app/api/**/*` полностью type-checked.** Нет исключений в tsconfig для API routes.
+ESLint и TypeScript включёны для всей кодовой базы.
 
 ---
 
@@ -111,27 +111,26 @@ ESLint включён полностью. TypeScript включён для вс�
    - Паттерны: query<T>, as unknown as T, null guards, type predicates, process.env.S3_*
    - Примечание: transfer-operator/* возвращён в exclude (re-export из ещё-исключённого transfer)
 
-### Итерация 8 (следующая)
-10. Исправить оставшиеся 13 директорий (~372 ошибок):
+### Итерация 8 ✅ ЗАВЕРШЕНО (commit 7f398b1, branch fix/api-ts-errors-iteration-8)
+10. ✅ Удалены последние 13 dir из tsconfig exclude — `app/api/**/*` теперь полностью type-checked
+    - Исправлено 372 TS ошибок в 45 файлах:
+    - transfer/* (11 файлов, 78 ошибок): typed query rows, String() casts, null guards
+    - transfers/* (6 файлов, 84 ошибки): typed rows для schedules/availability/book/search
+    - agent/* (7 файлов, 72 ошибки): typed commissions/dashboard/clients/vouchers rows
+    - weather/route.ts (48 ошибок): typed external API response shapes (OpenWeatherMap/WeatherAPI/Yandex)
+    - accommodations/* (5 файлов, 25 ошибок): typed availability/book/prices/list rows
+    - chat/route.ts (14 ошибок): typed session + message query rows
+    - reviews/* (2 файла, 9 ошибок): typed count + summary rows
+    - trip/plan/route.ts (9 ошибок): typed tours/accommodations/transfers rows
+    - eco-points/* (9 ошибок): typed user points + achievements rows
+    - stay-provider/* (7 ошибок): typed metrics CTE result
+    - souvenirs/* (3 файла, 6 ошибок): typed souvenir + count rows
+    - webhooks/payments (6 ошибок): PaymentServiceWithWebhook local type cast
+    - cars/* (2 файла, 5 ошибок): typed inventory rows
+    - types/agent.ts: +130 строк новых типов для агентского модуля
 
-| Директория | Ошибок | Приоритет |
-|-----------|--------|-----------|
-| `app/api/transfers/` | ~84 | P2 |
-| `app/api/transfer/` | ~78 | P2 |
-| `app/api/agent/` | ~72 | P2 |
-| `app/api/weather/` | ~48 | P3 |
-| `app/api/accommodations/` | ~25 | P2 |
-| `app/api/chat/` | ~14 | P3 |
-| `app/api/eco-points/` | ~9 | P3 |
-| `app/api/reviews/` | ~9 | P2 |
-| `app/api/trip/` | ~9 | P3 |
-| `app/api/stay-provider/` | ~7 | P3 |
-| `app/api/souvenirs/` | ~6 | P3 |
-| `app/api/webhooks/` | ~6 | P3 |
-| `app/api/cars/` | ~5 | P3 |
-| `app/api/transfer-operator/` | 0 (после fix transfer) | P3 |
-
-Стратегия: объединить transfer + transfers + transfer-operator в одну итерацию (3 связанных dir), затем agent, затем остальные.
+### ✅ ТЕХДОЛГ ЗАКРЫТ
+`tsc --noEmit --skipLibCheck` выходит с кодом 0. Все ~847 ошибок устранены за 8 итераций.
 
 ---
 
