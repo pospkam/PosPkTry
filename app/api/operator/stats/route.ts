@@ -3,6 +3,13 @@ import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireOperator } from '@/lib/auth/middleware';
 import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
+import {
+  OpStatsToursRow,
+  OpStatsBookingsRow,
+  OpStatsRevenueRow,
+  OpStatsRecentBookingRow,
+  OpStatsPartnerInfoRow,
+} from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,13 +35,13 @@ export async function GET(request: NextRequest) {
       }
 
     // Get tours count
-    const toursResult = await query(
+    const toursResult = await query<OpStatsToursRow>(
       'SELECT COUNT(*) as total, SUM(CASE WHEN is_active THEN 1 ELSE 0 END) as active FROM tours WHERE operator_id = $1',
       [operatorId]
     );
 
     // Get bookings stats
-    const bookingsResult = await query(
+    const bookingsResult = await query<OpStatsBookingsRow>(
       `SELECT 
         COUNT(*) as total,
         SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
@@ -48,7 +55,7 @@ export async function GET(request: NextRequest) {
     );
 
     // Get revenue stats
-    const revenueResult = await query(
+    const revenueResult = await query<OpStatsRevenueRow>(
       `SELECT 
         COALESCE(SUM(CASE WHEN b.payment_status = 'paid' THEN b.total_price ELSE 0 END), 0) as total_revenue,
         COALESCE(SUM(CASE WHEN b.payment_status = 'pending' THEN b.total_price ELSE 0 END), 0) as pending_revenue,
@@ -62,7 +69,7 @@ export async function GET(request: NextRequest) {
     );
 
     // Get recent bookings
-    const recentBookingsResult = await query(
+    const recentBookingsResult = await query<OpStatsRecentBookingRow>(
       `SELECT 
         b.id,
         b.date,
@@ -80,7 +87,7 @@ export async function GET(request: NextRequest) {
       [operatorId]
     );
 
-    const partnerInfoResult = await query(
+    const partnerInfoResult = await query<OpStatsPartnerInfoRow>(
       'SELECT id, name, rating, review_count FROM partners WHERE id = $1',
       [operatorId]
     );
@@ -89,9 +96,9 @@ export async function GET(request: NextRequest) {
     const stats = {
         operator: {
           id: operatorId,
-          name: operatorInfo?.name || '',
-          rating: parseFloat(operatorInfo?.rating || 0),
-          reviewCount: parseInt(operatorInfo?.review_count || 0),
+          name: operatorInfo?.name ?? '',
+          rating: parseFloat(operatorInfo?.rating ?? '0'),
+          reviewCount: parseInt(operatorInfo?.review_count ?? '0'),
         },
       tours: {
         total: parseInt(toursResult.rows[0].total),

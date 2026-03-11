@@ -1,11 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
-import { OperatorDashboardData, OperatorMetrics, TourStats, OperatorBooking, ChartDataPoint } from '@/types/operator';
+import { OperatorDashboardData, OperatorMetrics, OperatorBooking, ChartDataPoint } from '@/types/operator';
 import { requireOperator } from '@/lib/auth/middleware';
 import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
+import {
+  OpDashboardMetricsRow,
+  OpDashboardBookingRow,
+  OpDashboardTopTourRow,
+  OpDashboardChartRow,
+  OpDashboardUpcomingTourRow,
+} from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
+
+// TourStats extended with id (dashboard query uses tour_id as the identifier)
+interface DashboardTourStats {
+  id: string;
+  tourId: string;
+  tourName: string;
+  bookingsCount: number;
+  revenue: number;
+  averageRating: number;
+  reviewCount: number;
+  completionRate: number;
+}
 
 /**
  * GET /api/operator/dashboard
@@ -18,7 +37,7 @@ export async function GET(request: NextRequest) {
     if (userOrResponse instanceof NextResponse) {
       return userOrResponse;
     }
-    
+
       const partnerId = await getOperatorPartnerId(userOrResponse.userId);
       if (!partnerId) {
         return NextResponse.json({
@@ -78,7 +97,7 @@ export async function GET(request: NextRequest) {
       FROM tour_stats ts, booking_stats bs, review_stats rs
     `;
 
-      const metricsResult = await query(metricsQuery, [partnerId, startDate]);
+      const metricsResult = await query<OpDashboardMetricsRow>(metricsQuery, [partnerId, startDate]);
     const metricsRow = metricsResult.rows[0];
 
     const metrics: OperatorMetrics = {
@@ -119,7 +138,7 @@ export async function GET(request: NextRequest) {
       LIMIT 10
     `;
 
-      const bookingsResult = await query(recentBookingsQuery, [partnerId]);
+      const bookingsResult = await query<OpDashboardBookingRow>(recentBookingsQuery, [partnerId]);
     const recentBookings: OperatorBooking[] = bookingsResult.rows.map(row => ({
       id: row.id,
       tourId: row.tour_id,
@@ -127,13 +146,13 @@ export async function GET(request: NextRequest) {
       userId: row.user_id,
       userName: row.user_name,
       userEmail: row.user_email,
-      date: new Date(row.date),
+      date: new Date(String(row.date)),
       guestsCount: parseInt(row.guests_count) || 1,
       totalPrice: parseFloat(row.total_price),
-      status: row.status,
-      paymentStatus: row.payment_status,
-      createdAt: new Date(row.created_at),
-      updatedAt: new Date(row.updated_at)
+      status: row.status as OperatorBooking['status'],
+      paymentStatus: row.payment_status as OperatorBooking['paymentStatus'],
+      createdAt: new Date(String(row.created_at)),
+      updatedAt: new Date(String(row.updated_at))
     }));
 
     // 3. ТОП ТУРЫ
@@ -146,8 +165,8 @@ export async function GET(request: NextRequest) {
         COALESCE(AVG(r.rating), 0) as avg_rating,
         COUNT(DISTINCT r.id) as review_count,
         ROUND(
-          COUNT(CASE WHEN b.status = 'completed' THEN 1 END)::numeric / 
-          NULLIF(COUNT(b.id), 0) * 100, 
+          COUNT(CASE WHEN b.status = 'completed' THEN 1 END)::numeric /
+          NULLIF(COUNT(b.id), 0) * 100,
           2
         ) as completion_rate
       FROM tours t
@@ -159,15 +178,16 @@ export async function GET(request: NextRequest) {
       LIMIT 5
     `;
 
-      const topToursResult = await query(topToursQuery, [partnerId]);
-    const topTours: TourStats[] = topToursResult.rows.map(row => ({
+      const topToursResult = await query<OpDashboardTopTourRow>(topToursQuery, [partnerId]);
+    const topTours: DashboardTourStats[] = topToursResult.rows.map(row => ({
+      id: row.tour_id,
       tourId: row.tour_id,
       tourName: row.tour_name,
       bookingsCount: parseInt(row.bookings_count) || 0,
       revenue: parseFloat(row.revenue) || 0,
       averageRating: parseFloat(row.avg_rating) || 0,
       reviewCount: parseInt(row.review_count) || 0,
-      completionRate: parseFloat(row.completion_rate) || 0
+      completionRate: parseFloat(row.completion_rate ?? '0') || 0
     }));
 
     // 4. ГРАФИК ВЫРУЧКИ (по дням за период)
@@ -184,10 +204,11 @@ export async function GET(request: NextRequest) {
       ORDER BY date ASC
     `;
 
-      const revenueChartResult = await query(revenueChartQuery, [partnerId, startDate]);
+      const revenueChartResult = await query<OpDashboardChartRow>(revenueChartQuery, [partnerId, startDate]);
     const revenueChart: ChartDataPoint[] = revenueChartResult.rows.map(row => ({
-      date: new Date(row.date).toISOString().split('T')[0],
-      value: parseFloat(row.value) || 0
+      date: new Date(String(row.date)).toISOString().split('T')[0],
+      value: parseFloat(row.value) || 0,
+      label: ''
     }));
 
     // 5. ГРАФИК БРОНИРОВАНИЙ (по дням за период)
@@ -203,10 +224,11 @@ export async function GET(request: NextRequest) {
       ORDER BY date ASC
     `;
 
-      const bookingsChartResult = await query(bookingsChartQuery, [partnerId, startDate]);
+      const bookingsChartResult = await query<OpDashboardChartRow>(bookingsChartQuery, [partnerId, startDate]);
     const bookingsChart: ChartDataPoint[] = bookingsChartResult.rows.map(row => ({
-      date: new Date(row.date).toISOString().split('T')[0],
-      value: parseInt(row.value) || 0
+      date: new Date(String(row.date)).toISOString().split('T')[0],
+      value: parseInt(row.value) || 0,
+      label: ''
     }));
 
     // 6. ПРЕДСТОЯЩИЕ ТУРЫ
@@ -227,14 +249,15 @@ export async function GET(request: NextRequest) {
       LIMIT 5
     `;
 
-      const upcomingToursResult = await query(upcomingToursQuery, [partnerId]);
-    const upcomingTours = upcomingToursResult.rows.map(row => ({
-      tourId: row.tour_id,
-      tourName: row.tour_name,
-      date: new Date(row.date),
-      bookingsCount: parseInt(row.bookings_count) || 0,
-      capacity: parseInt(row.capacity) || 0
-    }));
+      const upcomingToursResult = await query<OpDashboardUpcomingTourRow>(upcomingToursQuery, [partnerId]);
+    const upcomingTours: { tourId: string; tourName: string; date: Date; bookingsCount: number; capacity: number }[] =
+      upcomingToursResult.rows.map(row => ({
+        tourId: row.tour_id,
+        tourName: row.tour_name,
+        date: new Date(String(row.date)),
+        bookingsCount: parseInt(row.bookings_count) || 0,
+        capacity: parseInt(String(row.capacity)) || 0
+      }));
 
     // Формируем ответ
     const dashboardData: OperatorDashboardData = {
@@ -260,5 +283,4 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<null>, { status: 500 });
   }
 }
-
 

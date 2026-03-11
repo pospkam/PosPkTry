@@ -3,6 +3,7 @@ import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireOperator } from '@/lib/auth/middleware';
 import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
+import { OpTourDetailRow, OpTourOwnerRow, CountRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,7 +56,7 @@ export async function GET(
     const { id } = await params;
 
     // Get tour with full details
-      const result = await query(
+      const result = await query<OpTourDetailRow>(
         `SELECT 
           t.*,
           COALESCE(array_agg(DISTINCT a.url) FILTER (WHERE a.url IS NOT NULL), '{}') as images,
@@ -158,7 +159,7 @@ export async function PUT(
       const jsonFields = new Set(['season', 'requirements', 'includes', 'excludes', 'coordinates']);
 
     const updateFields: string[] = [];
-    const updateValues: unknown[] = [];
+    const updateValues: (string | number | boolean | null | object)[] = [];
     let paramIndex = 1;
 
       for (const [key, value] of Object.entries(body)) {
@@ -248,7 +249,7 @@ export async function DELETE(
 
     const { id } = await params;
 
-    const tourOwnershipResult = await query(
+    const tourOwnershipResult = await query<OpTourOwnerRow>(
       `SELECT id FROM tours WHERE id = $1 AND operator_id = $2`,
       [id, operatorId]
     );
@@ -261,7 +262,7 @@ export async function DELETE(
     }
 
     // Check for active bookings
-    const bookingsCheck = await query(
+    const bookingsCheck = await query<CountRow>(
       `SELECT COUNT(*) as count FROM bookings 
        WHERE tour_id = $1 AND status IN ('pending', 'confirmed')`,
       [id]

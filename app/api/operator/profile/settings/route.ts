@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireOperator } from '@/lib/auth/middleware';
+import { OpSettingsRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,14 +18,14 @@ export async function GET(request: NextRequest) {
     }
     const userId = operatorOrResponse.userId;
 
-    const result = await query(
+    const result = await query<OpSettingsRow>(
       'SELECT * FROM operator_settings WHERE user_id = $1',
       [userId]
     );
 
     if (result.rows.length === 0) {
       // Create default settings
-      const createResult = await query(
+      const createResult = await query<OpSettingsRow>(
         `INSERT INTO operator_settings (user_id) 
          VALUES ($1) 
          RETURNING *`,
@@ -102,8 +103,8 @@ export async function PUT(request: NextRequest) {
     } = body;
 
     // Build update query
-    const updates = [];
-    const values = [];
+    const updates: string[] = [];
+    const values: (string | number | boolean | null)[] = [];
     let paramIndex = 1;
 
     if (autoConfirmBookings !== undefined) {

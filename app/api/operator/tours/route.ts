@@ -4,6 +4,7 @@ import { ApiResponse, PaginatedResponse } from '@/types';
 import { OperatorTour } from '@/types/operator';
 import { requireOperator } from '@/lib/auth/middleware';
 import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
+import { OpTourListRow, OpTourCreateRow, CountRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
     const sortOrder = (searchParams.get('sortOrder') || 'desc').toLowerCase() === 'asc' ? 'ASC' : 'DESC';
 
     const whereConditions: string[] = ['t.operator_id = $1'];
-    const queryParams: unknown[] = [operatorId];
+    const queryParams: (string | number | boolean | null)[] = [operatorId];
     let paramIndex = 2;
 
     if (status === 'active') {
@@ -88,8 +89,8 @@ export async function GET(request: NextRequest) {
       ${whereClause}
     `;
 
-    const countResult = await query(countQuery, queryParams);
-    const total = parseInt(countResult.rows[0].total);
+    const countResult = await query<CountRow>(countQuery, queryParams);
+    const total = parseInt(countResult.rows[0].count);
 
     // Получение туров с дополнительной информацией
     const toursQuery = `
@@ -129,17 +130,17 @@ export async function GET(request: NextRequest) {
     `;
 
     queryParams.push(limit, offset);
-    const toursResult = await query(toursQuery, queryParams);
+    const toursResult = await query<OpTourListRow>(toursQuery, queryParams);
 
     const tours: OperatorTour[] = toursResult.rows.map(row => ({
       id: row.id,
       name: row.name,
       description: row.description,
       category: row.category,
-      difficulty: row.difficulty,
-      duration: parseInt(row.duration),
-      maxGroupSize: parseInt(row.max_group_size),
-      minGroupSize: parseInt(row.min_group_size) || 1,
+      difficulty: row.difficulty as OperatorTour['difficulty'],
+      duration: row.duration,
+      maxGroupSize: row.max_group_size,
+      minGroupSize: row.min_group_size || 1,
       price: parseFloat(row.price),
       currency: row.currency,
       isActive: row.is_active,
@@ -157,15 +158,15 @@ export async function GET(request: NextRequest) {
       reviewCount: parseInt(row.review_count) || 0,
       bookingsCount: parseInt(row.bookings_count) || 0,
       totalRevenue: parseFloat(row.total_revenue) || 0,
-      createdAt: new Date(row.created_at),
-      updatedAt: new Date(row.updated_at),
-      routeId: (row.route_id as string | null) ?? undefined,
+      createdAt: new Date(String(row.created_at)),
+      updatedAt: new Date(String(row.updated_at)),
+      routeId: row.route_id ?? undefined,
       route: row.route_id ? {
-        id: row.route_id as string,
-        title: row.route_title as string,
-        category: row.route_category as string,
-        lat: row.route_lat != null ? parseFloat(row.route_lat as string) : undefined,
-        lng: row.route_lng != null ? parseFloat(row.route_lng as string) : undefined,
+        id: row.route_id,
+        title: row.route_title ?? '',
+        category: row.route_category ?? '',
+        lat: row.route_lat != null ? parseFloat(row.route_lat) : undefined,
+        lng: row.route_lng != null ? parseFloat(row.route_lng) : undefined,
       } : undefined,
     }));
 
@@ -376,7 +377,7 @@ export async function POST(request: NextRequest) {
       JSON.stringify(body.images || [])
     ];
 
-    const result = await query(insertQuery, values);
+    const result = await query<OpTourCreateRow>(insertQuery, values);
     const newTour = result.rows[0];
 
     return NextResponse.json({
@@ -388,7 +389,7 @@ export async function POST(request: NextRequest) {
         status: 'draft',
         operator_id: operatorId,
         isActive: newTour.is_active,
-        createdAt: new Date(newTour.created_at)
+        createdAt: new Date(String(newTour.created_at))
       },
       message: 'Тур успешно создан'
     }, { status: 201 });

@@ -3,6 +3,15 @@ import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireOperator } from '@/lib/auth/middleware';
 import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
+import {
+  OpAnalyticsOverviewRow,
+  OpAnalyticsTrendRow,
+  OpAnalyticsTopTourRow,
+  OpAnalyticsRecentBookingRow,
+  OpAnalyticsConversionRow,
+  OpAnalyticsCustomersRow,
+  OpAnalyticsReviewsRow,
+} from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,7 +28,7 @@ export async function GET(request: NextRequest) {
     const userId = operatorOrResponse.userId;
 
     const operatorId = await getOperatorPartnerId(userId);
-    
+
     if (!operatorId) {
       return NextResponse.json({
         success: false,
@@ -32,8 +41,8 @@ export async function GET(request: NextRequest) {
     const startDate = new Date(Date.now() - parseInt(period) * 24 * 60 * 60 * 1000).toISOString();
 
     // Overview statistics
-    const overviewResult = await query(
-      `SELECT 
+    const overviewResult = await query<OpAnalyticsOverviewRow>(
+      `SELECT
         COUNT(DISTINCT t.id) as total_tours,
         COUNT(DISTINCT CASE WHEN t.is_active THEN t.id END) as active_tours,
         COUNT(DISTINCT b.id) as total_bookings,
@@ -54,8 +63,8 @@ export async function GET(request: NextRequest) {
     const overview = overviewResult.rows[0];
 
     // Daily bookings trend (last 30 days)
-    const trendResult = await query(
-      `SELECT 
+    const trendResult = await query<OpAnalyticsTrendRow>(
+      `SELECT
         DATE(b.created_at) as date,
         COUNT(*) as bookings_count,
         SUM(b.total_price) as revenue,
@@ -70,8 +79,8 @@ export async function GET(request: NextRequest) {
     );
 
     // Top performing tours
-    const topToursResult = await query(
-      `SELECT 
+    const topToursResult = await query<OpAnalyticsTopTourRow>(
+      `SELECT
         t.id,
         t.name,
         COUNT(b.id) as bookings_count,
@@ -89,8 +98,8 @@ export async function GET(request: NextRequest) {
     );
 
     // Recent bookings
-    const recentBookingsResult = await query(
-      `SELECT 
+    const recentBookingsResult = await query<OpAnalyticsRecentBookingRow>(
+      `SELECT
         b.id,
         b.status,
         b.payment_status,
@@ -111,8 +120,8 @@ export async function GET(request: NextRequest) {
     );
 
     // Conversion metrics
-    const conversionResult = await query(
-      `SELECT 
+    const conversionResult = await query<OpAnalyticsConversionRow>(
+      `SELECT
         COUNT(*) FILTER (WHERE status = 'pending') as pending,
         COUNT(*) FILTER (WHERE status = 'confirmed') as confirmed,
         COUNT(*) FILTER (WHERE status = 'completed') as completed,
@@ -125,16 +134,16 @@ export async function GET(request: NextRequest) {
     );
 
     const conversion = conversionResult.rows[0];
-    const totalConversion = parseInt(conversion.pending) + parseInt(conversion.confirmed) + 
+    const totalConversion = parseInt(conversion.pending) + parseInt(conversion.confirmed) +
                            parseInt(conversion.completed) + parseInt(conversion.cancelled);
 
     // Customer insights
-    const customersResult = await query(
-      `SELECT 
+    const customersResult = await query<OpAnalyticsCustomersRow>(
+      `SELECT
         COUNT(DISTINCT b.user_id) as total_customers,
         COUNT(DISTINCT CASE WHEN booking_count > 1 THEN user_id END) as repeat_customers
       FROM (
-        SELECT 
+        SELECT
           b.user_id,
           COUNT(*) as booking_count
         FROM bookings b
@@ -150,8 +159,8 @@ export async function GET(request: NextRequest) {
     const customers = customersResult.rows[0];
 
     // Reviews summary
-    const reviewsResult = await query(
-      `SELECT 
+    const reviewsResult = await query<OpAnalyticsReviewsRow>(
+      `SELECT
         COUNT(*) as total_reviews,
         AVG(rating) as avg_rating,
         COUNT(*) FILTER (WHERE rating = 5) as five_star,
@@ -197,14 +206,14 @@ export async function GET(request: NextRequest) {
       trend: trendResult.rows.map(row => ({
         date: row.date,
         bookingsCount: parseInt(row.bookings_count),
-        revenue: parseFloat(row.revenue),
+        revenue: parseFloat(row.revenue ?? '0'),
         uniqueCustomers: parseInt(row.unique_customers)
       })),
       topTours: topToursResult.rows.map(row => ({
         id: row.id,
         name: row.name,
         bookingsCount: parseInt(row.bookings_count),
-        revenue: parseFloat(row.revenue || 0),
+        revenue: parseFloat(row.revenue ?? '0'),
         avgRating: row.avg_rating ? parseFloat(row.avg_rating).toFixed(2) : null,
         reviewsCount: parseInt(row.reviews_count)
       })),
@@ -225,7 +234,7 @@ export async function GET(request: NextRequest) {
         confirmed: parseInt(conversion.confirmed),
         completed: parseInt(conversion.completed),
         cancelled: parseInt(conversion.cancelled),
-        confirmationRate: totalConversion > 0 
+        confirmationRate: totalConversion > 0
           ? ((parseInt(conversion.confirmed) / totalConversion) * 100).toFixed(2)
           : '0.00',
         completionRate: parseInt(conversion.confirmed) > 0

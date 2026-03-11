@@ -56,7 +56,7 @@ export async function GET(
     const parsedParams = paramsSchema.safeParse(await params);
     if (!parsedParams.success) {
       return NextResponse.json(
-        { success: false, error: parsedParams.error.issues } as ApiResponse<null>,
+        { success: false, error: parsedParams.error.issues } as unknown as ApiResponse<null>,
         { status: 400 }
       );
     }

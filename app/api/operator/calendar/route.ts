@@ -3,6 +3,7 @@ import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireOperator } from '@/lib/auth/middleware';
 import { getOperatorPartnerId, verifyTourOwnership } from '@/lib/auth/operator-helpers';
+import { OpCalendarRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
         AND ta.date <= $3
     `;
 
-    const params: unknown[] = [operatorId, startDate, endDate];
+    const params: (string | number | boolean | null)[] = [operatorId, startDate, endDate];
     let paramIndex = 4;
 
     if (tourId) {
@@ -69,7 +70,7 @@ export async function GET(request: NextRequest) {
 
     queryStr += ` ORDER BY ta.date ASC, t.name ASC`;
 
-    const result = await query(queryStr, params);
+    const result = await query<OpCalendarRow>(queryStr, params);
 
     const availability = result.rows.map(row => ({
       id: row.id,

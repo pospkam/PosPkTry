@@ -3,6 +3,7 @@ import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireOperator } from '@/lib/auth/middleware';
 import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
+import { OpTourPublishRow } from '@/lib/types/db-rows';
 
 /**
  * POST /api/operator/tours/[id]/publish
@@ -35,7 +36,7 @@ export async function POST(
     const { id } = await params;
 
     // Проверяем что тур принадлежит оператору
-    const tourResult = await query(
+    const tourResult = await query<OpTourPublishRow>(
       `SELECT id, name, description, price, is_active, operator_id 
        FROM tours WHERE id = $1`,
       [id]
@@ -75,7 +76,7 @@ export async function POST(
     if (!tour.description || tour.description.trim().length < 20) {
       errors.push('Описание тура обязательно (минимум 20 символов)');
     }
-    if (!tour.price || tour.price <= 0) {
+    if (!tour.price || parseFloat(tour.price) <= 0) {
       errors.push('Укажите цену тура');
     }
 
