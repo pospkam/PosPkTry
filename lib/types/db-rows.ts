@@ -1052,3 +1052,121 @@ export interface OpAssetUsageRow {
   count: string;
 }
 
+// === Guide Routes ===
+
+export interface GuideEarningRow {
+  id: string;
+  amount: string;
+  commission_rate: string;
+  commission_amount: string;
+  payment_status: string;
+  payment_date: Date | null;
+  notes: string | null;
+  tour_name: string | null;
+  tour_date: Date | null;
+  created_at: Date;
+}
+
+export interface GuideEarningStatsRow {
+  total_count: string;
+  total_earned: string;
+  total_paid: string;
+  total_pending: string;
+  total_commission: string;
+  avg_commission_rate: string;
+}
+
+export interface GuideLocationRow {
+  name: string;
+  longitude: string | null;
+  latitude: string | null;
+  specializations: string[] | null;
+}
+
+export interface GuideScheduleLocationRow {
+  id: string;
+  title: string;
+  start_time: Date;
+  location_name: string | null;
+  longitude: string;
+  latitude: string;
+  tour_title: string | null;
+}
+
+export interface GuidePopularLocationRow {
+  location_name: string | null;
+  longitude: string;
+  latitude: string;
+  bookings_count: string;
+  tour_title: string;
+}
+
+export interface GuideActivityTrailRow {
+  title: string;
+  start_time: Date;
+  location_name: string | null;
+  longitude: string;
+  latitude: string;
+}
+
+export interface GuideScheduleRow {
+  id: string;
+  guide_id: string;
+  start_time: Date;
+  end_time: Date;
+  title: string;
+  description: string | null;
+  tour_id: string | null;
+  tour_title: string | null;
+  booking_id: string | null;
+  booking_status: string | null;
+  max_participants: number;
+  current_participants: number;
+  location_name: string | null;
+  status: string;
+  notes: string | null;
+  created_at: Date;
+  updated_at: Date;
+  latitude: string | null;
+  longitude: string | null;
+}
+
+export interface GuideScheduleCheckRow {
+  guide_id: string;
+  start_time: string;
+  end_time: string;
+  tour_id: string | null;
+}
+
+export interface GuideUserRow {
+  id: string;
+  email: string;
+  name: string;
+  created_at: Date;
+}
+
+export interface GuideReviewStatsRow {
+  total_reviews: string;
+  avg_rating: string;
+  five_star: string;
+  four_star: string;
+  three_star: string;
+  two_star: string;
+  one_star: string;
+  replied_count: string;
+  unreplied_count: string;
+  avg_professionalism: string;
+  avg_knowledge: string;
+  avg_communication: string;
+}
+
+// === Tourist Routes ===
+
+export interface TouristAchievementRow {
+  id: string;
+  tourist_id: string;
+  achievement_type: string;
+  earned_at: Date;
+  metadata: Record<string, unknown> | null;
+}
+

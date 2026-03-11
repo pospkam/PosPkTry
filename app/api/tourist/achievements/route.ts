@@ -3,6 +3,7 @@ import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireAuth } from '@/lib/auth/middleware';
 import { getTouristProfile } from '@/lib/auth/tourist-helpers';
+import { TouristAchievementRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const result = await query(
+    const result = await query<TouristAchievementRow>(
       `SELECT * FROM tourist_achievements WHERE tourist_id = $1 ORDER BY earned_at DESC`,
       [profile.id]
     );

@@ -3,6 +3,7 @@ import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { getGuidePartnerId } from '@/lib/auth/guide-helpers';
 import { requireRole } from '@/lib/auth/middleware';
+import { GuideReviewStatsRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -68,7 +69,7 @@ export async function GET(request: NextRequest) {
     const result = await query(queryStr, params);
 
     // Get statistics
-    const statsResult = await query(
+    const statsResult = await query<GuideReviewStatsRow>(
       `SELECT 
         COUNT(*) as total_reviews,
         COALESCE(AVG(rating), 0) as avg_rating,
@@ -103,7 +104,7 @@ export async function GET(request: NextRequest) {
       countQuery += ` AND rating <= 2`;
     }
     
-    const countResult = await query(countQuery, countParams);
+    const countResult = await query<{ count: string }>(countQuery, countParams);
     const totalCount = parseInt(countResult.rows[0].count);
 
     const reviews = result.rows.map(row => ({

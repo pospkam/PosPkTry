@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireRole } from '@/lib/auth/middleware';
+import { GuideEarningRow, GuideEarningStatsRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
     const userId = guideOrResponse.userId;
 
     // Get earnings list
-    const earningsResult = await query(
+    const earningsResult = await query<GuideEarningRow>(
       `SELECT 
         ge.*,
         t.name as tour_name,
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest) {
     );
 
     // Get summary statistics
-    const statsResult = await query(
+    const statsResult = await query<GuideEarningStatsRow>(
       `SELECT 
         COUNT(*) as total_count,
         COALESCE(SUM(amount), 0) as total_earned,

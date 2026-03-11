@@ -3,6 +3,12 @@ import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { getGuidePartnerId, getGuideExpertiseZones } from '@/lib/auth/guide-helpers';
 import { requireRole } from '@/lib/auth/middleware';
+import {
+  GuideLocationRow,
+  GuideScheduleLocationRow,
+  GuidePopularLocationRow,
+  GuideActivityTrailRow,
+} from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,7 +32,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get guide's base location
-    const guideLocationResult = await query(
+    const guideLocationResult = await query<GuideLocationRow>(
       `SELECT 
         p.name,
         ST_X(p.location::geometry) as longitude,
@@ -49,7 +55,7 @@ export async function GET(request: NextRequest) {
     const expertiseZones = await getGuideExpertiseZones(guideId);
 
     // Get upcoming schedule locations
-    const upcomingLocationsResult = await query(
+    const upcomingLocationsResult = await query<GuideScheduleLocationRow>(
       `SELECT 
         gs.id,
         gs.title,
@@ -83,7 +89,7 @@ export async function GET(request: NextRequest) {
     }));
 
     // Get popular locations (most frequent tour locations)
-    const popularLocationsResult = await query(
+    const popularLocationsResult = await query<GuidePopularLocationRow>(
       `SELECT 
         t.location_name,
         ST_X(t.location::geometry) as longitude,
@@ -107,11 +113,11 @@ export async function GET(request: NextRequest) {
         lng: parseFloat(row.longitude)
       },
       tourTitle: row.tour_title,
-      bookingsCount: parseInt(row.bookings_count || 0)
+      bookingsCount: parseInt(row.bookings_count ?? '0')
     }));
 
     // Get recent activity trail (last 30 days completed tours)
-    const activityTrailResult = await query(
+    const activityTrailResult = await query<GuideActivityTrailRow>(
       `SELECT 
         gs.title,
         gs.start_time,
