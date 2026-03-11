@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { ApiResponse } from '@/types';
+import { BookingAdminRow, CountRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,7 +33,7 @@ export async function GET(request: NextRequest) {
       JOIN users u ON b.user_id = u.id
     `;
 
-    const params = [];
+    const params: (string | number)[] = [];
     let paramIndex = 1;
 
     if (status) {
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest) {
     queryStr += ` ORDER BY b.created_at DESC LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
     params.push(limit, offset);
 
-    const result = await query(queryStr, params);
+    const result = await query<BookingAdminRow>(queryStr, params);
 
     const bookings = result.rows.map(row => ({
       id: row.id,
@@ -61,7 +62,7 @@ export async function GET(request: NextRequest) {
     }));
 
     // Get total count
-    const countResult = await query(
+    const countResult = await query<CountRow>(
       status ? 'SELECT COUNT(*) FROM bookings WHERE status = $1' : 'SELECT COUNT(*) FROM bookings',
       status ? [status] : []
     );

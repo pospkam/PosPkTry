@@ -3,6 +3,15 @@ import { query } from '@/lib/database';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { DashboardData, DashboardMetrics, DashboardCharts, RecentActivity, AdminAlert } from '@/types/admin';
 import { ApiResponse } from '@/types';
+import {
+  DashboardMetricsRow,
+  RevenueChartRow,
+  CategoryCountRow,
+  UserGrowthRow,
+  TopTourRow,
+  ActivityRow,
+  TotalRow,
+} from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -70,7 +79,7 @@ export async function GET(request: NextRequest) {
       FROM current_period cp, previous_period pp, users_stats us, conversion c
     `;
 
-    const metricsResult = await query(metricsQuery, [currentPeriodStart, previousPeriodStart]);
+    const metricsResult = await query<DashboardMetricsRow>(metricsQuery, [currentPeriodStart, previousPeriodStart]);
     const metricsRow = metricsResult.rows[0];
 
     // Вычисляем изменения и тренды
@@ -96,12 +105,12 @@ export async function GET(request: NextRequest) {
       parseInt(metricsRow.previous_users)
     );
 
-    const averageOrderValue = metricsRow.current_bookings > 0
-      ? parseFloat(metricsRow.current_revenue) / parseInt(metricsRow.current_bookings)
+    const averageOrderValue = parseInt(metricsRow.current_bookings, 10) > 0
+      ? parseFloat(metricsRow.current_revenue) / parseInt(metricsRow.current_bookings, 10)
       : 0;
 
-    const previousAverageOrderValue = metricsRow.previous_bookings > 0
-      ? parseFloat(metricsRow.previous_revenue) / parseInt(metricsRow.previous_bookings)
+    const previousAverageOrderValue = parseInt(metricsRow.previous_bookings, 10) > 0
+      ? parseFloat(metricsRow.previous_revenue) / parseInt(metricsRow.previous_bookings, 10)
       : 0;
 
     const aovChange = calculateChange(averageOrderValue, previousAverageOrderValue);
@@ -150,7 +159,7 @@ export async function GET(request: NextRequest) {
       ORDER BY month
     `;
 
-    const revenueChartResult = await query(revenueChartQuery, []);
+    const revenueChartResult = await query<RevenueChartRow>(revenueChartQuery, []);
     const revenueByMonth = revenueChartResult.rows.map(row => ({
       date: new Date(row.month).toISOString().substring(0, 7), // YYYY-MM
       value: parseFloat(row.revenue)
@@ -169,7 +178,7 @@ export async function GET(request: NextRequest) {
       ORDER BY count DESC
     `;
 
-    const categoryResult = await query(bookingsByCategoryQuery, [currentPeriodStart]);
+    const categoryResult = await query<CategoryCountRow>(bookingsByCategoryQuery, [currentPeriodStart]);
     
     const categoryColors: Record<string, string> = {
       operator: '#E6C149',
@@ -196,7 +205,7 @@ export async function GET(request: NextRequest) {
       ORDER BY date
     `;
 
-    const userGrowthResult = await query(userGrowthQuery, [currentPeriodStart]);
+    const userGrowthResult = await query<UserGrowthRow>(userGrowthQuery, [currentPeriodStart]);
     const userGrowth = userGrowthResult.rows.map(row => ({
       date: new Date(row.date).toISOString().substring(0, 10), // YYYY-MM-DD
       value: parseInt(row.count)
@@ -217,7 +226,7 @@ export async function GET(request: NextRequest) {
       LIMIT 5
     `;
 
-    const topToursResult = await query(topToursQuery, [currentPeriodStart]);
+    const topToursResult = await query<TopTourRow>(topToursQuery, [currentPeriodStart]);
     const topTours = topToursResult.rows.map(row => ({
       id: row.id,
       title: row.title,
@@ -251,17 +260,17 @@ export async function GET(request: NextRequest) {
       LIMIT 10
     `;
 
-    const activitiesResult = await query(activitiesQuery, []);
+    const activitiesResult = await query<ActivityRow>(activitiesQuery, []);
     const recentActivities: RecentActivity[] = activitiesResult.rows.map(row => ({
       id: row.id,
-      type: row.type,
+      type: row.type as RecentActivity['type'],
       title: row.title,
       description: row.description,
       timestamp: new Date(row.timestamp),
       user: row.user_id ? {
         id: row.user_id,
-        name: row.user_name,
-        avatar: row.user_avatar
+        name: row.user_name ?? '',
+        avatar: row.user_avatar ?? undefined
       } : undefined
     }));
 
@@ -274,7 +283,7 @@ export async function GET(request: NextRequest) {
       FROM partners
       WHERE is_verified = false
     `;
-    const pendingPartnersResult = await query(pendingPartnersQuery, []);
+    const pendingPartnersResult = await query<TotalRow>(pendingPartnersQuery, []);
     const pendingPartners = parseInt(pendingPartnersResult.rows[0]?.total || '0');
 
     const pendingToursQuery = `
@@ -282,7 +291,7 @@ export async function GET(request: NextRequest) {
       FROM tours
       WHERE is_active = false
     `;
-    const pendingToursResult = await query(pendingToursQuery, []);
+    const pendingToursResult = await query<TotalRow>(pendingToursQuery, []);
     const pendingTours = parseInt(pendingToursResult.rows[0]?.total || '0');
 
     // Собираем все данные

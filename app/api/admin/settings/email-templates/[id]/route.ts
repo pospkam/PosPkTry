@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { ApiResponse } from '@/types';
+import { EmailTemplateRow, EmailTemplateUpdateRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,7 +26,7 @@ export async function GET(
       WHERE id = $1
     `;
 
-    const templateResult = await query(templateQuery, [id]);
+    const templateResult = await query<EmailTemplateRow>(templateQuery, [id]);
 
     if (templateResult.rows.length === 0) {
       return NextResponse.json({
@@ -94,7 +95,7 @@ export async function PUT(
       RETURNING id, updated_at
     `;
 
-    const result = await query(updateQuery, [
+    const result = await query<EmailTemplateUpdateRow>(updateQuery, [
       name,
       subject,
       type,

@@ -2,9 +2,27 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { ApiResponse, PaginatedResponse } from '@/types';
+import { CountRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 const ALLOWED_SORT_FIELDS = new Set(['created_at', 'updated_at', 'name', 'price', 'rating', 'review_count', 'is_active']);
+
+interface ContentTourAdminRow {
+  id: string;
+  name: string;
+  description: string;
+  difficulty: string;
+  duration: number;
+  price: string;
+  currency: string;
+  operator_id: string;
+  is_active: boolean;
+  rating: string;
+  review_count: string;
+  created_at: Date;
+  updated_at: Date;
+  operator_name: string | null;
+}
 
 interface AdminTour {
   id: string;
@@ -47,7 +65,7 @@ export async function GET(request: NextRequest) {
 
     // Строим WHERE условия
     const whereConditions: string[] = [];
-    const queryParams: unknown[] = [];
+    const queryParams: (string | number | boolean | null)[] = [];
     let paramIndex = 1;
 
     if (status === 'active') {
@@ -68,13 +86,13 @@ export async function GET(request: NextRequest) {
 
     // Подсчёт общего количества
     const countQuery = `
-      SELECT COUNT(*) as total
+      SELECT COUNT(*)
       FROM tours t
       ${whereClause}
     `;
 
-    const countResult = await query(countQuery, queryParams);
-    const total = parseInt(countResult.rows[0].total);
+    const countResult = await query<CountRow>(countQuery, queryParams);
+    const total = parseInt(countResult.rows[0].count);
 
     // Получение туров
     const toursQuery = `
@@ -101,7 +119,7 @@ export async function GET(request: NextRequest) {
     `;
 
     queryParams.push(limit, offset);
-    const toursResult = await query(toursQuery, queryParams);
+    const toursResult = await query<ContentTourAdminRow>(toursQuery, queryParams);
 
     const tours: AdminTour[] = toursResult.rows.map(row => ({
       id: row.id,

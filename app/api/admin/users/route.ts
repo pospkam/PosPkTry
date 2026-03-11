@@ -4,6 +4,7 @@ import { AdminUser } from '@/types/admin';
 import { ApiResponse, PaginatedResponse } from '@/types';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { z } from 'zod';
+import { UsersAdminRow, CountRow, UsersCreateRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -72,7 +73,7 @@ export async function GET(request: NextRequest) {
 
     // Строим WHERE условия
     const whereConditions: string[] = [];
-    const queryParams: unknown[] = [];
+    const queryParams: (string | number | null)[] = [];
     let paramIndex = 1;
 
     if (role) {
@@ -98,13 +99,13 @@ export async function GET(request: NextRequest) {
 
     // Подсчёт общего количества
     const countQuery = `
-      SELECT COUNT(*) as total
+      SELECT COUNT(*)
       FROM users u
       ${whereClause}
     `;
 
-    const countResult = await query(countQuery, queryParams);
-    const total = Number.parseInt(countResult.rows[0]?.total ?? '0', 10);
+    const countResult = await query<CountRow>(countQuery, queryParams);
+    const total = Number.parseInt(countResult.rows[0]?.count ?? '0', 10);
 
     // Получение пользователей
     const usersQuery = `
@@ -133,7 +134,7 @@ export async function GET(request: NextRequest) {
     `;
 
     queryParams.push(limit, offset);
-    const usersResult = await query(usersQuery, queryParams);
+    const usersResult = await query<UsersAdminRow>(usersQuery, queryParams);
 
     const users: AdminUser[] = usersResult.rows.map(row => ({
       id: row.id,
@@ -214,7 +215,7 @@ export async function POST(request: NextRequest) {
       RETURNING id, email, name, role, created_at
     `;
 
-    const result = await query(createUserQuery, [
+    const result = await query<UsersCreateRow>(createUserQuery, [
       email,
       name,
       role,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { ApiResponse } from '@/types';
+import { TourUpdateRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -78,7 +79,7 @@ export async function PUT(
       RETURNING id, name, is_active, updated_at
     `;
 
-    const result = await query(updateQuery, values);
+    const result = await query<TourUpdateRow>(updateQuery, values);
     const updatedTour = result.rows[0];
 
     return NextResponse.json({

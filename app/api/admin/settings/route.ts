@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireAdmin } from '@/lib/auth/middleware';
+import { SystemSettingRow, EmailTemplateRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,10 +20,10 @@ export async function GET(request: NextRequest) {
       ORDER BY category, key
     `;
 
-    const settingsResult = await query(settingsQuery);
+    const settingsResult = await query<SystemSettingRow>(settingsQuery);
 
     // Группируем по категориям
-    const settings: any = {};
+    const settings: Record<string, Record<string, { value: string; description: string | null; updatedAt: Date }>> = {};
     settingsResult.rows.forEach(row => {
       if (!settings[row.category]) {
         settings[row.category] = {};
@@ -41,7 +42,7 @@ export async function GET(request: NextRequest) {
       ORDER BY type, name
     `;
 
-    const templatesResult = await query(templatesQuery);
+    const templatesResult = await query<EmailTemplateRow>(templatesQuery);
 
     return NextResponse.json({
       success: true,
@@ -89,7 +90,7 @@ export async function PUT(request: NextRequest) {
     // Обновляем настройки
     const updatePromises = [];
     for (const [category, categorySettings] of Object.entries(settings)) {
-      for (const [key, value] of Object.entries(categorySettings as any)) {
+      for (const [key, value] of Object.entries(categorySettings as Record<string, unknown>)) {
         const updateQuery = `
           INSERT INTO system_settings (key, value, category, updated_at)
           VALUES ($1, $2, $3, NOW())

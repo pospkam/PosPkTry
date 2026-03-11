@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { ApiResponse, PaginatedResponse } from '@/types';
+import { ReviewAdminRow, CountRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 const ALLOWED_SORT_FIELDS = new Set(['created_at', 'updated_at', 'rating', 'is_verified']);
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest) {
     const sortOrder = (searchParams.get('sortOrder') || 'desc').toLowerCase() === 'asc' ? 'ASC' : 'DESC';
 
     const whereConditions: string[] = [];
-    const queryParams: unknown[] = [];
+    const queryParams: (string | number | boolean | null)[] = [];
     let paramIndex = 1;
 
     if (verified !== null && verified !== undefined) {
@@ -55,13 +56,13 @@ export async function GET(request: NextRequest) {
 
     // Подсчёт
     const countQuery = `
-      SELECT COUNT(*) as total
+      SELECT COUNT(*)
       FROM reviews r
       ${whereClause}
     `;
 
-    const countResult = await query(countQuery, queryParams);
-    const total = parseInt(countResult.rows[0].total);
+    const countResult = await query<CountRow>(countQuery, queryParams);
+    const total = parseInt(countResult.rows[0].count);
 
     // Получение отзывов
     const reviewsQuery = `
@@ -84,7 +85,7 @@ export async function GET(request: NextRequest) {
     `;
 
     queryParams.push(limit, offset);
-    const reviewsResult = await query(reviewsQuery, queryParams);
+    const reviewsResult = await query<ReviewAdminRow>(reviewsQuery, queryParams);
 
     const reviews: AdminReview[] = reviewsResult.rows.map(row => ({
       id: row.id,

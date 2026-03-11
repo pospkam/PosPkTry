@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { ApiResponse } from '@/types';
+import { EmailTemplateRow, EmailTemplateCreateRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
       ORDER BY type, name
     `;
 
-    const templatesResult = await query(templatesQuery);
+    const templatesResult = await query<EmailTemplateRow>(templatesQuery);
 
     return NextResponse.json({
       success: true,
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest) {
       RETURNING id, created_at
     `;
 
-    const result = await query(createQuery, [
+    const result = await query<EmailTemplateCreateRow>(createQuery, [
       name,
       subject,
       type,

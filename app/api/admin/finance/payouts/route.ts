@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { ApiResponse } from '@/types';
+import { PayoutAdminRow, PayoutStatsRow, PayoutCreateRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -67,7 +68,7 @@ export async function GET(request: NextRequest) {
     `;
 
     payoutsParams.push(limit);
-    const payoutsResult = await query(payoutsQuery, payoutsParams);
+    const payoutsResult = await query<PayoutAdminRow>(payoutsQuery, payoutsParams);
 
     // Статистика выплат
     const statsQuery = `
@@ -80,7 +81,7 @@ export async function GET(request: NextRequest) {
       FROM payouts
     `;
 
-    const statsResult = await query(statsQuery);
+    const statsResult = await query<PayoutStatsRow>(statsQuery);
     const stats = statsResult.rows[0];
 
     return NextResponse.json({
@@ -169,7 +170,7 @@ export async function POST(request: NextRequest) {
       RETURNING id, status, created_at
     `;
 
-    const payoutResult = await query(createPayoutQuery, [
+    const payoutResult = await query<PayoutCreateRow>(createPayoutQuery, [
       partnerId,
       bookingId,
       parsedAmount,

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { requireAdmin } from '@/lib/auth/middleware';
-import { Partner, ApiResponse, PaginatedResponse } from '@/types';
+import { Partner, ApiResponse, PaginatedResponse, Asset, ContactInfo } from '@/types';
+import { PartnerAdminRow, CountRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 const ALLOWED_SORT_FIELDS = new Set(['created_at', 'updated_at', 'name', 'category', 'rating', 'review_count', 'is_verified']);
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest) {
     const sortOrder = (searchParams.get('sortOrder') || 'desc').toLowerCase() === 'asc' ? 'ASC' : 'DESC';
 
     const whereConditions: string[] = [];
-    const queryParams: unknown[] = [];
+    const queryParams: (string | number | boolean | null)[] = [];
     let paramIndex = 1;
 
     if (category) {
@@ -57,13 +58,13 @@ export async function GET(request: NextRequest) {
 
     // Подсчёт
     const countQuery = `
-      SELECT COUNT(*) as total
+      SELECT COUNT(*)
       FROM partners p
       ${whereClause}
     `;
 
-    const countResult = await query(countQuery, queryParams);
-    const total = parseInt(countResult.rows[0].total);
+    const countResult = await query<CountRow>(countQuery, queryParams);
+    const total = parseInt(countResult.rows[0].count);
 
     // Получение партнёров
     const partnersQuery = `
@@ -87,14 +88,14 @@ export async function GET(request: NextRequest) {
     `;
 
     queryParams.push(limit, offset);
-    const partnersResult = await query(partnersQuery, queryParams);
+    const partnersResult = await query<PartnerAdminRow>(partnersQuery, queryParams);
 
     const partners: Partner[] = partnersResult.rows.map(row => ({
       id: row.id,
       name: row.name,
-      category: row.category,
-      description: row.description,
-      contact: row.contact,
+      category: row.category as Partner['category'],
+      description: row.description ?? '',
+      contact: (row.contact ?? {}) as unknown as ContactInfo,
       rating: parseFloat(row.rating) || 0,
       reviewCount: parseInt(row.review_count) || 0,
       isVerified: row.is_verified,
@@ -106,7 +107,7 @@ export async function GET(request: NextRequest) {
         size: 0,
         createdAt: new Date()
       } : undefined,
-      images: [],
+      images: [] as Asset[],
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.updated_at)
     }));

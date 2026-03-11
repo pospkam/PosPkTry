@@ -4,6 +4,7 @@ import { verifyPassword } from '@/lib/auth/password';
 import { createToken } from '@/lib/auth/jwt';
 import { ApiResponse } from '@/types';
 import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
+import { UsersRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Find user by email
-    const userResult = await query(
+    const userResult = await query<UsersRow>(
       `SELECT id, email, name, role, password_hash, preferences, created_at, updated_at
        FROM users
        WHERE email = $1`,

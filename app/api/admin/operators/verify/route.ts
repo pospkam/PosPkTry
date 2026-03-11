@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { emailService } from '@/lib/notifications/email-service';
+import { OperatorVerifyRow, OperatorActionRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Получаем данные оператора
-    const operatorResult = await query(`
+    const operatorResult = await query<OperatorActionRow>(`
       SELECT 
         o.id,
         o.user_id,
@@ -156,7 +157,7 @@ export async function GET(request: NextRequest) {
     const userOrResponse = await requireAdmin(request);
     if (userOrResponse instanceof NextResponse) return userOrResponse;
 
-    const result = await query(`
+    const result = await query<OperatorVerifyRow>(`
       SELECT 
         o.id,
         o.company_name,

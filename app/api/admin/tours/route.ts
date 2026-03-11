@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { ApiResponse } from '@/types';
+import { TourAdminRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
       return adminOrResponse;
     }
 
-    const result = await query(`
+    const result = await query<TourAdminRow>(`
       SELECT 
         t.*,
         p.name as operator_name,
@@ -42,7 +43,7 @@ export async function GET(request: NextRequest) {
       rating: parseFloat(row.rating),
       reviewCount: row.review_count,
       operatorName: row.operator_name,
-      images: row.images.filter(Boolean),
+      images: Array.isArray(row.images) ? row.images.filter(Boolean) : [],
       bookingsCount: parseInt(row.bookings_count),
       createdAt: row.created_at,
       updatedAt: row.updated_at
