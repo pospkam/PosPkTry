@@ -1,10 +1,10 @@
 # Tech Debt: TypeScript Build Errors in API Routes
 
 **Дата анализа:** 11 марта 2026
-**Общее количество TS ошибок в `app/api/`:** ~847
+**Общее количество TS ошибок в `app/api/`:** ~847 → ~372 (исправлено ~460 в итерациях 2-7)
 
-Файл `app/api/**/*` исключён из `tsconfig.json` (`exclude`) чтобы не блокировать деплой пока ошибки не исправлены.
-ESLint включён полностью. TypeScript включён для всей кодовой базы **кроме** `app/api/`.
+Файлы `app/api/**/*` — только 13 оставшихся dir исключены из `tsconfig.json` (`exclude`). Остальные уже type-checked.
+ESLint включён полностью. TypeScript включён для всей кодовой базы **кроме** 13 оставшихся API dir.
 
 ---
 
@@ -105,8 +105,33 @@ ESLint включён полностью. TypeScript включён для вс�
 8. ✅ Исправить `app/api/guide/` (40 ошибок → 0, 8 файлов), `app/api/tourist/achievements/` (5 ошибок → 0), `app/api/support/` (0 ошибок, уже чисто)
    - Добавлено 10 новых интерфейсов в db-rows.ts: GuideEarningRow, GuideEarningStatsRow, GuideLocationRow, GuideScheduleRow, GuideScheduleCheckRow, GuideScheduleLocationRow, GuidePopularLocationRow, GuideActivityTrailRow, GuideUserRow, GuideReviewStatsRow, TouristAchievementRow
 
-### Итерация 7 (следующая)
-9. Исправить оставшиеся директории (P3): `app/api/ai/`, `app/api/analytics/`, `app/api/notifications/`, `app/api/profile/`, `app/api/reviews/`, и другие
+### Итерация 7 ✅ ЗАВЕРШЕНО (commit 8f0be88, branch fix/api-ts-errors-iteration-7)
+9. ✅ Удалены лишние exclude-записи из tsconfig (25 dirs): zero-error dirs (analytics, csrf-token, docs, engagement, geocode, health, import, kamchatka-routes, loyalty, monitoring, partner, ping, roles, safety, telegram, upload, upload-design, webhook + мелкие) + исправлены ошибки в группе
+   - Исправлено 23 TS ошибки в 10 файлах: ai (6), partners (5), discovery (4), gear (4), notifications (2), profile (1), cart (1)
+   - Паттерны: query<T>, as unknown as T, null guards, type predicates, process.env.S3_*
+   - Примечание: transfer-operator/* возвращён в exclude (re-export из ещё-исключённого transfer)
+
+### Итерация 8 (следующая)
+10. Исправить оставшиеся 13 директорий (~372 ошибок):
+
+| Директория | Ошибок | Приоритет |
+|-----------|--------|-----------|
+| `app/api/transfers/` | ~84 | P2 |
+| `app/api/transfer/` | ~78 | P2 |
+| `app/api/agent/` | ~72 | P2 |
+| `app/api/weather/` | ~48 | P3 |
+| `app/api/accommodations/` | ~25 | P2 |
+| `app/api/chat/` | ~14 | P3 |
+| `app/api/eco-points/` | ~9 | P3 |
+| `app/api/reviews/` | ~9 | P2 |
+| `app/api/trip/` | ~9 | P3 |
+| `app/api/stay-provider/` | ~7 | P3 |
+| `app/api/souvenirs/` | ~6 | P3 |
+| `app/api/webhooks/` | ~6 | P3 |
+| `app/api/cars/` | ~5 | P3 |
+| `app/api/transfer-operator/` | 0 (после fix transfer) | P3 |
+
+Стратегия: объединить transfer + transfers + transfer-operator в одну итерацию (3 связанных dir), затем agent, затем остальные.
 
 ---
 
