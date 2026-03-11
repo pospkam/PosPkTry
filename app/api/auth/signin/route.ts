@@ -3,8 +3,12 @@ import { query } from '@/lib/database';
 import { verifyPassword } from '@/lib/auth/password';
 import { createToken } from '@/lib/auth/jwt';
 import { ApiResponse } from '@/types';
+import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
+
+// 5 attempts per minute per IP — brute force protection
+const signinRateLimiter = createRateLimiter({ windowMs: 60_000, max: 5 });
 
 /**
  * POST /api/auth/signin
@@ -12,6 +16,14 @@ export const dynamic = 'force-dynamic';
  */
 // PUBLIC: Auth entry point — signin endpoint intentionally public (no token required).
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request.headers);
+  if (!signinRateLimiter.check(ip)) {
+    return NextResponse.json({
+      success: false,
+      error: 'Слишком много попыток. Попробуйте через минуту.'
+    } as ApiResponse<null>, { status: 429 });
+  }
+
   try {
     const body = await request.json();
     const { email, password } = body;

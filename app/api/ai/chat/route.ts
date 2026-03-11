@@ -6,8 +6,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSystemPrompt, buildMessageHistory, ChatRole, ChatMessage } from '@/lib/ai/prompts';
 import { query } from '@/lib/database';
+import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
+
+// 20 requests per minute per IP — enough for interactive UI, prevents API cost abuse
+const chatRateLimiter = createRateLimiter({ windowMs: 60_000, max: 20 });
 
 // ── Anthropic Claude (primary) ─────────────────────────────────
 async function callAnthropic(messages: ChatMessage[]): Promise<string | null> {
@@ -266,6 +270,14 @@ async function saveSessionHistory(
 // ── Основной обработчик ────────────────────────────────────────
 // AUTH: Public — AI chat assistant for visitors
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request.headers);
+  if (!chatRateLimiter.check(ip)) {
+    return NextResponse.json(
+      { success: false, error: 'Слишком много запросов. Попробуйте через минуту.' },
+      { status: 429 }
+    );
+  }
+
   try {
     const body = await request.json();
     const {
