@@ -1,8 +1,9 @@
 /**
- * MCP Server для Timeweb Cloud AI Agent
+ * MCP Server (Streamable HTTP) для Timeweb Cloud AI Agent
+ * Протокол: JSON-RPC 2.0 (MCP spec)
  * Даёт агенту доступ к 259 маршрутам Камчатки в реальном времени
  *
- * URL для регистрации в Timeweb: https://pospkam-pospktry-c1f3.twc1.net/api/mcp
+ * URL: https://pospkam-pospktry-c1f3.twc1.net/api/mcp
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -16,7 +17,7 @@ const TOOLS = [
     name: 'search_routes',
     description: 'Поиск туристических маршрутов Камчатки по категории или ключевым словам',
     inputSchema: {
-      type: 'object',
+      type: 'object' as const,
       properties: {
         category: {
           type: 'string',
@@ -35,31 +36,25 @@ const TOOLS = [
   },
   {
     name: 'get_route_details',
-    description: 'Получить подробную информацию о конкретном маршруте',
+    description: 'Получить подробную информацию о конкретном маршруте по ID',
     inputSchema: {
-      type: 'object',
+      type: 'object' as const,
       properties: {
-        route_id: {
-          type: 'string',
-          description: 'ID маршрута',
-        },
+        route_id: { type: 'string', description: 'UUID маршрута' },
       },
       required: ['route_id'],
     },
   },
   {
     name: 'list_categories',
-    description: 'Список всех категорий маршрутов с количеством',
-    inputSchema: {
-      type: 'object',
-      properties: {},
-    },
+    description: 'Список всех 14 категорий маршрутов с количеством',
+    inputSchema: { type: 'object' as const, properties: {} },
   },
   {
     name: 'get_tours',
-    description: 'Получить коммерческие туры с ценами и датами отправления',
+    description: 'Получить коммерческие туры с ценами и ближайшими датами отправления',
     inputSchema: {
-      type: 'object',
+      type: 'object' as const,
       properties: {
         category: { type: 'string', description: 'Фильтр по категории' },
         limit: { type: 'number', description: 'Кол-во туров (по умолчанию 5)' },
@@ -139,7 +134,7 @@ async function getRouteDetails(args: Record<string, unknown>): Promise<string> {
   if (!result.rows.length) return `Маршрут с ID "${routeId}" не найден.`;
   const r = result.rows[0];
 
-  const lines = [
+  return [
     `# ${r.title}`,
     `Категория: ${r.category}`,
     r.difficulty ? `Сложность: ${r.difficulty}` : null,
@@ -148,9 +143,7 @@ async function getRouteDetails(args: Record<string, unknown>): Promise<string> {
     r.price_from ? `Цена от: ${r.price_from} ₽` : null,
     r.description ? `\n${r.description}` : null,
     r.source_url ? `\nПодробнее: ${r.source_url}` : null,
-  ].filter(Boolean);
-
-  return lines.join('\n');
+  ].filter(Boolean).join('\n');
 }
 
 async function listCategories(): Promise<string> {
@@ -215,61 +208,112 @@ async function getTours(args: Record<string, unknown>): Promise<string> {
   }).join('\n\n');
 }
 
-// ── MCP Protocol handlers ────────────────────────────────────
+// ── Execute tool by name ─────────────────────────────────────
+async function executeTool(name: string, args: Record<string, unknown>): Promise<string> {
+  switch (name) {
+    case 'search_routes': return searchRoutes(args);
+    case 'get_route_details': return getRouteDetails(args);
+    case 'list_categories': return listCategories();
+    case 'get_tours': return getTours(args);
+    default: throw new Error(`Unknown tool: ${name}`);
+  }
+}
 
-// GET /api/mcp — server info + tools list (MCP discovery)
+// ── JSON-RPC helpers ─────────────────────────────────────────
+interface JsonRpcRequest {
+  jsonrpc?: string;
+  method?: string;
+  params?: Record<string, unknown>;
+  id?: string | number | null;
+}
+
+function jsonrpcSuccess(id: string | number | null | undefined, result: unknown) {
+  return { jsonrpc: '2.0', id: id ?? null, result };
+}
+
+function jsonrpcError(id: string | number | null | undefined, code: number, message: string) {
+  return { jsonrpc: '2.0', id: id ?? null, error: { code, message } };
+}
+
+// ── MCP Protocol: GET = server info ──────────────────────────
 export async function GET() {
   return NextResponse.json({
     name: 'kamchatour-mcp',
     version: '1.0.0',
-    description: 'KamchatourHub — маршруты и туры Камчатки',
+    description: 'KamchatourHub — 260 маршрутов и туры Камчатки',
     tools: TOOLS,
   });
 }
 
-// POST /api/mcp — execute tool call
+// ── MCP Protocol: POST = JSON-RPC 2.0 ───────────────────────
 export async function POST(request: NextRequest) {
+  let body: JsonRpcRequest;
   try {
-    const body = await request.json() as {
-      tool?: string;
-      name?: string;
-      arguments?: Record<string, unknown>;
-      input?: Record<string, unknown>;
-      params?: { name?: string; arguments?: Record<string, unknown> };
-    };
+    body = await request.json() as JsonRpcRequest;
+  } catch {
+    return NextResponse.json(
+      jsonrpcError(null, -32700, 'Parse error'),
+      { status: 400 }
+    );
+  }
 
-    // Support multiple MCP call formats
-    const toolName = body.tool || body.name || body.params?.name || '';
-    const toolArgs = body.arguments || body.input || body.params?.arguments || {};
+  const { method, params, id } = body;
 
-    let result: string;
-    switch (toolName) {
-      case 'search_routes':
-        result = await searchRoutes(toolArgs);
-        break;
-      case 'get_route_details':
-        result = await getRouteDetails(toolArgs);
-        break;
-      case 'list_categories':
-        result = await listCategories();
-        break;
-      case 'get_tours':
-        result = await getTours(toolArgs);
-        break;
+  try {
+    switch (method) {
+      // ── initialize handshake ──
+      case 'initialize':
+        return NextResponse.json(jsonrpcSuccess(id, {
+          protocolVersion: '2024-11-05',
+          capabilities: { tools: {} },
+          serverInfo: {
+            name: 'kamchatour-mcp',
+            version: '1.0.0',
+          },
+        }));
+
+      // ── client acknowledged init ──
+      case 'notifications/initialized':
+        return NextResponse.json(jsonrpcSuccess(id, {}));
+
+      // ── list available tools ──
+      case 'tools/list':
+        return NextResponse.json(jsonrpcSuccess(id, { tools: TOOLS }));
+
+      // ── call a tool ──
+      case 'tools/call': {
+        const toolName = typeof params?.name === 'string' ? params.name : '';
+        const toolArgs = (params?.arguments ?? {}) as Record<string, unknown>;
+
+        try {
+          const text = await executeTool(toolName, toolArgs);
+          return NextResponse.json(jsonrpcSuccess(id, {
+            content: [{ type: 'text', text }],
+          }));
+        } catch (toolErr) {
+          const msg = toolErr instanceof Error ? toolErr.message : 'Tool execution failed';
+          return NextResponse.json(jsonrpcSuccess(id, {
+            content: [{ type: 'text', text: msg }],
+            isError: true,
+          }));
+        }
+      }
+
+      // ── ping/pong ──
+      case 'ping':
+        return NextResponse.json(jsonrpcSuccess(id, {}));
+
+      // ── unknown method ──
       default:
         return NextResponse.json(
-          { error: `Unknown tool: ${toolName}` },
+          jsonrpcError(id, -32601, `Method not found: ${method}`),
           { status: 400 }
         );
     }
-
-    return NextResponse.json({
-      content: [{ type: 'text', text: result }],
-    });
   } catch (err) {
-    console.error('[MCP] Error:', err);
+    const msg = err instanceof Error ? err.message : 'Internal error';
     return NextResponse.json(
-      { error: 'Internal server error' },
+      jsonrpcError(id, -32603, msg),
       { status: 500 }
     );
   }
