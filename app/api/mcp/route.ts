@@ -75,7 +75,11 @@ async function searchRoutes(args: Record<string, unknown>): Promise<string> {
   const limit = typeof args.limit === 'number' ? Math.min(args.limit, 10) : 5;
 
   let sql = `
-    SELECT id, title, category, description, difficulty, duration, season, price_from, source_url
+    SELECT id, title, category, description, source_url,
+           payload->>'difficulty' as difficulty,
+           payload->>'duration' as duration,
+           payload->>'season' as season,
+           payload->>'price_from' as price_from
     FROM agent_route_knowledge
     WHERE 1=1
   `;
@@ -120,9 +124,15 @@ async function getRouteDetails(args: Record<string, unknown>): Promise<string> {
     id: string; title: string; category: string;
     description: string | null; difficulty: string | null;
     duration: string | null; season: string | null; price_from: string | null;
-    coordinates: unknown; highlights: unknown; source_url: string | null;
+    highlights: string | null; source_url: string | null;
   }>(
-    `SELECT * FROM agent_route_knowledge WHERE id = $1 LIMIT 1`,
+    `SELECT id, title, category, description, source_url,
+            payload->>'difficulty' as difficulty,
+            payload->>'duration' as duration,
+            payload->>'season' as season,
+            payload->>'price_from' as price_from,
+            payload->>'highlights' as highlights
+     FROM agent_route_knowledge WHERE id = $1 LIMIT 1`,
     [routeId]
   );
 
