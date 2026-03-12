@@ -351,4 +351,4 @@ export {
   searchService,
   slaService,
   ticketMessageService,
-} from '@/lib/services';
+} from '@/lib/services/index';
