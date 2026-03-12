@@ -33,6 +33,14 @@ interface DashboardData {
     description: string;
     timestamp: string;
   }>;
+  alerts?: Array<{
+    id: string;
+    type: 'error' | 'warning' | 'info';
+    title: string;
+    message: string;
+    actionUrl?: string;
+    actionLabel?: string;
+  }>;
   pendingTours?: number;
   pendingPartners?: number;
 }
@@ -191,6 +199,37 @@ export default function AdminDashboard() {
               <ArrowUpRight className="w-3 h-3" />
             </button>
           )}
+        </div>
+      )}
+
+      {/* AI Алерты */}
+      {data.alerts && data.alerts.length > 0 && (
+        <div className="space-y-1.5">
+          {data.alerts.map(alert => {
+            const colors = {
+              error: 'text-[var(--danger)] bg-[var(--danger)]/10 border-[var(--danger)]/20',
+              warning: 'text-[var(--warning)] bg-[var(--warning)]/10 border-[var(--warning)]/20',
+              info: 'text-[var(--accent)] bg-[var(--accent-muted)] border-[var(--accent)]/20',
+            };
+            return (
+              <div
+                key={alert.id}
+                className={`flex items-center gap-2 px-3 py-2 text-xs border rounded-md ${colors[alert.type]}`}
+              >
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                <span className="font-medium">{alert.title}:</span>
+                <span className="opacity-80 flex-1">{alert.message}</span>
+                {alert.actionUrl && (
+                  <button
+                    onClick={() => router.push(alert.actionUrl!)}
+                    className="shrink-0 flex items-center gap-0.5 hover:underline"
+                  >
+                    {alert.actionLabel ?? 'Подробнее'} <ArrowUpRight className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 

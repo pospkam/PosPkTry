@@ -1207,4 +1207,67 @@ export interface CustomerRow {
   status: 'vip' | 'active' | 'inactive';
 }
 
+// ──────────────────────────────────────────────────────────
+// Admin — Knowledge Base (agent_route_knowledge)
+// ──────────────────────────────────────────────────────────
 
+export interface KnowledgeRouteRow {
+  id: string;
+  title: string;
+  category: string;
+  description: string | null;
+  source_url: string | null;
+  source_name: string | null;
+  lat: string | null;
+  lng: string | null;
+  difficulty: string | null;
+  duration: string | null;
+  season: string | null;
+  price_from: string | null;
+  has_embedding: boolean;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface KnowledgeCategoryStatsRow {
+  category: string;
+  count: string;
+}
+
+export interface KnowledgeSourceStatsRow {
+  source_name: string | null;
+  count: string;
+}
+
+// ──────────────────────────────────────────────────────────
+// Admin — Alerts (anomaly detection)
+// ──────────────────────────────────────────────────────────
+
+export interface AlertBookingVolumeRow {
+  current_count: string;
+  previous_count: string;
+}
+
+export interface AlertBadReviewBurstRow {
+  tour_name: string;
+  bad_reviews: string;
+}
+
+export interface AlertCancellationRateRow {
+  company_name: string;
+  id: string;
+  cancelled: string;
+  total: string;
+}
+
+// ──────────────────────────────────────────────────────────
+// Admin — AI Moderation
+// ──────────────────────────────────────────────────────────
+
+export interface ReviewForAnalysisRow {
+  id: string;
+  comment: string | null;
+  rating: string;
+  user_name: string | null;
+  tour_name: string | null;
+}

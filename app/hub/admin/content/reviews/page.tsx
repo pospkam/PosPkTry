@@ -11,7 +11,7 @@ import {
   EmptyState,
   Column
 } from '@/components/admin/shared';
-import { Star } from 'lucide-react';
+import { Star, Sparkles, Loader2 } from 'lucide-react';
 
 interface AdminReview {
   id: string;
@@ -25,12 +25,20 @@ interface AdminReview {
   createdAt: Date;
 }
 
+interface AiAnalysis {
+  sentiment: 'positive' | 'negative' | 'neutral';
+  spamProbability: number;
+  summary: string;
+}
+
 export default function ReviewsManagement() {
   const [reviews, setReviews] = useState<AdminReview[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
   const [verifiedFilter, setVerifiedFilter] = useState('all');
+  const [analyzing, setAnalyzing] = useState<string | null>(null);
+  const [analyses, setAnalyses] = useState<Record<string, AiAnalysis>>({});
 
   useEffect(() => {
     fetchReviews();
@@ -78,6 +86,24 @@ export default function ReviewsManagement() {
       }
     } catch (error) {
       console.error('Error moderating review:', error);
+    }
+  };
+
+  const handleAnalyze = async (reviewId: string) => {
+    if (analyzing) return;
+    setAnalyzing(reviewId);
+    try {
+      const response = await fetch(`/api/admin/content/reviews/${reviewId}/analyze`, {
+        method: 'POST',
+      });
+      const result = await response.json();
+      if (result.success) {
+        setAnalyses(prev => ({ ...prev, [reviewId]: result.data }));
+      }
+    } catch {
+      // ignore
+    } finally {
+      setAnalyzing(null);
     }
   };
 
@@ -140,21 +166,53 @@ export default function ReviewsManagement() {
       key: 'actions',
       title: 'Действия',
       render: (review) => (
-        <div className="flex space-x-2">
-          {!review.isVerified && (
+        <div className="space-y-2">
+          <div className="flex space-x-2">
             <button
-              onClick={() => handleModerate(review.id, 'approve')}
-              className="px-3 py-1 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded-lg text-xs font-medium transition-colors"
+              onClick={() => handleAnalyze(review.id)}
+              disabled={analyzing === review.id}
+              className="px-3 py-1 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 rounded-lg text-xs font-medium transition-colors flex items-center gap-1 disabled:opacity-50"
             >
-              Одобрить
+              {analyzing === review.id ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : (
+                <Sparkles className="w-3 h-3" />
+              )}
+              AI Анализ
             </button>
+            {!review.isVerified && (
+              <button
+                onClick={() => handleModerate(review.id, 'approve')}
+                className="px-3 py-1 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded-lg text-xs font-medium transition-colors"
+              >
+                Одобрить
+              </button>
+            )}
+            <button
+              onClick={() => handleModerate(review.id, 'delete')}
+              className="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-xs font-medium transition-colors"
+            >
+              Удалить
+            </button>
+          </div>
+          {analyses[review.id] && (
+            <div className="flex items-center gap-2 text-xs">
+              <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                analyses[review.id].sentiment === 'positive' ? 'bg-green-500/20 text-green-400' :
+                analyses[review.id].sentiment === 'negative' ? 'bg-red-500/20 text-red-400' :
+                'bg-gray-500/20 text-gray-400'
+              }`}>
+                {analyses[review.id].sentiment === 'positive' ? 'Позитив' :
+                 analyses[review.id].sentiment === 'negative' ? 'Негатив' : 'Нейтрал'}
+              </span>
+              <span className="text-white/50">
+                Спам: {Math.round(analyses[review.id].spamProbability * 100)}%
+              </span>
+              <span className="text-white/60 truncate max-w-[200px]">
+                {analyses[review.id].summary}
+              </span>
+            </div>
           )}
-          <button
-            onClick={() => handleModerate(review.id, 'delete')}
-            className="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-xs font-medium transition-colors"
-          >
-            Удалить
-          </button>
         </div>
       )
     }

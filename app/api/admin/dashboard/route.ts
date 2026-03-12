@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { requireAdmin } from '@/lib/auth/middleware';
+import { getAdminAlerts } from '@/lib/admin/alerts';
 import { DashboardData, DashboardMetrics, DashboardCharts, RecentActivity, AdminAlert } from '@/types/admin';
 import { ApiResponse } from '@/types';
 import {
@@ -259,7 +260,10 @@ export async function GET(request: NextRequest) {
       pendingTours = parseInt(ptResult.rows[0]?.total ?? '0', 10);
     } catch { /* 0 */ }
 
-    const alerts: AdminAlert[] = [];
+    let alerts: AdminAlert[] = [];
+    try {
+      alerts = await getAdminAlerts();
+    } catch { /* fallback empty */ }
 
     const dashboardData: DashboardData = {
       metrics,
