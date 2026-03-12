@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   X, Mail, Phone, Star, Leaf, Loader2, AlertCircle,
-  Calendar, Tag, Plus, Check,
+  Calendar, Tag, Plus, Check, Send,
 } from 'lucide-react';
 
 const PRESET_TAGS = ['VIP', 'Постоянный', 'Группа', 'Проблемный', 'Оплатил аванс'];
@@ -21,7 +21,7 @@ interface Review {
 
 interface CustomerProfile {
   id: string; name: string; email: string; phone: string;
-  ecoPoints: number; tags: string[];
+  ecoPoints: number; tags: string[]; telegramId: string;
   bookings: Booking[]; reviews: Review[];
 }
 
@@ -53,6 +53,9 @@ export default function CustomerProfileModal({ clientId, onClose, onTagsUpdated 
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState('');
   const [tags, setTags]         = useState<string[]>([]);
+  const [telegramId, setTelegramId] = useState('');
+  const [tgEditing, setTgEditing]   = useState(false);
+  const [tgInput, setTgInput]       = useState('');
   const [saving, setSaving]     = useState(false);
   const [saved, setSaved]       = useState(false);
   const [tagInput, setTagInput] = useState('');
@@ -69,6 +72,7 @@ export default function CustomerProfileModal({ clientId, onClose, onTagsUpdated 
       if (!json.success || !json.data) throw new Error(json.error ?? 'Ошибка загрузки');
       setProfile(json.data);
       setTags(json.data.tags);
+      setTelegramId(json.data.telegramId);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Ошибка');
     } finally {
@@ -98,6 +102,28 @@ export default function CustomerProfileModal({ clientId, onClose, onTagsUpdated 
       if (!json.success) throw new Error(json.error ?? 'Ошибка');
       setTags(next);
       onTagsUpdated?.(clientId, next);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Ошибка сохранения');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function saveTelegramId(val: string) {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/operator/clients/${clientId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+        body: JSON.stringify({ telegram_id: val }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json() as { success: boolean; error?: string };
+      if (!json.success) throw new Error(json.error ?? 'Ошибка');
+      setTelegramId(val);
+      setTgEditing(false);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (e) {
@@ -170,6 +196,61 @@ export default function CustomerProfileModal({ clientId, onClose, onTagsUpdated 
                   <span className="flex items-center gap-1.5 text-green-400">
                     <Leaf className="w-4 h-4" />{profile.ecoPoints} экобаллов
                   </span>
+                )}
+              </div>
+
+              {/* Telegram */}
+              <div className="flex items-center gap-3">
+                <Send className="w-4 h-4 text-[#229ED9] shrink-0" />
+                {!tgEditing ? (
+                  telegramId ? (
+                    <>
+                      <a
+                        href={telegramId.startsWith('@')
+                          ? `https://t.me/${telegramId.slice(1)}`
+                          : `tg://user?id=${telegramId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-[#229ED9] hover:underline"
+                      >
+                        {telegramId}
+                      </a>
+                      <button
+                        onClick={() => { setTgInput(telegramId); setTgEditing(true); }}
+                        className="text-xs text-white/30 hover:text-white/60 ml-1"
+                      >изменить</button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => { setTgInput(''); setTgEditing(true); }}
+                      className="text-sm text-white/40 hover:text-white/70 flex items-center gap-1"
+                    >
+                      <Plus className="w-3.5 h-3.5" /> Добавить Telegram
+                    </button>
+                  )
+                ) : (
+                  <div className="flex gap-2 flex-1">
+                    <input
+                      value={tgInput}
+                      onChange={e => setTgInput(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') { e.preventDefault(); saveTelegramId(tgInput.trim()); }
+                        if (e.key === 'Escape') setTgEditing(false);
+                      }}
+                      placeholder="@username или числовой ID"
+                      className="flex-1 min-h-[34px] px-3 py-1 bg-white/5 border border-[#229ED9]/40 rounded-lg text-sm text-white placeholder-white/30 focus:outline-none focus:border-[#229ED9]/80"
+                    />
+                    <button
+                      onClick={() => saveTelegramId(tgInput.trim())}
+                      disabled={saving}
+                      className="px-3 py-1 bg-[#229ED9]/20 border border-[#229ED9]/40 rounded-lg text-[#229ED9] text-sm hover:bg-[#229ED9]/30 disabled:opacity-40"
+                    >
+                      {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                    </button>
+                    <button onClick={() => setTgEditing(false)} className="px-2 text-white/40 hover:text-white/70">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
                 )}
               </div>
 

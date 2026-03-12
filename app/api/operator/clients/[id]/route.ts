@@ -56,9 +56,10 @@ export async function GET(
     }
     const u = userRes.rows[0] as {
       id: string; name: string; email: string; phone: string | null;
-      preferences: { tags?: string[] } | null; eco_points: number;
+      preferences: { tags?: string[]; telegram_id?: string } | null; eco_points: number;
     };
     const tags: string[] = u.preferences?.tags ?? [];
+    const telegramId: string = u.preferences?.telegram_id ?? '';
 
     // 2. Все бронирования клиента у этого оператора
     interface BookingRow {
@@ -104,6 +105,7 @@ export async function GET(
         phone: u.phone ?? '',
         ecoPoints: u.eco_points,
         tags,
+        telegramId,
         bookings: bookingsRes.rows.map((b) => ({
           id:          b.id,
           tourName:    b.tour_name,
@@ -131,7 +133,7 @@ export async function GET(
 
 /**
  * PATCH /api/operator/clients/[id]
- * Обновить теги клиента (хранятся в users.preferences->>'tags')
+ * Обновить теги и/или telegram_id клиента (хранятся в users.preferences JSONB)
  */
 export async function PATCH(
   request: NextRequest,
@@ -152,22 +154,37 @@ export async function PATCH(
       return NextResponse.json({ success: false, error: 'Клиент не найден' }, { status: 404 });
     }
 
-    const body = await request.json() as { tags?: unknown };
-    if (!Array.isArray(body.tags) || !body.tags.every((t) => typeof t === 'string')) {
+    const body = await request.json() as { tags?: unknown; telegram_id?: unknown };
+
+    // Валидация tags
+    if ('tags' in body && (!Array.isArray(body.tags) || !body.tags.every((t) => typeof t === 'string'))) {
       return NextResponse.json({ success: false, error: 'tags должен быть массивом строк' }, { status: 400 });
     }
+    // Валидация telegram_id: числовой ID или username @handle
+    if ('telegram_id' in body && body.telegram_id !== '' &&
+        typeof body.telegram_id === 'string' &&
+        !/^(@[a-zA-Z0-9_]{4,32}|\d{4,12})$/.test(body.telegram_id)) {
+      return NextResponse.json({ success: false, error: 'Неверный формат Telegram ID (число или @username)' }, { status: 400 });
+    }
 
-    const tags = (body.tags as string[]).slice(0, 10); // максимум 10 тегов
+    // Собираем только изменённые поля для JSONB merge
+    const updates: Record<string, unknown> = {};
+    if ('tags' in body) updates.tags = (body.tags as string[]).slice(0, 10);
+    if ('telegram_id' in body) updates.telegram_id = body.telegram_id as string;
+
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ success: false, error: 'Нечего обновлять' }, { status: 400 });
+    }
 
     await query(
       `UPDATE users
-       SET preferences = jsonb_set(COALESCE(preferences, '{}'), '{tags}', $2::jsonb, true),
+       SET preferences = COALESCE(preferences, '{}') || $2::jsonb,
            updated_at = NOW()
        WHERE id = $1`,
-      [id, JSON.stringify(tags)]
+      [id, JSON.stringify(updates)]
     );
 
-    return NextResponse.json({ success: true, data: { id, tags } });
+    return NextResponse.json({ success: true, data: { id } });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Внутренняя ошибка';
     return NextResponse.json({ success: false, error: message }, { status: 500 });
