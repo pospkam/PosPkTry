@@ -21,6 +21,7 @@
     "db:seed:departures": "node scripts/seed-departures.js",
     "db:sync:agent-routes": "node scripts/sync-agent-route-knowledge.js",
     "ai:setup-agent-rag": "npx tsx scripts/setup-agent-rag.ts",
+    "ai:sync-kb": "npx tsx scripts/sync-timeweb-kb.ts",
     "sentry:sourcemaps": "sentry-cli sourcemaps upload --org kamhub --project nextjs .next",
     "postbuild": "echo Sentry sourcemaps skipped",
     "ai:update-knowledge": "node scripts/update-knowledge-base.js",
