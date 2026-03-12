@@ -9,9 +9,10 @@ const nextConfig = {
   // that cannot be bundled by webpack — must be resolved at runtime.
   serverExternalPackages: ['onnxruntime-node', '@huggingface/transformers'],
 
-  // Проверки качества при сборке — включены
+  // ESLint: skip during build (saves ~500MB RAM) — checks run locally via CI
+  // TypeScript: keep strict — fast and catches real errors
   eslint: {
-    ignoreDuringBuilds: false,
+    ignoreDuringBuilds: true,
   },
   typescript: {
     ignoreBuildErrors: false,
