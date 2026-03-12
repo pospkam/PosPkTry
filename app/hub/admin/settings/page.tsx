@@ -1,8 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { AdminProtected } from '@/components/auth/AdminProtected';
-import { AdminNav } from '@/components/admin/AdminNav';
 import { SystemSettings } from '@/components/admin/Settings/SystemSettings';
 import { EmailTemplatesManager } from '@/components/admin/Settings/EmailTemplatesManager';
 import { Settings, Mail } from 'lucide-react';
@@ -13,61 +11,42 @@ export default function AdminSettings() {
   const [activeTab, setActiveTab] = useState<TabType>('system');
 
   const tabs = [
-    { id: 'system' as TabType, name: 'Системные настройки', icon: Settings },
+    { id: 'system' as TabType, name: 'Система', icon: Settings },
     { id: 'email' as TabType, name: 'Email шаблоны', icon: Mail },
   ];
 
   return (
-    <AdminProtected>
-      <main className="min-h-screen bg-transparent text-white">
-        <AdminNav />
+    <div className="p-5 lg:p-6 space-y-5">
+      {/* Header */}
+      <div className="flex items-center gap-2.5">
+        <Settings className="w-4 h-4 text-[var(--text-muted)]" />
+        <h1 className="text-sm font-semibold text-[var(--text-primary)] tracking-tight">Настройки</h1>
+      </div>
 
-        {/* Header */}
-        <div className="bg-white/15 border-b border-white/15 p-6">
-          <div className="max-w-7xl mx-auto">
-            <div>
-              <h1 className="text-3xl font-black text-white">
-                Настройки системы
-              </h1>
-              <p className="text-white/70 mt-1">
-                Конфигурация платформы и управление шаблонами
-              </p>
-            </div>
-          </div>
-        </div>
+      {/* Tabs */}
+      <div className="flex gap-1 border-b border-[var(--border)]">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-2 text-xs font-medium transition-colors flex items-center gap-1.5 border-b-2 -mb-px ${
+                activeTab === tab.id
+                  ? 'border-[var(--accent)] text-[var(--accent)]'
+                  : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              {tab.name}
+            </button>
+          );
+        })}
+      </div>
 
-        {/* Tabs */}
-        <div className="bg-white/15 border-b border-white/15">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="flex space-x-1">
-              {tabs.map((tab) => {
-                const Icon = tab.icon;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`px-6 py-4 font-medium transition-all duration-200 flex items-center gap-2 ${
-                      activeTab === tab.id
-                        ? 'bg-premium-gold text-premium-black border-b-2 border-white/15'
-                        : 'text-white/70 hover:bg-white/10 hover:text-white'
-                    }`}
-                  >
-                    <Icon className="w-5 h-5" />
-                    {tab.name}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="max-w-7xl mx-auto p-6">
-          {activeTab === 'system' && <SystemSettings />}
-          {activeTab === 'email' && <EmailTemplatesManager />}
-        </div>
-      </main>
-    </AdminProtected>
+      {/* Content */}
+      {activeTab === 'system' && <SystemSettings />}
+      {activeTab === 'email' && <EmailTemplatesManager />}
+    </div>
   );
 }
-

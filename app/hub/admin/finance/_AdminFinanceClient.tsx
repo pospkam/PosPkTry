@@ -1,12 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { AdminProtected } from '@/components/auth/AdminProtected';
-import { AdminNav } from '@/components/admin/AdminNav';
 import { FinanceMetricsGrid } from '@/components/admin/Finance/FinanceMetricsGrid';
 import { RevenueChart } from '@/components/admin/Finance/RevenueChart';
 import { PayoutsManager } from '@/components/admin/Finance/PayoutsManager';
-import { BarChart, Banknote } from 'lucide-react';
+import { DollarSign, BarChart, Banknote } from 'lucide-react';
 
 type TabType = 'overview' | 'payouts';
 
@@ -20,86 +18,57 @@ export default function AdminFinanceClient() {
   ];
 
   return (
-    <AdminProtected>
-      <main className="min-h-screen bg-transparent text-white">
-        <AdminNav />
-
-        {/* Header */}
-        <div className="bg-white/15 border-b border-white/15 p-6">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-black text-white">
-                  Финансовое управление
-                </h1>
-                <p className="text-white/70 mt-1">
-                  Доходы, выплаты и финансовая аналитика
-                </p>
-              </div>
-
-              {/* Period selector (только для overview) */}
-              {activeTab === 'overview' && (
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-white/70">Период:</span>
-                  <select
-                    value={period}
-                    onChange={(e) => setPeriod(e.target.value)}
-                    className="px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60"
-                  >
-                    <option value="7">7 дней</option>
-                    <option value="30">30 дней</option>
-                    <option value="90">90 дней</option>
-                    <option value="365">Год</option>
-                  </select>
-                </div>
-              )}
-            </div>
-          </div>
+    <div className="p-5 lg:p-6 space-y-5">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <DollarSign className="w-4 h-4 text-[var(--text-muted)]" />
+          <h1 className="text-sm font-semibold text-[var(--text-primary)] tracking-tight">Финансы</h1>
         </div>
+        {activeTab === 'overview' && (
+          <select
+            value={period}
+            onChange={(e) => setPeriod(e.target.value)}
+            className="px-3 py-1.5 text-xs bg-[var(--bg-card)] border border-[var(--border)] rounded-md text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+          >
+            <option value="7">7 дней</option>
+            <option value="30">30 дней</option>
+            <option value="90">90 дней</option>
+            <option value="365">Год</option>
+          </select>
+        )}
+      </div>
 
-        {/* Tabs */}
-        <div className="bg-white/15 border-b border-white/15">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="flex space-x-1">
-              {tabs.map((tab) => {
-                const Icon = tab.icon;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`px-6 py-4 font-medium transition-all duration-200 flex items-center gap-2 ${
-                      activeTab === tab.id
-                        ? 'bg-premium-gold text-premium-black border-b-2 border-white/15'
-                        : 'text-white/70 hover:bg-white/10 hover:text-white'
-                    }`}
-                  >
-                    <Icon className="w-5 h-5" />
-                    {tab.name}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+      {/* Tabs */}
+      <div className="flex gap-1 border-b border-[var(--border)]">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-2 text-xs font-medium transition-colors flex items-center gap-1.5 border-b-2 -mb-px ${
+                activeTab === tab.id
+                  ? 'border-[var(--accent)] text-[var(--accent)]'
+                  : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              {tab.name}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Content */}
+      {activeTab === 'overview' && (
+        <div className="space-y-5">
+          <FinanceMetricsGrid period={period} />
+          <RevenueChart period={period} />
         </div>
+      )}
 
-        {/* Content */}
-        <div className="max-w-7xl mx-auto p-6">
-          {activeTab === 'overview' && (
-            <div className="space-y-6">
-              {/* Metrics */}
-              <FinanceMetricsGrid period={period} />
-
-              {/* Revenue Chart */}
-              <RevenueChart period={period} />
-            </div>
-          )}
-
-          {activeTab === 'payouts' && (
-            <PayoutsManager />
-          )}
-        </div>
-      </main>
-    </AdminProtected>
+      {activeTab === 'payouts' && <PayoutsManager />}
+    </div>
   );
 }
-
