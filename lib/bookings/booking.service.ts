@@ -126,6 +126,7 @@ const BOOKING_SELECT = `
 /**
  * Создать бронирование со статусом pending.
  * Проверяет: тур существует, достаточно мест.
+ * Если передан departureId — валидирует заезд и использует его дату.
  */
 export async function createBooking(
   userId: string,
@@ -146,32 +147,61 @@ export async function createBooking(
       throw new Error('Тур не активен');
     }
 
-    // Проверяем доступность мест на дату
-    const availResult = await client.query(
-      `SELECT COALESCE(SUM(participants), 0) AS booked
-       FROM bookings
-       WHERE tour_id = $1
-         AND date = $2
-         AND status IN ('pending', 'confirmed')`,
-      [input.tourId, input.date]
-    );
-    const bookedCount = Number(availResult.rows[0].booked);
-    if (bookedCount + input.participants > Number(tour.max_group_size)) {
-      throw new Error('Недостаточно мест на выбранную дату');
+    let bookingDate = input.date;
+    let pricePerPerson = Number(tour.price);
+    let validatedDepartureId: string | null = null;
+
+    if (input.departureId) {
+      // Валидируем заезд
+      const depResult = await client.query(
+        `SELECT id, start_date, available_slots, booked_slots, price_override, status
+         FROM tour_departures
+         WHERE id = $1 AND tour_id = $2`,
+        [input.departureId, input.tourId]
+      );
+      if (depResult.rows.length === 0) {
+        throw new Error('Заезд не найден или не принадлежит этому туру');
+      }
+      const dep = depResult.rows[0];
+      if (dep.status !== 'active') {
+        throw new Error('Заезд недоступен для бронирования');
+      }
+      const spotsLeft = Number(dep.available_slots) - Number(dep.booked_slots);
+      if (input.participants > spotsLeft) {
+        throw new Error(`Недостаточно мест на заезде: свободно ${spotsLeft}, запрошено ${input.participants}`);
+      }
+      bookingDate = String(dep.start_date);
+      if (dep.price_override != null) {
+        pricePerPerson = Number(dep.price_override);
+      }
+      validatedDepartureId = input.departureId;
+    } else {
+      // Проверяем доступность мест на дату (legacy — без заезда)
+      const availResult = await client.query(
+        `SELECT COALESCE(SUM(participants), 0) AS booked
+         FROM bookings
+         WHERE tour_id = $1
+           AND date = $2
+           AND status IN ('pending', 'confirmed')`,
+        [input.tourId, input.date]
+      );
+      const bookedCount = Number(availResult.rows[0].booked);
+      if (bookedCount + input.participants > Number(tour.max_group_size)) {
+        throw new Error('Недостаточно мест на выбранную дату');
+      }
     }
 
     // Рассчитываем итоговую стоимость
-    // Бизнес-правило: цена тура * количество участников
-    const totalPrice = Number(tour.price) * input.participants;
+    const totalPrice = pricePerPerson * input.participants;
 
     // Создаём бронирование
     const insertResult = await client.query(
       `INSERT INTO bookings
-         (user_id, tour_id, date, start_date, participants, guests_count,
+         (user_id, tour_id, departure_id, date, start_date, participants, guests_count,
           total_price, status, payment_status, special_requests, created_at, updated_at)
-       VALUES ($1, $2, $3, $3, $4, $4, $5, 'pending', 'pending', $6, NOW(), NOW())
+       VALUES ($1, $2, $3, $4, $4, $5, $5, $6, 'pending', 'pending', $7, NOW(), NOW())
        RETURNING *`,
-      [userId, input.tourId, input.date, input.participants, totalPrice, input.specialRequests ?? null]
+      [userId, input.tourId, validatedDepartureId, bookingDate, input.participants, totalPrice, input.specialRequests ?? null]
     );
 
     const bookingRow = insertResult.rows[0];

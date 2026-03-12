@@ -89,6 +89,8 @@ export interface CreateBookingInput {
   date: string;
   participants: number;
   specialRequests?: string;
+  /** UUID заезда из tour_departures (если бронь через календарь заездов) */
+  departureId?: string;
 }
 
 export interface RescheduleBookingInput {

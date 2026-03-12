@@ -94,33 +94,35 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { tourId, date, participants, specialRequests } = body as Record<string, unknown>;
+    const { tourId, date, participants, specialRequests, departureId } = body as Record<string, unknown>;
 
     // Валидация входных данных
     if (
       typeof tourId !== 'string' || !tourId ||
-      typeof date !== 'string' || !date ||
       typeof participants !== 'number' || participants < 1
     ) {
       return NextResponse.json(
-        { success: false, error: 'Неверные данные бронирования. Обязательные поля: tourId (string), date (string YYYY-MM-DD), participants (number >= 1)' } as ApiResponse<null>,
+        { success: false, error: 'Неверные данные: требуются tourId (string) и participants (number >= 1)' } as ApiResponse<null>,
         { status: 400 }
       );
     }
 
-    // Валидация формата даты
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      return NextResponse.json(
-        { success: false, error: 'Дата должна быть в формате YYYY-MM-DD' } as ApiResponse<null>,
-        { status: 400 }
-      );
+    // Если нет departureId — дата обязательна
+    if (typeof departureId !== 'string' || !departureId) {
+      if (typeof date !== 'string' || !date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        return NextResponse.json(
+          { success: false, error: 'Без заезда обязательно поле date в формате YYYY-MM-DD' } as ApiResponse<null>,
+          { status: 400 }
+        );
+      }
     }
 
     const input: CreateBookingInput = {
       tourId,
-      date,
+      date: typeof date === 'string' ? date : '',
       participants,
       specialRequests: typeof specialRequests === 'string' ? specialRequests : undefined,
+      departureId: typeof departureId === 'string' ? departureId : undefined,
     };
 
     const booking = await createBooking(auth.userId, input);
