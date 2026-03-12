@@ -13,6 +13,48 @@ export const dynamic = 'force-dynamic';
 // 20 requests per minute per IP — enough for interactive UI, prevents API cost abuse
 const chatRateLimiter = createRateLimiter({ windowMs: 60_000, max: 20 });
 
+// ── Timeweb Cloud AI Agent (primary) ───────────────────────────
+// OpenAI-compatible эндпоинт: agent.timeweb.cloud/…/v1/chat/completions
+// Создать агента: https://timeweb.cloud/my/cloud-ai/agents → TIMEWEB_AI_AGENT_ID
+async function callTimewebAgent(messages: ChatMessage[]): Promise<string | null> {
+  const token = process.env.TIMEWEB_TOKEN;
+  const agentId = process.env.TIMEWEB_AI_AGENT_ID;
+  if (!token || !agentId) return null;
+
+  try {
+    const payload = messages.map(({ role, content }) => ({ role, content }));
+    const res = await fetch(
+      `https://agent.timeweb.cloud/api/v1/cloud-ai/agents/${agentId}/v1/chat/completions`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          model: 'deepseek-chat',
+          temperature: 0.4,
+          max_tokens: 800,
+          messages: payload,
+        }),
+        signal: AbortSignal.timeout(25_000),
+      }
+    );
+
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      console.error(`[AI] Timeweb agent ${res.status}:`, errText.slice(0, 300));
+      return null;
+    }
+
+    const data = await res.json() as { choices?: Array<{ message?: { content?: string } }> };
+    return data?.choices?.[0]?.message?.content ?? null;
+  } catch (e) {
+    console.error('[AI] Timeweb agent exception:', e instanceof Error ? e.message : String(e));
+    return null;
+  }
+}
+
 // ── Anthropic Claude (primary) ─────────────────────────────────
 async function callAnthropic(messages: ChatMessage[]): Promise<string | null> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -314,10 +356,12 @@ export async function POST(request: NextRequest) {
     const systemPrompt = getSystemPrompt(safeRole);
     const messagesForAI = buildMessageHistory(systemPrompt, history, 10);
 
+    // Timeweb Cloud AI Agent (DeepSeek) — основной, работает из России без блокировок
     // OpenRouter — прокси через US серверы, обходит гео-блокировку России
     // DeepSeek/Minimax — китайские, прямой доступ из России
     // xAI/Anthropic — заблокированы напрямую из России
-    let answer = await callOpenrouter(messagesForAI);
+    let answer = await callTimewebAgent(messagesForAI);
+    if (!answer) answer = await callOpenrouter(messagesForAI);
     if (!answer) answer = await callDeepSeek(messagesForAI);
     if (!answer) answer = await callMinimax(messagesForAI);
     if (!answer) answer = await callXai(messagesForAI);

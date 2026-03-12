@@ -24,21 +24,22 @@ export const config = {
   ai: {
     timeweb: {
       primaryAgent: {
-        id: process.env.TIMEWEB_AI_AGENT_ID || '3933ea81-05e2-470e-80de-80dc67c1101f',
-        url: 'https://agent.timeweb.cloud/api/v1/cloud-ai/agents/3933ea81-05e2-470e-80de-80dc67c1101f/v1',
-        name: 'Основной AI агент',
-      },
-      secondaryAgent: {
-        id: '14289',
-        url: 'https://agent.timeweb.cloud/api/v1/cloud-ai/agents/14289/v1',
-        name: 'Вторичный AI агент',
+        id: process.env.TIMEWEB_AI_AGENT_ID || '',
+        get url() {
+          const id = process.env.TIMEWEB_AI_AGENT_ID;
+          return id
+            ? `https://agent.timeweb.cloud/api/v1/cloud-ai/agents/${id}/v1`
+            : '';
+        },
+        name: 'КамчаТур AI-гид (DeepSeek)',
       },
       timeout: 30000,
-      maxTokens: parseInt(process.env.AI_MAX_TOKENS || '4000'),
+      maxTokens: parseInt(process.env.AI_MAX_TOKENS || '800'),
       knowledgeBase: {
-        enabled: true,
-        updateEndpoint: 'https://api.timeweb.cloud/v1/cloud-ai/knowledge-base',
-        maxDocuments: 100,
+        enabled: !!process.env.TIMEWEB_AI_KB_ID,
+        id: process.env.TIMEWEB_AI_KB_ID || '',
+        updateEndpoint: 'https://api.timeweb.cloud/api/v1/cloud-ai/knowledge-bases',
+        maxDocuments: 300,
         chunkSize: 1000,
       },
     },
