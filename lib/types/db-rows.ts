@@ -500,6 +500,32 @@ export interface AvailabilityDateRow {
 }
 
 // ──────────────────────────────────────────────────────────
+// Tour Departures (заезды — конкретные даты с местами)
+// ──────────────────────────────────────────────────────────
+
+/** Full tour_departures row */
+export interface TourDepartureRow {
+  id: string;
+  tour_id: string;
+  start_date: string;
+  end_date: string | null;
+  available_slots: number;
+  booked_slots: number;
+  price_override: string | null;
+  min_group_size: number;
+  status: 'active' | 'sold_out' | 'cancelled' | 'archived';
+  notes: string | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
+/** Departure with joined tour name + base price (for API responses) */
+export interface TourDepartureWithTourRow extends TourDepartureRow {
+  tour_name: string;
+  tour_price: string;
+}
+
+// ──────────────────────────────────────────────────────────
 // Operator — Analytics Dashboard
 // ──────────────────────────────────────────────────────────
 
