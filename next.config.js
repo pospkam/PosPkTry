@@ -54,7 +54,6 @@ const nextConfig = {
       'node_modules/next/dist/compiled/postcss-preset-env/**',
       'node_modules/next/dist/compiled/cssnano-simple/**',
       'node_modules/next/dist/compiled/crypto-browserify/**',
-      'node_modules/next/dist/build/**',
     ],
   },
 
