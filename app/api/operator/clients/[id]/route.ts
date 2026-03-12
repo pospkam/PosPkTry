@@ -160,17 +160,23 @@ export async function PATCH(
     if ('tags' in body && (!Array.isArray(body.tags) || !body.tags.every((t) => typeof t === 'string'))) {
       return NextResponse.json({ success: false, error: 'tags должен быть массивом строк' }, { status: 400 });
     }
-    // Валидация telegram_id: числовой ID или username @handle
-    if ('telegram_id' in body && body.telegram_id !== '' &&
-        typeof body.telegram_id === 'string' &&
-        !/^(@[a-zA-Z0-9_]{4,32}|\d{4,12})$/.test(body.telegram_id)) {
-      return NextResponse.json({ success: false, error: 'Неверный формат Telegram ID (число или @username)' }, { status: 400 });
+    // Нормализация и валидация telegram_id
+    let normalizedTgId: string | undefined;
+    if ('telegram_id' in body) {
+      const raw = typeof body.telegram_id === 'string' ? body.telegram_id.trim() : '';
+      normalizedTgId = raw.startsWith('@') ? raw.slice(1) : raw; // убираем @ — храним без него
+      if (normalizedTgId !== '' && !/^([a-zA-Z0-9_]{4,32}|\d{4,12})$/.test(normalizedTgId)) {
+        return NextResponse.json(
+          { success: false, error: 'Неверный формат: введите @username (4–32 символа) или числовой ID' },
+          { status: 400 }
+        );
+      }
     }
 
     // Собираем только изменённые поля для JSONB merge
     const updates: Record<string, unknown> = {};
     if ('tags' in body) updates.tags = (body.tags as string[]).slice(0, 10);
-    if ('telegram_id' in body) updates.telegram_id = body.telegram_id as string;
+    if (normalizedTgId !== undefined) updates.telegram_id = normalizedTgId;
 
     if (Object.keys(updates).length === 0) {
       return NextResponse.json({ success: false, error: 'Нечего обновлять' }, { status: 400 });

@@ -206,14 +206,14 @@ export default function CustomerProfileModal({ clientId, onClose, onTagsUpdated 
                   telegramId ? (
                     <>
                       <a
-                        href={telegramId.startsWith('@')
-                          ? `https://t.me/${telegramId.slice(1)}`
-                          : `tg://user?id=${telegramId}`}
+                        href={/^\d+$/.test(telegramId)
+                          ? `tg://user?id=${telegramId}`
+                          : `https://t.me/${telegramId}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-sm text-[#229ED9] hover:underline"
                       >
-                        {telegramId}
+                        {/^\d+$/.test(telegramId) ? telegramId : `@${telegramId}`}
                       </a>
                       <button
                         onClick={() => { setTgInput(telegramId); setTgEditing(true); }}
