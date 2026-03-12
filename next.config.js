@@ -26,9 +26,10 @@ const nextConfig = {
     ],
   },
 
-  // Исключить dev-пакеты из standalone (экономит ~45MB)
+  // Исключить dev/ML пакеты из standalone — критично для лимита 50MB Timeweb
   outputFileTracingExcludes: {
     '*': [
+      // Dev dependencies
       'node_modules/typescript/**',
       'node_modules/caniuse-lite/**',
       'node_modules/@swc/core/**',
@@ -38,7 +39,20 @@ const nextConfig = {
       'node_modules/@smithy/**',
       'node_modules/@aws-crypto/**',
       'node_modules/fast-xml-parser/**',
-      'node_modules/onnxruntime-node/bin/**',
+      // ML/Embedding — семантический поиск работает, но не критичен для deploy
+      'node_modules/onnxruntime-node/**',
+      'node_modules/onnxruntime-web/**',
+      'node_modules/onnxruntime-common/**',
+      'node_modules/@huggingface/**',
+      // Next.js build-time modules (не нужны в standalone runtime)
+      'node_modules/next/dist/compiled/amphtml-validator/**',
+      'node_modules/next/dist/compiled/babel/**',
+      'node_modules/next/dist/compiled/babel-packages/**',
+      'node_modules/next/dist/compiled/next-devtools/**',
+      'node_modules/next/dist/compiled/postcss-preset-env/**',
+      'node_modules/next/dist/compiled/cssnano-simple/**',
+      'node_modules/next/dist/compiled/crypto-browserify/**',
+      'node_modules/next/dist/build/**',
     ],
   },
 
