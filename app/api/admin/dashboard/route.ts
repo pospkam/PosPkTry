@@ -215,19 +215,34 @@ export async function GET(request: NextRequest) {
 
     const charts: DashboardCharts = { revenueByMonth, bookingsByCategory, userGrowth, topTours };
 
-    // 3. ПОСЛЕДНИЕ АКТИВНОСТИ
+    // 3. ПОСЛЕДНИЕ АКТИВНОСТИ (из 3 аудит-таблиц)
     let recentActivities: RecentActivity[] = [];
     try {
       const activitiesResult = await query<ActivityRow>(
-        `SELECT b.id, 'booking' as type, 'Новое бронирование' as title,
+        `(SELECT b.id, 'booking' as type, 'Новое бронирование' as title,
                 t.title as description, b.created_at as timestamp,
                 u.id as user_id, u.email as user_name, NULL as user_avatar
          FROM bookings b
          JOIN tours t ON b.tour_id = t.id
          JOIN users u ON b.user_id = u.id
-         WHERE b.created_at >= NOW() - INTERVAL '24 hours'
-         ORDER BY b.created_at DESC
-         LIMIT 10`,
+         WHERE b.created_at >= NOW() - INTERVAL '24 hours')
+        UNION ALL
+        (SELECT al.id::text, 'user' as type, al.action as title,
+                COALESCE(al.resource_type, '') as description, al.created_at as timestamp,
+                al.user_id::text as user_id, u2.email as user_name, NULL as user_avatar
+         FROM audit_logs al
+         LEFT JOIN users u2 ON al.user_id = u2.id
+         WHERE al.created_at >= NOW() - INTERVAL '24 hours')
+        UNION ALL
+        (SELECT bl.id::text, 'booking' as type,
+                'Статус: ' || bl.from_status || ' → ' || bl.to_status as title,
+                COALESCE(bl.comment, '') as description, bl.created_at as timestamp,
+                bl.changed_by::text as user_id, u3.email as user_name, NULL as user_avatar
+         FROM booking_logs bl
+         LEFT JOIN users u3 ON bl.changed_by = u3.id
+         WHERE bl.created_at >= NOW() - INTERVAL '24 hours')
+        ORDER BY timestamp DESC
+        LIMIT 10`,
         []
       );
       recentActivities = activitiesResult.rows.map(row => ({

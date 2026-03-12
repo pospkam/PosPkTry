@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth } from '@/lib/auth';
 import { completeBooking } from '@/lib/bookings/booking.service';
+import { loyaltySystem } from '@/lib/loyalty/loyalty-system';
 import { ApiResponse } from '@/types';
 
 export async function PATCH(
@@ -35,6 +36,11 @@ export async function PATCH(
 
     // 3. Бизнес-логика
     const booking = await completeBooking(bookingId, auth.userId);
+
+    // 4. Начислить баллы лояльности (fire-and-forget)
+    if (booking.tourist?.id && booking.totalAmount > 0) {
+      loyaltySystem.earnPoints(booking.tourist.id, bookingId, booking.totalAmount).catch(() => {});
+    }
 
     return NextResponse.json({
       success: true,

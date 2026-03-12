@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Protected } from '@/components/auth/Protected';
-import { Bell, Loader2, CheckCheck } from 'lucide-react';
+import { Bell, Loader2, CheckCheck, Settings } from 'lucide-react';
 import { useApiFetch } from '@/hooks/use-api-fetch';
 
 interface Notification {
@@ -27,6 +27,32 @@ type FilterTab = 'all' | 'unread';
 
 export default function NotificationsClient() {
   const [filter, setFilter] = useState<FilterTab>('all');
+  const [showPrefs, setShowPrefs] = useState(false);
+  const [prefs, setPrefs] = useState<Record<string, boolean> | null>(null);
+  const [prefsLoading, setPrefsLoading] = useState(false);
+
+  const fetchPrefs = useCallback(async () => {
+    setPrefsLoading(true);
+    try {
+      const res = await fetch('/api/tourist/notification-preferences');
+      const json = await res.json();
+      if (json.success && json.data) {
+        setPrefs(json.data);
+      }
+    } catch { /* ignore */ }
+    setPrefsLoading(false);
+  }, []);
+
+  const togglePref = async (key: string, value: boolean) => {
+    setPrefs(prev => prev ? { ...prev, [key]: value } : null);
+    try {
+      await fetch('/api/tourist/notification-preferences', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [key]: value }),
+      });
+    } catch { /* silent */ }
+  };
 
   const { data: notifications, loading, error, setData } = useApiFetch<
     NotificationsApiResponse,
@@ -194,7 +220,87 @@ export default function NotificationsClient() {
             ))}
           </div>
         )}
+
+        {/* Notification Preferences */}
+        <div className="mt-8">
+          <button
+            onClick={() => { setShowPrefs(!showPrefs); if (!prefs) fetchPrefs(); }}
+            className="flex items-center gap-2 text-sm font-medium transition-colors"
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            <Settings className="w-4 h-4" />
+            Настройки уведомлений
+          </button>
+
+          {showPrefs && (
+            <div className="mt-4 rounded-xl border p-5 space-y-4" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border)' }}>
+              {prefsLoading ? (
+                <div className="flex justify-center py-4">
+                  <Loader2 className="w-5 h-5 animate-spin" style={{ color: 'var(--accent)' }} />
+                </div>
+              ) : prefs ? (
+                <>
+                  <PrefSection title="Email" items={[
+                    { key: 'email_booking_confirmation', label: 'Подтверждение бронирования' },
+                    { key: 'email_booking_reminder', label: 'Напоминания о туре' },
+                    { key: 'email_booking_changes', label: 'Изменения бронирования' },
+                    { key: 'email_payment_receipts', label: 'Чеки оплаты' },
+                    { key: 'email_promotions', label: 'Акции и скидки' },
+                    { key: 'email_recommendations', label: 'Рекомендации' },
+                  ]} prefs={prefs} onToggle={togglePref} />
+
+                  <PrefSection title="Push" items={[
+                    { key: 'push_booking_updates', label: 'Обновления бронирований' },
+                    { key: 'push_messages', label: 'Сообщения' },
+                    { key: 'push_promotions', label: 'Акции' },
+                    { key: 'push_recommendations', label: 'Рекомендации' },
+                  ]} prefs={prefs} onToggle={togglePref} />
+
+                  <PrefSection title="SMS" items={[
+                    { key: 'sms_booking_confirmation', label: 'Подтверждение бронирования' },
+                    { key: 'sms_booking_reminder', label: 'Напоминания' },
+                    { key: 'sms_emergency_alerts', label: 'Экстренные оповещения' },
+                  ]} prefs={prefs} onToggle={togglePref} />
+                </>
+              ) : (
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                  Настройки недоступны. Создайте профиль туриста.
+                </p>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </Protected>
+  );
+}
+
+function PrefSection({ title, items, prefs, onToggle }: {
+  title: string;
+  items: { key: string; label: string }[];
+  prefs: Record<string, boolean>;
+  onToggle: (key: string, val: boolean) => void;
+}) {
+  return (
+    <div>
+      <p className="text-xs font-medium mb-2 uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>{title}</p>
+      <div className="space-y-2">
+        {items.map(item => (
+          <label key={item.key} className="flex items-center justify-between cursor-pointer">
+            <span className="text-sm" style={{ color: 'var(--text-primary)' }}>{item.label}</span>
+            <button
+              onClick={() => onToggle(item.key, !prefs[item.key])}
+              className="relative w-10 h-5 rounded-full transition-colors"
+              style={{ backgroundColor: prefs[item.key] ? 'var(--accent)' : 'var(--border)' }}
+            >
+              <div
+                className="absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform"
+                style={{ left: prefs[item.key] ? '22px' : '2px' }}
+              />
+            </button>
+          </label>
+        ))}
+      </div>
+    </div>
   );
 }
