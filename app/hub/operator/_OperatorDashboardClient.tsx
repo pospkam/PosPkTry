@@ -1,8 +1,6 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Protected } from '@/components/auth/Protected';
-import { OperatorNav } from '@/components/operator/OperatorNav';
 import { OperatorMetricsGrid } from '@/components/operator/Dashboard/OperatorMetricsGrid';
 import { RecentBookingsTable } from '@/components/operator/Dashboard/RecentBookingsTable';
 import { TopToursTable } from '@/components/operator/Dashboard/TopToursTable';
@@ -10,7 +8,7 @@ import { SimpleChart } from '@/components/admin/Dashboard/SimpleChart';
 import { LoadingSpinner, EmptyState } from '@/components/admin/shared';
 import { MchsRegistrationPanel } from '@/components/operator/Dashboard/MchsRegistrationPanel';
 import { OperatorDashboardData, OperatorBooking } from '@/types/operator';
-import { AlertTriangle, BarChart3, Mountain, Calendar } from 'lucide-react';
+import { AlertTriangle, BarChart3, Mountain, Calendar, Users, RefreshCw } from 'lucide-react';
 
 export default function OperatorDashboardClient() {
   const [data, setData] = useState<OperatorDashboardData | null>(null);
@@ -22,211 +20,137 @@ export default function OperatorDashboardClient() {
     try {
       setLoading(true);
       setError(null);
-
-      const response = await fetch(
-        `/api/operator/dashboard?period=${period}`
-      );
+      const response = await fetch(`/api/operator/dashboard?period=${period}`);
       const result = await response.json();
-
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to fetch data');
-      }
-
+      if (!result.success) throw new Error(result.error || 'Failed to fetch data');
       setData(result.data);
     } catch (err) {
-      console.error('Error fetching dashboard data:', err);
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
     }
   }, [period]);
 
-  useEffect(() => {
-    void fetchDashboardData();
-  }, [fetchDashboardData]);
+  useEffect(() => { void fetchDashboardData(); }, [fetchDashboardData]);
 
-  const handleViewBookingDetails = (booking: OperatorBooking) => {
-    // TODO: Открыть модальное окно с деталями
-  };
+  const handleViewBookingDetails = (_booking: OperatorBooking) => {};
 
   return (
-    <Protected roles={['operator', 'admin']}>
-      <main className="min-h-screen bg-transparent text-white">
-        <OperatorNav />
-
+    <div className="p-5 lg:p-6 space-y-5">
       {/* Header */}
-        <div className="bg-white/15 border-b border-white/15 p-6">
-          <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between">
-            <div>
-                <h1 className="text-3xl font-black text-white">
-                  Панель оператора
-                </h1>
-                <p className="text-white/70 mt-1">
-                  Управление турами, бронированиями и аналитика
-                </p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <BarChart3 className="w-4 h-4 text-[var(--text-muted)]" />
+          <h1 className="text-sm font-semibold text-[var(--text-primary)] tracking-tight">Обзор оператора</h1>
+        </div>
+        <div className="flex items-center gap-2">
+          <select
+            value={period}
+            onChange={e => setPeriod(e.target.value)}
+            className="px-2.5 py-1.5 text-xs bg-[var(--bg-card)] border border-[var(--border)] rounded-md text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+          >
+            <option value="7">7 дней</option>
+            <option value="30">30 дней</option>
+            <option value="90">90 дней</option>
+            <option value="365">Год</option>
+          </select>
+          <button onClick={fetchDashboardData}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-[var(--text-secondary)] bg-[var(--bg-card)] border border-[var(--border)] rounded-md hover:bg-[var(--bg-hover)] transition-colors">
+            <RefreshCw className="w-3 h-3" />
+          </button>
+        </div>
       </div>
 
-              {/* Period Selector */}
-              <select
-                value={period}
-                onChange={(e) => setPeriod(e.target.value)}
-                className="px-4 py-3 bg-white/10 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold transition-colors"
-              >
-                <option value="7">Последние 7 дней</option>
-                <option value="30">Последние 30 дней</option>
-                <option value="90">Последние 90 дней</option>
-                <option value="365">Последний год</option>
-              </select>
-                </div>
-              </div>
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <LoadingSpinner size="lg" message="Загрузка данных..." />
+        </div>
+      ) : error ? (
+        <EmptyState
+          icon={<AlertTriangle className="w-10 h-10 text-[var(--warning)]" />}
+          title="Ошибка загрузки"
+          description={error}
+          action={{ label: 'Повторить', onClick: fetchDashboardData }}
+        />
+      ) : !data ? (
+        <EmptyState
+          icon={<BarChart3 className="w-10 h-10 text-[var(--text-muted)]" />}
+          title="Нет данных"
+          description="Данные не найдены"
+        />
+      ) : (
+        <div className="space-y-5">
+          <OperatorMetricsGrid metrics={data.metrics} />
+          <MchsRegistrationPanel />
+
+          {/* Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4">
+              <p className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] mb-3">Выручка</p>
+              <SimpleChart data={data.revenueChart} type="bar" color="var(--accent)" />
             </div>
-
-        {/* Content */}
-        <div className="max-w-7xl mx-auto p-6">
-          {loading ? (
-            <div className="flex items-center justify-center py-20">
-              <LoadingSpinner size="lg" message="Загрузка данных..." />
-                    </div>
-          ) : error ? (
-            <EmptyState
-              icon={<AlertTriangle className="w-12 h-12 text-yellow-500" />}
-              title="Ошибка загрузки"
-              description={error}
-              action={{
-                label: 'Попробовать снова',
-                onClick: fetchDashboardData
-              }}
-            />
-          ) : !data ? (
-            <EmptyState
-              icon={<BarChart3 className="w-12 h-12 text-purple-500" />}
-              title="Нет данных"
-              description="Данные не найдены"
-            />
-          ) : (
-            <div className="space-y-8">
-              {/* Metrics Grid */}
-              <section>
-                <h2 className="text-2xl font-bold text-white mb-4">
-                  Ключевые показатели
-                </h2>
-                <OperatorMetricsGrid metrics={data.metrics} />
-              </section>
-
-              <MchsRegistrationPanel />
-
-              {/* Charts */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Revenue Chart */}
-                <section className="bg-white/15 border border-white/15 rounded-2xl p-6">
-                  <h2 className="text-xl font-bold text-white mb-4">
-                    Выручка
-                  </h2>
-                  <SimpleChart
-                    data={data.revenueChart}
-                    type="bar"
-                    color="#D4AF37"
-                  />
-                </section>
-
-                {/* Bookings Chart */}
-                <section className="bg-white/15 border border-white/15 rounded-2xl p-6">
-                  <h2 className="text-xl font-bold text-white mb-4">
-                    Бронирования
-                  </h2>
-                  <SimpleChart
-                    data={data.bookingsChart}
-                    type="line"
-                    color="#60A5FA"
-                  />
-                </section>
+            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4">
+              <p className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] mb-3">Бронирования</p>
+              <SimpleChart data={data.bookingsChart} type="line" color="var(--success)" />
             </div>
+          </div>
 
-              {/* Top Tours */}
-              <section>
-                <h2 className="text-2xl font-bold text-white mb-4">
-                  Топ-5 туров
-                </h2>
-                {data.topTours.length > 0 ? (
-                  <TopToursTable tours={data.topTours} />
-                ) : (
-                  <EmptyState
-                    icon={<Mountain className="w-12 h-12 text-green-500" />}
-                    title="Нет туров"
-                    description="Создайте свой первый тур"
-                  />
-                )}
-              </section>
-
-              {/* Upcoming Tours */}
-              {data.upcomingTours.length > 0 && (
-                <section>
-                  <h2 className="text-2xl font-bold text-white mb-4">
-                    Предстоящие туры
-                  </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {data.upcomingTours.map((tour) => (
-                      <div
-                        key={`${tour.tourId}-${tour.date.toString()}`}
-                        className="bg-white/15 border border-white/15 rounded-xl p-4 hover:bg-white/10 transition-colors"
-                      >
-                        <h3 className="font-semibold text-white mb-2">
-                          {tour.tourName}
-                        </h3>
-                        <p className="text-white/60 text-sm mb-3">
-                          {new Date(tour.date).toLocaleDateString('ru-RU', {
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric'
-                          })}
-                        </p>
-            <div className="flex items-center justify-between">
-                          <span className="text-white/80">
-                            <span className="text-xl mr-1 inline-flex items-center">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                              </svg>
-                          </span>
-                            {tour.bookingsCount} / {tour.capacity}
-                    </span>
-                          <div className="w-20 bg-white/10 rounded-full h-2">
-                          <div 
-                            className="bg-premium-gold h-2 rounded-full" 
-                              style={{
-                                width: `${(tour.bookingsCount / tour.capacity) * 100}%`
-                              }}
-                            />
-                        </div>
+          {/* Upcoming tours */}
+          {data.upcomingTours.length > 0 && (
+            <div>
+              <p className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] mb-3">Предстоящие туры</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {data.upcomingTours.map(tour => (
+                  <div key={`${tour.tourId}-${tour.date.toString()}`}
+                    className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4">
+                    <p className="text-sm font-medium text-[var(--text-primary)] mb-1 truncate">{tour.tourName}</p>
+                    <p className="text-xs text-[var(--text-muted)] mb-3">
+                      {new Date(tour.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-[var(--text-secondary)] flex items-center gap-1">
+                        <Users className="w-3 h-3" /> {tour.bookingsCount}/{tour.capacity}
+                      </span>
+                      <div className="w-20 bg-[var(--bg-hover)] rounded-full h-1.5">
+                        <div className="bg-[var(--accent)] h-1.5 rounded-full"
+                          style={{ width: `${Math.min(100, (tour.bookingsCount / tour.capacity) * 100)}%` }} />
                       </div>
                     </div>
-                  ))}
-                </div>
-                </section>
-              )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
-              {/* Recent Bookings */}
-              <section>
-                <h2 className="text-2xl font-bold text-white mb-4">
-                  Последние бронирования
-                </h2>
-                {data.recentBookings.length > 0 ? (
-                  <RecentBookingsTable
-                    bookings={data.recentBookings}
-                    onViewDetails={handleViewBookingDetails}
-                  />
-                ) : (
-                  <EmptyState
-                    icon={<Calendar className="w-12 h-12 text-white/50" />}
-                    title="Нет бронирований"
-                    description="Бронирования появятся здесь"
-                  />
-                )}
-              </section>
+          {/* Top tours */}
+          <div>
+            <p className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] mb-3">Топ-5 туров</p>
+            {data.topTours.length > 0 ? (
+              <TopToursTable tours={data.topTours} />
+            ) : (
+              <EmptyState
+                icon={<Mountain className="w-10 h-10 text-[var(--text-muted)]" />}
+                title="Нет туров"
+                description="Создайте свой первый тур"
+              />
+            )}
           </div>
-        )}
-      </div>
-      </main>
-    </Protected>
+
+          {/* Recent bookings */}
+          <div>
+            <p className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] mb-3">Последние бронирования</p>
+            {data.recentBookings.length > 0 ? (
+              <RecentBookingsTable bookings={data.recentBookings} onViewDetails={handleViewBookingDetails} />
+            ) : (
+              <EmptyState
+                icon={<Calendar className="w-10 h-10 text-[var(--text-muted)]" />}
+                title="Нет бронирований"
+                description="Бронирования появятся здесь"
+              />
+            )}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

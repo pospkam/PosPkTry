@@ -1,101 +1,69 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Protected } from '@/components/auth/Protected';
-import { AgentNav } from '@/components/agent/AgentNav';
 import { AgentMetricsGrid } from '@/components/agent/Dashboard/AgentMetricsGrid';
 import { RecentClientsTable } from '@/components/agent/Dashboard/RecentClientsTable';
 import { UpcomingBookingsTable } from '@/components/agent/Dashboard/UpcomingBookingsTable';
-import { LoadingSpinner } from '@/components/admin/shared';
+import { BarChart3, Users, Calendar, Receipt } from 'lucide-react';
+
+const QUICK_ACTIONS = [
+  { label: 'Добавить клиента', href: '/hub/agent/clients', icon: Users },
+  { label: 'Создать бронирование', href: '/hub/agent/bookings', icon: Calendar },
+  { label: 'Создать ваучер', href: '/hub/agent/vouchers', icon: Receipt },
+  { label: 'Комиссионные', href: '/hub/agent/commissions', icon: BarChart3 },
+];
 
 export default function AgentDashboardClient() {
   const [period, setPeriod] = useState('30');
 
   return (
-    <Protected roles={['agent']}>
-      <main className="min-h-screen bg-transparent text-white">
-        <AgentNav />
-
-        {/* Header */}
-        <div className="bg-white/15 border-b border-white/15 p-6">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-black text-white">
-                  Агентская панель
-                </h1>
-                <p className="text-white/70 mt-1">
-                  Управление клиентами, бронированиями и комиссиями
-                </p>
-              </div>
-
-              {/* Period selector */}
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-white/70">Период:</span>
-                <select
-                  value={period}
-                  onChange={(e) => setPeriod(e.target.value)}
-                  className="px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
-                >
-                  <option value="7">7 дней</option>
-                  <option value="30">30 дней</option>
-                  <option value="90">90 дней</option>
-                  <option value="365">Год</option>
-                </select>
-              </div>
-            </div>
-          </div>
+    <div className="p-5 lg:p-6 space-y-5">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <BarChart3 className="w-4 h-4 text-[var(--text-muted)]" />
+          <h1 className="text-sm font-semibold text-[var(--text-primary)] tracking-tight">Агентская панель</h1>
         </div>
-
-        {/* Content */}
-        <div className="max-w-7xl mx-auto p-6">
-          <div className="space-y-6">
-            {/* Metrics */}
-            <AgentMetricsGrid period={period} />
-
-            {/* Tables Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <RecentClientsTable />
-              <UpcomingBookingsTable />
-            </div>
-
-            {/* Quick Actions */}
-            <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
-              <h3 className="text-lg font-bold text-white mb-4">Быстрые действия</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <button
-                  onClick={() => window.location.href = '/hub/agent/clients'}
-                  className="p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-center"
-                >
-                  <div className="text-3xl mb-2"> </div>
-                  <p className="text-sm font-semibold">Добавить клиента</p>
-                </button>
-                <button
-                  onClick={() => window.location.href = '/hub/agent/bookings'}
-                  className="p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-center"
-                >
-                  <div className="text-3xl mb-2"> </div>
-                  <p className="text-sm font-semibold">Создать бронирование</p>
-                </button>
-                <button
-                  onClick={() => window.location.href = '/hub/agent/vouchers'}
-                  className="p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-center"
-                >
-                  <div className="text-3xl mb-2"> </div>
-                  <p className="text-sm font-semibold">Создать ваучер</p>
-                </button>
-                <button
-                  onClick={() => window.location.href = '/hub/agent/commissions'}
-                  className="p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-center"
-                >
-                  <div className="text-3xl mb-2"> </div>
-                  <p className="text-sm font-semibold">Комиссионные</p>
-                </button>
-              </div>
-            </div>
-          </div>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[10px] text-[var(--text-muted)]">Период:</span>
+          <select
+            value={period} onChange={e => setPeriod(e.target.value)}
+            className="px-2.5 py-1.5 text-xs bg-[var(--bg-card)] border border-[var(--border)] rounded-md text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+          >
+            <option value="7">7 дней</option>
+            <option value="30">30 дней</option>
+            <option value="90">90 дней</option>
+            <option value="365">Год</option>
+          </select>
         </div>
-      </main>
-    </Protected>
+      </div>
+
+      {/* Metrics */}
+      <AgentMetricsGrid period={period} />
+
+      {/* Tables */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <RecentClientsTable />
+        <UpcomingBookingsTable />
+      </div>
+
+      {/* Quick Actions */}
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4">
+        <p className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] mb-3">Быстрые действия</p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          {QUICK_ACTIONS.map(action => {
+            const Icon = action.icon;
+            return (
+              <button key={action.href}
+                onClick={() => window.location.href = action.href}
+                className="flex flex-col items-center gap-2 p-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-md hover:bg-[var(--bg-hover)] transition-colors text-center">
+                <Icon className="w-4 h-4 text-[var(--text-muted)]" />
+                <span className="text-xs text-[var(--text-secondary)]">{action.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
   );
 }

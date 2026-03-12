@@ -3,18 +3,17 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Shield, Lock, Mail, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
+import { Shield, Lock, Mail, Eye, EyeOff, AlertCircle } from 'lucide-react';
+
+const INPUT = 'w-full px-3.5 py-2.5 text-sm bg-[var(--bg-primary)] border border-[var(--border)] rounded-md text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition-colors';
+const LABEL = 'block text-[10px] uppercase tracking-widest text-[var(--text-muted)] mb-1.5';
 
 export default function AdminLoginPageClient() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
+  const [formData, setFormData] = useState({ email: '', password: '' });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,33 +24,20 @@ export default function AdminLoginPageClient() {
       const response = await fetch('/api/auth/signin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
+        body: JSON.stringify(formData),
       });
-
       const data = await response.json();
 
-      if (!data.success || !data.data?.token) {
-        throw new Error(data.error || 'Неверный email или пароль');
-      }
-
+      if (!data.success || !data.data?.token) throw new Error(data.error || 'Неверный email или пароль');
       const user = data.data;
+      if (user.role !== 'admin') throw new Error('Доступ разрешён только администраторам');
 
-      if (user.role !== 'admin') {
-        throw new Error('Доступ разрешён только администраторам');
-      }
-
-      // Сохраняем токен и данные администратора
       localStorage.setItem('token', user.token);
       localStorage.setItem('admin_token', user.token);
       localStorage.setItem('admin_email', user.email);
       localStorage.setItem('user_roles', JSON.stringify(user.roles || [user.role]));
 
-      // Редирект на админ панель
       router.push('/hub/admin');
-
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка входа');
     } finally {
@@ -60,196 +46,94 @@ export default function AdminLoginPageClient() {
   };
 
   return (
-    <main className="min-h-screen relative text-white overflow-hidden flex items-center justify-center p-4">
-      {/* Animated Premium Background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-amber-500/20 to-yellow-500/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-br from-cyber-cyan/10 to-cyber-cyan/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
-      </div>
-
-      <div className="w-full max-w-md">
-        {/* Logo & Header */}
-        <div className="text-center mb-8 animate-fade-in">
-          <div className="mx-auto mb-6 w-24 h-24 bg-gradient-to-br from-amber-400 via-yellow-500 to-orange-500 rounded-3xl flex items-center justify-center shadow-2xl shadow-amber-500/50 transform hover:scale-110 transition-transform">
-            <Shield className="w-14 h-14 text-white" strokeWidth={2.5} />
+    <main className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center p-4">
+      <div className="w-full max-w-sm">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <div className="w-12 h-12 mx-auto mb-4 bg-[var(--accent)]/10 border border-[var(--accent)]/20 rounded-lg flex items-center justify-center">
+            <Shield className="w-6 h-6 text-[var(--accent)]" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-black mb-3 bg-gradient-to-r from-amber-300 via-yellow-400 to-orange-400 bg-clip-text text-transparent">
-            Панель администратора
-          </h1>
-          <p className="text-lg text-white/70">
-            Kamchatour Hub Admin
-          </p>
+          <h1 className="text-xl font-semibold text-[var(--text-primary)] mb-1">Панель администратора</h1>
+          <p className="text-xs text-[var(--text-muted)]">Kamchatour Hub Admin</p>
         </div>
 
-        {/* Error Message */}
+        {/* Error */}
         {error && (
-          <div className="mb-6 p-4 bg-red-500/10 backdrop-blur-2xl border border-red-500/30 rounded-2xl animate-shake">
-            <div className="flex items-center gap-3 text-red-400">
-              <AlertCircle className="w-5 h-5 flex-shrink-0" />
-              <span className="text-sm">{error}</span>
-            </div>
+          <div className="mb-4 px-4 py-3 bg-[var(--danger)]/10 border border-[var(--danger)]/30 rounded-md flex items-center gap-2 text-sm text-[var(--danger)]">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            {error}
           </div>
         )}
 
-        {/* Login Form */}
-        <form onSubmit={handleSubmit} className="space-y-6 animate-slide-up">
-          <div className="bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-2xl border border-white/20 rounded-3xl p-8 shadow-2xl">
-            {/* Email Field */}
-            <div className="mb-6">
-              <label htmlFor="admin-email" className="block text-sm font-bold mb-3 text-white/90 flex items-center gap-2">
-                <Mail className="w-4 h-4" />
-                Email администратора
-              </label>
-              <div className="relative">
-                <input
-                  id="admin-email"
-                  type="email"
-                  required
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-6 py-4 bg-white/10 border border-white/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent text-white placeholder-white/40 transition-all text-lg"
-                  placeholder="admin@kamchatour.ru"
-                  autoComplete="email"
-                />
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30">
-                  <Mail className="w-5 h-5" />
-                </div>
-              </div>
-            </div>
-
-            {/* Password Field */}
-            <div className="mb-6">
-              <label htmlFor="admin-password" className="block text-sm font-bold mb-3 text-white/90 flex items-center gap-2">
-                <Lock className="w-4 h-4" />
-                Пароль
-              </label>
-              <div className="relative">
-                <input
-                  id="admin-password"
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full px-6 py-4 bg-white/10 border border-white/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent text-white placeholder-white/40 transition-all text-lg"
-                  placeholder="••••••••"
-                  autoComplete="current-password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-4 bg-gradient-to-r from-amber-400 via-yellow-500 to-orange-500 text-white font-bold rounded-xl hover:shadow-2xl hover:shadow-amber-500/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-105 text-lg flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-white/30 border-t-white"></div>
-                  <span>Вход...</span>
-                </>
-              ) : (
-                <>
-                  <Shield className="w-5 h-5" />
-                  <span>Войти в панель</span>
-                </>
-              )}
-            </button>
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6 space-y-4">
+          <div>
+            <label htmlFor="admin-email" className={`${LABEL} flex items-center gap-1.5`}>
+              <Mail className="w-3 h-3" /> Email администратора
+            </label>
+            <input id="admin-email" type="email" required value={formData.email}
+              onChange={e => setFormData({ ...formData, email: e.target.value })}
+              className={INPUT} placeholder="admin@kamchatour.ru" autoComplete="email" />
           </div>
 
-          {/* Security Notice */}
-          <div className="bg-gradient-to-br from-cyber-cyan/10 to-cyber-cyan/5 backdrop-blur-2xl border border-cyber-cyan/30 rounded-2xl p-4">
-            <div className="flex items-start gap-3 text-cyber-cyan">
-              <Shield className="w-5 h-5 flex-shrink-0 mt-0.5" />
-              <div className="text-sm">
-                <p className="font-semibold mb-1">Защищённый доступ</p>
-                <p className="text-cyber-cyan/70">
-                  Все действия в панели администратора логируются и защищены двухфакторной авторизацией.
-                </p>
-              </div>
+          <div>
+            <label htmlFor="admin-password" className={`${LABEL} flex items-center gap-1.5`}>
+              <Lock className="w-3 h-3" /> Пароль
+            </label>
+            <div className="relative">
+              <input id="admin-password" type={showPassword ? 'text' : 'password'} required
+                value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })}
+                className={INPUT} placeholder="••••••••" autoComplete="current-password" />
+              <button type="button" onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
           </div>
+
+          <button type="submit" disabled={loading}
+            className="w-full py-2.5 bg-[var(--accent)] text-[var(--bg-card)] text-sm font-medium rounded-md hover:opacity-90 disabled:opacity-50 transition-opacity flex items-center justify-center gap-2">
+            {loading ? (
+              <><div className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin" /> Вход...</>
+            ) : (
+              <><Shield className="w-4 h-4" /> Войти в панель</>
+            )}
+          </button>
         </form>
 
-        {/* Demo Credentials */}
-        <div className="mt-6 bg-gradient-to-br from-purple-500/10 to-pink-500/10 backdrop-blur-2xl border border-purple-500/30 rounded-2xl p-4">
-          <div className="flex items-start gap-3 text-purple-300">
-            <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-            <div className="text-xs">
-              <p className="font-semibold mb-2">Тестовый доступ:</p>
-              <div className="space-y-1 font-mono text-purple-300/80">
-                <p>Email: admin@kamhub.test</p>
-                <p>Пароль: Admin123456</p>
+        {/* Security notice */}
+        <div className="mt-4 bg-[var(--bg-card)] border border-[var(--border)] rounded-md p-3">
+          <div className="flex items-start gap-2">
+            <Shield className="w-3.5 h-3.5 text-[var(--text-muted)] mt-0.5 shrink-0" />
+            <div>
+              <p className="text-[10px] font-medium text-[var(--text-secondary)]">Защищённый доступ</p>
+              <p className="text-[10px] text-[var(--text-muted)] mt-0.5">
+                Все действия в панели администратора логируются.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Test credentials */}
+        <div className="mt-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-md p-3">
+          <div className="flex items-start gap-2">
+            <AlertCircle className="w-3.5 h-3.5 text-[var(--text-muted)] mt-0.5 shrink-0" />
+            <div>
+              <p className="text-[10px] font-medium text-[var(--text-secondary)]">Тестовый доступ</p>
+              <div className="mt-1 space-y-0.5 font-mono text-[10px] text-[var(--text-muted)]">
+                <p>admin@kamhub.test</p>
+                <p>Admin123456</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Back Link */}
-        <div className="text-center mt-8">
-          <Link
-            href="/"
-            className="text-white/60 hover:text-white transition-colors text-sm flex items-center justify-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Вернуться на главную
+        <div className="text-center mt-6">
+          <Link href="/" className="text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors flex items-center justify-center gap-1.5">
+            ← Вернуться на главную
           </Link>
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-            transform: translateY(-20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        @keyframes slide-up {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-10px); }
-          75% { transform: translateX(10px); }
-        }
-        
-        .animate-fade-in {
-          animation: fade-in 0.6s ease-out;
-        }
-        
-        .animate-slide-up {
-          animation: slide-up 0.8s ease-out;
-          animation-delay: 0.2s;
-          animation-fill-mode: both;
-        }
-        
-        .animate-shake {
-          animation: shake 0.5s ease-in-out;
-        }
-      `}</style>
     </main>
   );
 }
