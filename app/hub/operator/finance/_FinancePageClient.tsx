@@ -24,7 +24,7 @@ function MetricCard({ title, value, icon: Icon, iconColor, bgColor }: MetricCard
           <Icon className={`w-6 h-6 ${iconColor}`} />
         </div>
       </div>
-      <div className="text-2xl font-black text-[var(--text-primary)] mb-1">{value}</div>
+      <div className="text-2xl font-bold text-[var(--text-primary)] mb-1">{value}</div>
       <div className="text-sm text-[var(--text-muted)]">{title}</div>
     </div>
   );
@@ -196,7 +196,7 @@ export default function FinancePageClient() {
 
           <div className="bg-[var(--bg-card)] border border-[var(--accent)]/30 rounded-lg p-6">
             <h3 className="text-[var(--text-muted)] mb-2">Чистый доход</h3>
-            <p className="text-4xl font-black text-[var(--text-primary)]">
+            <p className="text-4xl font-bold text-[var(--text-primary)]">
               {formatCurrency(data.netIncome)}
             </p>
             <p className="text-[var(--text-muted)] text-sm mt-2">
