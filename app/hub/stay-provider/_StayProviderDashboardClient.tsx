@@ -1,9 +1,5 @@
 'use client';
 
-import { Protected } from '@/components/auth/Protected';
-import { PublicNav } from '@/components/shared/PublicNav';
-import BottomNav from '@/components/shared/BottomNav';
-import { StayProviderNav } from '@/components/stay-provider/StayProviderNav';
 import { LoadingSpinner } from '@/components/admin/shared';
 import { useApiFetch } from '@/hooks/use-api-fetch';
 
@@ -51,81 +47,77 @@ export default function StayProviderDashboardClient() {
 
   if (loading) {
     return (
-      <Protected roles={['stay', 'operator', 'admin']}>
-        <div className="min-h-screen bg-transparent flex items-center justify-center">
-          <LoadingSpinner message="Загрузка dashboard..." />
-        </div>
-      </Protected>
+      <div className="p-5 lg:p-6 flex items-center justify-center min-h-[300px]">
+        <LoadingSpinner message="Загрузка dashboard..." />
+      </div>
     );
   }
 
   return (
-    <Protected roles={['stay', 'operator', 'admin']}>
-      <main className="min-h-screen bg-transparent text-white pb-24 md:pb-0">
-        <PublicNav />
-        <StayProviderNav />
-        <div className="bg-white/15 border-b border-white/15 p-6">
-          <h1 className="text-3xl font-black text-white">Dashboard Размещений</h1>
-          <p className="text-white/70">Управление вашими объектами размещения</p>
+    <div className="p-5 lg:p-6 space-y-5">
+      {/* Header */}
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5">
+        <h1 className="text-xl font-bold text-[var(--text-primary)]">Dashboard Размещений</h1>
+        <p className="text-sm text-[var(--text-muted)] mt-0.5">Управление вашими объектами размещения</p>
+      </div>
+
+      {/* Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5">
+          <p className="text-xs text-[var(--text-muted)] mb-2 uppercase tracking-wide">Объектов</p>
+          <p className="text-3xl font-bold text-[var(--text-primary)]">{metrics.totalAccommodations}</p>
         </div>
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5">
+          <p className="text-xs text-[var(--text-muted)] mb-2 uppercase tracking-wide">Бронирований</p>
+          <p className="text-3xl font-bold" style={{ color: 'var(--success)' }}>{metrics.totalBookings}</p>
+        </div>
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5">
+          <p className="text-xs text-[var(--text-muted)] mb-2 uppercase tracking-wide">Номеров</p>
+          <p className="text-3xl font-bold text-[var(--accent)]">{metrics.totalRooms}</p>
+        </div>
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5">
+          <p className="text-xs text-[var(--text-muted)] mb-2 uppercase tracking-wide">Доход</p>
+          <p className="text-3xl font-bold text-[var(--text-primary)]">{(metrics.monthlyRevenue / 1000).toFixed(0)}K ₽</p>
+        </div>
+      </div>
 
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white/15 border border-white/15 rounded-xl p-6">
-              <p className="text-white/50 text-sm mb-2">Объектов</p>
-              <p className="text-4xl font-black text-white">{metrics.totalAccommodations}</p>
-            </div>
-            <div className="bg-white/15 border border-white/15 rounded-xl p-6">
-              <p className="text-white/50 text-sm mb-2">Бронирований</p>
-              <p className="text-4xl font-black text-green-400">{metrics.totalBookings}</p>
-            </div>
-            <div className="bg-white/15 border border-white/15 rounded-xl p-6">
-              <p className="text-white/50 text-sm mb-2">Номеров</p>
-              <p className="text-4xl font-black text-premium-gold">{metrics.totalRooms}</p>
-            </div>
-            <div className="bg-white/15 border border-white/15 rounded-xl p-6">
-              <p className="text-white/50 text-sm mb-2">Доход</p>
-              <p className="text-4xl font-black text-white">{(metrics.monthlyRevenue / 1000).toFixed(0)}K ₽</p>
-            </div>
-          </div>
-
-          <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
-            <h2 className="text-2xl font-bold mb-6">Последние бронирования</h2>
-            {bookings.length === 0 ? (
-              <p className="text-white/50 text-center py-8">Нет бронирований</p>
-            ) : (
-              <div className="space-y-3">
-                {bookings.map((booking) => (
-                  <div key={booking.id} className="bg-white/15 border border-white/15 rounded-xl p-4">
-                    <div className="flex justify-between">
-                      <div>
-                        <h3 className="font-semibold">{booking.accommodation_name}</h3>
-                        <p className="text-sm text-white/70">
-                          {new Date(booking.check_in_date).toLocaleDateString('ru-RU')} -{' '}
-                          {new Date(booking.check_out_date).toLocaleDateString('ru-RU')}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xl font-bold text-white">
-                          {booking.total_price.toLocaleString('ru-RU')} ₽
-                        </p>
-                        <span className={`text-xs px-2 py-1 rounded-full ${
-                          booking.status === 'confirmed'
-                            ? 'bg-green-500/20 text-green-400'
-                            : 'bg-yellow-500/20 text-yellow-400'
-                        }`}>
-                          {booking.status}
-                        </span>
-                      </div>
-                    </div>
+      {/* Recent Bookings */}
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden">
+        <div className="px-5 py-4 border-b border-[var(--border)]">
+          <h2 className="text-sm font-semibold text-[var(--text-primary)]">Последние бронирования</h2>
+        </div>
+        {bookings.length === 0 ? (
+          <p className="text-sm text-[var(--text-muted)] text-center py-8">Нет бронирований</p>
+        ) : (
+          <div className="divide-y divide-[var(--border)]">
+            {bookings.map((booking) => (
+              <div key={booking.id} className="px-5 py-4">
+                <div className="flex justify-between">
+                  <div>
+                    <h3 className="text-sm font-semibold text-[var(--text-primary)]">{booking.accommodation_name}</h3>
+                    <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                      {new Date(booking.check_in_date).toLocaleDateString('ru-RU')} —{' '}
+                      {new Date(booking.check_out_date).toLocaleDateString('ru-RU')}
+                    </p>
                   </div>
-                ))}
+                  <div className="text-right">
+                    <p className="text-sm font-bold text-[var(--text-primary)]">
+                      {booking.total_price.toLocaleString('ru-RU')} ₽
+                    </p>
+                    <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full border ${
+                      booking.status === 'confirmed'
+                        ? 'text-[var(--success)] border-[var(--success)]/30 bg-[var(--success)]/10'
+                        : 'text-[var(--warning)] border-[var(--warning)]/30 bg-[var(--warning)]/10'
+                    }`}>
+                      {booking.status}
+                    </span>
+                  </div>
+                </div>
               </div>
-            )}
+            ))}
           </div>
-        </div>
-        <BottomNav activePath="/hub/stay" />
-      </main>
-    </Protected>
+        )}
+      </div>
+    </div>
   );
 }

@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Protected } from '@/components/auth/Protected';
-import { OperatorNav } from '@/components/operator/OperatorNav';
 import { DataTable, LoadingSpinner, EmptyState, Column } from '@/components/admin/shared';
 import { FinanceData, Transaction } from '@/types/operator';
 import { useAuth } from '@/contexts/AuthContext';
 import { Wallet, Clock, CheckCircle, Percent, LucideIcon } from 'lucide-react';
+
+const SELECT = 'px-3.5 py-2.5 text-sm bg-[var(--bg-primary)] border border-[var(--border)] rounded-md text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] transition-colors';
 
 interface MetricCardProps {
   title: string;
@@ -18,14 +18,14 @@ interface MetricCardProps {
 
 function MetricCard({ title, value, icon: Icon, iconColor, bgColor }: MetricCardProps) {
   return (
-    <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
+    <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
       <div className="flex items-start justify-between mb-4">
-        <div className={`p-3 rounded-xl ${bgColor}`}>
+        <div className={`p-3 rounded-lg ${bgColor}`}>
           <Icon className={`w-6 h-6 ${iconColor}`} />
         </div>
       </div>
-      <div className="text-2xl font-black text-white mb-1">{value}</div>
-      <div className="text-sm text-white/60">{title}</div>
+      <div className="text-2xl font-black text-[var(--text-primary)] mb-1">{value}</div>
+      <div className="text-sm text-[var(--text-muted)]">{title}</div>
     </div>
   );
 }
@@ -80,7 +80,7 @@ export default function FinancePageClient() {
       key: 'date',
       title: 'Дата',
       render: (tx) => (
-        <span className="text-white/80">
+        <span className="text-[var(--text-secondary)]">
           {new Date(tx.date).toLocaleDateString('ru-RU')}
         </span>
       )
@@ -89,7 +89,7 @@ export default function FinancePageClient() {
       key: 'type',
       title: 'Тип',
       render: (tx) => (
-        <span className="px-2 py-1 bg-white/10 rounded-lg text-xs">
+        <span className="px-2 py-1 bg-[var(--bg-hover)] rounded-md text-xs text-[var(--text-secondary)]">
           {getTransactionTypeLabel(tx.type)}
         </span>
       )
@@ -98,7 +98,7 @@ export default function FinancePageClient() {
       key: 'description',
       title: 'Описание',
       render: (tx) => (
-        <span className="text-white/80">{tx.description}</span>
+        <span className="text-[var(--text-secondary)]">{tx.description}</span>
       )
     },
     {
@@ -106,9 +106,9 @@ export default function FinancePageClient() {
       title: 'Сумма',
       render: (tx) => (
         <span className={`font-semibold ${
-          tx.type === 'refund' || tx.type === 'commission' 
-            ? 'text-red-400' 
-            : 'text-green-400'
+          tx.type === 'refund' || tx.type === 'commission'
+            ? 'text-[var(--danger)]'
+            : 'text-[var(--success)]'
         }`}>
           {tx.type === 'refund' || tx.type === 'commission' ? '-' : '+'}
           {formatCurrency(tx.amount)}
@@ -119,10 +119,10 @@ export default function FinancePageClient() {
       key: 'status',
       title: 'Статус',
       render: (tx) => (
-        <span className={`px-2 py-1 rounded-lg text-xs ${
-          tx.status === 'completed' 
-            ? 'bg-green-500/20 text-green-400' 
-            : 'bg-yellow-500/20 text-yellow-400'
+        <span className={`px-2 py-1 rounded-md text-xs ${
+          tx.status === 'completed'
+            ? 'bg-[var(--success)]/10 text-[var(--success)]'
+            : 'bg-[var(--warning)]/10 text-[var(--warning)]'
         }`}>
           {tx.status === 'completed' ? 'Завершено' : 'В ожидании'}
         </span>
@@ -131,103 +131,95 @@ export default function FinancePageClient() {
   ];
 
   return (
-    <Protected roles={['operator', 'admin']}>
-      <main className="min-h-screen bg-transparent text-white">
-        <OperatorNav />
-
-        <div className="bg-white/15 border-b border-white/15 p-6">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-black text-white">Финансы</h1>
-                <p className="text-white/70 mt-1">Выручка, выплаты и транзакции</p>
-              </div>
-              <select
-                value={period}
-                onChange={(e) => setPeriod(e.target.value)}
-                className="px-4 py-3 bg-white/10 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
-              >
-                <option value="7" className="bg-white/10">Последние 7 дней</option>
-                <option value="30" className="bg-white/10">Последние 30 дней</option>
-                <option value="90" className="bg-white/10">Последние 90 дней</option>
-                <option value="365" className="bg-white/10">Последний год</option>
-              </select>
-            </div>
-          </div>
+    <div className="p-5 lg:p-6 space-y-5">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Финансы</h1>
+          <p className="text-[var(--text-muted)] mt-1">Выручка, выплаты и транзакции</p>
         </div>
+        <select
+          value={period}
+          onChange={(e) => setPeriod(e.target.value)}
+          className={SELECT}
+        >
+          <option value="7">Последние 7 дней</option>
+          <option value="30">Последние 30 дней</option>
+          <option value="90">Последние 90 дней</option>
+          <option value="365">Последний год</option>
+        </select>
+      </div>
 
-        <div className="max-w-7xl mx-auto p-6">
-          {loading ? (
-            <div className="flex items-center justify-center py-20">
-              <LoadingSpinner size="lg" message="Загрузка данных..." />
-            </div>
-          ) : !data ? (
-            <EmptyState
-              icon={<Wallet className="w-12 h-12 text-white/30" />}
-              title="Нет данных"
-              description="Финансовые данные не найдены"
+      {/* Content */}
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <LoadingSpinner size="lg" message="Загрузка данных..." />
+        </div>
+      ) : !data ? (
+        <EmptyState
+          icon={<Wallet className="w-12 h-12 text-[var(--text-muted)] opacity-40" />}
+          title="Нет данных"
+          description="Финансовые данные не найдены"
+        />
+      ) : (
+        <div className="space-y-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <MetricCard
+              title="Общая выручка"
+              value={formatCurrency(data.totalRevenue)}
+              icon={Wallet}
+              iconColor="text-[var(--accent)]"
+              bgColor="bg-[var(--accent)]/10"
             />
-          ) : (
-            <div className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <MetricCard
-                  title="Общая выручка"
-                  value={formatCurrency(data.totalRevenue)}
-                  icon={Wallet}
-                  iconColor="text-premium-gold"
-                  bgColor="bg-premium-gold/20"
-                />
-                <MetricCard
-                  title="Ожидают выплаты"
-                  value={formatCurrency(data.pendingPayouts)}
-                  icon={Clock}
-                  iconColor="text-amber-400"
-                  bgColor="bg-amber-500/20"
-                />
-                <MetricCard
-                  title="Выплачено"
-                  value={formatCurrency(data.completedPayouts)}
-                  icon={CheckCircle}
-                  iconColor="text-green-400"
-                  bgColor="bg-green-500/20"
-                />
-                <MetricCard
-                  title="Комиссия платформы"
-                  value={formatCurrency(data.commission)}
-                  icon={Percent}
-                  iconColor="text-purple-400"
-                  bgColor="bg-purple-500/20"
-                />
-              </div>
+            <MetricCard
+              title="Ожидают выплаты"
+              value={formatCurrency(data.pendingPayouts)}
+              icon={Clock}
+              iconColor="text-[var(--warning)]"
+              bgColor="bg-[var(--warning)]/10"
+            />
+            <MetricCard
+              title="Выплачено"
+              value={formatCurrency(data.completedPayouts)}
+              icon={CheckCircle}
+              iconColor="text-[var(--success)]"
+              bgColor="bg-[var(--success)]/10"
+            />
+            <MetricCard
+              title="Комиссия платформы"
+              value={formatCurrency(data.commission)}
+              icon={Percent}
+              iconColor="text-[var(--text-secondary)]"
+              bgColor="bg-[var(--bg-hover)]"
+            />
+          </div>
 
-              <div className="bg-gradient-to-r from-premium-gold/20 to-premium-gold/10 border border-premium-gold/30 rounded-2xl p-6">
-                <h3 className="text-white/70 mb-2">Чистый доход</h3>
-                <p className="text-4xl font-black text-white">
-                  {formatCurrency(data.netIncome)}
-                </p>
-                <p className="text-white/60 text-sm mt-2">
-                  После вычета комиссии 10%
-                </p>
-              </div>
+          <div className="bg-[var(--bg-card)] border border-[var(--accent)]/30 rounded-lg p-6">
+            <h3 className="text-[var(--text-muted)] mb-2">Чистый доход</h3>
+            <p className="text-4xl font-black text-[var(--text-primary)]">
+              {formatCurrency(data.netIncome)}
+            </p>
+            <p className="text-[var(--text-muted)] text-sm mt-2">
+              После вычета комиссии 10%
+            </p>
+          </div>
 
-              <section>
-                <h2 className="text-2xl font-bold text-white mb-4">
-                  История транзакций
-                </h2>
-                {data.transactions.length > 0 ? (
-                  <DataTable columns={columns} data={data.transactions} />
-                ) : (
-                  <EmptyState
-                    icon={<Wallet className="w-12 h-12 text-white/30" />}
-                    title="Нет транзакций"
-                    description="Транзакции появятся здесь"
-                  />
-                )}
-              </section>
-            </div>
-          )}
+          <section>
+            <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-4">
+              История транзакций
+            </h2>
+            {data.transactions.length > 0 ? (
+              <DataTable columns={columns} data={data.transactions} />
+            ) : (
+              <EmptyState
+                icon={<Wallet className="w-12 h-12 text-[var(--text-muted)] opacity-40" />}
+                title="Нет транзакций"
+                description="Транзакции появятся здесь"
+              />
+            )}
+          </section>
         </div>
-      </main>
-    </Protected>
+      )}
+    </div>
   );
 }

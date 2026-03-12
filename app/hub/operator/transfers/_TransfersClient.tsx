@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Protected } from '@/components/auth/Protected';
 import {
   ArrowRightLeft, Send, Check, X, Loader2, Plus,
   ArrowUpRight, ArrowDownLeft,
@@ -34,26 +33,29 @@ function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null;
 }
 
-// -- Цвета статусов --
-function statusBadge(s: TransferStatus): string {
-  const map: Record<TransferStatus, string> = {
-    pending: 'bg-yellow-500/15 text-yellow-300 border border-yellow-400/30',
-    accepted: 'bg-green-500/15 text-green-300 border border-green-400/30',
-    rejected: 'bg-red-500/15 text-red-300 border border-red-400/30',
-    completed: 'bg-white/20 text-white/70 border border-white/20',
+// -- Стили статусов --
+function statusStyle(s: TransferStatus): { color: string; borderColor: string } {
+  const map: Record<TransferStatus, { color: string; borderColor: string }> = {
+    pending:   { color: 'var(--warning)', borderColor: 'var(--warning)' },
+    accepted:  { color: 'var(--success)', borderColor: 'var(--success)' },
+    rejected:  { color: 'var(--danger)',  borderColor: 'var(--danger)'  },
+    completed: { color: 'var(--text-muted)', borderColor: 'var(--border)' },
   };
-  return map[s] ?? '';
+  return map[s] ?? { color: 'var(--text-muted)', borderColor: 'var(--border)' };
 }
 
 function statusLabel(s: TransferStatus): string {
   const map: Record<TransferStatus, string> = {
-    pending: 'Ожидает',
-    accepted: 'Принят',
-    rejected: 'Отклонён',
+    pending:   'Ожидает',
+    accepted:  'Принят',
+    rejected:  'Отклонён',
     completed: 'Завершён',
   };
   return map[s] ?? s;
 }
+
+const INPUT = 'w-full px-3.5 py-2.5 text-sm bg-[var(--bg-primary)] border border-[var(--border)] rounded-md text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition-colors';
+const LABEL = 'block text-[10px] uppercase tracking-widest text-[var(--text-muted)] mb-1.5';
 
 export default function TransfersClient() {
   const [outgoing, setOutgoing] = useState<TransferItem[]>([]);
@@ -152,147 +154,212 @@ export default function TransfersClient() {
     }
   }
 
-  const inputCls = 'w-full min-h-[44px] px-3 py-2 bg-white/10 border border-white/15 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-premium-gold/30';
-
   return (
-    <Protected roles={['operator', 'admin']}>
-      <div className="max-w-5xl mx-auto p-6 space-y-8">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <ArrowRightLeft className="w-6 h-6 text-premium-gold" />
-            <h1 className="text-2xl font-bold text-white">Переброс бронирований</h1>
+    <div className="p-5 lg:p-6 space-y-5">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <ArrowRightLeft className="w-5 h-5" style={{ color: 'var(--accent)' }} />
+          <div>
+            <h1 className="text-xl font-bold text-[var(--text-primary)]">Переброс бронирований</h1>
+          </div>
+        </div>
+        <button
+          onClick={() => setShowForm(!showForm)}
+          className="min-h-[44px] px-4 py-2 rounded-md bg-[var(--accent)] text-[var(--bg-card)] text-sm font-semibold inline-flex items-center gap-2 hover:opacity-90 transition-opacity"
+        >
+          <Plus className="w-4 h-4" />
+          Предложить переброс
+        </button>
+      </div>
+
+      {submitMsg && (
+        <div
+          className="px-3.5 py-2.5 rounded-md text-sm border"
+          style={{ color: 'var(--success)', borderColor: 'var(--success)', backgroundColor: 'color-mix(in srgb, var(--success) 10%, transparent)' }}
+        >
+          {submitMsg}
+        </div>
+      )}
+
+      {/* Форма создания переброса */}
+      {showForm && (
+        <form onSubmit={handleSubmit} className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5 space-y-4">
+          <h2 className="text-sm font-semibold text-[var(--text-primary)]">Новый переброс</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <label className="block">
+              <span className={LABEL}>ID бронирования</span>
+              <input
+                value={form.bookingId}
+                onChange={e => setForm(p => ({ ...p, bookingId: e.target.value }))}
+                className={INPUT}
+                required
+                placeholder="UUID"
+              />
+            </label>
+            <label className="block">
+              <span className={LABEL}>ID оператора-получателя</span>
+              <input
+                value={form.toOperatorPartnerId}
+                onChange={e => setForm(p => ({ ...p, toOperatorPartnerId: e.target.value }))}
+                className={INPUT}
+                required
+                placeholder="UUID партнёра"
+              />
+            </label>
+            <label className="block">
+              <span className={LABEL}>Комиссия (%)</span>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
+                value={form.commissionPercent}
+                onChange={e => setForm(p => ({ ...p, commissionPercent: e.target.value }))}
+                className={INPUT}
+                required
+              />
+            </label>
+            <label className="block">
+              <span className={LABEL}>Сообщение</span>
+              <input
+                value={form.message}
+                onChange={e => setForm(p => ({ ...p, message: e.target.value }))}
+                className={INPUT}
+                placeholder="Опционально"
+              />
+            </label>
           </div>
           <button
-            onClick={() => setShowForm(!showForm)}
-            className="min-h-[44px] px-4 py-2 rounded-xl bg-premium-gold text-premium-black font-medium inline-flex items-center gap-2 hover:bg-premium-gold/80 transition-colors"
+            type="submit"
+            disabled={submitting}
+            className="min-h-[44px] px-4 py-2 rounded-md bg-[var(--accent)] text-[var(--bg-card)] text-sm font-semibold inline-flex items-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50"
           >
-            <Plus className="w-4 h-4" />
-            Предложить переброс
+            {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+            Отправить
           </button>
+        </form>
+      )}
+
+      {loading ? (
+        <div className="flex justify-center py-12">
+          <Loader2 className="w-6 h-6 animate-spin text-[var(--text-muted)]" />
         </div>
-
-        {submitMsg && (
-          <div className="px-3 py-2 rounded-xl bg-green-500/20 border border-green-400/30 text-green-200 text-sm">
-            {submitMsg}
-          </div>
-        )}
-
-        {/* Форма создания переброса */}
-        {showForm && (
-          <form onSubmit={handleSubmit} className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4">
-            <h2 className="text-lg font-semibold text-white">Новый переброс</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <label className="block">
-                <span className="text-sm text-white/70">ID бронирования</span>
-                <input value={form.bookingId} onChange={e => setForm(p => ({ ...p, bookingId: e.target.value }))} className={inputCls} required placeholder="UUID" />
-              </label>
-              <label className="block">
-                <span className="text-sm text-white/70">ID оператора-получателя</span>
-                <input value={form.toOperatorPartnerId} onChange={e => setForm(p => ({ ...p, toOperatorPartnerId: e.target.value }))} className={inputCls} required placeholder="UUID партнёра" />
-              </label>
-              <label className="block">
-                <span className="text-sm text-white/70">Комиссия (%)</span>
-                <input type="number" min="0" max="100" step="0.01" value={form.commissionPercent} onChange={e => setForm(p => ({ ...p, commissionPercent: e.target.value }))} className={inputCls} required />
-              </label>
-              <label className="block">
-                <span className="text-sm text-white/70">Сообщение</span>
-                <input value={form.message} onChange={e => setForm(p => ({ ...p, message: e.target.value }))} className={inputCls} placeholder="Опционально" />
-              </label>
-            </div>
-            <button type="submit" disabled={submitting} className="min-h-[44px] px-4 py-2 rounded-xl bg-premium-gold text-premium-black font-medium inline-flex items-center gap-2 disabled:opacity-50">
-              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-              Отправить
-            </button>
-          </form>
-        )}
-
-        {loading ? (
-          <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-white/50" /></div>
-        ) : error ? (
-          <div className="px-3 py-2 rounded-xl bg-red-500/20 border border-red-400/30 text-red-200 text-sm">{error}</div>
-        ) : (
-          <>
-            {/* Исходящие */}
-            <section>
-              <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-                <ArrowUpRight className="w-5 h-5 text-premium-gold" />
-                Исходящие ({outgoing.length})
-              </h2>
-              {outgoing.length === 0 ? (
-                <p className="text-white/50 text-sm">Нет исходящих перебросов</p>
-              ) : (
-                <div className="space-y-2">
-                  {outgoing.map(t => (
-                    <div key={t.id} className="bg-white/5 border border-white/10 rounded-xl p-4 flex items-center justify-between gap-4">
-                      <div>
-                        <p className="text-white text-sm font-medium">
-                          Бронирование {t.bookingId.slice(0, 8)}... &rarr; {t.toOperatorName ?? 'Оператор'}
-                        </p>
-                        <p className="text-white/50 text-xs">Комиссия: {t.commissionPercent}% | {new Date(t.createdAt).toLocaleDateString('ru-RU')}</p>
-                        {t.message && <p className="text-white/40 text-xs mt-1">{t.message}</p>}
-                      </div>
-                      <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${statusBadge(t.status)}`}>
-                        {statusLabel(t.status)}
-                      </span>
+      ) : error ? (
+        <div
+          className="px-3.5 py-2.5 rounded-md text-sm border"
+          style={{ color: 'var(--danger)', borderColor: 'var(--danger)', backgroundColor: 'color-mix(in srgb, var(--danger) 10%, transparent)' }}
+        >
+          {error}
+        </div>
+      ) : (
+        <>
+          {/* Исходящие */}
+          <section>
+            <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-3 flex items-center gap-2">
+              <ArrowUpRight className="w-4 h-4" style={{ color: 'var(--accent)' }} />
+              Исходящие ({outgoing.length})
+            </h2>
+            {outgoing.length === 0 ? (
+              <p className="text-sm text-[var(--text-muted)]">Нет исходящих перебросов</p>
+            ) : (
+              <div className="space-y-2">
+                {outgoing.map(t => (
+                  <div
+                    key={t.id}
+                    className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4 flex items-center justify-between gap-4"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-[var(--text-primary)]">
+                        Бронирование {t.bookingId.slice(0, 8)}... &rarr; {t.toOperatorName ?? 'Оператор'}
+                      </p>
+                      <p className="text-xs text-[var(--text-muted)]">
+                        Комиссия: {t.commissionPercent}% | {new Date(t.createdAt).toLocaleDateString('ru-RU')}
+                      </p>
+                      {t.message && (
+                        <p className="text-xs text-[var(--text-muted)] mt-1">{t.message}</p>
+                      )}
                     </div>
-                  ))}
-                </div>
-              )}
-            </section>
+                    <span
+                      className="text-xs px-2 py-1 rounded-full whitespace-nowrap border"
+                      style={statusStyle(t.status)}
+                    >
+                      {statusLabel(t.status)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
 
-            {/* Входящие */}
-            <section>
-              <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-                <ArrowDownLeft className="w-5 h-5 text-green-400" />
-                Входящие ({incoming.length})
-              </h2>
-              {incoming.length === 0 ? (
-                <p className="text-white/50 text-sm">Нет входящих перебросов</p>
-              ) : (
-                <div className="space-y-2">
-                  {incoming.map(t => (
-                    <div key={t.id} className="bg-white/5 border border-white/10 rounded-xl p-4 flex items-center justify-between gap-4">
-                      <div>
-                        <p className="text-white text-sm font-medium">
-                          {t.fromOperatorName ?? 'Оператор'} &rarr; вам | Бронирование {t.bookingId.slice(0, 8)}...
-                        </p>
-                        <p className="text-white/50 text-xs">Комиссия: {t.commissionPercent}% | {new Date(t.createdAt).toLocaleDateString('ru-RU')}</p>
-                        {t.message && <p className="text-white/40 text-xs mt-1">{t.message}</p>}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {t.status === 'pending' ? (
-                          <>
-                            <button
-                              onClick={() => handleAction(t.id, 'accept')}
-                              disabled={actionLoading === t.id}
-                              className="min-h-[44px] px-3 py-2 rounded-xl bg-green-600 text-white text-sm font-medium inline-flex items-center gap-1 hover:bg-green-700 disabled:opacity-50"
-                            >
-                              {actionLoading === t.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                              Принять
-                            </button>
-                            <button
-                              onClick={() => handleAction(t.id, 'reject')}
-                              disabled={actionLoading === t.id}
-                              className="min-h-[44px] px-3 py-2 rounded-xl bg-red-600 text-white text-sm font-medium inline-flex items-center gap-1 hover:bg-red-700 disabled:opacity-50"
-                            >
-                              <X className="w-4 h-4" />
-                              Отклонить
-                            </button>
-                          </>
-                        ) : (
-                          <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${statusBadge(t.status)}`}>
-                            {statusLabel(t.status)}
-                          </span>
-                        )}
-                      </div>
+          {/* Входящие */}
+          <section>
+            <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-3 flex items-center gap-2">
+              <ArrowDownLeft className="w-4 h-4" style={{ color: 'var(--success)' }} />
+              Входящие ({incoming.length})
+            </h2>
+            {incoming.length === 0 ? (
+              <p className="text-sm text-[var(--text-muted)]">Нет входящих перебросов</p>
+            ) : (
+              <div className="space-y-2">
+                {incoming.map(t => (
+                  <div
+                    key={t.id}
+                    className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4 flex items-center justify-between gap-4"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-[var(--text-primary)]">
+                        {t.fromOperatorName ?? 'Оператор'} &rarr; вам | Бронирование {t.bookingId.slice(0, 8)}...
+                      </p>
+                      <p className="text-xs text-[var(--text-muted)]">
+                        Комиссия: {t.commissionPercent}% | {new Date(t.createdAt).toLocaleDateString('ru-RU')}
+                      </p>
+                      {t.message && (
+                        <p className="text-xs text-[var(--text-muted)] mt-1">{t.message}</p>
+                      )}
                     </div>
-                  ))}
-                </div>
-              )}
-            </section>
-          </>
-        )}
-      </div>
-    </Protected>
+                    <div className="flex items-center gap-2">
+                      {t.status === 'pending' ? (
+                        <>
+                          <button
+                            onClick={() => handleAction(t.id, 'accept')}
+                            disabled={actionLoading === t.id}
+                            className="min-h-[36px] px-3 py-1.5 rounded-md text-sm font-medium inline-flex items-center gap-1 disabled:opacity-50 transition-opacity hover:opacity-80"
+                            style={{ backgroundColor: 'var(--success)', color: 'var(--bg-card)' }}
+                          >
+                            {actionLoading === t.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Check className="w-4 h-4" />
+                            )}
+                            Принять
+                          </button>
+                          <button
+                            onClick={() => handleAction(t.id, 'reject')}
+                            disabled={actionLoading === t.id}
+                            className="min-h-[36px] px-3 py-1.5 rounded-md text-sm font-medium inline-flex items-center gap-1 disabled:opacity-50 transition-opacity hover:opacity-80"
+                            style={{ backgroundColor: 'var(--danger)', color: 'var(--bg-card)' }}
+                          >
+                            <X className="w-4 h-4" />
+                            Отклонить
+                          </button>
+                        </>
+                      ) : (
+                        <span
+                          className="text-xs px-2 py-1 rounded-full whitespace-nowrap border"
+                          style={statusStyle(t.status)}
+                        >
+                          {statusLabel(t.status)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        </>
+      )}
+    </div>
   );
 }

@@ -1,13 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Protected } from '@/components/auth/Protected';
-import { PublicNav } from '@/components/shared/PublicNav';
 import { GearCard } from '@/components/gear/GearCard';
 import { GearFilters } from '@/components/gear/GearFilters';
 import { GearBookingForm } from '@/components/gear/GearBookingForm';
 import { LoadingSpinner } from '@/components/admin/shared';
-import BottomNav from '@/components/shared/BottomNav';
 import toast from 'react-hot-toast';
 
 interface GearItem {
@@ -50,10 +47,9 @@ export default function GearHubClient() {
         setGearItems(result.data);
       } else {
         setGearItems([]);
-        console.error('No gear data:', result);
       }
     } catch (err) {
-      console.error('Error fetching gear:', err);
+      // silently fail
     } finally {
       setLoading(false);
     }
@@ -123,81 +119,73 @@ export default function GearHubClient() {
 
   if (loading) {
     return (
-      <Protected roles={['tourist', 'admin']}>
-        <div className="min-h-screen bg-transparent flex items-center justify-center">
-          <LoadingSpinner message="Загрузка снаряжения..." />
-        </div>
-      </Protected>
+      <div className="p-5 lg:p-6 flex items-center justify-center min-h-[300px]">
+        <LoadingSpinner message="Загрузка снаряжения..." />
+      </div>
     );
   }
 
   return (
-    <Protected roles={['tourist', 'admin']}>
-      <main className="min-h-screen bg-transparent text-white pb-24 md:pb-0">
-        <PublicNav />
-        {/* Header */}
-        <div className="bg-white/15 border-b border-white/15 p-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-black text-white">Аренда снаряжения</h1>
-              <p className="text-white/70">Профессиональное туристическое оборудование</p>
-            </div>
-
-            {showBookingForm && (
-              <button
-                onClick={handleBackToCatalog}
-                className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
-              >
-                ← К каталогу
-              </button>
-            )}
+    <div className="p-5 lg:p-6 space-y-5">
+      {/* Header */}
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-xl font-bold text-[var(--text-primary)]">Аренда снаряжения</h1>
+            <p className="text-sm text-[var(--text-muted)] mt-0.5">Профессиональное туристическое оборудование</p>
           </div>
-        </div>
 
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          {!showBookingForm ? (
-            <>
-              {/* Filters */}
-              <GearFilters
-                selectedCategory={selectedCategory}
-                onCategoryChange={setSelectedCategory}
-                categories={categories}
-                priceRange={priceRange}
-                onPriceRangeChange={setPriceRange}
-                showAvailableOnly={showAvailableOnly}
-                onAvailableToggle={setShowAvailableOnly}
-                sortBy={sortBy}
-                onSortChange={(value) => setSortBy(value as typeof sortBy)}
+          {showBookingForm && (
+            <button
+              onClick={handleBackToCatalog}
+              className="px-4 py-2 text-sm border border-[var(--border)] text-[var(--text-secondary)] rounded-md hover:bg-[var(--bg-primary)] transition-colors"
+            >
+              ← К каталогу
+            </button>
+          )}
+        </div>
+      </div>
+
+      {!showBookingForm ? (
+        <>
+          {/* Filters */}
+          <GearFilters
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
+            categories={categories}
+            priceRange={priceRange}
+            onPriceRangeChange={setPriceRange}
+            showAvailableOnly={showAvailableOnly}
+            onAvailableToggle={setShowAvailableOnly}
+            sortBy={sortBy}
+            onSortChange={(value) => setSortBy(value as typeof sortBy)}
+          />
+
+          {/* Catalog */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredGear.map((gear) => (
+              <GearCard
+                key={gear.id}
+                gear={gear}
+                onRent={handleRent}
               />
+            ))}
+          </div>
 
-              {/* Catalog */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredGear.map((gear) => (
-                  <GearCard
-                    key={gear.id}
-                    gear={gear}
-                    onRent={handleRent}
-                  />
-                ))}
-              </div>
-
-              {filteredGear.length === 0 && (
-                <div className="text-center py-12">
-                  <p className="text-white/70 text-lg">Снаряжение не найдено</p>
-                  <p className="text-white/50">Попробуйте изменить фильтры</p>
-                </div>
-              )}
-            </>
-          ) : selectedGear ? (
-            <GearBookingForm
-              gear={selectedGear}
-              onBookingComplete={handleBookingComplete}
-              onCancel={handleBackToCatalog}
-            />
-          ) : null}
-        </div>
-        <BottomNav activePath="/hub/gear" />
-      </main>
-    </Protected>
+          {filteredGear.length === 0 && (
+            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-12 text-center">
+              <p className="text-[var(--text-muted)] mb-1">Снаряжение не найдено</p>
+              <p className="text-sm text-[var(--text-muted)]">Попробуйте изменить фильтры</p>
+            </div>
+          )}
+        </>
+      ) : selectedGear ? (
+        <GearBookingForm
+          gear={selectedGear}
+          onBookingComplete={handleBookingComplete}
+          onCancel={handleBackToCatalog}
+        />
+      ) : null}
+    </div>
   );
 }

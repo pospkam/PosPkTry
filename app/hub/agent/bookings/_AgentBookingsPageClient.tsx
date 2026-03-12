@@ -1,7 +1,5 @@
 'use client';
 
-import { Protected } from '@/components/auth/Protected';
-import { AgentNav } from '@/components/agent/AgentNav';
 import { DataTable } from '@/components/admin/shared/DataTable';
 import { LoadingSpinner } from '@/components/admin/shared/LoadingSpinner';
 import { StatusBadge } from '@/components/admin/shared/StatusBadge';
@@ -36,21 +34,23 @@ export default function AgentBookingsPageClient() {
       header: 'Клиент',
       render: (booking: AgentBooking) => (
         <div>
-          <div className="font-medium text-white">{booking.clientName}</div>
-          <div className="text-white/60 text-sm">{booking.clientEmail}</div>
+          <div className="font-medium text-[var(--text-primary)]">{booking.clientName}</div>
+          <div className="text-[var(--text-muted)] text-sm">{booking.clientEmail}</div>
         </div>
       ),
     },
     {
       key: 'tourName',
       header: 'Тур',
-      render: (booking: AgentBooking) => <div className="text-white">{booking.tourName}</div>,
+      render: (booking: AgentBooking) => (
+        <div className="text-[var(--text-primary)]">{booking.tourName}</div>
+      ),
     },
     {
       key: 'tourDate',
       header: 'Дата',
       render: (booking: AgentBooking) => (
-        <div className="text-white/70">
+        <div className="text-[var(--text-secondary)]">
           {new Date(booking.tourDate).toLocaleDateString('ru-RU')}
         </div>
       ),
@@ -59,14 +59,16 @@ export default function AgentBookingsPageClient() {
       key: 'totalPrice',
       header: 'Сумма',
       render: (booking: AgentBooking) => (
-        <div className="font-medium text-white">{booking.totalPrice?.toLocaleString('ru-RU')} ₽</div>
+        <div className="font-medium text-[var(--text-primary)]">
+          {booking.totalPrice?.toLocaleString('ru-RU')} ₽
+        </div>
       ),
     },
     {
       key: 'agentCommission',
       header: 'Комиссия',
       render: (booking: AgentBooking) => (
-        <div className="font-medium text-green-400">
+        <div className="font-medium text-[var(--success)]">
           {booking.agentCommission?.toLocaleString('ru-RU')} ₽
         </div>
       ),
@@ -79,18 +81,19 @@ export default function AgentBookingsPageClient() {
   ];
 
   return (
-    <Protected roles={['agent']}>
-      <main className="min-h-screen bg-transparent text-white">
-        <AgentNav />
-        <div className="max-w-7xl mx-auto p-6">
-          <h1 className="text-3xl font-black text-white mb-6">Бронирования</h1>
-          {loading ? (
-            <LoadingSpinner message="Загрузка..." />
-          ) : (
-            <DataTable<AgentBooking> data={list} columns={columns} emptyMessage="Нет бронирований" />
-          )}
+    <div className="p-5 lg:p-6 space-y-5">
+      <h1 className="text-xl font-bold text-[var(--text-primary)]">Бронирования</h1>
+      {loading ? (
+        <LoadingSpinner message="Загрузка..." />
+      ) : (
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden">
+          <DataTable<AgentBooking>
+            data={list}
+            columns={columns}
+            emptyMessage="Нет бронирований"
+          />
         </div>
-      </main>
-    </Protected>
+      )}
+    </div>
   );
 }

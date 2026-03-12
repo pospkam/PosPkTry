@@ -2,8 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { Protected } from '@/components/auth/Protected';
-import { OperatorNav } from '@/components/operator/OperatorNav';
 import {
   DataTable,
   Pagination,
@@ -18,6 +16,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { Users, Plus, Star } from 'lucide-react';
+
+const SELECT = 'px-3.5 py-2.5 text-sm bg-[var(--bg-primary)] border border-[var(--border)] rounded-md text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] transition-colors';
 
 export default function ToursManagementClient() {
   const { user } = useAuth();
@@ -38,7 +38,7 @@ export default function ToursManagementClient() {
   const fetchTours = async () => {
     try {
       setLoading(true);
-      
+
       const params = new URLSearchParams({
         ...(operatorId ? { operatorId } : {}),
         page: currentPage.toString(),
@@ -135,18 +135,18 @@ export default function ToursManagementClient() {
               className="w-12 h-12 rounded-lg mr-3 object-cover"
             />
           ) : (
-            <div className="w-12 h-12 rounded-lg mr-3 bg-white/10 flex items-center justify-center">
-              <span className="text-2xl"></span>
+            <div className="w-12 h-12 rounded-lg mr-3 bg-[var(--bg-hover)] flex items-center justify-center">
+              <span className="text-2xl">🏔</span>
             </div>
           )}
           <div>
             <Link
               href={`/hub/operator/tours/${tour.id}`}
-              className="font-semibold text-white hover:text-white transition-colors"
+              className="font-semibold text-[var(--text-primary)] hover:text-[var(--accent)] transition-colors"
             >
               {tour.name}
             </Link>
-            <p className="text-xs text-white/60">{tour.category}</p>
+            <p className="text-xs text-[var(--text-muted)]">{tour.category}</p>
           </div>
         </div>
       )
@@ -155,7 +155,7 @@ export default function ToursManagementClient() {
       key: 'difficulty',
       title: 'Сложность',
       render: (tour) => (
-        <span className="px-2 py-1 bg-white/10 rounded-lg text-xs">
+        <span className="px-2 py-1 bg-[var(--bg-hover)] border border-[var(--border)] rounded text-xs text-[var(--text-secondary)]">
           {getDifficultyLabel(tour.difficulty)}
         </span>
       )
@@ -164,14 +164,14 @@ export default function ToursManagementClient() {
       key: 'duration',
       title: 'Длит.',
       render: (tour) => (
-        <span className="text-white/80">{tour.duration}ч</span>
+        <span className="text-[var(--text-secondary)]">{tour.duration}ч</span>
       )
     },
     {
       key: 'maxGroupSize',
       title: 'Макс. группа',
       render: (tour) => (
-        <span className="text-white/80">
+        <span className="text-[var(--text-secondary)]">
           <Users className="w-5 h-5 mr-1 inline" />
           {tour.maxGroupSize}
         </span>
@@ -182,7 +182,7 @@ export default function ToursManagementClient() {
       title: 'Цена',
       sortable: true,
       render: (tour) => (
-        <span className="font-semibold text-white">
+        <span className="font-semibold text-[var(--text-primary)]">
           {formatCurrency(tour.price, tour.currency)}
         </span>
       )
@@ -193,8 +193,8 @@ export default function ToursManagementClient() {
       sortable: true,
       render: (tour) => (
         <div className="text-center">
-          <div className="font-semibold text-white">{tour.bookingsCount}</div>
-          <div className="text-xs text-white/50">
+          <div className="font-semibold text-[var(--text-primary)]">{tour.bookingsCount}</div>
+          <div className="text-xs text-[var(--text-muted)]">
             {formatCurrency(tour.totalRevenue, tour.currency)}
           </div>
         </div>
@@ -204,9 +204,13 @@ export default function ToursManagementClient() {
       key: 'rating',
       title: 'Рейтинг',
       render: (tour) => (
-        <div className="text-sm">
-          <Star className="w-4 h-4 text-yellow-400 fill-yellow-400 inline" /> {tour.rating.toFixed(1)}
-          <span className="text-white/50 text-xs"> ({tour.reviewCount})</span>
+        <div className="text-sm text-[var(--text-secondary)]">
+          <Star
+            className="w-4 h-4 inline"
+            style={{ color: 'var(--warning)', fill: 'var(--warning)' }}
+          />{' '}
+          {tour.rating.toFixed(1)}
+          <span className="text-[var(--text-muted)] text-xs"> ({tour.reviewCount})</span>
         </div>
       )
     },
@@ -224,19 +228,21 @@ export default function ToursManagementClient() {
         <div className="flex space-x-2">
           <Link
             href={`/hub/operator/tours/${tour.id}`}
-            className="px-3 py-1 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-medium transition-colors"
+            className="px-3 py-1 border border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] rounded-md text-xs font-medium transition-colors"
           >
             Изменить
           </Link>
           <button
             onClick={() => handleToggleActive(tour.id, tour.isActive)}
-            className="px-3 py-1 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 rounded-lg text-xs font-medium transition-colors"
+            className="px-3 py-1 rounded-md text-xs font-medium transition-colors"
+            style={{ color: 'var(--warning)', border: '1px solid var(--warning)' }}
           >
             {tour.isActive ? 'Скрыть' : 'Показать'}
           </button>
           <button
             onClick={() => handleDelete(tour.id)}
-            className="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-xs font-medium transition-colors"
+            className="px-3 py-1 rounded-md text-xs font-medium transition-colors"
+            style={{ color: 'var(--danger)', border: '1px solid var(--danger)' }}
           >
             Удалить
           </button>
@@ -246,117 +252,101 @@ export default function ToursManagementClient() {
   ];
 
   return (
-    <Protected roles={['operator', 'admin']}>
-      <main className="min-h-screen bg-transparent text-white">
-        <OperatorNav />
-        
-        {/* Header */}
-        <div className="bg-white/15 border-b border-white/15 p-6">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h1 className="text-3xl font-black text-white">
-                  Мои туры
-                </h1>
-                <p className="text-white/70 mt-1">
-                  Управление вашими турами и экскурсиями
-                </p>
-              </div>
-              <Link
-                href="/hub/operator/tours/new"
-                className="px-6 py-3 bg-premium-gold hover:bg-premium-gold/80 text-premium-black font-bold rounded-xl transition-colors"
-              >
-                <Plus className="w-5 h-5 mr-2 inline" />
-                Создать тур
-              </Link>
-            </div>
-
-            {/* Filters */}
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1">
-                <SearchBar
-                  placeholder="Поиск по названию или описанию..."
-                  onSearch={(query) => {
-                    setSearch(query);
-                    setCurrentPage(1);
-                  }}
-                />
-              </div>
-              <select
-                value={categoryFilter}
-                onChange={(e) => {
-                  setCategoryFilter(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
-              >
-                <option value="">Все категории</option>
-                <option value="adventure">Приключения</option>
-                <option value="nature">Природа</option>
-                <option value="culture">Культура</option>
-                <option value="extreme">Экстрим</option>
-                <option value="relaxation">Отдых</option>
-              </select>
-              <select
-                value={statusFilter}
-                onChange={(e) => {
-                  setStatusFilter(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
-              >
-                <option value="all">Все статусы</option>
-                <option value="active">Активные</option>
-                <option value="inactive">Неактивные</option>
-              </select>
-            </div>
-          </div>
+    <div className="p-5 lg:p-6 space-y-5">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-[var(--text-primary)]">Мои туры</h1>
+          <p className="text-sm text-[var(--text-muted)] mt-0.5">
+            Управление вашими турами и экскурсиями
+          </p>
         </div>
+        <Link
+          href="/hub/operator/tours/new"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--accent)] text-[var(--bg-card)] text-sm font-semibold rounded-md hover:opacity-90 transition-opacity"
+        >
+          <Plus className="w-4 h-4" />
+          Создать тур
+        </Link>
+      </div>
 
-        {/* Content */}
-        <div className="max-w-7xl mx-auto p-6">
-          {loading ? (
-            <div className="flex items-center justify-center py-20">
-              <LoadingSpinner size="lg" message="Загрузка туров..." />
-            </div>
-          ) : tours.length === 0 ? (
-            <EmptyState
-              icon=""
-              title="Туры не найдены"
-              description={
-                search || categoryFilter || statusFilter !== 'all'
-                  ? 'Попробуйте изменить фильтры'
-                  : 'Создайте свой первый тур'
-              }
-              action={
-                !search && !categoryFilter && statusFilter === 'all'
-                  ? {
-                      label: 'Создать тур',
-                      onClick: () => (window.location.href = '/hub/operator/tours/new')
-                    }
-                  : undefined
-              }
-            />
-          ) : (
-            <div className="space-y-6">
-              <DataTable
-                columns={columns}
-                data={tours}
-              />
-
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-              />
-            </div>
-          )}
+      {/* Filters */}
+      <div className="flex flex-col md:flex-row gap-3">
+        <div className="flex-1">
+          <SearchBar
+            placeholder="Поиск по названию или описанию..."
+            onSearch={(query) => {
+              setSearch(query);
+              setCurrentPage(1);
+            }}
+          />
         </div>
-      </main>
-    </Protected>
+        <select
+          value={categoryFilter}
+          onChange={(e) => {
+            setCategoryFilter(e.target.value);
+            setCurrentPage(1);
+          }}
+          className={SELECT}
+        >
+          <option value="">Все категории</option>
+          <option value="adventure">Приключения</option>
+          <option value="nature">Природа</option>
+          <option value="culture">Культура</option>
+          <option value="extreme">Экстрим</option>
+          <option value="relaxation">Отдых</option>
+        </select>
+        <select
+          value={statusFilter}
+          onChange={(e) => {
+            setStatusFilter(e.target.value);
+            setCurrentPage(1);
+          }}
+          className={SELECT}
+        >
+          <option value="all">Все статусы</option>
+          <option value="active">Активные</option>
+          <option value="inactive">Неактивные</option>
+        </select>
+      </div>
+
+      {/* Content */}
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <LoadingSpinner size="lg" message="Загрузка туров..." />
+        </div>
+      ) : tours.length === 0 ? (
+        <EmptyState
+          icon="🏔"
+          title="Туры не найдены"
+          description={
+            search || categoryFilter || statusFilter !== 'all'
+              ? 'Попробуйте изменить фильтры'
+              : 'Создайте свой первый тур'
+          }
+          action={
+            !search && !categoryFilter && statusFilter === 'all'
+              ? {
+                  label: 'Создать тур',
+                  onClick: () => (window.location.href = '/hub/operator/tours/new')
+                }
+              : undefined
+          }
+        />
+      ) : (
+        <div className="space-y-4">
+          <DataTable
+            columns={columns}
+            data={tours}
+          />
+
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </div>
+      )}
+    </div>
   );
 }
-
-
-
-

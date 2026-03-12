@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { Protected } from '@/components/auth/Protected';
 import { LoadingSpinner } from '@/components/admin/shared';
 import { Booking } from '@/types';
 import { Calendar, Users } from 'lucide-react';
@@ -19,10 +18,10 @@ export default function BookingHistoryPageClient() {
 
   const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
-      pending: 'bg-yellow-500/20 text-yellow-400',
-      confirmed: 'bg-green-500/20 text-green-400',
-      completed: 'bg-premium-gold/20 text-premium-gold',
-      cancelled: 'bg-red-500/20 text-red-400',
+      pending: 'bg-[var(--warning)]/15 text-[var(--warning)]',
+      confirmed: 'bg-[var(--success)]/15 text-[var(--success)]',
+      completed: 'bg-[var(--accent)]/15 text-[var(--accent)]',
+      cancelled: 'bg-[var(--danger)]/15 text-[var(--danger)]',
     };
     const labels: Record<string, string> = {
       pending: 'Ожидает',
@@ -39,9 +38,9 @@ export default function BookingHistoryPageClient() {
 
   const getPaymentBadge = (status: string) => {
     const styles: Record<string, string> = {
-      pending: 'bg-yellow-500/20 text-yellow-400',
-      paid: 'bg-green-500/20 text-green-400',
-      refunded: 'bg-white/10 text-white/40',
+      pending: 'bg-[var(--warning)]/15 text-[var(--warning)]',
+      paid: 'bg-[var(--success)]/15 text-[var(--success)]',
+      refunded: 'bg-[var(--bg-hover)] text-[var(--text-muted)]',
     };
     const labels: Record<string, string> = {
       pending: 'Не оплачено',
@@ -60,122 +59,133 @@ export default function BookingHistoryPageClient() {
     const today = new Date();
     const bookingDate = new Date(booking.date);
     switch (filter) {
-      case 'upcoming': return bookingDate >= today && booking.status !== 'cancelled';
-      case 'past': return bookingDate < today || booking.status === 'completed';
-      case 'cancelled': return booking.status === 'cancelled';
-      default: return true;
+      case 'upcoming':
+        return bookingDate >= today && booking.status !== 'cancelled';
+      case 'past':
+        return bookingDate < today || booking.status === 'completed';
+      case 'cancelled':
+        return booking.status === 'cancelled';
+      default:
+        return true;
     }
   });
 
   if (loading) {
     return (
-      <Protected roles={['tourist']}>
-        <div className="min-h-screen bg-transparent flex items-center justify-center">
-          <LoadingSpinner message="Загрузка бронирований..." />
-        </div>
-      </Protected>
+      <div className="p-5 lg:p-6 flex items-center justify-center py-20">
+        <LoadingSpinner message="Загрузка бронирований..." />
+      </div>
     );
   }
 
   return (
-    <Protected roles={['tourist']}>
-      <main className="min-h-screen bg-transparent text-white">
-        <div className="bg-white/15 border-b border-white/15 p-6">
-          <h1 className="text-3xl font-black text-white">Мои бронирования</h1>
-          <p className="text-white/70">История ваших бронирований и заказов</p>
+    <div className="p-5 lg:p-6 space-y-5">
+      {/* Header */}
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5">
+        <h1 className="text-xl font-bold text-[var(--text-primary)]">Мои бронирования</h1>
+        <p className="text-[var(--text-secondary)] text-sm mt-0.5">
+          История ваших бронирований и заказов
+        </p>
+      </div>
+
+      {/* Filter tabs */}
+      <div className="flex gap-2 flex-wrap">
+        {(['all', 'upcoming', 'past', 'cancelled'] as const).map((f) => {
+          const labels = {
+            all: `Все (${list.length})`,
+            upcoming: 'Предстоящие',
+            past: 'Прошедшие',
+            cancelled: 'Отменённые',
+          };
+          return (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                filter === f
+                  ? 'bg-[var(--accent)] text-[var(--bg-card)]'
+                  : 'border border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]'
+              }`}
+            >
+              {labels[f]}
+            </button>
+          );
+        })}
+      </div>
+
+      {filteredBookings.length === 0 ? (
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-12 text-center">
+          <Calendar className="w-12 h-12 mx-auto mb-4 text-[var(--text-muted)]" />
+          <p className="text-[var(--text-secondary)] text-base">У вас пока нет бронирований</p>
+          <button
+            onClick={() => {
+              window.location.href = '/hub/tourist';
+            }}
+            className="mt-5 px-6 py-2.5 bg-[var(--accent)] text-[var(--bg-card)] rounded-md text-sm font-semibold transition-colors"
+          >
+            Начать путешествие
+          </button>
         </div>
-
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex gap-3 mb-6">
-            {(['all', 'upcoming', 'past', 'cancelled'] as const).map((f) => {
-              const labels = { all: `Все (${list.length})`, upcoming: 'Предстоящие', past: 'Прошедшие', cancelled: 'Отменённые' };
-              return (
-                <button
-                  key={f}
-                  onClick={() => setFilter(f)}
-                  className={`px-6 py-2 rounded-xl font-semibold transition-colors ${
-                    filter === f
-                      ? 'bg-premium-gold text-premium-black'
-                      : 'bg-white/10 hover:bg-white/20 text-white'
-                  }`}
-                >
-                  {labels[f]}
-                </button>
-              );
-            })}
-          </div>
-
-          {filteredBookings.length === 0 ? (
-            <div className="bg-white/15 border border-white/15 rounded-2xl p-12 text-center">
-              <Calendar className="w-16 h-16 mx-auto mb-4 text-white/50" />
-              <p className="text-white/70 text-lg">У вас пока нет бронирований</p>
-              <button
-                onClick={() => { window.location.href = '/hub/tourist'; }}
-                className="mt-6 px-8 py-3 bg-premium-gold text-premium-black rounded-xl font-semibold hover:bg-premium-gold/80 transition-colors"
-              >
-                Начать путешествие
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {filteredBookings.map((booking) => (
-                <div
-                  key={booking.id}
-                  className="bg-white/15 border border-white/15 rounded-2xl p-6 hover:bg-white/10 transition-colors"
-                >
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="text-xl font-bold mb-2">{booking.tour?.title || 'Тур'}</h3>
-                      <div className="flex items-center gap-4 text-sm text-white/70">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4" />
-                          {new Date(booking.date).toLocaleDateString('ru-RU')}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Users className="w-4 h-4" />
-                          {booking.participants} чел
-                        </span>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-white mb-2">
-                        {booking.totalPrice.toLocaleString('ru-RU')} ₽
-                      </p>
-                      <div className="flex flex-col gap-2">
-                        {getStatusBadge(booking.status)}
-                        {getPaymentBadge(booking.paymentStatus)}
-                      </div>
-                    </div>
-                  </div>
-
-                  {booking.specialRequests && (
-                    <div className="mt-4 pt-4 border-t border-white/15">
-                      <p className="text-xs text-white/50 mb-1">Особые пожелания:</p>
-                      <p className="text-sm text-white/80">{booking.specialRequests}</p>
-                    </div>
-                  )}
-
-                  <div className="mt-4 pt-4 border-t border-white/15 flex gap-3">
-                    <button className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm transition-colors">
-                      Подробнее
-                    </button>
-                    {booking.status === 'pending' && (
-                      <button className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-sm transition-colors">
-                        Отменить
-                      </button>
-                    )}
-                    {booking.status === 'completed' && booking.paymentStatus === 'paid' && (
-                      <button className="px-4 py-2 bg-premium-gold/20 hover:bg-premium-gold/30 text-white rounded-lg text-sm transition-colors">
-                        Оставить отзыв
-                      </button>
-                    )}
+      ) : (
+        <div className="space-y-3">
+          {filteredBookings.map((booking) => (
+            <div
+              key={booking.id}
+              className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5 hover:bg-[var(--bg-hover)] transition-colors"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="text-base font-semibold text-[var(--text-primary)] mb-1.5">
+                    {booking.tour?.title || 'Тур'}
+                  </h3>
+                  <div className="flex items-center gap-4 text-sm text-[var(--text-secondary)]">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-4 h-4" />
+                      {new Date(booking.date).toLocaleDateString('ru-RU')}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Users className="w-4 h-4" />
+                      {booking.participants} чел
+                    </span>
                   </div>
                 </div>
-              ))}
+                <div className="text-right">
+                  <p className="text-xl font-bold text-[var(--text-primary)] mb-2">
+                    {booking.totalPrice.toLocaleString('ru-RU')} ₽
+                  </p>
+                  <div className="flex flex-col gap-1.5 items-end">
+                    {getStatusBadge(booking.status)}
+                    {getPaymentBadge(booking.paymentStatus)}
+                  </div>
+                </div>
+              </div>
+
+              {booking.specialRequests && (
+                <div className="mt-3 pt-3 border-t border-[var(--border)]">
+                  <p className="text-xs text-[var(--text-muted)] mb-1">Особые пожелания:</p>
+                  <p className="text-sm text-[var(--text-secondary)]">{booking.specialRequests}</p>
+                </div>
+              )}
+
+              <div className="mt-3 pt-3 border-t border-[var(--border)] flex gap-2">
+                <button className="px-4 py-1.5 border border-[var(--border)] text-[var(--text-secondary)] rounded-md text-sm transition-colors hover:bg-[var(--bg-hover)]">
+                  Подробнее
+                </button>
+                {booking.status === 'pending' && (
+                  <button className="px-4 py-1.5 border border-[var(--danger)]/40 text-[var(--danger)] rounded-md text-sm transition-colors hover:bg-[var(--danger)]/10">
+                    Отменить
+                  </button>
+                )}
+                {booking.status === 'completed' && booking.paymentStatus === 'paid' && (
+                  <button className="px-4 py-1.5 border border-[var(--accent)]/40 text-[var(--accent)] rounded-md text-sm transition-colors hover:bg-[var(--accent)]/10">
+                    Оставить отзыв
+                  </button>
+                )}
+              </div>
             </div>
-          )}
+          ))}
         </div>
-      </main>
-    </Protected>
+      )}
+    </div>
   );
 }

@@ -1,7 +1,5 @@
 'use client';
 
-import { Protected } from '@/components/auth/Protected';
-import { AgentNav } from '@/components/agent/AgentNav';
 import { DataTable } from '@/components/admin/shared/DataTable';
 import { LoadingSpinner } from '@/components/admin/shared/LoadingSpinner';
 import { useApiFetch } from '@/hooks/use-api-fetch';
@@ -33,18 +31,20 @@ export default function AgentVouchersPageClient() {
     {
       key: 'code',
       header: 'Код',
-      render: (v: Voucher) => <div className="font-mono text-white">{v.code}</div>,
+      render: (v: Voucher) => (
+        <div className="font-mono text-[var(--text-primary)]">{v.code}</div>
+      ),
     },
     {
       key: 'name',
       header: 'Название',
-      render: (v: Voucher) => <div className="text-white">{v.name}</div>,
+      render: (v: Voucher) => <div className="text-[var(--text-primary)]">{v.name}</div>,
     },
     {
       key: 'discountValue',
       header: 'Скидка',
       render: (v: Voucher) => (
-        <div className="text-green-400">
+        <div className="text-[var(--success)]">
           {v.discountType === 'percentage' ? `${v.discountValue}%` : `${v.discountValue} ₽`}
         </div>
       ),
@@ -53,7 +53,7 @@ export default function AgentVouchersPageClient() {
       key: 'usedCount',
       header: 'Использовано',
       render: (v: Voucher) => (
-        <div className="text-white/70">
+        <div className="text-[var(--text-secondary)]">
           {v.usedCount} {v.usageLimit ? `/ ${v.usageLimit}` : ''}
         </div>
       ),
@@ -62,25 +62,23 @@ export default function AgentVouchersPageClient() {
       key: 'validTo',
       header: 'Действует до',
       render: (v: Voucher) => (
-        <div className="text-white/70">{new Date(v.validTo).toLocaleDateString('ru-RU')}</div>
+        <div className="text-[var(--text-secondary)]">
+          {new Date(v.validTo).toLocaleDateString('ru-RU')}
+        </div>
       ),
     },
   ];
 
   return (
-    <Protected roles={['agent']}>
-      <main className="min-h-screen bg-transparent text-white">
-        <AgentNav />
-        <div className="max-w-7xl mx-auto p-6">
-          <h1 className="text-3xl font-black text-white mb-6">Ваучеры</h1>
-          {loading ? (
-            <LoadingSpinner message="Загрузка..." />
-          ) : (
-            <DataTable<Voucher> data={list} columns={columns} emptyMessage="Нет ваучеров" />
-          )}
+    <div className="p-5 lg:p-6 space-y-5">
+      <h1 className="text-xl font-bold text-[var(--text-primary)]">Ваучеры</h1>
+      {loading ? (
+        <LoadingSpinner message="Загрузка..." />
+      ) : (
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden">
+          <DataTable<Voucher> data={list} columns={columns} emptyMessage="Нет ваучеров" />
         </div>
-      </main>
-    </Protected>
+      )}
+    </div>
   );
 }
-

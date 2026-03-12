@@ -1,7 +1,5 @@
 'use client';
 
-import { Protected } from '@/components/auth/Protected';
-import { TransferOperatorNav } from '@/components/transfer-operator/TransferOperatorNav';
 import { DataTable } from '@/components/admin/shared/DataTable';
 import { LoadingSpinner } from '@/components/admin/shared/LoadingSpinner';
 import { StatusBadge } from '@/components/admin/shared/StatusBadge';
@@ -37,8 +35,10 @@ export default function DriversPageClient() {
       header: 'Водитель',
       render: (d: Driver) => (
         <div>
-          <div className="font-medium text-white">{d.firstName} {d.lastName}</div>
-          <div className="text-white/60 text-sm">{d.phone}</div>
+          <div className="font-medium text-[var(--text-primary)]">
+            {d.firstName} {d.lastName}
+          </div>
+          <div className="text-[var(--text-muted)] text-sm">{d.phone}</div>
         </div>
       ),
     },
@@ -47,15 +47,17 @@ export default function DriversPageClient() {
       header: 'Рейтинг',
       render: (d: Driver) => (
         <div className="flex items-center gap-1">
-          <span><Star className="w-4 h-4" /></span>
-          <span className="text-white">{d.rating?.toFixed(1)}</span>
+          <Star className="w-4 h-4 text-[var(--text-secondary)]" />
+          <span className="text-[var(--text-primary)]">{d.rating?.toFixed(1)}</span>
         </div>
       ),
     },
     {
       key: 'totalTrips',
       header: 'Поездок',
-      render: (d: Driver) => <div className="text-white">{d.totalTrips}</div>,
+      render: (d: Driver) => (
+        <div className="text-[var(--text-primary)]">{d.totalTrips}</div>
+      ),
     },
     {
       key: 'status',
@@ -66,7 +68,7 @@ export default function DriversPageClient() {
       key: 'licenseExpiry',
       header: 'Лицензия до',
       render: (d: Driver) => (
-        <div className="text-white/70 text-sm">
+        <div className="text-[var(--text-secondary)] text-sm">
           {new Date(d.licenseExpiry).toLocaleDateString('ru-RU')}
         </div>
       ),
@@ -74,19 +76,15 @@ export default function DriversPageClient() {
   ];
 
   return (
-    <Protected roles={['transfer', 'operator', 'admin']}>
-      <main className="min-h-screen bg-transparent text-white">
-        <TransferOperatorNav />
-        <div className="max-w-7xl mx-auto p-6">
-          <h1 className="text-3xl font-black text-white mb-6">Водители</h1>
-          {loading ? (
-            <LoadingSpinner message="Загрузка..." />
-          ) : (
-            <DataTable<Driver> data={list} columns={columns} emptyMessage="Нет водителей" />
-          )}
+    <div className="p-5 lg:p-6 space-y-5">
+      <h1 className="text-xl font-bold text-[var(--text-primary)]">Водители</h1>
+      {loading ? (
+        <LoadingSpinner message="Загрузка..." />
+      ) : (
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden">
+          <DataTable<Driver> data={list} columns={columns} emptyMessage="Нет водителей" />
         </div>
-      </main>
-    </Protected>
+      )}
+    </div>
   );
 }
-

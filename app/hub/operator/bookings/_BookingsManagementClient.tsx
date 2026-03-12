@@ -1,8 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Protected } from '@/components/auth/Protected';
-import { OperatorNav } from '@/components/operator/OperatorNav';
 import {
   DataTable,
   Pagination,
@@ -16,6 +14,8 @@ import { OperatorBooking } from '@/types/operator';
 import { Check } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
+
+const SELECT = 'px-3.5 py-2.5 text-sm bg-[var(--bg-primary)] border border-[var(--border)] rounded-md text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] transition-colors';
 
 export default function BookingsManagementClient() {
   const { user } = useAuth();
@@ -36,7 +36,7 @@ export default function BookingsManagementClient() {
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      
+
       const params = new URLSearchParams({
         ...(operatorId ? { operatorId } : {}),
         page: currentPage.toString(),
@@ -121,7 +121,7 @@ export default function BookingsManagementClient() {
       title: 'ID',
       width: '100px',
       render: (booking) => (
-        <span className="text-white/60 font-mono text-xs">
+        <span className="text-[var(--text-muted)] font-mono text-xs">
           #{booking.id.substring(0, 8)}
         </span>
       )
@@ -131,8 +131,8 @@ export default function BookingsManagementClient() {
       title: 'Тур',
       render: (booking) => (
         <div>
-          <p className="font-semibold text-white">{booking.tourName}</p>
-          <p className="text-xs text-white/60">
+          <p className="font-semibold text-[var(--text-primary)]">{booking.tourName}</p>
+          <p className="text-xs text-[var(--text-muted)]">
             {new Date(booking.date).toLocaleDateString('ru-RU', {
               day: 'numeric',
               month: 'short',
@@ -147,10 +147,10 @@ export default function BookingsManagementClient() {
       title: 'Клиент',
       render: (booking) => (
         <div>
-          <p className="text-white">{booking.userName}</p>
-          <p className="text-xs text-white/60">{booking.userEmail}</p>
+          <p className="text-[var(--text-primary)]">{booking.userName}</p>
+          <p className="text-xs text-[var(--text-muted)]">{booking.userEmail}</p>
           {booking.userPhone && (
-            <p className="text-xs text-white/60">{booking.userPhone}</p>
+            <p className="text-xs text-[var(--text-muted)]">{booking.userPhone}</p>
           )}
         </div>
       )
@@ -159,7 +159,7 @@ export default function BookingsManagementClient() {
       key: 'guestsCount',
       title: 'Гости',
       render: (booking) => (
-        <span className="text-white/80">
+        <span className="text-[var(--text-secondary)]">
           <span className="text-xl mr-1"> </span>
           {booking.guestsCount}
         </span>
@@ -170,10 +170,10 @@ export default function BookingsManagementClient() {
       title: 'Сумма',
       render: (booking) => (
         <div>
-          <div className="font-semibold text-white">
+          <div className="font-semibold text-[var(--text-primary)]">
             {formatCurrency(booking.totalPrice)}
           </div>
-          <div className="text-xs text-white/60">
+          <div className="text-xs text-[var(--text-muted)]">
             {booking.paymentStatus === 'paid' ? <><Check className="w-3 h-3 inline mr-1" />Оплачено</> : 'Ожидает'}
           </div>
         </div>
@@ -195,13 +195,13 @@ export default function BookingsManagementClient() {
             <>
               <button
                 onClick={() => handleUpdateStatus(booking.id, 'confirmed')}
-                className="px-3 py-1 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded-lg text-xs font-medium transition-colors"
+                className="px-3 py-1 bg-[var(--success)]/10 hover:bg-[var(--success)]/20 text-[var(--success)] rounded-md text-xs font-medium transition-colors"
               >
                 Подтвердить
               </button>
               <button
                 onClick={() => handleUpdateStatus(booking.id, 'cancelled')}
-                className="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-xs font-medium transition-colors"
+                className="px-3 py-1 bg-[var(--danger)]/10 hover:bg-[var(--danger)]/20 text-[var(--danger)] rounded-md text-xs font-medium transition-colors"
               >
                 Отменить
               </button>
@@ -211,13 +211,13 @@ export default function BookingsManagementClient() {
             <>
               <button
                 onClick={() => handleUpdateStatus(booking.id, 'completed')}
-                className="px-3 py-1 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-medium transition-colors"
+                className="px-3 py-1 border border-[var(--border)] hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] rounded-md text-xs font-medium transition-colors"
               >
                 Завершить
               </button>
               <button
                 onClick={() => handleUpdateStatus(booking.id, 'cancelled')}
-                className="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-xs font-medium transition-colors"
+                className="px-3 py-1 bg-[var(--danger)]/10 hover:bg-[var(--danger)]/20 text-[var(--danger)] rounded-md text-xs font-medium transition-colors"
               >
                 Отменить
               </button>
@@ -226,7 +226,7 @@ export default function BookingsManagementClient() {
           {(booking.status === 'completed' || booking.status === 'cancelled') && (
             <button
               onClick={() => setSelectedBooking(booking)}
-              className="px-3 py-1 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-medium transition-colors"
+              className="px-3 py-1 border border-[var(--border)] hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] rounded-md text-xs font-medium transition-colors"
             >
               Детали
             </button>
@@ -237,116 +237,99 @@ export default function BookingsManagementClient() {
   ];
 
   return (
-    <Protected roles={['operator', 'admin']}>
-      <main className="min-h-screen bg-transparent text-white">
-        <OperatorNav />
-        
-        {/* Header */}
-        <div className="bg-white/15 border-b border-white/15 p-6">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h1 className="text-3xl font-black text-white">
-                  Бронирования
-                </h1>
-                <p className="text-white/70 mt-1">
-                  Управление бронированиями ваших туров
-                </p>
-              </div>
-            </div>
+    <div className="p-5 lg:p-6 space-y-5">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Бронирования</h1>
+          <p className="text-[var(--text-muted)] mt-1">Управление бронированиями ваших туров</p>
+        </div>
+      </div>
 
-            {/* Filters */}
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1">
-                <SearchBar
-                  placeholder="Поиск по клиенту, email или туру..."
-                  onSearch={(query) => {
-                    setSearch(query);
-                    setCurrentPage(1);
-                  }}
-                />
-              </div>
-              <select
-                value={statusFilter}
-                onChange={(e) => {
-                  setStatusFilter(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="px-4 py-3 bg-white/15 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
-              >
-                <option value="all">Все статусы</option>
-                <option value="pending">Ожидают подтверждения</option>
-                <option value="confirmed">Подтверждённые</option>
-                <option value="completed">Завершённые</option>
-                <option value="cancelled">Отменённые</option>
-              </select>
+      {/* Filters */}
+      <div className="flex flex-col md:flex-row gap-3">
+        <div className="flex-1">
+          <SearchBar
+            placeholder="Поиск по клиенту, email или туру..."
+            onSearch={(query) => {
+              setSearch(query);
+              setCurrentPage(1);
+            }}
+          />
+        </div>
+        <select
+          value={statusFilter}
+          onChange={(e) => {
+            setStatusFilter(e.target.value);
+            setCurrentPage(1);
+          }}
+          className={SELECT}
+        >
+          <option value="all">Все статусы</option>
+          <option value="pending">Ожидают подтверждения</option>
+          <option value="confirmed">Подтверждённые</option>
+          <option value="completed">Завершённые</option>
+          <option value="cancelled">Отменённые</option>
+        </select>
+      </div>
+
+      {/* Content */}
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <LoadingSpinner size="lg" message="Загрузка бронирований..." />
+        </div>
+      ) : bookings.length === 0 ? (
+        <EmptyState
+          icon=" "
+          title="Бронирований не найдено"
+          description={
+            search || statusFilter !== 'all'
+              ? 'Попробуйте изменить фильтры'
+              : 'Бронирования появятся здесь'
+          }
+        />
+      ) : (
+        <div className="space-y-5">
+          {/* Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4">
+              <p className="text-[var(--text-muted)] text-sm">Ожидают</p>
+              <p className="text-2xl font-bold text-[var(--warning)]">
+                {bookings.filter(b => b.status === 'pending').length}
+              </p>
+            </div>
+            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4">
+              <p className="text-[var(--text-muted)] text-sm">Подтверждены</p>
+              <p className="text-2xl font-bold text-[var(--success)]">
+                {bookings.filter(b => b.status === 'confirmed').length}
+              </p>
+            </div>
+            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4">
+              <p className="text-[var(--text-muted)] text-sm">Завершены</p>
+              <p className="text-2xl font-bold text-[var(--accent)]">
+                {bookings.filter(b => b.status === 'completed').length}
+              </p>
+            </div>
+            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4">
+              <p className="text-[var(--text-muted)] text-sm">Отменены</p>
+              <p className="text-2xl font-bold text-[var(--danger)]">
+                {bookings.filter(b => b.status === 'cancelled').length}
+              </p>
             </div>
           </div>
+
+          <DataTable
+            columns={columns}
+            data={bookings}
+          />
+
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
         </div>
-
-        {/* Content */}
-        <div className="max-w-7xl mx-auto p-6">
-          {loading ? (
-            <div className="flex items-center justify-center py-20">
-              <LoadingSpinner size="lg" message="Загрузка бронирований..." />
-            </div>
-          ) : bookings.length === 0 ? (
-            <EmptyState
-              icon=" "
-              title="Бронирований не найдено"
-              description={
-                search || statusFilter !== 'all'
-                  ? 'Попробуйте изменить фильтры'
-                  : 'Бронирования появятся здесь'
-              }
-            />
-          ) : (
-            <div className="space-y-6">
-              {/* Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-white/15 border border-white/15 rounded-xl p-4">
-                  <p className="text-white/60 text-sm">Ожидают</p>
-                  <p className="text-2xl font-bold text-yellow-400">
-                    {bookings.filter(b => b.status === 'pending').length}
-                  </p>
-                </div>
-                <div className="bg-white/15 border border-white/15 rounded-xl p-4">
-                  <p className="text-white/60 text-sm">Подтверждены</p>
-                  <p className="text-2xl font-bold text-green-400">
-                    {bookings.filter(b => b.status === 'confirmed').length}
-                  </p>
-                </div>
-                <div className="bg-white/15 border border-white/15 rounded-xl p-4">
-                  <p className="text-white/60 text-sm">Завершены</p>
-                  <p className="text-2xl font-bold text-premium-gold">
-                    {bookings.filter(b => b.status === 'completed').length}
-                  </p>
-                </div>
-                <div className="bg-white/15 border border-white/15 rounded-xl p-4">
-                  <p className="text-white/60 text-sm">Отменены</p>
-                  <p className="text-2xl font-bold text-red-400">
-                    {bookings.filter(b => b.status === 'cancelled').length}
-                  </p>
-                </div>
-              </div>
-
-              <DataTable
-                columns={columns}
-                data={bookings}
-              />
-
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-              />
-            </div>
-          )}
-        </div>
-      </main>
-    </Protected>
+      )}
+    </div>
   );
 }
-
-
-

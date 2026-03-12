@@ -1,8 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Protected } from '@/components/auth/Protected';
-import { OperatorNav } from '@/components/operator/OperatorNav';
 import { LoadingSpinner, EmptyState } from '@/components/admin/shared';
 import { AvailabilitySlot } from '@/types/operator';
 import { useAuth } from '@/contexts/AuthContext';
@@ -82,130 +80,115 @@ export default function CalendarPageClient() {
   };
 
   return (
-    <Protected roles={['operator', 'admin']}>
-      <main className="min-h-screen bg-transparent text-white">
-        <OperatorNav />
+    <div className="p-5 lg:p-6 space-y-5">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-[var(--text-primary)]">Календарь доступности</h1>
+        <p className="text-[var(--text-muted)] mt-1">Просмотр загрузки туров по дням</p>
+      </div>
 
-        {/* Header */}
-        <div className="bg-white/15 border-b border-white/15 p-6">
-          <div className="max-w-7xl mx-auto">
-            <h1 className="text-3xl font-black text-white">
-              Календарь доступности
-            </h1>
-            <p className="text-white/70 mt-1">
-              Просмотр загрузки туров по дням
-            </p>
+      {/* Content */}
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <LoadingSpinner size="lg" message="Загрузка календаря..." />
+        </div>
+      ) : (
+        <div className="space-y-5">
+          {/* Month Selector */}
+          <div className="flex items-center justify-between bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4">
+            <button
+              onClick={() => changeMonth(-1)}
+              className="px-4 py-2 border border-[var(--border)] hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] rounded-md transition-colors text-sm"
+            >
+              ← Пред.
+            </button>
+            <h2 className="text-lg font-semibold text-[var(--text-primary)]">
+              {selectedMonth.toLocaleDateString('ru-RU', {
+                month: 'long',
+                year: 'numeric'
+              })}
+            </h2>
+            <button
+              onClick={() => changeMonth(1)}
+              className="px-4 py-2 border border-[var(--border)] hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] rounded-md transition-colors text-sm"
+            >
+              След. →
+            </button>
+          </div>
+
+          {/* Calendar Grid */}
+          <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
+            {/* Week days */}
+            <div className="grid grid-cols-7 gap-2 mb-4">
+              {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map(day => (
+                <div key={day} className="text-center text-[10px] uppercase tracking-widest text-[var(--text-muted)] py-2">
+                  {day}
+                </div>
+              ))}
+            </div>
+
+            {/* Days */}
+            <div className="grid grid-cols-7 gap-2">
+              {getDaysInMonth().map((date, calIndex) => {
+                if (!date) {
+                  return <div key={`empty-cell-${calIndex}`} className="aspect-square" />;
+                }
+
+                const slot = getSlotForDate(date);
+                const isToday = date.toDateString() === new Date().toDateString();
+                const isPast = date < new Date(new Date().setHours(0, 0, 0, 0));
+
+                return (
+                  <div
+                    key={date.toISOString()}
+                    className={`
+                      aspect-square rounded-md border p-2 transition-all
+                      ${isPast ? 'bg-[var(--bg-hover)] border-[var(--border)] opacity-50' : 'bg-[var(--bg-primary)] border-[var(--border)]'}
+                      ${isToday ? 'border-[var(--accent)] border-2' : ''}
+                      ${slot?.isBlocked ? 'bg-[var(--danger)]/10' : ''}
+                      hover:bg-[var(--bg-hover)] cursor-pointer
+                    `}
+                  >
+                    <div className="text-sm font-semibold mb-1 text-[var(--text-primary)]">{date.getDate()}</div>
+                    {slot && !isPast && (
+                      <div className="text-xs">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[var(--text-muted)]">
+                            {slot.bookedCount}/{slot.maxCapacity}
+                          </span>
+                          <span className={`
+                            ${slot.availableSpots === 0 ? 'text-[var(--danger)]' :
+                              slot.availableSpots < 3 ? 'text-[var(--warning)]' :
+                              'text-[var(--success)]'}
+                          `}>
+                            ●
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Legend */}
+          <div className="flex items-center justify-center gap-6 text-sm">
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-[var(--success)]"></span>
+              <span className="text-[var(--text-muted)]">Доступно</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-[var(--warning)]"></span>
+              <span className="text-[var(--text-muted)]">Мало мест</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-[var(--danger)]"></span>
+              <span className="text-[var(--text-muted)]">Занято</span>
+            </div>
           </div>
         </div>
-
-        {/* Content */}
-        <div className="max-w-7xl mx-auto p-6">
-          {loading ? (
-            <div className="flex items-center justify-center py-20">
-              <LoadingSpinner size="lg" message="Загрузка календаря..." />
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {/* Month Selector */}
-              <div className="flex items-center justify-between bg-white/15 border border-white/15 rounded-xl p-4">
-                <button
-                  onClick={() => changeMonth(-1)}
-                  className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
-                >
-                  ← Пред.
-                </button>
-                <h2 className="text-2xl font-bold">
-                  {selectedMonth.toLocaleDateString('ru-RU', {
-                    month: 'long',
-                    year: 'numeric'
-                  })}
-                </h2>
-                <button
-                  onClick={() => changeMonth(1)}
-                  className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
-                >
-                  След. →
-                </button>
-              </div>
-
-              {/* Calendar Grid */}
-              <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
-                {/* Week days */}
-                <div className="grid grid-cols-7 gap-2 mb-4">
-                  {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map(day => (
-                    <div key={day} className="text-center font-bold text-white/70 py-2">
-                      {day}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Days */}
-                <div className="grid grid-cols-7 gap-2">
-                  {getDaysInMonth().map((date, calIndex) => {
-                    if (!date) {
-                      return <div key={`empty-cell-${calIndex}`} className="aspect-square" />;
-                    }
-
-                    const slot = getSlotForDate(date);
-                    const isToday = date.toDateString() === new Date().toDateString();
-                    const isPast = date < new Date(new Date().setHours(0, 0, 0, 0));
-
-                    return (
-                      <div
-                        key={date.toISOString()}
-                        className={`
-                          aspect-square rounded-lg border p-2 transition-all
-                          ${isPast ? 'bg-white/15 border-white/15 opacity-50' : 'bg-white/10 border-white/20'}
-                          ${isToday ? 'border-white/15 border-2' : ''}
-                          ${slot?.isBlocked ? 'bg-red-500/20' : ''}
-                          hover:bg-white/20 cursor-pointer
-                        `}
-                      >
-                        <div className="text-sm font-semibold mb-1">{date.getDate()}</div>
-                        {slot && !isPast && (
-                          <div className="text-xs">
-                            <div className="flex items-center justify-between">
-                              <span className="text-white/60">
-                                {slot.bookedCount}/{slot.maxCapacity}
-                              </span>
-                              <span className={`
-                                ${slot.availableSpots === 0 ? 'text-red-400' : 
-                                  slot.availableSpots < 3 ? 'text-yellow-400' : 
-                                  'text-green-400'}
-                              `}>
-                                ●
-                              </span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Legend */}
-              <div className="flex items-center justify-center gap-6 text-sm">
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-green-400"></span>
-                  <span className="text-white/70">Доступно</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-yellow-400"></span>
-                  <span className="text-white/70">Мало мест</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-red-400"></span>
-                  <span className="text-white/70">Занято</span>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </main>
-    </Protected>
+      )}
+    </div>
   );
 }
-
-
-

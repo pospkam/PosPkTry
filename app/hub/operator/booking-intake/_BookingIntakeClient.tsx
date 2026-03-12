@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
-import { Protected } from '@/components/auth/Protected';
 import {
   Bot, Send, Loader2, CheckCircle2, Clock, User,
 } from 'lucide-react';
@@ -95,122 +94,124 @@ export default function BookingIntakeClient() {
   }
 
   return (
-    <Protected roles={['operator', 'admin']}>
-      <div className="max-w-6xl mx-auto p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <Bot className="w-6 h-6 text-premium-gold" />
-          <h1 className="text-2xl font-bold text-white">AI Приём заявок</h1>
-          {provider && (
-            <span className="text-xs px-2 py-1 rounded-full bg-white/20 text-white/70 border border-white/20">
-              {provider}
-            </span>
-          )}
-        </div>
+    <div className="p-5 lg:p-6 space-y-5">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <Bot className="w-6 h-6 text-[var(--accent)]" />
+        <h1 className="text-2xl font-bold text-[var(--text-primary)]">AI Приём заявок</h1>
+        {provider && (
+          <span className="text-xs px-2 py-1 rounded-full bg-[var(--bg-hover)] text-[var(--text-muted)] border border-[var(--border)]">
+            {provider}
+          </span>
+        )}
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Чат */}
-          <div className="lg:col-span-2 bg-white/5 border border-white/10 rounded-2xl flex flex-col h-[600px]">
-            <div className="p-4 border-b border-white/10 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-white">Тестовый чат</h2>
-              <button onClick={startNewChat} className="text-xs text-premium-gold hover:text-premium-gold/80 min-h-[44px] px-3">
-                Новый чат
-              </button>
-            </div>
-
-            {/* Сообщения */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {messages.length === 0 && (
-                <div className="text-center text-white/30 py-12">
-                  <Bot className="w-10 h-10 mx-auto mb-3 text-white/20" />
-                  <p className="text-sm">Напишите сообщение от имени туриста для тестирования AI-агента</p>
-                </div>
-              )}
-              {messages.map((msg, i) => (
-                <div
-                  key={`msg-${i}-${msg.role}`}
-                  className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  {msg.role === 'assistant' && <Bot className="w-5 h-5 text-premium-gold mt-1 shrink-0" />}
-                  <div
-                    className={`max-w-[80%] px-3 py-2 rounded-xl text-sm whitespace-pre-wrap ${
-                      msg.role === 'user'
-                        ? 'bg-white/20 text-white'
-                        : 'bg-white/10 text-white/90'
-                    }`}
-                  >
-                    {msg.content}
-                  </div>
-                  {msg.role === 'user' && <User className="w-5 h-5 text-white/40 mt-1 shrink-0" />}
-                </div>
-              ))}
-              {loading && (
-                <div className="flex gap-2 items-center text-white/40 text-sm">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  AI думает...
-                </div>
-              )}
-              <div ref={chatEndRef} />
-            </div>
-
-            {/* Ввод */}
-            <form onSubmit={sendMessage} className="p-4 border-t border-white/10 flex gap-2">
-              <input
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                placeholder="Сообщение от туриста..."
-                className="flex-1 min-h-[44px] px-3 py-2 bg-white/10 border border-white/15 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-premium-gold/30"
-                disabled={loading}
-              />
-              <button
-                type="submit"
-                disabled={loading || !input.trim()}
-                className="min-h-[44px] min-w-[44px] px-3 rounded-xl bg-premium-gold text-premium-black disabled:opacity-50 flex items-center justify-center"
-              >
-                <Send className="w-5 h-5" />
-              </button>
-            </form>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Чат */}
+        <div className="lg:col-span-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg flex flex-col h-[600px]">
+          <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-[var(--text-primary)]">Тестовый чат</h2>
+            <button
+              onClick={startNewChat}
+              className="text-xs text-[var(--accent)] hover:opacity-80 min-h-[44px] px-3 transition-opacity"
+            >
+              Новый чат
+            </button>
           </div>
 
-          {/* Список заявок */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
-            <h2 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-              <Clock className="w-4 h-4 text-white/50" />
-              Заявки ({inquiries.length})
-            </h2>
-
-            {inquiries.length === 0 ? (
-              <p className="text-white/30 text-xs">Заявки появятся после общения с AI</p>
-            ) : (
-              <div className="space-y-2">
-                {inquiries.map(inq => (
-                  <div key={inq.id} className="bg-white/5 border border-white/10 rounded-xl p-3">
-                    <p className="text-white/80 text-xs line-clamp-2 mb-2">{inq.preview}</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-white/30 text-[10px]">
-                        {new Date(inq.createdAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                      {inq.status === 'new' ? (
-                        <button
-                          onClick={() => markProcessed(inq.id)}
-                          className="min-h-[44px] px-2 py-1 text-xs text-green-400 hover:text-green-300 inline-flex items-center gap-1"
-                        >
-                          <CheckCircle2 className="w-3 h-3" />
-                          Обработано
-                        </button>
-                      ) : (
-                        <span className="text-xs text-green-400/60 inline-flex items-center gap-1">
-                          <CheckCircle2 className="w-3 h-3" />
-                          Готово
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
+          {/* Сообщения */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {messages.length === 0 && (
+              <div className="text-center text-[var(--text-muted)] py-12">
+                <Bot className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                <p className="text-sm">Напишите сообщение от имени туриста для тестирования AI-агента</p>
               </div>
             )}
+            {messages.map((msg, i) => (
+              <div
+                key={`msg-${i}-${msg.role}`}
+                className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                {msg.role === 'assistant' && <Bot className="w-5 h-5 text-[var(--accent)] mt-1 shrink-0" />}
+                <div
+                  className={`max-w-[80%] px-3 py-2 rounded-lg text-sm whitespace-pre-wrap ${
+                    msg.role === 'user'
+                      ? 'bg-[var(--accent)]/10 text-[var(--text-primary)]'
+                      : 'bg-[var(--bg-hover)] text-[var(--text-secondary)]'
+                  }`}
+                >
+                  {msg.content}
+                </div>
+                {msg.role === 'user' && <User className="w-5 h-5 text-[var(--text-muted)] mt-1 shrink-0" />}
+              </div>
+            ))}
+            {loading && (
+              <div className="flex gap-2 items-center text-[var(--text-muted)] text-sm">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                AI думает...
+              </div>
+            )}
+            <div ref={chatEndRef} />
           </div>
+
+          {/* Ввод */}
+          <form onSubmit={sendMessage} className="p-4 border-t border-[var(--border)] flex gap-2">
+            <input
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              placeholder="Сообщение от туриста..."
+              className="flex-1 min-h-[44px] px-3 py-2 bg-[var(--bg-primary)] border border-[var(--border)] rounded-md text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition-colors text-sm"
+              disabled={loading}
+            />
+            <button
+              type="submit"
+              disabled={loading || !input.trim()}
+              className="min-h-[44px] min-w-[44px] px-3 rounded-md bg-[var(--accent)] text-[var(--bg-card)] disabled:opacity-50 flex items-center justify-center transition-opacity"
+            >
+              <Send className="w-5 h-5" />
+            </button>
+          </form>
+        </div>
+
+        {/* Список заявок */}
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4">
+          <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-3 flex items-center gap-2">
+            <Clock className="w-4 h-4 text-[var(--text-muted)]" />
+            Заявки ({inquiries.length})
+          </h2>
+
+          {inquiries.length === 0 ? (
+            <p className="text-[var(--text-muted)] text-xs">Заявки появятся после общения с AI</p>
+          ) : (
+            <div className="space-y-2">
+              {inquiries.map(inq => (
+                <div key={inq.id} className="bg-[var(--bg-hover)] border border-[var(--border)] rounded-md p-3">
+                  <p className="text-[var(--text-secondary)] text-xs line-clamp-2 mb-2">{inq.preview}</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[var(--text-muted)] text-[10px]">
+                      {new Date(inq.createdAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                    {inq.status === 'new' ? (
+                      <button
+                        onClick={() => markProcessed(inq.id)}
+                        className="min-h-[44px] px-2 py-1 text-xs text-[var(--success)] hover:opacity-80 inline-flex items-center gap-1 transition-opacity"
+                      >
+                        <CheckCircle2 className="w-3 h-3" />
+                        Обработано
+                      </button>
+                    ) : (
+                      <span className="text-xs text-[var(--success)]/60 inline-flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" />
+                        Готово
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
-    </Protected>
+    </div>
   );
 }

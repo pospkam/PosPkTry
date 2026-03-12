@@ -1,15 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Protected } from '@/components/auth/Protected';
-import { PublicNav } from '@/components/shared/PublicNav';
 import { SouvenirCard } from '@/components/souvenirs/SouvenirCard';
 import { ShoppingCart as ShoppingCartIcon } from 'lucide-react';
 import { ShoppingCart } from '@/components/souvenirs/ShoppingCart';
 import { SouvenirCheckout } from '@/components/souvenirs/SouvenirCheckout';
 import { SouvenirFilters } from '@/components/souvenirs/SouvenirFilters';
 import { LoadingSpinner } from '@/components/admin/shared';
-import BottomNav from '@/components/shared/BottomNav';
 import toast from 'react-hot-toast';
 
 interface Souvenir {
@@ -58,10 +55,9 @@ export default function SouvenirsHubClient() {
         setSouvenirs(result.data);
       } else {
         setSouvenirs([]);
-        console.error('No souvenirs data:', result);
       }
     } catch (err) {
-      console.error('Error fetching souvenirs:', err);
+      // silently fail
     } finally {
       setLoading(false);
     }
@@ -170,108 +166,101 @@ export default function SouvenirsHubClient() {
 
   if (loading) {
     return (
-      <Protected roles={['tourist', 'admin']}>
-        <div className="min-h-screen bg-transparent flex items-center justify-center">
-          <LoadingSpinner message="Загрузка сувениров..." />
-        </div>
-      </Protected>
+      <div className="p-5 lg:p-6 flex items-center justify-center min-h-[300px]">
+        <LoadingSpinner message="Загрузка сувениров..." />
+      </div>
     );
   }
 
   return (
-    <Protected roles={['tourist', 'admin']}>
-      <main className="min-h-screen bg-transparent text-white pb-24 md:pb-0">
-        <PublicNav />
-        {/* Header */}
-        <div className="bg-white/15 border-b border-white/15 p-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-black text-white">Сувениры Камчатки</h1>
-              <p className="text-white/70">Уникальные подарки и сувениры</p>
-            </div>
+    <div className="p-5 lg:p-6 space-y-5">
+      {/* Header */}
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-xl font-bold text-[var(--text-primary)]">Сувениры Камчатки</h1>
+            <p className="text-sm text-[var(--text-muted)] mt-0.5">Уникальные подарки и сувениры</p>
+          </div>
 
-            <div className="flex items-center gap-4">
-              {view !== 'catalog' && (
-                <button
-                  onClick={handleBackToCatalog}
-                  className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
-                >
-                  ← Каталог
-                </button>
-              )}
-
+          <div className="flex items-center gap-3">
+            {view !== 'catalog' && (
               <button
-                onClick={() => setView(view === 'cart' ? 'catalog' : 'cart')}
-                className="relative px-6 py-3 bg-premium-gold hover:bg-premium-gold/80 text-premium-black font-semibold rounded-xl transition-colors"
+                onClick={handleBackToCatalog}
+                className="px-4 py-2 text-sm border border-[var(--border)] text-[var(--text-secondary)] rounded-md hover:bg-[var(--bg-primary)] transition-colors"
               >
-                <ShoppingCartIcon className="w-5 h-5 inline mr-2" />
-                Корзина
-                {cart.length > 0 && (
-                  <span className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-xs">
-                    {cart.reduce((sum, item) => sum + item.quantity, 0)}
-                  </span>
-                )}
+                ← Каталог
               </button>
-            </div>
+            )}
+
+            <button
+              onClick={() => setView(view === 'cart' ? 'catalog' : 'cart')}
+              className="relative px-4 py-2 text-sm font-medium rounded-md bg-[var(--accent)] text-[var(--bg-card)] hover:opacity-90 transition-opacity"
+            >
+              <ShoppingCartIcon className="w-4 h-4 inline mr-1.5" />
+              Корзина
+              {cart.length > 0 && (
+                <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full flex items-center justify-center text-xs text-white"
+                  style={{ background: 'var(--danger)' }}>
+                  {cart.reduce((sum, item) => sum + item.quantity, 0)}
+                </span>
+              )}
+            </button>
           </div>
         </div>
+      </div>
 
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          {/* Content based on current view */}
-          {view === 'catalog' && (
-            <>
-              {/* Filters */}
-              <SouvenirFilters
-                selectedCategory={selectedCategory}
-                onCategoryChange={setSelectedCategory}
-                categories={categories}
-                priceRange={priceRange}
-                onPriceRangeChange={setPriceRange}
-                showInStockOnly={showInStockOnly}
-                onInStockToggle={setShowInStockOnly}
-                sortBy={sortBy}
-                onSortChange={(value) => setSortBy(value as typeof sortBy)}
+      {/* Content based on current view */}
+      {view === 'catalog' && (
+        <>
+          {/* Filters */}
+          <SouvenirFilters
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
+            categories={categories}
+            priceRange={priceRange}
+            onPriceRangeChange={setPriceRange}
+            showInStockOnly={showInStockOnly}
+            onInStockToggle={setShowInStockOnly}
+            sortBy={sortBy}
+            onSortChange={(value) => setSortBy(value as typeof sortBy)}
+          />
+
+          {/* Catalog */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredSouvenirs.map((souvenir) => (
+              <SouvenirCard
+                key={souvenir.id}
+                souvenir={souvenir}
+                onAddToCart={handleAddToCart}
               />
+            ))}
+          </div>
 
-              {/* Catalog */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredSouvenirs.map((souvenir) => (
-                  <SouvenirCard
-                    key={souvenir.id}
-                    souvenir={souvenir}
-                    onAddToCart={handleAddToCart}
-                  />
-                ))}
-              </div>
-
-              {filteredSouvenirs.length === 0 && (
-                <div className="text-center py-12">
-                  <p className="text-white/70 text-lg">Товары не найдены</p>
-                  <p className="text-white/50">Попробуйте изменить фильтры</p>
-                </div>
-              )}
-            </>
+          {filteredSouvenirs.length === 0 && (
+            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-12 text-center">
+              <p className="text-[var(--text-muted)] mb-1">Товары не найдены</p>
+              <p className="text-sm text-[var(--text-muted)]">Попробуйте изменить фильтры</p>
+            </div>
           )}
+        </>
+      )}
 
-          {view === 'cart' && (
-            <ShoppingCart
-              items={cart}
-              onUpdateQuantity={handleUpdateQuantity}
-              onRemove={handleRemove}
-              onCheckout={handleCheckout}
-            />
-          )}
+      {view === 'cart' && (
+        <ShoppingCart
+          items={cart}
+          onUpdateQuantity={handleUpdateQuantity}
+          onRemove={handleRemove}
+          onCheckout={handleCheckout}
+        />
+      )}
 
-          {view === 'checkout' && (
-            <SouvenirCheckout
-              items={cart}
-              onBack={handleBackToCart}
-              onOrderComplete={handleOrderComplete}
-            />
-          )}
-        </div>
-        <BottomNav activePath="/" />
-      </main>
-    </Protected>
+      {view === 'checkout' && (
+        <SouvenirCheckout
+          items={cart}
+          onBack={handleBackToCart}
+          onOrderComplete={handleOrderComplete}
+        />
+      )}
+    </div>
   );
 }

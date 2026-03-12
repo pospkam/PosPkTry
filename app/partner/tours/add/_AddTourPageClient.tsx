@@ -1,18 +1,18 @@
 'use client';
 
 import React, { useState } from 'react';
-import Logo from '@/components/shared/Logo';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Flower, Leaf, Snowflake, Sun, Moon, CheckCircle2, XCircle, Circle, User } from 'lucide-react';
-import { useTheme } from '@/contexts/ThemeContext';
+import { Flower, Leaf, Snowflake, Sun, CheckCircle2, XCircle, Circle } from 'lucide-react';
 import BottomNav from '@/components/shared/BottomNav';
-import Link from 'next/link';
+
+const INPUT = 'w-full px-3.5 py-2.5 text-sm bg-[var(--bg-primary)] border border-[var(--border)] rounded-md text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition-colors';
+const LABEL = 'block text-[10px] uppercase tracking-widest text-[var(--text-muted)] mb-1.5';
 
 const DIFFICULTY_LEVELS = [
-  { id: 'easy', name: 'Легкий', color: 'text-green-400', description: 'Для новичков' },
-  { id: 'medium', name: 'Средний', color: 'text-yellow-400', description: 'Требуется подготовка' },
-  { id: 'hard', name: 'Сложный', color: 'text-red-400', description: 'Для опытных' },
+  { id: 'easy', name: 'Легкий', color: 'var(--success)', description: 'Для новичков' },
+  { id: 'medium', name: 'Средний', color: 'var(--warning)', description: 'Требуется подготовка' },
+  { id: 'hard', name: 'Сложный', color: 'var(--danger)', description: 'Для опытных' },
 ];
 
 const SEASONS = [
@@ -24,7 +24,6 @@ const SEASONS = [
 
 export default function AddTourPageClient() {
   const router = useRouter();
-  const { isDark, toggleTheme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -127,11 +126,11 @@ export default function AddTourPageClient() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-transparent flex items-center justify-center p-6">
-        <div className="max-w-md w-full bg-white/15 border border-white/15 rounded-2xl p-8 text-center">
-          <CheckCircle2 className="w-16 h-16 mx-auto mb-4 text-green-400" />
-          <h1 className="text-2xl font-bold text-white mb-2">Тур добавлен!</h1>
-          <p className="text-white/70 mb-4">
+      <div className="p-5 lg:p-6 flex items-center justify-center min-h-[400px]">
+        <div className="max-w-md w-full bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-8 text-center">
+          <CheckCircle2 className="w-14 h-14 mx-auto mb-4" style={{ color: 'var(--success)' }} />
+          <h1 className="text-xl font-bold text-[var(--text-primary)] mb-2">Тур добавлен!</h1>
+          <p className="text-sm text-[var(--text-muted)]">
             Тур успешно создан и доступен для бронирования.
           </p>
         </div>
@@ -140,314 +139,312 @@ export default function AddTourPageClient() {
   }
 
   return (
-    <div className="min-h-screen pb-24 md:pb-0">
-      <header style={{ background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.15)', position: 'sticky', top: 0, zIndex: 50 }}>
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}><Logo size={28} /></Link>
-          <h1 className="text-lg font-bold text-white hidden sm:block">Добавить тур</h1>
-          <div className="flex items-center gap-3">
-            <button onClick={toggleTheme} className="text-white/70 hover:text-white transition-colors" aria-label="Переключить тему">{isDark ? <Sun size={20} /> : <Moon size={20} />}</button>
-            <Link href="/profile" className="text-white/70 hover:text-white transition-colors" aria-label="Личный кабинет"><User size={20} /></Link>
-          </div>
+    <div className="p-5 lg:p-6 space-y-5">
+      {/* Header */}
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5">
+        <h1 className="text-xl font-bold text-[var(--text-primary)]">Добавить тур</h1>
+        <p className="text-sm text-[var(--text-muted)] mt-0.5">Заполните информацию о новом туре</p>
+      </div>
+
+      {error && (
+        <div className="p-4 rounded-lg border flex items-center gap-3"
+          style={{ borderColor: 'color-mix(in srgb, var(--danger) 30%, transparent)', background: 'color-mix(in srgb, var(--danger) 10%, transparent)', color: 'var(--danger)' }}>
+          <XCircle className="w-4 h-4 shrink-0" />
+          <span className="text-sm">{error}</span>
         </div>
-      </header>
-    <main className="bg-transparent text-white p-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Добавить тур</h1>
-          <p className="text-white/70">
-            Заполните информацию о новом туре
-          </p>
-        </div>
+      )}
 
-        {error && (
-          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400">
-            <span className="flex items-center gap-2"><XCircle className="w-4 h-4" />{error}</span>
-          </div>
-        )}
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Основная информация */}
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5">
+          <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-4">Основная информация</h2>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Основная информация */}
-          <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
-            <h2 className="text-xl font-bold mb-4">Основная информация</h2>
-            
-            <div className="grid gap-4">
-              <div>
-                <label htmlFor="tour-name" className="block text-sm font-medium mb-2">
-                  Название тура <span className="text-red-400">*</span>
-                </label>
-                <input
-                  id="tour-name"
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60"
-                  placeholder="Рыбалка на реке Быстрая"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="tour-short-desc" className="block text-sm font-medium mb-2">
-                  Краткое описание
-                </label>
-                <input
-                  id="tour-short-desc"
-                  type="text"
-                  value={formData.shortDescription}
-                  onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
-                  className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60"
-                  placeholder="Незабываемая рыбалка в горной реке"
-                  maxLength={100}
-                />
-                <p className="text-xs text-white/50 mt-1">Макс. 100 символов</p>
-              </div>
-
-              <div>
-                <label htmlFor="tour-description" className="block text-sm font-medium mb-2">
-                  Полное описание <span className="text-red-400">*</span>
-                </label>
-                <textarea
-                  id="tour-description"
-                  required
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={6}
-                  className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60 resize-none"
-                  placeholder="Детальное описание тура, маршрута, особенностей..."
-                />
-              </div>
-
-              <div className="grid md:grid-cols-3 gap-4">
-                <div>
-                  <label htmlFor="tour-duration" className="block text-sm font-medium mb-2">
-                    Длительность (часов) <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    id="tour-duration"
-                    type="number"
-                    required
-                    min="1"
-                    value={formData.duration}
-                    onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) || 1 })}
-                    className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="tour-price" className="block text-sm font-medium mb-2">
-                    Цена (₽) <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    id="tour-price"
-                    type="number"
-                    required
-                    min="0"
-                    step="100"
-                    value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60"
-                    placeholder="15000"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="tour-max-group" className="block text-sm font-medium mb-2">
-                    Макс. группа
-                  </label>
-                  <input
-                    id="tour-max-group"
-                    type="number"
-                    min="1"
-                    max="100"
-                    value={formData.maxGroupSize}
-                    onChange={(e) => setFormData({ ...formData, maxGroupSize: parseInt(e.target.value) || 10 })}
-                    className="w-full px-4 py-3 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60"
-                  />
-                </div>
-              </div>
+          <div className="grid gap-4">
+            <div>
+              <label htmlFor="tour-name" className={LABEL}>
+                Название тура <span style={{ color: 'var(--danger)' }}>*</span>
+              </label>
+              <input
+                id="tour-name"
+                type="text"
+                required
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className={INPUT}
+                placeholder="Рыбалка на реке Быстрая"
+              />
             </div>
-          </div>
 
-          {/* Сложность */}
-          <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
-            <h2 className="text-xl font-bold mb-4">
-              Уровень сложности <span className="text-red-400">*</span>
-            </h2>
+            <div>
+              <label htmlFor="tour-short-desc" className={LABEL}>
+                Краткое описание
+              </label>
+              <input
+                id="tour-short-desc"
+                type="text"
+                value={formData.shortDescription}
+                onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
+                className={INPUT}
+                placeholder="Незабываемая рыбалка в горной реке"
+                maxLength={100}
+              />
+              <p className="text-xs text-[var(--text-muted)] mt-1">Макс. 100 символов</p>
+            </div>
+
+            <div>
+              <label htmlFor="tour-description" className={LABEL}>
+                Полное описание <span style={{ color: 'var(--danger)' }}>*</span>
+              </label>
+              <textarea
+                id="tour-description"
+                required
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                rows={6}
+                className={`${INPUT} resize-none`}
+                placeholder="Детальное описание тура, маршрута, особенностей..."
+              />
+            </div>
+
             <div className="grid md:grid-cols-3 gap-4">
-              {DIFFICULTY_LEVELS.map((level) => (
-                <button
-                  key={level.id}
-                  type="button"
-                  onClick={() => setFormData({ ...formData, difficulty: level.id as any })}
-                  className={`p-4 rounded-xl border-2 transition-all ${
-                    formData.difficulty === level.id
-                      ? 'border-white/15 bg-premium-gold/10'
-                      : 'border-white/15 bg-white/15 hover:border-white/20'
-                  }`}
-                >
-                  <div className={`text-3xl mb-2 ${level.color}`}>
-                    <Circle className="w-8 h-8 fill-current" />
-                  </div>
-                  <div className="font-bold mb-1">{level.name}</div>
-                  <div className="text-sm text-white/70">{level.description}</div>
-                </button>
-              ))}
+              <div>
+                <label htmlFor="tour-duration" className={LABEL}>
+                  Длительность (часов) <span style={{ color: 'var(--danger)' }}>*</span>
+                </label>
+                <input
+                  id="tour-duration"
+                  type="number"
+                  required
+                  min="1"
+                  value={formData.duration}
+                  onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) || 1 })}
+                  className={INPUT}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="tour-price" className={LABEL}>
+                  Цена (₽) <span style={{ color: 'var(--danger)' }}>*</span>
+                </label>
+                <input
+                  id="tour-price"
+                  type="number"
+                  required
+                  min="0"
+                  step="100"
+                  value={formData.price}
+                  onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
+                  className={INPUT}
+                  placeholder="15000"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="tour-max-group" className={LABEL}>
+                  Макс. группа
+                </label>
+                <input
+                  id="tour-max-group"
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={formData.maxGroupSize}
+                  onChange={(e) => setFormData({ ...formData, maxGroupSize: parseInt(e.target.value) || 10 })}
+                  className={INPUT}
+                />
+              </div>
             </div>
           </div>
+        </div>
 
-          {/* Сезоны */}
-          <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
-            <h2 className="text-xl font-bold mb-4">Сезоны проведения</h2>
-            <div className="grid grid-cols-4 gap-4">
-              {SEASONS.map((season) => (
-                <button
-                  key={season.id}
-                  type="button"
-                  onClick={() => handleSeasonToggle(season.id)}
-                  className={`p-4 rounded-xl border-2 transition-all ${
-                    formData.season.includes(season.id)
-                      ? 'border-white/15 bg-premium-gold/10'
-                      : 'border-white/15 bg-white/15 hover:border-white/20'
-                  }`}
-                >
-                  <div className="text-2xl mb-1">{React.createElement(season.Icon, { className: 'w-6 h-6' })}</div>
-                  <div className="text-sm font-bold">{season.name}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Что включено */}
-          <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
-            <h2 className="text-xl font-bold mb-4">Что включено в стоимость</h2>
-            <div className="flex gap-2 mb-3">
-              <input
-                type="text"
-                value={currentIncluded}
-                onChange={(e) => setCurrentIncluded(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addItem('included', currentIncluded))}
-                className="flex-1 px-4 py-2 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60"
-                placeholder="Трансфер, обед, снаряжение..."
-              />
+        {/* Сложность */}
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5">
+          <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-4">
+            Уровень сложности <span style={{ color: 'var(--danger)' }}>*</span>
+          </h2>
+          <div className="grid md:grid-cols-3 gap-3">
+            {DIFFICULTY_LEVELS.map((level) => (
               <button
+                key={level.id}
                 type="button"
-                onClick={() => addItem('included', currentIncluded)}
-                className="px-4 py-2 bg-premium-gold text-premium-black font-bold rounded-xl hover:bg-premium-gold/90"
+                onClick={() => setFormData({ ...formData, difficulty: level.id as 'easy' | 'medium' | 'hard' })}
+                className={`p-4 rounded-lg border-2 transition-all ${
+                  formData.difficulty === level.id
+                    ? 'border-[var(--accent)] bg-[var(--accent)]/5'
+                    : 'border-[var(--border)] bg-[var(--bg-primary)] hover:border-[var(--accent)]/40'
+                }`}
               >
-                Добавить
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {formData.included.map((item, includedIdx) => (
-                <span key={`included-${item}-${includedIdx}`} className="px-3 py-1 bg-green-500/20 text-green-400 border border-green-500/30 rounded-lg text-sm flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4" />
-                  {item}
-                  <button
-                    type="button"
-                    onClick={() => removeItem('included', includedIdx)}
-                    className="hover:text-red-400"
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Что НЕ включено */}
-          <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
-            <h2 className="text-xl font-bold mb-4">Что НЕ включено</h2>
-            <div className="flex gap-2 mb-3">
-              <input
-                type="text"
-                value={currentNotIncluded}
-                onChange={(e) => setCurrentNotIncluded(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addItem('notIncluded', currentNotIncluded))}
-                className="flex-1 px-4 py-2 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60"
-                placeholder="Личные расходы, алкоголь..."
-              />
-              <button
-                type="button"
-                onClick={() => addItem('notIncluded', currentNotIncluded)}
-                className="px-4 py-2 bg-premium-gold text-premium-black font-bold rounded-xl hover:bg-premium-gold/90"
-              >
-                Добавить
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {formData.notIncluded.map((item, notIncludedIdx) => (
-                <span key={`notIncluded-${item}-${notIncludedIdx}`} className="px-3 py-1 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-sm flex items-center gap-2">
-                  <XCircle className="w-4 h-4" />
-                  {item}
-                  <button
-                    type="button"
-                    onClick={() => removeItem('notIncluded', notIncludedIdx)}
-                    className="hover:text-white"
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Фотографии */}
-          <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
-            <h2 className="text-xl font-bold mb-4">Фотографии</h2>
-            <div className="flex gap-2 mb-3">
-              <input
-                type="url"
-                value={currentImage}
-                onChange={(e) => setCurrentImage(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addImage())}
-                className="flex-1 px-4 py-2 bg-white/15 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60"
-                placeholder="https://example.com/image.jpg"
-              />
-              <button
-                type="button"
-                onClick={addImage}
-                className="px-4 py-2 bg-premium-gold text-premium-black font-bold rounded-xl hover:bg-premium-gold/90"
-              >
-                Добавить
-              </button>
-            </div>
-            <div className="grid grid-cols-4 gap-3">
-              {formData.images.map((url, imgIndex) => (
-                <div key={`image-${url}-${imgIndex}`} className="relative group">
-                  <Image src={url} alt="" className="w-full h-24 object-cover rounded-lg" width={200} height={96} />
-                  <button
-                    type="button"
-                    onClick={() => removeItem('images', imgIndex)}
-                    className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    ×
-                  </button>
+                <div className="mb-2">
+                  <Circle className="w-7 h-7 fill-current mx-auto" style={{ color: level.color }} />
                 </div>
-              ))}
-            </div>
+                <div className="text-sm font-semibold text-[var(--text-primary)] mb-0.5">{level.name}</div>
+                <div className="text-xs text-[var(--text-muted)]">{level.description}</div>
+              </button>
+            ))}
           </div>
+        </div>
 
-          {/* Кнопки */}
-          <div className="flex gap-4">
+        {/* Сезоны */}
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5">
+          <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-4">Сезоны проведения</h2>
+          <div className="grid grid-cols-4 gap-3">
+            {SEASONS.map((season) => (
+              <button
+                key={season.id}
+                type="button"
+                onClick={() => handleSeasonToggle(season.id)}
+                className={`p-4 rounded-lg border-2 transition-all ${
+                  formData.season.includes(season.id)
+                    ? 'border-[var(--accent)] bg-[var(--accent)]/5'
+                    : 'border-[var(--border)] bg-[var(--bg-primary)] hover:border-[var(--accent)]/40'
+                }`}
+              >
+                <div className="mb-1 flex justify-center">
+                  {React.createElement(season.Icon, { className: 'w-5 h-5 text-[var(--text-secondary)]' })}
+                </div>
+                <div className="text-xs font-semibold text-[var(--text-primary)]">{season.name}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Что включено */}
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5">
+          <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-4">Что включено в стоимость</h2>
+          <div className="flex gap-2 mb-3">
+            <input
+              type="text"
+              value={currentIncluded}
+              onChange={(e) => setCurrentIncluded(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addItem('included', currentIncluded))}
+              className={INPUT}
+              placeholder="Трансфер, обед, снаряжение..."
+            />
             <button
               type="button"
-              onClick={() => router.back()}
-              className="flex-1 px-6 py-3 bg-white/15 border border-white/15 text-white rounded-xl hover:bg-white/10 transition-colors font-bold"
+              onClick={() => addItem('included', currentIncluded)}
+              className="px-4 py-2 text-sm font-medium rounded-md bg-[var(--accent)] text-[var(--bg-card)] hover:opacity-90 transition-opacity whitespace-nowrap"
             >
-              Отмена
-            </button>
-            <button
-              type="submit"
-              disabled={loading || !formData.difficulty}
-              className="flex-1 px-6 py-3 bg-premium-gold text-premium-black rounded-xl hover:bg-premium-gold/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-bold"
-            >
-              {loading ? 'Создание...' : 'Создать тур'}
+              Добавить
             </button>
           </div>
-        </form>
-      </div>
-    </main>
+          <div className="flex flex-wrap gap-2">
+            {formData.included.map((item, includedIdx) => (
+              <span
+                key={`included-${item}-${includedIdx}`}
+                className="px-3 py-1 rounded-md text-sm flex items-center gap-1.5 border"
+                style={{ color: 'var(--success)', borderColor: 'color-mix(in srgb, var(--success) 30%, transparent)', background: 'color-mix(in srgb, var(--success) 10%, transparent)' }}
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                {item}
+                <button
+                  type="button"
+                  onClick={() => removeItem('included', includedIdx)}
+                  className="hover:opacity-60 ml-0.5"
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Что НЕ включено */}
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5">
+          <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-4">Что НЕ включено</h2>
+          <div className="flex gap-2 mb-3">
+            <input
+              type="text"
+              value={currentNotIncluded}
+              onChange={(e) => setCurrentNotIncluded(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addItem('notIncluded', currentNotIncluded))}
+              className={INPUT}
+              placeholder="Личные расходы, алкоголь..."
+            />
+            <button
+              type="button"
+              onClick={() => addItem('notIncluded', currentNotIncluded)}
+              className="px-4 py-2 text-sm font-medium rounded-md bg-[var(--accent)] text-[var(--bg-card)] hover:opacity-90 transition-opacity whitespace-nowrap"
+            >
+              Добавить
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {formData.notIncluded.map((item, notIncludedIdx) => (
+              <span
+                key={`notIncluded-${item}-${notIncludedIdx}`}
+                className="px-3 py-1 rounded-md text-sm flex items-center gap-1.5 border"
+                style={{ color: 'var(--danger)', borderColor: 'color-mix(in srgb, var(--danger) 30%, transparent)', background: 'color-mix(in srgb, var(--danger) 10%, transparent)' }}
+              >
+                <XCircle className="w-3.5 h-3.5" />
+                {item}
+                <button
+                  type="button"
+                  onClick={() => removeItem('notIncluded', notIncludedIdx)}
+                  className="hover:opacity-60 ml-0.5"
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Фотографии */}
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5">
+          <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-4">Фотографии</h2>
+          <div className="flex gap-2 mb-3">
+            <input
+              type="url"
+              value={currentImage}
+              onChange={(e) => setCurrentImage(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addImage())}
+              className={INPUT}
+              placeholder="https://example.com/image.jpg"
+            />
+            <button
+              type="button"
+              onClick={addImage}
+              className="px-4 py-2 text-sm font-medium rounded-md bg-[var(--accent)] text-[var(--bg-card)] hover:opacity-90 transition-opacity whitespace-nowrap"
+            >
+              Добавить
+            </button>
+          </div>
+          <div className="grid grid-cols-4 gap-3">
+            {formData.images.map((url, imgIndex) => (
+              <div key={`image-${url}-${imgIndex}`} className="relative group">
+                <Image src={url} alt="" className="w-full h-24 object-cover rounded-md" width={200} height={96} />
+                <button
+                  type="button"
+                  onClick={() => removeItem('images', imgIndex)}
+                  className="absolute top-1 right-1 w-6 h-6 rounded-full flex items-center justify-center text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                  style={{ background: 'var(--danger)' }}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Кнопки */}
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="flex-1 px-5 py-2.5 text-sm border border-[var(--border)] text-[var(--text-secondary)] rounded-md hover:bg-[var(--bg-primary)] transition-colors font-medium"
+          >
+            Отмена
+          </button>
+          <button
+            type="submit"
+            disabled={loading || !formData.difficulty}
+            className="flex-1 px-5 py-2.5 text-sm font-medium rounded-md bg-[var(--accent)] text-[var(--bg-card)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+          >
+            {loading ? 'Создание...' : 'Создать тур'}
+          </button>
+        </div>
+      </form>
       <BottomNav activePath="/" />
     </div>
   );

@@ -1,13 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Protected } from '@/components/auth/Protected';
-import { PublicNav } from '@/components/shared/PublicNav';
 import { CarCard } from '@/components/cars/CarCard';
 import { CarFilters } from '@/components/cars/CarFilters';
 import { CarBookingForm } from '@/components/cars/CarBookingForm';
 import { LoadingSpinner } from '@/components/admin/shared';
-import BottomNav from '@/components/shared/BottomNav';
 import toast from 'react-hot-toast';
 
 interface Car {
@@ -57,10 +54,9 @@ export default function CarsHubClient() {
         setCars(result.data);
       } else {
         setCars([]);
-        console.error('No cars data:', result);
       }
     } catch (err) {
-      console.error('Error fetching cars:', err);
+      // silently fail
     } finally {
       setLoading(false);
     }
@@ -142,87 +138,79 @@ export default function CarsHubClient() {
 
   if (loading) {
     return (
-      <Protected roles={['tourist', 'admin']}>
-        <div className="min-h-screen bg-transparent flex items-center justify-center">
-          <LoadingSpinner message="Загрузка автомобилей..." />
-        </div>
-      </Protected>
+      <div className="p-5 lg:p-6 flex items-center justify-center min-h-[300px]">
+        <LoadingSpinner message="Загрузка автомобилей..." />
+      </div>
     );
   }
 
   return (
-    <Protected roles={['tourist', 'admin']}>
-      <main className="min-h-screen bg-transparent text-white pb-24 md:pb-0">
-        <PublicNav />
-        {/* Header */}
-        <div className="bg-white/15 border-b border-white/15 p-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-black text-white">Аренда автомобилей</h1>
-              <p className="text-white/70">Надежный транспорт для путешествий</p>
-            </div>
-
-            {view === 'booking' && (
-              <button
-                onClick={handleBackToCatalog}
-                className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
-              >
-                ← К каталогу
-              </button>
-            )}
+    <div className="p-5 lg:p-6 space-y-5">
+      {/* Header */}
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-xl font-bold text-[var(--text-primary)]">Аренда автомобилей</h1>
+            <p className="text-sm text-[var(--text-muted)] mt-0.5">Надежный транспорт для путешествий</p>
           </div>
-        </div>
 
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          {view === 'catalog' ? (
-            <>
-              {/* Filters */}
-              <CarFilters
-                selectedCategory={selectedCategory}
-                onCategoryChange={setSelectedCategory}
-                categories={categories}
-                priceRange={priceRange}
-                onPriceRangeChange={setPriceRange}
-                showAvailableOnly={showAvailableOnly}
-                onAvailableToggle={setShowAvailableOnly}
-                transmission={transmission}
-                onTransmissionChange={setTransmission}
-                transmissions={transmissions}
-                fuelType={fuelType}
-                onFuelTypeChange={setFuelType}
-                fuelTypes={fuelTypes}
-                sortBy={sortBy}
-                onSortChange={(value) => setSortBy(value as typeof sortBy)}
+          {view === 'booking' && (
+            <button
+              onClick={handleBackToCatalog}
+              className="px-4 py-2 text-sm border border-[var(--border)] text-[var(--text-secondary)] rounded-md hover:bg-[var(--bg-primary)] transition-colors"
+            >
+              ← К каталогу
+            </button>
+          )}
+        </div>
+      </div>
+
+      {view === 'catalog' ? (
+        <>
+          {/* Filters */}
+          <CarFilters
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
+            categories={categories}
+            priceRange={priceRange}
+            onPriceRangeChange={setPriceRange}
+            showAvailableOnly={showAvailableOnly}
+            onAvailableToggle={setShowAvailableOnly}
+            transmission={transmission}
+            onTransmissionChange={setTransmission}
+            transmissions={transmissions}
+            fuelType={fuelType}
+            onFuelTypeChange={setFuelType}
+            fuelTypes={fuelTypes}
+            sortBy={sortBy}
+            onSortChange={(value) => setSortBy(value as typeof sortBy)}
+          />
+
+          {/* Catalog */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredCars.map((car) => (
+              <CarCard
+                key={car.id}
+                car={car}
+                onRent={handleRent}
               />
+            ))}
+          </div>
 
-              {/* Catalog */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredCars.map((car) => (
-                  <CarCard
-                    key={car.id}
-                    car={car}
-                    onRent={handleRent}
-                  />
-                ))}
-              </div>
-
-              {filteredCars.length === 0 && (
-                <div className="text-center py-12">
-                  <p className="text-white/70 text-lg">Автомобили не найдены</p>
-                  <p className="text-white/50">Попробуйте изменить фильтры</p>
-                </div>
-              )}
-            </>
-          ) : selectedCar ? (
-            <CarBookingForm
-              car={selectedCar}
-              onBookingComplete={handleBookingComplete}
-              onCancel={handleBackToCatalog}
-            />
-          ) : null}
-        </div>
-        <BottomNav activePath="/hub/cars" />
-      </main>
-    </Protected>
+          {filteredCars.length === 0 && (
+            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-12 text-center">
+              <p className="text-[var(--text-muted)] mb-1">Автомобили не найдены</p>
+              <p className="text-sm text-[var(--text-muted)]">Попробуйте изменить фильтры</p>
+            </div>
+          )}
+        </>
+      ) : selectedCar ? (
+        <CarBookingForm
+          car={selectedCar}
+          onBookingComplete={handleBookingComplete}
+          onCancel={handleBackToCatalog}
+        />
+      ) : null}
+    </div>
   );
 }

@@ -1,8 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Protected } from '@/components/auth/Protected';
-import { OperatorNav } from '@/components/operator/OperatorNav';
 import { TransferOperatorDashboard } from '@/components/transfer-operator/TransferOperatorDashboard';
 import { TransferDriverManagement } from '@/components/transfer-operator/TransferDriverManagement';
 import { TransferRouteManagement } from '@/components/transfer-operator/TransferRouteManagement';
@@ -64,108 +62,99 @@ export default function TransferOperatorPageClient() {
 
   const tabs = [
     { id: 'dashboard' as ActiveTab, name: 'Панель управления', Icon: BarChart3 },
-    { id: 'drivers' as ActiveTab, name: 'Водители', Icon: Users },
-    { id: 'routes' as ActiveTab, name: 'Маршруты', Icon: Map },
-    { id: 'bookings' as ActiveTab, name: 'Бронирования', Icon: Calendar },
+    { id: 'drivers'   as ActiveTab, name: 'Водители',          Icon: Users    },
+    { id: 'routes'    as ActiveTab, name: 'Маршруты',           Icon: Map      },
+    { id: 'bookings'  as ActiveTab, name: 'Бронирования',       Icon: Calendar },
   ];
 
   return (
-    <Protected roles={['transfer', 'operator', 'admin']}>
-      <main className="min-h-screen bg-transparent text-white">
-        <OperatorNav />
-        {/* Header */}
-        <div className="bg-white/15 border-b border-white/15 p-6">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-black text-white">
-                  Оператор трансферов
-                </h1>
-                <p className="text-white/70 mt-1">
-                  Управление водителями, маршрутами и трансферами
-                </p>
-              </div>
-
-              <div className="flex items-center space-x-4">
-                <div className="text-right">
-                  <div className="text-sm text-white/50">Оператор</div>
-                  <div className="font-semibold">{user?.name || 'Неизвестно'}</div>
-                </div>
-                <button
-                  onClick={fetchData}
-                  className="px-4 py-2 bg-premium-gold hover:bg-premium-gold/80 text-premium-black font-semibold rounded-lg transition-colors"
-                >
-                  <RefreshCw className="w-4 h-4 inline mr-2" />
-                  Обновить
-                </button>
-              </div>
+    <div className="p-5 lg:p-6 space-y-5">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-[var(--text-primary)]">
+            Оператор трансферов
+          </h1>
+          <p className="text-sm text-[var(--text-muted)] mt-0.5">
+            Управление водителями, маршрутами и трансферами
+          </p>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="text-right">
+            <div className="text-xs text-[var(--text-muted)]">Оператор</div>
+            <div className="text-sm font-semibold text-[var(--text-primary)]">
+              {user?.name || 'Неизвестно'}
             </div>
           </div>
+          <button
+            onClick={fetchData}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--accent)] text-[var(--bg-card)] text-sm font-semibold rounded-md hover:opacity-90 transition-opacity"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Обновить
+          </button>
         </div>
+      </div>
 
-        {/* Navigation Tabs */}
-        <div className="bg-white/10 border-b border-white/15">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="flex space-x-1">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`px-6 py-4 font-medium transition-all duration-200 flex items-center gap-2 ${
-                    activeTab === tab.id
-                      ? 'bg-premium-gold text-premium-black border-b-2 border-white/15'
-                      : 'text-white/70 hover:bg-white/10 hover:text-white'
-                  }`}
-                >
-                  {React.createElement(tab.Icon, { className: 'w-5 h-5' })}
-                  {tab.name}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="max-w-7xl mx-auto p-6">
-          {loading ? (
-            <div className="flex items-center justify-center py-20">
-              <LoadingSpinner size="lg" message="Загрузка данных..." />
-            </div>
-          ) : error ? (
-            <EmptyState
-              icon={<AlertTriangle className="w-12 h-12 text-yellow-500" />}
-              title="Ошибка загрузки данных"
-              description={error}
-              action={
-                <button
-                  onClick={fetchData}
-                  className="px-6 py-3 bg-premium-gold hover:bg-premium-gold/80 text-premium-black font-semibold rounded-lg transition-colors"
-                >
-                  Попробовать снова
-                </button>
+      {/* Navigation Tabs */}
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden">
+        <div className="flex">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className="flex-1 px-4 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2"
+              style={
+                activeTab === tab.id
+                  ? { backgroundColor: 'var(--accent)', color: 'var(--bg-card)' }
+                  : { color: 'var(--text-secondary)' }
               }
-            />
-          ) : (
-            <>
-              {activeTab === 'dashboard' && data && (
-                <TransferOperatorDashboard data={data} />
-              )}
-
-              {activeTab === 'drivers' && (
-                <TransferDriverManagement operatorId={operatorId!} onDataChange={fetchData} />
-              )}
-
-              {activeTab === 'routes' && (
-                <TransferRouteManagement operatorId={operatorId!} onDataChange={fetchData} />
-              )}
-
-              {activeTab === 'bookings' && (
-                <TransferBookingManagement operatorId={operatorId!} onDataChange={fetchData} />
-              )}
-            </>
-          )}
+            >
+              {React.createElement(tab.Icon, { className: 'w-4 h-4' })}
+              <span className="hidden sm:inline">{tab.name}</span>
+            </button>
+          ))}
         </div>
-      </main>
-    </Protected>
+      </div>
+
+      {/* Content */}
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <LoadingSpinner size="lg" message="Загрузка данных..." />
+        </div>
+      ) : error ? (
+        <EmptyState
+          icon={<AlertTriangle className="w-12 h-12" style={{ color: 'var(--warning)' }} />}
+          title="Ошибка загрузки данных"
+          description={error}
+          action={
+            <button
+              onClick={fetchData}
+              className="px-4 py-2 bg-[var(--accent)] text-[var(--bg-card)] text-sm font-semibold rounded-md hover:opacity-90 transition-opacity"
+            >
+              Попробовать снова
+            </button>
+          }
+        />
+      ) : (
+        <>
+          {activeTab === 'dashboard' && data && (
+            <TransferOperatorDashboard data={data} />
+          )}
+
+          {activeTab === 'drivers' && (
+            <TransferDriverManagement operatorId={operatorId!} onDataChange={fetchData} />
+          )}
+
+          {activeTab === 'routes' && (
+            <TransferRouteManagement operatorId={operatorId!} onDataChange={fetchData} />
+          )}
+
+          {activeTab === 'bookings' && (
+            <TransferBookingManagement operatorId={operatorId!} onDataChange={fetchData} />
+          )}
+        </>
+      )}
+    </div>
   );
 }

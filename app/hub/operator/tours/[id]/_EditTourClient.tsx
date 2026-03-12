@@ -2,8 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Protected } from '@/components/auth/Protected';
-import { OperatorNav } from '@/components/operator/OperatorNav';
 import { TourForm } from '@/components/operator/Tours/TourForm';
 import { LoadingSpinner, EmptyState } from '@/components/admin/shared';
 import { TourFormData, OperatorTour } from '@/types/operator';
@@ -92,64 +90,53 @@ export default function EditTourClient() {
   } : undefined;
 
   return (
-    <Protected roles={['operator', 'admin']}>
-      <main className="min-h-screen bg-transparent text-white">
-        <OperatorNav />
-        
-        {/* Header */}
-        <div className="bg-white/15 border-b border-white/15 p-6">
-          <div className="max-w-5xl mx-auto">
-            <h1 className="text-3xl font-black text-white">
-              Редактирование тура
-            </h1>
-            <p className="text-white/70 mt-1">
-              {tour ? tour.name : 'Загрузка...'}
-            </p>
-          </div>
-        </div>
+    <div className="p-5 lg:p-6 space-y-5">
+      {/* Header */}
+      <div>
+        <h1 className="text-xl font-bold text-[var(--text-primary)]">
+          Редактирование тура
+        </h1>
+        <p className="text-sm text-[var(--text-muted)] mt-0.5">
+          {tour ? tour.name : 'Загрузка...'}
+        </p>
+      </div>
 
-        {/* Content */}
-        <div className="max-w-5xl mx-auto p-6">
-          {loading ? (
-            <div className="flex items-center justify-center py-20">
-              <LoadingSpinner size="lg" message="Загрузка тура..." />
-            </div>
-          ) : error ? (
-            <EmptyState
-              icon={<AlertTriangle className="w-16 h-16 text-red-400" />}
-              title="Ошибка загрузки"
-              description={error}
-              action={{
-                label: 'Попробовать снова',
-                onClick: fetchTour
-              }}
-            />
-          ) : !tour ? (
-            <EmptyState
-              icon=""
-              title="Тур не найден"
-              description="Тур не существует или был удалён"
-              action={{
-                label: 'Вернуться к списку',
-                onClick: () => router.push('/hub/operator/tours')
-              }}
-            />
-          ) : (
-            <>
-              <TourForm
-                initialData={tourFormData}
-                onSubmit={handleSubmit}
-                onCancel={handleCancel}
-                isEdit={true}
-              />
-              <GenerateTagsButton tourId={tourId} />
-            </>
-          )}
+      {/* Content */}
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <LoadingSpinner size="lg" message="Загрузка тура..." />
         </div>
-      </main>
-    </Protected>
+      ) : error ? (
+        <EmptyState
+          icon={<AlertTriangle className="w-16 h-16 text-red-400" />}
+          title="Ошибка загрузки"
+          description={error}
+          action={{
+            label: 'Попробовать снова',
+            onClick: fetchTour
+          }}
+        />
+      ) : !tour ? (
+        <EmptyState
+          icon="🏔"
+          title="Тур не найден"
+          description="Тур не существует или был удалён"
+          action={{
+            label: 'Вернуться к списку',
+            onClick: () => router.push('/hub/operator/tours')
+          }}
+        />
+      ) : (
+        <>
+          <TourForm
+            initialData={tourFormData}
+            onSubmit={handleSubmit}
+            onCancel={handleCancel}
+            isEdit={true}
+          />
+          <GenerateTagsButton tourId={tourId} />
+        </>
+      )}
+    </div>
   );
 }
-
-
-

@@ -1,7 +1,5 @@
 'use client';
 
-import { Protected } from '@/components/auth/Protected';
-import { AgentNav } from '@/components/agent/AgentNav';
 import { DataTable } from '@/components/admin/shared/DataTable';
 import { LoadingSpinner } from '@/components/admin/shared/LoadingSpinner';
 import { StatusBadge } from '@/components/admin/shared/StatusBadge';
@@ -50,19 +48,25 @@ export default function AgentCommissionsPageClient() {
     {
       key: 'bookingId',
       header: 'Бронирование',
-      render: (c: Commission) => <div className="font-mono text-white/70 text-sm">{c.bookingId}</div>,
+      render: (c: Commission) => (
+        <div className="font-mono text-[var(--text-secondary)] text-sm">{c.bookingId}</div>
+      ),
     },
     {
       key: 'amount',
       header: 'Сумма',
       render: (c: Commission) => (
-        <div className="font-bold text-white">{c.amount?.toLocaleString('ru-RU')} ₽</div>
+        <div className="font-bold text-[var(--text-primary)]">
+          {c.amount?.toLocaleString('ru-RU')} ₽
+        </div>
       ),
     },
     {
       key: 'rate',
       header: 'Ставка',
-      render: (c: Commission) => <div className="text-white/70">{c.rate}%</div>,
+      render: (c: Commission) => (
+        <div className="text-[var(--text-secondary)]">{c.rate}%</div>
+      ),
     },
     {
       key: 'status',
@@ -73,7 +77,7 @@ export default function AgentCommissionsPageClient() {
       key: 'createdAt',
       header: 'Дата',
       render: (c: Commission) => (
-        <div className="text-white/70 text-sm">
+        <div className="text-[var(--text-secondary)] text-sm">
           {new Date(c.createdAt).toLocaleDateString('ru-RU')}
         </div>
       ),
@@ -83,40 +87,41 @@ export default function AgentCommissionsPageClient() {
   const s = stats ?? EMPTY_STATS;
 
   return (
-    <Protected roles={['agent']}>
-      <main className="min-h-screen bg-transparent text-white">
-        <AgentNav />
-        <div className="max-w-7xl mx-auto p-6">
-          <h1 className="text-3xl font-black text-white mb-6">Комиссионные</h1>
+    <div className="p-5 lg:p-6 space-y-5">
+      <h1 className="text-xl font-bold text-[var(--text-primary)]">Комиссионные</h1>
 
-          <div className="grid grid-cols-3 gap-4 mb-6">
-            <div className="bg-white/15 border border-white/15 rounded-xl p-4 text-center">
-              <div className="text-2xl font-bold text-green-400">
-                {s.totalPaid.toLocaleString('ru-RU')} ₽
-              </div>
-              <div className="text-white/60 text-sm">Выплачено</div>
-            </div>
-            <div className="bg-white/15 border border-white/15 rounded-xl p-4 text-center">
-              <div className="text-2xl font-bold text-yellow-400">
-                {s.totalPending.toLocaleString('ru-RU')} ₽
-              </div>
-              <div className="text-white/60 text-sm">Ожидает</div>
-            </div>
-            <div className="bg-white/15 border border-white/15 rounded-xl p-4 text-center">
-              <div className="text-2xl font-bold text-white">
-                {s.totalAll.toLocaleString('ru-RU')} ₽
-              </div>
-              <div className="text-white/60 text-sm">Всего</div>
-            </div>
+      <div className="grid grid-cols-3 gap-4">
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4 text-center">
+          <div className="text-2xl font-bold text-[var(--success)]">
+            {s.totalPaid.toLocaleString('ru-RU')} ₽
           </div>
-
-          {loading ? (
-            <LoadingSpinner message="Загрузка..." />
-          ) : (
-            <DataTable<Commission> data={commissions} columns={columns} emptyMessage="Нет комиссионных" />
-          )}
+          <div className="text-[var(--text-muted)] text-sm mt-1">Выплачено</div>
         </div>
-      </main>
-    </Protected>
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4 text-center">
+          <div className="text-2xl font-bold text-[var(--warning)]">
+            {s.totalPending.toLocaleString('ru-RU')} ₽
+          </div>
+          <div className="text-[var(--text-muted)] text-sm mt-1">Ожидает</div>
+        </div>
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4 text-center">
+          <div className="text-2xl font-bold text-[var(--text-primary)]">
+            {s.totalAll.toLocaleString('ru-RU')} ₽
+          </div>
+          <div className="text-[var(--text-muted)] text-sm mt-1">Всего</div>
+        </div>
+      </div>
+
+      {loading ? (
+        <LoadingSpinner message="Загрузка..." />
+      ) : (
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden">
+          <DataTable<Commission>
+            data={commissions}
+            columns={columns}
+            emptyMessage="Нет комиссионных"
+          />
+        </div>
+      )}
+    </div>
   );
 }
