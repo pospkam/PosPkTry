@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { notificationService } from '@/lib/database'
+import { notificationService } from '@/lib/services'
 import { verifyAuth } from '@/lib/auth'
 
 export async function GET(

@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { wishlistService } from '@/lib/database'
+import { wishlistService } from '@/lib/services'
 import { verifyAuth } from '@/lib/auth'
 
 export async function GET(

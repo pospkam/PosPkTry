@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
 
     // Строим WHERE условия
     const whereConditions: string[] = ['is_active = true'];
-    const queryParams: unknown[] = [];
+    const queryParams: (string | number)[] = [];
     let paramIndex = 1;
 
     if (category) {
@@ -55,10 +55,11 @@ export async function GET(request: NextRequest) {
 
     const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
 
-    // Таблица eco_points может иметь разную схему в зависимости от миграции.
-    // Используем безопасный SELECT без несуществующих колонок.
+    const limitParam = paramIndex;
+    queryParams.push(200);
+
     const ecoPointsQuery = `
-      SELECT 
+      SELECT
         id,
         total_points,
         co2_saved_kg,
@@ -66,10 +67,12 @@ export async function GET(request: NextRequest) {
         created_at,
         updated_at
       FROM eco_points
+      ${whereClause}
       ORDER BY created_at DESC
+      LIMIT $${limitParam}
     `;
 
-    const result = await query(ecoPointsQuery);
+    const result = await query(ecoPointsQuery, queryParams);
 
     const ecoPoints = result.rows.map(row => ({
       id: row.id,

@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
       paramIndex++;
     }
 
-    queryStr += ` ORDER BY ds.date ASC, ds.start_time ASC`;
+    queryStr += ` ORDER BY ds.date ASC, ds.start_time ASC LIMIT 500`;
 
     const result = await query(queryStr, params);
 

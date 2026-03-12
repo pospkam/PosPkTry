@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { partnerService } from '@/lib/database'
+import { partnerService } from '@/lib/services'
 import { requireAdmin } from '@/lib/auth/middleware'
 
 export async function POST(

@@ -112,7 +112,7 @@ export async function GET(request: NextRequest) {
       paramIndex++;
     }
 
-    queryText += ` ORDER BY ts.start_date ASC`;
+    queryText += ` ORDER BY ts.start_date ASC LIMIT 500`;
 
     const result = await query<OpTourScheduleRow>(queryText, values);
 

@@ -1,24 +1,62 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Shield, Users, FileText, DollarSign, Settings, CheckCircle, Clock, TrendingUp, TrendingDown, Package, Map, Wrench, AlertCircle, ArrowRight, Sparkles, Star, RefreshCw } from 'lucide-react';
+import {
+  Shield, Users, FileText, DollarSign, Settings,
+  CheckCircle, Clock, TrendingUp, TrendingDown,
+  Package, Map, Wrench, AlertCircle, ArrowUpRight,
+  RefreshCw, AlertTriangle, BarChart3,
+} from 'lucide-react';
 
-interface Metrics {
-  totalRevenue: { value: number; change: number; trend: string };
-  totalBookings: { value: number; change: number; trend: string };
-  activeUsers: { value: number; change: number; trend: string };
-  conversionRate: { value: number; change: number; trend: string };
+interface MetricItem {
+  value: number;
+  change: number;
+  trend: string;
 }
 
 interface DashboardData {
-  metrics: Metrics;
+  metrics: {
+    totalRevenue: MetricItem;
+    totalBookings: MetricItem;
+    activeUsers: MetricItem;
+    conversionRate: MetricItem;
+  };
   charts: {
     topTours: Array<{ id: string; title: string; bookings: number; revenue: number }>;
   };
-  recentActivities: Array<{ id: string; type: string; title: string; description: string; timestamp: string; message?: string; time?: string; [key: string]: unknown }>;
+  recentActivities: Array<{
+    id: string;
+    type: string;
+    title: string;
+    description: string;
+    timestamp: string;
+  }>;
   pendingTours?: number;
   pendingPartners?: number;
+}
+
+function formatCurrency(value: number) {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)} млн ₽`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(0)} тыс ₽`;
+  return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: 0 }).format(value);
+}
+
+function formatNumber(value: number) {
+  return new Intl.NumberFormat('ru-RU').format(value);
+}
+
+function TrendBadge({ change, trend }: { change: number; trend: string }) {
+  if (trend === 'neutral' || change === 0) return null;
+  const up = trend === 'up';
+  return (
+    <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${
+      up ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
+    }`}>
+      {up ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+      {Math.abs(change).toFixed(1)}%
+    </span>
+  );
 }
 
 export default function AdminDashboard() {
@@ -27,408 +65,293 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError('');
     try {
-      setLoading(true);
       const response = await fetch('/api/admin/dashboard?period=30');
       const result = await response.json();
-      
-      if (!result.success) {
-        throw new Error(result.error || 'Ошибка загрузки данных');
-      }
-      
+      if (!result.success) throw new Error(result.error ?? 'Ошибка загрузки данных');
       setData(result.data);
     } catch (err) {
-      console.error('Error:', err);
       setError(err instanceof Error ? err.message : 'Ошибка загрузки');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('ru-RU', {
-      style: 'currency',
-      currency: 'RUB',
-      minimumFractionDigits: 0
-    }).format(value);
-  };
-
-  const formatNumber = (value: number) => {
-    return new Intl.NumberFormat('ru-RU').format(value);
-  };
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   const adminTools = [
-    {
-      icon: Users,
-      title: 'Пользователи',
-      description: 'Управление и аналитика',
-      link: '/hub/admin/users',
-      gradient: 'from-violet-400 via-purple-500 to-fuchsia-500',
-      badge: data ? formatNumber(data.metrics.activeUsers.value) : null
-    },
-    {
-      icon: Map,
-      title: 'Туры',
-      description: 'Модерация контента',
-      link: '/hub/admin/content/tours',
-      gradient: 'from-emerald-400 via-teal-500 to-cyan-500',
-      badge: data?.pendingTours && data.pendingTours > 0 ? data.pendingTours : null
-    },
-    {
-      icon: Package,
-      title: 'Партнёры',
-      description: 'Верификация',
-      link: '/hub/admin/content/partners',
-      gradient: 'from-cyber-cyan via-cyber-cyan/70 to-premium-gold',
-      badge: data?.pendingPartners && data.pendingPartners > 0 ? data.pendingPartners : null
-    },
-    {
-      icon: FileText,
-      title: 'Отзывы',
-      description: 'Модерация',
-      link: '/hub/admin/content/reviews',
-      gradient: 'from-amber-400 via-orange-500 to-red-500',
-      badge: null
-    },
-    {
-      icon: DollarSign,
-      title: 'Финансы',
-      description: 'Транзакции',
-      link: '/hub/admin/finance',
-      gradient: 'from-pink-400 via-rose-500 to-red-500',
-      badge: data ? formatCurrency(data.metrics.totalRevenue.value) : null
-    },
-    {
-      icon: Settings,
-      title: 'Настройки',
-      description: 'Конфигурация',
-      link: '/hub/admin/settings',
-      gradient: 'from-white/30 via-white/20 to-white/10',
-      badge: null
-    },
+    { icon: Users, label: 'Пользователи', href: '/hub/admin/users', badge: data ? formatNumber(data.metrics.activeUsers.value) : null, color: 'text-violet-600 bg-violet-50' },
+    { icon: Map, label: 'Туры', href: '/hub/admin/content/tours', badge: data?.pendingTours && data.pendingTours > 0 ? String(data.pendingTours) : null, badgeAlert: true, color: 'text-sky-600 bg-sky-50' },
+    { icon: Package, label: 'Партнёры', href: '/hub/admin/content/partners', badge: data?.pendingPartners && data.pendingPartners > 0 ? String(data.pendingPartners) : null, badgeAlert: true, color: 'text-amber-600 bg-amber-50' },
+    { icon: FileText, label: 'Отзывы', href: '/hub/admin/content/reviews', badge: null, color: 'text-orange-600 bg-orange-50' },
+    { icon: DollarSign, label: 'Финансы', href: '/hub/admin/finance', badge: null, color: 'text-emerald-600 bg-emerald-50' },
+    { icon: Settings, label: 'Настройки', href: '/hub/admin/settings', badge: null, color: 'text-slate-600 bg-slate-100' },
   ];
 
+  // --- Loading skeleton ---
   if (loading) {
     return (
-      <main className="min-h-screen relative overflow-hidden">
-        {/* Animated Gradient Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-violet-900"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(167,139,250,0.15),transparent_50%)]"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(249,168,212,0.15),transparent_50%)]"></div>
-        
-        <div className="relative min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <div className="relative mb-8">
-              <div className="w-24 h-24 border-4 border-violet-500/30 border-t-violet-400 rounded-full animate-spin mx-auto"></div>
-              <Sparkles className="w-10 h-10 text-violet-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse" />
-            </div>
-            <p className="text-xl font-semibold text-white">
-              Загрузка данных...
-            </p>
+      <div className="p-6 lg:p-8 bg-slate-50 min-h-screen">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <div className="h-7 w-32 bg-slate-200 rounded animate-pulse mb-2" />
+            <div className="h-4 w-56 bg-slate-100 rounded animate-pulse" />
           </div>
         </div>
-      </main>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="bg-white border border-slate-200 rounded-xl p-5 animate-pulse">
+              <div className="h-4 w-24 bg-slate-100 rounded mb-4" />
+              <div className="h-8 w-32 bg-slate-200 rounded mb-2" />
+              <div className="h-4 w-16 bg-slate-100 rounded" />
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl h-72 animate-pulse" />
+          <div className="bg-white border border-slate-200 rounded-xl h-72 animate-pulse" />
+        </div>
+      </div>
     );
   }
 
+  // --- Error state ---
   if (error) {
     return (
-      <main className="min-h-screen relative overflow-hidden flex items-center justify-center p-6">
-        {/* Animated Gradient Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-violet-900"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(167,139,250,0.15),transparent_50%)]"></div>
-        
-        <div className="relative max-w-md w-full backdrop-blur-2xl bg-black/40 rounded-3xl shadow-2xl border border-white/30 p-8 text-center">
-          <div className="w-20 h-20 bg-gradient-to-br from-red-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl">
-            <AlertCircle className="w-10 h-10 text-white" strokeWidth={2.5} />
+      <div className="p-6 lg:p-8 bg-slate-50 min-h-screen flex items-start justify-start">
+        <div className="bg-white border border-slate-200 rounded-xl p-8 max-w-md">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
+              <AlertCircle className="w-5 h-5 text-red-600" />
+            </div>
+            <h2 className="text-lg font-semibold text-slate-900">Ошибка загрузки</h2>
           </div>
-          <h2 className="text-2xl font-black text-white mb-4">Ошибка загрузки</h2>
-          <p className="text-white/70 mb-6">{error}</p>
+          <p className="text-slate-600 text-sm mb-6">{error}</p>
           <button
             onClick={fetchData}
-            className="px-8 py-4 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white rounded-2xl font-bold hover:shadow-2xl hover:shadow-violet-500/50 transition-all transform hover:scale-105"
+            className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors"
           >
+            <RefreshCw className="w-4 h-4" />
             Попробовать снова
           </button>
         </div>
-      </main>
+      </div>
     );
   }
 
   if (!data) return null;
 
-  const stats = [
-    { 
-      icon: Users, 
-      label: 'Пользователи', 
+  const kpis = [
+    {
+      icon: Users,
+      label: 'Пользователи',
       value: formatNumber(data.metrics.activeUsers.value),
-      change: data.metrics.activeUsers.change.toFixed(1),
-      gradient: 'from-violet-400 via-purple-500 to-fuchsia-500',
-      trend: data.metrics.activeUsers.trend
+      metric: data.metrics.activeUsers,
+      accent: 'border-l-violet-500',
+      iconClass: 'text-violet-500 bg-violet-50',
     },
-    { 
-      icon: FileText, 
-      label: 'Бронирования', 
+    {
+      icon: FileText,
+      label: 'Бронирования',
       value: formatNumber(data.metrics.totalBookings.value),
-      change: data.metrics.totalBookings.change.toFixed(1),
-      gradient: 'from-emerald-400 via-teal-500 to-cyan-500',
-      trend: data.metrics.totalBookings.trend
+      metric: data.metrics.totalBookings,
+      accent: 'border-l-sky-500',
+      iconClass: 'text-sky-500 bg-sky-50',
     },
-    { 
-      icon: DollarSign, 
-      label: 'Выручка', 
+    {
+      icon: DollarSign,
+      label: 'Выручка',
       value: formatCurrency(data.metrics.totalRevenue.value),
-      change: data.metrics.totalRevenue.change.toFixed(1),
-      gradient: 'from-pink-400 via-rose-500 to-red-500',
-      trend: data.metrics.totalRevenue.trend
+      metric: data.metrics.totalRevenue,
+      accent: 'border-l-emerald-500',
+      iconClass: 'text-emerald-500 bg-emerald-50',
     },
-    { 
-      icon: TrendingUp, 
-      label: 'Конверсия', 
+    {
+      icon: BarChart3,
+      label: 'Конверсия',
       value: `${data.metrics.conversionRate.value.toFixed(1)}%`,
-      change: data.metrics.conversionRate.change.toFixed(1),
-      gradient: 'from-amber-400 via-orange-500 to-red-500',
-      trend: data.metrics.conversionRate.trend
+      metric: data.metrics.conversionRate,
+      accent: 'border-l-amber-500',
+      iconClass: 'text-amber-500 bg-amber-50',
     },
   ];
 
   return (
-    <main className="min-h-screen relative overflow-hidden">
-      {/* КАМЧАТКА: Фоновое изображение вулканов */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#2C1810] via-[#1a2634] to-[#0f1821]"></div>
-      <div 
-        className="absolute inset-0 opacity-20 bg-cover bg-center bg-no-repeat"
-        style={{
-          backgroundImage: `url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><defs><linearGradient id="volcano" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:%23DC143C;stop-opacity:0.3"/><stop offset="100%" style="stop-color:%23FF4500;stop-opacity:0.1"/></linearGradient></defs><polygon points="200,800 400,200 600,800" fill="url(%23volcano)"/><polygon points="700,800 900,150 1100,800" fill="url(%23volcano)" opacity="0.8"/><circle cx="400" cy="180" r="30" fill="%23FF6347" opacity="0.6"/><circle cx="900" cy="130" r="40" fill="%23FF4500" opacity="0.5"/></svg>')`,
-          filter: 'blur(2px)'
-        }}
-      ></div>
-      
-      {/* Камчатские цвета: охра, лава, океан, мох */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(205,133,63,0.15),transparent_50%)]"></div>
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(30,144,255,0.1),transparent_50%)]"></div>
-      
-      {/* Плавающие частицы - вулканический пепел */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-20 w-72 h-72 bg-[#CD853F]/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-[#DC143C]/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
-        <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-[#556B2F]/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
+    <div className="p-6 lg:p-8 bg-slate-50 min-h-screen">
+
+      {/* Заголовок страницы */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-slate-900 flex items-center justify-center">
+            <Shield className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-xl font-semibold text-slate-900">Обзор</h1>
+            <p className="text-xs text-slate-500">Административная панель · последние 30 дней</p>
+          </div>
+        </div>
+        <button
+          onClick={fetchData}
+          className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-colors"
+        >
+          <RefreshCw className="w-4 h-4" />
+          Обновить
+        </button>
       </div>
 
-      {/* Header */}
-      <div className="relative backdrop-blur-xl bg-gradient-to-r from-[#2C1810]/40 via-[#1a2634]/40 to-[#2C1810]/40 border-b border-[#CD853F]/30 shadow-2xl">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-[#DC143C] to-[#FF4500] rounded-3xl blur-xl opacity-75 group-hover:opacity-100 transition-opacity"></div>
-                <div className="relative w-20 h-20 bg-gradient-to-br from-[#DC143C] via-[#FF4500] to-[#CD853F] rounded-3xl flex items-center justify-center shadow-2xl transform group-hover:scale-110 transition-transform">
-                  <Shield className="w-10 h-10 text-white" strokeWidth={2.5} />
+      {/* Алерты — ожидающие модерации */}
+      {((data.pendingTours ?? 0) > 0 || (data.pendingPartners ?? 0) > 0) && (
+        <div className="flex flex-wrap gap-3 mb-6">
+          {(data.pendingTours ?? 0) > 0 && (
+            <button
+              onClick={() => router.push('/hub/admin/content/tours')}
+              className="flex items-center gap-2 px-4 py-2.5 bg-amber-50 border border-amber-200 text-amber-800 text-sm font-medium rounded-lg hover:bg-amber-100 transition-colors"
+            >
+              <AlertTriangle className="w-4 h-4 text-amber-500" />
+              {data.pendingTours} туров ожидают модерации
+              <ArrowUpRight className="w-3.5 h-3.5 text-amber-500" />
+            </button>
+          )}
+          {(data.pendingPartners ?? 0) > 0 && (
+            <button
+              onClick={() => router.push('/hub/admin/content/partners')}
+              className="flex items-center gap-2 px-4 py-2.5 bg-blue-50 border border-blue-200 text-blue-800 text-sm font-medium rounded-lg hover:bg-blue-100 transition-colors"
+            >
+              <AlertTriangle className="w-4 h-4 text-blue-500" />
+              {data.pendingPartners} партнёров ожидают верификации
+              <ArrowUpRight className="w-3.5 h-3.5 text-blue-500" />
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* KPI карточки */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {kpis.map((kpi) => {
+          const Icon = kpi.icon;
+          return (
+            <div
+              key={kpi.label}
+              className={`bg-white border-l-4 ${kpi.accent} border border-slate-200 rounded-xl p-5`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${kpi.iconClass}`}>
+                  <Icon className="w-4 h-4" />
                 </div>
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-[#6B8E23] to-[#556B2F] rounded-full border-4 border-[#CD853F] shadow-lg animate-pulse"></div>
+                <TrendBadge change={kpi.metric.change} trend={kpi.metric.trend} />
               </div>
-              <div>
-                <h1 className="text-4xl font-black bg-gradient-to-r from-[#CD853F] via-[#DAA520] to-[#FF6347] bg-clip-text text-transparent drop-shadow-lg">
-                  Панель администратора Камчатки
-                </h1>
-                <p className="text-[#E8D4B0] mt-1 font-semibold flex items-center gap-2">
-                  <Star className="w-4 h-4 text-[#FF4500] fill-[#FF4500]" />
-                  Kamchatour Hub · Вулканы, Океан, Приключения
-                </p>
-              </div>
+              <p className="text-2xl font-bold text-slate-900 leading-tight">{kpi.value}</p>
+              <p className="text-xs text-slate-500 mt-1">{kpi.label}</p>
             </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={fetchData}
-                className="px-6 py-3 backdrop-blur-xl bg-[#556B2F]/20 hover:bg-[#6B8E23]/30 border border-[#CD853F]/50 rounded-2xl transition-all font-bold text-[#E8D4B0] shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center gap-2"
-              >
-                <RefreshCw className="w-5 h-5" />
-                Обновить
-              </button>
-              <button
-                onClick={() => router.push('/')}
-                className="px-6 py-3 bg-gradient-to-r from-[#DC143C] to-[#FF4500] hover:from-[#FF4500] hover:to-[#FF6347] text-white rounded-2xl transition-all font-bold shadow-xl shadow-[#DC143C]/50 hover:shadow-2xl hover:shadow-[#FF4500]/70 transform hover:scale-105"
-              >
-                ← Выход
-              </button>
-            </div>
+          );
+        })}
+      </div>
+
+      {/* Основная сетка: топ туры + активность */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+
+        {/* Топ туры */}
+        <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-slate-400" />
+            <h2 className="text-sm font-semibold text-slate-700">Топ туры</h2>
+            <span className="ml-auto text-xs text-slate-400">за 30 дней</span>
+          </div>
+          {data.charts.topTours.length === 0 ? (
+            <div className="px-6 py-12 text-center text-slate-400 text-sm">Нет данных</div>
+          ) : (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-100">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider w-8">#</th>
+                  <th className="px-3 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Тур</th>
+                  <th className="px-3 py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-wider">Броней</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-wider">Выручка</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {data.charts.topTours.map((tour, idx) => (
+                  <tr key={tour.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-6 py-3.5 text-slate-400 font-medium">{idx + 1}</td>
+                    <td className="px-3 py-3.5">
+                      <span className="text-slate-800 font-medium line-clamp-1">{tour.title}</span>
+                    </td>
+                    <td className="px-3 py-3.5 text-right text-slate-600">{tour.bookings}</td>
+                    <td className="px-6 py-3.5 text-right font-semibold text-slate-800">
+                      {formatCurrency(tour.revenue)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {/* Последняя активность */}
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
+            <Clock className="w-4 h-4 text-slate-400" />
+            <h2 className="text-sm font-semibold text-slate-700">Активность</h2>
+            <span className="ml-auto text-xs text-slate-400">24 ч</span>
+          </div>
+          <div className="divide-y divide-slate-50 max-h-72 overflow-y-auto">
+            {data.recentActivities.length === 0 ? (
+              <div className="px-6 py-12 text-center text-slate-400 text-sm">Нет активности</div>
+            ) : (
+              data.recentActivities.map((act) => (
+                <div key={act.id} className="flex items-start gap-3 px-5 py-3.5 hover:bg-slate-50 transition-colors">
+                  <div className="w-7 h-7 rounded-full bg-emerald-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium text-slate-800 truncate">{act.description}</p>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {new Date(act.timestamp).toLocaleString('ru-RU', {
+                        hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short'
+                      })}
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-6 py-8 space-y-8">
-        {/* Glass Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {stats.map((stat) => {
-            const Icon = stat.icon;
-            const isPositive = stat.trend === 'up';
-            
+      {/* Инструменты администратора */}
+      <div>
+        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Управление</p>
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+          {adminTools.map((tool) => {
+            const Icon = tool.icon;
             return (
-              <div
-                key={stat.label}
-                className="group relative backdrop-blur-2xl bg-gradient-to-br from-[#2C1810]/60 to-[#1a2634]/60 rounded-3xl p-6 border border-[#CD853F]/40 hover:border-[#FF4500]/60 hover:bg-[#2C1810]/70 transition-all duration-500 hover:scale-105 hover:-translate-y-2 shadow-xl hover:shadow-2xl hover:shadow-[#DC143C]/30"
+              <button
+                key={tool.label}
+                onClick={() => router.push(tool.href)}
+                className="group relative bg-white border border-slate-200 rounded-xl p-4 text-left hover:border-slate-300 hover:shadow-sm transition-all flex flex-col items-center gap-2.5 text-center"
               >
-                {/* Glow effect - Камчатка */}
-                <div className={`absolute inset-0 bg-gradient-to-r ${stat.gradient} rounded-3xl blur-xl opacity-0 group-hover:opacity-30 transition-opacity duration-500`}></div>
-                
-                <div className="relative">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className={`w-14 h-14 bg-gradient-to-br ${stat.gradient} rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-12 transition-all`}>
-                      <Icon className="w-7 h-7 text-white" strokeWidth={2.5} />
-                    </div>
-                    {stat.change !== '0.0' && (
-                      <div className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 ${
-                        isPositive ? 'bg-emerald-500/20 text-emerald-300' : 'bg-red-500/20 text-red-300'
-                      }`}>
-                        {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />} {Math.abs(parseFloat(stat.change))}%
-                      </div>
-                    )}
-                  </div>
-                  <p className="text-white/50 text-sm font-semibold mb-2">{stat.label}</p>
-                  <p className="text-3xl font-black text-white">
-                    {stat.value}
-                  </p>
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${tool.color}`}>
+                  <Icon className="w-5 h-5" />
                 </div>
-              </div>
+                <span className="text-xs font-medium text-slate-700 leading-tight">{tool.label}</span>
+                {tool.badge && (
+                  <span className={`absolute top-2.5 right-2.5 min-w-[20px] h-5 px-1.5 rounded-full text-xs font-bold flex items-center justify-center ${
+                    tool.badgeAlert
+                      ? 'bg-red-500 text-white'
+                      : 'bg-slate-100 text-slate-600'
+                  }`}>
+                    {tool.badge}
+                  </span>
+                )}
+              </button>
             );
           })}
         </div>
-
-        {/* Top Tours - Glass Card */}
-        {data.charts.topTours && data.charts.topTours.length > 0 && (
-          <div className="backdrop-blur-2xl bg-black/40 rounded-3xl border border-white/30 shadow-2xl overflow-hidden">
-            <div className="px-8 py-6 bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 border-b border-white/20">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg">
-                  <TrendingUp className="w-7 h-7 text-white" strokeWidth={2.5} />
-                </div>
-                <h2 className="text-2xl font-black bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
-                  Топ туры
-                </h2>
-              </div>
-            </div>
-            <div className="p-8">
-              <div className="space-y-4">
-                {data.charts.topTours.map((tour, tourIdx) => (
-                  <div
-                    key={tour.id}
-                    className="group flex items-center justify-between p-5 rounded-2xl backdrop-blur-xl bg-white/10 border border-white/20 hover:bg-white/20 hover:scale-105 transition-all shadow-lg hover:shadow-xl"
-                  >
-                    <div className="flex items-center gap-5">
-                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white font-black text-lg shadow-lg">
-                        {tourIdx + 1}
-                      </div>
-                      <div>
-                        <p className="text-white font-bold text-lg group-hover:text-violet-300 transition-colors">{tour.title}</p>
-                        <p className="text-white/50 text-sm">{tour.bookings} бронирований</p>
-                      </div>
-                    </div>
-                    <p className="text-2xl font-black bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
-                      {formatCurrency(tour.revenue)}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Admin Tools - Premium Glass Grid */}
-        <div className="backdrop-blur-2xl bg-black/40 rounded-3xl border border-white/30 shadow-2xl overflow-hidden">
-          <div className="px-8 py-6 bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 border-b border-white/20">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-white/15 to-white/5 rounded-2xl flex items-center justify-center shadow-lg">
-                <Wrench className="w-7 h-7 text-white" strokeWidth={2.5} />
-              </div>
-              <h2 className="text-2xl font-black bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
-                Инструменты администратора
-              </h2>
-            </div>
-          </div>
-          <div className="p-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {adminTools.map((tool) => {
-                const Icon = tool.icon;
-                return (
-                  <button
-                    key={tool.title}
-                    onClick={() => router.push(tool.link)}
-                    className="group relative backdrop-blur-xl bg-white/10 rounded-3xl p-8 border border-white/30 hover:bg-white/20 transition-all duration-500 text-left overflow-hidden hover:scale-105 hover:-translate-y-2 shadow-xl hover:shadow-2xl"
-                  >
-                    {/* Gradient glow on hover */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${tool.gradient} opacity-0 group-hover:opacity-30 transition-opacity duration-500`}></div>
-                    
-                    <div className="relative">
-                      <div className="flex items-start justify-between mb-5">
-                        <div className={`w-16 h-16 bg-gradient-to-br ${tool.gradient} rounded-2xl flex items-center justify-center shadow-xl group-hover:scale-110 group-hover:rotate-6 transition-all`}>
-                          <Icon className="w-8 h-8 text-white" strokeWidth={2.5} />
-                        </div>
-                        {tool.badge && (
-                          <span className="px-4 py-2 backdrop-blur-xl bg-white/20 text-white text-sm font-bold rounded-xl shadow-lg">
-                            {tool.badge}
-                          </span>
-                        )}
-                      </div>
-                      <h3 className="text-xl font-black text-white mb-2">
-                        {tool.title}
-                      </h3>
-                      <p className="text-white/60 text-sm mb-5 font-medium">
-                        {tool.description}
-                      </p>
-                      <div className="flex items-center gap-2 text-violet-400 group-hover:text-fuchsia-300 transition-colors font-bold">
-                        <span>Перейти</span>
-                        <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" strokeWidth={3} />
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        {/* Recent Activity */}
-        {data.recentActivities && data.recentActivities.length > 0 && (
-          <div className="backdrop-blur-2xl bg-black/40 rounded-3xl border border-white/30 shadow-2xl overflow-hidden">
-            <div className="px-8 py-6 bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 border-b border-white/20">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-gradient-to-br from-cyber-cyan to-cyber-cyan/70 rounded-2xl flex items-center justify-center shadow-lg">
-                  <Clock className="w-7 h-7 text-white" strokeWidth={2.5} />
-                </div>
-                <h2 className="text-2xl font-black bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
-                  Последняя активность
-                </h2>
-              </div>
-            </div>
-            <div className="p-8">
-              <div className="space-y-4">
-                {data.recentActivities.map((activity) => (
-                  <div
-                    key={activity.id}
-                    className="flex items-center gap-5 p-5 rounded-2xl backdrop-blur-xl bg-white/10 border border-white/20 hover:bg-white/20 transition-all shadow-lg hover:shadow-xl"
-                  >
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg">
-                      <CheckCircle className="w-6 h-6 text-white" strokeWidth={2.5} />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-white font-bold">{activity.title}</p>
-                      <p className="text-white/60 text-sm">{activity.description}</p>
-                      <p className="text-white/40 text-xs mt-1">
-                        {new Date(activity.timestamp).toLocaleString('ru-RU')}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
-    </main>
+
+    </div>
   );
 }

@@ -157,7 +157,7 @@ const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_RE
 const ratelimit = redis
   ? new Ratelimit({
       redis,
-      limiter: Ratelimit.slidingWindow(10, '10 s'),
+      limiter: Ratelimit.slidingWindow(100, '60 s'), // 100 req/min per IP — защита от DoS, не мешает нормальному браузингу
     })
   : null;
 

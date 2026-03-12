@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
         AND b.status = 'confirmed'
         AND b.payment_status = 'paid'
         AND u.email IS NOT NULL
+      LIMIT 200
     `;
 
     const bookingsResult = await query<{ id: string; user_email: string; tour_name: string; start_date: string; guests_count: number; total_price: string; duration: number; operator_name: string; operator_phone: string | null; operator_email: string | null; user_name: string; }>(bookingsQuery, [tomorrowStr]);

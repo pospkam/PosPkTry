@@ -8,11 +8,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { reviewService } from '@/lib/database';
+import { reviewService } from '@/lib/services';
 import {
   ReviewNotFoundError,
   ReviewValidationError,
-} from '@/lib/database';
+} from '@/lib/services';
 import { requireAuth, requireRole, requireAdmin } from '@/lib/auth/middleware';
 
 // ============================================================================

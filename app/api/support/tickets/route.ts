@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { ticketService } from '@/lib/database'
+import { ticketService } from '@/lib/services'
 import { CreateTicketSchema, validateInput, CreateTicketInput } from '@/lib/validation/support-schemas'
 import { requireAuth } from '@/lib/auth/middleware'
 

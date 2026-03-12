@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { knowledgeBaseService } from '@/lib/database'
+import { knowledgeBaseService } from '@/lib/services'
 import { requireRole } from '@/lib/auth/middleware'
 
 // AUTH: GET is public by design — allows unauthenticated users to search help content.

@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { availabilityService } from '@/lib/database'
+import { availabilityService } from '@/lib/services'
 import { authenticateUser, authorizeRole } from '@/lib/auth'
 import { verifyTourOwnership } from '@/lib/auth/operator-helpers'
 import { z } from 'zod'

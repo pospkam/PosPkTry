@@ -4,11 +4,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { tourService } from '@/lib/database';
+import { tourService } from '@/lib/services';
 import {
   TourNotFoundError,
   TourAlreadyPublishedError,
-} from '@/lib/database';
+} from '@/lib/services';
 import { requireOperator } from '@/lib/auth/middleware';
 import { verifyTourOwnership } from '@/lib/auth/operator-helpers';
 

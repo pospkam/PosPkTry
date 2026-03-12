@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { payoutService } from '@/lib/database'
+import { payoutService } from '@/lib/services'
 import { requireAdmin } from '@/lib/auth/middleware'
 
 export async function POST(

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { commissionService } from '@/lib/database'
+import { commissionService } from '@/lib/services'
 import { requireAdmin } from '@/lib/auth/middleware'
 
 export async function GET(request: NextRequest) {

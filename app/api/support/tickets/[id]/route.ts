@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { ticketService } from '@/lib/database'
+import { ticketService } from '@/lib/services'
 import { verifyAuth } from '@/lib/auth'
 
 export async function GET(

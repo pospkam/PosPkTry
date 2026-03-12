@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { ticketMessageService, ticketService } from '@/lib/database'
+import { ticketMessageService, ticketService } from '@/lib/services'
 import { requireAuth } from '@/lib/auth/middleware'
 
 export async function GET(

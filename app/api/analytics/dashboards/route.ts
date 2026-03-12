@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { dashboardService } from '@/lib/database'
+import { dashboardService } from '@/lib/services'
 import { requireAuth } from '@/lib/auth/middleware'
 
 export async function GET(request: NextRequest) {

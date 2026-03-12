@@ -7,7 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { searchService } from '@/lib/database';
+import { searchService } from '@/lib/services';
 
 // Public: рекомендации, автодополнение и похожие туры доступны без аутентификации.
 export async function GET(request: NextRequest) {

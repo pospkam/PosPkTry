@@ -39,3 +39,8 @@ export { agentService, feedbackService, slaService, ticketMessageService } from 
 
 // Analytics (dashboard, metrics, reports)
 export { dashboardService, metricsService, reportService } from './analytics.service';
+
+// Pillar services
+export { paymentService, PaymentService } from '@/pillars/booking-pillar/lib/payment/services';
+export { wishlistService, WishlistService } from '@/pillars/engagement-pillar/lib/wishlist/services';
+export { ticketService, TicketService } from '@/pillars/support-pillar/services/ticket.service';

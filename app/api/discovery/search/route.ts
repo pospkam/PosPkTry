@@ -3,7 +3,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { searchService } from '@/lib/database';
+import { searchService } from '@/lib/services';
 
 // Public: поиск туров доступен без аутентификации.
 export async function GET(request: NextRequest) {

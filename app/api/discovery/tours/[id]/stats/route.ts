@@ -4,9 +4,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { tourService } from '@/lib/database';
-import { reviewService } from '@/lib/database';
-import { TourNotFoundError } from '@/lib/database';
+import { tourService } from '@/lib/services';
+import { reviewService } from '@/lib/services';
+import { TourNotFoundError } from '@/lib/services';
 import { requireRole } from '@/lib/auth/middleware';
 import { verifyTourOwnership } from '@/lib/auth/operator-helpers';
 

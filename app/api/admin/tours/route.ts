@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
       LEFT JOIN bookings b ON t.id = b.tour_id
       GROUP BY t.id, p.id
       ORDER BY t.created_at DESC
+      LIMIT 500
     `);
 
     const tours = result.rows.map(row => ({

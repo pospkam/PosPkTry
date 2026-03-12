@@ -4,11 +4,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { reviewService } from '@/lib/database';
+import { reviewService } from '@/lib/services';
 import {
   ReviewValidationError,
   DuplicateReviewError,
-} from '@/lib/database';
+} from '@/lib/services';
 import { requireAuth, requireAdmin } from '@/lib/auth/middleware';
 
 // ============================================================================

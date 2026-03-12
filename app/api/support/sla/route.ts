@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { slaService } from '@/lib/database'
+import { slaService } from '@/lib/services'
 import { requireRole } from '@/lib/auth/middleware'
 
 export async function GET(request: NextRequest) {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { reportService } from '@/lib/database'
+import { reportService } from '@/lib/services'
 import { requireRole } from '@/lib/auth/middleware'
 
 export async function GET(request: NextRequest) {

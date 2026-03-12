@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { availabilityService } from '@/lib/database'
+import { availabilityService } from '@/lib/services'
 
 /**
  * GET /api/bookings/availability/calendar

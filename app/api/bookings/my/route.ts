@@ -47,7 +47,8 @@ export async function GET(request: NextRequest) {
        LEFT JOIN assets a ON ta.asset_id = a.id
        WHERE b.user_id = $1
        GROUP BY b.id, t.id, p.id
-       ORDER BY b.date DESC`,
+       ORDER BY b.date DESC
+       LIMIT 100`,
       [userId]
     );
 

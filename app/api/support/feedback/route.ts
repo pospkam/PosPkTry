@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { feedbackService } from '@/lib/database'
+import { feedbackService } from '@/lib/services'
 import { requireRole, requireAuth } from '@/lib/auth/middleware'
 
 export async function GET(request: NextRequest) {

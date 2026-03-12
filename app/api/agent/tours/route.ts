@@ -42,7 +42,8 @@ export async function GET(request: NextRequest) {
       LEFT JOIN assets a ON ta.asset_id = a.id
       WHERE t.is_active = true
       GROUP BY t.id, p.id
-      ORDER BY t.rating DESC, t.review_count DESC`,
+      ORDER BY t.rating DESC, t.review_count DESC
+      LIMIT 100`,
       []
     );
 
