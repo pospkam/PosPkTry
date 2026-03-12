@@ -177,6 +177,11 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const method = request.method;
 
+  // MCP server — public, no auth required (Timeweb AI agent calls this)
+  if (pathname.startsWith('/api/mcp')) {
+    return applySecurityHeaders(NextResponse.next());
+  }
+
   // Check if route requires authentication
   const isProtectedRoute = PROTECTED_ROUTES.some(route => pathname.startsWith(route));
   const isPublicApiRoute = isPublicRoute(pathname, method);
