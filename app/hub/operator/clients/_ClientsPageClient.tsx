@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Protected } from '@/components/auth/Protected';
 import { OperatorNav } from '@/components/operator/OperatorNav';
 import { LoadingSpinner, EmptyState } from '@/components/admin/shared';
+import CustomerProfileModal from '@/components/operator/CustomerProfileModal';
 import {
   Users, Search, Mail, Phone, Calendar,
   Star, TrendingUp, Download, ChevronLeft, ChevronRight, AlertCircle,
@@ -44,6 +45,7 @@ export default function ClientsPageClient() {
   const [search, setSearch]       = useState('');
   const [statusFilter, setStatus] = useState<'all' | Status>('all');
   const [page, setPage]           = useState(1);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const load = useCallback(async (pg = page) => {
     setLoading(true);
@@ -187,7 +189,11 @@ export default function ClientsPageClient() {
                   </thead>
                   <tbody>
                     {customers.map((c) => (
-                      <tr key={c.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                      <tr
+                        key={c.id}
+                        onClick={() => setSelectedId(c.id)}
+                        className="border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer"
+                      >
                         <td className="p-4">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-cyan-500/20 rounded-full flex items-center justify-center shrink-0">
@@ -254,6 +260,18 @@ export default function ClientsPageClient() {
 
         </div>
       </main>
+
+      {selectedId && (
+        <CustomerProfileModal
+          clientId={selectedId}
+          onClose={() => setSelectedId(null)}
+          onTagsUpdated={(_id, newTags) => {
+            // Refresh tags in the list not needed (status won't change from tags),
+            // but parent list could re-fetch if needed
+            void newTags;
+          }}
+        />
+      )}
     </Protected>
   );
 }
