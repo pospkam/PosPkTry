@@ -17,6 +17,7 @@
     "db:import:kamchatka-routes": "node scripts/import-kamchatka-routes.js",
     "db:import:kamchatka-routes:reset": "node scripts/import-kamchatka-routes.js --reset",
     "db:import:fishing-tours": "node scripts/load-fishingkam-tours.js",
+    "db:create:fishing-route": "node scripts/create-fishing-route.js",
     "db:sync:agent-routes": "node scripts/sync-agent-route-knowledge.js",
     "ai:setup-agent-rag": "npx tsx scripts/setup-agent-rag.ts",
     "sentry:sourcemaps": "sentry-cli sourcemaps upload --org kamhub --project nextjs .next",
