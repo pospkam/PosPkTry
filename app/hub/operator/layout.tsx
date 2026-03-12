@@ -1,7 +1,10 @@
 'use client';
 
 import { ReactNode } from 'react';
-import { BarChart3, Map, Calendar, Users, CreditCard, Settings } from 'lucide-react';
+import {
+  BarChart3, Map, Calendar, CalendarDays, Users, CreditCard,
+  Settings, Bell, FileText, ArrowLeftRight,
+} from 'lucide-react';
 import { HubLayout } from '@/components/layout/HubLayout';
 
 const SIDEBAR_ITEMS = [
@@ -10,7 +13,11 @@ const SIDEBAR_ITEMS = [
   { href: '/hub/operator/bookings', label: 'Бронирования', icon: Calendar },
   { href: '/hub/operator/clients', label: 'Клиенты', icon: Users },
   { href: '/hub/operator/finance', label: 'Финансы', icon: CreditCard },
-  { href: '/hub/operator/calendar', label: 'Календарь', icon: Calendar },
+  { href: '/hub/operator/calendar', label: 'Календарь', icon: CalendarDays },
+  { href: '/hub/operator/analytics', label: 'Аналитика', icon: BarChart3 },
+  { href: '/hub/operator/transfers', label: 'Трансферы', icon: ArrowLeftRight },
+  { href: '/hub/operator/reports', label: 'Отчёты', icon: FileText },
+  { href: '/hub/operator/notifications', label: 'Уведомления', icon: Bell },
   { href: '/hub/operator/integrations', label: 'Интеграции', icon: Settings },
 ];
 
