@@ -344,6 +344,57 @@ ${trip.feedback ? `  <b>Отзыв:</b> ${trip.feedback}` : ''}
     });
   }
 
+  // Уведомление партнёру о новом рыболовном туре (с кнопками Подтвердить / Отменить)
+  async sendTourBookingNotification(chatId: string, booking: {
+    id: string;
+    tourName: string;
+    departureDate: string;
+    participants: number;
+    totalAmount: number;
+    touristName: string;
+    touristEmail: string;
+    specialRequests?: string | null;
+  }): Promise<TelegramResponse> {
+    const date = new Date(booking.departureDate).toLocaleDateString('ru-RU', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    });
+
+    const lines: string[] = [
+      '🎣 <b>Новое бронирование тура!</b>',
+      '',
+      `<b>Тур:</b> ${booking.tourName}`,
+      `<b>Дата заезда:</b> ${date}`,
+      `<b>Участников:</b> ${booking.participants} чел.`,
+      `<b>Сумма:</b> ${booking.totalAmount.toLocaleString('ru-RU')} ₽`,
+      '',
+      `👤 <b>Гость:</b> ${booking.touristName}`,
+      `📧 ${booking.touristEmail}`,
+    ];
+    if (booking.specialRequests) {
+      lines.push(`\n📝 <i>${booking.specialRequests}</i>`);
+    }
+    lines.push('', `🆔 ID: <code>${booking.id}</code>`);
+
+    const replyMarkup = {
+      inline_keyboard: [[
+        { text: '✅ Подтвердить', callback_data: `confirm_${booking.id}` },
+        { text: '❌ Отменить',    callback_data: `cancel_${booking.id}`  },
+      ]],
+    };
+
+    return this.sendMessage({ chatId, text: lines.join('\n'), parseMode: 'HTML', replyMarkup });
+  }
+
+  // Ответ боту — убирает спиннер с inline-кнопки после нажатия
+  async answerCallback(callbackQueryId: string, text?: string): Promise<void> {
+    if (!this.botToken) return;
+    await fetch(`${this.baseUrl}/answerCallbackQuery`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ callback_query_id: callbackQueryId, text: text ?? '' }),
+    }).catch(() => { /* не прерываем при ошибке */ });
+  }
+
   // Обработка callback запросов
   async handleCallbackQuery(callbackQuery: {
     id: string;

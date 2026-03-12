@@ -17,6 +17,7 @@ import {
   createBooking,
 } from '@/lib/bookings/booking.service';
 import type { BookingWithDetails, CreateBookingInput } from '@/types/booking.types';
+import { telegramService } from '@/lib/notifications/telegram';
 
 // GET /api/bookings — Получение бронирований с ролевой фильтрацией
 export async function GET(request: NextRequest) {
@@ -126,6 +127,21 @@ export async function POST(request: NextRequest) {
     };
 
     const booking = await createBooking(auth.userId, input);
+
+    // Telegram-уведомление партнёру (fire-and-forget, не блокируем ответ)
+    const operatorChatId = process.env.TELEGRAM_FISHING_CHAT_ID;
+    if (operatorChatId) {
+      telegramService.sendTourBookingNotification(operatorChatId, {
+        id:              booking.id,
+        tourName:        booking.tour.title,
+        departureDate:   booking.date.toISOString(),
+        participants:    booking.participants,
+        totalAmount:     booking.totalAmount,
+        touristName:     booking.tourist.name,
+        touristEmail:    booking.tourist.email,
+        specialRequests: booking.specialRequests,
+      }).catch(() => { /* не прерываем при ошибке TG */ });
+    }
 
     return NextResponse.json({
       success: true,
