@@ -947,3 +947,36 @@ body {
     radial-gradient(1.5px 1.5px at 85% 85%, #fff, transparent),
     radial-gradient(1.5px 1.5px at 45% 90%, #fff, transparent);
 }
+
+/* =============================================
+   DEPARTURES CALENDAR — цвета дней заездов
+   ============================================= */
+
+.departures-calendar .react-datepicker__day.departure-available {
+  background: rgba(74, 222, 128, 0.2);
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.departures-calendar .react-datepicker__day.departure-available:hover {
+  background: rgba(74, 222, 128, 0.4);
+  color: #fff;
+}
+
+.departures-calendar .react-datepicker__day.departure-few {
+  background: rgba(250, 204, 21, 0.2);
+  color: #facc15;
+  font-weight: 600;
+}
+
+.departures-calendar .react-datepicker__day.departure-few:hover {
+  background: rgba(250, 204, 21, 0.4);
+  color: #fff;
+}
+
+.departures-calendar .react-datepicker__day.departure-sold-out {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  text-decoration: line-through;
+  cursor: not-allowed;
+}

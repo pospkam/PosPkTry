@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { WeatherWidget } from '@/components/weather/WeatherWidget';
 import { TourBookingForm } from '@/components/booking/TourBookingForm';
+import { TourDeparturesCalendar } from '@/components/booking/TourDeparturesCalendar';
 import { LoadingSpinner } from '@/components/admin/shared';
 import {
   Star, MapPin, Clock, Users, Check, X,
@@ -455,6 +456,14 @@ export default function TourDetailsPageClient() {
                 </div>
               </div>
             </div>
+
+            {/* Календарь заездов */}
+            <TourDeparturesCalendar
+              tourId={tourId}
+              tourName={tour.name}
+              basePrice={tour.price}
+              currency={tour.currency}
+            />
 
             {/* Оператор */}
             {tour.operator && (
