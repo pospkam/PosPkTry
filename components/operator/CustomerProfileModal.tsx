@@ -200,24 +200,27 @@ export default function CustomerProfileModal({ clientId, onClose, onTagsUpdated 
               </div>
 
               {/* Telegram */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-wrap">
                 <Send className="w-4 h-4 text-[#229ED9] shrink-0" />
                 {!tgEditing ? (
                   telegramId ? (
                     <>
+                      <span className="text-sm text-white/50">
+                        {/^\d+$/.test(telegramId) ? telegramId : `@${telegramId}`}
+                      </span>
                       <a
                         href={/^\d+$/.test(telegramId)
                           ? `tg://user?id=${telegramId}`
                           : `https://t.me/${telegramId}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm text-[#229ED9] hover:underline"
+                        className="flex items-center gap-1.5 px-3 py-1 bg-[#229ED9]/20 hover:bg-[#229ED9]/35 border border-[#229ED9]/40 rounded-full text-[#229ED9] text-xs font-medium transition-colors"
                       >
-                        {/^\d+$/.test(telegramId) ? telegramId : `@${telegramId}`}
+                        <Send className="w-3 h-3" /> Написать
                       </a>
                       <button
                         onClick={() => { setTgInput(telegramId); setTgEditing(true); }}
-                        className="text-xs text-white/30 hover:text-white/60 ml-1"
+                        className="text-xs text-white/30 hover:text-white/60"
                       >изменить</button>
                     </>
                   ) : (
