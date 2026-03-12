@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
   
   try {
     const body = await request.json();
-    const { email, password, name, role, phone, company_name, inn } = body;
+    const { email, password, name, phone, company_name, inn } = body;
     
     // Валидация обязательных полей
     if (!email || !password || !name) {
@@ -44,15 +44,9 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Валидация роли
-    const validRoles = ['tourist', 'operator', 'guide', 'agent', 'transfer', 'admin'];
-    const userRole = role || 'tourist';
-    if (!validRoles.includes(userRole)) {
-      return NextResponse.json(
-        { success: false, error: 'Неверная роль' },
-        { status: 400 }
-      );
-    }
+    // Роль при публичной регистрации — только tourist
+    // Остальные роли (operator, guide, admin и т.д.) назначаются через админку
+    const userRole = 'tourist';
     
     // Подключаемся к БД
     client = await pool.connect();
