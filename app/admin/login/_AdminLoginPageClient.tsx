@@ -22,29 +22,32 @@ export default function AdminLoginPageClient() {
     setError('');
 
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch('/api/auth/signin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: formData.email,
           password: formData.password,
-          role: 'admin',
         }),
       });
 
       const data = await response.json();
 
-      if (!data.success) {
+      if (!data.success || !data.data?.token) {
         throw new Error(data.error || 'Неверный email или пароль');
       }
 
-      // Сохраняем токен и роль администратора
-      if (data.token) {
-        localStorage.setItem('admin_token', data.token);
-        localStorage.setItem('admin_email', formData.email);
-        // КРИТИЧЕСКИ ВАЖНО: Устанавливаем роль admin для доступа к защищённым страницам
-        localStorage.setItem('user_roles', JSON.stringify(['admin']));
+      const user = data.data;
+
+      if (user.role !== 'admin') {
+        throw new Error('Доступ разрешён только администраторам');
       }
+
+      // Сохраняем токен и данные администратора
+      localStorage.setItem('token', user.token);
+      localStorage.setItem('admin_token', user.token);
+      localStorage.setItem('admin_email', user.email);
+      localStorage.setItem('user_roles', JSON.stringify(user.roles || [user.role]));
 
       // Редирект на админ панель
       router.push('/hub/admin');
