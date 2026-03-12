@@ -10,9 +10,22 @@ export async function GET(request: NextRequest) {
     const userOrResponse = await requireOperator(request);
     if (userOrResponse instanceof NextResponse) return userOrResponse;
 
-    const partnerId = await getOperatorPartnerId(userOrResponse.userId);
+    // Admins don't get auto-created partner records; they must use /hub/admin instead
+    let partnerId: string | null = null;
+    if (userOrResponse.role === 'admin') {
+      const row = await query(
+        `SELECT id FROM partners WHERE user_id = $1 AND category = 'operator' LIMIT 1`,
+        [userOrResponse.userId]
+      );
+      partnerId = (row.rows[0]?.id as string | undefined) ?? null;
+    } else {
+      partnerId = await getOperatorPartnerId(userOrResponse.userId);
+    }
     if (!partnerId) {
-      return NextResponse.json({ success: false, error: 'Партнёрский профиль не найден' }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: 'Партнёрский профиль не найден. Войдите как оператор.' },
+        { status: 404 }
+      );
     }
 
     const { searchParams } = new URL(request.url);
