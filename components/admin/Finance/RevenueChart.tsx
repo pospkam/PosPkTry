@@ -35,8 +35,7 @@ export function RevenueChart({ period = '30', type = 'all' }: RevenueChartProps)
       } else {
         setError(result.error);
       }
-    } catch (err) {
-      console.error('Error fetching revenue data:', err);
+    } catch {
       setError('Ошибка загрузки данных');
     } finally {
       setLoading(false);
@@ -53,11 +52,11 @@ export function RevenueChart({ period = '30', type = 'all' }: RevenueChartProps)
 
   if (error) {
     return (
-      <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-6 text-center">
-        <p className="text-red-400 mb-4">Ошибка загрузки данных</p>
+      <div className="bg-[var(--danger)]/8 border border-[var(--danger)]/15 rounded-lg p-6 text-center">
+        <p className="text-[var(--danger)] text-sm mb-4">Ошибка загрузки данных</p>
         <button
           onClick={fetchRevenueData}
-          className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors"
+          className="px-4 py-2 bg-[var(--danger)]/10 hover:bg-[var(--danger)]/15 text-[var(--danger)] text-xs font-medium rounded-lg transition-colors"
         >
           Повторить
         </button>
@@ -71,7 +70,7 @@ export function RevenueChart({ period = '30', type = 'all' }: RevenueChartProps)
 
   return (
     <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
-      <h3 className="text-xl font-bold text-[var(--text-primary)] mb-6">Динамика доходов</h3>
+      <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-6">Динамика доходов</h3>
 
       {dailyData.length === 0 ? (
         <div className="text-center py-20">
@@ -92,7 +91,7 @@ export function RevenueChart({ period = '30', type = 'all' }: RevenueChartProps)
               <span className="text-[var(--text-muted)]">Доход (₽)</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-blue-500 rounded"></div>
+              <div className="w-3 h-3 bg-[var(--ocean)] rounded"></div>
               <span className="text-[var(--text-muted)]">Транзакции</span>
             </div>
           </div>
@@ -114,7 +113,7 @@ export function RevenueChart({ period = '30', type = 'all' }: RevenueChartProps)
                     />
                     {/* Количество транзакций */}
                     <div
-                      className="w-3/4 bg-blue-500 rounded-t opacity-70"
+                      className="w-3/4 bg-[var(--ocean)] rounded-t opacity-70"
                       style={{
                         height: maxTransactions > 0 ? `${(day.transactions / maxTransactions) * 60}%` : '0%',
                         minHeight: day.transactions > 0 ? '2px' : '0px'
@@ -150,16 +149,16 @@ export function RevenueChart({ period = '30', type = 'all' }: RevenueChartProps)
           {/* Сводка */}
           <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[var(--border)]">
             <div className="text-center">
-              <p className="text-2xl font-bold text-[var(--accent)]">
+              <p className="text-lg font-bold font-mono text-[var(--accent)]">
                 {dailyData.reduce((sum, day) => sum + day.revenue, 0).toLocaleString('ru-RU')} ₽
               </p>
-              <p className="text-[var(--text-muted)] text-sm">Общий доход</p>
+              <p className="text-[var(--text-muted)] text-xs">Общий доход</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-[var(--accent)]">
+              <p className="text-lg font-bold font-mono text-[var(--accent)]">
                 {dailyData.reduce((sum, day) => sum + day.transactions, 0)}
               </p>
-              <p className="text-[var(--text-muted)] text-sm">Всего транзакций</p>
+              <p className="text-[var(--text-muted)] text-xs">Всего транзакций</p>
             </div>
           </div>
         </div>

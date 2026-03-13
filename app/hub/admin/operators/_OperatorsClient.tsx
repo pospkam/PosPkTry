@@ -128,7 +128,7 @@ export default function OperatorsClient() {
                   <div className="flex items-center gap-4 mt-1.5 text-sm text-[var(--text-secondary)]">
                     {op.rating > 0 ? (
                       <span className="flex items-center gap-1">
-                        <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                        <Star className="w-3.5 h-3.5 text-[var(--warning)] fill-[var(--warning)]" />
                         {op.rating.toFixed(1)}
                         <span className="text-[var(--text-muted)] text-xs">({op.reviewCount})</span>
                       </span>

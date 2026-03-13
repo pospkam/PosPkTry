@@ -39,8 +39,7 @@ export function FinanceMetricsGrid({ period = '30', type = 'all' }: FinanceMetri
       } else {
         setError(result.error);
       }
-    } catch (err) {
-      console.error('Error fetching finance metrics:', err);
+    } catch {
       setError('Ошибка загрузки данных');
     } finally {
       setLoading(false);
@@ -57,11 +56,11 @@ export function FinanceMetricsGrid({ period = '30', type = 'all' }: FinanceMetri
 
   if (error) {
     return (
-      <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-6 text-center">
-        <p className="text-red-400 mb-4">Ошибка загрузки данных</p>
+      <div className="bg-[var(--danger)]/8 border border-[var(--danger)]/15 rounded-lg p-6 text-center">
+        <p className="text-[var(--danger)] text-sm mb-4">Ошибка загрузки данных</p>
         <button
           onClick={fetchMetrics}
-          className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors"
+          className="px-4 py-2 bg-[var(--danger)]/10 hover:bg-[var(--danger)]/15 text-[var(--danger)] text-xs font-medium rounded-lg transition-colors"
         >
           Повторить
         </button>

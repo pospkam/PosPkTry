@@ -52,8 +52,7 @@ export function PayoutsManager() {
       } else {
         setError(result.error);
       }
-    } catch (err) {
-      console.error('Error fetching payouts:', err);
+    } catch {
       setError('Ошибка загрузки данных');
     } finally {
       setLoading(false);
@@ -81,8 +80,7 @@ export function PayoutsManager() {
       } else {
         toast.error(`Ошибка: ${result.error}`);
       }
-    } catch (err) {
-      console.error('Error creating payout:', err);
+    } catch {
       toast.error('Ошибка при создании выплаты');
     }
   };
@@ -145,11 +143,11 @@ export function PayoutsManager() {
 
   if (error) {
     return (
-      <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-6 text-center">
-        <p className="text-red-400 mb-4">Ошибка загрузки данных</p>
+      <div className="bg-[var(--danger)]/8 border border-[var(--danger)]/15 rounded-lg p-6 text-center">
+        <p className="text-[var(--danger)] text-sm mb-4">Ошибка загрузки данных</p>
         <button
           onClick={fetchPayouts}
-          className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors"
+          className="px-4 py-2 bg-[var(--danger)]/10 hover:bg-[var(--danger)]/15 text-[var(--danger)] text-xs font-medium rounded-lg transition-colors"
         >
           Повторить
         </button>
@@ -161,30 +159,30 @@ export function PayoutsManager() {
     <div className="space-y-6">
       {/* Статистика выплат */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-[var(--text-primary)]">{stats.totalPayouts}</div>
-            <div className="text-[var(--text-muted)] text-sm">Всего выплат</div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4 text-center">
+            <div className="text-xl font-bold font-mono text-[var(--text-primary)]">{stats.totalPayouts}</div>
+            <div className="text-[var(--text-muted)] text-xs">Всего выплат</div>
           </div>
-          <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-green-400">{stats.completedPayouts}</div>
-            <div className="text-[var(--text-muted)] text-sm">Выполнено</div>
+          <div className="bg-[var(--success)]/8 border border-[var(--success)]/15 rounded-lg p-4 text-center">
+            <div className="text-xl font-bold font-mono text-[var(--success)]">{stats.completedPayouts}</div>
+            <div className="text-[var(--text-muted)] text-xs">Выполнено</div>
           </div>
-          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-yellow-400">{stats.pendingPayouts}</div>
-            <div className="text-[var(--text-muted)] text-sm">Ожидают</div>
+          <div className="bg-[var(--warning)]/8 border border-[var(--warning)]/15 rounded-lg p-4 text-center">
+            <div className="text-xl font-bold font-mono text-[var(--warning)]">{stats.pendingPayouts}</div>
+            <div className="text-[var(--text-muted)] text-xs">Ожидают</div>
           </div>
-          <div className="bg-[var(--accent)]/10 border border-[var(--accent)]/30 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-[var(--accent)]">
-              {stats.totalPaid.toLocaleString('ru-RU')} ₽
+          <div className="bg-[var(--accent)]/8 border border-[var(--accent)]/15 rounded-lg p-4 text-center">
+            <div className="text-xl font-bold font-mono text-[var(--accent)]">
+              {stats.totalPaid.toLocaleString('ru-RU')} &#8381;
             </div>
-            <div className="text-[var(--text-muted)] text-sm">Выплачено</div>
+            <div className="text-[var(--text-muted)] text-xs">Выплачено</div>
           </div>
-          <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-orange-400">
-              {stats.pendingAmount.toLocaleString('ru-RU')} ₽
+          <div className="bg-[var(--warning)]/8 border border-[var(--warning)]/15 rounded-lg p-4 text-center">
+            <div className="text-xl font-bold font-mono text-[var(--warning)]">
+              {stats.pendingAmount.toLocaleString('ru-RU')} &#8381;
             </div>
-            <div className="text-[var(--text-muted)] text-sm">Ожидают выплаты</div>
+            <div className="text-[var(--text-muted)] text-xs">Ожидают выплаты</div>
           </div>
         </div>
       )}
@@ -192,7 +190,7 @@ export function PayoutsManager() {
       {/* Таблица выплат */}
       <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-bold text-[var(--text-primary)]">Выплаты партнерам</h3>
+          <h3 className="text-sm font-semibold text-[var(--text-primary)]">Выплаты партнерам</h3>
           <button
             onClick={fetchPayouts}
             className="px-4 py-2 bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] text-[var(--text-primary)] rounded-lg transition-colors"
