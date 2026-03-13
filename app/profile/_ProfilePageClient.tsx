@@ -1,21 +1,64 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Logo from '@/components/shared/Logo';
 import Link from 'next/link';
-import { Sun, Moon } from 'lucide-react';
+import {
+  User, Mail, Phone, Mountain, Fish, Camera, Footprints,
+  Waves, Binoculars, ChevronRight, Save, AlertCircle, CheckCircle,
+  type LucideIcon,
+} from 'lucide-react';
 import { Protected } from '@/components/auth/Protected';
 import { LoadingSpinner } from '@/components/admin/shared';
-import { useTheme } from '@/contexts/ThemeContext';
 import { User as UserType } from '@/types';
 import BottomNav from '@/components/shared/BottomNav';
 
+/* ── Interest chips ── */
+interface InterestDef { key: string; label: string; icon: LucideIcon }
+const INTERESTS: InterestDef[] = [
+  { key: 'вулканы', label: 'Вулканы', icon: Mountain },
+  { key: 'рыбалка', label: 'Рыбалка', icon: Fish },
+  { key: 'фототуры', label: 'Фототуры', icon: Camera },
+  { key: 'трекинг', label: 'Трекинг', icon: Footprints },
+  { key: 'каякинг', label: 'Каякинг', icon: Waves },
+  { key: 'наблюдение за животными', label: 'Животные', icon: Binoculars },
+];
+
+const DIFFICULTY_LABELS = {
+  easy: 'Легкий',
+  medium: 'Средний',
+  hard: 'Сложный',
+} as const;
+
+/* ── Helpers ── */
+function getRoleLabel(role: string): string {
+  const map: Record<string, string> = {
+    tourist: 'Турист',
+    operator: 'Оператор',
+    guide: 'Гид',
+    agent: 'Агент',
+    transfer: 'Трансфер',
+    admin: 'Администратор',
+  };
+  return map[role] ?? role;
+}
+
+function getRoleHubPath(role: string): string {
+  const map: Record<string, string> = {
+    tourist: '/hub/tourist',
+    operator: '/hub/operator',
+    guide: '/hub/guide',
+    agent: '/hub/agent',
+    transfer: '/hub/transfer-operator',
+    admin: '/hub/admin',
+  };
+  return map[role] ?? '/';
+}
+
 export default function ProfilePageClient() {
-  const { isDark, toggleTheme } = useTheme();
   const [user, setUser] = useState<UserType | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -25,26 +68,21 @@ export default function ProfilePageClient() {
       interests: [] as string[],
       budget: { min: 5000, max: 50000 },
       difficulty: 'medium' as 'easy' | 'medium' | 'hard',
-      groupSize: 2
-    }
+      groupSize: 2,
+    },
   });
 
-  useEffect(() => {
-    fetchProfile();
-  }, []);
+  useEffect(() => { fetchProfile(); }, []);
 
   const fetchProfile = async () => {
     try {
       setLoading(true);
       const response = await fetch('/api/profile');
       const result = await response.json();
-
-      if (!result.success) {
-        throw new Error(result.error ?? 'Ошибка загрузки профиля');
-      }
+      if (!result.success) throw new Error(result.error ?? 'Ошибка загрузки профиля');
 
       const data = result.data;
-      const loadedUser: UserType = {
+      const loaded: UserType = {
         id: data.id,
         email: data.email,
         name: data.name,
@@ -59,16 +97,15 @@ export default function ProfilePageClient() {
         createdAt: new Date(data.createdAt),
         updatedAt: new Date(data.updatedAt),
       };
-
-      setUser(loadedUser);
+      setUser(loaded);
       setFormData({
-        name: loadedUser.name,
-        email: loadedUser.email,
+        name: loaded.name,
+        email: loaded.email,
         phone: data.phone ?? '',
-        preferences: loadedUser.preferences,
+        preferences: loaded.preferences,
       });
     } catch {
-      setMessage('Ошибка загрузки профиля');
+      setMessage({ text: 'Ошибка загрузки профиля', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -78,7 +115,6 @@ export default function ProfilePageClient() {
     e.preventDefault();
     setSaving(true);
     setMessage(null);
-
     try {
       const response = await fetch('/api/profile', {
         method: 'PUT',
@@ -89,42 +125,34 @@ export default function ProfilePageClient() {
           preferences: formData.preferences,
         }),
       });
-
       const result = await response.json();
-      if (!result.success) {
-        throw new Error(result.error ?? 'Ошибка сохранения');
-      }
-
-      setMessage('Профиль успешно обновлён');
-      setTimeout(() => setMessage(null), 3000);
+      if (!result.success) throw new Error(result.error ?? 'Ошибка сохранения');
+      setMessage({ text: 'Профиль успешно обновлён', type: 'success' });
+      setTimeout(() => setMessage(null), 4000);
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Ошибка сохранения профиля');
+      setMessage({ text: err instanceof Error ? err.message : 'Ошибка сохранения', type: 'error' });
     } finally {
       setSaving(false);
     }
   };
 
-  const handleInterestToggle = (interest: string) => {
+  const toggleInterest = (key: string) => {
     setFormData(prev => ({
       ...prev,
       preferences: {
         ...prev.preferences,
-        interests: prev.preferences.interests.includes(interest)
-          ? prev.preferences.interests.filter(i => i !== interest)
-          : [...prev.preferences.interests, interest]
-      }
+        interests: prev.preferences.interests.includes(key)
+          ? prev.preferences.interests.filter(i => i !== key)
+          : [...prev.preferences.interests, key],
+      },
     }));
   };
 
-  const popularInterests = [
-    'Вулканы', 'Рыбалка', 'Хели-туры', 'Фототуры', 
-    'Трекинг', 'Дайвинг', 'Каякинг', 'Наблюдение за животными'
-  ];
-
+  /* ── Loading ── */
   if (loading) {
     return (
       <Protected roles={['tourist', 'operator', 'agent', 'guide', 'transfer', 'admin']}>
-        <div className="min-h-screen bg-transparent flex items-center justify-center">
+        <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center">
           <LoadingSpinner message="Загрузка профиля..." />
         </div>
       </Protected>
@@ -133,106 +161,143 @@ export default function ProfilePageClient() {
 
   return (
     <Protected roles={['tourist', 'operator', 'agent', 'guide', 'transfer', 'admin']}>
-      <main className="min-h-screen bg-transparent text-[var(--text-primary)] pb-24 md:pb-0">
-        {/* Навигационная шапка */}
-        <header className="bg-[var(--bg-card)] border-b border-[var(--border)] sticky top-0 z-50">
-          <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-            <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
-              <Logo size={28} />
-            </Link>
-            <h1 className="text-lg font-bold text-[var(--text-primary)]">Мой профиль</h1>
-            <button onClick={toggleTheme} className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors" aria-label="Переключить тему">
-              {isDark ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
-          </div>
-        </header>
+      <main className="min-h-screen bg-[var(--bg-primary)] pb-24 md:pb-8">
+        <div className="max-w-2xl mx-auto px-4 py-6 lg:py-8">
 
-        <div className="max-w-4xl mx-auto px-6 py-8">
+          {/* ─── Page header ─── */}
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-lg font-semibold text-[var(--text-primary)] tracking-tight">Мой профиль</h1>
+              {user && (
+                <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                  {getRoleLabel(user.role)}
+                </p>
+              )}
+            </div>
+            {user && (
+              <Link
+                href={getRoleHubPath(user.role)}
+                className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-[var(--accent)] bg-[var(--accent)]/10 rounded-lg hover:bg-[var(--accent)]/15 transition-colors"
+              >
+                Личный кабинет <ChevronRight className="w-3 h-3" />
+              </Link>
+            )}
+          </div>
+
+          {/* ─── Message banner ─── */}
           {message && (
-            <div className={`mb-6 p-4 rounded-xl ${
-              message.includes('успешно')
-                ? 'bg-green-500/20 border border-green-500/50 text-green-400'
-                : 'bg-red-500/20 border border-red-500/50 text-red-400'
+            <div className={`flex items-center gap-2 px-3.5 py-2.5 mb-5 text-xs font-medium rounded-lg border ${
+              message.type === 'success'
+                ? 'bg-[var(--success)]/8 border-[var(--success)]/15 text-[var(--success)]'
+                : 'bg-[var(--danger)]/8 border-[var(--danger)]/15 text-[var(--danger)]'
             }`}>
-              {message}
+              {message.type === 'success'
+                ? <CheckCircle className="w-3.5 h-3.5 shrink-0" />
+                : <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+              }
+              {message.text}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Личные данные */}
-            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
-              <h2 className="text-2xl font-bold mb-6">Личные данные</h2>
-              
-              <div className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
+
+            {/* ─── Personal info ─── */}
+            <section className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden">
+              <div className="px-4 py-3 border-b border-[var(--border)]">
+                <h2 className="text-xs font-semibold text-[var(--text-primary)]">Личные данные</h2>
+              </div>
+              <div className="p-4 space-y-3">
+                {/* Name */}
                 <div>
-                  <label htmlFor="profile-name" className="block text-[var(--text-muted)] mb-2">Имя</label>
+                  <label htmlFor="profile-name" className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.06em] font-medium text-[var(--text-muted)] mb-1.5">
+                    <User className="w-3 h-3" /> Имя
+                  </label>
                   <input
                     id="profile-name"
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/60"
+                    className="w-full px-3 py-2 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/40 focus:border-[var(--accent)]/40 transition-colors"
                     required
                   />
                 </div>
 
+                {/* Email */}
                 <div>
-                  <label htmlFor="profile-email" className="block text-[var(--text-muted)] mb-2">Email</label>
+                  <label htmlFor="profile-email" className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.06em] font-medium text-[var(--text-muted)] mb-1.5">
+                    <Mail className="w-3 h-3" /> Email
+                  </label>
                   <input
                     id="profile-email"
                     type="email"
                     value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/60"
-                    required
+                    disabled
+                    className="w-full px-3 py-2 bg-[var(--bg-hover)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-muted)] cursor-not-allowed"
                   />
+                  <p className="text-[10px] text-[var(--text-muted)] mt-1">Email нельзя изменить</p>
                 </div>
 
+                {/* Phone */}
                 <div>
-                  <label htmlFor="profile-phone" className="block text-[var(--text-muted)] mb-2">Телефон</label>
+                  <label htmlFor="profile-phone" className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.06em] font-medium text-[var(--text-muted)] mb-1.5">
+                    <Phone className="w-3 h-3" /> Телефон
+                  </label>
                   <input
                     id="profile-phone"
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     placeholder="+7 (XXX) XXX-XX-XX"
-                    className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/60"
+                    className="w-full px-3 py-2 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/40 focus:border-[var(--accent)]/40 transition-colors"
                   />
                 </div>
               </div>
-            </div>
+            </section>
 
-            {/* Предпочтения */}
-            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
-              <h2 className="text-2xl font-bold mb-6">Предпочтения</h2>
-              
-              {/* Интересы */}
-              <div className="mb-6">
-                <span className="block text-[var(--text-muted)] mb-3">Интересы</span>
-                <div className="flex flex-wrap gap-2">
-                  {popularInterests.map((interest) => (
-                    <button
-                      key={interest}
-                      type="button"
-                      onClick={() => handleInterestToggle(interest.toLowerCase())}
-                      className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
-                        formData.preferences.interests.includes(interest.toLowerCase())
-                          ? 'bg-[var(--accent)] text-[var(--bg-card)]'
-                          : 'bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] text-[var(--text-primary)]'
-                      }`}
-                    >
-                      {interest}
-                    </button>
-                  ))}
+            {/* ─── Interests ─── */}
+            <section className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden">
+              <div className="px-4 py-3 border-b border-[var(--border)]">
+                <h2 className="text-xs font-semibold text-[var(--text-primary)]">Интересы</h2>
+              </div>
+              <div className="p-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {INTERESTS.map((item) => {
+                    const active = formData.preferences.interests.includes(item.key);
+                    const Icon = item.icon;
+                    return (
+                      <button
+                        key={item.key}
+                        type="button"
+                        onClick={() => toggleInterest(item.key)}
+                        className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-medium transition-all ${
+                          active
+                            ? 'bg-[var(--accent)] text-white shadow-sm'
+                            : 'bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/30 hover:text-[var(--text-primary)]'
+                        }`}
+                      >
+                        <Icon className="w-3.5 h-3.5 shrink-0" />
+                        {item.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
+            </section>
 
-              {/* Бюджет */}
-              <div className="mb-6">
-                <span className="block text-[var(--text-muted)] mb-3">
-                  Бюджет на путешествие: {formData.preferences.budget.min.toLocaleString('ru-RU')} - {formData.preferences.budget.max.toLocaleString('ru-RU')} ₽
-                </span>
-                <div className="flex gap-4">
+            {/* ─── Preferences ─── */}
+            <section className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden">
+              <div className="px-4 py-3 border-b border-[var(--border)]">
+                <h2 className="text-xs font-semibold text-[var(--text-primary)]">Настройки путешествий</h2>
+              </div>
+              <div className="p-4 space-y-5">
+                {/* Budget */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] uppercase tracking-[0.06em] font-medium text-[var(--text-muted)]">Бюджет</span>
+                    <span className="text-xs font-semibold text-[var(--text-primary)] font-mono">
+                      {formData.preferences.budget.max.toLocaleString('ru-RU')} &#8381;
+                    </span>
+                  </div>
                   <input
                     type="range"
                     min="5000"
@@ -243,45 +308,76 @@ export default function ProfilePageClient() {
                       ...formData,
                       preferences: {
                         ...formData.preferences,
-                        budget: { ...formData.preferences.budget, max: Number(e.target.value) }
-                      }
+                        budget: { ...formData.preferences.budget, max: Number(e.target.value) },
+                      },
                     })}
-                    className="flex-1"
+                    className="w-full h-1.5 bg-[var(--bg-hover)] rounded-full appearance-none cursor-pointer accent-[var(--accent)]"
                   />
+                  <div className="flex justify-between text-[10px] text-[var(--text-muted)] mt-1 font-mono">
+                    <span>5 000 &#8381;</span>
+                    <span>200 000 &#8381;</span>
+                  </div>
+                </div>
+
+                {/* Difficulty */}
+                <div>
+                  <span className="text-[10px] uppercase tracking-[0.06em] font-medium text-[var(--text-muted)] mb-2 block">Сложность</span>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(Object.entries(DIFFICULTY_LABELS) as [keyof typeof DIFFICULTY_LABELS, string][]).map(([key, label]) => (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setFormData({
+                          ...formData,
+                          preferences: { ...formData.preferences, difficulty: key },
+                        })}
+                        className={`px-3 py-2.5 rounded-lg text-xs font-medium transition-all ${
+                          formData.preferences.difficulty === key
+                            ? 'bg-[var(--accent)] text-white shadow-sm'
+                            : 'bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/30'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Group size */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] uppercase tracking-[0.06em] font-medium text-[var(--text-muted)]">Размер группы</span>
+                    <span className="text-xs font-semibold text-[var(--text-primary)] font-mono">
+                      {formData.preferences.groupSize} чел.
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="20"
+                    step="1"
+                    value={formData.preferences.groupSize}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      preferences: { ...formData.preferences, groupSize: Number(e.target.value) },
+                    })}
+                    className="w-full h-1.5 bg-[var(--bg-hover)] rounded-full appearance-none cursor-pointer accent-[var(--accent)]"
+                  />
+                  <div className="flex justify-between text-[10px] text-[var(--text-muted)] mt-1 font-mono">
+                    <span>1</span>
+                    <span>20</span>
+                  </div>
                 </div>
               </div>
+            </section>
 
-              {/* Сложность */}
-              <div>
-                <span className="block text-[var(--text-muted)] mb-3">Предпочитаемая сложность</span>
-                <div className="flex gap-3">
-                  {(['easy', 'medium', 'hard'] as const).map((diff) => (
-                    <button
-                      key={diff}
-                      type="button"
-                      onClick={() => setFormData({
-                        ...formData,
-                        preferences: { ...formData.preferences, difficulty: diff }
-                      })}
-                      className={`flex-1 px-4 py-3 rounded-xl font-semibold transition-colors ${
-                        formData.preferences.difficulty === diff
-                          ? 'bg-[var(--accent)] text-[var(--bg-card)]'
-                          : 'bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] text-[var(--text-primary)]'
-                      }`}
-                    >
-                      {diff === 'easy' ? 'Легкий' : diff === 'medium' ? 'Средний' : 'Сложный'}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Кнопка сохранения */}
+            {/* ─── Save button ─── */}
             <button
               type="submit"
               disabled={saving}
-              className="w-full px-8 py-4 bg-[var(--accent)] hover:bg-[var(--accent)]/80 text-[var(--bg-card)] font-bold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-lg"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[var(--accent)] text-white font-medium text-sm rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
             >
+              <Save className="w-4 h-4" />
               {saving ? 'Сохранение...' : 'Сохранить изменения'}
             </button>
           </form>
@@ -292,4 +388,3 @@ export default function ProfilePageClient() {
     </Protected>
   );
 }
-
