@@ -2,43 +2,151 @@
 
 import { useState, useEffect } from 'react';
 import { Protected } from '@/components/auth/Protected';
-import { User, Loader2, Save, Lock } from 'lucide-react';
+import { User, Loader2, Save, Lock, AlertCircle, CheckCircle } from 'lucide-react';
 
 const INPUT_CLASS =
   'w-full min-h-[44px] px-4 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]';
 
+const INPUT_READONLY_CLASS =
+  'w-full min-h-[44px] px-4 bg-[var(--bg-hover)] border border-[var(--border)] rounded-xl text-[var(--text-secondary)] cursor-not-allowed select-none';
+
+interface TouristProfile {
+  full_name: string | null;
+  phone: string | null;
+  bio: string | null;
+}
+
+interface ApiSuccess<T> {
+  success: true;
+  data: T;
+}
+
+interface ApiError {
+  success: false;
+  error: string;
+}
+
+type ApiResult<T> = ApiSuccess<T> | ApiError;
+
+interface ProfileApiData {
+  profile: TouristProfile;
+}
+
+interface MeApiData {
+  email: string;
+  name: string;
+}
+
+function isApiSuccess<T>(res: ApiResult<T>): res is ApiSuccess<T> {
+  return res.success === true;
+}
+
+async function fetchJson<T>(url: string, options?: RequestInit): Promise<ApiResult<T>> {
+  const response = await fetch(url, options);
+  const json: unknown = await response.json();
+
+  if (
+    typeof json === 'object' &&
+    json !== null &&
+    'success' in json
+  ) {
+    return json as ApiResult<T>;
+  }
+
+  return { success: false, error: 'Неожиданный формат ответа от сервера' };
+}
+
 export default function ProfileClient() {
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
-  // Данные профиля
+  // Profile fields
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [bio, setBio] = useState('');
 
-  // Смена пароля
-  const [oldPassword, setOldPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  // Save state
+  const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
-  // Имитация загрузки профиля
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setName('Иван Петров');
-      setEmail('ivan@example.com');
-      setPhone('+7 900 123-45-67');
-      setLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
+    let cancelled = false;
+
+    async function loadProfile() {
+      setLoading(true);
+      setFetchError(null);
+
+      try {
+        const [profileResult, meResult] = await Promise.all([
+          fetchJson<ProfileApiData>('/api/tourist/profile'),
+          fetchJson<MeApiData>('/api/auth/me'),
+        ]);
+
+        if (cancelled) return;
+
+        if (!isApiSuccess(profileResult)) {
+          setFetchError(profileResult.error ?? 'Ошибка при загрузке профиля');
+          setLoading(false);
+          return;
+        }
+
+        if (!isApiSuccess(meResult)) {
+          setFetchError(meResult.error ?? 'Ошибка при загрузке данных пользователя');
+          setLoading(false);
+          return;
+        }
+
+        const profile = profileResult.data.profile;
+        setName(profile.full_name ?? '');
+        setPhone(profile.phone ?? '');
+        setBio(profile.bio ?? '');
+        setEmail(meResult.data.email ?? '');
+      } catch {
+        if (!cancelled) {
+          setFetchError('Не удалось загрузить профиль. Проверьте соединение.');
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    void loadProfile();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Отправка данных профиля на сервер
-  };
+    setSaving(true);
+    setSaveSuccess(false);
+    setSaveError(null);
 
-  const handleChangePassword = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Отправка запроса смены пароля
+    try {
+      const result = await fetchJson<TouristProfile>('/api/tourist/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          full_name: name.trim() || null,
+          phone: phone.trim() || null,
+          bio: bio.trim() || null,
+        }),
+      });
+
+      if (isApiSuccess(result)) {
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 4000);
+      } else {
+        setSaveError(result.error ?? 'Ошибка при сохранении профиля');
+      }
+    } catch {
+      setSaveError('Не удалось сохранить профиль. Проверьте соединение.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -58,11 +166,23 @@ export default function ProfileClient() {
               style={{ color: 'var(--accent)' }}
             />
           </div>
+        ) : fetchError ? (
+          <div
+            className="flex items-center gap-3 rounded-lg border p-5"
+            style={{
+              backgroundColor: 'var(--bg-card)',
+              borderColor: 'var(--danger)',
+              color: 'var(--danger)',
+            }}
+          >
+            <AlertCircle className="w-5 h-5 shrink-0" />
+            <span className="text-sm">{fetchError}</span>
+          </div>
         ) : (
           <div className="space-y-8">
-            {/* Основная информация */}
+            {/* Main profile form */}
             <form
-              onSubmit={handleSaveProfile}
+              onSubmit={(e) => { void handleSaveProfile(e); }}
               className="rounded-lg border p-6 space-y-5"
               style={{
                 backgroundColor: 'var(--bg-card)',
@@ -104,14 +224,20 @@ export default function ProfileClient() {
                   style={{ color: 'var(--text-secondary)' }}
                 >
                   Email
+                  <span
+                    className="ml-2 text-xs"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
+                    (только для чтения)
+                  </span>
                 </label>
                 <input
                   id="profile-email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="email@example.com"
-                  className={INPUT_CLASS}
+                  readOnly
+                  tabIndex={-1}
+                  className={INPUT_READONLY_CLASS}
                 />
               </div>
 
@@ -133,29 +259,79 @@ export default function ProfileClient() {
                 />
               </div>
 
+              <div>
+                <label
+                  htmlFor="profile-bio"
+                  className="block text-sm mb-1"
+                  style={{ color: 'var(--text-secondary)' }}
+                >
+                  О себе
+                </label>
+                <textarea
+                  id="profile-bio"
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  placeholder="Расскажите о себе"
+                  rows={3}
+                  className={`${INPUT_CLASS} resize-y py-3`}
+                />
+              </div>
+
+              {/* Save status messages */}
+              {saveSuccess && (
+                <div
+                  className="flex items-center gap-2 text-sm rounded-lg px-4 py-3"
+                  style={{
+                    backgroundColor: 'color-mix(in srgb, var(--success) 12%, transparent)',
+                    color: 'var(--success)',
+                    border: '1px solid color-mix(in srgb, var(--success) 30%, transparent)',
+                  }}
+                >
+                  <CheckCircle className="w-4 h-4 shrink-0" />
+                  Профиль успешно сохранён
+                </div>
+              )}
+              {saveError && (
+                <div
+                  className="flex items-center gap-2 text-sm rounded-lg px-4 py-3"
+                  style={{
+                    backgroundColor: 'color-mix(in srgb, var(--danger) 10%, transparent)',
+                    color: 'var(--danger)',
+                    border: '1px solid color-mix(in srgb, var(--danger) 30%, transparent)',
+                  }}
+                >
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  {saveError}
+                </div>
+              )}
+
               <button
                 type="submit"
-                className="flex items-center gap-2 min-h-[44px] px-6 rounded-xl font-medium text-sm transition-colors"
+                disabled={saving}
+                className="flex items-center gap-2 min-h-[44px] px-6 rounded-xl font-medium text-sm transition-colors disabled:opacity-60"
                 style={{
                   backgroundColor: 'var(--accent)',
                   color: '#fff',
                 }}
               >
-                <Save className="w-4 h-4" />
-                Сохранить
+                {saving ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+                {saving ? 'Сохранение...' : 'Сохранить'}
               </button>
             </form>
 
-            {/* Смена пароля */}
-            <form
-              onSubmit={handleChangePassword}
-              className="rounded-lg border p-6 space-y-5"
+            {/* Password section — no API available yet */}
+            <div
+              className="rounded-lg border p-6 space-y-4"
               style={{
                 backgroundColor: 'var(--bg-card)',
                 borderColor: 'var(--border)',
               }}
             >
-              <div className="flex items-center gap-3 mb-2">
+              <div className="flex items-center gap-3">
                 <Lock className="w-5 h-5" style={{ color: 'var(--warning)' }} />
                 <h2
                   className="text-lg font-semibold"
@@ -165,72 +341,14 @@ export default function ProfileClient() {
                 </h2>
               </div>
 
-              <div>
-                <label
-                  htmlFor="old-password"
-                  className="block text-sm mb-1"
-                  style={{ color: 'var(--text-secondary)' }}
-                >
-                  Текущий пароль
-                </label>
-                <input
-                  id="old-password"
-                  type="password"
-                  value={oldPassword}
-                  onChange={(e) => setOldPassword(e.target.value)}
-                  placeholder="Введите текущий пароль"
-                  className={INPUT_CLASS}
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="new-password"
-                  className="block text-sm mb-1"
-                  style={{ color: 'var(--text-secondary)' }}
-                >
-                  Новый пароль
-                </label>
-                <input
-                  id="new-password"
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Введите новый пароль"
-                  className={INPUT_CLASS}
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="confirm-password"
-                  className="block text-sm mb-1"
-                  style={{ color: 'var(--text-secondary)' }}
-                >
-                  Подтвердите пароль
-                </label>
-                <input
-                  id="confirm-password"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Повторите новый пароль"
-                  className={INPUT_CLASS}
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="flex items-center gap-2 min-h-[44px] px-6 rounded-xl font-medium text-sm transition-colors"
-                style={{
-                  backgroundColor: 'var(--warning)',
-                  color: '#fff',
-                }}
+              <p
+                className="text-sm"
+                style={{ color: 'var(--text-secondary)' }}
               >
-                <Lock className="w-4 h-4" />
-                Изменить пароль
-              </button>
-            </form>
+                Смена пароля временно недоступна. Для изменения пароля обратитесь
+                в&nbsp;службу поддержки.
+              </p>
+            </div>
           </div>
         )}
       </div>

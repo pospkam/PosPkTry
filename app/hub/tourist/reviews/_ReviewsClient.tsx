@@ -1,19 +1,56 @@
 'use client';
 
+import { useState, useCallback } from 'react';
 import { Protected } from '@/components/auth/Protected';
-import { MessageSquare, Star, Loader2 } from 'lucide-react';
+import {
+  MessageSquare,
+  Star,
+  Loader2,
+  Plus,
+  X,
+  CheckCircle,
+} from 'lucide-react';
 import { useApiFetch } from '@/hooks/use-api-fetch';
 
 interface Review {
   id: string;
+  tourId: string | null;
   tourName: string | null;
   rating: number;
   comment: string;
   createdAt: string;
 }
 
-interface ReviewsApiResponse {
+interface ReviewsApiData {
   reviews: Review[];
+  total: number;
+}
+
+interface TourOption {
+  id: string;
+  name: string;
+}
+
+interface ToursApiData {
+  tours: TourOption[];
+  pagination: unknown;
+}
+
+interface FormState {
+  tourId: string;
+  rating: number;
+  comment: string;
+}
+
+const EMPTY_FORM: FormState = { tourId: '', rating: 0, comment: '' };
+
+// Defined outside component for stable references — prevents useApiFetch re-fetch loop
+function transformReviews(d: ReviewsApiData): Review[] {
+  return (d?.reviews ?? []).map((r) => ({ ...r, comment: r.comment ?? '' }));
+}
+
+function transformTours(d: ToursApiData): TourOption[] {
+  return (d?.tours ?? []).map((t) => ({ id: t.id, name: t.name }));
 }
 
 function StarRating({ rating }: { rating: number }) {
@@ -33,11 +70,138 @@ function StarRating({ rating }: { rating: number }) {
   );
 }
 
+interface StarSelectorProps {
+  value: number;
+  onChange: (val: number) => void;
+}
+
+function StarSelector({ value, onChange }: StarSelectorProps) {
+  const [hovered, setHovered] = useState(0);
+  return (
+    <div className="flex gap-0.5">
+      {Array.from({ length: 5 }).map((_, i) => {
+        const starVal = i + 1;
+        const filled = hovered > 0 ? starVal <= hovered : starVal <= value;
+        return (
+          <button
+            key={`sel-star-${i}`}
+            type="button"
+            onClick={() => onChange(starVal)}
+            onMouseEnter={() => setHovered(starVal)}
+            onMouseLeave={() => setHovered(0)}
+            className="p-1 rounded transition-transform hover:scale-110"
+            aria-label={`Оценка ${starVal}`}
+          >
+            <Star
+              className="w-6 h-6"
+              style={{
+                color: filled ? 'var(--warning)' : 'var(--text-muted)',
+                transition: 'color 0.1s',
+              }}
+              fill={filled ? 'currentColor' : 'none'}
+            />
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function ReviewsClient() {
-  const { data: reviews, loading, error } = useApiFetch<ReviewsApiResponse, Review[]>(
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+
+  const {
+    data: reviews,
+    loading,
+    error,
+    refetch: refetchReviews,
+  } = useApiFetch<ReviewsApiData, Review[]>(
     '/api/reviews/my',
-    (d) => (d?.reviews ?? []).map((r) => ({ ...r, comment: r.comment ?? '' })),
+    transformReviews,
     { errorMessage: 'Не удалось загрузить отзывы' },
+  );
+
+  const {
+    data: tours,
+    loading: toursLoading,
+    refetch: fetchTours,
+  } = useApiFetch<ToursApiData, TourOption[]>(
+    '/api/tours',
+    transformTours,
+    { errorMessage: 'Не удалось загрузить список туров', skip: true },
+  );
+
+  const handleOpenForm = useCallback(() => {
+    setShowForm(true);
+    setForm(EMPTY_FORM);
+    setSubmitError('');
+    void fetchTours();
+  }, [fetchTours]);
+
+  const handleCloseForm = useCallback(() => {
+    setShowForm(false);
+    setForm(EMPTY_FORM);
+    setSubmitError('');
+  }, []);
+
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+
+      if (!form.tourId) {
+        setSubmitError('Выберите тур');
+        return;
+      }
+      if (form.rating === 0) {
+        setSubmitError('Выберите оценку (от 1 до 5 звёзд)');
+        return;
+      }
+      if (form.comment.trim().length < 10) {
+        setSubmitError('Комментарий должен содержать не менее 10 символов');
+        return;
+      }
+
+      setSubmitting(true);
+      setSubmitError('');
+
+      try {
+        const res = await fetch('/api/reviews', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tourId: form.tourId,
+            rating: form.rating,
+            comment: form.comment.trim(),
+          }),
+        });
+
+        const json = (await res.json()) as {
+          success: boolean;
+          error?: string;
+          message?: string;
+        };
+
+        if (!json.success) {
+          setSubmitError(json.error ?? 'Ошибка при отправке отзыва');
+          return;
+        }
+
+        setShowForm(false);
+        setForm(EMPTY_FORM);
+        setSuccessMessage('Отзыв добавлен');
+        setTimeout(() => setSuccessMessage(''), 4000);
+        await refetchReviews();
+      } catch {
+        setSubmitError('Не удалось отправить отзыв. Проверьте соединение.');
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [form, refetchReviews],
   );
 
   const list = reviews ?? [];
@@ -45,13 +209,176 @@ export default function ReviewsClient() {
   return (
     <Protected roles={['tourist', 'admin']}>
       <div className="max-w-5xl mx-auto p-6">
-        <h1
-          className="text-2xl font-semibold mb-6"
-          style={{ color: 'var(--text-primary)' }}
-        >
-          Мои отзывы
-        </h1>
+        {/* Header row */}
+        <div className="flex items-center justify-between mb-6">
+          <h1
+            className="text-2xl font-semibold"
+            style={{ color: 'var(--text-primary)' }}
+          >
+            Мои отзывы
+          </h1>
+          {!showForm && (
+            <button
+              onClick={handleOpenForm}
+              className="ds-btn ds-btn-primary flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Написать отзыв
+            </button>
+          )}
+        </div>
 
+        {/* Success banner */}
+        {successMessage && (
+          <div
+            className="flex items-center gap-2 mb-4 px-4 py-3 rounded-lg border"
+            style={{
+              backgroundColor: 'var(--bg-card)',
+              borderColor: 'var(--success)',
+              color: 'var(--success)',
+            }}
+          >
+            <CheckCircle className="w-5 h-5 flex-shrink-0" />
+            <span className="text-sm font-medium">{successMessage}</span>
+          </div>
+        )}
+
+        {/* Inline write-review form */}
+        {showForm && (
+          <div
+            className="rounded-lg border mb-6 p-5"
+            style={{
+              backgroundColor: 'var(--bg-card)',
+              borderColor: 'var(--border)',
+            }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2
+                className="font-semibold text-lg"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                Новый отзыв
+              </h2>
+              <button
+                onClick={handleCloseForm}
+                type="button"
+                className="p-1 rounded hover:opacity-70 transition-opacity"
+                style={{ color: 'var(--text-muted)' }}
+                aria-label="Закрыть форму"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+              {/* Tour selector */}
+              <div>
+                <label
+                  className="ds-label block mb-1"
+                  htmlFor="review-tour"
+                >
+                  Тур
+                </label>
+                {toursLoading ? (
+                  <div
+                    className="flex items-center gap-2 text-sm"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Загрузка списка туров...
+                  </div>
+                ) : (
+                  <select
+                    id="review-tour"
+                    className="ds-input w-full"
+                    value={form.tourId}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, tourId: e.target.value }))
+                    }
+                  >
+                    <option value="">Выберите тур</option>
+                    {(tours ?? []).map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              {/* Star rating */}
+              <div>
+                <label className="ds-label block mb-2">Оценка</label>
+                <StarSelector
+                  value={form.rating}
+                  onChange={(v) => setForm((f) => ({ ...f, rating: v }))}
+                />
+              </div>
+
+              {/* Comment */}
+              <div>
+                <label
+                  className="ds-label block mb-1"
+                  htmlFor="review-comment"
+                >
+                  Комментарий
+                </label>
+                <textarea
+                  id="review-comment"
+                  className="ds-input w-full resize-none"
+                  rows={4}
+                  placeholder="Поделитесь впечатлениями о туре (минимум 10 символов)"
+                  value={form.comment}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, comment: e.target.value }))
+                  }
+                  maxLength={5000}
+                />
+                <div
+                  className="text-right text-xs mt-1"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  {form.comment.length} / 5000
+                </div>
+              </div>
+
+              {/* Validation / API error */}
+              {submitError && (
+                <p className="text-sm" style={{ color: 'var(--danger)' }}>
+                  {submitError}
+                </p>
+              )}
+
+              {/* Form actions */}
+              <div className="flex gap-3">
+                <button
+                  type="submit"
+                  className="ds-btn ds-btn-primary flex items-center gap-2"
+                  disabled={submitting}
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Отправка...
+                    </>
+                  ) : (
+                    'Отправить отзыв'
+                  )}
+                </button>
+                <button
+                  type="button"
+                  className="ds-btn ds-btn-secondary"
+                  onClick={handleCloseForm}
+                  disabled={submitting}
+                >
+                  Отмена
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Reviews list */}
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2
@@ -75,10 +402,7 @@ export default function ReviewsClient() {
               className="w-16 h-16 mb-4"
               style={{ color: 'var(--text-muted)' }}
             />
-            <p
-              className="text-lg"
-              style={{ color: 'var(--text-muted)' }}
-            >
+            <p className="text-lg" style={{ color: 'var(--text-muted)' }}>
               У вас пока нет отзывов
             </p>
           </div>
