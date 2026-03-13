@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { AgentMetricsGrid } from '@/components/agent/Dashboard/AgentMetricsGrid';
 import { RecentClientsTable } from '@/components/agent/Dashboard/RecentClientsTable';
 import { UpcomingBookingsTable } from '@/components/agent/Dashboard/UpcomingBookingsTable';
@@ -14,6 +15,7 @@ const QUICK_ACTIONS = [
 ];
 
 export default function AgentDashboardClient() {
+  const router = useRouter();
   const [period, setPeriod] = useState('30');
 
   return (
@@ -55,7 +57,7 @@ export default function AgentDashboardClient() {
             const Icon = action.icon;
             return (
               <button key={action.href}
-                onClick={() => window.location.href = action.href}
+                onClick={() => router.push(action.href)}
                 className="flex flex-col items-center gap-2 p-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-md hover:bg-[var(--bg-hover)] transition-colors text-center">
                 <Icon className="w-4 h-4 text-[var(--text-muted)]" />
                 <span className="text-xs text-[var(--text-secondary)]">{action.label}</span>

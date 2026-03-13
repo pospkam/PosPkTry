@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { TransferOperatorMetricsGrid } from '@/components/transfer-operator/Dashboard/TransferOperatorMetricsGrid';
 import { Bus, UserPlus, ClipboardList, BarChart3 } from 'lucide-react';
 
@@ -12,6 +13,7 @@ const QUICK_ACTIONS = [
 ];
 
 export default function TransferOperatorDashboardClient() {
+  const router = useRouter();
   const [period, setPeriod] = useState('30');
 
   return (
@@ -47,7 +49,7 @@ export default function TransferOperatorDashboardClient() {
             const Icon = action.icon;
             return (
               <button key={action.href}
-                onClick={() => window.location.href = action.href}
+                onClick={() => router.push(action.href)}
                 className="flex flex-col items-center gap-2 p-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-md hover:bg-[var(--bg-hover)] transition-colors text-center">
                 <Icon className="w-4 h-4 text-[var(--text-muted)]" />
                 <span className="text-xs text-[var(--text-secondary)]">{action.label}</span>

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { DataTable } from '@/components/admin/shared/DataTable';
 import { LoadingSpinner } from '@/components/admin/shared/LoadingSpinner';
 import { StatusBadge } from '@/components/admin/shared/StatusBadge';
@@ -26,6 +27,7 @@ interface AgentClient {
 }
 
 export default function AgentClientsPageClient() {
+  const router = useRouter();
   const [clients, setClients] = useState<AgentClient[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -156,7 +158,7 @@ export default function AgentClientsPageClient() {
             Изменить
           </button>
           <button
-            onClick={() => (window.location.href = `/hub/agent/bookings?clientId=${client.id}`)}
+            onClick={() => router.push(`/hub/agent/bookings?clientId=${client.id}`)}
             className="px-3 py-1 bg-[var(--accent)] text-[var(--bg-card)] rounded text-sm transition-colors"
           >
             Бронирования
