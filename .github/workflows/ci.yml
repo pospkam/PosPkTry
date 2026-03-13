@@ -10,6 +10,11 @@ jobs:
   ci:
     runs-on: ubuntu-latest
 
+    env:
+      JWT_SECRET: test-jwt-secret-for-ci-only-not-used-in-production
+      DATABASE_URL: postgresql://user:password@localhost/test
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:3000
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
