@@ -2,12 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   User, Mail, Phone, Mountain, Fish, Camera, Footprints,
   Waves, Binoculars, ChevronRight, Save, AlertCircle, CheckCircle, House,
   type LucideIcon,
 } from 'lucide-react';
-import { Protected } from '@/components/auth/Protected';
+import { useAuth } from '@/contexts/AuthContext';
 import { LoadingSpinner } from '@/components/admin/shared';
 import { User as UserType } from '@/types';
 
@@ -54,6 +55,8 @@ function getRoleHubPath(role: string): string {
 }
 
 export default function ProfilePageClient() {
+  const router = useRouter();
+  const { user: authUser, isLoading: authLoading } = useAuth();
   const [user, setUser] = useState<UserType | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -71,7 +74,19 @@ export default function ProfilePageClient() {
     },
   });
 
-  useEffect(() => { fetchProfile(); }, []);
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !authUser) {
+      router.push('/auth/login');
+    }
+  }, [authLoading, authUser, router]);
+
+  // Only fetch profile after auth is confirmed
+  useEffect(() => {
+    if (!authLoading && authUser) {
+      fetchProfile();
+    }
+  }, [authLoading, authUser]);
 
   const fetchProfile = async () => {
     try {
@@ -147,20 +162,25 @@ export default function ProfilePageClient() {
     }));
   };
 
-  /* ── Loading ── */
+  /* ── Loading / auth check ── */
+  if (authLoading || !authUser) {
+    return (
+      <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center">
+        <LoadingSpinner message="Проверка доступа..." />
+      </div>
+    );
+  }
+
   if (loading) {
     return (
-      <Protected roles={['tourist', 'operator', 'agent', 'guide', 'transfer', 'admin']}>
-        <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center">
-          <LoadingSpinner message="Загрузка профиля..." />
-        </div>
-      </Protected>
+      <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center">
+        <LoadingSpinner message="Загрузка профиля..." />
+      </div>
     );
   }
 
   return (
-    <Protected roles={['tourist', 'operator', 'agent', 'guide', 'transfer', 'admin']}>
-      <main className="min-h-screen bg-[var(--bg-primary)] pb-8">
+    <main className="min-h-screen bg-[var(--bg-primary)] pb-8">
         <div className="max-w-2xl mx-auto px-4 py-6 lg:py-8">
 
           {/* ─── Page header ─── */}
@@ -391,6 +411,5 @@ export default function ProfilePageClient() {
           </form>
         </div>
       </main>
-    </Protected>
   );
 }
