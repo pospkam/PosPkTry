@@ -1271,3 +1271,71 @@ export interface ReviewForAnalysisRow {
   user_name: string | null;
   tour_name: string | null;
 }
+
+// ──────────────────────────────────────────────────────────
+// Chat System (conversations, participants, messages)
+// ──────────────────────────────────────────────────────────
+
+export interface ConversationRow {
+  id: string;
+  type: string;
+  subject: string | null;
+  booking_id: string | null;
+  tour_id: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ConversationParticipantRow {
+  id: string;
+  conversation_id: string;
+  user_id: string;
+  role: string;
+  joined_at: string;
+  last_read_at: string | null;
+  is_muted: boolean;
+  consent_given: boolean;
+}
+
+export interface ConversationMessageRow {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  content: string;
+  message_type: string;
+  attachments: unknown[];
+  is_deleted: boolean;
+  created_at: string;
+}
+
+/** Used by listConversations with LATERAL join for last message + unread count */
+export interface ConversationListRow {
+  id: string;
+  type: string;
+  subject: string | null;
+  booking_id: string | null;
+  tour_id: string | null;
+  created_at: string;
+  updated_at: string;
+  last_message_content: string | null;
+  last_message_at: string | null;
+  last_message_sender_id: string | null;
+  last_message_sender_name: string | null;
+  unread_count: string;
+  other_participant_name: string | null;
+  other_participant_role: string | null;
+  other_participant_id: string | null;
+}
+
+/** Used by getUnreadCounts — total unread per conversation */
+export interface UnreadCountRow {
+  conversation_id: string;
+  unread_count: string;
+}
+
+/** Used by messages query with sender info */
+export interface MessageWithSenderRow extends ConversationMessageRow {
+  sender_name: string;
+  sender_role: string;
+}

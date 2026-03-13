@@ -80,7 +80,7 @@ export function TokenImportForm({ onTokenSaved }: TokenImportFormProps) {
   return (
     <div className="max-w-md mx-auto p-6 bg-[var(--bg-card)] rounded-lg border border-[var(--border)]">
       <div className="flex items-center gap-3 mb-6">
-        <div className="p-3 bg-[var(--accent)]/20 rounded-xl">
+        <div className="p-3 bg-[var(--accent)]/20 rounded-lg">
           <Key className="w-6 h-6 text-[var(--accent)]" />
         </div>
         <div>
@@ -105,7 +105,7 @@ export function TokenImportForm({ onTokenSaved }: TokenImportFormProps) {
                 setError('');
               }}
               placeholder="Введите ваш API токен"
-              className="w-full px-4 py-3 pr-12 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)]/50"
+              className="w-full px-4 py-3 pr-12 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)]/50"
             />
             <button
               type="button"
@@ -118,14 +118,14 @@ export function TokenImportForm({ onTokenSaved }: TokenImportFormProps) {
         </div>
 
         {error && (
-          <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
+          <div className="flex items-center gap-2 p-3 bg-[var(--danger)]/15 border border-[var(--danger)]/20 rounded-lg text-[var(--danger)] text-sm">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
             {error}
           </div>
         )}
 
         {saved && (
-          <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/20 rounded-xl text-green-400 text-sm">
+          <div className="flex items-center gap-2 p-3 bg-[var(--success)]/15 border border-[var(--success)]/20 rounded-lg text-[var(--success)] text-sm">
             <Check className="w-4 h-4 flex-shrink-0" />
             Токен сохранён!
           </div>
@@ -135,14 +135,14 @@ export function TokenImportForm({ onTokenSaved }: TokenImportFormProps) {
           <button
             onClick={handleTest}
             disabled={!token.trim()}
-            className="flex-1 px-4 py-3 bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 px-4 py-3 bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Проверить
           </button>
           <button
             onClick={handleSave}
             disabled={!token.trim()}
-            className="flex-1 px-4 py-3 bg-[var(--accent)] hover:bg-[var(--accent)]/80 rounded-xl text-[var(--text-primary)] font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 px-4 py-3 bg-[var(--accent)] hover:bg-[var(--accent)]/80 rounded-lg text-[var(--text-primary)] font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Сохранить
           </button>

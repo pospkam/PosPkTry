@@ -87,7 +87,7 @@ export function AiAssistant() {
 
       {/* Modal */}
       <div
-        className="relative w-full max-w-lg mx-4 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl shadow-2xl overflow-hidden"
+        className="relative w-full max-w-lg mx-4 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg shadow-2xl overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { HubLayout } from '@/components/layout/HubLayout';
 import { AiAssistant } from '@/components/admin/AiAssistant';
+import { ChatWidget } from '@/components/chat/ChatWidget';
 
 const SIDEBAR_ITEMS = [
   { href: '/hub/admin', label: 'Обзор', icon: Shield },
@@ -33,6 +34,7 @@ export default function AdminHubLayout({ children }: { children: ReactNode }) {
     <HubLayout sidebarItems={SIDEBAR_ITEMS} sidebarTitle="Администрирование">
       {children}
       <AiAssistant />
+      <ChatWidget />
     </HubLayout>
   );
 }

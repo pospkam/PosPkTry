@@ -100,9 +100,12 @@ function DashboardContent() {
     setLoading(true);
     setError('');
     try {
-      const token =
-        localStorage.getItem('token') ??
-        localStorage.getItem('admin_token') ?? '';
+      const token = (() => {
+        try {
+          const u = JSON.parse(localStorage.getItem('user') ?? '{}');
+          return (u.token as string) ?? '';
+        } catch { return ''; }
+      })();
       const res = await fetch(`/api/partner/dashboard?period=${period}`, {
         headers: { Authorization: `Bearer ${token}` },
       });

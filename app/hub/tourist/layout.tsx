@@ -5,6 +5,7 @@ import {
   Compass, Calendar, Star, Heart, Award, MessageSquare, User, Bell,
 } from 'lucide-react';
 import { HubLayout } from '@/components/layout/HubLayout';
+import { ChatWidget } from '@/components/chat/ChatWidget';
 
 const SIDEBAR_ITEMS = [
   { href: '/hub/tourist', label: 'Обзор', icon: Compass },
@@ -21,6 +22,7 @@ export default function TouristLayout({ children }: { children: ReactNode }) {
   return (
     <HubLayout sidebarItems={SIDEBAR_ITEMS} sidebarTitle="Кабинет туриста">
       {children}
+      <ChatWidget />
     </HubLayout>
   );
 }

@@ -35,7 +35,7 @@ export function EmptyState({
     )}>
       {/* Icon */}
       <div className={clsx(
-        'rounded-xl bg-[var(--bg-hover)] flex items-center justify-center mb-4',
+        'rounded-lg bg-[var(--bg-hover)] flex items-center justify-center mb-4',
         compact ? 'w-10 h-10' : 'w-12 h-12',
       )}>
         {IconComponent ? (
@@ -80,7 +80,7 @@ export function EmptyState({
             'inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium transition-colors',
             action.variant === 'secondary'
               ? 'bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]'
-              : 'bg-[var(--accent)] text-white hover:opacity-90',
+              : 'bg-[var(--accent)] text-[var(--bg-primary)] hover:opacity-90',
           )}
         >
           {action.label}

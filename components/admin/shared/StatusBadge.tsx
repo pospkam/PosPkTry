@@ -22,50 +22,50 @@ export interface StatusBadgeProps {
 
 const statusConfig: Record<string, { color: string; bgColor: string; label: string; icon: LucideIcon }> = {
   success: {
-    color: 'text-green-400',
-    bgColor: 'bg-green-500/20',
+    color: 'text-[var(--success)]',
+    bgColor: 'bg-[var(--success)]/15',
     label: 'Успешно',
     icon: Check
   },
   warning: {
-    color: 'text-yellow-400',
-    bgColor: 'bg-yellow-500/20',
+    color: 'text-[var(--warning)]',
+    bgColor: 'bg-[var(--warning)]/15',
     label: 'Внимание',
     icon: AlertTriangle
   },
   error: {
-    color: 'text-red-400',
-    bgColor: 'bg-red-500/20',
+    color: 'text-[var(--danger)]',
+    bgColor: 'bg-[var(--danger)]/15',
     label: 'Ошибка',
     icon: X
   },
   info: {
-    color: 'text-blue-400',
-    bgColor: 'bg-blue-500/20',
+    color: 'text-[var(--ocean)]',
+    bgColor: 'bg-[var(--ocean)]/15',
     label: 'Инфо',
     icon: Info
   },
   pending: {
-    color: 'text-orange-400',
-    bgColor: 'bg-orange-500/20',
+    color: 'text-[var(--warning)]',
+    bgColor: 'bg-[var(--warning)]/15',
     label: 'Ожидает',
     icon: Clock
   },
   active: {
-    color: 'text-green-400',
-    bgColor: 'bg-green-500/20',
+    color: 'text-[var(--success)]',
+    bgColor: 'bg-[var(--success)]/15',
     label: 'Активен',
     icon: Circle
   },
   inactive: {
-    color: 'text-gray-400',
-    bgColor: 'bg-gray-500/20',
+    color: 'text-[var(--text-muted)]',
+    bgColor: 'bg-[var(--bg-hover)]',
     label: 'Неактивен',
     icon: Circle
   },
   prospect: {
-    color: 'text-blue-400',
-    bgColor: 'bg-blue-500/20',
+    color: 'text-[var(--ocean)]',
+    bgColor: 'bg-[var(--ocean)]/15',
     label: 'Потенциальный',
     icon: Info
   }
@@ -73,8 +73,8 @@ const statusConfig: Record<string, { color: string; bgColor: string; label: stri
 
 export function StatusBadge({ status, label, className }: StatusBadgeProps) {
   const config = statusConfig[status] || {
-    color: 'text-gray-400',
-    bgColor: 'bg-gray-500/20',
+    color: 'text-[var(--text-muted)]',
+    bgColor: 'bg-[var(--bg-hover)]',
     label: status,
     icon: Circle
   };

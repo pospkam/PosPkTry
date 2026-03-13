@@ -3,6 +3,7 @@
 import { ReactNode } from 'react';
 import { CalendarDays, Users, CreditCard, Star, MessageSquare, User } from 'lucide-react';
 import { HubLayout } from '@/components/layout/HubLayout';
+import { ChatWidget } from '@/components/chat/ChatWidget';
 
 const SIDEBAR_ITEMS = [
   { href: '/hub/guide', label: 'Обзор', icon: Star },
@@ -17,6 +18,7 @@ export default function GuideHubLayout({ children }: { children: ReactNode }) {
   return (
     <HubLayout sidebarItems={SIDEBAR_ITEMS} sidebarTitle="Кабинет гида">
       {children}
+      <ChatWidget />
     </HubLayout>
   );
 }

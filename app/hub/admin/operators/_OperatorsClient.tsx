@@ -10,7 +10,12 @@ interface Operator {
 }
 
 function getToken() {
-  return localStorage.getItem('token') ?? localStorage.getItem('admin_token') ?? '';
+  try {
+    const user = JSON.parse(localStorage.getItem('user') ?? '{}');
+    return (user.token as string) ?? '';
+  } catch {
+    return '';
+  }
 }
 
 export default function OperatorsClient() {
@@ -94,7 +99,7 @@ export default function OperatorsClient() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Поиск..."
-              className="min-h-[44px] pl-10 pr-4 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30"
+              className="min-h-[44px] pl-10 pr-4 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30"
             />
           </div>
         </div>
@@ -117,7 +122,7 @@ export default function OperatorsClient() {
         ) : (
           <div className="space-y-3">
             {filtered.map(op => (
-              <div key={op.id} className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-4 flex items-center justify-between gap-4">
+              <div key={op.id} className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4 flex items-center justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-[var(--text-primary)]">{op.name}</span>
@@ -141,7 +146,7 @@ export default function OperatorsClient() {
                   <button
                     onClick={() => activate(op.id)}
                     disabled={acting === op.id}
-                    className="min-h-[44px] px-3 py-2 rounded-xl text-sm border border-[var(--border)] inline-flex items-center gap-1.5 transition-colors text-[var(--success)] hover:bg-[var(--success)]/10 disabled:opacity-50"
+                    className="min-h-[44px] px-3 py-2 rounded-lg text-sm border border-[var(--border)] inline-flex items-center gap-1.5 transition-colors text-[var(--success)] hover:bg-[var(--success)]/10 disabled:opacity-50"
                   >
                     {acting === op.id
                       ? <Loader2 className="w-4 h-4 animate-spin" />
@@ -151,7 +156,7 @@ export default function OperatorsClient() {
                   </button>
                 ) : (
                   <button
-                    className="min-h-[44px] px-3 py-2 rounded-xl text-sm border border-[var(--border)] inline-flex items-center gap-1.5 text-[var(--text-muted)] cursor-not-allowed opacity-40"
+                    className="min-h-[44px] px-3 py-2 rounded-lg text-sm border border-[var(--border)] inline-flex items-center gap-1.5 text-[var(--text-muted)] cursor-not-allowed opacity-40"
                     title="Блокировка в разработке"
                     disabled
                   >

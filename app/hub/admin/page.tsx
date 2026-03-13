@@ -523,7 +523,7 @@ export default function AdminDashboard() {
                 </div>
                 <span className="text-[11px] text-[var(--text-secondary)] leading-tight font-medium">{s.label}</span>
                 {hasBadge && (
-                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[var(--danger)] text-white text-[10px] font-bold flex items-center justify-center shadow-sm">
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[var(--danger)] text-[var(--text-primary)] text-[10px] font-bold flex items-center justify-center shadow-sm">
                     {s.badge}
                   </span>
                 )}

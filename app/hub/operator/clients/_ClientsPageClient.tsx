@@ -19,7 +19,12 @@ interface Customer {
 interface Meta { total: number; page: number; limit: number; pages: number }
 
 function getToken() {
-  return localStorage.getItem('token') ?? localStorage.getItem('admin_token') ?? '';
+  try {
+    const user = JSON.parse(localStorage.getItem('user') ?? '{}');
+    return (user.token as string) ?? '';
+  } catch {
+    return '';
+  }
 }
 
 const INPUT = 'w-full px-3.5 py-2.5 text-sm bg-[var(--bg-primary)] border border-[var(--border)] rounded-md text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition-colors';

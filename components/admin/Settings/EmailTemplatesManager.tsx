@@ -156,7 +156,7 @@ export function EmailTemplatesManager() {
           </button>
           <button
             onClick={() => handleDeleteTemplate(template.id)}
-            className="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded text-sm transition-colors"
+            className="px-3 py-1 bg-[var(--danger)]/15 hover:bg-[var(--danger)]/15 text-[var(--danger)] rounded text-sm transition-colors"
           >
             Удалить
           </button>
@@ -175,11 +175,11 @@ export function EmailTemplatesManager() {
 
   if (error) {
     return (
-      <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-6 text-center">
-        <p className="text-red-400 mb-4">Ошибка загрузки шаблонов</p>
+      <div className="bg-[var(--danger)]/15 border border-[var(--danger)]/20 rounded-lg p-6 text-center">
+        <p className="text-[var(--danger)] mb-4">Ошибка загрузки шаблонов</p>
         <button
           onClick={fetchTemplates}
-          className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors"
+          className="px-4 py-2 bg-[var(--danger)]/15 hover:bg-[var(--danger)]/15 text-[var(--danger)] rounded-lg transition-colors"
         >
           Повторить
         </button>
@@ -285,7 +285,7 @@ function EmailTemplateForm({ template, onSave, onCancel }: EmailTemplateFormProp
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label htmlFor="template-name" className="block text-[var(--text-primary)] font-medium mb-2">
-              Название <span className="text-red-400">*</span>
+              Название <span className="text-[var(--danger)]">*</span>
             </label>
             <input
               id="template-name"
@@ -298,7 +298,7 @@ function EmailTemplateForm({ template, onSave, onCancel }: EmailTemplateFormProp
 
           <div>
             <label htmlFor="template-type" className="block text-[var(--text-primary)] font-medium mb-2">
-              Тип <span className="text-red-400">*</span>
+              Тип <span className="text-[var(--danger)]">*</span>
             </label>
             <select
               id="template-type"
@@ -319,7 +319,7 @@ function EmailTemplateForm({ template, onSave, onCancel }: EmailTemplateFormProp
 
         <div>
           <label htmlFor="template-subject" className="block text-[var(--text-primary)] font-medium mb-2">
-            Тема письма <span className="text-red-400">*</span>
+            Тема письма <span className="text-[var(--danger)]">*</span>
           </label>
           <input
             id="template-subject"
@@ -332,7 +332,7 @@ function EmailTemplateForm({ template, onSave, onCancel }: EmailTemplateFormProp
 
         <div>
           <label htmlFor="template-html" className="block text-[var(--text-primary)] font-medium mb-2">
-            HTML контент <span className="text-red-400">*</span>
+            HTML контент <span className="text-[var(--danger)]">*</span>
           </label>
           <textarea
             id="template-html"
@@ -392,7 +392,7 @@ function EmailTemplateForm({ template, onSave, onCancel }: EmailTemplateFormProp
                   <button
                     type="button"
                     onClick={() => removeVariable(variable)}
-                    className="hover:text-red-400"
+                    className="hover:text-[var(--danger)]"
                   >
                     ×
                   </button>

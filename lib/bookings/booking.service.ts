@@ -152,11 +152,12 @@ export async function createBooking(
     let validatedDepartureId: string | null = null;
 
     if (input.departureId) {
-      // Валидируем заезд
+      // Блокируем строку заезда на время транзакции чтобы избежать гонки
       const depResult = await client.query(
         `SELECT id, start_date, available_slots, booked_slots, price_override, status
          FROM tour_departures
-         WHERE id = $1 AND tour_id = $2`,
+         WHERE id = $1 AND tour_id = $2
+         FOR UPDATE`,
         [input.departureId, input.tourId]
       );
       if (depResult.rows.length === 0) {
@@ -166,7 +167,21 @@ export async function createBooking(
       if (dep.status !== 'active') {
         throw new Error('Заезд недоступен для бронирования');
       }
-      const spotsLeft = Number(dep.available_slots) - Number(dep.booked_slots);
+
+      // Считаем все активные брони (pending + confirmed) — не только booked_slots
+      // booked_slots инкрементируется при confirmBooking, но pending-брони
+      // тоже занимают места чтобы избежать двойного бронирования
+      const pendingResult = await client.query(
+        `SELECT COALESCE(SUM(participants), 0) AS pending_count
+         FROM bookings
+         WHERE departure_id = $1 AND status IN ('pending', 'confirmed')`,
+        [input.departureId]
+      );
+      const pendingCount = Number(pendingResult.rows[0].pending_count);
+      // Берём максимум чтобы избежать ситуации когда booked_slots > sum pending/confirmed
+      const effectiveBooked = Math.max(Number(dep.booked_slots), pendingCount);
+      const spotsLeft = Number(dep.available_slots) - effectiveBooked;
+
       if (input.participants > spotsLeft) {
         throw new Error(`Недостаточно мест на заезде: свободно ${spotsLeft}, запрошено ${input.participants}`);
       }

@@ -100,11 +100,11 @@ export function SystemSettings() {
 
   if (error) {
     return (
-      <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-6 text-center">
-        <p className="text-red-400 mb-4">Ошибка загрузки настроек</p>
+      <div className="bg-[var(--danger)]/15 border border-[var(--danger)]/20 rounded-lg p-6 text-center">
+        <p className="text-[var(--danger)] mb-4">Ошибка загрузки настроек</p>
         <button
           onClick={fetchSettings}
-          className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors"
+          className="px-4 py-2 bg-[var(--danger)]/15 hover:bg-[var(--danger)]/15 text-[var(--danger)] rounded-lg transition-colors"
         >
           Повторить
         </button>

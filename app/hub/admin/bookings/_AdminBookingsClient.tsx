@@ -21,7 +21,12 @@ const ST_LBL: Record<BStatus, string> = {
 };
 
 function getToken() {
-  return localStorage.getItem('token') ?? localStorage.getItem('admin_token') ?? '';
+  try {
+    const user = JSON.parse(localStorage.getItem('user') ?? '{}');
+    return (user.token as string) ?? '';
+  } catch {
+    return '';
+  }
 }
 
 export default function AdminBookingsClient() {
@@ -83,7 +88,7 @@ export default function AdminBookingsClient() {
             {!loading && <span className="text-sm text-[var(--text-muted)]">{total}</span>}
           </div>
           <button
-            className="min-h-[44px] px-4 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-secondary)] text-sm inline-flex items-center gap-2 hover:border-[var(--border-strong)]"
+            className="min-h-[44px] px-4 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-secondary)] text-sm inline-flex items-center gap-2 hover:border-[var(--border-strong)]"
             onClick={() => {
               const csv = ['Тур,Турист,Email,Дата,Цена,Статус',
                 ...filtered.map(b =>
@@ -106,7 +111,7 @@ export default function AdminBookingsClient() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Поиск по туру, туристу или email..."
-              className="w-full min-h-[44px] pl-10 pr-4 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30"
+              className="w-full min-h-[44px] pl-10 pr-4 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30"
             />
           </div>
           <div className="flex gap-2 overflow-x-auto">
@@ -114,7 +119,7 @@ export default function AdminBookingsClient() {
               <button
                 key={s}
                 onClick={() => setStatusFilter(s)}
-                className={`min-h-[44px] px-3 py-2 rounded-xl text-sm whitespace-nowrap ${
+                className={`min-h-[44px] px-3 py-2 rounded-lg text-sm whitespace-nowrap ${
                   statusFilter === s
                     ? 'bg-[var(--accent)] text-white'
                     : 'bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-secondary)]'

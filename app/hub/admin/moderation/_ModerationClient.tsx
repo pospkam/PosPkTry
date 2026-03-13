@@ -10,7 +10,12 @@ interface PendingReview {
 }
 
 function getToken() {
-  return localStorage.getItem('token') ?? localStorage.getItem('admin_token') ?? '';
+  try {
+    const user = JSON.parse(localStorage.getItem('user') ?? '{}');
+    return (user.token as string) ?? '';
+  } catch {
+    return '';
+  }
 }
 
 export default function ModerationClient() {
@@ -104,7 +109,7 @@ export default function ModerationClient() {
         ) : (
           <div className="space-y-3">
             {reviews.map(review => (
-              <div key={review.id} className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-4">
+              <div key={review.id} className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
@@ -113,7 +118,7 @@ export default function ModerationClient() {
                         {[1, 2, 3, 4, 5].map(s => (
                           <Star
                             key={s}
-                            className={`w-3.5 h-3.5 ${s <= review.rating ? 'text-amber-400 fill-amber-400' : 'text-[var(--text-muted)]'}`}
+                            className={`w-3.5 h-3.5 ${s <= review.rating ? 'text-[var(--warning)] fill-[var(--warning)]' : 'text-[var(--text-muted)]'}`}
                           />
                         ))}
                       </div>
@@ -127,7 +132,7 @@ export default function ModerationClient() {
                     <button
                       onClick={() => moderate(review.id, 'approve')}
                       disabled={acting === review.id}
-                      className="min-h-[44px] px-3 py-2 rounded-xl bg-[var(--success)] text-white text-sm font-medium inline-flex items-center gap-1 hover:opacity-90 disabled:opacity-50"
+                      className="min-h-[44px] px-3 py-2 rounded-lg bg-[var(--success)] text-[var(--text-primary)] text-sm font-medium inline-flex items-center gap-1 hover:opacity-90 disabled:opacity-50"
                     >
                       {acting === review.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                       Одобрить
@@ -135,7 +140,7 @@ export default function ModerationClient() {
                     <button
                       onClick={() => moderate(review.id, 'delete')}
                       disabled={acting === review.id}
-                      className="min-h-[44px] px-3 py-2 rounded-xl bg-[var(--danger)] text-white text-sm font-medium inline-flex items-center gap-1 hover:opacity-90 disabled:opacity-50"
+                      className="min-h-[44px] px-3 py-2 rounded-lg bg-[var(--danger)] text-[var(--text-primary)] text-sm font-medium inline-flex items-center gap-1 hover:opacity-90 disabled:opacity-50"
                     >
                       {acting === review.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
                       Отклонить

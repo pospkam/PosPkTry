@@ -6,6 +6,7 @@ import {
   Settings, Bell, FileText, ArrowLeftRight,
 } from 'lucide-react';
 import { HubLayout } from '@/components/layout/HubLayout';
+import { ChatWidget } from '@/components/chat/ChatWidget';
 
 const SIDEBAR_ITEMS = [
   { href: '/hub/operator', label: 'Обзор', icon: BarChart3 },
@@ -25,6 +26,7 @@ export default function OperatorHubLayout({ children }: { children: ReactNode })
   return (
     <HubLayout sidebarItems={SIDEBAR_ITEMS} sidebarTitle="Кабинет оператора">
       {children}
+      <ChatWidget />
     </HubLayout>
   );
 }

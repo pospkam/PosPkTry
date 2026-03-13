@@ -88,7 +88,7 @@ export default function AdminNotifications() {
           <Bell className="w-4 h-4 text-[var(--text-muted)]" />
           <h1 className="text-sm font-semibold text-[var(--text-primary)] tracking-tight">Уведомления</h1>
           {unreadCount > 0 && (
-            <span className="px-1.5 py-0.5 bg-[var(--danger)] text-white text-[9px] font-bold rounded-full">
+            <span className="px-1.5 py-0.5 bg-[var(--danger)] text-[var(--text-primary)] text-[9px] font-bold rounded-full">
               {unreadCount}
             </span>
           )}

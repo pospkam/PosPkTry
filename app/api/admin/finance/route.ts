@@ -12,6 +12,12 @@ import {
 
 export const dynamic = 'force-dynamic';
 
+/** Ставка комиссии платформы. Берётся из env, fallback 15% */
+const PLATFORM_COMMISSION_RATE = Math.max(
+  0,
+  Math.min(1, parseFloat(process.env.PLATFORM_COMMISSION_RATE ?? '0.15'))
+);
+
 const ALLOWED_BOOKING_TYPES = new Set(['all', 'tours', 'accommodations', 'transfers']);
 
 /**
@@ -81,7 +87,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const pendingPayoutsResult = await query<PendingPayoutsRow>(
       `SELECT
         COUNT(*) as pending_count,
-        COALESCE(SUM(amount * 0.15), 0) as pending_amount
+        COALESCE(SUM(amount * $1::numeric), 0) as pending_amount
        FROM payments p
        JOIN bookings b ON p.booking_id = b.id
        WHERE p.status = 'completed'
@@ -90,7 +96,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
            SELECT 1 FROM payouts
            WHERE booking_id = b.id
            AND status = 'completed'
-         )`
+         )`,
+      [PLATFORM_COMMISSION_RATE]
     );
     const pendingPayouts = pendingPayoutsResult.rows[0];
 
