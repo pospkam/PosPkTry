@@ -3,6 +3,17 @@ import { query } from '@/lib/database';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { ApiResponse } from '@/types';
 import { EmailTemplateRow, EmailTemplateUpdateRow } from '@/lib/types/db-rows';
+import { z } from 'zod';
+
+const UpdateEmailTemplateSchema = z.object({
+  name: z.string().min(1, 'Название шаблона обязательно'),
+  subject: z.string().min(1, 'Тема письма обязательна'),
+  type: z.string().min(1, 'Тип шаблона обязателен'),
+  htmlContent: z.string().min(1, 'HTML-содержимое обязательно'),
+  textContent: z.string().optional().default(''),
+  variables: z.array(z.string()).optional().default([]),
+  isActive: z.boolean().optional().default(true),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -78,14 +89,14 @@ export async function PUT(
     }
     const { id } = await params;
     const body = await request.json();
-    const { name, subject, type, htmlContent, textContent, variables, isActive } = body;
-
-    if (!name || !subject || !type || !htmlContent) {
+    const parsed = UpdateEmailTemplateSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json({
         success: false,
-        error: 'Необходимо указать name, subject, type и htmlContent'
+        error: parsed.error.issues[0]?.message || 'Некорректные данные'
       } as ApiResponse<null>, { status: 400 });
     }
+    const { name, subject, type, htmlContent, textContent, variables, isActive } = parsed.data;
 
     const updateQuery = `
       UPDATE email_templates
@@ -102,7 +113,7 @@ export async function PUT(
       htmlContent,
       textContent || '',
       JSON.stringify(variables || []),
-      isActive !== undefined ? isActive : true,
+      isActive,
       id
     ]);
 

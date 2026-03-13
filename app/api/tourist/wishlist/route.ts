@@ -1,8 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireAuth } from '@/lib/auth/middleware';
 import { getTouristProfile } from '@/lib/auth/tourist-helpers';
+
+const AddWishlistItemSchema = z.object({
+  itemType: z.enum(['tour', 'accommodation', 'partner', 'destination', 'activity'], {
+    errorMap: () => ({ message: 'Укажите корректный тип элемента' }),
+  }),
+  itemId: z.string().min(1, 'Укажите ID элемента'),
+  priority: z.enum(['low', 'medium', 'high']).optional(),
+  notes: z.string().optional(),
+  notifyOnDiscount: z.boolean().optional(),
+  notifyOnAvailability: z.boolean().optional(),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -71,22 +83,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { itemType, itemId, priority, notes, notifyOnDiscount, notifyOnAvailability } = body;
-
-    const validTypes = ['tour', 'accommodation', 'partner', 'destination', 'activity'];
-    if (!itemType || !validTypes.includes(itemType)) {
+    const parsed = AddWishlistItemSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: 'Укажите корректный тип элемента' } as ApiResponse<null>,
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' } as ApiResponse<null>,
         { status: 400 }
       );
     }
-
-    if (!itemId) {
-      return NextResponse.json(
-        { success: false, error: 'Укажите ID элемента' } as ApiResponse<null>,
-        { status: 400 }
-      );
-    }
+    const { itemType, itemId, priority, notes, notifyOnDiscount, notifyOnAvailability } = parsed.data;
 
     const result = await query(
       `INSERT INTO tourist_wishlist (tourist_id, item_type, item_id, priority, notes, notify_on_discount, notify_on_availability)

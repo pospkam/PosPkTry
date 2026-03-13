@@ -3,6 +3,14 @@ import { query } from '@/lib/database';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { ApiResponse } from '@/types';
 import { PayoutAdminRow, PayoutStatsRow, PayoutCreateRow } from '@/lib/types/db-rows';
+import { z } from 'zod';
+
+const CreatePayoutSchema = z.object({
+  partnerId: z.string().min(1, 'ID партнёра обязателен'),
+  bookingId: z.string().min(1, 'ID бронирования обязателен'),
+  amount: z.number({ coerce: true }).positive('Сумма должна быть положительной'),
+  description: z.string().optional().default('Выплата комиссии'),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -131,15 +139,14 @@ export async function POST(request: NextRequest) {
       return adminOrResponse;
     }
     const body = await request.json();
-    const { partnerId, bookingId, amount, description } = body;
-    const parsedAmount = Number(amount);
-
-    if (!partnerId || !bookingId || !Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+    const parsed = CreatePayoutSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json({
         success: false,
-        error: 'Необходимо указать partnerId, bookingId и корректный amount'
+        error: parsed.error.issues[0]?.message || 'Некорректные данные'
       } as ApiResponse<null>, { status: 400 });
     }
+    const { partnerId, bookingId, amount: parsedAmount, description } = parsed.data;
 
     // Проверяем, что выплата еще не существует
     const existingPayoutQuery = `

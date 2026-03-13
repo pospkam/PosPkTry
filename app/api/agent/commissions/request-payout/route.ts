@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireAgent } from '@/lib/auth/middleware';
+import { z } from 'zod';
+
+const RequestPayoutSchema = z.object({
+  paymentMethod: z.string().optional().default('bank_transfer'),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -15,7 +20,14 @@ export async function POST(request: NextRequest) {
 
     const agentId = userOrResponse.userId;
     const body = await request.json();
-    const { paymentMethod = 'bank_transfer' } = body;
+    const parsed = RequestPayoutSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' } as ApiResponse<null>,
+        { status: 400 }
+      );
+    }
+    const { paymentMethod } = parsed.data;
 
     const pendingCommissionsQuery = `
       SELECT id, amount FROM agent_commissions

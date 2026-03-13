@@ -3,6 +3,14 @@ import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { SystemSettingRow, EmailTemplateRow } from '@/lib/types/db-rows';
+import { z } from 'zod';
+
+const UpdateSettingsSchema = z.object({
+  settings: z.record(z.string(), z.record(z.string(), z.unknown())).refine(
+    val => Object.keys(val).length > 0,
+    'Объект settings не может быть пустым'
+  ),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -78,14 +86,14 @@ export async function PUT(request: NextRequest) {
     if (userOrResponse instanceof NextResponse) return userOrResponse;
     
     const body = await request.json();
-    const { settings } = body;
-
-    if (!settings || typeof settings !== 'object') {
+    const parsed = UpdateSettingsSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json({
         success: false,
-        error: 'Необходимо передать объект settings'
+        error: parsed.error.issues[0]?.message || 'Некорректные данные'
       } as ApiResponse<null>, { status: 400 });
     }
+    const { settings } = parsed.data;
 
     // Обновляем настройки
     const updatePromises = [];

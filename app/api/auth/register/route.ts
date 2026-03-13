@@ -3,6 +3,7 @@ import { SignJWT } from 'jose';
 import { z } from 'zod';
 import { pool } from '@/lib/database';
 import { hashPassword } from '@/lib/auth/password';
+import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
 
 const RegisterSchema = z.object({
   email: z.string({ required_error: 'Email обязателен' }).email('Неверный формат email'),
@@ -21,8 +22,18 @@ if (!jwtSecret) {
 
 const JWT_SECRET = new TextEncoder().encode(jwtSecret);
 
+const registerLimiter = createRateLimiter({ windowMs: 60_000, max: 3 });
+
 // PUBLIC: Auth entry point — register endpoint intentionally public (no token required).
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request.headers);
+  if (!registerLimiter.check(ip)) {
+    return NextResponse.json(
+      { success: false, error: 'Слишком много попыток регистрации. Попробуйте позже.' },
+      { status: 429 }
+    );
+  }
+
   let client;
   
   try {

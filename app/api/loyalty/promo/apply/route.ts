@@ -1,11 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { loyaltySystem } from '@/lib/loyalty/loyalty-system';
 import { requireAuth } from '@/lib/auth/middleware';
+import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
+const promoLimiter = createRateLimiter({ windowMs: 60_000, max: 5 });
+
 // POST /api/loyalty/promo/apply - Применение промокода
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request.headers);
+  if (!promoLimiter.check(ip)) {
+    return NextResponse.json(
+      { success: false, error: 'Слишком много попыток. Попробуйте позже.' },
+      { status: 429 }
+    );
+  }
+
   try {
     const authResult = await requireAuth(request);
     if (authResult instanceof NextResponse) return authResult;

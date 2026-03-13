@@ -2,6 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse, AgentClient, ClientFormData } from '@/types';
 import { requireAgent } from '@/lib/auth/middleware';
+import { z } from 'zod';
+
+const CreateClientSchema = z.object({
+  name: z.string().min(1, 'Имя клиента обязательно'),
+  email: z.string().email('Некорректный email'),
+  phone: z.string().optional(),
+  company: z.string().optional(),
+  status: z.string().optional(),
+  notes: z.string().optional(),
+  tags: z.array(z.string()).optional().default([]),
+  source: z.string().optional().default('manual'),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -107,15 +119,15 @@ export async function POST(request: NextRequest) {
     
     const agentId = userOrResponse.userId;
 
-    const body: ClientFormData = await request.json();
-    const { name, email, phone, company, status, notes, tags, source } = body;
-
-    if (!name || !email) {
+    const body = await request.json();
+    const parsed = CreateClientSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json({
         success: false,
-        error: 'Имя и email обязательны'
+        error: parsed.error.issues[0]?.message || 'Некорректные данные'
       } as ApiResponse<null>, { status: 400 });
     }
+    const { name, email, phone, company, status, notes, tags, source } = parsed.data;
 
     // Проверяем, что клиент с таким email еще не существует у этого агента
     const existingClientQuery = `

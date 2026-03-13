@@ -3,6 +3,9 @@ import { ApiResponse, Review } from '@/types';
 import { query } from '@/lib/database';
 import { verifyAuth } from '@/lib/auth';
 import { z } from 'zod';
+import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
+
+const reviewLimiter = createRateLimiter({ windowMs: 60_000, max: 5 });
 
 const reviewListQuerySchema = z.object({
   tourId: z.string().trim().min(1).optional(),
@@ -127,6 +130,14 @@ export async function GET(request: NextRequest) {
 
 // POST /api/reviews - Создание отзыва
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request.headers);
+  if (!reviewLimiter.check(ip)) {
+    return NextResponse.json(
+      { success: false, error: 'Слишком много отзывов. Попробуйте позже.' } as ApiResponse<null>,
+      { status: 429 }
+    );
+  }
+
   try {
     const auth = await verifyAuth(request);
     if (!auth.userId) {

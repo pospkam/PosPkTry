@@ -1,6 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { requireAuth } from '@/lib/auth/middleware';
 import { query } from '@/lib/database';
+
+const UpdateNotifPrefsSchema = z.object({
+  email_booking_confirmation: z.boolean().optional(),
+  email_booking_reminder: z.boolean().optional(),
+  email_booking_changes: z.boolean().optional(),
+  email_payment_receipts: z.boolean().optional(),
+  email_promotions: z.boolean().optional(),
+  email_newsletters: z.boolean().optional(),
+  email_recommendations: z.boolean().optional(),
+  email_reviews_requests: z.boolean().optional(),
+  sms_booking_confirmation: z.boolean().optional(),
+  sms_booking_reminder: z.boolean().optional(),
+  sms_emergency_alerts: z.boolean().optional(),
+  push_booking_updates: z.boolean().optional(),
+  push_messages: z.boolean().optional(),
+  push_promotions: z.boolean().optional(),
+  push_recommendations: z.boolean().optional(),
+  language: z.string().max(10, 'Код языка слишком длинный').optional(),
+  timezone: z.string().max(50, 'Часовой пояс слишком длинный').optional(),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -66,6 +87,14 @@ export async function PATCH(request: NextRequest) {
 
   try {
     const body = await request.json();
+    const parsed = UpdateNotifPrefsSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' },
+        { status: 400 }
+      );
+    }
+
     const allowed = [
       'email_booking_confirmation', 'email_booking_reminder', 'email_booking_changes',
       'email_payment_receipts', 'email_promotions', 'email_newsletters',
@@ -93,9 +122,9 @@ export async function PATCH(request: NextRequest) {
     let idx = 2;
 
     for (const key of allowed) {
-      if (key in body) {
+      if (key in parsed.data) {
         sets.push(`${key} = $${idx}`);
-        params.push(body[key] as string | boolean);
+        params.push(parsed.data[key as keyof typeof parsed.data] as string | boolean);
         idx++;
       }
     }

@@ -1,8 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireAuth } from '@/lib/auth/middleware';
 import { getTouristProfile } from '@/lib/auth/tourist-helpers';
+
+const CreateChecklistSchema = z.object({
+  name: z.string().min(3, 'Название чек-листа минимум 3 символа'),
+  items: z.array(z.unknown()).optional(),
+  tripId: z.string().uuid('Некорректный ID поездки').optional(),
+  templateId: z.string().uuid('Некорректный ID шаблона').optional(),
+});
+
+const UpdateChecklistSchema = z.object({
+  id: z.string().uuid('Укажите ID чек-листа'),
+  name: z.string().min(1, 'Название не может быть пустым').optional(),
+  items: z.array(z.unknown()).optional(),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -71,14 +85,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, items, tripId, templateId } = body;
-
-    if (!name || name.length < 3) {
+    const parsed = CreateChecklistSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: 'Укажите название чек-листа' } as ApiResponse<null>,
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' } as ApiResponse<null>,
         { status: 400 }
       );
     }
+    const { name, items, tripId, templateId } = parsed.data;
 
     const result = await query(
       `INSERT INTO tourist_checklists (tourist_id, trip_id, template_id, name, items)
@@ -119,14 +133,14 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, name, items } = body;
-
-    if (!id) {
+    const parsed = UpdateChecklistSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: 'Укажите ID чек-листа' } as ApiResponse<null>,
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' } as ApiResponse<null>,
         { status: 400 }
       );
     }
+    const { id, name, items } = parsed.data;
 
     const updates: string[] = [];
     const values: unknown[] = [];

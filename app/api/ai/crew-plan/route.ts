@@ -9,8 +9,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { runCrewPipeline } from '@/lib/ai/crew-agents';
+import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
+
+const crewPlanLimiter = createRateLimiter({ windowMs: 60_000, max: 5 });
 
 const Schema = z.object({
   query: z
@@ -25,6 +28,14 @@ const Schema = z.object({
 
 // AUTH: Public — открытый доступ для туристов
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request.headers);
+  if (!crewPlanLimiter.check(ip)) {
+    return NextResponse.json(
+      { success: false, error: 'Слишком много запросов. Попробуйте позже.' },
+      { status: 429 }
+    );
+  }
+
   try {
     const body: unknown = await request.json();
     const parsed = Schema.safeParse(body);

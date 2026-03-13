@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { requireAuth } from '@/lib/auth/middleware';
 import { chatService } from '@/lib/services/chat.service';
+
+const CreateConversationSchema = z.object({
+  participantId: z.string().min(1, 'participantId обязателен'),
+  participantRole: z.string().optional(),
+  subject: z.string().optional(),
+  bookingId: z.string().optional(),
+  tourId: z.string().optional(),
+  message: z.string().optional(),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -46,12 +56,19 @@ export async function POST(request: NextRequest) {
     if (userOrResponse instanceof NextResponse) return userOrResponse;
 
     const body = await request.json();
-    const participantId = typeof body.participantId === 'string' ? body.participantId.trim() : '';
-    const participantRole = typeof body.participantRole === 'string' ? body.participantRole : 'tourist';
-    const subject = typeof body.subject === 'string' ? body.subject.trim() : undefined;
-    const bookingId = typeof body.bookingId === 'string' ? body.bookingId.trim() : undefined;
-    const tourId = typeof body.tourId === 'number' ? body.tourId : undefined;
-    const message = typeof body.message === 'string' ? body.message.trim() : undefined;
+    const parsed = CreateConversationSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' },
+        { status: 400 }
+      );
+    }
+    const participantId = parsed.data.participantId.trim();
+    const participantRole = parsed.data.participantRole || 'tourist';
+    const subject = parsed.data.subject?.trim();
+    const bookingId = parsed.data.bookingId?.trim();
+    const tourId = parsed.data.tourId;
+    const message = parsed.data.message?.trim();
 
     if (!participantId) {
       return NextResponse.json(

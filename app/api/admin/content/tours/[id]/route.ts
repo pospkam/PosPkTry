@@ -3,6 +3,17 @@ import { query } from '@/lib/database';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { ApiResponse } from '@/types';
 import { TourUpdateRow } from '@/lib/types/db-rows';
+import { z } from 'zod';
+
+const UpdateTourSchema = z.object({
+  name: z.string().min(1, 'Название тура не может быть пустым').optional(),
+  description: z.string().optional(),
+  isActive: z.boolean().optional(),
+  price: z.number({ coerce: true }).nonnegative('Цена не может быть отрицательной').optional(),
+}).refine(
+  data => data.name !== undefined || data.description !== undefined || data.isActive !== undefined || data.price !== undefined,
+  'Необходимо указать хотя бы одно поле для обновления'
+);
 
 export const dynamic = 'force-dynamic';
 
@@ -21,6 +32,13 @@ export async function PUT(
     }
     const { id } = await context.params;
     const body = await request.json();
+    const parsed = UpdateTourSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({
+        success: false,
+        error: parsed.error.issues[0]?.message || 'Некорректные данные'
+      } as ApiResponse<null>, { status: 400 });
+    }
 
     // Проверяем существование тура
     const checkQuery = 'SELECT id FROM tours WHERE id = $1';
@@ -38,27 +56,27 @@ export async function PUT(
     const values: unknown[] = [];
     let paramIndex = 1;
 
-    if (body.name !== undefined) {
+    if (parsed.data.name !== undefined) {
       updates.push(`name = $${paramIndex}`);
-      values.push(body.name);
+      values.push(parsed.data.name);
       paramIndex++;
     }
 
-    if (body.description !== undefined) {
+    if (parsed.data.description !== undefined) {
       updates.push(`description = $${paramIndex}`);
-      values.push(body.description);
+      values.push(parsed.data.description);
       paramIndex++;
     }
 
-    if (body.isActive !== undefined) {
+    if (parsed.data.isActive !== undefined) {
       updates.push(`is_active = $${paramIndex}`);
-      values.push(body.isActive);
+      values.push(parsed.data.isActive);
       paramIndex++;
     }
 
-    if (body.price !== undefined) {
+    if (parsed.data.price !== undefined) {
       updates.push(`price = $${paramIndex}`);
-      values.push(body.price);
+      values.push(parsed.data.price);
       paramIndex++;
     }
 

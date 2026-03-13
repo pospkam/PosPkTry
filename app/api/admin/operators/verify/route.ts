@@ -3,6 +3,13 @@ import { query } from '@/lib/database';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { emailService } from '@/lib/notifications/email-service';
 import { OperatorVerifyRow, OperatorActionRow } from '@/lib/types/db-rows';
+import { z } from 'zod';
+
+const VerifyOperatorSchema = z.object({
+  operatorId: z.string().min(1, 'ID оператора обязателен'),
+  action: z.enum(['approve', 'reject'], { errorMap: () => ({ message: 'Действие должно быть approve или reject' }) }),
+  reason: z.string().optional(),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -15,21 +22,15 @@ export async function POST(request: NextRequest) {
     const userOrResponse = await requireAdmin(request);
     if (userOrResponse instanceof NextResponse) return userOrResponse;
 
-    const { operatorId, action, reason } = await request.json();
-
-    if (!operatorId || !action) {
+    const body = await request.json();
+    const parsed = VerifyOperatorSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json({
         success: false,
-        error: 'Operator ID и action обязательны'
+        error: parsed.error.issues[0]?.message || 'Некорректные данные'
       }, { status: 400 });
     }
-
-    if (!['approve', 'reject'].includes(action)) {
-      return NextResponse.json({
-        success: false,
-        error: 'Action должен быть approve или reject'
-      }, { status: 400 });
-    }
+    const { operatorId, action, reason } = parsed.data;
 
     // Получаем данные оператора
     const operatorResult = await query<OperatorActionRow>(`

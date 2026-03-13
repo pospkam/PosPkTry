@@ -1,8 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth } from '@/lib/auth';
 import { query } from '@/lib/database';
+import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
+
+const mfaEnableLimiter = createRateLimiter({ windowMs: 60_000, max: 3 });
 
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request.headers);
+  if (!mfaEnableLimiter.check(ip)) {
+    return NextResponse.json(
+      { error: 'Слишком много попыток. Попробуйте позже.' },
+      { status: 429 }
+    );
+  }
+
   try {
     const auth = await verifyAuth(request);
     if (!auth.isAuthenticated || !auth.userId) {

@@ -3,11 +3,14 @@ import { z } from 'zod';
 import { requireAuth } from '@/lib/auth/middleware';
 import { verifyPassword, hashPassword } from '@/lib/auth/password';
 import { query } from '@/lib/database';
+import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
 
 const ChangePasswordSchema = z.object({
   currentPassword: z.string({ required_error: 'Текущий пароль обязателен' }).min(1, 'Текущий пароль не может быть пустым'),
   newPassword: z.string({ required_error: 'Новый пароль обязателен' }).min(8, 'Новый пароль должен содержать не менее 8 символов'),
 });
+
+const passwordLimiter = createRateLimiter({ windowMs: 60_000, max: 5 });
 
 export const dynamic = 'force-dynamic';
 
@@ -17,6 +20,14 @@ export const dynamic = 'force-dynamic';
  * Body: { currentPassword: string; newPassword: string }
  */
 export async function PATCH(request: NextRequest) {
+  const ip = getClientIp(request.headers);
+  if (!passwordLimiter.check(ip)) {
+    return NextResponse.json(
+      { success: false, error: 'Слишком много попыток смены пароля. Попробуйте позже.' },
+      { status: 429 }
+    );
+  }
+
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 

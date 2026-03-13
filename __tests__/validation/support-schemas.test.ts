@@ -345,7 +345,7 @@ describe('Support Validation Schemas', () => {
 
       expect(result.success).toBe(false)
       if (!result.success && result.errors) {
-        expect(Object.keys(result.errors).some((key) => key.includes('subject'))).toBe(true)
+        expect(Object.keys(result.errors).some((key) => key.includes('description'))).toBe(true)
       }
     })
   })

@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { query } from '@/lib/database';
+import { z } from 'zod';
+
+const CreatePromoCodeSchema = z.object({
+  code: z.string().min(1, 'Код промокода обязателен'),
+  discountType: z.enum(['percentage', 'fixed'], { errorMap: () => ({ message: 'Тип скидки: percentage или fixed' }) }),
+  discountValue: z.number({ coerce: true }).positive('Размер скидки должен быть положительным'),
+  maxUses: z.number({ coerce: true }).int().positive('Максимальное число использований должно быть положительным'),
+  expiresAt: z.string().nullable().optional().default(null),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -46,21 +55,11 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { code, discountType, discountValue, maxUses, expiresAt } = body as {
-      code: string;
-      discountType: 'percentage' | 'fixed';
-      discountValue: number;
-      maxUses: number;
-      expiresAt: string | null;
-    };
-
-    if (!code || !discountType || !discountValue || !maxUses) {
-      return NextResponse.json({ success: false, error: 'Все поля обязательны' }, { status: 400 });
+    const parsed = CreatePromoCodeSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' }, { status: 400 });
     }
-
-    if (!['percentage', 'fixed'].includes(discountType)) {
-      return NextResponse.json({ success: false, error: 'Тип скидки: percentage или fixed' }, { status: 400 });
-    }
+    const { code, discountType, discountValue, maxUses, expiresAt } = parsed.data;
 
     const id = `promo_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 

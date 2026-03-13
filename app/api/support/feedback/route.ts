@@ -7,6 +7,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { feedbackService } from '@/lib/services'
 import { requireRole, requireAuth } from '@/lib/auth/middleware'
+import { z } from 'zod'
+
+const CreateFeedbackSchema = z.object({
+  ticketId: z.string().optional(),
+  overallRating: z.number({ coerce: true }).min(1).max(5).optional(),
+  comment: z.string().optional(),
+  rating: z.number({ coerce: true }).min(1).max(5).optional(),
+  category: z.string().optional(),
+}).refine(
+  data => data.ticketId || data.overallRating || data.rating || data.comment,
+  'Необходимо указать хотя бы одно поле обратной связи'
+)
 
 export async function GET(request: NextRequest) {
   const auth = await requireRole(request, ['admin', 'agent'])
@@ -41,7 +53,15 @@ export async function POST(request: NextRequest) {
   if (auth instanceof NextResponse) return auth
 
   try {
-    const data = await request.json()
+    const body = await request.json()
+    const parsed = CreateFeedbackSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' },
+        { status: 400 }
+      )
+    }
+    const data = parsed.data
 
     // Check if it's feedback or survey
     if (data.overallRating && !data.ticketId) {

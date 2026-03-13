@@ -1,8 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireAuth } from '@/lib/auth/middleware';
 import { getTouristProfile, validateDocumentData } from '@/lib/auth/tourist-helpers';
+
+const CreateDocumentSchema = z.object({
+  documentType: z.string().min(1, 'Тип документа обязателен'),
+  documentNumber: z.string().optional(),
+  issuingCountry: z.string().optional(),
+  issuingAuthority: z.string().optional(),
+  issueDate: z.string().optional(),
+  expiryDate: z.string().optional(),
+  fileUrl: z.string().url('Некорректный URL файла').optional(),
+  fileName: z.string().optional(),
+  fileSize: z.number().optional(),
+  notes: z.string().optional(),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -71,6 +85,13 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    const parsed = CreateDocumentSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' } as ApiResponse<null>,
+        { status: 400 }
+      );
+    }
     const {
       documentType,
       documentNumber,
@@ -82,7 +103,7 @@ export async function POST(request: NextRequest) {
       fileName,
       fileSize,
       notes
-    } = body;
+    } = parsed.data;
 
     const validation = validateDocumentData({
       documentType,

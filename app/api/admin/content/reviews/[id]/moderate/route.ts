@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { ApiResponse } from '@/types';
+import { z } from 'zod';
+
+const ModerateReviewSchema = z.object({
+  action: z.enum(['approve', 'delete'], { errorMap: () => ({ message: 'Действие должно быть approve или delete' }) }),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -20,14 +25,14 @@ export async function POST(
     }
     const { id } = await context.params;
     const body = await request.json();
-    const { action } = body; // 'approve' or 'delete'
-
-    if (!action || !['approve', 'delete'].includes(action)) {
+    const parsed = ModerateReviewSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json({
         success: false,
-        error: 'Invalid action. Must be "approve" or "delete"'
+        error: parsed.error.issues[0]?.message || 'Некорректные данные'
       } as ApiResponse<null>, { status: 400 });
     }
+    const { action } = parsed.data;
 
     // Проверяем существование
     const checkQuery = 'SELECT id FROM reviews WHERE id = $1';

@@ -7,6 +7,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { slaService } from '@/lib/services'
 import { requireRole } from '@/lib/auth/middleware'
+import { z } from 'zod'
+
+const CheckSLASchema = z.object({
+  ticketId: z.string().min(1, 'ID тикета обязателен'),
+})
 
 export async function GET(request: NextRequest) {
   const auth = await requireRole(request, ['admin', 'agent'])
@@ -37,16 +42,16 @@ export async function POST(request: NextRequest) {
   if (auth instanceof NextResponse) return auth
 
   try {
-    const data = await request.json()
-
-    if (!data.ticketId) {
+    const body = await request.json()
+    const parsed = CheckSLASchema.safeParse(body)
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: 'ticketId is required' },
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' },
         { status: 400 }
       )
     }
 
-    const violation = await slaService.checkSLAViolation(data.ticketId)
+    const violation = await slaService.checkSLAViolation(parsed.data.ticketId)
 
     return NextResponse.json({
       success: true,

@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { z } from 'zod';
+import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
 
 // Валидация входных данных
 const registerSchema = z.object({
@@ -72,7 +73,17 @@ async function hashPassword(password: string): Promise<string> {
 }
 
 // PUBLIC: registration endpoint intentionally public for new partner sign-up
+const partnerRegisterLimiter = createRateLimiter({ windowMs: 60_000, max: 3 });
+
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request.headers);
+  if (!partnerRegisterLimiter.check(ip)) {
+    return NextResponse.json(
+      { success: false, error: 'Слишком много попыток регистрации. Попробуйте позже.' },
+      { status: 429 }
+    );
+  }
+
   try {
     const body = await request.json();
     

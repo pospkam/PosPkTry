@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { reportService } from '@/lib/services'
 import { requireRole } from '@/lib/auth/middleware'
+import { z } from 'zod'
+
+const GenerateReportSchema = z.object({
+  type: z.string().min(1, 'Тип отчёта обязателен'),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  filters: z.record(z.string(), z.unknown()).optional(),
+})
 
 export async function GET(request: NextRequest) {
   const authOrResponse = await requireRole(request, ['admin', 'operator'])
@@ -32,8 +40,15 @@ export async function POST(request: NextRequest) {
   if (authOrResponse instanceof NextResponse) return authOrResponse
 
   try {
-    const data = await request.json()
-    const report = await reportService.generateReport(data, authOrResponse.userId)
+    const body = await request.json()
+    const parsed = GenerateReportSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' },
+        { status: 400 }
+      )
+    }
+    const report = await reportService.generateReport(parsed.data, authOrResponse.userId)
 
     return NextResponse.json({
       success: true,

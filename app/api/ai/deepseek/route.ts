@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
 
 export const runtime = 'edge';
+
+const deepseekLimiter = createRateLimiter({ windowMs: 60_000, max: 10 });
 
 interface DeepSeekMessage {
   role: 'system' | 'user' | 'assistant';
@@ -18,6 +21,13 @@ interface DeepSeekRequest {
 // POST /api/ai/deepseek - Chat с DeepSeek AI
 // AUTH: Public — AI assistant for visitors
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request.headers);
+  if (!deepseekLimiter.check(ip)) {
+    return NextResponse.json(
+      { error: 'Слишком много запросов. Попробуйте позже.' },
+      { status: 429 }
+    );
+  }
   try {
     const { message, context } = await request.json();
 

@@ -2,6 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse, AgentBooking, AgentBookingFormData } from '@/types';
 import { requireAgent } from '@/lib/auth/middleware';
+import { z } from 'zod';
+
+const CreateAgentBookingSchema = z.object({
+  clientId: z.string().min(1, 'ID клиента обязателен'),
+  tourId: z.string().min(1, 'ID тура обязателен'),
+  tourDate: z.string().min(1, 'Дата тура обязательна'),
+  guestsCount: z.number({ coerce: true }).int().positive('Количество гостей должно быть положительным'),
+  specialRequests: z.string().optional(),
+  voucherCode: z.string().optional(),
+  notes: z.string().optional(),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -120,15 +131,15 @@ export async function POST(request: NextRequest) {
     
     const agentId = userOrResponse.userId;
 
-    const body: AgentBookingFormData = await request.json();
-    const { clientId, tourId, tourDate, guestsCount, specialRequests, voucherCode, notes } = body;
-
-    if (!clientId || !tourId || !tourDate || !guestsCount) {
+    const body = await request.json();
+    const parsed = CreateAgentBookingSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json({
         success: false,
-        error: 'Необходимо указать клиента, тур, дату и количество гостей'
+        error: parsed.error.issues[0]?.message || 'Некорректные данные'
       } as ApiResponse<null>, { status: 400 });
     }
+    const { clientId, tourId, tourDate, guestsCount, specialRequests, voucherCode, notes } = parsed.data;
 
     // Получаем информацию о туре
     const tourQuery = `

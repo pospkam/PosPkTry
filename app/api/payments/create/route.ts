@@ -3,6 +3,7 @@ import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { verifyAuth } from '@/lib/auth';
 import { BookingForPaymentRow, PaymentRow } from '@/lib/types/db-rows';
+import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,7 +20,17 @@ interface CreatePaymentRequest {
  * POST /api/payments/create
  * Создание платежа для бронирования
  */
+const paymentLimiter = createRateLimiter({ windowMs: 60_000, max: 5 });
+
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request.headers);
+  if (!paymentLimiter.check(ip)) {
+    return NextResponse.json({
+      success: false,
+      error: 'Слишком много запросов оплаты. Попробуйте позже.',
+    } as ApiResponse<null>, { status: 429 });
+  }
+
   try {
     const auth = await verifyAuth(request);
     if (!auth.isAuthenticated || !auth.userId) {

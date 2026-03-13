@@ -7,6 +7,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { agentService } from '@/lib/services'
 import { requireRole } from '@/lib/auth/middleware'
+import { z } from 'zod'
+
+const CreateAgentSchema = z.object({
+  userId: z.string().min(1, 'ID пользователя обязателен'),
+  name: z.string().min(1, 'Имя агента обязательно'),
+  email: z.string().email('Некорректный email'),
+  team: z.string().optional(),
+  skills: z.array(z.string()).optional(),
+  maxConcurrentTickets: z.number({ coerce: true }).int().positive().optional(),
+})
 
 export async function GET(request: NextRequest) {
   const auth = await requireRole(request, ['admin', 'agent'])
@@ -45,9 +55,16 @@ export async function POST(request: NextRequest) {
   if (auth instanceof NextResponse) return auth
 
   try {
-    const data = await request.json()
+    const body = await request.json()
+    const parsed = CreateAgentSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' },
+        { status: 400 }
+      )
+    }
 
-    const agent = await agentService.createAgent(data)
+    const agent = await agentService.createAgent(parsed.data)
 
     return NextResponse.json({
       success: true,

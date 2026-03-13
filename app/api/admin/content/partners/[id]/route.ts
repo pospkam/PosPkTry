@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { requireAdmin } from '@/lib/auth/middleware';
+import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
 
@@ -80,6 +81,14 @@ const ALLOWED_CATEGORIES = new Set([
   'operator', 'guide', 'transfer', 'stay', 'gear', 'agent', 'souvenir', 'cars', 'restaurant',
 ]);
 
+const UpdatePartnerSchema = z.object({
+  name: z.string().min(1, 'Название обязательно'),
+  category: z.string().optional().default(''),
+  description: z.string().optional().default(''),
+  contact: z.record(z.string(), z.unknown()).optional().default({}),
+  isVerified: z.boolean().optional(),
+});
+
 /**
  * PUT /api/admin/content/partners/[id]
  * Обновление партнёра администратором
@@ -94,19 +103,15 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-
-    const name = typeof body.name === 'string' ? body.name.trim() : '';
-    const category = typeof body.category === 'string' ? body.category : '';
-    const description = typeof body.description === 'string' ? body.description.trim() : '';
-    const contact = typeof body.contact === 'object' && body.contact !== null ? body.contact : {};
-    const isVerified = typeof body.isVerified === 'boolean' ? body.isVerified : undefined;
-
-    if (!name) {
+    const parsed = UpdatePartnerSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: 'Название обязательно' },
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' },
         { status: 400 }
       );
     }
+
+    const { name, category, description, contact, isVerified } = parsed.data;
 
     if (category && !ALLOWED_CATEGORIES.has(category)) {
       return NextResponse.json(

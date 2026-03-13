@@ -2,6 +2,22 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse, Voucher, VoucherFormData } from '@/types';
 import { requireAgent } from '@/lib/auth/middleware';
+import { z } from 'zod';
+
+const CreateVoucherSchema = z.object({
+  name: z.string().min(1, 'Название ваучера обязательно'),
+  description: z.string().optional(),
+  code: z.string().min(1, 'Код ваучера обязателен'),
+  discountType: z.string().min(1, 'Тип скидки обязателен'),
+  discountValue: z.number({ coerce: true }).positive('Размер скидки должен быть положительным'),
+  minPurchase: z.number({ coerce: true }).nonnegative().optional(),
+  maxDiscount: z.number({ coerce: true }).positive().optional(),
+  validFrom: z.string().min(1, 'Дата начала действия обязательна'),
+  validTo: z.string().min(1, 'Дата окончания действия обязательна'),
+  usageLimit: z.number({ coerce: true }).int().positive().optional(),
+  applicableTours: z.array(z.string()).optional().default([]),
+  applicableClients: z.array(z.string()).optional().default([]),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -114,7 +130,14 @@ export async function POST(request: NextRequest) {
     
     const agentId = userOrResponse.userId;
 
-    const body: VoucherFormData = await request.json();
+    const body = await request.json();
+    const parsed = CreateVoucherSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({
+        success: false,
+        error: parsed.error.issues[0]?.message || 'Некорректные данные'
+      } as ApiResponse<null>, { status: 400 });
+    }
     const {
       name,
       description,
@@ -128,14 +151,7 @@ export async function POST(request: NextRequest) {
       usageLimit,
       applicableTours,
       applicableClients
-    } = body;
-
-    if (!name || !code || !discountValue || !validFrom || !validTo) {
-      return NextResponse.json({
-        success: false,
-        error: 'Необходимо указать название, код, размер скидки и период действия'
-      } as ApiResponse<null>, { status: 400 });
-    }
+    } = parsed.data;
 
     // Проверяем уникальность кода
     const existingVoucherQuery = `

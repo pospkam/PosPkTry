@@ -7,6 +7,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ticketService } from '@/lib/services'
 import { verifyAuth } from '@/lib/auth'
+import { z } from 'zod'
+
+const UpdateTicketSchema = z.object({
+  status: z.enum(['open', 'in_progress', 'resolved', 'closed']).optional(),
+  priority: z.enum(['low', 'medium', 'high', 'critical']).optional(),
+  assigneeId: z.string().optional(),
+  category: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+}).refine(
+  data => Object.values(data).some(v => v !== undefined),
+  'Необходимо указать хотя бы одно поле для обновления'
+)
 
 export async function GET(
   request: NextRequest,
@@ -64,9 +76,17 @@ export async function PUT(
     }
 
     const data = await request.json()
+    const parsed = UpdateTicketSchema.safeParse(data)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' },
+        { status: 400 }
+      )
+    }
+    const updateData = parsed.data as Partial<{ status: string; priority: string; assigneeId: string; category: string; tags: string[] }>
     const ticket = isPrivilegedRole
-      ? await ticketService.updateTicket(id, data)
-      : await ticketService.updateTicketForUser(id, auth.userId, data)
+      ? await ticketService.updateTicket(id, updateData as Record<string, unknown>)
+      : await ticketService.updateTicketForUser(id, auth.userId, updateData as Record<string, unknown>)
     if (!ticket) {
       return NextResponse.json({ success: false, error: 'Ticket not found' }, { status: 404 })
     }

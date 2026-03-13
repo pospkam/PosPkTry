@@ -59,6 +59,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loadUserFromStorage();
   }, []);
 
+  // Auto-refresh token when it's about to expire (within 1 day)
+  useEffect(() => {
+    if (!user?.token) return;
+
+    const checkAndRefresh = async () => {
+      try {
+        // Decode JWT payload (base64url) to read exp
+        const parts = user.token!.split('.');
+        if (parts.length !== 3) return;
+        const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+        const exp = payload.exp as number | undefined;
+        if (!exp) return;
+
+        const now = Math.floor(Date.now() / 1000);
+        const timeLeft = exp - now;
+        const oneDayInSeconds = 86400;
+
+        // Refresh if less than 1 day remaining
+        if (timeLeft > 0 && timeLeft < oneDayInSeconds) {
+          const response = await fetch('/api/auth/refresh', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${user.token}` },
+          });
+          if (response.ok) {
+            const result = await response.json();
+            if (result.success && result.token) {
+              const updatedUser = { ...user, token: result.token };
+              setUser(updatedUser);
+              await saveUserToStorage(updatedUser);
+            }
+          }
+        }
+      } catch {
+        // Silent fail — next check will retry
+      }
+    };
+
+    checkAndRefresh();
+    const interval = setInterval(checkAndRefresh, 30 * 60 * 1000); // every 30 min
+    return () => clearInterval(interval);
+  }, [user?.token]);
+
   const loadUserFromStorage = async () => {
     try {
       // Try to load from localStorage first

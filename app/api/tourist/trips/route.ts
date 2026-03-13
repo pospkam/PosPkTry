@@ -1,8 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireAuth } from '@/lib/auth/middleware';
 import { getTouristProfile, validateTripData, updateTouristStats, checkTripAchievements } from '@/lib/auth/tourist-helpers';
+
+const CreateTripSchema = z.object({
+  tripName: z.string().min(1, 'Название поездки обязательно'),
+  destination: z.string().min(1, 'Укажите направление'),
+  startDate: z.string().min(1, 'Укажите дату начала'),
+  endDate: z.string().min(1, 'Укажите дату окончания'),
+  tripType: z.string().optional(),
+  budget: z.number().optional(),
+  participants: z.number().int().min(1, 'Минимум 1 участник').optional(),
+  itinerary: z.array(z.unknown()).optional(),
+  notes: z.string().optional(),
+  isPublic: z.boolean().optional(),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -96,6 +110,13 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    const parsed = CreateTripSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' } as ApiResponse<null>,
+        { status: 400 }
+      );
+    }
     const {
       tripName,
       destination,
@@ -107,7 +128,7 @@ export async function POST(request: NextRequest) {
       itinerary,
       notes,
       isPublic
-    } = body;
+    } = parsed.data;
 
     const validation = validateTripData({
       tripName,

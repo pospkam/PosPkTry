@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { query } from '@/lib/database';
+import { z } from 'zod';
+
+const VerifyCertificationSchema = z.object({
+  id: z.string().min(1, 'ID сертификата обязателен'),
+  is_verified: z.boolean({ required_error: 'Поле is_verified обязательно' }),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -73,11 +79,11 @@ export async function PATCH(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { id, is_verified } = body as { id: string; is_verified: boolean };
-
-    if (!id || typeof is_verified !== 'boolean') {
-      return NextResponse.json({ success: false, error: 'id и is_verified обязательны' }, { status: 400 });
+    const parsed = VerifyCertificationSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' }, { status: 400 });
     }
+    const { id, is_verified } = parsed.data;
 
     await query(
       `UPDATE guide_certifications SET is_verified = $1, updated_at = NOW() WHERE id = $2`,

@@ -7,6 +7,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ticketMessageService, ticketService } from '@/lib/services'
 import { requireAuth } from '@/lib/auth/middleware'
+import { z } from 'zod'
+
+const CreateMessageSchema = z.object({
+  content: z.string().min(1, 'Текст сообщения обязателен'),
+  attachments: z.array(z.string()).optional(),
+})
 
 export async function GET(
   request: NextRequest,
@@ -59,9 +65,16 @@ export async function POST(
     }
 
     const data = await request.json()
+    const parsed = CreateMessageSchema.safeParse(data)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' },
+        { status: 400 }
+      )
+    }
     const messagePayload: Record<string, unknown> = {
       ticketId: id,
-      ...data,
+      ...parsed.data,
     }
     messagePayload.authorId = auth.userId
     messagePayload.userId = auth.userId

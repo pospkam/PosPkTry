@@ -3,6 +3,16 @@ import { query } from '@/lib/database';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { ApiResponse } from '@/types';
 import { EmailTemplateRow, EmailTemplateCreateRow } from '@/lib/types/db-rows';
+import { z } from 'zod';
+
+const CreateEmailTemplateSchema = z.object({
+  name: z.string().min(1, 'Название шаблона обязательно'),
+  subject: z.string().min(1, 'Тема письма обязательна'),
+  type: z.string().min(1, 'Тип шаблона обязателен'),
+  htmlContent: z.string().min(1, 'HTML-содержимое обязательно'),
+  textContent: z.string().optional().default(''),
+  variables: z.array(z.string()).optional().default([]),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -60,14 +70,14 @@ export async function POST(request: NextRequest) {
       return adminOrResponse;
     }
     const body = await request.json();
-    const { name, subject, type, htmlContent, textContent, variables } = body;
-
-    if (!name || !subject || !type || !htmlContent) {
+    const parsed = CreateEmailTemplateSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json({
         success: false,
-        error: 'Необходимо указать name, subject, type и htmlContent'
+        error: parsed.error.issues[0]?.message || 'Некорректные данные'
       } as ApiResponse<null>, { status: 400 });
     }
+    const { name, subject, type, htmlContent, textContent, variables } = parsed.data;
 
     const createQuery = `
       INSERT INTO email_templates (

@@ -2,9 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { writeFileSync, existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { requireAdmin } from '@/lib/auth/middleware';
+import { z } from 'zod';
 
 /** Only these env var names may be written via this endpoint. */
 const ALLOWED_TOKEN_TYPES = new Set(['TIMEWEB_TOKEN']);
+
+const SaveTokenSchema = z.object({
+  token: z.string().min(1, 'Токен обязателен').refine(val => !/[\r\n]/.test(val), 'Токен не должен содержать переносы строк'),
+  type: z.enum(['TIMEWEB_TOKEN'], { errorMap: () => ({ message: 'Недопустимый тип токена' }) }),
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,22 +19,14 @@ export async function POST(request: NextRequest) {
       return adminOrResponse;
     }
 
-    const { token, type } = await request.json();
-
-    if (!token || !type) {
-      return NextResponse.json({ error: 'Missing token or type' }, { status: 400 });
+    const body = await request.json();
+    const parsed = SaveTokenSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' }, { status: 400 });
     }
+    const { token, type } = parsed.data;
 
-    // Whitelist: only pre-approved env var names are writable
-    if (!ALLOWED_TOKEN_TYPES.has(String(type))) {
-      return NextResponse.json({ error: 'Invalid token type' }, { status: 400 });
-    }
-
-    // Prevent newline injection into .env.local
-    const safeToken = String(token);
-    if (/[\r\n]/.test(safeToken)) {
-      return NextResponse.json({ error: 'Token must not contain newlines' }, { status: 400 });
-    }
+    const safeToken = token;
 
     const envPath = join(process.cwd(), '.env.local');
     const content = existsSync(envPath) ? readFileSync(envPath, 'utf-8') : '';

@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { query } from '@/lib/database';
 import { ChatMessage, ChatSession, ApiResponse } from '@/types';
 import { config } from '@/lib/config';
 import { verifyAuth } from '@/lib/auth';
+
+const SendChatMessageSchema = z.object({
+  sessionId: z.string().optional(),
+  userId: z.string().optional(),
+  message: z.string().min(1, 'Сообщение не может быть пустым'),
+  context: z.record(z.unknown()).optional(),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -167,10 +175,17 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { sessionId, userId: requestedUserId, message, context } = body;
+    const parsed = SendChatMessageSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({
+        success: false,
+        error: parsed.error.issues[0]?.message || 'Некорректные данные',
+      } as ApiResponse<null>, { status: 400 });
+    }
+    const { sessionId, userId: requestedUserId, message, context } = parsed.data;
     const userId = (auth.role === 'admin' && requestedUserId) ? requestedUserId : auth.userId;
 
-    if (!message || !userId) {
+    if (!userId) {
       return NextResponse.json({
         success: false,
         error: 'Message and userId are required',

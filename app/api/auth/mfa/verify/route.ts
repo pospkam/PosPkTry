@@ -2,6 +2,9 @@ import { createHmac } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth } from '@/lib/auth';
 import { query } from '@/lib/database';
+import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
+
+const mfaVerifyLimiter = createRateLimiter({ windowMs: 60_000, max: 5 });
 
 function base32Decode(base32: string): Buffer {
   const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
@@ -48,6 +51,14 @@ function verifyTOTP(secret: string, token: string): boolean {
 }
 
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request.headers);
+  if (!mfaVerifyLimiter.check(ip)) {
+    return NextResponse.json(
+      { error: 'Слишком много попыток. Попробуйте позже.' },
+      { status: 429 }
+    );
+  }
+
   try {
     const auth = await verifyAuth(request);
     if (!auth.isAuthenticated || !auth.userId) {

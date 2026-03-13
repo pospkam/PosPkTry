@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { ApiResponse } from '@/types';
 import { verifyAuth } from '@/lib/auth';
+import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
 import {
   listBookings,
   createBooking,
@@ -88,7 +89,17 @@ export async function GET(request: NextRequest) {
 }
 
 // POST /api/bookings — Создание нового бронирования (только tourist)
+const bookingLimiter = createRateLimiter({ windowMs: 60_000, max: 5 });
+
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request.headers);
+  if (!bookingLimiter.check(ip)) {
+    return NextResponse.json(
+      { success: false, error: 'Слишком много запросов бронирования. Попробуйте позже.' } as ApiResponse<null>,
+      { status: 429 }
+    );
+  }
+
   try {
     const auth = await verifyAuth(request);
     if (!auth.isAuthenticated || !auth.userId || !auth.role) {

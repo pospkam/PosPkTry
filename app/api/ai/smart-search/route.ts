@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import { FISHING_TOURS } from '@/lib/partners/kamchatka-fishing/tours-data';
+import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
+
+const smartSearchLimiter = createRateLimiter({ windowMs: 60_000, max: 20 });
 
 /**
  * AI Smart Search API
@@ -8,6 +11,14 @@ import { FISHING_TOURS } from '@/lib/partners/kamchatka-fishing/tours-data';
  * AUTH: Public — AI search for visitors
  */
 export async function POST(request: Request) {
+  const ip = getClientIp(request.headers);
+  if (!smartSearchLimiter.check(ip)) {
+    return NextResponse.json(
+      { success: false, error: 'Слишком много запросов. Попробуйте позже.' },
+      { status: 429 }
+    );
+  }
+
   try {
     const { query } = await request.json();
 

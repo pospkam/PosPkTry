@@ -1,11 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { transferPayments } from '@/lib/payments/transfer-payments';
 import { requireAuth } from '@/lib/auth/middleware';
+import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
+const transferPaymentLimiter = createRateLimiter({ windowMs: 60_000, max: 5 });
+
 // POST /api/transfers/payment/confirm - Подтверждение платежа
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request.headers);
+  if (!transferPaymentLimiter.check(ip)) {
+    return NextResponse.json(
+      { success: false, error: 'Слишком много запросов. Попробуйте позже.' },
+      { status: 429 }
+    );
+  }
+
   try {
     const authResult = await requireAuth(request);
     if (authResult instanceof NextResponse) return authResult;

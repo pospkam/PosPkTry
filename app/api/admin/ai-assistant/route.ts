@@ -4,6 +4,11 @@ import { requireAdmin } from '@/lib/auth/middleware';
 import { callAIWaterfall } from '@/lib/ai/providers';
 import type { ChatMessage } from '@/lib/ai/prompts';
 import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
+import { z } from 'zod';
+
+const AiAssistantSchema = z.object({
+  question: z.string().min(1, 'Вопрос не может быть пустым').max(2000, 'Вопрос слишком длинный'),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -27,13 +32,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const question = typeof body?.question === 'string' ? body.question.trim() : '';
-    if (!question) {
+    const parsed = AiAssistantSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: 'Вопрос не может быть пустым' },
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' },
         { status: 400 }
       );
     }
+    const question = parsed.data.question.trim();
 
     // Fetch quick metrics for context
     let bookings30d = 0;

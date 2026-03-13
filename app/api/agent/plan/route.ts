@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
 
-interface AgentPlanRequest {
-  query: string;
-  group_size?: number;
-  duration_days?: number;
-  difficulty?: string;
-}
+const AgentPlanSchema = z.object({
+  query: z.string().min(1, 'Поле query обязательно'),
+  group_size: z.number({ coerce: true }).int().positive().optional().default(1),
+  duration_days: z.number({ coerce: true }).int().positive().optional().default(2),
+  difficulty: z.string().optional(),
+});
 
 /**
  * POST /api/agent/plan
@@ -25,15 +26,15 @@ interface AgentPlanRequest {
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json() as AgentPlanRequest;
-    const { query, group_size = 1, duration_days = 2, difficulty } = body;
-
-    if (!query) {
+    const body = await request.json();
+    const parsed = AgentPlanSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'query обязателен' },
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' },
         { status: 400 }
       );
     }
+    const { query, group_size, duration_days, difficulty } = parsed.data;
 
     // Пытаемся подключить FastAPI (если запущен)
     const crewaiUrl = process.env.CREWAI_API_URL || 'http://localhost:8001';
