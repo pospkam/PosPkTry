@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
+import { z } from 'zod';
 import { TransferBookingRequest, TransferBookingResponse } from '@/types/transfer';
 import { TransferBooking } from '@/types/transfer';
 import { config } from '@/lib/config';
@@ -13,6 +14,24 @@ import { requireAuth } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
+const bookTransferSchema = z.object({
+  scheduleId: z.string().uuid(),
+  passengersCount: z.number().int().min(1).max(50),
+  vehicleType: z.string().optional(),
+  features: z.array(z.string()).optional(),
+  languages: z.array(z.string()).optional(),
+  budgetMax: z.number().min(0).optional(),
+  contactInfo: z.object({
+    name: z.string().max(255).optional(),
+    phone: z.string().min(1).max(30),
+    email: z.string().email(),
+  }),
+  specialRequests: z.string().max(2000).optional(),
+  fromCoordinates: z.record(z.unknown()).optional(),
+  toCoordinates: z.record(z.unknown()).optional(),
+  departureDate: z.string().optional(),
+});
+
 // POST /api/transfers/book - Бронирование трансфера (THREAD-SAFE)
 export async function POST(request: NextRequest) {
   try {
@@ -20,47 +39,26 @@ export async function POST(request: NextRequest) {
     if (authResult instanceof NextResponse) return authResult;
     const userId = authResult.userId;
 
-    const body: TransferBookingRequest = await request.json();
-    
-    // Валидация входных данных
-    if (!body.scheduleId || !body.passengersCount || !body.contactInfo) {
+    const body: unknown = await request.json();
+    const parsed = bookTransferSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json({
         success: false,
-        error: 'Отсутствуют обязательные поля: scheduleId, passengersCount, contactInfo'
+        error: parsed.error.issues[0]?.message || 'Некорректные данные'
       }, { status: 400 });
     }
 
-    if (body.passengersCount < 1 || body.passengersCount > 50) {
-      return NextResponse.json({
-        success: false,
-        error: 'Количество пассажиров должно быть от 1 до 50'
-      }, { status: 400 });
-    }
-
-    if (!body.contactInfo.phone || !body.contactInfo.email) {
-      return NextResponse.json({
-        success: false,
-        error: 'Необходимо указать телефон и email'
-      }, { status: 400 });
-    }
-
-    // Проверяем наличие данных для сопоставления
-    if (!body.fromCoordinates || !body.toCoordinates || !body.departureDate) {
-      return NextResponse.json({
-        success: false,
-        error: 'Необходимо указать координаты и дату отправления для поиска водителей'
-      }, { status: 400 });
-    }
+    const requestData = parsed.data as TransferBookingRequest;
 
     try {
       // 1. ИНТЕЛЛЕКТУАЛЬНОЕ СОПОСТАВЛЕНИЕ ВОДИТЕЛЕЙ
       const matchingCriteria = {
-        vehicleType: body.vehicleType,
-        capacity: body.passengersCount,
-        features: body.features || [],
-        languages: body.languages || ['ru'],
+        vehicleType: requestData.vehicleType,
+        capacity: requestData.passengersCount,
+        features: requestData.features || [],
+        languages: requestData.languages || ['ru'],
         maxDistance: 10000, // 10 км
-        maxPrice: body.budgetMax || 10000,
+        maxPrice: requestData.budgetMax || 10000,
         minRating: 4.0,
         workingHours: {
           start: '06:00',
@@ -68,8 +66,8 @@ export async function POST(request: NextRequest) {
         }
       };
 
-      const matchingResult = await matchingEngine.findBestDrivers(body, matchingCriteria);
-      
+      const matchingResult = await matchingEngine.findBestDrivers(requestData, matchingCriteria);
+
       if (!matchingResult.success || matchingResult.drivers.length === 0) {
         return NextResponse.json({
           success: false,
@@ -79,7 +77,7 @@ export async function POST(request: NextRequest) {
 
       // Берем лучшего водителя
       const bestDriver = matchingResult.drivers[0];
-      
+
       // Получаем информацию о расписании для выбранного водителя
       const scheduleQuery = `
         SELECT s.*, r.*, v.*, d.*, o.name as operator_name, o.phone as operator_phone, o.email as operator_email
@@ -91,7 +89,7 @@ export async function POST(request: NextRequest) {
         WHERE s.id = $1 AND s.is_active = true AND d.id = $2
       `;
 
-      const scheduleResult = await query(scheduleQuery, [body.scheduleId, bestDriver.driverId]);
+      const scheduleResult = await query(scheduleQuery, [requestData.scheduleId, bestDriver.driverId]);
 
       if (scheduleResult.rows.length === 0) {
         return NextResponse.json({
@@ -105,11 +103,11 @@ export async function POST(request: NextRequest) {
       // 🔒 БЕЗОПАСНОЕ БРОНИРОВАНИЕ С ТРАНЗАКЦИОННЫМИ БЛОКИРОВКАМИ
       // Защита от race conditions и overbooking
       const bookingResult = await createBookingWithLock({
-        scheduleId: body.scheduleId,
-        passengersCount: body.passengersCount,
+        scheduleId: requestData.scheduleId,
+        passengersCount: requestData.passengersCount,
         userId,
-        contactInfo: body.contactInfo,
-        specialRequests: body.specialRequests
+        contactInfo: requestData.contactInfo,
+        specialRequests: requestData.specialRequests
       });
 
       if (!bookingResult.success) {
@@ -117,8 +115,8 @@ export async function POST(request: NextRequest) {
           success: false,
           error: bookingResult.error,
           errorCode: bookingResult.errorCode
-        }, { 
-          status: bookingResult.errorCode === 'INSUFFICIENT_SEATS' ? 400 : 
+        }, {
+          status: bookingResult.errorCode === 'INSUFFICIENT_SEATS' ? 400 :
                  bookingResult.errorCode === 'LOCK_TIMEOUT' ? 409 : 500
         });
       }
@@ -132,21 +130,21 @@ export async function POST(request: NextRequest) {
         currency: 'RUB',
         paymentMethod: 'card' as const,
         customerInfo: {
-          email: body.contactInfo.email,
-          phone: body.contactInfo.phone,
-          name: body.contactInfo.name || 'Не указано'
+          email: requestData.contactInfo.email,
+          phone: requestData.contactInfo.phone,
+          name: requestData.contactInfo.name || 'Не указано'
         },
         description: `Оплата трансфера ${booking.scheduleInfo.fromLocation} → ${booking.scheduleInfo.toLocation}`
       };
 
       const paymentResult = await transferPayments.createPayment(paymentRequest);
-      
+
       if (!paymentResult.success) {
         // Откатываем бронирование при ошибке платежа
         // Импортируем функцию отмены
         const { cancelBooking } = await import('@/lib/transfers/booking');
         await cancelBooking(booking.id, 'Payment creation failed');
-        
+
         return NextResponse.json({
           success: false,
           error: `Ошибка создания платежа: ${paymentResult.error}`
@@ -157,7 +155,7 @@ export async function POST(request: NextRequest) {
       // Уведомление уже создано в createBookingWithLock
 
       // Отправляем реальные уведомления
-      await sendRealBookingNotifications(booking, schedule, schedule, body.contactInfo);
+      await sendRealBookingNotifications(booking, schedule, schedule, requestData.contactInfo);
 
       const response: TransferBookingResponse = {
         success: true,
@@ -193,10 +191,10 @@ export async function POST(request: NextRequest) {
 
     } catch (dbError) {
       console.error('Database error:', dbError);
-      
+
       // Fallback к тестовому бронированию
-      const mockBooking = createMockBooking(body);
-      
+      const mockBooking = createMockBooking(requestData);
+
       const response: TransferBookingResponse = {
         success: true,
         data: {

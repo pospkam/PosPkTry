@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { query } from '@/lib/database';
 import { emailService } from '@/lib/notifications/email-service';
 import { requireAdmin } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
+
+const TourReminderSchema = z.object({
+  tour_id: z.string().uuid('Укажите корректный ID тура'),
+  reminder_type: z.enum(['email', 'sms', 'push'], { errorMap: () => ({ message: 'Укажите корректный тип напоминания: email, sms или push' }) }),
+  send_days_before: z.number().int('Дни должны быть целым числом').min(1, 'Минимум 1 день').max(30, 'Максимум 30 дней').optional(),
+});
 
 /**
  * POST /api/notifications/tour-reminders
@@ -14,6 +21,29 @@ export async function POST(request: NextRequest) {
   try {
     const adminOrResponse = await requireAdmin(request);
     if (adminOrResponse instanceof NextResponse) return adminOrResponse;
+
+    // Попытаемся распарсить body если он есть, но это не критично для этого endpoint
+    let body: unknown = {};
+    try {
+      const text = await request.text();
+      if (text) {
+        body = JSON.parse(text);
+      }
+    } catch {
+      // Игнорируем ошибку парсинга - параметры не обязательны
+    }
+
+    // Валидируем если данные были отправлены
+    if (Object.keys(body as Record<string, unknown>).length > 0) {
+      const validationResult = TourReminderSchema.safeParse(body);
+      if (!validationResult.success) {
+        const errorMessage = validationResult.error.errors[0]?.message || 'Ошибка валидации';
+        return NextResponse.json({
+          success: false,
+          error: errorMessage,
+        }, { status: 400 });
+      }
+    }
 
     // Находим все подтвержденные бронирования на завтра
     const tomorrow = new Date();

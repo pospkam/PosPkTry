@@ -5,9 +5,22 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { paymentService } from '@/lib/services'
 import { bookingService } from '@/lib/services'
 import { authenticateUser } from '@/lib/auth'
+
+const initiatePaymentSchema = z.object({
+  bookingId: z.string().uuid(),
+  gateway: z.string().min(1).max(50),
+  returnUrl: z.string().url().optional(),
+  notificationUrl: z.string().url().optional(),
+});
+
+const verifyPaymentSchema = z.object({
+  transactionId: z.string().uuid(),
+  verificationData: z.record(z.unknown()).optional(),
+});
 
 /**
  * POST /api/bookings/payments
@@ -22,33 +35,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Parse body
+    // Parse and validate body
     const body = await request.json()
-
-    if (!body.bookingId || !body.gateway) {
+    const parsed = initiatePaymentSchema.safeParse(body)
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'bookingId and gateway are required' },
+        { error: parsed.error.issues[0]?.message || 'Некорректные данные' },
         { status: 400 }
       )
     }
 
+    const { bookingId, gateway, returnUrl, notificationUrl } = parsed.data
+
     // Ownership is enforced at service layer
-    const booking = await bookingService.getByIdForUser(body.bookingId, userId)
+    const booking = await bookingService.getByIdForUser(bookingId, userId)
     if (!booking) {
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
     }
 
     // Initiate payment
     const paymentResponse = await paymentService.initiatePayment({
-      bookingId: body.bookingId,
+      bookingId: bookingId,
       amount: Number(booking.totalPrice || 0),
       currency: 'RUB',
-      gateway: body.gateway,
+      gateway: gateway,
       payerName: 'Customer',
       payerEmail: '',
       payerPhone: undefined,
-      returnUrl: body.returnUrl || `${process.env.NEXT_PUBLIC_APP_URL}/bookings/${body.bookingId}`,
-      notificationUrl: body.notificationUrl || `${process.env.NEXT_PUBLIC_API_URL}/webhooks/payments`,
+      returnUrl: returnUrl || `${process.env.NEXT_PUBLIC_APP_URL}/bookings/${bookingId}`,
+      notificationUrl: notificationUrl || `${process.env.NEXT_PUBLIC_API_URL}/webhooks/payments`,
       description: `Payment for booking ${booking.id}`,
       metadata: {
         bookingId: booking.id,
@@ -79,14 +94,19 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Parse body
+    // Parse and validate body
     const body = await request.json()
-
-    if (!body.transactionId) {
-      return NextResponse.json({ error: 'transactionId is required' }, { status: 400 })
+    const parsed = verifyPaymentSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message || 'Некорректные данные' },
+        { status: 400 }
+      )
     }
 
-    const transaction = await paymentService.getTransaction(body.transactionId)
+    const { transactionId, verificationData } = parsed.data
+
+    const transaction = await paymentService.getTransaction(transactionId)
     if (!transaction) {
       return NextResponse.json({ error: 'Transaction not found' }, { status: 404 })
     }
@@ -102,13 +122,13 @@ export async function PATCH(request: NextRequest) {
 
     // Verify payment
     const verification = await paymentService.verifyPayment(
-      body.transactionId,
-      body.verificationData || {}
+      transactionId,
+      verificationData || {}
     )
 
     if (verification.status === 'completed') {
       // Confirm booking
-      const confirmed = await bookingService.confirmPayment(transaction.bookingId, body.transactionId)
+      const confirmed = await bookingService.confirmPayment(transaction.bookingId, transactionId)
       if (!confirmed) {
         return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
       }

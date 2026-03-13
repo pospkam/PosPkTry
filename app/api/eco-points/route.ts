@@ -1,9 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { query } from '@/lib/database';
 import { EcoPoint, UserEcoPoints, EcoAchievement, ApiResponse } from '@/types';
 import { requireAdmin } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
+
+const CreateEcoPointSchema = z.object({
+  name: z.string().min(1, 'Название обязательно'),
+  description: z.string().min(1, 'Описание обязательно'),
+  coordinates: z.object({
+    lat: z.number(),
+    lng: z.number(),
+  }),
+  category: z.enum(['recycling', 'cleaning', 'conservation', 'education'], { errorMap: () => ({ message: 'Некорректная категория' }) }),
+  points: z.number().positive('Баллы должны быть положительными'),
+  isActive: z.boolean().optional(),
+});
 
 /**
  * Получение списка eco-points (публично, для карты/каталога)
@@ -105,32 +118,11 @@ export async function POST(request: NextRequest) {
     if (adminOrResponse instanceof NextResponse) return adminOrResponse;
 
     const body = await request.json();
-    
-    // Валидация обязательных полей
-    const requiredFields = ['name', 'description', 'coordinates', 'category', 'points'];
-    for (const field of requiredFields) {
-      if (!body[field]) {
-        return NextResponse.json({
-          success: false,
-          error: `Missing required field: ${field}`,
-        } as ApiResponse<null>, { status: 400 });
-      }
-    }
-
-    // Валидация категории
-    const validCategories = ['recycling', 'cleaning', 'conservation', 'education'];
-    if (!validCategories.includes(body.category)) {
+    const parsed = CreateEcoPointSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json({
         success: false,
-        error: `Invalid category. Must be one of: ${validCategories.join(', ')}`,
-      } as ApiResponse<null>, { status: 400 });
-    }
-
-    // Валидация координат
-    if (!body.coordinates.lat || !body.coordinates.lng) {
-      return NextResponse.json({
-        success: false,
-        error: 'Coordinates must include lat and lng',
+        error: parsed.error.issues[0]?.message || 'Некорректные данные',
       } as ApiResponse<null>, { status: 400 });
     }
 
@@ -144,12 +136,12 @@ export async function POST(request: NextRequest) {
     `;
 
     const ecoPointParams = [
-      body.name,
-      body.description,
-      JSON.stringify(body.coordinates),
-      body.category,
-      body.points,
-      body.isActive !== false, // По умолчанию активен
+      parsed.data.name,
+      parsed.data.description,
+      JSON.stringify(parsed.data.coordinates),
+      parsed.data.category,
+      parsed.data.points,
+      parsed.data.isActive !== false, // По умолчанию активен
     ];
 
     const result = await query(createEcoPointQuery, ecoPointParams);

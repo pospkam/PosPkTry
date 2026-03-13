@@ -1,8 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { ApiResponse } from '@/types';
 import { requireAdmin } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
+
+const validRoles = ['tourist', 'operator', 'guide', 'transfer', 'agent', 'admin', 'stay', 'gear'] as const;
+const validLevels = ['L1', 'L2', 'L3'] as const;
+
+const UpdateRoleSchema = z.object({
+  userId: z.string().uuid('Укажите корректный ID пользователя'),
+  role: z.enum(validRoles as unknown as [string, ...string[]], { errorMap: () => ({ message: 'Указана недопустимая роль' }) }),
+  level: z.enum(validLevels as unknown as [string, ...string[]], { errorMap: () => ({ message: 'Указан недопустимый уровень оператора' }) }).optional(),
+  permissions: z.array(z.string()).optional(),
+});
 
 // GET /api/roles - Public
 export async function GET(request: NextRequest) {
@@ -184,32 +195,33 @@ export async function POST(request: NextRequest) {
     const adminOrResponse = await requireAdmin(request);
     if (adminOrResponse instanceof NextResponse) return adminOrResponse;
 
-    const body = await request.json();
-    const { userId, role, level } = body;
-
-    if (!userId || !role) {
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
       return NextResponse.json({
         success: false,
-        error: 'User ID and role are required',
+        error: 'Неверный формат запроса',
       } as ApiResponse<null>, { status: 400 });
     }
 
-    // Валидация роли
-    const validRoles = ['tourist', 'operator', 'guide', 'transfer', 'agent', 'admin', 'stay', 'gear'];
-    if (!validRoles.includes(role)) {
+    const validationResult = UpdateRoleSchema.safeParse(body);
+    if (!validationResult.success) {
+      const errorMessage = validationResult.error.errors[0]?.message || 'Ошибка валидации';
       return NextResponse.json({
         success: false,
-        error: 'Invalid role',
+        error: errorMessage,
       } as ApiResponse<null>, { status: 400 });
     }
+
+    const { userId, role, level } = validationResult.data;
 
     // Валидация уровня для операторов
     if (role === 'operator' && level) {
-      const validLevels = ['L1', 'L2', 'L3'];
-      if (!validLevels.includes(level)) {
+      if (!validLevels.includes(level as 'L1' | 'L2' | 'L3')) {
         return NextResponse.json({
           success: false,
-          error: 'Invalid operator level',
+          error: 'Указан недопустимый уровень оператора',
         } as ApiResponse<null>, { status: 400 });
       }
     }

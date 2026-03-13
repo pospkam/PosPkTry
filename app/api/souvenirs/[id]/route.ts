@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireAdmin } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
+
+const UpdatePublicSouvenirSchema = z.object({
+  name: z.string().optional(),
+  description: z.string().optional(),
+  price: z.number().optional(),
+});
 
 // GET /api/souvenirs/[id] - Public
 export async function GET(
@@ -54,11 +61,21 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
+    const parsed = UpdatePublicSouvenirSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({
+        success: false,
+        error: parsed.error.issues[0]?.message || 'Некорректные данные'
+      } as ApiResponse<null>, { status: 400 });
+    }
+
+    const { name, description, price } = parsed.data;
+
     await query(`
-      UPDATE souvenirs 
-      SET name = $1, description = $2, price = $3, updated_at = NOW()
+      UPDATE souvenirs
+      SET name = COALESCE($1, name), description = COALESCE($2, description), price = COALESCE($3, price), updated_at = NOW()
       WHERE id = $4
-    `, [body.name, body.description, body.price, id]);
+    `, [name, description, price, id]);
 
     return NextResponse.json({
       success: true,

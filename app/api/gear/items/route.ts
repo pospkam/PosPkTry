@@ -1,10 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { getGearPartnerId } from '@/lib/auth/gear-helpers';
 import { requireAuth } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
+
+const CreateGearItemSchema = z.object({
+  name: z.string().min(1, 'Название обязательно'),
+  description: z.string().optional(),
+  category: z.string().min(1, 'Категория обязательна'),
+  subcategory: z.string().optional(),
+  brand: z.string().optional(),
+  model: z.string().optional(),
+  pricePerDay: z.number().positive('Цена должна быть положительной'),
+  pricePerWeek: z.number().optional(),
+  pricePerMonth: z.number().optional(),
+  quantity: z.number().int().positive('Количество должно быть целым числом больше 0'),
+  depositAmount: z.number().optional(),
+  insuranceCostPerDay: z.number().optional(),
+  images: z.array(z.string()).optional(),
+  specifications: z.record(z.unknown()).optional(),
+  features: z.array(z.string()).optional(),
+  condition: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+});
 
 /**
  * GET /api/gear/items - Get partner's gear items (auth required)
@@ -75,7 +96,7 @@ export async function POST(request: NextRequest) {
     const userId = authResult.userId;
 
     const partnerId = await getGearPartnerId(userId);
-    
+
     if (!partnerId) {
       return NextResponse.json({
         success: false,
@@ -84,19 +105,20 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    const parsed = CreateGearItemSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({
+        success: false,
+        error: parsed.error.issues[0]?.message || 'Некорректные данные'
+      } as ApiResponse<null>, { status: 400 });
+    }
+
     const {
       name, description, category, subcategory, brand, model,
       pricePerDay, pricePerWeek, pricePerMonth,
       quantity, depositAmount, insuranceCostPerDay,
       images, specifications, features, condition, tags
-    } = body;
-
-    if (!name || !category || !pricePerDay || !quantity) {
-      return NextResponse.json({
-        success: false,
-        error: 'Заполните обязательные поля'
-      } as ApiResponse<null>, { status: 400 });
-    }
+    } = parsed.data;
 
     const result = await query(
       `INSERT INTO gear_items (

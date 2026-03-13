@@ -1,10 +1,49 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireAuth } from '@/lib/auth/middleware';
 import { getCarsPartnerId, ensureCarsPartnerExists } from '@/lib/auth/cars-helpers';
 
 export const dynamic = 'force-dynamic';
+
+const CreateCarSchema = z.object({
+  brand: z.string().min(1, 'Марка обязательна'),
+  model: z.string().min(1, 'Модель обязательна'),
+  year: z.number().int().positive('Год должен быть положительным'),
+  vin: z.string().optional(),
+  licensePlate: z.string().min(1, 'Номер пластины обязателен'),
+  category: z.enum(['economy', 'comfort', 'business', 'suv', 'luxury', 'minivan'], { errorMap: () => ({ message: 'Некорректная категория' }) }),
+  bodyType: z.string().optional(),
+  transmission: z.enum(['manual', 'automatic', 'robot', 'cvt'], { errorMap: () => ({ message: 'Некорректный тип КПП' }) }),
+  fuelType: z.enum(['petrol', 'diesel', 'hybrid', 'electric', 'gas'], { errorMap: () => ({ message: 'Некорректный тип топлива' }) }),
+  engineVolume: z.number().optional(),
+  power: z.number().optional(),
+  driveType: z.string().optional(),
+  seats: z.number().int().min(2).max(9, 'Количество мест должно быть от 2 до 9'),
+  doors: z.number().optional(),
+  color: z.string().optional(),
+  mileage: z.number().optional(),
+  pricePerDay: z.number().positive('Цена за день должна быть положительной'),
+  pricePerWeek: z.number().optional(),
+  pricePerMonth: z.number().optional(),
+  images: z.array(z.string()).optional(),
+  features: z.array(z.string()).optional(),
+  specifications: z.record(z.unknown()).optional(),
+  condition: z.string().optional(),
+  depositAmount: z.number().min(0, 'Залог не может быть отрицательным'),
+  minDriverAge: z.number().optional(),
+  minDriverExperience: z.number().optional(),
+  insuranceIncluded: z.boolean().optional(),
+  insuranceDailyCost: z.number().optional(),
+  mileageLimitPerDay: z.number().optional(),
+  extraMileageCost: z.number().optional(),
+  locationAddress: z.string().optional(),
+  pickupInstructions: z.string().optional(),
+  returnInstructions: z.string().optional(),
+  restrictions: z.string().optional(),
+  quantity: z.number().optional(),
+});
 
 /**
  * GET /api/cars/items - Get all cars for the partner
@@ -99,6 +138,14 @@ export async function POST(request: NextRequest) {
     const partnerId = await ensureCarsPartnerExists(userOrResponse.userId);
 
     const body = await request.json();
+    const parsed = CreateCarSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' } as ApiResponse<null>,
+        { status: 400 }
+      );
+    }
+
     const {
       brand,
       model,
@@ -135,57 +182,7 @@ export async function POST(request: NextRequest) {
       returnInstructions,
       restrictions,
       quantity
-    } = body;
-
-    // Validation
-    if (!brand || !model || !year || !licensePlate) {
-      return NextResponse.json(
-        { success: false, error: 'Укажите обязательные поля: марка, модель, год, номер' } as ApiResponse<null>,
-        { status: 400 }
-      );
-    }
-
-    if (!category || !['economy', 'comfort', 'business', 'suv', 'luxury', 'minivan'].includes(category)) {
-      return NextResponse.json(
-        { success: false, error: 'Укажите корректную категорию' } as ApiResponse<null>,
-        { status: 400 }
-      );
-    }
-
-    if (!transmission || !['manual', 'automatic', 'robot', 'cvt'].includes(transmission)) {
-      return NextResponse.json(
-        { success: false, error: 'Укажите корректный тип КПП' } as ApiResponse<null>,
-        { status: 400 }
-      );
-    }
-
-    if (!fuelType || !['petrol', 'diesel', 'hybrid', 'electric', 'gas'].includes(fuelType)) {
-      return NextResponse.json(
-        { success: false, error: 'Укажите корректный тип топлива' } as ApiResponse<null>,
-        { status: 400 }
-      );
-    }
-
-    if (!seats || seats < 2 || seats > 9) {
-      return NextResponse.json(
-        { success: false, error: 'Количество мест должно быть от 2 до 9' } as ApiResponse<null>,
-        { status: 400 }
-      );
-    }
-
-    if (!pricePerDay || pricePerDay <= 0) {
-      return NextResponse.json(
-        { success: false, error: 'Укажите корректную цену за день' } as ApiResponse<null>,
-        { status: 400 }
-      );
-    }
-
-    if (!depositAmount || depositAmount < 0) {
-      return NextResponse.json(
-        { success: false, error: 'Укажите корректный размер залога' } as ApiResponse<null>,
-        { status: 400 }
-      );
-    }
+    } = parsed.data;
 
     // Check for duplicate license plate
     const duplicateCheck = await query(

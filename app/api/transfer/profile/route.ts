@@ -1,10 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
+import { z } from 'zod';
 import { ApiResponse } from '@/types';
 import { getTransferPartnerByUserId, ensureTransferPartnerExists, getTransferStats } from '@/lib/auth/transfer-helpers';
 import { requireTransferOperator } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
+
+const updateProfileSchema = z.object({
+  name: z.string().min(2).max(255).optional(),
+  partnerName: z.string().min(2).max(255).optional(),
+  description: z.string().max(2000).optional(),
+  contact: z.record(z.string(), z.unknown()).optional(),
+});
 
 /**
  * GET /api/transfer/profile
@@ -75,12 +83,20 @@ export async function PUT(request: NextRequest) {
     const userId = authResult.userId;
 
     const body = await request.json();
+    const parsed = updateProfileSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({
+        success: false,
+        error: parsed.error.issues[0]?.message || 'Некорректные данные'
+      } as ApiResponse<null>, { status: 400 });
+    }
+
     const {
       name,
       partnerName,
       description,
       contact
-    } = body;
+    } = parsed.data;
 
     // Update user name if provided
     if (name) {

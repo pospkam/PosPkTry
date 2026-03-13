@@ -1,8 +1,16 @@
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { query } from '@/lib/database';
 import { UserEcoPoints, EcoAchievement, ApiResponse } from '@/types';
 import { verifyAuth } from '@/lib/auth';
+
+const AddEcoPointsSchema = z.object({
+  userId: z.string().optional(),
+  points: z.number().int().positive('Баллы должны быть положительными'),
+  activity: z.string().min(1, 'Тип активности обязателен'),
+  ecoPointId: z.string().optional(),
+});
 
 
 
@@ -155,15 +163,16 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { userId: requestedUserId, points, activity, ecoPointId } = body;
-    const userId = requestedUserId || auth.userId;
-
-    if (!userId || !points || !activity) {
+    const parsed = AddEcoPointsSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json({
         success: false,
-        error: 'User ID, points, and activity are required',
+        error: parsed.error.issues[0]?.message || 'Некорректные данные',
       } as ApiResponse<null>, { status: 400 });
     }
+
+    const { userId: requestedUserId, points, activity, ecoPointId } = parsed.data;
+    const userId = requestedUserId || auth.userId;
 
     if (userId !== auth.userId && auth.role !== 'admin') {
       return NextResponse.json({
@@ -175,13 +184,13 @@ export async function POST(request: NextRequest) {
     // Начинаем транзакцию
     const result = await query(`
       BEGIN;
-      
+
       -- Обновляем очки пользователя
       INSERT INTO user_eco_points (user_id, total_points, level, last_activity)
       VALUES ($1, $2, 1, NOW())
       ON CONFLICT (user_id) DO UPDATE SET
         total_points = user_eco_points.total_points + $2,
-        level = CASE 
+        level = CASE
           WHEN user_eco_points.total_points + $2 >= 1000 THEN 5
           WHEN user_eco_points.total_points + $2 >= 500 THEN 4
           WHEN user_eco_points.total_points + $2 >= 200 THEN 3
@@ -189,11 +198,11 @@ export async function POST(request: NextRequest) {
           ELSE 1
         END,
         last_activity = NOW();
-      
+
       -- Записываем активность
       INSERT INTO user_eco_activities (user_id, points, activity, eco_point_id, created_at)
       VALUES ($1, $2, $3, $4, NOW());
-      
+
       -- Проверяем новые достижения
       INSERT INTO user_achievements (user_id, achievement_id, unlocked_at)
       SELECT $1, a.id, NOW()
@@ -204,13 +213,13 @@ export async function POST(request: NextRequest) {
       AND a.id NOT IN (
         SELECT achievement_id FROM user_achievements WHERE user_id = $1
       );
-      
+
       COMMIT;
     `, [userId, points, activity, ecoPointId]);
 
     // Получаем обновленные данные пользователя
     const userQuery = `
-      SELECT 
+      SELECT
         user_id,
         total_points,
         level,
@@ -224,7 +233,7 @@ export async function POST(request: NextRequest) {
 
     // Получаем новые достижения
     const newAchievementsQuery = `
-      SELECT 
+      SELECT
         a.id,
         a.name,
         a.description,

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { emailService, EmailOptions } from '@/lib/notifications/email-service';
 import { emailTemplates } from '@/lib/notifications/email-templates';
 import { ApiResponse } from '@/types';
@@ -6,11 +7,11 @@ import { requireAdmin } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
-interface SendEmailRequest {
-  type: 'bookingConfirmation' | 'paymentConfirmation' | 'tourReminder' | 'bookingCancellation' | 'welcome' | 'passwordReset' | 'partnerVerification';
-  to: string;
-  data: any;
-}
+const SendEmailSchema = z.object({
+  type: z.enum(['bookingConfirmation', 'paymentConfirmation', 'tourReminder', 'bookingCancellation', 'welcome', 'passwordReset', 'partnerVerification'], { errorMap: () => ({ message: 'Некорректный тип email' }) }),
+  to: z.string().email('Некорректный email'),
+  data: z.record(z.unknown()),
+});
 
 /**
  * POST /api/notifications/send
@@ -21,39 +22,41 @@ export async function POST(request: NextRequest) {
     const adminOrResponse = await requireAdmin(request);
     if (adminOrResponse instanceof NextResponse) return adminOrResponse;
 
-    const body: SendEmailRequest = await request.json();
-
-    if (!body.type || !body.to || !body.data) {
+    const body = await request.json();
+    const parsed = SendEmailSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json({
         success: false,
-        error: 'Type, to, and data are required'
+        error: parsed.error.issues[0]?.message || 'Некорректные данные'
       } as ApiResponse<null>, { status: 400 });
     }
+
+    const { type, to, data } = parsed.data;
 
     // Получаем шаблон
     let emailData: { subject: string; html: string };
 
-    switch (body.type) {
+    switch (type) {
       case 'bookingConfirmation':
-        emailData = emailTemplates.bookingConfirmation(body.data);
+        emailData = emailTemplates.bookingConfirmation(data as unknown as { userName: string; tourName: string; date: Date; guests: number; totalPrice: number; bookingId: string; });
         break;
       case 'paymentConfirmation':
-        emailData = emailTemplates.paymentConfirmation(body.data);
+        emailData = emailTemplates.paymentConfirmation(data as unknown as { userName: string; amount: number; transactionId: string; bookingType: string; bookingName: string; });
         break;
       case 'tourReminder':
-        emailData = emailTemplates.tourReminder(body.data);
+        emailData = emailTemplates.tourReminder(data as unknown as { userName: string; tourName: string; date: Date; time?: string; meetingPoint: string; guidePhone?: string; });
         break;
       case 'bookingCancellation':
-        emailData = emailTemplates.bookingCancellation(body.data);
+        emailData = emailTemplates.bookingCancellation(data as unknown as { userName: string; tourName: string; date: Date; bookingId: string; refundAmount?: number; });
         break;
       case 'welcome':
-        emailData = emailTemplates.welcome(body.data);
+        emailData = emailTemplates.welcome(data as unknown as { userName: string; userEmail: string; });
         break;
       case 'passwordReset':
-        emailData = emailTemplates.passwordReset(body.data);
+        emailData = emailTemplates.passwordReset(data as unknown as { userName: string; resetLink: string; });
         break;
       case 'partnerVerification':
-        emailData = emailTemplates.partnerVerification(body.data);
+        emailData = emailTemplates.partnerVerification(data as unknown as { partnerName: string; category: string; });
         break;
       default:
         return NextResponse.json({
@@ -64,7 +67,7 @@ export async function POST(request: NextRequest) {
 
     // Отправляем email
     const result = await emailService.sendEmail({
-      to: body.to,
+      to,
       subject: emailData.subject,
       html: emailData.html
     });

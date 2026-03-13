@@ -1,15 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireAuth } from '@/lib/auth/middleware';
-import { 
-  checkCarAvailability, 
-  calculateRentalCost, 
+import {
+  checkCarAvailability,
+  calculateRentalCost,
   validateRentalData,
   validateDriverLicense
 } from '@/lib/auth/cars-helpers';
 
 export const dynamic = 'force-dynamic';
+
+const CreateCarRentalSchema = z.object({
+  carId: z.string().min(1, 'ID автомобиля обязателен'),
+  customerName: z.string().min(1, 'Имя клиента обязательно'),
+  customerEmail: z.string().email('Некорректный email'),
+  customerPhone: z.string().min(1, 'Номер телефона обязателен'),
+  driverLicenseNumber: z.string().min(1, 'Номер водительского удостоверения обязателен'),
+  driverLicenseIssueDate: z.string().optional(),
+  driverLicenseExpiryDate: z.string().min(1, 'Дата истечения ВУ обязательна'),
+  driverBirthDate: z.string().min(1, 'Дата рождения обязательна'),
+  additionalDriverName: z.string().optional(),
+  additionalDriverLicense: z.string().optional(),
+  startDate: z.string().min(1, 'Дата начала обязательна'),
+  endDate: z.string().min(1, 'Дата окончания обязательна'),
+  pickupLocation: z.string().min(1, 'Место выезда обязательно'),
+  returnLocation: z.string().min(1, 'Место возврата обязательно'),
+  includesGPS: z.boolean().optional(),
+  includesChildSeat: z.boolean().optional(),
+  includesInsurance: z.boolean().optional(),
+  notes: z.string().optional(),
+});
 
 /**
  * POST /api/cars/rentals - Create car rental booking
@@ -22,6 +44,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    const parsed = CreateCarRentalSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' } as ApiResponse<null>,
+        { status: 400 }
+      );
+    }
+
     const {
       carId,
       customerName,
@@ -41,41 +71,7 @@ export async function POST(request: NextRequest) {
       includesChildSeat,
       includesInsurance,
       notes
-    } = body;
-
-    // Validate rental data
-    const validation = validateRentalData({
-      startDate,
-      endDate,
-      carId,
-      customerName,
-      customerEmail,
-      customerPhone,
-      driverLicenseNumber
-    });
-
-    if (!validation.valid) {
-      return NextResponse.json(
-        { success: false, error: validation.errors.join(', ') } as ApiResponse<null>,
-        { status: 400 }
-      );
-    }
-
-    // Validate driver license
-    const licenseValidation = validateDriverLicense({
-      licenseNumber: driverLicenseNumber,
-      issueDate: driverLicenseIssueDate,
-      expiryDate: driverLicenseExpiryDate,
-      birthDate: driverBirthDate,
-      rentalStartDate: startDate
-    });
-
-    if (!licenseValidation.valid) {
-      return NextResponse.json(
-        { success: false, error: licenseValidation.errors.join(', ') } as ApiResponse<null>,
-        { status: 400 }
-      );
-    }
+    } = parsed.data;
 
     // Get car details and partner_id
     const carResult = await query(

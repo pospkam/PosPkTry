@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { transferPayments } from '@/lib/payments/transfer-payments';
 import { requireAuth } from '@/lib/auth/middleware';
 import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
@@ -6,6 +7,10 @@ import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
 export const dynamic = 'force-dynamic';
 
 const transferPaymentLimiter = createRateLimiter({ windowMs: 60_000, max: 5 });
+
+const confirmPaymentSchema = z.object({
+  paymentId: z.string().uuid(),
+});
 
 // POST /api/transfers/payment/confirm - Подтверждение платежа
 export async function POST(request: NextRequest) {
@@ -22,14 +27,15 @@ export async function POST(request: NextRequest) {
     if (authResult instanceof NextResponse) return authResult;
 
     const body = await request.json();
-    const { paymentId } = body;
-
-    if (!paymentId) {
+    const parsed = confirmPaymentSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json({
         success: false,
-        error: 'Payment ID is required'
+        error: parsed.error.issues[0]?.message || 'Некорректные данные'
       }, { status: 400 });
     }
+
+    const { paymentId } = parsed.data;
 
     // Подтверждаем платеж
     const result = await transferPayments.confirmPayment(paymentId);

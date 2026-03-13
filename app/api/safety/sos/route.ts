@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { query } from '@/lib/database';
 import { verifyAuth } from '@/lib/auth';
 
@@ -7,6 +8,15 @@ export const dynamic = 'force-dynamic';
 // Rate limit: 1 SOS per 10 minutes per IP (in-memory, не блокируем при сбое Redis)
 const rateLimitMap = new Map<string, number>();
 const RATE_LIMIT_MS = 10 * 60 * 1000;
+
+const SOSSchema = z.object({
+  latitude: z.number().min(-90, 'Неверная широта').max(90, 'Неверная широта').optional(),
+  longitude: z.number().min(-180, 'Неверная долгота').max(180, 'Неверная долгота').optional(),
+  message: z.string().max(500, 'Максимальная длина сообщения: 500 символов').optional(),
+  emergency_type: z.string().optional(),
+  accuracy: z.number().optional(),
+  sessionId: z.string().optional(),
+});
 
 function isRateLimited(key: string): boolean {
   const last = rateLimitMap.get(key);
@@ -50,27 +60,30 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  let lat: number | null = null;
-  let lng: number | null = null;
-  let accuracy: number | null = null;
-  let sessionId: string | null = null;
-
+  let rawBody: unknown;
   try {
-    const body = await request.json();
-    lat = typeof body.lat === 'number' ? body.lat : null;
-    lng = typeof body.lng === 'number' ? body.lng : null;
-    accuracy = typeof body.accuracy === 'number' ? body.accuracy : null;
-    sessionId = typeof body.sessionId === 'string' ? body.sessionId : null;
+    rawBody = await request.json();
   } catch {
     // Тело может быть пустым — это допустимо для SOS
+    rawBody = {};
   }
+
+  const validationResult = SOSSchema.safeParse(rawBody);
+  if (!validationResult.success) {
+    return NextResponse.json(
+      { success: false, error: validationResult.error.errors[0]?.message || 'Ошибка валидации' },
+      { status: 400 }
+    );
+  }
+
+  const { latitude, longitude, accuracy, message, sessionId } = validationResult.data;
 
   // Логируем в БД (не блокируем ответ при ошибке БД)
   try {
     await query(
       `INSERT INTO sos_events (user_id, session_id, lat, lng, accuracy, ip_address, user_agent)
        VALUES ($1, $2, $3, $4, $5, $6::inet, $7)`,
-      [userId, sessionId, lat, lng, accuracy, ip, userAgent]
+      [userId, sessionId, latitude, longitude, accuracy, ip, userAgent]
     );
     setRateLimit(rateLimitKey);
   } catch {

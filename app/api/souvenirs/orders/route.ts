@@ -1,15 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireAuth } from '@/lib/auth/middleware';
-import { 
-  calculateOrderTotal, 
-  applyCouponDiscount, 
+import {
+  calculateOrderTotal,
+  applyCouponDiscount,
   validateOrderData,
   checkSouvenirStock
 } from '@/lib/auth/souvenir-helpers';
 
 export const dynamic = 'force-dynamic';
+
+const CreateSouvenirOrderSchema = z.object({
+  items: z.array(z.object({
+    souvenirId: z.string().min(1, 'ID товара обязателен'),
+    quantity: z.number().int().positive('Количество должно быть целым числом больше 0'),
+  })),
+  customerName: z.string().min(1, 'Имя клиента обязательно'),
+  customerEmail: z.string().email('Некорректный email'),
+  customerPhone: z.string().min(1, 'Номер телефона обязателен'),
+  shippingAddressLine1: z.string().min(1, 'Адрес обязателен'),
+  shippingAddressLine2: z.string().optional(),
+  shippingCity: z.string().min(1, 'Город обязателен'),
+  shippingRegion: z.string().optional(),
+  shippingPostalCode: z.string().optional(),
+  shippingMethod: z.string().min(1, 'Способ доставки обязателен'),
+  couponCode: z.string().optional(),
+  giftWrap: z.boolean().optional(),
+  giftMessage: z.string().optional(),
+  notes: z.string().optional(),
+});
 
 /**
  * POST /api/souvenirs/orders - Create souvenir order
@@ -22,6 +43,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    const parsed = CreateSouvenirOrderSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' } as ApiResponse<null>,
+        { status: 400 }
+      );
+    }
+
     const {
       items,
       customerName,
@@ -37,24 +66,7 @@ export async function POST(request: NextRequest) {
       giftWrap,
       giftMessage,
       notes
-    } = body;
-
-    // Validate order data
-    const validation = validateOrderData({
-      items,
-      customerName,
-      customerEmail,
-      customerPhone,
-      shippingAddress: shippingAddressLine1,
-      shippingCity
-    });
-
-    if (!validation.valid) {
-      return NextResponse.json(
-        { success: false, error: validation.errors.join(', ') } as ApiResponse<null>,
-        { status: 400 }
-      );
-    }
+    } = parsed.data;
 
     // Check stock for all items
     for (const item of items) {
@@ -81,7 +93,8 @@ export async function POST(request: NextRequest) {
 
     // Apply coupon if provided
     if (couponCode) {
-      const couponResult = await applyCouponDiscount(couponCode, subtotal, items);
+      const couponItems = items.map(item => ({ id: item.souvenirId, quantity: item.quantity }));
+      const couponResult = await applyCouponDiscount(couponCode, subtotal, couponItems);
       if (couponResult.valid) {
         couponDiscount = couponResult.discountAmount;
       }

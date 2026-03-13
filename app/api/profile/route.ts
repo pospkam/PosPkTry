@@ -1,9 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { query } from '@/lib/database';
 import { verifyAuth } from '@/lib/auth';
 import { ApiResponse, User } from '@/types';
 
 export const dynamic = 'force-dynamic';
+
+const UpdateProfileSchema = z.object({
+  name: z.string().min(1, 'Укажите корректное имя').optional(),
+  email: z.string().email('Укажите корректный email').optional(),
+  phone: z.string().min(5, 'Укажите корректный номер телефона').optional(),
+  preferences: z.record(z.unknown()).optional(),
+  avatar: z.string().url('Укажите корректный URL аватара').optional(),
+});
 
 /**
  * GET /api/profile
@@ -71,12 +80,7 @@ export async function PUT(request: NextRequest) {
     );
   }
 
-  let body: {
-    name?: string;
-    phone?: string;
-    preferences?: Record<string, unknown>;
-  };
-
+  let body: unknown;
   try {
     body = await request.json();
   } catch {
@@ -86,21 +90,16 @@ export async function PUT(request: NextRequest) {
     );
   }
 
-  const { name, phone, preferences } = body;
-
-  if (name !== undefined && (typeof name !== 'string' || name.trim().length === 0)) {
+  const validationResult = UpdateProfileSchema.safeParse(body);
+  if (!validationResult.success) {
+    const errorMessage = validationResult.error.errors[0]?.message || 'Ошибка валидации';
     return NextResponse.json(
-      { success: false, error: 'Имя не может быть пустым' } as ApiResponse<null>,
+      { success: false, error: errorMessage } as ApiResponse<null>,
       { status: 400 }
     );
   }
 
-  if (phone !== undefined && typeof phone !== 'string') {
-    return NextResponse.json(
-      { success: false, error: 'Неверный формат телефона' } as ApiResponse<null>,
-      { status: 400 }
-    );
-  }
+  const { name, phone, preferences } = validationResult.data;
 
   // Собираем только переданные поля
   const updates: string[] = [];

@@ -1,10 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireAuth } from '@/lib/auth/middleware';
 import { verifySouvenirOwnership } from '@/lib/auth/souvenir-helpers';
 
 export const dynamic = 'force-dynamic';
+
+const UpdateSouvenirSchema = z.object({
+  name: z.string().optional(),
+  description: z.string().optional(),
+  short_description: z.string().optional(),
+  category: z.string().optional(),
+  subcategory: z.string().optional(),
+  sku: z.string().optional(),
+  price: z.number().optional(),
+  discount_price: z.number().optional(),
+  cost_price: z.number().optional(),
+  images: z.array(z.unknown()).optional(),
+  tags: z.array(z.unknown()).optional(),
+  stock_quantity: z.number().optional(),
+  low_stock_threshold: z.number().optional(),
+  weight: z.number().optional(),
+  dimensions: z.record(z.unknown()).optional(),
+  materials: z.array(z.unknown()).optional(),
+  origin: z.string().optional(),
+  artisan_name: z.string().optional(),
+  artisan_bio: z.string().optional(),
+  is_handmade: z.boolean().optional(),
+  is_exclusive: z.boolean().optional(),
+  is_featured: z.boolean().optional(),
+  is_active: z.boolean().optional(),
+  min_order_quantity: z.number().optional(),
+  max_order_quantity: z.number().optional(),
+  production_time_days: z.number().optional(),
+  care_instructions: z.string().optional(),
+  shipping_info: z.string().optional(),
+  meta_title: z.string().optional(),
+  meta_description: z.string().optional(),
+});
 
 /**
  * GET /api/souvenirs/items/[id] - Get souvenir details
@@ -93,6 +127,14 @@ export async function PUT(
     }
 
     const body = await request.json();
+    const parsed = UpdateSouvenirSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' } as ApiResponse<null>,
+        { status: 400 }
+      );
+    }
+
     const updates: string[] = [];
     const values: unknown[] = [];
     let paramIndex = 1;
@@ -108,18 +150,18 @@ export async function PUT(
     ];
 
     for (const field of allowedFields) {
-      if (body[field] !== undefined) {
+      if ((parsed.data as any)[field] !== undefined) {
         const dbField = field.replace(/([A-Z])/g, '_$1').toLowerCase();
-        
+
         if (['images', 'dimensions'].includes(field)) {
           updates.push(`${dbField} = $${paramIndex}::jsonb`);
-          values.push(JSON.stringify(body[field]));
+          values.push(JSON.stringify((parsed.data as any)[field]));
         } else if (['tags', 'materials'].includes(field)) {
           updates.push(`${dbField} = $${paramIndex}::text[]`);
-          values.push(body[field]);
+          values.push((parsed.data as any)[field]);
         } else {
           updates.push(`${dbField} = $${paramIndex}`);
-          values.push(body[field]);
+          values.push((parsed.data as any)[field]);
         }
         paramIndex++;
       }

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
+import { z } from 'zod';
 import { ApiResponse } from '@/types';
-import { 
+import {
   getTransferPartnerId,
   generateBookingReference,
   findAvailableVehicle,
@@ -11,6 +12,22 @@ import {
 import { requireTransferOperator } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
+
+const createTransferSchema = z.object({
+  routeId: z.string().uuid().optional().nullable(),
+  clientName: z.string().min(1).max(255),
+  clientPhone: z.string().min(1).max(30),
+  clientEmail: z.string().email().optional().nullable(),
+  pickupLocation: z.string().min(1).max(255),
+  dropoffLocation: z.string().min(1).max(255),
+  pickupDatetime: z.string().datetime(),
+  passengers: z.number().int().min(1).max(100),
+  luggage: z.number().int().min(0).optional(),
+  specialRequests: z.string().max(2000).optional(),
+  vehicleId: z.string().uuid().optional().nullable(),
+  driverId: z.string().uuid().optional().nullable(),
+  autoAssign: z.boolean().optional().default(true),
+});
 
 /**
  * GET /api/transfer/transfers
@@ -149,7 +166,7 @@ export async function POST(request: NextRequest) {
     const userId = authResult.userId;
 
     const operatorId = await getTransferPartnerId(userId);
-    
+
     if (!operatorId) {
       return NextResponse.json({
         success: false,
@@ -158,6 +175,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    const parsed = createTransferSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({
+        success: false,
+        error: parsed.error.issues[0]?.message || 'Некорректные данные'
+      } as ApiResponse<null>, { status: 400 });
+    }
+
     const {
       routeId,
       clientName,
@@ -172,15 +197,7 @@ export async function POST(request: NextRequest) {
       vehicleId,
       driverId,
       autoAssign = true
-    } = body;
-
-    // Validation
-    if (!clientName || !clientPhone || !pickupLocation || !dropoffLocation || !pickupDatetime || !passengers) {
-      return NextResponse.json({
-        success: false,
-        error: 'Заполните обязательные поля'
-      } as ApiResponse<null>, { status: 400 });
-    }
+    } = parsed.data;
 
     // Calculate price
     let price = 0;

@@ -15,10 +15,44 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { telegramService } from '@/lib/notifications/telegram';
 import { confirmBooking, cancelBooking } from '@/lib/bookings/booking.service';
 
 export const dynamic = 'force-dynamic';
+
+const TelegramUserSchema = z.object({
+  id: z.number(),
+  username: z.string().optional(),
+  first_name: z.string().optional(),
+});
+
+const TelegramChatSchema = z.object({
+  id: z.number(),
+  type: z.string().optional(),
+});
+
+const TelegramMessageSchema = z.object({
+  message_id: z.number().optional(),
+  from: TelegramUserSchema.optional(),
+  chat: TelegramChatSchema.optional(),
+  text: z.string().optional(),
+});
+
+const TelegramCallbackQuerySchema = z.object({
+  id: z.string(),
+  from: TelegramUserSchema,
+  message: z.object({
+    chat: TelegramChatSchema.optional(),
+  }).optional(),
+  data: z.string().optional(),
+});
+
+const TelegramUpdateSchema = z.object({
+  update_id: z.number(),
+  message: TelegramMessageSchema.optional(),
+  callback_query: TelegramCallbackQuerySchema.optional(),
+});
 
 interface TelegramUpdate {
   update_id: number;
@@ -55,7 +89,12 @@ export async function POST(request: NextRequest) {
 
   let update: TelegramUpdate;
   try {
-    update = await request.json() as TelegramUpdate;
+    const json = await request.json();
+    const parsed = TelegramUpdateSchema.safeParse(json);
+    if (!parsed.success) {
+      return NextResponse.json({ ok: false }, { status: 400 });
+    }
+    update = parsed.data as TelegramUpdate;
   } catch {
     return NextResponse.json({ ok: false }, { status: 400 });
   }

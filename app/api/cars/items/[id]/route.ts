@@ -1,10 +1,53 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireAuth } from '@/lib/auth/middleware';
 import { verifyCarOwnership } from '@/lib/auth/cars-helpers';
 
 export const dynamic = 'force-dynamic';
+
+const UpdateCarSchema = z.object({
+  brand: z.string().optional(),
+  model: z.string().optional(),
+  year: z.number().optional(),
+  vin: z.string().optional(),
+  license_plate: z.string().optional(),
+  category: z.string().optional(),
+  body_type: z.string().optional(),
+  transmission: z.string().optional(),
+  fuel_type: z.string().optional(),
+  engine_volume: z.number().optional(),
+  power: z.number().optional(),
+  drive_type: z.string().optional(),
+  seats: z.number().optional(),
+  doors: z.number().optional(),
+  color: z.string().optional(),
+  mileage: z.number().optional(),
+  price_per_day: z.number().optional(),
+  price_per_week: z.number().optional(),
+  price_per_month: z.number().optional(),
+  images: z.array(z.unknown()).optional(),
+  features: z.array(z.unknown()).optional(),
+  specifications: z.record(z.unknown()).optional(),
+  condition: z.string().optional(),
+  deposit_amount: z.number().optional(),
+  min_driver_age: z.number().optional(),
+  min_driver_experience: z.number().optional(),
+  insurance_included: z.boolean().optional(),
+  insurance_daily_cost: z.number().optional(),
+  mileage_limit_per_day: z.number().optional(),
+  extra_mileage_cost: z.number().optional(),
+  location_address: z.string().optional(),
+  pickup_instructions: z.string().optional(),
+  return_instructions: z.string().optional(),
+  restrictions: z.string().optional(),
+  quantity: z.number().optional(),
+  is_active: z.boolean().optional(),
+  is_featured: z.boolean().optional(),
+  last_service_date: z.string().optional(),
+  next_service_date: z.string().optional(),
+});
 
 /**
  * GET /api/cars/items/[id] - Get car details
@@ -94,6 +137,14 @@ export async function PUT(
     }
 
     const body = await request.json();
+    const parsed = UpdateCarSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' } as ApiResponse<null>,
+        { status: 400 }
+      );
+    }
+
     const updates: string[] = [];
     const values: unknown[] = [];
     let paramIndex = 1;
@@ -114,15 +165,15 @@ export async function PUT(
     ];
 
     for (const field of allowedFields) {
-      if (body[field] !== undefined) {
+      if ((parsed.data as any)[field] !== undefined) {
         const dbField = field.replace(/([A-Z])/g, '_$1').toLowerCase();
-        
+
         if (['images', 'features', 'specifications'].includes(field)) {
           updates.push(`${dbField} = $${paramIndex}::jsonb`);
-          values.push(JSON.stringify(body[field]));
+          values.push(JSON.stringify((parsed.data as any)[field]));
         } else {
           updates.push(`${dbField} = $${paramIndex}`);
-          values.push(body[field]);
+          values.push((parsed.data as any)[field]);
         }
         paramIndex++;
       }
@@ -136,15 +187,15 @@ export async function PUT(
     }
 
     // If quantity changed, update available_quantity
-    if (body.quantity !== undefined) {
+    if ((parsed.data as any).quantity !== undefined) {
       const currentResult = await query<{ quantity: number; available_quantity: number }>(
         `SELECT quantity, available_quantity FROM cars WHERE id = $1`,
         [carId]
       );
       const current = currentResult.rows[0];
-      const diff = body.quantity - current.quantity;
+      const diff = (parsed.data as any).quantity - current.quantity;
       const newAvailable = Math.max(0, current.available_quantity + diff);
-      
+
       updates.push(`available_quantity = $${paramIndex}`);
       values.push(newAvailable);
       paramIndex++;

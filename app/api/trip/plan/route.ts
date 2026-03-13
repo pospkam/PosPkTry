@@ -1,6 +1,6 @@
 /**
  * API Endpoint: Планирование поездки на Камчатку
- * 
+ *
  * Функциональность:
  * - Анализ запроса пользователя (AI)
  * - Подбор туров из БД
@@ -11,6 +11,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { query } from '@/lib/database';
 import { config } from '@/lib/config';
 
@@ -26,6 +27,15 @@ interface TripRequest {
   groupSize?: number; // Размер группы
   startDate?: string; // Дата начала (YYYY-MM-DD)
 }
+
+const TripPlanSchema = z.object({
+  query: z.string().min(5, 'Опишите вашу поездку минимум 5 символами'),
+  days: z.number().int('Количество дней должно быть целым числом').min(1, 'Минимум 1 день').max(30, 'Максимум 30 дней'),
+  budget: z.number().min(0, 'Бюджет не может быть отрицательным').optional(),
+  interests: z.array(z.string()).optional(),
+  groupSize: z.number().int('Размер группы должен быть целым числом').min(1, 'Минимум 1 человек').max(100, 'Максимум 100 человек').optional(),
+  startDate: z.string().datetime().optional(),
+});
 
 interface TourCard {
   id: string;
@@ -106,31 +116,42 @@ interface TripPlan {
  */
 export async function POST(request: NextRequest) {
   try {
-    const body: TripRequest = await request.json();
-    
-    if (!body.query || !body.days || body.days < 1 || body.days > 30) {
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
       return NextResponse.json({
         success: false,
-        error: 'Invalid request. Please provide query and days (1-30).',
+        error: 'Неверный формат запроса',
       }, { status: 400 });
     }
 
+    const validationResult = TripPlanSchema.safeParse(body);
+    if (!validationResult.success) {
+      const errorMessage = validationResult.error.errors[0]?.message || 'Ошибка валидации';
+      return NextResponse.json({
+        success: false,
+        error: errorMessage,
+      }, { status: 400 });
+    }
+
+    const tripRequest = validationResult.data as TripRequest;
 
     // Шаг 1: Анализ запроса через AI
-    const userIntent = await analyzeUserIntent(body.query, body);
+    const userIntent = await analyzeUserIntent(tripRequest.query, tripRequest);
 
     // Шаг 2: Подбор туров из БД
-    const tours = await selectTours(userIntent, body.days, body.budget);
+    const tours = await selectTours(userIntent, tripRequest.days, tripRequest.budget);
 
     // Шаг 3: Подбор размещения из БД
-    const accommodations = await selectAccommodations(body.days, body.budget, body.groupSize);
+    const accommodations = await selectAccommodations(tripRequest.days, tripRequest.budget, tripRequest.groupSize);
 
     // Шаг 4: Подбор трансферов из БД
     const transfers = await selectTransfers(tours, accommodations);
 
     // Шаг 5: Генерация детального маршрута через AI
     const tripPlan = await generateTripPlan(
-      body,
+      tripRequest,
       userIntent,
       tours,
       accommodations,

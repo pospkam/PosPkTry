@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
+import { z } from 'zod';
 import { TransferConfirmationRequest, TransferConfirmationResponse } from '@/types/transfer';
 import { config } from '@/lib/config';
 import { requireTransferOperator } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
+
+const confirmTransferSchema = z.object({
+  bookingId: z.string().uuid(),
+  action: z.enum(['confirm', 'reject']),
+  message: z.string().max(2000).optional(),
+});
 
 // POST /api/transfers/confirm - Подтверждение/отклонение бронирования перевозчиком
 export async function POST(request: NextRequest) {
@@ -12,22 +19,16 @@ export async function POST(request: NextRequest) {
     const authResult = await requireTransferOperator(request);
     if (authResult instanceof NextResponse) return authResult;
 
-    const body: TransferConfirmationRequest = await request.json();
-    
-    // Валидация входных данных
-    if (!body.bookingId || !body.action) {
+    const body: unknown = await request.json();
+    const parsed = confirmTransferSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json({
         success: false,
-        error: 'Отсутствуют обязательные поля: bookingId, action'
+        error: parsed.error.issues[0]?.message || 'Некорректные данные'
       }, { status: 400 });
     }
 
-    if (!['confirm', 'reject'].includes(body.action)) {
-      return NextResponse.json({
-        success: false,
-        error: 'Действие должно быть "confirm" или "reject"'
-      }, { status: 400 });
-    }
+    const { bookingId, action, message } = parsed.data;
 
     try {
       // Получаем информацию о бронировании
@@ -42,7 +43,7 @@ export async function POST(request: NextRequest) {
         WHERE b.id = $1
       `;
 
-      const bookingResult = await query(bookingQuery, [body.bookingId]);
+      const bookingResult = await query(bookingQuery, [bookingId]);
 
       if (bookingResult.rows.length === 0) {
         return NextResponse.json({
@@ -61,24 +62,24 @@ export async function POST(request: NextRequest) {
         }, { status: 400 });
       }
 
-      const newStatus = body.action === 'confirm' ? 'confirmed' : 'cancelled';
-      const statusMessage = body.action === 'confirm' ? 'подтверждено' : 'отклонено';
+      const newStatus = action === 'confirm' ? 'confirmed' : 'cancelled';
+      const statusMessage = action === 'confirm' ? 'подтверждено' : 'отклонено';
 
       // Обновляем статус бронирования
       const updateBookingQuery = `
-        UPDATE transfer_bookings 
+        UPDATE transfer_bookings
         SET status = $1, updated_at = NOW()
         WHERE id = $2
         RETURNING *
       `;
 
-      const updateResult = await query<{ id: string; status: string }>(updateBookingQuery, [newStatus, body.bookingId]);
+      const updateResult = await query<{ id: string; status: string }>(updateBookingQuery, [newStatus, bookingId]);
       const updatedBooking = updateResult.rows[0];
 
       // Если бронирование отклонено, возвращаем места в расписание
-      if (body.action === 'reject') {
+      if (action === 'reject') {
         const returnSeatsQuery = `
-          UPDATE transfer_schedules 
+          UPDATE transfer_schedules
           SET available_seats = available_seats + $1, updated_at = NOW()
           WHERE id = $2
         `;
@@ -93,12 +94,12 @@ export async function POST(request: NextRequest) {
         ) VALUES ($1, $2, $3, $4, $5)
       `;
 
-      const notificationType = body.action === 'confirm' ? 'booking_confirmed' : 'booking_cancelled';
-      const notificationTitle = body.action === 'confirm' ? 
+      const notificationType = action === 'confirm' ? 'booking_confirmed' : 'booking_cancelled';
+      const notificationTitle = action === 'confirm' ?
         'Бронирование подтверждено' : 'Бронирование отклонено';
-      const notificationMessage = body.action === 'confirm' ? 
+      const notificationMessage = action === 'confirm' ?
         `Ваше бронирование трансфера подтверждено. Водитель: ${booking.name}, Телефон: ${booking.phone}` :
-        `Ваше бронирование трансфера отклонено. ${body.message || 'Причина не указана'}`;
+        `Ваше бронирование трансфера отклонено. ${message || 'Причина не указана'}`;
 
       await query(notificationQuery, [
         booking.id,
@@ -109,7 +110,7 @@ export async function POST(request: NextRequest) {
       ]);
 
       // Отправляем уведомления клиенту (заглушка)
-      await sendConfirmationNotifications(updatedBooking, body.action, body.message);
+      await sendConfirmationNotifications(updatedBooking, action, message);
 
       const response: TransferConfirmationResponse = {
         success: true,
@@ -124,14 +125,14 @@ export async function POST(request: NextRequest) {
 
     } catch (dbError) {
       console.error('Database error:', dbError);
-      
+
       // Fallback к тестовому подтверждению
       const mockResponse: TransferConfirmationResponse = {
         success: true,
         data: {
-          bookingId: body.bookingId,
-          newStatus: body.action === 'confirm' ? 'confirmed' : 'cancelled',
-          message: `Бронирование успешно ${body.action === 'confirm' ? 'подтверждено' : 'отклонено'}`
+          bookingId: bookingId,
+          newStatus: action === 'confirm' ? 'confirmed' : 'cancelled',
+          message: `Бронирование успешно ${action === 'confirm' ? 'подтверждено' : 'отклонено'}`
         }
       };
 

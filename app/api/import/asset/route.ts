@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { Client } from 'pg'
 import crypto from 'node:crypto'
 import { requireAdmin } from '@/lib/auth/middleware'
 
 export const runtime = 'nodejs'
+
+const ImportAssetSchema = z.object({
+  url: z.string().url('Некорректный URL'),
+  key: z.string().min(1, 'Ключ обязателен').optional().default('kamchatka_button'),
+})
 
 async function fetchBytes(url: string): Promise<{ bytes: Buffer; mime: string } | null> {
   const r = await fetch(url, { cache: 'no-store' })
@@ -22,10 +28,22 @@ export async function POST(req: NextRequest) {
   if (adminOrResponse instanceof NextResponse) return adminOrResponse;
 
   try {
-    const body = await req.json().catch(() => ({})) as any
-    const url = String(body?.url || '').trim()
-    const key = String(body?.key || '').trim() || 'kamchatka_button'
-    if (!url) return NextResponse.json({ error: 'NO_URL' }, { status: 400 })
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: 'Невалидный JSON' }, { status: 400 })
+    }
+
+    const parsed = ImportAssetSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation error', details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
+
+    const { url, key } = parsed.data;
 
     const dbUrl = process.env.DATABASE_URL
     if (!dbUrl) return NextResponse.json({ error: 'NO_DATABASE_URL' }, { status: 500 })

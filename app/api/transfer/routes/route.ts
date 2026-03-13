@@ -1,10 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
+import { z } from 'zod';
 import { ApiResponse } from '@/types';
 import { getTransferPartnerId } from '@/lib/auth/transfer-helpers';
 import { requireTransferOperator } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
+
+const createRouteSchema = z.object({
+  name: z.string().min(3).max(255),
+  fromLocation: z.string().min(1).max(255),
+  toLocation: z.string().min(1).max(255),
+  fromCoordinates: z.record(z.unknown()).optional(),
+  toCoordinates: z.record(z.unknown()).optional(),
+  distance: z.number().min(0).optional(),
+  estimatedDuration: z.unknown().optional(),
+  basePrice: z.number().min(0),
+  pricePerKm: z.number().min(0).optional().nullable(),
+  pricePerHour: z.number().min(0).optional().nullable(),
+  weatherDependent: z.boolean().optional(),
+  stops: z.array(z.unknown()).optional(),
+  description: z.string().max(5000).optional(),
+});
 
 /**
  * GET /api/transfer/routes
@@ -105,7 +122,7 @@ export async function POST(request: NextRequest) {
     const userId = authResult.userId;
 
     const operatorId = await getTransferPartnerId(userId);
-    
+
     if (!operatorId) {
       return NextResponse.json({
         success: false,
@@ -114,6 +131,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    const parsed = createRouteSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({
+        success: false,
+        error: parsed.error.issues[0]?.message || 'Некорректные данные'
+      } as ApiResponse<null>, { status: 400 });
+    }
+
     const {
       name,
       fromLocation,
@@ -128,14 +153,7 @@ export async function POST(request: NextRequest) {
       weatherDependent,
       stops,
       description
-    } = body;
-
-    if (!name || !fromLocation || !toLocation || !basePrice) {
-      return NextResponse.json({
-        success: false,
-        error: 'Заполните обязательные поля'
-      } as ApiResponse<null>, { status: 400 });
-    }
+    } = parsed.data;
 
     const result = await query(
       `INSERT INTO transfer_routes (

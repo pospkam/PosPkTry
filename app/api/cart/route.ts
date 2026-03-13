@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 
 export const dynamic = 'force-dynamic';
+
+const AddToCartSchema = z.object({
+  sessionId: z.string().min(1, 'Укажите ID сессии'),
+  souvenirId: z.string().uuid('Укажите корректный ID товара'),
+  quantity: z.number().int('Количество должно быть целым числом').min(1, 'Минимальное количество: 1').max(100, 'Максимальное количество: 100'),
+});
 
 /**
  * GET /api/cart - Получить корзину
@@ -51,8 +58,26 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { sessionId, souvenirId, quantity } = body;
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({
+        success: false,
+        error: 'Неверный формат запроса'
+      } as ApiResponse<null>, { status: 400 });
+    }
+
+    const validationResult = AddToCartSchema.safeParse(body);
+    if (!validationResult.success) {
+      const errorMessage = validationResult.error.errors[0]?.message || 'Ошибка валидации';
+      return NextResponse.json({
+        success: false,
+        error: errorMessage
+      } as ApiResponse<null>, { status: 400 });
+    }
+
+    const { sessionId, souvenirId, quantity } = validationResult.data;
 
     const souvenir = await query<{ price: string }>('SELECT * FROM souvenirs WHERE id = $1', [souvenirId]);
     if (souvenir.rows.length === 0) {
@@ -67,9 +92,9 @@ export async function POST(request: NextRequest) {
 
     await query(`
       INSERT INTO cart_items (cart_id, souvenir_id, quantity, unit_price, total_price)
-      SELECT id, $2, $3, $4, $5 FROM shopping_carts 
+      SELECT id, $2, $3, $4, $5 FROM shopping_carts
       WHERE session_id = $1
-      ON CONFLICT (cart_id, souvenir_id) 
+      ON CONFLICT (cart_id, souvenir_id)
       DO UPDATE SET quantity = cart_items.quantity + $3
     `, [sessionId, souvenirId, quantity, price, totalPrice]);
 

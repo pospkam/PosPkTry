@@ -1,10 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { getGearPartnerByUserId, ensureGearPartnerExists, getGearStats } from '@/lib/auth/gear-helpers';
 import { requireAuth } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
+
+const UpdateGearProfileSchema = z.object({
+  name: z.string().min(1, 'Имя обязательно').optional(),
+  partnerName: z.string().min(1, 'Имя партнёра обязательно').optional(),
+  description: z.string().optional(),
+  contact: z.record(z.unknown()).optional(),
+});
 
 /**
  * GET /api/gear/profile - Get gear partner profile with stats (auth required)
@@ -70,7 +78,15 @@ export async function PUT(request: NextRequest) {
     const userId = authResult.userId;
 
     const body = await request.json();
-    const { name, partnerName, description, contact } = body;
+    const parsed = UpdateGearProfileSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({
+        success: false,
+        error: parsed.error.issues[0]?.message || 'Некорректные данные'
+      } as ApiResponse<null>, { status: 400 });
+    }
+
+    const { name, partnerName, description, contact } = parsed.data;
 
     if (name) {
       await query('UPDATE users SET name = $1 WHERE id = $2', [name, userId]);

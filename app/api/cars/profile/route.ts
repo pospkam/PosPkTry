@@ -1,10 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireAuth } from '@/lib/auth/middleware';
 import { getCarsPartnerId, ensureCarsPartnerExists, getCarsStats } from '@/lib/auth/cars-helpers';
 
 export const dynamic = 'force-dynamic';
+
+const UpdateCarsProfileSchema = z.object({
+  companyName: z.string().optional(),
+  description: z.string().optional(),
+  address: z.string().optional(),
+  phone: z.string().optional(),
+  email: z.string().email('Некорректный email').optional(),
+  website: z.string().optional(),
+  workingHours: z.record(z.unknown()).optional(),
+  socialMedia: z.record(z.unknown()).optional(),
+  bankDetails: z.record(z.unknown()).optional(),
+  legalInfo: z.record(z.unknown()).optional(),
+});
 
 /**
  * GET /api/cars/profile - Get cars partner profile with stats
@@ -76,6 +90,14 @@ export async function PUT(request: NextRequest) {
     const partnerId = await ensureCarsPartnerExists(userOrResponse.userId);
 
     const body = await request.json();
+    const parsed = UpdateCarsProfileSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' } as ApiResponse<null>,
+        { status: 400 }
+      );
+    }
+
     const {
       companyName,
       description,
@@ -87,7 +109,7 @@ export async function PUT(request: NextRequest) {
       socialMedia,
       bankDetails,
       legalInfo
-    } = body;
+    } = parsed.data;
 
     const updates: string[] = [];
     const values: unknown[] = [];

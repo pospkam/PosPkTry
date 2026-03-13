@@ -1,10 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireAuth } from '@/lib/auth/middleware';
 import { getSouvenirPartnerId, ensureSouvenirPartnerExists } from '@/lib/auth/souvenir-helpers';
 
 export const dynamic = 'force-dynamic';
+
+const CreateSouvenirSchema = z.object({
+  name: z.string().min(3, 'Укажите название товара (минимум 3 символа)'),
+  description: z.string().min(10, 'Укажите описание товара (минимум 10 символов)'),
+  shortDescription: z.string().optional(),
+  category: z.enum(['magnets', 'ceramics', 'textiles', 'jewelry', 'crafts', 'food', 'books', 'art', 'other'], { errorMap: () => ({ message: 'Укажите корректную категорию' }) }),
+  subcategory: z.string().optional(),
+  sku: z.string().optional(),
+  price: z.number().positive('Укажите корректную цену'),
+  discountPrice: z.number().optional(),
+  costPrice: z.number().optional(),
+  images: z.array(z.string()).optional(),
+  tags: z.array(z.string()).optional(),
+  stockQuantity: z.number().optional(),
+  lowStockThreshold: z.number().optional(),
+  weight: z.number().optional(),
+  dimensions: z.record(z.unknown()).optional(),
+  materials: z.array(z.string()).optional(),
+  origin: z.string().optional(),
+  artisanName: z.string().optional(),
+  artisanBio: z.string().optional(),
+  isHandmade: z.boolean().optional(),
+  isExclusive: z.boolean().optional(),
+  isFeatured: z.boolean().optional(),
+  minOrderQuantity: z.number().optional(),
+  maxOrderQuantity: z.number().optional(),
+  productionTimeDays: z.number().optional(),
+  careInstructions: z.string().optional(),
+  shippingInfo: z.string().optional(),
+});
 
 /**
  * GET /api/souvenirs/items - Get all souvenirs for the partner
@@ -108,6 +139,14 @@ export async function POST(request: NextRequest) {
     const partnerId = await ensureSouvenirPartnerExists(userOrResponse.userId);
 
     const body = await request.json();
+    const parsed = CreateSouvenirSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' } as ApiResponse<null>,
+        { status: 400 }
+      );
+    }
+
     const {
       name,
       description,
@@ -136,43 +175,7 @@ export async function POST(request: NextRequest) {
       productionTimeDays,
       careInstructions,
       shippingInfo
-    } = body;
-
-    // Validation
-    if (!name || name.length < 3) {
-      return NextResponse.json(
-        { success: false, error: 'Укажите название товара (минимум 3 символа)' } as ApiResponse<null>,
-        { status: 400 }
-      );
-    }
-
-    if (!description || description.length < 10) {
-      return NextResponse.json(
-        { success: false, error: 'Укажите описание товара (минимум 10 символов)' } as ApiResponse<null>,
-        { status: 400 }
-      );
-    }
-
-    if (!category || !['magnets', 'ceramics', 'textiles', 'jewelry', 'crafts', 'food', 'books', 'art', 'other'].includes(category)) {
-      return NextResponse.json(
-        { success: false, error: 'Укажите корректную категорию' } as ApiResponse<null>,
-        { status: 400 }
-      );
-    }
-
-    if (!price || price <= 0) {
-      return NextResponse.json(
-        { success: false, error: 'Укажите корректную цену' } as ApiResponse<null>,
-        { status: 400 }
-      );
-    }
-
-    if (discountPrice && (discountPrice <= 0 || discountPrice >= price)) {
-      return NextResponse.json(
-        { success: false, error: 'Цена со скидкой должна быть меньше обычной цены' } as ApiResponse<null>,
-        { status: 400 }
-      );
-    }
+    } = parsed.data;
 
     // Check for duplicate SKU
     if (sku) {

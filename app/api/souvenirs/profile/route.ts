@@ -1,10 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireAuth } from '@/lib/auth/middleware';
 import { getSouvenirPartnerId, ensureSouvenirPartnerExists, getSouvenirStats } from '@/lib/auth/souvenir-helpers';
 
 export const dynamic = 'force-dynamic';
+
+const UpdateSouvenirProfileSchema = z.object({
+  companyName: z.string().optional(),
+  description: z.string().optional(),
+  address: z.string().optional(),
+  phone: z.string().optional(),
+  email: z.string().email('Некорректный email').optional(),
+  website: z.string().optional(),
+  workingHours: z.record(z.unknown()).optional(),
+  socialMedia: z.record(z.unknown()).optional(),
+  bankDetails: z.record(z.unknown()).optional(),
+  legalInfo: z.record(z.unknown()).optional(),
+  shippingInfo: z.record(z.unknown()).optional(),
+  returnPolicy: z.record(z.unknown()).optional(),
+});
 
 /**
  * GET /api/souvenirs/profile - Get souvenir partner profile with stats
@@ -74,6 +90,14 @@ export async function PUT(request: NextRequest) {
     const partnerId = await ensureSouvenirPartnerExists(userOrResponse.userId);
 
     const body = await request.json();
+    const parsed = UpdateSouvenirProfileSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' } as ApiResponse<null>,
+        { status: 400 }
+      );
+    }
+
     const {
       companyName,
       description,
@@ -87,7 +111,7 @@ export async function PUT(request: NextRequest) {
       legalInfo,
       shippingInfo,
       returnPolicy
-    } = body;
+    } = parsed.data;
 
     const updates: string[] = [];
     const values: unknown[] = [];

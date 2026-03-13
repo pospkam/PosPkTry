@@ -1,10 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireAuth } from '@/lib/auth/middleware';
 import { getGearPartnerId } from '@/lib/auth/gear-helpers';
 
 export const dynamic = 'force-dynamic';
+
+const CreateGearRentalSchema = z.object({
+  gearId: z.string().min(1, 'ID снаряжения обязателен'),
+  customer: z.object({
+    name: z.string().min(1, 'Имя обязательно'),
+    email: z.string().email('Некорректный email'),
+    phone: z.string().min(1, 'Номер телефона обязателен'),
+  }),
+  rental: z.object({
+    startDate: z.string().min(1, 'Дата начала обязательна'),
+    endDate: z.string().min(1, 'Дата окончания обязательна'),
+    quantity: z.number().int().positive('Количество должно быть целым числом больше 0'),
+    insurance: z.boolean().optional(),
+  }),
+  comments: z.string().optional(),
+});
 
 /**
  * POST /api/gear/rentals - Создание заявки на аренду снаряжения
@@ -17,45 +34,24 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    const parsed = CreateGearRentalSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' } as ApiResponse<null>,
+        { status: 400 }
+      );
+    }
+
     const {
       gearId,
       customer,
       rental,
       comments
-    } = body;
-
-    // Валидация данных
-    if (!customer?.name || !customer?.email || !customer?.phone) {
-      return NextResponse.json(
-        { success: false, error: 'Необходимо указать контактные данные' } as ApiResponse<null>,
-        { status: 400 }
-      );
-    }
-
-    if (!rental?.startDate || !rental?.endDate) {
-      return NextResponse.json(
-        { success: false, error: 'Необходимо указать даты аренды' } as ApiResponse<null>,
-        { status: 400 }
-      );
-    }
-
-    const quantity = Number(rental?.quantity);
-    if (!Number.isInteger(quantity) || quantity < 1) {
-      return NextResponse.json(
-        { success: false, error: 'Количество должно быть целым числом больше 0' } as ApiResponse<null>,
-        { status: 400 }
-      );
-    }
+    } = parsed.data;
 
     const startDate = new Date(rental.startDate);
     const endDate = new Date(rental.endDate);
-    if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime()) || endDate <= startDate) {
-      return NextResponse.json(
-        { success: false, error: 'Некорректный диапазон дат аренды' } as ApiResponse<null>,
-        { status: 400 }
-      );
-    }
-
+    const quantity = rental.quantity;
     const rentalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
 
     // Проверяем доступность снаряжения

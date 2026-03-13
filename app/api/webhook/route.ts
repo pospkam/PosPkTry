@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import crypto from 'crypto';
@@ -6,6 +7,13 @@ import crypto from 'crypto';
 const execAsync = promisify(exec);
 
 export const dynamic = 'force-dynamic';
+
+const GitHubWebhookSchema = z.object({
+  ref: z.string().optional(),
+  repository: z.object({
+    name: z.string().optional(),
+  }).optional(),
+});
 
 /**
  * POST /api/webhook - GitHub webhook for automatic deployment
@@ -15,7 +23,7 @@ export async function POST(request: NextRequest) {
   try {
     const signature = request.headers.get('x-hub-signature-256');
     const body = await request.text();
-    
+
     // Verify GitHub signature
     const secret = process.env.WEBHOOK_SECRET || '';
     if (secret && signature) {
@@ -23,7 +31,7 @@ export async function POST(request: NextRequest) {
         .createHmac('sha256', secret)
         .update(body)
         .digest('hex');
-      
+
       if (signature !== expectedSignature) {
         return NextResponse.json(
           { error: 'Invalid signature' },
@@ -32,10 +40,28 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const payload = JSON.parse(body);
+    let payload;
+    try {
+      payload = JSON.parse(body);
+    } catch {
+      return NextResponse.json(
+        { error: 'Невалидный JSON' },
+        { status: 400 }
+      );
+    }
+
+    const parsed = GitHubWebhookSchema.safeParse(payload);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Невалидная структура webhook' },
+        { status: 400 }
+      );
+    }
+
+    const webhookPayload = parsed.data;
 
     // Only deploy on push to main branch
-    if (payload.ref !== 'refs/heads/main') {
+    if (webhookPayload.ref !== 'refs/heads/main') {
       return NextResponse.json({
         message: 'Not main branch, skipping deployment'
       });

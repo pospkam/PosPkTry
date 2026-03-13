@@ -1,10 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
+import { z } from 'zod';
 import { ApiResponse } from '@/types';
 import { getTransferPartnerId, checkDriverAvailability } from '@/lib/auth/transfer-helpers';
 import { requireTransferOperator } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
+
+const createScheduleSchema = z.object({
+  driverId: z.string().uuid(),
+  vehicleId: z.string().uuid().optional().nullable(),
+  date: z.string().min(1),
+  startTime: z.string().min(1),
+  endTime: z.string().min(1),
+  location: z.string().max(255).optional(),
+  type: z.string().min(1).max(50),
+  notes: z.string().max(2000).optional(),
+});
 
 /**
  * GET /api/transfer/schedule
@@ -119,6 +131,14 @@ export async function POST(request: NextRequest) {
     if (authResult instanceof NextResponse) return authResult;
 
     const body = await request.json();
+    const parsed = createScheduleSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({
+        success: false,
+        error: parsed.error.issues[0]?.message || 'Некорректные данные'
+      } as ApiResponse<null>, { status: 400 });
+    }
+
     const {
       driverId,
       vehicleId,
@@ -128,14 +148,7 @@ export async function POST(request: NextRequest) {
       location,
       type,
       notes
-    } = body;
-
-    if (!driverId || !date || !startTime || !endTime || !type) {
-      return NextResponse.json({
-        success: false,
-        error: 'Заполните обязательные поля'
-      } as ApiResponse<null>, { status: 400 });
-    }
+    } = parsed.data;
 
     // Check driver availability
     const isAvailable = await checkDriverAvailability(driverId, date, startTime, endTime);
