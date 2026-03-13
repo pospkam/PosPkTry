@@ -17,7 +17,7 @@ interface CreateConversationParams {
   type?: 'direct' | 'group' | 'support';
   subject?: string;
   bookingId?: string;
-  tourId?: number;
+  tourId?: string;
   createdBy: string;
   participants: Array<{ userId: string; role: string }>;
   initialMessage?: string;
@@ -71,7 +71,7 @@ class ChatService {
     user1Role: string,
     user2Id: string,
     user2Role: string,
-    options?: { bookingId?: string; tourId?: number; subject?: string }
+    options?: { bookingId?: string; tourId?: string; subject?: string }
   ): Promise<{ conversationId: string; created: boolean }> {
     // Find existing direct conversation between these two users
     const existing = await query<{ id: string }>(

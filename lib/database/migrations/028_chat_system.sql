@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS conversations (
   type VARCHAR(20) NOT NULL DEFAULT 'direct',
   subject VARCHAR(255),
   booking_id UUID REFERENCES bookings(id) ON DELETE SET NULL,
-  tour_id INTEGER REFERENCES tours(id) ON DELETE SET NULL,
+  tour_id UUID REFERENCES tours(id) ON DELETE SET NULL,
   created_by UUID NOT NULL REFERENCES users(id),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()

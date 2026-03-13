@@ -137,7 +137,7 @@ export default function EcoPointsClient() {
                 {ECO_ACTIONS.map((action) => (
                   <div
                     key={action.id}
-                    className="flex items-center gap-4 rounded-xl border p-4"
+                    className="flex items-center gap-4 rounded-lg border p-4"
                     style={{
                       backgroundColor: 'var(--bg-card)',
                       borderColor: 'var(--border)',

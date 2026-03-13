@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronRight, Check, Eye, EyeOff, Building2, Truck, Home, Package } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const ROLES = [
   { id: 'operator', name: 'Туры', icon: Building2, description: 'Организация туров' },
@@ -18,6 +19,7 @@ const LABEL = 'block text-[10px] uppercase tracking-widest text-[var(--text-mute
 
 export default function AuthPageClient() {
   const router = useRouter();
+  const { signIn } = useAuth();
   const [mode, setMode] = useState<'login' | 'register'>('register');
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -77,10 +79,21 @@ export default function AuthPageClient() {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('/api/auth/signin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(loginData) });
-      const data = await res.json();
-      if (!data.success) throw new Error(data.error || 'Ошибка входа');
-      router.push('/partner/dashboard');
+      await signIn(loginData.email, loginData.password);
+      // signIn saves user to localStorage before returning
+      const storedUser = JSON.parse(localStorage.getItem('user') ?? '{}') as { role?: string };
+      const role = storedUser.role ?? 'tourist';
+      const roleRedirect: Record<string, string> = {
+        tourist: '/hub/tourist',
+        operator: '/hub/operator',
+        guide: '/hub/guide',
+        admin: '/hub/admin',
+        transfer: '/hub/operator',
+        transfer_operator: '/hub/operator',
+        agent: '/hub/operator',
+      };
+      const from = new URLSearchParams(window.location.search).get('from');
+      router.push(from ?? roleRedirect[role] ?? '/hub/tourist');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка входа');
     } finally { setLoading(false); }

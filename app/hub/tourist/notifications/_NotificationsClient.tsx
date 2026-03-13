@@ -97,7 +97,7 @@ export default function NotificationsClient() {
           {unreadCount > 0 && (
             <button
               onClick={handleReadAll}
-              className="flex items-center gap-2 min-h-[44px] px-4 rounded-xl text-sm font-medium transition-colors"
+              className="flex items-center gap-2 min-h-[44px] px-4 rounded-lg text-sm font-medium transition-colors"
               style={{
                 backgroundColor: 'var(--bg-card)',
                 color: 'var(--accent)',
@@ -114,10 +114,10 @@ export default function NotificationsClient() {
         <div className="flex gap-2 mb-6">
           <button
             onClick={() => setFilter('all')}
-            className="min-h-[44px] px-5 rounded-xl text-sm font-medium transition-colors"
+            className="min-h-[44px] px-5 rounded-lg text-sm font-medium transition-colors"
             style={{
               backgroundColor: filter === 'all' ? 'var(--accent)' : 'var(--bg-card)',
-              color: filter === 'all' ? '#fff' : 'var(--text-secondary)',
+              color: filter === 'all' ? 'var(--bg-card)' : 'var(--text-secondary)',
               border: filter === 'all' ? 'none' : '1px solid var(--border)',
             }}
           >
@@ -125,10 +125,10 @@ export default function NotificationsClient() {
           </button>
           <button
             onClick={() => setFilter('unread')}
-            className="min-h-[44px] px-5 rounded-xl text-sm font-medium transition-colors"
+            className="min-h-[44px] px-5 rounded-lg text-sm font-medium transition-colors"
             style={{
               backgroundColor: filter === 'unread' ? 'var(--accent)' : 'var(--bg-card)',
-              color: filter === 'unread' ? '#fff' : 'var(--text-secondary)',
+              color: filter === 'unread' ? 'var(--bg-card)' : 'var(--text-secondary)',
               border: filter === 'unread' ? 'none' : '1px solid var(--border)',
             }}
           >
@@ -171,7 +171,7 @@ export default function NotificationsClient() {
             {filtered.map((notification) => (
               <div
                 key={notification.id}
-                className="flex items-start gap-4 rounded-xl border p-4"
+                className="flex items-start gap-4 rounded-lg border p-4"
                 style={{
                   backgroundColor: notification.read
                     ? 'var(--bg-card)'
@@ -233,7 +233,7 @@ export default function NotificationsClient() {
           </button>
 
           {showPrefs && (
-            <div className="mt-4 rounded-xl border p-5 space-y-4" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border)' }}>
+            <div className="mt-4 rounded-lg border p-5 space-y-4" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border)' }}>
               {prefsLoading ? (
                 <div className="flex justify-center py-4">
                   <Loader2 className="w-5 h-5 animate-spin" style={{ color: 'var(--accent)' }} />
@@ -294,7 +294,7 @@ function PrefSection({ title, items, prefs, onToggle }: {
               style={{ backgroundColor: prefs[item.key] ? 'var(--accent)' : 'var(--border)' }}
             >
               <div
-                className="absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform"
+                className="absolute top-0.5 w-4 h-4 bg-[var(--bg-card)] rounded-full transition-transform"
                 style={{ left: prefs[item.key] ? '22px' : '2px' }}
               />
             </button>

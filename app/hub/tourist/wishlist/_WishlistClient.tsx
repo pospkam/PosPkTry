@@ -151,8 +151,8 @@ export default function WishlistClient() {
             </p>
             <Link
               href="/tours"
-              className="mt-4 px-6 py-3 rounded-xl font-medium text-sm"
-              style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
+              className="mt-4 px-6 py-3 rounded-lg font-medium text-sm"
+              style={{ backgroundColor: 'var(--accent)', color: 'var(--bg-card)' }}
             >
               Смотреть туры
             </Link>
@@ -197,7 +197,7 @@ export default function WishlistClient() {
                     {/* Type badge — sits above the image */}
                     <span
                       className="relative z-10 text-xs font-medium px-2 py-1 rounded-full"
-                      style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
+                      style={{ backgroundColor: 'var(--accent)', color: 'var(--bg-card)' }}
                     >
                       {typeLabel}
                     </span>
@@ -244,8 +244,8 @@ export default function WishlistClient() {
                     <div className="flex gap-2 mt-auto">
                       <Link
                         href={href}
-                        className="flex-1 min-h-[44px] px-4 rounded-xl font-medium text-sm flex items-center justify-center gap-1"
-                        style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
+                        className="flex-1 min-h-[44px] px-4 rounded-lg font-medium text-sm flex items-center justify-center gap-1"
+                        style={{ backgroundColor: 'var(--accent)', color: 'var(--bg-card)' }}
                       >
                         <ExternalLink className="w-4 h-4" />
                         Открыть
@@ -253,7 +253,7 @@ export default function WishlistClient() {
 
                       <button
                         onClick={() => handleRemove(item.id)}
-                        className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl border"
+                        className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg border"
                         style={{ borderColor: 'var(--border)' }}
                         aria-label="Удалить из избранного"
                       >

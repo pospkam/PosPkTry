@@ -41,12 +41,12 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 // Цвет категории на бейдже карточки
 const CATEGORY_ACCENT: Record<string, string> = {
-  vulkani: 'rgba(232,115,74,0.9)', geyzery: 'rgba(232,115,74,0.9)',
-  morskie_progulki: 'rgba(0,168,204,0.9)', lakes: 'rgba(0,168,204,0.9)', rivers: 'rgba(0,168,204,0.9)',
-  mountains: 'rgba(63,185,80,0.9)', trekking: 'rgba(63,185,80,0.9)', eco: 'rgba(63,185,80,0.9)',
-  snegohod: 'rgba(210,153,34,0.9)', dzhip: 'rgba(210,153,34,0.9)',
-  medvedi: 'rgba(232,115,74,0.75)', termalnye_istochniki: 'rgba(0,168,204,0.75)',
-  rybalka: 'rgba(100,180,255,0.85)', vertoletnye_tury: 'rgba(180,120,255,0.85)',
+  vulkani: 'var(--accent)', geyzery: 'var(--accent)',
+  morskie_progulki: 'var(--ocean)', lakes: 'var(--ocean)', rivers: 'var(--ocean)',
+  mountains: 'var(--success)', trekking: 'var(--success)', eco: 'var(--success)',
+  snegohod: 'var(--warning)', dzhip: 'var(--warning)',
+  medvedi: 'var(--accent)', termalnye_istochniki: 'var(--ocean)',
+  rybalka: 'var(--ocean)', vertoletnye_tury: 'var(--accent)',
 };
 
 // ─── Типы ─────────────────────────────────────────────────────────────────────
@@ -140,8 +140,7 @@ function RouteCard({ tour }: { tour: ApiTour }) {
           position: 'absolute', top: '10px', left: '10px',
           padding: '3px 10px', borderRadius: '100px',
           fontSize: '11px', fontWeight: 700,
-          background: badgeBg, color: '#fff',
-          backdropFilter: 'blur(6px)',
+          background: badgeBg, color: 'var(--bg-card)',
           letterSpacing: '0.02em',
         }}>
           {cat}
@@ -153,8 +152,7 @@ function RouteCard({ tour }: { tour: ApiTour }) {
             display: 'flex', alignItems: 'center', gap: '4px',
             padding: '3px 8px', borderRadius: '8px',
             fontSize: '11px', fontWeight: 600,
-            background: 'rgba(0,0,0,0.55)', color: '#fff',
-            backdropFilter: 'blur(6px)',
+            background: 'rgba(0,0,0,0.55)', color: 'var(--bg-card)',
           }}>
             <Clock size={10} />
             {durationStr}
@@ -314,9 +312,7 @@ export default function ToursPageClient() {
       {/* ── Хедер ── */}
       <header style={{
         position: 'sticky', top: 0, zIndex: 50,
-        background: 'rgba(13,17,23,0.85)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
+        background: 'var(--bg-primary)',
         borderBottom: '1px solid var(--border)',
       }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '11px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -355,8 +351,8 @@ export default function ToursPageClient() {
       {/* ── Hero-баннер ── */}
       <div style={{
         background: `
-          radial-gradient(ellipse 60% 100% at 80% 50%, rgba(0,168,204,0.12) 0%, transparent 70%),
-          radial-gradient(ellipse 50% 80% at 20% 50%, rgba(232,115,74,0.14) 0%, transparent 70%),
+          radial-gradient(ellipse 60% 100% at 80% 50%, color-mix(in srgb, var(--ocean) 12%, transparent) 0%, transparent 70%),
+          radial-gradient(ellipse 50% 80% at 20% 50%, color-mix(in srgb, var(--accent) 14%, transparent) 0%, transparent 70%),
           var(--bg-secondary)
         `,
         borderBottom: '1px solid var(--border)',
@@ -413,7 +409,7 @@ export default function ToursPageClient() {
                   fontSize: '13px', fontWeight: isActive ? 700 : 400,
                   background: isActive ? 'var(--accent)' : 'var(--bg-card)',
                   border: isActive ? '1px solid var(--accent)' : '1px solid var(--border)',
-                  color: isActive ? '#fff' : 'var(--text-secondary)',
+                  color: isActive ? 'var(--bg-card)' : 'var(--text-secondary)',
                   cursor: 'pointer', transition: 'all 150ms ease',
                 }}
               >
@@ -466,7 +462,7 @@ export default function ToursPageClient() {
 
           {error ? (
             <div style={{ padding: '60px 0', textAlign: 'center' }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '12px', background: 'rgba(248,81,73,0.08)', border: '1px solid rgba(248,81,73,0.2)', marginBottom: '16px' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '12px', background: 'color-mix(in srgb, var(--danger) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--danger) 20%, transparent)', marginBottom: '16px' }}>
                 <span style={{ fontSize: '14px', color: 'var(--danger)' }}>{error}</span>
               </div>
               <div>

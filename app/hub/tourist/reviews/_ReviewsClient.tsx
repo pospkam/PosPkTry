@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, Suspense } from 'react';
 import { Protected } from '@/components/auth/Protected';
+import { useSearchParams } from 'next/navigation';
 import {
   MessageSquare,
   Star,
@@ -108,6 +109,21 @@ function StarSelector({ value, onChange }: StarSelectorProps) {
 }
 
 export default function ReviewsClient() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--accent)' }} />
+      </div>
+    }>
+      <ReviewsContent />
+    </Suspense>
+  );
+}
+
+function ReviewsContent() {
+  const searchParams = useSearchParams();
+  const tourIdParam = searchParams?.get('tourId') ?? null;
+
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
@@ -134,6 +150,16 @@ export default function ReviewsClient() {
     transformTours,
     { errorMessage: 'Не удалось загрузить список туров', skip: true },
   );
+
+  // Auto-open form when ?tourId= is in URL
+  useEffect(() => {
+    if (tourIdParam) {
+      setShowForm(true);
+      setForm((f) => ({ ...f, tourId: tourIdParam }));
+      void fetchTours();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tourIdParam]);
 
   const handleOpenForm = useCallback(() => {
     setShowForm(true);

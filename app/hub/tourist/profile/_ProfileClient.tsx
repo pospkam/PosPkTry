@@ -5,10 +5,10 @@ import { Protected } from '@/components/auth/Protected';
 import { User, Loader2, Save, Lock, AlertCircle, CheckCircle } from 'lucide-react';
 
 const INPUT_CLASS =
-  'w-full min-h-[44px] px-4 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]';
+  'w-full min-h-[44px] px-4 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]';
 
 const INPUT_READONLY_CLASS =
-  'w-full min-h-[44px] px-4 bg-[var(--bg-hover)] border border-[var(--border)] rounded-xl text-[var(--text-secondary)] cursor-not-allowed select-none';
+  'w-full min-h-[44px] px-4 bg-[var(--bg-hover)] border border-[var(--border)] rounded-lg text-[var(--text-secondary)] cursor-not-allowed select-none';
 
 interface TouristProfile {
   full_name: string | null;
@@ -70,6 +70,14 @@ export default function ProfileClient() {
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Password change state
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [pwdSaving, setPwdSaving] = useState(false);
+  const [pwdSuccess, setPwdSuccess] = useState(false);
+  const [pwdError, setPwdError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -146,6 +154,44 @@ export default function ProfileClient() {
       setSaveError('Не удалось сохранить профиль. Проверьте соединение.');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwdError(null);
+    setPwdSuccess(false);
+
+    if (newPassword !== confirmNewPassword) {
+      setPwdError('Новый пароль и подтверждение не совпадают');
+      return;
+    }
+    if (newPassword.length < 8) {
+      setPwdError('Новый пароль должен содержать не менее 8 символов');
+      return;
+    }
+
+    setPwdSaving(true);
+    try {
+      const result = await fetchJson<{ message: string }>('/api/tourist/profile/password', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+
+      if (isApiSuccess(result)) {
+        setPwdSuccess(true);
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmNewPassword('');
+        setTimeout(() => setPwdSuccess(false), 5000);
+      } else {
+        setPwdError(result.error ?? 'Ошибка при смене пароля');
+      }
+    } catch {
+      setPwdError('Не удалось сменить пароль. Проверьте соединение.');
+    } finally {
+      setPwdSaving(false);
     }
   };
 
@@ -308,10 +354,10 @@ export default function ProfileClient() {
               <button
                 type="submit"
                 disabled={saving}
-                className="flex items-center gap-2 min-h-[44px] px-6 rounded-xl font-medium text-sm transition-colors disabled:opacity-60"
+                className="flex items-center gap-2 min-h-[44px] px-6 rounded-lg font-medium text-sm transition-colors disabled:opacity-60"
                 style={{
                   backgroundColor: 'var(--accent)',
-                  color: '#fff',
+                  color: 'var(--bg-card)',
                 }}
               >
                 {saving ? (
@@ -323,8 +369,9 @@ export default function ProfileClient() {
               </button>
             </form>
 
-            {/* Password section — no API available yet */}
-            <div
+            {/* Password change form */}
+            <form
+              onSubmit={(e) => { void handleChangePassword(e); }}
               className="rounded-lg border p-6 space-y-4"
               style={{
                 backgroundColor: 'var(--bg-card)',
@@ -341,14 +388,107 @@ export default function ProfileClient() {
                 </h2>
               </div>
 
-              <p
-                className="text-sm"
-                style={{ color: 'var(--text-secondary)' }}
+              <div>
+                <label
+                  htmlFor="pwd-current"
+                  className="block text-sm mb-1"
+                  style={{ color: 'var(--text-secondary)' }}
+                >
+                  Текущий пароль
+                </label>
+                <input
+                  id="pwd-current"
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="Введите текущий пароль"
+                  autoComplete="current-password"
+                  className={INPUT_CLASS}
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="pwd-new"
+                  className="block text-sm mb-1"
+                  style={{ color: 'var(--text-secondary)' }}
+                >
+                  Новый пароль
+                </label>
+                <input
+                  id="pwd-new"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Не менее 8 символов"
+                  autoComplete="new-password"
+                  className={INPUT_CLASS}
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="pwd-confirm"
+                  className="block text-sm mb-1"
+                  style={{ color: 'var(--text-secondary)' }}
+                >
+                  Подтвердите новый пароль
+                </label>
+                <input
+                  id="pwd-confirm"
+                  type="password"
+                  value={confirmNewPassword}
+                  onChange={(e) => setConfirmNewPassword(e.target.value)}
+                  placeholder="Повторите новый пароль"
+                  autoComplete="new-password"
+                  className={INPUT_CLASS}
+                />
+              </div>
+
+              {pwdSuccess && (
+                <div
+                  className="flex items-center gap-2 text-sm rounded-lg px-4 py-3"
+                  style={{
+                    backgroundColor: 'color-mix(in srgb, var(--success) 12%, transparent)',
+                    color: 'var(--success)',
+                    border: '1px solid color-mix(in srgb, var(--success) 30%, transparent)',
+                  }}
+                >
+                  <CheckCircle className="w-4 h-4 shrink-0" />
+                  Пароль успешно изменён
+                </div>
+              )}
+              {pwdError && (
+                <div
+                  className="flex items-center gap-2 text-sm rounded-lg px-4 py-3"
+                  style={{
+                    backgroundColor: 'color-mix(in srgb, var(--danger) 10%, transparent)',
+                    color: 'var(--danger)',
+                    border: '1px solid color-mix(in srgb, var(--danger) 30%, transparent)',
+                  }}
+                >
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  {pwdError}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={pwdSaving || !currentPassword || !newPassword || !confirmNewPassword}
+                className="flex items-center gap-2 min-h-[44px] px-6 rounded-lg font-medium text-sm transition-colors disabled:opacity-60"
+                style={{
+                  backgroundColor: 'var(--accent)',
+                  color: 'var(--bg-card)',
+                }}
               >
-                Смена пароля временно недоступна. Для изменения пароля обратитесь
-                в&nbsp;службу поддержки.
-              </p>
-            </div>
+                {pwdSaving ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Lock className="w-4 h-4" />
+                )}
+                {pwdSaving ? 'Сохранение...' : 'Изменить пароль'}
+              </button>
+            </form>
           </div>
         )}
       </div>

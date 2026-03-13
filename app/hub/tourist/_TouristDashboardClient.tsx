@@ -47,7 +47,7 @@ const TIER_LABELS: Record<string, string> = {
 };
 
 const STATUS_LABELS: Record<string, { label: string; cls: string }> = {
-  pending: { label: 'Ожидает', cls: 'bg-yellow-500/10 text-yellow-500' },
+  pending: { label: 'Ожидает', cls: 'bg-[var(--warning)]/10 text-[var(--warning)]' },
   confirmed: { label: 'Подтверждён', cls: 'bg-[var(--success)]/10 text-[var(--success)]' },
   completed: { label: 'Завершён', cls: 'bg-[var(--text-muted)]/10 text-[var(--text-muted)]' },
   cancelled: { label: 'Отменён', cls: 'bg-[var(--danger)]/10 text-[var(--danger)]' },
@@ -176,7 +176,7 @@ export default function TouristDashboardClient() {
               weather.safetyLevel === 'excellent' || weather.safetyLevel === 'good'
                 ? 'bg-[var(--success)]/10 text-[var(--success)]'
                 : weather.safetyLevel === 'difficult'
-                  ? 'bg-yellow-500/10 text-yellow-500'
+                  ? 'bg-[var(--warning)]/10 text-[var(--warning)]'
                   : 'bg-[var(--danger)]/10 text-[var(--danger)]'
             }`}>
               {weather.safetyLevel === 'excellent' ? 'Отлично' : weather.safetyLevel === 'good' ? 'Хорошо' : weather.safetyLevel === 'difficult' ? 'Сложно' : 'Опасно'}
@@ -313,7 +313,7 @@ export default function TouristDashboardClient() {
               <div key={review.id} className="px-4 py-2.5">
                 <div className="flex items-center justify-between mb-0.5">
                   <span className="text-xs font-medium text-[var(--text-primary)]">{review.tour_name}</span>
-                  <span className="text-[10px] text-yellow-400 font-mono">{'★'.repeat(review.rating)}</span>
+                  <span className="text-[10px] text-[var(--warning)] font-mono">{'★'.repeat(review.rating)}</span>
                 </div>
                 {review.comment && (
                   <p className="text-[10px] text-[var(--text-muted)] truncate">{review.comment}</p>

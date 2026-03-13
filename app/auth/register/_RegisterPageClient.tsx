@@ -3,6 +3,7 @@
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
 
 const INPUT = 'w-full px-3.5 py-2.5 text-sm bg-[var(--bg-primary)] border border-[var(--border)] rounded-md text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition-colors';
 const LABEL = 'block text-[10px] uppercase tracking-widest text-[var(--text-muted)] mb-1.5';
@@ -11,6 +12,7 @@ function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const type = searchParams?.get('type') || 'tourist';
+  const { signIn } = useAuth();
 
   const [formData, setFormData] = useState({
     email: '', password: '', password_confirm: '',
@@ -53,7 +55,18 @@ function RegisterForm() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Ошибка регистрации');
-      router.push('/auth/login?registered=true');
+
+      // Auto-login after successful registration
+      await signIn(formData.email, formData.password);
+      const role = formData.role || 'tourist';
+      const redirectMap: Record<string, string> = {
+        tourist: '/hub/tourist',
+        operator: '/hub/operator',
+        guide: '/hub/guide',
+        transfer: '/hub/operator',
+        agent: '/hub/operator',
+      };
+      router.push(redirectMap[role] ?? '/hub/tourist');
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Ошибка регистрации');
     } finally {

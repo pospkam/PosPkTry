@@ -73,9 +73,9 @@ const DIFFICULTY_LABEL: Record<string, string> = {
 };
 
 const DIFFICULTY_COLOR: Record<string, string> = {
-  easy: 'text-green-400',
-  medium: 'text-yellow-400',
-  hard: 'text-red-400',
+  easy: 'text-[var(--success)]',
+  medium: 'text-[var(--warning)]',
+  hard: 'text-[var(--danger)]',
 };
 
 type Tab = 'overview' | 'reviews' | 'booking';
@@ -148,13 +148,13 @@ export default function TourDetailsPageClient() {
     return (
       <div className="min-h-screen flex items-center justify-center p-6">
         <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-8 text-center max-w-md">
-          <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-red-400" />
+          <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-[var(--danger)]" />
           <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">
             {error || 'Тур не найден'}
           </h2>
           <button
             onClick={() => router.push('/tours')}
-            className="mt-4 px-6 py-3 bg-[var(--accent)] hover:bg-[var(--accent)]/80 text-[var(--bg-card)] font-bold rounded-xl transition-colors"
+            className="mt-4 px-6 py-3 bg-[var(--accent)] hover:bg-[var(--accent)]/80 text-[var(--bg-card)] font-bold rounded-lg transition-colors"
           >
             К списку туров
           </button>
@@ -199,7 +199,7 @@ export default function TourDetailsPageClient() {
           <h1 className="text-3xl sm:text-4xl font-bold text-[var(--text-primary)] mb-2">{tour.name}</h1>
           <div className="flex flex-wrap items-center gap-4 text-[var(--text-muted)] text-sm">
             <span className="flex items-center gap-1">
-              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+              <Star className="w-4 h-4 fill-[var(--warning)] text-[var(--warning)]" />
               <span className="text-[var(--text-primary)] font-semibold">{tour.rating.toFixed(1)}</span>
               <span>({tour.reviewCount} отзывов)</span>
             </span>
@@ -240,7 +240,7 @@ export default function TourDetailsPageClient() {
           {/* Дополнительные фото */}
           <div className="hidden md:grid col-span-2 grid-cols-2 gap-3">
             {tour.images.slice(1, 5).map((img, i) => (
-              <div key={i} className="relative rounded-xl overflow-hidden bg-[var(--bg-card)]">
+              <div key={i} className="relative rounded-lg overflow-hidden bg-[var(--bg-card)]">
                 <Image
                   src={img}
                   alt={`${tour.name} — фото ${i + 2}`}
@@ -252,7 +252,7 @@ export default function TourDetailsPageClient() {
             ))}
             {/* Заглушки если меньше 4 дополнительных */}
             {Array.from({ length: Math.max(0, 4 - tour.images.slice(1, 5).length) }).map((_, i) => (
-              <div key={`placeholder-${i}`} className="rounded-xl bg-[var(--bg-card)]" />
+              <div key={`placeholder-${i}`} className="rounded-lg bg-[var(--bg-card)]" />
             ))}
           </div>
         </div>
@@ -317,7 +317,7 @@ export default function TourDetailsPageClient() {
                     <ul className="space-y-2">
                       {tour.included.map((item, i) => (
                         <li key={i} className="flex items-start gap-2">
-                          <Check className="w-4 h-4 text-green-400 shrink-0 mt-0.5" />
+                          <Check className="w-4 h-4 text-[var(--success)] shrink-0 mt-0.5" />
                           <span className="text-[var(--text-secondary)]">{item}</span>
                         </li>
                       ))}
@@ -332,7 +332,7 @@ export default function TourDetailsPageClient() {
                     <ul className="space-y-2">
                       {tour.notIncluded.map((item, i) => (
                         <li key={i} className="flex items-start gap-2">
-                          <X className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                          <X className="w-4 h-4 text-[var(--danger)] shrink-0 mt-0.5" />
                           <span className="text-[var(--text-secondary)]">{item}</span>
                         </li>
                       ))}
@@ -365,9 +365,9 @@ export default function TourDetailsPageClient() {
                 ) : (
                   <div className="space-y-4">
                     {reviews.map(review => (
-                      <div key={review.id} className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-4">
+                      <div key={review.id} className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="flex text-yellow-400">
+                          <span className="flex text-[var(--warning)]">
                             {Array.from({ length: 5 }).map((_, i) => (
                               <Star
                                 key={i}
@@ -381,7 +381,7 @@ export default function TourDetailsPageClient() {
                           </span>
                         </div>
                         {review.isVerified && (
-                          <span className="inline-flex items-center gap-1 text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded mb-2">
+                          <span className="inline-flex items-center gap-1 text-xs bg-[var(--success)]/20 text-[var(--success)] px-2 py-0.5 rounded mb-2">
                             <Check className="w-3 h-3" /> Проверен
                           </span>
                         )}
@@ -420,7 +420,7 @@ export default function TourDetailsPageClient() {
 
               <button
                 onClick={() => setActiveTab('booking')}
-                className="w-full px-6 py-4 bg-[var(--accent)] hover:bg-[var(--accent)]/80 text-[var(--bg-card)] font-bold rounded-xl transition-colors text-base"
+                className="w-full px-6 py-4 bg-[var(--accent)] hover:bg-[var(--accent)]/80 text-[var(--bg-card)] font-bold rounded-lg transition-colors text-base"
               >
                 Забронировать
               </button>
@@ -449,7 +449,7 @@ export default function TourDetailsPageClient() {
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-[var(--text-muted)]">Рейтинг</span>
-                  <span className="flex items-center gap-1 text-yellow-400 font-semibold">
+                  <span className="flex items-center gap-1 text-[var(--warning)] font-semibold">
                     <Star className="w-4 h-4 fill-current" />
                     {tour.rating.toFixed(1)}
                   </span>
@@ -471,7 +471,7 @@ export default function TourDetailsPageClient() {
                 <h3 className="text-base font-bold mb-4">Организатор</h3>
                 <p className="text-[var(--text-primary)] font-semibold mb-1">{tour.operator.name}</p>
                 <p className="text-[var(--text-muted)] text-sm flex items-center gap-1 mb-4">
-                  <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+                  <Star className="w-3.5 h-3.5 fill-[var(--warning)] text-[var(--warning)]" />
                   {tour.operator.rating.toFixed(1)}
                 </p>
                 <div className="space-y-2">
