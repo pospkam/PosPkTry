@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireOperator } from '@/lib/auth/middleware';
+import { z } from 'zod';
+
+const CreateTemplateSchema = z.object({
+  name: z.string().min(1, 'Название шаблона обязательно'),
+  subject: z.string().optional(),
+  content: z.string().min(1, 'Содержимое шаблона обязательно'),
+  templateType: z.string().optional(),
+  variables: z.array(z.string()).optional(),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -64,14 +73,11 @@ export async function POST(request: NextRequest) {
     const userId = operatorOrResponse.userId;
 
     const body = await request.json();
-    const { name, subject, content, templateType, variables } = body;
-
-    if (!name || !content) {
-      return NextResponse.json({
-        success: false,
-        error: 'name и content обязательны'
-      } as ApiResponse<null>, { status: 400 });
+    const parsed = CreateTemplateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' }, { status: 400 });
     }
+    const { name, subject, content, templateType, variables } = parsed.data;
 
     const result = await query(
       `INSERT INTO message_templates (

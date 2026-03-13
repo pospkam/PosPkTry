@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireOperator } from '@/lib/auth/middleware';
@@ -181,6 +182,27 @@ export async function GET(request: NextRequest) {
 }
 
 // POST /api/tours — Создание нового тура (protected: operator only)
+const CreateTourSchema = z.object({
+  name: z.string().min(1, 'Название обязательно'),
+  description: z.string().min(1, 'Описание обязательно'),
+  shortDescription: z.string().optional(),
+  category: z.string().optional(),
+  difficulty: z.string().min(1, 'Сложность обязательна'),
+  duration: z.coerce.number().positive('Длительность должна быть положительной'),
+  price: z.coerce.number().positive('Цена должна быть положительной'),
+  currency: z.string().default('RUB'),
+  season: z.array(z.string()).optional(),
+  coordinates: z.array(z.unknown()).optional(),
+  requirements: z.array(z.string()).optional(),
+  included: z.array(z.string()).optional(),
+  notIncluded: z.array(z.string()).optional(),
+  maxGroupSize: z.coerce.number().int().positive().optional(),
+  minGroupSize: z.coerce.number().int().positive().optional(),
+  operatorId: z.string().optional(),
+  guideId: z.string().optional(),
+  routeId: z.string().optional(),
+});
+
 export async function POST(request: NextRequest) {
   const authResult = await requireOperator(request);
   if (authResult instanceof NextResponse) {
@@ -189,6 +211,13 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
+    const parsed = CreateTourSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' } as ApiResponse<null>,
+        { status: 400 }
+      );
+    }
     const {
       name,
       description,
@@ -208,7 +237,7 @@ export async function POST(request: NextRequest) {
       operatorId,
       guideId,
       routeId,
-    } = body;
+    } = parsed.data;
 
     let effectiveOperatorId = operatorId;
     if (authResult.role !== 'admin') {
@@ -226,13 +255,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: false,
         error: 'operatorId обязателен для администратора',
-      } as ApiResponse<null>, { status: 400 });
-    }
-
-    if (!name || !description || !difficulty || !duration || !price) {
-      return NextResponse.json({
-        success: false,
-        error: 'Обязательные поля: name, description, difficulty, duration, price',
       } as ApiResponse<null>, { status: 400 });
     }
 

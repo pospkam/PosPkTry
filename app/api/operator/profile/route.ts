@@ -4,6 +4,14 @@ import { ApiResponse } from '@/types';
 import { requireOperator } from '@/lib/auth/middleware';
 import { getPartnerByUserId, ensurePartnerExists } from '@/lib/auth/operator-helpers';
 import { OpProfileUserRow, OpSettingsRow, OpProfileStatsRow } from '@/lib/types/db-rows';
+import { z } from 'zod';
+
+const UpdateProfileSchema = z.object({
+  name: z.string().min(1, 'Имя не может быть пустым').optional(),
+  description: z.string().optional(),
+  contact: z.record(z.unknown()).optional(),
+  preferences: z.record(z.unknown()).optional(),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -133,7 +141,11 @@ export async function PUT(request: NextRequest) {
     const userId = operatorOrResponse.userId;
 
     const body = await request.json();
-    const { name, description, contact, preferences } = body;
+    const parsed = UpdateProfileSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' }, { status: 400 });
+    }
+    const { name, description, contact, preferences } = parsed.data;
 
     // Update user name and preferences if provided
     if (name || preferences) {

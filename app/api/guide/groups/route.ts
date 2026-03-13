@@ -3,6 +3,17 @@ import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { getGuidePartnerId, verifyScheduleOwnership } from '@/lib/auth/guide-helpers';
 import { requireRole } from '@/lib/auth/middleware';
+import { z } from 'zod';
+
+const CreateGroupSchema = z.object({
+  scheduleId: z.string().min(1, 'scheduleId обязателен'),
+  groupName: z.string().min(1, 'Название группы обязательно'),
+  participants: z.array(z.unknown()).optional(),
+  emergencyContacts: z.array(z.unknown()).optional(),
+  experienceLevels: z.record(z.unknown()).optional(),
+  specialNeeds: z.string().optional(),
+  equipmentChecklist: z.array(z.unknown()).optional(),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -90,6 +101,10 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    const parsed = CreateGroupSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' }, { status: 400 });
+    }
     const {
       scheduleId,
       groupName,
@@ -98,14 +113,7 @@ export async function POST(request: NextRequest) {
       experienceLevels,
       specialNeeds,
       equipmentChecklist
-    } = body;
-
-    if (!scheduleId) {
-      return NextResponse.json({
-        success: false,
-        error: 'Не указан scheduleId'
-      } as ApiResponse<null>, { status: 400 });
-    }
+    } = parsed.data;
 
     // Verify schedule belongs to current guide
     const ownsSchedule = await verifyScheduleOwnership(userId, scheduleId);

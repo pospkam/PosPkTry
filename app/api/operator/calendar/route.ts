@@ -4,6 +4,17 @@ import { ApiResponse } from '@/types';
 import { requireOperator } from '@/lib/auth/middleware';
 import { getOperatorPartnerId, verifyTourOwnership } from '@/lib/auth/operator-helpers';
 import { OpCalendarRow } from '@/lib/types/db-rows';
+import { z } from 'zod';
+
+const SetAvailabilitySchema = z.object({
+  tourId: z.string().min(1, 'tourId обязателен'),
+  date: z.string().min(1, 'date обязательна'),
+  availableSpots: z.number().int().min(0).optional(),
+  isBlocked: z.boolean().optional(),
+  blockReason: z.string().optional(),
+  priceOverride: z.number().min(0).optional(),
+  notes: z.string().optional(),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -114,14 +125,11 @@ export async function POST(request: NextRequest) {
     const userId = operatorOrResponse.userId;
 
     const body = await request.json();
-    const { tourId, date, availableSpots, isBlocked, blockReason, priceOverride, notes } = body;
-
-    if (!tourId || !date) {
-      return NextResponse.json({
-        success: false,
-        error: 'tourId и date обязательны'
-      } as ApiResponse<null>, { status: 400 });
+    const parsed = SetAvailabilitySchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' }, { status: 400 });
     }
+    const { tourId, date, availableSpots, isBlocked, blockReason, priceOverride, notes } = parsed.data;
 
     // Verify tour ownership
     const isOwner = await verifyTourOwnership(userId, tourId);

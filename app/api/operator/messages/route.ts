@@ -3,6 +3,14 @@ import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireOperator } from '@/lib/auth/middleware';
 import { verifyBookingOwnership } from '@/lib/auth/operator-helpers';
+import { z } from 'zod';
+
+const SendMessageSchema = z.object({
+  bookingId: z.string().min(1, 'bookingId обязателен'),
+  recipientId: z.string().min(1, 'recipientId обязателен'),
+  message: z.string().min(1, 'Сообщение не может быть пустым'),
+  attachments: z.array(z.unknown()).optional(),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -94,14 +102,11 @@ export async function POST(request: NextRequest) {
     const userId = operatorOrResponse.userId;
 
     const body = await request.json();
-    const { bookingId, recipientId, message, attachments } = body;
-
-    if (!bookingId || !recipientId || !message) {
-      return NextResponse.json({
-        success: false,
-        error: 'bookingId, recipientId и message обязательны'
-      } as ApiResponse<null>, { status: 400 });
+    const parsed = SendMessageSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' }, { status: 400 });
     }
+    const { bookingId, recipientId, message, attachments } = parsed.data;
 
     // Verify booking ownership
     const isOwner = await verifyBookingOwnership(userId, bookingId);

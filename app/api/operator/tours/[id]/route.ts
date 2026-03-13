@@ -4,6 +4,29 @@ import { ApiResponse } from '@/types';
 import { requireOperator } from '@/lib/auth/middleware';
 import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
 import { OpTourDetailRow, OpTourOwnerRow, CountRow } from '@/lib/types/db-rows';
+import { z } from 'zod';
+
+const UpdateTourSchema = z.object({
+  name: z.string().min(1, 'Название не может быть пустым').optional(),
+  description: z.string().min(1, 'Описание не может быть пустым').optional(),
+  shortDescription: z.string().optional(),
+  category: z.string().optional(),
+  difficulty: z.string().optional(),
+  duration: z.number().int().min(1).max(30).optional(),
+  price: z.number().min(0, 'Цена не может быть отрицательной').optional(),
+  currency: z.string().optional(),
+  season: z.union([z.string(), z.array(z.string())]).optional(),
+  maxGroupSize: z.number().int().min(1).max(100).optional(),
+  minGroupSize: z.number().int().min(1).optional(),
+  requirements: z.array(z.string()).optional(),
+  includes: z.array(z.string()).optional(),
+  excludes: z.array(z.string()).optional(),
+  coordinates: z.array(z.number()).optional(),
+  isActive: z.boolean().optional(),
+}).refine(
+  (data) => Object.values(data).some((v) => v !== undefined),
+  { message: 'Укажите хотя бы одно поле для обновления' }
+);
 
 export const dynamic = 'force-dynamic';
 
@@ -139,6 +162,10 @@ export async function PUT(
     const { id } = await params;
 
     const body = await request.json();
+    const parsed = UpdateTourSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' }, { status: 400 });
+    }
 
     // Build dynamic update query
       const allowedFields = [
@@ -162,7 +189,7 @@ export async function PUT(
     const updateValues: (string | number | boolean | null | object)[] = [];
     let paramIndex = 1;
 
-      for (const [key, value] of Object.entries(body)) {
+      for (const [key, value] of Object.entries(parsed.data)) {
         if (typeof value === 'undefined') {
           continue;
         }

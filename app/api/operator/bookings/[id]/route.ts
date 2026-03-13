@@ -3,6 +3,16 @@ import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireOperator } from '@/lib/auth/middleware';
 import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
+import { z } from 'zod';
+
+const UpdateBookingSchema = z.object({
+  status: z.enum(['pending', 'confirmed', 'completed', 'cancelled'], { message: 'Неверный статус бронирования' }).optional(),
+  paymentStatus: z.enum(['pending', 'paid', 'refunded'], { message: 'Неверный статус оплаты' }).optional(),
+  notes: z.string().optional(),
+}).refine(
+  (data) => data.status !== undefined || data.paymentStatus !== undefined || data.notes !== undefined,
+  { message: 'Укажите хотя бы одно поле для обновления' }
+);
 
 export const dynamic = 'force-dynamic';
 
@@ -31,24 +41,11 @@ export async function PUT(
     const { id } = await params;
 
     const body = await request.json();
-    const { status, paymentStatus, notes } = body;
-
-    // Validate status change
-    const validStatuses = ['pending', 'confirmed', 'completed', 'cancelled'];
-    if (status && !validStatuses.includes(status)) {
-      return NextResponse.json({
-        success: false,
-        error: 'Неверный статус бронирования'
-      } as ApiResponse<null>, { status: 400 });
+    const parsed = UpdateBookingSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' }, { status: 400 });
     }
-
-    const validPaymentStatuses = ['pending', 'paid', 'refunded'];
-    if (paymentStatus && !validPaymentStatuses.includes(paymentStatus)) {
-      return NextResponse.json({
-        success: false,
-        error: 'Неверный статус оплаты'
-      } as ApiResponse<null>, { status: 400 });
-    }
+    const { status, paymentStatus, notes } = parsed.data;
 
     // Build update query
     const updateFields = [];

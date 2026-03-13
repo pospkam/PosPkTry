@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { requireOperator } from '@/lib/auth/middleware';
 import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
+import { z } from 'zod';
+
+const UpdateClientSchema = z.object({
+  tags: z.array(z.string()).optional(),
+  telegram_id: z.string().optional(),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -155,6 +161,10 @@ export async function PATCH(
     }
 
     const body = await request.json() as { tags?: unknown; telegram_id?: unknown };
+    const parsed = UpdateClientSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' }, { status: 400 });
+    }
 
     // Валидация tags
     if ('tags' in body && (!Array.isArray(body.tags) || !body.tags.every((t) => typeof t === 'string'))) {

@@ -4,6 +4,20 @@ import { ApiResponse } from '@/types';
 import { getGuidePartnerByUserId, ensureGuidePartnerExists, getGuideStats } from '@/lib/auth/guide-helpers';
 import { requireRole } from '@/lib/auth/middleware';
 import { GuideUserRow } from '@/lib/types/db-rows';
+import { z } from 'zod';
+
+const UpdateGuideProfileSchema = z.object({
+  name: z.string().min(1, 'Имя не может быть пустым').optional(),
+  partnerName: z.string().optional(),
+  description: z.string().optional(),
+  contact: z.record(z.unknown()).optional(),
+  experienceYears: z.number().int().min(1, 'Опыт работы должен быть от 1 до 50 лет').max(50, 'Опыт работы должен быть от 1 до 50 лет').optional(),
+  languages: z.array(z.string()).optional(),
+  specializations: z.array(z.enum(['volcanoes', 'wildlife', 'fishing', 'history', 'photography', 'extreme', 'hiking', 'cultural', 'rafting', 'skiing'])).optional(),
+  bio: z.string().optional(),
+  location: z.object({ lat: z.number(), lng: z.number() }).optional(),
+  isAvailable: z.boolean().optional(),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -76,6 +90,10 @@ export async function PUT(request: NextRequest) {
     const userId = guideOrResponse.userId;
 
     const body = await request.json();
+    const parsed = UpdateGuideProfileSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' }, { status: 400 });
+    }
     const {
       name,
       partnerName,
@@ -87,24 +105,7 @@ export async function PUT(request: NextRequest) {
       bio,
       location,
       isAvailable
-    } = body;
-
-    // Validate experience years
-    if (experienceYears !== undefined && (experienceYears < 1 || experienceYears > 50)) {
-      return NextResponse.json({
-        success: false,
-        error: 'Опыт работы должен быть от 1 до 50 лет'
-      } as ApiResponse<null>, { status: 400 });
-    }
-
-    // Validate specializations
-    const validSpecializations = ['volcanoes', 'wildlife', 'fishing', 'history', 'photography', 'extreme', 'hiking', 'cultural', 'rafting', 'skiing'];
-    if (specializations && !specializations.every((s: string) => validSpecializations.includes(s))) {
-      return NextResponse.json({
-        success: false,
-        error: 'Недопустимая специализация. Доступные: ' + validSpecializations.join(', ')
-      } as ApiResponse<null>, { status: 400 });
-    }
+    } = parsed.data;
 
     // Update user name if provided
     if (name) {

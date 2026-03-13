@@ -9,6 +9,15 @@ import {
   OpTourForScheduleRow,
   OpScheduleInsertRow,
 } from '@/lib/types/db-rows';
+import { z } from 'zod';
+
+const CreateScheduleSchema = z.object({
+  tourId: z.string().min(1, 'ID тура обязателен'),
+  startDate: z.string().min(1, 'Дата начала обязательна'),
+  endDate: z.string().min(1, 'Дата окончания обязательна'),
+  price: z.number().positive('Цена должна быть положительной'),
+  maxParticipants: z.number().int().min(1, 'Укажите максимальное количество участников'),
+});
 
 interface TourSchedule {
   id: string;
@@ -174,50 +183,34 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-
-    // Валидация
-    const errors: string[] = [];
-
-    if (!body.tourId) {
-      errors.push('ID тура обязателен');
+    const parsed = CreateScheduleSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' }, { status: 400 });
     }
-    if (!body.startDate) {
-      errors.push('Дата начала обязательна');
-    }
-    if (!body.endDate) {
-      errors.push('Дата окончания обязательна');
-    }
-    if (!body.price || body.price <= 0) {
-      errors.push('Цена должна быть положительной');
-    }
-    if (!body.maxParticipants || body.maxParticipants < 1) {
-      errors.push('Укажите максимальное количество участников');
-    }
+    const { tourId, startDate, endDate, price, maxParticipants } = parsed.data;
 
     // Проверка дат
-    if (body.startDate && body.endDate) {
-      const start = new Date(body.startDate);
-      const end = new Date(body.endDate);
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
       if (start >= end) {
-        errors.push('Дата начала должна быть раньше даты окончания');
+        return NextResponse.json({
+          success: false,
+          error: 'Дата начала должна быть раньше даты окончания'
+        } as ApiResponse<null>, { status: 400 });
       }
       if (start < new Date()) {
-        errors.push('Дата начала не может быть в прошлом');
+        return NextResponse.json({
+          success: false,
+          error: 'Дата начала не может быть в прошлом'
+        } as ApiResponse<null>, { status: 400 });
       }
-    }
-
-    if (errors.length > 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'Validation failed',
-        errors: errors
-      } as ApiResponse<null>, { status: 400 });
     }
 
     // Проверяем что тур принадлежит оператору
     const tourResult = await query<OpTourForScheduleRow>(
       `SELECT id, name, operator_id FROM tours WHERE id = $1`,
-      [body.tourId]
+      [tourId]
     );
 
     if (tourResult.rows.length === 0) {
@@ -247,7 +240,7 @@ export async function POST(request: NextRequest) {
         updated_at
       ) VALUES ($1, $2, $3, $4, $5, 'open', NOW(), NOW())
       RETURNING id, start_date, end_date, price, max_participants, status`,
-      [body.tourId, body.startDate, body.endDate, body.price, body.maxParticipants]
+      [tourId, startDate, endDate, price, maxParticipants]
     );
 
     const schedule = insertResult.rows[0];
@@ -256,7 +249,7 @@ export async function POST(request: NextRequest) {
       success: true,
       data: {
         id: schedule.id,
-        tour_id: body.tourId,
+        tour_id: tourId,
         tour_name: tourResult.rows[0].name,
         start_date: schedule.start_date,
         end_date: schedule.end_date,

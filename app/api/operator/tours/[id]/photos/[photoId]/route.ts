@@ -4,6 +4,11 @@ import { ApiResponse } from '@/types';
 import { requireOperator } from '@/lib/auth/middleware';
 import { getOperatorPartnerId, verifyTourOwnership } from '@/lib/auth/operator-helpers';
 import { OpUnlinkRow, OpAssetUsageRow } from '@/lib/types/db-rows';
+import { z } from 'zod';
+
+const UpdatePhotoSchema = z.object({
+  alt: z.string().optional(),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -35,7 +40,11 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { alt } = body;
+    const parsed = UpdatePhotoSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' }, { status: 400 });
+    }
+    const { alt } = parsed.data;
 
     // Обновляем только фото, которое действительно привязано к этому туру.
     const result = await query(

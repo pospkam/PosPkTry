@@ -4,6 +4,20 @@ import { ApiResponse } from '@/types';
 import { getGuidePartnerId, checkScheduleConflicts, hasTourDayConflict } from '@/lib/auth/guide-helpers';
 import { requireRole } from '@/lib/auth/middleware';
 import { GuideScheduleRow } from '@/lib/types/db-rows';
+import { z } from 'zod';
+
+const CreateScheduleEntrySchema = z.object({
+  startTime: z.string().min(1, 'Время начала обязательно'),
+  endTime: z.string().min(1, 'Время окончания обязательно'),
+  title: z.string().min(1, 'Название обязательно').optional(),
+  description: z.string().optional(),
+  tourId: z.string().optional(),
+  bookingId: z.string().optional(),
+  maxParticipants: z.number().int().positive('maxParticipants должно быть положительным числом').optional(),
+  location: z.object({ lat: z.number(), lng: z.number() }).optional(),
+  locationName: z.string().optional(),
+  notes: z.string().optional(),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -127,6 +141,10 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    const parsed = CreateScheduleEntrySchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' }, { status: 400 });
+    }
       const {
         startTime,
         endTime,
@@ -138,7 +156,7 @@ export async function POST(request: NextRequest) {
         location,
         locationName,
         notes
-      } = body;
+      } = parsed.data;
 
       // Validation
       if (!startTime || !endTime || !title) {

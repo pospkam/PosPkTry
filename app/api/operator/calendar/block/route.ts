@@ -3,6 +3,14 @@ import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireOperator } from '@/lib/auth/middleware';
 import { verifyTourOwnership } from '@/lib/auth/operator-helpers';
+import { z } from 'zod';
+
+const BlockDatesSchema = z.object({
+  tourId: z.string().min(1, 'tourId обязателен'),
+  startDate: z.string().min(1, 'startDate обязательна'),
+  endDate: z.string().min(1, 'endDate обязательна'),
+  reason: z.string().optional(),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -19,14 +27,11 @@ export async function POST(request: NextRequest) {
     const userId = operatorOrResponse.userId;
 
     const body = await request.json();
-    const { tourId, startDate, endDate, reason } = body;
-
-    if (!tourId || !startDate || !endDate) {
-      return NextResponse.json({
-        success: false,
-        error: 'tourId, startDate и endDate обязательны'
-      } as ApiResponse<null>, { status: 400 });
+    const parsed = BlockDatesSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' }, { status: 400 });
     }
+    const { tourId, startDate, endDate, reason } = parsed.data;
 
     // Verify tour ownership
     const isOwner = await verifyTourOwnership(userId, tourId);

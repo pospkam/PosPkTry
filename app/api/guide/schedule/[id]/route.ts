@@ -4,6 +4,24 @@ import { ApiResponse } from '@/types';
 import { verifyScheduleOwnership, checkScheduleConflicts, hasTourDayConflict } from '@/lib/auth/guide-helpers';
 import { requireRole } from '@/lib/auth/middleware';
 import { GuideScheduleRow, GuideScheduleCheckRow } from '@/lib/types/db-rows';
+import { z } from 'zod';
+
+const UpdateScheduleEntrySchema = z.object({
+  startTime: z.string().optional(),
+  endTime: z.string().optional(),
+  title: z.string().optional(),
+  description: z.string().optional(),
+  maxParticipants: z.number().int().positive('maxParticipants должно быть положительным числом').optional(),
+  currentParticipants: z.number().int().min(0, 'currentParticipants не может быть отрицательным').optional(),
+  locationName: z.string().optional(),
+  notes: z.string().optional(),
+  tourId: z.string().optional(),
+  status: z.string().optional(),
+  location: z.object({ lat: z.number(), lng: z.number() }).optional(),
+}).refine(
+  (data) => Object.values(data).some((v) => v !== undefined),
+  { message: 'Укажите хотя бы одно поле для обновления' }
+);
 
 export const dynamic = 'force-dynamic';
 
@@ -113,6 +131,10 @@ export async function PUT(
       }
 
       const body = await request.json();
+      const parsed = UpdateScheduleEntrySchema.safeParse(body);
+      if (!parsed.success) {
+        return NextResponse.json({ success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' }, { status: 400 });
+      }
 
       const scheduleResult = await query<GuideScheduleCheckRow>(
         'SELECT guide_id, start_time, end_time, tour_id FROM guide_schedule WHERE id = $1',
@@ -128,8 +150,8 @@ export async function PUT(
         } as ApiResponse<null>, { status: 404 });
       }
 
-      const nextStartTime = (body.startTime as string | undefined) ?? scheduleRow.start_time;
-      const nextEndTime = (body.endTime as string | undefined) ?? scheduleRow.end_time;
+      const nextStartTime = parsed.data.startTime ?? scheduleRow.start_time;
+      const nextEndTime = parsed.data.endTime ?? scheduleRow.end_time;
 
       if (!nextStartTime || !nextEndTime) {
         return NextResponse.json({
@@ -172,7 +194,7 @@ export async function PUT(
           } as ApiResponse<null>, { status: 409 });
         }
 
-        const nextTourId = (body.tourId as string | undefined) ?? scheduleRow.tour_id;
+        const nextTourId = parsed.data.tourId ?? scheduleRow.tour_id;
         if (await hasTourDayConflict({
           guideId,
           tourId: nextTourId,
@@ -204,7 +226,8 @@ export async function PUT(
         tourId: 'tour_id'
       };
 
-    for (const [key, value] of Object.entries(body)) {
+    for (const [key, value] of Object.entries(parsed.data)) {
+        if (key === 'location') continue; // handled separately below
         if (allowedFields.includes(key)) {
           if (key === 'maxParticipants' && (typeof value !== 'number' || value <= 0)) {
             return NextResponse.json({
@@ -226,9 +249,9 @@ export async function PUT(
       }
     }
 
-    if (body.location && body.location.lat && body.location.lng) {
+    if (parsed.data.location && parsed.data.location.lat && parsed.data.location.lng) {
       updateFields.push(`location = ST_SetSRID(ST_MakePoint($${paramIndex}, $${paramIndex + 1}), 4326)::geography`);
-      updateValues.push(body.location.lng, body.location.lat);
+      updateValues.push(parsed.data.location.lng, parsed.data.location.lat);
       paramIndex += 2;
     }
 

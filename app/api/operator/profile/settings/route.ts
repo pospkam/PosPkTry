@@ -3,6 +3,20 @@ import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireOperator } from '@/lib/auth/middleware';
 import { OpSettingsRow } from '@/lib/types/db-rows';
+import { z } from 'zod';
+
+const UpdateSettingsSchema = z.object({
+  autoConfirmBookings: z.boolean().optional(),
+  bookingLeadTime: z.number().int().min(0).optional(),
+  cancellationPolicy: z.string().optional(),
+  refundPolicy: z.string().optional(),
+  minGroupSize: z.number().int().min(1).optional(),
+  maxAdvanceBookingDays: z.number().int().min(1).optional(),
+  timezone: z.string().optional(),
+  currency: z.string().optional(),
+  commissionRate: z.number().min(0).max(1).optional(),
+  settings: z.record(z.unknown()).optional(),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -89,6 +103,10 @@ export async function PUT(request: NextRequest) {
     const userId = operatorOrResponse.userId;
 
     const body = await request.json();
+    const parsed = UpdateSettingsSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' }, { status: 400 });
+    }
     const {
       autoConfirmBookings,
       bookingLeadTime,
@@ -100,7 +118,7 @@ export async function PUT(request: NextRequest) {
       currency,
       commissionRate,
       settings
-    } = body;
+    } = parsed.data;
 
     // Build update query
     const updates: string[] = [];

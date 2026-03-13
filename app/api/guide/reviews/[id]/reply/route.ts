@@ -3,6 +3,11 @@ import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { verifyReviewOwnership } from '@/lib/auth/guide-helpers';
 import { requireRole } from '@/lib/auth/middleware';
+import { z } from 'zod';
+
+const GuideReplySchema = z.object({
+  reply: z.string().min(1, 'Текст ответа не может быть пустым').max(1000, 'Максимальная длина ответа: 1000 символов'),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -30,24 +35,14 @@ export async function POST(
     }
 
     const body = await request.json();
-    const { reply } = body;
-
-    if (!reply || reply.trim().length === 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'Текст ответа не может быть пустым'
-      } as ApiResponse<null>, { status: 400 });
+    const parsed = GuideReplySchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' }, { status: 400 });
     }
-
-    if (reply.length > 1000) {
-      return NextResponse.json({
-        success: false,
-        error: 'Максимальная длина ответа: 1000 символов'
-      } as ApiResponse<null>, { status: 400 });
-    }
+    const { reply } = parsed.data;
 
     const result = await query(
-      `UPDATE guide_reviews 
+      `UPDATE guide_reviews
        SET guide_reply = $1, guide_reply_at = NOW(), updated_at = NOW()
        WHERE id = $2
        RETURNING *`,
@@ -115,24 +110,14 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { reply } = body;
-
-    if (!reply || reply.trim().length === 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'Текст ответа не может быть пустым'
-      } as ApiResponse<null>, { status: 400 });
+    const parsed = GuideReplySchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' }, { status: 400 });
     }
-
-    if (reply.length > 1000) {
-      return NextResponse.json({
-        success: false,
-        error: 'Максимальная длина ответа: 1000 символов'
-      } as ApiResponse<null>, { status: 400 });
-    }
+    const { reply } = parsed.data;
 
     const result = await query(
-      `UPDATE guide_reviews 
+      `UPDATE guide_reviews
        SET guide_reply = $1, updated_at = NOW()
        WHERE id = $2
        RETURNING *`,

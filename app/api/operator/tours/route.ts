@@ -5,6 +5,7 @@ import { OperatorTour } from '@/types/operator';
 import { requireOperator } from '@/lib/auth/middleware';
 import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
 import { OpTourListRow, OpTourCreateRow, CountRow } from '@/lib/types/db-rows';
+import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
 
@@ -195,6 +196,34 @@ export async function GET(request: NextRequest) {
   }
 }
 
+const CreateTourSchema = z.object({
+  name: z.string().min(3, 'Название тура обязательно (минимум 3 символа)'),
+  description: z.string().min(20, 'Описание тура обязательно (минимум 20 символов)'),
+  price: z.number().min(1000, 'Минимальная цена тура: 1000 рублей').max(1000000, 'Максимальная цена тура: 1,000,000 рублей'),
+  category: z.enum(['volcanoes', 'fishing', 'thermal', 'mountains', 'geysers', 'rivers', 'lakes', 'eco', 'adventure', 'combo', 'snowmobile', 'jeep', 'wildlife', 'cultural', 'hunting', 'family']).optional(),
+  difficulty: z.enum(['easy', 'medium', 'hard', 'extreme']).optional(),
+  duration: z.number().int().min(1, 'Продолжительность тура: от 1 до 30 дней').max(30, 'Продолжительность тура: от 1 до 30 дней').optional(),
+  currency: z.string().optional(),
+  season: z.enum(['winter', 'spring', 'summer', 'autumn', 'year-round']).optional(),
+  maxGroupSize: z.number().int().min(1, 'Минимальный размер группы: 1 человек').max(100, 'Максимальный размер группы: 100 человек').optional(),
+  minGroupSize: z.number().int().min(1, 'Минимальный размер группы: 1 человек').optional(),
+  coordinates: z.array(z.number()).optional(),
+  requirements: z.array(z.string()).optional(),
+  includes: z.array(z.string()).optional(),
+  excludes: z.array(z.string()).optional(),
+  isActive: z.boolean().optional(),
+  shortDescription: z.string().optional(),
+  routeId: z.string().nullable().optional(),
+  images: z.array(z.string()).optional(),
+}).refine(
+  (data) => {
+    const min = data.minGroupSize ?? 1;
+    const max = data.maxGroupSize ?? 100;
+    return min <= max;
+  },
+  { message: 'Минимальный размер группы не может превышать максимальный' }
+);
+
 /**
  * Создание нового тура (Kamchatour Hub)
  * @route POST /api/operator/tours
@@ -228,83 +257,17 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-
-    // === ВАЛИДАЦИЯ ===
-    const errors: string[] = [];
-
-    // Обязательные поля
-    if (!body.name || body.name.trim().length < 3) {
-      errors.push('Название тура обязательно (минимум 3 символа)');
+    const parsed = CreateTourSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' }, { status: 400 });
     }
-    if (!body.description || body.description.trim().length < 20) {
-      errors.push('Описание тура обязательно (минимум 20 символов)');
-    }
-    if (body.price === undefined || body.price === null) {
-      errors.push('Цена тура обязательна');
-    }
-
-    // Валидация цены
-    if (body.price !== undefined) {
-      if (typeof body.price !== 'number' || body.price < 0) {
-        errors.push('Цена должна быть положительным числом');
-      }
-      if (body.price < 1000) {
-        errors.push('Минимальная цена тура: 1000 рублей');
-      }
-      if (body.price > 1000000) {
-        errors.push('Максимальная цена тура: 1,000,000 рублей');
-      }
-    }
-
-    // Валидация размера группы (на основе fishingkam.ru - мин. 5 человек)
-    const minGroupSize = body.minGroupSize || 5;
-    const maxGroupSize = body.maxGroupSize || 15;
-
-    if (minGroupSize < 1) {
-      errors.push('Минимальный размер группы: 1 человек');
-    }
-    if (maxGroupSize > 100) {
-      errors.push('Максимальный размер группы: 100 человек');
-    }
-    if (minGroupSize > maxGroupSize) {
-      errors.push('Минимальный размер группы не может превышать максимальный');
-    }
-
-    // Валидация продолжительности
-    const duration = body.duration || 1;
-    if (duration < 1 || duration > 30) {
-      errors.push('Продолжительность тура: от 1 до 30 дней');
-    }
-
-    // Валидация сезона
-    const validSeasons = ['winter', 'spring', 'summer', 'autumn', 'year-round'];
-    if (body.season && !validSeasons.includes(body.season)) {
-      errors.push(`Сезон должен быть одним из: ${validSeasons.join(', ')}`);
-    }
-
-    // Валидация категории
-    const validCategories = ['volcanoes', 'fishing', 'thermal', 'mountains', 'geysers', 'rivers', 'lakes', 'eco', 'adventure', 'combo', 'snowmobile', 'jeep', 'wildlife', 'cultural', 'hunting', 'family'];
-    if (body.category && !validCategories.includes(body.category)) {
-      errors.push(`Категория должна быть одной из: ${validCategories.join(', ')}`);
-    }
-
-    // Валидация сложности
-    const validDifficulties = ['easy', 'medium', 'hard', 'extreme'];
-    if (body.difficulty && !validDifficulties.includes(body.difficulty)) {
-      errors.push(`Сложность должна быть одной из: ${validDifficulties.join(', ')}`);
-    }
-
-    // Если есть ошибки - возвращаем 400
-    if (errors.length > 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'Validation failed',
-        errors: errors
-      } as ApiResponse<null>, { status: 400 });
-    }
+    const { name, description, price, category, difficulty, season, currency, includes: bodyIncludes, excludes: bodyExcludes, routeId, images: bodyImages } = parsed.data;
+    const minGroupSize = parsed.data.minGroupSize || 5;
+    const maxGroupSize = parsed.data.maxGroupSize || 15;
+    const duration = parsed.data.duration || 1;
 
     // === ГЕНЕРАЦИЯ SLUG ===
-    const slug = body.name
+    const slug = name
       .toLowerCase()
       .replace(/[а-яё]/g, (char: string) => {
         const map: Record<string, string> = {
@@ -345,12 +308,12 @@ export async function POST(request: NextRequest) {
       RETURNING id, name, slug, is_active, created_at
     `;
 
-    const defaultIncludes = body.includes || [
+    const defaultIncludes = bodyIncludes || [
       'Размещение на базе',
       'Комплект снаряжения',
       'Сопровождение гида'
     ];
-    const defaultExcludes = body.excludes || [
+    const defaultExcludes = bodyExcludes || [
       'Трансфер до базы',
       'Одежда и обувь',
       'Аренда снастей',
@@ -359,22 +322,22 @@ export async function POST(request: NextRequest) {
 
     const values = [
       operatorId,
-      body.name.trim(),
+      name.trim(),
       slug,
-      body.description.trim(),
-      body.category || 'fishing',
-      body.difficulty || 'medium',
+      description.trim(),
+      category || 'fishing',
+      difficulty || 'medium',
       duration,
       maxGroupSize,
       minGroupSize,
-      body.price,
-      body.currency || 'RUB',
-      body.season || 'year-round',
-      body.routeId || null,
+      price,
+      currency || 'RUB',
+      season || 'year-round',
+      routeId || null,
       false,
       JSON.stringify(defaultIncludes),
       JSON.stringify(defaultExcludes),
-      JSON.stringify(body.images || [])
+      JSON.stringify(bodyImages || [])
     ];
 
     const result = await query<OpTourCreateRow>(insertQuery, values);

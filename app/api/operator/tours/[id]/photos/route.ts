@@ -5,6 +5,16 @@ import { requireOperator } from '@/lib/auth/middleware';
 import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
 import crypto from 'crypto';
 import { OpPhotoRow, OpAssetIdRow } from '@/lib/types/db-rows';
+import { z } from 'zod';
+
+const AddPhotoSchema = z.object({
+  url: z.string().url('URL фотографии обязателен'),
+  mimeType: z.string().optional(),
+  size: z.number().optional(),
+  width: z.number().optional(),
+  height: z.number().optional(),
+  alt: z.string().optional(),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -134,15 +144,11 @@ export async function POST(
     }
 
     const body = await request.json();
-    const { url, mimeType, size, width, height, alt } = body;
-
-    // Validation
-    if (!url || !mimeType) {
-      return NextResponse.json({
-        success: false,
-        error: 'URL и MIME тип обязательны'
-      } as ApiResponse<null>, { status: 400 });
+    const parsed = AddPhotoSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' }, { status: 400 });
     }
+    const { url, mimeType, size, width, height, alt } = parsed.data;
 
     // Generate SHA256 hash for URL
     const sha256 = crypto.createHash('sha256').update(url).digest('hex');
