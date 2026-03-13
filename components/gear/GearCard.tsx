@@ -29,7 +29,7 @@ export function GearCard({ gear, onRent }: GearCardProps) {
       case 'new': return 'text-green-400';
       case 'good': return 'text-yellow-400';
       case 'fair': return 'text-orange-400';
-      default: return 'text-white/40';
+      default: return 'text-[var(--text-muted)]';
     }
   };
 
@@ -43,9 +43,9 @@ export function GearCard({ gear, onRent }: GearCardProps) {
   };
 
   return (
-    <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:bg-white/10 transition-all hover:scale-105">
+    <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden hover:bg-[var(--bg-hover)] transition-all hover:scale-105">
       {/* Image */}
-      <div className="relative h-48 bg-white/10">
+      <div className="relative h-48 bg-[var(--bg-card)]">
         {gear.imageUrl ? (
           <Image
             src={gear.imageUrl}
@@ -56,7 +56,7 @@ export function GearCard({ gear, onRent }: GearCardProps) {
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <Backpack className="w-16 h-16 text-white/40" />
+            <Backpack className="w-16 h-16 text-[var(--text-muted)]" />
           </div>
         )}
 
@@ -80,18 +80,18 @@ export function GearCard({ gear, onRent }: GearCardProps) {
       {/* Content */}
       <div className="p-4">
         <div className="mb-2">
-          <span className="text-xs text-white/50">{gear.category}</span>
+          <span className="text-xs text-[var(--text-muted)]">{gear.category}</span>
           {gear.size && (
-            <span className="text-xs text-premium-gold ml-2">Размер: {gear.size}</span>
+            <span className="text-xs text-[var(--accent)] ml-2">Размер: {gear.size}</span>
           )}
         </div>
 
-        <h3 className="font-bold text-lg mb-2 text-white line-clamp-2">
+        <h3 className="font-bold text-lg mb-2 text-[var(--text-primary)] line-clamp-2">
           {gear.name}
         </h3>
 
         {gear.description && (
-          <p className="text-white/70 text-sm mb-4 line-clamp-2">
+          <p className="text-[var(--text-muted)] text-sm mb-4 line-clamp-2">
             {gear.description}
           </p>
         )}
@@ -99,25 +99,25 @@ export function GearCard({ gear, onRent }: GearCardProps) {
         {gear.rating && (
           <div className="flex items-center gap-1 mb-3">
             <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-            <span className="text-white/70 text-sm">{gear.rating.toFixed(1)}</span>
+            <span className="text-[var(--text-muted)] text-sm">{gear.rating.toFixed(1)}</span>
           </div>
         )}
 
         <div className="space-y-2 mb-4">
           <div className="flex justify-between items-center">
-            <span className="text-sm text-white/70">Цена за день:</span>
-            <span className="text-lg font-bold text-premium-gold">
+            <span className="text-sm text-[var(--text-muted)]">Цена за день:</span>
+            <span className="text-lg font-bold text-[var(--accent)]">
               {gear.pricePerDay.toLocaleString('ru-RU')} ₽
             </span>
           </div>
 
           {gear.pricePerWeek && (
             <div className="flex justify-between items-center">
-              <span className="text-sm text-white/70">Цена за неделю:</span>
-              <span className="text-sm text-white/50 line-through">
+              <span className="text-sm text-[var(--text-muted)]">Цена за неделю:</span>
+              <span className="text-sm text-[var(--text-muted)] line-through">
                 {(gear.pricePerDay * 7).toLocaleString('ru-RU')} ₽
               </span>
-              <span className="text-premium-gold font-semibold">
+              <span className="text-[var(--accent)] font-semibold">
                 {gear.pricePerWeek.toLocaleString('ru-RU')} ₽
               </span>
             </div>
@@ -127,7 +127,7 @@ export function GearCard({ gear, onRent }: GearCardProps) {
         <button
           onClick={() => onRent(gear.id)}
           disabled={gear.availableQuantity <= 0}
-          className="w-full px-4 py-3 bg-premium-gold hover:bg-premium-gold/80 disabled:opacity-50 disabled:cursor-not-allowed text-premium-black font-semibold rounded-lg transition-colors"
+          className="w-full px-4 py-3 bg-[var(--accent)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-[var(--bg-primary)] font-semibold rounded-lg transition-colors"
         >
           {gear.availableQuantity > 0 ? 'Забронировать' : 'Нет в наличии'}
         </button>

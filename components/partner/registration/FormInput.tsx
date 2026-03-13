@@ -43,7 +43,7 @@ export function FormInput({
 
   return (
     <div>
-      <label htmlFor={name} className="block text-sm font-medium mb-2 text-white/90 flex items-center gap-2">
+      <label htmlFor={name} className="block text-sm font-medium mb-2 text-[var(--text-secondary)] flex items-center gap-2">
         {Icon && <Icon className="w-4 h-4" />}
         {label}
         {required && <span className="text-red-400">*</span>}
@@ -58,14 +58,14 @@ export function FormInput({
         maxLength={maxLength}
         disabled={disabled}
         className={clsx(
-          'w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl',
-          'focus:outline-none focus:ring-2 focus:ring-premium-gold/50 focus:border-premium-gold',
-          'text-white placeholder-white/40 transition-all',
+          'w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg',
+          'focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50 focus:border-[var(--accent)]',
+          'text-[var(--text-primary)] placeholder-[var(--text-muted)] transition-all',
           disabled && 'opacity-50 cursor-not-allowed'
         )}
         placeholder={placeholder}
       />
-      {hint && <p className="mt-1 text-xs text-white/50">{hint}</p>}
+      {hint && <p className="mt-1 text-xs text-[var(--text-muted)]">{hint}</p>}
     </div>
   );
 }
@@ -95,7 +95,7 @@ export function FormTextarea({
 }: FormTextareaProps) {
   return (
     <div>
-      <label htmlFor={name} className="block text-sm font-medium mb-2 text-white/90 flex items-center gap-2">
+      <label htmlFor={name} className="block text-sm font-medium mb-2 text-[var(--text-secondary)] flex items-center gap-2">
         {Icon && <Icon className="w-4 h-4" />}
         {label}
         {required && <span className="text-red-400">*</span>}
@@ -107,10 +107,10 @@ export function FormTextarea({
         onChange={(e) => onChange(e.target.value)}
         required={required}
         rows={rows}
-        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-premium-gold/50 focus:border-premium-gold text-white placeholder-white/40 transition-all resize-none"
+        className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50 focus:border-[var(--accent)] text-[var(--text-primary)] placeholder-[var(--text-muted)] transition-all resize-none"
         placeholder={placeholder}
       />
-      {hint && <p className="mt-1 text-xs text-white/50">{hint}</p>}
+      {hint && <p className="mt-1 text-xs text-[var(--text-muted)]">{hint}</p>}
     </div>
   );
 }
@@ -141,18 +141,18 @@ export function FormCheckbox({ label, name, checked, onChange, required = false 
           className={clsx(
             'w-5 h-5 border-2 rounded transition-all',
             checked
-              ? 'bg-premium-gold border-premium-gold'
-              : 'bg-white/10 border-white/30 group-hover:border-white/50'
+              ? 'bg-[var(--accent)] border-[var(--accent)]'
+              : 'bg-[var(--bg-card)] border-[var(--border)] group-hover:border-[var(--text-muted)]'
           )}
         >
           {checked && (
-            <svg className="w-full h-full text-premium-black p-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+            <svg className="w-full h-full text-[var(--bg-primary)] p-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
               <polyline points="20 6 9 17 4 12" />
             </svg>
           )}
         </div>
       </div>
-      <span className="text-sm text-white/80 leading-tight">{label}</span>
+      <span className="text-sm text-[var(--text-secondary)] leading-tight">{label}</span>
     </label>
   );
 }

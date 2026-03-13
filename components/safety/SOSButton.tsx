@@ -84,7 +84,7 @@ function SOSButton({ className = '' }: { className?: string }) {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[999] flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/50 z-[999] flex items-center justify-center p-4"
             onClick={() => setIsOpen(false)}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -94,7 +94,7 @@ function SOSButton({ className = '' }: { className?: string }) {
             aria-label="Экстренная помощь — SOS"
           >
             <motion.div
-              className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8 max-w-md w-full max-h-[90vh] overflow-y-auto"
+              className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-8 max-w-md w-full max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -102,10 +102,10 @@ function SOSButton({ className = '' }: { className?: string }) {
             >
               <div className="flex items-center gap-3 mb-6">
                 <ShieldCheck size={28} className="text-red-600" aria-hidden="true" />
-                <h2 className="text-xl font-bold text-white">Экстренная помощь</h2>
+                <h2 className="text-xl font-bold text-[var(--text-primary)]">Экстренная помощь</h2>
               </div>
 
-              <p className="text-sm text-white/70 mb-6 p-3 bg-white/10 rounded-lg">
+              <p className="text-sm text-[var(--text-secondary)] mb-6 p-3 bg-[var(--bg-hover)] rounded-lg">
                 <MapPin size={16} className="inline mr-2" aria-hidden="true" />
                 {coordsLabel}
               </p>
@@ -140,7 +140,7 @@ function SOSButton({ className = '' }: { className?: string }) {
                 </motion.a>
 
                 <motion.button
-                  className="w-full flex items-center justify-between p-4 bg-white/10 hover:bg-white/20 text-white rounded-xl font-semibold min-h-[44px]"
+                  className="w-full flex items-center justify-between p-4 bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] text-[var(--text-primary)] rounded-lg font-semibold min-h-[44px]"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   aria-label="Связаться с гидом"
@@ -177,12 +177,12 @@ function SOSButton({ className = '' }: { className?: string }) {
                 </motion.button>
               </div>
 
-              <div className="bg-premium-gold/10 border border-premium-gold/30 rounded-xl p-4" aria-live="polite">
-                <AlertTriangle size={20} className="text-premium-gold inline mr-2 mb-2 block" aria-hidden="true" />
+              <div className="bg-[var(--warning)]/10 border border-[var(--warning)]/30 rounded-lg p-4" aria-live="polite">
+                <AlertTriangle size={20} className="text-[var(--warning)] inline mr-2 mb-2 block" aria-hidden="true" />
                 {errorMsg ? (
                   <p className="text-sm text-red-400 leading-relaxed">{errorMsg}</p>
                 ) : (
-                  <p className="text-sm text-premium-gold/80 leading-relaxed">
+                  <p className="text-sm text-[var(--warning)] leading-relaxed">
                     Если нет связи: оставайтесь на месте · свисток 3 сигнала · сохраняйте тепло
                   </p>
                 )}

@@ -15,17 +15,17 @@ export interface GuestSelectorProps {
   // Максимальное количество гостей
   maxGuests?: number;
   maxChildren?: number;
-  
+
   // Начальные значения
   initialAdults?: number;
   initialChildren?: number;
-  
+
   // Callback при изменении
   onChange: (adults: number, children: number, childrenAges: number[]) => void;
-  
+
   // Требовать возраст детей
   requireChildrenAges?: boolean;
-  
+
   // UI
   className?: string;
 }
@@ -47,7 +47,7 @@ export const GuestSelector: React.FC<GuestSelectorProps> = ({
   const handleAdultsChange = (newValue: number) => {
     const value = Math.max(1, Math.min(maxGuests, newValue));
     setAdults(value);
-    
+
     // Проверяем, не превышает ли общее количество максимум
     const totalGuests = value + children;
     if (totalGuests > maxGuests) {
@@ -62,26 +62,26 @@ export const GuestSelector: React.FC<GuestSelectorProps> = ({
   const handleChildrenChange = (newValue: number) => {
     const value = Math.max(0, Math.min(maxChildren, newValue));
     const totalGuests = adults + value;
-    
+
     if (totalGuests > maxGuests) {
       return;
     }
-    
+
     setChildren(value);
-    
+
     // Обновляем массив возрастов
     if (value > childrenAges.length) {
       setChildrenAges([...childrenAges, ...Array(value - childrenAges.length).fill(0)]);
     } else {
       setChildrenAges(childrenAges.slice(0, value));
     }
-    
+
     if (requireChildrenAges && value > 0) {
       setShowAges(true);
     } else if (value === 0) {
       setShowAges(false);
     }
-    
+
     onChange(adults, value, childrenAges.slice(0, value));
   };
 
@@ -95,10 +95,10 @@ export const GuestSelector: React.FC<GuestSelectorProps> = ({
   return (
     <div className={clsx('space-y-4', className)} role="group" aria-label="Выбор количества гостей">
       {/* Взрослые */}
-      <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-lg" aria-label="Взрослые">
+      <div className="flex items-center justify-between p-4 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg" aria-label="Взрослые">
         <div>
-          <div className="text-white font-medium">Взрослые</div>
-          <div className="text-white/60 text-sm">от 13 лет</div>
+          <div className="text-[var(--text-primary)] font-medium">Взрослые</div>
+          <div className="text-[var(--text-muted)] text-sm">от 13 лет</div>
         </div>
         <div className="flex items-center space-x-3">
           <button
@@ -107,22 +107,22 @@ export const GuestSelector: React.FC<GuestSelectorProps> = ({
             className={clsx(
               'w-8 h-8 rounded-full flex items-center justify-center transition-colors',
               adults <= 1
-                ? 'bg-white/10 text-white/30 cursor-not-allowed'
-                : 'bg-premium-gold text-premium-black hover:bg-premium-gold/90'
+                ? 'bg-[var(--bg-card)] text-[var(--text-muted)] cursor-not-allowed'
+                : 'bg-[var(--accent)] text-[var(--bg-primary)] hover:bg-[var(--accent)]/90'
             )}
             aria-label="Уменьшить количество взрослых"
           >
             −
           </button>
-          <span className="w-8 text-center text-white font-bold">{adults}</span>
+          <span className="w-8 text-center text-[var(--text-primary)] font-bold">{adults}</span>
           <button
             onClick={() => handleAdultsChange(adults + 1)}
             disabled={adults >= maxGuests || (adults + children) >= maxGuests}
             className={clsx(
               'w-8 h-8 rounded-full flex items-center justify-center transition-colors',
               (adults >= maxGuests || (adults + children) >= maxGuests)
-                ? 'bg-white/10 text-white/30 cursor-not-allowed'
-                : 'bg-premium-gold text-premium-black hover:bg-premium-gold/90'
+                ? 'bg-[var(--bg-card)] text-[var(--text-muted)] cursor-not-allowed'
+                : 'bg-[var(--accent)] text-[var(--bg-primary)] hover:bg-[var(--accent)]/90'
             )}
             aria-label="Увеличить количество взрослых"
           >
@@ -132,10 +132,10 @@ export const GuestSelector: React.FC<GuestSelectorProps> = ({
       </div>
 
       {/* Дети */}
-      <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-lg" aria-label="Дети">
+      <div className="flex items-center justify-between p-4 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg" aria-label="Дети">
         <div>
-          <div className="text-white font-medium">Дети</div>
-          <div className="text-white/60 text-sm">от 0 до 12 лет</div>
+          <div className="text-[var(--text-primary)] font-medium">Дети</div>
+          <div className="text-[var(--text-muted)] text-sm">от 0 до 12 лет</div>
         </div>
         <div className="flex items-center space-x-3">
           <button
@@ -144,22 +144,22 @@ export const GuestSelector: React.FC<GuestSelectorProps> = ({
             className={clsx(
               'w-8 h-8 rounded-full flex items-center justify-center transition-colors',
               children <= 0
-                ? 'bg-white/10 text-white/30 cursor-not-allowed'
-                : 'bg-premium-gold text-premium-black hover:bg-premium-gold/90'
+                ? 'bg-[var(--bg-card)] text-[var(--text-muted)] cursor-not-allowed'
+                : 'bg-[var(--accent)] text-[var(--bg-primary)] hover:bg-[var(--accent)]/90'
             )}
             aria-label="Уменьшить количество детей"
           >
             −
           </button>
-          <span className="w-8 text-center text-white font-bold">{children}</span>
+          <span className="w-8 text-center text-[var(--text-primary)] font-bold">{children}</span>
           <button
             onClick={() => handleChildrenChange(children + 1)}
             disabled={children >= maxChildren || (adults + children) >= maxGuests}
             className={clsx(
               'w-8 h-8 rounded-full flex items-center justify-center transition-colors',
               (children >= maxChildren || (adults + children) >= maxGuests)
-                ? 'bg-white/10 text-white/30 cursor-not-allowed'
-                : 'bg-premium-gold text-premium-black hover:bg-premium-gold/90'
+                ? 'bg-[var(--bg-card)] text-[var(--text-muted)] cursor-not-allowed'
+                : 'bg-[var(--accent)] text-[var(--bg-primary)] hover:bg-[var(--accent)]/90'
             )}
             aria-label="Увеличить количество детей"
           >
@@ -170,17 +170,17 @@ export const GuestSelector: React.FC<GuestSelectorProps> = ({
 
       {/* Возраст детей */}
       {showAges && children > 0 && (
-        <div className="p-4 bg-white/5 border border-white/10 rounded-lg space-y-3" aria-label="Возраст детей">
-          <div className="text-white font-medium mb-3">
+        <div className="p-4 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg space-y-3" aria-label="Возраст детей">
+          <div className="text-[var(--text-primary)] font-medium mb-3">
             Укажите возраст детей на момент заезда
           </div>
           {Array.from({ length: children }).map((_, childIndex) => (
             <div key={`child-age-${childIndex}`} className="flex items-center justify-between">
-              <span className="text-white/70">Ребёнок {childIndex + 1}</span>
+              <span className="text-[var(--text-secondary)]">Ребёнок {childIndex + 1}</span>
               <select
                 value={childrenAges[childIndex] || 0}
                 onChange={(e) => handleChildAgeChange(childIndex, Number(e.target.value))}
-                className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-premium-gold"
+                className="px-3 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                 aria-label={`Возраст ребёнка ${childIndex + 1}`}
               >
                 <option value={0}>Выберите возраст</option>
@@ -196,7 +196,7 @@ export const GuestSelector: React.FC<GuestSelectorProps> = ({
       )}
 
       {/* Итого */}
-      <div className="text-center text-white/70 text-sm" aria-label="Итого гостей" aria-live="polite">
+      <div className="text-center text-[var(--text-secondary)] text-sm" aria-label="Итого гостей" aria-live="polite">
         Всего гостей: {adults + children} из {maxGuests}
       </div>
     </div>

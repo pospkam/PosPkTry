@@ -63,7 +63,7 @@ export function AgentMetricsGrid({ period = '30' }: AgentMetricsGridProps) {
 
   if (error) {
     return (
-      <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-6 text-center">
+      <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-6 text-center">
         <p className="text-red-400 mb-4">Ошибка загрузки метрик</p>
         <button
           onClick={fetchMetrics}

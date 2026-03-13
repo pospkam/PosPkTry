@@ -54,9 +54,9 @@ export function UpcomingBookingsTable({ limit = 5 }: UpcomingBookingsTableProps)
   };
 
   const getUrgencyColor = (days: number) => {
-    if (days <= 1) return 'text-red-400';
-    if (days <= 7) return 'text-yellow-400';
-    return 'text-green-400';
+    if (days <= 1) return 'text-[var(--danger)]';
+    if (days <= 7) return 'text-[var(--warning)]';
+    return 'text-[var(--success)]';
   };
 
   if (loading) {
@@ -69,11 +69,11 @@ export function UpcomingBookingsTable({ limit = 5 }: UpcomingBookingsTableProps)
 
   if (error) {
     return (
-      <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 text-center">
-        <p className="text-red-400 mb-2">Ошибка загрузки бронирований</p>
+      <div className="bg-[var(--danger)]/10 border border-[var(--danger)]/30 rounded-lg p-4 text-center">
+        <p className="text-[var(--danger)] mb-2">Ошибка загрузки бронирований</p>
         <button
           onClick={fetchBookings}
-          className="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded text-sm transition-colors"
+          className="px-3 py-1 bg-[var(--danger)]/10 hover:bg-[var(--danger)]/20 text-[var(--danger)] rounded text-sm transition-colors"
         >
           Повторить
         </button>
@@ -84,10 +84,10 @@ export function UpcomingBookingsTable({ limit = 5 }: UpcomingBookingsTableProps)
   if (bookings.length === 0) {
     return (
       <div className="text-center py-10">
-        <p className="text-white/60 mb-4">Нет предстоящих бронирований</p>
+        <p className="text-[var(--text-muted)] mb-4">Нет предстоящих бронирований</p>
         <button
           onClick={() => window.location.href = '/hub/agent/bookings'}
-          className="px-4 py-2 bg-premium-gold hover:bg-premium-gold/80 text-premium-black font-bold rounded-lg transition-colors"
+          className="px-4 py-2 bg-[var(--accent)] hover:bg-[var(--accent)]/80 text-[var(--bg-card)] font-bold rounded-lg transition-colors"
         >
           Создать бронирование
         </button>
@@ -96,55 +96,55 @@ export function UpcomingBookingsTable({ limit = 5 }: UpcomingBookingsTableProps)
   }
 
   return (
-    <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
-      <div className="px-6 py-4 border-b border-white/10">
-        <h3 className="text-lg font-semibold text-white">Предстоящие бронирования</h3>
+    <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden">
+      <div className="px-6 py-4 border-b border-[var(--border)]">
+        <h3 className="text-lg font-semibold text-[var(--text-primary)]">Предстоящие бронирования</h3>
       </div>
 
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-white/5">
+          <thead className="bg-[var(--bg-card)]">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">
                 Тур
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">
                 Клиент
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">
                 Дата
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">
                 Доход
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">
                 Комиссия
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/10">
+          <tbody className="divide-y divide-[var(--border)]">
             {bookings.map((booking) => {
               const daysUntil = getDaysUntilTour(booking.tourDate);
               return (
-                <tr key={booking.id} className="hover:bg-white/5 transition-colors">
+                <tr key={booking.id} className="hover:bg-[var(--bg-hover)] transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-white">{booking.tourName}</div>
+                    <div className="text-sm font-medium text-[var(--text-primary)]">{booking.tourName}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-white">{booking.clientName}</div>
+                    <div className="text-sm text-[var(--text-primary)]">{booking.clientName}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-white">
+                    <div className="text-sm text-[var(--text-primary)]">
                       {new Date(booking.tourDate).toLocaleDateString('ru-RU')}
                     </div>
                     <div className={`text-xs ${getUrgencyColor(daysUntil)}`}>
                       через {daysUntil} дн.
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-premium-gold font-medium">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--accent)] font-medium">
                     {booking.totalPrice.toLocaleString('ru-RU')} ₽
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-green-400 font-medium">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--success)] font-medium">
                     {booking.commission.toLocaleString('ru-RU')} ₽
                   </td>
                 </tr>
@@ -154,10 +154,10 @@ export function UpcomingBookingsTable({ limit = 5 }: UpcomingBookingsTableProps)
         </table>
       </div>
 
-      <div className="px-6 py-4 border-t border-white/10 bg-white/5">
+      <div className="px-6 py-4 border-t border-[var(--border)] bg-[var(--bg-card)]">
         <button
           onClick={() => window.location.href = '/hub/agent/bookings'}
-          className="text-premium-gold hover:text-premium-gold/80 text-sm font-medium transition-colors"
+          className="text-[var(--accent)] hover:text-[var(--accent)]/80 text-sm font-medium transition-colors"
         >
           Посмотреть все бронирования →
         </button>

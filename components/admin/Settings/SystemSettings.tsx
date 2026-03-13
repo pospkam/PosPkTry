@@ -100,7 +100,7 @@ export function SystemSettings() {
 
   if (error) {
     return (
-      <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-6 text-center">
+      <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-6 text-center">
         <p className="text-red-400 mb-4">Ошибка загрузки настроек</p>
         <button
           onClick={fetchSettings}
@@ -118,18 +118,18 @@ export function SystemSettings() {
     <div className="space-y-6">
       {/* Заголовок */}
       <div className="flex justify-between items-center">
-        <h3 className="text-xl font-bold text-white">Системные настройки</h3>
+        <h3 className="text-xl font-bold text-[var(--text-primary)]">Системные настройки</h3>
         <div className="flex gap-3">
           <button
             onClick={fetchSettings}
-            className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
+            className="px-4 py-2 bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] text-[var(--text-primary)] rounded-lg transition-colors"
           >
             Обновить
           </button>
           <button
             onClick={saveSettings}
             disabled={!hasChanges || saving}
-            className="px-6 py-2 bg-premium-gold hover:bg-premium-gold/80 text-premium-black font-bold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2 bg-[var(--accent)] hover:bg-[var(--accent)]/80 text-[var(--text-primary)] font-bold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saving ? 'Сохранение...' : 'Сохранить изменения'}
           </button>
@@ -138,8 +138,8 @@ export function SystemSettings() {
 
       {/* Категории настроек */}
       {Object.entries(settings).map(([category, categorySettings]) => (
-        <div key={category} className="bg-white/5 border border-white/10 rounded-2xl p-6">
-          <h4 className="text-lg font-semibold text-white mb-4 capitalize">
+        <div key={category} className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
+          <h4 className="text-lg font-semibold text-[var(--text-primary)] mb-4 capitalize">
             {category === 'general' ? 'Общие' :
              category === 'payment' ? 'Платежи' :
              category === 'email' ? 'Email' :
@@ -154,20 +154,20 @@ export function SystemSettings() {
               const hasChange = changes[settingKey] !== undefined;
 
               return (
-                <div key={key} className="flex items-start gap-4 p-4 bg-white/5 rounded-lg">
+                <div key={key} className="flex items-start gap-4 p-4 bg-[var(--bg-card)] rounded-lg">
                   <div className="flex-1">
-                    <label className="block text-white font-medium mb-1">
+                    <label className="block text-[var(--text-primary)] font-medium mb-1">
                       {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                      {hasChange && <span className="text-premium-gold ml-2">•</span>}
+                      {hasChange && <span className="text-[var(--accent)] ml-2">•</span>}
                     </label>
-                    <p className="text-white/60 text-sm mb-3">{setting.description}</p>
+                    <p className="text-[var(--text-muted)] text-sm mb-3">{setting.description}</p>
 
                     {/* Разные типы полей в зависимости от ключа */}
                     {key.includes('enabled') || key.includes('active') ? (
                       <select
                         value={currentValue}
                         onChange={(e) => handleSettingChange(category, key, e.target.value)}
-                        className="px-3 py-2 bg-white/10 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+                        className="px-3 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                       >
                         <option value="true">Включено</option>
                         <option value="false">Отключено</option>
@@ -178,7 +178,7 @@ export function SystemSettings() {
                         step="0.01"
                         value={currentValue}
                         onChange={(e) => handleSettingChange(category, key, e.target.value)}
-                        className="px-3 py-2 bg-white/10 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+                        className="px-3 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                         placeholder="0.00"
                       />
                     ) : (
@@ -186,13 +186,13 @@ export function SystemSettings() {
                         type="text"
                         value={currentValue}
                         onChange={(e) => handleSettingChange(category, key, e.target.value)}
-                        className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+                        className="w-full px-3 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                         placeholder="Значение настройки"
                       />
                     )}
                   </div>
 
-                  <div className="text-white/40 text-sm">
+                  <div className="text-[var(--text-muted)] text-sm">
                     Обновлено: {new Date(setting.updatedAt).toLocaleDateString('ru-RU')}
                   </div>
                 </div>
@@ -203,8 +203,8 @@ export function SystemSettings() {
       ))}
 
       {Object.keys(settings).length === 0 && (
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-12 text-center">
-          <p className="text-white/60">Настройки не найдены</p>
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-12 text-center">
+          <p className="text-[var(--text-muted)]">Настройки не найдены</p>
         </div>
       )}
     </div>

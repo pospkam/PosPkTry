@@ -55,7 +55,7 @@ export default function GuideProfileClient() {
           <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-[var(--text-muted)]" /></div>
         ) : (
           <form onSubmit={handleSave} className="space-y-5">
-            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-6 space-y-4">
+            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6 space-y-4">
               <label className="block">
                 <span className="text-sm text-[var(--text-secondary)] flex items-center gap-1.5 mb-1.5"><User className="w-4 h-4" /> ФИО</span>
                 <input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} className={inputCls} />

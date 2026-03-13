@@ -104,12 +104,12 @@ export function TransferSearchWidget({ className, onSearchResults }: TransferSea
   };
 
   return (
-    <div className={`bg-premium-black/90 backdrop-blur-sm rounded-2xl p-6 border border-premium-gold/20 ${className}`}>
+    <div className={`bg-[var(--bg-card)] rounded-lg p-6 border border-[var(--border)] ${className}`}>
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-premium-gold mb-2">
+        <h2 className="text-2xl font-bold text-[var(--accent)] mb-2">
             Поиск трансферов
         </h2>
-        <p className="text-white/70">
+        <p className="text-[var(--text-muted)]">
           Найдите подходящий трансфер для вашей поездки
         </p>
       </div>
@@ -117,7 +117,7 @@ export function TransferSearchWidget({ className, onSearchResults }: TransferSea
       {/* Основные поля поиска */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div>
-          <label htmlFor="transfer-from" className="block text-sm font-medium text-white mb-2">
+          <label htmlFor="transfer-from" className="block text-sm font-medium text-[var(--text-primary)] mb-2">
             Откуда *
           </label>
           <input
@@ -125,12 +125,12 @@ export function TransferSearchWidget({ className, onSearchResults }: TransferSea
             value={searchParams.from}
             onChange={(e) => updateSearchParam('from', e.target.value)}
             placeholder="Аэропорт, отель, адрес..."
-            className="w-full px-4 py-3 bg-premium-black/50 border border-premium-gold/30 rounded-xl text-white placeholder-white/50 focus:border-premium-gold focus:outline-none transition-colors"
+            className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none transition-colors"
           />
         </div>
 
         <div>
-          <label htmlFor="transfer-to" className="block text-sm font-medium text-white mb-2">
+          <label htmlFor="transfer-to" className="block text-sm font-medium text-[var(--text-primary)] mb-2">
             Куда *
           </label>
           <input
@@ -138,12 +138,12 @@ export function TransferSearchWidget({ className, onSearchResults }: TransferSea
             value={searchParams.to}
             onChange={(e) => updateSearchParam('to', e.target.value)}
             placeholder="Аэропорт, отель, адрес..."
-            className="w-full px-4 py-3 bg-premium-black/50 border border-premium-gold/30 rounded-xl text-white placeholder-white/50 focus:border-premium-gold focus:outline-none transition-colors"
+            className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none transition-colors"
           />
         </div>
 
         <div>
-          <label htmlFor="transfer-date" className="block text-sm font-medium text-white mb-2">
+          <label htmlFor="transfer-date" className="block text-sm font-medium text-[var(--text-primary)] mb-2">
             Дата *
           </label>
           <input
@@ -151,22 +151,22 @@ export function TransferSearchWidget({ className, onSearchResults }: TransferSea
             value={searchParams.date}
             onChange={(e) => updateSearchParam('date', e.target.value)}
             min={new Date().toISOString().split('T')[0]}
-            className="w-full px-4 py-3 bg-premium-black/50 border border-premium-gold/30 rounded-xl text-white focus:border-premium-gold focus:outline-none transition-colors"
+            className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] focus:border-[var(--accent)] focus:outline-none transition-colors"
           />
         </div>
 
         <div>
-          <label htmlFor="transfer-passengers" className="block text-sm font-medium text-white mb-2">
+          <label htmlFor="transfer-passengers" className="block text-sm font-medium text-[var(--text-primary)] mb-2">
             Пассажиры *
           </label>
           <select
             id="transfer-passengers"
             value={searchParams.passengers}
             onChange={(e) => updateSearchParam('passengers', parseInt(e.target.value))}
-            className="w-full px-4 py-3 bg-premium-black/50 border border-premium-gold/30 rounded-xl text-white focus:border-premium-gold focus:outline-none transition-colors"
+            className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] focus:border-[var(--accent)] focus:outline-none transition-colors"
           >
             {Array.from({ length: 20 }, (_, i) => i + 1).map(num => (
-              <option key={num} value={num} className="bg-premium-black text-white">
+              <option key={num} value={num} className="bg-[var(--bg-card)] text-[var(--text-primary)]">
                 {num} {num === 1 ? 'пассажир' : num < 5 ? 'пассажира' : 'пассажиров'}
               </option>
             ))}
@@ -178,7 +178,7 @@ export function TransferSearchWidget({ className, onSearchResults }: TransferSea
       <div className="mb-6">
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className="flex items-center gap-2 text-premium-gold hover:text-premium-gold/80 transition-colors"
+          className="flex items-center gap-2 text-[var(--accent)] hover:text-[var(--accent)]/80 transition-colors"
         >
           {showFilters ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
           <span className="font-medium">
@@ -189,30 +189,30 @@ export function TransferSearchWidget({ className, onSearchResults }: TransferSea
 
       {/* Расширенные фильтры */}
       {showFilters && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6 p-4 bg-premium-black/30 rounded-xl border border-premium-gold/10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6 p-4 bg-[var(--bg-card)] rounded-lg border border-[var(--border)]">
           {/* Тип транспорта */}
           <div>
-            <label htmlFor="transfer-vehicle-type" className="block text-sm font-medium text-white mb-3">
+            <label htmlFor="transfer-vehicle-type" className="block text-sm font-medium text-[var(--text-primary)] mb-3">
               Тип транспорта
             </label>
             <select
               id="transfer-vehicle-type"
               value={searchParams.vehicleType || ''}
               onChange={(e) => updateSearchParam('vehicleType', e.target.value || undefined)}
-              className="w-full px-4 py-3 bg-premium-black/50 border border-premium-gold/30 rounded-xl text-white focus:border-premium-gold focus:outline-none transition-colors"
+              className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] focus:border-[var(--accent)] focus:outline-none transition-colors"
             >
-              <option value="" className="bg-premium-black text-white">Любой</option>
-              <option value="economy" className="bg-premium-black text-white">Эконом</option>
-              <option value="comfort" className="bg-premium-black text-white">Комфорт</option>
-              <option value="business" className="bg-premium-black text-white">Бизнес</option>
-              <option value="minibus" className="bg-premium-black text-white">Микроавтобус</option>
-              <option value="bus" className="bg-premium-black text-white">Автобус</option>
+              <option value="" className="bg-[var(--bg-card)] text-[var(--text-primary)]">Любой</option>
+              <option value="economy" className="bg-[var(--bg-card)] text-[var(--text-primary)]">Эконом</option>
+              <option value="comfort" className="bg-[var(--bg-card)] text-[var(--text-primary)]">Комфорт</option>
+              <option value="business" className="bg-[var(--bg-card)] text-[var(--text-primary)]">Бизнес</option>
+              <option value="minibus" className="bg-[var(--bg-card)] text-[var(--text-primary)]">Микроавтобус</option>
+              <option value="bus" className="bg-[var(--bg-card)] text-[var(--text-primary)]">Автобус</option>
             </select>
           </div>
 
           {/* Бюджет */}
           <div>
-            <span className="block text-sm font-medium text-white mb-3">
+            <span className="block text-sm font-medium text-[var(--text-primary)] mb-3">
               Бюджет (руб.)
             </span>
             <div className="grid grid-cols-2 gap-2">
@@ -221,21 +221,21 @@ export function TransferSearchWidget({ className, onSearchResults }: TransferSea
                 placeholder="От"
                 value={searchParams.budgetMin || ''}
                 onChange={(e) => updateSearchParam('budgetMin', e.target.value ? parseFloat(e.target.value) : undefined)}
-                className="px-3 py-2 bg-premium-black/50 border border-premium-gold/30 rounded-lg text-white placeholder-white/50 focus:border-premium-gold focus:outline-none transition-colors"
+                className="px-3 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none transition-colors"
               />
               <input
                 type="number"
                 placeholder="До"
                 value={searchParams.budgetMax || ''}
                 onChange={(e) => updateSearchParam('budgetMax', e.target.value ? parseFloat(e.target.value) : undefined)}
-                className="px-3 py-2 bg-premium-black/50 border border-premium-gold/30 rounded-lg text-white placeholder-white/50 focus:border-premium-gold focus:outline-none transition-colors"
+                className="px-3 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none transition-colors"
               />
             </div>
           </div>
 
           {/* Функции */}
           <div>
-            <span className="block text-sm font-medium text-white mb-3">
+            <span className="block text-sm font-medium text-[var(--text-primary)] mb-3">
               Функции
             </span>
             <div className="space-y-2">
@@ -245,12 +245,12 @@ export function TransferSearchWidget({ className, onSearchResults }: TransferSea
                 { key: 'child_seat', label: 'Детское кресло' },
                 { key: 'wheelchair_accessible', label: 'Доступ для инвалидов' }
               ].map(feature => (
-                <label key={feature.key} className="flex items-center gap-2 text-white/80">
+                <label key={feature.key} className="flex items-center gap-2 text-[var(--text-secondary)]">
                   <input
                     type="checkbox"
                     checked={searchParams.features?.includes(feature.key) || false}
                     onChange={() => toggleFeature(feature.key)}
-                    className="w-4 h-4 text-premium-gold bg-premium-black/50 border-premium-gold/30 rounded focus:ring-premium-gold focus:ring-2"
+                    className="w-4 h-4 text-[var(--accent)] bg-[var(--bg-card)] border-[var(--border)] rounded focus:ring-[var(--accent)] focus:ring-2"
                   />
                   <span className="text-sm">{feature.label}</span>
                 </label>
@@ -260,7 +260,7 @@ export function TransferSearchWidget({ className, onSearchResults }: TransferSea
 
           {/* Языки водителя */}
           <div>
-            <span className="block text-sm font-medium text-white mb-3">
+            <span className="block text-sm font-medium text-[var(--text-primary)] mb-3">
               Языки водителя
             </span>
             <div className="space-y-2">
@@ -270,12 +270,12 @@ export function TransferSearchWidget({ className, onSearchResults }: TransferSea
                 { key: 'zh', label: 'Китайский' },
                 { key: 'ja', label: 'Японский' }
               ].map(language => (
-                <label key={language.key} className="flex items-center gap-2 text-white/80">
+                <label key={language.key} className="flex items-center gap-2 text-[var(--text-secondary)]">
                   <input
                     type="checkbox"
                     checked={searchParams.languages?.includes(language.key) || false}
                     onChange={() => toggleLanguage(language.key)}
-                    className="w-4 h-4 text-premium-gold bg-premium-black/50 border-premium-gold/30 rounded focus:ring-premium-gold focus:ring-2"
+                    className="w-4 h-4 text-[var(--accent)] bg-[var(--bg-card)] border-[var(--border)] rounded focus:ring-[var(--accent)] focus:ring-2"
                   />
                   <span className="text-sm">{language.label}</span>
                 </label>
@@ -290,11 +290,11 @@ export function TransferSearchWidget({ className, onSearchResults }: TransferSea
         <button
           onClick={handleSearch}
           disabled={isLoading}
-          className="px-8 py-4 bg-premium-gold hover:bg-premium-gold/90 text-premium-black font-bold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          className="px-8 py-4 bg-[var(--accent)] hover:bg-[var(--accent)]/90 text-[var(--bg-card)] font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
           {isLoading ? (
             <>
-              <div className="w-5 h-5 border-2 border-premium-black border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-5 h-5 border-2 border-[var(--bg-card)] border-t-transparent rounded-full animate-spin"></div>
               <span>Поиск...</span>
             </>
           ) : (
@@ -308,15 +308,15 @@ export function TransferSearchWidget({ className, onSearchResults }: TransferSea
 
       {/* Ошибка */}
       {error && (
-        <div className="mt-4 p-4 bg-red-500/20 border border-red-500/30 rounded-xl">
-          <p className="text-red-400 text-sm">{error}</p>
+        <div className="mt-4 p-4 bg-[var(--danger)]/10 border border-[var(--danger)]/30 rounded-lg">
+          <p className="text-[var(--danger)] text-sm">{error}</p>
         </div>
       )}
 
       {/* Результаты поиска */}
       {searchResults.length > 0 && (
         <div className="mt-6">
-          <h3 className="text-lg font-bold text-white mb-4">
+          <h3 className="text-lg font-bold text-[var(--text-primary)] mb-4">
             Найдено трансферов: {searchResults.length}
           </h3>
           <div className="space-y-4">
@@ -368,41 +368,41 @@ function TransferCard({ transfer }: { transfer: TransferOption }) {
   };
 
   return (
-    <div className="bg-premium-black/50 border border-premium-gold/20 rounded-xl p-4 hover:border-premium-gold/40 transition-colors">
+    <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4 hover:border-[var(--accent)]/40 transition-colors">
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">
-          <span className="text-premium-gold">{getVehicleTypeIcon(transfer.vehicle.vehicleType)}</span>
+          <span className="text-[var(--accent)]">{getVehicleTypeIcon(transfer.vehicle.vehicleType)}</span>
           <div>
-            <h4 className="text-lg font-bold text-white">
+            <h4 className="text-lg font-bold text-[var(--text-primary)]">
               {getVehicleTypeLabel(transfer.vehicle.vehicleType)} • {transfer.vehicle.make} {transfer.vehicle.model}
             </h4>
-            <p className="text-white/70 text-sm">
+            <p className="text-[var(--text-muted)] text-sm">
               {transfer.vehicle.licensePlate} • {transfer.vehicle.capacity} мест
             </p>
           </div>
         </div>
         <div className="text-right">
-          <div className="text-2xl font-bold text-premium-gold">
+          <div className="text-2xl font-bold text-[var(--accent)]">
             {transfer.pricePerPerson.toLocaleString()} ₽
           </div>
-          <div className="text-white/70 text-sm">
+          <div className="text-[var(--text-muted)] text-sm">
             за человека
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        <div className="flex items-center gap-2 text-white/80">
+        <div className="flex items-center gap-2 text-[var(--text-secondary)]">
           <Clock className="w-4 h-4" />
           <span className="text-sm">
             {transfer.departureTime} - {transfer.arrivalTime}
           </span>
         </div>
-        <div className="flex items-center gap-2 text-white/80">
+        <div className="flex items-center gap-2 text-[var(--text-secondary)]">
           <span className="text-sm">{transfer.driver.name}</span>
         </div>
-        <div className="flex items-center gap-2 text-white/80">
-          <Star className="w-4 h-4 text-premium-gold fill-premium-gold" />
+        <div className="flex items-center gap-2 text-[var(--text-secondary)]">
+          <Star className="w-4 h-4 text-[var(--accent)] fill-[var(--accent)]" />
           <span className="text-sm">{transfer.driver.rating}/5</span>
         </div>
       </div>
@@ -412,7 +412,7 @@ function TransferCard({ transfer }: { transfer: TransferOption }) {
           {transfer.features.map(feature => (
             <span
               key={feature}
-              className="px-2 py-1 bg-premium-gold/20 text-premium-gold text-xs rounded-full"
+              className="px-2 py-1 bg-[var(--accent)]/10 text-[var(--accent)] text-xs rounded-full"
             >
               {feature}
             </span>
@@ -421,7 +421,7 @@ function TransferCard({ transfer }: { transfer: TransferOption }) {
         <button
           onClick={handleBooking}
           disabled={isBooking}
-          className="px-6 py-2 bg-premium-gold hover:bg-premium-gold/90 text-premium-black font-bold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-6 py-2 bg-[var(--accent)] hover:bg-[var(--accent)]/90 text-[var(--bg-card)] font-bold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isBooking ? 'Бронирование...' : 'Забронировать'}
         </button>

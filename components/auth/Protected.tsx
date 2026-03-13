@@ -12,7 +12,7 @@ interface ProtectedProps {
 export const Protected: React.FC<ProtectedProps> = ({ 
   children, 
   roles, 
-  fallback = <div className="text-center p-8 text-white/50">Нет доступа</div> 
+  fallback = <div className="text-center p-8 text-[var(--text-muted)]">Нет доступа</div>
 }) => {
   const { hasRole, isLoading } = useRoles();
   
@@ -21,8 +21,8 @@ export const Protected: React.FC<ProtectedProps> = ({
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-violet-500/30 border-t-violet-400 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-white">Проверка доступа...</p>
+          <div className="w-16 h-16 border-4 border-[var(--border)] border-t-[var(--accent)] rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-[var(--text-primary)]">Проверка доступа...</p>
         </div>
       </div>
     );

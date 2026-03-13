@@ -1,70 +1,51 @@
 # Kamhub - Copilot Instructions
 
 ## О проекте
-Kamhub - туристическая платформа Камчатки. Next.js 15, TypeScript, Tailwind CSS, PostgreSQL.
+Kamhub - туристическая платформа Камчатки. Next.js 15, TypeScript strict, Tailwind CSS, PostgreSQL.
 Продакшен: https://pospkam-pospktry-c1f3.twc1.net
 
 ## Команды
 ```bash
 npm run dev      # Dev сервер (порт 3000)
-npm run build   # Сборка
-npm test        # Тесты (vitest)
-npm run lint    # Линтинг
+npm run build    # Сборка
+npx tsc --noEmit # Проверка типов (0 ошибок)
+npm test         # Тесты (vitest)
+npm run lint     # Линтинг
 ```
 
-## React Best Practices (react-doctor rules)
+## Дизайн-система
 
-When generating React code, follow these rules:
+Все стили через CSS-переменные. Glassmorphism (bg-white/10, backdrop-blur) полностью заменен на CSS vars.
 
-### 1. useEffect
-- Avoid unnecessary useEffect
-- Use derived state when possible
-- Only for side effects (API calls, subscriptions)
-
-### 2. Accessibility
-- Add aria-label to buttons/inputs
-- Use semantic HTML
-- Ensure keyboard navigation
-- Alt text on images
-
-### 3. Composition
-- Avoid prop drilling (max 2-3 levels)
-- Use Context for global state
-- Use children prop for flexibility
-
-### 4. Performance
-- React.memo for expensive components
-- useMemo for expensive calculations
-- useCallback for functions passed to children
-
-### 5. Error Handling
-- Error boundaries for components
-- Try/catch for async operations
-- User-friendly error messages
-
-### 6. No Emojis
-- **НИКАКИХ ЭМОДЗИ** в коде, UI, console.log, markdown. Заменять на Lucide React иконки (`import { IconName } from 'lucide-react'`) или чистый текст.
-- В поиске и фильтрах: только SVG/Lucide или Tailwind символы (★, ✔).
-
-## Статус кода (React Doctor)
-- Score: **99/100** ✅
-- Page без metadata: **0** (исправлено паттерном server/client split)
-- Оставшиеся предупреждения: 4 (архитектурные)
-
-## Паттерны проекта
-### Glassmorphism
+### Цветовые токены
 ```css
-backdrop-filter: blur(10px);
-background: rgba(255, 255, 255, 0.05);
-border-radius: 20px;
+/* Light (default) */
+--bg-primary: #F5F0EB;    --bg-card: #FFFFFF;
+--text-primary: #1A1714;   --text-muted: #9A9590;
+--accent: #D44A0C;         --ocean: #2568B0;
+
+/* Dark */
+--bg-primary: #0D1117;    --bg-card: #21262D;
+--text-primary: #F0F6FC;   --text-muted: #484F58;
+--accent: #E8734A;         --ocean: #00A8CC;
 ```
 
-Scan code with: `npx -y react-doctor@latest`
+### Утилитарные классы (ds-*)
+`ds-page`, `ds-card`, `ds-input`, `ds-btn`, `ds-btn-primary`, `ds-section`, `ds-badge`, `ds-h1`, `ds-h2`
 
-## Ключевые паттерны Next.js
+### Типографика
+- Заголовки: Playfair Display (`--font-playfair`)
+- Основной текст: Outfit (`--font-outfit`)
 
-### Server/Client split (metadata)
-Никогда не смешивать `'use client'` и `export const metadata` в одном файле.
+### Запрещено
+- `bg-white/10`, `text-white`, `backdrop-blur-*` — используй `bg-[var(--bg-card)]`, `text-[var(--text-primary)]`
+- `text-cyber-cyan`, `text-premium-gold` — используй `text-[var(--accent)]`
+- `font-black` — используй `font-bold`
+- Хардкод hex — только CSS vars
+
+## React Best Practices
+
+### 1. Server/Client split
 ```tsx
 // page.tsx (server component)
 import type { Metadata } from 'next'
@@ -77,13 +58,39 @@ export default function Page() { return <PageClient /> }
 export default function PageClient() { /* вся логика */ }
 ```
 
-### Data fetching
-Использовать `useSWR` вместо `fetch` в `useEffect`:
+### 2. useEffect
+- Избегать лишних useEffect
+- Derived state для вычисляемых значений
+- Только для side effects (API, subscriptions)
+
+### 3. Data fetching
 ```tsx
 import useSWR from 'swr'
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 const { data } = useSWR('/api/weather', fetcher, { refreshInterval: 600000 })
 ```
 
-### Timeweb MCP
-Конфигурация в `.vscode/mcp.json` (не в git). Управление деплоем через GitHub Copilot.
+### 4. Accessibility
+- `aria-label` на кнопках/инпутах
+- Семантический HTML
+- Keyboard navigation
+- Alt text на изображениях
+
+### 5. Performance
+- `React.memo` для дорогих компонентов
+- `useMemo` для вычислений
+- `useCallback` для передаваемых функций
+
+### 6. No Emojis
+**НИКАКИХ ЭМОДЗИ** в коде, UI, console.log. Заменять на Lucide React иконки или текст.
+
+## Ключевые файлы
+- `lib/database.ts` — PostgreSQL query wrapper
+- `lib/db-pool.ts` — `{ pool }` (NAMED export)
+- `lib/auth/middleware.ts` — requireAuth, requireAdmin, requireRole
+- `lib/types/db-rows.ts` — интерфейсы строк БД
+- `lib/services/` — бизнес-логика (tour, booking, payment, rag, messaging)
+- `lib/ai/providers.ts` — AI waterfall (6 провайдеров)
+
+## Timeweb MCP
+Конфигурация в `.vscode/mcp.json` (не в git). Управление деплоем через Copilot.

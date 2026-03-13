@@ -133,15 +133,15 @@ export default function ProfilePageClient() {
 
   return (
     <Protected roles={['tourist', 'operator', 'agent', 'guide', 'transfer', 'admin']}>
-      <main className="min-h-screen bg-transparent text-white pb-24 md:pb-0">
+      <main className="min-h-screen bg-transparent text-[var(--text-primary)] pb-24 md:pb-0">
         {/* Навигационная шапка */}
-        <header style={{ background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.15)', position: 'sticky', top: 0, zIndex: 50 }}>
+        <header className="bg-[var(--bg-card)] border-b border-[var(--border)] sticky top-0 z-50">
           <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
             <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
               <Logo size={28} />
             </Link>
-            <h1 className="text-lg font-bold text-white">Мой профиль</h1>
-            <button onClick={toggleTheme} className="text-white/70 hover:text-white transition-colors" aria-label="Переключить тему">
+            <h1 className="text-lg font-bold text-[var(--text-primary)]">Мой профиль</h1>
+            <button onClick={toggleTheme} className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors" aria-label="Переключить тему">
               {isDark ? <Sun size={20} /> : <Moon size={20} />}
             </button>
           </div>
@@ -160,55 +160,55 @@ export default function ProfilePageClient() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Личные данные */}
-            <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
+            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
               <h2 className="text-2xl font-bold mb-6">Личные данные</h2>
               
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="profile-name" className="block text-white/70 mb-2">Имя</label>
+                  <label htmlFor="profile-name" className="block text-[var(--text-muted)] mb-2">Имя</label>
                   <input
                     id="profile-name"
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60"
+                    className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/60"
                     required
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="profile-email" className="block text-white/70 mb-2">Email</label>
+                  <label htmlFor="profile-email" className="block text-[var(--text-muted)] mb-2">Email</label>
                   <input
                     id="profile-email"
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60"
+                    className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/60"
                     required
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="profile-phone" className="block text-white/70 mb-2">Телефон</label>
+                  <label htmlFor="profile-phone" className="block text-[var(--text-muted)] mb-2">Телефон</label>
                   <input
                     id="profile-phone"
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     placeholder="+7 (XXX) XXX-XX-XX"
-                    className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60"
+                    className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/60"
                   />
                 </div>
               </div>
             </div>
 
             {/* Предпочтения */}
-            <div className="bg-white/15 border border-white/15 rounded-2xl p-6">
+            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
               <h2 className="text-2xl font-bold mb-6">Предпочтения</h2>
               
               {/* Интересы */}
               <div className="mb-6">
-                <span className="block text-white/70 mb-3">Интересы</span>
+                <span className="block text-[var(--text-muted)] mb-3">Интересы</span>
                 <div className="flex flex-wrap gap-2">
                   {popularInterests.map((interest) => (
                     <button
@@ -217,8 +217,8 @@ export default function ProfilePageClient() {
                       onClick={() => handleInterestToggle(interest.toLowerCase())}
                       className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
                         formData.preferences.interests.includes(interest.toLowerCase())
-                          ? 'bg-premium-gold text-premium-black'
-                          : 'bg-white/10 hover:bg-white/20 text-white'
+                          ? 'bg-[var(--accent)] text-[var(--bg-card)]'
+                          : 'bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] text-[var(--text-primary)]'
                       }`}
                     >
                       {interest}
@@ -229,7 +229,7 @@ export default function ProfilePageClient() {
 
               {/* Бюджет */}
               <div className="mb-6">
-                <span className="block text-white/70 mb-3">
+                <span className="block text-[var(--text-muted)] mb-3">
                   Бюджет на путешествие: {formData.preferences.budget.min.toLocaleString('ru-RU')} - {formData.preferences.budget.max.toLocaleString('ru-RU')} ₽
                 </span>
                 <div className="flex gap-4">
@@ -253,7 +253,7 @@ export default function ProfilePageClient() {
 
               {/* Сложность */}
               <div>
-                <span className="block text-white/70 mb-3">Предпочитаемая сложность</span>
+                <span className="block text-[var(--text-muted)] mb-3">Предпочитаемая сложность</span>
                 <div className="flex gap-3">
                   {(['easy', 'medium', 'hard'] as const).map((diff) => (
                     <button
@@ -265,8 +265,8 @@ export default function ProfilePageClient() {
                       })}
                       className={`flex-1 px-4 py-3 rounded-xl font-semibold transition-colors ${
                         formData.preferences.difficulty === diff
-                          ? 'bg-premium-gold text-premium-black'
-                          : 'bg-white/10 hover:bg-white/20 text-white'
+                          ? 'bg-[var(--accent)] text-[var(--bg-card)]'
+                          : 'bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] text-[var(--text-primary)]'
                       }`}
                     >
                       {diff === 'easy' ? 'Легкий' : diff === 'medium' ? 'Средний' : 'Сложный'}
@@ -280,7 +280,7 @@ export default function ProfilePageClient() {
             <button
               type="submit"
               disabled={saving}
-              className="w-full px-8 py-4 bg-premium-gold hover:bg-premium-gold/80 text-premium-black font-bold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-lg"
+              className="w-full px-8 py-4 bg-[var(--accent)] hover:bg-[var(--accent)]/80 text-[var(--bg-card)] font-bold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-lg"
             >
               {saving ? 'Сохранение...' : 'Сохранить изменения'}
             </button>

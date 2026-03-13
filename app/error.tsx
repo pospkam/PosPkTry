@@ -16,7 +16,7 @@ export default function Error({
     >
       <div className="text-center max-w-md">
         <div
-          className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center"
+          className="w-16 h-16 mx-auto mb-6 rounded-lg flex items-center justify-center"
           style={{ backgroundColor: 'var(--danger, #ef4444)', opacity: 0.1 }}
         >
           <svg

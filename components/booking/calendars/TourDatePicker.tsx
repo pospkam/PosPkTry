@@ -208,11 +208,11 @@ export const TourDatePicker: React.FC<TourDatePickerProps> = ({
   return (
     <div className={className} role="region" aria-label="Календарь выбора даты тура">
       {/* Информация о туре */}
-      <div className="mb-6 p-4 bg-white/5 border border-white/10 rounded-lg" aria-label="Информация о туре">
-        <div className="text-white/70 text-sm mb-1">
+      <div className="mb-6 p-4 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg" aria-label="Информация о туре">
+        <div className="text-[var(--text-secondary)] text-sm mb-1">
           {tourType === 'group' ? 'Групповой тур' : 'Индивидуальный тур'}
         </div>
-        <div className="text-white font-medium">
+        <div className="text-[var(--text-primary)] font-medium">
           Длительность: {duration} {duration === 1 ? 'день' : duration <= 4 ? 'дня' : 'дней'}
         </div>
       </div>
@@ -220,10 +220,10 @@ export const TourDatePicker: React.FC<TourDatePickerProps> = ({
       {/* Выбранная дата */}
       {selectedDate && (
         <div className="mb-6" aria-label="Выбранная дата">
-          <span className="block text-sm text-white/70 mb-2">
+          <span className="block text-sm text-[var(--text-secondary)] mb-2">
             Дата начала тура
           </span>
-          <div className="px-4 py-3 bg-premium-gold/10 border border-premium-gold/30 rounded-lg text-white font-medium" aria-live="polite">
+          <div className="px-4 py-3 bg-[var(--accent)]/10 border border-[var(--accent)]/30 rounded-lg text-[var(--text-primary)] font-medium" aria-live="polite">
             {formatDisplayDate(selectedDate)}
           </div>
         </div>
@@ -243,24 +243,24 @@ export const TourDatePicker: React.FC<TourDatePickerProps> = ({
 
       {/* Легенда для групповых туров */}
       {tourType === 'group' && !loading && (
-        <div className="mt-4 p-4 bg-white/5 border border-white/10 rounded-lg" aria-label="Легенда доступности">
-          <div className="text-white/70 text-sm mb-3">Легенда:</div>
+        <div className="mt-4 p-4 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg" aria-label="Легенда доступности">
+          <div className="text-[var(--text-secondary)] text-sm mb-3">Легенда:</div>
           <div className="grid grid-cols-2 gap-2 text-sm">
             <div className="flex items-center gap-2">
               <AvailabilityIndicator available={15} total={20} size="sm" />
-              <span className="text-white/70">Много мест (&gt;10)</span>
+              <span className="text-[var(--text-secondary)]">Много мест (&gt;10)</span>
             </div>
             <div className="flex items-center gap-2">
               <AvailabilityIndicator available={7} total={20} size="sm" />
-              <span className="text-white/70">Достаточно (5-10)</span>
+              <span className="text-[var(--text-secondary)]">Достаточно (5-10)</span>
             </div>
             <div className="flex items-center gap-2">
               <AvailabilityIndicator available={3} total={20} size="sm" />
-              <span className="text-white/70">Мало мест (&lt;5)</span>
+              <span className="text-[var(--text-secondary)]">Мало мест (&lt;5)</span>
             </div>
             <div className="flex items-center gap-2">
               <AvailabilityIndicator available={0} total={20} size="sm" />
-              <span className="text-white/70">Места закончились</span>
+              <span className="text-[var(--text-secondary)]">Места закончились</span>
             </div>
           </div>
         </div>
@@ -268,33 +268,33 @@ export const TourDatePicker: React.FC<TourDatePickerProps> = ({
 
       {/* Информация о выбранной дате (групповой тур) */}
       {selectedDateInfo && tourType === 'group' && (
-        <div className="mt-6 p-4 bg-premium-gold/10 border border-premium-gold/30 rounded-lg" aria-label="Информация о выбранной дате">
-          <div className="text-white font-medium mb-3">Информация о туре:</div>
+        <div className="mt-6 p-4 bg-[var(--accent)]/10 border border-[var(--accent)]/30 rounded-lg" aria-label="Информация о выбранной дате">
+          <div className="text-[var(--text-primary)] font-medium mb-3">Информация о туре:</div>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-white/70">Дата:</span>
-              <span className="text-white">{formatDisplayDate(selectedDate)}</span>
+              <span className="text-[var(--text-secondary)]">Дата:</span>
+              <span className="text-[var(--text-primary)]">{formatDisplayDate(selectedDate)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-white/70">Длительность:</span>
-              <span className="text-white">{duration} {duration === 1 ? 'день' : duration <= 4 ? 'дня' : 'дней'}</span>
+              <span className="text-[var(--text-secondary)]">Длительность:</span>
+              <span className="text-[var(--text-primary)]">{duration} {duration === 1 ? 'день' : duration <= 4 ? 'дня' : 'дней'}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-white/70">Осталось мест:</span>
-              <span className="text-white font-medium">
+              <span className="text-[var(--text-secondary)]">Осталось мест:</span>
+              <span className="text-[var(--text-primary)] font-medium">
                 {selectedDateInfo.available} из {selectedDateInfo.total}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-white/70">Цена:</span>
-              <span className="text-premium-gold font-bold">
+              <span className="text-[var(--text-secondary)]">Цена:</span>
+              <span className="text-[var(--accent)] font-bold">
                 {selectedDateInfo.price.toLocaleString('ru-RU')} ₽
               </span>
             </div>
             {selectedDateInfo.weather && (
               <div className="flex justify-between">
-                <span className="text-white/70">Погода:</span>
-                <span className="text-white">
+                <span className="text-[var(--text-secondary)]">Погода:</span>
+                <span className="text-[var(--text-primary)]">
                   {getWeatherText(selectedDateInfo.weather)}
                 </span>
               </div>
@@ -308,8 +308,8 @@ export const TourDatePicker: React.FC<TourDatePickerProps> = ({
         <div className="mt-6" aria-label="Выбор времени для индивидуального тура">
           {loadingSlots ? (
             <div className="text-center py-8">
-              <div className="w-8 h-8 border-4 border-white/20 border-t-premium-gold rounded-full animate-spin mx-auto mb-4"></div>
-              <div className="text-white/70">Загружаем расписание...</div>
+              <div className="w-8 h-8 border-4 border-[var(--border)] border-t-[var(--accent)] rounded-full animate-spin mx-auto mb-4"></div>
+              <div className="text-[var(--text-secondary)]">Загружаем расписание...</div>
             </div>
           ) : (
             <TimeSlotPicker

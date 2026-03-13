@@ -76,7 +76,7 @@ export function TransferDriverManagement({ operatorId, onDataChange }: TransferD
         <h2 className="text-2xl font-bold">Управление водителями</h2>
         <button
           onClick={() => setShowAddForm(!showAddForm)}
-          className="px-4 py-2 bg-premium-gold hover:bg-premium-gold/80 text-premium-black font-semibold rounded-lg transition-colors"
+          className="px-4 py-2 bg-[var(--accent)] hover:bg-[var(--accent)]/80 text-[var(--bg-card)] font-semibold rounded-lg transition-colors"
         >
           {showAddForm ? ' Отмена' : '+ Добавить водителя'}
         </button>
@@ -84,32 +84,32 @@ export function TransferDriverManagement({ operatorId, onDataChange }: TransferD
 
       {/* Add Driver Form */}
       {showAddForm && (
-        <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
           <h3 className="text-lg font-bold mb-4">Новый водитель</h3>
           <form className="grid grid-cols-2 gap-4">
             <input
               type="text"
               placeholder="ФИО"
-              className="px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold"
+              className="px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
             />
             <input
               type="tel"
               placeholder="Телефон"
-              className="px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold"
+              className="px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
             />
             <input
               type="text"
               placeholder="Модель авто"
-              className="px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold"
+              className="px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
             />
             <input
               type="text"
               placeholder="Гос. номер"
-              className="px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold"
+              className="px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
             />
             <button
               type="submit"
-              className="col-span-2 px-6 py-3 bg-premium-gold hover:bg-premium-gold/80 text-premium-black font-semibold rounded-lg transition-colors"
+              className="col-span-2 px-6 py-3 bg-[var(--accent)] hover:bg-[var(--accent)]/80 text-[var(--bg-card)] font-semibold rounded-lg transition-colors"
             >
               Добавить
             </button>
@@ -120,16 +120,16 @@ export function TransferDriverManagement({ operatorId, onDataChange }: TransferD
       {/* Drivers Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {drivers.map((driver) => (
-          <div key={driver.id} className="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-colors">
+          <div key={driver.id} className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6 hover:bg-[var(--bg-hover)] transition-colors">
             <div className="flex items-start justify-between mb-4">
               <div>
                 <h3 className="font-bold text-lg">{driver.name}</h3>
-                <p className="text-white/70 text-sm">{driver.phone}</p>
+                <p className="text-[var(--text-muted)] text-sm">{driver.phone}</p>
               </div>
               <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                driver.status === 'available' ? 'bg-green-500/20 text-green-400' :
-                driver.status === 'busy' ? 'bg-yellow-500/20 text-yellow-400' :
-                'bg-white/10 text-white/40'
+                driver.status === 'available' ? 'bg-[var(--success)]/10 text-[var(--success)]' :
+                driver.status === 'busy' ? 'bg-[var(--warning)]/10 text-[var(--warning)]' :
+                'bg-[var(--bg-card)] text-[var(--text-muted)]'
               }`}>
                 {driver.status === 'available' ? 'Доступен' : 
                  driver.status === 'busy' ? 'Занят' : 'Оффлайн'}
@@ -154,7 +154,7 @@ export function TransferDriverManagement({ operatorId, onDataChange }: TransferD
             <select
               value={driver.status}
               onChange={(e) => handleStatusChange(driver.id, e.target.value)}
-              className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+              className="w-full px-4 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
             >
               <option value="available">Доступен</option>
               <option value="busy">Занят</option>
@@ -164,7 +164,7 @@ export function TransferDriverManagement({ operatorId, onDataChange }: TransferD
         ))}
 
         {drivers.length === 0 && (
-          <div className="col-span-full text-center py-12 text-white/50">
+          <div className="col-span-full text-center py-12 text-[var(--text-muted)]">
             <p>Нет водителей. Добавьте первого!</p>
           </div>
         )}

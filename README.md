@@ -13,33 +13,37 @@
 
 ## Ключевые понятия: Маршрут vs Тур
 
-> ⚠️ Это разные сущности — не путать.
-
 | | **Маршрут (Route)** | **Тур (Tour)** |
 |---|---|---|
 | Таблица | `agent_route_knowledge`, `kamchatka_routes` | `tours` |
-| Источник | Скрапинг 3 сайтов (автоматически) | Создаёт оператор вручную |
-| Назначение | База знаний для AI-агентов, каталог маршрутов | Продаваемый продукт с ценой и бронью |
-| Цена | Нет (scraped metadata) | Есть (обязательное поле) |
-| Оператор | Нет | Есть (FK → `partners`) |
-| Бронирование | Нет | Да (`bookings` table) |
-| Количество | **259** (14 категорий, 3 источника) | **11** (fishingkam.ru) + операторы добавляют |
+| Источник | Скрапинг 3 сайтов (автоматически) | Оператор через CRM |
+| Назначение | База знаний для AI + каталог | Продаваемый продукт с ценой |
+| Цена | Нет | Есть (обязательное поле) |
+| Оператор | Нет | Есть (FK -> `partners`) |
+| Бронирование | Нет | Да (через `tour_departures` -> `bookings`) |
+| Количество | **260** (14 категорий, 3 источника) | **11** (fishingkam.ru) |
 | API | `GET /api/kamchatka-routes` | `GET /api/tours`, `POST /api/tours` |
 
-**Правило:** `kamchatka_routes` и `agent_route_knowledge` — читать только через `v_kamchatka_routes_api`. Прямой SELECT из `kamchatka_routes` запрещён.
+**Правило:** `kamchatka_routes` читать только через `v_kamchatka_routes_api`. Прямой SELECT запрещен.
 
 ---
 
 ## О проекте
 
-| Роль | Возможности |
-|------|-------------|
-| **Турист** | Каталог маршрутов и туров, бронирование, отзывы, eco-points, история поездок |
-| **Туроператор** | CRM: управление турами, календарь, аналитика выручки, бронирования |
-| **Гид** | Расписание, карта активностей, история заработка, репутация |
-| **Трансфер-оператор** | Автопарк, водители, маршруты трансферов, расписание |
-| **Агент** | Клиенты, ваучеры, комиссионные, воронка |
-| **Администратор** | Модерация пользователей, финансы платформы, SOS-сводка |
+### Хабы пользователей
+
+| Хаб | Маршрут | Возможности |
+|-----|---------|-------------|
+| **Турист** | /hub/tourist | Каталог, бронирование, отзывы, eco-points, история |
+| **Туроператор** | /hub/operator | CRM: туры, выезды, календарь, аналитика, финансы |
+| **Гид** | /hub/guide | Расписание, карта, заработок, репутация |
+| **Трансфер-оператор** | /hub/transfer-operator | Автопарк, водители, маршруты |
+| **Агент** | /hub/agent | Клиенты, ваучеры, комиссионные |
+| **Администратор** | /hub/admin | Модерация, пользователи, финансы платформы |
+| **Провайдер проживания** | /hub/stay-provider | Управление размещениями |
+| **Провайдер снаряжения** | /hub/gear-provider | Управление снаряжением |
+
+Дополнительные разделы: /hub/cars, /hub/gear, /hub/souvenirs, /hub/stay, /hub/tours, /hub/transfer, /hub/safety
 
 ---
 
@@ -47,15 +51,18 @@
 
 | Слой | Технологии |
 |------|-----------|
-| Frontend | Next.js 15 (App Router), React 18, TypeScript 5 strict, Tailwind CSS |
-| Backend | Next.js API Routes, PostgreSQL — прямой SQL через `lib/database.ts` |
-| Auth | JWT (jose) + bcrypt, 6 ролей |
-| AI | DeepSeek → Minimax → xAI Grok → OpenRouter (fallback chain) |
+| Frontend | Next.js 15 (App Router), React 19, TypeScript 5 strict, Tailwind CSS |
+| Стили | CSS-переменные (ds-классы), Playfair Display + Outfit |
+| Backend | Next.js API Routes (256 endpoints), PostgreSQL — прямой SQL |
+| Auth | JWT (jose) + bcrypt, 8 ролей |
+| AI | Timeweb Agent -> OpenRouter -> DeepSeek -> Minimax -> xAI -> Anthropic (6 провайдеров) |
+| MCP | `/api/mcp` — JSON-RPC 2.0, 4 инструмента, 260 маршрутов |
 | Платежи | CloudPayments |
 | Карты | Яндекс.Карты |
-| Погода | OpenWeatherMap + WeatherAPI + Яндекс (proxy, кэш) |
-| Деплой | Timeweb Cloud, GitHub Actions CI/CD |
-| Knowledge base | `agent_route_knowledge` — 259 маршрутов, MiniLM-L12 384-dim embeddings |
+| Погода | Yandex Weather + OpenWeatherMap + WeatherAPI (proxy, кэш 6ч) |
+| Telegram | @KuzmichKam_bot — уведомления о бронированиях |
+| Деплой | Timeweb Cloud (4cpu/8GB), GitHub -> автодеплой |
+| Knowledge base | `agent_route_knowledge` — 260 маршрутов, 14 категорий |
 
 ---
 
@@ -82,25 +89,28 @@ npm run lint              # ESLint (0 errors)
 npx tsc --noEmit          # TypeScript (0 errors)
 
 # База данных
-npm run db:migrate                        # Применить все SQL-миграции (идемпотентно)
-npm run db:import:kamchatka-routes        # Импорт маршрутов из партнёров
+npm run db:migrate                        # SQL-миграции (идемпотентно)
+npm run db:import:kamchatka-routes        # Импорт маршрутов
 npm run db:sync:agent-routes              # Синхронизация agent_route_knowledge
 
 # Скрапинг маршрутов (3 источника, без AI)
 npm run ai:scrape-unique:direct           # mestechkokam + zimaletokamchatka + kamchatintour
-npm run ai:scrape-unique:direct:dry       # Dry-run (в БД не пишет)
-npm run ai:scrape-unique:stats            # Статистика по категориям
+npm run ai:scrape-unique:direct:dry       # Dry-run
+npm run ai:scrape-unique:stats            # Статистика
 
 # Knowledge base для AI-агентов
 npm run ai:setup-agent-rag                # Пересобрать crew/knowledge-base.json
-# python3 crew/agent-trainer.py           # Пересобрать crew/agents.json (5 агентов)
+# python3 crew/agent-trainer.py           # Пересобрать crew/agents.json
 ```
 
 ### Docker
 
 ```bash
-docker-compose up    # Next.js + PostgreSQL
-npm run db:migrate   # SQL-миграции
+docker run -d --name kamhub-postgres \
+  -e POSTGRES_DB=kamhub -e POSTGRES_USER=kamuser \
+  -e POSTGRES_PASSWORD=kampass2024_local -p 5432:5432 \
+  postgis/postgis:15-3.3-alpine
+npm run db:migrate
 ```
 
 ---
@@ -111,74 +121,61 @@ npm run db:migrate   # SQL-миграции
 PosPkTry/
 ├── app/
 │   ├── page.tsx                    # Главная (Hero + BentoGrid + LiveFeed)
-│   ├── tours/                      # Каталог маршрутов (agent_route_knowledge)
-│   │   ├── page.tsx
-│   │   ├── [id]/page.tsx           # Детальная страница маршрута/тура
-│   │   └── fishing/                # Подраздел: рыбалка
-│   ├── hub/                        # Личные кабинеты по ролям
-│   │   ├── tourist/
-│   │   ├── operator/
-│   │   ├── guide/
-│   │   ├── transfer-operator/
-│   │   ├── agent/
-│   │   └── admin/
+│   ├── globals.css                 # CSS-переменные, ds-классы
+│   ├── home-variables.css          # Homepage токены (--kh-*)
+│   ├── tours/                      # Каталог маршрутов
+│   │   ├── [id]/                   # Детальная страница тура
+│   │   └── fishing/                # Рыбалка
+│   ├── hub/                        # Личные кабинеты (8 ролей + 7 сервисов)
+│   │   ├── tourist/                operator/   guide/
+│   │   ├── transfer-operator/      agent/      admin/
+│   │   ├── stay-provider/          gear-provider/
+│   │   ├── cars/  gear/  souvenirs/  stay/  tours/  transfer/  safety/
+│   │   └── layout.tsx              # Общий HubLayout
 │   ├── ai-assistant/               # AI-чат (публичный)
-│   ├── safety/                     # SOS, МЧС-контакты
-│   └── api/                        # API Routes (все полностью типизированы)
-│       ├── auth/                   # login, register, me, save-token
-│       ├── tours/                  # Каталог туров + CRUD (operator)
-│       ├── bookings/               # Создание и просмотр броней
+│   ├── safety/                     # SOS
+│   └── api/                        # 256 API Routes
+│       ├── auth/                   # login, register, me
+│       ├── tours/[id]/departures/  # CRUD выездов
+│       ├── bookings/               # Бронирования
+│       ├── operator/               # CRM (25+ endpoints)
+│       ├── ai/                     # Chat (waterfall 6 провайдеров)
+│       ├── mcp/                    # MCP Server (JSON-RPC 2.0)
+│       ├── telegram/               # Bot webhook + setup
+│       ├── weather/                # Multi-provider proxy
 │       ├── payments/               # CloudPayments webhook
-│       ├── operator/               # CRM оператора (25+ endpoints)
-│       ├── guide/                  # Dashboard гида
-│       ├── tourist/                # Достижения, история
-│       ├── transfer/               # Трансферы (оператор)
-│       ├── transfers/              # Трансферы (клиент/поиск)
-│       ├── agent/                  # Агентские операции
-│       ├── admin/                  # Платформа
-│       ├── ai/                     # DeepSeek→Minimax→xAI→OpenRouter
-│       │   ├── chat/               # AI-чат с историей (JSONB)
-│       │   ├── knowledge-base/     # S3-хранилище knowledge base
-│       │   └── booking-intake/     # AI-обработка запроса на тур
-│       ├── kamchatka-routes/       # Маршруты из v_kamchatka_routes_api
-│       ├── weather/                # Погода (proxy + кэш)
-│       ├── safety/sos/             # SOS → sos_events (rate-limit 10 мин)
-│       └── webhooks/payments/      # CloudPayments callback
+│       └── safety/sos/             # SOS (rate-limit 10 мин)
 │
 ├── components/
-│   ├── homepage/                   # Hero, BentoGrid, ActivityCircles, LiveFeed, CTA
-│   ├── tours/                      # TourCard, TourFilters
-│   ├── booking/                    # TourBookingForm, StayBookingForm
-│   ├── ai/                         # AIChatWidget
-│   ├── safety/                     # SOSButton, EmergencyModal
-│   ├── eco/                        # EcoPointsDashboard
-│   ├── weather/                    # WeatherWidget
-│   ├── icons/                      # 16 SVG-иконок категорий (single-stroke)
-│   └── shared/                     # Header, BottomNav, Logo, LoadingSpinner
+│   ├── homepage/                   # Hero, BentoGrid, ActivityCircles, LiveFeed, Reveal
+│   ├── tours/                      # TourCard
+│   ├── booking/                    # TourBookingForm, TourDeparturesCalendar
+│   ├── ai/                         # AIChatWidget, FloatingAIButton
+│   ├── shared/                     # PageShell, PublicNav, YandexMap, AccommodationCard
+│   ├── admin/                      # AdminNav, shared/ (DataTable, Pagination, MetricCard)
+│   ├── operator/                   # OperatorNav, Dashboard/, TourForm
+│   ├── agent/                      # AgentNav, Dashboard/, Clients/
+│   ├── transfer-operator/          # TransferOperatorNav, Dashboard/
+│   ├── tourist/                    # TouristNav, RecommendationCard
+│   ├── cars/ gear/ souvenirs/      # Карточки, фильтры, формы
+│   └── payments/                   # CloudPaymentsWidget
 │
 ├── lib/
 │   ├── database.ts                 # query<T>() — типизированный PostgreSQL-клиент
-│   ├── db-pool.ts                  # Pool singleton (named export { pool })
-│   ├── types/db-rows.ts            # 50+ TypeScript-интерфейсов для DB rows
-│   ├── auth/                       # JWT: middleware, helpers по ролям
-│   ├── services/                   # Бизнес-логика (tour, booking, payment...)
-│   ├── rate-limit.ts               # createRateLimiter({ windowMs, max })
-│   └── error-handler.ts            # apiError(), apiSuccess()
+│   ├── db-pool.ts                  # Pool singleton ({ pool } — named export)
+│   ├── types/db-rows.ts            # 50+ интерфейсов DB rows
+│   ├── auth/                       # JWT middleware, helpers
+│   ├── ai/providers.ts             # callAIWaterfall (6 провайдеров)
+│   ├── notifications/telegram.ts   # telegramService (@KuzmichKam_bot)
+│   ├── services/                   # tour, booking, payment, rag, messaging, analytics
+│   ├── rate-limit.ts               # createRateLimiter
+│   └── error-handler.ts            # apiError, apiSuccess
 │
-├── lib/database/migrations/        # 025 SQL-миграций (001–025)
-├── crew/
-│   ├── knowledge-base.json         # RAG-индекс: 259 маршрутов
-│   ├── agents.json                 # Конфиги 5 AI-агентов
-│   └── agent-trainer.py            # Регенерация agents.json
-├── scripts/
-│   ├── apply-new-schemas.sql       # Точка входа npm run db:migrate
-│   ├── unique-routes-scraper.js    # Скрапер 3 сайтов
-│   ├── sync-agent-route-knowledge.js
-│   └── setup-agent-rag.ts
-├── types/
-│   └── agent.ts                    # Типы для агентского модуля (+130 строк)
-├── k8s/                            # Kubernetes конфиги
-└── monitoring/                     # Grafana + Prometheus
+├── lib/database/migrations/        # 31 SQL-миграций (001-027)
+├── migrations/                     # 10 infra-миграций
+├── crew/                           # AI agent configs, knowledge-base.json
+├── middleware.ts                   # Edge: JWT + Upstash rate-limit
+└── docs/PLATFORM_MAP.md           # Полная карта платформы
 ```
 
 ---
@@ -189,18 +186,21 @@ PosPkTry/
 
 ```sql
 -- Пользователи и роли
-users                     -- id, email, role, bcrypt_hash, created_at
+users                     -- id UUID, email, role, bcrypt_hash, created_at
 partners                  -- Профили операторов/агентов, is_verified
 
--- Маршруты (справочник, только читать через view)
-kamchatka_routes          -- Сырые спарсенные маршруты
-v_kamchatka_routes_api    -- VIEW: использовать вместо прямого SELECT из kamchatka_routes
-agent_route_knowledge     -- RAG-индекс: 259 маршрутов + embeddings (MiniLM-L12)
+-- Маршруты (справочник, читать через view)
+kamchatka_routes          -- 260 спарсенных маршрутов
+v_kamchatka_routes_api    -- VIEW: использовать вместо прямого SELECT
+agent_route_knowledge     -- RAG-индекс: 260 маршрутов + embeddings
 
--- Туры (продаваемые продукты)
-tours                     -- Туры операторов: title, price, duration, operator_id, route_id
-bookings                  -- Бронирования туров: user_id, tour_id, status, payment_status
-reviews                   -- Отзывы: user_id, tour_id, rating, body
+-- Туры и бронирования (3 уровня)
+tours                     -- Туры операторов: title, price, operator_id, route_id
+tour_departures           -- Конкретные выезды: start_date, available_slots, booked_slots, price_override
+bookings                  -- Бронирования: user_id, tour_id, departure_id (FK, nullable), status
+
+-- Отзывы
+reviews                   -- rating, text, photos JSONB
 
 -- Трансферы
 transfers                 -- Маршруты трансферов
@@ -209,26 +209,26 @@ vehicles                  -- Автопарк
 drivers                   -- Водители
 
 -- AI и коммуникации
-chat_sessions             -- Сессии AI-чата: session_id, messages JSONB
-notifications             -- Push/email-уведомления
-sos_events                -- SOS-сигналы: координаты, IP, статус
+chat_sessions             -- AI-чат: session_id, messages JSONB
+notifications             -- Уведомления
+sos_events                -- SOS-сигналы: lat, lng, status
 
 -- Дополнительно
-eco_points                -- Eco-баллы пользователей
-souvenirs                 -- Магазин сувениров
+eco_points                -- Eco-баллы
+souvenirs                 -- Сувениры
 gear_rentals              -- Аренда снаряжения
 accommodations            -- Размещение
 ```
 
-### Категории маршрутов (259 маршрутов, 3 источника)
+### Категории маршрутов (260 маршрутов, 3 источника)
 
-| Категория | Маршрутов | Описание |
-|-----------|-----------|----------|
+| Категория | Кол-во | Описание |
+|-----------|--------|----------|
 | `eco` | 62 | Экотуризм |
 | `vulkani` | 49 | Вулканы |
 | `termalnye_istochniki` | 26 | Термальные источники |
 | `morskie_progulki` | 16 | Морские прогулки |
-| `lakes` | 16 | Озёра |
+| `lakes` | 16 | Озера |
 | `mountains` | 15 | Горы |
 | `geyzery` | 14 | Гейзеры |
 | `rybalka` | 14 | Рыбалка |
@@ -236,22 +236,104 @@ accommodations            -- Размещение
 | `dzhip` | 10 | Джип-туры |
 | `rivers` | 8 | Реки |
 | `snegohod` | 8 | Снегоход |
-| `vertoletnye_tury` | 6 | Вертолётные туры |
+| `vertoletnye_tury` | 6 | Вертолетные туры |
 | `medvedi` | 5 | Медведи |
 
-**Источники скрапинга:**
-- `mestechkokam.ru` — HTML (JSDOM)
-- `zimaletokamchatka.ru` — GraphQL (Strapi CMS)
-- `kamchatintour.ru` — HTML (Bitrix SSR)
+**Источники:** mestechkokam.ru (JSDOM), zimaletokamchatka.ru (GraphQL/Strapi), kamchatintour.ru (Bitrix SSR)
 
 ### Миграции
 
 ```bash
 npm run db:migrate
-# 025 файлов: lib/database/migrations/001_...sql → 025_...sql
+# 41 файл: lib/database/migrations/ (001-027) + migrations/ (10 infra)
 # Идемпотентны — безопасно применять повторно
-# Следующая: 026_...sql
+# Следующая: 028_...sql
 ```
+
+---
+
+## Дизайн-система
+
+### CSS-переменные (glassmorphism полностью заменен)
+
+**Light** (default, `data-theme="light"`):
+```css
+--bg-primary: #F5F0EB;     --bg-card: #FFFFFF;      --bg-hover: #F0ECE7;
+--text-primary: #1A1714;    --text-secondary: #6B6560; --text-muted: #9A9590;
+--accent: #D44A0C;          --ocean: #2568B0;
+--success: #3FB950;         --warning: #D29922;       --danger: #DC2626;
+--border: rgba(0,0,0,0.07);
+```
+
+**Dark** (`data-theme="dark"`):
+```css
+--bg-primary: #0D1117;     --bg-card: #21262D;      --bg-hover: #30363D;
+--text-primary: #F0F6FC;    --text-secondary: #8B949E; --text-muted: #484F58;
+--accent: #E8734A;          --ocean: #00A8CC;
+--danger: #F85149;
+--border: rgba(255,255,255,0.08);
+```
+
+### Утилитарные ds-классы
+`ds-page`, `ds-card`, `ds-input`, `ds-btn`, `ds-btn-primary`, `ds-btn-secondary`, `ds-btn-danger`, `ds-section`, `ds-badge`, `ds-h1`, `ds-h2`, `ds-label`, `ds-skeleton`
+
+### Типографика
+- Заголовки: **Playfair Display** (latin + cyrillic)
+- Основной текст: **Outfit** (latin, 300-700)
+
+### UI-паттерны
+
+```tsx
+// Карточка
+<div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4">
+
+// Кнопка CTA
+<button className="bg-[var(--accent)] text-[var(--bg-primary)] rounded-lg px-4 py-2">
+
+// Текст
+<p className="text-[var(--text-primary)]">
+<span className="text-[var(--text-muted)]">
+```
+
+### Навигация
+
+| Контекст | Компонент |
+|----------|-----------|
+| Публичные страницы | Header `KH + тема + ЛК` + `<BottomNav />` (mobile pill) |
+| Hub (дашборды) | `<HubLayout>` sidebar (desktop) + mobile nav |
+| Server-компоненты | `<PageShell>` — client-обертка |
+
+---
+
+## AI-система
+
+### Waterfall (6 провайдеров)
+
+| # | Провайдер | Модель | Env |
+|---|-----------|--------|-----|
+| 1 | Timeweb Cloud Agent | deepseek-chat | `TIMEWEB_TOKEN` + `TIMEWEB_AI_AGENT_ID` |
+| 2 | OpenRouter | claude-3.5-sonnet | `OPENROUTER_API_KEY` |
+| 3 | DeepSeek | deepseek-chat | `DEEPSEEK_API_KEY` |
+| 4 | Minimax | MiniMax-Text-01 | `MINIMAX_API_KEY` |
+| 5 | xAI | grok-4 | `XAI_API_KEY` |
+| 6 | Anthropic | claude-opus-4-6 | `ANTHROPIC_API_KEY` |
+
+Все: temperature 0.4, max_tokens 800. Если все 6 недоступны — fallback текст.
+
+### MCP Server (`/api/mcp`)
+
+JSON-RPC 2.0, публичный endpoint:
+- `search_routes` — поиск маршрутов по категории/ключам
+- `get_route_details` — детали маршрута по UUID
+- `list_categories` — 14 категорий с количеством
+- `get_tours` — коммерческие туры с выездами
+
+### Telegram Bot (@KuzmichKam_bot)
+
+- Webhook: `POST /api/telegram/webhook`
+- Уведомления операторов о бронированиях
+- Inline-кнопки для подтверждения/отмены
+- Env: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_FISHING_CHAT_ID`, `TELEGRAM_WEBHOOK_SECRET`
 
 ---
 
@@ -259,20 +341,20 @@ npm run db:migrate
 
 | Группа | Метод | Endpoint | Описание |
 |--------|-------|----------|----------|
-| Auth | POST | `/api/auth/signin` | Авторизация (rate-limit: 5/мин) |
+| Auth | POST | `/api/auth/signin` | Авторизация (5/мин) |
 | Auth | POST | `/api/auth/register` | Регистрация |
-| Auth | GET | `/api/auth/me` | Текущий пользователь |
 | Profile | GET/PUT | `/api/profile` | Профиль (JWT) |
-| **Маршруты** | GET | `/api/kamchatka-routes` | 259 маршрутов из `v_kamchatka_routes_api` |
-| **Туры** | GET | `/api/tours` | Каталог (agent_route_knowledge + tours) |
-| **Туры** | GET | `/api/tours/[id]` | Детали тура/маршрута |
-| **Туры** | POST | `/api/tours` | Создать тур (operator only) |
-| Bookings | POST | `/api/bookings` | Создать бронирование |
-| Bookings | GET | `/api/bookings/my` | Мои брони |
-| AI | POST | `/api/ai/chat` | AI-помощник (rate-limit: 20/мин) |
-| AI | GET | `/api/ai/chat?sessionId=` | История сессии |
-| Weather | GET | `/api/weather` | Погода (proxy) |
-| Safety | POST | `/api/safety/sos` | SOS → sos_events (rate-limit: 1/10мин) |
+| Маршруты | GET | `/api/kamchatka-routes` | 260 маршрутов |
+| Туры | GET | `/api/tours` | Каталог туров |
+| Туры | GET | `/api/tours/[id]` | Детали тура |
+| Выезды | GET | `/api/tours/[id]/departures` | Расписание выездов |
+| Выезды | POST | `/api/tours/[id]/departures` | Создать выезд (operator) |
+| Bookings | POST | `/api/bookings` | Бронирование |
+| AI | POST | `/api/ai/chat` | AI-чат (20/мин) |
+| MCP | GET/POST | `/api/mcp` | MCP Server (JSON-RPC) |
+| Telegram | POST | `/api/telegram/webhook` | Bot webhook |
+| Weather | GET | `/api/weather` | Погода (proxy, кэш 6ч) |
+| Safety | POST | `/api/safety/sos` | SOS (1/10мин) |
 
 ---
 
@@ -280,89 +362,51 @@ npm run db:migrate
 
 | Проверка | Статус |
 |----------|--------|
-| `tsc --noEmit` | ✅ 0 ошибок |
-| `npm run lint` | ✅ 0 ошибок (5 warnings react-hooks) |
-| `next build` | ✅ Компилируется |
-| `ignoreBuildErrors` | `false` — билд упадёт при TS-ошибках |
-| `ignoreDuringBuilds` | `false` — ESLint блокирует билд |
-| API routes типизированы | ✅ Все 90+ endpoints полностью |
-| `lib/types/db-rows.ts` | ✅ 50+ интерфейсов для всех DB-запросов |
+| `tsc --noEmit` | 0 ошибок |
+| `npm run lint` | 0 ошибок |
+| `next build` | Компилируется |
+| API routes | 256 endpoints, полностью типизированы |
+| `lib/types/db-rows.ts` | 50+ интерфейсов |
 
-**История:** ~847 TS-ошибок устранены за 8 итераций (март 2026).
-
-Итерации: auth+admin (128) → bookings+payments (9) → tours (24) → operator (231) → guide+tourist (45) → light groups (23) → transfers+agent+weather+остальные (372) → **итого 847 → 0**.
-
----
-
-## Дизайн-система
-
-**Темы:** светлая (default mobile) + тёмная, переключатель в хедере.
-
-**Цветовые токены (tailwind.config.ts):**
-
-| Токен | Hex | Назначение |
-|-------|-----|-----------|
-| `cyber-cyan` | `#00D4FF` | Focus rings, активные состояния, neon glow |
-| `premium-gold` | `#d4af37` | Цены, CTA-кнопки, primary actions |
-| `premium-black` | `#0a0a0a` | Текст на gold/cyan кнопках |
-
-**UI-паттерны:**
-
-```css
-/* Карточки */
-bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl
-
-/* Инпуты */
-bg-white/10 border border-white/20 text-white
-placeholder:text-white/40 focus:ring-cyber-cyan/60
-
-/* Primary кнопка */
-bg-premium-gold text-premium-black hover:bg-premium-gold/80
-
-/* CTA-градиент */
-bg-gradient-to-r from-cyber-cyan/80 to-premium-gold text-premium-black
-```
-
-**Навигация:**
-
-| Контекст | Компонент |
-|----------|-----------|
-| Публичные страницы | Glassmorphism header `KH + тема + ЛК` + `<BottomNav />` (mobile pill) |
-| Hub (ролевые дашборды) | `<HubLayout>` sidebar (desktop) + mobile nav |
-| Server-компоненты | `<PageShell>` — client-обёртка с header + BottomNav |
+**История:** 847 TS-ошибок устранены за 8 итераций (март 2026).
 
 ---
 
 ## Правила разработки
 
-```
-✅ TypeScript strict — any запрещён, используй unknown + type guard
-✅ SQL — только параметризованный: $1, $2 (без конкатенации)
-✅ kamchatka_routes — только через v_kamchatka_routes_api
-✅ Роль пользователя — только из JWT (не из тела запроса)
-✅ Секреты — только через .env.local (не хардкод)
-✅ console.log — запрещён в production (только console.error)
-✅ Новая таблица/колонка — новая миграция 026_...sql
-✅ JWT защита — на каждом protected endpoint
-```
+- TypeScript strict — `any` запрещен, использовать `unknown` + type guard
+- SQL — только параметризованный: `$1, $2` (без конкатенации)
+- `kamchatka_routes` — только через `v_kamchatka_routes_api`
+- Роль пользователя — только из JWT (не из тела запроса)
+- Секреты — только через `.env.local`
+- Стили — только CSS-переменные (никакого glassmorphism/hardcoded hex)
+- Новая таблица/колонка — новая миграция `028_...sql`
+- Pool import: `import { pool } from '@/lib/db-pool'` (named, не default)
+- Никаких эмодзи в UI/коде — только Lucide React иконки
 
 ---
 
 ## Переменные окружения
 
 ```bash
-# База данных
+# Обязательные
 DATABASE_URL=postgresql://user:pass@host:5432/dbname
+JWT_SECRET=...
+NEXT_PUBLIC_APP_URL=https://pospkam-pospktry-c1f3.twc1.net
 
-# Auth
-JWT_SECRET=...                       # min 32 символа, обязательно
-NEXTAUTH_SECRET=...
-
-# AI — хотя бы один обязателен (fallback chain: DeepSeek→Minimax→xAI→OpenRouter)
+# AI (waterfall — хотя бы один)
+TIMEWEB_TOKEN=...
+TIMEWEB_AI_AGENT_ID=...
+OPENROUTER_API_KEY=...
 DEEPSEEK_API_KEY=...
 MINIMAX_API_KEY=...
 XAI_API_KEY=...
-OPENROUTER_API_KEY=...
+ANTHROPIC_API_KEY=...
+
+# Telegram
+TELEGRAM_BOT_TOKEN=...
+TELEGRAM_FISHING_CHAT_ID=...
+TELEGRAM_WEBHOOK_SECRET=...
 
 # Карты и погода
 NEXT_PUBLIC_YANDEX_MAPS_API_KEY=...
@@ -372,7 +416,7 @@ YANDEX_WEATHER_API_KEY=...
 CLOUDPAYMENTS_PUBLIC_ID=...
 CLOUDPAYMENTS_API_SECRET=...
 
-# S3 (для knowledge base, опционально)
+# S3 (опционально)
 S3_ENDPOINT=...
 S3_BUCKET=...
 S3_REGION=...
@@ -384,79 +428,81 @@ S3_REGION=...
 
 ```
 git push origin main
-  → GitHub Actions
-    → Timeweb Cloud (автодеплой)
-      → https://pospkam-pospktry-c1f3.twc1.net
+  -> GitHub Actions
+    -> Timeweb Cloud (автодеплой)
+      -> https://pospkam-pospktry-c1f3.twc1.net
 ```
 
-Timeweb MCP Server (управление деплоем через AI):
-- Токен `TIMEWEB_TOKEN` — только в `.vscode/mcp.json`, не в `.env.local`
-- Команды: `create_timeweb_app`, `get_deploy_settings`, `add_vcs_provider`
+Timeweb MCP Server: токен `TIMEWEB_TOKEN` только в `.vscode/mcp.json`.
 
 ---
 
 ## Текущее состояние (март 2026)
 
 ```
-Страниц:              91
-API endpoints:        90+  (все полностью типизированы)
-SQL-миграций:         025
-Маршрутов в БД:       259  (agent_route_knowledge, 14 категорий)
-Туров в БД:           11   (fishingkam.ru — требуют операторов для роста)
-Crew-агентов:         5
+Страниц:              94
+API endpoints:        256  (все типизированы)
+Компонентов:          119
+SQL-миграций:         41   (31 app + 10 infra)
+Маршрутов в БД:       260  (14 категорий, 3 источника)
+Туров в БД:           11   (fishingkam.ru)
+AI-провайдеров:       6    (waterfall)
+MCP инструментов:     4    (search, details, categories, tours)
 TS-ошибок:            0    (было 847)
 ESLint-ошибок:        0
 Build:                passing
-console.log в коде:   0
 ```
 
 ---
 
 ## Changelog
 
-### Март 2026 — спринт 2 (текущий)
+### Март 2026 — спринт 3 (текущий)
 
-- **Каталог маршрутов**: фикс 404 на страницах маршрутов — `/api/tours/[id]` теперь делает fallback к `agent_route_knowledge` когда ID не найден в `tours`
-- **Изображения-заглушки**: 14 категорий → локальные фото из `/public/images/activities/`, `/bento/`, `/gallery/`
+- **CSS-переменные**: полная миграция всех компонентов с glassmorphism на CSS vars (63+ файлов)
+- **Дизайн-система**: ds-классы, light/dark темы через `data-theme`
+- **Типографика**: Playfair Display (заголовки) + Outfit (текст)
+- **7 фич**: аудит-логи, программа лояльности, промокоды, FAQ, сертификаты гидов, логи бронирований, настройки уведомлений
+- **Tourist dashboard**: редизайн в бизнес-стиле CSS vars
+- **Документация**: обновлены CLAUDE.md, AGENTS.md, copilot-instructions.md, README.md
+
+### Март 2026 — спринт 2
+
+- **Каталог маршрутов**: фикс 404 — fallback к `agent_route_knowledge`
+- **Изображения**: 14 категорий -> локальные фото из `/public/images/`
+- **Tour departures**: 3-уровневая архитектура (tours -> departures -> bookings)
+- **Telegram bot**: @KuzmichKam_bot с inline-кнопками
+- **MCP Server**: `/api/mcp` — 4 инструмента, 260 маршрутов
 
 ### Март 2026 — спринт 1
 
-- **TypeScript: 847 → 0 ошибок** (8 итераций, 90+ файлов):
-  - Создан `lib/types/db-rows.ts` — 50+ типизированных интерфейсов DB rows
-  - Все API-routes полностью type-checked, `tsconfig.json` без API-исключений
-  - Исправлена SQL-инъекция в `admin/finance/route.ts`
-- **Скрапер маршрутов `--direct`**: 3 источника без AI (JSDOM + GraphQL + Bitrix), 149 → 259 маршрутов
-- **Дедупликация** маршрутов: 2 уровня — `route_dedupe_key` + нормализованный title (ё→е)
-- **Crew-агенты**: knowledge-base.json (259 маршрутов), 5 агентов обучены
-- **Rate limiting**: `/api/ai/chat` (20/мин), `/api/auth/signin` (5/мин), SOS (10 мин/IP)
+- **TypeScript: 847 -> 0 ошибок** (8 итераций, 90+ файлов)
+- **Скрапер маршрутов `--direct`**: 149 -> 260 маршрутов
+- **Rate limiting**: AI (20/мин), auth (5/мин), SOS (10 мин)
+- **AI waterfall**: 6 провайдеров (Timeweb -> OpenRouter -> DeepSeek -> Minimax -> xAI -> Anthropic)
 - **CSP**: убран `unsafe-eval`
-- **Timeweb MCP Server**: задокументирован в CLAUDE.md + AGENTS.md
 
-### Февраль–март 2026
+### Февраль--март 2026
 
-- JWT авторизация + 6 ролей + все dashboards
-- AI fallback chain: DeepSeek → Minimax → xAI → OpenRouter
-- AI-чат: sessionId в localStorage, история в `chat_sessions` (JSONB)
-- Profile API: `GET/PUT /api/profile`
-- SOS API: `POST /api/safety/sos` → `sos_events`
-- Глвная страница v3: Hero + ActivityCircles + BentoGrid + LiveFeed
-- 16 SVG-иконок категорий (single-stroke)
-- Дизайн-аудит: 91 страница + 100+ компонентов — единые токены
-- CloudPayments: accountId/email из JWT (не хардкод)
+- JWT авторизация + 8 ролей + все dashboards
+- AI-чат: sessionId, история в JSONB
+- Главная страница v3: Hero + ActivityCircles + BentoGrid + LiveFeed
+- 16 SVG-иконок категорий
+- CloudPayments: accountId/email из JWT
 
 ---
 
 ## Roadmap
 
-### Сейчас в работе
-- [ ] Полный цикл бронирования тура (форма → БД → email-подтверждение)
-- [ ] AI-подбор маршрута (чат на главной → список из knowledge base)
+### В работе
+- [ ] Полировка UI/UX всех хабов
+- [ ] Подключение реальных данных операторов
+- [ ] Фикс критичных API-багов (availability counting, departure ownership)
 
 ### Phase 2
-- [ ] CloudPayments sandbox → тестовая оплата
-- [ ] E2E-тесты (Playwright) на ключевые flow
+- [ ] CloudPayments sandbox -> тестовая оплата
+- [ ] E2E-тесты (Playwright)
 - [ ] Push-уведомления (Firebase FCM)
-- [ ] Redis-кэш для сессий и погоды
-- [ ] Real-time tracking групп (WebSockets)
-- [ ] CrewAI multi-agent (FastAPI) — `/api/agent` endpoint
+- [ ] Redis-кэш
+- [ ] Real-time tracking (WebSockets)
 - [ ] Международная версия (EN, ZH)

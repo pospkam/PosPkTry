@@ -11,7 +11,7 @@ const AIChatWidget = dynamic(
   ssr: false,
   loading: () => (
     <div className="flex items-center justify-center h-full">
-      <div className="w-8 h-8 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin"></div>
+      <div className="w-8 h-8 border-4 border-[var(--border)] border-t-[var(--accent)] rounded-full animate-spin"></div>
     </div>
   )
 });
@@ -24,7 +24,7 @@ export default function FloatingAIButton() {
       {/* Floating Button */}
       <button
         onClick={() => setShowAIChat(!showAIChat)}
-        className="fixed bottom-32 right-4 md:bottom-6 md:right-6 z-50 w-14 h-14 bg-gradient-to-br from-yellow-400 via-orange-400 to-pink-500 hover:from-yellow-500 hover:via-orange-500 hover:to-pink-600 rounded-full shadow-2xl flex items-center justify-center transition-all hover:scale-110 group"
+        className="fixed bottom-32 right-4 md:bottom-6 md:right-6 z-50 w-14 h-14 bg-[var(--accent)] hover:bg-[var(--accent)]/90 rounded-full shadow-2xl flex items-center justify-center transition-all hover:scale-110 group"
         aria-label="AI помощник"
       >
         {showAIChat ? (

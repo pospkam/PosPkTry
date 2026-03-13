@@ -10,20 +10,20 @@ export const metadata = {
 export default function PrivacyPage() {
   return (
     <PageShell title="Политика конфиденциальности">
-    <main className="bg-transparent text-white py-12 px-4">
+    <main className="bg-transparent text-[var(--text-primary)] py-12 px-4">
       <div className="max-w-3xl mx-auto">
-        <Link href="/" className="inline-flex items-center text-premium-gold hover:text-premium-gold/80 mb-8">
+        <Link href="/" className="inline-flex items-center text-[var(--accent)] hover:text-[var(--accent)]/80 mb-8">
           <ChevronLeft className="w-5 h-5 mr-1" />
           На главную
         </Link>
 
         <h1 className="text-3xl font-bold mb-8">Политика конфиденциальности</h1>
         
-        <div className="prose prose-invert max-w-none space-y-6 text-white/80">
-          <p className="text-sm text-white/50">Дата вступления в силу: 1 января 2025 г.</p>
+        <div className="prose prose-invert max-w-none space-y-6 text-[var(--text-secondary)]">
+          <p className="text-sm text-[var(--text-muted)]">Дата вступления в силу: 1 января 2025 г.</p>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mt-8 mb-4">1. Общие положения</h2>
+            <h2 className="text-xl font-semibold text-[var(--text-primary)] mt-8 mb-4">1. Общие положения</h2>
             <p>
               Настоящая Политика конфиденциальности (далее — Политика) определяет порядок обработки 
               и защиты персональных данных пользователей платформы KamHub (далее — Платформа), 
@@ -36,7 +36,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mt-8 mb-4">2. Персональные данные</h2>
+            <h2 className="text-xl font-semibold text-[var(--text-primary)] mt-8 mb-4">2. Персональные данные</h2>
             <p>Оператор обрабатывает следующие персональные данные:</p>
             <ul className="list-disc pl-6 space-y-2">
               <li>Фамилия, имя, отчество</li>
@@ -49,7 +49,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mt-8 mb-4">3. Цели обработки</h2>
+            <h2 className="text-xl font-semibold text-[var(--text-primary)] mt-8 mb-4">3. Цели обработки</h2>
             <p>Персональные данные обрабатываются в целях:</p>
             <ul className="list-disc pl-6 space-y-2">
               <li>Регистрации и идентификации пользователей</li>
@@ -62,7 +62,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mt-8 mb-4">4. Правовые основания</h2>
+            <h2 className="text-xl font-semibold text-[var(--text-primary)] mt-8 mb-4">4. Правовые основания</h2>
             <p>Обработка персональных данных осуществляется на основании:</p>
             <ul className="list-disc pl-6 space-y-2">
               <li>Согласия субъекта персональных данных</li>
@@ -72,7 +72,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mt-8 mb-4">5. Хранение данных</h2>
+            <h2 className="text-xl font-semibold text-[var(--text-primary)] mt-8 mb-4">5. Хранение данных</h2>
             <p>
               Персональные данные хранятся на серверах, расположенных на территории Российской Федерации, 
               в соответствии с требованиями Федерального закона № 242-ФЗ.
@@ -84,7 +84,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mt-8 mb-4">6. Права субъекта</h2>
+            <h2 className="text-xl font-semibold text-[var(--text-primary)] mt-8 mb-4">6. Права субъекта</h2>
             <p>Субъект персональных данных имеет право:</p>
             <ul className="list-disc pl-6 space-y-2">
               <li>Получить информацию об обработке своих данных</li>
@@ -95,7 +95,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mt-8 mb-4">7. Контакты</h2>
+            <h2 className="text-xl font-semibold text-[var(--text-primary)] mt-8 mb-4">7. Контакты</h2>
             <p>
               По вопросам обработки персональных данных обращайтесь:<br />
               Email: privacy@kamhub.ru<br />

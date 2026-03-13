@@ -49,7 +49,7 @@ export function SearchBar({
     <div className={clsx('relative', className)}>
       <div className="relative">
         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-          <Search className="w-5 h-5 text-white/50" />
+          <Search className="w-5 h-5 text-[var(--text-muted)]" />
         </div>
         <input
           type="text"
@@ -57,17 +57,17 @@ export function SearchBar({
           onChange={handleChange}
           placeholder={placeholder}
           className={clsx(
-            'w-full pl-12 pr-12 py-3 rounded-xl',
-            'bg-white/5 border border-white/10',
-            'text-white placeholder-white/50',
-            'focus:outline-none focus:ring-2 focus:ring-premium-gold focus:border-transparent',
+            'w-full pl-12 pr-12 py-3 rounded-lg',
+            'bg-[var(--bg-card)] border border-[var(--border)]',
+            'text-[var(--text-primary)] placeholder:text-[var(--text-muted)]',
+            'focus:outline-none focus:border-[var(--accent)]',
             'transition-all duration-200'
           )}
         />
         {value && (
           <button
             onClick={handleClear}
-            className="absolute inset-y-0 right-0 pr-4 flex items-center text-white/50 hover:text-white transition-colors"
+            className="absolute inset-y-0 right-0 pr-4 flex items-center text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
           >
             <X className="w-5 h-5" />
           </button>

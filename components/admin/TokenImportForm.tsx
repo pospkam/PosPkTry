@@ -78,20 +78,20 @@ export function TokenImportForm({ onTokenSaved }: TokenImportFormProps) {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20">
+    <div className="max-w-md mx-auto p-6 bg-[var(--bg-card)] rounded-lg border border-[var(--border)]">
       <div className="flex items-center gap-3 mb-6">
-        <div className="p-3 bg-cyber-cyan/20 rounded-xl">
-          <Key className="w-6 h-6 text-cyber-cyan" />
+        <div className="p-3 bg-[var(--accent)]/20 rounded-xl">
+          <Key className="w-6 h-6 text-[var(--accent)]" />
         </div>
         <div>
-          <h2 className="text-xl font-bold text-white">Timeweb Cloud API</h2>
-          <p className="text-sm text-white/60">Подключение к хостингу</p>
+          <h2 className="text-xl font-bold text-[var(--text-primary)]">Timeweb Cloud API</h2>
+          <p className="text-sm text-[var(--text-muted)]">Подключение к хостингу</p>
         </div>
       </div>
 
       <div className="space-y-4">
         <div>
-          <label htmlFor="api-token-input" className="block text-sm text-white/80 mb-2">
+          <label htmlFor="api-token-input" className="block text-sm text-[var(--text-secondary)] mb-2">
             API Token
           </label>
           <div className="relative">
@@ -105,12 +105,12 @@ export function TokenImportForm({ onTokenSaved }: TokenImportFormProps) {
                 setError('');
               }}
               placeholder="Введите ваш API токен"
-              className="w-full px-4 py-3 pr-12 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/30 focus:outline-none focus:border-cyber-cyan/50"
+              className="w-full px-4 py-3 pr-12 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)]/50"
             />
             <button
               type="button"
               onClick={() => setShowToken(!showToken)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-muted)]"
             >
               {showToken ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
@@ -135,28 +135,28 @@ export function TokenImportForm({ onTokenSaved }: TokenImportFormProps) {
           <button
             onClick={handleTest}
             disabled={!token.trim()}
-            className="flex-1 px-4 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 px-4 py-3 bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Проверить
           </button>
           <button
             onClick={handleSave}
             disabled={!token.trim()}
-            className="flex-1 px-4 py-3 bg-premium-gold hover:bg-premium-gold/80 rounded-xl text-premium-black font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 px-4 py-3 bg-[var(--accent)] hover:bg-[var(--accent)]/80 rounded-xl text-[var(--text-primary)] font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Сохранить
           </button>
         </div>
       </div>
 
-      <div className="mt-6 pt-4 border-t border-white/10">
-        <p className="text-xs text-white/40">
+      <div className="mt-6 pt-4 border-t border-[var(--border)]">
+        <p className="text-xs text-[var(--text-muted)]">
           Получить токен можно в{' '}
           <a 
             href="https://timeweb.cloud/my/settings/tokens" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="text-cyber-cyan hover:underline"
+            className="text-[var(--accent)] hover:underline"
           >
             личном кабинете Timeweb
           </a>

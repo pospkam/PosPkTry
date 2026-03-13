@@ -87,7 +87,7 @@ export default function ReviewsClient() {
             {list.map((review) => (
               <div
                 key={review.id}
-                className="rounded-2xl border p-5"
+                className="rounded-lg border p-5"
                 style={{
                   backgroundColor: 'var(--bg-card)',
                   borderColor: 'var(--border)',

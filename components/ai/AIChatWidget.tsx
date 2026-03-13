@@ -232,7 +232,7 @@ export function AIChatWidget({ isOpen = false, onClose, className, userId }: AIC
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className={`fixed bottom-44 left-4 right-4 max-h-[65vh] sm:bottom-6 sm:left-auto sm:right-6 sm:w-96 sm:h-[520px] sm:max-h-none flex flex-col overflow-hidden glassmorphism shadow-2xl z-50 ${className || ''}`}
+          className={`fixed bottom-44 left-4 right-4 max-h-[65vh] sm:bottom-6 sm:left-auto sm:right-6 sm:w-96 sm:h-[520px] sm:max-h-none flex flex-col overflow-hidden bg-[var(--bg-card)] border border-[var(--border)] rounded-lg shadow-2xl z-50 ${className || ''}`}
           initial={{ y: '100%', opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: '100%', opacity: 0 }}
@@ -241,17 +241,17 @@ export function AIChatWidget({ isOpen = false, onClose, className, userId }: AIC
           aria-modal="true"
           aria-label="AI-чат помощник Камчатки"
         >
-          <div className="flex items-center justify-between p-4 sm:p-6 border-b border-white/20 rounded-t-2xl flex-shrink-0">
+          <div className="flex items-center justify-between p-4 sm:p-6 border-b border-[var(--border)] rounded-t-lg flex-shrink-0">
             <div className="flex items-center gap-3">
-              <Bot size={24} className="text-cyber-cyan" aria-hidden="true" />
+              <Bot size={24} className="text-[var(--accent)]" aria-hidden="true" />
               <div>
-                <h3 className="text-lg font-semibold text-white">AI-помощник Камчатки</h3>
-                <p className="text-sm text-volcano">Спросите о турах и безопасности</p>
+                <h3 className="text-lg font-semibold text-[var(--text-primary)]">AI-помощник Камчатки</h3>
+                <p className="text-sm text-[var(--text-muted)]">Спросите о турах и безопасности</p>
               </div>
             </div>
             <motion.button
               onClick={onClose}
-              className="p-2 hover:bg-white/20 rounded-xl transition-all"
+              className="p-2 hover:bg-[var(--bg-hover)] rounded-xl transition-all"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
               aria-label="Закрыть чат"
@@ -264,8 +264,8 @@ export function AIChatWidget({ isOpen = false, onClose, className, userId }: AIC
             {messages.map((msg) => (
               <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div
-                  className={`max-w-xs p-3 rounded-2xl ${
-                    msg.role === 'user' ? 'bg-white/20 text-white' : 'bg-white/10 text-white/90'
+                  className={`max-w-xs p-3 rounded-lg ${
+                    msg.role === 'user' ? 'bg-[var(--bg-hover)] text-[var(--text-primary)]' : 'bg-[var(--bg-card)] text-[var(--text-secondary)]'
                   }`}
                   aria-label={msg.role === 'user' ? 'Ваше сообщение' : 'Ответ AI'}
                 >
@@ -281,10 +281,10 @@ export function AIChatWidget({ isOpen = false, onClose, className, userId }: AIC
 
             {isLoading && (
               <div className="flex justify-start">
-                <div className="bg-white/10 px-4 py-3 rounded-2xl">
+                <div className="bg-[var(--bg-card)] px-4 py-3 rounded-lg">
                   <div className="flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin text-cyber-cyan" />
-                    <span className="text-sm text-white/50">
+                    <Loader2 className="w-4 h-4 animate-spin text-[var(--accent)]" />
+                    <span className="text-sm text-[var(--text-muted)]">
                       {isCrewMode ? 'Агенты думают...' : 'AI думает...'}
                     </span>
                   </div>
@@ -294,11 +294,11 @@ export function AIChatWidget({ isOpen = false, onClose, className, userId }: AIC
                         {CREW_STEPS.map((_, i) => (
                           <div
                             key={i}
-                            className={`h-1.5 flex-1 rounded-full transition-colors duration-500 ${i <= crewStepIdx ? 'bg-premium-gold' : 'bg-white/20'}`}
+                            className={`h-1.5 flex-1 rounded-full transition-colors duration-500 ${i <= crewStepIdx ? 'bg-[var(--accent)]' : 'bg-[var(--bg-card)]'}`}
                           />
                         ))}
                       </div>
-                      <span className="text-xs text-white/50 mt-1 block">{CREW_STEPS[crewStepIdx]}</span>
+                      <span className="text-xs text-[var(--text-muted)] mt-1 block">{CREW_STEPS[crewStepIdx]}</span>
                     </>
                   )}
                 </div>
@@ -307,7 +307,7 @@ export function AIChatWidget({ isOpen = false, onClose, className, userId }: AIC
             <div ref={messagesEndRef} />
           </div>
 
-          <form onSubmit={handleSubmit} className="p-4 sm:p-6 border-t border-white/20 flex-shrink-0">
+          <form onSubmit={handleSubmit} className="p-4 sm:p-6 border-t border-[var(--border)] flex-shrink-0">
             <div className="flex items-center gap-2 mb-3">
               <input
                 ref={inputRef}
@@ -315,13 +315,13 @@ export function AIChatWidget({ isOpen = false, onClose, className, userId }: AIC
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Спросите о Камчатке..."
-                className="flex-1 px-4 py-3 rounded-full bg-white/10 border border-white/20 focus:outline-none focus:ring-2 focus:ring-premium-gold placeholder:text-white/40 text-white text-sm"
+                className="flex-1 px-4 py-3 rounded-full bg-[var(--bg-card)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] placeholder:text-[var(--text-muted)] text-[var(--text-primary)] text-sm"
                 aria-label="Сообщение для AI"
                 disabled={isLoading}
                 autoFocus
               />
               <motion.button
-                className="p-3 bg-premium-gold text-premium-black rounded-full disabled:opacity-50"
+                className="p-3 bg-[var(--accent)] text-[var(--bg-primary)] rounded-full disabled:opacity-50"
                 whileHover={{ scale: 1.05 }}
                 aria-label="Отправить сообщение"
                 type="submit"
@@ -332,7 +332,7 @@ export function AIChatWidget({ isOpen = false, onClose, className, userId }: AIC
             </div>
             <div className="flex gap-2">
               <motion.button
-                className="flex-1 px-3 py-2 bg-white/10 hover:bg-white/20 text-white/80 hover:text-white rounded-full text-xs font-medium flex items-center gap-1 justify-center min-h-[36px] disabled:opacity-50"
+                className="flex-1 px-3 py-2 bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-full text-xs font-medium flex items-center gap-1 justify-center min-h-[36px] disabled:opacity-50"
                 whileHover={{ scale: 1.05 }}
                 aria-label="Планировать тур"
                 type="button"
@@ -342,7 +342,7 @@ export function AIChatWidget({ isOpen = false, onClose, className, userId }: AIC
                 <Calendar size={14} aria-hidden="true" /> Планировать тур
               </motion.button>
               <motion.button
-                className="flex-1 px-3 py-2 bg-white/10 hover:bg-white/20 text-white/80 hover:text-white rounded-full text-xs font-medium flex items-center gap-1 justify-center min-h-[36px] disabled:opacity-50"
+                className="flex-1 px-3 py-2 bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-full text-xs font-medium flex items-center gap-1 justify-center min-h-[36px] disabled:opacity-50"
                 whileHover={{ scale: 1.05 }}
                 aria-label="Погода"
                 type="button"
@@ -352,7 +352,7 @@ export function AIChatWidget({ isOpen = false, onClose, className, userId }: AIC
                 <Thermometer size={14} aria-hidden="true" /> Погода
               </motion.button>
               <motion.button
-                className="flex-1 px-3 py-2 bg-white/10 hover:bg-white/20 text-white/80 hover:text-white rounded-full text-xs font-medium flex items-center gap-1 justify-center min-h-[36px] disabled:opacity-50"
+                className="flex-1 px-3 py-2 bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-full text-xs font-medium flex items-center gap-1 justify-center min-h-[36px] disabled:opacity-50"
                 whileHover={{ scale: 1.05 }}
                 aria-label="Безопасность"
                 type="button"

@@ -49,7 +49,7 @@ export default function GuideReviewsClient() {
         ) : (
           <>
             {/* Средний рейтинг */}
-            <div className="flex items-center gap-6 mb-6 bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-5">
+            <div className="flex items-center gap-6 mb-6 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5">
               <div className="text-center">
                 <p className="text-4xl font-bold text-[var(--text-primary)]">{avgRating}</p>
                 <div className="flex items-center gap-0.5 mt-1">

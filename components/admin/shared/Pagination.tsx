@@ -53,7 +53,7 @@ export function Pagination({
 
   return (
     <div className={clsx('flex items-center justify-between', className)}>
-      <div className="text-sm text-white/70">
+      <div className="text-sm text-[var(--text-muted)]">
         Страница {currentPage} из {totalPages}
       </div>
 
@@ -64,8 +64,8 @@ export function Pagination({
           className={clsx(
             'px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-1',
             currentPage === 1
-              ? 'bg-white/5 text-white/30 cursor-not-allowed'
-              : 'bg-white/10 text-white hover:bg-white/20'
+              ? 'bg-[var(--bg-card)] text-[var(--text-muted)] cursor-not-allowed'
+              : 'bg-[var(--bg-card)] text-[var(--text-primary)] hover:bg-[var(--bg-hover)]'
           )}
         >
           <ChevronLeft className="w-4 h-4" /> Назад
@@ -75,7 +75,7 @@ export function Pagination({
           {getPageNumbers().map((page, pageIndex) => {
             if (page === '...') {
               return (
-                <span key={`ellipsis-${pageIndex}`} className="px-3 py-2 text-white/50">
+                <span key={`ellipsis-${pageIndex}`} className="px-3 py-2 text-[var(--text-muted)]">
                   ...
                 </span>
               );
@@ -88,8 +88,8 @@ export function Pagination({
                 className={clsx(
                   'px-4 py-2 rounded-lg font-medium transition-colors',
                   currentPage === page
-                    ? 'bg-premium-gold text-premium-black'
-                    : 'bg-white/10 text-white hover:bg-white/20'
+                    ? 'bg-[var(--accent)] text-[var(--bg-card)]'
+                    : 'bg-[var(--bg-card)] text-[var(--text-primary)] hover:bg-[var(--bg-hover)]'
                 )}
               >
                 {page}
@@ -104,8 +104,8 @@ export function Pagination({
           className={clsx(
             'px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-1',
             currentPage === totalPages
-              ? 'bg-white/5 text-white/30 cursor-not-allowed'
-              : 'bg-white/10 text-white hover:bg-white/20'
+              ? 'bg-[var(--bg-card)] text-[var(--text-muted)] cursor-not-allowed'
+              : 'bg-[var(--bg-card)] text-[var(--text-primary)] hover:bg-[var(--bg-hover)]'
           )}
         >
           Вперёд <ChevronRight className="w-4 h-4" />

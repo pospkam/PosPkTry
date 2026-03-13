@@ -70,7 +70,7 @@ export default function RoutesClient() {
         </div>
 
         {showForm && (
-          <form onSubmit={handleAdd} className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-5 mb-6 space-y-4">
+          <form onSubmit={handleAdd} className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5 mb-6 space-y-4">
             <h2 className="text-lg font-semibold text-[var(--text-primary)]">Новый маршрут</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <label className="block">

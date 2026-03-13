@@ -17,13 +17,13 @@ import { formatPrice, formatDuration, type TimeSlot } from '../calendars/calenda
 export interface TimeSlotPickerProps {
   // Доступные слоты
   slots: TimeSlot[];
-  
+
   // Callback при выборе
   onSelect: (slot: TimeSlot) => void;
-  
+
   // Выбранный слот
   selectedSlotId?: string;
-  
+
   // UI
   className?: string;
 }
@@ -38,7 +38,7 @@ export const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
 
   const handleSelect = (slot: TimeSlot) => {
     if (slot.available === 0) return;
-    
+
     setSelected(slot.id);
     onSelect(slot);
   };
@@ -46,15 +46,15 @@ export const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
   if (slots.length === 0) {
     return (
       <div className={clsx('text-center py-12', className)} role="status" aria-label="Нет доступных слотов времени">
-        <div className="text-white/50 text-lg mb-2"></div>
-        <div className="text-white/70">Нет доступных слотов времени</div>
+        <div className="text-[var(--text-muted)] text-lg mb-2"></div>
+        <div className="text-[var(--text-secondary)]">Нет доступных слотов времени</div>
       </div>
     );
   }
 
   return (
     <div className={clsx('space-y-3', className)} role="group" aria-label="Выбор времени">
-      <div className="text-white font-medium mb-4">
+      <div className="text-[var(--text-primary)] font-medium mb-4">
         Выберите время:
       </div>
 
@@ -72,9 +72,9 @@ export const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
             className={clsx(
               'w-full p-4 rounded-xl border-2 transition-all text-left',
               {
-                'bg-premium-gold border-premium-gold': isSelected,
-                'bg-white/5 border-white/10 hover:border-premium-gold hover:bg-white/10': !isSelected && !isSoldOut,
-                'bg-white/5 border-white/5 opacity-50 cursor-not-allowed': isSoldOut,
+                'bg-[var(--accent)] border-[var(--accent)]': isSelected,
+                'bg-[var(--bg-card)] border-[var(--border)] hover:border-[var(--accent)] hover:bg-[var(--bg-hover)]': !isSelected && !isSoldOut,
+                'bg-[var(--bg-card)] border-[var(--border)] opacity-50 cursor-not-allowed': isSoldOut,
               }
             )}
           >
@@ -82,7 +82,7 @@ export const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
               {/* Время */}
               <div className={clsx(
                 'text-lg font-bold',
-                isSelected ? 'text-premium-black' : 'text-white'
+                isSelected ? 'text-[var(--bg-primary)]' : 'text-[var(--text-primary)]'
               )}>
                 {slot.displayTime}
               </div>
@@ -106,7 +106,7 @@ export const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
               {/* Места */}
               {!isSoldOut && (
                 <span className={clsx(
-                  isSelected ? 'text-premium-black/70' : 'text-white/70'
+                  isSelected ? 'text-[var(--bg-primary)]' : 'text-[var(--text-secondary)]'
                 )}>
                   Места: {slot.available} {slot.available === 1 ? 'место' : slot.available <= 4 ? 'места' : 'мест'}
                 </span>
@@ -115,7 +115,7 @@ export const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
               {/* Цена */}
               <span className={clsx(
                 'font-bold',
-                isSelected ? 'text-premium-black' : 'text-premium-gold'
+                isSelected ? 'text-[var(--bg-primary)]' : 'text-[var(--accent)]'
               )}>
                 {formatPrice(slot.price)}
               </span>

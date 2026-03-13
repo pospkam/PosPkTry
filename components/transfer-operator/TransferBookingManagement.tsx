@@ -8,7 +8,7 @@ interface TransferBookingManagementProps {
 
 export function TransferBookingManagement({ operatorId, onDataChange }: TransferBookingManagementProps) {
   return (
-    <div className="p-6 text-white/60 text-center">
+    <div className="p-6 text-[var(--text-muted)] text-center">
       Управление бронированиями трансфера — в разработке
     </div>
   );

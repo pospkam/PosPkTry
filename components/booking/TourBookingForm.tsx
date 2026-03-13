@@ -168,16 +168,16 @@ export function TourBookingForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Tour Info */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-        <h3 className="text-2xl font-bold text-white mb-2">{tourName}</h3>
-        <p className="text-premium-gold text-xl font-semibold">
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
+        <h3 className="text-2xl font-bold text-[var(--text-primary)] mb-2">{tourName}</h3>
+        <p className="text-[var(--accent)] text-xl font-semibold">
           от {price.toLocaleString('ru-RU')} ₽
         </p>
       </div>
 
       {/* Date Selection */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-        <h4 className="text-lg font-semibold text-white mb-4">Выберите дату</h4>
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
+        <h4 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Выберите дату</h4>
         <TourDatePicker
           tourId={tourId}
           tourType={tourType}
@@ -189,10 +189,10 @@ export function TourBookingForm({
         />
         {selectedDate && (
           <div className="mt-4 p-4 bg-green-500/10 border border-green-500/30 rounded-xl">
-            <p className="text-green-400">
+            <p className="text-[var(--success)]">
               [] Выбрана дата: {selectedDate.toLocaleDateString('ru-RU')}
             </p>
-            <p className="text-white/70 text-sm mt-1">
+            <p className="text-[var(--text-muted)] text-sm mt-1">
               Свободных мест: {getSpotsLeft(selectedDate)}
             </p>
           </div>
@@ -200,8 +200,8 @@ export function TourBookingForm({
       </div>
 
       {/* Guests Selection */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-        <h4 className="text-lg font-semibold text-white mb-4">Количество гостей</h4>
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
+        <h4 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Количество гостей</h4>
         <GuestSelector
           maxGuests={selectedDate ? getSpotsLeft(selectedDate) : 10}
           initialAdults={adults}
@@ -214,37 +214,37 @@ export function TourBookingForm({
       </div>
 
       {/* Special Requirements */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-        <h4 className="text-lg font-semibold text-white mb-4">Особые пожелания</h4>
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
+        <h4 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Особые пожелания</h4>
         <textarea
           value={specialRequirements}
           onChange={(e) => setSpecialRequirements(e.target.value)}
           placeholder="Например: диетические требования, особые потребности..."
           rows={4}
-          className="w-full px-4 py-3 bg-white/10 border border-white/10 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold resize-none"
+          className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] resize-none"
         />
       </div>
 
       {/* Price Summary */}
-      <div className="bg-gradient-to-r from-premium-gold/20 to-premium-gold/10 border border-premium-gold/30 rounded-2xl p-6">
+      <div className="bg-[var(--bg-card)] border border-[var(--accent)]/30 rounded-lg p-6">
         <div className="flex justify-between items-center mb-4">
-          <span className="text-white/70">Взрослые ({adults})</span>
-          <span className="text-white font-semibold">
+          <span className="text-[var(--text-muted)]">Взрослые ({adults})</span>
+          <span className="text-[var(--text-primary)] font-semibold">
             {(adults * price).toLocaleString('ru-RU')} ₽
           </span>
         </div>
         {children > 0 && (
           <div className="flex justify-between items-center mb-4">
-            <span className="text-white/70">Дети ({children})</span>
-            <span className="text-white font-semibold">
+            <span className="text-[var(--text-muted)]">Дети ({children})</span>
+            <span className="text-[var(--text-primary)] font-semibold">
               {(children * price * 0.5).toLocaleString('ru-RU')} ₽
             </span>
           </div>
         )}
-        <div className="border-t border-white/10 pt-4 mt-4">
+        <div className="border-t border-[var(--border)] pt-4 mt-4">
           <div className="flex justify-between items-center">
-            <span className="text-xl font-bold text-white">Итого:</span>
-            <span className="text-2xl font-black text-premium-gold">
+            <span className="text-xl font-bold text-[var(--text-primary)]">Итого:</span>
+            <span className="text-2xl font-bold text-[var(--accent)]">
               {calculateTotalPrice().toLocaleString('ru-RU')} ₽
             </span>
           </div>
@@ -268,7 +268,7 @@ export function TourBookingForm({
           <button
             type="button"
             onClick={() => setShowPayment(false)}
-            className="w-full px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
+            className="w-full px-4 py-2 bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] text-[var(--text-primary)] rounded-lg transition-colors"
           >
             Вернуться к бронированию
           </button>
@@ -277,7 +277,7 @@ export function TourBookingForm({
         <button
           type="submit"
           disabled={!selectedDate || submitting}
-          className="w-full px-8 py-4 bg-premium-gold hover:bg-premium-gold/80 text-premium-black font-bold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-lg"
+          className="w-full px-8 py-4 bg-[var(--accent)] hover:bg-[var(--accent)]/80 text-[var(--bg-card)] font-bold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-lg"
         >
           {submitting ? (
             <span className="flex items-center justify-center">

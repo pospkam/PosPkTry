@@ -93,8 +93,8 @@ export function PayoutsManager() {
       header: 'Партнер',
       render: (payout: Payout) => (
         <div>
-          <div className="font-medium text-white">{payout.partnerName}</div>
-          <div className="text-white/60 text-sm">{payout.partnerEmail}</div>
+          <div className="font-medium text-[var(--text-primary)]">{payout.partnerName}</div>
+          <div className="text-[var(--text-muted)] text-sm">{payout.partnerEmail}</div>
         </div>
       )
     },
@@ -103,8 +103,8 @@ export function PayoutsManager() {
       header: 'Услуга',
       render: (payout: Payout) => (
         <div>
-          <div className="font-medium text-white">{payout.serviceName}</div>
-          <div className="text-white/60 text-sm capitalize">{payout.bookingType}</div>
+          <div className="font-medium text-[var(--text-primary)]">{payout.serviceName}</div>
+          <div className="text-[var(--text-muted)] text-sm capitalize">{payout.bookingType}</div>
         </div>
       )
     },
@@ -112,7 +112,7 @@ export function PayoutsManager() {
       key: 'amount',
       header: 'Сумма',
       render: (payout: Payout) => (
-        <div className="font-medium text-premium-gold">
+        <div className="font-medium text-[var(--accent)]">
           {payout.amount.toLocaleString('ru-RU')} {payout.currency}
         </div>
       )
@@ -128,7 +128,7 @@ export function PayoutsManager() {
       key: 'createdAt',
       header: 'Создано',
       render: (payout: Payout) => (
-        <div className="text-white/70 text-sm">
+        <div className="text-[var(--text-muted)] text-sm">
           {new Date(payout.createdAt).toLocaleDateString('ru-RU')}
         </div>
       )
@@ -145,7 +145,7 @@ export function PayoutsManager() {
 
   if (error) {
     return (
-      <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-6 text-center">
+      <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-6 text-center">
         <p className="text-red-400 mb-4">Ошибка загрузки данных</p>
         <button
           onClick={fetchPayouts}
@@ -162,40 +162,40 @@ export function PayoutsManager() {
       {/* Статистика выплат */}
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-white">{stats.totalPayouts}</div>
-            <div className="text-white/60 text-sm">Всего выплат</div>
+          <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-4 text-center">
+            <div className="text-2xl font-bold text-[var(--text-primary)]">{stats.totalPayouts}</div>
+            <div className="text-[var(--text-muted)] text-sm">Всего выплат</div>
           </div>
           <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 text-center">
             <div className="text-2xl font-bold text-green-400">{stats.completedPayouts}</div>
-            <div className="text-white/60 text-sm">Выполнено</div>
+            <div className="text-[var(--text-muted)] text-sm">Выполнено</div>
           </div>
           <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 text-center">
             <div className="text-2xl font-bold text-yellow-400">{stats.pendingPayouts}</div>
-            <div className="text-white/60 text-sm">Ожидают</div>
+            <div className="text-[var(--text-muted)] text-sm">Ожидают</div>
           </div>
-          <div className="bg-cyber-cyan/10 border border-cyber-cyan/30 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-cyber-cyan">
+          <div className="bg-[var(--accent)]/10 border border-[var(--accent)]/30 rounded-xl p-4 text-center">
+            <div className="text-2xl font-bold text-[var(--accent)]">
               {stats.totalPaid.toLocaleString('ru-RU')} ₽
             </div>
-            <div className="text-white/60 text-sm">Выплачено</div>
+            <div className="text-[var(--text-muted)] text-sm">Выплачено</div>
           </div>
           <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-4 text-center">
             <div className="text-2xl font-bold text-orange-400">
               {stats.pendingAmount.toLocaleString('ru-RU')} ₽
             </div>
-            <div className="text-white/60 text-sm">Ожидают выплаты</div>
+            <div className="text-[var(--text-muted)] text-sm">Ожидают выплаты</div>
           </div>
         </div>
       )}
 
       {/* Таблица выплат */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-bold text-white">Выплаты партнерам</h3>
+          <h3 className="text-xl font-bold text-[var(--text-primary)]">Выплаты партнерам</h3>
           <button
             onClick={fetchPayouts}
-            className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
+            className="px-4 py-2 bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] text-[var(--text-primary)] rounded-lg transition-colors"
           >
             Обновить
           </button>

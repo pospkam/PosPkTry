@@ -140,11 +140,11 @@ function getStatusLabel(status: MchsStatus): string {
 function getStatusClasses(status: MchsStatus): string {
   const classes: Record<MchsStatus, string> = {
     pending: 'bg-volcano/20 text-volcano border border-volcano/30',
-    submitted: 'bg-premium-gold/20 text-premium-gold border border-premium-gold/30',
+    submitted: 'bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/30',
     confirmed: 'bg-moss/20 text-moss border border-moss/30',
-    rejected: 'bg-red-600/20 text-red-400 border border-red-600/30',
+    rejected: 'bg-red-600/20 text-[var(--danger)] border border-red-600/30',
   };
-  return classes[status] ?? 'bg-white/10 text-white/70';
+  return classes[status] ?? 'bg-[var(--bg-card)] text-[var(--text-muted)]';
 }
 
 function formatDate(value: string): string {
@@ -371,15 +371,15 @@ export function MchsRegistrationPanel() {
   }
 
   // -- Стиль input-полей --
-  const inputClasses = 'mt-1 w-full min-h-[44px] bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyber-cyan/60';
+  const inputClasses = 'mt-1 w-full min-h-[44px] bg-[var(--bg-card)] border border-[var(--border)] rounded-xl px-3 py-2 text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/60';
 
   return (
-    <section className="bg-white/15 border border-white/15 rounded-2xl p-6">
+    <section className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
       {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-white">Регистрация групп в МЧС</h2>
-          <p className="text-white/70 mt-1">
+          <h2 className="text-2xl font-bold text-[var(--text-primary)]">Регистрация групп в МЧС</h2>
+          <p className="text-[var(--text-muted)] mt-1">
             Подача данных о группе и маршруте в МЧС перед стартом тура.
           </p>
         </div>
@@ -391,31 +391,31 @@ export function MchsRegistrationPanel() {
 
       {loading ? (
         <div className="py-10 flex justify-center">
-          <Loader2 className="w-6 h-6 animate-spin text-white/70" />
+          <Loader2 className="w-6 h-6 animate-spin text-[var(--text-muted)]" />
         </div>
       ) : (
         <div className="space-y-6">
           {/* Сводка по статусам */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            <div className="bg-white/10 rounded-xl p-3">
-              <p className="text-xs text-white/60">Всего</p>
-              <p className="text-xl font-semibold text-white">{summary.total}</p>
+            <div className="bg-[var(--bg-card)] rounded-xl p-3">
+              <p className="text-xs text-[var(--text-muted)]">Всего</p>
+              <p className="text-xl font-semibold text-[var(--text-primary)]">{summary.total}</p>
             </div>
             <div className="bg-volcano/15 rounded-xl p-3">
-              <p className="text-xs text-white/60">Ожидает</p>
+              <p className="text-xs text-[var(--text-muted)]">Ожидает</p>
               <p className="text-xl font-semibold text-volcano">{summary.pending}</p>
             </div>
-            <div className="bg-white/10 rounded-xl p-3">
-              <p className="text-xs text-white/60">Отправлено</p>
-              <p className="text-xl font-semibold text-premium-gold">{summary.submitted}</p>
+            <div className="bg-[var(--bg-card)] rounded-xl p-3">
+              <p className="text-xs text-[var(--text-muted)]">Отправлено</p>
+              <p className="text-xl font-semibold text-[var(--accent)]">{summary.submitted}</p>
             </div>
             <div className="bg-moss/15 rounded-xl p-3">
-              <p className="text-xs text-white/60">Подтверждено</p>
+              <p className="text-xs text-[var(--text-muted)]">Подтверждено</p>
               <p className="text-xl font-semibold text-moss">{summary.confirmed}</p>
             </div>
             <div className="bg-red-600/15 rounded-xl p-3">
-              <p className="text-xs text-white/60">Отклонено</p>
-              <p className="text-xl font-semibold text-red-400">{summary.rejected}</p>
+              <p className="text-xs text-[var(--text-muted)]">Отклонено</p>
+              <p className="text-xl font-semibold text-[var(--danger)]">{summary.rejected}</p>
             </div>
           </div>
 
@@ -424,7 +424,7 @@ export function MchsRegistrationPanel() {
             <button
               type="button"
               onClick={() => setShowForm(true)}
-              className="min-h-[44px] min-w-[44px] px-4 py-2 rounded-xl bg-premium-gold text-premium-black font-medium inline-flex items-center gap-2 hover:bg-premium-gold/80 transition-colors"
+              className="min-h-[44px] min-w-[44px] px-4 py-2 rounded-xl bg-[var(--accent)] text-[var(--text-primary)] font-medium inline-flex items-center gap-2 hover:bg-[var(--accent)]/80 transition-colors"
             >
               <Plus className="w-4 h-4" />
               Новая регистрация
@@ -433,13 +433,13 @@ export function MchsRegistrationPanel() {
 
           {/* Форма создания регистрации */}
           {showForm && (
-            <form onSubmit={submitRegistration} className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4">
+            <form onSubmit={submitRegistration} className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5 space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-white">Новая регистрация МЧС</h3>
+                <h3 className="text-lg font-semibold text-[var(--text-primary)]">Новая регистрация МЧС</h3>
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="min-h-[44px] min-w-[44px] p-2 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+                  className="min-h-[44px] min-w-[44px] p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -447,7 +447,7 @@ export function MchsRegistrationPanel() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <label htmlFor="mchs-booking-id" className="block">
-                  <span className="text-sm text-white/80">ID бронирования</span>
+                  <span className="text-sm text-[var(--text-secondary)]">ID бронирования</span>
                   <input
                     id="mchs-booking-id"
                     value={formState.bookingId}
@@ -459,7 +459,7 @@ export function MchsRegistrationPanel() {
                 </label>
 
                 <label htmlFor="mchs-route" className="block md:col-span-2">
-                  <span className="text-sm text-white/80">Маршрут</span>
+                  <span className="text-sm text-[var(--text-secondary)]">Маршрут</span>
                   <textarea
                     id="mchs-route"
                     value={formState.route}
@@ -471,7 +471,7 @@ export function MchsRegistrationPanel() {
                 </label>
 
                 <label htmlFor="mchs-start-date" className="block">
-                  <span className="text-sm text-white/80">Дата начала</span>
+                  <span className="text-sm text-[var(--text-secondary)]">Дата начала</span>
                   <input
                     id="mchs-start-date"
                     type="date"
@@ -483,7 +483,7 @@ export function MchsRegistrationPanel() {
                 </label>
 
                 <label htmlFor="mchs-end-date" className="block">
-                  <span className="text-sm text-white/80">Дата окончания</span>
+                  <span className="text-sm text-[var(--text-secondary)]">Дата окончания</span>
                   <input
                     id="mchs-end-date"
                     type="date"
@@ -495,7 +495,7 @@ export function MchsRegistrationPanel() {
                 </label>
 
                 <label htmlFor="mchs-guide-name" className="block">
-                  <span className="text-sm text-white/80">Контакт гида (ФИО)</span>
+                  <span className="text-sm text-[var(--text-secondary)]">Контакт гида (ФИО)</span>
                   <input
                     id="mchs-guide-name"
                     value={formState.guideName}
@@ -506,7 +506,7 @@ export function MchsRegistrationPanel() {
                 </label>
 
                 <label htmlFor="mchs-guide-phone" className="block">
-                  <span className="text-sm text-white/80">Телефон гида</span>
+                  <span className="text-sm text-[var(--text-secondary)]">Телефон гида</span>
                   <input
                     id="mchs-guide-phone"
                     value={formState.guidePhone}
@@ -521,13 +521,13 @@ export function MchsRegistrationPanel() {
               {/* Динамический список участников группы */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-semibold text-white/80">
+                  <h4 className="text-sm font-semibold text-[var(--text-secondary)]">
                     Состав группы ({validMembers.length} участников)
                   </h4>
                   <button
                     type="button"
                     onClick={addMember}
-                    className="min-h-[44px] min-w-[44px] px-3 py-2 rounded-xl bg-white/10 border border-white/20 text-white text-sm inline-flex items-center gap-1 hover:bg-white/15 transition-colors"
+                    className="min-h-[44px] min-w-[44px] px-3 py-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-primary)] text-sm inline-flex items-center gap-1 hover:bg-[var(--bg-hover)] transition-colors"
                   >
                     <Plus className="w-4 h-4" />
                     Добавить
@@ -559,7 +559,7 @@ export function MchsRegistrationPanel() {
                       <button
                         type="button"
                         onClick={() => removeMember(idx)}
-                        className="min-h-[44px] min-w-[44px] p-2 rounded-xl text-red-400 hover:bg-red-600/20 transition-colors self-end"
+                        className="min-h-[44px] min-w-[44px] p-2 rounded-xl text-[var(--danger)] hover:bg-red-600/20 transition-colors self-end"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -571,13 +571,13 @@ export function MchsRegistrationPanel() {
               {/* Динамический список экстренных контактов */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-semibold text-white/80">
+                  <h4 className="text-sm font-semibold text-[var(--text-secondary)]">
                     Экстренные контакты ({validEmergencyContacts.length})
                   </h4>
                   <button
                     type="button"
                     onClick={addEmergencyContact}
-                    className="min-h-[44px] min-w-[44px] px-3 py-2 rounded-xl bg-white/10 border border-white/20 text-white text-sm inline-flex items-center gap-1 hover:bg-white/15 transition-colors"
+                    className="min-h-[44px] min-w-[44px] px-3 py-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-primary)] text-sm inline-flex items-center gap-1 hover:bg-[var(--bg-hover)] transition-colors"
                   >
                     <Plus className="w-4 h-4" />
                     Добавить
@@ -609,7 +609,7 @@ export function MchsRegistrationPanel() {
                       <button
                         type="button"
                         onClick={() => removeEmergencyContact(idx)}
-                        className="min-h-[44px] min-w-[44px] p-2 rounded-xl text-red-400 hover:bg-red-600/20 transition-colors self-end"
+                        className="min-h-[44px] min-w-[44px] p-2 rounded-xl text-[var(--danger)] hover:bg-red-600/20 transition-colors self-end"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -634,7 +634,7 @@ export function MchsRegistrationPanel() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="min-h-[44px] min-w-[44px] px-4 py-2 rounded-xl bg-premium-gold text-premium-black font-medium inline-flex items-center gap-2 disabled:opacity-60 hover:bg-premium-gold/80 transition-colors"
+                className="min-h-[44px] min-w-[44px] px-4 py-2 rounded-xl bg-[var(--accent)] text-[var(--text-primary)] font-medium inline-flex items-center gap-2 disabled:opacity-60 hover:bg-[var(--accent)]/80 transition-colors"
               >
                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 Отправить в МЧС
@@ -644,7 +644,7 @@ export function MchsRegistrationPanel() {
 
           {/* Список регистраций */}
           <div className="space-y-3">
-            <h3 className="text-lg font-semibold text-white inline-flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-[var(--text-primary)] inline-flex items-center gap-2">
               <ClipboardList className="w-5 h-5" />
               Регистрации
             </h3>
@@ -656,34 +656,34 @@ export function MchsRegistrationPanel() {
             )}
 
             {registrations.length === 0 ? (
-              <p className="text-white/60 text-sm">Пока нет регистраций.</p>
+              <p className="text-[var(--text-muted)] text-sm">Пока нет регистраций.</p>
             ) : (
               <div className="space-y-2">
                 {registrations.map(item => (
                   <div
                     key={item.id}
-                    className="bg-white/10 border border-white/15 rounded-xl p-4 flex flex-col gap-2"
+                    className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-4 flex flex-col gap-2"
                   >
                     <div className="flex items-center justify-between gap-3">
-                      <p className="text-white font-medium truncate">
+                      <p className="text-[var(--text-primary)] font-medium truncate">
                         Бронирование: {item.bookingId.slice(0, 8)}...
                       </p>
                       <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${getStatusClasses(item.status)}`}>
                         {getStatusLabel(item.status)}
                       </span>
                     </div>
-                    <p className="text-white/70 text-sm line-clamp-2">{item.route}</p>
-                    <p className="text-xs text-white/50">
+                    <p className="text-[var(--text-muted)] text-sm line-clamp-2">{item.route}</p>
+                    <p className="text-xs text-[var(--text-muted)]">
                       {formatDate(item.startDate)} -- {formatDate(item.endDate)} | создано: {formatDate(item.createdAt)}
                     </p>
                     {item.mchsReference && (
-                      <p className="text-xs text-cyber-cyan">Ref: {item.mchsReference}</p>
+                      <p className="text-xs text-[var(--accent)]">Ref: {item.mchsReference}</p>
                     )}
                     <div>
                       <button
                         type="button"
                         onClick={() => loadDetails(item.id)}
-                        className="min-h-[44px] min-w-[44px] px-3 py-2 rounded-xl bg-white/10 border border-white/20 text-white text-sm inline-flex items-center gap-2 hover:bg-white/15 transition-colors"
+                        className="min-h-[44px] min-w-[44px] px-3 py-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-primary)] text-sm inline-flex items-center gap-2 hover:bg-[var(--bg-hover)] transition-colors"
                       >
                         {detailsLoading ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
@@ -700,40 +700,40 @@ export function MchsRegistrationPanel() {
 
             {/* Панель деталей */}
             {selectedDetails && (
-              <div className="bg-white/10 border border-white/20 rounded-xl p-4 space-y-3">
+              <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-4 space-y-3">
                 <div className="flex items-center justify-between gap-3">
-                  <h4 className="text-base font-semibold text-white">
+                  <h4 className="text-base font-semibold text-[var(--text-primary)]">
                     Детали регистрации
                   </h4>
                   <span className={`text-xs px-2 py-1 rounded-full ${getStatusClasses(selectedDetails.status)}`}>
                     {getStatusLabel(selectedDetails.status)}
                   </span>
                 </div>
-                <p className="text-sm text-white/80">
+                <p className="text-sm text-[var(--text-secondary)]">
                   Бронирование: {selectedDetails.bookingId}
                 </p>
-                <p className="text-sm text-white/70">{selectedDetails.route}</p>
-                <p className="text-xs text-white/60">
+                <p className="text-sm text-[var(--text-muted)]">{selectedDetails.route}</p>
+                <p className="text-xs text-[var(--text-muted)]">
                   {formatDate(selectedDetails.startDate)} -- {formatDate(selectedDetails.endDate)}
                 </p>
-                <p className="text-xs text-white/60">
+                <p className="text-xs text-[var(--text-muted)]">
                   Участников: {selectedDetails.groupComposition.length} |
                   Экстренных контактов: {selectedDetails.emergencyContacts.length}
                 </p>
                 {selectedDetails.guideContacts && (
-                  <p className="text-xs text-white/60">
+                  <p className="text-xs text-[var(--text-muted)]">
                     Гид: {selectedDetails.guideContacts.name}, {selectedDetails.guideContacts.phone}
                   </p>
                 )}
                 {selectedDetails.mchsReference && (
-                  <p className="text-xs text-cyber-cyan">
+                  <p className="text-xs text-[var(--accent)]">
                     МЧС Ref: {selectedDetails.mchsReference}
                   </p>
                 )}
                 <button
                   type="button"
                   onClick={() => setSelectedDetails(null)}
-                  className="min-h-[44px] min-w-[44px] px-3 py-2 rounded-xl bg-white/10 border border-white/20 text-white text-sm inline-flex items-center gap-2 hover:bg-white/15 transition-colors"
+                  className="min-h-[44px] min-w-[44px] px-3 py-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-primary)] text-sm inline-flex items-center gap-2 hover:bg-[var(--bg-hover)] transition-colors"
                 >
                   <X className="w-4 h-4" />
                   Закрыть

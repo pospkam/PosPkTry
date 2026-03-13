@@ -83,7 +83,7 @@ export function AiAssistant() {
       onClick={handleClose}
     >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/60" />
 
       {/* Modal */}
       <div
@@ -114,7 +114,7 @@ export function AiAssistant() {
           <button
             type="submit"
             disabled={loading || !question.trim()}
-            className="p-2 rounded-lg bg-[var(--accent)] text-white hover:opacity-90 disabled:opacity-40 transition-opacity"
+            className="p-2 rounded-lg bg-[var(--accent)] text-[var(--text-primary)] hover:opacity-90 disabled:opacity-40 transition-opacity"
           >
             {loading ? (
               <Loader2 className="w-4 h-4 animate-spin" />

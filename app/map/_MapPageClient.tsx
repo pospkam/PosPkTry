@@ -93,17 +93,17 @@ export default function MapPageClient() {
   return (
     <div className="min-h-screen pb-24 md:pb-0">
       {/* Стандартный хедер */}
-      <header style={{ background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.15)', position: 'sticky', top: 0, zIndex: 50 }}>
+      <header className="bg-[var(--bg-card)] border-b border-[var(--border)] sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
             <Logo size={28} />
           </Link>
-          <h1 className="text-lg font-bold text-white hidden sm:block">Карта Камчатки</h1>
+          <h1 className="text-lg font-bold text-[var(--text-primary)] hidden sm:block">Карта Камчатки</h1>
           <div className="flex items-center gap-3">
-            <button onClick={toggleTheme} className="text-white/70 hover:text-white transition-colors" aria-label="Переключить тему">
+            <button onClick={toggleTheme} className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors" aria-label="Переключить тему">
               {isDark ? <Sun size={20} /> : <Moon size={20} />}
             </button>
-            <Link href="/profile" className="text-white/70 hover:text-white transition-colors" aria-label="Личный кабинет">
+            <Link href="/profile" className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors" aria-label="Личный кабинет">
               <User size={20} />
             </Link>
           </div>
@@ -119,13 +119,13 @@ export default function MapPageClient() {
               onClick={() => setActiveFilter(filter.id)}
               className={`px-4 py-2 rounded-xl font-medium transition-all text-sm whitespace-nowrap ${
                 activeFilter === filter.id
-                  ? 'bg-cyber-cyan text-premium-black shadow-[0_0_12px_rgba(0,212,255,0.3)]'
-                  : 'bg-white/10 text-white/80 hover:bg-white/20'
+                  ? 'bg-[var(--accent)] text-[var(--bg-card)] shadow-[0_0_12px_rgba(0,212,255,0.3)]'
+                  : 'bg-[var(--bg-card)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]'
               }`}
             >
               {filter.name}
               <span className={`ml-1.5 text-xs ${
-                activeFilter === filter.id ? 'text-premium-black/60' : 'text-white/50'
+                activeFilter === filter.id ? 'text-[var(--bg-card)]/60' : 'text-[var(--text-muted)]'
               }`}>
                 ({loading ? '…' : countFor(filter.id)})
               </span>
@@ -136,7 +136,7 @@ export default function MapPageClient() {
 
       {/* Карта */}
       <div className="px-4 pb-4">
-        <div className="relative rounded-2xl overflow-hidden border border-white/20">
+        <div className="relative rounded-lg overflow-hidden border border-[var(--border)]">
           <YandexMap
             center={[53.0444, 158.6483]}
             zoom={8}
@@ -146,11 +146,11 @@ export default function MapPageClient() {
           />
 
           {/* Счётчик точек */}
-          <div className="absolute bottom-4 left-4 z-40 bg-black/60 backdrop-blur-md rounded-xl px-4 py-2 border border-white/20">
-            <p className="text-sm text-white/70">
+          <div className="absolute bottom-4 left-4 z-40 bg-black/60 rounded-xl px-4 py-2 border border-[var(--border)]">
+            <p className="text-sm text-[var(--text-muted)]">
               {loading
                 ? 'Загрузка маршрутов...'
-                : <><span>Показано точек: </span><span className="font-bold text-cyber-cyan">{filteredMarkers.length}</span></>
+                : <><span>Показано точек: </span><span className="font-bold text-[var(--accent)]">{filteredMarkers.length}</span></>
               }
             </p>
           </div>

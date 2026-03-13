@@ -106,8 +106,8 @@ export function EmailTemplatesManager() {
       header: 'Название',
       render: (template: EmailTemplate) => (
         <div>
-          <div className="font-medium text-white">{template.name}</div>
-          <div className="text-white/60 text-sm">{template.subject}</div>
+          <div className="font-medium text-[var(--text-primary)]">{template.name}</div>
+          <div className="text-[var(--text-muted)] text-sm">{template.subject}</div>
         </div>
       )
     },
@@ -115,7 +115,7 @@ export function EmailTemplatesManager() {
       key: 'type',
       header: 'Тип',
       render: (template: EmailTemplate) => (
-        <div className="capitalize text-premium-gold font-medium">
+        <div className="capitalize text-[var(--accent)] font-medium">
           {template.type === 'bookingConfirmation' ? 'Подтверждение бронирования' :
            template.type === 'paymentConfirmation' ? 'Подтверждение оплаты' :
            template.type === 'tourReminder' ? 'Напоминание о туре' :
@@ -138,7 +138,7 @@ export function EmailTemplatesManager() {
       key: 'updatedAt',
       header: 'Обновлено',
       render: (template: EmailTemplate) => (
-        <div className="text-white/70 text-sm">
+        <div className="text-[var(--text-muted)] text-sm">
           {new Date(template.updatedAt).toLocaleDateString('ru-RU')}
         </div>
       )
@@ -150,7 +150,7 @@ export function EmailTemplatesManager() {
         <div className="flex gap-2">
           <button
             onClick={() => setEditingTemplate(template)}
-            className="px-3 py-1 bg-cyber-cyan/20 hover:bg-cyber-cyan/30 text-cyber-cyan rounded text-sm transition-colors"
+            className="px-3 py-1 bg-[var(--accent)]/20 hover:bg-[var(--accent)]/30 text-[var(--accent)] rounded text-sm transition-colors"
           >
             Изменить
           </button>
@@ -175,7 +175,7 @@ export function EmailTemplatesManager() {
 
   if (error) {
     return (
-      <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-6 text-center">
+      <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-6 text-center">
         <p className="text-red-400 mb-4">Ошибка загрузки шаблонов</p>
         <button
           onClick={fetchTemplates}
@@ -191,17 +191,17 @@ export function EmailTemplatesManager() {
     <div className="space-y-6">
       {/* Заголовок */}
       <div className="flex justify-between items-center">
-        <h3 className="text-xl font-bold text-white">Email шаблоны</h3>
+        <h3 className="text-xl font-bold text-[var(--text-primary)]">Email шаблоны</h3>
         <button
           onClick={() => setShowCreateForm(true)}
-          className="px-6 py-2 bg-premium-gold hover:bg-premium-gold/80 text-premium-black font-bold rounded-lg transition-colors"
+          className="px-6 py-2 bg-[var(--accent)] hover:bg-[var(--accent)]/80 text-[var(--text-primary)] font-bold rounded-lg transition-colors"
         >
           Создать шаблон
         </button>
       </div>
 
       {/* Таблица шаблонов */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
         <DataTable
           data={templates}
           columns={columns}
@@ -276,35 +276,35 @@ function EmailTemplateForm({ template, onSave, onCancel }: EmailTemplateFormProp
   };
 
   return (
-    <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-      <h4 className="text-lg font-semibold text-white mb-6">
+    <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
+      <h4 className="text-lg font-semibold text-[var(--text-primary)] mb-6">
         {template ? 'Редактирование шаблона' : 'Создание шаблона'}
       </h4>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label htmlFor="template-name" className="block text-white font-medium mb-2">
+            <label htmlFor="template-name" className="block text-[var(--text-primary)] font-medium mb-2">
               Название <span className="text-red-400">*</span>
             </label>
             <input
               id="template-name"
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+              className="w-full px-3 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
               required
             />
           </div>
 
           <div>
-            <label htmlFor="template-type" className="block text-white font-medium mb-2">
+            <label htmlFor="template-type" className="block text-[var(--text-primary)] font-medium mb-2">
               Тип <span className="text-red-400">*</span>
             </label>
             <select
               id="template-type"
               value={formData.type}
               onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value }))}
-              className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+              className="w-full px-3 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
             >
               <option value="bookingConfirmation">Подтверждение бронирования</option>
               <option value="paymentConfirmation">Подтверждение оплаты</option>
@@ -318,20 +318,20 @@ function EmailTemplateForm({ template, onSave, onCancel }: EmailTemplateFormProp
         </div>
 
         <div>
-          <label htmlFor="template-subject" className="block text-white font-medium mb-2">
+          <label htmlFor="template-subject" className="block text-[var(--text-primary)] font-medium mb-2">
             Тема письма <span className="text-red-400">*</span>
           </label>
           <input
             id="template-subject"
             value={formData.subject}
             onChange={(e) => setFormData(prev => ({ ...prev, subject: e.target.value }))}
-            className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+            className="w-full px-3 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
             required
           />
         </div>
 
         <div>
-          <label htmlFor="template-html" className="block text-white font-medium mb-2">
+          <label htmlFor="template-html" className="block text-[var(--text-primary)] font-medium mb-2">
             HTML контент <span className="text-red-400">*</span>
           </label>
           <textarea
@@ -339,14 +339,14 @@ function EmailTemplateForm({ template, onSave, onCancel }: EmailTemplateFormProp
             value={formData.htmlContent}
             onChange={(e) => setFormData(prev => ({ ...prev, htmlContent: e.target.value }))}
             rows={10}
-            className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold resize-none font-mono text-sm"
+            className="w-full px-3 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] resize-none font-mono text-sm"
             placeholder="<h1>Привет!</h1>"
             required
           />
         </div>
 
         <div>
-          <label htmlFor="template-text" className="block text-white font-medium mb-2">
+          <label htmlFor="template-text" className="block text-[var(--text-primary)] font-medium mb-2">
             Text версия (опционально)
           </label>
           <textarea
@@ -354,13 +354,13 @@ function EmailTemplateForm({ template, onSave, onCancel }: EmailTemplateFormProp
             value={formData.textContent}
             onChange={(e) => setFormData(prev => ({ ...prev, textContent: e.target.value }))}
             rows={5}
-            className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold resize-none font-mono text-sm"
+            className="w-full px-3 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] resize-none font-mono text-sm"
             placeholder="Привет!"
           />
         </div>
 
         <div>
-          <label htmlFor="template-variable-input" className="block text-white font-medium mb-2">
+          <label htmlFor="template-variable-input" className="block text-[var(--text-primary)] font-medium mb-2">
             Переменные шаблона
           </label>
           <div className="flex gap-2 mb-3">
@@ -370,12 +370,12 @@ function EmailTemplateForm({ template, onSave, onCancel }: EmailTemplateFormProp
               value={newVariable}
               onChange={(e) => setNewVariable(e.target.value)}
               placeholder="Например: userName"
-              className="flex-1 px-3 py-2 bg-white/10 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+              className="flex-1 px-3 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
             />
             <button
               type="button"
               onClick={addVariable}
-              className="px-4 py-2 bg-premium-gold hover:bg-premium-gold/80 text-premium-black font-bold rounded-lg transition-colors"
+              className="px-4 py-2 bg-[var(--accent)] hover:bg-[var(--accent)]/80 text-[var(--text-primary)] font-bold rounded-lg transition-colors"
             >
               Добавить
             </button>
@@ -386,7 +386,7 @@ function EmailTemplateForm({ template, onSave, onCancel }: EmailTemplateFormProp
               {formData.variables.map(variable => (
                 <span
                   key={variable}
-                  className="inline-flex items-center gap-2 px-3 py-1 bg-premium-gold/20 text-premium-gold rounded-lg text-sm"
+                  className="inline-flex items-center gap-2 px-3 py-1 bg-[var(--accent)]/20 text-[var(--accent)] rounded-lg text-sm"
                 >
                   {variable}
                   <button
@@ -403,28 +403,28 @@ function EmailTemplateForm({ template, onSave, onCancel }: EmailTemplateFormProp
         </div>
 
         <div className="flex items-center gap-3">
-          <label className="flex items-center gap-2 text-white">
+          <label className="flex items-center gap-2 text-[var(--text-primary)]">
             <input
               type="checkbox"
               checked={formData.isActive}
               onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
-              className="rounded border-white/10 bg-white/10 text-premium-gold focus:ring-premium-gold"
+              className="rounded border-[var(--border)] bg-[var(--bg-card)] text-[var(--accent)] focus:ring-[var(--accent)]"
             />
             Активен
           </label>
         </div>
 
-        <div className="flex gap-3 pt-4 border-t border-white/10">
+        <div className="flex gap-3 pt-4 border-t border-[var(--border)]">
           <button
             type="submit"
-            className="px-6 py-2 bg-premium-gold hover:bg-premium-gold/80 text-premium-black font-bold rounded-lg transition-colors"
+            className="px-6 py-2 bg-[var(--accent)] hover:bg-[var(--accent)]/80 text-[var(--text-primary)] font-bold rounded-lg transition-colors"
           >
             {template ? 'Сохранить изменения' : 'Создать шаблон'}
           </button>
           <button
             type="button"
             onClick={onCancel}
-            className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
+            className="px-6 py-2 bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] text-[var(--text-primary)] rounded-lg transition-colors"
           >
             Отмена
           </button>

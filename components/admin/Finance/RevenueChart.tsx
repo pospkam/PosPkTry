@@ -53,7 +53,7 @@ export function RevenueChart({ period = '30', type = 'all' }: RevenueChartProps)
 
   if (error) {
     return (
-      <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-6 text-center">
+      <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-6 text-center">
         <p className="text-red-400 mb-4">Ошибка загрузки данных</p>
         <button
           onClick={fetchRevenueData}
@@ -70,15 +70,15 @@ export function RevenueChart({ period = '30', type = 'all' }: RevenueChartProps)
   const maxTransactions = Math.max(...dailyData.map(d => d.transactions));
 
   return (
-    <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-      <h3 className="text-xl font-bold text-white mb-6">Динамика доходов</h3>
+    <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
+      <h3 className="text-xl font-bold text-[var(--text-primary)] mb-6">Динамика доходов</h3>
 
       {dailyData.length === 0 ? (
         <div className="text-center py-20">
-          <p className="text-white/60 mb-4">Нет данных за выбранный период</p>
+          <p className="text-[var(--text-muted)] mb-4">Нет данных за выбранный период</p>
           <button
             onClick={fetchRevenueData}
-            className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
+            className="px-4 py-2 bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] text-[var(--text-primary)] rounded-lg transition-colors"
           >
             Обновить
           </button>
@@ -88,12 +88,12 @@ export function RevenueChart({ period = '30', type = 'all' }: RevenueChartProps)
           {/* Легенда */}
           <div className="flex items-center gap-6 text-sm">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-premium-gold rounded"></div>
-              <span className="text-white/70">Доход (₽)</span>
+              <div className="w-3 h-3 bg-[var(--accent)] rounded"></div>
+              <span className="text-[var(--text-muted)]">Доход (₽)</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-blue-500 rounded"></div>
-              <span className="text-white/70">Транзакции</span>
+              <span className="text-[var(--text-muted)]">Транзакции</span>
             </div>
           </div>
 
@@ -105,7 +105,7 @@ export function RevenueChart({ period = '30', type = 'all' }: RevenueChartProps)
                   {/* Столбец дохода */}
                   <div className="relative w-full flex flex-col items-center">
                     <div
-                      className="w-full bg-premium-gold rounded-t transition-all duration-300 hover:opacity-80"
+                      className="w-full bg-[var(--accent)] rounded-t transition-all duration-300 hover:opacity-80"
                       style={{
                         height: maxRevenue > 0 ? `${(day.revenue / maxRevenue) * 100}%` : '0%',
                         minHeight: day.revenue > 0 ? '4px' : '0px'
@@ -124,7 +124,7 @@ export function RevenueChart({ period = '30', type = 'all' }: RevenueChartProps)
                   </div>
 
                   {/* Дата */}
-                  <span className="text-xs text-white/60 mt-2 transform -rotate-45 origin-top-left">
+                  <span className="text-xs text-[var(--text-muted)] mt-2 transform -rotate-45 origin-top-left">
                     {new Date(day.date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' })}
                   </span>
                 </div>
@@ -136,10 +136,10 @@ export function RevenueChart({ period = '30', type = 'all' }: RevenueChartProps)
               {[0, 25, 50, 75, 100].map((percent) => (
                 <div
                   key={percent}
-                  className="absolute w-full border-t border-white/10"
+                  className="absolute w-full border-t border-[var(--border)]"
                   style={{ bottom: `${percent}%` }}
                 >
-                  <span className="absolute -left-8 -top-2 text-xs text-white/40">
+                  <span className="absolute -left-8 -top-2 text-xs text-[var(--text-muted)]">
                     {percent === 0 ? '0' : `${Math.round(maxRevenue * percent / 100).toLocaleString('ru-RU')}₽`}
                   </span>
                 </div>
@@ -148,18 +148,18 @@ export function RevenueChart({ period = '30', type = 'all' }: RevenueChartProps)
           </div>
 
           {/* Сводка */}
-          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
+          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[var(--border)]">
             <div className="text-center">
-              <p className="text-2xl font-bold text-premium-gold">
+              <p className="text-2xl font-bold text-[var(--accent)]">
                 {dailyData.reduce((sum, day) => sum + day.revenue, 0).toLocaleString('ru-RU')} ₽
               </p>
-              <p className="text-white/60 text-sm">Общий доход</p>
+              <p className="text-[var(--text-muted)] text-sm">Общий доход</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-cyber-cyan">
+              <p className="text-2xl font-bold text-[var(--accent)]">
                 {dailyData.reduce((sum, day) => sum + day.transactions, 0)}
               </p>
-              <p className="text-white/60 text-sm">Всего транзакций</p>
+              <p className="text-[var(--text-muted)] text-sm">Всего транзакций</p>
             </div>
           </div>
         </div>

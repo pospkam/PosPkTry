@@ -25,26 +25,26 @@ export function ShoppingCart({ items, onUpdateQuantity, onRemove, onCheckout }: 
 
   if (items.length === 0) {
     return (
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-12 text-center">
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-12 text-center">
         <div className="text-6xl mb-4"></div>
-        <p className="text-white/70 text-lg">Корзина пуста</p>
-        <p className="text-white/50 text-sm mt-2">Добавьте товары из каталога</p>
+        <p className="text-[var(--text-secondary)] text-lg">Корзина пуста</p>
+        <p className="text-[var(--text-muted)] text-sm mt-2">Добавьте товары из каталога</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+    <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
       <h2 className="text-2xl font-bold mb-6">Корзина ({totalItems})</h2>
 
       <div className="space-y-4 mb-6">
         {items.map((item) => (
           <div
             key={item.id}
-            className="bg-white/5 border border-white/10 rounded-xl p-4 flex gap-4"
+            className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-4 flex gap-4"
           >
             {/* Image */}
-            <div className="w-20 h-20 bg-white/10 rounded-lg flex-shrink-0">
+            <div className="w-20 h-20 bg-[var(--bg-card)] rounded-lg flex-shrink-0">
               {item.imageUrl ? (
                 <Image
                   src={item.imageUrl}
@@ -63,7 +63,7 @@ export function ShoppingCart({ items, onUpdateQuantity, onRemove, onCheckout }: 
             {/* Info */}
             <div className="flex-1">
               <h3 className="font-semibold mb-1">{item.name}</h3>
-              <p className="text-premium-gold font-bold">
+              <p className="text-[var(--accent)] font-bold">
                 {item.price.toLocaleString('ru-RU')} ₽
               </p>
             </div>
@@ -72,14 +72,14 @@ export function ShoppingCart({ items, onUpdateQuantity, onRemove, onCheckout }: 
             <div className="flex items-center gap-3">
               <button
                 onClick={() => onUpdateQuantity(item.id, Math.max(1, item.quantity - 1))}
-                className="w-8 h-8 bg-white/10 hover:bg-white/20 rounded-lg font-bold transition-colors"
+                className="w-8 h-8 bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] rounded-lg font-bold transition-colors"
               >
                 −
               </button>
               <span className="w-8 text-center font-bold">{item.quantity}</span>
               <button
                 onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
-                className="w-8 h-8 bg-white/10 hover:bg-white/20 rounded-lg font-bold transition-colors"
+                className="w-8 h-8 bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] rounded-lg font-bold transition-colors"
               >
                 +
               </button>
@@ -98,14 +98,14 @@ export function ShoppingCart({ items, onUpdateQuantity, onRemove, onCheckout }: 
       </div>
 
       {/* Total */}
-      <div className="bg-gradient-to-r from-premium-gold/20 to-premium-gold/10 border border-premium-gold/30 rounded-xl p-6 mb-6">
+      <div className="bg-[var(--bg-hover)] border border-[var(--border)] rounded-xl p-6 mb-6">
         <div className="flex justify-between items-center">
           <span className="text-xl font-bold">Итого:</span>
-          <span className="text-3xl font-black text-premium-gold">
+          <span className="text-3xl font-bold text-[var(--accent)]">
             {totalPrice.toLocaleString('ru-RU')} ₽
           </span>
         </div>
-        <p className="text-white/50 text-sm mt-2">
+        <p className="text-[var(--text-muted)] text-sm mt-2">
           {totalItems} {totalItems === 1 ? 'товар' : totalItems < 5 ? 'товара' : 'товаров'}
         </p>
       </div>
@@ -113,7 +113,7 @@ export function ShoppingCart({ items, onUpdateQuantity, onRemove, onCheckout }: 
       {/* Checkout Button */}
       <button
         onClick={onCheckout}
-        className="w-full px-8 py-4 bg-premium-gold hover:bg-premium-gold/80 text-premium-black font-bold rounded-xl transition-colors text-lg"
+        className="w-full px-8 py-4 bg-[var(--accent)] hover:bg-[var(--accent)]/80 text-[var(--bg-primary)] font-bold rounded-xl transition-colors text-lg"
       >
         Оформить заказ
       </button>

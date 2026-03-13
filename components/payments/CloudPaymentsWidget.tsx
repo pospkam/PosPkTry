@@ -89,8 +89,8 @@ export function CloudPaymentsWidget({
   };
 
   const defaultClassName = `
-    w-full px-8 py-4 bg-premium-gold hover:bg-premium-gold/80 
-    text-premium-black font-bold rounded-xl transition-colors 
+    w-full px-8 py-4 bg-[var(--accent)] hover:opacity-90
+    text-[var(--bg-primary)] font-bold rounded-lg transition-all
     disabled:opacity-50 disabled:cursor-not-allowed text-lg
     flex items-center justify-center
   `;

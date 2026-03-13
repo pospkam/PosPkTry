@@ -152,11 +152,11 @@ export function GearBookingForm({ gear, onBookingComplete, onCancel }: GearBooki
   };
 
   return (
-    <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+    <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
       <div className="flex items-center gap-4 mb-6">
         <button
           onClick={onCancel}
-          className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+          className="p-2 hover:bg-[var(--bg-hover)] rounded-lg transition-colors"
         >
           ←
         </button>
@@ -168,20 +168,20 @@ export function GearBookingForm({ gear, onBookingComplete, onCancel }: GearBooki
         <div>
           <h3 className="text-xl font-bold mb-4">Выбранное снаряжение</h3>
 
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+          <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-4">
             <div className="flex gap-4 mb-4">
-              <div className="w-20 h-20 bg-white/10 rounded-lg flex-shrink-0">
+              <div className="w-20 h-20 bg-[var(--bg-card)] rounded-lg flex-shrink-0">
                 {gear.imageUrl ? (
                   <Image src={gear.imageUrl} alt={gear.name} fill className="object-cover rounded-lg" sizes="80px" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center"><Backpack className="w-10 h-10 text-white/50" /></div>
+                  <div className="w-full h-full flex items-center justify-center"><Backpack className="w-10 h-10 text-[var(--text-muted)]" /></div>
                 )}
               </div>
 
               <div className="flex-1">
                 <h4 className="font-bold text-lg">{gear.name}</h4>
-                <p className="text-white/70 text-sm">{gear.category}</p>
-                {gear.size && <p className="text-premium-gold text-sm">Размер: {gear.size}</p>}
+                <p className="text-[var(--text-muted)] text-sm">{gear.category}</p>
+                {gear.size && <p className="text-[var(--accent)] text-sm">Размер: {gear.size}</p>}
                 <p className={`text-sm ${
                   gear.condition === 'new' ? 'text-green-400' :
                   gear.condition === 'good' ? 'text-yellow-400' : 'text-orange-400'
@@ -197,12 +197,12 @@ export function GearBookingForm({ gear, onBookingComplete, onCancel }: GearBooki
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span>Цена за день:</span>
-                <span className="text-premium-gold">{gear.pricePerDay.toLocaleString('ru-RU')} ₽</span>
+                <span className="text-[var(--accent)]">{gear.pricePerDay.toLocaleString('ru-RU')} ₽</span>
               </div>
               {gear.pricePerWeek && (
                 <div className="flex justify-between">
                   <span>Цена за неделю:</span>
-                  <span className="text-premium-gold">{gear.pricePerWeek.toLocaleString('ru-RU')} ₽</span>
+                  <span className="text-[var(--accent)]">{gear.pricePerWeek.toLocaleString('ru-RU')} ₽</span>
                 </div>
               )}
               <div className="flex justify-between">
@@ -224,8 +224,8 @@ export function GearBookingForm({ gear, onBookingComplete, onCancel }: GearBooki
                 id="gear-booking-name"
                 value={form.name}
                 onChange={(e) => updateForm('name', e.target.value)}
-                className={`w-full px-4 py-3 bg-white/10 border rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold ${
-                  errors.name ? 'border-red-500' : 'border-white/20'
+                className={`w-full px-4 py-3 bg-[var(--bg-card)] border rounded-lg text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] ${
+                  errors.name ? 'border-red-500' : 'border-[var(--border)]'
                 }`}
                 placeholder="Введите ваше имя"
               />
@@ -238,8 +238,8 @@ export function GearBookingForm({ gear, onBookingComplete, onCancel }: GearBooki
                 id="gear-booking-email"
                 value={form.email}
                 onChange={(e) => updateForm('email', e.target.value)}
-                className={`w-full px-4 py-3 bg-white/10 border rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold ${
-                  errors.email ? 'border-red-500' : 'border-white/20'
+                className={`w-full px-4 py-3 bg-[var(--bg-card)] border rounded-lg text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] ${
+                  errors.email ? 'border-red-500' : 'border-[var(--border)]'
                 }`}
                 placeholder="example@email.com"
               />
@@ -252,8 +252,8 @@ export function GearBookingForm({ gear, onBookingComplete, onCancel }: GearBooki
                 id="gear-booking-phone"
                 value={form.phone}
                 onChange={(e) => updateForm('phone', e.target.value)}
-                className={`w-full px-4 py-3 bg-white/10 border rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold ${
-                  errors.phone ? 'border-red-500' : 'border-white/20'
+                className={`w-full px-4 py-3 bg-[var(--bg-card)] border rounded-lg text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] ${
+                  errors.phone ? 'border-red-500' : 'border-[var(--border)]'
                 }`}
                 placeholder="+7 (999) 123-45-67"
               />
@@ -268,8 +268,8 @@ export function GearBookingForm({ gear, onBookingComplete, onCancel }: GearBooki
                   value={form.startDate}
                   onChange={(e) => updateForm('startDate', e.target.value)}
                   min={new Date().toISOString().split('T')[0]}
-                  className={`w-full px-4 py-3 bg-white/10 border rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold ${
-                    errors.startDate ? 'border-red-500' : 'border-white/20'
+                  className={`w-full px-4 py-3 bg-[var(--bg-card)] border rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] ${
+                    errors.startDate ? 'border-red-500' : 'border-[var(--border)]'
                   }`}
                 />
                 {errors.startDate && <p className="text-red-400 text-sm mt-1">{errors.startDate}</p>}
@@ -282,8 +282,8 @@ export function GearBookingForm({ gear, onBookingComplete, onCancel }: GearBooki
                   value={form.endDate}
                   onChange={(e) => updateForm('endDate', e.target.value)}
                   min={form.startDate}
-                  className={`w-full px-4 py-3 bg-white/10 border rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold ${
-                    errors.endDate ? 'border-red-500' : 'border-white/20'
+                  className={`w-full px-4 py-3 bg-[var(--bg-card)] border rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] ${
+                    errors.endDate ? 'border-red-500' : 'border-[var(--border)]'
                   }`}
                 />
                 {errors.endDate && <p className="text-red-400 text-sm mt-1">{errors.endDate}</p>}
@@ -298,8 +298,8 @@ export function GearBookingForm({ gear, onBookingComplete, onCancel }: GearBooki
                 max={gear.availableQuantity}
                 value={form.quantity}
                 onChange={(e) => updateForm('quantity', parseInt(e.target.value) || 1)}
-                className={`w-full px-4 py-3 bg-white/10 border rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold ${
-                  errors.quantity ? 'border-red-500' : 'border-white/20'
+                className={`w-full px-4 py-3 bg-[var(--bg-card)] border rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] ${
+                  errors.quantity ? 'border-red-500' : 'border-[var(--border)]'
                 }`}
               />
               {errors.quantity && <p className="text-red-400 text-sm mt-1">{errors.quantity}</p>}
@@ -312,7 +312,7 @@ export function GearBookingForm({ gear, onBookingComplete, onCancel }: GearBooki
                   type="checkbox"
                   checked={form.insurance}
                   onChange={(e) => updateForm('insurance', e.target.checked)}
-                  className="text-premium-gold rounded"
+                  className="text-[var(--accent)] rounded"
                 />
                 <span>Добавить страховку (+10% от стоимости)</span>
               </label>
@@ -324,14 +324,14 @@ export function GearBookingForm({ gear, onBookingComplete, onCancel }: GearBooki
                 id="gear-comments"
                 value={form.comments}
                 onChange={(e) => updateForm('comments', e.target.value)}
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold resize-none"
+                className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] resize-none"
                 rows={3}
                 placeholder="Особые пожелания или требования"
               />
             </div>
 
             {/* Price Summary */}
-            <div className="bg-gradient-to-r from-premium-gold/20 to-premium-gold/10 border border-premium-gold/30 rounded-xl p-4">
+            <div className="bg-[var(--accent)]/10 border border-[var(--accent)]/20 rounded-lg p-4">
               <h4 className="font-bold mb-3">Расчет стоимости</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
@@ -352,10 +352,10 @@ export function GearBookingForm({ gear, onBookingComplete, onCancel }: GearBooki
                   <span>Количество:</span>
                   <span>{form.quantity} шт.</span>
                 </div>
-                <hr className="border-white/20 my-2" />
+                <hr className="border-[var(--border)] my-2" />
                 <div className="flex justify-between text-lg font-bold">
                   <span>Итого:</span>
-                  <span className="text-premium-gold">{totalPrice.toLocaleString('ru-RU')} ₽</span>
+                  <span className="text-[var(--accent)]">{totalPrice.toLocaleString('ru-RU')} ₽</span>
                 </div>
               </div>
             </div>
@@ -363,7 +363,7 @@ export function GearBookingForm({ gear, onBookingComplete, onCancel }: GearBooki
             <button
               type="submit"
               disabled={loading}
-              className="w-full px-8 py-4 bg-premium-gold hover:bg-premium-gold/80 disabled:opacity-50 disabled:cursor-not-allowed text-premium-black font-bold rounded-xl transition-colors text-lg"
+              className="w-full px-8 py-4 bg-[var(--accent)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-[var(--bg-primary)] font-bold rounded-lg transition-colors text-lg"
             >
               {loading ? 'Создание заявки...' : `Забронировать за ${totalPrice.toLocaleString('ru-RU')} ₽`}
             </button>

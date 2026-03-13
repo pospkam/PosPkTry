@@ -70,11 +70,11 @@ export function DataTable<T extends { id: string | number }>({
 
   if (loading) {
     return (
-      <div className={clsx('bg-white/5 border border-white/10 rounded-2xl overflow-hidden', className)}>
+      <div className={clsx('bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden', className)}>
         <div className="animate-pulse">
-          <div className="h-12 bg-white/5 border-b border-white/10"></div>
+          <div className="h-12 bg-[var(--bg-card)] border-b border-[var(--border)]"></div>
           {[...Array(5)].map((_, loadIndex) => (
-            <div key={`loading-${loadIndex}`} className="h-16 bg-white/5 border-b border-white/5"></div>
+            <div key={`loading-${loadIndex}`} className="h-16 bg-[var(--bg-card)] border-b border-[var(--border)]"></div>
           ))}
         </div>
       </div>
@@ -84,37 +84,37 @@ export function DataTable<T extends { id: string | number }>({
   if (data.length === 0) {
     return (
       <div className={clsx(
-        'bg-white/5 border border-white/10 rounded-2xl p-12 text-center',
+        'bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-12 text-center',
         className
       )}>
-        <p className="text-white/70">{emptyMessage}</p>
+        <p className="text-[var(--text-muted)]">{emptyMessage}</p>
       </div>
     );
   }
 
   return (
     <div className={clsx(
-      'bg-white/5 border border-white/10 rounded-2xl overflow-hidden',
+      'bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden',
       className
     )}>
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="bg-white/5 border-b border-white/10">
+            <tr className="bg-[var(--bg-card)] border-b border-[var(--border)]">
               {columns.map((column) => (
                 <th
                   key={column.key}
                   onClick={() => handleSort(column.key, column.sortable)}
                   className={clsx(
-                    'px-6 py-4 text-left text-sm font-bold text-white/90',
-                    column.sortable && 'cursor-pointer hover:bg-white/5 transition-colors',
+                    'px-6 py-4 text-left text-sm font-bold text-[var(--text-secondary)]',
+                    column.sortable && 'cursor-pointer hover:bg-[var(--bg-hover)] transition-colors',
                     column.width
                   )}
                 >
                   <div className="flex items-center space-x-2">
                     <span>{column.header}</span>
                     {column.sortable && sortKey === column.key && (
-                      <span className="text-premium-gold">
+                      <span className="text-[var(--accent)]">
                         {sortDirection === 'asc' ? '↑' : '↓'}
                       </span>
                     )}
@@ -129,13 +129,13 @@ export function DataTable<T extends { id: string | number }>({
                 key={item.id}
                 onClick={() => onRowClick?.(item)}
                 className={clsx(
-                  'border-b border-white/5',
-                  onRowClick && 'cursor-pointer hover:bg-white/5 transition-colors',
-                  rowIndex % 2 === 0 ? 'bg-transparent' : 'bg-white/[0.02]'
+                  'border-b border-[var(--border)]',
+                  onRowClick && 'cursor-pointer hover:bg-[var(--bg-hover)] transition-colors',
+                  rowIndex % 2 === 0 ? 'bg-transparent' : ''
                 )}
               >
                 {columns.map((column) => (
-                  <td key={column.key} className="px-6 py-4 text-sm text-white/80">
+                  <td key={column.key} className="px-6 py-4 text-sm text-[var(--text-secondary)]">
                     {column.render
                       ? column.render(item)
                       : String((item as Record<string, unknown>)[column.key] ?? '-')}

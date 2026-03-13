@@ -39,26 +39,26 @@ export default async function ApiDocsPage() {
     <PageShell title="API Документация">
     <div className="bg-transparent">
       <div className="max-w-7xl mx-auto px-6 py-12">
-        <h1 className="text-4xl font-black text-white mb-4">API Documentation</h1>
-        <p className="text-white/70 text-lg mb-8">
+        <h1 className="text-4xl font-bold text-[var(--text-primary)] mb-4">API Documentation</h1>
+        <p className="text-[var(--text-muted)] text-lg mb-8">
           {spec?.info?.description || 'Kamhub API'}
         </p>
         
-        <div className="bg-white/10 backdrop-blur-xl border border-white/15 rounded-2xl p-6 mb-8">
-          <h2 className="text-2xl font-bold text-white mb-4">Endpoints</h2>
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6 mb-8">
+          <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-4">Endpoints</h2>
           <div className="grid gap-4">
             {(spec?.tags || []).map((tag: unknown) => (
-              <div key={(tag as { name: string }).name} className="border-l-4 border-premium-gold pl-4">
-                <h3 className="text-xl font-semibold text-white">{(tag as { name: string }).name}</h3>
-                <p className="text-white/60">{(tag as { description: string }).description}</p>
+              <div key={(tag as { name: string }).name} className="border-l-4 border-[var(--accent)] pl-4">
+                <h3 className="text-xl font-semibold text-[var(--text-primary)]">{(tag as { name: string }).name}</h3>
+                <p className="text-[var(--text-muted)]">{(tag as { description: string }).description}</p>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="bg-white/10 backdrop-blur-xl border border-white/15 rounded-2xl p-6">
-          <h2 className="text-2xl font-bold text-white mb-4">OpenAPI Spec</h2>
-          <pre className="text-white/70 text-sm overflow-auto max-h-96">
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
+          <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-4">OpenAPI Spec</h2>
+          <pre className="text-[var(--text-muted)] text-sm overflow-auto max-h-96">
             {JSON.stringify(spec, null, 2)}
           </pre>
         </div>

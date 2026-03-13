@@ -56,7 +56,7 @@ export function WeatherWidget({
 
   if (loading) {
     return (
-      <motion.div className={`glassmorphism p-4 ${className}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      <motion.div className={`bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4 ${className}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
         <div className="skeleton h-12 w-12 rounded-full mb-2 mx-auto"></div>
         <div className="skeleton h-8 w-20 mx-auto mb-4"></div>
         <div className="grid grid-cols-3 gap-2">
@@ -74,38 +74,38 @@ export function WeatherWidget({
   const size = compact ? '280px' : 'full';
 
   return (
-    <motion.div className={`glassmorphism p-6 ${className} ${hasAlert ? 'border-red-200 bg-red-50/50 animate-pulse' : ''}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+    <motion.div className={`${hasAlert ? 'bg-[var(--danger)]/10 border border-[var(--danger)]/30 animate-pulse' : 'bg-[var(--bg-card)] border border-[var(--border)]'} rounded-lg p-6 ${className}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       <div className="flex items-center gap-4 mb-4">
-        <Icon size={compact ? 32 : 48} className={hasAlert ? 'text-red-400' : 'text-cyber-cyan'} />
+        <Icon size={compact ? 32 : 48} className={hasAlert ? 'text-[var(--danger)]' : 'text-[var(--accent)]'} />
         <div>
-          <p className="text-3xl md:text-4xl font-bold text-white">{weather.temperature}°</p>
-          <p className="text-sm text-volcano capitalize">{weather.condition}</p>
+          <p className="text-3xl md:text-4xl font-bold text-[var(--text-primary)]">{weather.temperature}°</p>
+          <p className="text-sm text-[var(--text-secondary)] capitalize">{weather.condition}</p>
         </div>
       </div>
       {hasAlert && (
         <motion.div className="bg-red-500/20 border border-red-400/30 rounded-xl p-4 mb-4" animate={{ scale: [1, 1.02, 1] }} transition={{ repeat: Infinity, duration: 3 }}>
           <AlertTriangle size={20} className="text-red-600 inline mr-2" />
-          <span className="text-sm font-medium text-red-300">Штормовое предупреждение!</span>
+          <span className="text-sm font-medium text-[var(--danger)]">Штормовое предупреждение!</span>
         </motion.div>
       )}
       {!compact && (
         <>
           <div className="grid grid-cols-3 gap-4 mb-4 text-sm">
-            <div className="flex items-center gap-2 text-volcano">
+            <div className="flex items-center gap-2 text-[var(--text-secondary)]">
               <Droplets size={16} />
               {weather.humidity}%
             </div>
-            <div className="flex items-center gap-2 text-volcano">
+            <div className="flex items-center gap-2 text-[var(--text-secondary)]">
               <Wind size={16} />
               {weather.windSpeed} м/с
             </div>
-            <div className="text-volcano">{weather.visibility} км</div>
+            <div className="text-[var(--text-secondary)]">{weather.visibility} км</div>
           </div>
-          <div className="grid grid-cols-3 gap-4 pt-4 border-t border-white/20">
+          <div className="grid grid-cols-3 gap-4 pt-4 border-t border-[var(--border)]">
             {weather.forecast.slice(0, 3).map((day, i) => (
               <motion.div key={i} className="text-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.1 }}>
-                <p className="text-xs text-volcano">{new Date(day.date).toLocaleDateString('ru-RU', { weekday: 'short' })}</p>
-                <Sun size={20} className="mx-auto mb-1 text-cyber-cyan" />
+                <p className="text-xs text-[var(--text-secondary)]">{new Date(day.date).toLocaleDateString('ru-RU', { weekday: 'short' })}</p>
+                <Sun size={20} className="mx-auto mb-1 text-[var(--accent)]" />
                 <p className="font-semibold">{day.temperature.min}°–{day.temperature.max}°</p>
               </motion.div>
             ))}

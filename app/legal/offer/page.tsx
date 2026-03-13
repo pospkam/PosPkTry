@@ -10,20 +10,20 @@ export const metadata = {
 export default function OfferPage() {
   return (
     <PageShell title="Публичная оферта">
-    <main className="bg-transparent text-white py-12 px-4">
+    <main className="bg-transparent text-[var(--text-primary)] py-12 px-4">
       <div className="max-w-3xl mx-auto">
-        <Link href="/" className="inline-flex items-center text-premium-gold hover:text-premium-gold/80 mb-8">
+        <Link href="/" className="inline-flex items-center text-[var(--accent)] hover:text-[var(--accent)]/80 mb-8">
           <ChevronLeft className="w-5 h-5 mr-1" />
           На главную
         </Link>
 
         <h1 className="text-3xl font-bold mb-8">Договор-оферта для партнеров</h1>
         
-        <div className="prose prose-invert max-w-none space-y-6 text-white/80">
-          <p className="text-sm text-white/50">Редакция от 1 января 2025 г.</p>
+        <div className="prose prose-invert max-w-none space-y-6 text-[var(--text-secondary)]">
+          <p className="text-sm text-[var(--text-muted)]">Редакция от 1 января 2025 г.</p>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mt-8 mb-4">1. Предмет договора</h2>
+            <h2 className="text-xl font-semibold text-[var(--text-primary)] mt-8 mb-4">1. Предмет договора</h2>
             <p>
               ООО «КамХаб» (далее — Платформа) предлагает юридическим лицам и индивидуальным 
               предпринимателям (далее — Партнер) заключить настоящий договор на условиях, 
@@ -36,7 +36,7 @@ export default function OfferPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mt-8 mb-4">2. Акцепт оферты</h2>
+            <h2 className="text-xl font-semibold text-[var(--text-primary)] mt-8 mb-4">2. Акцепт оферты</h2>
             <p>
               Акцептом настоящей оферты является регистрация Партнера на Платформе и 
               проставление отметки о согласии с условиями договора.
@@ -47,7 +47,7 @@ export default function OfferPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mt-8 mb-4">3. Обязанности Платформы</h2>
+            <h2 className="text-xl font-semibold text-[var(--text-primary)] mt-8 mb-4">3. Обязанности Платформы</h2>
             <ul className="list-disc pl-6 space-y-2">
               <li>Размещение информации об услугах Партнера</li>
               <li>Обеспечение приема и обработки бронирований</li>
@@ -58,7 +58,7 @@ export default function OfferPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mt-8 mb-4">4. Обязанности Партнера</h2>
+            <h2 className="text-xl font-semibold text-[var(--text-primary)] mt-8 mb-4">4. Обязанности Партнера</h2>
             <ul className="list-disc pl-6 space-y-2">
               <li>Предоставление достоверной информации об услугах</li>
               <li>Своевременное обновление цен и наличия</li>
@@ -70,9 +70,9 @@ export default function OfferPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mt-8 mb-4">5. Комиссия платформы</h2>
-            <div className="bg-premium-gold/10 border border-premium-gold/30 rounded-xl p-4 my-4">
-              <p className="text-premium-gold font-semibold">
+            <h2 className="text-xl font-semibold text-[var(--text-primary)] mt-8 mb-4">5. Комиссия платформы</h2>
+            <div className="bg-[var(--accent)]/10 border border-[var(--accent)]/30 rounded-xl p-4 my-4">
+              <p className="text-[var(--accent)] font-semibold">
                 Комиссия Платформы составляет 10% от стоимости каждого бронирования.
               </p>
             </div>
@@ -86,7 +86,7 @@ export default function OfferPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mt-8 mb-4">6. Порядок расчетов</h2>
+            <h2 className="text-xl font-semibold text-[var(--text-primary)] mt-8 mb-4">6. Порядок расчетов</h2>
             <ul className="list-disc pl-6 space-y-2">
               <li>Клиент оплачивает бронирование через Платформу</li>
               <li>Средства поступают на счет Платформы</li>
@@ -97,7 +97,7 @@ export default function OfferPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mt-8 mb-4">7. Отмена бронирований</h2>
+            <h2 className="text-xl font-semibold text-[var(--text-primary)] mt-8 mb-4">7. Отмена бронирований</h2>
             <p>
               Политика отмены определяется Партнером при создании услуги. 
               Партнер обязан соблюдать заявленную политику отмены.
@@ -108,7 +108,7 @@ export default function OfferPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mt-8 mb-4">8. Ответственность</h2>
+            <h2 className="text-xl font-semibold text-[var(--text-primary)] mt-8 mb-4">8. Ответственность</h2>
             <p>
               Партнер несет полную ответственность за качество оказываемых услуг 
               и соответствие их описанию на Платформе.
@@ -119,7 +119,7 @@ export default function OfferPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mt-8 mb-4">9. Срок действия</h2>
+            <h2 className="text-xl font-semibold text-[var(--text-primary)] mt-8 mb-4">9. Срок действия</h2>
             <p>
               Договор действует бессрочно. Любая из сторон может расторгнуть договор, 
               уведомив другую сторону за 30 дней.
@@ -130,7 +130,7 @@ export default function OfferPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mt-8 mb-4">10. Реквизиты Платформы</h2>
+            <h2 className="text-xl font-semibold text-[var(--text-primary)] mt-8 mb-4">10. Реквизиты Платформы</h2>
             <p>
               ООО «КамХаб»<br />
               ИНН: 4101XXXXXX<br />

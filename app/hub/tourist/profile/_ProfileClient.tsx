@@ -63,7 +63,7 @@ export default function ProfileClient() {
             {/* Основная информация */}
             <form
               onSubmit={handleSaveProfile}
-              className="rounded-2xl border p-6 space-y-5"
+              className="rounded-lg border p-6 space-y-5"
               style={{
                 backgroundColor: 'var(--bg-card)',
                 borderColor: 'var(--border)',
@@ -149,7 +149,7 @@ export default function ProfileClient() {
             {/* Смена пароля */}
             <form
               onSubmit={handleChangePassword}
-              className="rounded-2xl border p-6 space-y-5"
+              className="rounded-lg border p-6 space-y-5"
               style={{
                 backgroundColor: 'var(--bg-card)',
                 borderColor: 'var(--border)',

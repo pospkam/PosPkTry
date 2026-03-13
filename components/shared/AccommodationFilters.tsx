@@ -101,13 +101,13 @@ export const AccommodationFilters: React.FC<AccommodationFiltersProps> = ({
     (filters.locationZone ? 1 : 0);
   
   return (
-    <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+    <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden">
       {/* Header */}
-      <div className="p-4 border-b border-white/10 flex items-center justify-between">
+      <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h3 className="text-lg font-bold text-white">Фильтры</h3>
+          <h3 className="text-lg font-bold text-[var(--text-primary)]">Фильтры</h3>
           {activeFiltersCount > 0 && (
-            <span className="px-2 py-1 bg-premium-gold/20 text-premium-gold text-xs font-bold rounded-full">
+            <span className="px-2 py-1 bg-[var(--accent)]/20 text-[var(--accent)] text-xs font-bold rounded-full">
               {activeFiltersCount}
             </span>
           )}
@@ -116,17 +116,17 @@ export const AccommodationFilters: React.FC<AccommodationFiltersProps> = ({
           {activeFiltersCount > 0 && (
             <button
               onClick={onReset}
-              className="text-sm text-white/60 hover:text-white transition-colors"
+              className="text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
             >
               Сбросить всё
             </button>
           )}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+            className="p-2 hover:bg-[var(--bg-hover)] rounded-lg transition-colors"
           >
             <svg
-              className={`w-5 h-5 text-white transition-transform ${isOpen ? 'rotate-180' : ''}`}
+              className={`w-5 h-5 text-[var(--text-primary)] transition-transform ${isOpen ? 'rotate-180' : ''}`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -142,7 +142,7 @@ export const AccommodationFilters: React.FC<AccommodationFiltersProps> = ({
         <div className="p-4 space-y-6">
           {/* Поиск */}
           <div>
-            <label htmlFor="accommodation-search" className="block text-sm font-medium text-white/80 mb-2">
+            <label htmlFor="accommodation-search" className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
               Поиск по названию
             </label>
             <input
@@ -151,10 +151,10 @@ export const AccommodationFilters: React.FC<AccommodationFiltersProps> = ({
               onChange={(e) => onFiltersChange({ ...filters, search: e.target.value })}
               placeholder="Название объекта..."
               className="
-                w-full px-4 py-2 rounded-xl
-                bg-white/5 border border-white/10
-                text-white placeholder-white/40
-                focus:outline-none focus:border-premium-gold/50
+                w-full px-4 py-2 rounded-lg
+                bg-[var(--bg-card)] border border-[var(--border)]
+                text-[var(--text-primary)] placeholder-[var(--text-muted)]
+                focus:outline-none focus:border-[var(--accent)]
                 transition-colors
               "
             />
@@ -162,7 +162,7 @@ export const AccommodationFilters: React.FC<AccommodationFiltersProps> = ({
           
           {/* Тип размещения */}
           <div>
-            <span className="block text-sm font-medium text-white/80 mb-3">
+            <span className="block text-sm font-medium text-[var(--text-secondary)] mb-3">
               Тип размещения
             </span>
             <div className="grid grid-cols-2 gap-2">
@@ -171,11 +171,11 @@ export const AccommodationFilters: React.FC<AccommodationFiltersProps> = ({
                   key={type.value}
                   onClick={() => handleTypeToggle(type.value)}
                   className={`
-                    px-3 py-2 rounded-xl text-sm font-medium transition-all
+                    px-3 py-2 rounded-lg text-sm font-medium transition-all
                     flex items-center gap-2
                     ${filters.type.includes(type.value)
-                      ? 'bg-premium-gold text-premium-black'
-                      : 'bg-white/5 text-white/80 hover:bg-white/10'}
+                      ? 'bg-[var(--accent)] text-[var(--bg-card)]'
+                      : 'bg-[var(--bg-card)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]'}
                   `}
                   aria-label={filters.type.includes(type.value) ? `Убрать фильтр: ${type.label}` : `Добавить фильтр: ${type.label}`}
                 >
@@ -188,7 +188,7 @@ export const AccommodationFilters: React.FC<AccommodationFiltersProps> = ({
           
           {/* Цена */}
           <div>
-            <span className="block text-sm font-medium text-white/80 mb-3">
+            <span className="block text-sm font-medium text-[var(--text-secondary)] mb-3">
               Цена за ночь
             </span>
             <div className="space-y-3">
@@ -200,23 +200,23 @@ export const AccommodationFilters: React.FC<AccommodationFiltersProps> = ({
                   onChange={(e) => handlePriceChange(Number(e.target.value), filters.priceMax)}
                   placeholder="От"
                   className="
-                    w-full px-3 py-2 rounded-xl
-                    bg-white/5 border border-white/10
-                    text-white placeholder-white/40
-                    focus:outline-none focus:border-premium-gold/50
+                    w-full px-3 py-2 rounded-lg
+                    bg-[var(--bg-card)] border border-[var(--border)]
+                    text-[var(--text-primary)] placeholder-[var(--text-muted)]
+                    focus:outline-none focus:border-[var(--accent)]
                   "
                 />
-                <span className="text-white/60">—</span>
+                <span className="text-[var(--text-muted)]">—</span>
                 <input
                   id="price-max"
                   type="number"
                   onChange={(e) => handlePriceChange(filters.priceMin, Number(e.target.value))}
                   placeholder="До"
                   className="
-                    w-full px-3 py-2 rounded-xl
-                    bg-white/5 border border-white/10
-                    text-white placeholder-white/40
-                    focus:outline-none focus:border-premium-gold/50
+                    w-full px-3 py-2 rounded-lg
+                    bg-[var(--bg-card)] border border-[var(--border)]
+                    text-[var(--text-primary)] placeholder-[var(--text-muted)]
+                    focus:outline-none focus:border-[var(--accent)]
                   "
                 />
               </div>
@@ -231,7 +231,7 @@ export const AccommodationFilters: React.FC<AccommodationFiltersProps> = ({
                   <button
                     key={option.max}
                     onClick={() => handlePriceChange(0, option.max)}
-                    className="px-3 py-1 rounded-lg text-xs bg-white/5 hover:bg-white/10 text-white/80 transition-colors"
+                    className="px-3 py-1 rounded-lg text-xs bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] transition-colors"
                   >
                     {option.label}
                   </button>
@@ -242,7 +242,7 @@ export const AccommodationFilters: React.FC<AccommodationFiltersProps> = ({
           
           {/* Рейтинг */}
           <div>
-            <span className="block text-sm font-medium text-white/80 mb-3">
+            <span className="block text-sm font-medium text-[var(--text-secondary)] mb-3">
               Минимальный рейтинг
             </span>
             <div className="flex gap-2">
@@ -251,10 +251,10 @@ export const AccommodationFilters: React.FC<AccommodationFiltersProps> = ({
                   key={rating}
                   onClick={() => onFiltersChange({ ...filters, ratingMin: rating })}
                   className={`
-                    px-4 py-2 rounded-xl font-medium transition-all flex-1
+                    px-4 py-2 rounded-lg font-medium transition-all flex-1
                     ${filters.ratingMin === rating
-                      ? 'bg-premium-gold text-premium-black'
-                      : 'bg-white/5 text-white/80 hover:bg-white/10'}
+                      ? 'bg-[var(--accent)] text-[var(--bg-card)]'
+                      : 'bg-[var(--bg-card)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]'}
                   `}
                 >
                   {rating === 0 ? 'Любой' : `${rating}+`}
@@ -265,7 +265,7 @@ export const AccommodationFilters: React.FC<AccommodationFiltersProps> = ({
           
           {/* Расположение */}
           <div>
-            <label htmlFor="location-zone" className="block text-sm font-medium text-white/80 mb-3">
+            <label htmlFor="location-zone" className="block text-sm font-medium text-[var(--text-secondary)] mb-3">
               Расположение
             </label>
             <select
@@ -273,15 +273,15 @@ export const AccommodationFilters: React.FC<AccommodationFiltersProps> = ({
               value={filters.locationZone}
               onChange={(e) => onFiltersChange({ ...filters, locationZone: e.target.value })}
               className="
-                w-full px-4 py-2 rounded-xl
-                bg-white/5 border border-white/10
-                text-white
-                focus:outline-none focus:border-premium-gold/50
+                w-full px-4 py-2 rounded-lg
+                bg-[var(--bg-card)] border border-[var(--border)]
+                text-[var(--text-primary)]
+                focus:outline-none focus:border-[var(--accent)]
                 transition-colors
               "
             >
               {locationZones.map(zone => (
-                <option key={zone.value} value={zone.value} className="bg-premium-black">
+                <option key={zone.value} value={zone.value} className="bg-[var(--bg-primary)]">
                   {zone.label}
                 </option>
               ))}
@@ -290,7 +290,7 @@ export const AccommodationFilters: React.FC<AccommodationFiltersProps> = ({
           
           {/* Удобства */}
           <div>
-            <span className="block text-sm font-medium text-white/80 mb-3">
+            <span className="block text-sm font-medium text-[var(--text-secondary)] mb-3">
               Удобства
             </span>
             <div className="grid grid-cols-2 gap-2">
@@ -299,11 +299,11 @@ export const AccommodationFilters: React.FC<AccommodationFiltersProps> = ({
                   key={amenity.value}
                   onClick={() => handleAmenityToggle(amenity.value)}
                   className={`
-                    px-3 py-2 rounded-xl text-sm font-medium transition-all
+                    px-3 py-2 rounded-lg text-sm font-medium transition-all
                     flex items-center gap-2
                     ${filters.amenities.includes(amenity.value)
-                      ? 'bg-premium-gold text-premium-black'
-                      : 'bg-white/5 text-white/80 hover:bg-white/10'}
+                      ? 'bg-[var(--accent)] text-[var(--bg-card)]'
+                      : 'bg-[var(--bg-card)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]'}
                   `}
                   aria-label={filters.amenities.includes(amenity.value) ? `Убрать удобство: ${amenity.label}` : `Добавить удобство: ${amenity.label}`}
                 >
@@ -316,7 +316,7 @@ export const AccommodationFilters: React.FC<AccommodationFiltersProps> = ({
           
           {/* Сортировка */}
           <div>
-            <label htmlFor="sort-order" className="block text-sm font-medium text-white/80 mb-3">
+            <label htmlFor="sort-order" className="block text-sm font-medium text-[var(--text-secondary)] mb-3">
               Сортировать
             </label>
             <select
@@ -324,15 +324,15 @@ export const AccommodationFilters: React.FC<AccommodationFiltersProps> = ({
               value={filters.sort}
               onChange={(e) => onFiltersChange({ ...filters, sort: e.target.value })}
               className="
-                w-full px-4 py-2 rounded-xl
-                bg-white/5 border border-white/10
-                text-white
-                focus:outline-none focus:border-premium-gold/50
+                w-full px-4 py-2 rounded-lg
+                bg-[var(--bg-card)] border border-[var(--border)]
+                text-[var(--text-primary)]
+                focus:outline-none focus:border-[var(--accent)]
                 transition-colors
               "
             >
               {sortOptions.map(option => (
-                <option key={option.value} value={option.value} className="bg-premium-black">
+                <option key={option.value} value={option.value} className="bg-[var(--bg-primary)]">
                   {option.label}
                 </option>
               ))}

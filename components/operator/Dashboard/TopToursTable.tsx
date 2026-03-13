@@ -22,7 +22,7 @@ export function TopToursTable({ tours }: TopToursTableProps) {
       key: 'tourName',
       title: 'Название тура',
       render: (tour) => (
-        <span className="font-semibold text-white">{tour.tourName}</span>
+        <span className="font-semibold text-[var(--text-primary)]">{tour.tourName}</span>
       )
     },
     {
@@ -32,7 +32,7 @@ export function TopToursTable({ tours }: TopToursTableProps) {
       render: (tour) => (
         <div className="flex items-center">
           <span className="text-2xl mr-2"></span>
-          <span className="font-semibold text-white">{tour.bookingsCount}</span>
+          <span className="font-semibold text-[var(--text-primary)]">{tour.bookingsCount}</span>
         </div>
       )
     },
@@ -41,7 +41,7 @@ export function TopToursTable({ tours }: TopToursTableProps) {
       title: 'Выручка',
       sortable: true,
       render: (tour) => (
-        <span className="font-semibold text-premium-gold">
+        <span className="font-semibold text-[var(--accent)]">
           {formatCurrency(tour.revenue)}
         </span>
       )
@@ -52,9 +52,9 @@ export function TopToursTable({ tours }: TopToursTableProps) {
       sortable: true,
       render: (tour) => (
         <div className="flex items-center">
-          <span className="text-yellow-400 mr-1"></span>
-          <span className="text-white">{tour.averageRating.toFixed(1)}</span>
-          <span className="text-white/50 text-xs ml-1">
+          <span className="text-[var(--warning)] mr-1"></span>
+          <span className="text-[var(--text-primary)]">{tour.averageRating.toFixed(1)}</span>
+          <span className="text-[var(--text-muted)] text-xs ml-1">
             ({tour.reviewCount})
           </span>
         </div>
@@ -66,13 +66,13 @@ export function TopToursTable({ tours }: TopToursTableProps) {
       sortable: true,
       render: (tour) => (
         <div className="flex items-center">
-          <div className="w-full bg-white/10 rounded-full h-2 mr-2" style={{ width: '100px' }}>
+          <div className="w-full bg-[var(--bg-card)] rounded-full h-2 mr-2" style={{ width: '100px' }}>
             <div
-              className="bg-green-500 h-2 rounded-full"
+              className="bg-[var(--success)] h-2 rounded-full"
               style={{ width: `${tour.completionRate}%` }}
             />
           </div>
-          <span className="text-white/80 text-sm">{tour.completionRate.toFixed(0)}%</span>
+          <span className="text-[var(--text-secondary)] text-sm">{tour.completionRate.toFixed(0)}%</span>
         </div>
       )
     }

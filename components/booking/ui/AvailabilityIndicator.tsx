@@ -72,12 +72,12 @@ export const AvailabilityIndicator: React.FC<AvailabilityIndicatorProps> = ({
 
       {/* Текст */}
       {showText && (
-        <span className="text-sm text-white/70" aria-live="polite">{text}</span>
+        <span className="text-sm text-[var(--text-secondary)]" aria-live="polite">{text}</span>
       )}
 
       {/* Количество мест */}
       {showCount && (
-        <span className="text-sm text-white/70" aria-live="polite">
+        <span className="text-sm text-[var(--text-secondary)]" aria-live="polite">
           {available > 0 ? `${available} из ${total}` : 'Нет мест'}
         </span>
       )}

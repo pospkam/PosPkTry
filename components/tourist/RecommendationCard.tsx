@@ -19,13 +19,13 @@ const STRATEGY_BADGES: Record<RecommendationStrategy, { icon: React.ReactNode; c
 /** Скелетон загрузки */
 export function RecommendationCardSkeleton() {
   return (
-    <div className="rounded-2xl overflow-hidden bg-white/5 border border-white/10 animate-pulse">
-      <div className="h-40 bg-white/10" />
+    <div className="rounded-lg overflow-hidden bg-[var(--bg-card)] border border-[var(--border)] animate-pulse">
+      <div className="h-40 bg-[var(--bg-card)]" />
       <div className="p-4 space-y-2">
-        <div className="h-4 bg-white/10 rounded w-3/4" />
-        <div className="h-3 bg-white/10 rounded w-full" />
-        <div className="h-3 bg-white/10 rounded w-2/3" />
-        <div className="h-8 bg-white/10 rounded-xl mt-3" />
+        <div className="h-4 bg-[var(--bg-card)] rounded w-3/4" />
+        <div className="h-3 bg-[var(--bg-card)] rounded w-full" />
+        <div className="h-3 bg-[var(--bg-card)] rounded w-2/3" />
+        <div className="h-8 bg-[var(--bg-card)] rounded-lg mt-3" />
       </div>
     </div>
   );
@@ -57,16 +57,16 @@ export default function RecommendationCard({ tour, onCardClick }: Recommendation
       role="article"
       onClick={handleClick}
       className="
-        group relative rounded-2xl overflow-hidden
-        bg-white/10 border border-white/20
-        hover:border-premium-gold/50 hover:bg-white/10
+        group relative rounded-lg overflow-hidden
+        bg-[var(--bg-card)] border border-[var(--border)]
+        hover:border-[var(--accent)]/50 hover:bg-[var(--bg-hover)]
         cursor-pointer transition-all duration-300
-        hover:shadow-xl hover:shadow-premium-gold/10
+        hover:shadow-xl hover:shadow-[var(--accent)]/10
         hover:-translate-y-0.5
       "
     >
       {/* Фото */}
-      <div className="relative h-44 overflow-hidden bg-white/5">
+      <div className="relative h-44 overflow-hidden bg-[var(--bg-card)]">
         {mainImage ? (
           <Image
             src={mainImage}
@@ -84,7 +84,7 @@ export default function RecommendationCard({ tour, onCardClick }: Recommendation
 
         {/* Eco-баллы badge */}
         {tour.eco_points_reward && tour.eco_points_reward > 0 && (
-          <div className="absolute top-2 right-2 px-2 py-1 rounded-full bg-green-500/80 text-white text-xs font-semibold backdrop-blur-sm flex items-center gap-1">
+          <div className="absolute top-2 right-2 px-2 py-1 rounded-full bg-[var(--success)]/80 text-[var(--text-primary)] text-xs font-semibold flex items-center gap-1">
             <Leaf className="w-3 h-3" /> +{tour.eco_points_reward} эко
           </div>
         )}
@@ -96,32 +96,32 @@ export default function RecommendationCard({ tour, onCardClick }: Recommendation
         <div
           className={`
             inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
-            bg-gradient-to-r border backdrop-blur-sm mb-2
+            bg-gradient-to-r border mb-2
             ${badge.color}
           `}
         >
           <span>{badge.icon}</span>
-          <span className="text-white/80">{tour.strategyLabel}</span>
+          <span className="text-[var(--text-secondary)]">{tour.strategyLabel}</span>
         </div>
 
-        <h3 className="text-sm font-semibold text-white line-clamp-2 mb-1 group-hover:text-premium-gold transition-colors">
+        <h3 className="text-sm font-semibold text-[var(--text-primary)] line-clamp-2 mb-1 group-hover:text-[var(--accent)] transition-colors">
           {tour.title}
         </h3>
 
         {tour.description && (
-          <p className="text-xs text-white/50 line-clamp-2 mb-3">
+          <p className="text-xs text-[var(--text-muted)] line-clamp-2 mb-3">
             {tour.description}
           </p>
         )}
 
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs text-white/50">
+          <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
             {tour.duration && <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {tour.duration} дн.</span>}
             {tour.difficulty && (
               <span className="capitalize flex items-center gap-1">
                 <Circle className={`w-2.5 h-2.5 fill-current ${
-                  tour.difficulty === 'easy' ? 'text-green-400' :
-                  tour.difficulty === 'moderate' ? 'text-yellow-400' : 'text-red-400'
+                  tour.difficulty === 'easy' ? 'text-[var(--success)]' :
+                  tour.difficulty === 'moderate' ? 'text-[var(--warning)]' : 'text-[var(--danger)]'
                 }`} />
                 {tour.difficulty === 'easy'
                   ? 'лёгкий'
@@ -133,7 +133,7 @@ export default function RecommendationCard({ tour, onCardClick }: Recommendation
           </div>
 
           {tour.price && (
-            <span className="text-sm font-bold text-premium-gold">
+            <span className="text-sm font-bold text-[var(--accent)]">
               {tour.price.toLocaleString('ru-RU')} ₽
             </span>
           )}

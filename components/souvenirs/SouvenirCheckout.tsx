@@ -121,11 +121,11 @@ export function SouvenirCheckout({ items, onBack, onOrderComplete }: SouvenirChe
   };
 
   return (
-    <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+    <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
       <div className="flex items-center gap-4 mb-6">
         <button
           onClick={onBack}
-          className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+          className="p-2 hover:bg-[var(--bg-hover)] rounded-lg transition-colors"
         >
           ←
         </button>
@@ -139,9 +139,9 @@ export function SouvenirCheckout({ items, onBack, onOrderComplete }: SouvenirChe
 
           <div className="space-y-3 mb-6">
             {items.map((item) => (
-              <div key={item.id} className="bg-white/5 border border-white/10 rounded-lg p-4">
+              <div key={item.id} className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4">
                 <div className="flex gap-4">
-                  <div className="w-16 h-16 bg-white/10 rounded-lg flex-shrink-0">
+                  <div className="w-16 h-16 bg-[var(--bg-card)] rounded-lg flex-shrink-0">
                     {item.imageUrl ? (
                       <Image src={item.imageUrl} alt={item.name} fill className="object-cover rounded-lg" sizes="64px" />
                     ) : (
@@ -152,11 +152,11 @@ export function SouvenirCheckout({ items, onBack, onOrderComplete }: SouvenirChe
                   <div className="flex-1">
                     <h4 className="font-semibold">{item.name}</h4>
                     <div className="flex justify-between items-center mt-2">
-                      <span className="text-premium-gold font-bold">
+                      <span className="text-[var(--accent)] font-bold">
                         {item.price.toLocaleString('ru-RU')} ₽
                       </span>
-                      <span className="text-white/70">× {item.quantity}</span>
-                      <span className="text-premium-gold font-bold">
+                      <span className="text-[var(--text-muted)]">× {item.quantity}</span>
+                      <span className="text-[var(--accent)] font-bold">
                         {(item.price * item.quantity).toLocaleString('ru-RU')} ₽
                       </span>
                     </div>
@@ -166,14 +166,14 @@ export function SouvenirCheckout({ items, onBack, onOrderComplete }: SouvenirChe
             ))}
           </div>
 
-          <div className="bg-gradient-to-r from-premium-gold/20 to-premium-gold/10 border border-premium-gold/30 rounded-xl p-4">
+          <div className="bg-gradient-to-r from-[var(--accent)]/20 to-[var(--accent)]/10 border border-[var(--accent)]/30 rounded-lg p-4">
             <div className="flex justify-between items-center text-lg">
               <span className="font-bold">Итого:</span>
-              <span className="text-2xl font-black text-premium-gold">
+              <span className="text-2xl font-bold text-[var(--accent)]">
                 {totalPrice.toLocaleString('ru-RU')} ₽
               </span>
             </div>
-            <p className="text-white/50 text-sm mt-1">
+            <p className="text-[var(--text-muted)] text-sm mt-1">
               {totalItems} {totalItems === 1 ? 'товар' : totalItems < 5 ? 'товара' : 'товаров'}
             </p>
           </div>
@@ -190,8 +190,8 @@ export function SouvenirCheckout({ items, onBack, onOrderComplete }: SouvenirChe
                 id="checkout-name"
                 value={form.name}
                 onChange={(e) => updateForm('name', e.target.value)}
-                className={`w-full px-4 py-3 bg-white/10 border rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold ${
-                  errors.name ? 'border-red-500' : 'border-white/20'
+                className={`w-full px-4 py-3 bg-[var(--bg-card)] border rounded-lg text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] ${
+                  errors.name ? 'border-red-500' : 'border-[var(--border)]'
                 }`}
                 placeholder="Введите ваше имя"
               />
@@ -204,8 +204,8 @@ export function SouvenirCheckout({ items, onBack, onOrderComplete }: SouvenirChe
                 id="checkout-email"
                 value={form.email}
                 onChange={(e) => updateForm('email', e.target.value)}
-                className={`w-full px-4 py-3 bg-white/10 border rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold ${
-                  errors.email ? 'border-red-500' : 'border-white/20'
+                className={`w-full px-4 py-3 bg-[var(--bg-card)] border rounded-lg text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] ${
+                  errors.email ? 'border-red-500' : 'border-[var(--border)]'
                 }`}
                 placeholder="example@email.com"
               />
@@ -218,8 +218,8 @@ export function SouvenirCheckout({ items, onBack, onOrderComplete }: SouvenirChe
                 id="checkout-phone"
                 value={form.phone}
                 onChange={(e) => updateForm('phone', e.target.value)}
-                className={`w-full px-4 py-3 bg-white/10 border rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold ${
-                  errors.phone ? 'border-red-500' : 'border-white/20'
+                className={`w-full px-4 py-3 bg-[var(--bg-card)] border rounded-lg text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] ${
+                  errors.phone ? 'border-red-500' : 'border-[var(--border)]'
                 }`}
                 placeholder="+7 (999) 123-45-67"
               />
@@ -237,7 +237,7 @@ export function SouvenirCheckout({ items, onBack, onOrderComplete }: SouvenirChe
                     value="pickup"
                     checked={form.deliveryMethod === 'pickup'}
                     onChange={(e) => updateForm('deliveryMethod', e.target.value as 'pickup' | 'delivery')}
-                    className="text-premium-gold"
+                    className="text-[var(--accent)]"
                   />
                   <span>Самовывоз из офиса</span>
                 </label>
@@ -249,7 +249,7 @@ export function SouvenirCheckout({ items, onBack, onOrderComplete }: SouvenirChe
                     value="delivery"
                     checked={form.deliveryMethod === 'delivery'}
                     onChange={(e) => updateForm('deliveryMethod', e.target.value as 'pickup' | 'delivery')}
-                    className="text-premium-gold"
+                    className="text-[var(--accent)]"
                   />
                   <span>Доставка</span>
                 </label>
@@ -263,8 +263,8 @@ export function SouvenirCheckout({ items, onBack, onOrderComplete }: SouvenirChe
                   id="checkout-address"
                   value={form.address}
                   onChange={(e) => updateForm('address', e.target.value)}
-                  className={`w-full px-4 py-3 bg-white/10 border rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold resize-none ${
-                    errors.address ? 'border-red-500' : 'border-white/20'
+                  className={`w-full px-4 py-3 bg-[var(--bg-card)] border rounded-lg text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] resize-none ${
+                    errors.address ? 'border-red-500' : 'border-[var(--border)]'
                   }`}
                   rows={3}
                   placeholder="Укажите полный адрес доставки"
@@ -279,7 +279,7 @@ export function SouvenirCheckout({ items, onBack, onOrderComplete }: SouvenirChe
                 id="checkout-comments"
                 value={form.comments}
                 onChange={(e) => updateForm('comments', e.target.value)}
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold resize-none"
+                className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] resize-none"
                 rows={3}
                 placeholder="Особые пожелания или комментарии"
               />
@@ -288,7 +288,7 @@ export function SouvenirCheckout({ items, onBack, onOrderComplete }: SouvenirChe
             <button
               type="submit"
               disabled={loading}
-              className="w-full px-8 py-4 bg-premium-gold hover:bg-premium-gold/80 disabled:opacity-50 disabled:cursor-not-allowed text-premium-black font-bold rounded-xl transition-colors text-lg"
+              className="w-full px-8 py-4 bg-[var(--accent)] hover:bg-[var(--accent)]/80 disabled:opacity-50 disabled:cursor-not-allowed text-[var(--bg-primary)] font-bold rounded-lg transition-colors text-lg"
             >
               {loading ? 'Создание заказа...' : `Оформить заказ на ${totalPrice.toLocaleString('ru-RU')} ₽`}
             </button>

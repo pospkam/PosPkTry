@@ -24,7 +24,7 @@ export function EmptyState({
   return (
     <div className={clsx(
       'flex flex-col items-center justify-center py-12 px-6',
-      'bg-white/5 border border-white/10 rounded-2xl',
+      'bg-[var(--bg-card)] border border-[var(--border)] rounded-lg',
       className
     )}>
       {icon && (
@@ -32,14 +32,14 @@ export function EmptyState({
           {typeof icon === 'string' ? <span className="text-6xl">{icon}</span> : icon}
         </div>
       )}
-      <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
+      <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">{title}</h3>
       {description && (
-        <p className="text-white/70 text-center mb-6 max-w-md">{description}</p>
+        <p className="text-[var(--text-muted)] text-center mb-6 max-w-md">{description}</p>
       )}
       {action && (
         <button
           onClick={action.onClick}
-          className="px-6 py-3 bg-premium-gold text-premium-black rounded-xl font-bold hover:bg-premium-gold/90 transition-colors"
+          className="px-6 py-3 bg-[var(--accent)] text-[var(--bg-card)] rounded-lg font-bold hover:opacity-90 transition-colors"
         >
           {action.label}
         </button>

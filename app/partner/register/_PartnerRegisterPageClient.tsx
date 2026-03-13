@@ -703,7 +703,7 @@ export default function PartnerRegisterPageClient() {
             >
               {loading ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-[var(--border-strong)] border-t-white rounded-full animate-spin" />
                   Отправка...
                 </>
               ) : (

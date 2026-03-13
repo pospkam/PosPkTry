@@ -89,16 +89,16 @@ export const AccommodationCard: React.FC<AccommodationCardProps> = ({
     <Link href={`/hub/stay/${id}`}>
       <div
         className={`
-          bg-white/5 border border-white/10 rounded-2xl overflow-hidden
-          hover:border-premium-gold/50 transition-all duration-300
+          bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden
+          hover:border-[var(--accent)]/50 transition-all duration-300
           cursor-pointer group
-          ${isHovered ? 'transform scale-[1.02] shadow-2xl shadow-premium-gold/20' : ''}
+          ${isHovered ? 'transform scale-[1.02] shadow-2xl shadow-[var(--accent)]/20' : ''}
         `}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
         {/* Изображение */}
-        <div className="relative h-56 w-full overflow-hidden bg-white/5">
+        <div className="relative h-56 w-full overflow-hidden bg-[var(--bg-card)]">
           {!imgError ? (
             <Image
               src={mainImage}
@@ -109,7 +109,7 @@ export const AccommodationCard: React.FC<AccommodationCardProps> = ({
               onError={() => setImgError(true)}
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-white/50 text-6xl">
+            <div className="w-full h-full flex items-center justify-center text-[var(--text-muted)] text-6xl">
               
             </div>
           )}
@@ -118,11 +118,11 @@ export const AccommodationCard: React.FC<AccommodationCardProps> = ({
           <button
             onClick={handleFavoriteClick}
             className={`
-              absolute top-4 right-4 p-2 rounded-full backdrop-blur-sm
+              absolute top-4 right-4 p-2 rounded-full
               transition-all duration-200
-              ${isFavorite 
-                ? 'bg-red-500/90 text-white' 
-                : 'bg-black/30 text-white/70 hover:bg-black/50 hover:text-white'}
+              ${isFavorite
+                ? 'bg-red-500/90 text-[var(--text-primary)]'
+                : 'bg-black/30 text-[var(--text-muted)] hover:bg-black/50 hover:text-[var(--text-primary)]'}
             `}
             aria-label={isFavorite ? "Убрать из избранного" : "Добавить в избранное"}
           >
@@ -143,11 +143,11 @@ export const AccommodationCard: React.FC<AccommodationCardProps> = ({
           
           {/* Тип и звёзды */}
           <div className="absolute bottom-4 left-4 flex gap-2">
-            <span className="px-3 py-1 bg-black/70 backdrop-blur-sm rounded-full text-xs text-white/90 font-medium">
+            <span className="px-3 py-1 bg-black/70 rounded-full text-xs text-[var(--text-secondary)] font-medium">
               {typeLabels[type] || type}
             </span>
             {starRating && (
-              <span className="px-3 py-1 bg-black/70 backdrop-blur-sm rounded-full text-xs text-premium-gold font-medium">
+              <span className="px-3 py-1 bg-black/70 rounded-full text-xs text-[var(--accent)] font-medium">
                 {''.repeat(starRating)}
               </span>
             )}
@@ -158,16 +158,16 @@ export const AccommodationCard: React.FC<AccommodationCardProps> = ({
         <div className="p-5">
           {/* Название и адрес */}
           <div className="mb-3">
-            <h3 className="text-xl font-bold text-white mb-1 group-hover:text-premium-gold transition-colors line-clamp-1">
+            <h3 className="text-xl font-bold text-[var(--text-primary)] mb-1 group-hover:text-[var(--accent)] transition-colors line-clamp-1">
               {name}
             </h3>
-            <p className="text-sm text-white/60 line-clamp-1">
+            <p className="text-sm text-[var(--text-muted)] line-clamp-1">
                {address}
             </p>
           </div>
           
           {/* Описание */}
-          <p className="text-white/70 text-sm mb-4 line-clamp-2">
+          <p className="text-[var(--text-muted)] text-sm mb-4 line-clamp-2">
             {description}
           </p>
           
@@ -176,59 +176,59 @@ export const AccommodationCard: React.FC<AccommodationCardProps> = ({
             {displayAmenities.map((amenity) => (
               <span
                 key={amenity}
-                className="px-2 py-1 bg-white/5 rounded-lg text-xs text-white/80 flex items-center gap-1"
+                className="px-2 py-1 bg-[var(--bg-card)] rounded-lg text-xs text-[var(--text-secondary)] flex items-center gap-1"
               >
                 {amenityIcons[amenity]}
                 <span className="capitalize">{amenity}</span>
               </span>
             ))}
             {amenities.length > 4 && (
-              <span className="px-2 py-1 bg-white/5 rounded-lg text-xs text-white/60">
+              <span className="px-2 py-1 bg-[var(--bg-card)] rounded-lg text-xs text-[var(--text-muted)]">
                 +{amenities.length - 4}
               </span>
             )}
           </div>
           
           {/* Рейтинг и цена */}
-          <div className="flex items-center justify-between pt-4 border-t border-white/10">
+          <div className="flex items-center justify-between pt-4 border-t border-[var(--border)]">
             {/* Рейтинг */}
             <div className="flex items-center gap-2">
               {rating > 0 ? (
                 <>
-                  <div className="px-2 py-1 bg-premium-gold/20 rounded-lg">
-                    <span className="text-premium-gold font-bold">{rating.toFixed(1)}</span>
+                  <div className="px-2 py-1 bg-[var(--accent)]/20 rounded-lg">
+                    <span className="text-[var(--accent)] font-bold">{rating.toFixed(1)}</span>
                   </div>
-                  <div className="text-xs text-white/60" aria-label={`Количество отзывов: ${reviewCount}`}>
+                  <div className="text-xs text-[var(--text-muted)]" aria-label={`Количество отзывов: ${reviewCount}`}>
                     {reviewCount > 0 && (
                       <span>{reviewCount} отзыв{reviewCount % 10 === 1 && reviewCount !== 11 ? '' : reviewCount % 10 >= 2 && reviewCount % 10 <= 4 && (reviewCount < 10 || reviewCount > 20) ? 'а' : 'ов'}</span>
                     )}
                   </div>
                 </>
               ) : (
-                <span className="text-xs text-white/50">Пока нет отзывов</span>
+                <span className="text-xs text-[var(--text-muted)]">Пока нет отзывов</span>
               )}
             </div>
             
             {/* Цена */}
             <div className="text-right" aria-label={`Цена от ${pricePerNight.from} рублей за ночь`}>
-              <div className="text-xs text-white/60 mb-1">от</div>
+              <div className="text-xs text-[var(--text-muted)] mb-1">от</div>
               <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-black text-premium-gold">
+                <span className="text-2xl font-bold text-[var(--accent)]">
                   {pricePerNight.from.toLocaleString('ru-RU')}
                 </span>
-                <span className="text-sm text-white/70">₽</span>
+                <span className="text-sm text-[var(--text-muted)]">₽</span>
               </div>
-              <div className="text-xs text-white/50">за ночь</div>
+              <div className="text-xs text-[var(--text-muted)]">за ночь</div>
             </div>
           </div>
           
           {/* Кнопка бронирования */}
           <button
             className="
-              w-full mt-4 py-3 px-4 rounded-xl
-              bg-premium-gold text-premium-black font-bold
-              hover:bg-premium-gold/90 transition-all duration-200
-              hover:shadow-lg hover:shadow-premium-gold/30
+              w-full mt-4 py-3 px-4 rounded-lg
+              bg-[var(--accent)] text-[var(--bg-card)] font-bold
+              hover:bg-[var(--accent)]/90 transition-all duration-200
+              hover:shadow-lg hover:shadow-[var(--accent)]/30
               active:scale-95
             "
             onClick={(e) => {

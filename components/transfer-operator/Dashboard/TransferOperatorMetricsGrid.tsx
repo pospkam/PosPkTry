@@ -60,19 +60,19 @@ export function TransferOperatorMetricsGrid({ period = '30', metrics: metricsPro
       label: 'Всего бронирований',
       value: metrics.totalBookings,
       icon: Calendar,
-      color: 'text-premium-gold'
+      color: 'text-[var(--accent)]'
     },
     {
       label: 'Активные',
       value: metrics.activeBookings,
       icon: Car,
-      color: 'text-premium-gold'
+      color: 'text-[var(--accent)]'
     },
     {
       label: 'Доступно водителей',
       value: metrics.availableDrivers,
       icon: Users,
-      color: 'text-green-400'
+      color: 'text-[var(--success)]'
     },
     {
       label: 'Активные маршруты',
@@ -84,13 +84,13 @@ export function TransferOperatorMetricsGrid({ period = '30', metrics: metricsPro
       label: 'Завершено',
       value: metrics.completedTransfers,
       icon: CheckCircle,
-      color: 'text-green-400'
+      color: 'text-[var(--success)]'
     },
     {
       label: 'Общий доход',
       value: `${metrics.totalRevenue.toLocaleString('ru-RU')} ₽`,
       icon: DollarSign,
-      color: 'text-premium-gold'
+      color: 'text-[var(--accent)]'
     },
   ];
 
@@ -100,10 +100,10 @@ export function TransferOperatorMetricsGrid({ period = '30', metrics: metricsPro
         {[...Array(6)].map((_, skeletonIdx) => (
           <div
             key={`skeleton-${skeletonIdx}`}
-            className="bg-white/5 border border-white/10 rounded-xl p-6 animate-pulse"
+            className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6 animate-pulse"
           >
-            <div className="h-12 bg-white/10 rounded mb-3"></div>
-            <div className="h-4 bg-white/10 rounded w-2/3"></div>
+            <div className="h-12 bg-[var(--bg-card)] rounded mb-3"></div>
+            <div className="h-4 bg-[var(--bg-card)] rounded w-2/3"></div>
           </div>
         ))}
       </div>
@@ -117,15 +117,15 @@ export function TransferOperatorMetricsGrid({ period = '30', metrics: metricsPro
         return (
           <div
             key={metric.label}
-            className="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-colors"
+            className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6 hover:bg-[var(--bg-hover)] transition-colors"
           >
             <div className="flex items-center justify-between mb-3">
-              <Icon className="w-8 h-8 text-white/50" />
-              <div className={`text-3xl font-black ${metric.color}`}>
+              <Icon className="w-8 h-8 text-[var(--text-muted)]" />
+              <div className={`text-3xl font-bold ${metric.color}`}>
                 {metric.value}
               </div>
             </div>
-            <div className="text-white/70 text-sm">{metric.label}</div>
+            <div className="text-[var(--text-muted)] text-sm">{metric.label}</div>
           </div>
         );
       })}

@@ -61,7 +61,7 @@ const TAG_LABELS: Record<string, string> = {
 
 function TagBadge({ tag }: { tag: string }) {
   return (
-    <span className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-white/10 border border-white/20 text-white/80 mr-1 mb-1">
+    <span className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-secondary)] mr-1 mb-1">
       {TAG_LABELS[tag] ?? tag}
     </span>
   );
@@ -96,11 +96,11 @@ export default function GenerateTagsButton({ tourId }: GenerateTagsButtonProps) 
   };
 
   return (
-    <div className="mt-6 p-4 rounded-2xl bg-white/5 border border-white/10">
+    <div className="mt-6 p-4 rounded-lg bg-[var(--bg-card)] border border-[var(--border)]">
       <div className="flex items-center justify-between mb-3">
         <div>
-          <h3 className="text-sm font-semibold text-white flex items-center gap-2"><Bot className="w-4 h-4" /> AI-теги фотографий</h3>
-          <p className="text-xs text-white/50 mt-0.5">
+          <h3 className="text-sm font-semibold text-[var(--text-primary)] flex items-center gap-2"><Bot className="w-4 h-4" /> AI-теги фотографий</h3>
+          <p className="text-xs text-[var(--text-muted)] mt-0.5">
             Автоматически определяет теги по фото тура
           </p>
         </div>
@@ -110,10 +110,10 @@ export default function GenerateTagsButton({ tourId }: GenerateTagsButtonProps) 
           aria-label="Сгенерировать AI-теги для фотографий тура"
           className="
             flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium
-            bg-gradient-to-r from-cyber-cyan/80 to-premium-gold/80
-            hover:from-cyber-cyan hover:to-premium-gold
+            bg-[var(--accent)]
+            hover:bg-[var(--accent)]/80
             disabled:opacity-50 disabled:cursor-not-allowed
-            text-premium-black transition-all duration-200
+            text-[var(--bg-primary)] transition-all duration-200
           "
         >
           {loading ? (
@@ -140,7 +140,7 @@ export default function GenerateTagsButton({ tourId }: GenerateTagsButtonProps) 
         <div className="mt-3 space-y-3">
           {tags.landscape.length > 0 && (
             <div>
-              <span className="text-xs text-white/40 uppercase tracking-wider">Пейзаж</span>
+              <span className="text-xs text-[var(--text-muted)] uppercase tracking-wider">Пейзаж</span>
               <div className="mt-1">
                 {tags.landscape.map((t) => <TagBadge key={t} tag={t} />)}
               </div>
@@ -148,21 +148,21 @@ export default function GenerateTagsButton({ tourId }: GenerateTagsButtonProps) 
           )}
           {tags.activity.length > 0 && (
             <div>
-              <span className="text-xs text-white/40 uppercase tracking-wider">Активности</span>
+              <span className="text-xs text-[var(--text-muted)] uppercase tracking-wider">Активности</span>
               <div className="mt-1">
                 {tags.activity.map((t) => <TagBadge key={t} tag={t} />)}
               </div>
             </div>
           )}
           <div>
-            <span className="text-xs text-white/40 uppercase tracking-wider">Сложность</span>
+            <span className="text-xs text-[var(--text-muted)] uppercase tracking-wider">Сложность</span>
             <div className="mt-1">
               <TagBadge tag={tags.difficulty} />
             </div>
           </div>
           {tags.season.length > 0 && (
             <div>
-              <span className="text-xs text-white/40 uppercase tracking-wider">Сезон</span>
+              <span className="text-xs text-[var(--text-muted)] uppercase tracking-wider">Сезон</span>
               <div className="mt-1">
                 {tags.season.map((t) => <TagBadge key={t} tag={t} />)}
               </div>
@@ -170,7 +170,7 @@ export default function GenerateTagsButton({ tourId }: GenerateTagsButtonProps) 
           )}
           {tags.features.length > 0 && (
             <div>
-              <span className="text-xs text-white/40 uppercase tracking-wider">Особенности</span>
+              <span className="text-xs text-[var(--text-muted)] uppercase tracking-wider">Особенности</span>
               <div className="mt-1">
                 {tags.features.map((t) => <TagBadge key={t} tag={t} />)}
               </div>

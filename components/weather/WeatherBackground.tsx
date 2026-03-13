@@ -89,17 +89,17 @@ export default function WeatherBackground() {
       {weather === 'wind' && <WindEffect />}
 
       {/* Индикатор времени и погоды - с реальными данными */}
-      <div className="fixed top-4 right-4 z-50 bg-black/30 backdrop-blur-xl rounded-xl sm:rounded-2xl px-4 py-3 sm:px-6 sm:py-4 border border-white/30 shadow-2xl">
+      <div className="fixed top-4 right-4 z-50 bg-[var(--bg-card)] rounded-lg sm:rounded-lg px-4 py-3 sm:px-6 sm:py-4 border border-[var(--border-strong)] shadow-2xl">
         {loading ? (
-          <div className="flex items-center gap-3 text-white">
-            <div className="animate-spin rounded-full h-6 w-6 border-2 border-white/30 border-t-white"></div>
+          <div className="flex items-center gap-3 text-[var(--text-primary)]">
+            <div className="animate-spin rounded-full h-6 w-6 border-2 border-[var(--border)] border-t-[var(--accent)]"></div>
             <span className="text-sm">Загрузка...</span>
           </div>
         ) : (
-          <div className="flex items-center gap-3 sm:gap-4 text-white">
+          <div className="flex items-center gap-3 sm:gap-4 text-[var(--text-primary)]">
             {/* Иконка погоды */}
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 flex items-center justify-center">
-              <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[var(--bg-hover)] flex items-center justify-center">
+              <svg className="w-6 h-6 sm:w-8 sm:h-8 text-[var(--text-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 {weather === 'snow' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />}
                 {weather === 'rain' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />}
                 {weather === 'wind' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />}
@@ -111,25 +111,25 @@ export default function WeatherBackground() {
             <div className="text-left">
               {/* Температура */}
               {temperature !== null && (
-                <div className="text-2xl sm:text-3xl font-black text-white drop-shadow-lg">
+                <div className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)] drop-shadow-lg">
                   {temperature > 0 ? '+' : ''}{temperature}°
                 </div>
               )}
               
               {/* Описание и время суток */}
               <div className="flex items-center gap-2 text-xs sm:text-sm">
-                <span className="font-semibold text-white/90 capitalize">
+                <span className="font-semibold text-[var(--text-secondary)] capitalize">
                   {getTimeLabel(timeOfDay)}
                 </span>
-                <span className="text-white/60">•</span>
-                <span className="text-white/80">
+                <span className="text-[var(--text-muted)]">•</span>
+                <span className="text-[var(--text-secondary)]">
                   {getWeatherLabel(weather)}
                 </span>
               </div>
               
               {/* Дополнительная информация */}
               {weatherData && (
-                <div className="text-xs text-white/60 mt-1 hidden sm:block">
+                <div className="text-xs text-[var(--text-muted)] mt-1 hidden sm:block">
                   Ветер: {weatherData.windSpeed} м/с • Влажность: {weatherData.humidity}%
                 </div>
               )}
@@ -163,7 +163,7 @@ function SnowEffect() {
       {snowflakes.map(flake => (
         <div
           key={flake.id}
-          className="absolute text-white animate-fall"
+          className="absolute text-[var(--text-primary)] animate-fall"
           style={{
             left: `${flake.left}%`,
             top: '-10px',
@@ -173,7 +173,7 @@ function SnowEffect() {
             opacity: 0.8
           }}
         >
-          <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="currentColor">
+          <svg className="w-3 h-3 text-[var(--text-primary)]" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 2L9 9L2 12L9 15L12 22L15 15L22 12L15 9L12 2Z" />
           </svg>
         </div>

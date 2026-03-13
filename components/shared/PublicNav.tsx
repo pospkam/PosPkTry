@@ -34,14 +34,14 @@ export function PublicNav() {
 
   return (
     <nav
-      className="bg-white/5 border-b border-white/10 sticky top-0 z-40"
+      className="bg-[var(--bg-card)] border-b border-[var(--border)] sticky top-0 z-40"
       aria-label="Главная навигация"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
 
           {/* Логотип */}
-          <Link href="/" className="text-2xl font-black text-premium-gold shrink-0">
+          <Link href="/" className="text-2xl font-bold text-[var(--accent)] shrink-0">
             KamHub
           </Link>
 
@@ -59,8 +59,8 @@ export function PublicNav() {
                   className={clsx(
                     'px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 text-sm',
                     isActive
-                      ? 'bg-premium-gold text-premium-black'
-                      : 'text-white/70 hover:bg-white/10 hover:text-white'
+                      ? 'bg-[var(--accent)] text-[var(--bg-card)]'
+                      : 'text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]'
                   )}
                 >
                   <Icon className="w-4 h-4" aria-hidden="true" />
@@ -74,13 +74,13 @@ export function PublicNav() {
           <div className="hidden md:flex items-center gap-3">
             <Link
               href="/auth/login"
-              className="px-4 py-2 text-white/70 hover:text-white transition-colors text-sm"
+              className="px-4 py-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors text-sm"
             >
               Войти
             </Link>
             <Link
               href="/auth/register"
-              className="px-4 py-2 bg-premium-gold hover:bg-premium-gold/80 text-premium-black rounded-lg transition-colors text-sm font-medium"
+              className="px-4 py-2 bg-[var(--accent)] hover:opacity-80 text-[var(--bg-card)] rounded-lg transition-colors text-sm font-medium"
             >
               Регистрация
             </Link>
@@ -89,7 +89,7 @@ export function PublicNav() {
           {/* Mobile: гамбургер */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 rounded-lg text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+            className="md:hidden p-2 rounded-lg text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] transition-colors"
             aria-label={isMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
             aria-expanded={isMenuOpen}
           >
@@ -103,7 +103,7 @@ export function PublicNav() {
 
       {/* Mobile: раскрывающееся меню */}
       {isMenuOpen && (
-        <div className="md:hidden border-t border-white/10 bg-white/5 backdrop-blur-sm px-4 py-3">
+        <div className="md:hidden border-t border-[var(--border)] bg-[var(--bg-card)] px-4 py-3">
           <div className="space-y-1 mb-3">
             {navItems.map((item) => {
               const isActive = pathname === item.path;
@@ -117,8 +117,8 @@ export function PublicNav() {
                   className={clsx(
                     'flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all',
                     isActive
-                      ? 'bg-premium-gold text-premium-black'
-                      : 'text-white/70 hover:bg-white/10 hover:text-white'
+                      ? 'bg-[var(--accent)] text-[var(--bg-card)]'
+                      : 'text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]'
                   )}
                 >
                   <Icon className="w-5 h-5 shrink-0" aria-hidden="true" />
@@ -127,18 +127,18 @@ export function PublicNav() {
               );
             })}
           </div>
-          <div className="flex gap-3 pt-3 border-t border-white/10">
+          <div className="flex gap-3 pt-3 border-t border-[var(--border)]">
             <Link
               href="/auth/login"
               onClick={() => setIsMenuOpen(false)}
-              className="flex-1 px-4 py-2 text-center text-white/70 hover:text-white border border-white/20 rounded-lg transition-colors text-sm"
+              className="flex-1 px-4 py-2 text-center text-[var(--text-muted)] hover:text-[var(--text-primary)] border border-[var(--border)] rounded-lg transition-colors text-sm"
             >
               Войти
             </Link>
             <Link
               href="/auth/register"
               onClick={() => setIsMenuOpen(false)}
-              className="flex-1 px-4 py-2 text-center bg-premium-gold hover:bg-premium-gold/80 text-premium-black rounded-lg transition-colors text-sm font-medium"
+              className="flex-1 px-4 py-2 text-center bg-[var(--accent)] hover:opacity-80 text-[var(--bg-card)] rounded-lg transition-colors text-sm font-medium"
             >
               Регистрация
             </Link>

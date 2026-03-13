@@ -202,14 +202,14 @@ export const StayDatePicker: React.FC<StayDatePickerProps> = ({
       {/* Выбранные даты */}
       <div className="mb-6 grid grid-cols-2 gap-4" aria-label="Выбранные даты">
         <div>
-          <span className="block text-sm text-white/70 mb-2">Заезд</span>
-          <div className="px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white">
+          <span className="block text-sm text-[var(--text-secondary)] mb-2">Заезд</span>
+          <div className="px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)]">
             {checkIn ? formatDisplayDate(checkIn) : 'Выберите дату'}
           </div>
         </div>
         <div>
-          <span className="block text-sm text-white/70 mb-2">Выезд</span>
-          <div className="px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white">
+          <span className="block text-sm text-[var(--text-secondary)] mb-2">Выезд</span>
+          <div className="px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)]">
             {checkOut ? formatDisplayDate(checkOut) : 'Выберите дату'}
           </div>
         </div>
@@ -230,7 +230,7 @@ export const StayDatePicker: React.FC<StayDatePickerProps> = ({
 
       {/* Минимум ночей */}
       {minNights > 1 && (
-        <div className="mt-4 text-sm text-white/70" aria-label="Минимальное количество ночей" aria-live="polite">
+        <div className="mt-4 text-sm text-[var(--text-secondary)]" aria-label="Минимальное количество ночей" aria-live="polite">
           ! Минимальное количество ночей: {minNights}
         </div>
       )}
@@ -277,8 +277,8 @@ export const StayDatePicker: React.FC<StayDatePickerProps> = ({
 
       {/* Проверка доступности */}
       {checking && (
-        <div className="mt-4 text-sm text-white/70 flex items-center gap-2">
-          <div className="w-4 h-4 border-2 border-white/20 border-t-premium-gold rounded-full animate-spin"></div>
+        <div className="mt-4 text-sm text-[var(--text-secondary)] flex items-center gap-2">
+          <div className="w-4 h-4 border-2 border-[var(--border)] border-t-[var(--accent)] rounded-full animate-spin"></div>
           <span>Проверяем доступность...</span>
         </div>
       )}

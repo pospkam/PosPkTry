@@ -147,14 +147,14 @@ export default function TourDetailsPageClient() {
   if (error || !tour) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6">
-        <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-8 text-center max-w-md">
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-8 text-center max-w-md">
           <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-red-400" />
-          <h2 className="text-xl font-bold text-white mb-2">
+          <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">
             {error || 'Тур не найден'}
           </h2>
           <button
             onClick={() => router.push('/tours')}
-            className="mt-4 px-6 py-3 bg-premium-gold hover:bg-premium-gold/80 text-premium-black font-bold rounded-xl transition-colors"
+            className="mt-4 px-6 py-3 bg-[var(--accent)] hover:bg-[var(--accent)]/80 text-[var(--bg-card)] font-bold rounded-xl transition-colors"
           >
             К списку туров
           </button>
@@ -168,47 +168,47 @@ export default function TourDetailsPageClient() {
   return (
     <div className="min-h-screen pb-24 md:pb-0">
       {/* Standard header */}
-      <header style={{ background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.15)', position: 'sticky', top: 0, zIndex: 50 }}>
+      <header className="bg-[var(--bg-card)] border-b border-[var(--border)] sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
             <Logo size={28} />
           </Link>
-          <h1 className="text-lg font-bold text-white hidden sm:block">Детали тура</h1>
+          <h1 className="text-lg font-bold text-[var(--text-primary)] hidden sm:block">Детали тура</h1>
           <div className="flex items-center gap-3">
-            <button onClick={toggleTheme} className="text-white/70 hover:text-white transition-colors" aria-label="Переключить тему">
+            <button onClick={toggleTheme} className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors" aria-label="Переключить тему">
               {isDark ? <Sun size={20} /> : <Moon size={20} />}
             </button>
-            <Link href="/profile" className="text-white/70 hover:text-white transition-colors" aria-label="Личный кабинет">
+            <Link href="/profile" className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors" aria-label="Личный кабинет">
               <User size={20} />
             </Link>
           </div>
         </div>
       </header>
 
-      <div className="text-white">
+      <div className="text-[var(--text-primary)]">
       {/* Шапка */}
-      <div className="bg-white/10 backdrop-blur-sm border-b border-white/15">
+      <div className="bg-[var(--bg-card)] border-b border-[var(--border)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-white/60 hover:text-white mb-4 transition-colors"
+            className="flex items-center gap-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] mb-4 transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
             Назад
           </button>
-          <h1 className="text-3xl sm:text-4xl font-black text-white mb-2">{tour.name}</h1>
-          <div className="flex flex-wrap items-center gap-4 text-white/70 text-sm">
+          <h1 className="text-3xl sm:text-4xl font-bold text-[var(--text-primary)] mb-2">{tour.name}</h1>
+          <div className="flex flex-wrap items-center gap-4 text-[var(--text-muted)] text-sm">
             <span className="flex items-center gap-1">
               <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-              <span className="text-white font-semibold">{tour.rating.toFixed(1)}</span>
+              <span className="text-[var(--text-primary)] font-semibold">{tour.rating.toFixed(1)}</span>
               <span>({tour.reviewCount} отзывов)</span>
             </span>
-            <span className={DIFFICULTY_COLOR[tour.difficulty] || 'text-white/70'}>
+            <span className={DIFFICULTY_COLOR[tour.difficulty] || 'text-[var(--text-muted)]'}>
               • {DIFFICULTY_LABEL[tour.difficulty] || tour.difficulty}
             </span>
             {tour.route && (
               <span className="flex items-center gap-1">
-                <MapPin className="w-4 h-4 text-premium-gold" />
+                <MapPin className="w-4 h-4 text-[var(--accent)]" />
                 {tour.route.title}
               </span>
             )}
@@ -220,7 +220,7 @@ export default function TourDetailsPageClient() {
         {/* Галерея */}
         <div className="grid grid-cols-4 gap-3 mb-8 h-72 sm:h-96">
           {/* Главное фото */}
-          <div className="col-span-4 md:col-span-2 relative rounded-2xl overflow-hidden bg-white/5">
+          <div className="col-span-4 md:col-span-2 relative rounded-lg overflow-hidden bg-[var(--bg-card)]">
             {heroImage ? (
               <Image
                 src={heroImage}
@@ -231,8 +231,8 @@ export default function TourDetailsPageClient() {
                 priority
               />
             ) : (
-              <div className="absolute inset-0 bg-gradient-to-br from-premium-gold/20 to-white/5 flex items-center justify-center">
-                <MapPin className="w-16 h-16 text-white/20" />
+              <div className="absolute inset-0 bg-[var(--bg-card)] flex items-center justify-center">
+                <MapPin className="w-16 h-16 text-[var(--text-muted)]" />
               </div>
             )}
           </div>
@@ -240,7 +240,7 @@ export default function TourDetailsPageClient() {
           {/* Дополнительные фото */}
           <div className="hidden md:grid col-span-2 grid-cols-2 gap-3">
             {tour.images.slice(1, 5).map((img, i) => (
-              <div key={i} className="relative rounded-xl overflow-hidden bg-white/5">
+              <div key={i} className="relative rounded-xl overflow-hidden bg-[var(--bg-card)]">
                 <Image
                   src={img}
                   alt={`${tour.name} — фото ${i + 2}`}
@@ -252,21 +252,21 @@ export default function TourDetailsPageClient() {
             ))}
             {/* Заглушки если меньше 4 дополнительных */}
             {Array.from({ length: Math.max(0, 4 - tour.images.slice(1, 5).length) }).map((_, i) => (
-              <div key={`placeholder-${i}`} className="rounded-xl bg-white/5" />
+              <div key={`placeholder-${i}`} className="rounded-xl bg-[var(--bg-card)]" />
             ))}
           </div>
         </div>
 
         {/* Вкладки */}
-        <div className="flex gap-1 mb-6 border-b border-white/15">
+        <div className="flex gap-1 mb-6 border-b border-[var(--border)]">
           {(['overview', 'reviews', 'booking'] as Tab[]).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`px-5 py-3 text-sm font-semibold transition-colors rounded-t-lg ${
                 activeTab === tab
-                  ? 'text-white border-b-2 border-premium-gold'
-                  : 'text-white/60 hover:text-white'
+                  ? 'text-[var(--text-primary)] border-b-2 border-[var(--accent)]'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
               }`}
             >
               {tab === 'overview' && 'Обзор'}
@@ -283,25 +283,25 @@ export default function TourDetailsPageClient() {
             {activeTab === 'overview' && (
               <>
                 {/* Описание */}
-                <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
+                <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
                   <h2 className="text-xl font-bold mb-3">Описание тура</h2>
-                  <p className="text-white/80 leading-relaxed whitespace-pre-line">{tour.description}</p>
+                  <p className="text-[var(--text-secondary)] leading-relaxed whitespace-pre-line">{tour.description}</p>
                 </div>
 
                 {/* Маршрут-баннер */}
                 {tour.route && (
-                  <div className="bg-premium-gold/10 border border-premium-gold/30 rounded-2xl p-5 flex items-start gap-4">
-                    <MapPin className="w-6 h-6 text-premium-gold shrink-0 mt-0.5" />
+                  <div className="bg-[var(--accent)]/10 border border-[var(--accent)]/30 rounded-lg p-5 flex items-start gap-4">
+                    <MapPin className="w-6 h-6 text-[var(--accent)] shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-premium-gold font-semibold text-sm uppercase tracking-wide mb-1">Маршрут</p>
-                      <p className="text-white font-bold text-lg">{tour.route.title}</p>
-                      <p className="text-white/60 text-sm capitalize">{tour.route.category}</p>
+                      <p className="text-[var(--accent)] font-semibold text-sm uppercase tracking-wide mb-1">Маршрут</p>
+                      <p className="text-[var(--text-primary)] font-bold text-lg">{tour.route.title}</p>
+                      <p className="text-[var(--text-muted)] text-sm capitalize">{tour.route.category}</p>
                       {tour.route.sourceUrl && (
                         <a
                           href={tour.route.sourceUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs text-premium-gold/70 hover:text-premium-gold mt-1 inline-block transition-colors"
+                          className="text-xs text-[var(--accent)]/70 hover:text-[var(--accent)] mt-1 inline-block transition-colors"
                         >
                           Подробнее о маршруте →
                         </a>
@@ -312,13 +312,13 @@ export default function TourDetailsPageClient() {
 
                 {/* Что включено */}
                 {tour.included.length > 0 && (
-                  <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
+                  <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
                     <h2 className="text-xl font-bold mb-4">Включено в тур</h2>
                     <ul className="space-y-2">
                       {tour.included.map((item, i) => (
                         <li key={i} className="flex items-start gap-2">
                           <Check className="w-4 h-4 text-green-400 shrink-0 mt-0.5" />
-                          <span className="text-white/80">{item}</span>
+                          <span className="text-[var(--text-secondary)]">{item}</span>
                         </li>
                       ))}
                     </ul>
@@ -327,13 +327,13 @@ export default function TourDetailsPageClient() {
 
                 {/* Не включено */}
                 {tour.notIncluded.length > 0 && (
-                  <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
+                  <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
                     <h2 className="text-xl font-bold mb-4">Не включено</h2>
                     <ul className="space-y-2">
                       {tour.notIncluded.map((item, i) => (
                         <li key={i} className="flex items-start gap-2">
                           <X className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-                          <span className="text-white/80">{item}</span>
+                          <span className="text-[var(--text-secondary)]">{item}</span>
                         </li>
                       ))}
                     </ul>
@@ -342,13 +342,13 @@ export default function TourDetailsPageClient() {
 
                 {/* Требования / снаряжение */}
                 {tour.requirements.length > 0 && (
-                  <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
+                  <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
                     <h2 className="text-xl font-bold mb-4">Что взять с собой</h2>
                     <ul className="space-y-2">
                       {tour.requirements.map((item, i) => (
                         <li key={i} className="flex items-start gap-2">
-                          <span className="text-premium-gold mt-0.5">•</span>
-                          <span className="text-white/80">{item}</span>
+                          <span className="text-[var(--accent)] mt-0.5">•</span>
+                          <span className="text-[var(--text-secondary)]">{item}</span>
                         </li>
                       ))}
                     </ul>
@@ -358,14 +358,14 @@ export default function TourDetailsPageClient() {
             )}
 
             {activeTab === 'reviews' && (
-              <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
+              <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
                 <h2 className="text-xl font-bold mb-6">Отзывы</h2>
                 {reviews.length === 0 ? (
-                  <p className="text-white/50 text-center py-8">Пока нет отзывов</p>
+                  <p className="text-[var(--text-muted)] text-center py-8">Пока нет отзывов</p>
                 ) : (
                   <div className="space-y-4">
                     {reviews.map(review => (
-                      <div key={review.id} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                      <div key={review.id} className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-4">
                         <div className="flex items-center justify-between mb-2">
                           <span className="flex text-yellow-400">
                             {Array.from({ length: 5 }).map((_, i) => (
@@ -376,7 +376,7 @@ export default function TourDetailsPageClient() {
                               />
                             ))}
                           </span>
-                          <span className="text-white/50 text-xs">
+                          <span className="text-[var(--text-muted)] text-xs">
                             {new Date(review.createdAt).toLocaleDateString('ru-RU')}
                           </span>
                         </div>
@@ -385,7 +385,7 @@ export default function TourDetailsPageClient() {
                             <Check className="w-3 h-3" /> Проверен
                           </span>
                         )}
-                        <p className="text-white/80 text-sm">{review.comment}</p>
+                        <p className="text-[var(--text-secondary)] text-sm">{review.comment}</p>
                       </div>
                     ))}
                   </div>
@@ -394,7 +394,7 @@ export default function TourDetailsPageClient() {
             )}
 
             {activeTab === 'booking' && (
-              <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
+              <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
                 <h2 className="text-xl font-bold mb-6">Забронировать тур</h2>
                 <TourBookingForm
                   tourId={tourId}
@@ -409,46 +409,46 @@ export default function TourDetailsPageClient() {
           {/* Сайдбар */}
           <div className="space-y-6">
             {/* Цена + CTA */}
-            <div className="bg-gradient-to-br from-premium-gold/20 to-premium-gold/10 border border-premium-gold/30 rounded-2xl p-6 sticky top-6">
+            <div className="bg-[var(--bg-card)] border border-[var(--accent)]/30 rounded-lg p-6 sticky top-6">
               <div className="text-center mb-5">
-                <p className="text-white/60 text-sm mb-1">от</p>
-                <p className="text-4xl font-black text-white">
+                <p className="text-[var(--text-muted)] text-sm mb-1">от</p>
+                <p className="text-4xl font-bold text-[var(--text-primary)]">
                   {tour.price.toLocaleString('ru-RU')} {tour.currency === 'RUB' ? '₽' : tour.currency}
                 </p>
-                <p className="text-white/50 text-sm mt-1">за человека</p>
+                <p className="text-[var(--text-muted)] text-sm mt-1">за человека</p>
               </div>
 
               <button
                 onClick={() => setActiveTab('booking')}
-                className="w-full px-6 py-4 bg-premium-gold hover:bg-premium-gold/80 text-premium-black font-bold rounded-xl transition-colors text-base"
+                className="w-full px-6 py-4 bg-[var(--accent)] hover:bg-[var(--accent)]/80 text-[var(--bg-card)] font-bold rounded-xl transition-colors text-base"
               >
                 Забронировать
               </button>
 
               {/* Параметры */}
-              <div className="mt-5 space-y-3 pt-5 border-t border-white/15">
+              <div className="mt-5 space-y-3 pt-5 border-t border-[var(--border)]">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-1.5 text-white/60">
+                  <span className="flex items-center gap-1.5 text-[var(--text-muted)]">
                     <Clock className="w-4 h-4" /> Длительность
                   </span>
-                  <span className="text-white font-semibold">{tour.duration} д.</span>
+                  <span className="text-[var(--text-primary)] font-semibold">{tour.duration} д.</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-white/60">Сложность</span>
+                  <span className="text-[var(--text-muted)]">Сложность</span>
                   <span className={`font-semibold ${DIFFICULTY_COLOR[tour.difficulty] || ''}`}>
                     {DIFFICULTY_LABEL[tour.difficulty] || tour.difficulty}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-1.5 text-white/60">
+                  <span className="flex items-center gap-1.5 text-[var(--text-muted)]">
                     <Users className="w-4 h-4" /> Группа
                   </span>
-                  <span className="text-white font-semibold">
+                  <span className="text-[var(--text-primary)] font-semibold">
                     {tour.minGroupSize}–{tour.maxGroupSize} чел.
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-white/60">Рейтинг</span>
+                  <span className="text-[var(--text-muted)]">Рейтинг</span>
                   <span className="flex items-center gap-1 text-yellow-400 font-semibold">
                     <Star className="w-4 h-4 fill-current" />
                     {tour.rating.toFixed(1)}
@@ -467,10 +467,10 @@ export default function TourDetailsPageClient() {
 
             {/* Оператор */}
             {tour.operator && (
-              <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
+              <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
                 <h3 className="text-base font-bold mb-4">Организатор</h3>
-                <p className="text-white font-semibold mb-1">{tour.operator.name}</p>
-                <p className="text-white/60 text-sm flex items-center gap-1 mb-4">
+                <p className="text-[var(--text-primary)] font-semibold mb-1">{tour.operator.name}</p>
+                <p className="text-[var(--text-muted)] text-sm flex items-center gap-1 mb-4">
                   <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
                   {tour.operator.rating.toFixed(1)}
                 </p>
@@ -478,18 +478,18 @@ export default function TourDetailsPageClient() {
                   {tour.operator.phone && (
                     <a
                       href={`tel:${tour.operator.phone}`}
-                      className="flex items-center gap-2 text-sm text-white/80 hover:text-white transition-colors"
+                      className="flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                     >
-                      <Phone className="w-4 h-4 text-premium-gold shrink-0" />
+                      <Phone className="w-4 h-4 text-[var(--accent)] shrink-0" />
                       {tour.operator.phone}
                     </a>
                   )}
                   {tour.operator.email && (
                     <a
                       href={`mailto:${tour.operator.email}`}
-                      className="flex items-center gap-2 text-sm text-white/80 hover:text-white transition-colors"
+                      className="flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                     >
-                      <Mail className="w-4 h-4 text-premium-gold shrink-0" />
+                      <Mail className="w-4 h-4 text-[var(--accent)] shrink-0" />
                       {tour.operator.email}
                     </a>
                   )}
@@ -498,7 +498,7 @@ export default function TourDetailsPageClient() {
             )}
 
             {/* Погода */}
-            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
+            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
               <h3 className="text-base font-bold mb-4">Погода на маршруте</h3>
               <WeatherWidget
                 lat={tour.route?.lat ?? undefined}

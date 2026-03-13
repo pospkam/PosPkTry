@@ -39,7 +39,7 @@ export function RecentBookingsTable({ bookings, onViewDetails }: RecentBookingsT
       title: 'ID',
       width: '100px',
       render: (booking) => (
-        <span className="text-white/60 font-mono text-xs">
+        <span className="text-[var(--text-muted)] font-mono text-xs">
           #{booking.id.substring(0, 8)}
         </span>
       )
@@ -49,8 +49,8 @@ export function RecentBookingsTable({ bookings, onViewDetails }: RecentBookingsT
       title: 'Тур',
       render: (booking) => (
         <div>
-          <p className="font-semibold text-white">{booking.tourName}</p>
-          <p className="text-xs text-white/60">
+          <p className="font-semibold text-[var(--text-primary)]">{booking.tourName}</p>
+          <p className="text-xs text-[var(--text-muted)]">
             {new Date(booking.date).toLocaleDateString('ru-RU', {
               day: 'numeric',
               month: 'short',
@@ -65,8 +65,8 @@ export function RecentBookingsTable({ bookings, onViewDetails }: RecentBookingsT
       title: 'Клиент',
       render: (booking) => (
         <div>
-          <p className="text-white">{booking.userName}</p>
-          <p className="text-xs text-white/60">{booking.userEmail}</p>
+          <p className="text-[var(--text-primary)]">{booking.userName}</p>
+          <p className="text-xs text-[var(--text-muted)]">{booking.userEmail}</p>
         </div>
       )
     },
@@ -74,7 +74,7 @@ export function RecentBookingsTable({ bookings, onViewDetails }: RecentBookingsT
       key: 'guestsCount',
       title: 'Гости',
       render: (booking) => (
-        <span className="text-white/80">
+        <span className="text-[var(--text-secondary)]">
           <span className="text-xl mr-1"></span>
           {booking.guestsCount}
         </span>
@@ -84,7 +84,7 @@ export function RecentBookingsTable({ bookings, onViewDetails }: RecentBookingsT
       key: 'totalPrice',
       title: 'Сумма',
       render: (booking) => (
-        <span className="font-semibold text-premium-gold">
+        <span className="font-semibold text-[var(--accent)]">
           {formatCurrency(booking.totalPrice)}
         </span>
       )
@@ -100,7 +100,7 @@ export function RecentBookingsTable({ bookings, onViewDetails }: RecentBookingsT
       key: 'createdAt',
       title: 'Дата заказа',
       render: (booking) => (
-        <span className="text-white/60 text-sm">
+        <span className="text-[var(--text-muted)] text-sm">
           {new Date(booking.createdAt).toLocaleDateString('ru-RU')}
         </span>
       )
@@ -111,7 +111,7 @@ export function RecentBookingsTable({ bookings, onViewDetails }: RecentBookingsT
       render: (booking) => (
         <button
           onClick={() => onViewDetails && onViewDetails(booking)}
-          className="px-3 py-1 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-medium transition-colors"
+          className="px-3 py-1 bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] text-[var(--text-primary)] rounded-lg text-xs font-medium transition-colors"
         >
           Детали
         </button>

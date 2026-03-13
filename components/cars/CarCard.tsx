@@ -36,7 +36,7 @@ export function CarCard({ car, onRent }: CarCardProps) {
       case 'business': return 'text-purple-400';
       case 'suv': return 'text-orange-400';
       case 'luxury': return 'text-yellow-400';
-      default: return 'text-white/40';
+      default: return 'text-[var(--text-muted)]';
     }
   };
 
@@ -66,9 +66,9 @@ export function CarCard({ car, onRent }: CarCardProps) {
   };
 
   return (
-    <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:bg-white/10 transition-all hover:scale-105">
+    <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden hover:bg-[var(--bg-hover)] transition-all hover:scale-105">
       {/* Image */}
-      <div className="relative h-48 bg-white/10">
+      <div className="relative h-48 bg-[var(--bg-card)]">
         {car.imageUrl ? (
           <Image
             src={car.imageUrl}
@@ -79,7 +79,7 @@ export function CarCard({ car, onRent }: CarCardProps) {
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <Car className="w-16 h-16 text-white/40" />
+            <Car className="w-16 h-16 text-[var(--text-muted)]" />
           </div>
         )}
 
@@ -139,13 +139,13 @@ export function CarCard({ car, onRent }: CarCardProps) {
               {car.features.slice(0, 3).map((feature) => (
                 <span
                   key={feature}
-                  className="px-2 py-1 bg-white/10 rounded text-xs text-white/70"
+                  className="px-2 py-1 bg-[var(--bg-card)] rounded text-xs text-[var(--text-muted)]"
                 >
                   {feature}
                 </span>
               ))}
               {car.features.length > 3 && (
-                <span className="px-2 py-1 bg-white/10 rounded text-xs text-white/50">
+                <span className="px-2 py-1 bg-[var(--bg-card)] rounded text-xs text-[var(--text-muted)]">
                   +{car.features.length - 3}
                 </span>
               )}
@@ -156,19 +156,19 @@ export function CarCard({ car, onRent }: CarCardProps) {
         {/* Pricing */}
         <div className="space-y-2 mb-4">
           <div className="flex justify-between items-center">
-            <span className="text-sm text-white/70">Цена за день:</span>
-            <span className="text-lg font-bold text-premium-gold">
+            <span className="text-sm text-[var(--text-muted)]">Цена за день:</span>
+            <span className="text-lg font-bold text-[var(--accent)]">
               {car.pricePerDay.toLocaleString('ru-RU')} ₽
             </span>
           </div>
 
           {car.pricePerWeek && (
             <div className="flex justify-between items-center">
-              <span className="text-sm text-white/70">Цена за неделю:</span>
-              <span className="text-sm text-white/50 line-through">
+              <span className="text-sm text-[var(--text-muted)]">Цена за неделю:</span>
+              <span className="text-sm text-[var(--text-muted)] line-through">
                 {(car.pricePerDay * 7).toLocaleString('ru-RU')} ₽
               </span>
-              <span className="text-premium-gold font-semibold">
+              <span className="text-[var(--accent)] font-semibold">
                 {car.pricePerWeek.toLocaleString('ru-RU')} ₽
               </span>
             </div>
@@ -176,11 +176,11 @@ export function CarCard({ car, onRent }: CarCardProps) {
 
           {car.pricePerMonth && (
             <div className="flex justify-between items-center">
-              <span className="text-sm text-white/70">Цена за месяц:</span>
-              <span className="text-sm text-white/50 line-through">
+              <span className="text-sm text-[var(--text-muted)]">Цена за месяц:</span>
+              <span className="text-sm text-[var(--text-muted)] line-through">
                 {(car.pricePerDay * 30).toLocaleString('ru-RU')} ₽
               </span>
-              <span className="text-premium-gold font-semibold">
+              <span className="text-[var(--accent)] font-semibold">
                 {car.pricePerMonth.toLocaleString('ru-RU')} ₽
               </span>
             </div>
@@ -188,9 +188,9 @@ export function CarCard({ car, onRent }: CarCardProps) {
         </div>
 
         {/* Deposit */}
-        <div className="mb-4 p-3 bg-white/5 rounded-lg">
+        <div className="mb-4 p-3 bg-[var(--bg-card)] rounded-lg">
           <div className="flex justify-between items-center text-sm">
-            <span className="text-white/70">Залог:</span>
+            <span className="text-[var(--text-muted)]">Залог:</span>
             <span className="text-orange-400 font-semibold">
               {car.deposit.toLocaleString('ru-RU')} ₽
             </span>
@@ -200,7 +200,7 @@ export function CarCard({ car, onRent }: CarCardProps) {
         <button
           onClick={() => onRent(car.id)}
           disabled={!car.isAvailable}
-          className="w-full px-4 py-3 bg-premium-gold hover:bg-premium-gold/80 disabled:opacity-50 disabled:cursor-not-allowed text-premium-black font-semibold rounded-lg transition-colors"
+          className="w-full px-4 py-3 bg-[var(--accent)] hover:bg-[var(--accent)]/80 disabled:opacity-50 disabled:cursor-not-allowed text-[var(--bg-primary)] font-semibold rounded-lg transition-colors"
         >
           {car.isAvailable ? 'Забронировать' : 'Недоступен'}
         </button>

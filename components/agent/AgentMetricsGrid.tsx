@@ -19,25 +19,25 @@ export function AgentMetricsGrid({ metrics }: AgentMetricsGridProps) {
       label: 'Всего клиентов',
       value: metrics.totalClients,
       icon: ' ',
-      color: 'text-premium-gold'
+      color: 'text-[var(--accent)]'
     },
     {
       label: 'Активные брони',
       value: metrics.activeBookings,
       icon: ' ',
-      color: 'text-cyber-cyan'
+      color: 'text-[var(--accent)]'
     },
     {
       label: 'Комиссия (всего)',
       value: `${metrics.totalCommission.toLocaleString('ru-RU')} ₽`,
       icon: ' ',
-      color: 'text-green-400'
+      color: 'text-[var(--success)]'
     },
     {
       label: 'Комиссия (месяц)',
       value: `${metrics.monthlyCommission.toLocaleString('ru-RU')} ₽`,
       icon: ' ',
-      color: 'text-premium-gold'
+      color: 'text-[var(--accent)]'
     },
     {
       label: 'Конверсия',
@@ -49,7 +49,7 @@ export function AgentMetricsGrid({ metrics }: AgentMetricsGridProps) {
       label: 'Средний чек',
       value: `${metrics.avgDealValue.toLocaleString('ru-RU')} ₽`,
       icon: '',
-      color: 'text-yellow-400'
+      color: 'text-[var(--warning)]'
     },
   ];
 
@@ -58,15 +58,15 @@ export function AgentMetricsGrid({ metrics }: AgentMetricsGridProps) {
       {metricCards.map((metric) => (
         <div
           key={metric.label}
-          className="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-colors"
+          className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6 hover:bg-[var(--bg-hover)] transition-colors"
         >
           <div className="flex items-center justify-between mb-3">
             <span className="text-4xl">{metric.icon}</span>
-            <div className={`text-3xl font-black ${metric.color}`}>
+            <div className={`text-3xl font-bold ${metric.color}`}>
               {metric.value}
             </div>
           </div>
-          <div className="text-white/70 text-sm">{metric.label}</div>
+          <div className="text-[var(--text-muted)] text-sm">{metric.label}</div>
         </div>
       ))}
     </div>

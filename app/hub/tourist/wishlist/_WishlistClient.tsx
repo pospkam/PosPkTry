@@ -94,7 +94,7 @@ export default function WishlistClient() {
               return (
                 <div
                   key={item.id}
-                  className="rounded-2xl border overflow-hidden"
+                  className="rounded-lg border overflow-hidden"
                   style={{
                     backgroundColor: 'var(--bg-card)',
                     borderColor: 'var(--border)',

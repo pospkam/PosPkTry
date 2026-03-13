@@ -107,13 +107,13 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
       {/* Основная информация */}
-      <section className="bg-white/5 border border-white/10 rounded-2xl p-6">
-        <h2 className="text-2xl font-bold text-white mb-6">Основная информация</h2>
+      <section className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
+        <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-6">Основная информация</h2>
         
         <div className="space-y-6">
           {/* Название */}
           <div>
-            <label htmlFor="tour-name" className="block text-white/70 mb-2">
+            <label htmlFor="tour-name" className="block text-[var(--text-muted)] mb-2">
               Название тура <span className="text-red-400">*</span>
             </label>
             <input
@@ -121,14 +121,14 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
               value={formData.name}
               onChange={(e) => handleChange('name', e.target.value)}
               placeholder="Например: Восхождение на вулкан Авачинский"
-              className="w-full px-4 py-3 bg-white/10 border border-white/10 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold"
+              className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
               required
             />
           </div>
 
           {/* Описание */}
           <div>
-            <label htmlFor="tour-description" className="block text-white/70 mb-2">
+            <label htmlFor="tour-description" className="block text-[var(--text-muted)] mb-2">
               Описание <span className="text-red-400">*</span>
             </label>
             <textarea
@@ -137,7 +137,7 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
               onChange={(e) => handleChange('description', e.target.value)}
               placeholder="Подробное описание тура..."
               rows={6}
-              className="w-full px-4 py-3 bg-white/10 border border-white/10 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold resize-none"
+              className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] resize-none"
               required
             />
           </div>
@@ -145,12 +145,12 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
           {/* Категория и Сложность */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="tour-category" className="block text-white/70 mb-2">Категория</label>
+              <label htmlFor="tour-category" className="block text-[var(--text-muted)] mb-2">Категория</label>
               <select
                 id="tour-category"
                 value={formData.category}
                 onChange={(e) => handleChange('category', e.target.value)}
-                className="w-full px-4 py-3 bg-white/10 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+                className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
               >
                 <option value="fishing">Рыбалка</option>
                 <option value="volcanoes">Вулканы</option>
@@ -169,12 +169,12 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
             </div>
 
             <div>
-              <label htmlFor="tour-difficulty" className="block text-white/70 mb-2">Сложность</label>
+              <label htmlFor="tour-difficulty" className="block text-[var(--text-muted)] mb-2">Сложность</label>
               <select
                 id="tour-difficulty"
                 value={formData.difficulty}
                 onChange={(e) => handleChange('difficulty', e.target.value as 'easy' | 'medium' | 'hard')}
-                className="w-full px-4 py-3 bg-white/10 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+                className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
               >
                 <option value="easy">Легко</option>
                 <option value="medium">Средне</option>
@@ -185,15 +185,15 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
 
           {/* Базовый маршрут */}
           <div>
-            <label htmlFor="tour-route" className="block text-white/70 mb-2">
+            <label htmlFor="tour-route" className="block text-[var(--text-muted)] mb-2">
               Базовый маршрут
-              <span className="ml-2 text-white/40 text-sm font-normal">(необязательно — маршрут из каталога Камчатки)</span>
+              <span className="ml-2 text-[var(--text-muted)] text-sm font-normal">(необязательно — маршрут из каталога Камчатки)</span>
             </label>
             <select
               id="tour-route"
               value={formData.routeId || ''}
               onChange={(e) => handleChange('routeId', e.target.value || undefined)}
-              className="w-full px-4 py-3 bg-white/10 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+              className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
             >
               <option value="">— без привязки к маршруту —</option>
               {routes.map(r => (
@@ -203,20 +203,20 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
               ))}
             </select>
             {routes.length === 0 && (
-              <p className="text-white/30 text-sm mt-1">Нет маршрутов для категории «{formData.category}»</p>
+              <p className="text-[var(--text-muted)] text-sm mt-1">Нет маршрутов для категории «{formData.category}»</p>
             )}
           </div>
         </div>
       </section>
 
       {/* Параметры тура */}
-      <section className="bg-white/5 border border-white/10 rounded-2xl p-6">
-        <h2 className="text-2xl font-bold text-white mb-6">Параметры тура</h2>
+      <section className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
+        <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-6">Параметры тура</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Длительность */}
           <div>
-            <label htmlFor="tour-duration" className="block text-white/70 mb-2">
+            <label htmlFor="tour-duration" className="block text-[var(--text-muted)] mb-2">
               Длительность (часы)
             </label>
             <input
@@ -224,13 +224,13 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
               value={formData.duration}
               onChange={(e) => handleChange('duration', parseInt(e.target.value))}
               min="1"
-              className="w-full px-4 py-3 bg-white/10 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+              className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
             />
           </div>
 
           {/* Мин. группа */}
           <div>
-            <label htmlFor="tour-min-group" className="block text-white/70 mb-2">
+            <label htmlFor="tour-min-group" className="block text-[var(--text-muted)] mb-2">
               Мин. группа
             </label>
             <input
@@ -238,13 +238,13 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
               value={formData.minGroupSize}
               onChange={(e) => handleChange('minGroupSize', parseInt(e.target.value))}
               min="1"
-              className="w-full px-4 py-3 bg-white/10 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+              className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
             />
           </div>
 
           {/* Макс. группа */}
           <div>
-            <label htmlFor="tour-max-group" className="block text-white/70 mb-2">
+            <label htmlFor="tour-max-group" className="block text-[var(--text-muted)] mb-2">
               Макс. группа
             </label>
             <input
@@ -253,13 +253,13 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
               value={formData.maxGroupSize}
               onChange={(e) => handleChange('maxGroupSize', parseInt(e.target.value))}
               min="1"
-              className="w-full px-4 py-3 bg-white/10 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+              className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
             />
           </div>
 
           {/* Цена */}
           <div>
-            <label htmlFor="tour-price" className="block text-white/70 mb-2">
+            <label htmlFor="tour-price" className="block text-[var(--text-muted)] mb-2">
               Цена <span className="text-red-400">*</span>
             </label>
             <input
@@ -269,7 +269,7 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
               onChange={(e) => handleChange('price', parseFloat(e.target.value))}
               min="0"
               step="100"
-              className="w-full px-4 py-3 bg-white/10 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+              className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
               required
             />
           </div>
@@ -277,8 +277,8 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
       </section>
 
       {/* Что включено */}
-      <section className="bg-white/5 border border-white/10 rounded-2xl p-6">
-        <h2 className="text-2xl font-bold text-white mb-6">Что включено в стоимость</h2>
+      <section className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
+        <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-6">Что включено в стоимость</h2>
         
         <div className="space-y-4">
           <div className="flex gap-2">
@@ -288,7 +288,7 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
               onChange={(e) => setNewInclude(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddInclude())}
               placeholder="Например: Транспорт от места сбора"
-              className="flex-1 px-4 py-3 bg-white/10 border border-white/10 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold"
+              className="flex-1 px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
             />
             <button
               type="button"
@@ -304,9 +304,9 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
               {formData.includes.map((item, includeIndex) => (
                 <li
                   key={`include-${includeIndex}`}
-                  className="flex items-center justify-between bg-white/5 px-4 py-3 rounded-xl"
+                  className="flex items-center justify-between bg-[var(--bg-card)] px-4 py-3 rounded-xl"
                 >
-                  <span className="text-white"> {item}</span>
+                  <span className="text-[var(--text-primary)]"> {item}</span>
                   <button
                     type="button"
                     onClick={() => handleRemoveInclude(includeIndex)}
@@ -322,8 +322,8 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
       </section>
 
       {/* Что НЕ включено */}
-      <section className="bg-white/5 border border-white/10 rounded-2xl p-6">
-        <h2 className="text-2xl font-bold text-white mb-6">Что НЕ включено в стоимость</h2>
+      <section className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
+        <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-6">Что НЕ включено в стоимость</h2>
         
         <div className="space-y-4">
           <div className="flex gap-2">
@@ -333,7 +333,7 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
               onChange={(e) => setNewExclude(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddExclude())}
               placeholder="Например: Личное снаряжение"
-              className="flex-1 px-4 py-3 bg-white/10 border border-white/10 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold"
+              className="flex-1 px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
             />
             <button
               type="button"
@@ -349,9 +349,9 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
               {formData.excludes.map((item, excludeIndex) => (
                 <li
                   key={`exclude-${excludeIndex}`}
-                  className="flex items-center justify-between bg-white/5 px-4 py-3 rounded-xl"
+                  className="flex items-center justify-between bg-[var(--bg-card)] px-4 py-3 rounded-xl"
                 >
-                  <span className="text-white"> {item}</span>
+                  <span className="text-[var(--text-primary)]"> {item}</span>
                   <button
                     type="button"
                     onClick={() => handleRemoveExclude(excludeIndex)}
@@ -372,14 +372,14 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
           type="button"
           onClick={onCancel}
           disabled={loading}
-          className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-medium transition-colors disabled:opacity-50"
+          className="px-6 py-3 bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] text-[var(--text-primary)] rounded-xl font-medium transition-colors disabled:opacity-50"
         >
           Отмена
         </button>
         <button
           type="submit"
           disabled={loading}
-          className="px-6 py-3 bg-premium-gold hover:bg-premium-gold/80 text-premium-black font-bold rounded-xl transition-colors disabled:opacity-50 flex items-center"
+          className="px-6 py-3 bg-[var(--accent)] hover:bg-[var(--accent)]/80 text-[var(--bg-primary)] font-bold rounded-xl transition-colors disabled:opacity-50 flex items-center"
         >
           {loading ? (
             <>

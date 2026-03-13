@@ -26,7 +26,7 @@ export function GearFilters({
   onSortChange
 }: GearFiltersProps) {
   return (
-    <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-6">
+    <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6 mb-6">
       <h3 className="text-lg font-bold mb-4">Фильтры и сортировка</h3>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -37,7 +37,7 @@ export function GearFilters({
             id="gear-category"
             value={selectedCategory}
             onChange={(e) => onCategoryChange(e.target.value)}
-            className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+            className="w-full px-4 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
           >
             <option value="all">Все категории</option>
             {categories.filter(cat => cat !== 'all').map((category) => (
@@ -59,7 +59,7 @@ export function GearFilters({
                   ...priceRange,
                   min: parseInt(e.target.value) || 0
                 })}
-                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold"
+                className="w-full px-3 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded text-white placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
               />
               <input
                 type="number"
@@ -69,7 +69,7 @@ export function GearFilters({
                   ...priceRange,
                   max: parseInt(e.target.value) || 10000
                 })}
-                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold"
+                className="w-full px-3 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded text-white placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
               />
             </div>
           </div>
@@ -84,7 +84,7 @@ export function GearFilters({
               type="checkbox"
               checked={showAvailableOnly}
               onChange={(e) => onAvailableToggle(e.target.checked)}
-              className="text-premium-gold rounded"
+              className="text-[var(--accent)] rounded"
             />
             <span>Только доступное</span>
           </label>
@@ -97,7 +97,7 @@ export function GearFilters({
             id="gear-sort"
             value={sortBy}
             onChange={(e) => onSortChange(e.target.value)}
-            className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+            className="w-full px-4 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
           >
             <option value="name">По названию</option>
             <option value="price-low">По цене (дешевле)</option>
@@ -109,16 +109,16 @@ export function GearFilters({
 
       {/* Active Filters Summary */}
       {(selectedCategory !== 'all' || priceRange.min > 0 || priceRange.max < 10000 || showAvailableOnly) && (
-        <div className="mt-4 pt-4 border-t border-white/10">
+        <div className="mt-4 pt-4 border-t border-[var(--border)]">
           <div className="flex flex-wrap gap-2">
-            <span className="text-sm text-white/70">Активные фильтры:</span>
+            <span className="text-sm text-[var(--text-muted)]">Активные фильтры:</span>
 
             {selectedCategory !== 'all' && (
-              <span className="px-3 py-1 bg-premium-gold/20 text-premium-gold rounded-full text-sm flex items-center gap-2">
+              <span className="px-3 py-1 bg-[var(--accent)]/20 text-[var(--accent)] rounded-full text-sm flex items-center gap-2">
                 {selectedCategory}
                 <button
                   onClick={() => onCategoryChange('all')}
-                  className="hover:text-white"
+                  className="hover:text-[var(--text-primary)]"
                 >
                   ×
                 </button>
@@ -126,11 +126,11 @@ export function GearFilters({
             )}
 
             {(priceRange.min > 0 || priceRange.max < 10000) && (
-              <span className="px-3 py-1 bg-premium-gold/20 text-premium-gold rounded-full text-sm flex items-center gap-2">
+              <span className="px-3 py-1 bg-[var(--accent)]/20 text-[var(--accent)] rounded-full text-sm flex items-center gap-2">
                 {priceRange.min > 0 ? `${priceRange.min}₽` : ''} - {priceRange.max < 10000 ? `${priceRange.max}₽` : '∞'}
                 <button
                   onClick={() => onPriceRangeChange({ min: 0, max: 10000 })}
-                  className="hover:text-white"
+                  className="hover:text-[var(--text-primary)]"
                 >
                   ×
                 </button>
@@ -138,11 +138,11 @@ export function GearFilters({
             )}
 
             {showAvailableOnly && (
-              <span className="px-3 py-1 bg-premium-gold/20 text-premium-gold rounded-full text-sm flex items-center gap-2">
+              <span className="px-3 py-1 bg-[var(--accent)]/20 text-[var(--accent)] rounded-full text-sm flex items-center gap-2">
                 Только доступное
                 <button
                   onClick={() => onAvailableToggle(false)}
-                  className="hover:text-white"
+                  className="hover:text-[var(--text-primary)]"
                 >
                   ×
                 </button>

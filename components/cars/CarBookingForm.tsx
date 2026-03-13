@@ -196,11 +196,11 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
   };
 
   return (
-    <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+    <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
       <div className="flex items-center gap-4 mb-6">
         <button
           onClick={onCancel}
-          className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+          className="p-2 hover:bg-[var(--bg-hover)] rounded-lg transition-colors"
         >
           ←
         </button>
@@ -212,19 +212,19 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
         <div>
           <h3 className="text-xl font-bold mb-4">Выбранный автомобиль</h3>
 
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+          <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-4">
             <div className="flex gap-4 mb-4">
-              <div className="w-20 h-20 bg-white/10 rounded-lg flex-shrink-0">
+              <div className="w-20 h-20 bg-[var(--bg-card)] rounded-lg flex-shrink-0">
                 {car.imageUrl ? (
                   <Image src={car.imageUrl} alt={`${car.brand} ${car.model}`} fill className="object-cover rounded-lg" sizes="80px" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center"><Car className="w-10 h-10 text-white/50" /></div>
+                  <div className="w-full h-full flex items-center justify-center"><Car className="w-10 h-10 text-[var(--text-muted)]" /></div>
                 )}
               </div>
 
               <div className="flex-1">
                 <h4 className="font-bold text-lg">{car.brand} {car.model}</h4>
-                <p className="text-white/70">{car.year} год</p>
+                <p className="text-[var(--text-muted)]">{car.year} год</p>
                 <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
                   <span>{car.transmission === 'automatic' ? 'Автомат' : 'Механика'}</span>
                   <span className="flex items-center gap-1"><Fuel className="w-4 h-4" /> {car.fuelType === 'petrol' ? 'Бензин' : car.fuelType === 'diesel' ? 'Дизель' : car.fuelType === 'electric' ? 'Электро' : 'Гибрид'}</span>
@@ -237,7 +237,7 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span>Цена за день:</span>
-                <span className="text-premium-gold">{car.pricePerDay.toLocaleString('ru-RU')} ₽</span>
+                <span className="text-[var(--accent)]">{car.pricePerDay.toLocaleString('ru-RU')} ₽</span>
               </div>
               <div className="flex justify-between">
                 <span>Залог:</span>
@@ -258,8 +258,8 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
                 id="booking-name"
                 value={form.name}
                 onChange={(e) => updateForm('name', e.target.value)}
-                className={`w-full px-4 py-3 bg-white/10 border rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold ${
-                  errors.name ? 'border-red-500' : 'border-white/20'
+                className={`w-full px-4 py-3 bg-[var(--bg-card)] border rounded-lg text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] ${
+                  errors.name ? 'border-red-500' : 'border-[var(--border)]'
                 }`}
                 placeholder="Иванов Иван Иванович"
               />
@@ -273,8 +273,8 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
                   id="booking-email"
                   value={form.email}
                   onChange={(e) => updateForm('email', e.target.value)}
-                  className={`w-full px-4 py-3 bg-white/10 border rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold ${
-                    errors.email ? 'border-red-500' : 'border-white/20'
+                  className={`w-full px-4 py-3 bg-[var(--bg-card)] border rounded-lg text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] ${
+                    errors.email ? 'border-red-500' : 'border-[var(--border)]'
                   }`}
                   placeholder="example@email.com"
                 />
@@ -287,8 +287,8 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
                   id="booking-phone"
                   value={form.phone}
                   onChange={(e) => updateForm('phone', e.target.value)}
-                  className={`w-full px-4 py-3 bg-white/10 border rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold ${
-                    errors.phone ? 'border-red-500' : 'border-white/20'
+                  className={`w-full px-4 py-3 bg-[var(--bg-card)] border rounded-lg text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] ${
+                    errors.phone ? 'border-red-500' : 'border-[var(--border)]'
                   }`}
                   placeholder="+7 (999) 123-45-67"
                 />
@@ -302,8 +302,8 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
                 id="booking-driver-license"
                 value={form.driverLicense}
                 onChange={(e) => updateForm('driverLicense', e.target.value)}
-                className={`w-full px-4 py-3 bg-white/10 border rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold ${
-                  errors.driverLicense ? 'border-red-500' : 'border-white/20'
+                className={`w-full px-4 py-3 bg-[var(--bg-card)] border rounded-lg text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] ${
+                  errors.driverLicense ? 'border-red-500' : 'border-[var(--border)]'
                 }`}
                 placeholder="12 34 567890"
               />
@@ -319,8 +319,8 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
                   value={form.startDate}
                   onChange={(e) => updateForm('startDate', e.target.value)}
                   min={new Date().toISOString().split('T')[0]}
-                  className={`w-full px-4 py-3 bg-white/10 border rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold ${
-                    errors.startDate ? 'border-red-500' : 'border-white/20'
+                  className={`w-full px-4 py-3 bg-[var(--bg-card)] border rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] ${
+                    errors.startDate ? 'border-red-500' : 'border-[var(--border)]'
                   }`}
                 />
                 {errors.startDate && <p className="text-red-400 text-sm mt-1">{errors.startDate}</p>}
@@ -333,8 +333,8 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
                   value={form.endDate}
                   onChange={(e) => updateForm('endDate', e.target.value)}
                   min={form.startDate}
-                  className={`w-full px-4 py-3 bg-white/10 border rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold ${
-                    errors.endDate ? 'border-red-500' : 'border-white/20'
+                  className={`w-full px-4 py-3 bg-[var(--bg-card)] border rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] ${
+                    errors.endDate ? 'border-red-500' : 'border-[var(--border)]'
                   }`}
                 />
                 {errors.endDate && <p className="text-red-400 text-sm mt-1">{errors.endDate}</p>}
@@ -348,7 +348,7 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
                   id="booking-pickup-location"
                   value={form.pickupLocation}
                   onChange={(e) => updateForm('pickupLocation', e.target.value)}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+                  className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                 >
                   <option value="Петропавловск-Камчатский">Петропавловск-Камчатский</option>
                   <option value="Елизово">Елизово</option>
@@ -362,7 +362,7 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
                   id="booking-return-location"
                   value={form.returnLocation}
                   onChange={(e) => updateForm('returnLocation', e.target.value)}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+                  className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                 >
                   <option value="Петропавловск-Камчатский">Петропавловск-Камчатский</option>
                   <option value="Елизово">Елизово</option>
@@ -381,7 +381,7 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
                     value="none"
                     checked={form.insurance === 'none'}
                     onChange={(e) => updateForm('insurance', e.target.value as 'basic' | 'premium' | 'none')}
-                    className="text-premium-gold"
+                    className="text-[var(--accent)]"
                   />
                   <span>Без страховки</span>
                 </label>
@@ -391,7 +391,7 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
                     id="insurance-basic"
                     checked={form.insurance === 'basic'}
                     onChange={(e) => updateForm('insurance', e.target.value as 'basic' | 'premium' | 'none')}
-                    className="text-premium-gold"
+                    className="text-[var(--accent)]"
                   />
                   <span>Базовая страховка (+8%)</span>
                 </label>
@@ -401,7 +401,7 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
                     id="insurance-premium"
                     checked={form.insurance === 'premium'}
                     onChange={(e) => updateForm('insurance', e.target.value as 'basic' | 'premium' | 'none')}
-                    className="text-premium-gold"
+                    className="text-[var(--accent)]"
                   />
                   <span>Премиум страховка (+15%)</span>
                 </label>
@@ -418,7 +418,7 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
                     type="checkbox"
                     checked={form.additionalDrivers}
                     onChange={(e) => updateForm('additionalDrivers', e.target.checked)}
-                    className="text-premium-gold rounded"
+                    className="text-[var(--accent)] rounded"
                   />
                 </label>
 
@@ -429,7 +429,7 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
                     type="checkbox"
                     checked={form.gps}
                     onChange={(e) => updateForm('gps', e.target.checked)}
-                    className="text-premium-gold rounded"
+                    className="text-[var(--accent)] rounded"
                   />
                 </label>
 
@@ -440,7 +440,7 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
                     type="checkbox"
                     checked={form.childSeat}
                     onChange={(e) => updateForm('childSeat', e.target.checked)}
-                    className="text-premium-gold rounded"
+                    className="text-[var(--accent)] rounded"
                   />
                 </label>
               </div>
@@ -452,14 +452,14 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
                 id="booking-comments"
                 value={form.comments}
                 onChange={(e) => updateForm('comments', e.target.value)}
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold resize-none"
+                className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] resize-none"
                 rows={3}
                 placeholder="Особые пожелания или требования"
               />
             </div>
 
             {/* Price Summary */}
-            <div className="bg-gradient-to-r from-premium-gold/20 to-premium-gold/10 border border-premium-gold/30 rounded-xl p-4">
+            <div className="bg-gradient-to-r from-[var(--accent)]/20 to-[var(--accent)]/10 border border-[var(--accent)]/30 rounded-lg p-4">
               <h4 className="font-bold mb-3">Расчет стоимости</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
@@ -494,10 +494,10 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
                     <span>{childSeatCost.toLocaleString('ru-RU')} ₽</span>
                   </div>
                 )}
-                <hr className="border-white/20 my-2" />
+                <hr className="border-[var(--border)] my-2" />
                 <div className="flex justify-between text-lg font-bold">
                   <span>Итого:</span>
-                  <span className="text-premium-gold">{totalPrice.toLocaleString('ru-RU')} ₽</span>
+                  <span className="text-[var(--accent)]">{totalPrice.toLocaleString('ru-RU')} ₽</span>
                 </div>
                 <div className="flex justify-between text-sm text-orange-400">
                   <span>Залог:</span>
@@ -509,7 +509,7 @@ export function CarBookingForm({ car, onBookingComplete, onCancel }: CarBookingF
             <button
               type="submit"
               disabled={loading}
-              className="w-full px-8 py-4 bg-premium-gold hover:bg-premium-gold/80 disabled:opacity-50 disabled:cursor-not-allowed text-premium-black font-bold rounded-xl transition-colors text-lg"
+              className="w-full px-8 py-4 bg-[var(--accent)] hover:bg-[var(--accent)]/80 disabled:opacity-50 disabled:cursor-not-allowed text-[var(--bg-primary)] font-bold rounded-lg transition-colors text-lg"
             >
               {loading ? 'Создание заявки...' : `Забронировать за ${totalPrice.toLocaleString('ru-RU')} ₽`}
             </button>

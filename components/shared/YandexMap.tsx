@@ -96,10 +96,10 @@ export default function YandexMap({
 
   if (!apiKey) {
     return (
-      <div className={`bg-white/10 border border-white/20 rounded-2xl flex items-center justify-center ${className}`} style={{ height }} role="region" aria-label="Карта временно недоступна">
+      <div className={`bg-[var(--bg-card)] border border-[var(--border)] rounded-lg flex items-center justify-center ${className}`} style={{ height }} role="region" aria-label="Карта временно недоступна">
         <div className="text-center p-8">
-          <p className="text-white/70 mb-2">Карта временно недоступна</p>
-          <p className="text-sm text-white/50">API ключ не настроен</p>
+          <p className="text-[var(--text-muted)] mb-2">Карта временно недоступна</p>
+          <p className="text-sm text-[var(--text-muted)]">API ключ не настроен</p>
         </div>
       </div>
     );
@@ -112,12 +112,12 @@ export default function YandexMap({
         strategy="afterInteractive"
         onLoad={() => setIsLoaded(true)}
       />
-      <div className={`relative rounded-2xl overflow-hidden shadow-xl ${className}`} style={{ height }} role="region" aria-label="Карта Камчатки">
+      <div className={`relative rounded-lg overflow-hidden shadow-xl ${className}`} style={{ height }} role="region" aria-label="Карта Камчатки">
         {!isLoaded && (
-          <div className="absolute inset-0 bg-white/10 backdrop-blur-sm flex items-center justify-center z-10" role="status" aria-label="Загрузка карты">
+          <div className="absolute inset-0 bg-[var(--bg-card)] flex items-center justify-center z-10" role="status" aria-label="Загрузка карты">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-4 border-premium-gold border-t-transparent mb-4 mx-auto"></div>
-              <p className="text-white font-semibold">Загрузка карты...</p>
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-[var(--accent)] border-t-transparent mb-4 mx-auto"></div>
+              <p className="text-[var(--text-primary)] font-semibold">Загрузка карты...</p>
             </div>
           </div>
         )}

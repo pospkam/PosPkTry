@@ -70,7 +70,7 @@ export function CarFilters({
   };
 
   return (
-    <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-6">
+    <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6 mb-6">
       <h3 className="text-lg font-bold mb-4">Фильтры и сортировка</h3>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
@@ -81,7 +81,7 @@ export function CarFilters({
             id="car-category"
             value={selectedCategory}
             onChange={(e) => onCategoryChange(e.target.value)}
-            className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+            className="w-full px-4 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
           >
             {categories.map((category) => (
               <option key={category} value={category}>
@@ -98,7 +98,7 @@ export function CarFilters({
             id="car-transmission"
             value={transmission}
             onChange={(e) => onTransmissionChange(e.target.value)}
-            className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+            className="w-full px-4 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
           >
             {transmissions.map((trans) => (
               <option key={trans} value={trans}>
@@ -115,7 +115,7 @@ export function CarFilters({
             id="car-fuel-type"
             value={fuelType}
             onChange={(e) => onFuelTypeChange(e.target.value)}
-            className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+            className="w-full px-4 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
           >
             {fuelTypes.map((fuel) => (
               <option key={fuel} value={fuel}>
@@ -138,7 +138,7 @@ export function CarFilters({
                   ...priceRange,
                   min: parseInt(e.target.value) || 0
                 })}
-                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold"
+                className="w-full px-3 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
               />
               <input
                 type="number"
@@ -148,7 +148,7 @@ export function CarFilters({
                   ...priceRange,
                   max: parseInt(e.target.value) || 50000
                 })}
-                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold"
+                className="w-full px-3 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
               />
             </div>
           </div>
@@ -161,7 +161,7 @@ export function CarFilters({
             id="car-sort"
             value={sortBy}
             onChange={(e) => onSortChange(e.target.value)}
-            className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+            className="w-full px-4 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
           >
             <option value="name">По названию</option>
             <option value="price-low">По цене (дешевле)</option>
@@ -179,7 +179,7 @@ export function CarFilters({
             type="checkbox"
             checked={showAvailableOnly}
             onChange={(e) => onAvailableToggle(e.target.checked)}
-            className="text-premium-gold rounded"
+            className="text-[var(--accent)] rounded"
           />
           <span>Показывать только доступные автомобили</span>
         </label>
@@ -187,16 +187,16 @@ export function CarFilters({
 
       {/* Active Filters Summary */}
       {(selectedCategory !== 'all' || priceRange.min > 0 || priceRange.max < 50000 || showAvailableOnly || transmission !== 'all' || fuelType !== 'all') && (
-        <div className="mt-4 pt-4 border-t border-white/10">
+        <div className="mt-4 pt-4 border-t border-[var(--border)]">
           <div className="flex flex-wrap gap-2">
-            <span className="text-sm text-white/70">Активные фильтры:</span>
+            <span className="text-sm text-[var(--text-muted)]">Активные фильтры:</span>
 
             {selectedCategory !== 'all' && (
-              <span className="px-3 py-1 bg-premium-gold/20 text-premium-gold rounded-full text-sm flex items-center gap-2">
+              <span className="px-3 py-1 bg-[var(--accent)]/20 text-[var(--accent)] rounded-full text-sm flex items-center gap-2">
                 {getCategoryText(selectedCategory)}
                 <button
                   onClick={() => onCategoryChange('all')}
-                  className="hover:text-white"
+                  className="hover:text-[var(--text-primary)]"
                 >
                   ×
                 </button>
@@ -204,11 +204,11 @@ export function CarFilters({
             )}
 
             {transmission !== 'all' && (
-              <span className="px-3 py-1 bg-premium-gold/20 text-premium-gold rounded-full text-sm flex items-center gap-2">
+              <span className="px-3 py-1 bg-[var(--accent)]/20 text-[var(--accent)] rounded-full text-sm flex items-center gap-2">
                 {getTransmissionText(transmission)}
                 <button
                   onClick={() => onTransmissionChange('all')}
-                  className="hover:text-white"
+                  className="hover:text-[var(--text-primary)]"
                 >
                   ×
                 </button>
@@ -216,11 +216,11 @@ export function CarFilters({
             )}
 
             {fuelType !== 'all' && (
-              <span className="px-3 py-1 bg-premium-gold/20 text-premium-gold rounded-full text-sm flex items-center gap-2">
+              <span className="px-3 py-1 bg-[var(--accent)]/20 text-[var(--accent)] rounded-full text-sm flex items-center gap-2">
                 {getFuelTypeText(fuelType)}
                 <button
                   onClick={() => onFuelTypeChange('all')}
-                  className="hover:text-white"
+                  className="hover:text-[var(--text-primary)]"
                 >
                   ×
                 </button>
@@ -228,11 +228,11 @@ export function CarFilters({
             )}
 
             {(priceRange.min > 0 || priceRange.max < 50000) && (
-              <span className="px-3 py-1 bg-premium-gold/20 text-premium-gold rounded-full text-sm flex items-center gap-2">
+              <span className="px-3 py-1 bg-[var(--accent)]/20 text-[var(--accent)] rounded-full text-sm flex items-center gap-2">
                 {priceRange.min > 0 ? `${priceRange.min}₽` : ''} - {priceRange.max < 50000 ? `${priceRange.max}₽` : '∞'}
                 <button
                   onClick={() => onPriceRangeChange({ min: 0, max: 50000 })}
-                  className="hover:text-white"
+                  className="hover:text-[var(--text-primary)]"
                 >
                   ×
                 </button>
@@ -240,11 +240,11 @@ export function CarFilters({
             )}
 
             {showAvailableOnly && (
-              <span className="px-3 py-1 bg-premium-gold/20 text-premium-gold rounded-full text-sm flex items-center gap-2">
+              <span className="px-3 py-1 bg-[var(--accent)]/20 text-[var(--accent)] rounded-full text-sm flex items-center gap-2">
                 Только доступные
                 <button
                   onClick={() => onAvailableToggle(false)}
-                  className="hover:text-white"
+                  className="hover:text-[var(--text-primary)]"
                 >
                   ×
                 </button>

@@ -210,23 +210,23 @@ export function StayBookingForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Accommodation Info */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-        <h3 className="text-2xl font-bold text-white mb-2">{accommodationName}</h3>
-        <p className="text-premium-gold text-xl font-semibold">
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
+        <h3 className="text-2xl font-bold text-[var(--text-primary)] mb-2">{accommodationName}</h3>
+        <p className="text-[var(--accent)] text-xl font-semibold">
           {pricePerNight.toLocaleString('ru-RU')} ₽ за ночь
         </p>
       </div>
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-500/20 border border-red-500/50 rounded-2xl p-4">
-          <p className="text-red-400">{error}</p>
+        <div className="bg-[var(--danger)]/20 border border-[var(--danger)]/50 rounded-lg p-4">
+          <p className="text-[var(--danger)]">{error}</p>
         </div>
       )}
 
       {/* Date Selection */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-        <h4 className="text-lg font-semibold text-white mb-4">Даты проживания</h4>
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
+        <h4 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Даты проживания</h4>
         <StayDatePicker
           accommodationId={accommodationId}
           pricePerNight={pricePerNight}
@@ -241,13 +241,13 @@ export function StayBookingForm({
         
         {checkInDate && checkOutDate && (
           <div className="mt-4 p-4 bg-green-500/10 border border-green-500/30 rounded-xl">
-            <p className="text-green-400">
+            <p className="text-[var(--success)]">
               [] Заезд: {checkInDate.toLocaleDateString('ru-RU')}
             </p>
-            <p className="text-green-400">
+            <p className="text-[var(--success)]">
               [] Выезд: {checkOutDate.toLocaleDateString('ru-RU')}
             </p>
-            <p className="text-white/70 text-sm mt-2">
+            <p className="text-[var(--text-muted)] text-sm mt-2">
               Количество ночей: {nights}
             </p>
           </div>
@@ -255,8 +255,8 @@ export function StayBookingForm({
       </div>
 
       {/* Guests Selection */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-        <h4 className="text-lg font-semibold text-white mb-4">Количество гостей</h4>
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
+        <h4 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Количество гостей</h4>
         <GuestSelector
           maxGuests={20}
           initialAdults={adults}
@@ -269,49 +269,49 @@ export function StayBookingForm({
       </div>
 
       {/* Special Requirements */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-        <h4 className="text-lg font-semibold text-white mb-4">Особые пожелания</h4>
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
+        <h4 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Особые пожелания</h4>
         <textarea
           value={specialRequirements}
           onChange={(e) => setSpecialRequirements(e.target.value)}
           placeholder="Например: высокий этаж, вид на море, гипоаллергенные подушки..."
           rows={4}
-          className="w-full px-4 py-3 bg-white/10 border border-white/10 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-premium-gold resize-none"
+          className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] resize-none"
         />
       </div>
 
       {/* Price Summary */}
-      <div className="bg-gradient-to-r from-premium-gold/20 to-premium-gold/10 border border-premium-gold/30 rounded-2xl p-6">
+      <div className="bg-[var(--bg-card)] border border-[var(--accent)]/30 rounded-lg p-6">
         <div className="space-y-3 mb-4">
           <div className="flex justify-between items-center">
-            <span className="text-white/70">Ночей:</span>
-            <span className="text-white font-semibold">{nights}</span>
+            <span className="text-[var(--text-muted)]">Ночей:</span>
+            <span className="text-[var(--text-primary)] font-semibold">{nights}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-white/70">Цена за ночь:</span>
-            <span className="text-white font-semibold">
+            <span className="text-[var(--text-muted)]">Цена за ночь:</span>
+            <span className="text-[var(--text-primary)] font-semibold">
               {pricePerNight.toLocaleString('ru-RU')} ₽
             </span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-white/70">Взрослые ({adults}):</span>
-            <span className="text-white font-semibold">
+            <span className="text-[var(--text-muted)]">Взрослые ({adults}):</span>
+            <span className="text-[var(--text-primary)] font-semibold">
               {nights > 0 ? (adults * pricePerNight * nights).toLocaleString('ru-RU') : 0} ₽
             </span>
           </div>
           {children > 0 && (
             <div className="flex justify-between items-center">
-              <span className="text-white/70">Дети ({children}, скидка 50%):</span>
-              <span className="text-white font-semibold">
+              <span className="text-[var(--text-muted)]">Дети ({children}, скидка 50%):</span>
+              <span className="text-[var(--text-primary)] font-semibold">
                 {nights > 0 ? (children * pricePerNight * nights * 0.5).toLocaleString('ru-RU') : 0} ₽
               </span>
             </div>
           )}
         </div>
-        <div className="border-t border-white/10 pt-4 mt-4">
+        <div className="border-t border-[var(--border)] pt-4 mt-4">
           <div className="flex justify-between items-center">
-            <span className="text-xl font-bold text-white">Итого:</span>
-            <span className="text-2xl font-black text-premium-gold">
+            <span className="text-xl font-bold text-[var(--text-primary)]">Итого:</span>
+            <span className="text-2xl font-bold text-[var(--accent)]">
               {totalPrice.toLocaleString('ru-RU')} ₽
             </span>
           </div>
@@ -335,7 +335,7 @@ export function StayBookingForm({
           <button
             type="button"
             onClick={() => setShowPayment(false)}
-            className="w-full px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
+            className="w-full px-4 py-2 bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] text-[var(--text-primary)] rounded-lg transition-colors"
           >
             Вернуться к бронированию
           </button>
@@ -344,7 +344,7 @@ export function StayBookingForm({
         <button
           type="submit"
           disabled={!checkInDate || !checkOutDate || submitting}
-          className="w-full px-8 py-4 bg-premium-gold hover:bg-premium-gold/80 text-premium-black font-bold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-lg"
+          className="w-full px-8 py-4 bg-[var(--accent)] hover:bg-[var(--accent)]/80 text-[var(--bg-primary)] font-bold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-lg"
         >
           {submitting ? (
             <span className="flex items-center justify-center">

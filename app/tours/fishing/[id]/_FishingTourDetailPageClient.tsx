@@ -107,8 +107,8 @@ export default function FishingTourDetailPageClient() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-premium-gold/30 border-t-premium-gold rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-white/70">Загрузка тура...</p>
+          <div className="w-12 h-12 border-4 border-[var(--accent)]/30 border-t-[var(--accent)] rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-[var(--text-muted)]">Загрузка тура...</p>
         </div>
       </div>
     );
@@ -117,12 +117,12 @@ export default function FishingTourDetailPageClient() {
   if (error || !tour) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6">
-        <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-8 text-center max-w-md">
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-8 text-center max-w-md">
           <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-red-400" />
-          <h2 className="text-xl font-bold text-white mb-2">{error || 'Тур не найден'}</h2>
+          <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">{error || 'Тур не найден'}</h2>
           <button
             onClick={() => router.push('/tours/fishing')}
-            className="mt-4 px-6 py-3 bg-premium-gold hover:bg-premium-gold/80 text-premium-black font-bold rounded-xl transition-colors"
+            className="mt-4 px-6 py-3 bg-[var(--accent)] hover:bg-[var(--accent)]/80 text-[var(--bg-card)] font-bold rounded-xl transition-colors"
           >
             К рыболовным турам
           </button>
@@ -131,46 +131,46 @@ export default function FishingTourDetailPageClient() {
     );
   }
 
-  const difficulty = DIFFICULTY_LABELS[tour.difficulty] ?? { text: tour.difficulty, color: 'bg-white/10 text-white/60' };
+  const difficulty = DIFFICULTY_LABELS[tour.difficulty] ?? { text: tour.difficulty, color: 'bg-[var(--bg-card)] text-[var(--text-muted)]' };
   const currentImage = tour.images[selectedImage] || null;
 
   return (
     <div className="min-h-screen pb-24 md:pb-0">
       {/* Standard header */}
-      <header style={{ background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.15)', position: 'sticky', top: 0, zIndex: 50 }}>
+      <header className="bg-[var(--bg-card)] border-b border-[var(--border)] sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
             <Logo size={28} />
           </Link>
-          <h1 className="text-lg font-bold text-white hidden sm:block">Детали тура</h1>
+          <h1 className="text-lg font-bold text-[var(--text-primary)] hidden sm:block">Детали тура</h1>
           <div className="flex items-center gap-3">
-            <button onClick={toggleTheme} className="text-white/70 hover:text-white transition-colors" aria-label="Переключить тему">
+            <button onClick={toggleTheme} className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors" aria-label="Переключить тему">
               {isDark ? <Sun size={20} /> : <Moon size={20} />}
             </button>
-            <Link href="/profile" className="text-white/70 hover:text-white transition-colors" aria-label="Личный кабинет">
+            <Link href="/profile" className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors" aria-label="Личный кабинет">
               <User size={20} />
             </Link>
           </div>
         </div>
       </header>
 
-    <main className="text-white">
+    <main className="text-[var(--text-primary)]">
       {/* Шапка */}
-      <div className="bg-white/5 border-b border-white/10">
+      <div className="bg-[var(--bg-card)] border-b border-[var(--border)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <Link
               href="/tours/fishing"
-              className="flex items-center gap-2 text-white/70 hover:text-white transition-colors"
+              className="flex items-center gap-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
             >
               <ChevronLeft className="w-5 h-5" />
               <span>Все рыболовные туры</span>
             </Link>
             <div className="flex items-center gap-2">
-              <button className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors">
+              <button className="p-2 rounded-lg bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] transition-colors">
                 <Share2 className="w-4 h-4" />
               </button>
-              <button className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors">
+              <button className="p-2 rounded-lg bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] transition-colors">
                 <Heart className="w-4 h-4" />
               </button>
             </div>
@@ -185,7 +185,7 @@ export default function FishingTourDetailPageClient() {
             {/* Галерея */}
             <div className="space-y-3">
               {/* Главное фото */}
-              <div className="aspect-video relative rounded-2xl overflow-hidden bg-white/10">
+              <div className="aspect-video relative rounded-lg overflow-hidden bg-[var(--bg-card)]">
                 {currentImage ? (
                   <Image
                     src={currentImage}
@@ -196,8 +196,8 @@ export default function FishingTourDetailPageClient() {
                     priority
                   />
                 ) : (
-                  <div className="absolute inset-0 bg-white/10 border border-white/20 flex items-center justify-center">
-                    <Fish className="w-24 h-24 text-white/20" />
+                  <div className="absolute inset-0 bg-[var(--bg-card)] border border-[var(--border)] flex items-center justify-center">
+                    <Fish className="w-24 h-24 text-[var(--text-muted)]" />
                   </div>
                 )}
               </div>
@@ -210,7 +210,7 @@ export default function FishingTourDetailPageClient() {
                       key={i}
                       onClick={() => setSelectedImage(i)}
                       className={`aspect-video relative rounded-xl overflow-hidden border-2 transition-colors ${
-                        selectedImage === i ? 'border-premium-gold' : 'border-transparent'
+                        selectedImage === i ? 'border-[var(--accent)]' : 'border-transparent'
                       }`}
                     >
                       <Image
@@ -232,48 +232,48 @@ export default function FishingTourDetailPageClient() {
                 <span className={`px-3 py-1 rounded-full text-sm font-semibold ${difficulty.color}`}>
                   {difficulty.text}
                 </span>
-                <span className="px-3 py-1 rounded-full text-sm bg-premium-gold/20 text-premium-gold flex items-center gap-1">
+                <span className="px-3 py-1 rounded-full text-sm bg-[var(--accent)]/20 text-[var(--accent)] flex items-center gap-1">
                   <Fish className="w-4 h-4" />
                   Рыбалка
                 </span>
               </div>
 
-              <h1 className="text-2xl sm:text-3xl font-black text-white mb-2">{tour.name}</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)] mb-2">{tour.name}</h1>
 
-              <div className="flex flex-wrap items-center gap-4 text-white/70 text-sm">
+              <div className="flex flex-wrap items-center gap-4 text-[var(--text-muted)] text-sm">
                 {tour.route && (
                   <span className="flex items-center gap-1">
-                    <MapPin className="w-4 h-4 text-premium-gold" />
+                    <MapPin className="w-4 h-4 text-[var(--accent)]" />
                     {tour.route.title}
                   </span>
                 )}
                 <span className="flex items-center gap-1">
-                  <Star className="w-4 h-4 text-premium-gold fill-premium-gold" />
-                  <span className="text-white font-semibold">{tour.rating.toFixed(1)}</span>
+                  <Star className="w-4 h-4 text-[var(--accent)] fill-[var(--accent)]" />
+                  <span className="text-[var(--text-primary)] font-semibold">{tour.rating.toFixed(1)}</span>
                   <span>({tour.reviewCount} отзывов)</span>
                 </span>
               </div>
             </div>
 
             {/* Описание */}
-            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
+            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
               <h2 className="text-xl font-bold mb-3">О туре</h2>
-              <p className="text-white/80 whitespace-pre-line leading-relaxed">{tour.description}</p>
+              <p className="text-[var(--text-secondary)] whitespace-pre-line leading-relaxed">{tour.description}</p>
             </div>
 
             {/* Маршрут */}
             {tour.route && (
-              <div className="bg-premium-gold/10 border border-premium-gold/30 rounded-2xl p-5 flex items-start gap-4">
-                <MapPin className="w-6 h-6 text-premium-gold shrink-0 mt-0.5" />
+              <div className="bg-[var(--accent)]/10 border border-[var(--accent)]/30 rounded-lg p-5 flex items-start gap-4">
+                <MapPin className="w-6 h-6 text-[var(--accent)] shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-premium-gold font-semibold text-sm uppercase tracking-wide mb-1">Маршрут</p>
-                  <p className="text-white font-bold">{tour.route.title}</p>
+                  <p className="text-[var(--accent)] font-semibold text-sm uppercase tracking-wide mb-1">Маршрут</p>
+                  <p className="text-[var(--text-primary)] font-bold">{tour.route.title}</p>
                   {tour.route.sourceUrl && (
                     <a
                       href={tour.route.sourceUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs text-premium-gold/70 hover:text-premium-gold mt-1 inline-block transition-colors"
+                      className="text-xs text-[var(--accent)]/70 hover:text-[var(--accent)] mt-1 inline-block transition-colors"
                     >
                       Подробнее о маршруте →
                     </a>
@@ -284,13 +284,13 @@ export default function FishingTourDetailPageClient() {
 
             {/* Что включено */}
             {tour.included.length > 0 && (
-              <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
+              <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
                 <h2 className="text-xl font-bold mb-4">Что включено</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {tour.included.map((item, i) => (
                     <div key={i} className="flex items-start gap-3">
                       <Check className="w-5 h-5 text-green-400 shrink-0 mt-0.5" />
-                      <span className="text-white/80 text-sm">{item}</span>
+                      <span className="text-[var(--text-secondary)] text-sm">{item}</span>
                     </div>
                   ))}
                 </div>
@@ -299,13 +299,13 @@ export default function FishingTourDetailPageClient() {
 
             {/* Что взять */}
             {tour.requirements.length > 0 && (
-              <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
+              <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
                 <h2 className="text-xl font-bold mb-4">Что взять с собой</h2>
                 <div className="space-y-2">
                   {tour.requirements.map((item, i) => (
                     <div key={i} className="flex items-start gap-3">
                       <AlertTriangle className="w-5 h-5 text-yellow-400 shrink-0 mt-0.5" />
-                      <span className="text-white/80 text-sm">{item}</span>
+                      <span className="text-[var(--text-secondary)] text-sm">{item}</span>
                     </div>
                   ))}
                 </div>
@@ -314,7 +314,7 @@ export default function FishingTourDetailPageClient() {
 
             {/* Форма бронирования (мобильная — под контентом) */}
             {showBooking && (
-              <div className="lg:hidden bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
+              <div className="lg:hidden bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
                 <h2 className="text-xl font-bold mb-5">Забронировать тур</h2>
                 <TourBookingForm
                   tourId={tourId}
@@ -329,26 +329,26 @@ export default function FishingTourDetailPageClient() {
           {/* Сайдбар */}
           <div className="space-y-5">
             {/* Бронирование */}
-            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 sticky top-6">
+            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6 sticky top-6">
               <div className="text-center mb-5">
-                <div className="text-4xl font-black text-premium-gold">
+                <div className="text-4xl font-bold text-[var(--accent)]">
                   {tour.price.toLocaleString('ru-RU')} ₽
                 </div>
-                <div className="text-white/50 text-sm">за человека</div>
+                <div className="text-[var(--text-muted)] text-sm">за человека</div>
               </div>
 
               <div className="space-y-3 mb-5 text-sm">
                 <div className="flex items-center justify-between">
-                  <span className="text-white/60 flex items-center gap-2">
+                  <span className="text-[var(--text-muted)] flex items-center gap-2">
                     <Clock className="w-4 h-4" /> Длительность
                   </span>
-                  <span className="text-white font-medium">{tour.duration} д.</span>
+                  <span className="text-[var(--text-primary)] font-medium">{tour.duration} д.</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-white/60 flex items-center gap-2">
+                  <span className="text-[var(--text-muted)] flex items-center gap-2">
                     <Users className="w-4 h-4" /> Группа
                   </span>
-                  <span className="text-white font-medium">
+                  <span className="text-[var(--text-primary)] font-medium">
                     {tour.minGroupSize}–{tour.maxGroupSize} чел.
                   </span>
                 </div>
@@ -367,7 +367,7 @@ export default function FishingTourDetailPageClient() {
               {/* Кнопка для мобильных */}
               <button
                 onClick={() => setShowBooking(!showBooking)}
-                className="lg:hidden w-full py-4 bg-premium-gold hover:bg-premium-gold/80 rounded-xl font-bold text-premium-black transition-colors"
+                className="lg:hidden w-full py-4 bg-[var(--accent)] hover:bg-[var(--accent)]/80 rounded-xl font-bold text-[var(--bg-card)] transition-colors"
               >
                 {showBooking ? 'Скрыть форму' : 'Забронировать'}
               </button>
@@ -378,7 +378,7 @@ export default function FishingTourDetailPageClient() {
                   {tour.operator.phone && (
                     <a
                       href={`tel:${tour.operator.phone}`}
-                      className="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-xl text-center font-medium transition-colors flex items-center justify-center gap-2 text-sm"
+                      className="flex-1 py-3 bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] rounded-xl text-center font-medium transition-colors flex items-center justify-center gap-2 text-sm"
                     >
                       <Phone className="w-4 h-4" />
                       Позвонить
@@ -387,7 +387,7 @@ export default function FishingTourDetailPageClient() {
                   {tour.operator.email && (
                     <a
                       href={`mailto:${tour.operator.email}`}
-                      className="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-xl text-center font-medium transition-colors flex items-center justify-center gap-2 text-sm"
+                      className="flex-1 py-3 bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] rounded-xl text-center font-medium transition-colors flex items-center justify-center gap-2 text-sm"
                     >
                       <Mail className="w-4 h-4" />
                       Email
@@ -399,16 +399,16 @@ export default function FishingTourDetailPageClient() {
 
             {/* Карточка оператора */}
             {tour.operator && (
-              <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
+              <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
                 <h3 className="font-bold mb-4">Организатор</h3>
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="w-14 h-14 bg-premium-gold/20 rounded-xl flex items-center justify-center shrink-0">
-                    <Fish className="w-8 h-8 text-premium-gold" />
+                  <div className="w-14 h-14 bg-[var(--accent)]/20 rounded-xl flex items-center justify-center shrink-0">
+                    <Fish className="w-8 h-8 text-[var(--accent)]" />
                   </div>
                   <div>
-                    <p className="font-bold text-white">{tour.operator.name}</p>
-                    <p className="flex items-center gap-1 text-sm text-white/60">
-                      <Star className="w-4 h-4 text-premium-gold fill-premium-gold" />
+                    <p className="font-bold text-[var(--text-primary)]">{tour.operator.name}</p>
+                    <p className="flex items-center gap-1 text-sm text-[var(--text-muted)]">
+                      <Star className="w-4 h-4 text-[var(--accent)] fill-[var(--accent)]" />
                       {tour.operator.rating.toFixed(1)}
                     </p>
                   </div>

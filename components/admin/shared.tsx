@@ -28,31 +28,31 @@ interface DataTableProps<T> {
 
 export function DataTable<T extends { id: string }>({ columns, data, onRowClick }: DataTableProps<T>) {
   return (
-    <div className="backdrop-blur-xl bg-gradient-to-br from-[#2C1810]/60 to-[#1a2634]/60 rounded-2xl border border-[#CD853F]/40 overflow-hidden">
+    <div className="bg-[var(--bg-card)] rounded-lg border border-[var(--border)] overflow-hidden">
       <table className="w-full">
-        <thead className="bg-[#2C1810]/40 border-b border-[#CD853F]/30">
+        <thead className="bg-[var(--bg-card)] border-b border-[var(--border)]">
           <tr>
             {columns.map((col) => (
               <th
                 key={String(col.key)}
-                className="px-6 py-4 text-left text-xs font-bold text-[#E8D4B0] uppercase tracking-wider"
+                className="px-6 py-4 text-left text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider"
               >
                 {col.header || col.title || String(col.key)}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-[#CD853F]/20">
+        <tbody className="divide-y divide-[var(--border)]">
           {data.map((item) => (
             <tr
               key={item.id}
               onClick={() => onRowClick?.(item)}
-              className={`hover:bg-[#2C1810]/40 transition-colors ${
+              className={`hover:bg-[var(--bg-hover)] transition-colors ${
                 onRowClick ? 'cursor-pointer' : ''
               }`}
             >
               {columns.map((col) => (
-                <td key={String(col.key)} className="px-6 py-4 text-sm text-white/90">
+                <td key={String(col.key)} className="px-6 py-4 text-sm text-[var(--text-secondary)]">
                   {col.render ? col.render(item) : String(item[col.key as keyof T] || '—')}
                 </td>
               ))}
@@ -87,15 +87,15 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
 
   return (
     <div className="flex items-center justify-between px-6 py-4">
-      <div className="text-sm text-[#E8D4B0]">
+      <div className="text-sm text-[var(--text-muted)]">
         Страница {currentPage} из {totalPages}
       </div>
-      
+
       <div className="flex items-center gap-2">
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="p-2 rounded-lg bg-[#2C1810]/40 border border-[#CD853F]/40 text-[#E8D4B0] hover:bg-[#2C1810]/60 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          className="p-2 rounded-lg bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--bg-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
@@ -106,8 +106,8 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
             onClick={() => onPageChange(page)}
             className={`px-4 py-2 rounded-lg font-semibold transition-all ${
               page === currentPage
-                ? 'bg-gradient-to-r from-[#DC143C] to-[#FF4500] text-white shadow-lg'
-                : 'bg-[#2C1810]/40 border border-[#CD853F]/40 text-[#E8D4B0] hover:bg-[#2C1810]/60'
+                ? 'bg-[var(--accent)] text-[var(--bg-card)] shadow-lg'
+                : 'bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--bg-hover)]'
             }`}
           >
             {page}
@@ -117,7 +117,7 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="p-2 rounded-lg bg-[#2C1810]/40 border border-[#CD853F]/40 text-[#E8D4B0] hover:bg-[#2C1810]/60 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          className="p-2 rounded-lg bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--bg-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
           <ChevronRight className="w-5 h-5" />
         </button>
@@ -143,22 +143,22 @@ export interface MetricCardProps {
 export function MetricCard({ title, value, subtitle, icon, trend, change, loading }: MetricCardProps) {
   if (loading) {
     return (
-      <div className="bg-white/10 rounded-2xl border border-white/15 p-6 animate-pulse">
-        <div className="h-4 bg-white/20 rounded mb-3 w-3/4"></div>
-        <div className="h-8 bg-white/20 rounded mb-2 w-1/2"></div>
+      <div className="bg-[var(--bg-card)] rounded-lg border border-[var(--border)] p-6 animate-pulse">
+        <div className="h-4 bg-[var(--bg-hover)] rounded mb-3 w-3/4"></div>
+        <div className="h-8 bg-[var(--bg-hover)] rounded mb-2 w-1/2"></div>
       </div>
     );
   }
   return (
-    <div className="bg-white/10 rounded-2xl border border-white/15 p-6">
+    <div className="bg-[var(--bg-card)] rounded-lg border border-[var(--border)] p-6">
       <div className="flex items-center justify-between mb-4">
-        <span className="text-white/60 text-sm font-medium">{title}</span>
+        <span className="text-[var(--text-muted)] text-sm font-medium">{title}</span>
         {icon && <span className="text-2xl">{icon}</span>}
       </div>
-      <div className="text-3xl font-bold text-white mb-2">{value}</div>
-      {subtitle && <div className="text-white/50 text-sm">{subtitle}</div>}
+      <div className="text-3xl font-bold text-[var(--text-primary)] mb-2">{value}</div>
+      {subtitle && <div className="text-[var(--text-muted)] text-sm">{subtitle}</div>}
       {(trend || change !== undefined) && (
-        <div className={`flex items-center gap-1 text-sm mt-3 ${trend === 'up' ? 'text-green-400' : trend === 'down' ? 'text-red-400' : 'text-white/50'}`}>
+        <div className={`flex items-center gap-1 text-sm mt-3 ${trend === 'up' ? 'text-[var(--success)]' : trend === 'down' ? 'text-[var(--danger)]' : 'text-[var(--text-muted)]'}`}>
           {trend === 'up' ? <TrendingUp className="w-4 h-4" /> : trend === 'down' ? <TrendingDown className="w-4 h-4" /> : <Minus className="w-4 h-4" />}
           {change !== undefined && <span>{change > 0 ? '+' : ''}{change.toFixed(1)}%</span>}
         </div>
@@ -186,7 +186,7 @@ export function SearchBar({ placeholder = 'Поиск...', onSearch }: SearchBar
 
   return (
     <form onSubmit={handleSubmit} className="relative">
-      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#CD853F]" />
+      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--accent)]" />
       <input
         type="text"
         value={query}
@@ -195,7 +195,7 @@ export function SearchBar({ placeholder = 'Поиск...', onSearch }: SearchBar
           if (e.target.value === '') onSearch('');
         }}
         placeholder={placeholder}
-        className="w-full pl-12 pr-4 py-3 bg-[#2C1810]/40 border border-[#CD853F]/40 rounded-xl text-white placeholder-[#E8D4B0]/50 focus:outline-none focus:border-[#FF4500] focus:ring-2 focus:ring-[#FF4500]/20 transition-all"
+        className="w-full pl-12 pr-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition-all"
       />
     </form>
   );
@@ -213,10 +213,10 @@ interface StatusBadgeProps {
 
 export function StatusBadge({ status }: StatusBadgeProps) {
   const styles = {
-    active: 'bg-[#6B8E23]/20 text-[#9ACD32] border-[#6B8E23]/40',
-    success: 'bg-[#6B8E23]/20 text-[#9ACD32] border-[#6B8E23]/40',
+    active: 'bg-[var(--success)]/15 text-[var(--success)] border-[var(--success)]/30',
+    success: 'bg-[var(--success)]/15 text-[var(--success)] border-[var(--success)]/30',
     inactive: 'bg-gray-500/20 text-gray-300 border-gray-500/40',
-    pending: 'bg-[#FF4500]/20 text-[#FF6347] border-[#FF4500]/40',
+    pending: 'bg-[var(--warning)]/15 text-[var(--warning)] border-[var(--warning)]/30',
   };
 
   const labels = {
@@ -252,8 +252,8 @@ export function LoadingSpinner({ size = 'md', message }: LoadingSpinnerProps) {
 
   return (
     <div className="flex flex-col items-center justify-center">
-      <div className={`${sizeClasses[size]} border-4 border-[#CD853F]/30 border-t-[#FF4500] rounded-full animate-spin`}></div>
-      {message && <p className="mt-4 text-[#E8D4B0] font-medium">{message}</p>}
+      <div className={`${sizeClasses[size]} border-4 border-[var(--border)] border-t-[var(--accent)] rounded-full animate-spin`}></div>
+      {message && <p className="mt-4 text-[var(--text-muted)] font-medium">{message}</p>}
     </div>
   );
 }
@@ -276,13 +276,13 @@ function isActionObject(a: unknown): a is { label: string; onClick: () => void }
 export function EmptyState({ icon, title, description, action }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-6">
-      <h3 className="text-2xl font-bold text-white mb-2">{title}</h3>
-      {description && <p className="text-[#E8D4B0]/70 text-center mb-6">{description}</p>}
+      <h3 className="text-2xl font-bold text-[var(--text-primary)] mb-2">{title}</h3>
+      {description && <p className="text-[var(--text-muted)] text-center mb-6">{description}</p>}
       {action && (
         isActionObject(action) ? (
           <button
             onClick={action.onClick}
-            className="px-6 py-3 bg-gradient-to-r from-[#DC143C] to-[#FF4500] text-white rounded-xl font-bold hover:shadow-xl hover:shadow-[#DC143C]/50 transition-all transform hover:scale-105"
+            className="px-6 py-3 bg-[var(--accent)] text-[var(--bg-card)] rounded-lg font-bold transition-all transform hover:scale-105"
           >
             {action.label}
           </button>

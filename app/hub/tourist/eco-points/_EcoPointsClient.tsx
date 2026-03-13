@@ -69,7 +69,7 @@ export default function EcoPointsClient() {
           <div className="space-y-6">
             {/* Баланс и прогресс */}
             <div
-              className="rounded-2xl border p-6 text-center"
+              className="rounded-lg border p-6 text-center"
               style={{
                 backgroundColor: 'var(--bg-card)',
                 borderColor: 'var(--border)',

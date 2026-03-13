@@ -93,16 +93,16 @@ export function ClientFormModal({ client, onClose, onSave }: ClientFormModalProp
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-premium-black border border-white/20 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-white/10">
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6 border-b border-[var(--border)]">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-white">
+            <h2 className="text-xl font-bold text-[var(--text-primary)]">
               {client ? 'Редактирование клиента' : 'Новый клиент'}
             </h2>
             <button
               onClick={onClose}
-              className="text-white/60 hover:text-white transition-colors"
+              className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
             >
               
             </button>
@@ -112,27 +112,27 @@ export function ClientFormModal({ client, onClose, onSave }: ClientFormModalProp
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="client-name" className="block text-white font-medium mb-2">
-                Имя <span className="text-red-400">*</span>
+              <label htmlFor="client-name" className="block text-[var(--text-primary)] font-medium mb-2">
+                Имя <span className="text-[var(--danger)]">*</span>
               </label>
               <input
                 id="client-name"
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+                className="w-full px-3 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="client-email" className="block text-white font-medium mb-2">
-                Email <span className="text-red-400">*</span>
+              <label htmlFor="client-email" className="block text-[var(--text-primary)] font-medium mb-2">
+                Email <span className="text-[var(--danger)]">*</span>
               </label>
               <input
                 id="client-email"
                 value={formData.email}
                 onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+                className="w-full px-3 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                 required
               />
             </div>
@@ -140,27 +140,27 @@ export function ClientFormModal({ client, onClose, onSave }: ClientFormModalProp
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="client-phone" className="block text-white font-medium mb-2">
+              <label htmlFor="client-phone" className="block text-[var(--text-primary)] font-medium mb-2">
                 Телефон
               </label>
               <input
                 id="client-phone"
                 value={formData.phone}
                 onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+                className="w-full px-3 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                 placeholder="+7 (999) 123-45-67"
               />
             </div>
 
             <div>
-              <label htmlFor="client-company" className="block text-white font-medium mb-2">
+              <label htmlFor="client-company" className="block text-[var(--text-primary)] font-medium mb-2">
                 Компания
               </label>
               <input
                 id="client-company"
                 value={formData.company}
                 onChange={(e) => setFormData(prev => ({ ...prev, company: e.target.value }))}
-                className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+                className="w-full px-3 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                 placeholder="Название компании"
               />
             </div>
@@ -168,14 +168,14 @@ export function ClientFormModal({ client, onClose, onSave }: ClientFormModalProp
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="client-status" className="block text-white font-medium mb-2">
+              <label htmlFor="client-status" className="block text-[var(--text-primary)] font-medium mb-2">
                 Статус
               </label>
               <select
                 id="client-status"
                 value={formData.status}
                 onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as any }))}
-                className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+                className="w-full px-3 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
               >
                 <option value="prospect">Потенциальный</option>
                 <option value="active">Активный</option>
@@ -184,14 +184,14 @@ export function ClientFormModal({ client, onClose, onSave }: ClientFormModalProp
             </div>
 
             <div>
-              <label htmlFor="client-source" className="block text-white font-medium mb-2">
+              <label htmlFor="client-source" className="block text-[var(--text-primary)] font-medium mb-2">
                 Источник
               </label>
               <select
                 id="client-source"
                 value={formData.source}
                 onChange={(e) => setFormData(prev => ({ ...prev, source: e.target.value as any }))}
-                className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+                className="w-full px-3 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
               >
                 <option value="direct">Прямой контакт</option>
                 <option value="referral">Рекомендация</option>
@@ -203,7 +203,7 @@ export function ClientFormModal({ client, onClose, onSave }: ClientFormModalProp
           </div>
 
           <div>
-            <label htmlFor="client-notes" className="block text-white font-medium mb-2">
+            <label htmlFor="client-notes" className="block text-[var(--text-primary)] font-medium mb-2">
               Заметки
             </label>
             <textarea
@@ -211,13 +211,13 @@ export function ClientFormModal({ client, onClose, onSave }: ClientFormModalProp
               value={formData.notes}
               onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
               rows={3}
-              className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold resize-none"
+              className="w-full px-3 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] resize-none"
               placeholder="Дополнительная информация о клиенте..."
             />
           </div>
 
           <div>
-            <span className="block text-white font-medium mb-2">
+            <span className="block text-[var(--text-primary)] font-medium mb-2">
               Теги
             </span>
             <div className="flex gap-2 mb-3">
@@ -226,13 +226,13 @@ export function ClientFormModal({ client, onClose, onSave }: ClientFormModalProp
                 value={newTag}
                 onChange={(e) => setNewTag(e.target.value)}
                 placeholder="Добавить тег..."
-                className="flex-1 px-3 py-2 bg-white/10 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-premium-gold"
+                className="flex-1 px-3 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                 onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
               />
               <button
                 type="button"
                 onClick={addTag}
-                className="px-4 py-2 bg-premium-gold hover:bg-premium-gold/80 text-premium-black font-bold rounded-lg transition-colors"
+                className="px-4 py-2 bg-[var(--accent)] hover:bg-[var(--accent)]/80 text-[var(--bg-card)] font-bold rounded-lg transition-colors"
               >
                 Добавить
               </button>
@@ -243,13 +243,13 @@ export function ClientFormModal({ client, onClose, onSave }: ClientFormModalProp
                 {formData.tags.map(tag => (
                   <span
                     key={tag}
-                    className="inline-flex items-center gap-2 px-3 py-1 bg-premium-gold/20 text-premium-gold rounded-lg text-sm"
+                    className="inline-flex items-center gap-2 px-3 py-1 bg-[var(--accent)]/10 text-[var(--accent)] rounded-lg text-sm"
                   >
                     {tag}
                     <button
                       type="button"
                       onClick={() => removeTag(tag)}
-                      className="hover:text-red-400"
+                      className="hover:text-[var(--danger)]"
                     >
                       ×
                     </button>
@@ -259,18 +259,18 @@ export function ClientFormModal({ client, onClose, onSave }: ClientFormModalProp
             )}
           </div>
 
-          <div className="flex gap-3 pt-6 border-t border-white/10">
+          <div className="flex gap-3 pt-6 border-t border-[var(--border)]">
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 px-6 py-3 bg-premium-gold hover:bg-premium-gold/80 text-premium-black font-bold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-6 py-3 bg-[var(--accent)] hover:bg-[var(--accent)]/80 text-[var(--bg-card)] font-bold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving ? 'Сохранение...' : (client ? 'Сохранить изменения' : 'Создать клиента')}
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
+              className="px-6 py-3 bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] text-[var(--text-primary)] rounded-lg transition-colors"
             >
               Отмена
             </button>

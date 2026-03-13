@@ -111,11 +111,11 @@ export function TourDeparturesCalendar({
 
   if (loading) {
     return (
-      <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
         <h3 className="text-base font-bold mb-4 flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-premium-gold" /> Доступные заезды
+          <Calendar className="w-4 h-4 text-[var(--accent)]" /> Доступные заезды
         </h3>
-        <div className="flex items-center justify-center py-8 text-white/60">
+        <div className="flex items-center justify-center py-8 text-[var(--text-muted)]">
           <Loader2 className="w-5 h-5 animate-spin mr-2" />
           Загрузка...
         </div>
@@ -125,11 +125,11 @@ export function TourDeparturesCalendar({
 
   if (error || departures.length === 0) {
     return (
-      <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
         <h3 className="text-base font-bold mb-4 flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-premium-gold" /> Доступные заезды
+          <Calendar className="w-4 h-4 text-[var(--accent)]" /> Доступные заезды
         </h3>
-        <p className="text-white/50 text-sm">
+        <p className="text-[var(--text-muted)] text-sm">
           {error || 'Нет запланированных заездов. Свяжитесь с организатором.'}
         </p>
       </div>
@@ -137,13 +137,13 @@ export function TourDeparturesCalendar({
   }
 
   return (
-    <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
+    <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
       <h3 className="text-base font-bold mb-4 flex items-center gap-2">
-        <Calendar className="w-4 h-4 text-premium-gold" /> Доступные заезды
+        <Calendar className="w-4 h-4 text-[var(--accent)]" /> Доступные заезды
       </h3>
 
       {/* Legend */}
-      <div className="flex items-center gap-4 mb-4 text-xs text-white/60">
+      <div className="flex items-center gap-4 mb-4 text-xs text-[var(--text-muted)]">
         <span className="flex items-center gap-1">
           <span className="w-2.5 h-2.5 rounded-full bg-green-400 inline-block" />
           Есть места
@@ -171,10 +171,10 @@ export function TourDeparturesCalendar({
       {/* Selected departure info */}
       {selectedDeparture && (
         <div className="mt-4 space-y-3">
-          <div className="bg-white/5 rounded-xl p-4 space-y-2">
+          <div className="bg-[var(--bg-card)] rounded-lg p-4 space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-white/60">Дата</span>
-              <span className="text-white font-semibold">
+              <span className="text-[var(--text-muted)]">Дата</span>
+              <span className="text-[var(--text-primary)] font-semibold">
                 {new Date(selectedDeparture.startDate).toLocaleDateString('ru-RU', {
                   day: 'numeric',
                   month: 'long',
@@ -189,39 +189,39 @@ export function TourDeparturesCalendar({
               </span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-white/60">Свободно мест</span>
+              <span className="text-[var(--text-muted)]">Свободно мест</span>
               <span className={`font-semibold ${selectedDeparture.spotsLeft <= 3 ? 'text-yellow-400' : 'text-green-400'}`}>
                 {selectedDeparture.spotsLeft} из {selectedDeparture.availableSlots}
               </span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-white/60">Цена за чел.</span>
-              <span className="text-premium-gold font-bold">
+              <span className="text-[var(--text-muted)]">Цена за чел.</span>
+              <span className="text-[var(--accent)] font-bold">
                 {price.toLocaleString('ru-RU')} {currencyLabel}
               </span>
             </div>
             {selectedDeparture.notes && (
-              <p className="text-white/40 text-xs italic mt-1">{selectedDeparture.notes}</p>
+              <p className="text-[var(--text-muted)] text-xs italic mt-1">{selectedDeparture.notes}</p>
             )}
           </div>
 
           {/* People count */}
           <div className="flex items-center justify-between">
-            <label className="flex items-center gap-1.5 text-sm text-white/60">
+            <label className="flex items-center gap-1.5 text-sm text-[var(--text-muted)]">
               <Users className="w-4 h-4" /> Участников
             </label>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setPeople(p => Math.max(1, p - 1))}
-                className="w-8 h-8 rounded-lg bg-white/10 text-white hover:bg-white/20 transition-colors flex items-center justify-center text-lg font-bold"
+                className="w-8 h-8 rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-colors flex items-center justify-center text-lg font-bold"
                 disabled={people <= 1}
               >
                 -
               </button>
-              <span className="text-white font-bold w-8 text-center">{people}</span>
+              <span className="text-[var(--text-primary)] font-bold w-8 text-center">{people}</span>
               <button
                 onClick={() => setPeople(p => Math.min(maxPeople, p + 1))}
-                className="w-8 h-8 rounded-lg bg-white/10 text-white hover:bg-white/20 transition-colors flex items-center justify-center text-lg font-bold"
+                className="w-8 h-8 rounded-lg bg-[var(--bg-card)] text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-colors flex items-center justify-center text-lg font-bold"
                 disabled={people >= maxPeople}
               >
                 +
@@ -230,9 +230,9 @@ export function TourDeparturesCalendar({
           </div>
 
           {/* Total */}
-          <div className="flex justify-between items-center pt-2 border-t border-white/10">
-            <span className="text-white/60 text-sm">Итого</span>
-            <span className="text-xl font-black text-premium-gold">
+          <div className="flex justify-between items-center pt-2 border-t border-[var(--border)]">
+            <span className="text-[var(--text-muted)] text-sm">Итого</span>
+            <span className="text-xl font-bold text-[var(--accent)]">
               {(price * people).toLocaleString('ru-RU')} {currencyLabel}
             </span>
           </div>
@@ -240,7 +240,7 @@ export function TourDeparturesCalendar({
           {/* Book button */}
           <button
             onClick={handleBook}
-            className="w-full px-6 py-3.5 bg-premium-gold hover:bg-premium-gold/80 text-premium-black font-bold rounded-xl transition-colors"
+            className="w-full px-6 py-3.5 bg-[var(--accent)] hover:opacity-90 text-[var(--bg-primary)] font-bold rounded-lg transition-colors"
           >
             Забронировать
           </button>

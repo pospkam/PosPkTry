@@ -9,8 +9,8 @@ export default function SettingsPageClient() {
       <PublicNav />
       
       <div className="max-w-4xl mx-auto px-4 py-12">
-        <h1 className="text-3xl font-bold text-white mb-2">Настройки</h1>
-        <p className="text-white/60 mb-8">Подключение внешних сервисов</p>
+        <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">Настройки</h1>
+        <p className="text-[var(--text-muted)] mb-8">Подключение внешних сервисов</p>
         
         <div className="space-y-6">
           <TokenImportForm />
