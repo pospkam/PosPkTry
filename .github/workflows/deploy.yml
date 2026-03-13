@@ -20,9 +20,11 @@ jobs:
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Sync ALL env vars to Timeweb
+        env:
+          TIMEWEB_TOKEN: ${{ secrets.TIMEWEB_TOKEN }}
         run: |
           APP_ID="159529"
-          TOKEN="${{ secrets.TIMEWEB_TOKEN }}"
+          TOKEN="$TIMEWEB_TOKEN"
 
           if [ -z "$TOKEN" ]; then
             echo "TIMEWEB_TOKEN not set — skip env sync"
@@ -84,9 +86,11 @@ jobs:
           fi
 
       - name: Check deploy status
+        env:
+          TIMEWEB_TOKEN: ${{ secrets.TIMEWEB_TOKEN }}
         run: |
           APP_ID="159529"
-          TOKEN="${{ secrets.TIMEWEB_TOKEN }}"
+          TOKEN="$TIMEWEB_TOKEN"
 
           if [ -z "$TOKEN" ]; then
             echo "TIMEWEB_TOKEN not set — skip status check"
