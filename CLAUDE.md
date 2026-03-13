@@ -1,50 +1,39 @@
-# KamchatourHub — Claude Code Rules (CLAUDE.md)
+# KamchatourHub — Claude Code Rules
 
-## 1. ЗАДАЧА (Task)
-
-Ты помогаешь разрабатывать **KamchatourHub** — туристическую платформу Камчатки.
-Успех = рабочий, задеплоенный код на Timeweb Cloud без регрессий.
-Без ролей типа "веди себя как сеньор". Просто делай задачу.
+> Туристическая платформа Камчатки. Цель: рабочий задеплоенный код без регрессий.
+> Подробности об архитектуре, сервисах и хитростях — в `.claude/MEMORY.md`.
 
 ---
 
-## 2. КОНТЕКСТ ПРОЕКТА (Context)
+## 1. СТЕК
 
-**Стек:**
-- Next.js 15 (App Router), TypeScript strict, Tailwind CSS
-- PostgreSQL — прямой SQL через `lib/database.ts` + `lib/db-pool.ts` (не Prisma)
-- JWT auth в `lib/auth.ts`, middleware в `lib/auth/middleware.ts`
-- 8+ хабов: tourist / operator / guide / transfer-operator / agent / admin / stay-provider / gear-provider
-- Деплой: Timeweb Cloud → pospkam-pospktry-c1f3.twc1.net (App ID: 159529)
-- CI/CD: GitHub → автодеплой при push в main
+| Слой | Технология |
+|------|-----------|
+| Frontend | Next.js 15 App Router, TypeScript strict, Tailwind CSS |
+| Database | PostgreSQL — прямой SQL (`lib/database.ts`, `lib/db-pool.ts`), без Prisma |
+| Auth | JWT — `lib/auth.ts`, middleware — `lib/auth/middleware.ts` |
+| Deploy | Timeweb Cloud → `pospkam-pospktry-c1f3.twc1.net` (App ID: 159529) |
+| CI/CD | GitHub → автодеплой при push в `main` |
 
-**Масштаб:**
-- 94 страницы, 256 API routes, 119 компонентов
-- 41 миграция (lib/database/migrations/ + migrations/), следующая: `028_...sql`
-- 260 маршрутов в `agent_route_knowledge`, 14 категорий
-- 11 коммерческих туров с системой выездов (tour_departures)
+**Масштаб:** 94 стр / 256 API routes / 119 компонентов / 8 хабов / 260 маршрутов БД
 
-**Прочитай перед стартом:**
-- `lib/database.ts` — PostgreSQL клиент (query wrapper)
-- `lib/db-pool.ts` — экспортирует `{ pool }` (NAMED export)
-- `lib/auth.ts` — verifyAuth, authorizeRole, authenticateUser
-- `lib/auth/middleware.ts` — requireAuth, requireAdmin, requireRole, requireOperator
+**Ключевые файлы перед стартом:**
+- `lib/db-pool.ts` — `import { pool } from` (named, не default)
 - `lib/types/db-rows.ts` — все интерфейсы строк БД
+- `lib/auth/middleware.ts` — requireAuth / requireAdmin / requireRole
 
 ---
 
-## 3. ДИЗАЙН-СИСТЕМА (Design System)
+## 2. ДИЗАЙН-СИСТЕМА
 
-**Принцип:** Все стили через CSS-переменные. Никаких хардкод hex, никакого glassmorphism.
-
-**Цветовые токены (globals.css):**
+### Токены (globals.css)
 
 | Токен | Light | Dark | Назначение |
 |-------|-------|------|------------|
 | `--bg-primary` | `#F5F0EB` | `#0D1117` | Фон страницы |
 | `--bg-card` | `#FFFFFF` | `#21262D` | Карточки |
-| `--bg-hover` | `#F0ECE7` | `#30363D` | Hover-состояния |
-| `--text-primary` | `#1A1714` | `#F0F6FC` | Заголовки, основной текст |
+| `--bg-hover` | `#F0ECE7` | `#30363D` | Hover |
+| `--text-primary` | `#1A1714` | `#F0F6FC` | Заголовки |
 | `--text-secondary` | `#6B6560` | `#8B949E` | Подписи |
 | `--text-muted` | `#9A9590` | `#484F58` | Плейсхолдеры |
 | `--accent` | `#D44A0C` | `#E8734A` | CTA, активные состояния |
@@ -54,190 +43,132 @@
 | `--danger` | `#DC2626` | `#F85149` | SOS, ошибки |
 | `--border` | `rgba(0,0,0,0.07)` | `rgba(255,255,255,0.08)` | Границы |
 
-**Утилиты дизайн-системы (ds-классы):**
-`ds-page`, `ds-card`, `ds-input`, `ds-btn`, `ds-btn-primary`, `ds-btn-secondary`, `ds-btn-danger`, `ds-section`, `ds-badge`, `ds-h1`, `ds-h2`, `ds-label`, `ds-skeleton`
+**DS-утилиты:** `ds-page` `ds-card` `ds-input` `ds-btn` `ds-btn-primary` `ds-btn-secondary` `ds-btn-danger` `ds-section` `ds-badge` `ds-h1` `ds-h2` `ds-label` `ds-skeleton`
 
-**Типографика:**
-- Заголовки: `Playfair Display` (var: `--font-playfair`)
-- Основной текст: `Outfit` (var: `--font-outfit`, default sans)
+**Типографика:** заголовки — `Playfair Display` (`--font-playfair`), текст — `Outfit` (`--font-outfit`)
 
-**Темы:**
-- Светлая (default): `data-theme="light"`
-- Темная: `data-theme="dark"`
-- Переключатель в хедере
-- Tailwind: `darkMode: 'class'`
+### Запрещено
 
-**Запрещено в стилях:**
-- `bg-white/10`, `text-white`, `backdrop-blur-*` — используй CSS-переменные
-- `text-cyber-cyan`, `text-premium-gold`, `bg-premium-*` — устаревшие токены
-- `font-black` — используй `font-bold`
-- `rounded-2xl` — используй `rounded-lg`
-- Хардкод hex (#2C1810, #CD853F, #00D4FF и т.д.) — только CSS vars
-
-**Маппинг замен (при миграции):**
 ```
-bg-white/10 → bg-[var(--bg-card)]
-border-white/20 → border-[var(--border)]
-text-white → text-[var(--text-primary)]
-text-white/70 → text-[var(--text-muted)]
-text-premium-gold → text-[var(--accent)]
-bg-cyber-cyan → bg-[var(--accent)]
-backdrop-blur-* → удалить
+bg-white/10        → bg-[var(--bg-card)]
+text-white         → text-[var(--text-primary)]
+text-white/70      → text-[var(--text-muted)]
+border-white/20    → border-[var(--border)]
+backdrop-blur-*    → удалить
+text-cyber-cyan / text-premium-gold / bg-premium-* → устаревшие, не использовать
+font-black         → font-bold
+rounded-2xl        → rounded-lg
+Хардкод hex        → только CSS vars
+Glassmorphism      → запрещён
 ```
 
-**Компоненты:**
-- Хедер: `KH` логотип + иконка темы + ЛК. БЕЗ поиска.
-- Поиск — только через иконку -> модальное окно
-- Навбар (mobile, pill): Дом / Карта / Избранное / ЛК / СОС
-- Футер — только desktop
+### Компоненты платформы
+
+- Хедер: `KH` логотип + иконка темы + ЛК (без поиска в шапке)
+- Поиск: только иконка → модальное окно
+- Mobile navbar (pill): Дом / Карта / Избранное / ЛК / СОС — **только на главной и хабах**
+- Футер: только desktop
 - Homepage: `components/homepage/` (Hero, BentoGrid, LiveFeed, ActivityCircles, CTASection, Marquee, Reveal)
 
 ---
 
-## 4. ПРАВИЛА КОДА (Rules)
+## 3. FRONTEND-DESIGN (Anthropic Plugin)
+
+Скилл активируется автоматически при создании UI. Работает **внутри нашей дизайн-системы**.
+
+### Что поощряется
+
+- **Bold typography** через `font-playfair` + крупные размеры (`text-4xl`, `text-5xl`) — заголовки секций, hero, CTA
+- **Distinctive layouts** — asymmetric grids, offset cards, full-bleed секции с `--bg-primary`
+- **High-impact moments** — hero-секции с мощной типографикой и минимальным декором
+- **Context-aware visuals** — дикая природа Камчатки: вулканы, медведи, океан. Не generic travel
+- **Micro-animations** — `transition-all duration-200`, subtle scale/opacity. Без flashy keyframes
+- **Whitespace as design** — отступы говорят «премиум», не «студент-верстальщик»
+
+### Правила применения
+
+1. Любой цвет — только через CSS-токены (`var(--accent)`, `var(--ocean)` и т.д.)
+2. Анимации — только через Tailwind transition-классы, без `@keyframes` в компонентах
+3. Шрифты — Playfair Display для заголовков, Outfit для остального. Никаких Google Fonts import
+4. Изображения — из `public/images/`, не placeholder.com и не unsplash ссылки
+5. Иконки — только `lucide-react`. Никаких emoji
+6. Glassmorphism — под абсолютным запретом даже для "эффекта"
+
+### Контекст платформы для дизайна
+
+Это премиальная туристическая платформа. Эстетика:
+- Тёплая, земная, природная (лаваст, вулканы, тайга)
+- Не минималистично-белая, не cyberpunk, не startup-purple
+- Суровая красота + доверие + профессионализм
+
+---
+
+## 4. КОД
 
 **Обязательно:**
-- TypeScript строгий, без `any` — использовать `unknown` + type guards
-- Все API routes с валидацией входных данных (Zod)
-- JWT проверка на каждом защищенном маршруте
-- SQL только параметризованный: `$1, $2` — никогда конкатенация
-- Обработка ошибок с понятными сообщениями на русском
-- НИКАКИХ ЭМОДЗИ в коде, UI, console.log — только Lucide React иконки или текст
+- TypeScript строгий — `unknown` + type guards, без `any`
+- Все API routes — Zod валидация входных данных
+- JWT проверка на каждом защищённом маршруте
+- SQL — только параметризованный (`$1, $2`), никогда конкатенация
+- Ошибки — понятные сообщения на русском
+- Никаких эмодзи в коде, UI, логах
 
 **Запрещено:**
 - `console.log` в продакшн-коде
-- Хардкод строк подключения и секретов — только через `.env.local`
-- Изменение схемы БД без миграции (следующая: `028_...sql`)
-- Читать `kamchatka_routes` напрямую — только через `v_kamchatka_routes_api`
-- `import pool from` — только `import { pool } from '@/lib/db-pool'` (named export)
+- Секреты в коде — только `.env.local`
+- Изменение схемы БД без SQL-миграции
+- `SELECT * FROM kamchatka_routes` — только через `v_kamchatka_routes_api`
+- `import pool from` — только `import { pool } from '@/lib/db-pool'`
 
-**Стиль:**
-- Компоненты в `components/`, атомарно
-- Хуки в `hooks/`
-- Утилиты в `lib/`
-- Сервисы в `lib/services/`
-- Типы БД в `lib/types/db-rows.ts`
-- Именование: `kebab-case` для файлов, `PascalCase` для компонентов
-- Server/Client split: `page.tsx` (server, metadata) + `_*Client.tsx` (client, логика)
-
----
-
-## 5. ПРОЦЕСС (Plan)
-
-**Перед тем как писать код:**
-1. Назови 3 правила из этого файла, которые важны для текущей задачи
-2. Дай план: что изменяешь, какие файлы затронуты, возможные риски
-
-**Не начинай без плана если задача затрагивает:**
-- Схему БД
-- Логику авторизации
-- API endpoints
-- Компоненты с бизнес-логикой бронирований
-
----
-
-## 6. УТОЧНЕНИЯ (Conversation)
-
-Если задача неоднозначна — **НЕ начинай выполнение**.
-Задай уточняющие вопросы:
-- Какая роль пользователя затронута?
-- Это новый функционал или правка существующего?
-- Есть ли пример желаемого поведения?
-
----
-
-## 7. ВЫРАВНИВАНИЕ (Alignment)
-
-Начинай работу только после того, как план согласован.
-Если собираешься нарушить одно из правил выше — **остановись и скажи об этом**.
-
----
-
-## 8. ДЕПЛОЙ (Deploy)
-
-- Проверь: `npm run build` без ошибок
-- TypeScript: `npx tsc --noEmit` — 0 ошибок
-- Миграции: через psql или скрипт
-- Переменные окружения заданы на Timeweb Cloud
-- Push в `main` -> автодеплой через GitHub Actions
-- Build config: `ignoreBuildErrors=true` на Timeweb (Docker), локально проверяем `tsc --noEmit`
-
-### Timeweb MCP Server
-
-Для управления деплоем через AI-агентов используется **Timeweb MCP Server**:
-- Токен: `TIMEWEB_TOKEN` (в `.cursor/mcp.json` или `.vscode/mcp.json`, **не** в `.env.local`)
-- Команды: `create_timeweb_app`, `get_deploy_settings`, `add_vcs_provider`
-
-### MCP Server (API маршрутов)
-
-Платформа предоставляет собственный MCP Server: `app/api/mcp/route.ts` -> `/api/mcp`
-- Протокол: JSON-RPC 2.0 (Streamable HTTP)
-- 4 инструмента: `search_routes`, `get_route_details`, `list_categories`, `get_tours`
-- Данные: 260 маршрутов из `agent_route_knowledge`
-- Публичный endpoint (без авторизации)
-
----
-
-## 9. AI-СИСТЕМА
-
-**Водопад провайдеров** (`lib/ai/providers.ts`):
-1. Timeweb Cloud AI Agent (deepseek-chat) — `TIMEWEB_TOKEN` + `TIMEWEB_AI_AGENT_ID`
-2. OpenRouter (claude-3.5-sonnet) — `OPENROUTER_API_KEY`
-3. DeepSeek (deepseek-chat) — `DEEPSEEK_API_KEY`
-4. Minimax (MiniMax-Text-01) — `MINIMAX_API_KEY`
-5. xAI Grok (grok-4) — `XAI_API_KEY`
-6. Anthropic Claude (claude-opus-4-6) — `ANTHROPIC_API_KEY`
-
-Все провайдеры: temperature 0.4, max_tokens 800. Если все 6 недоступны — fallback текст.
-
-**RAG:** `agent_route_knowledge` (260 маршрутов), fallback `v_kamchatka_routes_api`
-
----
-
-## 10. TELEGRAM BOT (@KuzmichKam_bot)
-
-- Сервис: `lib/notifications/telegram.ts` -> `telegramService`
-- Webhook: `POST /api/telegram/webhook` (валидация через `X-Telegram-Bot-Api-Secret-Token`)
-- Регистрация: `POST /api/telegram/setup-webhook` (admin-only)
-- Env vars: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_FISHING_CHAT_ID`, `TELEGRAM_WEBHOOK_SECRET`
-- Функции: уведомления о бронированиях, подтверждение/отмена через inline кнопки
-
----
-
-## 11. МАРШРУТЫ (Routes Knowledge)
-
-**Текущее состояние БД:**
-- `agent_route_knowledge`: **260 маршрутов**, 14 категорий
-- Источники: mestechkokam.ru, zimaletokamchatka.ru, kamchatintour.ru
-
-**3-уровневая архитектура бронирований:**
-- `kamchatka_routes` -> физические локации (260)
-- `tours` -> коммерческие программы (11, route_id FK)
-- `tour_departures` -> конкретные даты выездов (migration 026)
-- `bookings` -> бронирования (departure_id FK, migration 027)
-
-**Workflow обновления базы знаний:**
-```bash
-npm run ai:scrape-unique:direct     # скрапинг (без AI)
-npm run ai:setup-agent-rag          # -> crew/knowledge-base.json
-python3 crew/agent-trainer.py       # -> конфиги агентов
+**Структура файлов:**
+```
+components/   — атомарные компоненты (PascalCase)
+hooks/        — React hooks
+lib/          — утилиты, сервисы, конфиги
+lib/services/ — доменные сервисы
+lib/types/db-rows.ts — интерфейсы строк БД
+page.tsx      — server (metadata)
+_*Client.tsx  — client (логика, useState)
 ```
 
-**Дедупликация** — два уровня:
-1. По `route_dedupe_key` (hostname:slug)
-2. По нормализованному заголовку (lowercase + е->е + strip non-alnum)
+---
+
+## 5. ПРОЦЕСС
+
+Перед кодом — план: что меняешь, какие файлы затронуты, риски.
+
+**Обязательный план если затрагивает:**
+- Схему БД / миграции
+- Логику авторизации
+- API endpoints
+- Компоненты бронирований
+
+Если задача неоднозначна — задай вопросы (роль, новое/правка, пример поведения).
 
 ---
 
-## 12. ЧТО НЕ ТРОГАТЬ
+## 6. ДЕПЛОЙ
 
-- `middleware.ts` — Edge middleware (JWT + rate-limit)
+```bash
+npx tsc --noEmit      # 0 ошибок
+npx vitest run        # 214 тестов зелёные
+git push origin main  # → автодеплой Timeweb
+```
+
+Переменные окружения — на Timeweb Cloud панели, не в коде.
+Build config: `ignoreBuildErrors=true` на Timeweb (Docker), локально — строгая проверка.
+
+---
+
+## 7. НЕ ТРОГАТЬ
+
+- `middleware.ts` — Edge JWT + rate-limit
 - `lib/auth.ts` — JWT логика
 - `app/api/payments/` — CloudPayments webhook
-- `app/api/safety/sos` — SOS (изменения -> staging, не prod)
-- Существующие миграции 001-027 — только добавлять новые
+- `app/api/safety/sos` — SOS (только через staging)
+- Миграции 001-027 — только добавлять новые (следующая: `028_`)
 
 ---
 
-> Статус: MVP реализован, полировка UI + подключение реальных данных.
-> Обновлено: Март 2026
+> Статус: MVP завершён. Фаза: полировка UI + реальные данные.
+> Обновлено: Март 2026 | Команда: `.claude/team-workflow.md`

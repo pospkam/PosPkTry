@@ -4,13 +4,12 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   User, Mail, Phone, Mountain, Fish, Camera, Footprints,
-  Waves, Binoculars, ChevronRight, Save, AlertCircle, CheckCircle,
+  Waves, Binoculars, ChevronRight, Save, AlertCircle, CheckCircle, House,
   type LucideIcon,
 } from 'lucide-react';
 import { Protected } from '@/components/auth/Protected';
 import { LoadingSpinner } from '@/components/admin/shared';
 import { User as UserType } from '@/types';
-import BottomNav from '@/components/shared/BottomNav';
 
 /* ── Interest chips ── */
 interface InterestDef { key: string; label: string; icon: LucideIcon }
@@ -161,18 +160,27 @@ export default function ProfilePageClient() {
 
   return (
     <Protected roles={['tourist', 'operator', 'agent', 'guide', 'transfer', 'admin']}>
-      <main className="min-h-screen bg-[var(--bg-primary)] pb-24 md:pb-8">
+      <main className="min-h-screen bg-[var(--bg-primary)] pb-8">
         <div className="max-w-2xl mx-auto px-4 py-6 lg:py-8">
 
           {/* ─── Page header ─── */}
           <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-lg font-semibold text-[var(--text-primary)] tracking-tight">Мой профиль</h1>
-              {user && (
-                <p className="text-xs text-[var(--text-muted)] mt-0.5">
-                  {getRoleLabel(user.role)}
-                </p>
-              )}
+            <div className="flex items-center gap-3">
+              <Link
+                href="/"
+                className="flex items-center justify-center w-8 h-8 rounded-lg bg-[var(--bg-hover)] hover:bg-[var(--border)] transition-colors"
+                aria-label="На главную"
+              >
+                <House className="w-4 h-4 text-[var(--text-secondary)]" />
+              </Link>
+              <div>
+                <h1 className="text-lg font-semibold text-[var(--text-primary)] tracking-tight">Мой профиль</h1>
+                {user && (
+                  <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                    {getRoleLabel(user.role)}
+                  </p>
+                )}
+              </div>
             </div>
             {user && (
               <Link
@@ -382,8 +390,6 @@ export default function ProfilePageClient() {
             </button>
           </form>
         </div>
-
-        <BottomNav activePath="/profile" />
       </main>
     </Protected>
   );
