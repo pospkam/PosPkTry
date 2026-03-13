@@ -10,6 +10,7 @@ import { LiveFeed } from '@/components/homepage/LiveFeed';
 import { CTASection } from '@/components/homepage/CTASection';
 import { HomeBottomNav } from '@/components/homepage/HomeBottomNav';
 import SOSButton from '@/components/shared/SOSButton';
+import { Footer } from '@/components/layout/Footer';
 import { useScrollY } from '@/hooks/useScrollY';
 
 export default function HomePageClient() {
@@ -38,6 +39,7 @@ export default function HomePageClient() {
       <BentoGrid />
       <LiveFeed />
       <CTASection />
+      <Footer />
       <HomeBottomNav />
       <SOSButton />
     </div>
