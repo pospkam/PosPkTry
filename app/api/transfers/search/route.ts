@@ -83,25 +83,20 @@ export async function GET(request: NextRequest) {
       ]);
 
       if (routeResult.rows.length === 0) {
-        // Если маршруты не найдены, возвращаем тестовые данные
-        const mockTransfers = generateMockTransfers(from, to, date, passengers, vehicleType, budgetMin, budgetMax);
-        
-        const searchMetadata: SearchMetadata = {
-          searchId: `search_${Date.now()}`,
-          searchTime: new Date(),
-          resultsCount: mockTransfers.length,
-          minPrice: Math.min(...mockTransfers.map(t => t.pricePerPerson)),
-          maxPrice: Math.max(...mockTransfers.map(t => t.pricePerPerson)),
-          averagePrice: mockTransfers.reduce((sum, t) => sum + t.pricePerPerson, 0) / mockTransfers.length,
-          searchDuration: Date.now() - startTime
-        };
-
         return NextResponse.json({
           success: true,
           data: {
-            availableTransfers: mockTransfers,
-            totalCount: mockTransfers.length,
-            searchMetadata
+            availableTransfers: [],
+            totalCount: 0,
+            searchMetadata: {
+              searchId: `search_${Date.now()}`,
+              searchTime: new Date(),
+              resultsCount: 0,
+              minPrice: 0,
+              maxPrice: 0,
+              averagePrice: 0,
+              searchDuration: Date.now() - startTime
+            }
           }
         });
       }
@@ -263,29 +258,11 @@ export async function GET(request: NextRequest) {
       });
 
     } catch (dbError) {
-      console.error('Database error:', dbError);
-      
-      // Fallback к тестовым данным при ошибке БД
-      const mockTransfers = generateMockTransfers(from, to, date, passengers, vehicleType, budgetMin, budgetMax);
-      
-      const searchMetadata: SearchMetadata = {
-        searchId: `search_${Date.now()}`,
-        searchTime: new Date(),
-        resultsCount: mockTransfers.length,
-        minPrice: Math.min(...mockTransfers.map(t => t.pricePerPerson)),
-        maxPrice: Math.max(...mockTransfers.map(t => t.pricePerPerson)),
-        averagePrice: mockTransfers.reduce((sum, t) => sum + t.pricePerPerson, 0) / mockTransfers.length,
-        searchDuration: Date.now() - startTime
-      };
-
+      const msg = dbError instanceof Error ? dbError.message : 'Ошибка базы данных';
       return NextResponse.json({
-        success: true,
-        data: {
-          availableTransfers: mockTransfers,
-          totalCount: mockTransfers.length,
-          searchMetadata
-        }
-      });
+        success: false,
+        error: `Ошибка поиска трансферов: ${msg}`
+      }, { status: 503 });
     }
 
   } catch (error) {

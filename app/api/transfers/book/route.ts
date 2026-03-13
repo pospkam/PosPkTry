@@ -190,23 +190,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(response);
 
     } catch (dbError) {
-      console.error('Database error:', dbError);
-
-      // Fallback к тестовому бронированию
-      const mockBooking = createMockBooking(requestData);
-
-      const response: TransferBookingResponse = {
-        success: true,
-        data: {
-          bookingId: mockBooking.id as string,
-          status: mockBooking.status as string,
-          confirmationCode: mockBooking.confirmationCode as string,
-          totalPrice: mockBooking.totalPrice as number,
-          bookingDetails: mockBooking as unknown as TransferBooking
-        }
-      };
-
-      return NextResponse.json(response);
+      const msg = dbError instanceof Error ? dbError.message : 'Ошибка базы данных';
+      return NextResponse.json({
+        success: false,
+        error: `Не удалось создать бронирование: ${msg}`
+      }, { status: 503 });
     }
 
   } catch (error) {
@@ -216,16 +204,6 @@ export async function POST(request: NextRequest) {
       error: 'Внутренняя ошибка сервера при создании бронирования'
     }, { status: 500 });
   }
-}
-
-// Функция для генерации кода подтверждения
-function generateConfirmationCode(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let result = '';
-  for (let i = 0; i < 6; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
 }
 
 // Функция для отправки реальных уведомлений
@@ -284,31 +262,4 @@ async function sendRealBookingNotifications(
     console.error('Error sending real notifications:', error);
     // Не прерываем выполнение при ошибке уведомлений
   }
-}
-
-// Функция для создания тестового бронирования
-function createMockBooking(request: TransferBookingRequest): Record<string, unknown> {
-  const confirmationCode = generateConfirmationCode();
-  const totalPrice = 1500 * request.passengersCount; // Заглушка цены
-
-  return {
-    id: `booking_${Date.now()}`,
-    userId: 'user_123',
-    operatorId: 'operator_1',
-    routeId: 'route_1',
-    vehicleId: 'vehicle_1',
-    driverId: 'driver_1',
-    scheduleId: request.scheduleId,
-    bookingDate: new Date().toISOString().split('T')[0],
-    departureTime: '08:00',
-    passengersCount: request.passengersCount,
-    totalPrice: totalPrice,
-    status: 'pending',
-    specialRequests: request.specialRequests,
-    contactPhone: request.contactInfo.phone,
-    contactEmail: request.contactInfo.email,
-    confirmationCode: confirmationCode,
-    createdAt: new Date(),
-    updatedAt: new Date()
-  };
 }
