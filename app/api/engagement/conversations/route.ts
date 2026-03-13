@@ -4,8 +4,20 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { messagingService } from '@/lib/services'
 import { verifyAuth } from '@/lib/auth'
+
+const CreateConversationSchema = z.object({
+  participantIds: z.array(z.string()).min(1, 'Необходимо указать хотя бы одного участника'),
+  firstMessage: z.string().optional(),
+  type: z.string().optional(),
+  subject: z.string().optional(),
+  description: z.string().optional(),
+  relatedTourId: z.string().optional(),
+  relatedBookingId: z.string().optional(),
+  relatedReviewId: z.string().optional(),
+})
 
 export async function GET(request: NextRequest) {
   try {
@@ -43,20 +55,26 @@ export async function POST(request: NextRequest) {
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await request.json()
-    const participantIds = Array.isArray(body.participantIds)
-      ? body.participantIds.filter((value: unknown): value is string => typeof value === 'string')
-      : []
-    const firstMessage = typeof body.firstMessage === 'string' ? body.firstMessage.trim() : undefined
+    const parsed = CreateConversationSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' },
+        { status: 400 }
+      )
+    }
+
+    const { participantIds, firstMessage: rawFirstMessage, type, subject, description, relatedTourId, relatedBookingId, relatedReviewId } = parsed.data
+    const firstMessage = rawFirstMessage?.trim() || undefined
 
     const conversation = await messagingService.createConversation(
       {
-        type: body.type || 'direct',
+        type: type || 'direct',
         participantIds: [userId, ...participantIds],
-        subject: body.subject,
-        description: body.description,
-        relatedTourId: body.relatedTourId,
-        relatedBookingId: body.relatedBookingId,
-        relatedReviewId: body.relatedReviewId,
+        subject,
+        description,
+        relatedTourId,
+        relatedBookingId,
+        relatedReviewId,
         firstMessage,
       },
       userId

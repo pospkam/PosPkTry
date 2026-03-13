@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { verifyAuth } from '@/lib/auth';
@@ -7,14 +8,14 @@ import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
-interface CreatePaymentRequest {
-  bookingId: string;
-  bookingType: 'tour' | 'accommodation' | 'transfer';
-  amount: number;
-  currency: string;
-  description?: string;
-  userEmail?: string;
-}
+const CreatePaymentSchema = z.object({
+  bookingId: z.string().min(1, 'ID бронирования обязателен'),
+  bookingType: z.enum(['tour', 'accommodation', 'transfer'], { message: 'Тип бронирования должен быть tour, accommodation или transfer' }),
+  amount: z.number().positive('Сумма должна быть положительной'),
+  currency: z.string().default('RUB'),
+  description: z.string().optional(),
+  userEmail: z.string().email('Некорректный email').optional(),
+});
 
 /**
  * POST /api/payments/create
@@ -40,21 +41,22 @@ export async function POST(request: NextRequest) {
       } as ApiResponse<null>, { status: 401 });
     }
 
-    const body: CreatePaymentRequest = await request.json();
-    const userId = auth.userId;
-    const userEmail = auth.email || body.userEmail || '';
-
-    // Валидация
-    if (!body.bookingId || !body.amount) {
+    const body = await request.json();
+    const parsed = CreatePaymentSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json({
         success: false,
-        error: 'Missing required fields'
+        error: parsed.error.issues[0]?.message || 'Некорректные данные'
       } as ApiResponse<null>, { status: 400 });
     }
 
+    const { bookingId, bookingType, amount, currency, description, userEmail: bodyEmail } = parsed.data;
+    const userId = auth.userId;
+    const userEmail = auth.email || bodyEmail || '';
+
     // Проверяем существование бронирования
     let bookingQuery = '';
-    switch (body.bookingType) {
+    switch (bookingType) {
       case 'tour':
         bookingQuery = 'SELECT id, total_price, status, user_id FROM bookings WHERE id = $1';
         break;
@@ -64,14 +66,9 @@ export async function POST(request: NextRequest) {
       case 'transfer':
         bookingQuery = 'SELECT id, total_price, status, user_id FROM transfer_bookings WHERE id = $1';
         break;
-      default:
-        return NextResponse.json({
-          success: false,
-          error: 'Invalid booking type'
-        } as ApiResponse<null>, { status: 400 });
     }
 
-    const bookingResult = await query<BookingForPaymentRow>(bookingQuery, [body.bookingId]);
+    const bookingResult = await query<BookingForPaymentRow>(bookingQuery, [bookingId]);
 
     if (bookingResult.rows.length === 0) {
       return NextResponse.json({
@@ -91,7 +88,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Проверяем, что сумма совпадает
-    if (parseFloat(booking.total_price) !== body.amount) {
+    if (parseFloat(booking.total_price) !== amount) {
       return NextResponse.json({
         success: false,
         error: 'Amount mismatch'
@@ -115,11 +112,11 @@ export async function POST(request: NextRequest) {
     `;
 
     const paymentResult = await query<PaymentRow>(paymentQuery, [
-      body.bookingId,
-      body.bookingType,
+      bookingId,
+      bookingType,
       userId,
-      body.amount,
-      body.currency || 'RUB',
+      amount,
+      currency,
       'pending',
       'cloudpayments'
     ]);
@@ -131,9 +128,9 @@ export async function POST(request: NextRequest) {
       success: true,
       data: {
         paymentId: payment.id,
-        amount: body.amount,
-        currency: body.currency || 'RUB',
-        description: body.description || `Оплата бронирования #${body.bookingId.substring(0, 8)}`,
+        amount,
+        currency,
+        description: description || `Оплата бронирования #${bookingId.substring(0, 8)}`,
         invoiceId: payment.id,
         accountId: userId,
         email: userEmail,

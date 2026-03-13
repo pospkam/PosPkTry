@@ -4,8 +4,19 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { wishlistService } from '@/lib/services'
 import { verifyAuth } from '@/lib/auth'
+
+const UpdateWishlistSchema = z.object({
+  name: z.string().optional(),
+  description: z.string().optional(),
+  isPublic: z.boolean().optional(),
+  theme: z.string().optional(),
+  priority: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  targetDate: z.string().optional(),
+})
 
 export async function GET(
   request: NextRequest,
@@ -48,17 +59,26 @@ export async function PUT(
 
     const { id } = await params
     const body = await request.json()
+    const parsed = UpdateWishlistSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' },
+        { status: 400 }
+      )
+    }
+
+    const { name, description, isPublic, theme, priority, tags, targetDate } = parsed.data
 
     const wishlist = await wishlistService.updateWishlist(
       id,
       {
-        name: body.name,
-        description: body.description,
-        isPublic: body.isPublic,
-        theme: body.theme,
-        priority: body.priority,
-        tags: body.tags,
-        targetDate: body.targetDate,
+        name,
+        description,
+        isPublic,
+        theme,
+        priority,
+        tags,
+        targetDate,
       },
       userId
     )

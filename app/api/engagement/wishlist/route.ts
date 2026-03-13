@@ -4,8 +4,21 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { wishlistService } from '@/lib/services'
 import { verifyAuth } from '@/lib/auth'
+
+const CreateWishlistSchema = z.object({
+  name: z.string().min(1, 'Название обязательно'),
+  description: z.string().optional(),
+  isPublic: z.boolean().optional(),
+  theme: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  estimatedBudget: z.number().optional(),
+  currency: z.string().optional(),
+  priority: z.string().optional(),
+  targetDate: z.string().optional(),
+})
 
 export async function GET(request: NextRequest) {
   try {
@@ -42,18 +55,27 @@ export async function POST(request: NextRequest) {
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await request.json()
+    const parsed = CreateWishlistSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' },
+        { status: 400 }
+      )
+    }
+
+    const { name, description, isPublic, theme, tags, estimatedBudget, currency, priority, targetDate } = parsed.data
 
     const wishlist = await wishlistService.createWishlist(
       {
-        name: body.name,
-        description: body.description,
-        isPublic: body.isPublic,
-        theme: body.theme,
-        tags: body.tags,
-        estimatedBudget: body.estimatedBudget,
-        currency: body.currency,
-        priority: body.priority,
-        targetDate: body.targetDate,
+        name,
+        description,
+        isPublic,
+        theme,
+        tags,
+        estimatedBudget,
+        currency,
+        priority,
+        targetDate,
       },
       userId
     )

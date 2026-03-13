@@ -4,8 +4,13 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { messagingService } from '@/lib/services'
 import { verifyAuth } from '@/lib/auth'
+
+const UpdateMessageSchema = z.object({
+  markAsRead: z.boolean().optional(),
+})
 
 export async function GET(
   request: NextRequest,
@@ -53,8 +58,17 @@ export async function PUT(
     }
 
     const body = await request.json()
+    const parsed = UpdateMessageSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' },
+        { status: 400 }
+      )
+    }
 
-    if (body.markAsRead) {
+    const { markAsRead } = parsed.data
+
+    if (markAsRead) {
       const updated = await messagingService.markAsRead(id, userId, role === 'admin')
       if (!updated) {
         return NextResponse.json({ error: 'Message not found' }, { status: 404 })

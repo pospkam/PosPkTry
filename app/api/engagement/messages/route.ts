@@ -4,8 +4,17 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { messagingService } from '@/lib/services'
 import { verifyAuth } from '@/lib/auth'
+
+const SendMessageSchema = z.object({
+  conversationId: z.string().min(1, 'ID диалога обязателен'),
+  content: z.string().min(1, 'Сообщение не может быть пустым'),
+  type: z.string().optional(),
+  attachments: z.array(z.unknown()).optional(),
+  repliedToMessageId: z.string().optional(),
+})
 
 export async function GET(request: NextRequest) {
   try {
@@ -59,27 +68,23 @@ export async function POST(request: NextRequest) {
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await request.json()
-    if (!body.conversationId || !body.content) {
+    const parsed = SendMessageSchema.safeParse(body)
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'conversationId and content are required' },
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' },
         { status: 400 }
       )
     }
 
-    if (typeof body.content !== 'string' || body.content.trim().length === 0) {
-      return NextResponse.json(
-        { error: 'content must be a non-empty string' },
-        { status: 400 }
-      )
-    }
+    const { conversationId, content, type, attachments, repliedToMessageId } = parsed.data
 
     const message = await messagingService.sendMessage(
       {
-        conversationId: body.conversationId,
-        type: body.type || 'text',
-        content: body.content,
-        attachments: body.attachments,
-        repliedToMessageId: body.repliedToMessageId,
+        conversationId,
+        type: type || 'text',
+        content,
+        attachments,
+        repliedToMessageId,
       },
       userId
     )

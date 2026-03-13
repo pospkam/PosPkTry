@@ -4,8 +4,20 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { wishlistService } from '@/lib/services'
 import { verifyAuth } from '@/lib/auth'
+
+const AddWishlistItemSchema = z.object({
+  itemId: z.string().min(1, 'ID элемента обязателен'),
+  itemType: z.string().min(1, 'Тип элемента обязателен'),
+  priority: z.string().optional(),
+  notes: z.string().optional(),
+  visitDate: z.string().optional(),
+  estimatedBudget: z.number().optional(),
+  currency: z.string().optional(),
+  notifyOnPriceChange: z.boolean().optional(),
+})
 
 export async function GET(
   request: NextRequest,
@@ -51,18 +63,27 @@ export async function POST(
 
     const { id } = await params
     const body = await request.json()
+    const parsed = AddWishlistItemSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' },
+        { status: 400 }
+      )
+    }
+
+    const { itemId, itemType, priority, notes, visitDate, estimatedBudget, currency, notifyOnPriceChange } = parsed.data
 
     const item = await wishlistService.addItem(
       id,
       {
-        itemId: body.itemId,
-        itemType: body.itemType,
-        priority: body.priority,
-        notes: body.notes,
-        visitDate: body.visitDate,
-        estimatedBudget: body.estimatedBudget,
-        currency: body.currency,
-        notifyOnPriceChange: body.notifyOnPriceChange,
+        itemId,
+        itemType,
+        priority,
+        notes,
+        visitDate,
+        estimatedBudget,
+        currency,
+        notifyOnPriceChange,
       },
       userId
     )
