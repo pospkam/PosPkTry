@@ -20,15 +20,6 @@ const ST_LBL: Record<BStatus, string> = {
   pending: 'Ожидает', confirmed: 'Подтверждён', completed: 'Завершён', cancelled: 'Отменён',
 };
 
-function getToken() {
-  try {
-    const user = JSON.parse(localStorage.getItem('user') ?? '{}');
-    return (user.token as string) ?? '';
-  } catch {
-    return '';
-  }
-}
-
 export default function AdminBookingsClient() {
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState('');
@@ -43,9 +34,7 @@ export default function AdminBookingsClient() {
     try {
       const params = new URLSearchParams({ limit: '100' });
       if (statusFilter !== 'all') params.set('status', statusFilter);
-      const res = await fetch(`/api/admin/bookings?${params}`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
+      const res = await fetch(`/api/admin/bookings?${params}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
       if (!json.success) throw new Error(json.error ?? 'Ошибка загрузки');

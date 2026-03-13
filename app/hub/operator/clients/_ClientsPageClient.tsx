@@ -18,15 +18,6 @@ interface Customer {
 
 interface Meta { total: number; page: number; limit: number; pages: number }
 
-function getToken() {
-  try {
-    const user = JSON.parse(localStorage.getItem('user') ?? '{}');
-    return (user.token as string) ?? '';
-  } catch {
-    return '';
-  }
-}
-
 const INPUT = 'w-full px-3.5 py-2.5 text-sm bg-[var(--bg-primary)] border border-[var(--border)] rounded-md text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition-colors';
 const LABEL = 'block text-[10px] uppercase tracking-widest text-[var(--text-muted)] mb-1.5';
 const SELECT = 'px-3.5 py-2.5 text-sm bg-[var(--bg-primary)] border border-[var(--border)] rounded-md text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] transition-colors';
@@ -63,9 +54,7 @@ export default function ClientsPageClient() {
         ...(search     ? { search }       : {}),
         ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
       });
-      const res = await fetch(`/api/operator/clients?${params}`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
+      const res = await fetch(`/api/operator/clients?${params}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
       if (!json.success) throw new Error(json.error ?? 'Ошибка загрузки');

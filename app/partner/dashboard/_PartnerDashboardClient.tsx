@@ -100,15 +100,7 @@ function DashboardContent() {
     setLoading(true);
     setError('');
     try {
-      const token = (() => {
-        try {
-          const u = JSON.parse(localStorage.getItem('user') ?? '{}');
-          return (u.token as string) ?? '';
-        } catch { return ''; }
-      })();
-      const res = await fetch(`/api/partner/dashboard?period=${period}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(`/api/partner/dashboard?period=${period}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json: { success: boolean; data?: DashboardData; error?: string } = await res.json();
       if (!json.success || !json.data) throw new Error(json.error ?? 'Ошибка загрузки');

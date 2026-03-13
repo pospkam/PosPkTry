@@ -9,15 +9,6 @@ interface Operator {
   rating: number; reviewCount: number;
 }
 
-function getToken() {
-  try {
-    const user = JSON.parse(localStorage.getItem('user') ?? '{}');
-    return (user.token as string) ?? '';
-  } catch {
-    return '';
-  }
-}
-
 export default function OperatorsClient() {
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState('');
@@ -29,9 +20,7 @@ export default function OperatorsClient() {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('/api/admin/content/partners?category=operator&limit=100', {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
+      const res = await fetch('/api/admin/content/partners?category=operator&limit=100');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
       if (!json.success) throw new Error(json.error ?? 'Ошибка загрузки');
@@ -59,7 +48,6 @@ export default function OperatorsClient() {
     try {
       const res = await fetch(`/api/admin/content/partners/${id}/verify`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${getToken()}` },
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();

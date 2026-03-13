@@ -9,15 +9,6 @@ interface PendingReview {
   rating: number; text: string; date: string;
 }
 
-function getToken() {
-  try {
-    const user = JSON.parse(localStorage.getItem('user') ?? '{}');
-    return (user.token as string) ?? '';
-  } catch {
-    return '';
-  }
-}
-
 export default function ModerationClient() {
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState('');
@@ -28,9 +19,7 @@ export default function ModerationClient() {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('/api/admin/content/reviews?verified=false&limit=50', {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
+      const res = await fetch('/api/admin/content/reviews?verified=false&limit=50');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
       if (!json.success) throw new Error(json.error ?? 'Ошибка загрузки');
@@ -60,10 +49,7 @@ export default function ModerationClient() {
     try {
       const res = await fetch(`/api/admin/content/reviews/${id}/moderate`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${getToken()}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
