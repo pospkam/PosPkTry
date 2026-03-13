@@ -1,6 +1,16 @@
-import { pool } from '@/lib/db-pool';
-import { toStringOrNull, toNumberOrNull, toBooleanOrNull } from './_helpers';
+/**
+ * Notification Service
+ * Functions related to notification CRUD, preferences, and muting.
+ */
 
+import {
+  pool,
+  toStringOrNull,
+  toNumberOrNull,
+  toBooleanOrNull,
+} from './_helpers';
+
+// In-memory store for notification preferences
 const notificationPreferencesStore = new Map<string, Record<string, unknown>>();
 
 export const notificationService = {

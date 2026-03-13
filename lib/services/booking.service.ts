@@ -1,5 +1,13 @@
-import { pool } from '@/lib/db-pool';
-import { toStringOrNull, toNumberOrNull } from './_helpers';
+/**
+ * Booking & Availability Service
+ * Functions related to booking CRUD, payment confirmation, cancellation, and availability.
+ */
+
+import {
+  pool,
+  toStringOrNull,
+  toNumberOrNull,
+} from './_helpers';
 
 export const bookingService = {
   normalize(row: Record<string, unknown> | null) {
@@ -173,6 +181,10 @@ export const bookingService = {
     return { bookings: result.rows.map(row => this.normalize(row)) };
   },
 };
+
+// ========================================
+// Availability Service
+// ========================================
 
 export const availabilityService = {
   async search(params: Record<string, unknown>) {

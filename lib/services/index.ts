@@ -1,9 +1,12 @@
 /**
- * Service barrel file — re-exports all domain services.
- * Provides backward compatibility: `import { tourService } from '@/lib/services'` still works.
+ * Service Index
+ *
+ * Re-exports all domain services from their individual modules.
+ * This file serves as a backward-compatible entry point so that
+ * existing imports from '@/lib/services' continue to work.
  */
 
-// Error classes
+// Shared helpers and error classes
 export {
   TourNotFoundError,
   TourValidationError,
@@ -11,39 +14,26 @@ export {
   ReviewNotFoundError,
   ReviewValidationError,
   DuplicateReviewError,
-} from './_errors';
+  toStringOrNull,
+  toNumberOrNull,
+  toBooleanOrNull,
+} from './_helpers';
 
-// Tour / Review / Search
-export { tourService, reviewService, searchService } from './tour.service';
-
-// Booking / Availability
+// Domain services
+export { tourService } from './tour.service';
+export { reviewService } from './review.service';
 export { bookingService, availabilityService } from './booking.service';
-
-// Partner (operators)
+export { agentService } from './agent.service';
 export { partnerService } from './partner.service';
-
-// Payment / Commission / Payout
-export { commissionService, payoutService } from './payment.service';
-
-// RAG / Knowledge Base
-export { knowledgeBaseService } from './rag.service';
-
-// Messaging (legacy engagement chat)
+export { commissionService } from './commission.service';
+export { dashboardService } from './dashboard.service';
+export { feedbackService } from './feedback.service';
+export { knowledgeBaseService } from './knowledge-base.service';
 export { messagingService } from './messaging.service';
-
-// Chat (conversation-based user-to-user messaging)
-export { chatService } from './chat.service';
-
-// Notifications
+export { metricsService } from './metrics.service';
 export { notificationService } from './notification.service';
-
-// Support (agents, feedback, SLA, ticket messages)
-export { agentService, feedbackService, slaService, ticketMessageService } from './support.service';
-
-// Analytics (dashboard, metrics, reports)
-export { dashboardService, metricsService, reportService } from './analytics.service';
-
-// Pillar services
-export { paymentService, PaymentService } from '@/pillars/booking-pillar/lib/payment/services';
-export { wishlistService, WishlistService } from '@/pillars/engagement-pillar/lib/wishlist/services';
-export { ticketService, TicketService } from '@/pillars/support-pillar/services/ticket.service';
+export { payoutService } from './payout.service';
+export { reportService } from './report.service';
+export { searchService } from './search.service';
+export { slaService } from './sla.service';
+export { ticketMessageService } from './ticket-message.service';

@@ -1,5 +1,13 @@
-import { pool } from '@/lib/db-pool';
-import { toStringOrNull, toNumberOrNull } from './_helpers';
+/**
+ * Messaging Service
+ * Functions related to conversations, messages, and in-memory fallback.
+ */
+
+import { pool, toStringOrNull, toNumberOrNull } from './_helpers';
+
+// ========================================
+// In-memory stores (fallback when DB unavailable)
+// ========================================
 
 interface InMemoryConversationRecord {
   id: string;
@@ -357,6 +365,7 @@ export const messagingService = {
          RETURNING id`,
         [conversationId, content, JSON.stringify(metadata)]
       );
+
       const insertedMessageId = toStringOrNull(insertResult.rows[0]?.id);
       if (!insertedMessageId) {
         return null;

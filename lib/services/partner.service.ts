@@ -1,5 +1,14 @@
-import { pool } from '@/lib/db-pool';
-import { toStringOrNull, toNumberOrNull, toBooleanOrNull } from './_helpers';
+/**
+ * Partner Service
+ * Functions related to partner CRUD, listing, and activation.
+ */
+
+import {
+  pool,
+  toStringOrNull,
+  toNumberOrNull,
+  toBooleanOrNull,
+} from './_helpers';
 
 export const partnerService = {
   normalize(row: Record<string, unknown> | null) {
