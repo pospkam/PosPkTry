@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { loyaltySystem } from '@/lib/loyalty/loyalty-system';
 import { requireAuth } from '@/lib/auth/middleware';
 import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
+
+const ApplyPromoSchema = z.object({
+  code: z.string().min(1, 'Промокод обязателен'),
+  orderAmount: z.coerce.number().positive('Сумма заказа должна быть положительной'),
+});
 
 const promoLimiter = createRateLimiter({ windowMs: 60_000, max: 5 });
 
@@ -23,14 +29,14 @@ export async function POST(request: NextRequest) {
     const userId = authResult.userId;
 
     const body = await request.json();
-    const { code, orderAmount } = body;
-
-    if (!code || orderAmount == null) {
-      return NextResponse.json({
-        success: false,
-        error: 'Code and orderAmount are required'
-      }, { status: 400 });
+    const parsed = ApplyPromoSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' },
+        { status: 400 }
+      );
     }
+    const { code, orderAmount } = parsed.data;
 
     const result = await loyaltySystem.applyPromoCode(code, userId, Number(orderAmount));
 

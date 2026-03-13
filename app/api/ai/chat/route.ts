@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { getSystemPrompt, buildMessageHistory, ChatRole, ChatMessage } from '@/lib/ai/prompts';
 import { query } from '@/lib/database';
 import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
@@ -59,6 +60,13 @@ async function saveSessionHistory(
 
 // ── Основной обработчик ────────────────────────────────────────
 // AUTH: Public — AI chat assistant for visitors
+const AiChatSchema = z.object({
+  message: z.string().min(1, 'Сообщение обязательно'),
+  sessionId: z.string().optional(),
+  role: z.string().default('tourist'),
+  userId: z.string().nullable().default(null),
+});
+
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request.headers);
   if (!chatRateLimiter.check(ip)) {
@@ -70,6 +78,13 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
+    const parsed = AiChatSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' },
+        { status: 400 }
+      );
+    }
     const {
       message,
       sessionId,

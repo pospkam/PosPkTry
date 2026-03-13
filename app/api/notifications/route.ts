@@ -1,9 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireAuth, requireAdmin } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
+
+const CreateNotificationSchema = z.object({
+  userId: z.string({ required_error: 'userId обязателен' }).min(1, 'userId обязателен'),
+  type: z.string({ required_error: 'Тип уведомления обязателен' }).min(1, 'Тип уведомления обязателен'),
+  title: z.string({ required_error: 'Заголовок обязателен' }).min(1, 'Заголовок обязателен'),
+  message: z.string({ required_error: 'Сообщение обязательно' }).min(1, 'Сообщение обязательно'),
+  data: z.record(z.unknown()).optional(),
+  priority: z.string().optional(),
+  actionUrl: z.string().optional(),
+  expiresAt: z.string().optional(),
+});
 
 /**
  * GET /api/notifications
@@ -96,14 +108,15 @@ export async function POST(request: NextRequest) {
     if (adminOrResponse instanceof NextResponse) return adminOrResponse;
 
     const body = await request.json();
-    const { userId, type, title, message, data, priority, actionUrl, expiresAt } = body;
-
-    if (!userId || !type || !title || !message) {
+    const parsed = CreateNotificationSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json({
         success: false,
-        error: 'Отсутствуют обязательные поля'
+        error: parsed.error.issues[0]?.message || 'Некорректные данные'
       } as ApiResponse<null>, { status: 400 });
     }
+
+    const { userId, type, title, message, data, priority, actionUrl, expiresAt } = parsed.data;
 
     const result = await query(
       `INSERT INTO notifications (

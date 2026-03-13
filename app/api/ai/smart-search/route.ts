@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { FISHING_TOURS } from '@/lib/partners/kamchatka-fishing/tours-data';
 import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
+
+const SmartSearchSchema = z.object({
+  query: z.string().min(1, 'Поисковый запрос обязателен').max(500),
+});
 
 const smartSearchLimiter = createRateLimiter({ windowMs: 60_000, max: 20 });
 
@@ -20,14 +25,15 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { query } = await request.json();
-
-    if (!query || query.trim().length === 0) {
+    const body = await request.json();
+    const parsed = SmartSearchSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: 'Query is required' },
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' },
         { status: 400 }
       );
     }
+    const { query } = parsed.data;
 
     const normalizedQuery = query.toLowerCase().trim();
     

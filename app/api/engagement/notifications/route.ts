@@ -4,8 +4,19 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { notificationService } from '@/lib/services'
 import { verifyAuth } from '@/lib/auth'
+
+const CreateNotificationSchema = z.object({
+  type: z.string({ required_error: 'Тип уведомления обязателен' }).min(1, 'Тип уведомления обязателен'),
+  title: z.string({ required_error: 'Заголовок обязателен' }).min(1, 'Заголовок обязателен'),
+  message: z.string({ required_error: 'Сообщение обязательно' }).min(1, 'Сообщение обязательно'),
+  userId: z.string().optional(),
+  channels: z.array(z.string()).optional(),
+  data: z.record(z.unknown()).optional(),
+  scheduledFor: z.string().optional(),
+})
 
 export async function GET(request: NextRequest) {
   try {
@@ -43,18 +54,27 @@ export async function POST(request: NextRequest) {
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await request.json()
-    const targetUserId = role === 'admin' && typeof body.userId === 'string'
-      ? body.userId
+    const parsed = CreateNotificationSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' },
+        { status: 400 }
+      )
+    }
+
+    const { type, title, message, channels, data, scheduledFor } = parsed.data
+    const targetUserId = role === 'admin' && typeof parsed.data.userId === 'string'
+      ? parsed.data.userId
       : userId
 
     const notification = await notificationService.create({
       userId: targetUserId,
-      type: body.type,
-      title: body.title,
-      message: body.message,
-      channels: body.channels,
-      data: body.data,
-      scheduledFor: body.scheduledFor,
+      type,
+      title,
+      message,
+      channels,
+      data,
+      scheduledFor,
     })
 
     return NextResponse.json({

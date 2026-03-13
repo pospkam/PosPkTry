@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
 
 export const runtime = 'edge';
@@ -18,6 +19,11 @@ interface DeepSeekRequest {
   stream?: boolean;
 }
 
+const DeepSeekChatSchema = z.object({
+  message: z.string().min(1, 'Сообщение обязательно'),
+  context: z.string().optional(),
+});
+
 // POST /api/ai/deepseek - Chat с DeepSeek AI
 // AUTH: Public — AI assistant for visitors
 export async function POST(request: NextRequest) {
@@ -29,18 +35,19 @@ export async function POST(request: NextRequest) {
     );
   }
   try {
-    const { message, context } = await request.json();
-
-    if (!message) {
-      return NextResponse.json({
-        success: false,
-        error: 'Message is required',
-      }, { status: 400 });
+    const body = await request.json();
+    const parsed = DeepSeekChatSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' },
+        { status: 400 }
+      );
     }
+    const { message, context } = parsed.data;
 
     // DeepSeek API Key (добавьте в .env)
     const apiKey = process.env.DEEPSEEK_API_KEY || '';
-    
+
     if (!apiKey) {
       return NextResponse.json({
         success: false,
@@ -71,7 +78,6 @@ export async function POST(request: NextRequest) {
 
     const messages: DeepSeekMessage[] = [
       { role: 'system', content: systemPrompt },
-      ...(context || []),
       { role: 'user', content: message }
     ];
 

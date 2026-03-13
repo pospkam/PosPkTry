@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { requireAuth } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
+
+const UpdateNotificationSchema = z.object({
+  isRead: z.boolean().optional(),
+  isArchived: z.boolean().optional(),
+});
 
 /**
  * PUT /api/notifications/[id]
@@ -20,7 +26,15 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const { isRead, isArchived } = body;
+    const parsed = UpdateNotificationSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({
+        success: false,
+        error: parsed.error.issues[0]?.message || 'Некорректные данные'
+      } as ApiResponse<null>, { status: 400 });
+    }
+
+    const { isRead, isArchived } = parsed.data;
 
     const updateFields = [];
     const updateValues = [];
