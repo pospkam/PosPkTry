@@ -2,7 +2,6 @@
 
 import { Sun, Moon, User } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
-import BottomNav from '@/components/shared/BottomNav';
 import Logo from '@/components/shared/Logo';
 import Link from 'next/link';
 
@@ -12,11 +11,11 @@ interface PageShellProps {
   children: React.ReactNode;
 }
 
-export default function PageShell({ title, activePath = '/', children }: PageShellProps) {
+export default function PageShell({ title, children }: PageShellProps) {
   const { isDark, toggleTheme } = useTheme();
 
   return (
-    <div className="min-h-screen pb-24 md:pb-0">
+    <div className="min-h-screen">
       <header style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border)', position: 'sticky', top: 0, zIndex: 50 }}>
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
@@ -34,7 +33,6 @@ export default function PageShell({ title, activePath = '/', children }: PageShe
         </div>
       </header>
       {children}
-      <BottomNav activePath={activePath} />
     </div>
   );
 }

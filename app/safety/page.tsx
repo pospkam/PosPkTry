@@ -13,9 +13,10 @@ export default function SafetyPage() {
   return (
     <PageShell title="Безопасность">
     <div className="max-w-4xl mx-auto px-4 py-8 bg-transparent">
-      <div className="flex items-center gap-3 mb-8">
+      {/* Заголовок — только мобайл, на десктопе его показывает PageShell */}
+      <div className="flex items-center gap-3 mb-8 sm:hidden">
         <Shield className="w-8 h-8 text-[var(--danger)]" />
-        <h1 className="font-serif text-3xl font-bold text-[var(--text-primary)]">Безопасность</h1>
+        <h2 className="font-serif text-3xl font-bold text-[var(--text-primary)]">Безопасность</h2>
       </div>
 
       {/* SOS -- glavnyj blok, pervyj i samyj bol'shoj */}
@@ -29,7 +30,7 @@ export default function SafetyPage() {
         </div>
         <a
           href="tel:112"
-          className="w-full flex items-center justify-center gap-3 h-16 text-2xl font-bold bg-[var(--danger)] text-white rounded-lg shadow-lg hover:bg-red-600 transition-all duration-200 animate-pulse"
+          className="w-full flex items-center justify-center gap-3 h-16 text-2xl font-bold bg-[var(--danger)] text-white rounded-lg shadow-lg hover:opacity-90 transition-all duration-200 animate-pulse"
         >
           <Phone className="w-7 h-7" />
           112 — МЧС
@@ -83,7 +84,7 @@ export default function SafetyPage() {
 
       <Link
         href="/hub/safety"
-        className="inline-flex items-center gap-2 min-h-[44px] px-6 py-3 rounded-xl border border-[var(--accent)] text-[var(--accent)] font-medium hover:bg-[var(--accent)] hover:text-white transition-colors"
+        className="inline-flex items-center gap-2 min-h-[44px] px-6 py-3 rounded-lg border border-[var(--accent)] text-[var(--accent)] font-medium hover:bg-[var(--accent)] hover:text-[var(--bg-primary)] transition-colors"
       >
         <Shield className="w-4 h-4" />
         Подробнее о безопасности
