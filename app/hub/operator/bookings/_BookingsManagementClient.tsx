@@ -11,7 +11,7 @@ import {
   Column
 } from '@/components/admin/shared';
 import { OperatorBooking } from '@/types/operator';
-import { Check } from 'lucide-react';
+import { Check, Calendar } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
 
@@ -280,7 +280,7 @@ export default function BookingsManagementClient() {
         </div>
       ) : bookings.length === 0 ? (
         <EmptyState
-          icon=" "
+          icon={Calendar}
           title="Бронирований не найдено"
           description={
             search || statusFilter !== 'all'

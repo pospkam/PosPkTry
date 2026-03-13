@@ -127,14 +127,10 @@ export default function TransferOperatorPageClient() {
           icon={<AlertTriangle className="w-12 h-12" style={{ color: 'var(--warning)' }} />}
           title="Ошибка загрузки данных"
           description={error}
-          action={
-            <button
-              onClick={fetchData}
-              className="px-4 py-2 bg-[var(--accent)] text-[var(--bg-card)] text-sm font-semibold rounded-md hover:opacity-90 transition-opacity"
-            >
-              Попробовать снова
-            </button>
-          }
+          action={{
+            label: 'Попробовать снова',
+            onClick: fetchData,
+          }}
         />
       ) : (
         <>

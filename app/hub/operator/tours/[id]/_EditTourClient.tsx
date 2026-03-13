@@ -8,7 +8,7 @@ import { TourFormData, OperatorTour } from '@/types/operator';
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
 import GenerateTagsButton from '@/components/operator/GenerateTagsButton';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Mountain } from 'lucide-react';
 
 export default function EditTourClient() {
   const { user } = useAuth();
@@ -118,7 +118,7 @@ export default function EditTourClient() {
         />
       ) : !tour ? (
         <EmptyState
-          icon="🏔"
+          icon={Mountain}
           title="Тур не найден"
           description="Тур не существует или был удалён"
           action={{

@@ -15,7 +15,7 @@ import { OperatorTour } from '@/types/operator';
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
-import { Users, Plus, Star } from 'lucide-react';
+import { Users, Plus, Star, Mountain } from 'lucide-react';
 
 const SELECT = 'px-3.5 py-2.5 text-sm bg-[var(--bg-primary)] border border-[var(--border)] rounded-md text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] transition-colors';
 
@@ -317,7 +317,7 @@ export default function ToursManagementClient() {
         </div>
       ) : tours.length === 0 ? (
         <EmptyState
-          icon="🏔"
+          icon={Mountain}
           title="Туры не найдены"
           description={
             search || categoryFilter || statusFilter !== 'all'

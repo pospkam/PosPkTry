@@ -258,38 +258,6 @@ export function LoadingSpinner({ size = 'md', message }: LoadingSpinnerProps) {
   );
 }
 
-// ===============================
-// EMPTY STATE
-// ===============================
-
-interface EmptyStateProps {
-  icon?: string | React.ReactNode;
-  title: string;
-  description?: string;
-  action?: React.ReactNode | { label: string; onClick: () => void };
-}
-
-function isActionObject(a: unknown): a is { label: string; onClick: () => void } {
-  return typeof a === 'object' && a !== null && 'label' in a && 'onClick' in a;
-}
-
-export function EmptyState({ icon, title, description, action }: EmptyStateProps) {
-  return (
-    <div className="flex flex-col items-center justify-center py-16 px-6">
-      <h3 className="text-2xl font-bold text-[var(--text-primary)] mb-2">{title}</h3>
-      {description && <p className="text-[var(--text-muted)] text-center mb-6">{description}</p>}
-      {action && (
-        isActionObject(action) ? (
-          <button
-            onClick={action.onClick}
-            className="px-6 py-3 bg-[var(--accent)] text-[var(--bg-card)] rounded-lg font-bold transition-all transform hover:scale-105"
-          >
-            {action.label}
-          </button>
-        ) : (
-          <>{action}</>
-        )
-      )}
-    </div>
-  );
-}
+// EmptyState — re-export from dedicated file
+export { EmptyState } from './shared/EmptyState';
+export type { EmptyStateProps } from './shared/EmptyState';
