@@ -25,7 +25,8 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-semibold text-[var(--text-primary)] mt-8 mb-4">1. Термины и определения</h2>
             <ul className="list-disc pl-6 space-y-2">
-              <li><strong>Платформа</strong> — интернет-сервис KamHub, доступный по адресу kamhub.ru</li>
+              <li><strong>Платформа</strong> — интернет-сервис KamchatourHub (kamhub.ru), принадлежащий ООО «Трей» (ИНН 4100053571, ОГРН 1254100000175)</li>
+              <li><strong>Оператор</strong> — ООО «Трей», 683017, Камчатский край, г. Петропавловск-Камчатский, ул. Дзержинского, д. 2а, кв. 22</li>
               <li><strong>Пользователь</strong> — физическое лицо, использующее Платформу</li>
               <li><strong>Партнер</strong> — юридическое лицо или ИП, оказывающее услуги через Платформу</li>
               <li><strong>Услуги</strong> — туры, трансферы, размещение и другие туристические услуги</li>

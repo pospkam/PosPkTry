@@ -32,4 +32,4 @@
 \ir ../lib/database/migrations/023_add_route_id_to_tours.sql
 \ir ../lib/database/migrations/024_create_kamchatka_routes.sql
 \ir ../lib/database/migrations/025_add_embedding_to_agent_routes.sql
-\ir ../lib/database/migrations/026_add_phone_to_users.sql
+\ir ../lib/database/migrations/030_add_phone_to_users.sql
