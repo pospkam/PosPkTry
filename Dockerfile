@@ -11,7 +11,8 @@ WORKDIR /app
 # Copy package files
 COPY package.json package-lock.json* ./
 # Install all dependencies including devDependencies for the build stage
-RUN npm ci --include=dev
+# --fetch-retries: retry on network errors; --fetch-retry-mintimeout: wait before retry
+RUN npm ci --include=dev --fetch-retries=3 --fetch-retry-mintimeout=10000 --fetch-retry-maxtimeout=60000
 
 # Rebuild the source code only when needed
 FROM base AS builder
