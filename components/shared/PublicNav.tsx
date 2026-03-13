@@ -79,7 +79,7 @@ export function PublicNav() {
               Войти
             </Link>
             <Link
-              href="/auth/register"
+              href="/auth/login"
               className="px-4 py-2 bg-[var(--accent)] hover:opacity-80 text-[var(--bg-card)] rounded-lg transition-colors text-sm font-medium"
             >
               Регистрация
@@ -136,7 +136,7 @@ export function PublicNav() {
               Войти
             </Link>
             <Link
-              href="/auth/register"
+              href="/auth/login"
               onClick={() => setIsMenuOpen(false)}
               className="flex-1 px-4 py-2 text-center bg-[var(--accent)] hover:opacity-80 text-[var(--bg-card)] rounded-lg transition-colors text-sm font-medium"
             >

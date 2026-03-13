@@ -5,6 +5,8 @@ import { pool } from '@/lib/database';
 import { hashPassword } from '@/lib/auth/password';
 import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
 
+const VALID_ROLES = ['tourist', 'operator', 'guide', 'transfer', 'agent', 'stay', 'gear'] as const;
+
 const RegisterSchema = z.object({
   email: z.string({ required_error: 'Email обязателен' }).email('Неверный формат email'),
   password: z.string({ required_error: 'Пароль обязателен' }).min(6, 'Пароль должен быть минимум 6 символов'),
@@ -12,6 +14,8 @@ const RegisterSchema = z.object({
   phone: z.string().optional(),
   company_name: z.string().optional(),
   inn: z.string().optional(),
+  role: z.enum(VALID_ROLES).optional(),
+  roles: z.array(z.enum(VALID_ROLES)).optional(),
 });
 
 const jwtSecret = process.env.JWT_SECRET;
@@ -46,11 +50,12 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    const { email, password, name, phone, company_name, inn } = parsed.data;
+    const { email, password, name, phone, company_name, inn, role, roles } = parsed.data;
 
-    // Роль при публичной регистрации — только tourist
-    // Остальные роли (operator, guide, admin и т.д.) назначаются через админку
-    const userRole = 'tourist';
+    // Определяем роль: переданная роль > первая из массива ролей > tourist
+    const userRole = role ?? roles?.[0] ?? 'tourist';
+    // Все роли для сохранения в preferences (для мультиролей)
+    const allRoles = roles?.length ? roles : [userRole];
     
     // Подключаемся к БД
     client = await pool.connect();
@@ -72,11 +77,12 @@ export async function POST(request: NextRequest) {
     const hashedPassword = await hashPassword(password);
     
     // Создаем пользователя
+    const preferences = { roles: allRoles };
     const result = await client.query(
-      `INSERT INTO users (email, password_hash, name, role, phone, company_name, inn, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
-       RETURNING id, email, name, role, created_at`,
-      [email.toLowerCase(), hashedPassword, name, userRole, phone || null, company_name || null, inn || null]
+      `INSERT INTO users (email, password_hash, name, role, phone, company_name, inn, preferences, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, NOW(), NOW())
+       RETURNING id, email, name, role, preferences, created_at`,
+      [email.toLowerCase(), hashedPassword, name, userRole, phone || null, company_name || null, inn || null, JSON.stringify(preferences)]
     );
     
     const user = result.rows[0];
@@ -86,6 +92,7 @@ export async function POST(request: NextRequest) {
       userId: user.id,
       email: user.email,
       role: user.role,
+      roles: allRoles,
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
@@ -102,6 +109,7 @@ export async function POST(request: NextRequest) {
           email: user.email,
           name: user.name,
           role: user.role,
+          roles: allRoles,
         },
         token,
       },
