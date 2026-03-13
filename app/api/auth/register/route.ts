@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SignJWT } from 'jose';
+import { z } from 'zod';
 import { pool } from '@/lib/database';
 import { hashPassword } from '@/lib/auth/password';
+
+const RegisterSchema = z.object({
+  email: z.string({ required_error: 'Email обязателен' }).email('Неверный формат email'),
+  password: z.string({ required_error: 'Пароль обязателен' }).min(6, 'Пароль должен быть минимум 6 символов'),
+  name: z.string({ required_error: 'Имя обязательно' }).min(1, 'Имя не может быть пустым'),
+  phone: z.string().optional(),
+  company_name: z.string().optional(),
+  inn: z.string().optional(),
+});
 
 const jwtSecret = process.env.JWT_SECRET;
 
@@ -17,33 +27,16 @@ export async function POST(request: NextRequest) {
   
   try {
     const body = await request.json();
-    const { email, password, name, phone, company_name, inn } = body;
-    
-    // Валидация обязательных полей
-    if (!email || !password || !name) {
+
+    const parsed = RegisterSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: 'Email, пароль и имя обязательны' },
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' },
         { status: 400 }
       );
     }
-    
-    // Валидация email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return NextResponse.json(
-        { success: false, error: 'Неверный формат email' },
-        { status: 400 }
-      );
-    }
-    
-    // Валидация пароля
-    if (password.length < 6) {
-      return NextResponse.json(
-        { success: false, error: 'Пароль должен быть минимум 6 символов' },
-        { status: 400 }
-      );
-    }
-    
+    const { email, password, name, phone, company_name, inn } = parsed.data;
+
     // Роль при публичной регистрации — только tourist
     // Остальные роли (operator, guide, admin и т.д.) назначаются через админку
     const userRole = 'tourist';
@@ -115,10 +108,11 @@ export async function POST(request: NextRequest) {
     
     return response;
     
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : 'Неизвестная ошибка';
     console.error('Registration error:', error);
     return NextResponse.json(
-      { success: false, error: 'Ошибка регистрации: ' + (error.message || 'Неизвестная ошибка') },
+      { success: false, error: 'Ошибка регистрации: ' + msg },
       { status: 500 }
     );
   } finally {

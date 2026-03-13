@@ -10,6 +10,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { ApiResponse } from '@/types';
 import { verifyAuth } from '@/lib/auth';
 import {
@@ -18,6 +19,17 @@ import {
 } from '@/lib/bookings/booking.service';
 import type { BookingWithDetails, CreateBookingInput } from '@/types/booking.types';
 import { telegramService } from '@/lib/notifications/telegram';
+
+const CreateBookingSchema = z.object({
+  tourId: z.string({ required_error: 'ID тура обязателен' }).uuid('tourId должен быть валидным UUID'),
+  participants: z.number({ required_error: 'Количество участников обязательно' }).int('Количество участников должно быть целым числом').min(1, 'Минимум 1 участник'),
+  departureId: z.string().uuid('departureId должен быть валидным UUID').optional(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Дата должна быть в формате YYYY-MM-DD').optional(),
+  specialRequests: z.string().optional(),
+}).refine(
+  (data) => data.departureId || data.date,
+  { message: 'Необходимо указать departureId или date', path: ['date'] }
+);
 
 // GET /api/bookings — Получение бронирований с ролевой фильтрацией
 export async function GET(request: NextRequest) {
@@ -95,35 +107,22 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { tourId, date, participants, specialRequests, departureId } = body as Record<string, unknown>;
 
-    // Валидация входных данных
-    if (
-      typeof tourId !== 'string' || !tourId ||
-      typeof participants !== 'number' || participants < 1
-    ) {
+    const parsed = CreateBookingSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: 'Неверные данные: требуются tourId (string) и participants (number >= 1)' } as ApiResponse<null>,
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' } as ApiResponse<null>,
         { status: 400 }
       );
     }
-
-    // Если нет departureId — дата обязательна
-    if (typeof departureId !== 'string' || !departureId) {
-      if (typeof date !== 'string' || !date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-        return NextResponse.json(
-          { success: false, error: 'Без заезда обязательно поле date в формате YYYY-MM-DD' } as ApiResponse<null>,
-          { status: 400 }
-        );
-      }
-    }
+    const { tourId, participants, departureId, date, specialRequests } = parsed.data;
 
     const input: CreateBookingInput = {
       tourId,
-      date: typeof date === 'string' ? date : '',
+      date: date ?? '',
       participants,
-      specialRequests: typeof specialRequests === 'string' ? specialRequests : undefined,
-      departureId: typeof departureId === 'string' ? departureId : undefined,
+      specialRequests: specialRequests ?? undefined,
+      departureId: departureId ?? undefined,
     };
 
     const booking = await createBooking(auth.userId, input);

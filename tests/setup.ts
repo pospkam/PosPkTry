@@ -53,7 +53,6 @@ vi.mock('process', () => ({
     SMTP_HOST: 'smtp.test.com',
     SMTP_USER: 'test@test.com',
     SMTP_PASSWORD: 'test-password',
-    SENTRY_DSN: 'test-sentry-dsn',
     CDN_URL: 'https://cdn.test.com',
   },
   uptime: vi.fn(() => 1000),

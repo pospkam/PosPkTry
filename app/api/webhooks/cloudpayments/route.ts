@@ -17,10 +17,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { processCloudPaymentsWebhook } from '@/lib/payments/cloudpayments-webhook';
 import { transaction } from '@/lib/database';
 
-// Note: Sentry monitoring temporarily disabled to reduce build size
-// import * as Sentry from '@sentry/nextjs';
-// import { trackPaymentEvent, BusinessError } from '@/lib/monitoring/sentry-utils';
-
 // Simple error class for business logic errors
 class BusinessError extends Error {
   code: string;

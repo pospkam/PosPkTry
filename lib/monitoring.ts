@@ -108,7 +108,6 @@ class MonitoringSystem {
   private async sendToExternalService(entry: LogEntry) {
     try {
       // Здесь будет интеграция с внешним сервисом логирования
-      // Например, Sentry, LogRocket, или собственный сервис
     } catch (error) {
       console.error('Failed to send log to external service:', error);
     }
@@ -117,7 +116,6 @@ class MonitoringSystem {
   private async sendMetricToExternalService(metric: PerformanceMetric) {
     try {
       // Здесь будет интеграция с сервисом метрик
-      // Например, DataDog, New Relic, или собственный сервис
     } catch (error) {
       console.error('Failed to send metric to external service:', error);
     }
@@ -126,7 +124,6 @@ class MonitoringSystem {
   private async sendErrorToExternalService(errorReport: ErrorReport) {
     try {
       // Здесь будет интеграция с сервисом ошибок
-      // Например, Sentry, Bugsnag, или собственный сервис
     } catch (error) {
       console.error('Failed to send error to external service:', error);
     }

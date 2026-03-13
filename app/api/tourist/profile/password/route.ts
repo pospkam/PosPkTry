@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { requireAuth } from '@/lib/auth/middleware';
 import { verifyPassword, hashPassword } from '@/lib/auth/password';
 import { query } from '@/lib/database';
+
+const ChangePasswordSchema = z.object({
+  currentPassword: z.string({ required_error: 'Текущий пароль обязателен' }).min(1, 'Текущий пароль не может быть пустым'),
+  newPassword: z.string({ required_error: 'Новый пароль обязателен' }).min(8, 'Новый пароль должен содержать не менее 8 символов'),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -26,28 +32,14 @@ export async function PATCH(request: NextRequest) {
     );
   }
 
-  const currentPassword =
-    typeof (body as Record<string, unknown>).currentPassword === 'string'
-      ? ((body as Record<string, unknown>).currentPassword as string).trim()
-      : '';
-  const newPassword =
-    typeof (body as Record<string, unknown>).newPassword === 'string'
-      ? ((body as Record<string, unknown>).newPassword as string)
-      : '';
-
-  if (!currentPassword || !newPassword) {
+  const parsed = ChangePasswordSchema.safeParse(body);
+  if (!parsed.success) {
     return NextResponse.json(
-      { success: false, error: 'Укажите текущий и новый пароль' },
+      { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' },
       { status: 400 }
     );
   }
-
-  if (newPassword.length < 8) {
-    return NextResponse.json(
-      { success: false, error: 'Новый пароль должен содержать не менее 8 символов' },
-      { status: 400 }
-    );
-  }
+  const { currentPassword, newPassword } = parsed.data;
 
   try {
     // Fetch current password hash

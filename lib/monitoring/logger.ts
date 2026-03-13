@@ -32,9 +32,7 @@ class Logger {
 
     logMethod(`[${level.toUpperCase()}] ${message}`, context || '');
 
-    // TODO: В production отправлять в Sentry/CloudWatch/etc
     if (level === 'error' && typeof window === 'undefined') {
-      // Server-side error tracking
       this.sendToErrorTracking(entry);
     }
   }
@@ -64,8 +62,8 @@ class Logger {
     }
   }
 
-  private async sendToErrorTracking(entry: LogEntry) {
-    // TODO: Интеграция с Sentry
+  private async sendToErrorTracking(_entry: LogEntry) {
+    // External error tracking integration placeholder
   }
 
   getRecentLogs(limit: number = 100): LogEntry[] {

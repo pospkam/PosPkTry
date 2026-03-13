@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { query } from '@/lib/database';
 import { verifyPassword } from '@/lib/auth/password';
 import { createToken } from '@/lib/auth/jwt';
 import { ApiResponse } from '@/types';
 import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
 import { UsersRow } from '@/lib/types/db-rows';
+
+const SigninSchema = z.object({
+  email: z.string({ required_error: 'Email обязателен' }).email('Неверный формат email'),
+  password: z.string({ required_error: 'Пароль обязателен' }).min(1, 'Пароль не может быть пустым'),
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -27,15 +33,15 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { email, password } = body;
 
-    // Validation
-    if (!email || !password) {
+    const parsed = SigninSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json({
         success: false,
-        error: 'Email и пароль обязательны'
+        error: parsed.error.issues[0]?.message || 'Некорректные данные'
       } as ApiResponse<null>, { status: 400 });
     }
+    const { email, password } = parsed.data;
 
     // Find user by email
     const userResult = await query<UsersRow>(

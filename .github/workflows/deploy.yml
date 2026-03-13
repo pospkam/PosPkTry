@@ -3,15 +3,21 @@ name: Deploy to Timeweb Cloud
 # Timeweb Cloud auto-deploy включён (is_auto_deploy: true)
 # Деплой запускается автоматически через webhook при push в main
 # Этот workflow синхронизирует env vars и проверяет статус деплоя
+#
+# Quality gate: runs only after CI workflow succeeds on main.
+# Manual dispatch (workflow_dispatch) bypasses the CI gate.
 
 on:
-  push:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
     branches: [main]
   workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Sync ALL env vars to Timeweb
         run: |

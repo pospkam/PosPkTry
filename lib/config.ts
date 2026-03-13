@@ -193,10 +193,6 @@ export const config = {
 
   // Настройки мониторинга
   monitoring: {
-    sentry: {
-      dsn: process.env.SENTRY_DSN || '',
-      environment: process.env.NODE_ENV || 'development',
-    },
     prometheus: {
       enabled: process.env.PROMETHEUS_ENABLED === 'true',
       port: parseInt(process.env.PROMETHEUS_PORT || '9090'),
@@ -288,11 +284,6 @@ export function getClientConfig() {
         publishableKey: config.payments.stripe.publishableKey,
       },
     },
-    monitoring: {
-      sentry: {
-        dsn: config.monitoring.sentry.dsn,
-        environment: config.monitoring.sentry.environment,
-      },
-    },
+    monitoring: {},
   };
 }
