@@ -2,43 +2,37 @@
 
 import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
-import { Hero } from '@/components/homepage/Hero';
-import { ActivityCircles } from '@/components/homepage/ActivityCircles';
-import { Marquee } from '@/components/homepage/Marquee';
-import { BentoGrid } from '@/components/homepage/BentoGrid';
-import { LiveFeed } from '@/components/homepage/LiveFeed';
-import { CTASection } from '@/components/homepage/CTASection';
+import { HeroSection } from '@/components/homepage/HeroSection';
+import { CategoryCards } from '@/components/homepage/CategoryCards';
+import { FeaturedTours } from '@/components/homepage/FeaturedTours';
+import { PlatformStats } from '@/components/homepage/PlatformStats';
+import { AudienceSection } from '@/components/homepage/AudienceSection';
+import { ReviewsSection } from '@/components/homepage/ReviewsSection';
+import { CTABanner } from '@/components/homepage/CTABanner';
 import { HomeBottomNav } from '@/components/homepage/HomeBottomNav';
 import SOSButton from '@/components/shared/SOSButton';
 import { Footer } from '@/components/layout/Footer';
-import { useScrollY } from '@/hooks/useScrollY';
 
 export default function HomePageClient() {
   const [mounted, setMounted] = useState(false);
-  const scrollY = useScrollY();
-
   useEffect(() => { setMounted(true); }, []);
 
   if (!mounted) {
-    return <div style={{ minHeight: '100dvh', background: 'var(--kh-bg)' }} />;
+    return <div className="min-h-[100dvh] bg-[var(--kh-bg)]" />;
   }
 
   return (
-    <div
-      style={{
-        background: 'var(--kh-bg)',
-        color: 'var(--kh-text)',
-        minHeight: '100dvh',
-        transition: 'background 0.4s ease, color 0.4s ease',
-      }}
-    >
+    <div className="bg-[var(--kh-bg)] text-[var(--kh-text)] min-h-[100dvh] transition-colors duration-300">
       <Header />
-      <Hero scrollY={scrollY} />
-      <ActivityCircles />
-      <Marquee />
-      <BentoGrid />
-      <LiveFeed />
-      <CTASection />
+      <main>
+        <HeroSection />
+        <CategoryCards />
+        <FeaturedTours />
+        <PlatformStats />
+        <AudienceSection />
+        <ReviewsSection />
+        <CTABanner />
+      </main>
       <Footer />
       <HomeBottomNav />
       <SOSButton />

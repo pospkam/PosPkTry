@@ -38,6 +38,7 @@ export default {
       },
       fontFamily: {
         sans: ['Outfit', '-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', '"Segoe UI"', 'sans-serif'],
+        playfair: ['var(--font-playfair)', 'Playfair Display', 'Georgia', 'serif'],
       },
     },
   },
