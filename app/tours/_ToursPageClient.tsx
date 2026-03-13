@@ -13,40 +13,45 @@ import BottomNav from '@/components/shared/BottomNav';
 const CATEGORIES = [
   { value: '',                     label: 'Все маршруты' },
   { value: 'vulkani',              label: 'Вулканы' },
+  { value: 'geyzery',              label: 'Гейзеры' },
   { value: 'rybalka',              label: 'Рыбалка' },
   { value: 'termalnye_istochniki', label: 'Термы' },
-  { value: 'geyzery',              label: 'Гейзеры' },
-  { value: 'trekking',             label: 'Треккинг' },
-  { value: 'vertoletnye_tury',     label: 'Вертолёт' },
   { value: 'medvedi',              label: 'Медведи' },
   { value: 'morskie_progulki',     label: 'Море' },
+  { value: 'vertoletnye_tury',     label: 'Вертолёт' },
+  { value: 'trekking',             label: 'Треккинг' },
   { value: 'snegohod',             label: 'Снегоход' },
   { value: 'dzhip',                label: 'Джип' },
-  { value: 'lakes',                label: 'Озёра' },
-  { value: 'mountains',            label: 'Горы' },
-  { value: 'rivers',               label: 'Реки' },
-  { value: 'eco',                  label: 'Эко' },
+  { value: 'ozera',                label: 'Озёра' },
+  { value: 'gory',                 label: 'Горы' },
+  { value: 'reki',                 label: 'Реки' },
+  { value: 'eko',                  label: 'Эко' },
+  { value: 'kombo',                label: 'Комбо' },
 ];
 
 const CATEGORY_LABELS: Record<string, string> = {
-  vulkani: 'Вулканы', rybalka: 'Рыбалка', termalnye_istochniki: 'Термы',
-  geyzery: 'Гейзеры', trekking: 'Треккинг', vertoletnye_tury: 'Вертолёт',
-  medvedi: 'Медведи', morskie_progulki: 'Море', snegohod: 'Снегоход',
-  dzhip: 'Джип', lakes: 'Озёра', mountains: 'Горы', rivers: 'Реки', eco: 'Эко',
-  // aliases
+  vulkani: 'Вулканы', geyzery: 'Гейзеры', rybalka: 'Рыбалка',
+  termalnye_istochniki: 'Термы', medvedi: 'Медведи',
+  morskie_progulki: 'Море', vertoletnye_tury: 'Вертолёт',
+  trekking: 'Треккинг', snegohod: 'Снегоход', dzhip: 'Джип',
+  ozera: 'Озёра', gory: 'Горы', reki: 'Реки', eko: 'Эко', kombo: 'Комбо',
+  // Алиасы для обратной совместимости с английскими слагами в БД
   volcanoes: 'Вулканы', fishing: 'Рыбалка', thermal: 'Термы',
   geysers: 'Гейзеры', snowmobile: 'Снегоход', jeep: 'Джип',
   wildlife: 'Медведи', adventure: 'Треккинг', helicopter: 'Вертолёт',
+  mountains: 'Горы', rivers: 'Реки', lakes: 'Озёра', eco: 'Эко',
+  bears: 'Медведи', combo: 'Комбо',
 };
 
 // Цвет категории на бейдже карточки
 const CATEGORY_ACCENT: Record<string, string> = {
   vulkani: 'var(--accent)', geyzery: 'var(--accent)',
-  morskie_progulki: 'var(--ocean)', lakes: 'var(--ocean)', rivers: 'var(--ocean)',
-  mountains: 'var(--success)', trekking: 'var(--success)', eco: 'var(--success)',
+  morskie_progulki: 'var(--ocean)', ozera: 'var(--ocean)', reki: 'var(--ocean)',
+  gory: 'var(--success)', trekking: 'var(--success)', eko: 'var(--success)',
   snegohod: 'var(--warning)', dzhip: 'var(--warning)',
   medvedi: 'var(--accent)', termalnye_istochniki: 'var(--ocean)',
   rybalka: 'var(--ocean)', vertoletnye_tury: 'var(--accent)',
+  kombo: 'var(--warning)',
 };
 
 // ─── Типы ─────────────────────────────────────────────────────────────────────

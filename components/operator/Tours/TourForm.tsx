@@ -152,19 +152,21 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
                 onChange={(e) => handleChange('category', e.target.value)}
                 className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
               >
-                <option value="fishing">Рыбалка</option>
-                <option value="volcanoes">Вулканы</option>
-                <option value="thermal">Термы / Горячие источники</option>
+                <option value="vulkani">Вулканы</option>
+                <option value="geyzery">Гейзеры</option>
+                <option value="rybalka">Рыбалка</option>
+                <option value="termalnye_istochniki">Термы / Горячие источники</option>
+                <option value="medvedi">Медведи / Дикая природа</option>
+                <option value="morskie_progulki">Морские прогулки</option>
+                <option value="vertoletnye_tury">Вертолётные туры</option>
                 <option value="trekking">Треккинг / Пешие туры</option>
-                <option value="snowmobile">Снегоход</option>
-                <option value="jeep">Джип-туры</option>
-                <option value="helicopter">Вертолётные туры</option>
-                <option value="bears">Медведи / Дикая природа</option>
-                <option value="lakes">Озёра</option>
-                <option value="mountains">Горы</option>
-                <option value="rivers">Реки</option>
-                <option value="eco">Эко-туры</option>
-                <option value="combo">Комбо-тур</option>
+                <option value="snegohod">Снегоходы</option>
+                <option value="dzhip">Джип-туры</option>
+                <option value="ozera">Озёра</option>
+                <option value="gory">Горы</option>
+                <option value="reki">Реки</option>
+                <option value="eko">Эко-туры</option>
+                <option value="kombo">Комбо-тур</option>
               </select>
             </div>
 

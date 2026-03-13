@@ -7,13 +7,20 @@ import { Reveal } from '@/components/homepage/Reveal';
 
 const CATEGORIES = [
   { label: 'Вулканы', slug: 'vulkani', img: '/images/activities/volcanoes.jpg' },
+  { label: 'Гейзеры', slug: 'geyzery', img: '/images/activities/volcanoes.jpg' },
   { label: 'Рыбалка', slug: 'rybalka', img: '/images/activities/fishing.jpg' },
   { label: 'Термальные', slug: 'termalnye_istochniki', img: '/images/activities/hotsprings.jpg' },
+  { label: 'Медведи', slug: 'medvedi', img: '/images/gallery/road-winter.jpg' },
   { label: 'Морские', slug: 'morskie_progulki', img: '/images/activities/sea.jpg' },
   { label: 'Вертолёты', slug: 'vertoletnye_tury', img: '/images/activities/helicopter.jpg' },
-  { label: 'Снегоходы', slug: 'snegohod', img: '/images/activities/snowmobile.jpg' },
   { label: 'Треккинг', slug: 'trekking', img: '/images/gallery/camp-sunset.jpg' },
-  { label: 'Медведи', slug: 'medvedi', img: '/images/gallery/road-winter.jpg' },
+  { label: 'Снегоходы', slug: 'snegohod', img: '/images/activities/snowmobile.jpg' },
+  { label: 'Джипы', slug: 'dzhip', img: '/images/activities/jeep.jpg' },
+  { label: 'Озёра', slug: 'ozera', img: '/images/gallery/bay-sunset.jpg' },
+  { label: 'Горы', slug: 'gory', img: '/images/gallery/stela.jpg' },
+  { label: 'Реки', slug: 'reki', img: '/images/bento/khalaktyr.jpg' },
+  { label: 'Эко-туры', slug: 'eko', img: '/images/gallery/aurora.jpg' },
+  { label: 'Комбо', slug: 'kombo', img: '/images/activities/volcanoes.jpg' },
 ] as const;
 
 export function CategoryCards() {
@@ -25,11 +32,11 @@ export function CategoryCards() {
             Направления
           </h2>
           <p className="text-[var(--kh-text-dim)] text-sm mb-8">
-            8 видов активного отдыха на полуострове
+            15 направлений активного отдыха на полуострове
           </p>
         </Reveal>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 md:gap-4">
           {CATEGORIES.map((cat, i) => (
             <Reveal key={cat.slug} delay={Math.min(i + 1, 4) as 1 | 2 | 3 | 4}>
               <Link

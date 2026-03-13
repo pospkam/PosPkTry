@@ -21,7 +21,7 @@ const TOOLS = [
       properties: {
         category: {
           type: 'string',
-          description: 'Категория: vulkani, geyzery, termalnye_istochniki, rybalka, snegohod, dzhip, morskie_progulki, trekking, lakes, mountains, rivers, medvedi, vertoletnye_tury, eco',
+          description: 'Категория: vulkani, geyzery, termalnye_istochniki, rybalka, medvedi, morskie_progulki, vertoletnye_tury, trekking, snegohod, dzhip, ozera, gory, reki, eko, kombo',
         },
         query: {
           type: 'string',

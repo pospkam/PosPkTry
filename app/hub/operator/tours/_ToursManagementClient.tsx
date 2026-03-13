@@ -292,11 +292,21 @@ export default function ToursManagementClient() {
           className={SELECT}
         >
           <option value="">Все категории</option>
-          <option value="adventure">Приключения</option>
-          <option value="nature">Природа</option>
-          <option value="culture">Культура</option>
-          <option value="extreme">Экстрим</option>
-          <option value="relaxation">Отдых</option>
+          <option value="vulkani">Вулканы</option>
+          <option value="geyzery">Гейзеры</option>
+          <option value="rybalka">Рыбалка</option>
+          <option value="termalnye_istochniki">Термы</option>
+          <option value="medvedi">Медведи</option>
+          <option value="morskie_progulki">Морские</option>
+          <option value="vertoletnye_tury">Вертолёты</option>
+          <option value="trekking">Треккинг</option>
+          <option value="snegohod">Снегоходы</option>
+          <option value="dzhip">Джипы</option>
+          <option value="ozera">Озёра</option>
+          <option value="gory">Горы</option>
+          <option value="reki">Реки</option>
+          <option value="eko">Эко</option>
+          <option value="kombo">Комбо</option>
         </select>
         <select
           value={statusFilter}

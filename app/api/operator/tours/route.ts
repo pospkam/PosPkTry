@@ -200,7 +200,7 @@ const CreateTourSchema = z.object({
   name: z.string().min(3, 'Название тура обязательно (минимум 3 символа)'),
   description: z.string().min(20, 'Описание тура обязательно (минимум 20 символов)'),
   price: z.number().min(1000, 'Минимальная цена тура: 1000 рублей').max(1000000, 'Максимальная цена тура: 1,000,000 рублей'),
-  category: z.enum(['volcanoes', 'fishing', 'thermal', 'mountains', 'geysers', 'rivers', 'lakes', 'eco', 'adventure', 'combo', 'snowmobile', 'jeep', 'wildlife', 'cultural', 'hunting', 'family']).optional(),
+  category: z.enum(['vulkani', 'geyzery', 'rybalka', 'termalnye_istochniki', 'medvedi', 'morskie_progulki', 'vertoletnye_tury', 'trekking', 'snegohod', 'dzhip', 'ozera', 'gory', 'reki', 'eko', 'kombo']).optional(),
   difficulty: z.enum(['easy', 'medium', 'hard', 'extreme']).optional(),
   duration: z.number().int().min(1, 'Продолжительность тура: от 1 до 30 дней').max(30, 'Продолжительность тура: от 1 до 30 дней').optional(),
   currency: z.string().optional(),

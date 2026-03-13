@@ -54,68 +54,101 @@ export const DIFFICULTY_MAP: Record<string, TourDifficulty> = {
 };
 
 /**
- * Категории туров
+ * Категории туров (единые русские транслит-слаги)
  */
 export const TOUR_CATEGORY = {
-  // Основные
-  VOLCANOES: 'volcanoes',
-  FISHING: 'fishing',
-  THERMAL: 'thermal',
-  MOUNTAINS: 'mountains',
-  GEYSERS: 'geysers',
-  RIVERS: 'rivers',
-  LAKES: 'lakes',
-  ECO: 'eco',
-  // Дополнительные
-  ADVENTURE: 'adventure',
-  COMBO: 'combo',
-  SNOWMOBILE: 'snowmobile',
-  JEEP: 'jeep',
-  WILDLIFE: 'wildlife',
-  CULTURAL: 'cultural',
+  VULKANI: 'vulkani',
+  GEYZERY: 'geyzery',
+  RYBALKA: 'rybalka',
+  TERMALNYE: 'termalnye_istochniki',
+  MEDVEDI: 'medvedi',
+  MORSKIE: 'morskie_progulki',
+  VERTOLETNYE: 'vertoletnye_tury',
+  TREKKING: 'trekking',
+  SNEGOHOD: 'snegohod',
+  DZHIP: 'dzhip',
+  OZERA: 'ozera',
+  GORY: 'gory',
+  REKI: 'reki',
+  EKO: 'eko',
+  KOMBO: 'kombo',
 } as const;
+
+/** Маппинг старых английских слагов → новые русские */
+export const CATEGORY_ALIAS: Record<string, TourCategory> = {
+  volcanoes: 'vulkani',
+  fishing: 'rybalka',
+  thermal: 'termalnye_istochniki',
+  geysers: 'geyzery',
+  wildlife: 'medvedi',
+  bears: 'medvedi',
+  helicopter: 'vertoletnye_tury',
+  snowmobile: 'snegohod',
+  jeep: 'dzhip',
+  mountains: 'gory',
+  rivers: 'reki',
+  lakes: 'ozera',
+  eco: 'eko',
+  combo: 'kombo',
+  adventure: 'trekking',
+  cultural: 'trekking',
+  hunting: 'rybalka',
+  family: 'trekking',
+};
 
 export type TourCategory = (typeof TOUR_CATEGORY)[keyof typeof TOUR_CATEGORY];
 
 /**
- * Маппинг категорий из парсеров
+ * Маппинг категорий из парсеров и внешних источников
  */
 export const CATEGORY_MAP: Record<string, TourCategory> = {
-  // Русские
-  'Вулканы': TOUR_CATEGORY.VOLCANOES,
-  'Рыбалка': TOUR_CATEGORY.FISHING,
-  'Термы': TOUR_CATEGORY.THERMAL,
-  'Горячие источники': TOUR_CATEGORY.THERMAL,
-  'Горы': TOUR_CATEGORY.MOUNTAINS,
-  'Гейзеры': TOUR_CATEGORY.GEYSERS,
-  'Реки': TOUR_CATEGORY.RIVERS,
-  'Озёра': TOUR_CATEGORY.LAKES,
-  'Эко': TOUR_CATEGORY.ECO,
-  'Приключения': TOUR_CATEGORY.ADVENTURE,
-  'Комбо': TOUR_CATEGORY.COMBO,
-  'Снегоход': TOUR_CATEGORY.SNOWMOBILE,
-  'Джип': TOUR_CATEGORY.JEEP,
-  'Животные': TOUR_CATEGORY.WILDLIFE,
+  // Русские названия
+  'Вулканы': TOUR_CATEGORY.VULKANI,
+  'Рыбалка': TOUR_CATEGORY.RYBALKA,
+  'Термы': TOUR_CATEGORY.TERMALNYE,
+  'Горячие источники': TOUR_CATEGORY.TERMALNYE,
+  'Гейзеры': TOUR_CATEGORY.GEYZERY,
+  'Горы': TOUR_CATEGORY.GORY,
+  'Реки': TOUR_CATEGORY.REKI,
+  'Озёра': TOUR_CATEGORY.OZERA,
+  'Эко': TOUR_CATEGORY.EKO,
+  'Комбо': TOUR_CATEGORY.KOMBO,
+  'Снегоход': TOUR_CATEGORY.SNEGOHOD,
+  'Джип': TOUR_CATEGORY.DZHIP,
+  'Медведи': TOUR_CATEGORY.MEDVEDI,
+  'Животные': TOUR_CATEGORY.MEDVEDI,
+  'Море': TOUR_CATEGORY.MORSKIE,
+  'Вертолёт': TOUR_CATEGORY.VERTOLETNYE,
+  'Треккинг': TOUR_CATEGORY.TREKKING,
+  'Приключения': TOUR_CATEGORY.TREKKING,
   // Английские
-  'Volcanoes': TOUR_CATEGORY.VOLCANOES,
-  'Fishing': TOUR_CATEGORY.FISHING,
-  'Hot Springs': TOUR_CATEGORY.THERMAL,
-  'Mountains': TOUR_CATEGORY.MOUNTAINS,
-  'Geysers': TOUR_CATEGORY.GEYSERS,
-  'Rivers': TOUR_CATEGORY.RIVERS,
-  'Lakes': TOUR_CATEGORY.LAKES,
-  'Eco': TOUR_CATEGORY.ECO,
-  // Системные
-  'volcanoes': TOUR_CATEGORY.VOLCANOES,
-  'fishing': TOUR_CATEGORY.FISHING,
-  'thermal': TOUR_CATEGORY.THERMAL,
-  'mountains': TOUR_CATEGORY.MOUNTAINS,
-  'geysers': TOUR_CATEGORY.GEYSERS,
-  'rivers': TOUR_CATEGORY.RIVERS,
-  'lakes': TOUR_CATEGORY.LAKES,
-  'eco': TOUR_CATEGORY.ECO,
-  'adventure': TOUR_CATEGORY.ADVENTURE,
-  'combo': TOUR_CATEGORY.COMBO,
+  'Volcanoes': TOUR_CATEGORY.VULKANI,
+  'Fishing': TOUR_CATEGORY.RYBALKA,
+  'Hot Springs': TOUR_CATEGORY.TERMALNYE,
+  'Mountains': TOUR_CATEGORY.GORY,
+  'Geysers': TOUR_CATEGORY.GEYZERY,
+  'Rivers': TOUR_CATEGORY.REKI,
+  'Lakes': TOUR_CATEGORY.OZERA,
+  'Eco': TOUR_CATEGORY.EKO,
+  // Системные (все старые + новые слаги для идемпотентности)
+  ...Object.fromEntries(Object.values(TOUR_CATEGORY).map(v => [v, v])),
+  // Старые английские слаги
+  'volcanoes': TOUR_CATEGORY.VULKANI,
+  'fishing': TOUR_CATEGORY.RYBALKA,
+  'thermal': TOUR_CATEGORY.TERMALNYE,
+  'mountains': TOUR_CATEGORY.GORY,
+  'geysers': TOUR_CATEGORY.GEYZERY,
+  'rivers': TOUR_CATEGORY.REKI,
+  'lakes': TOUR_CATEGORY.OZERA,
+  'eco': TOUR_CATEGORY.EKO,
+  'adventure': TOUR_CATEGORY.TREKKING,
+  'combo': TOUR_CATEGORY.KOMBO,
+  'snowmobile': TOUR_CATEGORY.SNEGOHOD,
+  'jeep': TOUR_CATEGORY.DZHIP,
+  'wildlife': TOUR_CATEGORY.MEDVEDI,
+  'bears': TOUR_CATEGORY.MEDVEDI,
+  'helicopter': TOUR_CATEGORY.VERTOLETNYE,
+  'cultural': TOUR_CATEGORY.TREKKING,
 };
 
 /**
@@ -178,7 +211,7 @@ export interface Tour {
 
   // Необязательные поля
   short_description?: string; // Краткое описание (макс 200 символов)
-  category?: TourCategory; // Категория (по умолчанию adventure)
+  category?: TourCategory; // Категория (по умолчанию trekking)
   currency?: Currency; // Валюта (по умолчанию RUB)
   season?: Season[]; // Сезоны (массив)
   coordinates?: Coordinates[]; // Маршрут (массив точек)
@@ -277,14 +310,16 @@ export function normalizeDifficulty(value: string | undefined | null): TourDiffi
  * Нормализует category
  */
 export function normalizeCategory(value: string | undefined | null): TourCategory {
-  if (!value) return TOUR_CATEGORY.ADVENTURE; // По умолчанию
-  
+  if (!value) return TOUR_CATEGORY.TREKKING;
+
   const normalized = CATEGORY_MAP[value] || CATEGORY_MAP[value.trim()];
   if (normalized) return normalized;
-  
-  // Fallback
-  console.warn(`[TOUR_SCHEMA] Unknown category: "${value}", using adventure`);
-  return TOUR_CATEGORY.ADVENTURE;
+
+  // Проверяем alias
+  const aliased = CATEGORY_ALIAS[value] || CATEGORY_ALIAS[value.trim()];
+  if (aliased) return aliased;
+
+  return TOUR_CATEGORY.TREKKING;
 }
 
 /**
@@ -349,18 +384,19 @@ export const DIFFICULTY_LABELS: Record<TourDifficulty, string> = {
  * Человеко-читаемые названия категорий (для UI)
  */
 export const CATEGORY_LABELS: Record<TourCategory, string> = {
-  [TOUR_CATEGORY.VOLCANOES]: 'Вулканы',
-  [TOUR_CATEGORY.FISHING]: 'Рыбалка',
-  [TOUR_CATEGORY.THERMAL]: 'Горячие источники',
-  [TOUR_CATEGORY.MOUNTAINS]: 'Горы',
-  [TOUR_CATEGORY.GEYSERS]: 'Гейзеры',
-  [TOUR_CATEGORY.RIVERS]: 'Реки',
-  [TOUR_CATEGORY.LAKES]: 'Озёра',
-  [TOUR_CATEGORY.ECO]: 'Эко-туры',
-  [TOUR_CATEGORY.ADVENTURE]: 'Приключения',
-  [TOUR_CATEGORY.COMBO]: 'Комбо-туры',
-  [TOUR_CATEGORY.SNOWMOBILE]: 'Снегоходы',
-  [TOUR_CATEGORY.JEEP]: 'Джип-туры',
-  [TOUR_CATEGORY.WILDLIFE]: 'Дикая природа',
-  [TOUR_CATEGORY.CULTURAL]: 'Культурные',
+  [TOUR_CATEGORY.VULKANI]: 'Вулканы',
+  [TOUR_CATEGORY.GEYZERY]: 'Гейзеры',
+  [TOUR_CATEGORY.RYBALKA]: 'Рыбалка',
+  [TOUR_CATEGORY.TERMALNYE]: 'Горячие источники',
+  [TOUR_CATEGORY.MEDVEDI]: 'Медведи',
+  [TOUR_CATEGORY.MORSKIE]: 'Морские прогулки',
+  [TOUR_CATEGORY.VERTOLETNYE]: 'Вертолётные туры',
+  [TOUR_CATEGORY.TREKKING]: 'Треккинг',
+  [TOUR_CATEGORY.SNEGOHOD]: 'Снегоходы',
+  [TOUR_CATEGORY.DZHIP]: 'Джип-туры',
+  [TOUR_CATEGORY.OZERA]: 'Озёра',
+  [TOUR_CATEGORY.GORY]: 'Горы',
+  [TOUR_CATEGORY.REKI]: 'Реки',
+  [TOUR_CATEGORY.EKO]: 'Эко-туры',
+  [TOUR_CATEGORY.KOMBO]: 'Комбо-туры',
 };

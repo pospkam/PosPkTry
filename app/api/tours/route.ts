@@ -41,16 +41,26 @@ const CATEGORY_IMAGES: Record<string, string> = {
   geyzery:              '/images/activities/volcanoes.jpg',
   rybalka:              '/images/activities/fishing.jpg',
   termalnye_istochniki: '/images/activities/hotsprings.jpg',
-  dzhip:                '/images/activities/jeep.jpg',
-  snegohod:             '/images/activities/snowmobile.jpg',
+  medvedi:              '/images/gallery/road-winter.jpg',
   morskie_progulki:     '/images/activities/sea.jpg',
   vertoletnye_tury:     '/images/activities/helicopter.jpg',
   trekking:             '/images/gallery/camp-sunset.jpg',
-  mountains:            '/images/gallery/stela.jpg',
-  rivers:               '/images/bento/khalaktyr.jpg',
-  lakes:                '/images/gallery/bay-sunset.jpg',
-  medvedi:              '/images/gallery/road-winter.jpg',
-  eco:                  '/images/gallery/aurora.jpg',
+  snegohod:             '/images/activities/snowmobile.jpg',
+  dzhip:                '/images/activities/jeep.jpg',
+  ozera:                '/images/gallery/bay-sunset.jpg',
+  gory:                 '/images/gallery/stela.jpg',
+  reki:                 '/images/bento/khalaktyr.jpg',
+  eko:                  '/images/gallery/aurora.jpg',
+  kombo:                '/images/activities/volcanoes.jpg',
+};
+
+// Маппинг старых английских слагов → русские (для обратной совместимости)
+const CATEGORY_ALIAS: Record<string, string> = {
+  volcanoes: 'vulkani', fishing: 'rybalka', thermal: 'termalnye_istochniki',
+  geysers: 'geyzery', wildlife: 'medvedi', bears: 'medvedi',
+  helicopter: 'vertoletnye_tury', snowmobile: 'snegohod', jeep: 'dzhip',
+  mountains: 'gory', rivers: 'reki', lakes: 'ozera',
+  eco: 'eko', combo: 'kombo', adventure: 'trekking',
 };
 
 // GET /api/tours — Каталог туров (из таблицы tours)
@@ -68,9 +78,19 @@ export async function GET(request: NextRequest) {
     let paramIndex = 1;
 
     if (category) {
-      whereConditions.push(`t.category = $${paramIndex}`);
-      queryParams.push(category);
-      paramIndex++;
+      // Резолвим alias (старые английские слаги → русские)
+      const resolved = CATEGORY_ALIAS[category] || category;
+      // Ищем и по новому русскому, и по старому английскому слагу
+      const reverseAlias = Object.entries(CATEGORY_ALIAS).find(([, v]) => v === resolved)?.[0];
+      if (reverseAlias) {
+        whereConditions.push(`(t.category = $${paramIndex} OR t.category = $${paramIndex + 1})`);
+        queryParams.push(resolved, reverseAlias);
+        paramIndex += 2;
+      } else {
+        whereConditions.push(`t.category = $${paramIndex}`);
+        queryParams.push(resolved);
+        paramIndex++;
+      }
     }
 
     if (search) {
