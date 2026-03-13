@@ -117,50 +117,51 @@ export default function TouristDashboardClient() {
 
   if (loading) {
     return (
-      <div className="p-5 lg:p-6 flex items-center justify-center min-h-[60vh]">
-        <div className="inline-block w-6 h-6 border-2 border-[var(--border)] border-t-[var(--accent)] rounded-full animate-spin" />
+      <div className="max-w-5xl lg:max-w-6xl mx-auto px-4 py-8 flex items-center justify-center min-h-[60vh]">
+        <div className="inline-block w-8 h-8 border-2 border-[var(--border)] border-t-[var(--accent)] rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="p-5 lg:p-6 space-y-5">
+    <div className="max-w-5xl lg:max-w-6xl mx-auto px-4 py-6 lg:py-8 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <Compass className="w-4 h-4 text-[var(--text-muted)]" />
-          <h1 className="text-sm font-semibold text-[var(--text-primary)] tracking-tight">Обзор</h1>
+        <div>
+          <h1 className="font-playfair text-2xl sm:text-3xl font-bold text-[var(--text-primary)]">
+            Обзор
+          </h1>
+          <p className="text-sm text-[var(--text-secondary)] mt-1">Ваш личный кабинет туриста</p>
         </div>
         <div className="flex items-center gap-3">
-          {/* Compact weather */}
           {weather && (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-[var(--bg-card)] border border-[var(--border)] rounded-md">
-              <WeatherIcon condition={weather.condition} className="w-4 h-4 text-[var(--text-secondary)]" />
-              <span className="text-xs font-mono text-[var(--text-primary)]">{weather.temperature}°C</span>
-              <span className="text-[10px] text-[var(--text-muted)] hidden sm:inline">{weather.location}</span>
+            <div className="flex items-center gap-2 px-3 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg">
+              <WeatherIcon condition={weather.condition} className="w-5 h-5 text-[var(--accent)]" />
+              <span className="text-sm font-semibold text-[var(--text-primary)]">{weather.temperature}°C</span>
+              <span className="ds-label hidden sm:inline">{weather.location}</span>
             </div>
           )}
           <button
             onClick={fetchAll}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-[var(--text-secondary)] bg-[var(--bg-card)] border border-[var(--border)] rounded-md hover:bg-[var(--bg-hover)] transition-colors"
+            className="ds-btn flex items-center gap-1.5 px-3 py-2 text-sm"
           >
-            <RefreshCw className="w-3 h-3" /> Обновить
+            <RefreshCw className="w-3.5 h-3.5" /> Обновить
           </button>
         </div>
       </div>
 
       {/* KPIs */}
       {kpis.length > 0 && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {kpis.map(kpi => {
             const Icon = kpi.icon;
             return (
-              <div key={kpi.label} className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg px-4 py-3.5">
-                <div className="flex items-center gap-1.5 mb-1.5">
-                  <Icon className="w-3 h-3 text-[var(--text-muted)]" />
-                  <p className="text-[10px] uppercase tracking-widest text-[var(--text-muted)]">{kpi.label}</p>
+              <div key={kpi.label} className="bg-[var(--bg-card)] border border-[var(--border)] border-l-4 border-l-[var(--accent)] rounded-lg px-5 py-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Icon className="w-4 h-4 text-[var(--accent)]" />
+                  <p className="ds-label">{kpi.label}</p>
                 </div>
-                <span className="text-xl font-semibold text-[var(--text-primary)] font-mono leading-none">{kpi.value}</span>
+                <span className="text-2xl font-bold text-[var(--text-primary)] font-playfair leading-none">{kpi.value}</span>
               </div>
             );
           })}
@@ -169,10 +170,10 @@ export default function TouristDashboardClient() {
 
       {/* Weather details */}
       {weather && (
-        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-[var(--text-secondary)]">Погода на Камчатке</span>
-            <span className={`text-[10px] font-medium px-2 py-0.5 rounded ${
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-[var(--text-primary)]">Погода на Камчатке</h2>
+            <span className={`ds-label px-2.5 py-1 rounded-lg ${
               weather.safetyLevel === 'excellent' || weather.safetyLevel === 'good'
                 ? 'bg-[var(--success)]/10 text-[var(--success)]'
                 : weather.safetyLevel === 'difficult'
@@ -182,32 +183,32 @@ export default function TouristDashboardClient() {
               {weather.safetyLevel === 'excellent' ? 'Отлично' : weather.safetyLevel === 'good' ? 'Хорошо' : weather.safetyLevel === 'difficult' ? 'Сложно' : 'Опасно'}
             </span>
           </div>
-          <div className="grid grid-cols-4 gap-4 text-center">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
             <div>
-              <WeatherIcon condition={weather.condition} className="w-6 h-6 text-[var(--accent)] mx-auto mb-1" />
-              <p className="text-lg font-semibold text-[var(--text-primary)] font-mono">{weather.temperature}°C</p>
-              <p className="text-[10px] text-[var(--text-muted)]">Температура</p>
+              <WeatherIcon condition={weather.condition} className="w-8 h-8 text-[var(--accent)] mx-auto mb-2" />
+              <p className="text-3xl font-bold text-[var(--text-primary)] font-playfair">{weather.temperature}°C</p>
+              <p className="ds-label mt-1">Температура</p>
             </div>
             <div>
-              <Wind className="w-5 h-5 text-[var(--text-muted)] mx-auto mb-1" />
-              <p className="text-lg font-semibold text-[var(--text-primary)] font-mono">{weather.windSpeed}</p>
-              <p className="text-[10px] text-[var(--text-muted)]">Ветер, км/ч</p>
+              <Wind className="w-6 h-6 text-[var(--text-secondary)] mx-auto mb-2" />
+              <p className="text-xl font-semibold text-[var(--text-primary)]">{weather.windSpeed}</p>
+              <p className="ds-label mt-1">Ветер, км/ч</p>
             </div>
             <div>
-              <Droplets className="w-5 h-5 text-[var(--text-muted)] mx-auto mb-1" />
-              <p className="text-lg font-semibold text-[var(--text-primary)] font-mono">{weather.humidity}%</p>
-              <p className="text-[10px] text-[var(--text-muted)]">Влажность</p>
+              <Droplets className="w-6 h-6 text-[var(--text-secondary)] mx-auto mb-2" />
+              <p className="text-xl font-semibold text-[var(--text-primary)]">{weather.humidity}%</p>
+              <p className="ds-label mt-1">Влажность</p>
             </div>
             <div>
-              <Sun className="w-5 h-5 text-[var(--text-muted)] mx-auto mb-1" />
-              <p className="text-lg font-semibold text-[var(--text-primary)] font-mono">{weather.visibility}</p>
-              <p className="text-[10px] text-[var(--text-muted)]">Видимость, км</p>
+              <Sun className="w-6 h-6 text-[var(--text-secondary)] mx-auto mb-2" />
+              <p className="text-xl font-semibold text-[var(--text-primary)]">{weather.visibility}</p>
+              <p className="ds-label mt-1">Видимость, км</p>
             </div>
           </div>
           {weather.recommendations && weather.recommendations.length > 0 && (
-            <div className="mt-3 pt-3 border-t border-[var(--border)]">
+            <div className="mt-4 pt-4 border-t border-[var(--border)]">
               {weather.recommendations.slice(0, 2).map((rec) => (
-                <p key={rec} className="text-[10px] text-[var(--text-muted)] leading-relaxed">{rec}</p>
+                <p key={rec} className="text-sm text-[var(--text-secondary)] leading-relaxed">{rec}</p>
               ))}
             </div>
           )}
@@ -216,17 +217,17 @@ export default function TouristDashboardClient() {
 
       {/* My bookings */}
       <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden">
-        <div className="px-4 py-3 border-b border-[var(--border)] flex items-center justify-between">
-          <span className="text-xs font-medium text-[var(--text-secondary)]">Мои бронирования</span>
-          <Link href="/hub/tourist/bookings" className="flex items-center gap-0.5 text-[10px] text-[var(--accent)] hover:underline">
-            Все <ChevronRight className="w-3 h-3" />
+        <div className="px-5 py-4 border-b border-[var(--border)] flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-[var(--text-primary)]">Мои бронирования</h2>
+          <Link href="/hub/tourist/bookings" className="flex items-center gap-1 text-sm text-[var(--accent)] hover:underline font-medium">
+            Все <ChevronRight className="w-4 h-4" />
           </Link>
         </div>
         {bookings.length === 0 ? (
-          <div className="px-4 py-10 text-center">
-            <Calendar className="w-6 h-6 text-[var(--text-muted)] mx-auto mb-2" />
-            <p className="text-xs text-[var(--text-muted)]">Бронирований пока нет</p>
-            <Link href="/hub/tourist/bookings/new" className="inline-block mt-2 text-[10px] text-[var(--accent)] hover:underline">
+          <div className="px-5 py-12 text-center">
+            <Calendar className="w-8 h-8 text-[var(--text-muted)] mx-auto mb-3" />
+            <p className="text-sm text-[var(--text-muted)] mb-2">Бронирований пока нет</p>
+            <Link href="/hub/tourist/bookings/new" className="text-sm text-[var(--accent)] hover:underline font-medium">
               Забронировать тур
             </Link>
           </div>
@@ -235,15 +236,15 @@ export default function TouristDashboardClient() {
             {bookings.map(b => {
               const st = STATUS_LABELS[b.status] ?? STATUS_LABELS.pending;
               return (
-                <Link key={b.id} href="/hub/tourist/bookings" className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--bg-hover)] transition-colors">
+                <Link key={b.id} href="/hub/tourist/bookings" className="flex items-center gap-4 px-5 py-3.5 hover:bg-[var(--bg-hover)] transition-colors">
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-[var(--text-primary)] truncate">{b.tour.name}</p>
-                    <p className="text-[10px] text-[var(--text-muted)]">
+                    <p className="text-sm font-medium text-[var(--text-primary)] truncate">{b.tour.name}</p>
+                    <p className="text-xs text-[var(--text-muted)] mt-0.5">
                       {new Date(b.date).toLocaleDateString('ru-RU')} · {b.participants} чел.
                     </p>
                   </div>
-                  <span className={`px-1.5 py-0.5 text-[10px] font-medium rounded ${st.cls}`}>{st.label}</span>
-                  <span className="text-xs font-mono text-[var(--text-primary)]">{fmtRub(b.totalPrice)}</span>
+                  <span className={`px-2 py-0.5 text-xs font-medium rounded-lg ${st.cls}`}>{st.label}</span>
+                  <span className="text-sm font-semibold text-[var(--text-primary)]">{fmtRub(b.totalPrice)}</span>
                 </Link>
               );
             })}
@@ -254,15 +255,15 @@ export default function TouristDashboardClient() {
       {/* Upcoming trips */}
       {stats?.upcoming_trips && stats.upcoming_trips.length > 0 && (
         <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden">
-          <div className="px-4 py-3 border-b border-[var(--border)]">
-            <span className="text-xs font-medium text-[var(--text-secondary)]">Ближайшие поездки</span>
+          <div className="px-5 py-4 border-b border-[var(--border)]">
+            <h2 className="text-lg font-semibold text-[var(--text-primary)]">Ближайшие поездки</h2>
           </div>
           <div className="divide-y divide-[var(--border)]">
             {stats.upcoming_trips.map(trip => (
-              <div key={trip.id} className="flex items-center gap-3 px-4 py-2.5">
-                <MapPin className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />
-                <span className="text-xs text-[var(--text-primary)] flex-1 truncate">{trip.title}</span>
-                <span className="text-[10px] text-[var(--text-muted)] font-mono">
+              <div key={trip.id} className="flex items-center gap-3 px-5 py-3.5">
+                <MapPin className="w-4 h-4 text-[var(--accent)] shrink-0" />
+                <span className="text-sm text-[var(--text-primary)] flex-1 truncate">{trip.title}</span>
+                <span className="ds-label">
                   {new Date(trip.start_date).toLocaleDateString('ru-RU')}
                 </span>
               </div>
@@ -273,50 +274,50 @@ export default function TouristDashboardClient() {
 
       {/* Recommendations */}
       <div>
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Target className="w-3.5 h-3.5 text-[var(--text-muted)]" />
-            <span className="text-xs font-medium text-[var(--text-secondary)]">Рекомендуем вам</span>
+            <Target className="w-5 h-5 text-[var(--accent)]" />
+            <h2 className="text-lg font-semibold text-[var(--text-primary)]">Рекомендуем вам</h2>
           </div>
-          <Link href="/tours" className="text-[10px] text-[var(--accent)] hover:underline">
+          <Link href="/tours" className="text-sm text-[var(--accent)] hover:underline font-medium">
             Все туры →
           </Link>
         </div>
         {recsLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {Array.from({ length: 3 }).map((_, i) => (
               <RecommendationCardSkeleton key={i} />
             ))}
           </div>
         ) : recommendations.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {recommendations.slice(0, 3).map(tour => (
               <RecommendationCard key={tour.id} tour={tour} />
             ))}
           </div>
         ) : (
-          <p className="text-xs text-[var(--text-muted)] py-6 text-center">Рекомендации появятся после первого бронирования</p>
+          <p className="text-sm text-[var(--text-muted)] py-8 text-center">Рекомендации появятся после первого бронирования</p>
         )}
       </div>
 
       {/* Recent reviews */}
       {stats?.recent_reviews && stats.recent_reviews.length > 0 && (
         <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden">
-          <div className="px-4 py-3 border-b border-[var(--border)] flex items-center justify-between">
-            <span className="text-xs font-medium text-[var(--text-secondary)]">Мои отзывы</span>
-            <Link href="/hub/tourist/reviews" className="flex items-center gap-0.5 text-[10px] text-[var(--accent)] hover:underline">
-              Все <ChevronRight className="w-3 h-3" />
+          <div className="px-5 py-4 border-b border-[var(--border)] flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-[var(--text-primary)]">Мои отзывы</h2>
+            <Link href="/hub/tourist/reviews" className="flex items-center gap-1 text-sm text-[var(--accent)] hover:underline font-medium">
+              Все <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
           <div className="divide-y divide-[var(--border)]">
             {stats.recent_reviews.slice(0, 3).map(review => (
-              <div key={review.id} className="px-4 py-2.5">
-                <div className="flex items-center justify-between mb-0.5">
-                  <span className="text-xs font-medium text-[var(--text-primary)]">{review.tour_name}</span>
-                  <span className="text-[10px] text-[var(--warning)] font-mono">{'★'.repeat(review.rating)}</span>
+              <div key={review.id} className="px-5 py-3.5">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-medium text-[var(--text-primary)]">{review.tour_name}</span>
+                  <span className="text-sm text-[var(--warning)]">{'★'.repeat(review.rating)}</span>
                 </div>
                 {review.comment && (
-                  <p className="text-[10px] text-[var(--text-muted)] truncate">{review.comment}</p>
+                  <p className="text-xs text-[var(--text-muted)] truncate">{review.comment}</p>
                 )}
               </div>
             ))}

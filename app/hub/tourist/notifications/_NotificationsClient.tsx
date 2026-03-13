@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { Protected } from '@/components/auth/Protected';
 import { Bell, Loader2, CheckCheck, Settings } from 'lucide-react';
 import { useApiFetch } from '@/hooks/use-api-fetch';
@@ -85,24 +85,16 @@ export default function NotificationsClient() {
 
   return (
     <Protected roles={['tourist', 'admin']}>
-      <div className="max-w-5xl mx-auto p-6">
+      <div className="max-w-5xl mx-auto px-4 py-6 lg:py-8">
         <div className="flex items-center justify-between mb-6">
-          <h1
-            className="text-2xl font-semibold"
-            style={{ color: 'var(--text-primary)' }}
-          >
+          <h1 className="font-playfair text-2xl sm:text-3xl font-bold text-[var(--text-primary)]">
             Уведомления
           </h1>
 
           {unreadCount > 0 && (
             <button
               onClick={handleReadAll}
-              className="flex items-center gap-2 min-h-[44px] px-4 rounded-lg text-sm font-medium transition-colors"
-              style={{
-                backgroundColor: 'var(--bg-card)',
-                color: 'var(--accent)',
-                border: '1px solid var(--border)',
-              }}
+              className="ds-btn ds-btn-secondary flex items-center gap-2"
             >
               <CheckCheck className="w-4 h-4" />
               Прочитать все
@@ -110,27 +102,25 @@ export default function NotificationsClient() {
           )}
         </div>
 
-        {/* Фильтр: все / непрочитанные */}
+        {/* Filter tabs */}
         <div className="flex gap-2 mb-6">
           <button
             onClick={() => setFilter('all')}
-            className="min-h-[44px] px-5 rounded-lg text-sm font-medium transition-colors"
-            style={{
-              backgroundColor: filter === 'all' ? 'var(--accent)' : 'var(--bg-card)',
-              color: filter === 'all' ? 'var(--bg-card)' : 'var(--text-secondary)',
-              border: filter === 'all' ? 'none' : '1px solid var(--border)',
-            }}
+            className={`min-h-[44px] px-5 rounded-lg text-sm font-medium transition-colors ${
+              filter === 'all'
+                ? 'bg-[var(--accent)] text-[var(--bg-card)]'
+                : 'bg-[var(--bg-card)] text-[var(--text-secondary)] border border-[var(--border)]'
+            }`}
           >
             Все
           </button>
           <button
             onClick={() => setFilter('unread')}
-            className="min-h-[44px] px-5 rounded-lg text-sm font-medium transition-colors"
-            style={{
-              backgroundColor: filter === 'unread' ? 'var(--accent)' : 'var(--bg-card)',
-              color: filter === 'unread' ? 'var(--bg-card)' : 'var(--text-secondary)',
-              border: filter === 'unread' ? 'none' : '1px solid var(--border)',
-            }}
+            className={`min-h-[44px] px-5 rounded-lg text-sm font-medium transition-colors ${
+              filter === 'unread'
+                ? 'bg-[var(--accent)] text-[var(--bg-card)]'
+                : 'bg-[var(--bg-card)] text-[var(--text-secondary)] border border-[var(--border)]'
+            }`}
           >
             Непрочитанные ({unreadCount})
           </button>
@@ -138,31 +128,17 @@ export default function NotificationsClient() {
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2
-              className="w-8 h-8 animate-spin"
-              style={{ color: 'var(--accent)' }}
-            />
+            <Loader2 className="w-8 h-8 animate-spin text-[var(--accent)]" />
           </div>
         ) : error ? (
           <div className="flex flex-col items-center justify-center py-20">
-            <Bell
-              className="w-16 h-16 mb-4"
-              style={{ color: 'var(--text-muted)' }}
-            />
-            <p className="text-lg" style={{ color: 'var(--text-muted)' }}>
-              {error}
-            </p>
+            <Bell className="w-16 h-16 mb-4 text-[var(--text-muted)]" />
+            <p className="text-lg text-[var(--text-muted)]">{error}</p>
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">
-            <Bell
-              className="w-16 h-16 mb-4"
-              style={{ color: 'var(--text-muted)' }}
-            />
-            <p
-              className="text-lg"
-              style={{ color: 'var(--text-muted)' }}
-            >
+            <Bell className="w-16 h-16 mb-4 text-[var(--text-muted)]" />
+            <p className="text-lg text-[var(--text-muted)]">
               Нет новых уведомлений
             </p>
           </div>
@@ -171,43 +147,26 @@ export default function NotificationsClient() {
             {filtered.map((notification) => (
               <div
                 key={notification.id}
-                className="flex items-start gap-4 rounded-lg border p-4"
-                style={{
-                  backgroundColor: notification.read
-                    ? 'var(--bg-card)'
-                    : 'var(--bg-primary)',
-                  borderColor: 'var(--border)',
-                }}
+                className={`flex items-start gap-4 rounded-lg border border-[var(--border)] p-4 ${
+                  notification.read ? 'bg-[var(--bg-card)]' : 'bg-[var(--bg-primary)]'
+                }`}
               >
-                {/* Индикатор непрочитанного */}
                 <div className="pt-1 flex-shrink-0">
                   {!notification.read ? (
-                    <div
-                      className="w-2.5 h-2.5 rounded-full"
-                      style={{ backgroundColor: 'var(--accent)' }}
-                    />
+                    <div className="w-2.5 h-2.5 rounded-full bg-[var(--accent)]" />
                   ) : (
                     <div className="w-2.5 h-2.5" />
                   )}
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <h3
-                    className="font-semibold text-sm"
-                    style={{ color: 'var(--text-primary)' }}
-                  >
+                  <h3 className="font-semibold text-sm text-[var(--text-primary)]">
                     {notification.title}
                   </h3>
-                  <p
-                    className="text-sm mt-1"
-                    style={{ color: 'var(--text-secondary)' }}
-                  >
+                  <p className="text-sm mt-1 text-[var(--text-secondary)]">
                     {notification.message}
                   </p>
-                  <span
-                    className="text-xs mt-2 block"
-                    style={{ color: 'var(--text-muted)' }}
-                  >
+                  <span className="text-xs mt-2 block text-[var(--text-muted)]">
                     {new Date(notification.time).toLocaleString('ru-RU', {
                       day: 'numeric',
                       month: 'long',
@@ -225,18 +184,17 @@ export default function NotificationsClient() {
         <div className="mt-8">
           <button
             onClick={() => { setShowPrefs(!showPrefs); if (!prefs) fetchPrefs(); }}
-            className="flex items-center gap-2 text-sm font-medium transition-colors"
-            style={{ color: 'var(--text-secondary)' }}
+            className="flex items-center gap-2 text-sm font-medium text-[var(--text-secondary)] transition-colors"
           >
             <Settings className="w-4 h-4" />
             Настройки уведомлений
           </button>
 
           {showPrefs && (
-            <div className="mt-4 rounded-lg border p-5 space-y-4" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border)' }}>
+            <div className="mt-4 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5 space-y-4">
               {prefsLoading ? (
                 <div className="flex justify-center py-4">
-                  <Loader2 className="w-5 h-5 animate-spin" style={{ color: 'var(--accent)' }} />
+                  <Loader2 className="w-5 h-5 animate-spin text-[var(--accent)]" />
                 </div>
               ) : prefs ? (
                 <>
@@ -263,7 +221,7 @@ export default function NotificationsClient() {
                   ]} prefs={prefs} onToggle={togglePref} />
                 </>
               ) : (
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                <p className="text-sm text-[var(--text-muted)]">
                   Настройки недоступны. Создайте профиль туриста.
                 </p>
               )}
@@ -283,15 +241,16 @@ function PrefSection({ title, items, prefs, onToggle }: {
 }) {
   return (
     <div>
-      <p className="text-xs font-medium mb-2 uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>{title}</p>
+      <p className="ds-label mb-2">{title}</p>
       <div className="space-y-2">
         {items.map(item => (
           <label key={item.key} className="flex items-center justify-between cursor-pointer">
-            <span className="text-sm" style={{ color: 'var(--text-primary)' }}>{item.label}</span>
+            <span className="text-sm text-[var(--text-primary)]">{item.label}</span>
             <button
               onClick={() => onToggle(item.key, !prefs[item.key])}
-              className="relative w-10 h-5 rounded-full transition-colors"
-              style={{ backgroundColor: prefs[item.key] ? 'var(--accent)' : 'var(--border)' }}
+              className={`relative w-10 h-5 rounded-full transition-colors ${
+                prefs[item.key] ? 'bg-[var(--accent)]' : 'bg-[var(--border)]'
+              }`}
             >
               <div
                 className="absolute top-0.5 w-4 h-4 bg-[var(--bg-card)] rounded-full transition-transform"

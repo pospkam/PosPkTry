@@ -86,7 +86,7 @@ export function HubSidebar({ items, title }: HubSidebarProps) {
               className={`
                 flex items-center gap-1.5 px-3 py-2
                 rounded-[var(--radius-sm)]
-                text-xs whitespace-nowrap shrink-0
+                text-sm whitespace-nowrap shrink-0
                 min-h-[44px]
                 transition-colors duration-200
                 ${isActive

@@ -63,12 +63,10 @@ export default function WishlistClient() {
   );
 
   const [tourDetails, setTourDetails] = useState<Map<string, TourDetail>>(new Map());
-  // Track IDs already fetched (or in-flight) to avoid duplicate requests
   const fetchedIdsRef = useRef<Set<string>>(new Set());
 
   const items = data ?? [];
 
-  // After the wishlist loads, fetch full tour data for all tour-type items in parallel
   useEffect(() => {
     if (!data) return;
 
@@ -81,7 +79,6 @@ export default function WishlistClient() {
 
     if (missingIds.length === 0) return;
 
-    // Mark as in-flight immediately so a subsequent render doesn't re-trigger
     missingIds.forEach((id) => fetchedIdsRef.current.add(id));
 
     Promise.allSettled(
@@ -120,39 +117,29 @@ export default function WishlistClient() {
 
   return (
     <Protected roles={['tourist', 'admin']}>
-      <div className="max-w-5xl mx-auto p-6">
-        <h1
-          className="text-2xl font-semibold mb-6"
-          style={{ color: 'var(--text-primary)' }}
-        >
+      <div className="max-w-5xl mx-auto px-4 py-6 lg:py-8">
+        <h1 className="font-playfair text-2xl sm:text-3xl font-bold text-[var(--text-primary)] mb-6">
           Избранное
         </h1>
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2
-              className="w-8 h-8 animate-spin"
-              style={{ color: 'var(--accent)' }}
-            />
+            <Loader2 className="w-8 h-8 animate-spin text-[var(--accent)]" />
           </div>
         ) : error ? (
           <div className="flex flex-col items-center justify-center py-20">
-            <Heart className="w-16 h-16 mb-4" style={{ color: 'var(--text-muted)' }} />
-            <p className="text-lg" style={{ color: 'var(--text-muted)' }}>{error}</p>
+            <Heart className="w-16 h-16 mb-4 text-[var(--text-muted)]" />
+            <p className="text-lg text-[var(--text-muted)]">{error}</p>
           </div>
         ) : items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">
-            <Heart
-              className="w-16 h-16 mb-4"
-              style={{ color: 'var(--text-muted)' }}
-            />
-            <p className="text-lg" style={{ color: 'var(--text-muted)' }}>
+            <Heart className="w-16 h-16 mb-4 text-[var(--text-muted)]" />
+            <p className="text-lg text-[var(--text-muted)]">
               Сохраните понравившиеся туры
             </p>
             <Link
               href="/tours"
-              className="mt-4 px-6 py-3 rounded-lg font-medium text-sm"
-              style={{ backgroundColor: 'var(--accent)', color: 'var(--bg-card)' }}
+              className="ds-btn ds-btn-primary mt-4 px-6 py-3"
             >
               Смотреть туры
             </Link>
@@ -172,17 +159,10 @@ export default function WishlistClient() {
               return (
                 <div
                   key={item.id}
-                  className="rounded-lg border overflow-hidden flex flex-col"
-                  style={{
-                    backgroundColor: 'var(--bg-card)',
-                    borderColor: 'var(--border)',
-                  }}
+                  className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden flex flex-col"
                 >
                   {/* Cover image / placeholder */}
-                  <div
-                    className="relative h-40 flex flex-col items-center justify-center gap-2"
-                    style={{ backgroundColor: 'var(--bg-primary)' }}
-                  >
+                  <div className="relative h-40 flex flex-col items-center justify-center gap-2 bg-[var(--bg-primary)]">
                     {coverImage ? (
                       <Image
                         src={coverImage}
@@ -192,60 +172,44 @@ export default function WishlistClient() {
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       />
                     ) : (
-                      <Mountain className="w-10 h-10" style={{ color: 'var(--text-muted)' }} />
+                      <Mountain className="w-10 h-10 text-[var(--text-muted)]" />
                     )}
-                    {/* Type badge — sits above the image */}
-                    <span
-                      className="relative z-10 text-xs font-medium px-2 py-1 rounded-full"
-                      style={{ backgroundColor: 'var(--accent)', color: 'var(--bg-card)' }}
-                    >
+                    <span className="relative z-10 text-xs font-medium px-2 py-1 rounded-lg bg-[var(--accent)] text-[var(--bg-card)]">
                       {typeLabel}
                     </span>
                   </div>
 
                   <div className="p-4 space-y-3 flex flex-col flex-1">
                     <h3
-                      className="font-semibold text-base line-clamp-2"
-                      style={{ color: 'var(--text-primary)' }}
+                      className="font-semibold text-base text-[var(--text-primary)] line-clamp-2"
                       title={displayName}
                     >
                       {displayName}
                     </h3>
 
-                    {/* Price + difficulty row — only shown when tour details are available */}
                     {detail && (
                       <div className="flex items-center gap-2 flex-wrap">
                         {detail.price > 0 && (
-                          <span
-                            className="text-sm font-semibold"
-                            style={{ color: 'var(--accent)' }}
-                          >
+                          <span className="text-sm font-semibold text-[var(--accent)]">
                             от {detail.price.toLocaleString('ru-RU')} ₽
                           </span>
                         )}
                         {detail.difficulty && (
-                          <span
-                            className="text-xs px-2 py-0.5 rounded-full border"
-                            style={{
-                              borderColor: 'var(--border)',
-                              color: 'var(--text-secondary)',
-                            }}
-                          >
+                          <span className="text-xs px-2 py-0.5 rounded-lg border border-[var(--border)] text-[var(--text-secondary)]">
                             {DIFFICULTY_LABELS[detail.difficulty] ?? detail.difficulty}
                           </span>
                         )}
                       </div>
                     )}
 
-                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                    <p className="text-xs text-[var(--text-muted)]">
                       Добавлено: {new Date(item.created_at).toLocaleDateString('ru-RU')}
                     </p>
 
                     <div className="flex gap-2 mt-auto">
                       <Link
                         href={href}
-                        className="flex-1 min-h-[44px] px-4 rounded-lg font-medium text-sm flex items-center justify-center gap-1"
-                        style={{ backgroundColor: 'var(--accent)', color: 'var(--bg-card)' }}
+                        className="ds-btn ds-btn-primary flex-1 min-h-[44px] px-4 flex items-center justify-center gap-1"
                       >
                         <ExternalLink className="w-4 h-4" />
                         Открыть
@@ -253,13 +217,11 @@ export default function WishlistClient() {
 
                       <button
                         onClick={() => handleRemove(item.id)}
-                        className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg border"
-                        style={{ borderColor: 'var(--border)' }}
+                        className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg border border-[var(--border)] hover:bg-[var(--bg-hover)] transition-colors"
                         aria-label="Удалить из избранного"
                       >
                         <Heart
-                          className="w-5 h-5"
-                          style={{ color: 'var(--danger)' }}
+                          className="w-5 h-5 text-[var(--danger)]"
                           fill="currentColor"
                         />
                       </button>

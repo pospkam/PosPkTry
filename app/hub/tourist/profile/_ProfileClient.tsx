@@ -60,18 +60,15 @@ export default function ProfileClient() {
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
-  // Profile fields
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [bio, setBio] = useState('');
 
-  // Save state
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  // Password change state
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
@@ -197,30 +194,17 @@ export default function ProfileClient() {
 
   return (
     <Protected roles={['tourist', 'admin']}>
-      <div className="max-w-5xl mx-auto p-6">
-        <h1
-          className="text-2xl font-semibold mb-6"
-          style={{ color: 'var(--text-primary)' }}
-        >
+      <div className="max-w-5xl mx-auto px-4 py-6 lg:py-8">
+        <h1 className="font-playfair text-2xl sm:text-3xl font-bold text-[var(--text-primary)] mb-6">
           Профиль
         </h1>
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2
-              className="w-8 h-8 animate-spin"
-              style={{ color: 'var(--accent)' }}
-            />
+            <Loader2 className="w-8 h-8 animate-spin text-[var(--accent)]" />
           </div>
         ) : fetchError ? (
-          <div
-            className="flex items-center gap-3 rounded-lg border p-5"
-            style={{
-              backgroundColor: 'var(--bg-card)',
-              borderColor: 'var(--danger)',
-              color: 'var(--danger)',
-            }}
-          >
+          <div className="flex items-center gap-3 rounded-lg border border-[var(--danger)] bg-[var(--bg-card)] text-[var(--danger)] p-5">
             <AlertCircle className="w-5 h-5 shrink-0" />
             <span className="text-sm">{fetchError}</span>
           </div>
@@ -229,28 +213,17 @@ export default function ProfileClient() {
             {/* Main profile form */}
             <form
               onSubmit={(e) => { void handleSaveProfile(e); }}
-              className="rounded-lg border p-6 space-y-5"
-              style={{
-                backgroundColor: 'var(--bg-card)',
-                borderColor: 'var(--border)',
-              }}
+              className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6 space-y-5"
             >
               <div className="flex items-center gap-3 mb-2">
-                <User className="w-5 h-5" style={{ color: 'var(--accent)' }} />
-                <h2
-                  className="text-lg font-semibold"
-                  style={{ color: 'var(--text-primary)' }}
-                >
+                <User className="w-5 h-5 text-[var(--accent)]" />
+                <h2 className="text-lg font-semibold text-[var(--text-primary)]">
                   Личные данные
                 </h2>
               </div>
 
               <div>
-                <label
-                  htmlFor="profile-name"
-                  className="block text-sm mb-1"
-                  style={{ color: 'var(--text-secondary)' }}
-                >
+                <label htmlFor="profile-name" className="block text-sm mb-1 text-[var(--text-secondary)]">
                   Имя
                 </label>
                 <input
@@ -264,16 +237,9 @@ export default function ProfileClient() {
               </div>
 
               <div>
-                <label
-                  htmlFor="profile-email"
-                  className="block text-sm mb-1"
-                  style={{ color: 'var(--text-secondary)' }}
-                >
+                <label htmlFor="profile-email" className="block text-sm mb-1 text-[var(--text-secondary)]">
                   Email
-                  <span
-                    className="ml-2 text-xs"
-                    style={{ color: 'var(--text-muted)' }}
-                  >
+                  <span className="ml-2 text-xs text-[var(--text-muted)]">
                     (только для чтения)
                   </span>
                 </label>
@@ -288,11 +254,7 @@ export default function ProfileClient() {
               </div>
 
               <div>
-                <label
-                  htmlFor="profile-phone"
-                  className="block text-sm mb-1"
-                  style={{ color: 'var(--text-secondary)' }}
-                >
+                <label htmlFor="profile-phone" className="block text-sm mb-1 text-[var(--text-secondary)]">
                   Телефон
                 </label>
                 <input
@@ -306,11 +268,7 @@ export default function ProfileClient() {
               </div>
 
               <div>
-                <label
-                  htmlFor="profile-bio"
-                  className="block text-sm mb-1"
-                  style={{ color: 'var(--text-secondary)' }}
-                >
+                <label htmlFor="profile-bio" className="block text-sm mb-1 text-[var(--text-secondary)]">
                   О себе
                 </label>
                 <textarea
@@ -323,29 +281,14 @@ export default function ProfileClient() {
                 />
               </div>
 
-              {/* Save status messages */}
               {saveSuccess && (
-                <div
-                  className="flex items-center gap-2 text-sm rounded-lg px-4 py-3"
-                  style={{
-                    backgroundColor: 'color-mix(in srgb, var(--success) 12%, transparent)',
-                    color: 'var(--success)',
-                    border: '1px solid color-mix(in srgb, var(--success) 30%, transparent)',
-                  }}
-                >
+                <div className="flex items-center gap-2 text-sm rounded-lg px-4 py-3 bg-[var(--success)]/10 text-[var(--success)] border border-[var(--success)]/30">
                   <CheckCircle className="w-4 h-4 shrink-0" />
                   Профиль успешно сохранён
                 </div>
               )}
               {saveError && (
-                <div
-                  className="flex items-center gap-2 text-sm rounded-lg px-4 py-3"
-                  style={{
-                    backgroundColor: 'color-mix(in srgb, var(--danger) 10%, transparent)',
-                    color: 'var(--danger)',
-                    border: '1px solid color-mix(in srgb, var(--danger) 30%, transparent)',
-                  }}
-                >
+                <div className="flex items-center gap-2 text-sm rounded-lg px-4 py-3 bg-[var(--danger)]/10 text-[var(--danger)] border border-[var(--danger)]/30">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   {saveError}
                 </div>
@@ -354,11 +297,7 @@ export default function ProfileClient() {
               <button
                 type="submit"
                 disabled={saving}
-                className="flex items-center gap-2 min-h-[44px] px-6 rounded-lg font-medium text-sm transition-colors disabled:opacity-60"
-                style={{
-                  backgroundColor: 'var(--accent)',
-                  color: 'var(--bg-card)',
-                }}
+                className="ds-btn ds-btn-primary flex items-center gap-2 min-h-[44px] px-6"
               >
                 {saving ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -372,28 +311,17 @@ export default function ProfileClient() {
             {/* Password change form */}
             <form
               onSubmit={(e) => { void handleChangePassword(e); }}
-              className="rounded-lg border p-6 space-y-4"
-              style={{
-                backgroundColor: 'var(--bg-card)',
-                borderColor: 'var(--border)',
-              }}
+              className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6 space-y-4"
             >
               <div className="flex items-center gap-3">
-                <Lock className="w-5 h-5" style={{ color: 'var(--warning)' }} />
-                <h2
-                  className="text-lg font-semibold"
-                  style={{ color: 'var(--text-primary)' }}
-                >
+                <Lock className="w-5 h-5 text-[var(--warning)]" />
+                <h2 className="text-lg font-semibold text-[var(--text-primary)]">
                   Смена пароля
                 </h2>
               </div>
 
               <div>
-                <label
-                  htmlFor="pwd-current"
-                  className="block text-sm mb-1"
-                  style={{ color: 'var(--text-secondary)' }}
-                >
+                <label htmlFor="pwd-current" className="block text-sm mb-1 text-[var(--text-secondary)]">
                   Текущий пароль
                 </label>
                 <input
@@ -408,11 +336,7 @@ export default function ProfileClient() {
               </div>
 
               <div>
-                <label
-                  htmlFor="pwd-new"
-                  className="block text-sm mb-1"
-                  style={{ color: 'var(--text-secondary)' }}
-                >
+                <label htmlFor="pwd-new" className="block text-sm mb-1 text-[var(--text-secondary)]">
                   Новый пароль
                 </label>
                 <input
@@ -427,11 +351,7 @@ export default function ProfileClient() {
               </div>
 
               <div>
-                <label
-                  htmlFor="pwd-confirm"
-                  className="block text-sm mb-1"
-                  style={{ color: 'var(--text-secondary)' }}
-                >
+                <label htmlFor="pwd-confirm" className="block text-sm mb-1 text-[var(--text-secondary)]">
                   Подтвердите новый пароль
                 </label>
                 <input
@@ -446,27 +366,13 @@ export default function ProfileClient() {
               </div>
 
               {pwdSuccess && (
-                <div
-                  className="flex items-center gap-2 text-sm rounded-lg px-4 py-3"
-                  style={{
-                    backgroundColor: 'color-mix(in srgb, var(--success) 12%, transparent)',
-                    color: 'var(--success)',
-                    border: '1px solid color-mix(in srgb, var(--success) 30%, transparent)',
-                  }}
-                >
+                <div className="flex items-center gap-2 text-sm rounded-lg px-4 py-3 bg-[var(--success)]/10 text-[var(--success)] border border-[var(--success)]/30">
                   <CheckCircle className="w-4 h-4 shrink-0" />
                   Пароль успешно изменён
                 </div>
               )}
               {pwdError && (
-                <div
-                  className="flex items-center gap-2 text-sm rounded-lg px-4 py-3"
-                  style={{
-                    backgroundColor: 'color-mix(in srgb, var(--danger) 10%, transparent)',
-                    color: 'var(--danger)',
-                    border: '1px solid color-mix(in srgb, var(--danger) 30%, transparent)',
-                  }}
-                >
+                <div className="flex items-center gap-2 text-sm rounded-lg px-4 py-3 bg-[var(--danger)]/10 text-[var(--danger)] border border-[var(--danger)]/30">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   {pwdError}
                 </div>
@@ -475,11 +381,7 @@ export default function ProfileClient() {
               <button
                 type="submit"
                 disabled={pwdSaving || !currentPassword || !newPassword || !confirmNewPassword}
-                className="flex items-center gap-2 min-h-[44px] px-6 rounded-lg font-medium text-sm transition-colors disabled:opacity-60"
-                style={{
-                  backgroundColor: 'var(--accent)',
-                  color: 'var(--bg-card)',
-                }}
+                className="ds-btn ds-btn-primary flex items-center gap-2 min-h-[44px] px-6"
               >
                 {pwdSaving ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

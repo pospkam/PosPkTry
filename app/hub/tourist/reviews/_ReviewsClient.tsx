@@ -45,7 +45,6 @@ interface FormState {
 
 const EMPTY_FORM: FormState = { tourId: '', rating: 0, comment: '' };
 
-// Defined outside component for stable references — prevents useApiFetch re-fetch loop
 function transformReviews(d: ReviewsApiData): Review[] {
   return (d?.reviews ?? []).map((r) => ({ ...r, comment: r.comment ?? '' }));
 }
@@ -60,10 +59,7 @@ function StarRating({ rating }: { rating: number }) {
       {Array.from({ length: 5 }).map((_, i) => (
         <Star
           key={`star-${i}`}
-          className="w-4 h-4"
-          style={{
-            color: i < rating ? 'var(--warning)' : 'var(--text-muted)',
-          }}
+          className={`w-4 h-4 ${i < rating ? 'text-[var(--warning)]' : 'text-[var(--text-muted)]'}`}
           fill={i < rating ? 'currentColor' : 'none'}
         />
       ))}
@@ -94,11 +90,7 @@ function StarSelector({ value, onChange }: StarSelectorProps) {
             aria-label={`Оценка ${starVal}`}
           >
             <Star
-              className="w-6 h-6"
-              style={{
-                color: filled ? 'var(--warning)' : 'var(--text-muted)',
-                transition: 'color 0.1s',
-              }}
+              className={`w-6 h-6 transition-colors ${filled ? 'text-[var(--warning)]' : 'text-[var(--text-muted)]'}`}
               fill={filled ? 'currentColor' : 'none'}
             />
           </button>
@@ -112,7 +104,7 @@ export default function ReviewsClient() {
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--accent)' }} />
+        <Loader2 className="w-8 h-8 animate-spin text-[var(--accent)]" />
       </div>
     }>
       <ReviewsContent />
@@ -151,7 +143,6 @@ function ReviewsContent() {
     { errorMessage: 'Не удалось загрузить список туров', skip: true },
   );
 
-  // Auto-open form when ?tourId= is in URL
   useEffect(() => {
     if (tourIdParam) {
       setShowForm(true);
@@ -234,13 +225,10 @@ function ReviewsContent() {
 
   return (
     <Protected roles={['tourist', 'admin']}>
-      <div className="max-w-5xl mx-auto p-6">
+      <div className="max-w-5xl mx-auto px-4 py-6 lg:py-8">
         {/* Header row */}
         <div className="flex items-center justify-between mb-6">
-          <h1
-            className="text-2xl font-semibold"
-            style={{ color: 'var(--text-primary)' }}
-          >
+          <h1 className="font-playfair text-2xl sm:text-3xl font-bold text-[var(--text-primary)]">
             Мои отзывы
           </h1>
           {!showForm && (
@@ -256,14 +244,7 @@ function ReviewsContent() {
 
         {/* Success banner */}
         {successMessage && (
-          <div
-            className="flex items-center gap-2 mb-4 px-4 py-3 rounded-lg border"
-            style={{
-              backgroundColor: 'var(--bg-card)',
-              borderColor: 'var(--success)',
-              color: 'var(--success)',
-            }}
-          >
+          <div className="flex items-center gap-2 mb-4 px-4 py-3 rounded-lg border border-[var(--success)] bg-[var(--bg-card)] text-[var(--success)]">
             <CheckCircle className="w-5 h-5 flex-shrink-0" />
             <span className="text-sm font-medium">{successMessage}</span>
           </div>
@@ -271,25 +252,15 @@ function ReviewsContent() {
 
         {/* Inline write-review form */}
         {showForm && (
-          <div
-            className="rounded-lg border mb-6 p-5"
-            style={{
-              backgroundColor: 'var(--bg-card)',
-              borderColor: 'var(--border)',
-            }}
-          >
+          <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg mb-6 p-5">
             <div className="flex items-center justify-between mb-4">
-              <h2
-                className="font-semibold text-lg"
-                style={{ color: 'var(--text-primary)' }}
-              >
+              <h2 className="font-semibold text-lg text-[var(--text-primary)]">
                 Новый отзыв
               </h2>
               <button
                 onClick={handleCloseForm}
                 type="button"
-                className="p-1 rounded hover:opacity-70 transition-opacity"
-                style={{ color: 'var(--text-muted)' }}
+                className="p-1 rounded text-[var(--text-muted)] hover:opacity-70 transition-opacity"
                 aria-label="Закрыть форму"
               >
                 <X className="w-5 h-5" />
@@ -299,17 +270,11 @@ function ReviewsContent() {
             <form onSubmit={handleSubmit} className="space-y-4" noValidate>
               {/* Tour selector */}
               <div>
-                <label
-                  className="ds-label block mb-1"
-                  htmlFor="review-tour"
-                >
+                <label className="ds-label block mb-1" htmlFor="review-tour">
                   Тур
                 </label>
                 {toursLoading ? (
-                  <div
-                    className="flex items-center gap-2 text-sm"
-                    style={{ color: 'var(--text-muted)' }}
-                  >
+                  <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
                     <Loader2 className="w-4 h-4 animate-spin" />
                     Загрузка списка туров...
                   </div>
@@ -343,10 +308,7 @@ function ReviewsContent() {
 
               {/* Comment */}
               <div>
-                <label
-                  className="ds-label block mb-1"
-                  htmlFor="review-comment"
-                >
+                <label className="ds-label block mb-1" htmlFor="review-comment">
                   Комментарий
                 </label>
                 <textarea
@@ -360,22 +322,15 @@ function ReviewsContent() {
                   }
                   maxLength={5000}
                 />
-                <div
-                  className="text-right text-xs mt-1"
-                  style={{ color: 'var(--text-muted)' }}
-                >
+                <div className="text-right text-xs mt-1 text-[var(--text-muted)]">
                   {form.comment.length} / 5000
                 </div>
               </div>
 
-              {/* Validation / API error */}
               {submitError && (
-                <p className="text-sm" style={{ color: 'var(--danger)' }}>
-                  {submitError}
-                </p>
+                <p className="text-sm text-[var(--danger)]">{submitError}</p>
               )}
 
-              {/* Form actions */}
               <div className="flex gap-3">
                 <button
                   type="submit"
@@ -407,28 +362,17 @@ function ReviewsContent() {
         {/* Reviews list */}
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2
-              className="w-8 h-8 animate-spin"
-              style={{ color: 'var(--accent)' }}
-            />
+            <Loader2 className="w-8 h-8 animate-spin text-[var(--accent)]" />
           </div>
         ) : error ? (
           <div className="flex flex-col items-center justify-center py-20">
-            <MessageSquare
-              className="w-16 h-16 mb-4"
-              style={{ color: 'var(--text-muted)' }}
-            />
-            <p className="text-lg" style={{ color: 'var(--text-muted)' }}>
-              {error}
-            </p>
+            <MessageSquare className="w-16 h-16 mb-4 text-[var(--text-muted)]" />
+            <p className="text-lg text-[var(--text-muted)]">{error}</p>
           </div>
         ) : list.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">
-            <MessageSquare
-              className="w-16 h-16 mb-4"
-              style={{ color: 'var(--text-muted)' }}
-            />
-            <p className="text-lg" style={{ color: 'var(--text-muted)' }}>
+            <MessageSquare className="w-16 h-16 mb-4 text-[var(--text-muted)]" />
+            <p className="text-lg text-[var(--text-muted)]">
               У вас пока нет отзывов
             </p>
           </div>
@@ -437,23 +381,13 @@ function ReviewsContent() {
             {list.map((review) => (
               <div
                 key={review.id}
-                className="rounded-lg border p-5"
-                style={{
-                  backgroundColor: 'var(--bg-card)',
-                  borderColor: 'var(--border)',
-                }}
+                className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5"
               >
                 <div className="flex items-start justify-between mb-2">
-                  <h3
-                    className="font-semibold text-base"
-                    style={{ color: 'var(--text-primary)' }}
-                  >
+                  <h3 className="font-semibold text-base text-[var(--text-primary)]">
                     {review.tourName ?? 'Тур'}
                   </h3>
-                  <span
-                    className="text-sm"
-                    style={{ color: 'var(--text-muted)' }}
-                  >
+                  <span className="text-sm text-[var(--text-muted)]">
                     {new Date(review.createdAt).toLocaleDateString('ru-RU')}
                   </span>
                 </div>
@@ -461,10 +395,7 @@ function ReviewsContent() {
                 <StarRating rating={review.rating} />
 
                 {review.comment && (
-                  <p
-                    className="mt-3 text-sm"
-                    style={{ color: 'var(--text-secondary)' }}
-                  >
+                  <p className="mt-3 text-sm text-[var(--text-secondary)]">
                     {review.comment}
                   </p>
                 )}

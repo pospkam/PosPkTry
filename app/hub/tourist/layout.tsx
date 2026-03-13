@@ -2,7 +2,7 @@
 
 import { ReactNode } from 'react';
 import {
-  Compass, Calendar, Star, Heart, Award, MessageSquare, User, Bell,
+  Compass, Calendar, Star, Heart, Award, MessageSquare, User, Bell, Mail,
 } from 'lucide-react';
 import { HubLayout } from '@/components/layout/HubLayout';
 import { ChatWidget } from '@/components/chat/ChatWidget';
@@ -13,6 +13,7 @@ const SIDEBAR_ITEMS = [
   { href: '/hub/tourist/bookings/new', label: 'Новое бронирование', icon: Star },
   { href: '/hub/tourist/wishlist', label: 'Избранное', icon: Heart },
   { href: '/hub/tourist/reviews', label: 'Мои отзывы', icon: MessageSquare },
+  { href: '/hub/tourist/messages', label: 'Сообщения', icon: Mail },
   { href: '/hub/tourist/eco-points', label: 'Эко-баллы', icon: Award },
   { href: '/hub/tourist/notifications', label: 'Уведомления', icon: Bell },
   { href: '/hub/tourist/profile', label: 'Профиль', icon: User },

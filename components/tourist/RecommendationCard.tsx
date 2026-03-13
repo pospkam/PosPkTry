@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Users, Target, Leaf, Mountain, Clock, Circle } from 'lucide-react';
 import type { RecommendedTour, RecommendationStrategy } from '@/lib/recommendations/engine';
 
@@ -10,22 +11,22 @@ interface RecommendationCardProps {
   onCardClick?: (tourId: string, strategy: RecommendationStrategy) => void;
 }
 
-const STRATEGY_BADGES: Record<RecommendationStrategy, { icon: React.ReactNode; color: string }> = {
-  SIMILAR_USERS: { icon: <Users className="w-4 h-4" />, color: 'from-blue-500/30 to-blue-600/20 border-blue-400/30' },
-  TOUR_CONTENT: { icon: <Target className="w-4 h-4" />, color: 'from-purple-500/30 to-purple-600/20 border-purple-400/30' },
-  ECO_OPTIMIZED: { icon: <Leaf className="w-4 h-4" />, color: 'from-green-500/30 to-green-600/20 border-green-400/30' },
+const STRATEGY_BADGES: Record<RecommendationStrategy, { icon: React.ReactNode; label: string }> = {
+  SIMILAR_USERS: { icon: <Users className="w-3.5 h-3.5" />, label: 'Похожие пользователи' },
+  TOUR_CONTENT: { icon: <Target className="w-3.5 h-3.5" />, label: 'По содержанию' },
+  ECO_OPTIMIZED: { icon: <Leaf className="w-3.5 h-3.5" />, label: 'Эко-выбор' },
 };
 
 /** Скелетон загрузки */
 export function RecommendationCardSkeleton() {
   return (
     <div className="rounded-lg overflow-hidden bg-[var(--bg-card)] border border-[var(--border)] animate-pulse">
-      <div className="h-40 bg-[var(--bg-card)]" />
+      <div className="h-40 bg-[var(--bg-hover)]" />
       <div className="p-4 space-y-2">
-        <div className="h-4 bg-[var(--bg-card)] rounded w-3/4" />
-        <div className="h-3 bg-[var(--bg-card)] rounded w-full" />
-        <div className="h-3 bg-[var(--bg-card)] rounded w-2/3" />
-        <div className="h-8 bg-[var(--bg-card)] rounded-lg mt-3" />
+        <div className="h-4 bg-[var(--bg-hover)] rounded w-3/4" />
+        <div className="h-3 bg-[var(--bg-hover)] rounded w-full" />
+        <div className="h-3 bg-[var(--bg-hover)] rounded w-2/3" />
+        <div className="h-8 bg-[var(--bg-hover)] rounded-lg mt-3" />
       </div>
     </div>
   );
@@ -35,17 +36,13 @@ export default function RecommendationCard({ tour, onCardClick }: Recommendation
   const badge = STRATEGY_BADGES[tour.strategy];
 
   const handleClick = () => {
-    // Трекинг клика
     fetch('/api/analytics/recommendation-click', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ tourId: tour.id, strategy: tour.strategy }),
-    }).catch(() => {}); // fire and forget
+    }).catch(() => {});
 
     onCardClick?.(tour.id, tour.strategy);
-
-    // Переход на страницу тура
-    window.location.href = `/tours/${tour.id}`;
   };
 
   const mainImage = Array.isArray(tour.images) && tour.images.length > 0
@@ -53,55 +50,46 @@ export default function RecommendationCard({ tour, onCardClick }: Recommendation
     : null;
 
   return (
-    <article
-      role="article"
+    <Link
+      href={`/tours/${tour.id}`}
       onClick={handleClick}
       className="
         group relative rounded-lg overflow-hidden
         bg-[var(--bg-card)] border border-[var(--border)]
-        hover:border-[var(--accent)]/50 hover:bg-[var(--bg-hover)]
-        cursor-pointer transition-all duration-300
-        hover:shadow-xl hover:shadow-[var(--accent)]/10
-        hover:-translate-y-0.5
+        hover:border-[var(--accent)] hover:bg-[var(--bg-hover)]
+        cursor-pointer transition-all duration-200
+        hover:-translate-y-0.5 block
       "
     >
-      {/* Фото */}
-      <div className="relative h-44 overflow-hidden bg-[var(--bg-card)]">
+      {/* Photo */}
+      <div className="relative h-44 overflow-hidden bg-[var(--bg-hover)]">
         {mainImage ? (
           <Image
             src={mainImage}
             alt={`Фото тура: ${tour.title}`}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="object-cover group-hover:scale-105 transition-transform duration-500"
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center opacity-30">
-            <Mountain className="w-16 h-16" />
+          <div className="w-full h-full flex items-center justify-center">
+            <Mountain className="w-16 h-16 text-[var(--text-muted)]" />
           </div>
         )}
 
-        {/* Eco-баллы badge */}
         {tour.eco_points_reward && tour.eco_points_reward > 0 && (
-          <div className="absolute top-2 right-2 px-2 py-1 rounded-full bg-[var(--success)]/80 text-[var(--text-primary)] text-xs font-semibold flex items-center gap-1">
+          <div className="absolute top-2 right-2 px-2 py-1 rounded-lg bg-[var(--success)] text-[var(--bg-card)] text-xs font-semibold flex items-center gap-1">
             <Leaf className="w-3 h-3" /> +{tour.eco_points_reward} эко
           </div>
         )}
       </div>
 
-      {/* Контент */}
+      {/* Content */}
       <div className="p-4">
-        {/* Стратегия badge */}
-        <div
-          className={`
-            inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
-            bg-gradient-to-r border mb-2
-            ${badge.color}
-          `}
-        >
-          <span>{badge.icon}</span>
-          <span className="text-[var(--text-secondary)]">{tour.strategyLabel}</span>
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-[var(--bg-hover)] border border-[var(--border)] mb-2">
+          <span className="text-[var(--accent)]">{badge.icon}</span>
+          <span className="text-[var(--text-secondary)]">{tour.strategyLabel ?? badge.label}</span>
         </div>
 
         <h3 className="text-sm font-semibold text-[var(--text-primary)] line-clamp-2 mb-1 group-hover:text-[var(--accent)] transition-colors">
@@ -139,6 +127,6 @@ export default function RecommendationCard({ tour, onCardClick }: Recommendation
           )}
         </div>
       </div>
-    </article>
+    </Link>
   );
 }

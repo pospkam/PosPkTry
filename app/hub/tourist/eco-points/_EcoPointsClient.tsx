@@ -50,86 +50,53 @@ export default function EcoPointsClient() {
 
   return (
     <Protected roles={['tourist', 'admin']}>
-      <div className="max-w-5xl mx-auto p-6">
-        <h1
-          className="text-2xl font-semibold mb-6"
-          style={{ color: 'var(--text-primary)' }}
-        >
+      <div className="max-w-5xl mx-auto px-4 py-6 lg:py-8">
+        <h1 className="font-playfair text-2xl sm:text-3xl font-bold text-[var(--text-primary)] mb-6">
           Эко-баллы
         </h1>
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2
-              className="w-8 h-8 animate-spin"
-              style={{ color: 'var(--accent)' }}
-            />
+            <Loader2 className="w-8 h-8 animate-spin text-[var(--accent)]" />
           </div>
         ) : (
           <div className="space-y-6">
-            {/* Баланс и прогресс */}
-            <div
-              className="rounded-lg border p-6 text-center"
-              style={{
-                backgroundColor: 'var(--bg-card)',
-                borderColor: 'var(--border)',
-              }}
-            >
-              <Leaf
-                className="w-12 h-12 mx-auto mb-3"
-                style={{ color: 'var(--success)' }}
-              />
-              <p
-                className="text-5xl font-bold"
-                style={{ color: error ? 'var(--danger)' : 'var(--text-primary)' }}
-              >
+            {/* Balance and progress */}
+            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6 text-center">
+              <Leaf className="w-12 h-12 mx-auto mb-3 text-[var(--success)]" />
+              <p className={`text-5xl font-bold font-playfair ${error ? 'text-[var(--danger)]' : 'text-[var(--text-primary)]'}`}>
                 {error ? '—' : points}
               </p>
-              <p
-                className="text-sm mt-1"
-                style={{ color: 'var(--text-muted)' }}
-              >
+              <p className="text-sm mt-1 text-[var(--text-muted)]">
                 {error ? error : 'эко-баллов'}
               </p>
 
               {!error && (
                 <div className="mt-6 max-w-md mx-auto">
                   <div className="flex justify-between text-sm mb-1">
-                    <span style={{ color: 'var(--text-secondary)' }}>
+                    <span className="text-[var(--text-secondary)]">
                       До следующего уровня
                     </span>
-                    <span style={{ color: 'var(--text-secondary)' }}>
+                    <span className="text-[var(--text-secondary)]">
                       {points} / {NEXT_LEVEL}
                     </span>
                   </div>
-                  <div
-                    className="w-full h-3 rounded-full overflow-hidden"
-                    style={{ backgroundColor: 'var(--border)' }}
-                  >
+                  <div className="w-full h-3 rounded-full overflow-hidden bg-[var(--border)]">
                     <div
-                      className="h-full rounded-full transition-all"
-                      style={{
-                        width: `${progressPercent}%`,
-                        backgroundColor: 'var(--success)',
-                      }}
+                      className="h-full rounded-full transition-all bg-[var(--success)]"
+                      style={{ width: `${progressPercent}%` }}
                     />
                   </div>
-                  <p
-                    className="text-xs mt-2"
-                    style={{ color: 'var(--text-muted)' }}
-                  >
+                  <p className="text-xs mt-2 text-[var(--text-muted)]">
                     500 баллов = скидка 10% на следующий тур
                   </p>
                 </div>
               )}
             </div>
 
-            {/* Список действий */}
+            {/* Action list */}
             <div>
-              <h2
-                className="text-lg font-semibold mb-4"
-                style={{ color: 'var(--text-primary)' }}
-              >
+              <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-4">
                 Как заработать баллы
               </h2>
 
@@ -137,30 +104,17 @@ export default function EcoPointsClient() {
                 {ECO_ACTIONS.map((action) => (
                   <div
                     key={action.id}
-                    className="flex items-center gap-4 rounded-lg border p-4"
-                    style={{
-                      backgroundColor: 'var(--bg-card)',
-                      borderColor: 'var(--border)',
-                    }}
+                    className="flex items-center gap-4 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4"
                   >
-                    <div
-                      className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                      style={{ backgroundColor: 'var(--bg-primary)' }}
-                    >
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-[var(--bg-primary)]">
                       <ActionIcon type={action.icon} className="w-5 h-5" />
                     </div>
 
-                    <span
-                      className="flex-1 text-sm"
-                      style={{ color: 'var(--text-primary)' }}
-                    >
+                    <span className="flex-1 text-sm text-[var(--text-primary)]">
                       {action.label}
                     </span>
 
-                    <span
-                      className="font-bold text-sm"
-                      style={{ color: 'var(--success)' }}
-                    >
+                    <span className="font-bold text-sm text-[var(--success)]">
                       +{action.points}
                     </span>
                   </div>
