@@ -37,3 +37,8 @@ export { reportService } from './report.service';
 export { searchService } from './search.service';
 export { slaService } from './sla.service';
 export { ticketMessageService } from './ticket-message.service';
+
+// Pillar services
+export { paymentService, PaymentService } from '@/pillars/booking-pillar/lib/payment/services';
+export { wishlistService, WishlistService } from '@/pillars/engagement-pillar/lib/wishlist/services';
+export { ticketService, TicketService } from '@/pillars/support-pillar/services/ticket.service';
