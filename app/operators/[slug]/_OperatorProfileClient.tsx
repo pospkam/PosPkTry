@@ -132,7 +132,7 @@ export default function OperatorProfileClient({ slug }: { slug: string }) {
         {/* Hero */}
         <section className="relative h-[50vh] min-h-[360px] overflow-hidden">
           {op.heroImage ? (
-            <Image src={op.heroImage} alt={op.name} fill className="object-cover" priority sizes="100vw" />
+            <Image src={op.heroImage} alt={op.name} fill className="object-cover object-top" priority sizes="100vw" />
           ) : (
             <div className="w-full h-full bg-[var(--bg-hover)]" />
           )}
@@ -237,12 +237,35 @@ export default function OperatorProfileClient({ slug }: { slug: string }) {
           <section className="py-14 px-4 bg-[var(--bg-card)]">
             <div className="max-w-6xl mx-auto">
               <h2 className="ds-h2 text-center mb-10" style={{ fontFamily: 'var(--font-playfair)' }}>Галерея</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              <div
+                className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3"
+                style={{ gridAutoRows: '160px', gridAutoFlow: 'dense' }}
+              >
                 {op.gallery.map((img, i) => {
                   const src = img.startsWith('/') ? img : `/images/fishingkam/${img}`;
+                  // Vary card sizes like homepage category moodboard
+                  const isLarge = i === 0;
+                  const isTall  = !isLarge && i % 5 === 1;
+                  const isWide  = !isLarge && !isTall && i % 7 === 4;
                   return (
-                    <div key={i} className="relative aspect-[4/3] rounded-lg overflow-hidden">
-                      <Image src={src} alt={`${op.name} ${i + 1}`} fill className="object-cover hover:scale-105 transition-transform duration-300" sizes="(max-width: 768px) 50vw, 25vw" />
+                    <div
+                      key={i}
+                      className={[
+                        'group relative overflow-hidden rounded-lg',
+                        isLarge ? 'md:col-span-2 md:row-span-2' : '',
+                        isTall  ? 'md:row-span-2'  : '',
+                        isWide  ? 'md:col-span-2'  : '',
+                      ].join(' ')}
+                    >
+                      <Image
+                        src={src}
+                        alt={`${op.name} — фото ${i + 1}`}
+                        fill
+                        className="object-cover object-top group-hover:scale-110 transition-transform duration-700 ease-out"
+                        sizes={isLarge || isWide ? '(max-width: 768px) 100vw, 50vw' : '(max-width: 768px) 50vw, 25vw'}
+                        loading={i < 4 ? 'eager' : 'lazy'}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent group-hover:from-black/50 transition-all duration-300" />
                     </div>
                   );
                 })}
