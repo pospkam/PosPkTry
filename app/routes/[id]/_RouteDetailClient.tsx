@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   ArrowLeft, MapPin, Tag, Clock, Calendar, Mountain,
   ExternalLink, AlertTriangle, Users, Gauge, Send,
@@ -10,6 +11,7 @@ import {
 import dynamic from 'next/dynamic';
 import { Header } from '@/components/layout/Header';
 import LeadModal from '@/components/routes/LeadModal';
+import BookingModal from '@/components/routes/BookingModal';
 
 const LeafletMap = dynamic(() => import('@/components/shared/LeafletMap'), { ssr: false });
 
@@ -28,6 +30,24 @@ const CATEGORY_LABELS: Record<string, string> = {
   medvedi:              'Медведи',
   mountains:            'Горы',
   dzhip:                'Джип-туры',
+};
+
+// Фото с сайтов партнёров (Камчатинтур) — скачаны и хранятся локально
+const CATEGORY_IMAGES: Record<string, string> = {
+  vulkani:              '/images/partners/kamchatintour/avacha-winter.jpg',
+  geyzery:              '/images/partners/kamchatintour/seo4.jpg',
+  termalnye_istochniki: '/images/partners/kamchatintour/laguna-winter.jpg',
+  morskie_progulki:     '/images/partners/kamchatintour/seo5.jpg',
+  snegohod:             '/images/partners/kamchatintour/snowmobile.jpg',
+  vertoletnye_tury:     '/images/partners/kamchatintour/helicopter.jpg',
+  trekking:             '/images/partners/kamchatintour/winter-adventures.jpg',
+  mountains:            '/images/partners/kamchatintour/seo4.jpg',
+  eco:                  '/images/partners/kamchatintour/seo1.jpg',
+  medvedi:              '/images/partners/kamchatintour/dog-sled.jpg',
+  dzhip:                '/images/partners/kamchatintour/seo3.jpg',
+  rybalka:              '/images/activities/fishing.jpg',
+  rivers:               '/images/bento/khalaktyr.jpg',
+  lakes:                '/images/gallery/bay-sunset.jpg',
 };
 
 const DIFFICULTY_RU: Record<string, string> = {
@@ -227,32 +247,52 @@ export default function RouteDetailClient({ id }: { id: string }) {
   const hasGeo = route.lat != null && route.lng != null;
   const catLabel = CATEGORY_LABELS[route.category] ?? route.category;
   const offers = route.offers ?? [];
+  const heroImage = CATEGORY_IMAGES[route.category] ?? '/images/hero/hero-dark.jpg';
 
   return (
     <>
       <Header />
-      <div className="ds-page pt-20 pb-10">
 
-      {/* ── Breadcrumb ────────────────────────────────────────── */}
-      <Link
-        href="/routes"
-        className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--accent)] mb-6 transition-colors"
-      >
-        <ArrowLeft className="w-3.5 h-3.5" /> Все маршруты
-      </Link>
+      {/* ── Hero ──────────────────────────────────────────────── */}
+      <div className="relative h-56 md:h-80 w-full overflow-hidden pt-16">
+        <Image
+          src={heroImage}
+          alt={route.title}
+          fill
+          className="object-cover"
+          priority
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-black/20" />
+
+        {/* Breadcrumb */}
+        <Link
+          href="/routes"
+          className="absolute top-4 left-4 md:left-8 inline-flex items-center gap-1.5 text-sm text-white/80 hover:text-white transition-colors bg-black/30 px-3 py-1.5 rounded-full"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" /> Все маршруты
+        </Link>
+
+        {/* Title overlay */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8">
+          <span className="text-[var(--accent)] text-xs font-semibold uppercase tracking-widest mb-1 block">
+            {catLabel}
+          </span>
+          <h1
+            className="text-2xl md:text-4xl font-bold text-white leading-tight"
+            style={{ fontFamily: 'var(--font-playfair)' }}
+          >
+            {route.title}
+          </h1>
+        </div>
+      </div>
+
+      <div className="ds-page pb-10 pt-6">
 
       <div className="grid lg:grid-cols-3 gap-6">
 
         {/* ── Main content ──────────────────────────────────── */}
         <div className="lg:col-span-2 space-y-6">
-
-          {/* Title */}
-          <div>
-            <span className="text-xs font-medium uppercase tracking-wider text-[var(--accent)] mb-2 block">
-              {catLabel}
-            </span>
-            <h1 className="ds-h1">{route.title}</h1>
-          </div>
 
           {/* Key badges */}
           <div className="flex flex-wrap gap-2">

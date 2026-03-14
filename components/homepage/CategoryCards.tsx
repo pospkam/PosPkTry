@@ -33,19 +33,6 @@ const SPAN: Record<CardSize, { col: string; row: string }> = {
   normal: { col: '',              row: ''               },
 };
 
-const FONT: Record<CardSize, string> = {
-  large:  'text-xl md:text-3xl',
-  wide:   'text-base md:text-xl',
-  tall:   'text-sm md:text-lg',
-  normal: 'text-xs md:text-sm',
-};
-
-const PAD: Record<CardSize, string> = {
-  large:  'p-4 md:p-6',
-  wide:   'p-3 md:p-5',
-  tall:   'p-3 md:p-4',
-  normal: 'p-2 md:p-3',
-};
 
 export function CategoryCards() {
   return (
@@ -70,13 +57,13 @@ export function CategoryCards() {
             return (
               <Link
                 key={cat.slug}
-                href={`/tours?category=${cat.slug}`}
+                href={`/routes?category=${cat.slug}`}
                 className={`kh-fade-up group relative overflow-hidden rounded-lg ${col} ${row}`}
                 style={{ animationDelay: `${i * 60}ms` }}
               >
                 <Image
                   src={cat.img}
-                  alt=""
+                  alt={cat.label}
                   fill
                   sizes={
                     cat.size === 'large'
@@ -90,12 +77,7 @@ export function CategoryCards() {
                 />
 
                 {/* overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent group-hover:from-black/85 transition-all duration-300" />
-
-                {/* label */}
-                <span className={`absolute bottom-0 left-0 right-0 font-playfair font-bold text-white leading-tight ${FONT[cat.size]} ${PAD[cat.size]}`}>
-                  {cat.label}
-                </span>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent group-hover:from-black/60 transition-all duration-300" />
               </Link>
             );
           })}
