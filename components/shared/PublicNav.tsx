@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { clsx } from 'clsx';
-import { Home, Map, Shield, Bus, Menu, X, Route, LucideIcon } from 'lucide-react';
+import { Home, Map, Shield, Bus, Menu, X, Route, Users, LucideIcon } from 'lucide-react';
 
 interface NavItem {
   name: string;
@@ -16,6 +16,7 @@ const navItems: NavItem[] = [
   { name: 'Главная',      path: '/',              icon: Home   },
   { name: 'Маршруты',     path: '/routes',         icon: Route  },
   { name: 'Карта',        path: '/map',             icon: Map    },
+  { name: 'Партнёры',     path: '/operators',       icon: Users  },
   { name: 'Трансферы',    path: '/hub/transfer',   icon: Bus    },
   { name: 'Безопасность', path: '/hub/safety',     icon: Shield },
 ];

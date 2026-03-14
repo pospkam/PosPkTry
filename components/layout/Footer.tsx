@@ -5,6 +5,7 @@ import { Send } from 'lucide-react';
 const PLATFORM = [
   { label: 'Маршруты', href: '/routes' },
   { label: 'Карта Камчатки', href: '/map' },
+  { label: 'Партнёры', href: '/operators' },
   { label: 'Стать партнёром', href: '/auth/login' },
 ];
 
