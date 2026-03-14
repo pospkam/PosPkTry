@@ -59,7 +59,7 @@ export async function callOpenrouter(messages: ChatMessage[]): Promise<string | 
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'anthropic/claude-3.5-sonnet',
+        model: 'anthropic/claude-sonnet-4-6',
         temperature: 0.4,
         max_tokens: 800,
         messages: payload,

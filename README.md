@@ -312,7 +312,7 @@ npm run db:migrate
 | # | Провайдер | Модель | Env |
 |---|-----------|--------|-----|
 | 1 | Timeweb Cloud Agent | deepseek-chat | `TIMEWEB_TOKEN` + `TIMEWEB_AI_AGENT_ID` |
-| 2 | OpenRouter | claude-3.5-sonnet | `OPENROUTER_API_KEY` |
+| 2 | OpenRouter | claude-sonnet-4-6 | `OPENROUTER_API_KEY` |
 | 3 | DeepSeek | deepseek-chat | `DEEPSEEK_API_KEY` |
 | 4 | Minimax | MiniMax-Text-01 | `MINIMAX_API_KEY` |
 | 5 | xAI | grok-4 | `XAI_API_KEY` |

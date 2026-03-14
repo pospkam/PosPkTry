@@ -1,9 +1,10 @@
 import { MetadataRoute } from 'next';
 import { FISHING_TOURS } from '@/lib/partners/kamchatka-fishing/tours-data';
+import { query } from '@/lib/database';
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://kamchatour.ru';
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
 
   // Статические страницы
@@ -33,18 +34,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
-      url: `${BASE_URL}/cars`,
-      lastModified: now,
-      changeFrequency: 'weekly',
-      priority: 0.7,
-    },
-    {
-      url: `${BASE_URL}/gear`,
-      lastModified: now,
-      changeFrequency: 'weekly',
-      priority: 0.7,
-    },
-    {
       url: `${BASE_URL}/search`,
       lastModified: now,
       changeFrequency: 'daily',
@@ -55,6 +44,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.6,
+    },
+    {
+      url: `${BASE_URL}/routes`,
+      lastModified: now,
+      changeFrequency: 'daily',
+      priority: 0.9,
     },
     // Legal pages
     {
@@ -94,13 +89,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly',
       priority: 0.5,
     },
-    // Partner
-    {
-      url: `${BASE_URL}/partner/register`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.6,
-    },
   ];
 
   // Динамические страницы туров (рыбалка)
@@ -111,5 +99,20 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.8,
   }));
 
-  return [...staticPages, ...fishingTourPages];
+  // Динамические страницы маршрутов из agent_route_knowledge
+  let routePages: MetadataRoute.Sitemap = [];
+  try {
+    const result = await query(
+      `SELECT id, updated_at FROM agent_route_knowledge
+       WHERE lat IS NOT NULL ORDER BY updated_at DESC LIMIT 1000`
+    );
+    routePages = result.rows.map((r) => ({
+      url: `${BASE_URL}/routes/${r.id as string}`,
+      lastModified: r.updated_at ? new Date(r.updated_at as string) : now,
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
+    }));
+  } catch { /* sitemap continues without routes if DB unavailable */ }
+
+  return [...staticPages, ...fishingTourPages, ...routePages];
 }

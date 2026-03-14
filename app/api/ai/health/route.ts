@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
           fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${openrouterKey}` },
-            body: JSON.stringify({ model: 'anthropic/claude-3.5-sonnet', max_tokens: 20, messages: [{ role: 'user', content: 'ping' }] }),
+            body: JSON.stringify({ model: 'anthropic/claude-sonnet-4-6', max_tokens: 20, messages: [{ role: 'user', content: 'ping' }] }),
           })
         )
       : { name: 'OpenRouter', ok: false, status: 0, error: 'OPENROUTER_API_KEY MISSING' },
