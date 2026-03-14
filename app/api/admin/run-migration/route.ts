@@ -72,11 +72,13 @@ ON CONFLICT (slug) DO UPDATE SET
   updated_at = NOW();
 `;
 
+// Временный одноразовый токен (удаляется вместе с файлом)
+const TEMP_TOKEN = 'mig033-7f4a2b9c-e1d5-4f8a-b3c6-9d2e7f1a4b8c';
+
 export async function POST(request: NextRequest) {
   const secret = request.headers.get('x-migration-secret');
-  const expected = process.env.MIGRATION_SECRET;
 
-  if (!expected || secret !== expected) {
+  if (secret !== TEMP_TOKEN) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
