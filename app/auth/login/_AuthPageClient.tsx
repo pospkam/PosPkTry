@@ -12,11 +12,9 @@ type UserType = 'tourist' | 'partner';
 
 const PARTNER_ROLES = [
   { id: 'operator', label: 'Туроператор', desc: 'Организация туров' },
-  { id: 'guide', label: 'Гид', desc: 'Проведение экскурсий' },
-  { id: 'transfer', label: 'Трансфер', desc: 'Перевозка туристов' },
-  { id: 'agent', label: 'Агент', desc: 'Продажа туров' },
-  { id: 'stay', label: 'Размещение', desc: 'Жильё и базы' },
-  { id: 'gear', label: 'Снаряжение', desc: 'Прокат оборудования' },
+  { id: 'guide',    label: 'Гид',         desc: 'Проведение экскурсий' },
+  { id: 'transfer', label: 'Трансфер',    desc: 'Перевозка туристов' },
+  { id: 'agent',    label: 'Агент',       desc: 'Продажа туров' },
 ] as const;
 
 const INPUT = 'w-full px-3.5 py-2.5 text-sm bg-[var(--bg-primary)] border border-[var(--border)] rounded-md text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition-colors';
