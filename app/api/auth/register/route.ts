@@ -13,6 +13,7 @@ const RegisterSchema = z.object({
   name: z.string({ required_error: 'Имя обязательно' }).min(1, 'Имя не может быть пустым'),
   role: z.enum(VALID_ROLES).optional(),
   roles: z.array(z.enum(VALID_ROLES)).optional(),
+  pd_consent: z.literal(true, { errorMap: () => ({ message: 'Необходимо согласие на обработку персональных данных' }) }),
 });
 
 const jwtSecret = process.env.JWT_SECRET;
@@ -76,10 +77,10 @@ export async function POST(request: NextRequest) {
     // Создаем пользователя
     const preferences = { roles: allRoles };
     const result = await client.query(
-      `INSERT INTO users (email, password_hash, name, role, preferences, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5::jsonb, NOW(), NOW())
+      `INSERT INTO users (email, password_hash, name, role, preferences, pd_consent_at, pd_consent_ip, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5::jsonb, NOW(), $6, NOW(), NOW())
        RETURNING id, email, name, role, preferences, created_at`,
-      [email.toLowerCase(), hashedPassword, name, userRole, JSON.stringify(preferences)]
+      [email.toLowerCase(), hashedPassword, name, userRole, JSON.stringify(preferences), ip]
     );
     
     const user = result.rows[0];

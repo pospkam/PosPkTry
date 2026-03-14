@@ -12,12 +12,13 @@ interface LeadModalProps {
 }
 
 export default function LeadModal({ open, onClose, routeId, routeTitle, sourceUrl }: LeadModalProps) {
-  const [name, setName]       = useState('');
-  const [phone, setPhone]     = useState('');
-  const [comment, setComment] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [done, setDone]       = useState(false);
-  const [error, setError]     = useState('');
+  const [name, setName]         = useState('');
+  const [phone, setPhone]       = useState('');
+  const [comment, setComment]   = useState('');
+  const [pdConsent, setPdConsent] = useState(false);
+  const [loading, setLoading]   = useState(false);
+  const [done, setDone]         = useState(false);
+  const [error, setError]       = useState('');
   const nameRef = useRef<HTMLInputElement>(null);
 
   // Фокус на первом поле при открытии
@@ -25,6 +26,7 @@ export default function LeadModal({ open, onClose, routeId, routeTitle, sourceUr
     if (open) {
       setDone(false);
       setError('');
+      setPdConsent(false);
       setTimeout(() => nameRef.current?.focus(), 60);
     }
   }, [open]);
@@ -202,19 +204,28 @@ export default function LeadModal({ open, onClose, routeId, routeTitle, sourceUr
 
                 <button
                   type="submit"
-                  disabled={loading || !name.trim() || !phone.trim()}
+                  disabled={loading || !name.trim() || !phone.trim() || !pdConsent}
                   className="ds-btn ds-btn-primary w-full flex items-center justify-center gap-2"
                 >
                   {loading && <Loader2 className="w-4 h-4 animate-spin" />}
                   {loading ? 'Отправляем…' : 'Отправить заявку'}
                 </button>
 
-                <p className="text-[10px] text-[var(--text-muted)] text-center">
-                  Нажимая кнопку, вы соглашаетесь с{' '}
-                  <a href="/legal/privacy" target="_blank" className="underline underline-offset-2 hover:text-[var(--ocean)]">
-                    политикой конфиденциальности
-                  </a>
-                </p>
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={pdConsent}
+                    onChange={e => setPdConsent(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded border-[var(--border)] accent-[var(--accent)] shrink-0 cursor-pointer"
+                  />
+                  <span className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+                    Согласен(на) на{' '}
+                    <a href="/legal/privacy" target="_blank" className="text-[var(--ocean)] hover:underline">
+                      обработку персональных данных
+                    </a>{' '}
+                    (152-ФЗ)
+                  </span>
+                </label>
               </form>
             </>
           )}

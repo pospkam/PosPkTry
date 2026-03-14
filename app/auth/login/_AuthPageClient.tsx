@@ -38,6 +38,7 @@ export default function AuthPageClient() {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [partnerRoles, setPartnerRoles] = useState<string[]>([]);
+  const [pdConsent, setPdConsent] = useState(false);
 
   const toggleRole = (roleId: string) => {
     setPartnerRoles(prev =>
@@ -101,6 +102,11 @@ export default function AuthPageClient() {
       setLoading(false);
       return;
     }
+    if (!pdConsent) {
+      setError('Необходимо согласие на обработку персональных данных');
+      setLoading(false);
+      return;
+    }
 
     try {
       // Регистрация напрямую через API (с ролями)
@@ -114,6 +120,7 @@ export default function AuthPageClient() {
           phone: phone || undefined,
           role: userType === 'tourist' ? 'tourist' : partnerRoles[0],
           roles: userType === 'tourist' ? ['tourist'] : partnerRoles,
+          pd_consent: true,
         }),
       });
 
@@ -395,9 +402,26 @@ export default function AuthPageClient() {
                 )}
               </div>
 
+              {/* Consent 152-ФЗ */}
+              <label className="flex items-start gap-2.5 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={pdConsent}
+                  onChange={e => setPdConsent(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 rounded border-[var(--border)] accent-[var(--accent)] cursor-pointer shrink-0"
+                />
+                <span className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                  Даю согласие на{' '}
+                  <Link href="/legal/privacy" target="_blank" className="text-[var(--ocean)] hover:underline">
+                    обработку персональных данных
+                  </Link>{' '}
+                  в соответствии с 152-ФЗ
+                </span>
+              </label>
+
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !pdConsent}
                 className="w-full py-2.5 bg-[var(--accent)] text-white text-sm font-medium rounded-md hover:opacity-90 disabled:opacity-50 transition-opacity"
               >
                 {loading ? 'Регистрация...' : 'Зарегистрироваться'}
