@@ -49,17 +49,31 @@ export async function POST(request: NextRequest) {
 
   const data = await res.json();
 
-  if (data.ok) {
+  if (!data.ok) {
     return NextResponse.json({
-      success: true,
+      success: false,
+      error: data.description || 'Ошибка установки webhook',
       webhookUrl,
-      message: data.description || 'Webhook установлен',
-    });
+    }, { status: 400 });
   }
 
+  // Регистрируем команды в меню бота
+  await fetch(`https://api.telegram.org/bot${botToken}/setMyCommands`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      commands: [
+        { command: 'start',  description: 'Познакомиться с Кузьмичем' },
+        { command: 'route',  description: 'Случайный маршрут из каталога' },
+        { command: 'sezon',  description: 'Совет на текущий сезон' },
+        { command: 'help',   description: 'Список команд' },
+      ],
+    }),
+  });
+
   return NextResponse.json({
-    success: false,
-    error: data.description || 'Ошибка установки webhook',
+    success: true,
     webhookUrl,
-  }, { status: 400 });
+    message: data.description || 'Webhook установлен, команды зарегистрированы',
+  });
 }
