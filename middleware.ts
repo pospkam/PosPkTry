@@ -32,6 +32,11 @@ const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/auth': 'ALL',
   '/api/weather': 'ALL',
   '/api/tours': ['GET'],
+  '/api/routes': ['GET'],          // публичный каталог маршрутов
+  '/api/leads': ['POST'],          // форма заявки без регистрации
+  '/api/reviews': ['GET'],         // отзывы (LiveFeed на главной)
+  '/api/public': 'ALL',            // публичная статистика
+  '/api/discovery': ['GET', 'POST'], // поиск
   '/api/partners': ['GET'],
   '/api/eco-points': ['GET'],
   '/api/ai/chat': ['POST'],
@@ -39,6 +44,7 @@ const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/ai/health': ['GET'],
   '/api/safety': 'ALL',
   '/api/mcp': 'ALL',
+  '/api/telegram': 'ALL',          // Telegram webhook
 };
 
 const API_ROLE_REQUIREMENTS: Record<string, AuthRole> = {
