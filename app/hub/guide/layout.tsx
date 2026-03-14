@@ -16,7 +16,7 @@ const SIDEBAR_ITEMS = [
 
 export default function GuideHubLayout({ children }: { children: ReactNode }) {
   return (
-    <HubLayout sidebarItems={SIDEBAR_ITEMS} sidebarTitle="Кабинет гида">
+    <HubLayout sidebarItems={SIDEBAR_ITEMS} sidebarTitle="Кабинет гида" requiredRole="guide">
       {children}
       <ChatWidget />
     </HubLayout>

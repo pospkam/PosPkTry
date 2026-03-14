@@ -21,7 +21,7 @@ const SIDEBAR_ITEMS = [
 
 export default function TouristLayout({ children }: { children: ReactNode }) {
   return (
-    <HubLayout sidebarItems={SIDEBAR_ITEMS} sidebarTitle="Кабинет туриста">
+    <HubLayout sidebarItems={SIDEBAR_ITEMS} sidebarTitle="Кабинет туриста" requiredRole="tourist">
       {children}
       <ChatWidget />
     </HubLayout>

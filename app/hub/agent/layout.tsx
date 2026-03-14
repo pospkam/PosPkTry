@@ -14,7 +14,7 @@ const SIDEBAR_ITEMS = [
 
 export default function AgentHubLayout({ children }: { children: ReactNode }) {
   return (
-    <HubLayout sidebarItems={SIDEBAR_ITEMS} sidebarTitle="Кабинет агента">
+    <HubLayout sidebarItems={SIDEBAR_ITEMS} sidebarTitle="Кабинет агента" requiredRole="agent">
       {children}
     </HubLayout>
   );

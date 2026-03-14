@@ -24,7 +24,7 @@ const SIDEBAR_ITEMS = [
 
 export default function OperatorHubLayout({ children }: { children: ReactNode }) {
   return (
-    <HubLayout sidebarItems={SIDEBAR_ITEMS} sidebarTitle="Кабинет оператора">
+    <HubLayout sidebarItems={SIDEBAR_ITEMS} sidebarTitle="Кабинет оператора" requiredRole="operator">
       {children}
       <ChatWidget />
     </HubLayout>
