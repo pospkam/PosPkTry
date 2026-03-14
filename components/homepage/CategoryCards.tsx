@@ -18,11 +18,10 @@ const CATEGORIES: { label: string; slug: string; img: string; size: CardSize }[]
   { label: 'Треккинг',   slug: 'trekking',             img: '/images/gallery/camp-sunset.jpg',   size: 'normal' },
   { label: 'Снегоходы',  slug: 'snegohod',             img: '/images/activities/snowmobile.jpg', size: 'tall'   },
   { label: 'Джипы',      slug: 'dzhip',                img: '/images/activities/jeep.jpg',       size: 'wide'   },
-  { label: 'Озёра',      slug: 'ozera',                img: '/images/gallery/bay-sunset.jpg',    size: 'normal' },
-  { label: 'Горы',       slug: 'gory',                 img: '/images/gallery/stela.jpg',         size: 'normal' },
-  { label: 'Реки',       slug: 'reki',                 img: '/images/bento/khalaktyr.jpg',       size: 'normal' },
-  { label: 'Эко-туры',   slug: 'eko',                  img: '/images/gallery/aurora.jpg',        size: 'wide'   },
-  { label: 'Комбо',      slug: 'kombo',                img: '/images/gallery/sunset-clouds.jpg', size: 'normal' },
+  { label: 'Озёра',      slug: 'lakes',                img: '/images/gallery/bay-sunset.jpg',    size: 'normal' },
+  { label: 'Горы',       slug: 'mountains',            img: '/images/gallery/stela.jpg',         size: 'normal' },
+  { label: 'Реки',       slug: 'rivers',               img: '/images/bento/khalaktyr.jpg',       size: 'normal' },
+  { label: 'Эко-туры',   slug: 'eco',                  img: '/images/gallery/aurora.jpg',        size: 'wide'   },
 ];
 
 /** col / row CSS Grid span per size  */
@@ -43,7 +42,7 @@ export function CategoryCards() {
             Направления
           </h2>
           <p className="text-[var(--kh-text-dim)] text-sm mb-8">
-            15 направлений активного отдыха на полуострове
+            14 направлений активного отдыха на полуострове
           </p>
         </Reveal>
 
