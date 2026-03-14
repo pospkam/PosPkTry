@@ -94,6 +94,7 @@ import { OrdersProvider } from '@/contexts/OrdersContext'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import FloatingAIButtonWrapper from '@/components/ai/FloatingAIButtonWrapper'
 import { Toaster } from 'react-hot-toast'
+import YandexMetrika from '@/components/shared/YandexMetrika'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -145,6 +146,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             })
           }}
         />
+        <YandexMetrika />
       </body>
     </html>
   )
