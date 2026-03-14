@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
-import { Phone, MapPin, Fish, Calendar, Home, Users, Star, Shield, ChevronDown, Send } from 'lucide-react';
+import { Phone, MapPin, Fish, Calendar, Home, Users, Star, Shield, ChevronDown } from 'lucide-react';
 
 const GALLERY = [
   '2025-01-27_142444.jpg',
@@ -113,7 +112,7 @@ export default function FishingKamClient() {
       await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, phone, source_url: 'https://fishingkam.ru', route_title: 'Рыбалка на Камчатке' }),
+        body: JSON.stringify({ name, phone, source_url: 'https://tourhab.ru/fishingkam', route_title: 'Рыбалка на Камчатке (партнёр)' }),
       });
     } catch { /* silent */ }
     setSent(true);
@@ -122,30 +121,13 @@ export default function FishingKamClient() {
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]">
 
-      {/* ── Sticky header ──────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 bg-[var(--bg-card)] border-b border-[var(--border)]">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Fish className="w-5 h-5 text-[var(--accent)]" />
-            <span className="font-bold text-[var(--text-primary)] text-lg" style={{ fontFamily: 'var(--font-playfair)' }}>
-              Камчатская рыбалка
-            </span>
-          </div>
-          <div className="hidden md:flex items-center gap-6 text-sm text-[var(--text-secondary)]">
-            <a href="tel:+79147822222" className="flex items-center gap-1.5 hover:text-[var(--accent)] transition-colors">
-              <Phone className="w-3.5 h-3.5" />
-              +7 (914) 782-22-22
-            </a>
-            <a href="tel:+79992997007" className="flex items-center gap-1.5 hover:text-[var(--accent)] transition-colors">
-              <Phone className="w-3.5 h-3.5" />
-              +7 (999) 299-70-07
-            </a>
-          </div>
-          <button onClick={() => setShowModal(true)} className="ds-btn ds-btn-primary text-sm px-4 py-2">
-            Оставить заявку
-          </button>
+      {/* ── Partner badge ────────────────────────────────────────── */}
+      <div className="bg-[var(--bg-card)] border-b border-[var(--border)] px-4 py-2">
+        <div className="max-w-6xl mx-auto flex items-center gap-2 text-xs text-[var(--text-muted)]">
+          <Shield className="w-3.5 h-3.5 text-[var(--success)]" />
+          <span>Проверенный партнёр платформы TourHab</span>
         </div>
-      </header>
+      </div>
 
       {/* ── Hero ───────────────────────────────────────────────── */}
       <section className="relative h-[90vh] min-h-[580px] overflow-hidden">
@@ -397,30 +379,12 @@ export default function FishingKamClient() {
             <a href="tel:+79247808011" className="text-[var(--ocean)] text-sm hover:underline">8 (924) 780-80-11</a>
           </div>
         </div>
-      </section>
-
-      {/* ── Footer ─────────────────────────────────────────────── */}
-      <footer className="bg-[var(--bg-card)] border-t border-[var(--border)] py-8 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <Fish className="w-4 h-4 text-[var(--accent)]" />
-                <span className="font-semibold" style={{ fontFamily: 'var(--font-playfair)' }}>Камчатская рыбалка</span>
-              </div>
-              <p className="text-xs text-[var(--text-muted)]">© 2025 ООО «Камчатская рыбалка»</p>
-            </div>
-            <div className="text-xs text-[var(--text-muted)] space-y-1">
-              <p>ИНН 4100050147 · ОГРН 1244100000869</p>
-              <p>684005, Камчатский край, г. Елизово, ул. Звёздная, д. 1«А», каб. 14</p>
-              <p>Рыболовный участок №1182 (р. Камчатка) · Договор №02/2023-л от 22.05.2023</p>
-            </div>
-            <Link href="https://tourhab.ru" className="text-xs text-[var(--text-muted)] hover:text-[var(--ocean)] transition-colors">
-              Площадка TourHab
-            </Link>
-          </div>
+        <div className="mt-8 text-center text-xs text-[var(--text-muted)] space-y-1">
+          <p>ООО «Камчатская рыбалка» · ИНН 4100050147 · ОГРН 1244100000869</p>
+          <p>684005, Камчатский край, г. Елизово, ул. Звёздная, д. 1«А», каб. 14</p>
+          <p>Рыболовный участок №1182 (р. Камчатка) · Договор №02/2023-л от 22.05.2023</p>
         </div>
-      </footer>
+      </section>
 
       {/* ── Lead modal ─────────────────────────────────────────── */}
       {showModal && (

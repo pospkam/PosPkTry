@@ -1,10 +1,10 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { Send } from 'lucide-react';
 
 const PLATFORM = [
-  { label: 'Туры и маршруты', href: '/tours' },
+  { label: 'Маршруты', href: '/routes' },
   { label: 'Карта Камчатки', href: '/map' },
-  { label: 'Гид-ассистент', href: '/ai-assistant' },
   { label: 'Стать партнёром', href: '/auth/login' },
 ];
 
@@ -44,6 +44,15 @@ export function Footer() {
             <p className="text-xs text-[var(--text-muted)] mt-4">
               support@kamhub.ru
             </p>
+            <a
+              href="https://t.me/kamchatka_real"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 mt-3 text-xs text-[var(--ocean)] hover:underline transition-colors"
+            >
+              <Send className="w-3.5 h-3.5" />
+              Telegram-канал
+            </a>
           </div>
 
           {/* Platform links */}
