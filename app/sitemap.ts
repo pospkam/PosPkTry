@@ -1,5 +1,4 @@
 import { MetadataRoute } from 'next';
-import { FISHING_TOURS } from '@/lib/partners/kamchatka-fishing/tours-data';
 import { query } from '@/lib/database';
 import { CATEGORY_SLUGS } from '@/lib/routes/category-meta';
 
@@ -15,30 +14,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: now,
       changeFrequency: 'daily',
       priority: 1,
-    },
-    {
-      url: `${BASE_URL}/tours`,
-      lastModified: now,
-      changeFrequency: 'daily',
-      priority: 0.9,
-    },
-    {
-      url: `${BASE_URL}/tours/fishing`,
-      lastModified: now,
-      changeFrequency: 'weekly',
-      priority: 0.9,
-    },
-    {
-      url: `${BASE_URL}/accommodations`,
-      lastModified: now,
-      changeFrequency: 'weekly',
-      priority: 0.8,
-    },
-    {
-      url: `${BASE_URL}/search`,
-      lastModified: now,
-      changeFrequency: 'daily',
-      priority: 0.8,
     },
     {
       url: `${BASE_URL}/map`,
@@ -106,14 +81,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.9,
   }));
 
-  // Динамические страницы туров (рыбалка)
-  const fishingTourPages: MetadataRoute.Sitemap = FISHING_TOURS.map((tour) => ({
-    url: `${BASE_URL}/tours/fishing/${tour.id}`,
-    lastModified: now,
-    changeFrequency: 'weekly' as const,
-    priority: 0.8,
-  }));
-
   // Динамические страницы маршрутов из agent_route_knowledge
   let routePages: MetadataRoute.Sitemap = [];
   try {
@@ -145,5 +112,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
   } catch { /* sitemap continues without operators if DB unavailable */ }
 
-  return [...staticPages, ...categoryPages, ...fishingTourPages, ...routePages, ...operatorPages];
+  return [...staticPages, ...categoryPages, ...routePages, ...operatorPages];
 }
