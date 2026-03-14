@@ -4,11 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { HeroSection } from '@/components/homepage/HeroSection';
 import { CategoryCards } from '@/components/homepage/CategoryCards';
-import { FeaturedTours } from '@/components/homepage/FeaturedTours';
 import { PlatformStats } from '@/components/homepage/PlatformStats';
-import { AudienceSection } from '@/components/homepage/AudienceSection';
 import { ReviewsSection } from '@/components/homepage/ReviewsSection';
-import { CTABanner } from '@/components/homepage/CTABanner';
 import { HomeBottomNav } from '@/components/homepage/HomeBottomNav';
 import SOSButton from '@/components/shared/SOSButton';
 import { Footer } from '@/components/layout/Footer';
@@ -27,11 +24,8 @@ export default function HomePageClient() {
       <main>
         <HeroSection />
         <CategoryCards />
-        <FeaturedTours />
         <PlatformStats />
-        <AudienceSection />
         <ReviewsSection />
-        <CTABanner />
       </main>
       <Footer />
       <HomeBottomNav />

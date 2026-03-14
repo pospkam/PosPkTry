@@ -77,7 +77,12 @@ export function CategoryCards() {
                 />
 
                 {/* overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent group-hover:from-black/60 transition-all duration-300" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent group-hover:from-black/70 transition-all duration-300" />
+
+                {/* label */}
+                <span className="absolute bottom-2 left-3 text-white text-xs font-semibold tracking-wide drop-shadow-sm">
+                  {cat.label}
+                </span>
               </Link>
             );
           })}
