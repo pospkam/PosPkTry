@@ -32,7 +32,7 @@ export function CTABanner() {
         <Reveal delay={2}>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              href="/tours"
+              href="/routes"
               className="px-8 py-3 bg-[var(--kh-accent)] text-white text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity"
             >
               Найти тур

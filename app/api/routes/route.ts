@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
   const { q, category, page, limit, hasCoords, sort, difficulty, price_min, price_max } = parsed.data;
   const offset = (page - 1) * limit;
 
-  const conditions: string[] = [];
+  const conditions: string[] = ['is_visible = TRUE'];
   const params: unknown[] = [];
   let idx = 1;
 

@@ -76,7 +76,7 @@ async function searchRoutes(args: Record<string, unknown>): Promise<string> {
            payload->>'season' as season,
            payload->>'price_from' as price_from
     FROM agent_route_knowledge
-    WHERE 1=1
+    WHERE is_visible = TRUE
   `;
   const params: (string | number)[] = [];
   let idx = 1;
@@ -127,7 +127,7 @@ async function getRouteDetails(args: Record<string, unknown>): Promise<string> {
             payload->>'season' as season,
             payload->>'price_from' as price_from,
             payload->>'highlights' as highlights
-     FROM agent_route_knowledge WHERE id = $1 LIMIT 1`,
+     FROM agent_route_knowledge WHERE id = $1 AND is_visible = TRUE LIMIT 1`,
     [routeId]
   );
 
@@ -148,7 +148,7 @@ async function getRouteDetails(args: Record<string, unknown>): Promise<string> {
 
 async function listCategories(): Promise<string> {
   const result = await query<{ category: string; count: string }>(
-    `SELECT category, COUNT(*) as count FROM agent_route_knowledge GROUP BY category ORDER BY count DESC`
+    `SELECT category, COUNT(*) as count FROM agent_route_knowledge WHERE is_visible = TRUE GROUP BY category ORDER BY count DESC`
   );
 
   const labels: Record<string, string> = {

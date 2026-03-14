@@ -129,11 +129,18 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<UserEcoPoints>);
 
   } catch (error) {
-    console.error('Error fetching user eco-points:', error);
+    // Таблицы eco-points могут не существовать — возвращаем пустые данные
+    const msg = error instanceof Error ? error.message : '';
+    if (msg.includes('does not exist') || msg.includes('relation')) {
+      const userId2 = new URL(request.url).searchParams.get('userId') || '';
+      return NextResponse.json({
+        success: true,
+        data: { userId: userId2, totalPoints: 0, level: 1, achievements: [], lastActivity: new Date() },
+      } as ApiResponse<UserEcoPoints>);
+    }
     return NextResponse.json({
       success: false,
-      error: 'Failed to fetch user eco-points',
-      message: error instanceof Error ? error.message : 'Unknown error',
+      error: 'Не удалось загрузить эко-баллы',
     } as ApiResponse<null>, { status: 500 });
   }
 }
@@ -268,11 +275,9 @@ export async function POST(request: NextRequest) {
     } as ApiResponse<{ userId: string; totalPoints: number; level: number; newAchievements: EcoAchievement[]; lastActivity: Date }>);
 
   } catch (error) {
-    console.error('Error adding eco-points:', error);
     return NextResponse.json({
       success: false,
-      error: 'Failed to add eco-points',
-      message: error instanceof Error ? error.message : 'Unknown error',
+      error: 'Не удалось начислить эко-баллы',
     } as ApiResponse<null>, { status: 500 });
   }
 }

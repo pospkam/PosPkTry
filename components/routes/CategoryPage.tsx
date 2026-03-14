@@ -20,7 +20,7 @@ export default async function CategoryPage({ category }: { category: string }) {
               NULLIF(payload->>'duration_days', '')::numeric::int AS duration_days,
               source_name
        FROM agent_route_knowledge
-       WHERE category = $1
+       WHERE category = $1 AND is_visible = TRUE
        ORDER BY
          CASE WHEN source_name = 'idilesom.com' THEN 0
               WHEN source_name = 'kamchatintour.ru' THEN 1
@@ -30,7 +30,7 @@ export default async function CategoryPage({ category }: { category: string }) {
       [category]
     ),
     pool.query<{ count: string }>(
-      'SELECT COUNT(*) AS count FROM agent_route_knowledge WHERE category = $1',
+      'SELECT COUNT(*) AS count FROM agent_route_knowledge WHERE category = $1 AND is_visible = TRUE',
       [category]
     ),
   ]);

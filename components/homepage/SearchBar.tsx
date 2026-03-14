@@ -20,7 +20,7 @@ export function SearchBar() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const q = searchQuery.trim();
-    router.push(q ? `/tours?search=${encodeURIComponent(q)}` : '/tours');
+    router.push(q ? `/routes?q=${encodeURIComponent(q)}` : '/routes');
   };
 
   return (
@@ -47,7 +47,7 @@ export function SearchBar() {
           <button
             key={cat.slug}
             type="button"
-            onClick={() => router.push(`/tours?category=${cat.slug}`)}
+            onClick={() => router.push(`/routes?category=${cat.slug}`)}
             className="shrink-0 px-3 py-1.5 text-xs font-medium rounded-full border border-[var(--kh-border)] text-[var(--kh-text-dim)] hover:border-[var(--kh-accent)] hover:text-[var(--kh-accent)] transition-colors"
           >
             {cat.label}

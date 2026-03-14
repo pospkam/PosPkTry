@@ -10,7 +10,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
 
   try {
-    const result = await query(`SELECT * FROM tours WHERE id = $1`, [id]);
+    const result = await query(`SELECT * FROM tours WHERE id = $1 AND is_active = TRUE`, [id]);
 
     if (result.rows.length > 0) {
       const tour = result.rows[0];

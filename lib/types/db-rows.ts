@@ -1225,8 +1225,26 @@ export interface KnowledgeRouteRow {
   season: string | null;
   price_from: string | null;
   has_embedding: boolean;
+  is_visible: boolean;
   created_at: Date;
   updated_at: Date;
+}
+
+export interface AdminRouteRow {
+  id: string;
+  title: string;
+  category: string;
+  source_name: string | null;
+  lat: string | null;
+  lng: string | null;
+  is_visible: boolean;
+  created_at: Date;
+}
+
+export interface RouteVisibilityUpdateRow {
+  id: string;
+  title: string;
+  is_visible: boolean;
 }
 
 export interface KnowledgeCategoryStatsRow {

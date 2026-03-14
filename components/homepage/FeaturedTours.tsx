@@ -59,7 +59,7 @@ export function FeaturedTours() {
             difficulty: t.difficulty, duration: t.duration,
             price: t.price, rating: t.rating,
             image: t.images?.[0] || CATEGORY_IMAGES[t.category] || DEFAULT_IMAGE,
-            href: `/tours/${t.id}`,
+            href: `/routes/${t.id}`,
           })));
           return;
         }
@@ -175,7 +175,7 @@ export function FeaturedTours() {
           <Reveal>
             <div className="flex justify-center mt-10">
               <Link
-                href={fromRoutes ? '/routes' : '/tours'}
+                href={fromRoutes ? '/routes' : '/routes'}
                 className="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium border border-[var(--kh-border)] rounded-lg text-[var(--kh-text)] hover:bg-[var(--kh-surface)] transition-colors"
               >
                 {fromRoutes ? 'Все маршруты' : 'Все туры'} <ArrowRight className="w-4 h-4" />

@@ -57,7 +57,7 @@ export function TouristNav() {
 
           <div className="flex items-center gap-3">
             <Link 
-              href="/tours" 
+              href="/routes"
               className="px-4 py-2 bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] text-[var(--accent)] rounded-lg transition-colors text-sm flex items-center gap-2"
             >
               <MapPin className="w-4 h-4" />

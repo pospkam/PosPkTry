@@ -119,7 +119,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const result = await query(
       `SELECT id, updated_at FROM agent_route_knowledge
-       WHERE lat IS NOT NULL ORDER BY updated_at DESC LIMIT 1000`
+       WHERE lat IS NOT NULL AND is_visible = TRUE ORDER BY updated_at DESC LIMIT 1000`
     );
     routePages = result.rows.map((r) => ({
       url: `${BASE_URL}/routes/${r.id as string}`,

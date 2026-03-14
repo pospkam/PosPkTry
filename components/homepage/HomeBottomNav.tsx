@@ -10,7 +10,7 @@ const FO = "var(--font-outfit,'Outfit',system-ui,sans-serif)";
 const NAV_ITEMS = [
   { icon: MapPin,   label: 'Карта',     href: '/map' },
   { icon: Heart,    label: undefined,    href: '/profile' },
-  { icon: Search,   label: 'Поиск',     href: '/tours' },
+  { icon: Search,   label: 'Поиск',     href: '/routes' },
   { icon: Sparkles, label: 'AI',         href: '/search' },
 ];
 

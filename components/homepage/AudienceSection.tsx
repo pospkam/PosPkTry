@@ -6,7 +6,7 @@ import { Compass, Briefcase, Check } from 'lucide-react';
 import { Reveal } from '@/components/homepage/Reveal';
 
 const TOURIST_FEATURES = [
-  '260+ маршрутов с описаниями и картой',
+  'Маршруты с описаниями и картой',
   'Онлайн-бронирование у проверенных операторов',
   'SOS-система с геолокацией 24/7',
   'AI-ассистент для подбора тура',
@@ -48,7 +48,7 @@ export function AudienceSection() {
                 ))}
               </ul>
               <Link
-                href="/tours"
+                href="/routes"
                 className="mt-6 inline-flex items-center justify-center px-6 py-3 bg-[var(--kh-accent)] text-white text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity"
               >
                 Найти тур

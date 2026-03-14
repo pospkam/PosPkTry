@@ -13,7 +13,7 @@ async function getRoute(id: string) {
   try {
     const result = await query(
       `SELECT id, category, title, description, lat, lng, source_url, payload
-       FROM agent_route_knowledge WHERE id = $1`,
+       FROM agent_route_knowledge WHERE id = $1 AND is_visible = TRUE`,
       [id]
     );
     if (!result.rows[0]) return null;

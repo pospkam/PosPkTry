@@ -24,7 +24,7 @@ export async function GET(
          id, route_dedupe_key, route_id, category, title, description,
          lat, lng, source_url, source_name, payload, created_at
        FROM agent_route_knowledge
-       WHERE id = $1`,
+       WHERE id = $1 AND is_visible = TRUE`,
       [id]
     );
 
