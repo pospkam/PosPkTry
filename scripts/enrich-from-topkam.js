@@ -116,11 +116,15 @@ function extractAttractionContent(html, pageUrl) {
   return { title, description, sourceUrl: pageUrl };
 }
 
-// Нормализация для матчинга
+// Родовые географические слова — не используем для матчинга
+const GEO_STOPWORDS = new Set([
+  'озеро', 'река', 'гора', 'сопка', 'вулкан', 'остров', 'бухта',
+  'залив', 'пролив', 'мыс', 'долина', 'перевал', 'хребет', 'ключ',
+]);
+
 function normalize(str) {
   return str
     .toLowerCase()
-    .replace(/вулкан\s+/g, '')
     .replace(/[ьъ]/g, '')
     .replace(/[^а-яё\s]/g, ' ')
     .replace(/\s+/g, ' ')
@@ -130,13 +134,24 @@ function normalize(str) {
 function isSimilar(a, b) {
   const na = normalize(a);
   const nb = normalize(b);
-  // Прямое вхождение
-  if (na.includes(nb) || nb.includes(na)) return true;
-  // Первое слово совпадает и длина > 3
-  const wordsA = na.split(' ').filter(w => w.length > 3);
-  const wordsB = nb.split(' ').filter(w => w.length > 3);
-  if (wordsA.length === 0 || wordsB.length === 0) return false;
-  return wordsA.some(w => wordsB.includes(w));
+  // Прямое вхождение (без стоп-слов — опасно само по себе)
+  if (na === nb) return true;
+  // Значимые слова — только не-стоп
+  const sigA = na.split(' ').filter(w => w.length > 3 && !GEO_STOPWORDS.has(w));
+  const sigB = nb.split(' ').filter(w => w.length > 3 && !GEO_STOPWORDS.has(w));
+  if (sigA.length === 0 || sigB.length === 0) return false;
+  // Хотя бы одно значимое слово должно совпадать в обеих строках
+  return sigA.some(w => sigB.includes(w));
+}
+
+function makeDedupeKey(sourceUrl, title) {
+  try {
+    const hostname = new URL(sourceUrl).hostname;
+    const slug = title.trim().toLowerCase().replace(/\s+/g, '-').slice(0, 80);
+    return `${hostname}:${slug}`;
+  } catch {
+    return `topkam.ru:${title.trim().toLowerCase().replace(/\s+/g, '-').slice(0, 80)}`;
+  }
 }
 
 // ── Основная логика ───────────────────────────────────────────
@@ -181,28 +196,67 @@ async function main() {
       // Обновляем БД
       if (!KB_ONLY && pool) {
         try {
-          // Ищем маршрут по похожему названию
-          const res = await pool.query(
-            `SELECT id, title FROM agent_route_knowledge
-             WHERE category = $1
-               AND (description IS NULL OR length(description) < 100)
-             LIMIT 50`,
-            [cat.slug]
-          );
+          const dedupeKey = makeDedupeKey(sourceUrl, title);
 
-          const match = res.rows.find(r => isSimilar(r.title, title));
-          if (match) {
+          // Сначала проверяем: есть ли уже такой dedupe key
+          const existRes = await pool.query(
+            'SELECT id, title FROM agent_route_knowledge WHERE route_dedupe_key = $1',
+            [dedupeKey]
+          );
+          if (existRes.rows[0]) {
+            // Уже есть — обновляем только если description короткое
             if (DRY_RUN) {
-              console.log(`    [DRY] UPDATE id=${match.id} "${match.title}"`);
+              console.log(`    [DRY] UPDATE (существует): "${existRes.rows[0].title}"`);
             } else {
               await pool.query(
-                `UPDATE agent_route_knowledge
-                 SET description = $1, source_url = COALESCE(source_url, $2)
-                 WHERE id = $3`,
-                [description, sourceUrl, match.id]
+                `UPDATE agent_route_knowledge SET description = $1
+                 WHERE route_dedupe_key = $2 AND (description IS NULL OR length(description) < 100)`,
+                [description, dedupeKey]
               );
               dbUpdated++;
-              console.log(`    Обновлён: "${match.title}"`);
+            }
+          } else {
+            // Ищем приблизительный матч в существующих записях
+            const res = await pool.query(
+              `SELECT id, title FROM agent_route_knowledge
+               WHERE category = $1
+                 AND (description IS NULL OR length(description) < 100)
+               LIMIT 100`,
+              [cat.slug]
+            );
+            const match = res.rows.find(r => isSimilar(r.title, title));
+
+            if (match) {
+              if (DRY_RUN) {
+                console.log(`    [DRY] UPDATE "${match.title}" ← "${title}"`);
+              } else {
+                await pool.query(
+                  `UPDATE agent_route_knowledge
+                   SET description = $1, source_url = COALESCE(source_url, $2)
+                   WHERE id = $3`,
+                  [description, sourceUrl, match.id]
+                );
+                dbUpdated++;
+                console.log(`    Обновлён: "${match.title}"`);
+              }
+            } else {
+              // Нет матча — добавляем как новую запись знаний (is_visible=false)
+              const searchText = `${title} ${description.slice(0, 200)}`;
+              if (DRY_RUN) {
+                console.log(`    [DRY] INSERT новая запись: "${title}"`);
+              } else {
+                await pool.query(
+                  `INSERT INTO agent_route_knowledge
+                     (route_dedupe_key, category, title, description, lat, lng,
+                      source_url, source_name, search_text, payload, is_visible)
+                   VALUES ($1,$2,$3,$4,NULL,NULL,$5,'topkam.ru',
+                           to_tsvector('russian',$6),'{}',FALSE)
+                   ON CONFLICT (route_dedupe_key) DO NOTHING`,
+                  [dedupeKey, cat.slug, title, description, sourceUrl, searchText]
+                );
+                dbUpdated++;
+                console.log(`    Добавлена новая локация: "${title}"`);
+              }
             }
           }
         } catch (e) {
