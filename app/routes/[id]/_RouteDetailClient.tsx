@@ -5,6 +5,7 @@ import Link from 'next/link';
 import {
   ArrowLeft, MapPin, Tag, Clock, Calendar, Mountain,
   ExternalLink, AlertTriangle, Users, Gauge, Send,
+  Star, CheckCircle, ChevronRight,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { Header } from '@/components/layout/Header';
@@ -29,7 +30,38 @@ const CATEGORY_LABELS: Record<string, string> = {
   dzhip:                'Джип-туры',
 };
 
+const DIFFICULTY_RU: Record<string, string> = {
+  easy: 'Лёгкий', medium: 'Средний', hard: 'Сложный',
+  легкий: 'Лёгкий', средний: 'Средний', сложный: 'Сложный',
+};
+
 const MONTHS = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
+
+interface Offer {
+  tourId: string;
+  tourName: string;
+  shortDesc: string | null;
+  priceBase: number | null;
+  effectivePrice: number | null;
+  durationDays: number | null;
+  difficulty: string | null;
+  maxGroupSize: number | null;
+  minGroupSize: number | null;
+  rating: number | null;
+  reviewCount: number | null;
+  included: string[];
+  season: string[];
+  operator: {
+    id: string;
+    name: string;
+    slug: string | null;
+    rating: number | null;
+    reviewCount: number | null;
+    verified: boolean;
+  };
+  nextDeparture: string | null;
+  nextSlots: number | null;
+}
 
 interface RouteDetail {
   id: string;
@@ -49,6 +81,105 @@ interface RouteDetail {
   groupSizeMax: number | null;
   dangerLevel: string | null;
   equipment: string[] | null;
+  offers: Offer[];
+}
+
+function OfferCard({ offer, onLead }: { offer: Offer; onLead: () => void }) {
+  const price = offer.effectivePrice ?? offer.priceBase;
+  const nextDate = offer.nextDeparture
+    ? new Date(offer.nextDeparture).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' })
+    : null;
+
+  return (
+    <div className="ds-card p-4 flex flex-col gap-3 hover:border-[var(--accent)]/30 transition-colors">
+      {/* Operator header */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 mb-0.5">
+            <span className="text-sm font-semibold text-[var(--text-primary)] truncate">
+              {offer.operator.name}
+            </span>
+            {offer.operator.verified && (
+              <CheckCircle className="w-3.5 h-3.5 text-[var(--success)] flex-shrink-0" />
+            )}
+          </div>
+          {offer.operator.rating != null && offer.operator.rating > 0 && (
+            <div className="flex items-center gap-1">
+              <Star className="w-3 h-3 fill-[var(--warning)] text-[var(--warning)]" />
+              <span className="text-xs text-[var(--text-secondary)]">
+                {offer.operator.rating.toFixed(1)}
+                {offer.operator.reviewCount != null && offer.operator.reviewCount > 0 &&
+                  ` (${offer.operator.reviewCount})`}
+              </span>
+            </div>
+          )}
+        </div>
+        {price != null && price > 0 && (
+          <div className="text-right flex-shrink-0">
+            <div className="text-base font-bold text-[var(--accent)]">
+              {price.toLocaleString('ru-RU')} ₽
+            </div>
+            <div className="text-xs text-[var(--text-muted)]">за чел.</div>
+          </div>
+        )}
+      </div>
+
+      {/* Tour name */}
+      <p className="text-sm text-[var(--text-secondary)] line-clamp-2">
+        {offer.tourName}
+      </p>
+
+      {/* Quick stats */}
+      <div className="flex flex-wrap gap-2">
+        {offer.durationDays != null && (
+          <span className="flex items-center gap-1 text-xs text-[var(--text-muted)] bg-[var(--bg-hover)] px-2 py-0.5 rounded">
+            <Clock className="w-3 h-3" />
+            {offer.durationDays} дн.
+          </span>
+        )}
+        {offer.difficulty && (
+          <span className="text-xs text-[var(--text-muted)] bg-[var(--bg-hover)] px-2 py-0.5 rounded">
+            {DIFFICULTY_RU[offer.difficulty] ?? offer.difficulty}
+          </span>
+        )}
+        {offer.maxGroupSize != null && (
+          <span className="flex items-center gap-1 text-xs text-[var(--text-muted)] bg-[var(--bg-hover)] px-2 py-0.5 rounded">
+            <Users className="w-3 h-3" />
+            до {offer.maxGroupSize}
+          </span>
+        )}
+      </div>
+
+      {/* Next departure */}
+      {nextDate && (
+        <div className="flex items-center gap-1.5 text-xs text-[var(--success)] bg-[var(--success)]/10 px-2 py-1 rounded">
+          <Calendar className="w-3 h-3" />
+          Ближайший заезд: {nextDate}
+          {offer.nextSlots != null && ` · ${offer.nextSlots} мест`}
+        </div>
+      )}
+
+      {/* Actions */}
+      <div className="flex gap-2 mt-auto">
+        {offer.operator.slug && (
+          <Link
+            href={`/operators/${offer.operator.slug}`}
+            className="flex-1 ds-btn ds-btn-secondary text-xs text-center flex items-center justify-center gap-1"
+          >
+            Об операторе <ChevronRight className="w-3 h-3" />
+          </Link>
+        )}
+        <button
+          type="button"
+          onClick={onLead}
+          className="flex-1 ds-btn ds-btn-primary text-xs flex items-center justify-center gap-1"
+        >
+          <Send className="w-3 h-3" />
+          Оставить заявку
+        </button>
+      </div>
+    </div>
+  );
 }
 
 export default function RouteDetailClient({ id }: { id: string }) {
@@ -95,6 +226,7 @@ export default function RouteDetailClient({ id }: { id: string }) {
 
   const hasGeo = route.lat != null && route.lng != null;
   const catLabel = CATEGORY_LABELS[route.category] ?? route.category;
+  const offers = route.offers ?? [];
 
   return (
     <>
@@ -124,7 +256,7 @@ export default function RouteDetailClient({ id }: { id: string }) {
 
           {/* Key badges */}
           <div className="flex flex-wrap gap-2">
-            {route.priceFrom != null && (
+            {route.priceFrom != null && route.priceFrom > 0 && (
               <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--success)]/10 text-[var(--success)] text-sm font-semibold">
                 <Tag className="w-3.5 h-3.5" />
                 от {route.priceFrom.toLocaleString('ru-RU')} ₽
@@ -139,7 +271,7 @@ export default function RouteDetailClient({ id }: { id: string }) {
             {route.difficulty && (
               <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-secondary)] text-sm">
                 <Gauge className="w-3.5 h-3.5" />
-                {route.difficulty}
+                {DIFFICULTY_RU[route.difficulty] ?? route.difficulty}
               </span>
             )}
             {route.altitude != null && (
@@ -166,6 +298,27 @@ export default function RouteDetailClient({ id }: { id: string }) {
           {route.description && (
             <div className="prose prose-sm max-w-none text-[var(--text-secondary)] leading-relaxed">
               {route.description.split('\n').map((p, i) => p.trim() ? <p key={i}>{p}</p> : null)}
+            </div>
+          )}
+
+          {/* ── Offers from operators ─────────────────────────── */}
+          {offers.length > 0 && (
+            <div>
+              <h2 className="ds-h2 mb-4">
+                Предложения операторов
+                <span className="ml-2 text-base font-normal text-[var(--text-muted)]">
+                  ({offers.length})
+                </span>
+              </h2>
+              <div className="grid sm:grid-cols-2 gap-4">
+                {offers.map(offer => (
+                  <OfferCard
+                    key={offer.tourId}
+                    offer={offer}
+                    onLead={() => setShowLead(true)}
+                  />
+                ))}
+              </div>
             </div>
           )}
 
@@ -261,16 +414,12 @@ export default function RouteDetailClient({ id }: { id: string }) {
 
           {/* CTA */}
           <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4 space-y-3">
-            <h3 className="text-sm font-semibold text-[var(--text-primary)]">Хотите на этот маршрут?</h3>
+            <h3 className="text-sm font-semibold text-[var(--text-primary)]">
+              {offers.length > 0 ? 'Нужна помощь с выбором?' : 'Хотите на этот маршрут?'}
+            </h3>
             <p className="text-xs text-[var(--text-secondary)]">
               Оставьте заявку — подберём оператора и дату под ваш запрос.
             </p>
-            <Link
-              href={`/search?q=${encodeURIComponent(route.title)}`}
-              className="ds-btn ds-btn-secondary w-full text-center text-sm"
-            >
-              Найти тур
-            </Link>
             <button
               type="button"
               onClick={() => setShowLead(true)}
