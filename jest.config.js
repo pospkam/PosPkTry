@@ -6,7 +6,6 @@ module.exports = {
     '^@/(.*)$': '<rootDir>/$1',
     '^@core-infrastructure/(.*)$': '<rootDir>/pillars/core-infrastructure/$1',
     '^@support/(.*)$': '<rootDir>/pillars/support/$1',
-    '^@partner/(.*)$': '<rootDir>/pillars/partner/$1',
     '^@analytics/(.*)$': '<rootDir>/pillars/analytics/$1',
     '^@discovery/(.*)$': '<rootDir>/pillars/discovery/$1',
     '^@booking/(.*)$': '<rootDir>/pillars/booking/$1',

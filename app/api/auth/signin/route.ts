@@ -116,7 +116,6 @@ export async function POST(request: NextRequest) {
     return response;
 
   } catch (error) {
-    console.error('Sign in error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при входе в систему',

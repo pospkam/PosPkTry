@@ -28,8 +28,6 @@ const ROLE_HUB: Record<string, string> = {
   transfer_operator: '/hub/transfer-operator',
   agent:             '/hub/agent',
   admin:             '/hub/admin',
-  stay:              '/hub/stay-provider',
-  gear:              '/hub/gear-provider',
 };
 
 export function HubLayout({ children, sidebarItems, sidebarTitle, requiredRole }: HubLayoutProps) {

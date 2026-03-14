@@ -58,12 +58,12 @@ export default function MapPageClient() {
   useEffect(() => {
     const fetchRoutes = async () => {
       try {
-        const res = await fetch('/api/kamchatka-routes?limit=500');
+        const res = await fetch('/api/routes?hasCoords=true&limit=900&sort=title');
         const data = await res.json();
         if (!data.success) return;
         const markers: Marker[] = (data.data ?? [])
           .filter((r: { lat: number | null; lng: number | null }) => r.lat != null && r.lng != null)
-          .map((r: { title: string; description: string; category: string; lat: number; lng: number }) => {
+          .map((r: { id: string; title: string; description: string; category: string; lat: number; lng: number }) => {
             const mapping = CATEGORY_MAP[r.category] ?? { activity: 'nature' as ActivityType, color: 'blue' };
             return {
               coords: [r.lat, r.lng] as [number, number],

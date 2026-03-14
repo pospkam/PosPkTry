@@ -37,7 +37,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(calendar)
   } catch (error) {
-    console.error('Failed to get calendar:', error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to get calendar' },
       { status: 500 }

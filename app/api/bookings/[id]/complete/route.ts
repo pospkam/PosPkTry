@@ -63,7 +63,6 @@ export async function PATCH(
       );
     }
 
-    console.error('[BOOKINGS_COMPLETE]', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка при завершении бронирования' } as ApiResponse<null>,
       { status: 500 }

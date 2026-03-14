@@ -89,7 +89,6 @@ export async function GET(
       { status: 403 }
     );
   } catch (error) {
-    console.error('[BOOKINGS_GET_ID]', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка при получении бронирования' } as ApiResponse<null>,
       { status: 500 }
@@ -149,7 +148,6 @@ export async function PUT(
       message: 'Бронирование обновлено',
     });
   } catch (error) {
-    console.error('[BOOKINGS_PUT]', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка при обновлении бронирования' } as ApiResponse<null>,
       { status: 500 }
@@ -215,7 +213,6 @@ export async function DELETE(
       );
     }
 
-    console.error('[BOOKINGS_DELETE]', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка при отмене бронирования' } as ApiResponse<null>,
       { status: 500 }

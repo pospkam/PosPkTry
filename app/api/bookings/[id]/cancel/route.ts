@@ -143,7 +143,6 @@ export async function POST(
       );
     }
 
-    console.error('[BOOKINGS_CANCEL]', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка при отмене бронирования' } as ApiResponse<null>,
       { status: 500 }

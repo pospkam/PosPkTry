@@ -6,6 +6,14 @@
       "env": {
         "TIMEWEB_TOKEN": "${TIMEWEB_TOKEN}"
       }
+    },
+    "brightdata": {
+      "command": "npx",
+      "args": ["-y", "@brightdata/mcp"],
+      "env": {
+        "API_TOKEN": "${BRIGHTDATA_API_TOKEN}",
+        "WEB_UNLOCKER_ZONE": "unlocker"
+      }
     }
   }
 }

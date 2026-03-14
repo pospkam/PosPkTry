@@ -73,7 +73,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(paymentResponse, { status: 201 })
   } catch (error) {
-    console.error('Failed to initiate payment:', error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to initiate payment' },
       { status: 500 }
@@ -142,7 +141,6 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json(verification)
   } catch (error) {
-    console.error('Failed to verify payment:', error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to verify payment' },
       { status: 500 }

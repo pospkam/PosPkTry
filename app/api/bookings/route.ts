@@ -80,7 +80,6 @@ export async function GET(request: NextRequest) {
       },
     } as ApiResponse<{ bookings: BookingWithDetails[]; total: number; limit: number; offset: number }>);
   } catch (error) {
-    console.error('[BOOKINGS_GET]', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка при получении бронирований' } as ApiResponse<null>,
       { status: 500 }
@@ -174,7 +173,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('[BOOKINGS_POST]', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка при создании бронирования' } as ApiResponse<null>,
       { status: 500 }

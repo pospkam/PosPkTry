@@ -52,7 +52,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(demoUser);
   } catch (error) {
-    console.error('Demo user creation error:', error);
     return NextResponse.json(
       { error: 'Внутренняя ошибка сервера' },
       { status: 500 }

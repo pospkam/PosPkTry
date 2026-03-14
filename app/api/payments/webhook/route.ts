@@ -22,7 +22,6 @@ export async function POST(request: NextRequest) {
     const validationResult = await processCloudPaymentsWebhook(body, signature);
 
     if (!validationResult.success) {
-      console.error('Webhook validation failed:', validationResult.error);
       return NextResponse.json({
         code: 13,
         message: validationResult.error || 'Invalid webhook'
@@ -44,14 +43,13 @@ export async function POST(request: NextRequest) {
         await handlePendingPayment(webhookData);
         break;
       default:
-        console.warn('Unknown payment status:', webhookData.Status);
+        break;
     }
 
     // CloudPayments ждёт ответ с code: 0
     return NextResponse.json({ code: 0 });
 
   } catch (error) {
-    console.error('Webhook processing error:', error);
     return NextResponse.json({
       code: 13,
       message: 'Internal error'
@@ -87,7 +85,6 @@ async function handleSuccessfulPayment(webhook: CloudPaymentsWebhook) {
     ]);
 
     if (paymentResult.rows.length === 0) {
-      console.error('Payment not found:', paymentId);
       return;
     }
 
@@ -297,7 +294,6 @@ async function handleFailedPayment(webhook: CloudPaymentsWebhook) {
 
 
   } catch (error) {
-    console.error('Error handling failed payment:', error);
     throw error;
   }
 }
@@ -328,7 +324,6 @@ async function handlePendingPayment(webhook: CloudPaymentsWebhook) {
 
 
   } catch (error) {
-    console.error('Error handling pending payment:', error);
     throw error;
   }
 }

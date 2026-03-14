@@ -70,7 +70,6 @@ export async function PATCH(
       );
     }
 
-    console.error('[BOOKINGS_CONFIRM]', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка при подтверждении бронирования' } as ApiResponse<null>,
       { status: 500 }

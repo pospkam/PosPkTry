@@ -37,7 +37,6 @@ export async function POST(request: NextRequest) {
     return response;
 
   } catch (error) {
-    console.error('Sign out error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при выходе из системы'

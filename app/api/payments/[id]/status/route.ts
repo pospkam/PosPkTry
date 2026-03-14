@@ -95,7 +95,6 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('Error fetching payment status:', error);
     return NextResponse.json({
       success: false,
       error: 'Failed to fetch payment status',

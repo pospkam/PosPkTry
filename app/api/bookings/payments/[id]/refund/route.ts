@@ -71,7 +71,6 @@ export async function POST(
       refund,
     })
   } catch (error) {
-    console.error('Failed to process refund:', error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to process refund' },
       { status: 500 }

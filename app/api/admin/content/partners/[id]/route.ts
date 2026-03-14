@@ -78,7 +78,7 @@ export async function GET(
 }
 
 const ALLOWED_CATEGORIES = new Set([
-  'operator', 'guide', 'transfer', 'stay', 'gear', 'agent', 'souvenir', 'cars', 'restaurant',
+  'operator', 'guide', 'transfer', 'agent', 'restaurant',
 ]);
 
 const UpdatePartnerSchema = z.object({

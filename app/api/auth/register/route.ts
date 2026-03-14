@@ -125,7 +125,6 @@ export async function POST(request: NextRequest) {
     return response;
     
   } catch (error: unknown) {
-    console.error('Registration error:', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка регистрации. Попробуйте позже.' },
       { status: 500 }

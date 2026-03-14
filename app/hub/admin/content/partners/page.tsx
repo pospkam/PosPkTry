@@ -31,11 +31,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   operator: 'Туроператор',
   transfer: 'Трансфер',
   guide: 'Гид',
-  souvenir: 'Сувениры',
-  gear: 'Снаряжение',
   restaurant: 'Ресторан',
-  stay: 'Проживание',
-  cars: 'Авто',
   agent: 'Агент',
 };
 
@@ -43,11 +39,7 @@ const EDITABLE_CATEGORIES = [
   { value: 'operator', label: 'Туроператор' },
   { value: 'guide', label: 'Гид' },
   { value: 'transfer', label: 'Трансфер' },
-  { value: 'stay', label: 'Проживание' },
-  { value: 'gear', label: 'Снаряжение' },
   { value: 'agent', label: 'Агент' },
-  { value: 'souvenir', label: 'Сувениры' },
-  { value: 'cars', label: 'Авто' },
   { value: 'restaurant', label: 'Ресторан' },
 ];
 

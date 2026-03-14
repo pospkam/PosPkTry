@@ -89,7 +89,6 @@ export async function PATCH(
       )
     }
 
-    console.error('[BOOKINGS_RESCHEDULE]', error)
     return NextResponse.json(
       { success: false, error: 'Ошибка при перебросе бронирования' } as ApiResponse<null>,
       { status: 500 }

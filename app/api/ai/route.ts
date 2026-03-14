@@ -91,7 +91,7 @@ async function callOpenrouter(prompt: string) {
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: 'anthropic/claude-3.5-sonnet',
+      model: 'anthropic/claude-sonnet-4-6',
       temperature: 0.3,
       max_tokens: 400,
       messages: [

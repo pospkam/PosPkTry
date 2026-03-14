@@ -70,7 +70,7 @@ export interface Tour {
 export interface Partner {
   id: string;
   name: string;
-  category: 'operator' | 'guide' | 'transfer' | 'stay' | 'souvenir' | 'gear' | 'cars' | 'restaurant';
+  category: 'operator' | 'guide' | 'transfer' | 'restaurant' | 'agent';
   description: string;
   contact: ContactInfo;
   rating: number;
