@@ -36,12 +36,12 @@ interface TourResponse {
   source: 'tour' | 'route';
 }
 
-// Локальные изображения-заглушки по категориям
+// Локальные изображения-заглушки по категориям (fallback последнего уровня)
 const CATEGORY_IMAGES: Record<string, string> = {
-  vulkani:              '/images/activities/volcanoes.jpg',
-  geyzery:              '/images/activities/volcanoes.jpg',
+  vulkani:              '/images/bento/mutnovsky.jpg',
+  geyzery:              '/images/bento/mutnovsky.jpg',
   rybalka:              '/images/activities/fishing.jpg',
-  termalnye_istochniki: '/images/activities/hotsprings.jpg',
+  termalnye_istochniki: '/images/bento/paratunka.jpg',
   medvedi:              '/images/gallery/road-winter.jpg',
   morskie_progulki:     '/images/activities/sea.jpg',
   vertoletnye_tury:     '/images/activities/helicopter.jpg',
@@ -128,7 +128,9 @@ export async function GET(request: NextRequest) {
         ${newSchema ? 't.images,' : '\'[]\' AS images,'}
         t.created_at,
         t.updated_at,
-        p.name as operator_name
+        p.name as operator_name,
+        p.hero_image as partner_hero_image,
+        p.gallery as partner_gallery
       FROM tours t
       LEFT JOIN partners p ON t.operator_id = p.id
       ${newSchema ? whereClause : whereClause.replace(/t\.title\s+ILIKE/g, 't.name ILIKE')}
@@ -188,10 +190,27 @@ export async function GET(request: NextRequest) {
         reviewCount: typeof row.reviews_count === 'number' ? row.reviews_count : 0,
         isActive: row.is_active === true,
         images: (() => {
-          const dbImages = Array.isArray(row.images) ? row.images as string[]
-            : typeof row.images === 'string' ? (() => { try { return JSON.parse(row.images as string) as string[]; } catch { return []; } })()
-            : [];
-          return dbImages.length > 0 ? dbImages : [CATEGORY_IMAGES[row.category as string] || '/images/activities/volcanoes.jpg'];
+          // 1. Собственные изображения тура
+          const parseArr = (v: unknown): string[] => {
+            if (Array.isArray(v)) return (v as string[]).filter(s => typeof s === 'string' && s.startsWith('/'));
+            if (typeof v === 'string') {
+              try { const p = JSON.parse(v) as unknown; return Array.isArray(p) ? (p as string[]).filter(s => typeof s === 'string' && s.startsWith('/')) : []; }
+              catch { return []; }
+            }
+            return [];
+          };
+          const own = parseArr(row.images);
+          if (own.length > 0) return own;
+          // 2. Галерея оператора (только полные пути)
+          const gallery = parseArr(row.partner_gallery);
+          if (gallery.length > 0) return [gallery[0]];
+          // 3. Hero-фото оператора
+          const hero = typeof row.partner_hero_image === 'string' && (row.partner_hero_image as string).startsWith('/')
+            ? row.partner_hero_image as string : null;
+          if (hero) return [hero];
+          // 4. Категорийный fallback
+          const cat = CATEGORY_ALIAS[row.category as string] || (row.category as string);
+          return [CATEGORY_IMAGES[cat] || '/images/bento/mutnovsky.jpg'];
         })(),
         createdAt: new Date(row.created_at as string),
         updatedAt: new Date(row.updated_at as string),
