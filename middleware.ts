@@ -46,7 +46,6 @@ const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/mcp': 'ALL',
   '/api/telegram': 'ALL',          // Telegram webhook
   '/api/operators': ['GET'],        // публичный каталог партнёров
-  '/api/mig033': ['POST'],          // TEMP: мигратор 033 (удалить после запуска)
 };
 
 const API_ROLE_REQUIREMENTS: Record<string, AuthRole> = {
