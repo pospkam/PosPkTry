@@ -11,12 +11,15 @@ import { query } from '@/lib/database';
 export const dynamic = 'force-dynamic';
 
 const QuerySchema = z.object({
-  q:         z.string().max(200).optional(),
-  category:  z.string().max(60).optional(),
-  page:      z.coerce.number().int().min(1).default(1),
-  limit:     z.coerce.number().int().min(1).max(100).default(24),
-  hasCoords: z.enum(['true', 'false']).optional(),
-  sort:      z.enum(['title', 'recent', 'price']).default('title'),
+  q:          z.string().max(200).optional(),
+  category:   z.string().max(60).optional(),
+  page:       z.coerce.number().int().min(1).default(1),
+  limit:      z.coerce.number().int().min(1).max(100).default(24),
+  hasCoords:  z.enum(['true', 'false']).optional(),
+  sort:       z.enum(['title', 'recent', 'price_asc', 'price_desc', 'recommended']).default('title'),
+  difficulty: z.enum(['easy', 'medium', 'hard']).optional(),
+  price_min:  z.coerce.number().min(0).optional(),
+  price_max:  z.coerce.number().min(0).optional(),
 });
 
 export async function GET(request: NextRequest) {
@@ -27,7 +30,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: false, error: 'Неверные параметры запроса' }, { status: 400 });
   }
 
-  const { q, category, page, limit, hasCoords, sort } = parsed.data;
+  const { q, category, page, limit, hasCoords, sort, difficulty, price_min, price_max } = parsed.data;
   const offset = (page - 1) * limit;
 
   const conditions: string[] = [];
@@ -47,12 +50,34 @@ export async function GET(request: NextRequest) {
   if (hasCoords === 'true') {
     conditions.push(`lat IS NOT NULL AND lng IS NOT NULL`);
   }
+  if (difficulty) {
+    conditions.push(`payload->>'difficulty' = $${idx}`);
+    params.push(difficulty);
+    idx++;
+  }
+  if (price_min != null) {
+    conditions.push(`(payload->>'price_from')::numeric >= $${idx}`);
+    params.push(price_min);
+    idx++;
+  }
+  if (price_max != null) {
+    conditions.push(`(payload->>'price_from')::numeric <= $${idx}`);
+    params.push(price_max);
+    idx++;
+  }
 
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
   const orderBy =
-    sort === 'recent' ? 'created_at DESC' :
-    sort === 'price'  ? 'COALESCE((payload->>\'price_from\')::numeric, 999999999) ASC, title ASC' :
+    sort === 'recent'      ? 'created_at DESC' :
+    sort === 'price_asc'   ? 'COALESCE((payload->>\'price_from\')::numeric, 999999999) ASC, title ASC' :
+    sort === 'price_desc'  ? 'COALESCE((payload->>\'price_from\')::numeric, 0) DESC, title ASC' :
+    sort === 'recommended' ? `(
+      CASE WHEN payload->>'price_from'    IS NOT NULL THEN 1 ELSE 0 END +
+      CASE WHEN payload->>'difficulty'    IS NOT NULL THEN 1 ELSE 0 END +
+      CASE WHEN payload->>'duration_days' IS NOT NULL THEN 1 ELSE 0 END +
+      CASE WHEN payload->>'best_months'   IS NOT NULL THEN 1 ELSE 0 END
+    ) DESC, title ASC` :
     'title ASC';
 
   try {
