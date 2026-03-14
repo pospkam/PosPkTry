@@ -4,10 +4,11 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   ArrowLeft, MapPin, Tag, Clock, Calendar, Mountain,
-  ExternalLink, AlertTriangle, Users, Gauge,
+  ExternalLink, AlertTriangle, Users, Gauge, Send,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { Header } from '@/components/layout/Header';
+import LeadModal from '@/components/routes/LeadModal';
 
 const YandexMap = dynamic(() => import('@/components/shared/YandexMap'), { ssr: false });
 
@@ -54,6 +55,7 @@ export default function RouteDetailClient({ id }: { id: string }) {
   const [route, setRoute] = useState<RouteDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [showLead, setShowLead] = useState(false);
 
   useEffect(() => {
     fetch(`/api/routes/${id}`)
@@ -265,20 +267,28 @@ export default function RouteDetailClient({ id }: { id: string }) {
             </p>
             <Link
               href={`/search?q=${encodeURIComponent(route.title)}`}
-              className="ds-btn ds-btn-primary w-full text-center text-sm"
+              className="ds-btn ds-btn-secondary w-full text-center text-sm"
             >
               Найти тур
             </Link>
-            <Link
-              href="/hub/tourist/bookings/new"
-              className="ds-btn ds-btn-secondary w-full text-center text-sm"
+            <button
+              type="button"
+              onClick={() => setShowLead(true)}
+              className="ds-btn ds-btn-primary w-full text-center text-sm flex items-center justify-center gap-1.5"
             >
-              Забронировать
-            </Link>
+              <Send className="w-3.5 h-3.5" />
+              Оставить заявку
+            </button>
           </div>
         </div>
       </div>
     </div>
+    <LeadModal
+      open={showLead}
+      onClose={() => setShowLead(false)}
+      routeId={route.id}
+      routeTitle={route.title}
+    />
     </>
   );
 }
