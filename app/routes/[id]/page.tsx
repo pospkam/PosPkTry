@@ -9,7 +9,7 @@ interface Props {
 }
 
 async function getRoute(id: string) {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://kamchatour.ru';
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://tourhab.ru';
   try {
     const res = await fetch(`${base}/api/routes/${id}`, { next: { revalidate: 3600 } });
     const json = await res.json();
@@ -29,11 +29,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: catMeta.title,
       description: catMeta.description,
       keywords: catMeta.keywords,
-      alternates: { canonical: `https://kamchatour.ru/routes/${id}` },
+      alternates: { canonical: `https://tourhab.ru/routes/${id}` },
       openGraph: {
         title: catMeta.title,
         description: catMeta.description,
-        url: `https://kamchatour.ru/routes/${id}`,
+        url: `https://tourhab.ru/routes/${id}`,
         siteName: 'Kamchatour',
         locale: 'ru_RU',
         type: 'website',
@@ -53,11 +53,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title,
     description: desc,
-    alternates: { canonical: `https://kamchatour.ru/routes/${id}` },
+    alternates: { canonical: `https://tourhab.ru/routes/${id}` },
     openGraph: {
       title,
       description: desc,
-      url: `https://kamchatour.ru/routes/${id}`,
+      url: `https://tourhab.ru/routes/${id}`,
       siteName: 'KamchatourHub',
       locale: 'ru_RU',
       type: 'article',
@@ -76,13 +76,13 @@ export default async function RouteOrCategoryPage({ params }: Props) {
       '@type': 'CollectionPage',
       name: catMeta.h1,
       description: catMeta.description,
-      url: `https://kamchatour.ru/routes/${id}`,
+      url: `https://tourhab.ru/routes/${id}`,
       breadcrumb: {
         '@type': 'BreadcrumbList',
         itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'Главная', item: 'https://kamchatour.ru' },
-          { '@type': 'ListItem', position: 2, name: 'Маршруты', item: 'https://kamchatour.ru/routes' },
-          { '@type': 'ListItem', position: 3, name: catMeta.name, item: `https://kamchatour.ru/routes/${id}` },
+          { '@type': 'ListItem', position: 1, name: 'Главная', item: 'https://tourhab.ru' },
+          { '@type': 'ListItem', position: 2, name: 'Маршруты', item: 'https://tourhab.ru/routes' },
+          { '@type': 'ListItem', position: 3, name: catMeta.name, item: `https://tourhab.ru/routes/${id}` },
         ],
       },
     };
@@ -110,7 +110,7 @@ export default async function RouteOrCategoryPage({ params }: Props) {
     description: route.description
       ? route.description.replace(/<[^>]+>/g, '').slice(0, 500)
       : undefined,
-    url: `https://kamchatour.ru/routes/${id}`,
+    url: `https://tourhab.ru/routes/${id}`,
     touristType: route.category,
     ...(route.lat != null && route.lng != null ? {
       geo: {

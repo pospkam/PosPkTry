@@ -65,7 +65,7 @@ export default function PrivacyPage() {
               поведенческих данных (история бронирований, просмотренные маршруты, категории интересов). Результаты используются
               исключительно для персонализации предложений и не влекут юридически значимых последствий для пользователя.
               Пользователь вправе отказаться от такой обработки, направив запрос на&nbsp;
-              <a href="mailto:info@kamchatour.ru" className="text-[var(--ocean)] hover:underline">info@kamchatour.ru</a>.
+              <a href="mailto:info@tourhab.ru" className="text-[var(--ocean)] hover:underline">info@tourhab.ru</a>.
             </p>
           </section>
 

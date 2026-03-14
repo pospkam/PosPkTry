@@ -110,7 +110,7 @@ export default function FishingToursPageClient() {
   const hasFilters = !!(search || difficulty || maxPrice);
   const clearFilters = () => { setSearch(''); setDifficulty(''); setMaxPrice(''); };
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://kamchatour.ru';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://tourhab.ru';
 
   return (
     <div className="min-h-screen pb-24 md:pb-0">

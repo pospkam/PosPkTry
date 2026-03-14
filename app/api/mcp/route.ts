@@ -3,7 +3,7 @@
  * Протокол: JSON-RPC 2.0 (MCP spec)
  * Даёт агенту доступ к 259 маршрутам Камчатки в реальном времени
  *
- * URL: https://pospkam-pospktry-c1f3.twc1.net/api/mcp
+ * URL: https://tourhab.ru/api/mcp
  */
 
 import { NextRequest, NextResponse } from 'next/server';

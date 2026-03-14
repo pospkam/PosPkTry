@@ -166,7 +166,7 @@ export const config = {
           pass: process.env.SMTP_PASS || '',
         },
       },
-      from: process.env.EMAIL_FROM || 'noreply@kamchatour.ru',
+      from: process.env.EMAIL_FROM || 'noreply@tourhab.ru',
     },
     sms: {
       smsRu: {

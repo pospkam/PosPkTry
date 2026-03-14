@@ -184,7 +184,7 @@ export function FishingTourJsonLd({
   reviewsCount,
   partner,
 }: FishingTourJsonLdProps) {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://kamchatour.ru';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://tourhab.ru';
 
   const jsonLd = {
     '@context': 'https://schema.org',

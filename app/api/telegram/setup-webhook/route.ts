@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
 
   const appUrl = body.appUrl
     || process.env.NEXT_PUBLIC_APP_URL
-    || 'https://pospkam-pospktry-c1f3.twc1.net';
+    || 'https://tourhab.ru';
 
   const webhookUrl = `${appUrl}/api/telegram/webhook`;
   const secret = process.env.TELEGRAM_WEBHOOK_SECRET ?? '';

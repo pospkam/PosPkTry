@@ -61,7 +61,7 @@ const envSchema = z.object({
   SMTP_USER: z.string().optional().default(''),
   SMTP_PASS: z.string().optional().default(''),
   SMTP_FROM: z.string().optional().default(''),
-  EMAIL_FROM: z.string().optional().default('noreply@kamchatour.ru'),
+  EMAIL_FROM: z.string().optional().default('noreply@tourhab.ru'),
 
   // ── SMS ───────────────────────────────────────────────────────────
   SMS_RU_API_KEY: z.string().optional().default(''),

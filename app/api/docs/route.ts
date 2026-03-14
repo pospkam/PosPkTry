@@ -20,7 +20,7 @@ const options: swaggerJsdoc.Options = {
     },
     servers: [
       {
-        url: 'https://pospk-kamhub-c8e0.twc1.net',
+        url: 'https://tourhab.ru',
         description: 'Production сервер',
       },
       {

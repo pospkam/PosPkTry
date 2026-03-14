@@ -3,7 +3,7 @@ import { FISHING_TOURS } from '@/lib/partners/kamchatka-fishing/tours-data';
 import { query } from '@/lib/database';
 import { CATEGORY_SLUGS } from '@/lib/routes/category-meta';
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://kamchatour.ru';
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://tourhab.ru';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();

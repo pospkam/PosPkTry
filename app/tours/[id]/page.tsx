@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       const tourPrice = tour.pricePerDay || tour.price || '';
       const description = (tour.description || tour.short_description || `Забронируйте тур "${tourName}" на Камчатке. Цена: от ${tourPrice} ${tour.currency || '₽'}.`) as string;
       
-      let imageUrl = 'https://kamchatour.ru/images/og-default.jpg';
+      let imageUrl = 'https://tourhab.ru/images/og-default.jpg';
       if (tour.images) {
         try {
           const images = typeof tour.images === 'string' ? JSON.parse(tour.images) : tour.images;
@@ -80,7 +80,7 @@ export default async function TourDetailsPage({ params }: Props) {
         '@type': 'TouristTrip',
         name: tour.title || tour.name || '',
         description: tour.fullDescription || tour.description || '',
-        image: images.length > 0 ? images : ['https://kamchatour.ru/images/og-default.jpg'],
+        image: images.length > 0 ? images : ['https://tourhab.ru/images/og-default.jpg'],
         offers: {
           '@type': 'Offer',
           price: tour.pricePerDay || tour.price || 0,
@@ -90,7 +90,7 @@ export default async function TourDetailsPage({ params }: Props) {
         provider: {
           '@type': 'Organization',
           name: 'Kamchatour',
-          url: 'https://kamchatour.ru'
+          url: 'https://tourhab.ru'
         }
       };
 

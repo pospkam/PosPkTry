@@ -73,7 +73,7 @@ export default function AdminLoginPageClient() {
             </label>
             <input id="admin-email" type="email" required value={formData.email}
               onChange={e => setFormData({ ...formData, email: e.target.value })}
-              className={INPUT} placeholder="admin@kamchatour.ru" autoComplete="email" />
+              className={INPUT} placeholder="admin@tourhab.ru" autoComplete="email" />
           </div>
 
           <div>

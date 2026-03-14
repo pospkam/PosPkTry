@@ -15,7 +15,7 @@ const outfit = Outfit({
   variable: '--font-outfit',
 });
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://kamchatour.ru';
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://tourhab.ru';
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
@@ -118,8 +118,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               "@type": "TouristInformationCenter",
               "name": "Kamchatour Hub",
               "description": "Туристическая платформа Камчатки для туристов, операторов, гидов.",
-              "url": "https://kamchatour.ru",
-              "logo": "https://kamchatour.ru/logo-kamchatka.svg",
+              "url": "https://tourhab.ru",
+              "logo": "https://tourhab.ru/logo-kamchatka.svg",
               "address": {
                 "@type": "PostalAddress",
                 "addressCountry": "RU",

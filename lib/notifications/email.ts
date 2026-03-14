@@ -127,7 +127,7 @@ export class EmailNotificationService {
             
             <div class="footer">
               <p>С уважением,<br>Команда Kamchatour Hub</p>
-              <p>  +7 (XXX) XXX-XX-XX | 📧 info@kamchatour.ru</p>
+              <p>  +7 (XXX) XXX-XX-XX | 📧 info@tourhab.ru</p>
             </div>
           </div>
         </div>

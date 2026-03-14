@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (tour) {
     const title       = `${tour.name} | Kamchatour`;
     const description = tour.description.substring(0, 160) + (tour.description.length > 160 ? '...' : '');
-    const imageUrl    = tour.images[0] || 'https://kamchatour.ru/images/og-default.jpg';
+    const imageUrl    = tour.images[0] || 'https://tourhab.ru/images/og-default.jpg';
 
     return {
       title,
@@ -72,7 +72,7 @@ export default async function FishingTourDetailPage({ params }: Props) {
         '@type':    'TouristTrip',
         name:         tour.name,
         description:  tour.description,
-        image:        tour.images.length > 0 ? tour.images : ['https://kamchatour.ru/images/og-default.jpg'],
+        image:        tour.images.length > 0 ? tour.images : ['https://tourhab.ru/images/og-default.jpg'],
         offers: {
           '@type':       'Offer',
           price:          0,
@@ -82,7 +82,7 @@ export default async function FishingTourDetailPage({ params }: Props) {
         provider: {
           '@type': 'Organization',
           name:    'Kamchatour',
-          url:     'https://kamchatour.ru',
+          url:     'https://tourhab.ru',
         },
       }
     : null;
