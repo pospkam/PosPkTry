@@ -286,37 +286,6 @@ export default function FishingKamClient() {
         </div>
       </section>
 
-      {/* ── Avito ──────────────────────────────────────────────── */}
-      <section className="py-12 px-4 max-w-6xl mx-auto">
-        <div className="ds-card p-6 flex flex-col sm:flex-row items-center gap-5">
-          <div className="w-12 h-12 flex-shrink-0 rounded-xl bg-[#00AAFF]/10 flex items-center justify-center">
-            <span className="text-[#00AAFF] font-black text-lg">А</span>
-          </div>
-          <div className="flex-1 text-center sm:text-left">
-            <p className="font-semibold text-[var(--text-primary)] mb-1">Мы на Авито</p>
-            <p className="text-sm text-[var(--text-secondary)]">Проверенные объявления с отзывами на официальной площадке</p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-2 flex-shrink-0">
-            <a
-              href="https://www.avito.ru/elizovo/ohota_i_rybalka/rybalka_na_reke_kamchatka_ot_professionalov_7631461509"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="ds-btn ds-btn-secondary text-sm px-4 py-2"
-            >
-              Охота и рыбалка
-            </a>
-            <a
-              href="https://www.avito.ru/elizovo/predlozheniya_uslug/rybalka_na_reke_kamchatka_ot_professionalov_7631333356"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="ds-btn ds-btn-secondary text-sm px-4 py-2"
-            >
-              Услуги
-            </a>
-          </div>
-        </div>
-      </section>
-
       {/* ── FAQ ────────────────────────────────────────────────── */}
       <section className="py-16 px-4 bg-[var(--bg-card)]">
         <div className="max-w-3xl mx-auto">
