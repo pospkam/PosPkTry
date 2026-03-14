@@ -3,17 +3,32 @@ import { notFound } from 'next/navigation';
 import RouteDetailClient from './_RouteDetailClient';
 import { CATEGORY_PAGES } from '@/lib/routes/category-meta';
 import CategoryPage from '@/components/routes/CategoryPage';
+import { query } from '@/lib/database';
 
 interface Props {
   params: Promise<{ id: string }>;
 }
 
 async function getRoute(id: string) {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://tourhab.ru';
   try {
-    const res = await fetch(`${base}/api/routes/${id}`, { next: { revalidate: 3600 } });
-    const json = await res.json();
-    return json.success ? json.data : null;
+    const result = await query(
+      `SELECT id, category, title, description, lat, lng, source_url, payload
+       FROM agent_route_knowledge WHERE id = $1`,
+      [id]
+    );
+    if (!result.rows[0]) return null;
+    const r = result.rows[0];
+    const payload = (r.payload as Record<string, unknown>) ?? {};
+    return {
+      id: r.id as string,
+      category: r.category as string,
+      title: r.title as string,
+      description: (r.description as string | null) ?? '',
+      lat: r.lat != null ? parseFloat(r.lat as string) : null,
+      lng: r.lng != null ? parseFloat(r.lng as string) : null,
+      sourceUrl: (r.source_url as string | null) ?? null,
+      priceFrom: payload.price_from != null ? Number(payload.price_from) : null,
+    };
   } catch {
     return null;
   }
@@ -34,7 +49,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         title: catMeta.title,
         description: catMeta.description,
         url: `https://tourhab.ru/routes/${id}`,
-        siteName: 'Kamchatour',
+        siteName: 'TourHab',
         locale: 'ru_RU',
         type: 'website',
       },
@@ -42,6 +57,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   // Individual route metadata
+  if (!/^[0-9a-f-]{36}$/.test(id)) return { title: 'Маршрут не найден' };
+
   const route = await getRoute(id);
   if (!route) return { title: 'Маршрут не найден' };
 
@@ -58,7 +75,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description: desc,
       url: `https://tourhab.ru/routes/${id}`,
-      siteName: 'KamchatourHub',
+      siteName: 'TourHab',
       locale: 'ru_RU',
       type: 'article',
     },

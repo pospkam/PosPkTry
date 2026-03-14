@@ -10,7 +10,7 @@ import dynamic from 'next/dynamic';
 import { Header } from '@/components/layout/Header';
 import LeadModal from '@/components/routes/LeadModal';
 
-const YandexMap = dynamic(() => import('@/components/shared/YandexMap'), { ssr: false });
+const LeafletMap = dynamic(() => import('@/components/shared/LeafletMap'), { ssr: false });
 
 const CATEGORY_LABELS: Record<string, string> = {
   vulkani:              'Вулканы',
@@ -239,7 +239,7 @@ export default function RouteDetailClient({ id }: { id: string }) {
               <h3 className="ds-label mb-2 flex items-center gap-1.5">
                 <MapPin className="w-3.5 h-3.5" /> Расположение
               </h3>
-              <YandexMap
+              <LeafletMap
                 center={[Number(route.lat), Number(route.lng)]}
                 zoom={10}
                 markers={[{

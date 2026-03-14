@@ -72,6 +72,16 @@ const nextConfig = {
     return config;
   },
 
+  async redirects() {
+    return [
+      {
+        source: '/fishingkam',
+        destination: '/operators/kamchatskaya-rybalka',
+        permanent: true,
+      },
+    ];
+  },
+
   async headers() {
     return [
       {

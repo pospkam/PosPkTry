@@ -1339,3 +1339,43 @@ export interface MessageWithSenderRow extends ConversationMessageRow {
   sender_name: string;
   sender_role: string;
 }
+
+// ──────────────────────────────────────────────────────────
+// Operators — Public profiles
+// ──────────────────────────────────────────────────────────
+
+export interface OperatorListRow {
+  id: string;
+  slug: string;
+  name: string;
+  category: string;
+  short_description: string | null;
+  hero_image: string | null;
+  rating: string;
+  review_count: string;
+  is_verified: boolean;
+}
+
+export interface OperatorProfileRow {
+  id: string;
+  slug: string;
+  name: string;
+  category: string;
+  description: string | null;
+  short_description: string | null;
+  hero_image: string | null;
+  gallery: unknown[];
+  services: unknown[];
+  features: unknown[];
+  faq: unknown[];
+  season_info: unknown[];
+  reviews_data: unknown[];
+  contacts: unknown[];
+  location: { lat: number; lng: number; address: string } | null;
+  legal_info: Record<string, unknown> | null;
+  contact: Record<string, unknown> | null;
+  rating: string;
+  review_count: string;
+  is_verified: boolean;
+  created_at: string;
+}
