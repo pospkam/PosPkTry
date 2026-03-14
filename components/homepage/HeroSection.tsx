@@ -1,26 +1,44 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Reveal } from '@/components/homepage/Reveal';
 import { SearchBar } from '@/components/homepage/SearchBar';
 import { MapPin, ShieldCheck, Compass, AlertTriangle } from 'lucide-react';
 
-const TRUST_ITEMS = [
-  { icon: MapPin, value: '260+', label: 'маршрутов' },
-  { icon: ShieldCheck, value: '50+', label: 'операторов' },
-  { icon: Compass, value: '8', label: 'направлений' },
-  { icon: AlertTriangle, value: '24/7', label: 'SOS' },
-] as const;
+interface Stats {
+  totalRoutes: number;
+  verifiedPartners: number;
+}
+
+function fmt(n: number): string {
+  if (n === 0) return '—';
+  return n >= 100 ? `${n}+` : String(n);
+}
 
 export function HeroSection() {
   const { isDark } = useTheme();
   const heroSrc = isDark ? '/images/hero/hero-dark.jpg' : '/images/hero/hero-light.jpg';
 
+  const [stats, setStats] = useState<Stats | null>(null);
+
+  useEffect(() => {
+    fetch('/api/public/stats')
+      .then(r => r.json())
+      .then(j => { if (j.success) setStats(j.data); })
+      .catch(() => {/* silent */});
+  }, []);
+
+  const trustItems = [
+    { icon: MapPin,       value: stats ? fmt(stats.totalRoutes)      : '…', label: 'маршрутов'  },
+    { icon: ShieldCheck,  value: stats ? fmt(stats.verifiedPartners) : '…', label: 'операторов' },
+    { icon: Compass,      value: '15',                                       label: 'направлений' },
+    { icon: AlertTriangle, value: '24/7',                                    label: 'SOS'        },
+  ];
+
   return (
     <section className="relative min-h-[60vh] md:min-h-[70vh] flex items-center justify-center overflow-hidden">
-      {/* Background image */}
       <Image
         src={heroSrc}
         alt="Камчатка"
@@ -30,10 +48,8 @@ export function HeroSection() {
         className="object-cover object-[center_30%]"
       />
 
-      {/* Gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-[var(--kh-bg)]" />
 
-      {/* Content */}
       <div className="relative z-10 w-full max-w-4xl mx-auto px-6 py-20 text-center">
         <Reveal>
           <p className="text-[10px] font-medium uppercase tracking-[3px] text-white/70 mb-4">
@@ -51,7 +67,7 @@ export function HeroSection() {
 
         <Reveal delay={2}>
           <p className="text-sm md:text-base text-white/70 mb-8 max-w-xl mx-auto">
-            Откройте 260+ маршрутов от проверенных операторов
+            Маршруты от проверенных операторов. Бронирование онлайн.
           </p>
         </Reveal>
 
@@ -59,10 +75,10 @@ export function HeroSection() {
           <SearchBar />
         </Reveal>
 
-        {/* Trust strip */}
+        {/* Trust strip — real data */}
         <Reveal delay={4}>
           <div className="mt-10 flex flex-wrap justify-center gap-6 md:gap-10">
-            {TRUST_ITEMS.map(item => {
+            {trustItems.map(item => {
               const Icon = item.icon;
               return (
                 <div key={item.label} className="flex items-center gap-2">

@@ -11,9 +11,6 @@ const RegisterSchema = z.object({
   email: z.string({ required_error: 'Email обязателен' }).email('Неверный формат email'),
   password: z.string({ required_error: 'Пароль обязателен' }).min(6, 'Пароль должен быть минимум 6 символов'),
   name: z.string({ required_error: 'Имя обязательно' }).min(1, 'Имя не может быть пустым'),
-  phone: z.string().optional(),
-  company_name: z.string().optional(),
-  inn: z.string().optional(),
   role: z.enum(VALID_ROLES).optional(),
   roles: z.array(z.enum(VALID_ROLES)).optional(),
 });
@@ -50,39 +47,39 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    const { email, password, name, phone, company_name, inn, role, roles } = parsed.data;
+    const { email, password, name, role, roles } = parsed.data;
 
     // Определяем роль: переданная роль > первая из массива ролей > tourist
     const userRole = role ?? roles?.[0] ?? 'tourist';
     // Все роли для сохранения в preferences (для мультиролей)
     const allRoles = roles?.length ? roles : [userRole];
-    
+
     // Подключаемся к БД
     client = await pool.connect();
-    
+
     // Проверяем существование пользователя
     const existingUser = await client.query(
       'SELECT id FROM users WHERE email = $1',
       [email.toLowerCase()]
     );
-    
+
     if (existingUser.rows.length > 0) {
       return NextResponse.json(
         { success: false, error: 'Пользователь с таким email уже существует' },
         { status: 409 }
       );
     }
-    
+
     // Хешируем пароль единым методом
     const hashedPassword = await hashPassword(password);
-    
+
     // Создаем пользователя
     const preferences = { roles: allRoles };
     const result = await client.query(
-      `INSERT INTO users (email, password_hash, name, role, phone, company_name, inn, preferences, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, NOW(), NOW())
+      `INSERT INTO users (email, password_hash, name, role, preferences, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5::jsonb, NOW(), NOW())
        RETURNING id, email, name, role, preferences, created_at`,
-      [email.toLowerCase(), hashedPassword, name, userRole, phone || null, company_name || null, inn || null, JSON.stringify(preferences)]
+      [email.toLowerCase(), hashedPassword, name, userRole, JSON.stringify(preferences)]
     );
     
     const user = result.rows[0];
@@ -128,10 +125,9 @@ export async function POST(request: NextRequest) {
     return response;
     
   } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : 'Неизвестная ошибка';
     console.error('Registration error:', error);
     return NextResponse.json(
-      { success: false, error: 'Ошибка регистрации: ' + msg },
+      { success: false, error: 'Ошибка регистрации. Попробуйте позже.' },
       { status: 500 }
     );
   } finally {
