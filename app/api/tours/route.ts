@@ -104,11 +104,11 @@ export async function GET(request: NextRequest) {
 
     const whereClause = `WHERE ${whereConditions.join(' AND ')}`;
 
-    // Основной запрос: tours таблица
-    const toursQuery = `
+    // Строим два варианта запроса: новая схема (post-030) и старая (pre-030)
+    const buildSelect = (newSchema: boolean) => `
       SELECT
         t.id,
-        t.title AS name,
+        ${newSchema ? 't.title AS name' : 't.name'},
         t.description,
         t.short_description,
         t.category,
@@ -121,28 +121,44 @@ export async function GET(request: NextRequest) {
         t.requirements,
         t.included,
         t.not_included,
-        t.max_participants,
-        t.min_participants,
+        ${newSchema ? 't.max_participants, t.min_participants' : 't.max_group_size AS max_participants, t.min_group_size AS min_participants'},
         t.rating,
-        t.reviews_count,
+        ${newSchema ? 't.reviews_count' : 't.review_count AS reviews_count'},
         t.is_active,
-        t.images,
+        ${newSchema ? 't.images,' : '\'[]\' AS images,'}
         t.created_at,
         t.updated_at,
         p.name as operator_name
       FROM tours t
       LEFT JOIN partners p ON t.operator_id = p.id
-      ${whereClause}
+      ${newSchema ? whereClause : whereClause.replace(/t\.title\s+ILIKE/g, 't.name ILIKE')}
       ORDER BY t.created_at DESC
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
+
     queryParams.push(limit, offset);
 
-    const result = await query(toursQuery, queryParams);
+    // Пробуем новую схему (migration 030 applied), при ошибке — старую
+    let result;
+    try {
+      result = await query(buildSelect(true), queryParams);
+    } catch (e) {
+      if (e instanceof Error && e.message.includes('does not exist')) {
+        result = await query(buildSelect(false), queryParams);
+      } else {
+        throw e;
+      }
+    }
 
-    // Подсчёт
-    const countQuery = `SELECT COUNT(*)::int AS total FROM tours t ${whereClause}`;
-    const countResult = await query<TotalRow>(countQuery, queryParams.slice(0, -2));
+    // Подсчёт (аналогично)
+    const countBase = (newSchema: boolean) =>
+      `SELECT COUNT(*)::int AS total FROM tours t ${newSchema ? whereClause : whereClause.replace(/t\.title\s+ILIKE/g, 't.name ILIKE')}`;
+    let countResult;
+    try {
+      countResult = await query<TotalRow>(countBase(true), queryParams.slice(0, -2));
+    } catch {
+      countResult = await query<TotalRow>(countBase(false), queryParams.slice(0, -2));
+    }
     const total = parseInt(countResult.rows[0]?.total ?? '0');
 
     const tours: TourResponse[] = result.rows.map(row => {

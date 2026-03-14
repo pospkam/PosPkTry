@@ -20,6 +20,7 @@ import {
 } from '@/lib/bookings/booking.service';
 import type { BookingWithDetails, CreateBookingInput } from '@/types/booking.types';
 import { telegramService } from '@/lib/notifications/telegram';
+import { emailService } from '@/lib/notifications/email-service';
 import { query } from '@/lib/database';
 
 const CreateBookingSchema = z.object({
@@ -163,6 +164,24 @@ export async function POST(request: NextRequest) {
           });
         }
       } catch { /* не прерываем при ошибке TG */ }
+    })();
+
+    // Email-подтверждение туристу (fire-and-forget)
+    ;(async () => {
+      try {
+        if (booking.tourist.email) {
+          await emailService.sendBookingConfirmation({
+            bookingId:       booking.id,
+            touristName:     booking.tourist.name,
+            touristEmail:    booking.tourist.email,
+            tourTitle:       booking.tour.title,
+            date:            booking.date,
+            participants:    booking.participants,
+            totalAmount:     booking.totalAmount,
+            specialRequests: booking.specialRequests,
+          });
+        }
+      } catch { /* не прерываем при ошибке email */ }
     })();
 
     return NextResponse.json({
