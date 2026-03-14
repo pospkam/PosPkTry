@@ -5,23 +5,39 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Reveal } from '@/components/homepage/Reveal';
 
-const CATEGORIES = [
-  { label: 'Вулканы', slug: 'vulkani', img: '/images/activities/volcanoes.jpg' },
-  { label: 'Гейзеры', slug: 'geyzery', img: '/images/activities/volcanoes.jpg' },
-  { label: 'Рыбалка', slug: 'rybalka', img: '/images/activities/fishing.jpg' },
-  { label: 'Термальные', slug: 'termalnye_istochniki', img: '/images/activities/hotsprings.jpg' },
-  { label: 'Медведи', slug: 'medvedi', img: '/images/gallery/road-winter.jpg' },
-  { label: 'Морские', slug: 'morskie_progulki', img: '/images/activities/sea.jpg' },
-  { label: 'Вертолёты', slug: 'vertoletnye_tury', img: '/images/activities/helicopter.jpg' },
-  { label: 'Треккинг', slug: 'trekking', img: '/images/gallery/camp-sunset.jpg' },
-  { label: 'Снегоходы', slug: 'snegohod', img: '/images/activities/snowmobile.jpg' },
-  { label: 'Джипы', slug: 'dzhip', img: '/images/activities/jeep.jpg' },
-  { label: 'Озёра', slug: 'ozera', img: '/images/gallery/bay-sunset.jpg' },
-  { label: 'Горы', slug: 'gory', img: '/images/gallery/stela.jpg' },
-  { label: 'Реки', slug: 'reki', img: '/images/bento/khalaktyr.jpg' },
-  { label: 'Эко-туры', slug: 'eko', img: '/images/gallery/aurora.jpg' },
-  { label: 'Комбо', slug: 'kombo', img: '/images/activities/volcanoes.jpg' },
-] as const;
+type CardSize = 'large' | 'tall' | 'wide' | 'normal';
+
+const CATEGORIES: { label: string; slug: string; img: string; size: CardSize }[] = [
+  { label: 'Вулканы',      slug: 'vulkani',              img: '/images/activities/volcanoes.jpg',  size: 'large' },
+  { label: 'Гейзеры',      slug: 'geyzery',              img: '/images/bento/mutnovsky.jpg',       size: 'normal' },
+  { label: 'Рыбалка',      slug: 'rybalka',              img: '/images/activities/fishing.jpg',    size: 'tall' },
+  { label: 'Термальные',   slug: 'termalnye_istochniki',  img: '/images/activities/hotsprings.jpg', size: 'normal' },
+  { label: 'Медведи',      slug: 'medvedi',              img: '/images/gallery/road-winter.jpg',   size: 'wide' },
+  { label: 'Морские',      slug: 'morskie_progulki',      img: '/images/activities/sea.jpg',        size: 'normal' },
+  { label: 'Вертолёты',    slug: 'vertoletnye_tury',      img: '/images/activities/helicopter.jpg', size: 'normal' },
+  { label: 'Треккинг',     slug: 'trekking',              img: '/images/gallery/camp-sunset.jpg',   size: 'normal' },
+  { label: 'Снегоходы',    slug: 'snegohod',              img: '/images/activities/snowmobile.jpg', size: 'tall' },
+  { label: 'Джипы',        slug: 'dzhip',                 img: '/images/activities/jeep.jpg',       size: 'wide' },
+  { label: 'Озёра',        slug: 'ozera',                 img: '/images/gallery/bay-sunset.jpg',    size: 'normal' },
+  { label: 'Горы',         slug: 'gory',                  img: '/images/gallery/stela.jpg',         size: 'normal' },
+  { label: 'Реки',         slug: 'reki',                  img: '/images/bento/khalaktyr.jpg',       size: 'normal' },
+  { label: 'Эко-туры',     slug: 'eko',                   img: '/images/gallery/aurora.jpg',        size: 'wide' },
+  { label: 'Комбо',        slug: 'kombo',                 img: '/images/gallery/sunset-clouds.jpg', size: 'normal' },
+];
+
+const GRID_CLASSES: Record<CardSize, string> = {
+  large:  'col-span-2 row-span-2',
+  tall:   'row-span-2',
+  wide:   'col-span-2',
+  normal: '',
+};
+
+const TEXT_CLASSES: Record<CardSize, string> = {
+  large:  'text-xl md:text-3xl',
+  tall:   'text-base md:text-lg',
+  wide:   'text-base md:text-xl',
+  normal: 'text-sm md:text-base',
+};
 
 export function CategoryCards() {
   return (
@@ -36,24 +52,37 @@ export function CategoryCards() {
           </p>
         </Reveal>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 md:gap-4">
+        <div
+          className="grid grid-cols-2 md:grid-cols-4 auto-rows-[120px] md:auto-rows-[160px] gap-2 md:gap-3"
+          style={{ gridAutoFlow: 'dense' }}
+        >
           {CATEGORIES.map((cat, i) => (
-            <Reveal key={cat.slug} delay={Math.min(i + 1, 4) as 1 | 2 | 3 | 4}>
+            <Reveal
+              key={cat.slug}
+              delay={Math.min(i + 1, 4) as 1 | 2 | 3 | 4}
+              className={`${GRID_CLASSES[cat.size]} h-full`}
+            >
               <Link
                 href={`/tours?category=${cat.slug}`}
-                className="group relative overflow-hidden rounded-lg aspect-[4/3] block"
+                className="group relative overflow-hidden rounded-lg block h-full"
               >
                 <Image
                   src={cat.img}
                   alt={cat.label}
                   fill
-                  sizes="(max-width: 768px) 50vw, 25vw"
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  sizes={cat.size === 'large' ? '(max-width: 768px) 100vw, 50vw' : '(max-width: 768px) 50vw, 25vw'}
+                  className="object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
                   loading="lazy"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                <div className="absolute bottom-0 left-0 p-3 md:p-4">
-                  <h3 className="font-playfair text-base md:text-lg font-bold text-white">
+
+                <div className={`absolute inset-0 transition-opacity duration-300 ${
+                  cat.size === 'large'
+                    ? 'bg-gradient-to-t from-black/80 via-black/30 to-transparent group-hover:opacity-90'
+                    : 'bg-gradient-to-t from-black/70 via-black/10 to-transparent group-hover:opacity-80'
+                }`} />
+
+                <div className={`absolute bottom-0 left-0 ${cat.size === 'large' ? 'p-4 md:p-6' : 'p-3 md:p-4'}`}>
+                  <h3 className={`font-playfair font-bold text-white leading-tight ${TEXT_CLASSES[cat.size]}`}>
                     {cat.label}
                   </h3>
                 </div>
