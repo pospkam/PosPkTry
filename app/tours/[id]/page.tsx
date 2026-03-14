@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
           if (Array.isArray(images) && images.length > 0) {
             imageUrl = images[0];
           }
-        } catch (e) {
+        } catch {
           // Ignore parse error
         }
       }
@@ -48,8 +48,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         },
       };
     }
-  } catch (error) {
-    console.error('Error generating metadata for tour:', error);
+  } catch {
+    // metadata fallback below
   }
 
   return {
@@ -72,7 +72,7 @@ export default async function TourDetailsPage({ params }: Props) {
       if (tour.images) {
         try {
           images = typeof tour.images === 'string' ? JSON.parse(tour.images) : tour.images;
-        } catch (e) {}
+        } catch {}
       }
 
       tourJsonLd = {
@@ -102,8 +102,8 @@ export default async function TourDetailsPage({ params }: Props) {
         };
       }
     }
-  } catch (error) {
-    console.error('Error generating JSON-LD for tour:', error);
+  } catch {
+    // JSON-LD is optional, continue without it
   }
 
   return (

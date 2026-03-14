@@ -28,6 +28,7 @@ interface TourResponse {
   rating: number;
   reviewCount: number;
   isActive: boolean;
+  images: string[];
   createdAt: Date;
   updatedAt: Date;
   sourceUrl: string | null;
@@ -95,7 +96,7 @@ export async function GET(request: NextRequest) {
 
     if (search) {
       whereConditions.push(
-        `(t.name ILIKE $${paramIndex} OR t.description ILIKE $${paramIndex})`
+        `(t.title ILIKE $${paramIndex} OR t.description ILIKE $${paramIndex})`
       );
       queryParams.push(`%${search}%`);
       paramIndex++;
@@ -107,7 +108,7 @@ export async function GET(request: NextRequest) {
     const toursQuery = `
       SELECT
         t.id,
-        t.name,
+        t.title AS name,
         t.description,
         t.short_description,
         t.category,
@@ -120,11 +121,12 @@ export async function GET(request: NextRequest) {
         t.requirements,
         t.included,
         t.not_included,
-        t.max_group_size,
-        t.min_group_size,
+        t.max_participants,
+        t.min_participants,
         t.rating,
-        t.review_count,
+        t.reviews_count,
         t.is_active,
+        t.images,
         t.created_at,
         t.updated_at,
         p.name as operator_name
@@ -164,17 +166,22 @@ export async function GET(request: NextRequest) {
         requirements: Array.isArray(row.requirements) ? (row.requirements as string[]) : [],
         included,
         notIncluded,
-        maxGroupSize: typeof row.max_group_size === 'number' ? row.max_group_size : 20,
-        minGroupSize: typeof row.min_group_size === 'number' ? row.min_group_size : 1,
+        maxGroupSize: typeof row.max_participants === 'number' ? row.max_participants : 20,
+        minGroupSize: typeof row.min_participants === 'number' ? row.min_participants : 1,
         rating: typeof row.rating === 'string' ? parseFloat(row.rating as string) : (row.rating as number),
-        reviewCount: typeof row.review_count === 'number' ? row.review_count : 0,
+        reviewCount: typeof row.reviews_count === 'number' ? row.reviews_count : 0,
         isActive: row.is_active === true,
+        images: (() => {
+          const dbImages = Array.isArray(row.images) ? row.images as string[]
+            : typeof row.images === 'string' ? (() => { try { return JSON.parse(row.images as string) as string[]; } catch { return []; } })()
+            : [];
+          return dbImages.length > 0 ? dbImages : [CATEGORY_IMAGES[row.category as string] || '/images/activities/volcanoes.jpg'];
+        })(),
         createdAt: new Date(row.created_at as string),
         updatedAt: new Date(row.updated_at as string),
         sourceUrl: null,
         sourceName: row.operator_name as string | null,
         source: 'tour' as const,
-        images: [CATEGORY_IMAGES[row.category as string] || '/images/activities/volcanoes.jpg'],
       };
     });
 
