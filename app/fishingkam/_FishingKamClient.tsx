@@ -63,6 +63,23 @@ const SEASON = [
   { months: 'Декабрь — Март', fish: 'Подлёдная: микижа, хариус, кунжа, голец', color: '#64B5F6', season: 'Зима' },
 ];
 
+const REVIEWS = [
+  {
+    name: 'Степан',
+    date: '26 декабря 2025',
+    text: 'Анатолий профессионал своего дела! Выбирайте и не пожалеете!',
+    source: 'Авито',
+    verified: true,
+  },
+  {
+    name: 'Артём',
+    date: '24 февраля 2026',
+    text: 'Все отлично',
+    source: 'Авито',
+    verified: true,
+  },
+];
+
 const FAQ = [
   {
     q: 'Какое время года лучше для рыбалки?',
@@ -283,6 +300,34 @@ export default function FishingKamClient() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── Reviews ────────────────────────────────────────────── */}
+      <section className="py-16 px-4 max-w-6xl mx-auto">
+        <h2 className="ds-h2 text-center mb-2">Отзывы клиентов</h2>
+        <p className="text-center text-[var(--text-secondary)] mb-8">Реальные отзывы с подтверждённой сделкой</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-2xl mx-auto">
+          {REVIEWS.map((r, i) => (
+            <div key={i} className="ds-card p-5">
+              <div className="flex items-center gap-1 mb-3">
+                {[1,2,3,4,5].map(s => (
+                  <Star key={s} className="w-4 h-4 fill-[var(--warning)] text-[var(--warning)]" />
+                ))}
+              </div>
+              <p className="text-[var(--text-primary)] mb-4 leading-relaxed">«{r.text}»</p>
+              <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-6 h-6 rounded-full bg-[var(--accent)]/20 flex items-center justify-center font-bold text-[var(--accent)] text-[10px]">
+                    {r.name[0]}
+                  </div>
+                  <span className="font-medium text-[var(--text-secondary)]">{r.name}</span>
+                  {r.verified && <span className="text-[var(--success)]">✓ Сделка состоялась</span>}
+                </div>
+                <span>{r.date}</span>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 

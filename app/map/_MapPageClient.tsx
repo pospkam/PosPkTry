@@ -5,7 +5,8 @@ import Logo from '@/components/shared/Logo';
 import Link from 'next/link';
 import { Sun, Moon, User } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
-import YandexMap from '@/components/shared/YandexMap';
+import dynamic from 'next/dynamic';
+const LeafletMap = dynamic(() => import('@/components/shared/LeafletMap'), { ssr: false });
 import BottomNav from '@/components/shared/BottomNav';
 
 type ActivityType = 'all' | 'volcano' | 'nature' | 'geyser' | 'ocean' | 'thermal' | 'wildlife' | 'trekking' | 'heli' | 'winter';
@@ -137,7 +138,7 @@ export default function MapPageClient() {
       {/* Карта */}
       <div className="px-4 pb-4">
         <div className="relative rounded-lg overflow-hidden border border-[var(--border)]">
-          <YandexMap
+          <LeafletMap
             center={[53.0444, 158.6483]}
             zoom={8}
             markers={filteredMarkers}
