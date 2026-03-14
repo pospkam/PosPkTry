@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next';
 import { FISHING_TOURS } from '@/lib/partners/kamchatka-fishing/tours-data';
 import { query } from '@/lib/database';
+import { CATEGORY_SLUGS } from '@/lib/routes/category-meta';
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://kamchatour.ru';
 
@@ -91,6 +92,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
+  // Категорийные страницы маршрутов (SEO)
+  const categoryPages: MetadataRoute.Sitemap = CATEGORY_SLUGS.map(slug => ({
+    url: `${BASE_URL}/routes/${slug}`,
+    lastModified: now,
+    changeFrequency: 'weekly' as const,
+    priority: 0.9,
+  }));
+
   // Динамические страницы туров (рыбалка)
   const fishingTourPages: MetadataRoute.Sitemap = FISHING_TOURS.map((tour) => ({
     url: `${BASE_URL}/tours/fishing/${tour.id}`,
@@ -114,5 +123,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
   } catch { /* sitemap continues without routes if DB unavailable */ }
 
-  return [...staticPages, ...fishingTourPages, ...routePages];
+  return [...staticPages, ...categoryPages, ...fishingTourPages, ...routePages];
 }
