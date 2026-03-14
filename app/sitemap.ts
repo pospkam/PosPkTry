@@ -52,6 +52,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'daily',
       priority: 0.9,
     },
+    {
+      url: `${BASE_URL}/operators`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
     // Legal pages
     {
       url: `${BASE_URL}/legal/privacy`,
@@ -123,5 +129,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
   } catch { /* sitemap continues without routes if DB unavailable */ }
 
-  return [...staticPages, ...categoryPages, ...fishingTourPages, ...routePages];
+  // Динамические страницы операторов
+  let operatorPages: MetadataRoute.Sitemap = [];
+  try {
+    const opResult = await query(
+      `SELECT slug, updated_at FROM partners
+       WHERE is_public = TRUE AND slug IS NOT NULL AND status = 'active'
+       ORDER BY updated_at DESC`
+    );
+    operatorPages = opResult.rows.map((r) => ({
+      url: `${BASE_URL}/operators/${r.slug as string}`,
+      lastModified: r.updated_at ? new Date(r.updated_at as string) : now,
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+    }));
+  } catch { /* sitemap continues without operators if DB unavailable */ }
+
+  return [...staticPages, ...categoryPages, ...fishingTourPages, ...routePages, ...operatorPages];
 }
