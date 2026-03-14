@@ -202,15 +202,6 @@ export default function LeadModal({ open, onClose, routeId, routeTitle, sourceUr
                   </p>
                 )}
 
-                <button
-                  type="submit"
-                  disabled={loading || !name.trim() || !phone.trim() || !pdConsent}
-                  className="ds-btn ds-btn-primary w-full flex items-center justify-center gap-2"
-                >
-                  {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-                  {loading ? 'Отправляем…' : 'Отправить заявку'}
-                </button>
-
                 <label className="flex items-start gap-2 cursor-pointer">
                   <input
                     type="checkbox"
@@ -226,6 +217,15 @@ export default function LeadModal({ open, onClose, routeId, routeTitle, sourceUr
                     (152-ФЗ)
                   </span>
                 </label>
+
+                <button
+                  type="submit"
+                  disabled={loading || !name.trim() || !phone.trim() || !pdConsent}
+                  className="ds-btn ds-btn-primary w-full flex items-center justify-center gap-2"
+                >
+                  {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {loading ? 'Отправляем…' : 'Отправить заявку'}
+                </button>
               </form>
             </>
           )}
