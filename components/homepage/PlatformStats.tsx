@@ -59,10 +59,10 @@ export function PlatformStats() {
   }, []);
 
   const items: StatItem[] = [
-    { icon: MapPin, value: stats?.totalRoutes ?? 260, suffix: '+', label: 'Маршрутов на Камчатке' },
-    { icon: ShieldCheck, value: stats?.verifiedPartners ?? 50, suffix: '+', label: 'Проверенных операторов' },
-    { icon: Compass, value: 8, suffix: '', label: 'Направлений активностей' },
-    { icon: AlertTriangle, value: '24/7', suffix: '', label: 'SOS-система безопасности' },
+    { icon: MapPin,        value: stats?.totalRoutes      ?? 1000, suffix: '+', label: 'Маршрутов на Камчатке'        },
+    { icon: ShieldCheck,   value: stats?.verifiedPartners ?? 18,   suffix: '+', label: 'Операторов на платформе'      },
+    { icon: Compass,       value: 14,                               suffix: '',  label: 'Категорий маршрутов'          },
+    { icon: AlertTriangle, value: '24/7',                           suffix: '',  label: 'SOS-система безопасности'     },
   ];
 
   return (

@@ -33,7 +33,7 @@ export function HeroSection() {
   const trustItems = [
     { icon: MapPin,       value: stats ? fmt(stats.totalRoutes)      : '…', label: 'маршрутов'  },
     { icon: ShieldCheck,  value: stats ? fmt(stats.verifiedPartners) : '…', label: 'операторов' },
-    { icon: Compass,      value: '15',                                       label: 'направлений' },
+    { icon: Compass,      value: '14',                                       label: 'направлений' },
     { icon: AlertTriangle, value: '24/7',                                    label: 'SOS'        },
   ];
 
