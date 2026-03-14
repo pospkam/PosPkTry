@@ -104,7 +104,7 @@ interface RouteDetail {
   offers: Offer[];
 }
 
-function OfferCard({ offer, onLead }: { offer: Offer; onLead: () => void }) {
+function OfferCard({ offer, onBook }: { offer: Offer; onBook: () => void }) {
   const price = offer.effectivePrice ?? offer.priceBase;
   const nextDate = offer.nextDeparture
     ? new Date(offer.nextDeparture).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -191,11 +191,11 @@ function OfferCard({ offer, onLead }: { offer: Offer; onLead: () => void }) {
         )}
         <button
           type="button"
-          onClick={onLead}
+          onClick={onBook}
           className="flex-1 ds-btn ds-btn-primary text-xs flex items-center justify-center gap-1"
         >
-          <Send className="w-3 h-3" />
-          Оставить заявку
+          <Calendar className="w-3 h-3" />
+          Забронировать
         </button>
       </div>
     </div>
@@ -207,6 +207,7 @@ export default function RouteDetailClient({ id }: { id: string }) {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [showLead, setShowLead] = useState(false);
+  const [bookingOffer, setBookingOffer] = useState<Offer | null>(null);
 
   useEffect(() => {
     fetch(`/api/routes/${id}`)
@@ -355,7 +356,7 @@ export default function RouteDetailClient({ id }: { id: string }) {
                   <OfferCard
                     key={offer.tourId}
                     offer={offer}
-                    onLead={() => setShowLead(true)}
+                    onBook={() => setBookingOffer(offer)}
                   />
                 ))}
               </div>
@@ -478,6 +479,18 @@ export default function RouteDetailClient({ id }: { id: string }) {
       routeId={route.id}
       routeTitle={route.title}
     />
+    {bookingOffer && (
+      <BookingModal
+        open={bookingOffer !== null}
+        onClose={() => setBookingOffer(null)}
+        tourId={bookingOffer.tourId}
+        tourName={bookingOffer.tourName}
+        operatorName={bookingOffer.operator.name}
+        priceBase={bookingOffer.priceBase}
+        minGroupSize={bookingOffer.minGroupSize}
+        maxGroupSize={bookingOffer.maxGroupSize}
+      />
+    )}
     </>
   );
 }

@@ -20,6 +20,7 @@ import {
 } from '@/lib/bookings/booking.service';
 import type { BookingWithDetails, CreateBookingInput } from '@/types/booking.types';
 import { telegramService } from '@/lib/notifications/telegram';
+import { query } from '@/lib/database';
 
 const CreateBookingSchema = z.object({
   tourId: z.string({ required_error: 'ID тура обязателен' }).uuid('tourId должен быть валидным UUID'),
@@ -138,19 +139,31 @@ export async function POST(request: NextRequest) {
     const booking = await createBooking(auth.userId, input);
 
     // Telegram-уведомление партнёру (fire-and-forget, не блокируем ответ)
-    const operatorChatId = process.env.TELEGRAM_FISHING_CHAT_ID;
-    if (operatorChatId) {
-      telegramService.sendTourBookingNotification(operatorChatId, {
-        id:              booking.id,
-        tourName:        booking.tour.title,
-        departureDate:   booking.date.toISOString(),
-        participants:    booking.participants,
-        totalAmount:     booking.totalAmount,
-        touristName:     booking.tourist.name,
-        touristEmail:    booking.tourist.email,
-        specialRequests: booking.specialRequests,
-      }).catch(() => { /* не прерываем при ошибке TG */ });
-    }
+    // Динамически получаем telegram_chat_id из partners.contact
+    ;(async () => {
+      try {
+        const partnerRow = await query<{ telegram_chat_id: string }>(
+          `SELECT p.contact->>'telegram_chat_id' AS telegram_chat_id
+           FROM tours t
+           JOIN partners p ON p.id = t.operator_id
+           WHERE t.id = $1`,
+          [tourId]
+        );
+        const chatId = partnerRow.rows[0]?.telegram_chat_id ?? process.env.TELEGRAM_FISHING_CHAT_ID;
+        if (chatId) {
+          await telegramService.sendTourBookingNotification(chatId, {
+            id:              booking.id,
+            tourName:        booking.tour.title,
+            departureDate:   booking.date.toISOString(),
+            participants:    booking.participants,
+            totalAmount:     booking.totalAmount,
+            touristName:     booking.tourist.name,
+            touristEmail:    booking.tourist.email,
+            specialRequests: booking.specialRequests,
+          });
+        }
+      } catch { /* не прерываем при ошибке TG */ }
+    })();
 
     return NextResponse.json({
       success: true,
