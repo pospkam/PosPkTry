@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Phone, MapPin, Fish, Calendar, Home, Users, Star, Shield, ChevronDown } from 'lucide-react';
+import { Phone, MapPin, Fish, Calendar, Home, Users, Star, Shield, ChevronDown, Send } from 'lucide-react';
 
 const GALLERY = [
   '2025-01-27_142444.jpg',
@@ -382,13 +382,13 @@ export default function FishingKamClient() {
             <Phone className="w-6 h-6 text-[var(--accent)] mx-auto mb-3" />
             <p className="font-semibold mb-1">Анатолий</p>
             <a href="tel:+79147822222" className="text-[var(--ocean)] hover:underline">+7 (914) 782-22-22</a>
-            <p className="text-xs text-[var(--text-muted)] mt-1">Пн–Пт, 00:00–10:00 по МСК</p>
+            <p className="text-xs text-[var(--text-muted)] mt-1">Пн-Пт, 00:00-10:00 по МСК</p>
           </div>
           <div className="ds-card p-6">
             <Phone className="w-6 h-6 text-[var(--accent)] mx-auto mb-3" />
             <p className="font-semibold mb-1">Александр</p>
             <a href="tel:+79992997007" className="text-[var(--ocean)] hover:underline">+7 (999) 299-70-07</a>
-            <p className="text-xs text-[var(--text-muted)] mt-1">Пн–Пт, 00:00–10:00 по МСК</p>
+            <p className="text-xs text-[var(--text-muted)] mt-1">Пн-Пт, 00:00-10:00 по МСК</p>
           </div>
           <div className="ds-card p-6">
             <MapPin className="w-6 h-6 text-[var(--accent)] mx-auto mb-3" />
