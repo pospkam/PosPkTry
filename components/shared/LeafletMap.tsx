@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import 'leaflet/dist/leaflet.css';
 
 export interface MapMarker {
@@ -16,6 +16,7 @@ interface LeafletMapProps {
   zoom?: number;
   height?: string;
   className?: string;
+  attribution?: boolean;
 }
 
 const COLOR_HEX: Record<string, string> = {
@@ -41,66 +42,109 @@ export default function LeafletMap({
   zoom = 8,
   height = '400px',
   className = '',
+  attribution = true,
 }: LeafletMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<unknown>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mapRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const layerRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const leafletRef = useRef<any>(null);
 
+  const updateMarkers = useCallback(() => {
+    const map = mapRef.current;
+    const L = leafletRef.current;
+    if (!map || !L) return;
+
+    if (layerRef.current) {
+      layerRef.current.clearLayers();
+    } else {
+      layerRef.current = L.featureGroup().addTo(map);
+    }
+
+    markers.forEach(marker => {
+      const hex = COLOR_HEX[marker.color ?? 'blue'] ?? '#2568B0';
+      const icon = L.divIcon({
+        className: '',
+        html: `<div style="width:10px;height:10px;border-radius:50%;background:${hex};border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.4)"></div>`,
+        iconSize: [10, 10],
+        iconAnchor: [5, 5],
+      });
+
+      const m = L.marker(marker.coords, { icon }).addTo(layerRef.current);
+      if (marker.title) {
+        m.bindPopup(
+          `<strong>${marker.title}</strong>${marker.description ? `<br/><span style="color:#666;font-size:12px">${marker.description}</span>` : ''}`
+        );
+      }
+    });
+
+    if (markers.length > 1) {
+      map.fitBounds(layerRef.current.getBounds().pad(0.1));
+    } else if (markers.length === 1) {
+      map.setView(markers[0].coords, 12);
+    }
+  }, [markers]);
+
+  // Init map once
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
-    // Leaflet must be imported client-side only
     import('leaflet').then(L => {
-      // Fix default marker icon (webpack issue)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      delete (L.Icon.Default.prototype as any)._getIconUrl;
-      L.Icon.Default.mergeOptions({
-        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-      });
+      leafletRef.current = L;
 
-      const map = L.map(containerRef.current!).setView(center, zoom);
+      const map = L.map(containerRef.current!, {
+        attributionControl: attribution,
+      }).setView(center, zoom);
       mapRef.current = map;
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        attribution: attribution ? '&copy; OpenStreetMap' : '',
         maxZoom: 19,
       }).addTo(map);
 
+      // Draw initial markers if any
       if (markers.length > 0) {
-        const group = L.featureGroup();
-
+        layerRef.current = L.featureGroup().addTo(map);
         markers.forEach(marker => {
           const hex = COLOR_HEX[marker.color ?? 'blue'] ?? '#2568B0';
-          const svgIcon = L.divIcon({
+          const icon = L.divIcon({
             className: '',
-            html: `<div style="width:12px;height:12px;border-radius:50%;background:${hex};border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.4)"></div>`,
-            iconSize: [12, 12],
-            iconAnchor: [6, 6],
+            html: `<div style="width:10px;height:10px;border-radius:50%;background:${hex};border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.4)"></div>`,
+            iconSize: [10, 10],
+            iconAnchor: [5, 5],
           });
-
-          const m = L.marker(marker.coords, { icon: svgIcon }).addTo(map);
+          const m = L.marker(marker.coords, { icon }).addTo(layerRef.current);
           if (marker.title) {
-            m.bindPopup(`<strong>${marker.title}</strong>${marker.description ? `<br/><span style="color:#666;font-size:12px">${marker.description}</span>` : ''}`);
+            m.bindPopup(
+              `<strong>${marker.title}</strong>${marker.description ? `<br/><span style="color:#666;font-size:12px">${marker.description}</span>` : ''}`
+            );
           }
-          group.addLayer(m);
         });
-
         if (markers.length > 1) {
-          map.fitBounds(group.getBounds().pad(0.1));
+          map.fitBounds(layerRef.current.getBounds().pad(0.1));
         }
       }
     });
 
     return () => {
       if (mapRef.current) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (mapRef.current as any).remove();
+        mapRef.current.remove();
         mapRef.current = null;
+        layerRef.current = null;
+        leafletRef.current = null;
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Update markers when they change (after initial load)
+  useEffect(() => {
+    if (mapRef.current && leafletRef.current) {
+      updateMarkers();
+    }
+  }, [updateMarkers]);
 
   return (
     <div
