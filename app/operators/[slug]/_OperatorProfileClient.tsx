@@ -44,6 +44,27 @@ interface OperatorProfile {
   isVerified: boolean;
 }
 
+interface LiveReview {
+  id: string;
+  rating: number;
+  comment: string;
+  isVerified: boolean;
+  createdAt: string;
+}
+
+function StarRow({ rating }: { rating: number }) {
+  return (
+    <div className="flex gap-0.5">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <Star
+          key={i}
+          className={`w-3.5 h-3.5 ${i < rating ? 'text-[var(--warning)] fill-[var(--warning)]' : 'text-[var(--border)]'}`}
+        />
+      ))}
+    </div>
+  );
+}
+
 export default function OperatorProfileClient({ slug }: { slug: string }) {
   const [op, setOp] = useState<OperatorProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -54,6 +75,7 @@ export default function OperatorProfileClient({ slug }: { slug: string }) {
   const [consent, setConsent] = useState(false);
   const [sent, setSent] = useState(false);
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
+  const [liveReviews, setLiveReviews] = useState<LiveReview[]>([]);
 
   useEffect(() => {
     const load = async () => {
@@ -62,8 +84,23 @@ export default function OperatorProfileClient({ slug }: { slug: string }) {
         if (res.status === 404) { setNotFound(true); return; }
         if (!res.ok) return;
         const json = await res.json();
-        if (json.success) setOp(json.data);
-        else setNotFound(true);
+        if (json.success) {
+          setOp(json.data);
+          // Fetch live platform reviews for this operator
+          try {
+            const rRes = await fetch(`/api/reviews?operatorId=${json.data.id}&limit=20`);
+            if (rRes.ok) {
+              const rJson = await rRes.json();
+              if (rJson.success && Array.isArray(rJson.data)) {
+                setLiveReviews(rJson.data as LiveReview[]);
+              }
+            }
+          } catch {
+            // silent — live reviews are optional
+          }
+        } else {
+          setNotFound(true);
+        }
       } catch {
         // silent
       } finally {
@@ -275,31 +312,82 @@ export default function OperatorProfileClient({ slug }: { slug: string }) {
         )}
 
         {/* Reviews */}
-        {op.reviewsData.length > 0 && (
+        {(liveReviews.length > 0 || op.reviewsData.length > 0) && (
           <section className="py-14 px-4">
             <div className="max-w-4xl mx-auto">
               <h2 className="ds-h2 text-center mb-10" style={{ fontFamily: 'var(--font-playfair)' }}>Отзывы</h2>
-              <div className="space-y-4">
-                {op.reviewsData.map((r, i) => (
-                  <div key={i} className="ds-card p-5">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 rounded-full bg-[var(--accent)] flex items-center justify-center text-white font-bold text-sm">
-                        {r.name.charAt(0)}
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-semibold text-sm">{r.name}</p>
-                        <p className="text-xs text-[var(--text-muted)]">{r.date} · {r.source}</p>
-                      </div>
-                      {r.verified && (
-                        <span className="text-xs text-[var(--success)] flex items-center gap-1">
-                          <Shield className="w-3 h-3" /> Подтверждён
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm text-[var(--text-secondary)]">{r.text}</p>
+
+              {/* Live platform reviews */}
+              {liveReviews.length > 0 && (
+                <div className="mb-8">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Shield className="w-4 h-4 text-[var(--success)]" />
+                    <span className="text-sm font-medium text-[var(--text-secondary)]">
+                      Отзывы туристов с платформы TourHab ({liveReviews.length})
+                    </span>
                   </div>
-                ))}
-              </div>
+                  <div className="space-y-4">
+                    {liveReviews.map((r) => (
+                      <div key={r.id} className="ds-card p-5">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 rounded-full bg-[var(--ocean)] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                            Т
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="font-semibold text-sm">Турист TourHab</p>
+                              {r.isVerified && (
+                                <span className="text-xs text-[var(--success)] flex items-center gap-0.5">
+                                  <Shield className="w-3 h-3" /> Подтверждён
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <StarRow rating={r.rating} />
+                              <span className="text-xs text-[var(--text-muted)]">
+                                {new Date(r.createdAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        {r.comment && (
+                          <p className="text-sm text-[var(--text-secondary)]">{r.comment}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Static partner reviews */}
+              {op.reviewsData.length > 0 && (
+                <div>
+                  {liveReviews.length > 0 && (
+                    <p className="text-sm text-[var(--text-muted)] mb-4">Отзывы с других платформ</p>
+                  )}
+                  <div className="space-y-4">
+                    {op.reviewsData.map((r, i) => (
+                      <div key={i} className="ds-card p-5">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 rounded-full bg-[var(--accent)] flex items-center justify-center text-white font-bold text-sm">
+                            {r.name.charAt(0)}
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-sm">{r.name}</p>
+                            <p className="text-xs text-[var(--text-muted)]">{r.date} · {r.source}</p>
+                          </div>
+                          {r.verified && (
+                            <span className="text-xs text-[var(--success)] flex items-center gap-1">
+                              <Shield className="w-3 h-3" /> Подтверждён
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-[var(--text-secondary)]">{r.text}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </section>
         )}
