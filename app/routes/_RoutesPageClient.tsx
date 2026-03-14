@@ -7,7 +7,7 @@ import RouteCard, { type RouteItem } from '@/components/routes/RouteCard';
 import dynamic from 'next/dynamic';
 import { Header } from '@/components/layout/Header';
 
-const YandexMap = dynamic(() => import('@/components/shared/YandexMap'), { ssr: false });
+const LeafletMap = dynamic(() => import('@/components/shared/LeafletMap'), { ssr: false });
 
 const CATEGORIES = [
   { value: '',                     label: 'Все' },
@@ -337,7 +337,7 @@ export default function RoutesPageClient() {
                 <div className="animate-spin w-10 h-10 rounded-full border-4 border-[var(--accent)] border-t-transparent" />
               </div>
             ) : (
-              <YandexMap
+              <LeafletMap
                 markers={mapMarkers}
                 center={[53.0, 158.7]}
                 zoom={6}
