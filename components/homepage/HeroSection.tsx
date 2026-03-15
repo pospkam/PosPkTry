@@ -2,8 +2,7 @@
 
 import Image from 'next/image';
 
-// TODO: заменить на '/images/hero/bears-kurilskoye.jpg' когда файл будет сохранён
-const HERO_SRC = '/images/bento/laguna.jpg';
+const HERO_SRC = '/images/hero/bears-kurilskoye.jpg';
 
 export function HeroSection() {
   return (
