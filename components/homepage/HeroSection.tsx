@@ -40,7 +40,7 @@ export function HeroSection() {
 
         <button
           type="button"
-          onClick={() => document.getElementById('categories')?.scrollIntoView({ behavior: 'smooth' })}
+          onClick={() => document.getElementById('planner')?.scrollIntoView({ behavior: 'smooth' })}
           className="inline-flex items-center gap-3 bg-white text-[var(--text-primary)] font-semibold text-sm px-6 py-3.5 rounded-full hover:bg-white/90 transition-all"
         >
           Спланировать поездку
