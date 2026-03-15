@@ -11,10 +11,10 @@ type CardSize = 'large' | 'tall' | 'wide' | 'normal';
 const CATEGORIES: { label: string; slug: string; img: string; size: CardSize }[] = [
   { label: 'Вулканы',    slug: 'vulkani',              img: '/images/activities/volcanoes.jpg',  size: 'large'  },
   { label: 'Гейзеры',    slug: 'geyzery',              img: '/images/bento/mutnovsky.jpg',       size: 'normal' },
-  { label: 'Рыбалка',    slug: 'rybalka',              img: '/images/activities/fishing.jpg',    size: 'tall'   },
+  { label: 'Рыбалка',    slug: 'rybalka',              img: '/images/fishingkam/2025-01-27_142814.jpg', size: 'tall'   },
   { label: 'Термальные', slug: 'termalnye_istochniki',  img: '/images/activities/hotsprings.jpg', size: 'normal' },
   { label: 'Медведи',    slug: 'medvedi',              img: '/images/gallery/road-winter.jpg',   size: 'wide'   },
-  { label: 'Морские',    slug: 'morskie_progulki',      img: '/images/activities/sea.jpg',        size: 'normal' },
+  { label: 'Морские',    slug: 'morskie_progulki',      img: '/images/bento/cape.jpg',            size: 'normal' },
   { label: 'Вертолёты',  slug: 'vertoletnye_tury',      img: '/images/activities/helicopter.jpg', size: 'normal' },
   { label: 'Треккинг',   slug: 'trekking',              img: '/images/gallery/camp-sunset.jpg',   size: 'normal' },
   { label: 'Снегоходы',  slug: 'snegohod',              img: '/images/activities/snowmobile.jpg', size: 'tall'   },

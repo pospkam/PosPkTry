@@ -18,7 +18,7 @@ function fmt(n: number): string {
 
 export function HeroSection() {
   const { isDark } = useTheme();
-  const heroSrc = isDark ? '/images/hero/hero-dark.jpg' : '/images/hero/hero-light.jpg';
+  const heroSrc = isDark ? '/images/hero/hero-dark.jpg' : '/images/bento/laguna.jpg';
 
   const [stats, setStats] = useState<Stats | null>(null);
 
