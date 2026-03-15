@@ -2,9 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { X, Calendar, Users, MessageSquare, CheckCircle, Loader2, LogIn, AlertCircle } from 'lucide-react';
+import { X, Calendar, Users, MessageSquare, CheckCircle, Loader2, LogIn, AlertCircle, Phone } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { CloudPaymentsWidget } from '@/components/payments/CloudPaymentsWidget';
 
 interface Departure {
   id: string;
@@ -27,17 +26,7 @@ interface BookingModalProps {
   maxGroupSize: number | null;
 }
 
-type Step = 'form' | 'payment' | 'success';
-
-interface PaymentData {
-  paymentId: string;
-  amount: number;
-  currency: string;
-  description: string;
-  invoiceId: string;
-  accountId: string;
-  email: string;
-}
+type Step = 'form' | 'success';
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -60,12 +49,12 @@ export default function BookingModal({
   const [loadingDepartures, setLoadingDepartures] = useState(false);
 
   const [selectedDepartureId, setSelectedDepartureId] = useState('');
+  const [desiredDate, setDesiredDate] = useState('');
   const [participants, setParticipants] = useState(minGroupSize ?? 1);
   const [specialRequests, setSpecialRequests] = useState('');
 
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
-  const [paymentData, setPaymentData] = useState<PaymentData | null>(null);
   const [bookingId, setBookingId] = useState('');
 
   const firstFieldRef = useRef<HTMLSelectElement>(null);
@@ -75,10 +64,10 @@ export default function BookingModal({
     if (open) {
       setStep('form');
       setSelectedDepartureId('');
+      setDesiredDate('');
       setParticipants(minGroupSize ?? 1);
       setSpecialRequests('');
       setFormError('');
-      setPaymentData(null);
       setBookingId('');
       if (user) setTimeout(() => firstFieldRef.current?.focus(), 60);
     }
@@ -110,6 +99,7 @@ export default function BookingModal({
 
   if (!open) return null;
 
+  const hasDepartures = departures.length > 0;
   const selectedDeparture = departures.find(d => d.id === selectedDepartureId);
   const effectivePrice = selectedDeparture?.price ?? priceBase;
   const totalAmount = effectivePrice != null ? effectivePrice * participants : null;
@@ -118,53 +108,46 @@ export default function BookingModal({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!selectedDepartureId) { setFormError('Выберите дату заезда'); return; }
+    if (hasDepartures && !selectedDepartureId) {
+      setFormError('Выберите дату заезда');
+      return;
+    }
+    if (!hasDepartures && !desiredDate.trim()) {
+      setFormError('Укажите желаемую дату');
+      return;
+    }
     setFormError('');
     setSubmitting(true);
 
     try {
-      // 1. Create booking
+      const body: Record<string, unknown> = {
+        tourId,
+        participants,
+        specialRequests: specialRequests.trim() || undefined,
+      };
+      if (hasDepartures && selectedDepartureId) {
+        body.departureId = selectedDepartureId;
+      } else {
+        body.date = desiredDate;
+        body.specialRequests = [
+          desiredDate ? `Желаемая дата: ${desiredDate}` : '',
+          specialRequests.trim(),
+        ].filter(Boolean).join('. ');
+      }
+
       const bookingRes = await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tourId,
-          departureId: selectedDepartureId,
-          participants,
-          specialRequests: specialRequests.trim() || undefined,
-        }),
+        body: JSON.stringify(body),
       });
       const bookingJson = await bookingRes.json();
       if (!bookingJson.success) {
-        setFormError(bookingJson.error ?? 'Ошибка создания бронирования');
+        setFormError(bookingJson.error ?? 'Ошибка создания заявки');
         return;
       }
 
-      const newBookingId: string = bookingJson.data.id;
-      const amount: number = parseFloat(bookingJson.data.totalAmount ?? bookingJson.data.total_price ?? totalAmount ?? 0);
-      setBookingId(newBookingId);
-
-      // 2. Create payment record
-      const paymentRes = await fetch('/api/payments/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          bookingId: newBookingId,
-          bookingType: 'tour',
-          amount,
-          currency: 'RUB',
-          description: `${tourName} · ${formatDate(selectedDeparture?.start_date ?? '')} · ${participants} чел.`,
-        }),
-      });
-      const paymentJson = await paymentRes.json();
-      if (!paymentJson.success) {
-        // Booking created, but payment init failed — still go to payment step
-        setFormError(paymentJson.error ?? 'Ошибка инициализации оплаты');
-        return;
-      }
-
-      setPaymentData(paymentJson.data);
-      setStep('payment');
+      setBookingId(bookingJson.data.id);
+      setStep('success');
     } catch {
       setFormError('Нет связи. Проверьте интернет и попробуйте ещё раз.');
     } finally {
@@ -199,7 +182,7 @@ export default function BookingModal({
           <div className="mb-5 pr-6">
             <h2 id="booking-modal-title" className="text-lg font-semibold text-[var(--text-primary)]"
                 style={{ fontFamily: 'var(--font-playfair)' }}>
-              {step === 'success' ? 'Бронирование оформлено' : 'Забронировать тур'}
+              {step === 'success' ? 'Заявка принята' : 'Оставить заявку'}
             </h2>
             <p className="text-xs text-[var(--text-muted)] mt-0.5 line-clamp-1">{tourName}</p>
             <p className="text-xs text-[var(--text-secondary)]">{operatorName}</p>
@@ -213,14 +196,14 @@ export default function BookingModal({
                 <div className="py-6 text-center space-y-4">
                   <LogIn className="w-10 h-10 mx-auto text-[var(--text-muted)]" />
                   <p className="text-sm text-[var(--text-secondary)]">
-                    Для бронирования необходимо войти в аккаунт.
+                    Для оформления заявки необходимо войти в аккаунт.
                   </p>
                   <Link
                     href={`/auth/login?next=${encodeURIComponent(typeof window !== 'undefined' ? window.location.pathname : '')}`}
                     className="ds-btn ds-btn-primary w-full flex items-center justify-center gap-1.5"
                   >
                     <LogIn className="w-3.5 h-3.5" />
-                    Войти для бронирования
+                    Войти для оформления
                   </Link>
                 </div>
               )}
@@ -246,12 +229,7 @@ export default function BookingModal({
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
                         <span className="text-sm">Загрузка дат…</span>
                       </div>
-                    ) : departures.length === 0 ? (
-                      <div className="flex items-center gap-2 text-xs text-[var(--warning)] bg-[var(--warning)]/10 px-3 py-2 rounded">
-                        <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
-                        Доступных дат нет. Оставьте заявку на удобную дату в комментарии.
-                      </div>
-                    ) : (
+                    ) : hasDepartures ? (
                       <select
                         ref={firstFieldRef}
                         id="bm-departure"
@@ -269,6 +247,21 @@ export default function BookingModal({
                           </option>
                         ))}
                       </select>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-xs text-[var(--warning)] bg-[var(--warning)]/10 px-3 py-2 rounded">
+                          <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                          Готовых дат нет — укажите удобный период, оператор подберёт дату.
+                        </div>
+                        <input
+                          type="text"
+                          className="ds-input w-full"
+                          placeholder="Например: июль 2026, 2 недели"
+                          value={desiredDate}
+                          onChange={e => setDesiredDate(e.target.value)}
+                          maxLength={100}
+                        />
+                      </div>
                     )}
                   </div>
 
@@ -297,13 +290,13 @@ export default function BookingModal({
                   <div>
                     <label htmlFor="bm-requests" className="ds-label mb-1 flex items-center gap-1.5">
                       <MessageSquare className="w-3.5 h-3.5" />
-                      Особые пожелания
+                      Комментарий
                     </label>
                     <textarea
                       id="bm-requests"
                       className="ds-input w-full resize-none"
                       rows={3}
-                      placeholder="Снаряжение, аллергии, специальные требования…"
+                      placeholder="Снаряжение, аллергии, вопросы…"
                       value={specialRequests}
                       onChange={e => setSpecialRequests(e.target.value)}
                       maxLength={1000}
@@ -313,12 +306,18 @@ export default function BookingModal({
                   {/* Price summary */}
                   {totalAmount != null && totalAmount > 0 && (
                     <div className="flex items-center justify-between bg-[var(--bg-hover)] px-3 py-2 rounded text-sm">
-                      <span className="text-[var(--text-secondary)]">Итого</span>
+                      <span className="text-[var(--text-secondary)]">Ориентировочная стоимость</span>
                       <span className="font-bold text-[var(--accent)]">
                         {totalAmount.toLocaleString('ru-RU')} ₽
                       </span>
                     </div>
                   )}
+
+                  {/* Info: no online payment */}
+                  <div className="flex items-start gap-2 text-xs text-[var(--text-muted)] bg-[var(--bg-hover)] px-3 py-2 rounded">
+                    <Phone className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                    <span>Оплата при подтверждении — оператор свяжется с вами в течение 24 часов.</span>
+                  </div>
 
                   {formError && (
                     <p className="text-xs text-[var(--danger)] bg-[var(--danger)]/10 px-3 py-2 rounded flex items-center gap-1.5">
@@ -329,68 +328,15 @@ export default function BookingModal({
 
                   <button
                     type="submit"
-                    disabled={submitting || (departures.length > 0 && !selectedDepartureId)}
+                    disabled={submitting}
                     className="ds-btn ds-btn-primary w-full flex items-center justify-center gap-1.5"
                   >
                     {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                    {submitting ? 'Оформляем…' : 'Перейти к оплате'}
+                    {submitting ? 'Отправляем…' : 'Отправить заявку'}
                   </button>
                 </form>
               )}
             </>
-          )}
-
-          {/* ── Step: payment ── */}
-          {step === 'payment' && paymentData && (
-            <div className="space-y-4">
-              <div className="bg-[var(--bg-hover)] rounded-lg p-3 space-y-1 text-sm">
-                {selectedDeparture && (
-                  <div className="flex justify-between">
-                    <span className="text-[var(--text-muted)]">Дата заезда</span>
-                    <span className="text-[var(--text-primary)]">{formatDate(selectedDeparture.start_date)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <span className="text-[var(--text-muted)]">Участники</span>
-                  <span className="text-[var(--text-primary)]">{participants} чел.</span>
-                </div>
-                <div className="flex justify-between font-semibold">
-                  <span className="text-[var(--text-secondary)]">К оплате</span>
-                  <span className="text-[var(--accent)]">{paymentData.amount.toLocaleString('ru-RU')} ₽</span>
-                </div>
-              </div>
-
-              <p className="text-xs text-[var(--text-muted)]">
-                После нажатия откроется защищённая форма оплаты CloudPayments.
-              </p>
-
-              {formError && (
-                <p className="text-xs text-[var(--danger)] bg-[var(--danger)]/10 px-3 py-2 rounded">
-                  {formError}
-                </p>
-              )}
-
-              <CloudPaymentsWidget
-                amount={paymentData.amount}
-                currency={paymentData.currency}
-                description={paymentData.description}
-                invoiceId={paymentData.invoiceId}
-                accountId={paymentData.accountId}
-                email={paymentData.email}
-                onSuccess={() => setStep('success')}
-                onFail={reason => setFormError(`Ошибка оплаты: ${reason}`)}
-                buttonText="Оплатить"
-                buttonClassName="ds-btn ds-btn-primary w-full flex items-center justify-center gap-1.5 py-3"
-              />
-
-              <button
-                type="button"
-                onClick={() => setStep('form')}
-                className="ds-btn ds-btn-secondary w-full text-sm"
-              >
-                Назад
-              </button>
-            </div>
           )}
 
           {/* ── Step: success ── */}
@@ -398,19 +344,19 @@ export default function BookingModal({
             <div className="py-4 text-center space-y-3">
               <CheckCircle className="w-12 h-12 mx-auto text-[var(--success)]" />
               <h3 className="text-base font-semibold text-[var(--text-primary)]">
-                Оплата прошла успешно!
+                Заявка отправлена!
               </h3>
               <p className="text-sm text-[var(--text-secondary)]">
-                Бронирование подтверждено. Оператор свяжется с вами для уточнения деталей.
+                Оператор получил уведомление и свяжется с вами в течение 24 часов для подтверждения и оплаты.
               </p>
               {bookingId && (
                 <p className="text-xs text-[var(--text-muted)]">
-                  Номер бронирования: <span className="font-mono">{bookingId.substring(0, 8).toUpperCase()}</span>
+                  Номер заявки: <span className="font-mono">{bookingId.substring(0, 8).toUpperCase()}</span>
                 </p>
               )}
               <div className="flex gap-2 pt-1">
-                <Link href="/bookings" className="ds-btn ds-btn-secondary flex-1 text-sm text-center">
-                  Мои бронирования
+                <Link href="/hub/tourist/bookings" className="ds-btn ds-btn-secondary flex-1 text-sm text-center">
+                  Мои заявки
                 </Link>
                 <button type="button" onClick={onClose} className="ds-btn ds-btn-primary flex-1 text-sm">
                   Закрыть
