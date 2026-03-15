@@ -11,6 +11,7 @@ import {
   Fish, Home, Users, Mountain, Compass, Car, Snowflake, Bird, Waves, Trees,
 } from 'lucide-react';
 import { useSourceTracker } from '@/hooks/useSourceTracker';
+import { MarkerType } from '@/components/shared/LeafletMap';
 
 const LeafletMap = dynamic(() => import('@/components/shared/LeafletMap'), { ssr: false });
 
@@ -490,12 +491,13 @@ export default function OperatorProfileClient({ slug }: { slug: string }) {
 
             {op.location && (() => {
               const li = op.legalInfo as Record<string, string | undefined> | null;
-              const markers: Array<{ coords: [number, number]; title: string; description?: string; color?: string }> = [
+              const markers: Array<{ coords: [number, number]; title: string; description?: string; color?: string; type?: MarkerType }> = [
                 {
                   coords: [op.location.lat, op.location.lng],
                   title: op.name,
                   description: op.location.address,
                   color: 'blue',
+                  type: MarkerType.POI,
                 },
               ];
               // Второй маркер — офис (если адрес отличается от участка)
@@ -505,6 +507,7 @@ export default function OperatorProfileClient({ slug }: { slug: string }) {
                   title: 'Офис',
                   description: op.location.officeAddress,
                   color: 'orange',
+                  type: MarkerType.POI,
                 });
               }
               return (

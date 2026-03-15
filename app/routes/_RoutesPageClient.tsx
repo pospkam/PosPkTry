@@ -6,32 +6,52 @@ import { Search, Map, LayoutGrid, SlidersHorizontal, X, ChevronLeft, ChevronRigh
 import RouteCard, { type RouteItem } from '@/components/routes/RouteCard';
 import dynamic from 'next/dynamic';
 import { Header } from '@/components/layout/Header';
+import { MarkerType } from '@/components/shared/LeafletMap';
 
 const LeafletMap = dynamic(() => import('@/components/shared/LeafletMap'), { ssr: false });
 
-const CATEGORIES = [
-  { value: '',                     label: 'Все' },
-  { value: 'vulkani',              label: 'Вулканы' },
-  { value: 'termalnye_istochniki', label: 'Термальные' },
-  { value: 'eco',                  label: 'Экомаршруты' },
-  { value: 'morskie_progulki',     label: 'Море' },
-  { value: 'trekking',             label: 'Трекинг' },
-  { value: 'rybalka',              label: 'Рыбалка' },
-  { value: 'mountains',            label: 'Горы' },
-  { value: 'lakes',                label: 'Озёра' },
-  { value: 'geyzery',              label: 'Гейзеры' },
-  { value: 'rivers',               label: 'Реки' },
-  { value: 'medvedi',              label: 'Медведи' },
-  { value: 'snegohod',             label: 'Снегоходы' },
-  { value: 'vertoletnye_tury',     label: 'Вертолёты' },
-  { value: 'dzhip',                label: 'Джип-туры' },
+// ЧТО ДЕЛАТЬ — фильтры каталога по activity_type
+const ACTIVITIES = [
+  { value: '',              label: 'Все активности' },
+  { value: 'trekking',     label: 'Треккинг' },
+  { value: 'fishing',      label: 'Рыбалка' },
+  { value: 'bear_watching',label: 'Медведи' },
+  { value: 'helicopter',   label: 'Вертолёт' },
+  { value: 'thermal',      label: 'Термальные' },
+  { value: 'boat_trip',    label: 'Море' },
+  { value: 'snowmobile',   label: 'Снегоходы' },
+  { value: 'jeep',         label: 'Джип' },
+  { value: 'eco',          label: 'Экотуризм' },
+  { value: 'diving',       label: 'Дайвинг' },
+  { value: 'surf',         label: 'Сёрфинг' },
+  { value: 'cultural',     label: 'Культура' },
+  { value: 'photo',        label: 'Фототур' },
 ];
+
+// ГДЕ — цвета маркеров по location_type
+const LOCATION_COLORS: Record<string, string> = {
+  volcano:    'orange',
+  geyser:     'green',
+  hot_spring: 'red',
+  lake:       'lightBlue',
+  mountain:   'darkBlue',
+  river:      'teal',
+  bay:        'darkCyan',
+  waterfall:  'blue',
+  cape:       'gray',
+  island:     'purple',
+  rock:       'brown',
+  forest:     'darkGreen',
+  beach:      'orange',
+  viewpoint:  'cyan',
+  other:      'gray',
+};
 
 const SORT_OPTIONS = [
   { value: 'recommended', label: 'Рекомендуемые' },
   { value: 'title',       label: 'А — Я' },
-  { value: 'price_asc',   label: 'Цена: сначала дешёвые' },
-  { value: 'price_desc',  label: 'Цена: сначала дорогие' },
+  { value: 'price_asc',   label: 'Цена: дешёвые' },
+  { value: 'price_desc',  label: 'Цена: дорогие' },
   { value: 'recent',      label: 'Новые' },
 ];
 
@@ -43,11 +63,11 @@ const DIFFICULTY_OPTIONS = [
 ];
 
 const PRICE_RANGES = [
-  { value: '',              label: 'Любая цена',       min: undefined, max: undefined },
-  { value: '0-5000',        label: 'до 5 000 ₽',       min: 0,         max: 5000 },
-  { value: '5000-25000',    label: '5 000 — 25 000 ₽', min: 5000,      max: 25000 },
-  { value: '25000-100000',  label: '25 000 — 100 000 ₽', min: 25000,   max: 100000 },
-  { value: '100000',        label: 'от 100 000 ₽',     min: 100000,    max: undefined },
+  { value: '',             label: 'Любая цена',         min: undefined, max: undefined },
+  { value: '0-5000',       label: 'до 5 000 ₽',         min: 0,         max: 5000 },
+  { value: '5000-25000',   label: '5 000 — 25 000 ₽',   min: 5000,      max: 25000 },
+  { value: '25000-100000', label: '25 000 — 100 000 ₽', min: 25000,     max: 100000 },
+  { value: '100000',       label: 'от 100 000 ₽',       min: 100000,    max: undefined },
 ];
 
 const LIMIT = 24;
@@ -61,7 +81,7 @@ interface RoutesResponse {
 interface MapRoute {
   id: string;
   title: string;
-  category: string;
+  locationType: string | null;
   lat: number;
   lng: number;
 }
@@ -75,7 +95,7 @@ export default function RoutesPageClient() {
 
   const [view, setView] = useState<'grid' | 'map'>('grid');
   const [query, setQuery] = useState(searchParams.get('q') ?? '');
-  const [category, setCategory] = useState(searchParams.get('category') ?? '');
+  const [activityType, setActivityType] = useState(searchParams.get('activity_type') ?? '');
   const [sort, setSort] = useState<SortValue>('recommended');
   const [difficulty, setDifficulty] = useState<DifficultyValue>('');
   const [priceRange, setPriceRange] = useState('');
@@ -100,14 +120,14 @@ export default function RoutesPageClient() {
 
   // ── Fetch grid data ──────────────────────────────────────────
   const fetchRoutes = useCallback(async (
-    q: string, cat: string, pg: number, srt: string,
+    q: string, act: string, pg: number, srt: string,
     diff: string, price_min?: number, price_max?: number,
   ) => {
     setLoading(true);
     const params = new URLSearchParams({ page: String(pg), limit: String(LIMIT), sort: srt });
-    if (q)          params.set('q', q);
-    if (cat)        params.set('category', cat);
-    if (diff)       params.set('difficulty', diff);
+    if (q)             params.set('q', q);
+    if (act)           params.set('activity_type', act);
+    if (diff)          params.set('difficulty', diff);
     if (price_min != null) params.set('price_min', String(price_min));
     if (price_max != null) params.set('price_max', String(price_max));
     try {
@@ -125,31 +145,31 @@ export default function RoutesPageClient() {
   const fetchMapRoutes = useCallback(async () => {
     setMapLoading(true);
     const params = new URLSearchParams({ limit: '500', hasCoords: 'true' });
-    if (category)   params.set('category', category);
-    if (query)      params.set('q', query);
-    if (difficulty) params.set('difficulty', difficulty);
+    if (activityType) params.set('activity_type', activityType);
+    if (query)        params.set('q', query);
+    if (difficulty)   params.set('difficulty', difficulty);
     try {
       const res = await fetch(`/api/routes?${params}`);
       const json: RoutesResponse = await res.json();
       if (json.success) {
         setMapRoutes(
-          (json.data as (RouteItem & { lat: number; lng: number })[])
+          (json.data as (RouteItem & { lat: number; lng: number; locationType: string | null })[])
             .filter(r => r.lat != null && r.lng != null)
-            .map(r => ({ id: r.id, title: r.title, category: r.category, lat: r.lat, lng: r.lng }))
+            .map(r => ({ id: r.id, title: r.title, locationType: r.locationType ?? null, lat: r.lat, lng: r.lng }))
         );
       }
     } catch { /* silent */ }
     setMapLoading(false);
-  }, [category, query, difficulty]);
+  }, [activityType, query, difficulty]);
 
   // ── Trigger fetch ────────────────────────────────────────────
   useEffect(() => {
     const { price_min, price_max } = getPriceParams();
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      fetchRoutes(query, category, page, sort, difficulty, price_min, price_max);
+      fetchRoutes(query, activityType, page, sort, difficulty, price_min, price_max);
     }, query ? 300 : 0);
-  }, [query, category, page, sort, difficulty, priceRange, fetchRoutes, getPriceParams]);
+  }, [query, activityType, page, sort, difficulty, priceRange, fetchRoutes, getPriceParams]);
 
   useEffect(() => {
     if (view === 'map') fetchMapRoutes();
@@ -158,27 +178,24 @@ export default function RoutesPageClient() {
   // ── Sync URL ─────────────────────────────────────────────────
   useEffect(() => {
     const p = new URLSearchParams();
-    if (query)    p.set('q', query);
-    if (category) p.set('category', category);
-    if (page > 1) p.set('page', String(page));
+    if (query)        p.set('q', query);
+    if (activityType) p.set('activity_type', activityType);
+    if (page > 1)     p.set('page', String(page));
     router.replace(`/routes${p.size ? '?' + p : ''}`, { scroll: false });
-  }, [query, category, page, router]);
+  }, [query, activityType, page, router]);
 
-  const resetFilters = () => {
-    setDifficulty('');
-    setPriceRange('');
-    setPage(1);
-  };
-
-  const handleCategoryChange = (cat: string) => { setCategory(cat); setPage(1); };
+  const resetFilters = () => { setDifficulty(''); setPriceRange(''); setPage(1); };
+  const handleActivityChange = (act: string) => { setActivityType(act); setPage(1); };
   const handleSearch = (val: string) => { setQuery(val); setPage(1); };
 
   const mapMarkers = mapRoutes.map(r => ({
-    coords: [r.lat, r.lng] as [number, number],
-    title: r.title,
-    description: r.category,
-    color: CATEGORY_COLORS[r.category] ?? 'blue',
-    href: `/routes/${r.id}`,
+    coords:      [r.lat, r.lng] as [number, number],
+    title:       r.title,
+    description: r.locationType ?? '',
+    color:       LOCATION_COLORS[r.locationType ?? 'other'] ?? 'blue',
+    href:        `/routes/${r.id}`,
+    type:        MarkerType.TOUR,
+    category:    r.locationType ?? 'other',
   }));
 
   return (
@@ -261,7 +278,6 @@ export default function RoutesPageClient() {
         {/* ── Filter panel ──────────────────────────────────── */}
         {showFilters && (
           <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4 mb-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Price range */}
             <div>
               <p className="ds-label mb-2">Цена</p>
               <div className="flex flex-wrap gap-2">
@@ -281,7 +297,6 @@ export default function RoutesPageClient() {
               </div>
             </div>
 
-            {/* Difficulty */}
             <div>
               <p className="ds-label mb-2">Сложность</p>
               <div className="flex flex-wrap gap-2">
@@ -301,7 +316,6 @@ export default function RoutesPageClient() {
               </div>
             </div>
 
-            {/* Reset */}
             {activeFiltersCount > 0 && (
               <div className="sm:col-span-2 flex justify-end">
                 <button onClick={resetFilters} className="ds-btn ds-btn-secondary text-sm flex items-center gap-1.5">
@@ -313,19 +327,19 @@ export default function RoutesPageClient() {
           </div>
         )}
 
-        {/* ── Category tabs ──────────────────────────────────── */}
+        {/* ── Activity tabs (ЧТО ДЕЛАТЬ) ──────────────────────── */}
         <div className="flex gap-2 overflow-x-auto pb-2 mb-6 scrollbar-none">
-          {CATEGORIES.map(cat => (
+          {ACTIVITIES.map(act => (
             <button
-              key={cat.value}
-              onClick={() => handleCategoryChange(cat.value)}
+              key={act.value}
+              onClick={() => handleActivityChange(act.value)}
               className={`flex-shrink-0 px-3 py-1.5 rounded-full text-sm font-medium border transition-all duration-150 ${
-                category === cat.value
+                activityType === act.value
                   ? 'bg-[var(--accent)] border-[var(--accent)] text-white'
                   : 'border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/40 hover:text-[var(--text-primary)] bg-[var(--bg-card)]'
               }`}
             >
-              {cat.label}
+              {act.label}
             </button>
           ))}
         </div>
@@ -366,7 +380,7 @@ export default function RoutesPageClient() {
                 <SlidersHorizontal className="w-10 h-10 mx-auto mb-3 text-[var(--text-muted)]" />
                 <p className="text-[var(--text-secondary)]">Нет маршрутов по вашему запросу</p>
                 <button
-                  onClick={() => { handleSearch(''); handleCategoryChange(''); resetFilters(); }}
+                  onClick={() => { handleSearch(''); handleActivityChange(''); resetFilters(); }}
                   className="mt-4 ds-btn ds-btn-secondary text-sm"
                 >
                   Сбросить всё
@@ -408,20 +422,3 @@ export default function RoutesPageClient() {
     </>
   );
 }
-
-const CATEGORY_COLORS: Record<string, string> = {
-  vulkani:              'red',
-  termalnye_istochniki: 'blue',
-  morskie_progulki:     'darkBlue',
-  eco:                  'green',
-  rybalka:              'darkCyan',
-  snegohod:             'lightBlue',
-  vertoletnye_tury:     'orange',
-  trekking:             'darkGreen',
-  geyzery:              'red',
-  rivers:               'blue',
-  lakes:                'teal',
-  medvedi:              'brown',
-  mountains:            'gray',
-  dzhip:                'darkOrange',
-};

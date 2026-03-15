@@ -15,42 +15,67 @@ import BookingModal from '@/components/routes/BookingModal';
 import RouteCard, { type RouteItem } from '@/components/routes/RouteCard';
 import { useSourceTracker } from '@/hooks/useSourceTracker';
 import { AssistantButton } from '@/components/shared/AssistantButton';
+import { MarkerType } from '@/components/shared/LeafletMap';
 
 const LeafletMap = dynamic(() => import('@/components/shared/LeafletMap'), { ssr: false });
 
-const CATEGORY_LABELS: Record<string, string> = {
-  vulkani:              'Вулканы',
-  termalnye_istochniki: 'Термальные источники',
-  morskie_progulki:     'Морские прогулки',
-  eco:                  'Экомаршруты',
-  rybalka:              'Рыбалка',
-  snegohod:             'Снегоходы',
-  vertoletnye_tury:     'Вертолётные туры',
-  trekking:             'Трекинг',
-  geyzery:              'Гейзеры',
-  rivers:               'Реки',
-  lakes:                'Озёра',
-  medvedi:              'Медведи',
-  mountains:            'Горы',
-  dzhip:                'Джип-туры',
+// ГДЕ — человекочитаемые названия типов локаций
+const LOCATION_TYPE_LABELS: Record<string, string> = {
+  volcano:    'Вулкан',
+  geyser:     'Гейзерное поле',
+  hot_spring: 'Термальный источник',
+  lake:       'Озеро',
+  mountain:   'Горный массив',
+  river:      'Река',
+  bay:        'Бухта',
+  cape:       'Мыс',
+  island:     'Остров',
+  glacier:    'Ледник',
+  forest:     'Лес',
+  beach:      'Пляж',
+  waterfall:  'Водопад',
+  rock:       'Скала',
+  viewpoint:  'Смотровая площадка',
+  settlement: 'Населённый пункт',
+  other:      'Маршрут',
 };
 
-// Фото с сайтов партнёров (Камчатинтур) — скачаны и хранятся локально
-const CATEGORY_IMAGES: Record<string, string> = {
-  vulkani:              '/images/partners/kamchatintour/avacha-winter.jpg',
-  geyzery:              '/images/partners/kamchatintour/seo4.jpg',
-  termalnye_istochniki: '/images/partners/kamchatintour/laguna-winter.jpg',
-  morskie_progulki:     '/images/partners/kamchatintour/seo5.jpg',
-  snegohod:             '/images/partners/kamchatintour/snowmobile.jpg',
-  vertoletnye_tury:     '/images/partners/kamchatintour/helicopter.jpg',
-  trekking:             '/images/partners/kamchatintour/winter-adventures.jpg',
-  mountains:            '/images/partners/kamchatintour/seo4.jpg',
-  eco:                  '/images/partners/kamchatintour/seo1.jpg',
-  medvedi:              '/images/partners/kamchatintour/dog-sled.jpg',
-  dzhip:                '/images/partners/kamchatintour/seo3.jpg',
-  rybalka:              '/images/activities/fishing.jpg',
-  rivers:               '/images/bento/khalaktyr.jpg',
-  lakes:                '/images/gallery/bay-sunset.jpg',
+// ЧТО ДЕЛАТЬ — человекочитаемые названия активностей
+const ACTIVITY_TYPE_LABELS: Record<string, string> = {
+  trekking:     'Треккинг',
+  fishing:      'Рыбалка',
+  bear_watching:'Медведи',
+  helicopter:   'Вертолётный тур',
+  thermal:      'Термальные источники',
+  boat_trip:    'Морская прогулка',
+  snowmobile:   'Снегоход',
+  jeep:         'Джип-тур',
+  eco:          'Экотуризм',
+  diving:       'Дайвинг',
+  surf:         'Сёрфинг',
+  ski:          'Фрирайд',
+  cultural:     'Культура',
+  photo:        'Фототур',
+  camping:      'Кемпинг',
+  sightseeing:  'Осмотр',
+  other:        'Активный отдых',
+};
+
+// Фото по типу локации
+const LOCATION_TYPE_IMAGES: Record<string, string> = {
+  volcano:    '/images/partners/kamchatintour/avacha-winter.jpg',
+  geyser:     '/images/partners/kamchatintour/seo4.jpg',
+  hot_spring: '/images/partners/kamchatintour/laguna-winter.jpg',
+  bay:        '/images/partners/kamchatintour/seo5.jpg',
+  snowmobile: '/images/partners/kamchatintour/snowmobile.jpg',
+  helicopter: '/images/partners/kamchatintour/helicopter.jpg',
+  mountain:   '/images/partners/kamchatintour/winter-adventures.jpg',
+  forest:     '/images/partners/kamchatintour/seo1.jpg',
+  beach:      '/images/bento/khalaktyr.jpg',
+  lake:       '/images/gallery/bay-sunset.jpg',
+  river:      '/images/bento/khalaktyr.jpg',
+  viewpoint:  '/images/partners/kamchatintour/seo3.jpg',
+  other:      '/images/hero/hero-dark.jpg',
 };
 
 const DIFFICULTY_RU: Record<string, string> = {
@@ -89,6 +114,8 @@ interface Offer {
 interface RouteDetail {
   id: string;
   category: string;
+  locationType: string | null;
+  activityType: string | null;
   title: string;
   description: string;
   lat: number | null;
@@ -192,7 +219,7 @@ export default function RouteDetailClient({ id }: { id: string }) {
   // Похожие маршруты — загружаем когда известна категория
   useEffect(() => {
     if (!route) return;
-    fetch(`/api/routes?category=${route.category}&limit=5&sort=recommended`)
+    fetch(`/api/routes?activity_type=${route.activityType ?? ''}&limit=5&sort=recommended`)
       .then(r => r.json())
       .then(j => {
         if (j.success) {
@@ -229,9 +256,10 @@ export default function RouteDetailClient({ id }: { id: string }) {
   }
 
   const hasGeo = route.lat != null && route.lng != null;
-  const catLabel = CATEGORY_LABELS[route.category] ?? route.category;
+  const locLabel = LOCATION_TYPE_LABELS[route.locationType ?? 'other'] ?? 'Маршрут';
+  const actLabel = ACTIVITY_TYPE_LABELS[route.activityType ?? 'other'] ?? 'Активный отдых';
   const offers = route.offers ?? [];
-  const heroImage = CATEGORY_IMAGES[route.category] ?? '/images/hero/hero-dark.jpg';
+  const heroImage = LOCATION_TYPE_IMAGES[route.locationType ?? 'other'] ?? '/images/hero/hero-dark.jpg';
 
   return (
     <>
@@ -260,7 +288,7 @@ export default function RouteDetailClient({ id }: { id: string }) {
         {/* Title overlay */}
         <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8">
           <span className="text-[var(--accent)] text-xs font-semibold uppercase tracking-widest mb-1 block">
-            {catLabel}
+            {locLabel} · {actLabel}
           </span>
           <h1
             className="text-2xl md:text-4xl font-bold text-white leading-tight"
@@ -419,8 +447,10 @@ export default function RouteDetailClient({ id }: { id: string }) {
                 markers={[{
                   coords: [Number(route.lat), Number(route.lng)],
                   title: route.title,
-                  description: catLabel,
+                  description: locLabel,
                   color: 'red',
+                  type: MarkerType.TOUR,
+                  category: route.locationType ?? 'other',
                 }]}
                 height="280px"
                 className="w-full rounded-lg"
@@ -458,10 +488,10 @@ export default function RouteDetailClient({ id }: { id: string }) {
         <div className="mt-10">
           <div className="flex items-center justify-between mb-4">
             <h2 className="ds-h2">
-              Ещё в категории &laquo;{catLabel}&raquo;
+              Похожее: {actLabel}
             </h2>
             <Link
-              href={`/routes?category=${route.category}`}
+              href={`/routes?activity_type=${route.activityType ?? ''}`}
               className="text-sm text-[var(--ocean)] hover:underline"
             >
               Все маршруты
@@ -493,7 +523,7 @@ export default function RouteDetailClient({ id }: { id: string }) {
         maxGroupSize={bookingOffer.maxGroupSize}
       />
     )}
-    <AssistantButton pageContext={{ type: 'route', title: route.title, category: catLabel }} />
+    <AssistantButton pageContext={{ type: 'route', title: route.title, category: locLabel }} />
     </>
   );
 }

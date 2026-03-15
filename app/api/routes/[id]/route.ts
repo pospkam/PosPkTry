@@ -21,8 +21,8 @@ export async function GET(
   try {
     const result = await query(
       `SELECT
-         id, route_dedupe_key, route_id, category, title, description,
-         lat, lng, source_url, source_name, payload, created_at
+         id, route_dedupe_key, route_id, category, location_type, activity_type,
+         title, description, lat, lng, source_url, source_name, payload, created_at
        FROM agent_route_knowledge
        WHERE id = $1 AND is_visible = TRUE`,
       [id]
@@ -99,11 +99,13 @@ export async function GET(
     return NextResponse.json({
       success: true,
       data: {
-        id:          r.id as string,
-        slug:        r.route_dedupe_key as string,
-        routeId:     (r.route_id as string | null) ?? null,
-        category:    r.category as string,
-        title:       r.title as string,
+        id:           r.id as string,
+        slug:         r.route_dedupe_key as string,
+        routeId:      (r.route_id as string | null) ?? null,
+        category:     r.category as string,
+        locationType: (r.location_type as string | null) ?? null,
+        activityType: (r.activity_type as string | null) ?? null,
+        title:        r.title as string,
         description: (r.description as string | null) ?? '',
         lat:         r.lat != null ? parseFloat(r.lat as string) : null,
         lng:         r.lng != null ? parseFloat(r.lng as string) : null,

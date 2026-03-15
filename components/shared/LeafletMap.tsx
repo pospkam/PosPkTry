@@ -3,12 +3,30 @@
 import { useEffect, useRef, useCallback } from 'react';
 import 'leaflet/dist/leaflet.css';
 
+export enum MarkerType {
+  TOUR = 'tour',
+  TRANSFER = 'transfer',
+  ACCOMMODATION = 'accommodation',
+  RESTAURANT = 'restaurant',
+  POI = 'poi',
+}
+
+export interface MapMarkerGeometry {
+  type: 'polyline' | 'polygon';
+  coordinates: [number, number][];
+  color?: string;
+  weight?: number;
+}
+
 export interface MapMarker {
   coords: [number, number];
   title: string;
   description?: string;
   color?: string;
   href?: string;
+  type?: MarkerType;
+  category?: string;
+  geometry?: MapMarkerGeometry;
 }
 
 interface LeafletMapProps {
@@ -48,12 +66,40 @@ function buildPopupHtml(marker: MapMarker): string {
   return html;
 }
 
-function createMarkerIcon(hex: string) {
+function createMarkerIcon(hex: string, type?: MarkerType): { className: string; html: string; iconSize: [number, number]; iconAnchor: [number, number] } {
+  let shape = '';
+  let size = 10;
+  let anchor = 5;
+
+  // Different shapes for different types
+  switch (type) {
+    case MarkerType.TRANSFER:
+      // Square
+      shape = `<div style="width:${size}px;height:${size}px;background:${hex};border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.4)"></div>`;
+      break;
+    case MarkerType.ACCOMMODATION:
+      // Diamond
+      shape = `<div style="width:${size}px;height:${size}px;background:${hex};border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.4);transform:rotate(45deg)"></div>`;
+      break;
+    case MarkerType.RESTAURANT:
+      // Cross
+      shape = `<div style="position:relative;width:${size}px;height:${size}px;background:${hex};mask-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 10 10%22><path d=%22M5 0v10M0 5h10%22 stroke=%22white%22 stroke-width=%222%22/></svg>');box-shadow:0 1px 3px rgba(0,0,0,0.4)"></div>`;
+      break;
+    case MarkerType.POI:
+      // Star (6-pointed)
+      shape = `<div style="width:0;height:0;border-left:${size / 2}px solid transparent;border-right:${size / 2}px solid transparent;border-bottom:${size}px solid ${hex};filter:drop-shadow(0 1px 3px rgba(0,0,0,0.4))"></div>`;
+      break;
+    case MarkerType.TOUR:
+    default:
+      // Circle (default)
+      shape = `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${hex};border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.4)"></div>`;
+  }
+
   return {
     className: '',
-    html: `<div style="width:10px;height:10px;border-radius:50%;background:${hex};border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.4)"></div>`,
-    iconSize: [10, 10] as [number, number],
-    iconAnchor: [5, 5] as [number, number],
+    html: shape,
+    iconSize: [size, size] as [number, number],
+    iconAnchor: [anchor, anchor] as [number, number],
   };
 }
 
@@ -86,7 +132,19 @@ export default function LeafletMap({
 
     markers.forEach(marker => {
       const hex = COLOR_HEX[marker.color ?? 'blue'] ?? '#2568B0';
-      const icon = L.divIcon(createMarkerIcon(hex));
+      const icon = L.divIcon(createMarkerIcon(hex, marker.type));
+
+      // Draw polyline/polygon if geometry present
+      if (marker.geometry && marker.geometry.coordinates.length >= 2) {
+        const geomHex = COLOR_HEX[marker.geometry.color ?? marker.color ?? 'teal'] ?? '#0D9488';
+        const geomWeight = marker.geometry.weight ?? 4;
+        const latlngs = marker.geometry.coordinates;
+        const shape = marker.geometry.type === 'polygon'
+          ? L.polygon(latlngs, { color: geomHex, weight: geomWeight, opacity: 0.85, fillOpacity: 0.15 })
+          : L.polyline(latlngs, { color: geomHex, weight: geomWeight, opacity: 0.85 });
+        shape.bindPopup(buildPopupHtml(marker));
+        shape.addTo(layerRef.current);
+      }
 
       const m = L.marker(marker.coords, { icon }).addTo(layerRef.current);
       if (marker.title) {
@@ -123,17 +181,22 @@ export default function LeafletMap({
         layerRef.current = L.featureGroup().addTo(map);
         markers.forEach(marker => {
           const hex = COLOR_HEX[marker.color ?? 'blue'] ?? '#2568B0';
-          const icon = L.divIcon({
-            className: '',
-            html: `<div style="width:10px;height:10px;border-radius:50%;background:${hex};border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.4)"></div>`,
-            iconSize: [10, 10],
-            iconAnchor: [5, 5],
-          });
+          const icon = L.divIcon(createMarkerIcon(hex, marker.type));
+
+          if (marker.geometry && marker.geometry.coordinates.length >= 2) {
+            const geomHex = COLOR_HEX[marker.geometry.color ?? marker.color ?? 'teal'] ?? '#0D9488';
+            const geomWeight = marker.geometry.weight ?? 4;
+            const latlngs = marker.geometry.coordinates;
+            const shape = marker.geometry.type === 'polygon'
+              ? L.polygon(latlngs, { color: geomHex, weight: geomWeight, opacity: 0.85, fillOpacity: 0.15 })
+              : L.polyline(latlngs, { color: geomHex, weight: geomWeight, opacity: 0.85 });
+            shape.bindPopup(buildPopupHtml(marker));
+            shape.addTo(layerRef.current);
+          }
+
           const m = L.marker(marker.coords, { icon }).addTo(layerRef.current);
           if (marker.title) {
-            m.bindPopup(
-              `<strong>${marker.title}</strong>${marker.description ? `<br/><span style="color:#666;font-size:12px">${marker.description}</span>` : ''}`
-            );
+            m.bindPopup(buildPopupHtml(marker));
           }
         });
         if (markers.length > 1) {
