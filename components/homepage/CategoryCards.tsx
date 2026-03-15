@@ -94,7 +94,6 @@ function CategoryCard({ cat, index, count, onHoverStart, onHoverEnd, onClick }: 
       {/* Видео — поверх картинки, появляется при hover */}
       <video
         ref={videoRef}
-        src={`/videos/${cat.slug}.webm`}
         muted
         loop
         playsInline
@@ -104,7 +103,10 @@ function CategoryCard({ cat, index, count, onHoverStart, onHoverEnd, onClick }: 
         className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
           videoActive && videoReady ? 'opacity-100' : 'opacity-0'
         }`}
-      />
+      >
+        <source src={`/videos/${cat.slug}.webm`} type="video/webm" />
+        <source src={`/videos/${cat.slug}.mp4`}  type="video/mp4"  />
+      </video>
 
       {/* overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent group-hover:from-black/70 transition-all duration-300" />

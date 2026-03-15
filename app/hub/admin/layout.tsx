@@ -4,7 +4,7 @@ import { ReactNode } from 'react';
 import {
   Shield, Users, Calendar, CalendarDays, FileText, MessageSquareText,
   Briefcase, UserCheck, BarChart3, DollarSign,
-  Activity, Bell, Settings, Brain, Tag, Award, LifeBuoy, MapPin, ImageIcon,
+  Activity, Bell, Settings, Brain, Tag, Award, LifeBuoy, MapPin, ImageIcon, Film,
 } from 'lucide-react';
 import { HubLayout } from '@/components/layout/HubLayout';
 import { AiAssistant } from '@/components/admin/AiAssistant';
@@ -17,6 +17,7 @@ const SIDEBAR_ITEMS = [
   { href: '/hub/admin/content/tours', label: 'Модерация туров', icon: FileText },
   { href: '/hub/admin/content/routes', label: 'Маршруты', icon: MapPin },
   { href: '/hub/admin/photos', label: 'Фотографии', icon: ImageIcon },
+  { href: '/hub/admin/videos', label: 'Видео',       icon: Film },
   { href: '/hub/admin/content/reviews', label: 'Отзывы', icon: MessageSquareText },
   { href: '/hub/admin/content/partners', label: 'Партнёры', icon: Briefcase },
   { href: '/hub/admin/operators', label: 'Операторы', icon: UserCheck },
