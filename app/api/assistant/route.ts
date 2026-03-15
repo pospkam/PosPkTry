@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
 
   const chatMessages: ChatMessage[] = [
     { role: 'system', content: systemContent },
-    ...messages.slice(-14), // последние 14 = 7 обменов
+    ...messages.slice(-8), // последние 8 = 4 обмена
   ];
 
   let reply: string;

@@ -24,10 +24,10 @@ export async function callTimewebAgent(messages: ChatMessage[]): Promise<string 
         body: JSON.stringify({
           model: 'claude-sonnet-4-6',
           temperature: 0.4,
-          max_tokens: 800,
+          max_tokens: 400,
           messages: payload,
         }),
-        signal: AbortSignal.timeout(25_000),
+        signal: AbortSignal.timeout(10_000),
       }
     );
 
