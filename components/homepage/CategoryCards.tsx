@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Reveal } from '@/components/homepage/Reveal';
+import { useInterestTracker } from '@/hooks/useInterestTracker';
 
 type CardSize = 'large' | 'tall' | 'wide' | 'normal';
 
@@ -34,6 +35,9 @@ const SPAN: Record<CardSize, { col: string; row: string }> = {
 
 
 export function CategoryCards() {
+  const { trackClick, trackHoverStart } = useInterestTracker();
+  const hoverCleanups = useRef<Map<string, () => void>>(new Map());
+
   return (
     <section className="py-16 px-4 md:px-6">
       <div className="max-w-6xl mx-auto">
@@ -59,6 +63,15 @@ export function CategoryCards() {
                 href={`/routes?category=${cat.slug}`}
                 className={`kh-fade-up group relative overflow-hidden rounded-lg ${col} ${row}`}
                 style={{ animationDelay: `${i * 60}ms` }}
+                onMouseEnter={() => {
+                  const cleanup = trackHoverStart(cat.slug);
+                  hoverCleanups.current.set(cat.slug, cleanup);
+                }}
+                onMouseLeave={() => {
+                  hoverCleanups.current.get(cat.slug)?.();
+                  hoverCleanups.current.delete(cat.slug);
+                }}
+                onClick={() => trackClick(cat.slug)}
               >
                 <Image
                   src={cat.img}
