@@ -12,7 +12,7 @@ export default function SOSButton() {
       style={{
         position: 'fixed',
         bottom: '76px',
-        right: '16px',
+        left: '16px',
         zIndex: 90,
         width: '42px',
         height: '42px',

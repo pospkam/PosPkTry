@@ -8,6 +8,7 @@ import { PlatformStats } from '@/components/homepage/PlatformStats';
 import { ReviewsSection } from '@/components/homepage/ReviewsSection';
 import { HomeBottomNav } from '@/components/homepage/HomeBottomNav';
 import SOSButton from '@/components/shared/SOSButton';
+import { AssistantButton } from '@/components/shared/AssistantButton';
 import { Footer } from '@/components/layout/Footer';
 
 export default function HomePageClient() {
@@ -30,6 +31,7 @@ export default function HomePageClient() {
       <Footer />
       <HomeBottomNav />
       <SOSButton />
+      <AssistantButton />
     </div>
   );
 }
