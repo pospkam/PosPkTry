@@ -51,26 +51,44 @@ const VISION_PROMPT = `Это фото для туристической пла�
 
 quality: excellent/good — обрабатываем, skip — размыто/тёмно/нерелевантно.`;
 
-// ── Vision через OpenRouter (claude-sonnet supports vision) ──────────────────
-async function analyzeWithOpenRouter(imgPath) {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) throw new Error('OPENROUTER_API_KEY не задан');
-
-  const thumbBuf = await sharp(imgPath)
-    .resize(768, null, { withoutEnlargement: true })
-    .jpeg({ quality: 75 })
-    .toBuffer();
-
-  const base64 = thumbBuf.toString('base64');
-
-  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+// ── Vision: Anthropic (primary) → OpenRouter → xAI ───────────────────────────
+async function callAnthropic(base64) {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: 'anthropic/claude-haiku-4-5',
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 300,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64 } },
+          { type: 'text', text: VISION_PROMPT },
+        ],
+      }],
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Anthropic ${res.status}: ${err.slice(0, 200)}`);
+  }
+  const data = await res.json();
+  const text = data?.content?.[0]?.text ?? '';
+  const clean = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+  return JSON.parse(clean);
+}
+
+async function callVisionAPI(base64, apiKey, baseUrl, model) {
+  const res = await fetch(`${baseUrl}/chat/completions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model,
       max_tokens: 300,
       messages: [{
         role: 'user',
@@ -81,21 +99,26 @@ async function analyzeWithOpenRouter(imgPath) {
       }],
     }),
   });
-
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`OpenRouter ${res.status}: ${err.slice(0, 200)}`);
+    throw new Error(`${model} ${res.status}: ${err.slice(0, 200)}`);
   }
-
   const data = await res.json();
   const text = data?.choices?.[0]?.message?.content ?? '';
-  // Убираем возможные markdown-обёртки вроде ```json ... ```
   const clean = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
   return JSON.parse(clean);
 }
 
 async function analyzeWithClaude(imgPath) {
-  return analyzeWithOpenRouter(imgPath);
+  const thumbBuf = await sharp(imgPath)
+    .resize(768, null, { withoutEnlargement: true })
+    .jpeg({ quality: 75 })
+    .toBuffer();
+  const base64 = thumbBuf.toString('base64');
+
+  if (process.env.ANTHROPIC_API_KEY)   return callAnthropic(base64);
+  if (process.env.OPENROUTER_API_KEY)  return callVisionAPI(base64, process.env.OPENROUTER_API_KEY, 'https://openrouter.ai/api/v1', 'anthropic/claude-haiku-4-5');
+  throw new Error('Нужен ANTHROPIC_API_KEY или OPENROUTER_API_KEY');
 }
 
 // ── Обработка одного файла ────────────────────────────────────────────────────
