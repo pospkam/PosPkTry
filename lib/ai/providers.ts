@@ -1,11 +1,11 @@
 /**
  * Shared AI provider functions — waterfall pattern.
- * Timeweb Agent → OpenRouter → DeepSeek → Minimax → xAI → Anthropic
+ * Timeweb Claude 4.6 → OpenRouter → Minimax → xAI → Anthropic (direct)
  */
 
 import type { ChatMessage } from '@/lib/ai/prompts';
 
-// ── Timeweb Cloud AI Agent (primary) ───────────────────────────
+// ── Timeweb Cloud AI Agent (Claude 4.6 Sonnet — primary) ────
 export async function callTimewebAgent(messages: ChatMessage[]): Promise<string | null> {
   const token = process.env.TIMEWEB_TOKEN;
   const agentId = process.env.TIMEWEB_AI_AGENT_ID;
@@ -22,7 +22,7 @@ export async function callTimewebAgent(messages: ChatMessage[]): Promise<string 
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          model: 'deepseek-chat',
+          model: 'claude-sonnet-4-6',
           temperature: 0.4,
           max_tokens: 800,
           messages: payload,
@@ -75,40 +75,6 @@ export async function callOpenrouter(messages: ChatMessage[]): Promise<string | 
     return data?.choices?.[0]?.message?.content ?? null;
   } catch (e) {
     console.error('[AI] OpenRouter exception:', e instanceof Error ? e.message : String(e));
-    return null;
-  }
-}
-
-// ── DeepSeek ───────────────────────────────────────────────────
-export async function callDeepSeek(messages: ChatMessage[]): Promise<string | null> {
-  const apiKey = process.env.DEEPSEEK_API_KEY;
-  if (!apiKey) return null;
-
-  try {
-    const payload = messages.map(({ role, content }) => ({ role, content }));
-    const res = await fetch('https://api.deepseek.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'deepseek-chat',
-        temperature: 0.4,
-        max_tokens: 800,
-        messages: payload,
-      }),
-    });
-
-    if (!res.ok) {
-      const errText = await res.text().catch(() => '');
-      console.error(`[AI] DeepSeek ${res.status}:`, errText.slice(0, 200));
-      return null;
-    }
-    const data = await res.json();
-    return data?.choices?.[0]?.message?.content ?? null;
-  } catch (e) {
-    console.error('[AI] DeepSeek exception:', e instanceof Error ? e.message : String(e));
     return null;
   }
 }
@@ -188,7 +154,7 @@ export async function callXai(messages: ChatMessage[]): Promise<string | null> {
   }
 }
 
-// ── Anthropic Claude ──────────────────────────────────────────
+// ── Anthropic Claude (direct API) ───────────────────────────
 export async function callAnthropic(messages: ChatMessage[]): Promise<string | null> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return null;
@@ -250,24 +216,19 @@ export async function callAnthropic(messages: ChatMessage[]): Promise<string | n
 }
 
 // ── Waterfall: пробует провайдеров по очереди ─────────────────
+// Timeweb Claude 4.6 → OpenRouter → Minimax → xAI → Anthropic direct
 export async function callAIWaterfall(messages: ChatMessage[]): Promise<string> {
   let answer = await callTimewebAgent(messages);
   if (!answer) answer = await callOpenrouter(messages);
-  if (!answer) answer = await callDeepSeek(messages);
   if (!answer) answer = await callMinimax(messages);
   if (!answer) answer = await callXai(messages);
   if (!answer) answer = await callAnthropic(messages);
   return answer ?? 'Извините, сервис временно недоступен. Попробуйте позже.';
 }
 
-// ── Waterfall без Timeweb-агента ───────────────────────────────
-// Используется там где нужен точный системный промпт (Кузьмич, TG-бот).
-// Timeweb-агент — RAG-агент с собственным system-prompt в дашборде,
-// он ИГНОРИРУЕТ наш { role: 'system' } → модель отвечает без персонажа.
+// ── Waterfall Direct — алиас основного ────────────────────────
+// Claude 4.6 на Timeweb корректно обрабатывает system prompt,
+// поэтому отдельный обход больше не нужен.
 export async function callAIWaterfallDirect(messages: ChatMessage[]): Promise<string> {
-  let answer = await callDeepSeek(messages);
-  if (!answer) answer = await callOpenrouter(messages);
-  if (!answer) answer = await callXai(messages);
-  if (!answer) answer = await callAnthropic(messages);
-  return answer ?? 'Извините, сервис временно недоступен. Попробуйте позже.';
+  return callAIWaterfall(messages);
 }

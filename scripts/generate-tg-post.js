@@ -97,33 +97,7 @@ const CATEGORY_OPERATOR = {
 
 // ── AI вызов (waterfall) ─────────────────────────────────────
 async function callAI(systemPrompt, userPrompt) {
-  // 1. DeepSeek API напрямую (system prompt работает корректно)
-  const dsKey = process.env.DEEPSEEK_API_KEY;
-  if (dsKey) {
-    try {
-      const res = await fetch('https://api.deepseek.com/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${dsKey}` },
-        body: JSON.stringify({
-          model: 'deepseek-chat',
-          temperature: 0.7,
-          max_tokens: 600,
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt },
-          ],
-        }),
-        signal: AbortSignal.timeout(30_000),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const text = data?.choices?.[0]?.message?.content;
-        if (text) { console.log('  AI: DeepSeek'); return text.trim(); }
-      }
-    } catch (e) { console.warn(`  DeepSeek err: ${e.message}`); }
-  }
-
-  // 2. Timeweb Agent (fallback — RAG с Камчаткой, но игнорирует system prompt)
+  // 1. Timeweb Claude 4.6 (primary — system prompt работает)
   const twToken = process.env.TIMEWEB_TOKEN;
   const twAgent = process.env.TIMEWEB_AI_AGENT_ID;
   if (twToken && twAgent) {
@@ -134,7 +108,7 @@ async function callAI(systemPrompt, userPrompt) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${twToken}` },
           body: JSON.stringify({
-            model: 'deepseek-chat',
+            model: 'claude-sonnet-4-6',
             temperature: 0.7,
             max_tokens: 600,
             messages: [
@@ -148,7 +122,7 @@ async function callAI(systemPrompt, userPrompt) {
       if (res.ok) {
         const data = await res.json();
         const text = data?.choices?.[0]?.message?.content;
-        if (text) { console.log('  AI: Timeweb'); return text.trim(); }
+        if (text) { console.log('  AI: Timeweb Claude'); return text.trim(); }
       }
     } catch (e) { console.warn(`  Timeweb err: ${e.message}`); }
   }
@@ -161,7 +135,7 @@ async function callAI(systemPrompt, userPrompt) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${orKey}` },
         body: JSON.stringify({
-          model: 'anthropic/claude-haiku-4-5-20251001',
+          model: 'anthropic/claude-sonnet-4-6',
           temperature: 0.7,
           max_tokens: 600,
           messages: [
