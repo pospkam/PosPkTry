@@ -5,6 +5,11 @@ const nextConfig = {
   poweredByHeader: false,
   compress: true,
 
+  // Лимит тела запроса для API routes (загрузка фото)
+  experimental: {
+    serverBodySizeLimit: '60mb',
+  },
+
   // ONNX Runtime (used by @huggingface/transformers) has native Node.js addons
   // that cannot be bundled by webpack — must be resolved at runtime.
   serverExternalPackages: ['onnxruntime-node', '@huggingface/transformers'],

@@ -39,7 +39,7 @@ interface OperatorProfile {
   seasonInfo: Array<{ months: string; fish: string; season: string }>;
   reviewsData: Array<{ name: string; date: string; text: string; source: string; verified?: boolean }>;
   contacts: Array<{ name: string; phone: string; role: string; address?: string }>;
-  location: { lat: number; lng: number; address: string } | null;
+  location: { lat: number; lng: number; address: string; officeAddress?: string } | null;
   legalInfo: Record<string, unknown> | null;
   rating: number;
   reviewCount: number;
@@ -488,19 +488,58 @@ export default function OperatorProfileClient({ slug }: { slug: string }) {
               ))}
             </div>
 
-            {op.location && (
-              <LeafletMap
-                center={[op.location.lat, op.location.lng]}
-                zoom={12}
-                markers={[{
+            {op.location && (() => {
+              const li = op.legalInfo as Record<string, string | undefined> | null;
+              const markers: Array<{ coords: [number, number]; title: string; description?: string; color?: string }> = [
+                {
                   coords: [op.location.lat, op.location.lng],
                   title: op.name,
                   description: op.location.address,
+                  color: 'blue',
+                },
+              ];
+              // Второй маркер — офис (если адрес отличается от участка)
+              if (op.location.officeAddress) {
+                markers.push({
+                  coords: [53.1838, 158.3804],
+                  title: 'Офис',
+                  description: op.location.officeAddress,
                   color: 'orange',
-                }]}
-                height="300px"
-              />
-            )}
+                });
+              }
+              return (
+                <>
+                  <LeafletMap
+                    center={[op.location.lat, op.location.lng]}
+                    zoom={10}
+                    markers={markers}
+                    height="360px"
+                  />
+                  {/* Рыболовный участок — описание */}
+                  {li?.fishingAreaBounds && (
+                    <div className="mt-6 ds-card p-5 flex gap-4 items-start">
+                      <MapPin className="w-5 h-5 text-[var(--ocean)] flex-shrink-0 mt-0.5" />
+                      <div className="text-sm space-y-1">
+                        <p className="font-semibold text-[var(--text-primary)]">
+                          Рыболовный участок №1182, р. Камчатка
+                        </p>
+                        {li.fishingArea && (
+                          <p className="text-[var(--text-secondary)]">
+                            Площадь: {li.fishingArea}
+                          </p>
+                        )}
+                        <p className="text-[var(--text-muted)] font-mono text-xs leading-relaxed">
+                          {li.fishingAreaBounds}
+                        </p>
+                        {li.license && (
+                          <p className="text-[var(--text-muted)]">{li.license}</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
 
             {/* Legal info */}
             {op.legalInfo && (() => {
@@ -510,7 +549,6 @@ export default function OperatorProfileClient({ slug }: { slug: string }) {
                   {li.companyName && <p>{li.companyName}</p>}
                   {li.inn && <p>ИНН {li.inn}{li.ogrn ? ` · ОГРН ${li.ogrn}` : ''}</p>}
                   {li.address && <p>{li.address}</p>}
-                  {li.license && <p>{li.license}</p>}
                 </div>
               );
             })()}
