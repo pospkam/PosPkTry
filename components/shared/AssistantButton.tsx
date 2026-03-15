@@ -34,6 +34,14 @@ function buildGreeting(ctx: string): string {
   return 'Привет! Что планируешь на Камчатке? Помогу разобраться.';
 }
 
+// ── Чипсы быстрых вопросов ────────────────────────────────────────────────────
+
+const QUICK_CHIPS = [
+  'Вулканы для новичка',
+  'Где порыбачить?',
+  'Что взять в поход?',
+];
+
 // ── Компонент ─────────────────────────────────────────────────────────────────
 
 export function AssistantButton() {
@@ -65,14 +73,12 @@ export function AssistantButton() {
 
   // ── Отправка сообщения ───────────────────────────────────────────────────
 
-  const send = useCallback(async () => {
-    const text = input.trim();
+  const sendText = useCallback(async (text: string) => {
     if (!text || loading) return;
 
     const userMsg: Message = { role: 'user', content: text };
     const nextMessages: Message[] = [...messages, userMsg];
     setMessages(nextMessages);
-    setInput('');
     setLoading(true);
 
     try {
@@ -98,7 +104,14 @@ export function AssistantButton() {
     } finally {
       setLoading(false);
     }
-  }, [input, loading, messages, interestContext]);
+  }, [loading, messages, interestContext]);
+
+  const send = useCallback(async () => {
+    const text = input.trim();
+    if (!text) return;
+    setInput('');
+    await sendText(text);
+  }, [input, sendText]);
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -228,6 +241,47 @@ export function AssistantButton() {
 
             <div ref={bottomRef} />
           </div>
+
+          {/* Быстрые вопросы — показываем только в начале */}
+          {messages.length === 1 && !loading && (
+            <div
+              style={{
+                padding: '0 12px 10px',
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '6px',
+                flexShrink: 0,
+              }}
+            >
+              {QUICK_CHIPS.map(chip => (
+                <button
+                  key={chip}
+                  onClick={() => sendText(chip)}
+                  style={{
+                    padding: '5px 12px',
+                    borderRadius: '100px',
+                    border: '1px solid var(--border)',
+                    background: 'var(--bg-hover)',
+                    color: 'var(--text-secondary)',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    transition: 'border-color 0.15s, color 0.15s',
+                    whiteSpace: 'nowrap',
+                  }}
+                  onMouseEnter={e => {
+                    (e.currentTarget.style.borderColor = 'var(--accent)');
+                    (e.currentTarget.style.color = 'var(--accent)');
+                  }}
+                  onMouseLeave={e => {
+                    (e.currentTarget.style.borderColor = 'var(--border)');
+                    (e.currentTarget.style.color = 'var(--text-secondary)');
+                  }}
+                >
+                  {chip}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Инпут */}
           <div
