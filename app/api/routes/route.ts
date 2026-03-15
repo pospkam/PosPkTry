@@ -16,7 +16,7 @@ const QuerySchema = z.object({
   location_type: z.string().max(60).optional(),
   activity_type: z.string().max(60).optional(),
   page:          z.coerce.number().int().min(1).default(1),
-  limit:         z.coerce.number().int().min(1).max(100).default(24),
+  limit:         z.coerce.number().int().min(1).max(2000).default(24),
   hasCoords:     z.enum(['true', 'false']).optional(),
   sort:          z.enum(['title', 'recent', 'price_asc', 'price_desc', 'recommended']).default('title'),
   difficulty:    z.enum(['easy', 'medium', 'hard']).optional(),
