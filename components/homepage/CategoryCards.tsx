@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Reveal } from '@/components/homepage/Reveal';
@@ -9,23 +9,22 @@ import { useInterestTracker } from '@/hooks/useInterestTracker';
 type CardSize = 'large' | 'tall' | 'wide' | 'normal';
 
 const CATEGORIES: { label: string; slug: string; img: string; size: CardSize }[] = [
-  { label: 'Вулканы',    slug: 'vulkani',             img: '/images/activities/volcanoes.jpg',  size: 'large'  },
-  { label: 'Гейзеры',    slug: 'geyzery',             img: '/images/bento/mutnovsky.jpg',       size: 'normal' },
-  { label: 'Рыбалка',    slug: 'rybalka',             img: '/images/activities/fishing.jpg',    size: 'tall'   },
-  { label: 'Термальные', slug: 'termalnye_istochniki', img: '/images/activities/hotsprings.jpg', size: 'normal' },
-  { label: 'Медведи',    slug: 'medvedi',             img: '/images/gallery/road-winter.jpg',   size: 'wide'   },
-  { label: 'Морские',    slug: 'morskie_progulki',     img: '/images/activities/sea.jpg',        size: 'normal' },
-  { label: 'Вертолёты',  slug: 'vertoletnye_tury',     img: '/images/activities/helicopter.jpg', size: 'normal' },
-  { label: 'Треккинг',   slug: 'trekking',             img: '/images/gallery/camp-sunset.jpg',   size: 'normal' },
-  { label: 'Снегоходы',  slug: 'snegohod',             img: '/images/activities/snowmobile.jpg', size: 'tall'   },
-  { label: 'Джипы',      slug: 'dzhip',                img: '/images/activities/jeep.jpg',       size: 'wide'   },
-  { label: 'Озёра',      slug: 'lakes',                img: '/images/gallery/bay-sunset.jpg',    size: 'normal' },
-  { label: 'Горы',       slug: 'mountains',            img: '/images/gallery/stela.jpg',         size: 'normal' },
-  { label: 'Реки',       slug: 'rivers',               img: '/images/bento/khalaktyr.jpg',       size: 'normal' },
-  { label: 'Эко-туры',   slug: 'eco',                  img: '/images/gallery/aurora.jpg',        size: 'wide'   },
+  { label: 'Вулканы',    slug: 'vulkani',              img: '/images/activities/volcanoes.jpg',  size: 'large'  },
+  { label: 'Гейзеры',    slug: 'geyzery',              img: '/images/bento/mutnovsky.jpg',       size: 'normal' },
+  { label: 'Рыбалка',    slug: 'rybalka',              img: '/images/activities/fishing.jpg',    size: 'tall'   },
+  { label: 'Термальные', slug: 'termalnye_istochniki',  img: '/images/activities/hotsprings.jpg', size: 'normal' },
+  { label: 'Медведи',    slug: 'medvedi',              img: '/images/gallery/road-winter.jpg',   size: 'wide'   },
+  { label: 'Морские',    slug: 'morskie_progulki',      img: '/images/activities/sea.jpg',        size: 'normal' },
+  { label: 'Вертолёты',  slug: 'vertoletnye_tury',      img: '/images/activities/helicopter.jpg', size: 'normal' },
+  { label: 'Треккинг',   slug: 'trekking',              img: '/images/gallery/camp-sunset.jpg',   size: 'normal' },
+  { label: 'Снегоходы',  slug: 'snegohod',              img: '/images/activities/snowmobile.jpg', size: 'tall'   },
+  { label: 'Джипы',      slug: 'dzhip',                 img: '/images/activities/jeep.jpg',       size: 'wide'   },
+  { label: 'Озёра',      slug: 'lakes',                 img: '/images/gallery/bay-sunset.jpg',    size: 'normal' },
+  { label: 'Горы',       slug: 'mountains',             img: '/images/gallery/stela.jpg',         size: 'normal' },
+  { label: 'Реки',       slug: 'rivers',                img: '/images/bento/khalaktyr.jpg',       size: 'normal' },
+  { label: 'Эко-туры',   slug: 'eco',                   img: '/images/gallery/aurora.jpg',        size: 'wide'   },
 ];
 
-/** col / row CSS Grid span per size  */
 const SPAN: Record<CardSize, { col: string; row: string }> = {
   large:  { col: 'md:col-span-2', row: 'md:row-span-2' },
   tall:   { col: '',              row: 'md:row-span-2'  },
@@ -33,6 +32,97 @@ const SPAN: Record<CardSize, { col: string; row: string }> = {
   normal: { col: '',              row: ''               },
 };
 
+// ── Карточка с video-на-hover ─────────────────────────────────────────────────
+
+interface CategoryCardProps {
+  cat: (typeof CATEGORIES)[number];
+  index: number;
+  count?: number;
+  onHoverStart: (slug: string) => void;
+  onHoverEnd:   (slug: string) => void;
+  onClick:      (slug: string) => void;
+}
+
+function CategoryCard({ cat, index, count, onHoverStart, onHoverEnd, onClick }: CategoryCardProps) {
+  const { col, row } = SPAN[cat.size];
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [videoReady, setVideoReady] = useState(false);
+  const [videoActive, setVideoActive] = useState(false);
+
+  const handleEnter = useCallback(() => {
+    onHoverStart(cat.slug);
+    if (videoRef.current && videoReady) {
+      videoRef.current.currentTime = 0;
+      void videoRef.current.play().catch(() => {/* autoplay blocked */});
+      setVideoActive(true);
+    }
+  }, [cat.slug, onHoverStart, videoReady]);
+
+  const handleLeave = useCallback(() => {
+    onHoverEnd(cat.slug);
+    if (videoRef.current) {
+      videoRef.current.pause();
+      setVideoActive(false);
+    }
+  }, [cat.slug, onHoverEnd]);
+
+  return (
+    <Link
+      href={`/routes?category=${cat.slug}`}
+      className={`kh-fade-up group relative overflow-hidden rounded-lg ${col} ${row}`}
+      style={{ animationDelay: `${index * 60}ms` }}
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
+      onClick={() => onClick(cat.slug)}
+    >
+      {/* Статичное изображение — фолбэк и фон */}
+      <Image
+        src={cat.img}
+        alt={cat.label}
+        fill
+        sizes={
+          cat.size === 'large' ? '(max-width: 768px) 50vw, 33vw' :
+          cat.size === 'wide'  ? '(max-width: 768px) 100vw, 50vw' :
+          '(max-width: 768px) 50vw, 25vw'
+        }
+        className={`object-cover transition-transform duration-700 ease-out ${
+          videoActive ? 'scale-100' : 'group-hover:scale-110'
+        }`}
+        loading={index < 4 ? 'eager' : 'lazy'}
+      />
+
+      {/* Видео — поверх картинки, появляется при hover */}
+      <video
+        ref={videoRef}
+        src={`/videos/${cat.slug}.webm`}
+        muted
+        loop
+        playsInline
+        preload="none"
+        onCanPlayThrough={() => setVideoReady(true)}
+        onError={() => setVideoReady(false)}
+        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
+          videoActive && videoReady ? 'opacity-100' : 'opacity-0'
+        }`}
+      />
+
+      {/* overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent group-hover:from-black/70 transition-all duration-300" />
+
+      {/* label + count */}
+      <div className="absolute bottom-2 left-3 right-3">
+        <span className="text-white text-xs font-semibold tracking-wide drop-shadow-sm">
+          {cat.label}
+        </span>
+        {count != null && count > 0 && (
+          <span className="ml-1.5 text-white/60 text-[10px] drop-shadow-sm">{count}</span>
+        )}
+      </div>
+    </Link>
+  );
+}
+
+// ── Главный компонент ─────────────────────────────────────────────────────────
 
 export function CategoryCards() {
   const { trackClick, trackHoverStart } = useInterestTracker();
@@ -44,6 +134,16 @@ export function CategoryCards() {
       .then(r => r.json())
       .then(j => { if (j.success) setCounts(j.data); })
       .catch(() => {/* silent */});
+  }, []);
+
+  const handleHoverStart = useCallback((slug: string) => {
+    const cleanup = trackHoverStart(slug);
+    hoverCleanups.current.set(slug, cleanup);
+  }, [trackHoverStart]);
+
+  const handleHoverEnd = useCallback((slug: string) => {
+    hoverCleanups.current.get(slug)?.();
+    hoverCleanups.current.delete(slug);
   }, []);
 
   return (
@@ -58,61 +158,21 @@ export function CategoryCards() {
           </p>
         </Reveal>
 
-        {/* Moodboard grid — dense auto-flow fills gaps organically */}
         <div
           className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3"
           style={{ gridAutoRows: '140px', gridAutoFlow: 'dense' }}
         >
-          {CATEGORIES.map((cat, i) => {
-            const { col, row } = SPAN[cat.size];
-            return (
-              <Link
-                key={cat.slug}
-                href={`/routes?category=${cat.slug}`}
-                className={`kh-fade-up group relative overflow-hidden rounded-lg ${col} ${row}`}
-                style={{ animationDelay: `${i * 60}ms` }}
-                onMouseEnter={() => {
-                  const cleanup = trackHoverStart(cat.slug);
-                  hoverCleanups.current.set(cat.slug, cleanup);
-                }}
-                onMouseLeave={() => {
-                  hoverCleanups.current.get(cat.slug)?.();
-                  hoverCleanups.current.delete(cat.slug);
-                }}
-                onClick={() => trackClick(cat.slug)}
-              >
-                <Image
-                  src={cat.img}
-                  alt={cat.label}
-                  fill
-                  sizes={
-                    cat.size === 'large'
-                      ? '(max-width: 768px) 50vw, 33vw'
-                      : cat.size === 'wide'
-                        ? '(max-width: 768px) 100vw, 50vw'
-                        : '(max-width: 768px) 50vw, 25vw'
-                  }
-                  className="object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                  loading={i < 4 ? 'eager' : 'lazy'}
-                />
-
-                {/* overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent group-hover:from-black/70 transition-all duration-300" />
-
-                {/* label + count */}
-                <div className="absolute bottom-2 left-3 right-3">
-                  <span className="text-white text-xs font-semibold tracking-wide drop-shadow-sm">
-                    {cat.label}
-                  </span>
-                  {counts[cat.slug] != null && counts[cat.slug] > 0 && (
-                    <span className="ml-1.5 text-white/60 text-[10px] drop-shadow-sm">
-                      {counts[cat.slug]}
-                    </span>
-                  )}
-                </div>
-              </Link>
-            );
-          })}
+          {CATEGORIES.map((cat, i) => (
+            <CategoryCard
+              key={cat.slug}
+              cat={cat}
+              index={i}
+              count={counts[cat.slug]}
+              onHoverStart={handleHoverStart}
+              onHoverEnd={handleHoverEnd}
+              onClick={trackClick}
+            />
+          ))}
         </div>
       </div>
     </section>
