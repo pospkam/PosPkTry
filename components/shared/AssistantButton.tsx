@@ -9,8 +9,33 @@
  */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Sparkles, Bot, X, Send, Loader2 } from 'lucide-react';
+import { Sparkles, X, Send, Loader2 } from 'lucide-react';
 import { getInterestContext } from '@/hooks/useInterestTracker';
+
+// ── SVG-аватар «Добрый робот» ─────────────────────────────────────────────────
+
+function RobotAvatar() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Антенна */}
+      <line x1="11" y1="0.5" x2="11" y2="4" stroke="white" strokeWidth="1.4" strokeLinecap="round" />
+      <circle cx="11" cy="0.5" r="1.2" fill="white" />
+      {/* Уши */}
+      <rect x="1" y="7" width="2" height="4" rx="1" fill="white" opacity="0.85" />
+      <rect x="19" y="7" width="2" height="4" rx="1" fill="white" opacity="0.85" />
+      {/* Голова */}
+      <rect x="3.5" y="4" width="15" height="13" rx="3.5" fill="white" />
+      {/* Глаза */}
+      <circle cx="8.5" cy="9.5" r="2.2" fill="var(--accent)" />
+      <circle cx="13.5" cy="9.5" r="2.2" fill="var(--accent)" />
+      {/* Блики в глазах */}
+      <circle cx="9.2" cy="8.8" r="0.7" fill="white" />
+      <circle cx="14.2" cy="8.8" r="0.7" fill="white" />
+      {/* Улыбка */}
+      <path d="M7.5 13 Q11 15.5 14.5 13" stroke="var(--accent)" strokeWidth="1.3" strokeLinecap="round" fill="none" />
+    </svg>
+  );
+}
 
 // ── Типы ──────────────────────────────────────────────────────────────────────
 
@@ -50,15 +75,41 @@ export function AssistantButton() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [interestContext, setInterestContext] = useState('');
+  const [sessionId, setSessionId] = useState('');
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Инициализация — только на клиенте (localStorage)
+  // Инициализация — только на клиенте (localStorage + восстановление истории)
   useEffect(() => {
+    const STORAGE_KEY = 'th_assistant_session';
     const ctx = getInterestContext();
     setInterestContext(ctx);
-    setMessages([{ role: 'assistant', content: buildGreeting(ctx) }]);
+
+    // Генерируем / восстанавливаем sessionId
+    let sid = localStorage.getItem(STORAGE_KEY) ?? '';
+    if (!sid) {
+      sid = typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `anon-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+      localStorage.setItem(STORAGE_KEY, sid);
+    }
+    setSessionId(sid);
+
+    // Пробуем загрузить предыдущую историю
+    fetch(`/api/assistant?sessionId=${encodeURIComponent(sid)}`)
+      .then(r => r.json())
+      .then((data: { messages?: Message[] }) => {
+        const prev = data.messages ?? [];
+        if (prev.length > 0) {
+          setMessages(prev);
+        } else {
+          setMessages([{ role: 'assistant', content: buildGreeting(ctx) }]);
+        }
+      })
+      .catch(() => {
+        setMessages([{ role: 'assistant', content: buildGreeting(ctx) }]);
+      });
   }, []);
 
   // Автоскролл при новых сообщениях
@@ -88,6 +139,7 @@ export function AssistantButton() {
         body: JSON.stringify({
           messages: nextMessages.slice(-12),
           interestContext: interestContext || undefined,
+          sessionId: sessionId || undefined,
         }),
       });
 
@@ -104,7 +156,7 @@ export function AssistantButton() {
     } finally {
       setLoading(false);
     }
-  }, [loading, messages, interestContext]);
+  }, [loading, messages, interestContext, sessionId]);
 
   const send = useCallback(async () => {
     const text = input.trim();
@@ -159,7 +211,7 @@ export function AssistantButton() {
                 width: '34px', height: '34px', borderRadius: '50%',
                 background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
               }}>
-                <Bot size={18} color="#fff" />
+                <RobotAvatar />
               </div>
               <div>
                 <p style={{ margin: 0, fontWeight: 600, fontSize: '14px', color: 'var(--text-primary)' }}>

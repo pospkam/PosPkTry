@@ -259,3 +259,15 @@ export async function callAIWaterfall(messages: ChatMessage[]): Promise<string> 
   if (!answer) answer = await callAnthropic(messages);
   return answer ?? 'Извините, сервис временно недоступен. Попробуйте позже.';
 }
+
+// ── Waterfall без Timeweb-агента ───────────────────────────────
+// Используется там где нужен точный системный промпт (Кузьмич, TG-бот).
+// Timeweb-агент — RAG-агент с собственным system-prompt в дашборде,
+// он ИГНОРИРУЕТ наш { role: 'system' } → модель отвечает без персонажа.
+export async function callAIWaterfallDirect(messages: ChatMessage[]): Promise<string> {
+  let answer = await callDeepSeek(messages);
+  if (!answer) answer = await callOpenrouter(messages);
+  if (!answer) answer = await callXai(messages);
+  if (!answer) answer = await callAnthropic(messages);
+  return answer ?? 'Извините, сервис временно недоступен. Попробуйте позже.';
+}

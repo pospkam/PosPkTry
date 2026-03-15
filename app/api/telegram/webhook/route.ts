@@ -22,7 +22,7 @@ import { z } from 'zod';
 import { telegramService } from '@/lib/notifications/telegram';
 import { confirmBooking, cancelBooking } from '@/lib/bookings/booking.service';
 import { query } from '@/lib/database';
-import { callAIWaterfall } from '@/lib/ai/providers';
+import { callAIWaterfallDirect } from '@/lib/ai/providers';
 import { KUZMICH_PROMPT, type ChatMessage } from '@/lib/ai/prompts';
 
 export const dynamic = 'force-dynamic';
@@ -120,7 +120,7 @@ async function kuzmichReply(userText: string): Promise<string> {
     { role: 'system', content: KUZMICH_CHAT_SYSTEM },
     { role: 'user', content: userText },
   ];
-  return callAIWaterfall(messages);
+  return callAIWaterfallDirect(messages);
 }
 
 // ── Хелпер отправки HTML-сообщения ───────────────────────────────────────────
