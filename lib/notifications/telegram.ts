@@ -2,6 +2,8 @@
 // СЕРВИС TELEGRAM УВЕДОМЛЕНИЙ
 // Kamchatour Hub - Telegram Notification Service
 // =============================================
+import { pool } from '@/lib/db-pool';
+import { confirmBooking, cancelBooking } from '@/lib/bookings/booking.service';
 
 interface TelegramMessage {
   chatId: string;
@@ -395,74 +397,57 @@ ${trip.feedback ? `  <b>Отзыв:</b> ${trip.feedback}` : ''}
     }).catch(() => { /* не прерываем при ошибке */ });
   }
 
-  // Обработка callback запросов
+  // Обработка callback запросов от inline-кнопок
+  // Форматы: confirm_<bookingId> | cancel_<bookingId>
   async handleCallbackQuery(callbackQuery: {
     id: string;
     data: string;
-    from: {
-      id: number;
-      username?: string;
-    };
-  }): Promise<{
-    success: boolean;
-    response?: string;
-    error?: string;
-  }> {
+    from: { id: number; username?: string };
+  }): Promise<{ success: boolean; response?: string; error?: string }> {
     try {
-      const [action, type, ...params] = callbackQuery.data.split('_');
-      
-      switch (action) {
-        case 'accept':
-          if (type === 'booking') {
-            const bookingId = params[0];
-            // Логика принятия заявки
-            return {
-              success: true,
-              response: `Заявка ${bookingId} принята!`
-            };
-          }
-          break;
-          
-        case 'reject':
-          if (type === 'booking') {
-            const bookingId = params[0];
-            // Логика отклонения заявки
-            return {
-              success: true,
-              response: `Заявка ${bookingId} отклонена.`
-            };
-          }
-          break;
-          
-        case 'call':
-          if (type === 'passenger' || type === 'driver') {
-            const phone = params[0];
-            return {
-              success: true,
-              response: `Звонок на номер ${phone}`
-            };
-          }
-          break;
-          
-        case 'show':
-          if (type === 'map') {
-            const tripId = params[0];
-            return {
-              success: true,
-              response: `Показать карту для поездки ${tripId}`
-            };
-          }
-          break;
+      const underscoreIdx = callbackQuery.data.indexOf('_');
+      if (underscoreIdx === -1) return { success: false, error: 'Неизвестный формат' };
+
+      const action = callbackQuery.data.substring(0, underscoreIdx);
+      const bookingId = callbackQuery.data.substring(underscoreIdx + 1);
+
+      if (!bookingId) return { success: false, error: 'Не указан ID заявки' };
+
+      // Получаем operator_id по бронированию
+      const { rows } = await pool.query(
+        `SELECT b.id, b.status, t.operator_id
+         FROM bookings b
+         JOIN tours t ON t.id = b.tour_id
+         WHERE b.id = $1`,
+        [bookingId]
+      );
+
+      if (!rows[0]) return { success: false, error: 'Заявка не найдена' };
+
+      const operatorId: string = rows[0].operator_id;
+      const currentStatus: string = rows[0].status;
+
+      if (action === 'confirm') {
+        if (currentStatus === 'confirmed') {
+          return { success: true, response: 'Заявка уже подтверждена.' };
+        }
+        await confirmBooking(bookingId, operatorId);
+        return { success: true, response: `Заявка ${bookingId.substring(0, 8).toUpperCase()} подтверждена. Туристу отправлено письмо.` };
       }
-      
-      return {
-        success: false,
-        error: 'Unknown callback action'
-      };
+
+      if (action === 'cancel') {
+        if (currentStatus === 'cancelled') {
+          return { success: true, response: 'Заявка уже отменена.' };
+        }
+        await cancelBooking(bookingId, operatorId, 'operator', 'Отменено оператором через Telegram');
+        return { success: true, response: `Заявка ${bookingId.substring(0, 8).toUpperCase()} отменена.` };
+      }
+
+      return { success: false, error: 'Неизвестное действие' };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Ошибка обработки',
       };
     }
   }
