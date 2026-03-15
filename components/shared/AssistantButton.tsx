@@ -9,7 +9,7 @@
  */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { MessageCircle, X, Send, Loader2 } from 'lucide-react';
+import { Sparkles, Bot, X, Send, Loader2 } from 'lucide-react';
 import { getInterestContext } from '@/hooks/useInterestTracker';
 
 // ── Типы ──────────────────────────────────────────────────────────────────────
@@ -154,13 +154,21 @@ export function AssistantButton() {
               flexShrink: 0,
             }}
           >
-            <div>
-              <p style={{ margin: 0, fontWeight: 600, fontSize: '14px', color: 'var(--text-primary)' }}>
-                Твой помощник
-              </p>
-              <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-muted)', marginTop: '1px' }}>
-                Туры на Камчатку
-              </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{
+                width: '34px', height: '34px', borderRadius: '50%',
+                background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              }}>
+                <Bot size={18} color="#fff" />
+              </div>
+              <div>
+                <p style={{ margin: 0, fontWeight: 600, fontSize: '14px', color: 'var(--text-primary)' }}>
+                  AI-помощник Камчатки
+                </p>
+                <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-muted)', marginTop: '1px' }}>
+                  Спросите о турах и безопасности
+                </p>
+              </div>
             </div>
             <button
               onClick={() => setIsOpen(false)}
@@ -368,7 +376,24 @@ export function AssistantButton() {
         onTouchStart={e => { (e.currentTarget.style.transform = 'scale(0.92)'); }}
         onTouchEnd={e => { (e.currentTarget.style.transform = 'scale(1)'); }}
       >
-        {isOpen ? <X size={20} /> : <MessageCircle size={20} />}
+        {isOpen ? <X size={20} /> : (
+          <div style={{ position: 'relative' }}>
+            <Sparkles size={22} className="animate-pulse" />
+            <span style={{
+              position: 'absolute', top: '-4px', right: '-4px',
+              width: '10px', height: '10px',
+            }}>
+              <span className="animate-ping" style={{
+                position: 'absolute', inset: 0,
+                borderRadius: '50%', background: '#4ade80', opacity: 0.75,
+              }} />
+              <span style={{
+                position: 'absolute', inset: '2px',
+                borderRadius: '50%', background: '#22c55e',
+              }} />
+            </span>
+          </div>
+        )}
       </button>
     </>
   );
