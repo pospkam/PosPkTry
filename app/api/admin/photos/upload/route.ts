@@ -1,31 +1,24 @@
 /**
  * POST /api/admin/photos/upload
  *
- * Загружает фото, анализирует через Vision AI (Anthropic → OpenRouter),
- * изменяет размер под нужный профиль и сохраняет в S3 (или локально при отсутствии S3).
+ * Принимает уже обработанное (resize на клиенте) изображение,
+ * анализирует через Vision AI (Anthropic → OpenRouter)
+ * и сохраняет в S3 (или локально при отсутствии S3).
  *
  * Поля FormData:
- *   file     — изображение (jpg/png/webp/heic)
+ *   file     — изображение (jpg/png/webp/heic), уже изменённое в размере клиентом
  *   profile  — (опционально) hero | activity | bento | gallery
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth/middleware';
-import sharp from 'sharp';
 import path from 'path';
 import fs from 'fs/promises';
 import { isS3Configured, uploadToS3 } from '@/lib/storage/s3';
 
 export const dynamic = 'force-dynamic';
 
-// ── Профили ───────────────────────────────────────────────────────────────────
-
-const PROFILES = {
-  hero:     { width: 1920, height: null as null, quality: 85 },
-  activity: { width: 800,  height: 600,          quality: 82 },
-  bento:    { width: 1200, height: 800,          quality: 85 },
-  gallery:  { width: 1200, height: 900,          quality: 85 },
-} as const;
+// ── Конфиги профилей (только метаданные — resize делается на клиенте) ──────────
 
 const PROFILE_DIRS: Record<string, string> = {
   hero:     'hero',
@@ -34,7 +27,7 @@ const PROFILE_DIRS: Record<string, string> = {
   gallery:  'gallery',
 };
 
-type Profile = keyof typeof PROFILES;
+type Profile = 'hero' | 'activity' | 'bento' | 'gallery';
 
 // ── Vision AI ─────────────────────────────────────────────────────────────────
 
@@ -60,7 +53,7 @@ interface AnalysisResult {
   quality: 'excellent' | 'good' | 'skip';
 }
 
-async function analyzeImage(thumbBase64: string): Promise<AnalysisResult | null> {
+async function analyzeImage(imageBase64: string): Promise<AnalysisResult | null> {
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
   const openrouterKey = process.env.OPENROUTER_API_KEY;
 
@@ -79,7 +72,7 @@ async function analyzeImage(thumbBase64: string): Promise<AnalysisResult | null>
           messages: [{
             role: 'user',
             content: [
-              { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: thumbBase64 } },
+              { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: imageBase64 } },
               { type: 'text', text: VISION_PROMPT },
             ],
           }],
@@ -103,7 +96,7 @@ async function analyzeImage(thumbBase64: string): Promise<AnalysisResult | null>
           messages: [{
             role: 'user',
             content: [
-              { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${thumbBase64}` } },
+              { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${imageBase64}` } },
               { type: 'text', text: VISION_PROMPT },
             ],
           }],
@@ -140,9 +133,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Поле file обязательно' }, { status: 400 });
   }
 
-  const MAX_SIZE = 50 * 1024 * 1024; // 50 MB
+  const MAX_SIZE = 60 * 1024 * 1024; // 60 MB
   if (file.size > MAX_SIZE) {
-    return NextResponse.json({ error: 'Файл слишком большой (макс. 50 МБ)' }, { status: 400 });
+    return NextResponse.json({ error: 'Файл слишком большой (макс. 60 МБ)' }, { status: 400 });
   }
 
   const profileOverride = formData.get('profile') as Profile | null;
@@ -150,18 +143,11 @@ export async function POST(request: NextRequest) {
   try {
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    // Миниатюра для AI-анализа
-    const thumbBuf = await sharp(buffer)
-      .resize(768, null, { withoutEnlargement: true })
-      .jpeg({ quality: 75 })
-      .toBuffer();
-    const thumbBase64 = thumbBuf.toString('base64');
-
-    // Анализ через Vision AI
-    const analysis = await analyzeImage(thumbBase64);
+    // AI-анализ: клиент уже снизил размер → используем буфер напрямую
+    const imageBase64 = buffer.toString('base64');
+    const analysis = await analyzeImage(imageBase64);
 
     const profile: Profile = profileOverride ?? (analysis?.profile as Profile) ?? 'gallery';
-    const cfg = PROFILES[profile] ?? PROFILES.gallery;
     const dir = PROFILE_DIRS[profile] ?? 'gallery';
 
     // Безопасное имя файла
@@ -176,20 +162,11 @@ export async function POST(request: NextRequest) {
     const outFilename = `${baseName}.jpg`;
     const s3Key = `images/${dir}/${outFilename}`;
 
-    // Resize
-    let pipeline = sharp(buffer);
-    if (cfg.height) {
-      pipeline = pipeline.resize(cfg.width, cfg.height, { fit: 'cover', position: 'centre' });
-    } else {
-      pipeline = pipeline.resize(cfg.width, null, { withoutEnlargement: true });
-    }
-    const resizedBuf = await pipeline.jpeg({ quality: cfg.quality, mozjpeg: true }).toBuffer();
-
     let servePath: string;
 
     // 1. S3 — основной storage (production)
     if (isS3Configured) {
-      const result = await uploadToS3(s3Key, resizedBuf, 'image/jpeg');
+      const result = await uploadToS3(s3Key, buffer, 'image/jpeg');
       servePath = result.url;
     } else {
       // 2. Fallback: public/ → /tmp/
@@ -209,7 +186,7 @@ export async function POST(request: NextRequest) {
       }
 
       const outPath = path.join(outDir, outFilename);
-      await fs.writeFile(outPath, resizedBuf);
+      await fs.writeFile(outPath, buffer);
     }
 
     return NextResponse.json({
@@ -218,7 +195,7 @@ export async function POST(request: NextRequest) {
       savedPath: servePath,
       profile,
       dir,
-      sizeKb: Math.round(resizedBuf.length / 1024),
+      sizeKb: Math.round(buffer.length / 1024),
       analysis: analysis ?? null,
     });
   } catch (err) {

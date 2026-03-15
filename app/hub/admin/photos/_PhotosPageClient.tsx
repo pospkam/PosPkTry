@@ -4,6 +4,63 @@ import React, { useCallback, useRef, useState } from 'react';
 import Image from 'next/image';
 import { Upload, CheckCircle, XCircle, Loader2, ImageIcon, Copy } from 'lucide-react';
 
+// ── Client-side resize ────────────────────────────────────────────────────────
+
+type ResizeDims = { width: number; height?: number };
+
+const CANVAS_PROFILES: Record<string, ResizeDims> = {
+  hero:     { width: 1920 },
+  activity: { width: 800,  height: 600 },
+  bento:    { width: 1200, height: 800 },
+  gallery:  { width: 1200, height: 900 },
+  auto:     { width: 1200 },          // pre-resize before AI decides profile
+};
+
+async function resizeForProfile(file: File, profile: string): Promise<Blob> {
+  const { width: targetW, height: targetH } = CANVAS_PROFILES[profile] ?? CANVAS_PROFILES.auto;
+
+  const bitmap = await createImageBitmap(file);
+  const srcW = bitmap.width;
+  const srcH = bitmap.height;
+
+  let canvasW: number;
+  let canvasH: number;
+  let drawX = 0;
+  let drawY = 0;
+  let drawW: number;
+  let drawH: number;
+
+  if (targetH) {
+    // cover: fill exact box, crop centre
+    const scale = Math.max(targetW / srcW, targetH / srcH);
+    drawW = Math.round(srcW * scale);
+    drawH = Math.round(srcH * scale);
+    canvasW = targetW;
+    canvasH = targetH;
+    drawX = Math.round((targetW - drawW) / 2);
+    drawY = Math.round((targetH - drawH) / 2);
+  } else {
+    // width-only: maintain ratio, never enlarge
+    const scale = srcW > targetW ? targetW / srcW : 1;
+    drawW = Math.round(srcW * scale);
+    drawH = Math.round(srcH * scale);
+    canvasW = drawW;
+    canvasH = drawH;
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width  = canvasW;
+  canvas.height = canvasH;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas недоступен');
+  ctx.drawImage(bitmap, drawX, drawY, drawW, drawH);
+  bitmap.close();
+
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob(b => (b ? resolve(b) : reject(new Error('toBlob вернул null'))), 'image/jpeg', 0.86);
+  });
+}
+
 // ── Типы ─────────────────────────────────────────────────────────────────────
 
 type Profile = 'hero' | 'activity' | 'bento' | 'gallery';
@@ -94,8 +151,16 @@ export function PhotosPageClient() {
   const uploadItem = async (item: PhotoItem): Promise<void> => {
     setItems(prev => prev.map(p => p.id === item.id ? { ...p, status: 'uploading' } : p));
 
+    let uploadBlob: Blob;
+    try {
+      uploadBlob = await resizeForProfile(item.file, item.selectedProfile);
+    } catch {
+      uploadBlob = item.file;   // fallback: send original if Canvas unavailable
+    }
+
+    const resizedFile = new File([uploadBlob], item.file.name, { type: 'image/jpeg' });
     const fd = new FormData();
-    fd.append('file', item.file);
+    fd.append('file', resizedFile);
     if (item.selectedProfile !== 'auto') {
       fd.append('profile', item.selectedProfile);
     }
@@ -182,7 +247,7 @@ export function PhotosPageClient() {
               Перетащи фото или нажми для выбора
             </p>
             <p className="text-sm text-[var(--text-secondary)] mt-1">
-              JPG, PNG, WEBP, HEIC — до 50 МБ каждый
+              JPG, PNG, WEBP, HEIC — до 60 МБ каждый
             </p>
           </div>
         </div>
@@ -292,8 +357,8 @@ function PhotoCard({ item, onRemove, onUpload, onProfileChange, onCopyPath }: Ph
         {/* Статус бейдж */}
         <div className="absolute top-2 right-2">
           {status === 'uploading' && (
-            <span className="bg-black/70 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
-              <Loader2 className="w-3 h-3 animate-spin" /> Анализ...
+            <span className="bg-[var(--bg-card)] text-[var(--text-secondary)] text-xs px-2 py-1 rounded flex items-center gap-1 shadow-sm">
+              <Loader2 className="w-3 h-3 animate-spin text-[var(--accent)]" /> Обработка...
             </span>
           )}
           {status === 'done' && (
