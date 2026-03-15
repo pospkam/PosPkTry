@@ -3,12 +3,14 @@ import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { ApiResponse } from '@/types';
 import { requireAuth } from '@/lib/auth/middleware';
+import { isS3Configured, uploadToS3 } from '@/lib/storage/s3';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * POST /api/upload - Загрузка изображений
  * AUTH: requireAuth — только авторизованные пользователи
+ * Storage: S3 (production) → public/uploads/ (dev fallback)
  */
 export async function POST(request: NextRequest) {
   const userOrResponse = await requireAuth(request);
@@ -26,22 +28,12 @@ export async function POST(request: NextRequest) {
     }
 
     const uploadedFiles: string[] = [];
-    const uploadDir = join(process.cwd(), 'public', 'uploads');
-
-    // Создаем директорию если не существует
-    try {
-      await mkdir(uploadDir, { recursive: true });
-    } catch (error) {
-      // Директория уже существует
-    }
 
     for (const file of files) {
-      // Валидация типа файла
       if (!file.type.startsWith('image/')) {
-        continue; // Пропускаем не-изображения
+        continue;
       }
 
-      // Валидация размера (макс 5MB)
       if (file.size > 5 * 1024 * 1024) {
         return NextResponse.json({
           success: false,
@@ -49,21 +41,28 @@ export async function POST(request: NextRequest) {
         } as ApiResponse<null>, { status: 400 });
       }
 
-      // Генерируем уникальное имя
       const timestamp = Date.now();
       const randomStr = Math.random().toString(36).substring(2, 15);
-      const extension = file.name.split('.').pop();
+      const extension = file.name.split('.').pop() ?? 'jpg';
       const filename = `${timestamp}-${randomStr}.${extension}`;
+      const buffer = Buffer.from(await file.arrayBuffer());
 
-      // Сохраняем файл
-      const bytes = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-      const filepath = join(uploadDir, filename);
-
-      await writeFile(filepath, buffer);
-
-      // Добавляем URL в результат
-      uploadedFiles.push(`/uploads/${filename}`);
+      if (isS3Configured) {
+        const key = `uploads/${filename}`;
+        const contentType = file.type || 'image/jpeg';
+        const result = await uploadToS3(key, buffer, contentType);
+        uploadedFiles.push(result.url);
+      } else {
+        const uploadDir = join(process.cwd(), 'public', 'uploads');
+        try {
+          await mkdir(uploadDir, { recursive: true });
+        } catch {
+          // dir exists
+        }
+        const filepath = join(uploadDir, filename);
+        await writeFile(filepath, buffer);
+        uploadedFiles.push(`/uploads/${filename}`);
+      }
     }
 
     return NextResponse.json({
@@ -75,12 +74,10 @@ export async function POST(request: NextRequest) {
       message: 'Файлы успешно загружены'
     } as ApiResponse<unknown>);
 
-  } catch (error) {
-    console.error('Error uploading files:', error);
+  } catch {
     return NextResponse.json({
       success: false,
       error: 'Ошибка при загрузке файлов'
     } as ApiResponse<null>, { status: 500 });
   }
 }
-

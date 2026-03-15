@@ -12,6 +12,9 @@ import dynamic from 'next/dynamic';
 import { Header } from '@/components/layout/Header';
 import LeadModal from '@/components/routes/LeadModal';
 import BookingModal from '@/components/routes/BookingModal';
+import RouteCard, { type RouteItem } from '@/components/routes/RouteCard';
+import { useSourceTracker } from '@/hooks/useSourceTracker';
+import { AssistantButton } from '@/components/shared/AssistantButton';
 
 const LeafletMap = dynamic(() => import('@/components/shared/LeafletMap'), { ssr: false });
 
@@ -208,6 +211,8 @@ export default function RouteDetailClient({ id }: { id: string }) {
   const [notFound, setNotFound] = useState(false);
   const [showLead, setShowLead] = useState(false);
   const [bookingOffer, setBookingOffer] = useState<Offer | null>(null);
+  const [relatedRoutes, setRelatedRoutes] = useState<RouteItem[]>([]);
+  useSourceTracker();
 
   useEffect(() => {
     fetch(`/api/routes/${id}`)
@@ -219,6 +224,20 @@ export default function RouteDetailClient({ id }: { id: string }) {
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
   }, [id]);
+
+  // Похожие маршруты — загружаем когда известна категория
+  useEffect(() => {
+    if (!route) return;
+    fetch(`/api/routes?category=${route.category}&limit=5&sort=recommended`)
+      .then(r => r.json())
+      .then(j => {
+        if (j.success) {
+          const others = (j.data as RouteItem[]).filter(r => r.id !== id).slice(0, 4);
+          setRelatedRoutes(others);
+        }
+      })
+      .catch(() => { /* silent */ });
+  }, [route, id]);
 
   if (loading) {
     return (
@@ -472,6 +491,28 @@ export default function RouteDetailClient({ id }: { id: string }) {
           </div>
         </div>
       </div>
+
+      {/* ── Related routes ───────────────────────────────────── */}
+      {relatedRoutes.length > 0 && (
+        <div className="mt-10">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="ds-h2">
+              Ещё в категории &laquo;{catLabel}&raquo;
+            </h2>
+            <Link
+              href={`/routes?category=${route.category}`}
+              className="text-sm text-[var(--ocean)] hover:underline"
+            >
+              Все маршруты
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {relatedRoutes.map(r => (
+              <RouteCard key={r.id} route={r} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
     <LeadModal
       open={showLead}
@@ -491,6 +532,7 @@ export default function RouteDetailClient({ id }: { id: string }) {
         maxGroupSize={bookingOffer.maxGroupSize}
       />
     )}
+    <AssistantButton pageContext={{ type: 'route', title: route.title, category: catLabel }} />
     </>
   );
 }

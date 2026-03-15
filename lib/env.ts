@@ -53,6 +53,8 @@ const envSchema = z.object({
   TELEGRAM_CHAT_ID: z.string().optional().default(''),
   TELEGRAM_FISHING_CHAT_ID: z.string().optional().default(''),
   TELEGRAM_WEBHOOK_SECRET: z.string().optional().default(''),
+  TELEGRAM_LEADS_CHAT_ID: z.string().optional().default(''),
+  TELEGRAM_CHANNEL_ID: z.string().optional().default(''),
 
   // ── Email (SMTP) ──────────────────────────────────────────────────
   SMTP_HOST: z.string().optional().default('smtp.gmail.com'),
@@ -126,6 +128,7 @@ const envSchema = z.object({
   // ── Analytics / SEO ───────────────────────────────────────────────
   GOOGLE_ANALYTICS_ID: z.string().optional().default(''),
   YANDEX_METRIKA_ID: z.string().optional().default(''),
+  NEXT_PUBLIC_YANDEX_METRIKA_ID: z.string().optional().default(''),
   GOOGLE_SITE_VERIFICATION: z.string().optional().default(''),
   YANDEX_VERIFICATION: z.string().optional().default(''),
 

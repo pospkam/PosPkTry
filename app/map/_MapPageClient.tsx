@@ -7,6 +7,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import dynamic from 'next/dynamic';
 import Logo from '@/components/shared/Logo';
 import BottomNav from '@/components/shared/BottomNav';
+import { AssistantButton } from '@/components/shared/AssistantButton';
 
 const LeafletMap = dynamic(() => import('@/components/shared/LeafletMap'), { ssr: false });
 
@@ -99,6 +100,7 @@ export default function MapPageClient() {
     title: r.title,
     description: r.description.slice(0, 120),
     color: CATEGORY_COLORS[r.category] ?? 'blue',
+    href: `/routes/${r.id}`,
   }));
 
   return (
@@ -170,6 +172,7 @@ export default function MapPageClient() {
       </div>
 
       <BottomNav activePath="/map" />
+      <AssistantButton pageContext={{ type: 'map' }} />
     </div>
   );
 }

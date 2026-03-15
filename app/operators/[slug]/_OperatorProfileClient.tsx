@@ -5,10 +5,12 @@ import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import RouteCard, { type RouteItem } from '@/components/routes/RouteCard';
 import {
   Phone, MapPin, Shield, Star, ChevronDown, Calendar,
   Fish, Home, Users, Mountain, Compass, Car, Snowflake, Bird, Waves, Trees,
 } from 'lucide-react';
+import { useSourceTracker } from '@/hooks/useSourceTracker';
 
 const LeafletMap = dynamic(() => import('@/components/shared/LeafletMap'), { ssr: false });
 
@@ -76,6 +78,8 @@ export default function OperatorProfileClient({ slug }: { slug: string }) {
   const [sent, setSent] = useState(false);
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
   const [liveReviews, setLiveReviews] = useState<LiveReview[]>([]);
+  const [platformRoutes, setPlatformRoutes] = useState<RouteItem[]>([]);
+  useSourceTracker();
 
   useEffect(() => {
     const load = async () => {
@@ -109,6 +113,19 @@ export default function OperatorProfileClient({ slug }: { slug: string }) {
     };
     load();
   }, [slug]);
+
+  // Маршруты оператора на TourHab
+  useEffect(() => {
+    if (!op) return;
+    fetch(`/api/operators/${slug}/routes`)
+      .then(r => r.json())
+      .then(j => {
+        if (j.success && Array.isArray(j.data)) {
+          setPlatformRoutes(j.data as RouteItem[]);
+        }
+      })
+      .catch(() => { /* silent */ });
+  }, [op, slug]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -242,6 +259,25 @@ export default function OperatorProfileClient({ slug }: { slug: string }) {
                       </ul>
                     )}
                   </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Platform Routes */}
+        {platformRoutes.length > 0 && (
+          <section className="py-14 px-4">
+            <div className="max-w-6xl mx-auto">
+              <h2 className="ds-h2 text-center mb-2" style={{ fontFamily: 'var(--font-playfair)' }}>
+                Маршруты на TourHab
+              </h2>
+              <p className="text-center text-sm text-[var(--text-secondary)] mb-8">
+                Маршруты {op.name} с онлайн-бронированием
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {platformRoutes.map(r => (
+                  <RouteCard key={r.id} route={r} />
                 ))}
               </div>
             </div>

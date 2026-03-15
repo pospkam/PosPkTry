@@ -178,6 +178,7 @@ export default function RoutesPageClient() {
     title: r.title,
     description: r.category,
     color: CATEGORY_COLORS[r.category] ?? 'blue',
+    href: `/routes/${r.id}`,
   }));
 
   return (

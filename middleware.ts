@@ -50,6 +50,7 @@ const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/loyalty/levels': ['GET'],   // уровни программы лояльности (публичный каталог)
   '/api/support/knowledge-base': ['GET'], // База знаний (публичная)
   '/api/faq': ['GET'],              // FAQ (публичная)
+  '/api/photos': ['GET'],            // загруженные фото из /tmp (Timeweb production)
 };
 
 const API_ROLE_REQUIREMENTS: Record<string, AuthRole> = {

@@ -10,6 +10,7 @@ const LeadSchema = z.object({
   route_id:    z.string().uuid().optional(),
   route_title: z.string().max(255).optional(),
   source_url:  z.string().max(500).optional(),
+  source_data: z.record(z.unknown()).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -28,15 +29,15 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { name, phone, comment, route_id, route_title, source_url } = parse.data;
+  const { name, phone, comment, route_id, route_title, source_url, source_data } = parse.data;
 
   let leadId: string;
   try {
     const res = await pool.query<{ id: string }>(
-      `INSERT INTO leads (name, phone, comment, route_id, route_title, source_url)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO leads (name, phone, comment, route_id, route_title, source_url, source_data)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING id`,
-      [name, phone, comment ?? null, route_id ?? null, route_title ?? null, source_url ?? null]
+      [name, phone, comment ?? null, route_id ?? null, route_title ?? null, source_url ?? null, source_data ? JSON.stringify(source_data) : null]
     );
     leadId = res.rows[0].id;
   } catch (err) {
@@ -58,6 +59,11 @@ export async function POST(req: NextRequest) {
     if (comment) lines.push(`<b>Комментарий:</b> ${escHtml(comment)}`);
     if (route_title) lines.push(`<b>Маршрут:</b> ${escHtml(route_title)}`);
     if (source_url) lines.push(`<b>Страница:</b> <a href="${escHtml(source_url)}">${escHtml(source_url)}</a>`);
+    if (source_data) {
+      const sd = source_data as Record<string, string | undefined>;
+      if (sd.utm_source) lines.push(`<b>UTM:</b> ${escHtml(sd.utm_source)}${sd.utm_medium ? ` / ${escHtml(sd.utm_medium)}` : ''}${sd.utm_campaign ? ` / ${escHtml(sd.utm_campaign)}` : ''}`);
+      if (sd.referrer) lines.push(`<b>Referrer:</b> ${escHtml(sd.referrer)}`);
+    }
     lines.push('', `<code>${leadId}</code>`);
 
     telegramService.sendMessage({ chatId, text: lines.join('\n'), parseMode: 'HTML' })

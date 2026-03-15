@@ -5,7 +5,7 @@ import Link from 'next/link';
 import {
   Flame, Thermometer, Anchor, Mountain, Leaf, Fish,
   Snowflake, Plane, Car, Waves, Droplets, Wind,
-  Footprints, PawPrint, MapPin, Tag, Clock, Heart,
+  Footprints, PawPrint, MapPin, Tag, Clock, Heart, CalendarCheck,
 } from 'lucide-react';
 
 export interface RouteItem {
@@ -19,6 +19,10 @@ export interface RouteItem {
   difficulty: string | null;
   durationDays: number | null;
   sourceName: string | null;
+  bestMonths?: number[] | null;
+  offerCount?: number;
+  topOperatorName?: string;
+  minOfferPrice?: number | null;
 }
 
 const CATEGORY_META: Record<string, { label: string; icon: React.ElementType; color: string }> = {
@@ -67,9 +71,18 @@ export default function RouteCard({ route }: { route: RouteItem }) {
   const Icon = meta.icon;
   const diff = route.difficulty ? DIFFICULTY_LABEL[route.difficulty] : null;
   const desc = route.description
-    ? route.description.replace(/<[^>]+>/g, '').slice(0, 100).trimEnd() + (route.description.length > 100 ? '…' : '')
+    ? route.description.replace(/<[^>]+>/g, '').slice(0, 100).trimEnd() + (route.description.length > 100 ? '...' : '')
     : null;
   const image = CARD_IMAGES[route.category] ?? '/images/bento/mutnovsky.jpg';
+
+  // Сезонный бейдж
+  const currentMonth = new Date().getMonth() + 1; // 1-12
+  const isInSeason = route.bestMonths?.includes(currentMonth) ?? false;
+  const hasSeasonData = route.bestMonths && route.bestMonths.length > 0;
+
+  // Оператор info
+  const displayPrice = route.minOfferPrice ?? route.priceFrom;
+  const hasOffers = (route.offerCount ?? 0) > 0;
 
   const [liked, setLiked] = useState(false);
   const [liking, setLiking] = useState(false);
@@ -129,6 +142,20 @@ export default function RouteCard({ route }: { route: RouteItem }) {
             {route.durationDays} {pluralDays(route.durationDays)}
           </span>
         )}
+
+        {/* Season badge */}
+        {hasSeasonData && (
+          <span
+            className={`absolute bottom-2 left-2 flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded ${
+              isInSeason
+                ? 'bg-[var(--success)] text-white'
+                : 'bg-black/60 text-white/80'
+            }`}
+          >
+            <CalendarCheck className="w-2.5 h-2.5" />
+            {isInSeason ? 'Сейчас сезон' : 'Сезонный'}
+          </span>
+        )}
       </Link>
 
       {/* Favorite button (outside Link to avoid navigation) */}
@@ -163,10 +190,10 @@ export default function RouteCard({ route }: { route: RouteItem }) {
 
         {/* Badges row */}
         <div className="flex flex-wrap items-center gap-1.5 pt-1">
-          {route.priceFrom != null && route.priceFrom > 0 && (
+          {displayPrice != null && displayPrice > 0 && (
             <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[var(--success)]/10 text-[var(--success)]">
               <Tag className="w-2.5 h-2.5" />
-              от {route.priceFrom.toLocaleString('ru-RU')} ₽
+              от {displayPrice.toLocaleString('ru-RU')} ₽
             </span>
           )}
           {diff && (
@@ -177,12 +204,24 @@ export default function RouteCard({ route }: { route: RouteItem }) {
               {diff.label}
             </span>
           )}
+          {hasOffers && (
+            <span className="inline-flex text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[var(--accent)]/10 text-[var(--accent)]">
+              Бронирование
+            </span>
+          )}
           {route.lat != null && (
             <span className="ml-auto text-[var(--ocean)]" title="Есть на карте">
               <MapPin className="w-3 h-3" />
             </span>
           )}
         </div>
+
+        {/* Operator */}
+        {route.topOperatorName && (
+          <p className="text-[10px] text-[var(--text-muted)] truncate">
+            {route.topOperatorName}
+          </p>
+        )}
       </Link>
     </div>
   );

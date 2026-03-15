@@ -8,6 +8,7 @@ export interface MapMarker {
   title: string;
   description?: string;
   color?: string;
+  href?: string;
 }
 
 interface LeafletMapProps {
@@ -35,6 +36,26 @@ const COLOR_HEX: Record<string, string> = {
   darkOrange:'#C2410C',
   cyan:      '#06B6D4',
 };
+
+function buildPopupHtml(marker: MapMarker): string {
+  let html = `<strong style="font-size:13px">${marker.title}</strong>`;
+  if (marker.description) {
+    html += `<br/><span style="color:#666;font-size:12px">${marker.description}</span>`;
+  }
+  if (marker.href) {
+    html += `<br/><a href="${marker.href}" style="color:#D44A0C;font-size:12px;font-weight:600;text-decoration:none;display:inline-block;margin-top:4px">Смотреть маршрут &rarr;</a>`;
+  }
+  return html;
+}
+
+function createMarkerIcon(hex: string) {
+  return {
+    className: '',
+    html: `<div style="width:10px;height:10px;border-radius:50%;background:${hex};border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.4)"></div>`,
+    iconSize: [10, 10] as [number, number],
+    iconAnchor: [5, 5] as [number, number],
+  };
+}
 
 export default function LeafletMap({
   markers = [],
@@ -65,18 +86,11 @@ export default function LeafletMap({
 
     markers.forEach(marker => {
       const hex = COLOR_HEX[marker.color ?? 'blue'] ?? '#2568B0';
-      const icon = L.divIcon({
-        className: '',
-        html: `<div style="width:10px;height:10px;border-radius:50%;background:${hex};border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.4)"></div>`,
-        iconSize: [10, 10],
-        iconAnchor: [5, 5],
-      });
+      const icon = L.divIcon(createMarkerIcon(hex));
 
       const m = L.marker(marker.coords, { icon }).addTo(layerRef.current);
       if (marker.title) {
-        m.bindPopup(
-          `<strong>${marker.title}</strong>${marker.description ? `<br/><span style="color:#666;font-size:12px">${marker.description}</span>` : ''}`
-        );
+        m.bindPopup(buildPopupHtml(marker));
       }
     });
 

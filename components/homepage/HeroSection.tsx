@@ -4,8 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Reveal } from '@/components/homepage/Reveal';
-import { SearchBar } from '@/components/homepage/SearchBar';
-import { MapPin, ShieldCheck, Compass, AlertTriangle } from 'lucide-react';
+import { MapPin, ShieldCheck, Compass, AlertTriangle, ChevronDown } from 'lucide-react';
 
 interface Stats {
   totalRoutes: number;
@@ -72,7 +71,14 @@ export function HeroSection() {
         </Reveal>
 
         <Reveal delay={3}>
-          <SearchBar />
+          <button
+            type="button"
+            onClick={() => document.getElementById('categories')?.scrollIntoView({ behavior: 'smooth' })}
+            className="ds-btn ds-btn-primary text-sm px-6 py-3 inline-flex items-center gap-2"
+          >
+            Выбрать активность
+            <ChevronDown className="w-4 h-4" />
+          </button>
         </Reveal>
 
         {/* Trust strip — real data */}

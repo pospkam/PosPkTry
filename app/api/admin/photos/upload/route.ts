@@ -2,7 +2,7 @@
  * POST /api/admin/photos/upload
  *
  * Загружает фото, анализирует через Vision AI (Anthropic → OpenRouter),
- * изменяет размер под нужный профиль и сохраняет в public/images/
+ * изменяет размер под нужный профиль и сохраняет в S3 (или локально при отсутствии S3).
  *
  * Поля FormData:
  *   file     — изображение (jpg/png/webp/heic)
@@ -14,6 +14,7 @@ import { requireAdmin } from '@/lib/auth/middleware';
 import sharp from 'sharp';
 import path from 'path';
 import fs from 'fs/promises';
+import { isS3Configured, uploadToS3 } from '@/lib/storage/s3';
 
 export const dynamic = 'force-dynamic';
 
@@ -172,28 +173,52 @@ export async function POST(request: NextRequest) {
         .toLowerCase()
     ).slice(0, 60);
 
-    const outDir = path.join(process.cwd(), 'public', 'images', dir);
-    await fs.mkdir(outDir, { recursive: true });
-
     const outFilename = `${baseName}.jpg`;
-    const outPath = path.join(outDir, outFilename);
+    const s3Key = `images/${dir}/${outFilename}`;
 
-    // Resize + сохранение
+    // Resize
     let pipeline = sharp(buffer);
     if (cfg.height) {
       pipeline = pipeline.resize(cfg.width, cfg.height, { fit: 'cover', position: 'centre' });
     } else {
       pipeline = pipeline.resize(cfg.width, null, { withoutEnlargement: true });
     }
-    const info = await pipeline.jpeg({ quality: cfg.quality, mozjpeg: true }).toFile(outPath);
+    const resizedBuf = await pipeline.jpeg({ quality: cfg.quality, mozjpeg: true }).toBuffer();
+
+    let servePath: string;
+
+    // 1. S3 — основной storage (production)
+    if (isS3Configured) {
+      const result = await uploadToS3(s3Key, resizedBuf, 'image/jpeg');
+      servePath = result.url;
+    } else {
+      // 2. Fallback: public/ → /tmp/
+      const publicDir = path.join(process.cwd(), 'public', 'images', dir);
+      const tmpDir = path.join('/tmp', 'tourhab-uploads', 'images', dir);
+
+      let outDir = publicDir;
+      servePath = `/images/${dir}/${outFilename}`;
+
+      try {
+        await fs.mkdir(publicDir, { recursive: true });
+        await fs.access(publicDir, 2 /* fs.constants.W_OK */);
+      } catch {
+        outDir = tmpDir;
+        servePath = `/api/photos/images/${dir}/${outFilename}`;
+        await fs.mkdir(tmpDir, { recursive: true });
+      }
+
+      const outPath = path.join(outDir, outFilename);
+      await fs.writeFile(outPath, resizedBuf);
+    }
 
     return NextResponse.json({
       ok: true,
       filename: outFilename,
-      savedPath: `/images/${dir}/${outFilename}`,
+      savedPath: servePath,
       profile,
       dir,
-      sizeKb: Math.round(info.size / 1024),
+      sizeKb: Math.round(resizedBuf.length / 1024),
       analysis: analysis ?? null,
     });
   } catch (err) {

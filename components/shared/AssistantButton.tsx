@@ -67,9 +67,30 @@ const QUICK_CHIPS = [
   'Что взять в поход?',
 ];
 
+// Контекстные чипсы и приветствия
+const PAGE_CHIPS: Record<string, string[]> = {
+  route:    ['Что взять с собой?', 'Когда лучше ехать?', 'Кто организует тур?'],
+  category: ['Помоги выбрать маршрут', 'Какой для новичка?', 'Когда сезон?'],
+  map:      ['Расскажи про эту точку', 'Что рядом посмотреть?', 'Где лучшие виды?'],
+  home:     QUICK_CHIPS,
+};
+
+const PAGE_GREETINGS: Record<string, string> = {
+  route:    'Интересный маршрут! Могу подсказать что взять с собой или когда лучше ехать.',
+  category: 'Помогу выбрать подходящий маршрут. Спрашивайте!',
+  map:      'Видите точки на карте? Спросите про любую — расскажу подробнее.',
+  home:     '',
+};
+
+export interface PageContext {
+  type: 'route' | 'category' | 'home' | 'map';
+  title?: string;
+  category?: string;
+}
+
 // ── Компонент ─────────────────────────────────────────────────────────────────
 
-export function AssistantButton() {
+export function AssistantButton({ pageContext }: { pageContext?: PageContext }) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -104,7 +125,9 @@ export function AssistantButton() {
         if (prev.length > 0) {
           setMessages(prev);
         } else {
-          setMessages([{ role: 'assistant', content: buildGreeting(ctx) }]);
+          const contextGreeting = pageContext ? PAGE_GREETINGS[pageContext.type] : '';
+          const greeting = contextGreeting || buildGreeting(ctx);
+          setMessages([{ role: 'assistant', content: greeting }]);
         }
       })
       .catch(() => {
@@ -313,7 +336,7 @@ export function AssistantButton() {
                 flexShrink: 0,
               }}
             >
-              {QUICK_CHIPS.map(chip => (
+              {(PAGE_CHIPS[pageContext?.type ?? 'home'] ?? QUICK_CHIPS).map(chip => (
                 <button
                   key={chip}
                   onClick={() => sendText(chip)}

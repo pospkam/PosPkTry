@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { X, Phone, User, MessageSquare, CheckCircle, Loader2 } from 'lucide-react';
+import { getSourceData } from '@/hooks/useSourceTracker';
 
 interface LeadModalProps {
   open: boolean;
@@ -56,6 +57,7 @@ export default function LeadModal({ open, onClose, routeId, routeTitle, sourceUr
           route_id:    routeId,
           route_title: routeTitle,
           source_url:  sourceUrl ?? (typeof window !== 'undefined' ? window.location.href : undefined),
+          source_data: getSourceData() ?? undefined,
         }),
       });
       const json: { success: boolean; error?: string } = await res.json();

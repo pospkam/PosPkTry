@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Reveal } from '@/components/homepage/Reveal';
@@ -37,9 +37,17 @@ const SPAN: Record<CardSize, { col: string; row: string }> = {
 export function CategoryCards() {
   const { trackClick, trackHoverStart } = useInterestTracker();
   const hoverCleanups = useRef<Map<string, () => void>>(new Map());
+  const [counts, setCounts] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    fetch('/api/public/stats/categories')
+      .then(r => r.json())
+      .then(j => { if (j.success) setCounts(j.data); })
+      .catch(() => {/* silent */});
+  }, []);
 
   return (
-    <section className="py-16 px-4 md:px-6">
+    <section id="categories" className="py-16 px-4 md:px-6">
       <div className="max-w-6xl mx-auto">
         <Reveal>
           <h2 className="font-playfair text-3xl md:text-4xl font-bold text-[var(--kh-text)] mb-2">
@@ -91,10 +99,17 @@ export function CategoryCards() {
                 {/* overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent group-hover:from-black/70 transition-all duration-300" />
 
-                {/* label */}
-                <span className="absolute bottom-2 left-3 text-white text-xs font-semibold tracking-wide drop-shadow-sm">
-                  {cat.label}
-                </span>
+                {/* label + count */}
+                <div className="absolute bottom-2 left-3 right-3">
+                  <span className="text-white text-xs font-semibold tracking-wide drop-shadow-sm">
+                    {cat.label}
+                  </span>
+                  {counts[cat.slug] != null && counts[cat.slug] > 0 && (
+                    <span className="ml-1.5 text-white/60 text-[10px] drop-shadow-sm">
+                      {counts[cat.slug]}
+                    </span>
+                  )}
+                </div>
               </Link>
             );
           })}

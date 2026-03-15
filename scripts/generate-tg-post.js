@@ -73,9 +73,57 @@ const POST_THEMES = [
   { type: 'insider',   hint: 'секретное место или совет, куда не водят массовые туры' },
 ];
 
+// ── Контекст платформы ────────────────────────────────────────
+const PLATFORM_CONTEXT = `ПЛАТФОРМА: TourHab (tourhab.ru) — агрегатор туров и маршрутов Камчатки.
+Операторы в каталоге:
+• Камчатская Рыбалка (kamchatskaya-rybalka) — рыбалка на нерку, чавычу, горбушу; база на реке Большой
+• Камчатинтур (kamchatintour) — пакетные туры с 1991 года, РТО 006765, официальный оператор
+• TopKam (topkam) — однодневные и многодневные активные туры, вулканы, треккинг
+• Вулкан Гид (vulkan-gid) — специализация: восхождения и треккинг на вулканы Камчатки
+• Камчатка Дикая (kamchatka-wild) — наблюдение за медведями, вертолётные туры, дикая природа
+Маршрутов в каталоге: 1158+. Каталог: https://tourhab.ru/routes
+Категории: вулканы, рыбалка, треккинг, термальные источники, медведи, вертолётные туры, сплавы, фотосафари и другие.`;
+
+// ── Маппинг категория → оператор ─────────────────────────────
+const CATEGORY_OPERATOR = {
+  rybalka:    'Камчатская Рыбалка (tourhab.ru/operators/kamchatskaya-rybalka) — специалисты по рыбалке на Камчатке.',
+  vulkani:    'Вулкан Гид (tourhab.ru/operators/vulkan-gid) — восхождения и треккинг на вулканы.',
+  medvedi:    'Камчатка Дикая (tourhab.ru/operators/kamchatka-wild) — наблюдение за медведями вплотную.',
+  vertolyoty: 'Камчатка Дикая (tourhab.ru/operators/kamchatka-wild) — вертолётные туры на вулканы и природные объекты.',
+  treking:    'TopKam (tourhab.ru/operators/topkam) и Вулкан Гид — пешие маршруты и восхождения.',
+  termalnye:  'Камчатинтур (tourhab.ru/operators/kamchatintour) — туры к термальным источникам с 1991 года.',
+  splav:      'TopKam (tourhab.ru/operators/topkam) — сплавы и активные туры по рекам Камчатки.',
+};
+
 // ── AI вызов (waterfall) ─────────────────────────────────────
 async function callAI(systemPrompt, userPrompt) {
-  // 1. Timeweb Agent
+  // 1. DeepSeek API напрямую (system prompt работает корректно)
+  const dsKey = process.env.DEEPSEEK_API_KEY;
+  if (dsKey) {
+    try {
+      const res = await fetch('https://api.deepseek.com/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${dsKey}` },
+        body: JSON.stringify({
+          model: 'deepseek-chat',
+          temperature: 0.7,
+          max_tokens: 600,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt },
+          ],
+        }),
+        signal: AbortSignal.timeout(30_000),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const text = data?.choices?.[0]?.message?.content;
+        if (text) { console.log('  AI: DeepSeek'); return text.trim(); }
+      }
+    } catch (e) { console.warn(`  DeepSeek err: ${e.message}`); }
+  }
+
+  // 2. Timeweb Agent (fallback — RAG с Камчаткой, но игнорирует system prompt)
   const twToken = process.env.TIMEWEB_TOKEN;
   const twAgent = process.env.TIMEWEB_AI_AGENT_ID;
   if (twToken && twAgent) {
@@ -192,7 +240,7 @@ async function main() {
           : '';
 
       const res = await pool.query(
-        `SELECT title, category, description, source_url,
+        `SELECT id, title, category, description, source_url,
                 payload->>'best_months' AS best_months,
                 payload->>'difficulty' AS difficulty
          FROM agent_route_knowledge
@@ -205,11 +253,15 @@ async function main() {
 
       if (res.rows[0]) {
         const r = res.rows[0];
+        const routeUrl = `https://tourhab.ru/routes/${r.id}`;
         routeContext = `Маршрут для поста: "${r.title}" (категория: ${r.category})`;
+        routeContext += `\nСсылка на маршрут: ${routeUrl}`;
         if (r.description) routeContext += `\nОписание: ${r.description.slice(0, 400)}`;
         if (r.difficulty) routeContext += `\nСложность: ${r.difficulty}`;
         if (r.best_months) routeContext += `\nЛучшие месяцы: ${r.best_months}`;
         if (r.source_url)  routeContext += `\nИсточник: ${r.source_url}`;
+        const opHint = CATEGORY_OPERATOR[r.category];
+        if (opHint) routeContext += `\nОператор по теме: ${opHint}`;
       }
     } catch (e) {
       console.warn(`  БД недоступна: ${e.message}. Работаем без контекста маршрута.`);
@@ -220,9 +272,14 @@ async function main() {
 
   // Формируем user prompt
   const currentMonth = new Date().toLocaleString('ru-RU', { month: 'long' });
-  const userPrompt = routeContext
-    ? `Напиши пост для Telegram-канала о Камчатке.\n\n${routeContext}\n\nСтиль: ${theme.hint}\nТекущий месяц на дворе: ${currentMonth}.`
-    : `Напиши пост для Telegram-канала о Камчатке.\nТема: ${theme.hint}\nТекущий месяц: ${currentMonth}.`;
+  let userPrompt = `${PLATFORM_CONTEXT}\n\n`;
+  if (routeContext) {
+    userPrompt += `Напиши пост для Telegram-канала о Камчатке.\n\n${routeContext}\n\nСтиль: ${theme.hint}\nТекущий месяц на дворе: ${currentMonth}.`;
+    userPrompt += `\n\nВАЖНО: В посте используй прямую ссылку на маршрут (не tourhab.ru/routes). Если упоминаешь оператора — дай ссылку на его профиль.`;
+  } else {
+    userPrompt += `Напиши пост для Telegram-канала о Камчатке.\nТема: ${theme.hint}\nТекущий месяц: ${currentMonth}.`;
+    userPrompt += `\n\nВ конце поста дай ссылку на каталог: https://tourhab.ru/routes`;
+  }
 
   console.log('\nГенерирую пост...');
   const post = await callAI(KUZMICH_SYSTEM, userPrompt);

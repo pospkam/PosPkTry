@@ -4,16 +4,18 @@ import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { HeroSection } from '@/components/homepage/HeroSection';
 import { CategoryCards } from '@/components/homepage/CategoryCards';
-import { PlatformStats } from '@/components/homepage/PlatformStats';
+import { NowOnKamchatka } from '@/components/homepage/NowOnKamchatka';
 import { ReviewsSection } from '@/components/homepage/ReviewsSection';
 import { HomeBottomNav } from '@/components/homepage/HomeBottomNav';
 import SOSButton from '@/components/shared/SOSButton';
 import { AssistantButton } from '@/components/shared/AssistantButton';
 import { Footer } from '@/components/layout/Footer';
+import { useSourceTracker } from '@/hooks/useSourceTracker';
 
 export default function HomePageClient() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
+  useSourceTracker();
 
   if (!mounted) {
     return <div className="min-h-[100dvh] bg-[var(--kh-bg)]" />;
@@ -25,13 +27,13 @@ export default function HomePageClient() {
       <main>
         <HeroSection />
         <CategoryCards />
-        <PlatformStats />
+        <NowOnKamchatka />
         <ReviewsSection />
       </main>
       <Footer />
       <HomeBottomNav />
       <SOSButton />
-      <AssistantButton />
+      <AssistantButton pageContext={{ type: 'home' }} />
     </div>
   );
 }
