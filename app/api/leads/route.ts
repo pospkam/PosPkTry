@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { pool } from '@/lib/db-pool';
 import { telegramService } from '@/lib/notifications/telegram';
+import { notifyAdminNewLead } from '@/lib/notifications/telegram-channel';
 
 const LeadSchema = z.object({
   name:        z.string().min(2, 'Укажите имя').max(120),
@@ -69,6 +70,16 @@ export async function POST(req: NextRequest) {
     telegramService.sendMessage({ chatId, text: lines.join('\n'), parseMode: 'HTML' })
       .catch(() => { /* уведомление — некритично */ });
   }
+
+  // Дублируем в centralised admin-чат (TELEGRAM_CHAT_ID), если он отличается от LEADS_CHAT_ID
+  notifyAdminNewLead({
+    id:         leadId,
+    name,
+    phone,
+    comment:    comment ?? null,
+    routeTitle: route_title ?? null,
+    sourceUrl:  source_url ?? null,
+  }).catch(() => { /* некритично */ });
 
   return NextResponse.json({ success: true, id: leadId }, { status: 201 });
 }

@@ -20,6 +20,7 @@ import {
 } from '@/lib/bookings/booking.service';
 import type { BookingWithDetails, CreateBookingInput } from '@/types/booking.types';
 import { telegramService } from '@/lib/notifications/telegram';
+import { notifyAdminNewBooking } from '@/lib/notifications/telegram-channel';
 import { emailService } from '@/lib/notifications/email-service';
 import { query } from '@/lib/database';
 
@@ -183,6 +184,17 @@ export async function POST(request: NextRequest) {
         }
       } catch { /* не прерываем при ошибке email */ }
     })();
+
+    // Уведомление в centralized admin-чат (fire-and-forget)
+    notifyAdminNewBooking({
+      id:            booking.id,
+      tourName:      booking.tour.title,
+      departureDate: booking.date.toISOString(),
+      participants:  booking.participants,
+      totalAmount:   booking.totalAmount,
+      touristName:   booking.tourist.name,
+      touristEmail:  booking.tourist.email,
+    }).catch(() => { /* некритично */ });
 
     return NextResponse.json({
       success: true,
