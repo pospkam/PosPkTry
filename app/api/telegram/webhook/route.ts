@@ -95,7 +95,9 @@ interface StatsRow {
   bookings_today: string; bookings_30d: string;
   leads_today: string;    leads_30d: string;
   total_users: string;    active_tours: string;
+  views_today: string;    views_30d: string;
 }
+interface TopPageRow { path: string; cnt: string; }
 interface HistoryMessage { role: 'user' | 'assistant'; content: string }
 
 // ── Утилиты ───────────────────────────────────────────────────────────────────
@@ -225,26 +227,44 @@ async function getOperatorsList(): Promise<string> {
 
 async function getStats(): Promise<string> {
   try {
-    const res = await query<StatsRow>(`
-      SELECT
-        (SELECT COUNT(*)::text FROM bookings WHERE created_at >= CURRENT_DATE)             AS bookings_today,
-        (SELECT COUNT(*)::text FROM bookings WHERE created_at >= NOW()-INTERVAL '30 days') AS bookings_30d,
-        (SELECT COUNT(*)::text FROM leads    WHERE created_at >= CURRENT_DATE)             AS leads_today,
-        (SELECT COUNT(*)::text FROM leads    WHERE created_at >= NOW()-INTERVAL '30 days') AS leads_30d,
-        (SELECT COUNT(*)::text FROM users)                                                 AS total_users,
-        (SELECT COUNT(*)::text FROM tours WHERE is_active = TRUE)                          AS active_tours
-    `);
-    const s = res.rows[0];
+    const [statsRes, topRes] = await Promise.all([
+      query<StatsRow>(`
+        SELECT
+          (SELECT COUNT(*)::text FROM bookings WHERE created_at >= CURRENT_DATE)             AS bookings_today,
+          (SELECT COUNT(*)::text FROM bookings WHERE created_at >= NOW()-INTERVAL '30 days') AS bookings_30d,
+          (SELECT COUNT(*)::text FROM leads    WHERE created_at >= CURRENT_DATE)             AS leads_today,
+          (SELECT COUNT(*)::text FROM leads    WHERE created_at >= NOW()-INTERVAL '30 days') AS leads_30d,
+          (SELECT COUNT(*)::text FROM users)                                                 AS total_users,
+          (SELECT COUNT(*)::text FROM tours WHERE is_active = TRUE)                          AS active_tours,
+          (SELECT COUNT(*)::text FROM page_views WHERE created_at >= CURRENT_DATE)           AS views_today,
+          (SELECT COUNT(*)::text FROM page_views WHERE created_at >= NOW()-INTERVAL '30 days') AS views_30d
+      `),
+      query<TopPageRow>(`
+        SELECT path, COUNT(*)::text AS cnt
+        FROM page_views
+        WHERE created_at >= NOW() - INTERVAL '7 days'
+        GROUP BY path ORDER BY cnt::int DESC LIMIT 5
+      `),
+    ]);
+    const s = statsRes.rows[0];
     const today = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
-    return [
+    const lines = [
       `<b>Статистика TourHab</b>  <i>${today}</i>`,
       '',
+      `👁 Просмотры сегодня: <b>${s.views_today}</b>   за 30 дней: <b>${s.views_30d}</b>`,
       `📦 Брони сегодня: <b>${s.bookings_today}</b>   за 30 дней: <b>${s.bookings_30d}</b>`,
       `📋 Лиды сегодня:  <b>${s.leads_today}</b>   за 30 дней: <b>${s.leads_30d}</b>`,
       '',
       `👥 Пользователей: <b>${s.total_users}</b>`,
       `🗺 Активных туров: <b>${s.active_tours}</b>`,
-    ].join('\n');
+    ];
+    if (topRes.rows.length) {
+      lines.push('', '<b>Топ страниц за 7 дней:</b>');
+      topRes.rows.forEach((r, i) => {
+        lines.push(`${i + 1}. <code>${esc(r.path)}</code> — ${r.cnt}`);
+      });
+    }
+    return lines.join('\n');
   } catch {
     return 'Не удалось загрузить статистику.';
   }

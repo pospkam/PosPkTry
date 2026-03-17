@@ -51,6 +51,7 @@ const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/support/knowledge-base': ['GET'], // База знаний (публичная)
   '/api/faq': ['GET'],              // FAQ (публичная)
   '/api/photos': ['GET'],            // загруженные фото из /tmp (Timeweb production)
+  '/api/analytics/hit': ['POST'],    // трекинг просмотров страниц (без авторизации)
 };
 
 const API_ROLE_REQUIREMENTS: Record<string, AuthRole> = {
