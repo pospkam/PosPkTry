@@ -52,6 +52,8 @@ const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/faq': ['GET'],              // FAQ (публичная)
   '/api/photos': ['GET'],            // загруженные фото из /tmp (Timeweb production)
   '/api/analytics/hit': ['POST'],    // трекинг просмотров страниц (без авторизации)
+  '/api/payments/webhook': ['POST'],                    // CloudPayments webhook — HMAC validated inside
+  '/api/hub/operator/payments/webhook': ['POST'],       // CloudPayments webhook for operator tours — HMAC validated inside
 };
 
 const API_ROLE_REQUIREMENTS: Record<string, AuthRole> = {

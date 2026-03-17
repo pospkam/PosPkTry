@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
 
     // Подсчёт
     const countQuery = `
-      SELECT COUNT(*) as total
+      SELECT COUNT(*) as count
       FROM tours t
       ${whereClause}
     `;
