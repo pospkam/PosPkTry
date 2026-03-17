@@ -191,6 +191,33 @@ export async function postOperatorToChannel(slug: string, photoUrl?: string): Pr
   return photo ? tgPostPhoto(channelId, photo, text) : tgPost(channelId, text);
 }
 
+/**
+ * AI генерирует сезонный пост в голосе Кузьмича и публикует в канал.
+ */
+export async function postSezonToChannel(): Promise<{ ok: boolean; error?: string }> {
+  const channelId = process.env.TELEGRAM_CHANNEL_ID;
+  if (!channelId) return { ok: false, error: 'TELEGRAM_CHANNEL_ID not set' };
+
+  const { callAIWaterfallDirect } = await import('@/lib/ai/providers');
+  const month = new Date().toLocaleString('ru-RU', { month: 'long' });
+
+  const prompt = `Ты — Кузьмич, камчадал в третьем поколении. Напиши короткий пост для Telegram-канала о Камчатке.
+Тема: что интересного можно сделать на Камчатке в ${month}.
+Требования:
+- 80-120 слов
+- живой голос местного, не рекламный
+- конкретные активности для этого месяца
+- заканчивай ссылкой: tourhab.ru/routes
+- HTML-теги Telegram: <b>жирный</b>, <i>курсив</i>
+- начни с эмодзи настроения месяца`;
+
+  const text = await callAIWaterfallDirect([
+    { role: 'user', content: prompt },
+  ]);
+
+  return tgPost(channelId, text);
+}
+
 // ── Б. Оперативные уведомления (в admin-чат) ─────────────────────────────────
 
 /**
