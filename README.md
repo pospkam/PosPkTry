@@ -14,9 +14,9 @@
 
 ```
 Маршрут (agent_route_knowledge)     Тур (tours)
-  1158 маршрутов, 14 категорий        66 туров от 5 операторов
+  1189 маршрутов, 16 типов локаций    66 туров от 5 операторов
   Источник: скрапинг 12 сайтов        Источник: операторы через CRM
-  Координаты: 100% покрытие           Цена, выезды, бронирование
+  kuzmich_review AI-отзыв             Цена, выезды, бронирование
          |                                    |
          +---- v_route_marketplace -----------+
                    |
@@ -32,9 +32,10 @@
 | Backend | Next.js API Routes, PostgreSQL (pg pool, прямой SQL) |
 | Auth | JWT (jose) + bcrypt, 6 ролей |
 | Storage | Timeweb S3 (`s3.twcstorage.ru`) + fallback на `/tmp` |
-| AI | DeepSeek / Timeweb Agent / OpenRouter / Anthropic (waterfall) |
+| AI | OpenRouter / xAI / Anthropic Haiku (waterfall) |
 | Maps | Leaflet + OpenStreetMap (маркеры с попапами и ссылками) |
-| Telegram | @KuzmichKam_bot — уведомления, TG-канал, чат-бот |
+| Telegram | @KuzmichKam_bot — уведомления, TG-канал, AI чат-бот |
+| Analytics | page_views (собственная) + Яндекс Метрика |
 | Deploy | Timeweb Cloud, GitHub Actions CI/CD |
 
 ---
@@ -57,7 +58,10 @@ npm run dev              # Dev-сервер (порт 3000)
 npm run build            # Production-сборка
 npx tsc --noEmit         # TypeScript (0 ошибок)
 npx vitest run           # Тесты
-npm run db:migrate       # SQL-миграции (идемпотентно)
+
+# Генерация AI-отзывов Кузьмича для маршрутов
+node scripts/generate-kuzmich-reviews.js --limit 100
+node scripts/generate-kuzmich-reviews.js --dry-run --limit 5
 ```
 
 ---
@@ -66,21 +70,22 @@ npm run db:migrate       # SQL-миграции (идемпотентно)
 
 ```
 app/
-  page.tsx                       # Главная (Hero + CategoryCards + NowOnKamchatka + Reviews)
-  routes/                        # Каталог маршрутов (1158 шт.)
-    [id]/                        # Детальная страница + похожие маршруты
+  page.tsx                       # Главная (Hero + CategoryCards + TripPlanner)
+  routes/                        # Каталог маршрутов (1189 шт.)
+    [id]/                        # Детальная: описание + Кузьмич-отзыв + офферы операторов
   operators/                     # Каталог операторов (5 шт.)
     [slug]/                      # Профиль оператора + его маршруты
   map/                           # Интерактивная карта (Leaflet, 900+ маркеров)
   hub/                           # Личные кабинеты (6 ролей)
     tourist/ operator/ guide/ admin/ agent/ transfer-operator/
-  api/                           # 254 API endpoints
+  api/                           # 256+ API endpoints
     routes/ leads/ operators/ assistant/ public/ tours/ bookings/
+    analytics/ telegram/
 
 components/
-  homepage/                      # Hero, CategoryCards, NowOnKamchatka, ReviewsSection
-  routes/                        # RouteCard, LeadModal, BookingModal, CategoryPage
-  shared/                        # LeafletMap, AssistantButton, SOSButton, BottomNav
+  homepage/                      # Hero, CategoryCards, TripPlanner
+  routes/                        # RouteCard, LeadModal, BookingModal
+  shared/                        # LeafletMap, AssistantButton, SOSButton, PageViewTracker
   layout/                        # Header, Footer
 
 lib/
@@ -88,11 +93,16 @@ lib/
   ai/providers.ts                # AI waterfall (4 провайдера)
   auth/                          # JWT middleware
   db-pool.ts                     # PostgreSQL pool (named export: { pool })
-  services/                      # 25 доменных сервисов
+  bookings/booking.service.ts    # Полная логика бронирований (транзакции, возврат, стейт-машина)
+  services/                      # Доменные сервисы
+  notifications/telegram-channel.ts  # Постинг в TG-канал
 
 hooks/
   useSourceTracker.ts            # UTM/referrer first-touch attribution
   useInterestTracker.ts          # Профиль интересов (localStorage)
+
+scripts/
+  generate-kuzmich-reviews.js    # AI-генерация отзывов для маршрутов (Anthropic Haiku)
 ```
 
 ---
@@ -100,70 +110,137 @@ hooks/
 ## Ключевые фичи
 
 ### Каталог маршрутов
-- **1158 маршрутов**, 14 категорий, 100% с координатами
-- Источники: 12 сайтов (mestechkokam, kamchatintour, sputnik8, russiadiscovery и др.)
-- Фильтрация по категориям, поиск, сортировка
-- 14 SEO-страниц по категориям (`/routes/vulkani`, `/routes/rybalka` и т.д.)
+- **1189 маршрутов**, 16 типов локаций, 15 типов активностей
+- Фильтрация по `location_type` (volcano, geyser, hot_spring...) и `activity_type`
+- **kuzmich_review** — AI-отзыв в голосе местного жителя (101+ маршрутов заполнены)
+- Поиск, сортировка, пагинация
 
 ### Marketplace
-- **v_route_marketplace** — view связывающий маршруты с турами операторов
-- На карточке: цена, оператор, "Можно забронировать", сезонный бейдж
-- На детальной: предложения операторов с ценами, датами, ссылками
+- **v_route_marketplace** — VIEW: маршрут + тур + оператор + следующая дата
+- На детальной странице: предложения операторов с ценами, датами, рейтингами
+- Бейджи: сезонность, сложность, "Бронирование"
 
 ### Карта
-- Leaflet + OpenStreetMap, 14 цветовых фильтров
-- Кликабельные маркеры с попапами и ссылками на маршруты
-- Подсчёт точек по фильтру
+- Leaflet + OpenStreetMap, цвета по типу локации
+- 900+ маркеров, кликабельные попапы → детальная страница
+- Фильтр по location_type и activity_type
+
+### Бронирования
+- `lib/bookings/booking.service.ts` — полная реализация:
+  - Стейт-машина (`ALLOWED_TRANSITIONS`)
+  - Защита от double-booking (`FOR UPDATE` lock)
+  - Атомарные транзакции (BEGIN/COMMIT/ROLLBACK)
+  - Правила возврата: оператор = 100%; турист >48ч = 100%, 24-48ч = 50%, <24ч = 0%
+  - BookingLog на каждую смену статуса
+- 330 выездов (tour_departures), BookingModal на сайте
 
 ### Операторы
 - 5 операторов: Камчатинтур, TopKam, Камчатская Рыбалка, Вулкан Гид, Камчатка Дикая
 - Профили с услугами, галереей, отзывами, FAQ, сезонным календарём
-- Секция "Маршруты на TourHab" с карточками из marketplace
 
-### AI-помощник ("Кузьмич")
-- Floating чат на каждой странице (AssistantButton)
-- Контекстные приветствия и чипсы в зависимости от страницы
-- Персонализация по интересам пользователя (localStorage)
-- AI waterfall: DeepSeek → Timeweb Agent → OpenRouter → Anthropic
+### Telegram-бот (@KuzmichKam_bot)
+- Публичные команды: `/start` `/help` `/route` `/weather` `/tip` `/operators` `/sezon`
+- Admin-команды: `/stats` `/leads` `/post operator|route|sezon` `/diag`
+- AI диалог в голосе Кузьмича с историей чата
+- Постинг в TG-канал с фото
+
+### Analytics
+- Собственная: `page_views` таблица, `POST /api/analytics/hit`
+- Яндекс Метрика: `NEXT_PUBLIC_YANDEX_METRIKA_ID`
+- UTM/referrer трекинг first-touch → в leads.source_data
 
 ### Lead Capture
 - Форма заявки без регистрации (LeadModal)
 - UTM/referrer трекинг (first-touch attribution)
 - Уведомления в Telegram с source_data
 
-### TG-канал
-- Автогенерация постов (`scripts/generate-tg-post.js`)
-- Прямые ссылки на маршруты (`/routes/{id}`)
-- Персонаж Кузьмич + знание платформы
+---
 
-### Бронирование
-- 330 выездов (tour_departures), BookingModal
-- Уведомления операторам в Telegram
-- CloudPayments (интеграция)
+## Переменные окружения
+
+```bash
+# === Обязательные ===
+DATABASE_URL=postgresql://user:pass@host:5432/dbname
+JWT_SECRET=...
+
+# === S3 Storage (Timeweb) ===
+S3_ACCESS_KEY=...
+S3_SECRET_KEY=...
+S3_ENDPOINT=https://s3.twcstorage.ru
+S3_BUCKET=kamhub-uploads
+S3_REGION=ru-1
+
+# === AI (хотя бы один) ===
+OPENROUTER_API_KEY=...
+ANTHROPIC_API_KEY=...        # sk-ant-api03-...
+
+# === Telegram ===
+TELEGRAM_BOT_TOKEN=...
+TELEGRAM_WEBHOOK_SECRET=kh-webhook-2026
+TELEGRAM_CHAT_ID=...         # ID админа (для admin-команд бота)
+TELEGRAM_CHANNEL_ID=...      # ID канала (для постинга, со знаком минус)
+TELEGRAM_LEADS_CHAT_ID=...   # Чат для входящих лидов
+
+# === Analytics ===
+NEXT_PUBLIC_YANDEX_METRIKA_ID=...
+
+# === Email (SMTP Yandex) ===
+SMTP_HOST=smtp.yandex.ru
+SMTP_PORT=465
+SMTP_USER=...
+SMTP_PASS=...
+
+# === Платежи (опционально) ===
+CLOUDPAYMENTS_API_SECRET=...
+NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID=...
+
+# === Rate Limiting (опционально) ===
+UPSTASH_REDIS_REST_URL=...
+UPSTASH_REDIS_REST_TOKEN=...
+```
 
 ---
 
-## Storage (S3)
+## База данных
 
-Архитектура хранения файлов:
+### Ключевые таблицы
 
+```sql
+-- Маршруты (knowledge base)
+agent_route_knowledge    -- 1189 маршрутов, kuzmich_review TEXT, location_type, activity_type
+
+-- Marketplace
+v_route_marketplace      -- VIEW: маршрут + тур + оператор + цена + следующая дата
+
+-- Операторы
+partners                 -- 5 операторов, slug, профиль, контакты
+
+-- Туры и бронирования
+tours                    -- 66 туров (operator_id → partners)
+tour_departures          -- 330 выездов (start_date, slots, price)
+bookings                 -- бронирования (7 статусов: pending/confirmed/cancelled_by_tourist/...)
+booking_logs             -- лог каждой смены статуса
+
+-- Лиды
+leads                    -- заявки без регистрации, source_data JSONB
+
+-- Аналитика
+page_views               -- path, referrer, created_at
+
+-- Пользователи
+users                    -- 6 ролей: tourist, operator, guide, transfer_operator, agent, admin
 ```
-S3 (production)                    Local (development)
-  s3.twcstorage.ru/{bucket}/         public/images/
-    images/hero/                     public/uploads/
-    images/activities/
-    images/bento/
-    images/gallery/
-    uploads/
+
+### Миграции
+
+40 файлов в `lib/database/migrations/` (001–039). Следующая: **`040_`**.
+
+```bash
+# Применить миграцию напрямую (без psql):
+node -e "require('dotenv').config({path:'.env.local',override:true}); \
+  const {Pool}=require('pg'); const p=new Pool({connectionString:process.env.DATABASE_URL}); \
+  p.query(require('fs').readFileSync('lib/database/migrations/040_xxx.sql','utf8')).then(()=>p.end())"
 ```
-
-| Endpoint | Storage | Назначение |
-|----------|---------|------------|
-| `POST /api/admin/photos/upload` | S3 → local fallback | Admin: загрузка + Vision AI + resize |
-| `POST /api/upload` | S3 → local fallback | User: загрузка изображений |
-| `GET /api/photos/[...path]` | `/tmp` fallback | Раздача при отсутствии S3 |
-
-**Библиотека:** `lib/storage/s3.ts` — `uploadToS3()`, `deleteFromS3()`, `getS3PublicUrl()`, `isS3Configured`
 
 ---
 
@@ -189,123 +266,31 @@ S3 (production)                    Local (development)
 
 ---
 
-## Переменные окружения
-
-```bash
-# === Обязательные ===
-DATABASE_URL=postgresql://user:pass@host:5432/dbname
-JWT_SECRET=...
-
-# === S3 Storage (Timeweb) ===
-S3_ACCESS_KEY=...
-S3_SECRET_KEY=...
-S3_ENDPOINT=https://s3.twcstorage.ru
-S3_BUCKET=kamhub-uploads
-S3_REGION=ru-1
-
-# === AI (хотя бы один) ===
-DEEPSEEK_API_KEY=...
-OPENROUTER_API_KEY=...
-ANTHROPIC_API_KEY=...
-TIMEWEB_TOKEN=...
-TIMEWEB_AI_AGENT_ID=...
-
-# === Telegram ===
-TELEGRAM_BOT_TOKEN=...
-TELEGRAM_FISHING_CHAT_ID=...
-TELEGRAM_LEADS_CHAT_ID=...
-TELEGRAM_CHANNEL_ID=...
-TELEGRAM_WEBHOOK_SECRET=...
-
-# === Email (SMTP Yandex) ===
-SMTP_HOST=smtp.yandex.ru
-SMTP_PORT=465
-SMTP_SECURE=true
-SMTP_USER=...
-SMTP_PASS=...
-
-# === Analytics ===
-NEXT_PUBLIC_YANDEX_METRIKA_ID=...
-GOOGLE_SITE_VERIFICATION=...
-YANDEX_VERIFICATION=...
-
-# === Платежи (опционально) ===
-CLOUDPAYMENTS_API_SECRET=...
-NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID=...
-PLATFORM_COMMISSION_RATE=0.15
-
-# === Карты ===
-NEXT_PUBLIC_YANDEX_MAPS_API_KEY=...
-
-# === Rate Limiting (опционально) ===
-UPSTASH_REDIS_REST_URL=...
-UPSTASH_REDIS_REST_TOKEN=...
-```
-
----
-
-## База данных
-
-### Ключевые таблицы
-
-```sql
--- Маршруты (knowledge base)
-agent_route_knowledge    -- 1158 маршрутов, 14 категорий, kuzmich_review
--- Visibility: is_visible (admin toggle, /hub/admin/content/routes)
-
--- Marketplace
-v_route_marketplace      -- VIEW: маршрут + тур + оператор + цена + дата
-
--- Операторы
-partners                 -- 5 операторов, slug, профиль, контакты
-
--- Туры и бронирования
-tours                    -- 66 туров (operator_id → partners)
-tour_departures          -- 330 выездов (start_date, slots, price)
-bookings                 -- бронирования (user_id, departure_id, status)
-
--- Лиды
-leads                    -- заявки без регистрации, source_data JSONB
-
--- Пользователи
-users                    -- 6 ролей: tourist, operator, guide, transfer_operator, agent, admin
-```
-
-### Миграции
-
-39 файлов в `lib/database/migrations/` (001-036). Следующая: `037_`.
-
-```bash
-npm run db:migrate    # Идемпотентно, безопасно повторять
-```
-
----
-
 ## Деплой
 
 ```
 git push origin main
-  → GitHub Actions (tsc + vitest + build)
+  → GitHub Actions (tsc)
     → Timeweb Cloud (автодеплой, App ID: 159529)
       → tourhab.ru
 ```
 
 **Домен:** tourhab.ru (DNS: ns1/ns2.reg.ru, A → 51.250.0.136)
+**Build time:** ~5-7 минут после push
 
 ---
 
 ## Текущее состояние (март 2026)
 
 ```
-Страниц:              89
-API endpoints:       254
-Компонентов:         102
-SQL-миграций:         39
-Маршрутов в БД:    1 158 (14 категорий, 12 источников)
+Страниц:              94
+API endpoints:       256+
+Компонентов:         119
+SQL-миграций:         40  (lib/database/migrations/ 001–039)
+Маршрутов в БД:    1 189  (16 типов локаций, 15 типов активностей)
+Кузьмич-отзывов:     101+
 Операторов:            5
-Туров:                66 (330 выездов)
-Хуков:                 5
-Сервисов:             25
+Туров:                66  (330 выездов)
 TS-ошибок:             0
 ```
 
@@ -322,5 +307,6 @@ TS-ошибок:             0
 - SQL только параметризованный (`$1, $2`)
 - Pool: `import { pool } from '@/lib/db-pool'` (named export)
 - Стили: только CSS-переменные, glassmorphism запрещён
-- Миграции: без изменения существующих (001-036)
-- Middleware (`middleware.ts`): не трогать без необходимости
+- Миграции: без изменения существующих (001–039), следующая `040_`
+- Бронирования: использовать `lib/bookings/booking.service.ts`, не `lib/services/booking.service.ts`
+- Server components не делают self-fetch через URL — только `import { query } from '@/lib/database'`
