@@ -14,6 +14,14 @@
         "API_TOKEN": "${BRIGHTDATA_API_TOKEN}",
         "WEB_UNLOCKER_ZONE": "unlocker"
       }
+    },
+    "stitch": {
+      "command": "npx",
+      "args": ["-y", "@google/stitch-skills"],
+      "env": {
+        "STITCH_API_KEY": "${STITCH_API_KEY}",
+        "STITCH_PROJECT_ID": "${STITCH_PROJECT_ID}"
+      }
     }
   }
 }

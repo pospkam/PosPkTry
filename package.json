@@ -49,6 +49,10 @@
     "scrape:idilesom:dry": "node scripts/scrape-idilesom-full.js --dry-run",
     "ai:index-embeddings": "npx tsx scripts/index-route-embeddings.ts",
     "ai:index-embeddings:force": "npx tsx scripts/index-route-embeddings.ts --force",
+    "stitch:generate": "npx tsx scripts/stitch-generate.ts generate",
+    "stitch:edit": "npx tsx scripts/stitch-generate.ts edit",
+    "stitch:export": "npx tsx scripts/stitch-generate.ts export",
+    "stitch:generate-screens": "npx tsx scripts/stitch-generate-screens.ts",
     "security:audit": "bash scripts/security/audit.sh",
     "security:detect-secrets": "bash scripts/security/detect-secrets.sh",
     "test:load": "bash load-tests/k6/run-load-test.sh",
@@ -109,6 +113,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@google/stitch-sdk": "^0.0.3",
     "@testing-library/jest-dom": "^6.4.2",
     "@testing-library/react": "^14.2.1",
     "@vitejs/plugin-react": "^4.2.1",
