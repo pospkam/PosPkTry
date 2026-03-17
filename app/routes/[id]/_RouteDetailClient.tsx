@@ -131,6 +131,7 @@ interface RouteDetail {
   groupSizeMax: number | null;
   dangerLevel: string | null;
   equipment: string[] | null;
+  kuzmichReview: string | null;
   offers: Offer[];
 }
 
@@ -482,6 +483,25 @@ export default function RouteDetailClient({ id }: { id: string }) {
           </div>
         </div>
       </div>
+
+      {/* ── Кузьмич о маршруте ───────────────────────────────── */}
+      {route.kuzmichReview && (
+        <div className="mt-8 ds-card p-5 border-l-4 border-[var(--accent)]">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-full bg-[var(--accent)]/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <Mountain className="w-4 h-4 text-[var(--accent)]" />
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-[var(--accent)] uppercase tracking-wide mb-1.5">
+                Кузьмич о маршруте
+              </p>
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed italic">
+                &ldquo;{route.kuzmichReview}&rdquo;
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Related routes ───────────────────────────────────── */}
       {relatedRoutes.length > 0 && (

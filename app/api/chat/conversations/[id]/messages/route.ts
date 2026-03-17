@@ -1,12 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
 import { requireAuth } from '@/lib/auth/middleware';
 import { chatService } from '@/lib/services/chat.service';
-
-const SendMessageSchema = z.object({
-  content: z.string().min(1, 'Сообщение не может быть пустым').max(5000, 'Сообщение слишком длинное (максимум 5000 символов)'),
-  messageType: z.enum(['text', 'system', 'image']).optional(),
-});
 
 export const dynamic = 'force-dynamic';
 
@@ -69,15 +63,24 @@ export async function POST(
 
     const { id } = await params;
     const body = await request.json();
-    const parsed = SendMessageSchema.safeParse(body);
-    if (!parsed.success) {
+    const content = typeof body.content === 'string' ? body.content.trim() : '';
+    const messageType = body.messageType === 'system' || body.messageType === 'image'
+      ? body.messageType
+      : 'text';
+
+    if (!content) {
       return NextResponse.json(
-        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' },
+        { success: false, error: 'Сообщение не может быть пустым' },
         { status: 400 }
       );
     }
-    const content = parsed.data.content.trim();
-    const messageType = parsed.data.messageType || 'text';
+
+    if (content.length > 5000) {
+      return NextResponse.json(
+        { success: false, error: 'Сообщение слишком длинное (максимум 5000 символов)' },
+        { status: 400 }
+      );
+    }
 
     const message = await chatService.sendMessage({
       conversationId: id,

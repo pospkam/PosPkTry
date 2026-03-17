@@ -38,14 +38,22 @@ export function HeroSection() {
           Ваш маршрут.
         </h1>
 
-        <button
-          type="button"
-          onClick={() => document.getElementById('planner')?.scrollIntoView({ behavior: 'smooth' })}
-          className="inline-flex items-center gap-3 bg-white text-[var(--text-primary)] font-semibold text-sm px-6 py-3.5 rounded-full hover:bg-white/90 transition-all"
-        >
-          Спланировать поездку
-          <span className="text-base">→</span>
-        </button>
+        <div className="flex items-center gap-3 flex-wrap">
+          <button
+            type="button"
+            onClick={() => document.getElementById('planner')?.scrollIntoView({ behavior: 'smooth' })}
+            className="inline-flex items-center gap-3 bg-white text-[var(--text-primary)] font-semibold text-sm px-6 py-3.5 rounded-full hover:bg-white/90 transition-all"
+          >
+            Спланировать поездку
+            <span className="text-base">→</span>
+          </button>
+          <a
+            href="/routes"
+            className="inline-flex items-center gap-2 border border-white/50 text-white font-medium text-sm px-6 py-3.5 rounded-full hover:bg-white/10 transition-all"
+          >
+            Все маршруты
+          </a>
+        </div>
       </div>
     </section>
   );

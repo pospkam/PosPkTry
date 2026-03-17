@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { HeroSection } from '@/components/homepage/HeroSection';
+import { CategoryCards } from '@/components/homepage/CategoryCards';
 import { TripPlanner } from '@/components/homepage/TripPlanner';
 import { HomeBottomNav } from '@/components/homepage/HomeBottomNav';
 import SOSButton from '@/components/shared/SOSButton';
@@ -24,6 +25,7 @@ export default function HomePageClient() {
       <Header />
       <main>
         <HeroSection />
+        <CategoryCards />
         <TripPlanner />
       </main>
       <Footer />

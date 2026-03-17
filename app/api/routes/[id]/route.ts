@@ -22,7 +22,8 @@ export async function GET(
     const result = await query(
       `SELECT
          id, route_dedupe_key, route_id, category, location_type, activity_type,
-         title, description, lat, lng, source_url, source_name, payload, created_at
+         title, description, lat, lng, source_url, source_name, payload, created_at,
+         kuzmich_review
        FROM agent_route_knowledge
        WHERE id = $1 AND is_visible = TRUE`,
       [id]
@@ -120,6 +121,7 @@ export async function GET(
         groupSizeMax: payload.group_size_max != null ? Number(payload.group_size_max) : null,
         dangerLevel: (payload.danger_level as string | null) ?? null,
         equipment:   (payload.required_equipment as string[] | null) ?? null,
+        kuzmichReview: (r.kuzmich_review as string | null) ?? null,
         createdAt:   r.created_at as string,
         offers,
       },

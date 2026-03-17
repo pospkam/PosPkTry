@@ -1225,26 +1225,8 @@ export interface KnowledgeRouteRow {
   season: string | null;
   price_from: string | null;
   has_embedding: boolean;
-  is_visible: boolean;
   created_at: Date;
   updated_at: Date;
-}
-
-export interface AdminRouteRow {
-  id: string;
-  title: string;
-  category: string;
-  source_name: string | null;
-  lat: string | null;
-  lng: string | null;
-  is_visible: boolean;
-  created_at: Date;
-}
-
-export interface RouteVisibilityUpdateRow {
-  id: string;
-  title: string;
-  is_visible: boolean;
 }
 
 export interface KnowledgeCategoryStatsRow {
@@ -1359,41 +1341,43 @@ export interface MessageWithSenderRow extends ConversationMessageRow {
 }
 
 // ──────────────────────────────────────────────────────────
-// Operators — Public profiles
+// Operator Public Profile (partners table)
 // ──────────────────────────────────────────────────────────
 
-export interface OperatorListRow {
-  id: string;
-  slug: string;
-  name: string;
-  category: string;
-  short_description: string | null;
-  hero_image: string | null;
-  rating: string;
-  review_count: string;
-  is_verified: boolean;
-}
-
+/** Used by GET /api/operators/[slug] */
 export interface OperatorProfileRow {
   id: string;
   slug: string;
   name: string;
-  category: string;
+  category: string | null;
   description: string | null;
   short_description: string | null;
   hero_image: string | null;
-  gallery: unknown[];
-  services: unknown[];
-  features: unknown[];
-  faq: unknown[];
-  season_info: unknown[];
-  reviews_data: unknown[];
-  contacts: unknown[];
-  location: { lat: number; lng: number; address: string } | null;
-  legal_info: Record<string, unknown> | null;
-  contact: Record<string, unknown> | null;
+  gallery: unknown[] | null;
+  services: unknown[] | null;
+  features: unknown[] | null;
+  faq: unknown[] | null;
+  season_info: unknown[] | null;
+  reviews_data: unknown[] | null;
+  contacts: unknown[] | null;
+  location: unknown | null;
+  legal_info: string | null;
+  contact: string | null;
   rating: string;
   review_count: string;
   is_verified: boolean;
   created_at: string;
+}
+
+/** Used by GET /api/operators (list) */
+export interface OperatorListRow {
+  id: string;
+  slug: string;
+  name: string;
+  category: string | null;
+  short_description: string | null;
+  hero_image: string | null;
+  rating: string;
+  review_count: string;
+  is_verified: boolean;
 }
