@@ -7,6 +7,7 @@
  */
 
 import { query } from '@/lib/database';
+import { callAIWaterfallDirect } from '@/lib/ai/providers';
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -198,7 +199,6 @@ export async function postSezonToChannel(): Promise<{ ok: boolean; error?: strin
   const channelId = process.env.TELEGRAM_CHANNEL_ID;
   if (!channelId) return { ok: false, error: 'TELEGRAM_CHANNEL_ID not set' };
 
-  const { callAIWaterfallDirect } = await import('@/lib/ai/providers');
   const month = new Date().toLocaleString('ru-RU', { month: 'long' });
 
   const prompt = `Ты — Кузьмич, камчадал в третьем поколении. Напиши короткий пост для Telegram-канала о Камчатке.
