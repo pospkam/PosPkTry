@@ -668,6 +668,61 @@ export async function getBookingForUser(
 }
 
 /**
+ * Подтвердить бронирование через оплату: pending -> confirmed
+ * Вызывается при успешном завершении платежа (gateway webhook / verify).
+ */
+export async function confirmBookingPayment(
+  bookingId: string,
+  transactionId: string
+): Promise<BookingWithDetails> {
+  return transaction(async (client) => {
+    const result = await client.query(
+      `${BOOKING_SELECT} WHERE b.id = $1 FOR UPDATE`,
+      [bookingId]
+    );
+    if (result.rows.length === 0) {
+      throw new Error('Бронирование не найдено');
+    }
+
+    const booking = result.rows[0];
+    const currentStatus = String(booking.status) as BookingStatus;
+
+    validateTransition(currentStatus, 'confirmed');
+
+    await client.query(
+      `UPDATE bookings SET status = 'confirmed', payment_status = 'paid', updated_at = NOW() WHERE id = $1`,
+      [bookingId]
+    );
+
+    // Обновляем счётчик занятых мест в заезде (если бронь привязана к tour_departures)
+    await client.query(
+      `UPDATE tour_departures
+       SET booked_slots = booked_slots + b.participants
+       FROM bookings b
+       WHERE tour_departures.id = b.departure_id
+         AND b.id = $1
+         AND b.departure_id IS NOT NULL`,
+      [bookingId]
+    );
+
+    await logStatusChange(
+      client,
+      bookingId,
+      currentStatus,
+      'confirmed',
+      bookingId,
+      `Оплата подтверждена (транзакция ${transactionId})`
+    );
+
+    const updated = await client.query(
+      `${BOOKING_SELECT} WHERE b.id = $1`,
+      [bookingId]
+    );
+    return normalizeBookingRow(updated.rows[0]);
+  });
+}
+
+/**
  * Список бронирований с фильтрацией по роли.
  *
  * - tourist: видит только свои бронирования

@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { paymentService } from '@/lib/services'
-import { bookingService } from '@/lib/services'
+import { getBookingForUser, getBookingById } from '@/lib/bookings/booking.service'
 import { authenticateUser, authorizeRole } from '@/lib/auth'
 
 /**
@@ -18,7 +18,6 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Authentication
     const userId = await authenticateUser(request)
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -26,14 +25,12 @@ export async function POST(
 
     const { id } = await params
 
-    // Parse body
     const body = await request.json()
 
     if (!body.reason) {
       return NextResponse.json({ error: 'reason is required' }, { status: 400 })
     }
 
-    // Get payment to check authorization
     const payment = await paymentService.getTransaction(id)
 
     if (!payment) {
@@ -44,21 +41,20 @@ export async function POST(
       return NextResponse.json({ error: 'Payment has no booking reference' }, { status: 400 })
     }
 
-    // Check authorization (service-level ownership first)
-    const ownBooking = await bookingService.getByIdForUser(payment.bookingId, userId)
+    // Проверяем права: либо владелец брони, либо admin
+    const ownBooking = await getBookingForUser(payment.bookingId, userId)
     if (!ownBooking) {
       const isAdmin = await authorizeRole(request, 'admin')
       if (!isAdmin) {
         return NextResponse.json({ error: 'Payment not found' }, { status: 404 })
       }
 
-      const adminBooking = await bookingService.getById(payment.bookingId)
+      const adminBooking = await getBookingById(payment.bookingId)
       if (!adminBooking) {
         return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
       }
     }
 
-    // Process refund
     const refund = await paymentService.refund({
       transactionId: id,
       refundAmount: body.refundAmount,

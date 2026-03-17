@@ -1,13 +1,13 @@
 /**
  * Bookings Payments API
  * POST /api/bookings/payments - Initiate payment
- * POST /api/bookings/payments/verify - Verify payment completion
+ * PATCH /api/bookings/payments - Verify payment completion
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { paymentService } from '@/lib/services'
-import { bookingService } from '@/lib/services'
+import { getBookingForUser, confirmBookingPayment } from '@/lib/bookings/booking.service'
 import { authenticateUser } from '@/lib/auth'
 
 const initiatePaymentSchema = z.object({
@@ -29,13 +29,11 @@ const verifyPaymentSchema = z.object({
  */
 export async function POST(request: NextRequest) {
   try {
-    // Authentication
     const userId = await authenticateUser(request)
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Parse and validate body
     const body = await request.json()
     const parsed = initiatePaymentSchema.safeParse(body)
     if (!parsed.success) {
@@ -47,27 +45,25 @@ export async function POST(request: NextRequest) {
 
     const { bookingId, gateway, returnUrl, notificationUrl } = parsed.data
 
-    // Ownership is enforced at service layer
-    const booking = await bookingService.getByIdForUser(bookingId, userId)
+    const booking = await getBookingForUser(bookingId, userId)
     if (!booking) {
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
     }
 
-    // Initiate payment
     const paymentResponse = await paymentService.initiatePayment({
       bookingId: bookingId,
-      amount: Number(booking.totalPrice || 0),
+      amount: Number(booking.totalAmount || 0),
       currency: 'RUB',
       gateway: gateway,
-      payerName: 'Customer',
-      payerEmail: '',
+      payerName: booking.tourist.name || 'Customer',
+      payerEmail: booking.tourist.email || '',
       payerPhone: undefined,
       returnUrl: returnUrl || `${process.env.NEXT_PUBLIC_APP_URL}/bookings/${bookingId}`,
       notificationUrl: notificationUrl || `${process.env.NEXT_PUBLIC_API_URL}/webhooks/payments`,
-      description: `Payment for booking ${booking.id}`,
+      description: `Оплата бронирования ${booking.tour.title}`,
       metadata: {
         bookingId: booking.id,
-        tourId: booking.tourId || undefined,
+        tourId: booking.tour.id,
       },
     })
 
@@ -81,19 +77,17 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * POST /api/bookings/payments/verify
+ * PATCH /api/bookings/payments
  * Verify payment completion and confirm booking
  * Body: { transactionId, verificationData }
  */
 export async function PATCH(request: NextRequest) {
   try {
-    // Authentication
     const userId = await authenticateUser(request)
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Parse and validate body
     const body = await request.json()
     const parsed = verifyPaymentSchema.safeParse(body)
     if (!parsed.success) {
@@ -105,35 +99,30 @@ export async function PATCH(request: NextRequest) {
 
     const { transactionId, verificationData } = parsed.data
 
-    const transaction = await paymentService.getTransaction(transactionId)
-    if (!transaction) {
+    const txn = await paymentService.getTransaction(transactionId)
+    if (!txn) {
       return NextResponse.json({ error: 'Transaction not found' }, { status: 404 })
     }
 
-    if (!transaction.bookingId) {
+    if (!txn.bookingId) {
       return NextResponse.json({ error: 'Transaction has no booking reference' }, { status: 400 })
     }
 
-    const booking = await bookingService.getByIdForUser(transaction.bookingId, userId)
+    const booking = await getBookingForUser(txn.bookingId, userId)
     if (!booking) {
       return NextResponse.json({ error: 'Transaction not found' }, { status: 404 })
     }
 
-    // Verify payment
     const verification = await paymentService.verifyPayment(
       transactionId,
       verificationData || {}
     )
 
     if (verification.status === 'completed') {
-      // Confirm booking
-      const confirmed = await bookingService.confirmPayment(transaction.bookingId, transactionId)
-      if (!confirmed) {
-        return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
-      }
+      const confirmed = await confirmBookingPayment(txn.bookingId, transactionId)
 
       return NextResponse.json({
-        message: 'Payment verified and booking confirmed',
+        message: 'Оплата подтверждена, бронирование активировано',
         verification,
         booking: confirmed,
       })
