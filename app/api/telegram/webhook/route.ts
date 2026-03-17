@@ -438,6 +438,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
+    // /diag — диагностика env vars (только admin)
+    if (text.startsWith('/diag')) {
+      if (!admin) {
+        await sendHTML(chatId, '<b>Нет прав.</b>');
+        return NextResponse.json({ ok: true });
+      }
+      const vars = [
+        ['TELEGRAM_BOT_TOKEN',      process.env.TELEGRAM_BOT_TOKEN],
+        ['TELEGRAM_CHAT_ID',        process.env.TELEGRAM_CHAT_ID],
+        ['TELEGRAM_CHANNEL_ID',     process.env.TELEGRAM_CHANNEL_ID],
+        ['TELEGRAM_LEADS_CHAT_ID',  process.env.TELEGRAM_LEADS_CHAT_ID],
+        ['ANTHROPIC_API_KEY',       process.env.ANTHROPIC_API_KEY],
+        ['NEXT_PUBLIC_YANDEX_METRIKA_ID', process.env.NEXT_PUBLIC_YANDEX_METRIKA_ID],
+      ];
+      const lines = ['<b>Env vars (✅ = задан, ❌ = не задан):</b>', ''];
+      for (const [name, val] of vars) {
+        const ok = val && val.trim().length > 0;
+        const preview = ok ? ` <code>${String(val).slice(0, 6)}…</code>` : '';
+        lines.push(`${ok ? '✅' : '❌'} <code>${name}</code>${preview}`);
+      }
+      await sendHTML(chatId, lines.join('\n'));
+      return NextResponse.json({ ok: true });
+    }
+
     // /post
     if (text.startsWith('/post')) {
       if (!admin) {
