@@ -249,7 +249,7 @@ export default function RoutesPageClient() {
             <SlidersHorizontal className="w-4 h-4" />
             Фильтры
             {activeFiltersCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[var(--accent)] text-white text-[10px] flex items-center justify-center font-bold">
+              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[var(--accent)] text-[var(--text-primary)] text-[10px] flex items-center justify-center font-bold">
                 {activeFiltersCount}
               </span>
             )}
@@ -260,14 +260,14 @@ export default function RoutesPageClient() {
           <div className="flex border border-[var(--border)] rounded-lg overflow-hidden">
             <button
               onClick={() => setView('grid')}
-              className={`px-3 py-2 transition-colors duration-150 ${view === 'grid' ? 'bg-[var(--accent)] text-white' : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]'}`}
+              className={`px-3 py-2 transition-colors duration-150 ${view === 'grid' ? 'bg-[var(--accent)] text-[var(--text-primary)]' : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]'}`}
               title="Сеткой"
             >
               <LayoutGrid className="w-4 h-4" />
             </button>
             <button
               onClick={() => setView('map')}
-              className={`px-3 py-2 transition-colors duration-150 ${view === 'map' ? 'bg-[var(--accent)] text-white' : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]'}`}
+              className={`px-3 py-2 transition-colors duration-150 ${view === 'map' ? 'bg-[var(--accent)] text-[var(--text-primary)]' : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]'}`}
               title="На карте"
             >
               <Map className="w-4 h-4" />

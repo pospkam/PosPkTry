@@ -141,7 +141,7 @@ export default function AIAssistantPage() {
           <button
             type="submit"
             disabled={loading || !input.trim()}
-            className="min-h-[44px] min-w-[44px] px-4 bg-[var(--accent)] text-white rounded-xl disabled:opacity-50 flex items-center justify-center hover:bg-[var(--accent-hover)] transition-colors"
+            className="min-h-[44px] min-w-[44px] px-4 bg-[var(--accent)] text-[var(--text-primary)] rounded-xl disabled:opacity-50 flex items-center justify-center hover:bg-[var(--accent-hover)] transition-colors"
           >
             <Send className="w-5 h-5" />
           </button>

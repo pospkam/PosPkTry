@@ -5,6 +5,10 @@ import { useRouter } from 'next/navigation';
 import { type LucideIcon } from 'lucide-react';
 import { HubSidebar } from './HubSidebar';
 import { useAuth } from '@/contexts/AuthContext';
+import Link from 'next/link';
+import { Sun, Moon, User } from 'lucide-react';
+import { useTheme } from '@/contexts/ThemeContext';
+import Logo from '@/components/shared/Logo';
 
 interface SidebarItem {
   href: string;
@@ -33,6 +37,7 @@ const ROLE_HUB: Record<string, string> = {
 export function HubLayout({ children, sidebarItems, sidebarTitle, requiredRole }: HubLayoutProps) {
   const router = useRouter();
   const { user, isLoading } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
 
   useEffect(() => {
     if (isLoading) return;
@@ -68,10 +73,33 @@ export function HubLayout({ children, sidebarItems, sidebarTitle, requiredRole }
   if (!userRoles.some(r => allowed.includes(r))) return null;
 
   return (
-    <div className="flex flex-col md:flex-row min-h-[calc(100vh-4rem)]">
-      <HubSidebar items={sidebarItems} title={sidebarTitle} />
-      <div className="flex-1 overflow-auto">
-        {children}
+    <div className="flex flex-col min-h-screen">
+      {/* Header */}
+      <header className="sticky top-0 z-40 bg-[var(--bg-card)] border-b border-[var(--border)]">
+        <div className="max-w-full px-4 py-3 flex items-center justify-between">
+          <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+            <Logo size={28} />
+          </Link>
+          <h1 className="text-lg font-bold text-[var(--text-primary)] hidden sm:block" style={{ fontFamily: 'var(--font-playfair)' }}>
+            {sidebarTitle}
+          </h1>
+          <div className="flex items-center gap-3">
+            <button onClick={toggleTheme} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors" aria-label="Переключить тему">
+              {isDark ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+            <Link href="/profile" className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors" aria-label="Личный кабинет">
+              <User size={20} />
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      {/* Main content */}
+      <div className="flex flex-col md:flex-row flex-1">
+        <HubSidebar items={sidebarItems} title={sidebarTitle} />
+        <div className="flex-1 overflow-auto">
+          {children}
+        </div>
       </div>
     </div>
   );

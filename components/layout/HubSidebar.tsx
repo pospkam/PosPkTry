@@ -31,7 +31,7 @@ export function HubSidebar({ items, title }: HubSidebarProps) {
         className="
           hidden md:flex flex-col w-60 shrink-0
           bg-[var(--bg-secondary)] border-r border-[var(--border)]
-          min-h-[calc(100vh-4rem)]
+          min-h-full
         "
       >
         <div className="p-4 border-b border-[var(--border)]">
