@@ -24,6 +24,7 @@ import { confirmBooking, cancelBooking } from '@/lib/bookings/booking.service';
 import { query } from '@/lib/database';
 import { callAIWaterfallDirect } from '@/lib/ai/providers';
 import { KUZMICH_PROMPT, type ChatMessage } from '@/lib/ai/prompts';
+import { postRouteToChannel, postOperatorToChannel } from '@/lib/notifications/telegram-channel';
 
 export const dynamic = 'force-dynamic';
 
@@ -96,6 +97,12 @@ function isAuthorizedOperator(chatId: number): boolean {
   if (!fishingId) return false;
   const ids = fishingId.split(',').map(s => s.trim()).filter(Boolean);
   return ids.includes(String(chatId));
+}
+
+// ── Проверка admin (совпадает с TELEGRAM_CHAT_ID) ─────────────────────────────
+function isAdmin(userId: number): boolean {
+  const adminId = process.env.TELEGRAM_CHAT_ID;
+  return !!adminId && adminId === String(userId);
 }
 
 // ── Случайный видимый маршрут ─────────────────────────────────────────────────
@@ -173,17 +180,22 @@ export async function POST(request: NextRequest) {
 
     // /help
     if (text.startsWith('/help')) {
+      const fromId = update.message?.from?.id ?? 0;
+      const adminCommands = isAdmin(fromId)
+        ? '\n<b>Команды администратора:</b>\n/post operator &lt;slug&gt; — пост оператора в канал\n/post route &lt;uuid&gt; — пост маршрута в канал'
+        : '';
       await sendHTML(chatId, [
         '<b>Команды:</b>',
         '',
         '/route — случайный маршрут из каталога',
         '/sezon — совет по текущему сезону',
         '/start — начать заново',
+        adminCommands,
         '',
         'Или задай вопрос текстом — про маршруты, снаряжение, медведей. Отвечу как есть.',
         '',
         'Все маршруты: <a href="https://tourhab.ru/routes">tourhab.ru/routes</a>',
-      ].join('\n'));
+      ].filter(s => s !== '').join('\n'));
       return NextResponse.json({ ok: true });
     }
 
@@ -217,6 +229,47 @@ export async function POST(request: NextRequest) {
         `Сейчас ${month}. Один конкретный совет: что стоит делать туристу на Камчатке прямо сейчас?`
       );
       await sendHTML(chatId, answer);
+      return NextResponse.json({ ok: true });
+    }
+
+    // /post — только для admin (TELEGRAM_CHAT_ID)
+    // Использование:
+    //   /post operator kamchatskaya-rybalka
+    //   /post route f25ed309-0a7e-4f70-bec1-82afaef7f1d5
+    if (text.startsWith('/post')) {
+      const fromId = update.message?.from?.id ?? 0;
+      if (!isAdmin(fromId)) {
+        await sendHTML(chatId, '<b>Нет прав.</b> Команда только для администратора.');
+        return NextResponse.json({ ok: true });
+      }
+      const parts = text.split(/\s+/);
+      const kind = parts[1]; // 'operator' | 'route'
+      const arg  = parts[2]; // slug или uuid
+      if (!kind || !arg) {
+        await sendHTML(chatId, [
+          '<b>/post — публикация в канал</b>',
+          '',
+          'Использование:',
+          '<code>/post operator kamchatskaya-rybalka</code>',
+          '<code>/post route &lt;uuid&gt;</code>',
+        ].join('\n'));
+        return NextResponse.json({ ok: true });
+      }
+      let result: { ok: boolean; error?: string };
+      if (kind === 'operator') {
+        result = await postOperatorToChannel(arg);
+      } else if (kind === 'route') {
+        result = await postRouteToChannel(arg);
+      } else {
+        await sendHTML(chatId, 'Неизвестный тип. Используй <code>operator</code> или <code>route</code>.');
+        return NextResponse.json({ ok: true });
+      }
+      await sendHTML(
+        chatId,
+        result.ok
+          ? '✅ Пост опубликован в канале.'
+          : `❌ Ошибка: ${result.error ?? 'неизвестная'}`,
+      );
       return NextResponse.json({ ok: true });
     }
 

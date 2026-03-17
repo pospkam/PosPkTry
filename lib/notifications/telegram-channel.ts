@@ -30,6 +30,30 @@ async function tgPost(chatId: string, text: string): Promise<{ ok: boolean; erro
   }
 }
 
+// sendPhoto — caption до 1024 символов
+async function tgPostPhoto(chatId: string, photoUrl: string, caption: string): Promise<{ ok: boolean; error?: string }> {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token || !chatId) return { ok: false, error: 'not configured' };
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId,
+        photo: photoUrl,
+        caption: caption.slice(0, 1024),
+        parse_mode: 'HTML',
+      }),
+    });
+    const data = await res.json() as { ok: boolean; description?: string };
+    // Если фото по URL недоступно — fallback на текстовый пост
+    if (!data.ok) return tgPost(chatId, caption);
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'fetch error' };
+  }
+}
+
 const LOCATION_LABELS: Record<string, string> = {
   volcano:    'Вулкан',
   geyser:     'Гейзеры',
@@ -80,9 +104,9 @@ interface RouteRow {
 
 /**
  * Постит маршрут в канал.
- * Возвращает { ok, error? }
+ * @param photoUrl — необязательно, если задан — пост с фото (sendPhoto)
  */
-export async function postRouteToChannel(routeId: string): Promise<{ ok: boolean; error?: string }> {
+export async function postRouteToChannel(routeId: string, photoUrl?: string): Promise<{ ok: boolean; error?: string }> {
   const channelId = process.env.TELEGRAM_CHANNEL_ID;
   if (!channelId) return { ok: false, error: 'TELEGRAM_CHANNEL_ID not set' };
 
@@ -121,7 +145,8 @@ export async function postRouteToChannel(routeId: string): Promise<{ ok: boolean
   lines.push('');
   lines.push(`<a href="${appUrl}/routes/${r.id}">Смотреть маршрут →</a>`);
 
-  return tgPost(channelId, lines.join('\n'));
+  const text = lines.join('\n');
+  return photoUrl ? tgPostPhoto(channelId, photoUrl, text) : tgPost(channelId, text);
 }
 
 interface PartnerRow {
@@ -130,17 +155,19 @@ interface PartnerRow {
   description: string | null;
   slug: string;
   location: string | null;
+  hero_image: string | null;
 }
 
 /**
  * Постит оператора (партнёра) в канал.
+ * Автоматически берёт hero_image из БД если photoUrl не передан.
  */
-export async function postOperatorToChannel(slug: string): Promise<{ ok: boolean; error?: string }> {
+export async function postOperatorToChannel(slug: string, photoUrl?: string): Promise<{ ok: boolean; error?: string }> {
   const channelId = process.env.TELEGRAM_CHANNEL_ID;
   if (!channelId) return { ok: false, error: 'TELEGRAM_CHANNEL_ID not set' };
 
   const res = await query<PartnerRow>(
-    `SELECT id, name, description, slug, location->>'city' AS location
+    `SELECT id, name, description, slug, location->>'city' AS location, hero_image
      FROM partners
      WHERE slug = $1 AND is_public = TRUE`,
     [slug]
@@ -152,14 +179,16 @@ export async function postOperatorToChannel(slug: string): Promise<{ ok: boolean
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tourhab.ru';
 
   const lines: string[] = [];
-  lines.push(`🏔 <b>${esc(p.name)}</b> — новый партнёр TourHab`);
+  lines.push(`🏔 <b>${esc(p.name)}</b> — партнёр TourHab`);
   lines.push('');
   if (desc) lines.push(esc(desc));
   if (p.location) lines.push(`\n📍 ${esc(p.location)}`);
   lines.push('');
   lines.push(`<a href="${appUrl}/operators/${p.slug}">Профиль оператора →</a>`);
 
-  return tgPost(channelId, lines.join('\n'));
+  const text = lines.join('\n');
+  const photo = photoUrl ?? p.hero_image ?? undefined;
+  return photo ? tgPostPhoto(channelId, photo, text) : tgPost(channelId, text);
 }
 
 // ── Б. Оперативные уведомления (в admin-чат) ─────────────────────────────────

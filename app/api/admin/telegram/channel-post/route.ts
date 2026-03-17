@@ -16,8 +16,8 @@ import { requireAdmin } from '@/lib/auth/middleware';
 import { postRouteToChannel, postOperatorToChannel } from '@/lib/notifications/telegram-channel';
 
 const BodySchema = z.discriminatedUnion('type', [
-  z.object({ type: z.literal('route'),    id:   z.string().uuid() }),
-  z.object({ type: z.literal('operator'), slug: z.string().min(1).max(100) }),
+  z.object({ type: z.literal('route'),    id:   z.string().uuid(), photoUrl: z.string().url().optional() }),
+  z.object({ type: z.literal('operator'), slug: z.string().min(1).max(100), photoUrl: z.string().url().optional() }),
 ]);
 
 export async function POST(request: NextRequest) {
@@ -37,8 +37,8 @@ export async function POST(request: NextRequest) {
   }
 
   const result = parsed.data.type === 'route'
-    ? await postRouteToChannel(parsed.data.id)
-    : await postOperatorToChannel(parsed.data.slug);
+    ? await postRouteToChannel(parsed.data.id, parsed.data.photoUrl)
+    : await postOperatorToChannel(parsed.data.slug, parsed.data.photoUrl);
 
   if (!result.ok) {
     return NextResponse.json({ success: false, error: result.error ?? 'Telegram error' }, { status: 502 });
