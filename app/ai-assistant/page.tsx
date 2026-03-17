@@ -44,9 +44,9 @@ export default function AIAssistantPage() {
       const data: unknown = await res.json();
 
       let reply = 'Извините, не удалось получить ответ. Попробуйте позже.';
-      if (isRecord(data) && data.success && isRecord(data.data)) {
-        const msg = data.data.message ?? data.data.reply;
-        if (typeof msg === 'string') reply = msg;
+      if (isRecord(data) && isRecord(data.data)) {
+        const answer = data.data.answer;
+        if (typeof answer === 'string') reply = answer;
       }
 
       setMessages(prev => [...prev, { role: 'assistant', content: reply }]);

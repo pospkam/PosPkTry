@@ -115,10 +115,8 @@ export function AssistantButton({ pageContext }: { pageContext?: PageContext }) 
         : `anon-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
       localStorage.setItem(STORAGE_KEY, sid);
     }
-    setSessionId(sid);
-
-    // Пробуем загрузить предыдущую историю
-    fetch(`/api/assistant?sessionId=${encodeURIComponent(sid)}`)
+    // Начинаем fetch истории ТУТ, параллельно с setSessionId (не ждём)
+    fetch(`/api/ai/chat?sessionId=${encodeURIComponent(sid)}`)
       .then(r => r.json())
       .then((data: { messages?: Message[] }) => {
         const prev = data.messages ?? [];
@@ -131,9 +129,14 @@ export function AssistantButton({ pageContext }: { pageContext?: PageContext }) 
         }
       })
       .catch(() => {
-        setMessages([{ role: 'assistant', content: buildGreeting(ctx) }]);
+        const contextGreeting = pageContext ? PAGE_GREETINGS[pageContext.type] : '';
+        const greeting = contextGreeting || buildGreeting(ctx);
+        setMessages([{ role: 'assistant', content: greeting }]);
       });
-  }, []);
+
+    // Устанавливаем sessionId (не блокирует fetch)
+    setSessionId(sid);
+  }, [pageContext]);
 
   // Автоскролл при новых сообщениях
   useEffect(() => {
@@ -156,20 +159,24 @@ export function AssistantButton({ pageContext }: { pageContext?: PageContext }) 
     setLoading(true);
 
     try {
-      const res = await fetch('/api/assistant', {
+      const res = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: nextMessages.slice(-12),
-          interestContext: interestContext || undefined,
+          message: text,
           sessionId: sessionId || undefined,
+          role: 'tourist',
         }),
       });
 
-      const data = await res.json() as { reply?: string; error?: string };
+      const data = await res.json() as {
+        success?: boolean;
+        error?: string;
+        data?: { answer?: string };
+      };
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: data.reply ?? (data.error ?? 'Что-то пошло не так, попробуй ещё раз.'),
+        content: data.data?.answer ?? data.error ?? 'Что-то пошло не так, попробуй ещё раз.',
       }]);
     } catch {
       setMessages(prev => [...prev, {
@@ -179,7 +186,7 @@ export function AssistantButton({ pageContext }: { pageContext?: PageContext }) 
     } finally {
       setLoading(false);
     }
-  }, [loading, messages, interestContext, sessionId]);
+  }, [loading, messages, sessionId]);
 
   const send = useCallback(async () => {
     const text = input.trim();

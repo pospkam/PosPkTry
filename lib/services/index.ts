@@ -30,9 +30,6 @@ export { commissionService, payoutService } from './payment.service';
 // RAG / Knowledge Base
 export { knowledgeBaseService } from './rag.service';
 
-// Messaging (legacy engagement chat)
-export { messagingService } from './messaging.service';
-
 // Chat (conversation-based user-to-user messaging)
 export { chatService } from './chat.service';
 
