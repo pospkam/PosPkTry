@@ -218,6 +218,59 @@ export async function postSezonToChannel(): Promise<{ ok: boolean; error?: strin
   return tgPost(channelId, text);
 }
 
+// ── Справочник «Друзья» — внешние партнёры без страницы на сайте ─────────────
+
+interface FriendEntry {
+  name: string;
+  tagline: string;
+  contact: string;
+  tg?: string;
+  context: string;  // контекст для AI
+}
+
+const FRIENDS: Record<string, FriendEntry> = {
+  soulful: {
+    name: 'SoulfulKamchatka',
+    tagline: 'Один день — три места. На джипе. По бездорожью.',
+    contact: '+7 929 901-97-87 (WA)',
+    tg: '@soulfulKamchatka',
+    context: 'Джип-туры по Камчатке. Группы до 4 человек. За один день объезжают несколько труднодоступных мест. Работают круглый год. Неформальный подход, без лишних слов.',
+  },
+};
+
+/**
+ * AI генерирует пост в голосе Кузьмича про внешнего партнёра («друга»)
+ * и публикует в канал.
+ */
+export async function postFriendToChannel(slug: string): Promise<{ ok: boolean; error?: string }> {
+  const channelId = process.env.TELEGRAM_CHANNEL_ID;
+  if (!channelId) return { ok: false, error: 'TELEGRAM_CHANNEL_ID not set' };
+
+  const friend = FRIENDS[slug];
+  if (!friend) {
+    const available = Object.keys(FRIENDS).join(', ');
+    return { ok: false, error: `Друг «${slug}» не найден. Доступные: ${available}` };
+  }
+
+  const prompt = `Ты — Кузьмич, камчадал в третьем поколении. Пишешь пост для Telegram-канала.
+Тема: рекомендуешь своих друзей — ${friend.name}.
+Контекст: ${friend.context}
+
+Требования:
+- 60-100 слов, живой голос местного жителя, без рекламного пафоса
+- Немного иронии над городскими туристами которые сидят в гостиницах
+- Конкретно и по делу — что они делают, чем отличаются
+- В конце контакты: ${friend.contact}${friend.tg ? `, ${friend.tg}` : ''}
+- HTML-теги Telegram: <b>жирный</b>, <i>курсив</i>
+- Начни не с имени, а с наблюдения или ситуации`;
+
+  const text = await callAIWaterfallDirect([
+    { role: 'user', content: prompt },
+  ]);
+
+  return tgPost(channelId, text);
+}
+
 // ── Б. Оперативные уведомления (в admin-чат) ─────────────────────────────────
 
 /**

@@ -34,6 +34,7 @@ import {
   postRouteToChannel,
   postOperatorToChannel,
   postSezonToChannel,
+  postFriendToChannel,
 } from '@/lib/notifications/telegram-channel';
 
 export const dynamic = 'force-dynamic';
@@ -474,9 +475,21 @@ export async function POST(request: NextRequest) {
 
       // /post sezon
       if (kind === 'sezon') {
-        await sendHTML(chatId, '⏳ Генерирую сезонный пост…');
+        await sendHTML(chatId, 'Генерирую сезонный пост…');
         const result = await postSezonToChannel();
-        await sendHTML(chatId, result.ok ? '✅ Сезонный пост опубликован.' : `❌ Ошибка: ${result.error}`);
+        await sendHTML(chatId, result.ok ? 'Сезонный пост опубликован.' : `Ошибка: ${result.error}`);
+        return NextResponse.json({ ok: true });
+      }
+
+      // /post friend <slug>
+      if (kind === 'friend') {
+        if (!arg) {
+          await sendHTML(chatId, 'Используй: <code>/post friend soulful</code>');
+          return NextResponse.json({ ok: true });
+        }
+        await sendHTML(chatId, `Генерирую пост про друзей (${arg})…`);
+        const result = await postFriendToChannel(arg);
+        await sendHTML(chatId, result.ok ? 'Пост опубликован.' : `Ошибка: ${result.error ?? 'неизвестная'}`);
         return NextResponse.json({ ok: true });
       }
 
@@ -486,7 +499,8 @@ export async function POST(request: NextRequest) {
           '',
           '<code>/post operator kamchatskaya-rybalka</code>',
           '<code>/post route &lt;uuid&gt;</code>',
-          '<code>/post sezon</code>  — AI генерирует пост',
+          '<code>/post sezon</code>  — AI сезонный пост',
+          '<code>/post friend soulful</code>  — пост про друзей',
         ].join('\n'));
         return NextResponse.json({ ok: true });
       }
@@ -497,7 +511,7 @@ export async function POST(request: NextRequest) {
       } else if (kind === 'route') {
         result = await postRouteToChannel(arg);
       } else {
-        await sendHTML(chatId, 'Используй: <code>operator</code>, <code>route</code> или <code>sezon</code>.');
+        await sendHTML(chatId, 'Используй: <code>operator</code>, <code>route</code>, <code>sezon</code> или <code>friend</code>.');
         return NextResponse.json({ ok: true });
       }
       await sendHTML(chatId, result.ok ? '✅ Пост опубликован.' : `❌ Ошибка: ${result.error ?? 'неизвестная'}`);
