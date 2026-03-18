@@ -11,6 +11,11 @@ interface PartnerRow {
   name: string;
   category: string;
   description: string | null;
+  short_description: string | null;
+  slug: string | null;
+  hero_image: string | null;
+  location: Record<string, unknown> | null;
+  is_public: boolean;
   contact: Record<string, unknown>;
   rating: string;
   review_count: string;
@@ -36,6 +41,8 @@ export async function GET(
 
     const result = await query<PartnerRow>(
       `SELECT p.id, p.user_id, p.name, p.category, p.description,
+              p.short_description, p.slug, p.hero_image,
+              p.location, p.is_public,
               p.contact, p.rating, p.review_count, p.is_verified,
               p.created_at, p.updated_at,
               l.url as logo_url
@@ -60,6 +67,11 @@ export async function GET(
         name: row.name,
         category: row.category,
         description: row.description ?? '',
+        shortDescription: row.short_description ?? '',
+        slug: row.slug ?? '',
+        heroImage: row.hero_image ?? '',
+        location: row.location ?? {},
+        isPublic: row.is_public ?? false,
         contact: row.contact ?? {},
         rating: parseFloat(row.rating) || 0,
         reviewCount: parseInt(row.review_count) || 0,
@@ -85,8 +97,18 @@ const UpdatePartnerSchema = z.object({
   name: z.string().min(1, 'Название обязательно'),
   category: z.string().optional().default(''),
   description: z.string().optional().default(''),
+  shortDescription: z.string().optional().default(''),
+  slug: z.string().optional().default(''),
+  heroImage: z.string().optional().default(''),
+  location: z.object({
+    lat: z.coerce.number().optional(),
+    lng: z.coerce.number().optional(),
+    address: z.string().optional(),
+    city: z.string().optional(),
+  }).optional().default({}),
   contact: z.record(z.string(), z.unknown()).optional().default({}),
   isVerified: z.boolean().optional(),
+  isPublic: z.boolean().optional(),
 });
 
 /**
@@ -111,7 +133,7 @@ export async function PUT(
       );
     }
 
-    const { name, category, description, contact, isVerified } = parsed.data;
+    const { name, category, description, shortDescription, slug, heroImage, location, contact, isVerified, isPublic } = parsed.data;
 
     if (category && !ALLOWED_CATEGORIES.has(category)) {
       return NextResponse.json(
@@ -122,32 +144,19 @@ export async function PUT(
 
     // Build dynamic SET clause
     const setClauses: string[] = [];
-    const values: (string | boolean | Record<string, unknown>)[] = [];
+    const values: unknown[] = [];
     let idx = 1;
 
-    setClauses.push(`name = $${idx}`);
-    values.push(name);
-    idx++;
-
-    if (category) {
-      setClauses.push(`category = $${idx}`);
-      values.push(category);
-      idx++;
-    }
-
-    setClauses.push(`description = $${idx}`);
-    values.push(description);
-    idx++;
-
-    setClauses.push(`contact = $${idx}`);
-    values.push(JSON.stringify(contact));
-    idx++;
-
-    if (isVerified !== undefined) {
-      setClauses.push(`is_verified = $${idx}`);
-      values.push(isVerified);
-      idx++;
-    }
+    setClauses.push(`name = $${idx}`); values.push(name); idx++;
+    if (category) { setClauses.push(`category = $${idx}`); values.push(category); idx++; }
+    setClauses.push(`description = $${idx}`); values.push(description); idx++;
+    setClauses.push(`short_description = $${idx}`); values.push(shortDescription); idx++;
+    if (slug) { setClauses.push(`slug = $${idx}`); values.push(slug); idx++; }
+    setClauses.push(`hero_image = $${idx}`); values.push(heroImage || null); idx++;
+    setClauses.push(`location = $${idx}`); values.push(JSON.stringify(location)); idx++;
+    setClauses.push(`contact = $${idx}`); values.push(JSON.stringify(contact)); idx++;
+    if (isVerified !== undefined) { setClauses.push(`is_verified = $${idx}`); values.push(isVerified); idx++; }
+    if (isPublic !== undefined) { setClauses.push(`is_public = $${idx}`); values.push(isPublic); idx++; }
 
     setClauses.push('updated_at = NOW()');
 

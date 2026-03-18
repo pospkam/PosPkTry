@@ -21,8 +21,13 @@ interface EditFormData {
   name: string;
   category: string;
   description: string;
+  shortDescription: string;
+  slug: string;
+  heroImage: string;
+  location: { lat?: number | string; lng?: number | string; address?: string; city?: string };
   contact: { phone?: string; email?: string; website?: string; address?: string };
   isVerified: boolean;
+  isPublic: boolean;
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -96,6 +101,15 @@ export default function PartnersManagement() {
           name: d.name ?? '',
           category: d.category ?? '',
           description: d.description ?? '',
+          shortDescription: d.shortDescription ?? '',
+          slug: d.slug ?? '',
+          heroImage: d.heroImage ?? '',
+          location: {
+            lat: d.location?.lat ?? '',
+            lng: d.location?.lng ?? '',
+            address: d.location?.address ?? '',
+            city: d.location?.city ?? '',
+          },
           contact: {
             phone: d.contact?.phone ?? '',
             email: d.contact?.email ?? '',
@@ -103,6 +117,7 @@ export default function PartnersManagement() {
             address: d.contact?.address ?? '',
           },
           isVerified: d.isVerified ?? false,
+          isPublic: d.isPublic ?? false,
         });
       } else {
         setMessage({ text: json.error ?? 'Ошибка загрузки', type: 'error' });
@@ -351,15 +366,108 @@ export default function PartnersManagement() {
                   </select>
                 </div>
 
+                {/* Slug */}
+                <div>
+                  <label className="text-[10px] uppercase tracking-[0.06em] font-medium text-[var(--text-muted)] mb-1.5 block">Slug (URL)</label>
+                  <input
+                    type="text"
+                    value={editForm.slug}
+                    onChange={(e) => setEditForm({ ...editForm, slug: e.target.value })}
+                    placeholder="kamchatskaya-rybalka"
+                    className="w-full px-3 py-2 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/40 font-mono"
+                  />
+                </div>
+
+                {/* Short description */}
+                <div>
+                  <label className="text-[10px] uppercase tracking-[0.06em] font-medium text-[var(--text-muted)] mb-1.5 block">Краткое описание</label>
+                  <input
+                    type="text"
+                    value={editForm.shortDescription}
+                    onChange={(e) => setEditForm({ ...editForm, shortDescription: e.target.value })}
+                    placeholder="До 150 символов для карточек"
+                    className="w-full px-3 py-2 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/40"
+                  />
+                </div>
+
                 {/* Description */}
                 <div>
-                  <label className="text-[10px] uppercase tracking-[0.06em] font-medium text-[var(--text-muted)] mb-1.5 block">Описание</label>
+                  <label className="text-[10px] uppercase tracking-[0.06em] font-medium text-[var(--text-muted)] mb-1.5 block">Полное описание</label>
                   <textarea
                     value={editForm.description}
                     onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
                     rows={3}
                     className="w-full px-3 py-2 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-primary)] resize-none focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/40"
                   />
+                </div>
+
+                {/* Hero image */}
+                <div>
+                  <label className="text-[10px] uppercase tracking-[0.06em] font-medium text-[var(--text-muted)] mb-1.5 block">Главное фото (путь)</label>
+                  {editForm.heroImage && (
+                    <div className="mb-2 rounded-lg overflow-hidden h-28 bg-[var(--bg-hover)]">
+                      <img src={editForm.heroImage} alt="hero" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                  <input
+                    type="text"
+                    value={editForm.heroImage}
+                    onChange={(e) => setEditForm({ ...editForm, heroImage: e.target.value })}
+                    placeholder="/images/fishingkam/photo.jpg"
+                    className="w-full px-3 py-2 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/40 font-mono"
+                  />
+                </div>
+
+                {/* Location */}
+                <div className="border border-[var(--border)] rounded-lg overflow-hidden">
+                  <div className="px-3 py-2 bg-[var(--bg-hover)] border-b border-[var(--border)]">
+                    <span className="text-[10px] uppercase tracking-[0.06em] font-medium text-[var(--text-muted)]">Координаты и адрес</span>
+                  </div>
+                  <div className="p-3 space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[10px] text-[var(--text-muted)] mb-1 block">Широта</label>
+                        <input
+                          type="number"
+                          step="0.0001"
+                          value={editForm.location.lat ?? ''}
+                          onChange={(e) => setEditForm({ ...editForm, location: { ...editForm.location, lat: e.target.value } })}
+                          placeholder="53.0452"
+                          className="w-full px-3 py-1.5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/40"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-[var(--text-muted)] mb-1 block">Долгота</label>
+                        <input
+                          type="number"
+                          step="0.0001"
+                          value={editForm.location.lng ?? ''}
+                          onChange={(e) => setEditForm({ ...editForm, location: { ...editForm.location, lng: e.target.value } })}
+                          placeholder="158.65"
+                          className="w-full px-3 py-1.5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/40"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-[var(--text-muted)] mb-1 block">Город</label>
+                      <input
+                        type="text"
+                        value={editForm.location.city ?? ''}
+                        onChange={(e) => setEditForm({ ...editForm, location: { ...editForm.location, city: e.target.value } })}
+                        placeholder="Петропавловск-Камчатский"
+                        className="w-full px-3 py-1.5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/40"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-[var(--text-muted)] mb-1 block">Полный адрес</label>
+                      <input
+                        type="text"
+                        value={editForm.location.address ?? ''}
+                        onChange={(e) => setEditForm({ ...editForm, location: { ...editForm.location, address: e.target.value } })}
+                        className="w-full px-3 py-1.5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/40"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 {/* Contact section */}
@@ -409,28 +517,46 @@ export default function PartnersManagement() {
                   </div>
                 </div>
 
-                {/* Verified toggle */}
-                <div className="flex items-center justify-between px-3 py-2.5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg">
-                  <div className="flex items-center gap-2">
-                    {editForm.isVerified
-                      ? <Shield className="w-4 h-4 text-[var(--success)]" />
-                      : <ShieldOff className="w-4 h-4 text-[var(--text-muted)]" />
-                    }
-                    <span className="text-xs font-medium text-[var(--text-primary)]">
-                      {editForm.isVerified ? 'Верифицирован' : 'Не верифицирован'}
-                    </span>
+                {/* Toggles */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between px-3 py-2.5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg">
+                    <div className="flex items-center gap-2">
+                      {editForm.isVerified
+                        ? <Shield className="w-4 h-4 text-[var(--success)]" />
+                        : <ShieldOff className="w-4 h-4 text-[var(--text-muted)]" />
+                      }
+                      <span className="text-xs font-medium text-[var(--text-primary)]">
+                        {editForm.isVerified ? 'Верифицирован' : 'Не верифицирован'}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setEditForm({ ...editForm, isVerified: !editForm.isVerified })}
+                      className={`relative w-10 h-5 rounded-full transition-colors ${
+                        editForm.isVerified ? 'bg-[var(--success)]' : 'bg-[var(--bg-hover)]'
+                      }`}
+                    >
+                      <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-[var(--bg-card)] shadow transition-transform ${
+                        editForm.isVerified ? 'translate-x-5' : ''
+                      }`} />
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setEditForm({ ...editForm, isVerified: !editForm.isVerified })}
-                    className={`relative w-10 h-5 rounded-full transition-colors ${
-                      editForm.isVerified ? 'bg-[var(--success)]' : 'bg-[var(--bg-hover)]'
-                    }`}
-                  >
-                    <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-[var(--bg-card)] shadow transition-transform ${
-                      editForm.isVerified ? 'translate-x-5' : ''
-                    }`} />
-                  </button>
+                  <div className="flex items-center justify-between px-3 py-2.5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg">
+                    <span className="text-xs font-medium text-[var(--text-primary)]">
+                      {editForm.isPublic ? 'Публичная страница' : 'Скрыт (не публичный)'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setEditForm({ ...editForm, isPublic: !editForm.isPublic })}
+                      className={`relative w-10 h-5 rounded-full transition-colors ${
+                        editForm.isPublic ? 'bg-[var(--ocean)]' : 'bg-[var(--bg-hover)]'
+                      }`}
+                    >
+                      <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-[var(--bg-card)] shadow transition-transform ${
+                        editForm.isPublic ? 'translate-x-5' : ''
+                      }`} />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Actions */}
