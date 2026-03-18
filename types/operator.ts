@@ -195,6 +195,7 @@ export interface TourFormData {
     activities: string[];
   }[];
   images: File[] | string[];
+  tourImage?: string;
   routeId?: string;
 }
 

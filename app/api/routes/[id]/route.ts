@@ -61,6 +61,8 @@ export async function GET(
            operator_review_count,
            operator_verified,
            commission_rate,
+           tour_image,
+           operator_hero_image,
            next_departure_date,
            next_departure_slots,
            marketplace_score
@@ -92,6 +94,8 @@ export async function GET(
           reviewCount:  o.operator_review_count != null ? Number(o.operator_review_count) : null,
           verified:     o.operator_verified as boolean,
         },
+        tourImage:        (o.tour_image as string | null) ?? null,
+        operatorHeroImage:(o.operator_hero_image as string | null) ?? null,
         nextDeparture:    (o.next_departure_date as string | null) ?? null,
         nextSlots:        o.next_departure_slots != null ? Number(o.next_departure_slots) : null,
       }));

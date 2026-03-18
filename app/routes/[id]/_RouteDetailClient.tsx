@@ -94,6 +94,8 @@ interface Offer {
     reviewCount: number | null;
     verified: boolean;
   };
+  tourImage: string | null;
+  operatorHeroImage: string | null;
   nextDeparture: string | null;
   nextSlots: number | null;
 }
@@ -142,12 +144,35 @@ function OfferCard({ offer, activityType, onBook }: {
     : null;
   const initials = offer.operator.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   const isLowSlots = offer.nextSlots != null && offer.nextSlots > 0 && offer.nextSlots <= 3;
+  const cardImage = offer.tourImage || offer.operatorHeroImage;
 
   return (
     <div
       className="ds-card overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group"
       onClick={onBook}
     >
+      {/* Фото тура / оператора */}
+      {cardImage && (
+        <div className="relative h-40 w-full overflow-hidden">
+          <Image
+            src={cardImage}
+            alt={offer.tourName}
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            sizes="(max-width: 768px) 100vw, 33vw"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+          {price != null && price > 0 && (
+            <div className="absolute bottom-2 left-3">
+              <span className="text-white font-bold text-lg leading-none">
+                {price.toLocaleString('ru-RU')} ₽
+              </span>
+              <span className="text-white/70 text-xs"> /чел</span>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Шапка с аватаром оператора и рейтингом */}
       <div className="px-4 pt-4 pb-3 flex items-center justify-between gap-3 border-b border-[var(--border)]">
         <div className="flex items-center gap-3 min-w-0">

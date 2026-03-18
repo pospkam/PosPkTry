@@ -38,6 +38,7 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
     excludes: initialData?.excludes || [],
     itinerary: initialData?.itinerary || [],
     images: initialData?.images || [],
+    tourImage: initialData?.tourImage || '',
     routeId: initialData?.routeId || '',
   });
 
@@ -276,6 +277,26 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
             />
           </div>
         </div>
+      </section>
+
+      {/* Главное фото тура */}
+      <section className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
+        <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-2">Главное фото тура</h2>
+        <p className="text-sm text-[var(--text-muted)] mb-4">
+          Путь к изображению (например: /images/fishingkam/2025-01-09_113928_1_.jpg)
+        </p>
+        <input
+          type="text"
+          value={formData.tourImage || ''}
+          onChange={(e) => handleChange('tourImage', e.target.value)}
+          placeholder="/images/fishingkam/..."
+          className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+        />
+        {formData.tourImage && (
+          <div className="mt-3 relative h-40 rounded-lg overflow-hidden">
+            <img src={formData.tourImage} alt="Превью" className="w-full h-full object-cover" />
+          </div>
+        )}
       </section>
 
       {/* Что включено */}

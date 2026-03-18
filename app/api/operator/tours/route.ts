@@ -215,6 +215,7 @@ const CreateTourSchema = z.object({
   shortDescription: z.string().optional(),
   routeId: z.string().nullable().optional(),
   images: z.array(z.string()).optional(),
+  tourImage: z.string().nullable().optional(),
 }).refine(
   (data) => {
     const min = data.minGroupSize ?? 1;
@@ -261,7 +262,7 @@ export async function POST(request: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json({ success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' }, { status: 400 });
     }
-    const { name, description, price, category, difficulty, season, currency, includes: bodyIncludes, excludes: bodyExcludes, routeId, images: bodyImages } = parsed.data;
+    const { name, description, price, category, difficulty, season, currency, includes: bodyIncludes, excludes: bodyExcludes, routeId, images: bodyImages, tourImage } = parsed.data;
     const minGroupSize = parsed.data.minGroupSize || 5;
     const maxGroupSize = parsed.data.maxGroupSize || 15;
     const duration = parsed.data.duration || 1;
@@ -302,9 +303,10 @@ export async function POST(request: NextRequest) {
         includes,
         excludes,
         images,
+        tour_image,
         created_at,
         updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, NOW(), NOW())
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, NOW(), NOW())
       RETURNING id, name, slug, is_active, created_at
     `;
 
@@ -337,7 +339,8 @@ export async function POST(request: NextRequest) {
       false,
       JSON.stringify(defaultIncludes),
       JSON.stringify(defaultExcludes),
-      JSON.stringify(bodyImages || [])
+      JSON.stringify(bodyImages || []),
+      tourImage || null,
     ];
 
     const result = await query<OpTourCreateRow>(insertQuery, values);
