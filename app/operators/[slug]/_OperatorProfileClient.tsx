@@ -465,7 +465,7 @@ export default function OperatorProfileClient({ slug }: { slug: string }) {
               Оставить заявку
             </button>
             {op.contacts[0]?.phone && (
-              <a href={`tel:${op.contacts[0].phone}`} className="px-8 py-3.5 border border-white/40 text-white font-semibold rounded-lg hover:bg-white/10 transition-colors flex items-center justify-center gap-2">
+              <a href={`tel:${op.contacts[0].phone}`} className="px-8 py-3.5 border border-[var(--bg-primary)]/50 text-[var(--bg-primary)] font-semibold rounded-lg hover:bg-[var(--bg-primary)]/10 transition-colors flex items-center justify-center gap-2">
                 <Phone className="w-4 h-4" />
                 {op.contacts[0].phone}
               </a>

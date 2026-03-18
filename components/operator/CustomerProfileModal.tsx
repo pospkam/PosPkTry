@@ -201,7 +201,7 @@ export default function CustomerProfileModal({ clientId, onClose, onTagsUpdated 
 
               {/* Telegram */}
               <div className="flex items-center gap-3 flex-wrap">
-                <Send className="w-4 h-4 text-[#229ED9] shrink-0" />
+                <Send className="w-4 h-4 text-[var(--ocean)] shrink-0" />
                 {!tgEditing ? (
                   telegramId ? (
                     <>
@@ -214,7 +214,7 @@ export default function CustomerProfileModal({ clientId, onClose, onTagsUpdated 
                           : `https://t.me/${telegramId}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 px-3 py-1 bg-[#229ED9]/20 hover:bg-[#229ED9]/35 border border-[#229ED9]/40 rounded-full text-[#229ED9] text-xs font-medium transition-colors"
+                        className="flex items-center gap-1.5 px-3 py-1 bg-[var(--ocean)]/15 hover:bg-[var(--ocean)]/25 border border-[var(--ocean)]/30 rounded-full text-[var(--ocean)] text-xs font-medium transition-colors"
                       >
                         <Send className="w-3 h-3" /> Написать
                       </a>
@@ -241,12 +241,12 @@ export default function CustomerProfileModal({ clientId, onClose, onTagsUpdated 
                         if (e.key === 'Escape') setTgEditing(false);
                       }}
                       placeholder="@username или числовой ID"
-                      className="flex-1 min-h-[34px] px-3 py-1 bg-[var(--bg-card)] border border-[#229ED9]/40 rounded-lg text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[#229ED9]/80"
+                      className="flex-1 min-h-[34px] px-3 py-1 bg-[var(--bg-card)] border border-[var(--ocean)]/30 rounded-lg text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--ocean)]"
                     />
                     <button
                       onClick={() => saveTelegramId(tgInput.trim())}
                       disabled={saving}
-                      className="px-3 py-1 bg-[#229ED9]/20 border border-[#229ED9]/40 rounded-lg text-[#229ED9] text-sm hover:bg-[#229ED9]/30 disabled:opacity-40"
+                      className="px-3 py-1 bg-[var(--ocean)]/15 border border-[var(--ocean)]/30 rounded-lg text-[var(--ocean)] text-sm hover:bg-[var(--ocean)]/25 disabled:opacity-40"
                     >
                       {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                     </button>
