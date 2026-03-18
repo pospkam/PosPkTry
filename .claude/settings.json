@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:max.ru)",
+      "WebFetch(domain:habr.com)",
+      "WebFetch(domain:vc.ru)",
+      "WebFetch(domain:www.tadviser.ru)",
+      "Bash(grep -r \"category\" /workspaces/PosPkTry/scripts/seed-operator*.sql)",
+      "Bash(node -e \":*)",
+      "Bash(grep -n \"OfferCard\\\\|TourCard\\\\|card\\\\|BookingModal\\\\|sticky\" /workspaces/PosPkTry/app/routes/[id]/_RouteDetailClient.tsx)",
+      "Bash(grep -rn \"OfferCard\\\\|TourCard\" /workspaces/PosPkTry/components/ --include=*.tsx -l 2)",
+      "Bash(/dev/null grep:*)",
+      "Bash(git config:*)",
+      "Bash(npx vitest:*)",
+      "WebFetch(domain:seahawkmedia.com)",
+      "WebFetch(domain:baymard.com)",
+      "WebFetch(domain:www.alfdesigngroup.com)",
+      "WebFetch(domain:www.eleken.co)",
+      "WebFetch(domain:www.setproduct.com)",
+      "WebFetch(domain:www.uxpin.com)",
+      "WebFetch(domain:www.justinmind.com)",
+      "WebFetch(domain:unicornplatform.com)",
+      "WebFetch(domain:medium.com)"
+    ]
+  }
+}
