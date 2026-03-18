@@ -132,7 +132,7 @@ function OfferCard({ offer, activityType, onBook }: {
 }) {
   const price = offer.effectivePrice ?? offer.priceBase;
   const nextDate = offer.nextDeparture
-    ? new Date(offer.nextDeparture).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
+    ? new Date(offer.nextDeparture).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
     : null;
   const accentColor = ACTIVITY_COLORS[activityType ?? 'other'] ?? 'var(--accent)';
   const duration = offer.durationDays
@@ -140,20 +140,26 @@ function OfferCard({ offer, activityType, onBook }: {
       ? `${Math.round(offer.durationDays * 24)} ч`
       : `${offer.durationDays} ${offer.durationDays === 1 ? 'день' : offer.durationDays < 5 ? 'дня' : 'дней'}`
     : null;
+  const initials = offer.operator.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  const isLowSlots = offer.nextSlots != null && offer.nextSlots > 0 && offer.nextSlots <= 3;
 
   return (
     <div
-      className="ds-card overflow-hidden hover:border-[var(--accent)]/50 transition-all duration-200 cursor-pointer group"
+      className="ds-card overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group"
       onClick={onBook}
     >
-      {/* Цветная полоса сверху */}
-      <div className="h-1 w-full" style={{ background: accentColor }} />
-
-      <div className="p-4 space-y-3">
-        {/* Оператор */}
-        <div className="flex items-start justify-between gap-2">
+      {/* Шапка с аватаром оператора и рейтингом */}
+      <div className="px-4 pt-4 pb-3 flex items-center justify-between gap-3 border-b border-[var(--border)]">
+        <div className="flex items-center gap-3 min-w-0">
+          {/* Аватар */}
+          <div
+            className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-white text-sm font-bold"
+            style={{ background: accentColor }}
+          >
+            {initials}
+          </div>
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5 mb-0.5">
+            <div className="flex items-center gap-1.5">
               <span className="font-semibold text-sm text-[var(--text-primary)] truncate">
                 {offer.operator.name}
               </span>
@@ -161,70 +167,85 @@ function OfferCard({ offer, activityType, onBook }: {
                 <CheckCircle className="w-3.5 h-3.5 text-[var(--success)] flex-shrink-0" />
               )}
             </div>
-            <p className="text-xs text-[var(--text-muted)] line-clamp-1">
-              {offer.tourName}
-            </p>
+            {offer.operator.reviewCount != null && offer.operator.reviewCount > 0 && (
+              <p className="text-xs text-[var(--text-muted)]">{offer.operator.reviewCount} отзывов</p>
+            )}
           </div>
-          {offer.operator.rating != null && offer.operator.rating > 0 && (
-            <div className="flex items-center gap-1 flex-shrink-0 bg-[var(--warning)]/10 px-1.5 py-0.5 rounded">
-              <Star className="w-3 h-3 fill-[var(--warning)] text-[var(--warning)]" />
-              <span className="text-xs font-semibold text-[var(--warning)]">
+        </div>
+        {offer.operator.rating != null && offer.operator.rating > 0 && (
+          <div className="flex flex-col items-center flex-shrink-0">
+            <div className="flex items-center gap-1">
+              <Star className="w-4 h-4 fill-[var(--warning)] text-[var(--warning)]" />
+              <span className="text-base font-bold text-[var(--text-primary)]">
                 {offer.operator.rating.toFixed(1)}
               </span>
             </div>
-          )}
-        </div>
+          </div>
+        )}
+      </div>
 
-        {/* Мета-инфо */}
-        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-[var(--text-muted)]">
+      <div className="p-4 space-y-4">
+        {/* Название тура */}
+        <p className="text-sm font-medium text-[var(--text-primary)] line-clamp-2 leading-snug">
+          {offer.tourName}
+        </p>
+
+        {/* Характеристики */}
+        <div className="grid grid-cols-2 gap-2">
           {duration && (
-            <span className="flex items-center gap-1">
-              <Clock className="w-3 h-3" />{duration}
-            </span>
+            <div className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)]">
+              <Clock className="w-3.5 h-3.5 flex-shrink-0" style={{ color: accentColor }} />
+              <span>{duration}</span>
+            </div>
           )}
           {offer.maxGroupSize && (
-            <span className="flex items-center gap-1">
-              <Users className="w-3 h-3" />до {offer.maxGroupSize} чел.
-            </span>
+            <div className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)]">
+              <Users className="w-3.5 h-3.5 flex-shrink-0" style={{ color: accentColor }} />
+              <span>до {offer.maxGroupSize} чел.</span>
+            </div>
           )}
-          {nextDate && (
-            <span className="flex items-center gap-1 text-[var(--success)]">
-              <Calendar className="w-3 h-3" />Ближайший {nextDate}
-            </span>
-          )}
-          {offer.nextSlots != null && offer.nextSlots > 0 && offer.nextSlots <= 3 && (
-            <span className="text-[var(--warning)] font-medium">
-              {offer.nextSlots} место
-            </span>
-          )}
+          {offer.included.slice(0, 2).map((item, i) => (
+            <div key={i} className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)] col-span-1">
+              <CheckCircle className="w-3.5 h-3.5 flex-shrink-0 text-[var(--success)]" />
+              <span className="truncate">{item}</span>
+            </div>
+          ))}
         </div>
 
-        {/* Включено */}
-        {offer.included.length > 0 && (
-          <p className="text-xs text-[var(--text-muted)] line-clamp-1">
-            Включено: {offer.included.slice(0, 3).join(', ')}
-            {offer.included.length > 3 && ` +${offer.included.length - 3}`}
-          </p>
+        {/* Ближайший заезд */}
+        {nextDate && (
+          <div className={`flex items-center gap-2 text-xs px-3 py-2 rounded-lg ${
+            isLowSlots
+              ? 'bg-[var(--warning)]/10 text-[var(--warning)]'
+              : 'bg-[var(--success)]/10 text-[var(--success)]'
+          }`}>
+            <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
+            <span className="font-medium">
+              {isLowSlots ? `Осталось ${offer.nextSlots} место — ` : ''}
+              {nextDate}
+            </span>
+          </div>
         )}
 
-        {/* Цена + кнопка */}
-        <div className="flex items-center justify-between gap-3 pt-1 border-t border-[var(--border)]">
-          <div>
+        {/* Цена + CTA */}
+        <div className="pt-1">
+          <div className="flex items-baseline gap-1 mb-3">
             {price != null && price > 0 ? (
               <>
-                <span className="text-xs text-[var(--text-muted)]">от </span>
-                <span className="text-lg font-bold" style={{ color: accentColor }}>
-                  {price.toLocaleString('ru-RU')} ₽
+                <span className="text-xs text-[var(--text-muted)]">от</span>
+                <span className="text-2xl font-bold" style={{ color: accentColor }}>
+                  {price.toLocaleString('ru-RU')}
                 </span>
-                <span className="text-xs text-[var(--text-muted)]"> /чел</span>
+                <span className="text-sm font-semibold text-[var(--text-muted)]">₽</span>
+                <span className="text-xs text-[var(--text-muted)]">/ чел</span>
               </>
             ) : (
-              <span className="text-sm font-semibold text-[var(--text-muted)]">По запросу</span>
+              <span className="text-lg font-semibold text-[var(--text-muted)]">По запросу</span>
             )}
           </div>
           <button
             type="button"
-            className="ds-btn ds-btn-primary text-xs px-4 py-2 flex-shrink-0 group-hover:opacity-90"
+            className="ds-btn ds-btn-primary w-full text-sm py-2.5 group-hover:opacity-95 transition-opacity"
             onClick={e => { e.stopPropagation(); onBook(); }}
           >
             Забронировать
