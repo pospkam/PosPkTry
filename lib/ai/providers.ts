@@ -217,13 +217,13 @@ export async function callAnthropic(messages: ChatMessage[]): Promise<string | n
 }
 
 // ── Waterfall: пробует провайдеров по очереди ─────────────────
-// Timeweb Claude 4.6 → OpenRouter → Minimax → xAI → Anthropic direct
+// Anthropic → xAI → Minimax → OpenRouter → Timeweb (legacy)
 export async function callAIWaterfall(messages: ChatMessage[]): Promise<string> {
-  let answer = await callTimewebAgent(messages);
-  if (!answer) answer = await callOpenrouter(messages);
-  if (!answer) answer = await callMinimax(messages);
+  let answer = await callAnthropic(messages);
   if (!answer) answer = await callXai(messages);
-  if (!answer) answer = await callAnthropic(messages);
+  if (!answer) answer = await callMinimax(messages);
+  if (!answer) answer = await callOpenrouter(messages);
+  if (!answer) answer = await callTimewebAgent(messages);
   return answer ?? 'Извините, сервис временно недоступен. Попробуйте позже.';
 }
 
