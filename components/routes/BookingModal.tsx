@@ -51,6 +51,7 @@ export default function BookingModal({
   const [selectedDepartureId, setSelectedDepartureId] = useState('');
   const [desiredDate, setDesiredDate] = useState('');
   const [participants, setParticipants] = useState(minGroupSize ?? 1);
+  const [experienceLevel, setExperienceLevel] = useState('');
   const [specialRequests, setSpecialRequests] = useState('');
 
   const [submitting, setSubmitting] = useState(false);
@@ -66,6 +67,7 @@ export default function BookingModal({
       setSelectedDepartureId('');
       setDesiredDate('');
       setParticipants(minGroupSize ?? 1);
+      setExperienceLevel('');
       setSpecialRequests('');
       setFormError('');
       setBookingId('');
@@ -120,10 +122,20 @@ export default function BookingModal({
     setSubmitting(true);
 
     try {
+      const experienceLabel: Record<string, string> = {
+        first: 'Первый раз в походе',
+        been: 'Бывал на Камчатке',
+        experienced: 'Опытный турист',
+      };
+      const parts = [
+        experienceLevel ? `Опыт: ${experienceLabel[experienceLevel]}` : '',
+        specialRequests.trim(),
+      ].filter(Boolean);
+
       const body: Record<string, unknown> = {
         tourId,
         participants,
-        specialRequests: specialRequests.trim() || undefined,
+        specialRequests: parts.length ? parts.join('. ') : undefined,
       };
       if (hasDepartures && selectedDepartureId) {
         body.departureId = selectedDepartureId;
@@ -284,6 +296,25 @@ export default function BookingModal({
                     <p className="text-xs text-[var(--text-muted)] mt-1">
                       От {minP} до {maxP} человек
                     </p>
+                  </div>
+
+                  {/* Experience level */}
+                  <div>
+                    <label htmlFor="bm-experience" className="ds-label mb-1 flex items-center gap-1.5">
+                      <Users className="w-3.5 h-3.5" />
+                      Ваш опыт в походах
+                    </label>
+                    <select
+                      id="bm-experience"
+                      value={experienceLevel}
+                      onChange={e => setExperienceLevel(e.target.value)}
+                      className="ds-input w-full"
+                    >
+                      <option value="">— не указывать —</option>
+                      <option value="first">Первый раз в походе</option>
+                      <option value="been">Бывал на Камчатке</option>
+                      <option value="experienced">Опытный турист</option>
+                    </select>
                   </div>
 
                   {/* Special requests */}

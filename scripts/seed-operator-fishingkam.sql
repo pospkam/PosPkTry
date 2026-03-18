@@ -24,7 +24,7 @@ INSERT INTO partners (
   '{"tourRegistryNumber": null, "hasFinancialGuarantee": false}'::jsonb,
 
   -- hero_image
-  '/images/fishingkam/2025-01-27_142444.jpg',
+  '/images/fishingkam/2025-01-09_113928_1_.jpg',
 
   -- gallery
   '["2025-01-27_142444.jpg","2025-01-27_142653.jpg","2025-01-27_142814.jpg","2025-01-27_142818_1.jpg","2025-01-27_142551.jpg","2025-01-27_142551_1.jpg","2025-02-10_151416.jpg","2025-02-10_151421.jpg","2025-02-10_151433.jpg","2025-02-10_151441.jpg","2025-02-10_151450.jpg","2025-01-09_113928_1_.jpg"]'::jsonb,
