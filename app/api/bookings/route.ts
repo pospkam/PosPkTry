@@ -167,6 +167,33 @@ export async function POST(request: NextRequest) {
       } catch { /* не прерываем при ошибке TG */ }
     })();
 
+    // Email-уведомление оператору (fire-and-forget)
+    ;(async () => {
+      try {
+        const partnerEmailRow = await query<{ email: string }>(
+          `SELECT p.contact->>'email' AS email
+           FROM tours t
+           JOIN partners p ON p.id = t.operator_id
+           WHERE t.id = $1`,
+          [tourId]
+        );
+        const operatorEmail = partnerEmailRow.rows[0]?.email;
+        if (operatorEmail) {
+          await emailService.sendOperatorNewBooking({
+            bookingId:       booking.id,
+            tourTitle:       booking.tour.title,
+            date:            booking.date,
+            participants:    booking.participants,
+            totalAmount:     booking.totalAmount ?? 0,
+            touristName:     booking.tourist.name,
+            touristEmail:    booking.tourist.email,
+            specialRequests: booking.specialRequests,
+            operatorEmail,
+          });
+        }
+      } catch { /* некритично */ }
+    })();
+
     // Email-подтверждение туристу (fire-and-forget)
     ;(async () => {
       try {

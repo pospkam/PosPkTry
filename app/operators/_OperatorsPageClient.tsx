@@ -63,6 +63,13 @@ export default function OperatorsPageClient() {
             Проверенные операторы, гиды и базы Камчатки. Каждый партнёр прошёл верификацию.
           </p>
 
+          <Link
+            href="/operators/join"
+            className="ds-btn ds-btn-primary inline-flex items-center gap-2 mb-8 px-6 py-2.5"
+          >
+            Стать партнёром платформы
+          </Link>
+
           {/* Search */}
           <div className="max-w-md mx-auto relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />

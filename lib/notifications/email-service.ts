@@ -22,6 +22,18 @@ export interface EmailResult {
   error?: string;
 }
 
+export interface OperatorNewBookingData {
+  bookingId: string;
+  tourTitle: string;
+  date: Date;
+  participants: number;
+  totalAmount: number;
+  touristName: string;
+  touristEmail: string;
+  specialRequests?: string | null;
+  operatorEmail: string;
+}
+
 export interface BookingConfirmationData {
   bookingId: string;
   touristName: string;
@@ -182,6 +194,77 @@ class EmailService {
     return this.sendEmail({
       to: data.touristEmail,
       subject: `Бронирование принято — ${data.tourTitle}`,
+      html,
+    });
+  }
+
+  async sendOperatorNewBooking(data: OperatorNewBookingData): Promise<EmailResult> {
+    const dateStr = data.date.toLocaleDateString('ru-RU', {
+      day: 'numeric', month: 'long', year: 'numeric',
+    });
+    const amountStr = new Intl.NumberFormat('ru-RU').format(data.totalAmount);
+    const shortId = data.bookingId.slice(0, 8).toUpperCase();
+
+    const html = `<!DOCTYPE html>
+<html lang="ru">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#F5F0EB;font-family:'Helvetica Neue',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0EB;padding:32px 0;">
+  <tr><td align="center">
+    <table width="560" cellpadding="0" cellspacing="0" style="background:#FFFFFF;border-radius:12px;overflow:hidden;max-width:560px;width:100%;">
+      <tr>
+        <td style="background:#D44A0C;padding:24px 32px;">
+          <p style="margin:0;font-size:22px;font-weight:700;color:#FFFFFF;">TourHab</p>
+          <p style="margin:4px 0 0;font-size:13px;color:rgba(255,255,255,0.8);">Новая заявка на тур</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:32px 32px 0;">
+          <p style="margin:0 0 8px;font-size:13px;color:#6B6560;text-transform:uppercase;letter-spacing:0.08em;">Новое бронирование</p>
+          <h1 style="margin:0 0 24px;font-size:24px;font-weight:700;color:#1A1714;line-height:1.3;">${this.esc(data.tourTitle)}</h1>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:0 32px;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0EB;border-radius:8px;">
+            <tr>
+              <td style="padding:20px 24px;">
+                ${this.detailRow('Заявка', `#${shortId}`)}
+                ${this.detailRow('Дата', dateStr)}
+                ${this.detailRow('Участников', String(data.participants))}
+                ${data.totalAmount > 0 ? this.detailRow('Сумма', `${amountStr}\u00A0\u20BD`) : ''}
+                ${this.detailRow('Турист', this.esc(data.touristName))}
+                ${this.detailRow('Email туриста', this.esc(data.touristEmail))}
+                ${data.specialRequests ? this.detailRow('Комментарий', this.esc(data.specialRequests)) : ''}
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:24px 32px;">
+          <a href="https://tourhab.ru/hub/operator/bookings" style="display:inline-block;background:#D44A0C;color:#FFFFFF;text-decoration:none;padding:12px 24px;border-radius:6px;font-size:14px;font-weight:600;">
+            Открыть в кабинете →
+          </a>
+        </td>
+      </tr>
+      <tr><td style="padding:0 32px;"><div style="border-top:1px solid #F0ECE7;"></div></td></tr>
+      <tr>
+        <td style="padding:16px 32px;background:#FAFAFA;">
+          <p style="margin:0;font-size:11px;color:#9A9590;">
+            TourHab &mdash; tourhab.ru &mdash; ООО &laquo;Трей&raquo;
+          </p>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`;
+
+    return this.sendEmail({
+      to: data.operatorEmail,
+      subject: `Новая заявка: ${data.tourTitle} — #${shortId}`,
       html,
     });
   }
