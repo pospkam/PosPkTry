@@ -152,9 +152,10 @@ html {
 }
 
 body {
-  font-family: var(--font-outfit, 'Outfit'), -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-family: var(--font-outfit, 'Inter'), -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-primary);
+  line-height: 1.6;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
@@ -869,21 +870,27 @@ a:focus-visible {
 
   /* Zagalovki */
   .ds-h1 {
+    font-family: var(--font-playfair), 'Playfair Display', Georgia, serif;
     font-size: 2.25rem;
     font-weight: 700;
     color: var(--text-primary);
-    line-height: 1.2;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
   }
   .ds-h2 {
+    font-family: var(--font-playfair), 'Playfair Display', Georgia, serif;
     font-size: 1.5rem;
     font-weight: 600;
     color: var(--text-primary);
+    line-height: 1.25;
+    letter-spacing: -0.01em;
   }
   .ds-label {
     font-size: 0.75rem;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.06em;
     color: var(--text-muted);
+    font-weight: 500;
   }
 
   /* Skeleton loading */

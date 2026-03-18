@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { Outfit, Playfair_Display } from 'next/font/google';
+import { Inter, Playfair_Display } from 'next/font/google';
 
 const playfairDisplay = Playfair_Display({
   subsets: ['latin', 'cyrillic'],
@@ -8,11 +8,11 @@ const playfairDisplay = Playfair_Display({
   variable: '--font-playfair',
 });
 
-const outfit = Outfit({
-  subsets: ['latin'],
+const inter = Inter({
+  subsets: ['latin', 'cyrillic'],
   weight: ['300', '400', '500', '600', '700'],
   display: 'swap',
-  variable: '--font-outfit',
+  variable: '--font-outfit', // переменная сохранена для обратной совместимости
 });
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://tourhab.ru';
@@ -99,7 +99,7 @@ import PageViewTracker from '@/components/shared/PageViewTracker'
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ru" suppressHydrationWarning>
-      <body className={`min-h-screen transition-colors duration-300 ${outfit.className} ${playfairDisplay.variable} ${outfit.variable}`}>
+      <body className={`min-h-screen transition-colors duration-300 ${inter.className} ${playfairDisplay.variable} ${inter.variable}`}>
         <ThemeProvider>
           <AuthProvider>
             <RoleProvider>
