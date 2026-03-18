@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
-  ArrowLeft, MapPin, Tag, Clock, Calendar, Mountain,
-  ExternalLink, AlertTriangle, Users, Gauge, Send,
-  Star, CheckCircle, Phone,
+  ArrowLeft, MapPin, Clock, Calendar, Mountain,
+  ExternalLink, AlertTriangle, Users, Send,
+  Star, CheckCircle, Phone, ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { Header } from '@/components/layout/Header';
@@ -119,6 +119,7 @@ interface RouteDetail {
   dangerLevel: string | null;
   equipment: string[] | null;
   kuzmichReview: string | null;
+  photos: string[] | null;
   offers: Offer[];
 }
 
@@ -298,7 +299,9 @@ export default function RouteDetailClient({ id }: { id: string }) {
   const locLabel = LOCATION_TYPE_LABELS[route.locationType ?? 'other'] ?? 'Маршрут';
   const actLabel = ACTIVITY_TYPE_LABELS[route.activityType ?? 'other'] ?? 'Активный отдых';
   const offers = route.offers ?? [];
-  const heroImage = LOCATION_TYPE_IMAGES[route.locationType ?? 'other'] ?? '/images/hero/hero-dark.jpg';
+  const photos = route.photos ?? [];
+  const heroImage = photos[0] ?? LOCATION_TYPE_IMAGES[route.locationType ?? 'other'] ?? '/images/hero/hero-dark.jpg';
+  const [galleryIdx, setGalleryIdx] = useState(0);
   const minPrice = offers.length > 0
     ? Math.min(...offers.map(o => o.effectivePrice ?? o.priceBase ?? 0).filter(p => p > 0))
     : (route.priceFrom ?? 0);
@@ -361,6 +364,41 @@ export default function RouteDetailClient({ id }: { id: string }) {
           </div>
         </div>
       </div>
+
+      {/* ── Галерея фото ────────────────────────────────────────────────────── */}
+      {photos.length > 1 && (
+        <div className="ds-page pt-4 pb-0">
+          <div className="relative">
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+              {photos.map((src, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setGalleryIdx(i)}
+                  className={`relative flex-shrink-0 rounded-lg overflow-hidden transition-all duration-200 ${
+                    i === galleryIdx ? 'ring-2 ring-[var(--accent)]' : 'opacity-75 hover:opacity-100'
+                  }`}
+                  style={{ width: 120, height: 80 }}
+                >
+                  <Image src={src} alt={`Фото ${i + 1}`} fill className="object-cover" sizes="120px" />
+                </button>
+              ))}
+            </div>
+            {galleryIdx > 0 && (
+              <button type="button" onClick={() => setGalleryIdx(i => i - 1)}
+                className="absolute left-0 top-1/2 -translate-y-1/2 bg-[var(--bg-card)] border border-[var(--border)] rounded-full p-1 shadow">
+                <ChevronLeft className="w-4 h-4 text-[var(--text-primary)]" />
+              </button>
+            )}
+            {galleryIdx < photos.length - 1 && (
+              <button type="button" onClick={() => setGalleryIdx(i => i + 1)}
+                className="absolute right-0 top-1/2 -translate-y-1/2 bg-[var(--bg-card)] border border-[var(--border)] rounded-full p-1 shadow">
+                <ChevronRight className="w-4 h-4 text-[var(--text-primary)]" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="ds-page pb-20 lg:pb-10 pt-6">
         <div className="grid lg:grid-cols-3 gap-6 lg:gap-8 items-start">

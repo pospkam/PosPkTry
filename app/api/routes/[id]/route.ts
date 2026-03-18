@@ -121,6 +121,7 @@ export async function GET(
         groupSizeMax: payload.group_size_max != null ? Number(payload.group_size_max) : null,
         dangerLevel: (payload.danger_level as string | null) ?? null,
         equipment:   (payload.required_equipment as string[] | null) ?? null,
+        photos:      (payload.photos as string[] | null) ?? null,
         kuzmichReview: (r.kuzmich_review as string | null) ?? null,
         createdAt:   r.created_at as string,
         offers,
