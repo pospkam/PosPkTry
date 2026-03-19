@@ -351,18 +351,16 @@ interface ExtractedInterests {
 }
 
 function extractLastInterestsFromHistory(history: HistoryMessage[]): ExtractedInterests {
-  // Scan history backwards to find intent context
-  // Look for recent user messages that might contain interests
   for (let i = history.length - 1; i >= Math.max(0, history.length - 10); i--) {
     if (history[i]?.role === 'user') {
       const parsed = parseInterestsFromText(history[i].content);
-      if (parsed.interests.length > 0) {
-        return parsed;
-      }
+      if (parsed.interests.length > 0) return parsed;
     }
   }
   return {};
 }
+
+interface OperatorRow2 { name: string; slug: string; telegram_chat_id: string | null }
 
 async function createLeadFromBot(
   chatId: string,
@@ -370,26 +368,23 @@ async function createLeadFromBot(
   interests: ExtractedInterests
 ): Promise<void> {
   try {
-    const name = 'Турист'; // Anonymous from bot
     const phone = phoneText;
-    const comment = interests.interests && interests.interests.length > 0
-      ? `Интересы: ${interests.interests.join(', ')}${
-          interests.dateFrom ? ` · Даты: ${interests.dateFrom} - ${interests.dateTo}` : ''
-        }`
+    const interestList = interests.interests ?? [];
+    const comment = interestList.length > 0
+      ? `Интересы: ${interestList.join(', ')}${interests.dateFrom ? ` · Даты: ${interests.dateFrom} - ${interests.dateTo}` : ''}`
       : 'Заявка с Telegram бота';
 
     const res = await pool.query(
       `INSERT INTO leads (name, phone, comment, source_url, source_data)
-       VALUES ($1, $2, $3, $4, $5::jsonb)
-       RETURNING id`,
+       VALUES ($1, $2, $3, $4, $5::jsonb) RETURNING id`,
       [
-        name,
+        'Турист',
         phone,
         comment,
         'https://t.me/KuzmichKam_bot',
         JSON.stringify({
           source: 'telegram_bot',
-          interests: interests.interests ?? [],
+          interests: interestList,
           date_from: interests.dateFrom,
           date_to: interests.dateTo,
           chat_id: chatId,
@@ -397,23 +392,85 @@ async function createLeadFromBot(
         }),
       ]
     );
-
     const leadId = res.rows[0]?.id as string;
 
-    // Send notification to admin
+    // ── 1. Автоответ туристу ───────────────────────────────────────────────
+    const routes = interestList.length > 0
+      ? await findRoutesByInterests(interestList, 2)
+      : [];
+
+    const touristLines = [
+      '✅ <b>Заявка принята!</b>',
+      '',
+      'Оператор свяжется с вами в течение <b>1–2 часов</b> по номеру',
+      `<b>${esc(phone)}</b>`,
+    ];
+
+    if (routes.length > 0) {
+      touristLines.push('', '<b>Пока посмотрите подходящие маршруты:</b>');
+      routes.forEach((r, i) => {
+        const price = r.priceFrom ? ` — от ${Math.round(r.priceFrom / 1000)}к₽` : '';
+        touristLines.push(`${i + 1}. <a href="https://tourhab.ru/routes/${r.id}">${esc(r.title)}</a>${price}`);
+      });
+    }
+
+    touristLines.push('', 'Если вопросы — пишите прямо здесь, помогу 🙌');
+
+    await telegramService.sendMessage({
+      chatId,
+      text: touristLines.join('\n'),
+      parseMode: 'HTML',
+    }).catch(() => {});
+
+    // ── 2. Уведомление нужному оператору ──────────────────────────────────
+    if (interestList.length > 0) {
+      const opRes = await pool.query<OperatorRow2>(
+        `SELECT p.name, p.slug, p.contacts->>'telegram_chat_id' AS telegram_chat_id
+         FROM partners p
+         JOIN operator_tours ot ON ot.operator_id = p.user_id
+         JOIN agent_route_knowledge ark ON ark.id = ot.route_id
+         WHERE ark.activity_type = ANY($1)
+           AND p.is_public = TRUE
+           AND (p.contacts->>'telegram_chat_id') IS NOT NULL
+         GROUP BY p.name, p.slug, p.contacts->>'telegram_chat_id'
+         LIMIT 3`,
+        [interestList]
+      );
+
+      for (const op of opRes.rows) {
+        if (!op.telegram_chat_id) continue;
+        await telegramService.sendMessage({
+          chatId: op.telegram_chat_id,
+          text: [
+            '🔥 <b>Горячий лид!</b>',
+            '',
+            `<b>Телефон:</b> <a href="tel:${phone}">${phone}</a>`,
+            `<b>Интересы:</b> ${interestList.join(', ')}`,
+            interests.dateFrom ? `<b>Даты:</b> ${interests.dateFrom} — ${interests.dateTo}` : '',
+            '',
+            '⚡️ Свяжитесь в течение 1–2 часов — турист ждёт!',
+            `<a href="https://tourhab.ru/hub/operator/bookings">Открыть в CRM →</a>`,
+          ].filter(s => s !== '').join('\n'),
+          parseMode: 'HTML',
+        }).catch(() => {});
+      }
+    }
+
+    // ── 3. Уведомление admin ───────────────────────────────────────────────
     await telegramService.sendMessage({
       chatId: process.env.TELEGRAM_CHAT_ID ?? '',
       text: [
-        '<b>🤖 Новый лид из бота</b>',
+        '🤖 <b>Новый лид из бота</b>',
         '',
         `<b>Телефон:</b> <a href="tel:${phone}">${phone}</a>`,
-        `<b>Интересы:</b> ${interests.interests?.join(', ') || 'неизвестно'}`,
-        interests.dateFrom ? `<b>Даты:</b> ${interests.dateFrom} - ${interests.dateTo}` : '',
+        `<b>Интересы:</b> ${interestList.join(', ') || 'неизвестно'}`,
+        interests.dateFrom ? `<b>Даты:</b> ${interests.dateFrom} — ${interests.dateTo}` : '',
         '',
         `<code>${leadId}</code>`,
       ].filter(s => s !== '').join('\n'),
       parseMode: 'HTML',
     }).catch(() => {});
+
   } catch (err) {
     console.error('[telegram-bot-lead] error:', err);
   }
