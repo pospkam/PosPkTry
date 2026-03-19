@@ -152,113 +152,132 @@ function OfferCard({ offer, activityType, onBook }: {
 
   return (
     <div
-      className="ds-card overflow-hidden hover:shadow-md hover:border-[var(--accent)]/30 transition-all duration-200 cursor-pointer group"
+      className="ds-card overflow-hidden hover:shadow-lg transition-all duration-200 cursor-pointer group flex flex-col md:flex-row md:gap-4"
       onClick={onBook}
     >
-      <div className="flex gap-0">
-        {/* Фото / иконка-заглушка */}
-        <div className="relative w-24 flex-shrink-0 overflow-hidden" style={{ minHeight: 110 }}>
-          {cardImage ? (
-            <Image
-              src={cardImage}
-              alt={offer.tourName}
-              fill
-              className="object-cover group-hover:scale-105 transition-transform duration-300"
-              sizes="96px"
-            />
-          ) : (
-            <div
-              className="absolute inset-0 flex items-center justify-center"
-              style={{ background: `color-mix(in srgb, ${accentColor} 12%, var(--bg-hover))` }}
+      {/* Фото — полная ширина на мобильном, сбоку на десктопном */}
+      <div className="relative w-full md:w-40 md:flex-shrink-0 h-48 md:h-auto overflow-hidden">
+        {cardImage ? (
+          <Image
+            src={cardImage}
+            alt={offer.tourName}
+            fill
+            className="object-cover group-hover:scale-110 transition-transform duration-300"
+            sizes="(max-width: 768px) 100vw, 160px"
+          />
+        ) : (
+          <div
+            className="absolute inset-0 flex items-center justify-center"
+            style={{ background: `color-mix(in srgb, ${accentColor} 12%, var(--bg-hover))` }}
+          >
+            <ActivityIcon className="w-12 h-12 opacity-40" style={{ color: accentColor }} />
+          </div>
+        )}
+        {/* Badge типа / сложность */}
+        <div className="absolute top-2 left-2 flex gap-1.5">
+          {offer.durationType && (
+            <span className="text-[10px] font-bold uppercase tracking-wider bg-black/70 text-white px-2 py-0.5 rounded">
+              {offer.durationType === 'multi_day' ? `${offer.multiDayCount ?? ''}д` : '1д'}
+            </span>
+          )}
+          {offer.difficulty && (
+            <span
+              className="text-[10px] font-bold uppercase tracking-wider text-white px-2 py-0.5 rounded"
+              style={{ background: `color-mix(in srgb, ${DIFFICULTY_COLOR[offer.difficulty]} 60%, black)` }}
             >
-              <ActivityIcon className="w-7 h-7 opacity-40" style={{ color: accentColor }} />
+              {DIFFICULTY_RU[offer.difficulty]}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Контент */}
+      <div className="flex-1 p-4 md:p-0 md:py-1 flex flex-col justify-between gap-3">
+        {/* Оператор + рейтинг */}
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-xs text-[var(--text-muted)]">{offer.operator.name}</span>
+            {offer.operator.verified && <CheckCircle className="w-3.5 h-3.5 text-[var(--success)] flex-shrink-0" />}
+          </div>
+          {offer.operator.rating != null && offer.operator.rating > 0 && (
+            <div className="flex items-center gap-0.5 flex-shrink-0">
+              <Star className="w-3.5 h-3.5 fill-[var(--warning)] text-[var(--warning)]" />
+              <span className="text-xs font-semibold text-[var(--text-primary)]">{offer.operator.rating.toFixed(1)}</span>
             </div>
           )}
-          {/* Badge типа */}
-          {offer.durationType && (
-            <span className="absolute top-1.5 left-1.5 text-[9px] font-bold uppercase tracking-wider bg-black/60 text-white px-1.5 py-0.5 rounded">
-              {offer.durationType === 'multi_day' ? `${offer.multiDayCount ?? ''} дн.` : '1 день'}
+        </div>
+
+        {/* Название + описание */}
+        <div>
+          <p className="text-base font-bold text-[var(--text-primary)] leading-snug">
+            {offer.tourName}
+          </p>
+          {offer.shortDesc && (
+            <p className="text-xs text-[var(--text-secondary)] mt-1 line-clamp-1">
+              {offer.shortDesc}
+            </p>
+          )}
+        </div>
+
+        {/* Мета-информация в одну строку или сетку */}
+        <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--text-secondary)]">
+          {duration && (
+            <span className="flex items-center gap-1">
+              <Clock className="w-3.5 h-3.5" style={{ color: accentColor }} />
+              {duration}
+            </span>
+          )}
+          {(offer.minGroupSize || offer.maxGroupSize) && (
+            <span className="flex items-center gap-1">
+              <Users className="w-3.5 h-3.5" style={{ color: accentColor }} />
+              {offer.minGroupSize && offer.maxGroupSize
+                ? `${offer.minGroupSize}–${offer.maxGroupSize}`
+                : `до ${offer.maxGroupSize}`}
+            </span>
+          )}
+          {seasonStr && (
+            <span className="flex items-center gap-1">
+              <Calendar className="w-3.5 h-3.5" style={{ color: accentColor }} />
+              <span className="hidden sm:inline">{seasonStr}</span>
             </span>
           )}
         </div>
 
-        {/* Контент */}
-        <div className="flex-1 p-3 min-w-0 flex flex-col justify-between gap-1.5">
-          {/* Оператор + рейтинг */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-[11px] text-[var(--text-muted)] truncate">{offer.operator.name}</span>
-            {offer.operator.verified && <CheckCircle className="w-3 h-3 text-[var(--success)] flex-shrink-0" />}
-            {offer.operator.rating != null && offer.operator.rating > 0 && (
-              <div className="flex items-center gap-0.5 ml-auto flex-shrink-0">
-                <Star className="w-3 h-3 fill-[var(--warning)] text-[var(--warning)]" />
-                <span className="text-[11px] font-semibold text-[var(--text-primary)]">{offer.operator.rating.toFixed(1)}</span>
-              </div>
-            )}
-          </div>
-
-          {/* Название */}
-          <p className="text-sm font-semibold text-[var(--text-primary)] line-clamp-2 leading-snug">
-            {offer.tourName}
-          </p>
-
-          {/* Мета-строка */}
-          <div className="flex items-center gap-2.5 flex-wrap">
-            {duration && (
-              <span className="flex items-center gap-1 text-xs text-[var(--text-secondary)]">
-                <Clock className="w-3 h-3" style={{ color: accentColor }} />
-                {duration}
-              </span>
-            )}
-            {(offer.minGroupSize || offer.maxGroupSize) && (
-              <span className="flex items-center gap-1 text-xs text-[var(--text-secondary)]">
-                <Users className="w-3 h-3" style={{ color: accentColor }} />
-                {offer.minGroupSize && offer.maxGroupSize
-                  ? `${offer.minGroupSize}–${offer.maxGroupSize} чел`
-                  : `до ${offer.maxGroupSize} чел`}
-              </span>
-            )}
-            {seasonStr && (
-              <span className="flex items-center gap-1 text-xs text-[var(--text-secondary)]">
-                <Calendar className="w-3 h-3" style={{ color: accentColor }} />
-                {seasonStr}
-              </span>
-            )}
-          </div>
-
-          {/* Цена + кнопка */}
-          <div className="flex items-center justify-between mt-0.5">
-            <div>
-              {price != null && price > 0 ? (
-                <span className="text-sm text-[var(--text-primary)]">
-                  {offer.priceOld != null && offer.priceOld > price && (
-                    <span className="text-xs line-through text-[var(--text-muted)] mr-1">
-                      {offer.priceOld.toLocaleString('ru-RU')} ₽
-                    </span>
-                  )}
-                  <span className="font-bold">{price.toLocaleString('ru-RU')} ₽</span>
-                  {offer.priceUnit && (
-                    <span className="text-[10px] font-normal text-[var(--text-muted)] ml-0.5">
-                      {priceUnitLabel(offer.priceUnit)}
-                    </span>
-                  )}
+        {/* Цена + кнопка */}
+        <div className="flex items-end justify-between gap-3 mt-auto pt-2 border-t border-[var(--border)]">
+          <div>
+            {price != null && price > 0 ? (
+              <div className="flex items-baseline gap-1.5">
+                <span className="font-bold text-lg text-[var(--text-primary)]">
+                  {price.toLocaleString('ru-RU')} ₽
                 </span>
-              ) : (
-                <span className="text-sm text-[var(--text-muted)]">По запросу</span>
-              )}
-              {nextDate && (
-                <p className={`text-[11px] mt-0.5 font-medium ${isLowSlots ? 'text-[var(--warning)]' : 'text-[var(--success)]'}`}>
-                  {isLowSlots ? `${offer.nextSlots} места · ` : ''}{nextDate}
-                </p>
-              )}
-            </div>
-            <button
-              type="button"
-              className="ds-btn ds-btn-primary px-3 py-1.5 text-xs font-semibold flex-shrink-0"
-              onClick={e => { e.stopPropagation(); onBook(); }}
-            >
-              Забронировать
-            </button>
+                {offer.priceUnit && (
+                  <span className="text-[11px] text-[var(--text-muted)]">
+                    {priceUnitLabel(offer.priceUnit)}
+                  </span>
+                )}
+              </div>
+            ) : (
+              <span className="text-sm text-[var(--text-muted)] font-medium">По запросу</span>
+            )}
+            {offer.priceOld != null && offer.priceOld > price && (
+              <p className="text-xs line-through text-[var(--text-muted)]">
+                было {offer.priceOld.toLocaleString('ru-RU')} ₽
+              </p>
+            )}
+            {nextDate && (
+              <p className={`text-[11px] mt-1 font-medium ${isLowSlots ? 'text-[var(--warning)]' : 'text-[var(--success)]'}`}>
+                {isLowSlots ? '⚡ ' : '✓ '}{isLowSlots ? `${offer.nextSlots} мест · ` : ''}{nextDate}
+              </p>
+            )}
           </div>
+          <button
+            type="button"
+            className="ds-btn ds-btn-primary px-4 py-2 text-sm font-semibold flex-shrink-0 whitespace-nowrap"
+            onClick={e => { e.stopPropagation(); onBook(); }}
+          >
+            Забронировать
+          </button>
         </div>
       </div>
     </div>
