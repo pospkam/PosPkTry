@@ -1,12 +1,13 @@
 /**
  * GET /api/cron/leads-followup
  *
- * Кроn: повторные уведомления по лидам из Telegram-бота.
+ * Кроn: повторные уведомления по лидам из всех источников.
  *
  * Логика:
- *   1. Находим лиды со статусом 'new', источник 'telegram_bot', старше 2 часов.
+ *   1. Находим все лиды со статусом 'new', старше 2 часов.
  *   2. Для каждого лида ищем следующего оператора с подходящими активностями,
  *      ещё не получавшего уведомление об этом лиде.
+ *      Если интересы не указаны — берём любого оператора.
  *   3. Если оператор найден — отправляем повторное уведомление.
  *   4. Если операторов больше нет — эскалация к admin + смена статуса на 'contacted'.
  *
@@ -39,6 +40,7 @@ interface LeadSourceData {
 
 interface FollowupLead {
   id: string;
+  name: string;
   phone: string;
   source_data: LeadSourceData;
 }
@@ -79,10 +81,9 @@ export async function GET(request: NextRequest) {
     //   - создан более 2 часов назад
     //   - либо ещё не было followup, либо последний followup был > 2 часов назад
     const leadsRes = await pool.query<FollowupLead>(`
-      SELECT id::text, phone, source_data
+      SELECT id::text, name, phone, source_data
       FROM leads
       WHERE status = 'new'
-        AND source_data->>'source' = 'telegram_bot'
         AND created_at < NOW() - INTERVAL '2 hours'
         AND (
           source_data->>'last_followup' IS NULL
@@ -125,6 +126,20 @@ export async function GET(request: NextRequest) {
         nextOperator = opRes.rows[0] ?? null;
       }
 
+      // Fallback: если нет интересов или не нашли по интересам — любой оператор не из списка
+      if (!nextOperator) {
+        const fallbackRes = await pool.query<OperatorMatch>(
+          `SELECT name, slug, contacts->>'telegram_chat_id' AS telegram_chat_id
+           FROM partners
+           WHERE is_public = TRUE
+             AND (contacts->>'telegram_chat_id') IS NOT NULL
+             AND NOT (slug = ANY($1))
+           LIMIT 1`,
+          [alreadyNotified]
+        );
+        nextOperator = fallbackRes.rows[0] ?? null;
+      }
+
       if (nextOperator) {
         // ── Уведомляем следующего оператора ───────────────────────────────
         const attempt = followupCount + 1;
@@ -133,6 +148,7 @@ export async function GET(request: NextRequest) {
             ? '⏰ <b>Напоминание: горячий лид!</b>'
             : `⏰ <b>Повторное уведомление (попытка ${attempt})</b>`,
           '',
+          `<b>Имя:</b> ${esc(lead.name)}`,
           `<b>Телефон:</b> <a href="tel:${esc(lead.phone)}">${esc(lead.phone)}</a>`,
           interests.length > 0 ? `<b>Интересы:</b> ${interests.join(', ')}` : '',
           sd.date_from ? `<b>Даты:</b> ${sd.date_from} — ${sd.date_to}` : '',
@@ -173,6 +189,7 @@ export async function GET(request: NextRequest) {
               '⚠️ <b>Лид без ответа — нужна ручная обработка!</b>',
               '',
               `<b>Телефон:</b> <a href="tel:${esc(lead.phone)}">${esc(lead.phone)}</a>`,
+              `<b>Имя:</b> ${esc(lead.name)}`,
               interests.length > 0 ? `<b>Интересы:</b> ${interests.join(', ')}` : '',
               sd.date_from ? `<b>Даты:</b> ${sd.date_from} — ${sd.date_to}` : '',
               `<b>Уведомлений отправлено:</b> ${followupCount}`,

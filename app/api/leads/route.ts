@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { pool } from '@/lib/db-pool';
 import { telegramService } from '@/lib/notifications/telegram';
 import { notifyAdminNewLead } from '@/lib/notifications/telegram-channel';
+import { requireAdmin } from '@/lib/auth/middleware';
 
 const LeadSchema = z.object({
   name:        z.string().min(2, 'Укажите имя').max(120),
@@ -21,7 +22,9 @@ const ListSchema = z.object({
 });
 
 export async function GET(req: NextRequest) {
-  // Admin-only list endpoint
+  const authResult = await requireAdmin(req);
+  if (authResult instanceof NextResponse) return authResult;
+
   const { searchParams } = new URL(req.url);
   const parse = ListSchema.safeParse(Object.fromEntries(searchParams));
   if (!parse.success) return NextResponse.json({ error: 'Неверные параметры' }, { status: 400 });
@@ -35,7 +38,7 @@ export async function GET(req: NextRequest) {
 
   const [rows, cnt] = await Promise.all([
     pool.query(
-      `SELECT id, name, phone, comment, route_title, source_url, status, notes, created_at, updated_at
+      `SELECT id, name, phone, comment, route_title, source_url, source_data, status, notes, created_at, updated_at
        FROM leads ${where} ORDER BY created_at DESC LIMIT $${lIdx} OFFSET $${oIdx}`,
       vals
     ),

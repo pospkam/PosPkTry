@@ -12,6 +12,7 @@ interface Lead {
   comment: string | null;
   route_title: string | null;
   source_url: string | null;
+  source_data: Record<string, unknown> | null;
   status: LeadStatus;
   notes: string | null;
   created_at: string;
@@ -62,9 +63,10 @@ function LeadCard({ lead, onUpdate }: { lead: Lead; onUpdate: (id: string, patch
   const [saving, setSaving] = useState(false);
   const [localStatus, setLocalStatus] = useState<LeadStatus>(lead.status);
 
-  const save = useCallback(async (newStatus?: LeadStatus) => {
+  const save = useCallback(async (newStatus?: LeadStatus, skipNotes = false) => {
     setSaving(true);
-    const body: Record<string, unknown> = { notes };
+    const body: Record<string, unknown> = {};
+    if (!skipNotes) body.notes = notes;
     if (newStatus) body.status = newStatus;
     try {
       const res = await fetch(`/api/leads/${lead.id}`, {
@@ -85,7 +87,7 @@ function LeadCard({ lead, onUpdate }: { lead: Lead; onUpdate: (id: string, patch
 
   const handleStatusClick = (s: LeadStatus) => {
     setLocalStatus(s);
-    save(s);
+    save(s, true);
   };
 
   const sm = STATUS_META[localStatus];
@@ -246,7 +248,7 @@ export function LeadsClient() {
               onClick={() => setTab(t.key)}
               className={`text-sm px-3 py-1.5 rounded-lg transition-all ${
                 tab === t.key
-                  ? 'bg-[var(--accent)] text-white font-medium'
+                  ? 'bg-[var(--accent)] text-[var(--bg-card)] font-medium'
                   : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]'
               }`}
             >
