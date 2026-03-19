@@ -290,6 +290,7 @@ export default function RouteDetailClient({ id }: { id: string }) {
   const [showLead, setShowLead] = useState(false);
   const [bookingOffer, setBookingOffer] = useState<Offer | null>(null);
   const [relatedRoutes, setRelatedRoutes] = useState<RouteItem[]>([]);
+  const [galleryIdx, setGalleryIdx] = useState(0);
   useSourceTracker();
 
   useEffect(() => {
@@ -347,7 +348,6 @@ export default function RouteDetailClient({ id }: { id: string }) {
   const offers = route.offers ?? [];
   const photos = route.photos ?? [];
   const heroImage = photos[0] ?? LOCATION_TYPE_IMAGES[route.locationType ?? 'other'] ?? '/images/hero/hero-dark.jpg';
-  const [galleryIdx, setGalleryIdx] = useState(0);
   const minPrice = offers.length > 0
     ? Math.min(...offers.map(o => o.effectivePrice ?? o.priceBase ?? 0).filter(p => p > 0))
     : (route.priceFrom ?? 0);
