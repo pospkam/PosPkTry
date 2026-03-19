@@ -160,11 +160,12 @@ export function TripPlanner() {
             <label className="text-sm font-medium text-[var(--text-secondary)]">Телефон</label>
             <input
               type="tel"
-              placeholder="+7"
+              placeholder="+7 900 000-00-00"
               value={phone}
               onChange={e => setPhone(e.target.value)}
               className="ds-input w-full"
             />
+            <p className="text-xs text-[var(--text-muted)]">Оператор перезвонит сам — вам ничего делать не нужно</p>
           </div>
         </div>
 
