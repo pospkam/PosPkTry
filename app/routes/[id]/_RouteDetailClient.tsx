@@ -128,6 +128,18 @@ interface RouteDetail {
 
 // ── Карточка оффера (sidebar) ─────────────────────────────────────────────────
 
+// Градиентные фолбэки по типу активности
+const ACTIVITY_GRADIENTS: Record<string, string> = {
+  fishing:      'linear-gradient(135deg, #1a4a6b 0%, #0d2b40 100%)',
+  trekking:     'linear-gradient(135deg, #1a4a2b 0%, #0d2b1a 100%)',
+  thermal:      'linear-gradient(135deg, #6b2d1a 0%, #40180d 100%)',
+  helicopter:   'linear-gradient(135deg, #6b1a1a 0%, #401010 100%)',
+  bear_watching:'linear-gradient(135deg, #4a2d1a 0%, #2b180d 100%)',
+  boat_trip:    'linear-gradient(135deg, #1a3a6b 0%, #0d1f40 100%)',
+  snowmobile:   'linear-gradient(135deg, #2d1a6b 0%, #180d40 100%)',
+  other:        'linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%)',
+};
+
 function OfferCard({ offer, activityType, onBook }: {
   offer: Offer;
   activityType: string | null;
@@ -146,15 +158,16 @@ function OfferCard({ offer, activityType, onBook }: {
   const initials = offer.operator.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   const isLowSlots = offer.nextSlots != null && offer.nextSlots > 0 && offer.nextSlots <= 3;
   const cardImage = offer.tourImage || offer.operatorHeroImage;
+  const fallbackGradient = ACTIVITY_GRADIENTS[activityType ?? 'other'] ?? ACTIVITY_GRADIENTS.other;
 
   return (
     <div
       className="ds-card overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group"
       onClick={onBook}
     >
-      {/* Фото тура / оператора */}
-      {cardImage && (
-        <div className="relative h-40 w-full overflow-hidden">
+      {/* Фото или градиентный фолбэк */}
+      <div className="relative h-36 w-full overflow-hidden">
+        {cardImage ? (
           <Image
             src={cardImage}
             alt={offer.tourName}
@@ -162,121 +175,90 @@ function OfferCard({ offer, activityType, onBook }: {
             className="object-cover group-hover:scale-105 transition-transform duration-300"
             sizes="(max-width: 768px) 100vw, 33vw"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-          {price != null && price > 0 && (
-            <div className="absolute bottom-2 left-3">
-              <span className="text-white font-bold text-lg leading-none">
-                {price.toLocaleString('ru-RU')} ₽
-              </span>
-              <span className="text-white/70 text-xs"> /чел</span>
-            </div>
-          )}
-        </div>
-      )}
+        ) : (
+          <div className="absolute inset-0" style={{ background: fallbackGradient }} />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
-      {/* Шапка с аватаром оператора и рейтингом */}
-      <div className="px-4 pt-4 pb-3 flex items-center justify-between gap-3 border-b border-[var(--border)]">
-        <div className="flex items-center gap-3 min-w-0">
-          {/* Аватар */}
+        {/* Имя оператора поверх фото */}
+        <div className="absolute top-3 left-3 flex items-center gap-2">
           <div
-            className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-white text-sm font-bold"
+            className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
             style={{ background: accentColor }}
           >
             {initials}
           </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
-              <span className="font-semibold text-sm text-[var(--text-primary)] truncate">
-                {offer.operator.name}
-              </span>
-              {offer.operator.verified && (
-                <CheckCircle className="w-3.5 h-3.5 text-[var(--success)] flex-shrink-0" />
-              )}
-            </div>
-            {offer.operator.reviewCount != null && offer.operator.reviewCount > 0 && (
-              <p className="text-xs text-[var(--text-muted)]">{offer.operator.reviewCount} отзывов</p>
-            )}
-          </div>
+          <span className="text-white text-xs font-medium drop-shadow">
+            {offer.operator.name}
+          </span>
+          {offer.operator.verified && (
+            <CheckCircle className="w-3.5 h-3.5 text-[var(--success)] flex-shrink-0" />
+          )}
         </div>
+
+        {/* Рейтинг */}
         {offer.operator.rating != null && offer.operator.rating > 0 && (
-          <div className="flex flex-col items-center flex-shrink-0">
-            <div className="flex items-center gap-1">
-              <Star className="w-4 h-4 fill-[var(--warning)] text-[var(--warning)]" />
-              <span className="text-base font-bold text-[var(--text-primary)]">
-                {offer.operator.rating.toFixed(1)}
-              </span>
-            </div>
+          <div className="absolute top-3 right-3 flex items-center gap-1 bg-black/40 px-2 py-0.5 rounded-full">
+            <Star className="w-3 h-3 fill-[var(--warning)] text-[var(--warning)]" />
+            <span className="text-white text-xs font-semibold">{offer.operator.rating.toFixed(1)}</span>
+          </div>
+        )}
+
+        {/* Цена снизу */}
+        {price != null && price > 0 && (
+          <div className="absolute bottom-2 left-3">
+            <span className="text-white font-bold text-lg leading-none drop-shadow">
+              {price.toLocaleString('ru-RU')} ₽
+            </span>
+            <span className="text-white/70 text-xs"> /чел</span>
           </div>
         )}
       </div>
 
-      <div className="p-4 space-y-4">
+      <div className="p-3 space-y-3">
         {/* Название тура */}
-        <p className="text-sm font-medium text-[var(--text-primary)] line-clamp-2 leading-snug">
+        <p className="text-sm font-semibold text-[var(--text-primary)] line-clamp-2 leading-snug">
           {offer.tourName}
         </p>
 
         {/* Характеристики */}
-        <div className="grid grid-cols-2 gap-2">
+        <div className="flex flex-wrap gap-x-3 gap-y-1">
           {duration && (
-            <div className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)]">
-              <Clock className="w-3.5 h-3.5 flex-shrink-0" style={{ color: accentColor }} />
+            <div className="flex items-center gap-1 text-xs text-[var(--text-secondary)]">
+              <Clock className="w-3 h-3 flex-shrink-0" style={{ color: accentColor }} />
               <span>{duration}</span>
             </div>
           )}
           {offer.maxGroupSize && (
-            <div className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)]">
-              <Users className="w-3.5 h-3.5 flex-shrink-0" style={{ color: accentColor }} />
+            <div className="flex items-center gap-1 text-xs text-[var(--text-secondary)]">
+              <Users className="w-3 h-3 flex-shrink-0" style={{ color: accentColor }} />
               <span>до {offer.maxGroupSize} чел.</span>
             </div>
           )}
-          {offer.included.slice(0, 2).map((item, i) => (
-            <div key={i} className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)] col-span-1">
-              <CheckCircle className="w-3.5 h-3.5 flex-shrink-0 text-[var(--success)]" />
-              <span className="truncate">{item}</span>
-            </div>
-          ))}
         </div>
 
         {/* Ближайший заезд */}
         {nextDate && (
-          <div className={`flex items-center gap-2 text-xs px-3 py-2 rounded-lg ${
+          <div className={`flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg ${
             isLowSlots
               ? 'bg-[var(--warning)]/10 text-[var(--warning)]'
               : 'bg-[var(--success)]/10 text-[var(--success)]'
           }`}>
-            <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
+            <Calendar className="w-3 h-3 flex-shrink-0" />
             <span className="font-medium">
-              {isLowSlots ? `Осталось ${offer.nextSlots} место — ` : ''}
+              {isLowSlots ? `Осталось ${offer.nextSlots} — ` : ''}
               {nextDate}
             </span>
           </div>
         )}
 
-        {/* Цена + CTA */}
-        <div className="pt-1">
-          <div className="flex items-baseline gap-1 mb-3">
-            {price != null && price > 0 ? (
-              <>
-                <span className="text-xs text-[var(--text-muted)]">от</span>
-                <span className="text-2xl font-bold" style={{ color: accentColor }}>
-                  {price.toLocaleString('ru-RU')}
-                </span>
-                <span className="text-sm font-semibold text-[var(--text-muted)]">₽</span>
-                <span className="text-xs text-[var(--text-muted)]">/ чел</span>
-              </>
-            ) : (
-              <span className="text-lg font-semibold text-[var(--text-muted)]">По запросу</span>
-            )}
-          </div>
-          <button
-            type="button"
-            className="ds-btn ds-btn-primary w-full text-sm py-2.5 group-hover:opacity-95 transition-opacity"
-            onClick={e => { e.stopPropagation(); onBook(); }}
-          >
-            Забронировать
-          </button>
-        </div>
+        <button
+          type="button"
+          className="ds-btn ds-btn-primary w-full text-sm py-2 group-hover:opacity-95 transition-opacity"
+          onClick={e => { e.stopPropagation(); onBook(); }}
+        >
+          Забронировать
+        </button>
       </div>
     </div>
   );
@@ -292,6 +274,7 @@ export default function RouteDetailClient({ id }: { id: string }) {
   const [bookingOffer, setBookingOffer] = useState<Offer | null>(null);
   const [relatedRoutes, setRelatedRoutes] = useState<RouteItem[]>([]);
   const [galleryIdx, setGalleryIdx] = useState(0);
+  const [showAllOffers, setShowAllOffers] = useState(false);
   useSourceTracker();
 
   useEffect(() => {
@@ -660,9 +643,9 @@ export default function RouteDetailClient({ id }: { id: string }) {
               {offers.length > 0 ? (
                 <div className="space-y-3">
                   <h2 className="text-sm font-semibold text-[var(--text-primary)] uppercase tracking-wider">
-                    {offers.length === 1 ? 'Доступный тур' : `${offers.length} тура на этот маршрут`}
+                    {offers.length === 1 ? 'Доступный тур' : `${offers.length} туров на маршрут`}
                   </h2>
-                  {offers.map(offer => (
+                  {(showAllOffers ? offers : offers.slice(0, 3)).map(offer => (
                     <OfferCard
                       key={offer.tourId}
                       offer={offer}
@@ -670,6 +653,15 @@ export default function RouteDetailClient({ id }: { id: string }) {
                       onBook={() => setBookingOffer(offer)}
                     />
                   ))}
+                  {offers.length > 3 && !showAllOffers && (
+                    <button
+                      type="button"
+                      onClick={() => setShowAllOffers(true)}
+                      className="w-full text-center text-sm font-medium text-[var(--ocean)] hover:text-[var(--accent)] transition-colors py-2 border border-[var(--border)] rounded-lg hover:border-[var(--accent)]"
+                    >
+                      Ещё {offers.length - 3} туров
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => setShowLead(true)}
