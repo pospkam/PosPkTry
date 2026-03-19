@@ -39,7 +39,7 @@ const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/discovery': ['GET', 'POST'], // поиск
   '/api/partners': ['GET'],
   '/api/eco-points': ['GET'],
-  '/api/ai/chat': ['POST'],
+  '/api/ai/chat': ['POST', 'GET'],
   '/api/ai/crew-plan': ['POST'],
   '/api/ai/health': ['GET'],
   '/api/safety': 'ALL',

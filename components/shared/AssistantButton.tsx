@@ -97,6 +97,8 @@ export function AssistantButton({ pageContext }: { pageContext?: PageContext }) 
   const [loading, setLoading] = useState(false);
   const [interestContext, setInterestContext] = useState('');
   const [sessionId, setSessionId] = useState('');
+  const [limitReached, setLimitReached] = useState(false);
+  const [remainingFree, setRemainingFree] = useState<number | null>(null);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -118,8 +120,10 @@ export function AssistantButton({ pageContext }: { pageContext?: PageContext }) 
     // Начинаем fetch истории ТУТ, параллельно с setSessionId (не ждём)
     fetch(`/api/ai/chat?sessionId=${encodeURIComponent(sid)}`)
       .then(r => r.json())
-      .then((data: { messages?: Message[] }) => {
-        const prev = data.messages ?? [];
+      .then((data: { data?: { messages?: Message[]; limitReached?: boolean; remainingFree?: number | null }; messages?: Message[] }) => {
+        const prev = data.data?.messages ?? data.messages ?? [];
+        if (data.data?.limitReached) setLimitReached(true);
+        if (data.data?.remainingFree != null) setRemainingFree(data.data.remainingFree);
         if (prev.length > 0) {
           setMessages(prev);
         } else {
@@ -172,8 +176,21 @@ export function AssistantButton({ pageContext }: { pageContext?: PageContext }) 
       const data = await res.json() as {
         success?: boolean;
         error?: string;
-        data?: { answer?: string };
+        data?: { answer?: string; limitReached?: boolean; message?: string; remainingFree?: number | null };
       };
+
+      if (data.data?.limitReached) {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: data.data?.message ?? 'Зарегистрируйтесь для продолжения.',
+        }]);
+        setLimitReached(true);
+        setRemainingFree(0);
+        return;
+      }
+
+      if (data.data?.remainingFree != null) setRemainingFree(data.data.remainingFree);
+
       setMessages(prev => [...prev, {
         role: 'assistant',
         content: data.data?.answer ?? data.error ?? 'Что-то пошло не так, попробуй ещё раз.',
@@ -373,7 +390,44 @@ export function AssistantButton({ pageContext }: { pageContext?: PageContext }) 
             </div>
           )}
 
-          {/* Инпут */}
+          {/* Input or limit CTA */}
+          {limitReached ? (
+            <div
+              style={{
+                padding: '14px 12px',
+                borderTop: '1px solid var(--border)',
+                textAlign: 'center',
+              }}
+            >
+              <p
+                style={{
+                  fontSize: '13px',
+                  color: 'var(--text-secondary)',
+                  marginBottom: '10px',
+                  lineHeight: '1.4',
+                  margin: '0 0 10px',
+                }}
+              >
+                Бесплатные сообщения закончились. Зарегистрируйтесь, чтобы продолжить.
+              </p>
+              <a
+                href="/auth/login"
+                style={{
+                  display: 'inline-block',
+                  padding: '8px 20px',
+                  background: 'var(--accent)',
+                  color: '#fff',
+                  borderRadius: '8px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  transition: 'opacity 0.15s',
+                }}
+              >
+                Войти или зарегистрироваться
+              </a>
+            </div>
+          ) : (
           <div
             style={{
               padding: '10px 12px',
@@ -428,6 +482,14 @@ export function AssistantButton({ pageContext }: { pageContext?: PageContext }) 
               <Send size={16} />
             </button>
           </div>
+          )}
+          {remainingFree != null && !limitReached && (
+            <div style={{ padding: '0 12px 6px', textAlign: 'center' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                {remainingFree === 1 ? 'Осталось 1 сообщение' : `Осталось ${remainingFree} из 5`}
+              </span>
+            </div>
+          )}
         </div>
       )}
 
