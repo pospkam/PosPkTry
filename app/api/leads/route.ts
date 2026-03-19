@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
     lines.push('', `<code>${leadId}</code>`);
 
     telegramService.sendMessage({ chatId, text: lines.join('\n'), parseMode: 'HTML' })
-      .catch(() => { /* уведомление — некритично */ });
+      .catch((e: unknown) => console.error('[leads] LEADS_CHAT_ID notify failed:', e));
   }
 
   // Admin-чат с кнопками статусов
@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
     comment:    comment ?? null,
     routeTitle: route_title ?? null,
     sourceUrl:  source_url ?? null,
-  }).catch(() => { /* некритично */ });
+  }).catch((e: unknown) => console.error('[leads] notifyAdminNewLead failed:', e));
 
   return NextResponse.json({ success: true, id: leadId }, { status: 201 });
 }
