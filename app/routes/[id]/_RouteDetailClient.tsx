@@ -773,12 +773,14 @@ export default function RouteDetailClient({ id }: { id: string }) {
 
               {offers.length > 0 ? (
                 <>
-                  <AvailabilityCalendar offers={offers.map(o => ({
-                    tourId: o.tourId,
-                    tourName: o.tourName,
-                    nextDeparture: o.nextDeparture,
-                    nextSlots: o.nextSlots,
-                  }))} />
+                  {offers.some(o => o.nextDeparture && (o.nextSlots ?? 0) > 0) && (
+                    <AvailabilityCalendar offers={offers.map(o => ({
+                      tourId: o.tourId,
+                      tourName: o.tourName,
+                      nextDeparture: o.nextDeparture,
+                      nextSlots: o.nextSlots,
+                    }))} />
+                  )}
 
                   <div className="flex items-center justify-between">
                     <h2 className="text-sm font-semibold text-[var(--text-primary)] uppercase tracking-wide">
