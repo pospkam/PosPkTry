@@ -330,8 +330,9 @@ export default function RouteDetailClient({ id }: { id: string }) {
   const locLabel = LOCATION_TYPE_LABELS[route.locationType ?? 'other'] ?? 'Маршрут';
   const actLabel = ACTIVITY_TYPE_LABELS[route.activityType ?? 'other'] ?? 'Активный отдых';
   const offers = route.offers ?? [];
-  const photos = route.photos ?? [];
-  const heroImage = photos[0] ?? LOCATION_TYPE_IMAGES[route.locationType ?? 'other'] ?? '/images/hero/hero-dark.jpg';
+  const photos = [...new Set(route.photos ?? [])]; // дедупликация
+  const fallbackHero = LOCATION_TYPE_IMAGES[route.locationType ?? 'other'] ?? '/images/hero/hero-dark.jpg';
+  const heroImage = photos[galleryIdx] ?? photos[0] ?? fallbackHero;
   const minPrice = offers.length > 0
     ? Math.min(...offers.map(o => o.effectivePrice ?? o.priceBase ?? 0).filter(p => p > 0))
     : (route.priceFrom ?? 0);
@@ -408,7 +409,7 @@ export default function RouteDetailClient({ id }: { id: string }) {
                   className={`relative flex-shrink-0 rounded-lg overflow-hidden transition-all duration-200 ${
                     i === galleryIdx ? 'ring-2 ring-[var(--accent)]' : 'opacity-75 hover:opacity-100'
                   }`}
-                  style={{ width: 120, height: 80 }}
+                  style={{ width: 160, height: 100 }}
                 >
                   <Image src={src} alt={`Фото ${i + 1}`} fill className="object-cover" sizes="120px" />
                 </button>
