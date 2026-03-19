@@ -48,6 +48,7 @@ const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/operators': ['GET'],        // публичный каталог партнёров
   '/api/assistant': ['GET', 'POST'],  // «AI-помощник Камчатки» — история + чат
   '/api/loyalty/levels': ['GET'],   // уровни программы лояльности (публичный каталог)
+  '/api/planner/recommend': ['POST'], // AI trip recommender
   '/api/support/knowledge-base': ['GET'], // База знаний (публичная)
   '/api/faq': ['GET'],              // FAQ (публичная)
   '/api/photos': ['GET'],            // загруженные фото из /tmp (Timeweb production)
