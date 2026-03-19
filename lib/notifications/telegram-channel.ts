@@ -277,6 +277,33 @@ export async function postFriendToChannel(slug: string): Promise<{ ok: boolean; 
  * Дублирует лид в централизованный admin-чат (TELEGRAM_CHAT_ID).
  * Вызывается fire-and-forget из /api/leads.
  */
+interface LeadSourceData {
+  source?: string;
+  interests?: string[];
+  date_from?: string;
+  date_to?: string;
+  arrival?: string;
+  departure?: string;
+  trip_days?: number;
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
+  referrer?: string;
+}
+
+const LEAD_SOURCE_LABELS: Record<string, string> = {
+  telegram_bot: 'Телеграм-бот',
+  trip_planner: 'TripPlanner',
+  website:      'Сайт',
+};
+
+const LEAD_INTEREST_LABELS: Record<string, string> = {
+  volcano: 'Вулкан', trekking: 'Треккинг', fishing: 'Рыбалка',
+  thermal: 'Термальный', helicopter: 'Вертолёт', boat_trip: 'Море',
+  snowmobile: 'Снегоходы', skiing: 'Лыжи', diving: 'Дайвинг',
+  kayak: 'Байдарки', photography: 'Фото', other: 'Другое',
+};
+
 export async function notifyAdminNewLead(lead: {
   id: string;
   name: string;
@@ -284,6 +311,7 @@ export async function notifyAdminNewLead(lead: {
   comment?: string | null;
   routeTitle?: string | null;
   sourceUrl?: string | null;
+  sourceData?: Record<string, unknown> | null;
 }): Promise<void> {
   const chatId = process.env.TELEGRAM_CHAT_ID;
   if (!chatId) return;
@@ -291,12 +319,29 @@ export async function notifyAdminNewLead(lead: {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   if (!token) return;
 
+  const sd = lead.sourceData as LeadSourceData | null | undefined;
+  const interests = sd?.interests ?? [];
+  const dateFrom  = sd?.date_from ?? sd?.arrival;
+  const dateTo    = sd?.date_to   ?? sd?.departure;
+  const source    = sd?.source ? (LEAD_SOURCE_LABELS[sd.source] ?? sd.source) : null;
+
+  const title = source ? `<b>Лид — ${esc(source)}</b>` : '<b>Лид с сайта</b>';
+
   const lines = [
-    '<b>Лид с сайта</b>',
+    title,
     '',
     `<b>Имя:</b> ${esc(lead.name)}`,
     `<b>Тел:</b> <a href="tel:${esc(lead.phone)}">${esc(lead.phone)}</a>`,
   ];
+
+  if (interests.length > 0) {
+    const labels = interests.map(i => LEAD_INTEREST_LABELS[i] ?? i).join(', ');
+    lines.push(`<b>Интересы:</b> ${esc(labels)}`);
+  }
+  if (dateFrom) {
+    lines.push(`<b>Даты:</b> ${esc(dateFrom)} — ${dateTo ? esc(dateTo) : '?'}`);
+  }
+  if (sd?.trip_days) lines.push(`<b>Длина:</b> ${sd.trip_days} дн.`);
   if (lead.comment) lines.push(`<b>Комментарий:</b> ${esc(lead.comment)}`);
   if (lead.routeTitle) lines.push(`<b>Маршрут:</b> ${esc(lead.routeTitle)}`);
   if (lead.sourceUrl) lines.push(`<b>Страница:</b> ${esc(lead.sourceUrl)}`);

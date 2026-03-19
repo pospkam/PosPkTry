@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle, Plane } from 'lucide-react';
 
 interface DateSlot {
   date: string;
@@ -22,12 +22,11 @@ interface AvailabilityCalendarProps {
 export default function AvailabilityCalendar({ offers }: AvailabilityCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
-  // Собираем все доступные даты
   const slots = useMemo(() => {
     const result: Record<string, DateSlot[]> = {};
     offers.forEach(offer => {
       if (offer.nextDeparture && offer.nextSlots != null && offer.nextSlots > 0) {
-        const dateStr = offer.nextDeparture.split('T')[0]; // YYYY-MM-DD
+        const dateStr = offer.nextDeparture.split('T')[0];
         if (!result[dateStr]) result[dateStr] = [];
         result[dateStr].push({
           date: dateStr,
@@ -53,15 +52,33 @@ export default function AvailabilityCalendar({ offers }: AvailabilityCalendarPro
 
   if (!hasSlots) {
     return (
-      <div className="p-4 text-center text-sm text-[var(--text-muted)]">
-        Даты вылетов в ближайшее время не опубликованы
+      <div className="ds-card p-5 space-y-4">
+        <div className="flex items-center gap-2">
+          <Plane className="w-4 h-4 text-[var(--ocean)]" />
+          <p className="text-sm font-semibold text-[var(--text-primary)]">Найти перелёт на Камчатку</p>
+        </div>
+        <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+          Расписание туров обновляется. Пока ищите билеты до Петропавловска-Камчатского (PKC) —
+          аэропорт Елизово, 30 мин от города.
+        </p>
+        <a
+          href="https://aviasales.ru"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-between w-full px-4 py-3 bg-[var(--ocean)]/10 border border-[var(--ocean)]/30 rounded-lg hover:bg-[var(--ocean)]/20 transition-colors group"
+        >
+          <div>
+            <p className="text-sm font-semibold text-[var(--ocean)]">Aviasales</p>
+            <p className="text-xs text-[var(--text-muted)]">Поиск авиабилетов</p>
+          </div>
+          <Plane className="w-4 h-4 text-[var(--ocean)] group-hover:translate-x-0.5 transition-transform" />
+        </a>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      {/* Заголовок + навигация */}
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-[var(--text-primary)] uppercase tracking-wide">
           Доступные даты вылетов
@@ -85,7 +102,6 @@ export default function AvailabilityCalendar({ offers }: AvailabilityCalendarPro
         </div>
       </div>
 
-      {/* Сетка дней недели */}
       <div className="grid grid-cols-7 gap-1">
         {['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'].map(day => (
           <div key={day} className="text-center text-[10px] font-bold text-[var(--text-muted)] uppercase py-1">
@@ -93,12 +109,10 @@ export default function AvailabilityCalendar({ offers }: AvailabilityCalendarPro
           </div>
         ))}
 
-        {/* Пустые клетки до первого дня */}
         {Array.from({ length: firstDay === 0 ? 6 : firstDay - 1 }).map((_, i) => (
           <div key={`empty-${i}`} />
         ))}
 
-        {/* Дни месяца */}
         {days.map(day => {
           const dateStr = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
           const daySlots = slots[dateStr] || [];
@@ -127,7 +141,6 @@ export default function AvailabilityCalendar({ offers }: AvailabilityCalendarPro
         })}
       </div>
 
-      {/* Список туров с ближайшими датами */}
       <div className="mt-4 pt-4 border-t border-[var(--border)] space-y-2">
         <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide">Ближайшие вылеты</p>
         <div className="space-y-1.5">

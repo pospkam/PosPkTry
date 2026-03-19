@@ -116,6 +116,7 @@ export async function POST(req: NextRequest) {
     comment:    comment ?? null,
     routeTitle: route_title ?? null,
     sourceUrl:  source_url ?? null,
+    sourceData: source_data ?? null,
   }).catch((e: unknown) => console.error('[leads] notifyAdminNewLead failed:', e));
 
   return NextResponse.json({ success: true, id: leadId }, { status: 201 });

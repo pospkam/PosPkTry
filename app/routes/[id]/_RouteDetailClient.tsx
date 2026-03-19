@@ -268,7 +268,10 @@ function OfferCard({ offer, activityType, onBook }: {
             )}
             {nextDate && (
               <p className={`text-[11px] mt-1 font-medium ${isLowSlots ? 'text-[var(--warning)]' : 'text-[var(--success)]'}`}>
-                {isLowSlots ? '⚡ ' : '✓ '}{isLowSlots ? `${offer.nextSlots} мест · ` : ''}{nextDate}
+                {isLowSlots
+                  ? <AlertTriangle className="w-3 h-3 inline mr-0.5" />
+                  : <CheckCircle className="w-3 h-3 inline mr-0.5" />
+                }{isLowSlots ? `${offer.nextSlots} мест · ` : ''}{nextDate}
               </p>
             )}
           </div>
@@ -554,10 +557,10 @@ export default function RouteDetailClient({ id }: { id: string }) {
                           : 'bg-[var(--bg-hover)] text-[var(--text-primary)] hover:bg-[var(--border)]'
                       }`}
                     >
-                      {option === 'price' && '💰 Цена'}
-                      {option === 'rating' && '⭐ Рейтинг'}
-                      {option === 'date' && '📅 Дата'}
-                      {option === 'slots' && '👥 Места'}
+                      {option === 'price' && <><TrendingUp className="w-3 h-3 inline mr-1" />Цена</>}
+                      {option === 'rating' && <><Star className="w-3 h-3 inline mr-1" />Рейтинг</>}
+                      {option === 'date' && <><Calendar className="w-3 h-3 inline mr-1" />Дата</>}
+                      {option === 'slots' && <><Users className="w-3 h-3 inline mr-1" />Места</>}
                     </button>
                   ))}
                 </div>
@@ -773,14 +776,12 @@ export default function RouteDetailClient({ id }: { id: string }) {
 
               {offers.length > 0 ? (
                 <>
-                  {offers.some(o => o.nextDeparture && (o.nextSlots ?? 0) > 0) && (
-                    <AvailabilityCalendar offers={offers.map(o => ({
+                  <AvailabilityCalendar offers={offers.map(o => ({
                       tourId: o.tourId,
                       tourName: o.tourName,
                       nextDeparture: o.nextDeparture,
                       nextSlots: o.nextSlots,
                     }))} />
-                  )}
 
                   <div className="flex items-center justify-between">
                     <h2 className="text-sm font-semibold text-[var(--text-primary)] uppercase tracking-wide">
