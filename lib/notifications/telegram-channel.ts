@@ -286,9 +286,10 @@ export async function notifyAdminNewLead(lead: {
   sourceUrl?: string | null;
 }): Promise<void> {
   const chatId = process.env.TELEGRAM_CHAT_ID;
-  const leadsChatId = process.env.TELEGRAM_LEADS_CHAT_ID;
-  // не дублируем если это тот же чат
-  if (!chatId || chatId === leadsChatId) return;
+  if (!chatId) return;
+
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) return;
 
   const lines = [
     '<b>Лид с сайта</b>',
@@ -301,7 +302,31 @@ export async function notifyAdminNewLead(lead: {
   if (lead.sourceUrl) lines.push(`<b>Страница:</b> ${esc(lead.sourceUrl)}`);
   lines.push('', `<code>${lead.id}</code>`);
 
-  await tgPost(chatId, lines.join('\n'));
+  const replyMarkup = {
+    inline_keyboard: [
+      [
+        { text: 'Позвонил', callback_data: `lead_contacted:${lead.id}` },
+        { text: 'Квалифицирован', callback_data: `lead_qualified:${lead.id}` },
+      ],
+      [
+        { text: 'Сделка!', callback_data: `lead_converted:${lead.id}` },
+        { text: 'Отказ', callback_data: `lead_lost:${lead.id}` },
+      ],
+    ],
+  };
+
+  try {
+    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: lines.join('\n'),
+        parse_mode: 'HTML',
+        reply_markup: replyMarkup,
+      }),
+    });
+  } catch { /* некритично */ }
 }
 
 /**

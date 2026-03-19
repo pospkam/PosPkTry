@@ -91,7 +91,7 @@ interface TelegramUpdate {
 
 interface RouteRow { id: string; title: string; category: string; description: string | null }
 interface OperatorRow { name: string; slug: string }
-interface LeadRow { name: string; phone: string; route_title: string | null; created_at: string }
+interface LeadRow { id: string; name: string; phone: string; route_title: string | null; created_at: string; status: string }
 interface StatsRow {
   bookings_today: string; bookings_30d: string;
   leads_today: string;    leads_30d: string;
@@ -273,24 +273,43 @@ async function getStats(): Promise<string> {
 
 // ── Admin: последние лиды ─────────────────────────────────────────────────────
 
+const STATUS_LABEL: Record<string, string> = {
+  new: 'Новый',
+  contacted: 'Позвонили',
+  qualified: 'Квалифицирован',
+  converted: 'Сделка',
+  lost: 'Отказ',
+};
+
 async function getLastLeads(): Promise<string> {
   try {
     const res = await query<LeadRow>(
-      `SELECT name, phone, route_title, created_at::text
+      `SELECT id::text, name, phone, route_title, created_at::text, status
        FROM leads ORDER BY created_at DESC LIMIT 5`
     );
     if (!res.rows.length) return 'Заявок пока нет.';
     const lines = ['<b>Последние 5 заявок:</b>', ''];
     res.rows.forEach((l, i) => {
       const date = new Date(l.created_at).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-      lines.push(`${i + 1}. <b>${esc(l.name)}</b>  <code>${esc(l.phone)}</code>`);
-      if (l.route_title) lines.push(`   📍 ${esc(l.route_title)}`);
-      lines.push(`   <i>${date}</i>`);
+      const statusLabel = STATUS_LABEL[l.status] ?? l.status;
+      lines.push(`${i + 1}. <b>${esc(l.name)}</b>  <code>${esc(l.phone)}</code>  [${statusLabel}]`);
+      if (l.route_title) lines.push(`   ${esc(l.route_title)}`);
+      lines.push(`   <i>${date}</i>  <code>${l.id}</code>`);
     });
     return lines.join('\n');
   } catch {
     return 'Не удалось загрузить лиды.';
   }
+}
+
+async function updateLeadStatus(leadId: string, status: string): Promise<{ name: string; phone: string } | null> {
+  try {
+    const res = await query<{ name: string; phone: string }>(
+      `UPDATE leads SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING name, phone`,
+      [status, leadId]
+    );
+    return res.rows[0] ?? null;
+  } catch { return null; }
 }
 
 // ── Основной обработчик ───────────────────────────────────────────────────────
@@ -526,19 +545,46 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // ── callback_query (кнопки Подтвердить / Отменить) ───────────────────────
+  // ── callback_query (кнопки лидов + бронирования) ────────────────────────
   if (update.callback_query) {
     const cq             = update.callback_query;
     const senderChatId   = cq.from.id;
     const callbackChatId = String(cq.message?.chat?.id ?? senderChatId);
     const data           = cq.data ?? '';
 
+    const uuidPattern = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+
+    // ── Кнопки статуса лида (только admin) ────────────────────────────────
+    const LEAD_STATUSES: Record<string, string> = {
+      'lead_contacted': 'contacted',
+      'lead_qualified': 'qualified',
+      'lead_converted': 'converted',
+      'lead_lost':      'lost',
+    };
+
+    const leadPrefix = Object.keys(LEAD_STATUSES).find(p => data.startsWith(p + ':'));
+    if (leadPrefix) {
+      if (!isAdmin(senderChatId)) {
+        await telegramService.answerCallback(cq.id, 'Нет прав');
+        return NextResponse.json({ ok: true });
+      }
+      const leadId = data.slice(leadPrefix.length + 1);
+      const newStatus = LEAD_STATUSES[leadPrefix];
+      const lead = await updateLeadStatus(leadId, newStatus);
+      if (lead) {
+        const label = STATUS_LABEL[newStatus] ?? newStatus;
+        await telegramService.answerCallback(cq.id, `${label}: ${lead.name}`);
+        await sendHTML(callbackChatId, `Лид <b>${esc(lead.name)}</b> — статус: <b>${label}</b>\n<code>${leadId}</code>`);
+      } else {
+        await telegramService.answerCallback(cq.id, 'Лид не найден');
+      }
+      return NextResponse.json({ ok: true });
+    }
+
     if (!isAuthorizedOperator(senderChatId)) {
       await telegramService.answerCallback(cq.id, 'Нет прав');
       return NextResponse.json({ ok: true });
     }
-
-    const uuidPattern = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 
     if (data.startsWith('confirm_')) {
       const match = data.match(uuidPattern);

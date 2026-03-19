@@ -14,6 +14,40 @@ const LeadSchema = z.object({
   source_data: z.record(z.unknown()).optional(),
 });
 
+const ListSchema = z.object({
+  status: z.enum(['new', 'contacted', 'qualified', 'converted', 'lost', 'all']).optional().default('all'),
+  limit:  z.coerce.number().min(1).max(100).optional().default(50),
+  offset: z.coerce.number().min(0).optional().default(0),
+});
+
+export async function GET(req: NextRequest) {
+  // Admin-only list endpoint
+  const { searchParams } = new URL(req.url);
+  const parse = ListSchema.safeParse(Object.fromEntries(searchParams));
+  if (!parse.success) return NextResponse.json({ error: 'Неверные параметры' }, { status: 400 });
+
+  const { status, limit, offset } = parse.data;
+
+  const where = status !== 'all' ? `WHERE status = $1` : '';
+  const vals  = status !== 'all' ? [status, limit, offset] : [limit, offset];
+  const lIdx  = status !== 'all' ? 2 : 1;
+  const oIdx  = lIdx + 1;
+
+  const [rows, cnt] = await Promise.all([
+    pool.query(
+      `SELECT id, name, phone, comment, route_title, source_url, status, notes, created_at, updated_at
+       FROM leads ${where} ORDER BY created_at DESC LIMIT $${lIdx} OFFSET $${oIdx}`,
+      vals
+    ),
+    pool.query(
+      `SELECT COUNT(*)::int AS total FROM leads ${where}`,
+      status !== 'all' ? [status] : []
+    ),
+  ]);
+
+  return NextResponse.json({ leads: rows.rows, total: cnt.rows[0].total });
+}
+
 export async function POST(req: NextRequest) {
   let body: unknown;
   try {
@@ -48,7 +82,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: 'Ошибка сервера. Попробуйте позже.' }, { status: 500 });
   }
 
-  // Отправка уведомления в Telegram (не блокирует ответ)
+  // Telegram — LEADS_CHAT_ID (старый канал)
   const chatId = process.env.TELEGRAM_LEADS_CHAT_ID;
   if (chatId) {
     const lines = [
@@ -71,7 +105,7 @@ export async function POST(req: NextRequest) {
       .catch(() => { /* уведомление — некритично */ });
   }
 
-  // Дублируем в centralised admin-чат (TELEGRAM_CHAT_ID), если он отличается от LEADS_CHAT_ID
+  // Admin-чат с кнопками статусов
   notifyAdminNewLead({
     id:         leadId,
     name,
