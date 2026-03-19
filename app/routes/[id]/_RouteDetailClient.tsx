@@ -387,11 +387,15 @@ export default function RouteDetailClient({ id }: { id: string }) {
                 {DIFFICULTY_RU[route.difficulty] ?? route.difficulty}
               </span>
             )}
-            {offers.length > 0 && (
-              <span className="bg-[var(--success)] text-white text-xs font-bold px-2.5 py-1 rounded-full">
-                {offers.length} {offers.length === 1 ? 'оператор' : offers.length < 5 ? 'оператора' : 'операторов'}
-              </span>
-            )}
+            {offers.length > 0 && (() => {
+              const uniqueOps = new Set(offers.map(o => o.operator.id)).size;
+              return (
+                <span className="bg-[var(--success)] text-white text-xs font-bold px-2.5 py-1 rounded-full">
+                  {offers.length} {offers.length === 1 ? 'тур' : offers.length < 5 ? 'тура' : 'туров'}
+                  {uniqueOps > 1 ? ` · ${uniqueOps} оператора` : ''}
+                </span>
+              );
+            })()}
           </div>
         </div>
       </div>
@@ -619,7 +623,7 @@ export default function RouteDetailClient({ id }: { id: string }) {
                     onClick={() => setShowAllOffers(true)}
                     className="w-full text-center text-sm font-medium text-[var(--ocean)] hover:text-[var(--accent)] transition-colors py-2 border border-[var(--border)] rounded-lg hover:border-[var(--accent)]"
                   >
-                    Ещё {offers.length - 3} туров
+                    Ещё {offers.length - 3} {offers.length - 3 < 5 ? 'тура' : 'туров'}
                   </button>
                 )}
               </div>
