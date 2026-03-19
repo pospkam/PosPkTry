@@ -146,10 +146,6 @@ export function TripPlanner() {
         {/* Левая колонка — форма */}
         <div className="space-y-7">
           <div className="space-y-2">
-            <div className="flex items-center gap-2 mb-1">
-              <Sparkles className="w-4 h-4 text-[var(--accent)]" />
-              <span className="text-xs font-bold uppercase tracking-widest text-[var(--accent)]">Умный планировщик</span>
-            </div>
             <h2 className="font-playfair text-3xl md:text-4xl font-bold text-[var(--text-primary)]">
               Идеальное путешествие
             </h2>
