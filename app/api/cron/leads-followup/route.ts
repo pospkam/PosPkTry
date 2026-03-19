@@ -31,6 +31,9 @@ interface LeadSourceData {
   interests?: string[];
   date_from?: string;
   date_to?: string;
+  arrival?: string;    // TripPlanner alias for date_from
+  departure?: string;  // TripPlanner alias for date_to
+  trip_days?: number;
   chat_id?: string;
   notified_operators?: string[];
   followup_count?: number;
@@ -151,7 +154,7 @@ export async function GET(request: NextRequest) {
           `<b>Имя:</b> ${esc(lead.name)}`,
           `<b>Телефон:</b> <a href="tel:${esc(lead.phone)}">${esc(lead.phone)}</a>`,
           interests.length > 0 ? `<b>Интересы:</b> ${interests.join(', ')}` : '',
-          sd.date_from ? `<b>Даты:</b> ${sd.date_from} — ${sd.date_to}` : '',
+          (sd.date_from ?? sd.arrival) ? `<b>Даты:</b> ${sd.date_from ?? sd.arrival} — ${sd.date_to ?? sd.departure}` : '',
           '',
           '⚡️ Турист ещё не получил ответа. Пожалуйста, свяжитесь с ним!',
           `<a href="https://tourhab.ru/hub/operator/bookings">Открыть в CRM →</a>`,
@@ -191,7 +194,7 @@ export async function GET(request: NextRequest) {
               `<b>Телефон:</b> <a href="tel:${esc(lead.phone)}">${esc(lead.phone)}</a>`,
               `<b>Имя:</b> ${esc(lead.name)}`,
               interests.length > 0 ? `<b>Интересы:</b> ${interests.join(', ')}` : '',
-              sd.date_from ? `<b>Даты:</b> ${sd.date_from} — ${sd.date_to}` : '',
+              (sd.date_from ?? sd.arrival) ? `<b>Даты:</b> ${sd.date_from ?? sd.arrival} — ${sd.date_to ?? sd.departure}` : '',
               `<b>Уведомлений отправлено:</b> ${followupCount}`,
               '',
               'Свободных операторов не осталось. Обработайте вручную.',

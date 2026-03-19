@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
-import 'leaflet/dist/leaflet.css';
+import { useEffect, useRef } from 'react';
 
 export enum MarkerType {
   TOUR = 'tour',
@@ -38,69 +37,46 @@ interface LeafletMapProps {
   attribution?: boolean;
 }
 
-const COLOR_HEX: Record<string, string> = {
-  red:       '#DC2626',
-  blue:      '#2568B0',
-  green:     '#3FB950',
-  orange:    '#D44A0C',
-  purple:    '#8B5CF6',
-  darkBlue:  '#1E40AF',
-  darkCyan:  '#0891B2',
+const COLOR_MAP: Record<string, string> = {
+  red: '#DC2626',
+  blue: '#2568B0',
+  green: '#3FB950',
+  orange: '#D44A0C',
+  purple: '#8B5CF6',
+  darkBlue: '#1E40AF',
+  darkCyan: '#0891B2',
   lightBlue: '#38BDF8',
   darkGreen: '#15803D',
-  teal:      '#0D9488',
-  brown:     '#92400E',
-  gray:      '#6B7280',
-  darkOrange:'#C2410C',
-  cyan:      '#06B6D4',
+  teal: '#0D9488',
+  brown: '#92400E',
+  gray: '#6B7280',
+  darkOrange: '#C2410C',
+  cyan: '#06B6D4',
 };
 
-function buildPopupHtml(marker: MapMarker): string {
-  let html = `<strong style="font-size:13px">${marker.title}</strong>`;
+function buildBalloonHtml(marker: MapMarker): string {
+  let html = `<strong style="font-size:13px;color:#000">${marker.title}</strong>`;
   if (marker.description) {
     html += `<br/><span style="color:#666;font-size:12px">${marker.description}</span>`;
   }
   if (marker.href) {
-    html += `<br/><a href="${marker.href}" style="color:#D44A0C;font-size:12px;font-weight:600;text-decoration:none;display:inline-block;margin-top:4px">Смотреть маршрут &rarr;</a>`;
+    html += `<br/><a href="${marker.href}" style="color:#D44A0C;font-size:12px;font-weight:600;text-decoration:none;display:inline-block;margin-top:4px">Смотреть маршрут →</a>`;
   }
   return html;
 }
 
-function createMarkerIcon(hex: string, type?: MarkerType): { className: string; html: string; iconSize: [number, number]; iconAnchor: [number, number] } {
-  let shape = '';
-  let size = 10;
-  let anchor = 5;
+function getMarkerColor(hex: string, type?: MarkerType): { preset: string; icon?: { content: string } } {
+  // Yandex preset colors mapping
+  if (type === MarkerType.TRANSFER) return { preset: 'islands#blueIcon' };
+  if (type === MarkerType.ACCOMMODATION) return { preset: 'islands#greenIcon' };
+  if (type === MarkerType.RESTAURANT) return { preset: 'islands#orangeIcon' };
+  if (type === MarkerType.POI) return { preset: 'islands#redIcon' };
 
-  // Different shapes for different types
-  switch (type) {
-    case MarkerType.TRANSFER:
-      // Square
-      shape = `<div style="width:${size}px;height:${size}px;background:${hex};border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.4)"></div>`;
-      break;
-    case MarkerType.ACCOMMODATION:
-      // Diamond
-      shape = `<div style="width:${size}px;height:${size}px;background:${hex};border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.4);transform:rotate(45deg)"></div>`;
-      break;
-    case MarkerType.RESTAURANT:
-      // Cross
-      shape = `<div style="position:relative;width:${size}px;height:${size}px;background:${hex};mask-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 10 10%22><path d=%22M5 0v10M0 5h10%22 stroke=%22white%22 stroke-width=%222%22/></svg>');box-shadow:0 1px 3px rgba(0,0,0,0.4)"></div>`;
-      break;
-    case MarkerType.POI:
-      // Star (6-pointed)
-      shape = `<div style="width:0;height:0;border-left:${size / 2}px solid transparent;border-right:${size / 2}px solid transparent;border-bottom:${size}px solid ${hex};filter:drop-shadow(0 1px 3px rgba(0,0,0,0.4))"></div>`;
-      break;
-    case MarkerType.TOUR:
-    default:
-      // Circle (default)
-      shape = `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${hex};border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.4)"></div>`;
-  }
-
-  return {
-    className: '',
-    html: shape,
-    iconSize: [size, size] as [number, number],
-    iconAnchor: [anchor, anchor] as [number, number],
-  };
+  // Default to blue for TOUR
+  if (hex === '#D44A0C') return { preset: 'islands#orangeIcon' };
+  if (hex === '#3FB950') return { preset: 'islands#greenIcon' };
+  if (hex === '#DC2626') return { preset: 'islands#redIcon' };
+  return { preset: 'islands#blueIcon' };
 }
 
 export default function LeafletMap({
@@ -109,119 +85,145 @@ export default function LeafletMap({
   zoom = 8,
   height = '400px',
   className = '',
-  attribution = true,
 }: LeafletMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const layerRef = useRef<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const leafletRef = useRef<any>(null);
 
-  const updateMarkers = useCallback(() => {
-    const map = mapRef.current;
-    const L = leafletRef.current;
-    if (!map || !L) return;
-
-    if (layerRef.current) {
-      layerRef.current.clearLayers();
-    } else {
-      layerRef.current = L.featureGroup().addTo(map);
-    }
-
-    markers.forEach(marker => {
-      const hex = COLOR_HEX[marker.color ?? 'blue'] ?? '#2568B0';
-      const icon = L.divIcon(createMarkerIcon(hex, marker.type));
-
-      // Draw polyline/polygon if geometry present
-      if (marker.geometry && marker.geometry.coordinates.length >= 2) {
-        const geomHex = COLOR_HEX[marker.geometry.color ?? marker.color ?? 'teal'] ?? '#0D9488';
-        const geomWeight = marker.geometry.weight ?? 4;
-        const latlngs = marker.geometry.coordinates;
-        const shape = marker.geometry.type === 'polygon'
-          ? L.polygon(latlngs, { color: geomHex, weight: geomWeight, opacity: 0.85, fillOpacity: 0.15 })
-          : L.polyline(latlngs, { color: geomHex, weight: geomWeight, opacity: 0.85 });
-        shape.bindPopup(buildPopupHtml(marker));
-        shape.addTo(layerRef.current);
-      }
-
-      const m = L.marker(marker.coords, { icon }).addTo(layerRef.current);
-      if (marker.title) {
-        m.bindPopup(buildPopupHtml(marker));
-      }
-    });
-
-    if (markers.length > 1) {
-      map.fitBounds(layerRef.current.getBounds().pad(0.1));
-    } else if (markers.length === 1) {
-      map.setView(markers[0].coords, 12);
-    }
-  }, [markers]);
-
-  // Init map once
   useEffect(() => {
-    if (!containerRef.current || mapRef.current) return;
+    if (!containerRef.current) return;
 
-    import('leaflet').then(L => {
-      leafletRef.current = L;
+    const loadYandexMap = () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const ymaps = (window as any).ymaps;
+      if (!ymaps) return;
 
-      const map = L.map(containerRef.current!, {
-        attributionControl: attribution,
-      }).setView(center, zoom);
-      mapRef.current = map;
+      ymaps.ready(() => {
+        if (!containerRef.current) return;
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: attribution ? '&copy; OpenStreetMap' : '',
-        maxZoom: 19,
-      }).addTo(map);
-
-      // Draw initial markers if any
-      if (markers.length > 0) {
-        layerRef.current = L.featureGroup().addTo(map);
-        markers.forEach(marker => {
-          const hex = COLOR_HEX[marker.color ?? 'blue'] ?? '#2568B0';
-          const icon = L.divIcon(createMarkerIcon(hex, marker.type));
-
-          if (marker.geometry && marker.geometry.coordinates.length >= 2) {
-            const geomHex = COLOR_HEX[marker.geometry.color ?? marker.color ?? 'teal'] ?? '#0D9488';
-            const geomWeight = marker.geometry.weight ?? 4;
-            const latlngs = marker.geometry.coordinates;
-            const shape = marker.geometry.type === 'polygon'
-              ? L.polygon(latlngs, { color: geomHex, weight: geomWeight, opacity: 0.85, fillOpacity: 0.15 })
-              : L.polyline(latlngs, { color: geomHex, weight: geomWeight, opacity: 0.85 });
-            shape.bindPopup(buildPopupHtml(marker));
-            shape.addTo(layerRef.current);
-          }
-
-          const m = L.marker(marker.coords, { icon }).addTo(layerRef.current);
-          if (marker.title) {
-            m.bindPopup(buildPopupHtml(marker));
-          }
-        });
-        if (markers.length > 1) {
-          map.fitBounds(layerRef.current.getBounds().pad(0.1));
+        // Destroy previous map if exists
+        if (mapRef.current) {
+          mapRef.current.destroy();
+          mapRef.current = null;
         }
+
+        // Create map
+        const map = new ymaps.Map(containerRef.current, {
+          center,
+          zoom,
+          controls: ['geolocationControl', 'zoomControl', 'typeSelector'],
+        });
+
+        // Add markers and geometries
+        const objectManager = new ymaps.ObjectManager();
+        const features: any[] = [];
+        const bounds: [number, number][] = [];
+
+        markers.forEach(marker => {
+          const hex = COLOR_MAP[marker.color ?? 'blue'] ?? '#2568B0';
+          const presetInfo = getMarkerColor(hex, marker.type);
+          bounds.push(marker.coords);
+
+          // Add geometry if present
+          if (marker.geometry && marker.geometry.coordinates.length >= 2) {
+            const geomHex = COLOR_MAP[marker.geometry.color ?? marker.color ?? 'teal'] ?? '#0D9488';
+            const geomWeight = marker.geometry.weight ?? 2;
+            const coordinates = marker.geometry.coordinates;
+
+            if (marker.geometry.type === 'polygon') {
+              features.push({
+                type: 'Feature',
+                id: `poly_${marker.title}`,
+                geometry: {
+                  type: 'Polygon',
+                  coordinates: [coordinates],
+                },
+                properties: {
+                  balloonContent: buildBalloonHtml(marker),
+                  clusterCaption: marker.title,
+                },
+                options: {
+                  strokeColor: geomHex,
+                  strokeWidth: geomWeight,
+                  fillColor: geomHex,
+                  fillOpacity: 0.15,
+                },
+              });
+            } else {
+              features.push({
+                type: 'Feature',
+                id: `line_${marker.title}`,
+                geometry: {
+                  type: 'LineString',
+                  coordinates,
+                },
+                properties: {
+                  balloonContent: buildBalloonHtml(marker),
+                  clusterCaption: marker.title,
+                },
+                options: {
+                  strokeColor: geomHex,
+                  strokeWidth: geomWeight,
+                  opacity: 0.85,
+                },
+              });
+            }
+          }
+
+          // Add placemark
+          features.push({
+            type: 'Feature',
+            id: `marker_${marker.title}`,
+            geometry: {
+              type: 'Point',
+              coordinates: marker.coords,
+            },
+            properties: {
+              balloonContent: buildBalloonHtml(marker),
+              clusterCaption: marker.title,
+              hintContent: marker.title,
+            },
+            options: {
+              preset: presetInfo.preset,
+            },
+          });
+        });
+
+        objectManager.add(features);
+        map.geoObjects.add(objectManager);
+
+        // Fit bounds
+        if (bounds.length > 1) {
+          map.setBounds(bounds, { checkZoomRange: true, zoomMargin: [50, 50, 50, 50] });
+        } else if (bounds.length === 1) {
+          map.setCenter(bounds[0], zoom || 12);
+        }
+
+        mapRef.current = map;
+      });
+    };
+
+    // Load Yandex Maps API if not loaded
+    if (typeof window !== 'undefined') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((window as any).ymaps) {
+        loadYandexMap();
+      } else {
+        const script = document.createElement('script');
+        script.src = 'https://api-maps.yandex.ru/2.1/?apikey=19c1c748-e99f-424e-8302-e4fb78df529f&lang=ru_RU';
+        script.async = true;
+        script.onload = loadYandexMap;
+        document.head.appendChild(script);
       }
-    });
+    }
 
     return () => {
       if (mapRef.current) {
-        mapRef.current.remove();
+        mapRef.current.destroy();
         mapRef.current = null;
-        layerRef.current = null;
-        leafletRef.current = null;
       }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Update markers when they change (after initial load)
-  useEffect(() => {
-    if (mapRef.current && leafletRef.current) {
-      updateMarkers();
-    }
-  }, [updateMarkers]);
+  }, [markers, center, zoom]);
 
   return (
     <div
