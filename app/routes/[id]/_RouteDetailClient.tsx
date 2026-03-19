@@ -260,7 +260,7 @@ function OfferCard({ offer, activityType, onBook }: {
             ) : (
               <span className="text-sm text-[var(--text-muted)] font-medium">По запросу</span>
             )}
-            {offer.priceOld != null && offer.priceOld > price && (
+            {offer.priceOld != null && price != null && offer.priceOld > price && (
               <p className="text-xs line-through text-[var(--text-muted)]">
                 было {offer.priceOld.toLocaleString('ru-RU')} ₽
               </p>
@@ -294,6 +294,10 @@ export default function RouteDetailClient({ id }: { id: string }) {
   const [galleryIdx, setGalleryIdx] = useState(0);
   const [showAllOffers, setShowAllOffers] = useState(false);
   const [descExpanded, setDescExpanded] = useState(false);
+  const [sortBy, setSortBy] = useState<'price' | 'rating' | 'date' | 'slots'>('price');
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000000]);
+  const [filterDifficulty, setFilterDifficulty] = useState<string | null>(null);
+  const [filterDurationType, setFilterDurationType] = useState<string | null>(null);
   useSourceTracker();
 
   useEffect(() => {
@@ -342,14 +346,45 @@ export default function RouteDetailClient({ id }: { id: string }) {
   const hasGeo = route.lat != null && route.lng != null;
   const locLabel = LOCATION_TYPE_LABELS[route.locationType ?? 'other'] ?? 'Маршрут';
   const actLabel = ACTIVITY_TYPE_LABELS[route.activityType ?? 'other'] ?? 'Активный отдых';
-  const offers = route.offers ?? [];
+
+  // Фильтрация и сортировка туров
+  const allOffers = route.offers ?? [];
+  const filteredOffers = allOffers
+    .filter(o => {
+      const price = o.effectivePrice ?? o.priceBase ?? 0;
+      if (price < priceRange[0] || price > priceRange[1]) return false;
+      if (filterDifficulty && o.difficulty !== filterDifficulty) return false;
+      if (filterDurationType && o.durationType !== filterDurationType) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      const priceA = a.effectivePrice ?? a.priceBase ?? 0;
+      const priceB = b.effectivePrice ?? b.priceBase ?? 0;
+      const ratingA = a.rating ?? 0;
+      const ratingB = b.rating ?? 0;
+      const dateA = a.nextDeparture ? new Date(a.nextDeparture).getTime() : Infinity;
+      const dateB = b.nextDeparture ? new Date(b.nextDeparture).getTime() : Infinity;
+
+      switch (sortBy) {
+        case 'price': return priceA - priceB;
+        case 'rating': return ratingB - ratingA;
+        case 'date': return dateA - dateB;
+        case 'slots': return (b.nextSlots ?? 0) - (a.nextSlots ?? 0);
+        default: return 0;
+      }
+    });
+
+  const offers = filteredOffers;
+  const maxPrice = allOffers.length > 0
+    ? Math.max(...allOffers.map(o => o.effectivePrice ?? o.priceBase ?? 0).filter(p => p > 0))
+    : 500000;
   const photos = [...new Set(route.photos ?? [])];
   const fallbackHero = LOCATION_TYPE_IMAGES[route.locationType ?? 'other'] ?? '/images/hero/hero-dark.jpg';
   const heroImage = photos[galleryIdx] ?? photos[0] ?? fallbackHero;
-  const minPrice = offers.length > 0
-    ? Math.min(...offers.map(o => o.effectivePrice ?? o.priceBase ?? 0).filter(p => p > 0))
+  const minPrice = allOffers.length > 0
+    ? Math.min(...allOffers.map(o => o.effectivePrice ?? o.priceBase ?? 0).filter(p => p > 0))
     : (route.priceFrom ?? 0);
-  const uniqueOperators = new Set(offers.map(o => o.operator.id)).size;
+  const uniqueOperators = new Set(allOffers.map(o => o.operator.id)).size;
   const descParagraphs = route.description?.split('\n').filter(p => p.trim()) ?? [];
   const isLongDesc = descParagraphs.length > 3;
 
@@ -498,6 +533,119 @@ export default function RouteDetailClient({ id }: { id: string }) {
                   Маршрут повышенной сложности. Требует физической подготовки и опытного гида.
                 </p>
               </div>
+            )}
+
+            {/* Фильтры и сортировка туров */}
+            {allOffers.length > 1 && (
+              <section className="space-y-3">
+                <div className="flex gap-2 overflow-x-auto pb-2">
+                  {/* Сортировка */}
+                  <label className="flex-shrink-0 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide pt-2">
+                    Сортировка:
+                  </label>
+                  {(['price', 'rating', 'date', 'slots'] as const).map(option => (
+                    <button
+                      key={option}
+                      onClick={() => setSortBy(option)}
+                      className={`flex-shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
+                        sortBy === option
+                          ? 'bg-[var(--accent)] text-white'
+                          : 'bg-[var(--bg-hover)] text-[var(--text-primary)] hover:bg-[var(--border)]'
+                      }`}
+                    >
+                      {option === 'price' && '💰 Цена'}
+                      {option === 'rating' && '⭐ Рейтинг'}
+                      {option === 'date' && '📅 Дата'}
+                      {option === 'slots' && '👥 Места'}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex gap-2 flex-wrap">
+                  {/* Сложность */}
+                  {['easy', 'medium', 'hard'].some(d => allOffers.some(o => o.difficulty === d)) && (
+                    <div>
+                      <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-1">
+                        Сложность
+                      </p>
+                      <div className="flex gap-1.5">
+                        {(['easy', 'medium', 'hard'] as const).map(diff => {
+                          const hasOption = allOffers.some(o => o.difficulty === diff);
+                          if (!hasOption) return null;
+                          return (
+                            <button
+                              key={diff}
+                              onClick={() => setFilterDifficulty(filterDifficulty === diff ? null : diff)}
+                              className={`px-2.5 py-1 text-xs font-semibold rounded transition-all ${
+                                filterDifficulty === diff
+                                  ? `text-white`
+                                  : 'bg-[var(--bg-hover)] text-[var(--text-primary)] hover:bg-[var(--border)]'
+                              }`}
+                              style={{
+                                background:
+                                  filterDifficulty === diff
+                                    ? DIFFICULTY_COLOR[diff as keyof typeof DIFFICULTY_COLOR]
+                                    : undefined,
+                              }}
+                            >
+                              {DIFFICULTY_RU[diff as keyof typeof DIFFICULTY_RU]}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Тип тура */}
+                  {['day', 'multi_day'].some(dt => allOffers.some(o => o.durationType === dt)) && (
+                    <div>
+                      <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-1">
+                        Тип
+                      </p>
+                      <div className="flex gap-1.5">
+                        {(['day', 'multi_day'] as const).map(dt => {
+                          const hasOption = allOffers.some(o => o.durationType === dt);
+                          if (!hasOption) return null;
+                          return (
+                            <button
+                              key={dt}
+                              onClick={() => setFilterDurationType(filterDurationType === dt ? null : dt)}
+                              className={`px-2.5 py-1 text-xs font-semibold rounded transition-all ${
+                                filterDurationType === dt
+                                  ? 'bg-[var(--accent)] text-white'
+                                  : 'bg-[var(--bg-hover)] text-[var(--text-primary)] hover:bg-[var(--border)]'
+                              }`}
+                            >
+                              {dt === 'day' ? 'Один день' : 'Многодневный'}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Слайдер цены */}
+                <div>
+                  <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-2">
+                    Цена: {priceRange[0].toLocaleString('ru-RU')} — {priceRange[1].toLocaleString('ru-RU')} ₽
+                  </p>
+                  <input
+                    type="range"
+                    min={minPrice}
+                    max={maxPrice}
+                    value={priceRange[1]}
+                    onChange={e => setPriceRange([priceRange[0], Math.max(priceRange[0], Number(e.target.value))])}
+                    className="w-full"
+                  />
+                </div>
+
+                {filteredOffers.length === 0 && allOffers.length > 0 && (
+                  <p className="text-sm text-[var(--text-muted)] text-center py-4">
+                    Туры по вашим фильтрам не найдены
+                  </p>
+                )}
+              </section>
             )}
 
             {/* Офферы — mobile */}
