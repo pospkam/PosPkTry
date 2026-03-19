@@ -48,7 +48,7 @@ const LOCATION_TYPE_IMAGES: Record<string, string> = {
   forest:     '/images/partners/kamchatintour/seo1.jpg',
   beach:      '/images/bento/khalaktyr.jpg',
   lake:       '/images/gallery/bay-sunset.jpg',
-  river:      '/images/bento/khalaktyr.jpg',
+  river:      '/images/activities/fishing.jpg',
   viewpoint:  '/images/partners/kamchatintour/seo3.jpg',
   other:      '/images/hero/hero-dark.jpg',
 };
@@ -596,6 +596,32 @@ export default function RouteDetailClient({ id }: { id: string }) {
                 <p className="text-sm text-[var(--warning)]">
                   Маршрут повышенной сложности. Требует физической подготовки и опытного гида.
                 </p>
+              </div>
+            )}
+
+            {/* Офферы — только на мобиле, на desktop показываем в сайдбаре */}
+            {offers.length > 0 && (
+              <div className="lg:hidden space-y-3">
+                <h2 className="text-sm font-semibold text-[var(--text-primary)] uppercase tracking-wider">
+                  {offers.length === 1 ? 'Доступный тур' : `${offers.length} туров на маршрут`}
+                </h2>
+                {(showAllOffers ? offers : offers.slice(0, 3)).map(offer => (
+                  <OfferCard
+                    key={offer.tourId}
+                    offer={offer}
+                    activityType={route.activityType}
+                    onBook={() => setBookingOffer(offer)}
+                  />
+                ))}
+                {offers.length > 3 && !showAllOffers && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAllOffers(true)}
+                    className="w-full text-center text-sm font-medium text-[var(--ocean)] hover:text-[var(--accent)] transition-colors py-2 border border-[var(--border)] rounded-lg hover:border-[var(--accent)]"
+                  >
+                    Ещё {offers.length - 3} туров
+                  </button>
+                )}
               </div>
             )}
 
