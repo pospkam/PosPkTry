@@ -19,11 +19,11 @@ interface Lead {
 }
 
 const STATUS_META: Record<LeadStatus, { label: string; color: string }> = {
-  new:        { label: 'Новый',          color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' },
-  contacted:  { label: 'Позвонили',      color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300' },
-  qualified:  { label: 'Квалифицирован', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300' },
-  converted:  { label: 'Сделка',         color: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' },
-  lost:       { label: 'Отказ',          color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300' },
+  new:        { label: 'Новый',          color: 'bg-[var(--ocean)]/10 text-[var(--ocean)]' },
+  contacted:  { label: 'Позвонили',      color: 'bg-[var(--warning)]/10 text-[var(--warning)]' },
+  qualified:  { label: 'Квалифицирован', color: 'bg-[var(--accent)]/10 text-[var(--accent)]' },
+  converted:  { label: 'Сделка',         color: 'bg-[var(--success)]/10 text-[var(--success)]' },
+  lost:       { label: 'Отказ',          color: 'bg-[var(--danger)]/10 text-[var(--danger)]' },
 };
 
 const TABS: Array<{ key: LeadStatus | 'all'; label: string }> = [

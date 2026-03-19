@@ -42,14 +42,14 @@ export function HeroSection() {
           <button
             type="button"
             onClick={() => document.getElementById('planner')?.scrollIntoView({ behavior: 'smooth' })}
-            className="inline-flex items-center gap-3 bg-white text-[var(--text-primary)] font-semibold text-sm px-6 py-3.5 rounded-full hover:bg-white/90 transition-all"
+            className="inline-flex items-center gap-3 bg-[var(--bg-card)] text-[var(--text-primary)] font-semibold text-sm px-6 py-3.5 rounded-full hover:opacity-90 transition-all"
           >
             Спланировать поездку
             <span className="text-base">→</span>
           </button>
           <a
             href="/routes"
-            className="inline-flex items-center gap-2 border border-white/50 text-white font-medium text-sm px-6 py-3.5 rounded-full hover:bg-white/10 transition-all"
+            className="inline-flex items-center gap-2 border border-[var(--border)] text-[var(--bg-card)] font-medium text-sm px-6 py-3.5 rounded-full hover:bg-[var(--bg-card)]/10 transition-all"
           >
             Все маршруты
           </a>

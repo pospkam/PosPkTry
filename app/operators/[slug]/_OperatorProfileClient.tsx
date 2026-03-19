@@ -461,7 +461,7 @@ export default function OperatorProfileClient({ slug }: { slug: string }) {
           </h2>
           <p className="text-white/80 mb-8 text-lg">Оставьте заявку — мы свяжемся и ответим на все вопросы</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <button onClick={() => setShowModal(true)} className="px-8 py-3.5 bg-white text-[var(--accent)] font-semibold rounded-lg hover:bg-white/90 transition-colors">
+            <button onClick={() => setShowModal(true)} className="px-8 py-3.5 bg-[var(--bg-card)] text-[var(--accent)] font-semibold rounded-lg hover:opacity-90 transition-colors">
               Оставить заявку
             </button>
             {op.contacts[0]?.phone && (

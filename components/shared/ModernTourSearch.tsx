@@ -84,7 +84,7 @@ const TourCard = React.memo(({ result }: { result: TourResult | (TourResult & Tr
         )}
         {result.isEco && (
           <motion.div
-            className="absolute top-3 right-3 bg-moss text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1"
+            className="absolute top-3 right-3 bg-[var(--success)] text-[var(--bg-card)] px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1"
             animate={{ scale: [1, 1.05, 1] }}
             transition={{ duration: 2, repeat: Infinity }}
             aria-label="Экологичный тур"
@@ -535,7 +535,7 @@ export function ModernTourSearch() {
                     aria-label="Ответ AI"
                   >
                     <div className="ai-response-header flex items-center gap-2 mb-2">
-                      <span className="ai-badge bg-moss text-white px-2 py-1 rounded-full text-xs font-medium">Рекомендация AI</span>
+                      <span className="ai-badge bg-[var(--success)] text-[var(--bg-card)] px-2 py-1 rounded-full text-xs font-medium">Рекомендация AI</span>
                     </div>
                     <p className="text-sm text-[var(--text-secondary)] whitespace-pre-wrap">{aiResponse}</p>
                   </motion.div>

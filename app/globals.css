@@ -129,17 +129,6 @@
   }
 }
 
-:root {
-  /* Ультрамарин цвета */
-  --ultramarine: #120A8F;
-  --ultramarine-light: #4169E1;
-  --ultramarine-lighter: #6495ED;
-  
-  /* Samsung Weather colors */
-  --premium-black: #0a0a0a;
-  --premium-gold: #d4af37;
-}
-
 * {
   margin: 0;
   padding: 0;
@@ -229,27 +218,6 @@ a:focus-visible {
 
 .animate-twinkle {
   animation: twinkle 3s ease-in-out infinite;
-}
-
-/* Glassmorphism утилита */
-.glass {
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* Glassmorphism для виджетов */
-.glassmorphism {
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 24px;
-}
-
-.glassmorphism-dark {
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* Shimmer skeleton */

@@ -25,7 +25,7 @@ interface ActivityCarouselProps {
 function spawnRipple(
   e: React.MouseEvent<HTMLElement>,
   container: HTMLElement,
-  color = 'rgba(0,212,255,0.3)'
+  color = 'var(--accent)'
 ): void {
   const rect = container.getBoundingClientRect();
   const size = Math.max(rect.width, rect.height) * 2;
@@ -57,12 +57,12 @@ const SCROLL_SPEED = 0.5; // px per frame (smooth)
 // -- Component --
 
 /**
- * Карусель активностей для главной/каталога (glassmorphism, ripple, accessibility)
+ * Карусель активностей для главной/каталога (ripple, accessibility)
  * @param {ActivityCarouselProps} props
  * @returns {JSX.Element}
  * @remarks
- * - Использует glassmorphism, ripple-эффект, auto-scroll
- * - Производительность: оптимизировано для 60fps, но при большом количестве карточек возможны лаги на слабых устройствах
+ * - Использует ripple-эффект, auto-scroll
+ * - Производительность: оптимизировано для 60fps
  * - Accessibility: каждая карточка снабжена aria-label, поддерживает клавиатуру
  */
 export default function ActivityCarousel({
@@ -254,16 +254,14 @@ export default function ActivityCarousel({
                 width: `${CARD_WIDTH}px`,
                 minWidth: `${CARD_WIDTH}px`,
                 padding: '12px 8px',
-                background: 'rgba(255,255,255,0.12)',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
+                background: 'var(--bg-card)',
                 border: isCentered
-                  ? '1px solid rgba(0,212,255,0.8)'
+                  ? '1px solid var(--accent)'
                   : isClicked
-                    ? '1px solid #00D4FF'
-                    : '1px solid rgba(255,255,255,0.2)',
-                borderRadius: '16px',
-                color: 'white',
+                    ? '1px solid var(--accent)'
+                    : '1px solid var(--border)',
+                borderRadius: '12px',
+                color: 'var(--text-primary)',
                 textDecoration: 'none',
                 cursor: 'pointer',
                 position: 'relative',
@@ -275,7 +273,7 @@ export default function ActivityCarousel({
                   : 'scale(0.9)',
                 opacity: isCentered ? 1 : 0.7,
                 boxShadow: isCentered
-                  ? '0 0 16px rgba(0,212,255,0.4)'
+                  ? 'var(--shadow-md)'
                   : 'none',
                 userSelect: 'none',
                 WebkitUserSelect: 'none',
