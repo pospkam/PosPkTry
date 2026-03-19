@@ -57,13 +57,16 @@ export async function callOpenrouter(messages: ChatMessage[]): Promise<string | 
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${apiKey}`,
+        'HTTP-Referer': 'https://tourhab.ru',
+        'X-Title': 'TourHab Kamchatka',
       },
       body: JSON.stringify({
-        model: 'anthropic/claude-sonnet-4-6',
+        model: 'openai/gpt-4o-mini',
         temperature: 0.4,
         max_tokens: 800,
         messages: payload,
       }),
+      signal: AbortSignal.timeout(15_000),
     });
 
     if (!res.ok) {
