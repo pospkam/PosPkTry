@@ -18,7 +18,7 @@ interface Departure {
 interface BookingModalProps {
   open: boolean;
   onClose: () => void;
-  tourId: string;
+  tourId: string | number;
   tourName: string;
   operatorName: string;
   priceBase: number | null;

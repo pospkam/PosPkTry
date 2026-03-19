@@ -72,20 +72,43 @@ const DIFFICULTY_COLOR: Record<string, string> = {
 
 const MONTHS = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
 
-function formatDuration(days: number): string {
-  if (days < 1) return `${Math.round(days * 24)} ч`;
+function formatDuration(hours: number, durationType?: string | null, multiDay?: number | null): string {
+  if (durationType === 'multi_day' && multiDay) {
+    if (multiDay < 5) return `${multiDay} дня`;
+    return `${multiDay} дней`;
+  }
+  const days = Math.round(hours / 24);
+  if (days <= 0) return `${hours} ч`;
   if (days === 1) return '1 день';
   if (days < 5) return `${days} дня`;
   return `${days} дней`;
 }
 
+function formatSeasonDates(start: string | null, end: string | null): string | null {
+  if (!start || !end) return null;
+  const fmt = (d: string) => new Date(d).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+  return `${fmt(start)} — ${fmt(end)}`;
+}
+
+function priceUnitLabel(unit: string | null): string {
+  switch (unit) {
+    case 'per_day_per_person': return '/ сут / чел';
+    case 'per_person': return '/ чел';
+    case 'per_day': return '/ сут';
+    default: return '';
+  }
+}
+
 interface Offer {
-  tourId: string; tourName: string; shortDesc: string | null;
-  priceBase: number | null; effectivePrice: number | null;
-  durationDays: number | null; difficulty: string | null;
+  tourId: number; tourName: string; shortDesc: string | null;
+  priceBase: number | null; priceOld: number | null; priceUnit: string | null;
+  effectivePrice: number | null;
+  durationHours: number | null; durationType: string | null; multiDayCount: number | null;
+  difficulty: string | null;
   maxGroupSize: number | null; minGroupSize: number | null;
   rating: number | null; reviewCount: number | null;
-  included: string[]; season: string[];
+  included: string[];
+  seasonStart: string | null; seasonEnd: string | null;
   operator: { id: string; name: string; slug: string | null; rating: number | null; reviewCount: number | null; verified: boolean; };
   tourImage: string | null; operatorHeroImage: string | null;
   nextDeparture: string | null; nextSlots: number | null;
@@ -119,10 +142,13 @@ function OfferCard({ offer, activityType, onBook }: {
     ? new Date(offer.nextDeparture).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
     : null;
   const accentColor = ACTIVITY_COLORS[activityType ?? 'other'] ?? 'var(--accent)';
-  const duration = offer.durationDays ? formatDuration(offer.durationDays) : null;
+  const duration = offer.durationHours
+    ? formatDuration(offer.durationHours, offer.durationType, offer.multiDayCount)
+    : null;
   const isLowSlots = offer.nextSlots != null && offer.nextSlots > 0 && offer.nextSlots <= 3;
   const cardImage = offer.tourImage || offer.operatorHeroImage;
   const ActivityIcon = ACTIVITY_ICONS[activityType ?? 'other'] ?? MapPin;
+  const seasonStr = formatSeasonDates(offer.seasonStart, offer.seasonEnd);
 
   return (
     <div
@@ -131,7 +157,7 @@ function OfferCard({ offer, activityType, onBook }: {
     >
       <div className="flex gap-0">
         {/* Фото / иконка-заглушка */}
-        <div className="relative w-24 flex-shrink-0 overflow-hidden" style={{ minHeight: 96 }}>
+        <div className="relative w-24 flex-shrink-0 overflow-hidden" style={{ minHeight: 110 }}>
           {cardImage ? (
             <Image
               src={cardImage}
@@ -148,10 +174,16 @@ function OfferCard({ offer, activityType, onBook }: {
               <ActivityIcon className="w-7 h-7 opacity-40" style={{ color: accentColor }} />
             </div>
           )}
+          {/* Badge типа */}
+          {offer.durationType && (
+            <span className="absolute top-1.5 left-1.5 text-[9px] font-bold uppercase tracking-wider bg-black/60 text-white px-1.5 py-0.5 rounded">
+              {offer.durationType === 'multi_day' ? `${offer.multiDayCount ?? ''} дн.` : '1 день'}
+            </span>
+          )}
         </div>
 
         {/* Контент */}
-        <div className="flex-1 p-3.5 min-w-0 flex flex-col justify-between gap-2">
+        <div className="flex-1 p-3 min-w-0 flex flex-col justify-between gap-1.5">
           {/* Оператор + рейтинг */}
           <div className="flex items-center gap-1.5">
             <span className="text-[11px] text-[var(--text-muted)] truncate">{offer.operator.name}</span>
@@ -170,28 +202,45 @@ function OfferCard({ offer, activityType, onBook }: {
           </p>
 
           {/* Мета-строка */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 flex-wrap">
             {duration && (
               <span className="flex items-center gap-1 text-xs text-[var(--text-secondary)]">
                 <Clock className="w-3 h-3" style={{ color: accentColor }} />
                 {duration}
               </span>
             )}
-            {offer.maxGroupSize && (
+            {(offer.minGroupSize || offer.maxGroupSize) && (
               <span className="flex items-center gap-1 text-xs text-[var(--text-secondary)]">
                 <Users className="w-3 h-3" style={{ color: accentColor }} />
-                до {offer.maxGroupSize}
+                {offer.minGroupSize && offer.maxGroupSize
+                  ? `${offer.minGroupSize}–${offer.maxGroupSize} чел`
+                  : `до ${offer.maxGroupSize} чел`}
+              </span>
+            )}
+            {seasonStr && (
+              <span className="flex items-center gap-1 text-xs text-[var(--text-secondary)]">
+                <Calendar className="w-3 h-3" style={{ color: accentColor }} />
+                {seasonStr}
               </span>
             )}
           </div>
 
           {/* Цена + кнопка */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mt-0.5">
             <div>
               {price != null && price > 0 ? (
-                <span className="text-sm font-bold text-[var(--text-primary)]">
-                  {price.toLocaleString('ru-RU')} ₽
-                  <span className="text-[11px] font-normal text-[var(--text-muted)] ml-1">/чел</span>
+                <span className="text-sm text-[var(--text-primary)]">
+                  {offer.priceOld != null && offer.priceOld > price && (
+                    <span className="text-xs line-through text-[var(--text-muted)] mr-1">
+                      {offer.priceOld.toLocaleString('ru-RU')} ₽
+                    </span>
+                  )}
+                  <span className="font-bold">{price.toLocaleString('ru-RU')} ₽</span>
+                  {offer.priceUnit && (
+                    <span className="text-[10px] font-normal text-[var(--text-muted)] ml-0.5">
+                      {priceUnitLabel(offer.priceUnit)}
+                    </span>
+                  )}
                 </span>
               ) : (
                 <span className="text-sm text-[var(--text-muted)]">По запросу</span>

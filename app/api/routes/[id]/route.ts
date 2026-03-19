@@ -36,24 +36,29 @@ export async function GET(
     const r = result.rows[0];
     const payload = (r.payload as Record<string, unknown>) ?? {};
 
-    // Загружаем предложения операторов если маршрут привязан к kamchatka_routes
+    // Загружаем предложения операторов из operator_tours (через v_route_marketplace)
     let offers: unknown[] = [];
-    if (r.route_id) {
+    {
       const offersResult = await query(
         `SELECT
            tour_id,
            tour_name,
            tour_short_desc,
            tour_price_base,
+           price_old,
+           price_unit,
            effective_price,
-           tour_duration_days,
+           tour_duration_hours,
+           duration_type,
+           multi_day_count,
            tour_difficulty,
            max_group_size,
            min_group_size,
            tour_rating,
            tour_review_count,
            included,
-           season,
+           season_start,
+           season_end,
            operator_id,
            operator_name,
            operator_slug,
@@ -69,23 +74,28 @@ export async function GET(
          FROM v_route_marketplace
          WHERE route_id = $1
          ORDER BY marketplace_score DESC`,
-        [r.route_id]
+        [id]
       );
 
       offers = offersResult.rows.map(o => ({
-        tourId:           o.tour_id as string,
+        tourId:           Number(o.tour_id),
         tourName:         o.tour_name as string,
         shortDesc:        (o.tour_short_desc as string | null) ?? null,
         priceBase:        o.tour_price_base != null ? Number(o.tour_price_base) : null,
+        priceOld:         o.price_old != null ? Number(o.price_old) : null,
+        priceUnit:        (o.price_unit as string | null) ?? null,
         effectivePrice:   o.effective_price != null ? Number(o.effective_price) : null,
-        durationDays:     o.tour_duration_days != null ? Number(o.tour_duration_days) : null,
+        durationHours:    o.tour_duration_hours != null ? Number(o.tour_duration_hours) : null,
+        durationType:     (o.duration_type as string | null) ?? null,
+        multiDayCount:    o.multi_day_count != null ? Number(o.multi_day_count) : null,
         difficulty:       (o.tour_difficulty as string | null) ?? null,
         maxGroupSize:     o.max_group_size != null ? Number(o.max_group_size) : null,
         minGroupSize:     o.min_group_size != null ? Number(o.min_group_size) : null,
         rating:           o.tour_rating != null ? Number(o.tour_rating) : null,
         reviewCount:      o.tour_review_count != null ? Number(o.tour_review_count) : null,
         included:         (o.included as unknown[]) ?? [],
-        season:           (o.season as unknown[]) ?? [],
+        seasonStart:      (o.season_start as string | null) ?? null,
+        seasonEnd:        (o.season_end as string | null) ?? null,
         operator: {
           id:           o.operator_id as string,
           name:         o.operator_name as string,
