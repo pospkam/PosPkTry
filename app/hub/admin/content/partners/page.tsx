@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Image from 'next/image';
 import { Partner } from '@/types';
 import {
@@ -14,7 +14,7 @@ import {
 } from '@/components/admin/shared';
 import {
   Star, Briefcase, Pencil, Trash2, X, Save, Shield, ShieldOff,
-  AlertCircle, CheckCircle,
+  AlertCircle, CheckCircle, Upload, ImageIcon,
 } from 'lucide-react';
 
 interface EditFormData {
@@ -24,6 +24,7 @@ interface EditFormData {
   shortDescription: string;
   slug: string;
   heroImage: string;
+  logoImage: string;
   location: { lat?: number | string; lng?: number | string; address?: string; city?: string };
   contact: { phone?: string; email?: string; website?: string; address?: string };
   isVerified: boolean;
@@ -63,6 +64,9 @@ export default function PartnersManagement() {
   const [editLoading, setEditLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [uploadingType, setUploadingType] = useState<'hero' | 'logo' | null>(null);
+  const heroInputRef = useRef<HTMLInputElement>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   const fetchPartners = useCallback(async () => {
     try {
@@ -104,6 +108,7 @@ export default function PartnersManagement() {
           shortDescription: d.shortDescription ?? '',
           slug: d.slug ?? '',
           heroImage: d.heroImage ?? '',
+          logoImage: d.logoImage ?? '',
           location: {
             lat: d.location?.lat ?? '',
             lng: d.location?.lng ?? '',
@@ -145,8 +150,7 @@ export default function PartnersManagement() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editForm),
-      });
-      const json = await res.json();
+      });      const json = await res.json();
       if (json.success) {
         setMessage({ text: 'Партнёр обновлён', type: 'success' });
         fetchPartners();
@@ -186,6 +190,53 @@ export default function PartnersManagement() {
       if (response.ok) fetchPartners();
     } catch {
       // ignore
+    }
+  };
+
+  /* ── Upload image to S3 ── */
+  const handleUpload = async (type: 'hero' | 'logo', file: File) => {
+    if (!editId) return;
+    setUploadingType(type);
+    setMessage(null);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('type', type);
+      const res = await fetch(`/api/admin/content/partners/${editId}/upload`, { method: 'POST', body: fd });
+      const json = await res.json();
+      if (json.success) {
+        setEditForm(prev => prev ? { ...prev, [type === 'hero' ? 'heroImage' : 'logoImage']: json.url } : prev);
+        setMessage({ text: type === 'hero' ? 'Главное фото загружено' : 'Логотип загружен', type: 'success' });
+      } else {
+        setMessage({ text: json.error ?? 'Ошибка загрузки', type: 'error' });
+      }
+    } catch {
+      setMessage({ text: 'Ошибка сети', type: 'error' });
+    } finally {
+      setUploadingType(null);
+    }
+  };
+
+  /* ── Delete image from S3 ── */
+  const handleDeleteImage = async (type: 'hero' | 'logo') => {
+    if (!editId) return;
+    setUploadingType(type);
+    try {
+      const res = await fetch(`/api/admin/content/partners/${editId}/upload`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setEditForm(prev => prev ? { ...prev, [type === 'hero' ? 'heroImage' : 'logoImage']: '' } : prev);
+      } else {
+        setMessage({ text: json.error ?? 'Ошибка удаления', type: 'error' });
+      }
+    } catch {
+      setMessage({ text: 'Ошибка сети', type: 'error' });
+    } finally {
+      setUploadingType(null);
     }
   };
 
@@ -401,21 +452,105 @@ export default function PartnersManagement() {
                   />
                 </div>
 
+                {/* Logo */}
+                <div>
+                  <label className="text-[10px] uppercase tracking-[0.06em] font-medium text-[var(--text-muted)] mb-2 block">Логотип партнёра</label>
+                  <input
+                    ref={logoInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUpload('logo', f); e.target.value = ''; }}
+                  />
+                  <div className="flex items-center gap-3">
+                    <div className="w-16 h-16 rounded-lg border border-[var(--border)] bg-[var(--bg-hover)] overflow-hidden flex items-center justify-center flex-shrink-0">
+                      {editForm.logoImage
+                        ? <img src={editForm.logoImage} alt="logo" className="w-full h-full object-contain p-1" />
+                        : <ImageIcon className="w-6 h-6 text-[var(--text-muted)]" />
+                      }
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => logoInputRef.current?.click()}
+                        disabled={uploadingType !== null}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-xs text-[var(--text-primary)] hover:border-[var(--accent)] transition-colors disabled:opacity-50"
+                      >
+                        <Upload className="w-3 h-3" />
+                        {uploadingType === 'logo' ? 'Загрузка...' : 'Загрузить логотип'}
+                      </button>
+                      {editForm.logoImage && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteImage('logo')}
+                          disabled={uploadingType !== null}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--danger)]/8 border border-[var(--danger)]/20 rounded-lg text-xs text-[var(--danger)] hover:bg-[var(--danger)]/12 transition-colors disabled:opacity-50"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          Удалить
+                        </button>
+                      )}
+                      <p className="text-[10px] text-[var(--text-muted)]">PNG, JPG или WebP, до 5 МБ</p>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Hero image */}
                 <div>
-                  <label className="text-[10px] uppercase tracking-[0.06em] font-medium text-[var(--text-muted)] mb-1.5 block">Главное фото (путь)</label>
-                  {editForm.heroImage && (
-                    <div className="mb-2 rounded-lg overflow-hidden h-28 bg-[var(--bg-hover)]">
-                      <img src={editForm.heroImage} alt="hero" className="w-full h-full object-cover" />
-                    </div>
-                  )}
+                  <label className="text-[10px] uppercase tracking-[0.06em] font-medium text-[var(--text-muted)] mb-2 block">Главное фото</label>
                   <input
-                    type="text"
-                    value={editForm.heroImage}
-                    onChange={(e) => setEditForm({ ...editForm, heroImage: e.target.value })}
-                    placeholder="/images/fishingkam/photo.jpg"
-                    className="w-full px-3 py-2 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/40 font-mono"
+                    ref={heroInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUpload('hero', f); e.target.value = ''; }}
                   />
+                  {editForm.heroImage ? (
+                    <div className="mb-2 rounded-lg overflow-hidden h-32 bg-[var(--bg-hover)] relative group">
+                      <img src={editForm.heroImage} alt="hero" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => heroInputRef.current?.click()}
+                          disabled={uploadingType !== null}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-white/90 rounded-lg text-xs text-[var(--text-primary)] font-medium hover:bg-white transition-colors"
+                        >
+                          <Upload className="w-3 h-3" />
+                          Заменить
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteImage('hero')}
+                          disabled={uploadingType !== null}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--danger)]/90 rounded-lg text-xs text-white font-medium hover:bg-[var(--danger)] transition-colors"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          Удалить
+                        </button>
+                      </div>
+                      {uploadingType === 'hero' && (
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                          <span className="text-white text-xs">Загрузка...</span>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => heroInputRef.current?.click()}
+                      disabled={uploadingType !== null}
+                      className="w-full h-24 border-2 border-dashed border-[var(--border)] rounded-lg flex flex-col items-center justify-center gap-2 text-[var(--text-muted)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors disabled:opacity-50"
+                    >
+                      {uploadingType === 'hero' ? (
+                        <span className="text-xs">Загрузка...</span>
+                      ) : (
+                        <>
+                          <Upload className="w-5 h-5" />
+                          <span className="text-xs">Загрузить фото (до 5 МБ)</span>
+                        </>
+                      )}
+                    </button>
+                  )}
                 </div>
 
                 {/* Location */}

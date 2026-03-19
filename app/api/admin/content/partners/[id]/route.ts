@@ -14,13 +14,13 @@ interface PartnerRow {
   short_description: string | null;
   slug: string | null;
   hero_image: string | null;
+  logo_image: string | null;
   location: Record<string, unknown> | null;
   is_public: boolean;
   contact: Record<string, unknown>;
   rating: string;
   review_count: string;
   is_verified: boolean;
-  logo_url: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -40,15 +40,12 @@ export async function GET(
     const { id } = await params;
 
     const result = await query<PartnerRow>(
-      `SELECT p.id, p.user_id, p.name, p.category, p.description,
-              p.short_description, p.slug, p.hero_image,
-              p.location, p.is_public,
-              p.contact, p.rating, p.review_count, p.is_verified,
-              p.created_at, p.updated_at,
-              l.url as logo_url
-       FROM partners p
-       LEFT JOIN assets l ON p.logo_asset_id = l.id
-       WHERE p.id = $1`,
+      `SELECT id, user_id, name, category, description,
+              short_description, slug, hero_image, logo_image,
+              location, is_public, contact, rating, review_count,
+              is_verified, created_at, updated_at
+       FROM partners
+       WHERE id = $1`,
       [id]
     );
 
@@ -70,13 +67,13 @@ export async function GET(
         shortDescription: row.short_description ?? '',
         slug: row.slug ?? '',
         heroImage: row.hero_image ?? '',
+        logoImage: row.logo_image ?? '',
         location: row.location ?? {},
         isPublic: row.is_public ?? false,
         contact: row.contact ?? {},
         rating: parseFloat(row.rating) || 0,
         reviewCount: parseInt(row.review_count) || 0,
         isVerified: row.is_verified,
-        logoUrl: row.logo_url,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
       },
@@ -100,6 +97,7 @@ const UpdatePartnerSchema = z.object({
   shortDescription: z.string().optional().default(''),
   slug: z.string().optional().default(''),
   heroImage: z.string().optional().default(''),
+  logoImage: z.string().optional().default(''),
   location: z.object({
     lat: z.coerce.number().optional(),
     lng: z.coerce.number().optional(),
@@ -133,7 +131,7 @@ export async function PUT(
       );
     }
 
-    const { name, category, description, shortDescription, slug, heroImage, location, contact, isVerified, isPublic } = parsed.data;
+    const { name, category, description, shortDescription, slug, heroImage, logoImage, location, contact, isVerified, isPublic } = parsed.data;
 
     if (category && !ALLOWED_CATEGORIES.has(category)) {
       return NextResponse.json(
@@ -153,6 +151,7 @@ export async function PUT(
     setClauses.push(`short_description = $${idx}`); values.push(shortDescription); idx++;
     if (slug) { setClauses.push(`slug = $${idx}`); values.push(slug); idx++; }
     setClauses.push(`hero_image = $${idx}`); values.push(heroImage || null); idx++;
+    setClauses.push(`logo_image = $${idx}`); values.push(logoImage || null); idx++;
     setClauses.push(`location = $${idx}`); values.push(JSON.stringify(location)); idx++;
     setClauses.push(`contact = $${idx}`); values.push(JSON.stringify(contact)); idx++;
     if (isVerified !== undefined) { setClauses.push(`is_verified = $${idx}`); values.push(isVerified); idx++; }
