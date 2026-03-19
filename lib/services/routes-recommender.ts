@@ -114,7 +114,7 @@ export async function findRoutesByInterests(
     }
 
     const data = await res.json() as {
-      routes?: Array<{
+      data?: Array<{
         id: string;
         title: string;
         activityType?: string;
@@ -125,7 +125,7 @@ export async function findRoutesByInterests(
       }>;
     };
 
-    return data.routes ?? [];
+    return data.data ?? [];
   } catch (err) {
     console.error('[routes-recommender] fetch error:', err);
     return [];
