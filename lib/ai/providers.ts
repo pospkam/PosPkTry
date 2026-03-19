@@ -1,6 +1,6 @@
 /**
  * Shared AI provider functions — waterfall pattern.
- * Timeweb Claude 4.6 → OpenRouter → Minimax → xAI → Anthropic (direct)
+ * OpenRouter (Claude 3.5 Haiku — cost-optimized) → xAI → Minimax → Anthropic → Timeweb (legacy)
  */
 
 import type { ChatMessage } from '@/lib/ai/prompts';
@@ -217,12 +217,12 @@ export async function callAnthropic(messages: ChatMessage[]): Promise<string | n
 }
 
 // ── Waterfall: пробует провайдеров по очереди ─────────────────
-// Anthropic → xAI → Minimax → OpenRouter → Timeweb (legacy)
+// OpenRouter (Claude 3.5 Haiku — cheap + reliable) → xAI → Minimax → Anthropic → Timeweb (legacy)
 export async function callAIWaterfall(messages: ChatMessage[]): Promise<string> {
-  let answer = await callAnthropic(messages);
+  let answer = await callOpenrouter(messages);
   if (!answer) answer = await callXai(messages);
   if (!answer) answer = await callMinimax(messages);
-  if (!answer) answer = await callOpenrouter(messages);
+  if (!answer) answer = await callAnthropic(messages);
   if (!answer) answer = await callTimewebAgent(messages);
   return answer ?? 'Извините, сервис временно недоступен. Попробуйте позже.';
 }

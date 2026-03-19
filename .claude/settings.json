@@ -20,7 +20,8 @@
       "WebFetch(domain:www.uxpin.com)",
       "WebFetch(domain:www.justinmind.com)",
       "WebFetch(domain:unicornplatform.com)",
-      "WebFetch(domain:medium.com)"
+      "WebFetch(domain:medium.com)",
+      "Bash(grep -r leads /workspaces/PosPkTry/app/api/ --include=*.ts -l)"
     ]
   }
 }

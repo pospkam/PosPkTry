@@ -25,11 +25,13 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { pool } from '@/lib/db-pool';
 import { telegramService } from '@/lib/notifications/telegram';
 import { confirmBooking, cancelBooking } from '@/lib/bookings/booking.service';
 import { query } from '@/lib/database';
 import { callAIWaterfallDirect } from '@/lib/ai/providers';
 import { KUZMICH_PROMPT, type ChatMessage } from '@/lib/ai/prompts';
+import { parseInterestsFromText, findRoutesByInterests, formatRoutesForTelegram } from '@/lib/services/routes-recommender';
 import {
   postRouteToChannel,
   postOperatorToChannel,
@@ -146,11 +148,39 @@ function saveHistory(tgChatId: string, messages: HistoryMessage[]): void {
 
 async function kuzmichReply(userText: string, chatId: string): Promise<string> {
   const history = await getHistory(chatId);
+
+  // Try to detect interests + dates from user text
+  const parsed = parseInterestsFromText(userText);
+
+  // If interests detected, fetch matching routes
+  let routesText = '';
+  if (parsed.interests.length > 0) {
+    const routes = await findRoutesByInterests(parsed.interests, 3);
+    if (routes.length > 0) {
+      routesText = `\n\nВот подходящие туры:\n${formatRoutesForTelegram(routes)}`;
+    }
+  }
+
+  // Build AI context
   const messages: ChatMessage[] = [
     { role: 'system', content: KUZMICH_CHAT_SYSTEM },
     ...history.slice(-8),
     { role: 'user', content: userText },
   ];
+
+  // If routes found, inject them into context for AI to format nicely
+  if (routesText) {
+    const withRoutes: ChatMessage[] = [
+      ...messages,
+      { role: 'assistant', content: 'Узнал ваши интересы и даты. Показываю подходящие туры.' },
+      { role: 'user', content: `Пожалуйста, покажи эти туры в красивом формате с ссылками:${routesText}` },
+    ];
+    const reply = await callAIWaterfallDirect(withRoutes);
+    saveHistory(chatId, [...history, { role: 'user', content: userText }, { role: 'assistant', content: reply }]);
+    return reply;
+  }
+
+  // Regular chat flow if no interests detected
   const reply = await callAIWaterfallDirect(messages);
   saveHistory(chatId, [...history, { role: 'user', content: userText }, { role: 'assistant', content: reply }]);
   return reply;
@@ -310,6 +340,83 @@ async function updateLeadStatus(leadId: string, status: string): Promise<{ name:
     );
     return res.rows[0] ?? null;
   } catch { return null; }
+}
+
+// ── Lead creation from bot ───────────────────────────────────────────────────
+
+interface ExtractedInterests {
+  interests?: string[];
+  dateFrom?: string;
+  dateTo?: string;
+}
+
+function extractLastInterestsFromHistory(history: HistoryMessage[]): ExtractedInterests {
+  // Scan history backwards to find intent context
+  // Look for recent user messages that might contain interests
+  for (let i = history.length - 1; i >= Math.max(0, history.length - 10); i--) {
+    if (history[i]?.role === 'user') {
+      const parsed = parseInterestsFromText(history[i].content);
+      if (parsed.interests.length > 0) {
+        return parsed;
+      }
+    }
+  }
+  return {};
+}
+
+async function createLeadFromBot(
+  chatId: string,
+  phoneText: string,
+  interests: ExtractedInterests
+): Promise<void> {
+  try {
+    const name = 'Турист'; // Anonymous from bot
+    const phone = phoneText;
+    const comment = interests.interests && interests.interests.length > 0
+      ? `Интересы: ${interests.interests.join(', ')}${
+          interests.dateFrom ? ` · Даты: ${interests.dateFrom} - ${interests.dateTo}` : ''
+        }`
+      : 'Заявка с Telegram бота';
+
+    const res = await pool.query(
+      `INSERT INTO leads (name, phone, comment, source_url, source_data)
+       VALUES ($1, $2, $3, $4, $5::jsonb)
+       RETURNING id`,
+      [
+        name,
+        phone,
+        comment,
+        'https://t.me/KuzmichKam_bot',
+        JSON.stringify({
+          source: 'telegram_bot',
+          interests: interests.interests ?? [],
+          date_from: interests.dateFrom,
+          date_to: interests.dateTo,
+          chat_id: chatId,
+          timestamp: new Date().toISOString(),
+        }),
+      ]
+    );
+
+    const leadId = res.rows[0]?.id as string;
+
+    // Send notification to admin
+    await telegramService.sendMessage({
+      chatId: process.env.TELEGRAM_CHAT_ID ?? '',
+      text: [
+        '<b>🤖 Новый лид из бота</b>',
+        '',
+        `<b>Телефон:</b> <a href="tel:${phone}">${phone}</a>`,
+        `<b>Интересы:</b> ${interests.interests?.join(', ') || 'неизвестно'}`,
+        interests.dateFrom ? `<b>Даты:</b> ${interests.dateFrom} - ${interests.dateTo}` : '',
+        '',
+        `<code>${leadId}</code>`,
+      ].filter(s => s !== '').join('\n'),
+      parseMode: 'HTML',
+    }).catch(() => {});
+  } catch (err) {
+    console.error('[telegram-bot-lead] error:', err);
+  }
 }
 
 // ── Основной обработчик ───────────────────────────────────────────────────────
@@ -537,8 +644,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
-    // Любой обычный текст → AI Кузьмич с историей
+    // Любой обычный текст → проверяю телефон или AI Кузьмич
     if (!text.startsWith('/')) {
+      // Check if text looks like phone number
+      const phoneMatch = text.match(/[\d+\-() ]{7,}/);
+      if (phoneMatch) {
+        const phoneText = phoneMatch[0].trim();
+        // Try to extract last known interests from chat history
+        const history = await getHistory(chatId);
+        const lastIntests = extractLastInterestsFromHistory(history);
+
+        if (lastIntests.interests && lastIntests.interests.length > 0) {
+          // User responded with phone after seeing tours
+          await createLeadFromBot(chatId, phoneText, lastIntests);
+          await sendHTML(chatId, '✅ Спасибо! Оператор свяжется с вами в ближайшее время.');
+          return NextResponse.json({ ok: true });
+        }
+      }
+
+      // Regular AI chat
       const answer = await kuzmichReply(text, chatId);
       await sendHTML(chatId, answer);
       return NextResponse.json({ ok: true });
