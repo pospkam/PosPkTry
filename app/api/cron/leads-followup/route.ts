@@ -1,0 +1,215 @@
+/**
+ * GET /api/cron/leads-followup
+ *
+ * Кроn: повторные уведомления по лидам из Telegram-бота.
+ *
+ * Логика:
+ *   1. Находим лиды со статусом 'new', источник 'telegram_bot', старше 2 часов.
+ *   2. Для каждого лида ищем следующего оператора с подходящими активностями,
+ *      ещё не получавшего уведомление об этом лиде.
+ *   3. Если оператор найден — отправляем повторное уведомление.
+ *   4. Если операторов больше нет — эскалация к admin + смена статуса на 'contacted'.
+ *
+ * Защита: заголовок Authorization: Bearer <CRON_SECRET>
+ *          или query-параметр ?secret=<CRON_SECRET>
+ *
+ * Запуск: cron-job.org каждые 30 минут
+ *   URL:  https://tourhab.ru/api/cron/leads-followup?secret=<CRON_SECRET>
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { pool } from '@/lib/db-pool';
+import { telegramService } from '@/lib/notifications/telegram';
+
+export const dynamic = 'force-dynamic';
+
+// ── Типы данных ───────────────────────────────────────────────────────────────
+
+interface LeadSourceData {
+  source?: string;
+  interests?: string[];
+  date_from?: string;
+  date_to?: string;
+  chat_id?: string;
+  notified_operators?: string[];
+  followup_count?: number;
+  last_followup?: string;
+  escalated_to_admin?: boolean;
+}
+
+interface FollowupLead {
+  id: string;
+  phone: string;
+  source_data: LeadSourceData;
+}
+
+interface OperatorMatch {
+  name: string;
+  slug: string;
+  telegram_chat_id: string;
+}
+
+// ── Утилиты ───────────────────────────────────────────────────────────────────
+
+function esc(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// ── Основной обработчик ───────────────────────────────────────────────────────
+
+export async function GET(request: NextRequest) {
+  // ── Проверка секрета ─────────────────────────────────────────────────────
+  const cronSecret = process.env.CRON_SECRET;
+  if (cronSecret) {
+    const authHeader = request.headers.get('Authorization');
+    const querySecret = request.nextUrl.searchParams.get('secret');
+    const provided = authHeader?.replace('Bearer ', '').trim() ?? querySecret ?? '';
+    if (provided !== cronSecret) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+  }
+
+  const adminChatId = process.env.TELEGRAM_CHAT_ID ?? '';
+
+  try {
+    // ── Выбираем лиды, требующие followup ───────────────────────────────────
+    // Условия:
+    //   - статус 'new' (ещё не обработан)
+    //   - источник 'telegram_bot'
+    //   - создан более 2 часов назад
+    //   - либо ещё не было followup, либо последний followup был > 2 часов назад
+    const leadsRes = await pool.query<FollowupLead>(`
+      SELECT id::text, phone, source_data
+      FROM leads
+      WHERE status = 'new'
+        AND source_data->>'source' = 'telegram_bot'
+        AND created_at < NOW() - INTERVAL '2 hours'
+        AND (
+          source_data->>'last_followup' IS NULL
+          OR (source_data->>'last_followup')::timestamptz < NOW() - INTERVAL '2 hours'
+        )
+        AND COALESCE((source_data->>'escalated_to_admin')::boolean, false) = false
+      ORDER BY created_at ASC
+      LIMIT 20
+    `);
+
+    if (leadsRes.rows.length === 0) {
+      return NextResponse.json({ ok: true, processed: 0 });
+    }
+
+    let processed = 0;
+
+    for (const lead of leadsRes.rows) {
+      const sd: LeadSourceData = lead.source_data ?? {};
+      const interests = sd.interests ?? [];
+      const alreadyNotified = sd.notified_operators ?? [];
+      const followupCount = sd.followup_count ?? 0;
+
+      // ── Ищем следующего операторa с подходящими активностями ──────────────
+      let nextOperator: OperatorMatch | null = null;
+
+      if (interests.length > 0) {
+        const opRes = await pool.query<OperatorMatch>(
+          `SELECT p.name, p.slug, p.contacts->>'telegram_chat_id' AS telegram_chat_id
+           FROM partners p
+           JOIN operator_tours ot ON ot.operator_id = p.user_id
+           JOIN agent_route_knowledge ark ON ark.id = ot.route_id
+           WHERE ark.activity_type = ANY($1)
+             AND p.is_public = TRUE
+             AND (p.contacts->>'telegram_chat_id') IS NOT NULL
+             AND NOT (p.slug = ANY($2))
+           GROUP BY p.name, p.slug, p.contacts->>'telegram_chat_id'
+           LIMIT 1`,
+          [interests, alreadyNotified]
+        );
+        nextOperator = opRes.rows[0] ?? null;
+      }
+
+      if (nextOperator) {
+        // ── Уведомляем следующего оператора ───────────────────────────────
+        const attempt = followupCount + 1;
+        const msgLines = [
+          attempt === 1
+            ? '⏰ <b>Напоминание: горячий лид!</b>'
+            : `⏰ <b>Повторное уведомление (попытка ${attempt})</b>`,
+          '',
+          `<b>Телефон:</b> <a href="tel:${esc(lead.phone)}">${esc(lead.phone)}</a>`,
+          interests.length > 0 ? `<b>Интересы:</b> ${interests.join(', ')}` : '',
+          sd.date_from ? `<b>Даты:</b> ${sd.date_from} — ${sd.date_to}` : '',
+          '',
+          '⚡️ Турист ещё не получил ответа. Пожалуйста, свяжитесь с ним!',
+          `<a href="https://tourhab.ru/hub/operator/bookings">Открыть в CRM →</a>`,
+        ].filter(Boolean).join('\n');
+
+        await telegramService.sendMessage({
+          chatId: nextOperator.telegram_chat_id,
+          text: msgLines,
+          parseMode: 'HTML',
+        }).catch(() => {});
+
+        // ── Обновляем source_data ──────────────────────────────────────────
+        const newNotified = [...alreadyNotified, nextOperator.slug];
+        await pool.query(
+          `UPDATE leads
+           SET source_data = source_data || $1::jsonb,
+               updated_at  = NOW()
+           WHERE id = $2`,
+          [
+            JSON.stringify({
+              notified_operators: newNotified,
+              followup_count: attempt,
+              last_followup: new Date().toISOString(),
+            }),
+            lead.id,
+          ]
+        );
+
+      } else {
+        // ── Операторы кончились — эскалация к admin ────────────────────────
+        if (adminChatId) {
+          await telegramService.sendMessage({
+            chatId: adminChatId,
+            text: [
+              '⚠️ <b>Лид без ответа — нужна ручная обработка!</b>',
+              '',
+              `<b>Телефон:</b> <a href="tel:${esc(lead.phone)}">${esc(lead.phone)}</a>`,
+              interests.length > 0 ? `<b>Интересы:</b> ${interests.join(', ')}` : '',
+              sd.date_from ? `<b>Даты:</b> ${sd.date_from} — ${sd.date_to}` : '',
+              `<b>Уведомлений отправлено:</b> ${followupCount}`,
+              '',
+              'Свободных операторов не осталось. Обработайте вручную.',
+              `<a href="https://tourhab.ru/hub/admin/leads">CRM лиды →</a>`,
+              `<code>${lead.id}</code>`,
+            ].filter(Boolean).join('\n'),
+            parseMode: 'HTML',
+          }).catch(() => {});
+        }
+
+        // Меняем статус на 'contacted' + помечаем как обработанный кроном
+        await pool.query(
+          `UPDATE leads
+           SET status      = 'contacted',
+               source_data = source_data || $1::jsonb,
+               updated_at  = NOW()
+           WHERE id = $2`,
+          [
+            JSON.stringify({
+              followup_count: followupCount + 1,
+              last_followup: new Date().toISOString(),
+              escalated_to_admin: true,
+            }),
+            lead.id,
+          ]
+        );
+      }
+
+      processed++;
+    }
+
+    return NextResponse.json({ ok: true, processed });
+
+  } catch (err) {
+    console.error('[cron/leads-followup] error:', err);
+    return NextResponse.json({ ok: false, error: 'Internal error' }, { status: 500 });
+  }
+}
