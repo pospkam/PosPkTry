@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireOperator } from '@/lib/auth/middleware';
 import { query } from '@/lib/database';
 import { z } from 'zod';
+import { loyaltySystem } from '@/lib/loyalty/loyalty-system';
 
 export const dynamic = 'force-dynamic';
 
@@ -104,9 +105,28 @@ export async function PATCH(
     const result = await query(
       `UPDATE operator_bookings SET ${sets.join(', ')}
        WHERE id = $${idx}
-       RETURNING id, booking_status, updated_at`,
+       RETURNING id, booking_status, updated_at, customer_email, total_price`,
       values
     );
+
+    // Earn loyalty points when booking is completed
+    if (input.booking_status === 'completed' && result.rows[0]) {
+      const row = result.rows[0] as { customer_email?: string; total_price?: string };
+      if (row.customer_email && row.total_price) {
+        const userResult = await query<{ id: string }>(
+          'SELECT id FROM users WHERE email = $1',
+          [row.customer_email]
+        );
+        if (userResult.rows[0]) {
+          const uid = userResult.rows[0].id;
+          const price = parseFloat(row.total_price);
+          await query('UPDATE users SET total_spent = COALESCE(total_spent, 0) + $1 WHERE id = $2', [price, uid]);
+          loyaltySystem.earnPoints(uid, params.id, price, 'booking').catch(() => {});
+          loyaltySystem.earnActivityPoints(uid, 'first_booking', params.id).catch(() => {});
+          loyaltySystem.completeReferral(uid).catch(() => {});
+        }
+      }
+    }
 
     return NextResponse.json({ success: true, data: result.rows[0] });
   } catch (error) {

@@ -14,6 +14,7 @@ const RegisterSchema = z.object({
   role: z.enum(VALID_ROLES).optional(),
   roles: z.array(z.enum(VALID_ROLES)).optional(),
   pd_consent: z.literal(true, { errorMap: () => ({ message: 'Необходимо согласие на обработку персональных данных' }) }),
+  referralCode: z.string().max(20).optional(),
 });
 
 const jwtSecret = process.env.JWT_SECRET;
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    const { email, password, name, role, roles } = parsed.data;
+    const { email, password, name, role, roles, referralCode } = parsed.data;
 
     // Определяем роль: переданная роль > первая из массива ролей > tourist
     const userRole = role ?? roles?.[0] ?? 'tourist';
@@ -84,6 +85,27 @@ export async function POST(request: NextRequest) {
     );
     
     const user = result.rows[0];
+
+    // Handle referral code
+    if (referralCode) {
+      const referrerResult = await client.query(
+        'SELECT id FROM users WHERE referral_code = $1',
+        [referralCode.toUpperCase()]
+      );
+      if (referrerResult.rows[0]) {
+        const referrerId = referrerResult.rows[0].id as string;
+        await client.query(
+          'UPDATE users SET referred_by = $1 WHERE id = $2',
+          [referrerId, user.id]
+        );
+        await client.query(
+          `INSERT INTO referrals (referrer_id, referred_id, referral_code, status)
+           VALUES ($1, $2, $3, 'pending')
+           ON CONFLICT (referrer_id, referred_id) DO NOTHING`,
+          [referrerId, user.id, referralCode.toUpperCase()]
+        );
+      }
+    }
     
     // Генерируем JWT токен
     const token = await new SignJWT({
