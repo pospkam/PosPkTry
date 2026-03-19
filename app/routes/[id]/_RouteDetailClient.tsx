@@ -7,6 +7,7 @@ import {
   ArrowLeft, MapPin, Clock, Calendar, Mountain,
   ExternalLink, AlertTriangle, Users, Send,
   Star, CheckCircle, Phone, ChevronLeft, ChevronRight,
+  TrendingUp, Layers, Thermometer,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { Header } from '@/components/layout/Header';
@@ -357,7 +358,7 @@ export default function RouteDetailClient({ id }: { id: string }) {
       <Header />
 
       {/* ── Hero ──────────────────────────────────────────────────────────────── */}
-      <div className="relative h-64 md:h-96 w-full overflow-hidden pt-16">
+      <div className="relative h-72 md:h-[480px] w-full overflow-hidden pt-16">
         <Image
           src={heroImage}
           alt={route.title}
@@ -461,6 +462,93 @@ export default function RouteDetailClient({ id }: { id: string }) {
               </div>
             )}
 
+            {/* Быстрые факты — всегда если хоть что-то есть */}
+            {(route.durationDays || route.difficulty || route.altitude || route.groupSizeMax || route.season) && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {route.durationDays != null && (
+                  <div className="ds-card p-3 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-[var(--accent)]/10 flex items-center justify-center flex-shrink-0">
+                      <Clock className="w-4 h-4 text-[var(--accent)]" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-[var(--text-muted)]">Длительность</p>
+                      <p className="text-sm font-semibold text-[var(--text-primary)]">
+                        {route.durationDays < 1
+                          ? `${Math.round(route.durationDays * 24)} ч`
+                          : `${route.durationDays} ${route.durationDays === 1 ? 'день' : route.durationDays < 5 ? 'дня' : 'дней'}`}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {route.difficulty && (
+                  <div className="ds-card p-3 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-[var(--ocean)]/10 flex items-center justify-center flex-shrink-0">
+                      <TrendingUp className="w-4 h-4 text-[var(--ocean)]" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-[var(--text-muted)]">Сложность</p>
+                      <p className="text-sm font-semibold text-[var(--text-primary)]">
+                        {DIFFICULTY_RU[route.difficulty] ?? route.difficulty}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {route.altitude != null && route.altitude > 0 && (
+                  <div className="ds-card p-3 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-[var(--success)]/10 flex items-center justify-center flex-shrink-0">
+                      <Layers className="w-4 h-4 text-[var(--success)]" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-[var(--text-muted)]">Высота</p>
+                      <p className="text-sm font-semibold text-[var(--text-primary)]">{route.altitude.toLocaleString('ru-RU')} м</p>
+                    </div>
+                  </div>
+                )}
+                {route.groupSizeMax != null && (
+                  <div className="ds-card p-3 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-[var(--warning)]/10 flex items-center justify-center flex-shrink-0">
+                      <Users className="w-4 h-4 text-[var(--warning)]" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-[var(--text-muted)]">Группа</p>
+                      <p className="text-sm font-semibold text-[var(--text-primary)]">до {route.groupSizeMax} чел.</p>
+                    </div>
+                  </div>
+                )}
+                {route.season && (
+                  <div className="ds-card p-3 flex items-center gap-3 col-span-2 sm:col-span-1">
+                    <div className="w-8 h-8 rounded-lg bg-[var(--accent)]/10 flex items-center justify-center flex-shrink-0">
+                      <Thermometer className="w-4 h-4 text-[var(--accent)]" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-[var(--text-muted)]">Сезон</p>
+                      <p className="text-sm font-semibold text-[var(--text-primary)]">{route.season}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Что включено — собираем из офферов */}
+            {offers.length > 0 && (() => {
+              const allIncluded = [...new Set(offers.flatMap(o => o.included))].filter(Boolean).slice(0, 8);
+              return allIncluded.length > 0 ? (
+                <div>
+                  <h3 className="ds-label mb-3 flex items-center gap-1.5">
+                    <CheckCircle className="w-3.5 h-3.5 text-[var(--success)]" /> Что входит в туры
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {allIncluded.map((item, i) => (
+                      <span key={i} className="inline-flex items-center gap-1.5 text-xs bg-[var(--success)]/8 text-[var(--success)] border border-[var(--success)]/20 px-2.5 py-1 rounded-full">
+                        <CheckCircle className="w-3 h-3 flex-shrink-0" />
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : null;
+            })()}
+
             {/* Кузьмич */}
             {route.kuzmichReview && (
               <div className="ds-card p-5 border-l-4 border-[var(--accent)]">
@@ -481,7 +569,7 @@ export default function RouteDetailClient({ id }: { id: string }) {
             )}
 
             {/* Лучшие месяцы */}
-            {route.bestMonths && route.bestMonths.length > 0 && (
+            {(route.bestMonths && route.bestMonths.length > 0) && (
               <div>
                 <h3 className="ds-label flex items-center gap-1.5 mb-3">
                   <Calendar className="w-3.5 h-3.5" /> Лучшие месяцы
