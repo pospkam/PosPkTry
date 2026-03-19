@@ -565,6 +565,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
+    // /migrate — применить миграцию (только admin)
+    if (text.startsWith('/migrate')) {
+      if (!admin) {
+        await sendHTML(chatId, '<b>Нет прав.</b>');
+        return NextResponse.json({ ok: true });
+      }
+      try {
+        await query(`
+          ALTER TABLE leads
+            ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'new'
+              CHECK (status IN ('new','contacted','qualified','converted','lost')),
+            ADD COLUMN IF NOT EXISTS notes TEXT,
+            ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        `);
+        await query(`CREATE INDEX IF NOT EXISTS idx_leads_status ON leads (status, created_at DESC)`);
+        await sendHTML(chatId, '✅ Migration 043 applied: leads.status + notes + updated_at');
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        await sendHTML(chatId, `❌ Migration error: <code>${esc(msg)}</code>`);
+      }
+      return NextResponse.json({ ok: true });
+    }
+
     // /diag — диагностика env vars (только admin)
     if (text.startsWith('/diag')) {
       if (!admin) {
@@ -577,6 +600,7 @@ export async function POST(request: NextRequest) {
         ['TELEGRAM_CHANNEL_ID',     process.env.TELEGRAM_CHANNEL_ID],
         ['TELEGRAM_LEADS_CHAT_ID',  process.env.TELEGRAM_LEADS_CHAT_ID],
         ['ANTHROPIC_API_KEY',       process.env.ANTHROPIC_API_KEY],
+        ['OPENROUTER_API_KEY',      process.env.OPENROUTER_API_KEY],
         ['NEXT_PUBLIC_YANDEX_METRIKA_ID', process.env.NEXT_PUBLIC_YANDEX_METRIKA_ID],
       ];
       const lines = ['<b>Env vars (✅ = задан, ❌ = не задан):</b>', ''];
