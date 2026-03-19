@@ -36,7 +36,6 @@ const envSchema = z.object({
   TIMEWEB_TOKEN: z.string().optional().default(''),
   TIMEWEB_TOKEN1: z.string().optional().default(''),
   TIMEWEB_API_TOKEN: z.string().optional().default(''),
-  TIMEWEB_AI_AGENT_ID: z.string().optional().default(''),
   TIMEWEB_AI_KB_ID: z.string().optional().default(''),
 
   // ── AI Providers ──────────────────────────────────────────────────

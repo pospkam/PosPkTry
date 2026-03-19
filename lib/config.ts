@@ -23,16 +23,6 @@ export const config = {
   // Настройки AI
   ai: {
     timeweb: {
-      primaryAgent: {
-        id: process.env.TIMEWEB_AI_AGENT_ID || '',
-        get url() {
-          const id = process.env.TIMEWEB_AI_AGENT_ID;
-          return id
-            ? `https://agent.timeweb.cloud/api/v1/cloud-ai/agents/${id}/v1`
-            : '';
-        },
-        name: 'КамчаТур AI-гид (DeepSeek)',
-      },
       timeout: 30000,
       maxTokens: parseInt(process.env.AI_MAX_TOKENS || '800'),
       knowledgeBase: {

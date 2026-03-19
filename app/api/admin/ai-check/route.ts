@@ -7,7 +7,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth/middleware';
 import {
-  callTimewebAgent,
   callOpenrouter,
   callMinimax,
   callXai,
@@ -36,8 +35,7 @@ export async function GET(request: NextRequest) {
   const authError = await requireAdmin(request);
   if (authError) return authError;
 
-  const [timeweb, openrouter, minimax, xai, anthropic] = await Promise.all([
-    probe(() => callTimewebAgent(PING)),
+  const [openrouter, minimax, xai, anthropic] = await Promise.all([
     probe(() => callOpenrouter(PING)),
     probe(() => callMinimax(PING)),
     probe(() => callXai(PING)),
@@ -45,20 +43,18 @@ export async function GET(request: NextRequest) {
   ]);
 
   const env = {
-    TIMEWEB_TOKEN:         !!process.env.TIMEWEB_TOKEN,
-    TIMEWEB_AI_AGENT_ID:   !!process.env.TIMEWEB_AI_AGENT_ID,
     OPENROUTER_API_KEY:    !!process.env.OPENROUTER_API_KEY,
     MINIMAX_API_KEY:       !!process.env.MINIMAX_API_KEY,
     XAI_API_KEY:           !!process.env.XAI_API_KEY,
     ANTHROPIC_API_KEY:     !!process.env.ANTHROPIC_API_KEY,
   };
 
-  const anyWorking = timeweb.ok || openrouter.ok || minimax.ok || xai.ok || anthropic.ok;
+  const anyWorking = openrouter.ok || minimax.ok || xai.ok || anthropic.ok;
 
   return NextResponse.json({
     success: true,
     overall: anyWorking ? 'ok' : 'all_failed',
     env,
-    providers: { timeweb, openrouter, minimax, xai, anthropic },
+    providers: { openrouter, minimax, xai, anthropic },
   });
 }

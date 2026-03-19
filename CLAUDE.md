@@ -166,7 +166,7 @@ Build config: `ignoreBuildErrors=true` на Timeweb (Docker), локально �
 - `lib/auth.ts` — JWT логика
 - `app/api/payments/` — CloudPayments webhook
 - `app/api/safety/sos` — SOS (только через staging)
-- Миграции 001-027 — только добавлять новые (следующая: `028_`)
+- Миграции 001-049 — только добавлять новые (следующая: `050_`)
 
 ---
 

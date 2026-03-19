@@ -1,49 +1,9 @@
 /**
  * Shared AI provider functions — waterfall pattern.
- * OpenRouter (Claude 3.5 Haiku — cost-optimized) → xAI → Minimax → Anthropic → Timeweb (legacy)
+ * OpenRouter (GPT-4o-mini — cost-optimized) → xAI → Minimax → Anthropic
  */
 
 import type { ChatMessage } from '@/lib/ai/prompts';
-
-// ── Timeweb Cloud AI Agent (Claude 4.6 Sonnet — primary) ────
-export async function callTimewebAgent(messages: ChatMessage[]): Promise<string | null> {
-  const token = process.env.TIMEWEB_TOKEN;
-  const agentId = process.env.TIMEWEB_AI_AGENT_ID;
-  if (!token || !agentId) return null;
-
-  try {
-    const payload = messages.map(({ role, content }) => ({ role, content }));
-    const res = await fetch(
-      `https://agent.timeweb.cloud/api/v1/cloud-ai/agents/${agentId}/v1/chat/completions`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-6',
-          temperature: 0.4,
-          max_tokens: 400,
-          messages: payload,
-        }),
-        signal: AbortSignal.timeout(10_000),
-      }
-    );
-
-    if (!res.ok) {
-      const errText = await res.text().catch(() => '');
-      console.error(`[AI] Timeweb agent ${res.status}:`, errText.slice(0, 300));
-      return null;
-    }
-
-    const data = await res.json() as { choices?: Array<{ message?: { content?: string } }> };
-    return data?.choices?.[0]?.message?.content ?? null;
-  } catch (e) {
-    console.error('[AI] Timeweb agent exception:', e instanceof Error ? e.message : String(e));
-    return null;
-  }
-}
 
 // ── OpenRouter ─────────────────────────────────────────────────
 export async function callOpenrouter(messages: ChatMessage[]): Promise<string | null> {
@@ -220,13 +180,12 @@ export async function callAnthropic(messages: ChatMessage[]): Promise<string | n
 }
 
 // ── Waterfall: пробует провайдеров по очереди ─────────────────
-// OpenRouter (Claude 3.5 Haiku — cheap + reliable) → xAI → Minimax → Anthropic → Timeweb (legacy)
+// OpenRouter (GPT-4o-mini) → xAI → Minimax → Anthropic
 export async function callAIWaterfall(messages: ChatMessage[]): Promise<string> {
   let answer = await callOpenrouter(messages);
   if (!answer) answer = await callXai(messages);
   if (!answer) answer = await callMinimax(messages);
   if (!answer) answer = await callAnthropic(messages);
-  if (!answer) answer = await callTimewebAgent(messages);
   return answer ?? 'Извините, сервис временно недоступен. Попробуйте позже.';
 }
 

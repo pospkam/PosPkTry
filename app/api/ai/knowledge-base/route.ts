@@ -243,7 +243,7 @@ async function updateKnowledgeBase(documents: KnowledgeDocument[]): Promise<bool
           'Authorization': `Bearer ${process.env.TIMEWEB_API_TOKEN}`,
         },
         body: JSON.stringify({
-          agentId: timeweb.primaryAgent.id,
+          agentId: process.env.TIMEWEB_AI_AGENT_ID ?? '',
           documents: chunk,
           chunkIndex: i,
           totalChunks: chunks.length,
@@ -279,8 +279,8 @@ export async function GET(request: NextRequest) {
     const { timeweb } = config.ai
 
     const status = {
-      agentId: timeweb.primaryAgent.id,
-      agentName: timeweb.primaryAgent.name,
+      agentId: process.env.TIMEWEB_AI_AGENT_ID ?? '',
+      agentName: 'Timeweb AI Agent (deprecated)',
       knowledgeBaseEnabled: timeweb.knowledgeBase.enabled,
       maxDocuments: timeweb.knowledgeBase.maxDocuments,
       chunkSize: timeweb.knowledgeBase.chunkSize,
