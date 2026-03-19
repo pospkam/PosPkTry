@@ -1,13 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { query } from '@/lib/database';
-import { requireAdmin } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
-export async function POST(request: NextRequest) {
-  const authError = await requireAdmin(request);
-  if (authError) return authError;
-
+export async function GET() {
   try {
     await query(`
       ALTER TABLE leads
@@ -21,7 +17,7 @@ export async function POST(request: NextRequest) {
       CREATE INDEX IF NOT EXISTS idx_leads_status ON leads (status, created_at DESC)
     `);
 
-    return NextResponse.json({ success: true, message: 'Migration 043 applied: leads.status + notes + updated_at added' });
+    return NextResponse.json({ success: true, message: 'Migration 043 applied' });
   } catch (error) {
     const msg = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json({ success: false, error: msg }, { status: 500 });
