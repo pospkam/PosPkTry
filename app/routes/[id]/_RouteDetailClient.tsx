@@ -8,6 +8,7 @@ import {
   ExternalLink, AlertTriangle, Users, Send,
   Star, CheckCircle, Phone, ChevronLeft, ChevronRight,
   TrendingUp, Layers, Thermometer, MessageSquare,
+  Fish, Plane, PawPrint, Anchor, Snowflake, Car,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { Header } from '@/components/layout/Header';
@@ -104,6 +105,12 @@ interface RouteDetail {
 
 // ── Карточка оффера ───────────────────────────────────────────────────────────
 
+const ACTIVITY_ICONS: Record<string, React.ElementType> = {
+  fishing: Fish, trekking: Mountain, thermal: Thermometer,
+  helicopter: Plane, bear_watching: PawPrint, boat_trip: Anchor,
+  snowmobile: Snowflake, jeep: Car, other: MapPin,
+};
+
 function OfferCard({ offer, activityType, onBook }: {
   offer: Offer; activityType: string | null; onBook: () => void;
 }) {
@@ -115,38 +122,44 @@ function OfferCard({ offer, activityType, onBook }: {
   const duration = offer.durationDays ? formatDuration(offer.durationDays) : null;
   const isLowSlots = offer.nextSlots != null && offer.nextSlots > 0 && offer.nextSlots <= 3;
   const cardImage = offer.tourImage || offer.operatorHeroImage;
+  const ActivityIcon = ACTIVITY_ICONS[activityType ?? 'other'] ?? MapPin;
 
   return (
     <div
-      className="ds-card overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer group"
+      className="ds-card overflow-hidden hover:shadow-md hover:border-[var(--accent)]/30 transition-all duration-200 cursor-pointer group"
       onClick={onBook}
     >
       <div className="flex gap-0">
-        {/* Фото слева — компактно */}
-        <div className="relative w-28 flex-shrink-0 overflow-hidden">
+        {/* Фото / иконка-заглушка */}
+        <div className="relative w-24 flex-shrink-0 overflow-hidden" style={{ minHeight: 96 }}>
           {cardImage ? (
             <Image
               src={cardImage}
               alt={offer.tourName}
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-300"
-              sizes="112px"
+              sizes="96px"
             />
           ) : (
-            <div className="absolute inset-0 bg-[var(--bg-hover)]" />
+            <div
+              className="absolute inset-0 flex items-center justify-center"
+              style={{ background: `color-mix(in srgb, ${accentColor} 12%, var(--bg-hover))` }}
+            >
+              <ActivityIcon className="w-7 h-7 opacity-40" style={{ color: accentColor }} />
+            </div>
           )}
         </div>
 
-        {/* Контент справа */}
-        <div className="flex-1 p-4 min-w-0 space-y-2">
-          {/* Оператор */}
+        {/* Контент */}
+        <div className="flex-1 p-3.5 min-w-0 flex flex-col justify-between gap-2">
+          {/* Оператор + рейтинг */}
           <div className="flex items-center gap-1.5">
-            <span className="text-xs text-[var(--text-muted)] truncate">{offer.operator.name}</span>
+            <span className="text-[11px] text-[var(--text-muted)] truncate">{offer.operator.name}</span>
             {offer.operator.verified && <CheckCircle className="w-3 h-3 text-[var(--success)] flex-shrink-0" />}
             {offer.operator.rating != null && offer.operator.rating > 0 && (
               <div className="flex items-center gap-0.5 ml-auto flex-shrink-0">
                 <Star className="w-3 h-3 fill-[var(--warning)] text-[var(--warning)]" />
-                <span className="text-xs font-semibold text-[var(--text-primary)]">{offer.operator.rating.toFixed(1)}</span>
+                <span className="text-[11px] font-semibold text-[var(--text-primary)]">{offer.operator.rating.toFixed(1)}</span>
               </div>
             )}
           </div>
@@ -156,7 +169,7 @@ function OfferCard({ offer, activityType, onBook }: {
             {offer.tourName}
           </p>
 
-          {/* Длительность + группа */}
+          {/* Мета-строка */}
           <div className="flex items-center gap-3">
             {duration && (
               <span className="flex items-center gap-1 text-xs text-[var(--text-secondary)]">
@@ -172,20 +185,20 @@ function OfferCard({ offer, activityType, onBook }: {
             )}
           </div>
 
-          {/* Цена + заезд */}
-          <div className="flex items-center justify-between pt-1">
+          {/* Цена + кнопка */}
+          <div className="flex items-center justify-between">
             <div>
               {price != null && price > 0 ? (
-                <span className="text-base font-bold text-[var(--text-primary)]">
+                <span className="text-sm font-bold text-[var(--text-primary)]">
                   {price.toLocaleString('ru-RU')} ₽
-                  <span className="text-xs font-normal text-[var(--text-muted)] ml-1">/чел</span>
+                  <span className="text-[11px] font-normal text-[var(--text-muted)] ml-1">/чел</span>
                 </span>
               ) : (
                 <span className="text-sm text-[var(--text-muted)]">По запросу</span>
               )}
               {nextDate && (
-                <p className={`text-xs mt-0.5 ${isLowSlots ? 'text-[var(--warning)]' : 'text-[var(--success)]'}`}>
-                  {isLowSlots ? `${offer.nextSlots} места — ` : ''}{nextDate}
+                <p className={`text-[11px] mt-0.5 font-medium ${isLowSlots ? 'text-[var(--warning)]' : 'text-[var(--success)]'}`}>
+                  {isLowSlots ? `${offer.nextSlots} места · ` : ''}{nextDate}
                 </p>
               )}
             </div>
@@ -202,8 +215,6 @@ function OfferCard({ offer, activityType, onBook }: {
     </div>
   );
 }
-
-// ── Компонент страницы ────────────────────────────────────────────────────────
 
 export default function RouteDetailClient({ id }: { id: string }) {
   const [route, setRoute] = useState<RouteDetail | null>(null);
