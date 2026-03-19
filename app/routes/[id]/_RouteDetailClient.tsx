@@ -14,6 +14,7 @@ import dynamic from 'next/dynamic';
 import { Header } from '@/components/layout/Header';
 import LeadModal from '@/components/routes/LeadModal';
 import BookingModal from '@/components/routes/BookingModal';
+import AvailabilityCalendar from '@/components/routes/AvailabilityCalendar';
 import RouteCard, { type RouteItem } from '@/components/routes/RouteCard';
 import { useSourceTracker } from '@/hooks/useSourceTracker';
 import { AssistantButton } from '@/components/shared/AssistantButton';
@@ -772,6 +773,13 @@ export default function RouteDetailClient({ id }: { id: string }) {
 
               {offers.length > 0 ? (
                 <>
+                  <AvailabilityCalendar offers={offers.map(o => ({
+                    tourId: o.tourId,
+                    tourName: o.tourName,
+                    nextDeparture: o.nextDeparture,
+                    nextSlots: o.nextSlots,
+                  }))} />
+
                   <div className="flex items-center justify-between">
                     <h2 className="text-sm font-semibold text-[var(--text-primary)] uppercase tracking-wide">
                       {offers.length === 1 ? 'Тур' : `${offers.length} туров`}
