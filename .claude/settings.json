@@ -21,7 +21,10 @@
       "WebFetch(domain:www.justinmind.com)",
       "WebFetch(domain:unicornplatform.com)",
       "WebFetch(domain:medium.com)",
-      "Bash(grep -r leads /workspaces/PosPkTry/app/api/ --include=*.ts -l)"
+      "Bash(grep -r leads /workspaces/PosPkTry/app/api/ --include=*.ts -l)",
+      "Bash(grep \"\\\\.tsx$\")",
+      "Bash(ls scripts/seed-*.sql)",
+      "Bash(find /workspaces/PosPkTry/app -type f -path */help* -o -path *help*)"
     ]
   }
 }
