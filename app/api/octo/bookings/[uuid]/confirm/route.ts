@@ -34,6 +34,24 @@ export async function POST(
     );
   }
 
+  if (typeof result === 'object' && 'error' in result) {
+    if (result.error === 'HOLD_EXPIRED') {
+      return NextResponse.json(
+        { error: 'GONE', errorMessage: 'Hold has expired. Create a new booking.' },
+        { status: 410 }
+      );
+    }
+    if (result.error === 'ALREADY_CONFIRMED') {
+      // Idempotent: return current booking state
+      const existing = await getBookingByUuid(uuid);
+      if (existing) return NextResponse.json(mapBooking(existing));
+      return NextResponse.json(
+        { error: 'NOT_FOUND', errorMessage: 'Booking not found' },
+        { status: 404 }
+      );
+    }
+  }
+
   const full = await getBookingByUuid(uuid);
   if (!full) {
     return NextResponse.json(

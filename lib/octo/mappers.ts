@@ -264,6 +264,48 @@ export function mapFreesaleAvailability(
   };
 }
 
+// Calendar endpoint returns one simplified entry per day (no id, no cutoff)
+export function mapCalendarDay(
+  row: AvailabilityRow,
+  _productId: string,
+  _optionId: string
+) {
+  const slots = row.available_slots;
+  const booked = Number(row.booked_slots ?? 0);
+  const remaining = slots !== null ? Math.max(0, slots - booked) : null;
+
+  let status: string;
+  if (remaining === null) {
+    status = 'FREESALE';
+  } else if (remaining <= 0) {
+    status = 'SOLD_OUT';
+  } else if (remaining <= 3) {
+    status = 'LIMITED';
+  } else {
+    status = 'AVAILABLE';
+  }
+
+  return {
+    localDate: formatLocalDate(row.date),
+    available: status !== 'SOLD_OUT',
+    status,
+    vacancies: remaining,
+    capacity: slots,
+    openingHours: [{ from: '08:00', to: '20:00' }],
+  };
+}
+
+export function mapFreesaleCalendarDay(date: string) {
+  return {
+    localDate: date,
+    available: true,
+    status: 'FREESALE',
+    vacancies: null,
+    capacity: null,
+    openingHours: [{ from: '08:00', to: '20:00' }],
+  };
+}
+
 export function mapBooking(row: BookingRow) {
   return {
     id: row.octo_uuid,

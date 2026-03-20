@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     `SELECT k.id, k.name, k.api_key, k.operator_id, k.can_read_products,
             k.can_read_availability, k.can_create_bookings, k.rate_limit_per_minute,
             k.is_active, k.last_used_at, k.created_at, k.notes,
-            p.name AS operator_name
+            p.company_name AS operator_name
      FROM octo_api_keys k
      LEFT JOIN partners p ON p.id = k.operator_id
      ORDER BY k.created_at DESC`
