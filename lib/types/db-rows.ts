@@ -1381,3 +1381,46 @@ export interface OperatorListRow {
   review_count: string;
   is_verified: boolean;
 }
+
+// ──────────────────────────────────────────────────────────
+// User Trips (TripBuilder persistence)
+// ──────────────────────────────────────────────────────────
+
+/** One day in a saved trip plan — mirrors DayPlan in _PlannerClient */
+export interface TripDayPlan {
+  day: number;
+  zone: 'avachinsky' | 'western' | 'eastern' | 'northern';
+  title: string;
+  activityType: string;
+  priceFrom: number;
+  priceTo: number;
+  coords: [number, number];
+  defaultTransport: 'walking' | 'jeep' | 'helicopter' | 'boat';
+}
+
+export interface UserTripRow {
+  id: string;
+  user_id: string;
+  title: string;
+  arrival_date: Date | null;
+  departure_date: Date | null;
+  places: string[];
+  activities: string[];
+  days: TripDayPlan[];
+  transport_by_day: Record<string, string>;
+  deleted_at: Date | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface UserTripListRow {
+  id: string;
+  title: string;
+  arrival_date: Date | null;
+  departure_date: Date | null;
+  places: string[];
+  activities: string[];
+  days_count: string;
+  created_at: Date;
+  updated_at: Date;
+}

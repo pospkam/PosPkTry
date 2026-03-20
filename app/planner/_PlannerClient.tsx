@@ -11,6 +11,7 @@ import {
   MapPin, Users, Trash2, Plus, Star, Phone,
   X, ChevronDown, ChevronUp, Truck,
   ArrowRight, ExternalLink, Map as MapIcon, List, Pencil,
+  Save, BookmarkCheck,
 } from 'lucide-react';
 import type { MapMarker } from '@/components/shared/LeafletMap';
 
@@ -245,6 +246,101 @@ function TransportSelector({ selected, onChange }: {
         );
       })}
     </div>
+  );
+}
+
+// ─── Day card (DnD-aware) ─────────────────────────────────────────────────────
+
+interface DayCardProps {
+  day: DayPlan;
+  idx: number;
+  isEditing: boolean;
+  transport: TransportType;
+  onToggleEdit: (dayId: number) => void;
+  onTransportChange: (dayNum: number, t: TransportType) => void;
+  onShowPartners: (activityType: string) => void;
+  onDelete: (dayNum: number) => void;
+  onShowMap: () => void;
+  onRef: (el: HTMLElement | null) => void;
+}
+
+function DayCard({
+  day, idx, isEditing, transport,
+  onToggleEdit, onTransportChange, onShowPartners, onDelete, onShowMap, onRef,
+}: DayCardProps) {
+  const dragControls = useDragControls();
+  const { priceAdd, Icon: TransIcon } = TRANSPORT_OPTIONS[transport];
+
+  return (
+    <Reorder.Item
+      value={day}
+      dragControls={dragControls}
+      dragListener={false}
+      className={`rounded-lg select-none transition-all ${
+        isEditing
+          ? 'bg-[var(--bg-card)] border-2 border-[var(--accent)] ring-2 ring-[var(--accent)]/20'
+          : 'bg-[var(--bg-card)] border border-[var(--border)]'
+      }`}
+      style={{ listStyle: 'none' }}
+    >
+      <div ref={onRef}>
+        {/* Row 1 — clickable to toggle edit */}
+        <div
+          className="flex items-center gap-2 px-3 pt-3 pb-1.5 cursor-pointer"
+          onClick={() => onToggleEdit(day.day)}
+        >
+          <GripVertical
+            className="w-3.5 h-3.5 text-[var(--text-muted)] shrink-0 cursor-grab active:cursor-grabbing touch-none"
+            onPointerDown={(e) => { e.stopPropagation(); dragControls.start(e); }}
+          />
+          <div
+            className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0 transition-all ${
+              isEditing ? 'ring-2 ring-[var(--accent)]/40' : ''
+            }`}
+            style={{ background: ZONE_COLORS[day.zone] ?? 'var(--accent)' }}
+          >
+            {idx + 1}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-medium text-[var(--text-primary)] truncate">{day.title}</p>
+            <p className="text-[10px] text-[var(--text-muted)]">
+              {ZONE_LABELS[day.zone] ?? day.zone}
+              {isEditing && (
+                <span className="ml-1.5 text-[var(--accent)] font-medium">— редактирование</span>
+              )}
+            </p>
+          </div>
+          <div className="text-right shrink-0">
+            <p className="text-xs font-semibold text-[var(--accent)]">от {fmt(day.priceFrom + priceAdd)} ₽</p>
+            <p className="text-[10px] text-[var(--text-muted)]">до {fmt(day.priceTo + priceAdd)} ₽</p>
+          </div>
+        </div>
+        {/* Row 2 — transport + actions */}
+        <div className="flex items-center gap-2 px-3 pb-2.5 pt-0.5">
+          <TransportSelector selected={transport} onChange={t => onTransportChange(day.day, t)} />
+          {priceAdd > 0 && (
+            <span className="text-[10px] text-[var(--text-muted)] flex items-center gap-0.5">
+              <TransIcon className="w-3 h-3" />+{fmt(priceAdd)} ₽
+            </span>
+          )}
+          <div className="flex-1" />
+          {isEditing && (
+            <button type="button" title="Показать на карте" onClick={onShowMap}
+              className="lg:hidden w-7 h-7 flex items-center justify-center rounded-md border border-[var(--accent)] text-[var(--accent)] bg-[var(--accent)]/10 transition-colors">
+              <MapIcon className="w-3.5 h-3.5" />
+            </button>
+          )}
+          <button type="button" title="Операторы" onClick={() => onShowPartners(day.activityType)}
+            className="w-7 h-7 flex items-center justify-center rounded-md border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--ocean)] hover:border-[var(--ocean)] transition-colors bg-[var(--bg-hover)]">
+            <Users className="w-3.5 h-3.5" />
+          </button>
+          <button type="button" title="Удалить день" onClick={() => onDelete(day.day)}
+            className="w-7 h-7 flex items-center justify-center rounded-md border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--danger)] hover:border-[var(--danger)] transition-colors bg-[var(--bg-hover)]">
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+    </Reorder.Item>
   );
 }
 
@@ -485,106 +581,18 @@ function MobileTabBar({ active, onChange, editingDay }: {
   );
 }
 
-// ─── Day card (DnD-aware) ────────────────────────────────────────────────────
-
-interface DayCardProps {
-  day: DayPlan;
-  idx: number;
-  isEditing: boolean;
-  transport: TransportType;
-  onToggleEdit: (dayId: number) => void;
-  onTransportChange: (dayNum: number, t: TransportType) => void;
-  onShowPartners: (activityType: string) => void;
-  onDelete: (dayNum: number) => void;
-  onShowMap: () => void;
-  onRef: (el: HTMLElement | null) => void;
-}
-
-function DayCard({ day, idx, isEditing, transport, onToggleEdit, onTransportChange, onShowPartners, onDelete, onShowMap, onRef }: DayCardProps) {
-  const dragControls = useDragControls();
-  const { priceAdd, Icon: TransIcon } = TRANSPORT_OPTIONS[transport];
-
-  return (
-    <Reorder.Item
-      value={day}
-      dragControls={dragControls}
-      dragListener={false}
-      className={`rounded-lg select-none transition-all ${
-        isEditing
-          ? 'bg-[var(--bg-card)] border-2 border-[var(--accent)] ring-2 ring-[var(--accent)]/20'
-          : 'bg-[var(--bg-card)] border border-[var(--border)]'
-      }`}
-      style={{ listStyle: 'none' }}
-    >
-      <div ref={onRef}>
-        {/* Row 1 — clickable to toggle edit */}
-        <div
-          className="flex items-center gap-2 px-3 pt-3 pb-1.5 cursor-pointer"
-          onClick={() => onToggleEdit(day.day)}
-        >
-          <GripVertical
-            className="w-3.5 h-3.5 text-[var(--text-muted)] shrink-0 cursor-grab active:cursor-grabbing touch-none"
-            onPointerDown={(e) => { e.stopPropagation(); dragControls.start(e); }}
-          />
-          <div
-            className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0 transition-all ${
-              isEditing ? 'ring-2 ring-[var(--accent)]/40' : ''
-            }`}
-            style={{ background: ZONE_COLORS[day.zone] ?? 'var(--accent)' }}
-          >
-            {idx + 1}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium text-[var(--text-primary)] truncate">{day.title}</p>
-            <p className="text-[10px] text-[var(--text-muted)]">
-              {ZONE_LABELS[day.zone] ?? day.zone}
-              {isEditing && (
-                <span className="ml-1.5 text-[var(--accent)] font-medium">— редактирование</span>
-              )}
-            </p>
-          </div>
-          <div className="text-right shrink-0">
-            <p className="text-xs font-semibold text-[var(--accent)]">от {fmt(day.priceFrom + priceAdd)} ₽</p>
-            <p className="text-[10px] text-[var(--text-muted)]">до {fmt(day.priceTo + priceAdd)} ₽</p>
-          </div>
-        </div>
-        {/* Row 2 — transport + actions */}
-        <div className="flex items-center gap-2 px-3 pb-2.5 pt-0.5">
-          <TransportSelector selected={transport} onChange={t => onTransportChange(day.day, t)} />
-          {priceAdd > 0 && (
-            <span className="text-[10px] text-[var(--text-muted)] flex items-center gap-0.5">
-              <TransIcon className="w-3 h-3" />+{fmt(priceAdd)} ₽
-            </span>
-          )}
-          <div className="flex-1" />
-          {isEditing && (
-            <button type="button" title="Показать на карте" onClick={onShowMap}
-              className="lg:hidden w-7 h-7 flex items-center justify-center rounded-md border border-[var(--accent)] text-[var(--accent)] bg-[var(--accent)]/10 transition-colors">
-              <MapIcon className="w-3.5 h-3.5" />
-            </button>
-          )}
-          <button type="button" title="Операторы" onClick={() => onShowPartners(day.activityType)}
-            className="w-7 h-7 flex items-center justify-center rounded-md border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--ocean)] hover:border-[var(--ocean)] transition-colors bg-[var(--bg-hover)]">
-            <Users className="w-3.5 h-3.5" />
-          </button>
-          <button type="button" title="Удалить день" onClick={() => onDelete(day.day)}
-            className="w-7 h-7 flex items-center justify-center rounded-md border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--danger)] hover:border-[var(--danger)] transition-colors bg-[var(--bg-hover)]">
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </div>
-    </Reorder.Item>
-  );
-}
-
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function PlannerClient() {
+export function PlannerClient({ initialUserId }: { initialUserId?: string | null }) {
   // Interest + date
   const [places, setPlaces]         = useState<string[]>([]);
   const [activities, setActivities] = useState<string[]>([]);
   const [arrival, setArrival]       = useState('');
   const [departure, setDeparture]   = useState('');
+
+  // Trip persistence
+  const [tripId, setTripId]         = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
   // Plan
   const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
@@ -643,6 +651,53 @@ export function PlannerClient() {
     setEditingDayId(prev => prev === dayId ? null : dayId);
     setSelectedRoute(null);
   }, []);
+
+  // Save / update trip in DB (requires auth)
+  const saveTrip = useCallback(async () => {
+    if (!initialUserId) {
+      window.location.href = `/auth/login?from=/planner`;
+      return;
+    }
+    if (days.length === 0) return;
+
+    setSaveStatus('saving');
+    try {
+      const payload = {
+        title: recommendation ? `Маршрут ${arrival || 'Камчатка'}` : 'Мой маршрут',
+        arrivalDate: arrival || null,
+        departureDate: departure || null,
+        places,
+        activities,
+        days,
+        transportByDay,
+      };
+
+      let res: Response;
+      if (tripId) {
+        res = await fetch(`/api/trips/${tripId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        res = await fetch('/api/trips', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+      }
+
+      const data: { success: boolean; data?: { id: string } } = await res.json();
+      if (!data.success) throw new Error('save failed');
+
+      if (!tripId && data.data?.id) setTripId(data.data.id);
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus('idle'), 3000);
+    } catch {
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus('idle'), 3000);
+    }
+  }, [initialUserId, days, arrival, departure, places, activities, transportByDay, recommendation, tripId]);
 
   // Map: plan markers (numbered) + polyline + background route dots (colored by zone)
   const mapMarkers = useMemo((): MapMarker[] => {
@@ -1021,6 +1076,43 @@ export function PlannerClient() {
                     <p key={i}>{line}</p>
                   ))}
                 </div>
+              )}
+            </div>
+          )}
+
+          {/* Save trip */}
+          {days.length > 0 && (
+            <div className="flex gap-2">
+              <button
+                onClick={saveTrip}
+                disabled={saveStatus === 'saving'}
+                className={`flex-1 ds-btn py-2.5 font-semibold flex items-center justify-center gap-2 transition-all disabled:opacity-50 ${
+                  saveStatus === 'saved'
+                    ? 'bg-[var(--success)] border-[var(--success)] text-white'
+                    : saveStatus === 'error'
+                    ? 'bg-[var(--danger)] border-[var(--danger)] text-white'
+                    : 'ds-btn-secondary'
+                }`}
+              >
+                {saveStatus === 'saving' && <Loader className="w-4 h-4 animate-spin" />}
+                {saveStatus === 'saved' && <BookmarkCheck className="w-4 h-4" />}
+                {saveStatus === 'error' && <AlertTriangle className="w-4 h-4" />}
+                {saveStatus === 'idle' && <Save className="w-4 h-4" />}
+                {saveStatus === 'saving' ? 'Сохраняем...'
+                  : saveStatus === 'saved' ? 'Сохранено'
+                  : saveStatus === 'error' ? 'Ошибка'
+                  : !initialUserId ? 'Войти и сохранить'
+                  : tripId ? 'Обновить маршрут'
+                  : 'Сохранить маршрут'}
+              </button>
+              {tripId && (
+                <a
+                  href={`/hub/tourist/trips/${tripId}`}
+                  className="ds-btn ds-btn-secondary px-3 py-2.5 flex items-center justify-center"
+                  title="Открыть сохранённый маршрут"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                </a>
               )}
             </div>
           )}
