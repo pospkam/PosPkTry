@@ -1,211 +1,235 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { DataTable } from '../shared/DataTable';
-import { LoadingSpinner } from '../shared/LoadingSpinner';
-import { StatusBadge } from '../shared/StatusBadge';
-import toast from 'react-hot-toast';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Banknote, Clock, CheckCircle, AlertCircle, Send } from 'lucide-react';
 
-interface Payout {
+interface TourPayment {
   id: string;
-  partnerId: string;
-  partnerName: string;
-  partnerEmail: string;
-  bookingId: string;
-  bookingType: string;
-  serviceName: string;
-  amount: number;
-  currency: string;
+  operator_id: string;
+  operator_name: string;
+  tour_title: string;
+  booking_date: string;
+  tourist_name: string;
+  participants: number;
+  retail_amount: string;
+  net_amount: string;
+  commission_amount: string;
+  commission_rate: string;
   status: string;
-  createdAt: string;
-  completedAt?: string;
-  failureReason?: string;
+  paid_at: string;
+  release_after: string;
+  released_at: string | null;
+  cp_transaction_id: string | null;
 }
 
-interface PayoutStats {
-  totalPayouts: number;
-  completedPayouts: number;
-  pendingPayouts: number;
-  totalPaid: number;
-  pendingAmount: number;
+interface ReadyGroup {
+  operator_id: string;
+  operator_name: string;
+  count: string;
+  total_net: string;
 }
+
+interface Stats {
+  totalRetail: number;
+  totalNet: number;
+  totalCommission: number;
+  heldNet: number;
+  releasedNet: number;
+  heldCount: number;
+  releasedCount: number;
+  refundedCount: number;
+}
+
+function formatRub(val: string | number) {
+  return new Intl.NumberFormat('ru-RU', {
+    style: 'currency', currency: 'RUB', minimumFractionDigits: 0
+  }).format(Number(val));
+}
+
+function formatDate(d: string | null) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+const STATUS_CLS: Record<string, string> = {
+  HELD:     'bg-[var(--warning)]/15 text-[var(--warning)]',
+  RELEASED: 'bg-[var(--success)]/15 text-[var(--success)]',
+  REFUNDED: 'bg-[var(--danger)]/10  text-[var(--danger)]',
+};
 
 export function PayoutsManager() {
-  const [payouts, setPayouts] = useState<Payout[]>([]);
-  const [stats, setStats] = useState<PayoutStats | null>(null);
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [payments, setPayments] = useState<TourPayment[]>([]);
+  const [ready, setReady] = useState<ReadyGroup[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [processing, setProcessing] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchPayouts();
-  }, []);
-
-  const fetchPayouts = async () => {
+  const fetchData = useCallback(async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const response = await fetch('/api/admin/finance/payouts');
-      const result = await response.json();
-
-      if (result.success) {
-        setPayouts(result.data.payouts);
-        setStats(result.data.stats);
-      } else {
-        setError(result.error);
+      const params = new URLSearchParams({ status: statusFilter });
+      const r = await fetch(`/api/admin/finance/payouts?${params}`);
+      const j: unknown = await r.json();
+      if (typeof j === 'object' && j !== null && 'success' in j && (j as { success: boolean }).success) {
+        const d = (j as unknown as { data: { stats: Stats; payments: TourPayment[]; readyForPayout: ReadyGroup[] } }).data;
+        setStats(d.stats);
+        setPayments(d.payments);
+        setReady(d.readyForPayout);
       }
-    } catch {
-      setError('Ошибка загрузки данных');
     } finally {
       setLoading(false);
     }
-  };
+  }, [statusFilter]);
 
-  const handleCreatePayout = async (bookingId: string, partnerId: string, amount: number) => {
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  async function handlePayout(operatorId: string, operatorName: string) {
+    const heldPayments = payments.filter(
+      p => p.operator_id === operatorId && p.status === 'HELD'
+    );
+    if (heldPayments.length === 0) return;
+    if (!confirm(`Выплатить ${formatRub(heldPayments.reduce((s, p) => s + parseFloat(p.net_amount), 0))} оператору ${operatorName}?`)) return;
+
+    setProcessing(operatorId);
     try {
-      const response = await fetch('/api/admin/finance/payouts', {
+      const today = new Date().toISOString().slice(0, 10);
+      const res = await fetch('/api/admin/finance/payouts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          bookingId,
-          partnerId,
-          amount: amount * 0.15, // 15% комиссия
-          description: `Комиссия за бронирование ${bookingId}`
-        })
+          operatorId,
+          paymentIds: heldPayments.map(p => p.id),
+          periodStart: heldPayments.reduce((min, p) => p.booking_date < min ? p.booking_date : min, today),
+          periodEnd: today,
+        }),
       });
-
-      const result = await response.json();
-
-      if (result.success) {
-        fetchPayouts(); // Обновляем список
-        toast.success('Выплата создана успешно');
-      } else {
-        toast.error(`Ошибка: ${result.error}`);
+      const j: unknown = await res.json();
+      if (typeof j === 'object' && j !== null && 'success' in j && (j as { success: boolean }).success) {
+        fetchData();
       }
-    } catch {
-      toast.error('Ошибка при создании выплаты');
+    } finally {
+      setProcessing(null);
     }
-  };
-
-  const columns = [
-    {
-      key: 'partnerName',
-      header: 'Партнер',
-      render: (payout: Payout) => (
-        <div>
-          <div className="font-medium text-[var(--text-primary)]">{payout.partnerName}</div>
-          <div className="text-[var(--text-muted)] text-sm">{payout.partnerEmail}</div>
-        </div>
-      )
-    },
-    {
-      key: 'serviceName',
-      header: 'Услуга',
-      render: (payout: Payout) => (
-        <div>
-          <div className="font-medium text-[var(--text-primary)]">{payout.serviceName}</div>
-          <div className="text-[var(--text-muted)] text-sm capitalize">{payout.bookingType}</div>
-        </div>
-      )
-    },
-    {
-      key: 'amount',
-      header: 'Сумма',
-      render: (payout: Payout) => (
-        <div className="font-medium text-[var(--accent)]">
-          {payout.amount.toLocaleString('ru-RU')} {payout.currency}
-        </div>
-      )
-    },
-    {
-      key: 'status',
-      header: 'Статус',
-      render: (payout: Payout) => (
-        <StatusBadge status={payout.status} />
-      )
-    },
-    {
-      key: 'createdAt',
-      header: 'Создано',
-      render: (payout: Payout) => (
-        <div className="text-[var(--text-muted)] text-sm">
-          {new Date(payout.createdAt).toLocaleDateString('ru-RU')}
-        </div>
-      )
-    }
-  ];
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <LoadingSpinner message="Загрузка выплат..." />
-      </div>
-    );
   }
 
-  if (error) {
-    return (
-      <div className="bg-[var(--danger)]/8 border border-[var(--danger)]/15 rounded-lg p-6 text-center">
-        <p className="text-[var(--danger)] text-sm mb-4">Ошибка загрузки данных</p>
-        <button
-          onClick={fetchPayouts}
-          className="px-4 py-2 bg-[var(--danger)]/10 hover:bg-[var(--danger)]/15 text-[var(--danger)] text-xs font-medium rounded-lg transition-colors"
-        >
-          Повторить
-        </button>
-      </div>
-    );
-  }
+  const selectCls = 'px-3 py-1.5 text-xs bg-[var(--bg-card)] border border-[var(--border)] rounded text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]';
 
   return (
-    <div className="space-y-6">
-      {/* Статистика выплат */}
+    <div className="space-y-4">
+      {/* Статистика */}
       {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-          <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4 text-center">
-            <div className="text-xl font-bold font-mono text-[var(--text-primary)]">{stats.totalPayouts}</div>
-            <div className="text-[var(--text-muted)] text-xs">Всего выплат</div>
-          </div>
-          <div className="bg-[var(--success)]/8 border border-[var(--success)]/15 rounded-lg p-4 text-center">
-            <div className="text-xl font-bold font-mono text-[var(--success)]">{stats.completedPayouts}</div>
-            <div className="text-[var(--text-muted)] text-xs">Выполнено</div>
-          </div>
-          <div className="bg-[var(--warning)]/8 border border-[var(--warning)]/15 rounded-lg p-4 text-center">
-            <div className="text-xl font-bold font-mono text-[var(--warning)]">{stats.pendingPayouts}</div>
-            <div className="text-[var(--text-muted)] text-xs">Ожидают</div>
-          </div>
-          <div className="bg-[var(--accent)]/8 border border-[var(--accent)]/15 rounded-lg p-4 text-center">
-            <div className="text-xl font-bold font-mono text-[var(--accent)]">
-              {stats.totalPaid.toLocaleString('ru-RU')} &#8381;
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { label: 'Удержано',   val: stats.heldNet,         count: stats.heldCount,     icon: Clock,        cls: 'text-[var(--warning)]' },
+            { label: 'Выплачено',  val: stats.releasedNet,     count: stats.releasedCount, icon: CheckCircle,  cls: 'text-[var(--success)]' },
+            { label: 'Комиссия',   val: stats.totalCommission, count: null,                icon: Banknote,     cls: 'text-[var(--ocean)]'   },
+            { label: 'Возвраты',   val: null,                  count: stats.refundedCount, icon: AlertCircle,  cls: 'text-[var(--danger)]'  },
+          ].map(({ label, val, count, icon: Icon, cls }) => (
+            <div key={label} className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-3">
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <Icon className={`w-3.5 h-3.5 ${cls}`} />
+                <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wide">{label}</span>
+              </div>
+              {val !== null && <p className="text-sm font-semibold text-[var(--text-primary)] font-mono">{formatRub(val)}</p>}
+              {count !== null && <p className="text-[10px] text-[var(--text-muted)]">{count} платежей</p>}
             </div>
-            <div className="text-[var(--text-muted)] text-xs">Выплачено</div>
+          ))}
+        </div>
+      )}
+
+      {/* Готовы к выплате */}
+      {ready.length > 0 && (
+        <div className="bg-[var(--success)]/5 border border-[var(--success)]/20 rounded-lg overflow-hidden">
+          <div className="px-4 py-2.5 border-b border-[var(--success)]/20">
+            <p className="text-xs font-medium text-[var(--success)]">Готовы к выплате ({ready.length} оператора)</p>
           </div>
-          <div className="bg-[var(--warning)]/8 border border-[var(--warning)]/15 rounded-lg p-4 text-center">
-            <div className="text-xl font-bold font-mono text-[var(--warning)]">
-              {stats.pendingAmount.toLocaleString('ru-RU')} &#8381;
-            </div>
-            <div className="text-[var(--text-muted)] text-xs">Ожидают выплаты</div>
+          <div className="divide-y divide-[var(--success)]/10">
+            {ready.map(g => (
+              <div key={g.operator_id} className="flex items-center justify-between px-4 py-2.5">
+                <div>
+                  <p className="text-xs font-medium text-[var(--text-primary)]">{g.operator_name}</p>
+                  <p className="text-[10px] text-[var(--text-muted)]">{g.count} платежей · {formatRub(g.total_net)}</p>
+                </div>
+                <button
+                  onClick={() => handlePayout(g.operator_id, g.operator_name)}
+                  disabled={processing === g.operator_id}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--success)] hover:bg-[var(--success)]/90 text-white rounded text-[10px] font-medium transition-colors disabled:opacity-50"
+                >
+                  <Send className="w-3 h-3" />
+                  {processing === g.operator_id ? 'Обработка...' : 'Выплатить'}
+                </button>
+              </div>
+            ))}
           </div>
         </div>
       )}
 
-      {/* Таблица выплат */}
-      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-sm font-semibold text-[var(--text-primary)]">Выплаты партнерам</h3>
-          <button
-            onClick={fetchPayouts}
-            className="px-4 py-2 bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] text-[var(--text-primary)] rounded-lg transition-colors"
-          >
-            Обновить
-          </button>
-        </div>
-
-        <DataTable
-          data={payouts}
-          columns={columns}
-          emptyMessage="Нет выплат для отображения"
-        />
+      {/* Фильтр */}
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-[var(--text-muted)]">Все платежи ({payments.length})</p>
+        <select className={selectCls} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+          <option value="all">Все статусы</option>
+          <option value="held">Удержано</option>
+          <option value="released">Выплачено</option>
+          <option value="refunded">Возвраты</option>
+        </select>
       </div>
+
+      {/* Таблица платежей */}
+      {loading ? (
+        <div className="flex justify-center py-10">
+          <div className="w-5 h-5 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : (
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-[var(--border)] bg-[var(--bg-hover)]">
+                  <th className="px-3 py-2 text-left text-[10px] font-medium text-[var(--text-muted)]">Оператор / тур</th>
+                  <th className="px-3 py-2 text-left text-[10px] font-medium text-[var(--text-muted)]">Турист</th>
+                  <th className="px-3 py-2 text-right text-[10px] font-medium text-[var(--text-muted)]">Retail</th>
+                  <th className="px-3 py-2 text-right text-[10px] font-medium text-[var(--text-muted)]">Net</th>
+                  <th className="px-3 py-2 text-right text-[10px] font-medium text-[var(--text-muted)]">Комиссия</th>
+                  <th className="px-3 py-2 text-left text-[10px] font-medium text-[var(--text-muted)]">Статус</th>
+                  <th className="px-3 py-2 text-left text-[10px] font-medium text-[var(--text-muted)]">Выплата после</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--border)]">
+                {payments.length === 0 ? (
+                  <tr><td colSpan={7} className="px-4 py-8 text-center text-[var(--text-muted)]">Платежей нет</td></tr>
+                ) : payments.map(p => (
+                  <tr key={p.id} className="hover:bg-[var(--bg-hover)] transition-colors">
+                    <td className="px-3 py-2.5">
+                      <p className="font-medium text-[var(--text-primary)] truncate max-w-[160px]">{p.operator_name}</p>
+                      <p className="text-[10px] text-[var(--text-muted)] truncate max-w-[160px]">{p.tour_title}</p>
+                    </td>
+                    <td className="px-3 py-2.5 text-[var(--text-secondary)]">
+                      <p>{p.tourist_name}</p>
+                      <p className="text-[10px] text-[var(--text-muted)]">{formatDate(p.booking_date)}</p>
+                    </td>
+                    <td className="px-3 py-2.5 text-right font-mono text-[var(--text-primary)]">{formatRub(p.retail_amount)}</td>
+                    <td className="px-3 py-2.5 text-right font-mono text-[var(--success)]">{formatRub(p.net_amount)}</td>
+                    <td className="px-3 py-2.5 text-right font-mono text-[var(--text-muted)]">
+                      {formatRub(p.commission_amount)}
+                      <span className="block text-[9px]">{p.commission_rate}%</span>
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${STATUS_CLS[p.status] ?? ''}`}>
+                        {p.status}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2.5 text-[var(--text-secondary)]">
+                      {p.released_at ? formatDate(p.released_at) : formatDate(p.release_after)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-

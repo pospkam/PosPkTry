@@ -1,209 +1,212 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/database';
-import { requireAdmin } from '@/lib/auth/middleware';
-import { ApiResponse } from '@/types';
-import { PayoutAdminRow, PayoutStatsRow, PayoutCreateRow } from '@/lib/types/db-rows';
-import { z } from 'zod';
+/**
+ * GET  /api/admin/finance/payouts — список tour_payments + operator_payouts + статистика
+ * POST /api/admin/finance/payouts — создать выплату оператору вручную (batch HELD → RELEASED)
+ */
 
-const CreatePayoutSchema = z.object({
-  partnerId: z.string().min(1, 'ID партнёра обязателен'),
-  bookingId: z.string().min(1, 'ID бронирования обязателен'),
-  amount: z.number({ coerce: true }).positive('Сумма должна быть положительной'),
-  description: z.string().optional().default('Выплата комиссии'),
-});
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/auth/middleware';
+import { query } from '@/lib/database';
+import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
 
-/**
- * GET /api/admin/finance/payouts - Список выплат партнерам
- */
+const CreatePayoutSchema = z.object({
+  operatorId: z.string().uuid('Некорректный ID оператора'),
+  paymentIds: z.array(z.string().uuid()).min(1, 'Выберите хотя бы один платёж'),
+  periodStart: z.string().date(),
+  periodEnd:   z.string().date(),
+  reference:   z.string().max(255).optional(),
+});
+
 export async function GET(request: NextRequest) {
-  try {
-    const adminOrResponse = await requireAdmin(request);
-    if (adminOrResponse instanceof NextResponse) {
-      return adminOrResponse;
-    }
-    const { searchParams } = new URL(request.url);
-    const rawStatus = searchParams.get('status') || 'all'; // all, pending, completed, failed
-    const allowedStatuses = new Set(['all', 'pending', 'completed', 'failed']);
-    if (!allowedStatuses.has(rawStatus)) {
-      return NextResponse.json({
-        success: false,
-        error: 'Некорректный статус'
-      } as ApiResponse<null>, { status: 400 });
-    }
+  const authOrResponse = await requireAdmin(request);
+  if (authOrResponse instanceof NextResponse) return authOrResponse;
 
-    const parsedLimit = Number.parseInt(searchParams.get('limit') || '50', 10);
-    const limit = Number.isFinite(parsedLimit) ? Math.min(Math.max(parsedLimit, 1), 200) : 50;
+  const sp = request.nextUrl.searchParams;
+  const statusFilter    = sp.get('status') || 'all';
+  const operatorFilter  = sp.get('operator_id');
 
-    const payoutsParams: (string | number)[] = [];
-    let whereClause = '';
-    if (rawStatus !== 'all') {
-      whereClause = `WHERE p.status = $1`;
-      payoutsParams.push(rawStatus);
-    }
+  // Глобальная статистика
+  const statsResult = await query(
+    `SELECT
+       COALESCE(SUM(retail_amount), 0)                                    AS total_retail,
+       COALESCE(SUM(net_amount),    0)                                    AS total_net,
+       COALESCE(SUM(commission_amount), 0)                                AS total_commission,
+       COALESCE(SUM(net_amount) FILTER (WHERE status = 'HELD'),    0)    AS held_net,
+       COALESCE(SUM(net_amount) FILTER (WHERE status = 'RELEASED'), 0)   AS released_net,
+       COUNT(*) FILTER (WHERE status = 'HELD')                            AS held_count,
+       COUNT(*) FILTER (WHERE status = 'RELEASED')                        AS released_count,
+       COUNT(*) FILTER (WHERE status = 'REFUNDED')                        AS refunded_count
+     FROM tour_payments`
+  );
 
-    const payoutsQuery = `
-      SELECT
-        p.id,
-        p.partner_id,
-        p.booking_id,
-        p.amount,
-        p.currency,
-        p.status,
-        p.created_at,
-        p.completed_at,
-        p.failure_reason,
-        pt.name as partner_name,
-        pt.email as partner_email,
-        CASE
-          WHEN b.id IS NOT NULL THEN 'tour'
-          WHEN ab.id IS NOT NULL THEN 'accommodation'
-          WHEN tb.id IS NOT NULL THEN 'transfer'
-          ELSE 'unknown'
-        END as booking_type,
-        COALESCE(t.name, a.name, 'Трансфер') as service_name
-      FROM payouts p
-      JOIN partners pt ON p.partner_id = pt.id
-      LEFT JOIN bookings b ON p.booking_id = b.id
-      LEFT JOIN tours t ON b.tour_id = t.id
-      LEFT JOIN accommodation_bookings ab ON p.booking_id = ab.id
-      LEFT JOIN accommodations a ON ab.accommodation_id = a.id
-      LEFT JOIN transfer_bookings tb ON p.booking_id = tb.id
-      ${whereClause}
-      ORDER BY p.created_at DESC
-      LIMIT $${payoutsParams.length + 1}
-    `;
+  // tour_payments с фильтрами
+  const conditions: string[] = [];
+  const vals: unknown[] = [];
+  let idx = 1;
 
-    payoutsParams.push(limit);
-    const payoutsResult = await query<PayoutAdminRow>(payoutsQuery, payoutsParams);
-
-    // Статистика выплат
-    const statsQuery = `
-      SELECT
-        COUNT(*) as total_payouts,
-        COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_payouts,
-        COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_payouts,
-        COALESCE(SUM(CASE WHEN status = 'completed' THEN amount END), 0) as total_paid,
-        COALESCE(SUM(CASE WHEN status = 'pending' THEN amount END), 0) as pending_amount
-      FROM payouts
-    `;
-
-    const statsResult = await query<PayoutStatsRow>(statsQuery);
-    const stats = statsResult.rows[0];
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        payouts: payoutsResult.rows.map(row => ({
-          id: row.id,
-          partnerId: row.partner_id,
-          partnerName: row.partner_name,
-          partnerEmail: row.partner_email,
-          bookingId: row.booking_id,
-          bookingType: row.booking_type,
-          serviceName: row.service_name,
-          amount: parseFloat(row.amount),
-          currency: row.currency,
-          status: row.status,
-          createdAt: row.created_at,
-          completedAt: row.completed_at,
-          failureReason: row.failure_reason
-        })),
-        stats: {
-          totalPayouts: parseInt(stats.total_payouts),
-          completedPayouts: parseInt(stats.completed_payouts),
-          pendingPayouts: parseInt(stats.pending_payouts),
-          totalPaid: parseFloat(stats.total_paid),
-          pendingAmount: parseFloat(stats.pending_amount)
-        }
-      }
-    } as ApiResponse<unknown>);
-
-  } catch (error) {
-    console.error('Error fetching payouts:', error);
-    return NextResponse.json({
-      success: false,
-      error: 'Ошибка при получении данных о выплатах'
-    } as ApiResponse<null>, { status: 500 });
+  if (statusFilter !== 'all') {
+    conditions.push(`tp.status = $${idx++}`);
+    vals.push(statusFilter.toUpperCase());
   }
-}
+  if (operatorFilter) {
+    conditions.push(`tp.operator_id = $${idx++}`);
+    vals.push(operatorFilter);
+  }
 
-/**
- * POST /api/admin/finance/payouts - Создание выплаты партнеру
- */
-export async function POST(request: NextRequest) {
-  try {
-    const adminOrResponse = await requireAdmin(request);
-    if (adminOrResponse instanceof NextResponse) {
-      return adminOrResponse;
-    }
-    const body = await request.json();
-    const parsed = CreatePayoutSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json({
-        success: false,
-        error: parsed.error.issues[0]?.message || 'Некорректные данные'
-      } as ApiResponse<null>, { status: 400 });
-    }
-    const { partnerId, bookingId, amount: parsedAmount, description } = parsed.data;
+  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
-    // Проверяем, что выплата еще не существует
-    const existingPayoutQuery = `
-      SELECT id FROM payouts
-      WHERE partner_id = $1 AND booking_id = $2
-    `;
+  vals.push(100);
+  const paymentsResult = await query(
+    `SELECT
+       tp.id, tp.operator_id, tp.retail_amount, tp.net_amount,
+       tp.commission_amount, tp.commission_rate, tp.status,
+       tp.paid_at, tp.release_after, tp.released_at, tp.refunded_at,
+       tp.cp_transaction_id,
+       p.company_name AS operator_name,
+       ot.title       AS tour_title,
+       ob.booking_date, ob.participants, ob.tourist_name
+     FROM tour_payments tp
+     JOIN partners p ON p.id = tp.operator_id
+     JOIN operator_bookings ob ON ob.id = tp.booking_id
+     JOIN operator_tours ot ON ot.id = ob.operator_tour_id
+     ${where}
+     ORDER BY tp.paid_at DESC
+     LIMIT $${idx}`,
+    vals
+  );
 
-    const existingResult = await query(existingPayoutQuery, [partnerId, bookingId]);
+  // operator_payouts история
+  const payoutsResult = await query(
+    `SELECT op.*, p.company_name AS operator_name
+     FROM operator_payouts op
+     JOIN partners p ON p.id = op.operator_id
+     ORDER BY op.created_at DESC
+     LIMIT 50`
+  );
 
-    if (existingResult.rows.length > 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'Выплата для этого бронирования уже существует'
-      } as ApiResponse<null>, { status: 400 });
-    }
+  // HELD платежи готовые к выплате (release_after < NOW)
+  const readyResult = await query(
+    `SELECT tp.operator_id, p.company_name AS operator_name,
+            COUNT(*) AS count,
+            SUM(tp.net_amount) AS total_net
+     FROM tour_payments tp
+     JOIN partners p ON p.id = tp.operator_id
+     WHERE tp.status = 'HELD' AND tp.release_after < NOW()
+     GROUP BY tp.operator_id, p.company_name
+     ORDER BY total_net DESC`
+  );
 
-    // Создаем выплату
-    const createPayoutQuery = `
-      INSERT INTO payouts (
-        partner_id,
-        booking_id,
-        amount,
-        currency,
-        status,
-        description,
-        created_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, NOW())
-      RETURNING id, status, created_at
-    `;
+  const s = statsResult.rows[0];
 
-    const payoutResult = await query<PayoutCreateRow>(createPayoutQuery, [
-      partnerId,
-      bookingId,
-      parsedAmount,
-      'RUB',
-      'pending',
-      description || 'Выплата комиссии'
-    ]);
-
-    const payout = payoutResult.rows[0];
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        payoutId: payout.id,
-        status: payout.status,
-        createdAt: payout.created_at
+  return NextResponse.json({
+    success: true,
+    data: {
+      stats: {
+        totalRetail:     parseFloat(s.total_retail     as string),
+        totalNet:        parseFloat(s.total_net        as string),
+        totalCommission: parseFloat(s.total_commission as string),
+        heldNet:         parseFloat(s.held_net         as string),
+        releasedNet:     parseFloat(s.released_net     as string),
+        heldCount:       parseInt(s.held_count      as string, 10),
+        releasedCount:   parseInt(s.released_count  as string, 10),
+        refundedCount:   parseInt(s.refunded_count  as string, 10),
       },
-      message: 'Выплата создана успешно'
-    } as ApiResponse<unknown>);
-
-  } catch (error) {
-    console.error('Error creating payout:', error);
-    return NextResponse.json({
-      success: false,
-      error: 'Ошибка при создании выплаты'
-    } as ApiResponse<null>, { status: 500 });
-  }
+      payments:     paymentsResult.rows,
+      payouts:      payoutsResult.rows,
+      readyForPayout: readyResult.rows,
+    },
+  });
 }
 
+export async function POST(request: NextRequest) {
+  const authOrResponse = await requireAdmin(request);
+  if (authOrResponse instanceof NextResponse) return authOrResponse;
+  const adminId = authOrResponse.userId;
+
+  const body: unknown = await request.json().catch(() => null);
+  if (!body) return NextResponse.json({ error: 'Неверный JSON' }, { status: 400 });
+
+  const parsed = CreatePayoutSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: 'Ошибка валидации', details: parsed.error.flatten() },
+      { status: 422 }
+    );
+  }
+
+  const { operatorId, paymentIds, periodStart, periodEnd, reference } = parsed.data;
+
+  // Получаем выбранные HELD платежи
+  const paymentsResult = await query(
+    `SELECT id, net_amount FROM tour_payments
+     WHERE id = ANY($1::uuid[])
+       AND operator_id = $2
+       AND status = 'HELD'`,
+    [paymentIds, operatorId]
+  );
+
+  if (paymentsResult.rows.length === 0) {
+    return NextResponse.json({ error: 'Нет платежей готовых к выплате' }, { status: 400 });
+  }
+
+  const totalNet = paymentsResult.rows.reduce(
+    (sum, r) => sum + parseFloat(r.net_amount as string), 0
+  );
+  const confirmedIds = paymentsResult.rows.map(r => r.id as string);
+
+  // Получаем реквизиты оператора
+  const partnerResult = await query(
+    `SELECT payout_method, payout_details, payout_verified FROM partners WHERE id = $1`,
+    [operatorId]
+  );
+  const partner = partnerResult.rows[0];
+
+  // Создаём запись выплаты
+  const payoutResult = await query(
+    `INSERT INTO operator_payouts (
+       operator_id, total_net, booking_count, payment_ids,
+       payout_method, payout_details,
+       status, period_start, period_end, payment_reference, created_by
+     ) VALUES ($1,$2,$3,$4,$5,$6,'PENDING',$7,$8,$9,$10)
+     RETURNING id`,
+    [
+      operatorId,
+      totalNet,
+      confirmedIds.length,
+      confirmedIds,
+      partner?.payout_method ?? null,
+      partner?.payout_details ?? null,
+      periodStart,
+      periodEnd,
+      reference ?? null,
+      adminId,
+    ]
+  );
+
+  const payoutId = payoutResult.rows[0].id as string;
+
+  // Переводим tour_payments в RELEASED
+  await query(
+    `UPDATE tour_payments
+     SET status = 'RELEASED', released_at = NOW(), updated_at = NOW()
+     WHERE id = ANY($1::uuid[])`,
+    [confirmedIds]
+  );
+
+  // Пересчитываем комиссию оператора
+  await query(`SELECT recalculate_commission($1)`, [operatorId]);
+
+  return NextResponse.json({
+    success: true,
+    data: {
+      payoutId,
+      totalNet: Math.round(totalNet * 100) / 100,
+      paymentCount: confirmedIds.length,
+      status: 'PENDING',
+      note: partner?.payout_verified
+        ? 'Реквизиты подтверждены — готово к отправке через CP Payouts'
+        : 'Реквизиты оператора не верифицированы — выплата ручная',
+    },
+  });
+}
