@@ -1,14 +1,24 @@
 /**
- * GET /api/planner/partners?activity_type=fishing&zone=western
+ * GET /api/planner/partners?activity_type=fishing
  * Returns operators relevant for a given day's activity type.
  * Prioritises operators with published tours for that activity_type,
  * falls back to all public operators ordered by rating.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { pool } from '@/lib/db-pool';
 
 export const dynamic = 'force-dynamic';
+
+const VALID_ACTIVITY_TYPES = [
+  'trekking', 'fishing', 'helicopter', 'bears', 'snowmobile', 'boat_trip',
+  'volcano', 'hot_spring', 'geyser', 'sea', 'mountain', 'river', 'thermal', 'other',
+] as const;
+
+const QuerySchema = z.object({
+  activity_type: z.enum(VALID_ACTIVITY_TYPES).default('trekking'),
+});
 
 interface PartnerRow {
   id: string;
@@ -26,7 +36,14 @@ interface PartnerRow {
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const activityType = searchParams.get('activity_type') ?? 'trekking';
+    const parsed = QuerySchema.safeParse({ activity_type: searchParams.get('activity_type') ?? undefined });
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: 'Некорректный тип активности', details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
+    const { activity_type: activityType } = parsed.data;
 
     const { rows } = await pool.query<PartnerRow>(`
       WITH tour_match AS (

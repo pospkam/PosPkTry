@@ -31,6 +31,7 @@
   --success: #3FB950;      /* moss -- успех, эко */
   --warning: #D29922;
   --danger: #F85149;       /* ash-red -- SOS, опасность */
+  --purple: #A855F7;       /* violet -- западная зона, акцент */
 
   --border: rgba(255,255,255,0.08);
   --border-strong: rgba(255,255,255,0.16);
@@ -61,6 +62,7 @@
   --success: #3FB950;
   --warning: #D29922;
   --danger: #DC2626;
+  --purple: #7C3AED;       /* violet -- западная зона, акцент */
 
   --border: rgba(0,0,0,0.07);
   --border-strong: rgba(0,0,0,0.12);
@@ -89,6 +91,7 @@
   --success: #3FB950;
   --warning: #D29922;
   --danger: #DC2626;
+  --purple: #7C3AED;       /* violet -- западная зона, акцент */
   --border: rgba(0,0,0,0.07);
   --border-strong: rgba(0,0,0,0.12);
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);

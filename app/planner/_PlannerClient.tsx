@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { Reorder } from 'framer-motion';
+import { Reorder, useDragControls } from 'framer-motion';
 import {
   Check, AlertTriangle, Sparkles, Loader,
   Fish, Mountain, PawPrint, Plane,
@@ -97,7 +97,7 @@ const ZONE_COLORS: Record<string, string> = {
   avachinsky: 'var(--accent)',
   eastern:    'var(--ocean)',
   northern:   'var(--success)',
-  western:    '#a855f7',
+  western:    'var(--purple)',
 };
 
 const ZONE_COORDS: Record<string, [number, number]> = {
@@ -485,6 +485,98 @@ function MobileTabBar({ active, onChange, editingDay }: {
   );
 }
 
+// ─── Day card (DnD-aware) ────────────────────────────────────────────────────
+
+interface DayCardProps {
+  day: DayPlan;
+  idx: number;
+  isEditing: boolean;
+  transport: TransportType;
+  onToggleEdit: (dayId: number) => void;
+  onTransportChange: (dayNum: number, t: TransportType) => void;
+  onShowPartners: (activityType: string) => void;
+  onDelete: (dayNum: number) => void;
+  onShowMap: () => void;
+  onRef: (el: HTMLElement | null) => void;
+}
+
+function DayCard({ day, idx, isEditing, transport, onToggleEdit, onTransportChange, onShowPartners, onDelete, onShowMap, onRef }: DayCardProps) {
+  const dragControls = useDragControls();
+  const { priceAdd, Icon: TransIcon } = TRANSPORT_OPTIONS[transport];
+
+  return (
+    <Reorder.Item
+      value={day}
+      dragControls={dragControls}
+      dragListener={false}
+      className={`rounded-lg select-none transition-all ${
+        isEditing
+          ? 'bg-[var(--bg-card)] border-2 border-[var(--accent)] ring-2 ring-[var(--accent)]/20'
+          : 'bg-[var(--bg-card)] border border-[var(--border)]'
+      }`}
+      style={{ listStyle: 'none' }}
+    >
+      <div ref={onRef}>
+        {/* Row 1 — clickable to toggle edit */}
+        <div
+          className="flex items-center gap-2 px-3 pt-3 pb-1.5 cursor-pointer"
+          onClick={() => onToggleEdit(day.day)}
+        >
+          <GripVertical
+            className="w-3.5 h-3.5 text-[var(--text-muted)] shrink-0 cursor-grab active:cursor-grabbing touch-none"
+            onPointerDown={(e) => { e.stopPropagation(); dragControls.start(e); }}
+          />
+          <div
+            className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0 transition-all ${
+              isEditing ? 'ring-2 ring-[var(--accent)]/40' : ''
+            }`}
+            style={{ background: ZONE_COLORS[day.zone] ?? 'var(--accent)' }}
+          >
+            {idx + 1}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-medium text-[var(--text-primary)] truncate">{day.title}</p>
+            <p className="text-[10px] text-[var(--text-muted)]">
+              {ZONE_LABELS[day.zone] ?? day.zone}
+              {isEditing && (
+                <span className="ml-1.5 text-[var(--accent)] font-medium">— редактирование</span>
+              )}
+            </p>
+          </div>
+          <div className="text-right shrink-0">
+            <p className="text-xs font-semibold text-[var(--accent)]">от {fmt(day.priceFrom + priceAdd)} ₽</p>
+            <p className="text-[10px] text-[var(--text-muted)]">до {fmt(day.priceTo + priceAdd)} ₽</p>
+          </div>
+        </div>
+        {/* Row 2 — transport + actions */}
+        <div className="flex items-center gap-2 px-3 pb-2.5 pt-0.5">
+          <TransportSelector selected={transport} onChange={t => onTransportChange(day.day, t)} />
+          {priceAdd > 0 && (
+            <span className="text-[10px] text-[var(--text-muted)] flex items-center gap-0.5">
+              <TransIcon className="w-3 h-3" />+{fmt(priceAdd)} ₽
+            </span>
+          )}
+          <div className="flex-1" />
+          {isEditing && (
+            <button type="button" title="Показать на карте" onClick={onShowMap}
+              className="lg:hidden w-7 h-7 flex items-center justify-center rounded-md border border-[var(--accent)] text-[var(--accent)] bg-[var(--accent)]/10 transition-colors">
+              <MapIcon className="w-3.5 h-3.5" />
+            </button>
+          )}
+          <button type="button" title="Операторы" onClick={() => onShowPartners(day.activityType)}
+            className="w-7 h-7 flex items-center justify-center rounded-md border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--ocean)] hover:border-[var(--ocean)] transition-colors bg-[var(--bg-hover)]">
+            <Users className="w-3.5 h-3.5" />
+          </button>
+          <button type="button" title="Удалить день" onClick={() => onDelete(day.day)}
+            className="w-7 h-7 flex items-center justify-center rounded-md border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--danger)] hover:border-[var(--danger)] transition-colors bg-[var(--bg-hover)]">
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+    </Reorder.Item>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function PlannerClient() {
@@ -507,6 +599,7 @@ export function PlannerClient() {
 
   // Background route markers
   const [bgRoutes, setBgRoutes] = useState<RoutePoint[]>([]);
+  const [bgLoading, setBgLoading] = useState(false);
 
   // Selected route on map (clicked suggestion)
   const [selectedRoute, setSelectedRoute] = useState<RoutePoint | null>(null);
@@ -617,7 +710,7 @@ export function PlannerClient() {
         id: 'route_line',
         coords: zoneOrder[0].coords,
         title: 'Маршрут',
-        geometry: { type: 'polyline', coordinates: zoneOrder.map(d => d.coords), color: '#D44A0C', weight: 3 },
+        geometry: { type: 'polyline', coordinates: zoneOrder.map(d => d.coords), color: 'orange', weight: 3 },
       });
     }
 
@@ -649,44 +742,38 @@ export function PlannerClient() {
   const totalFrom = days.reduce((s, d) => s + d.priceFrom + TRANSPORT_OPTIONS[getTransport(d)].priceAdd, 0);
   const totalTo   = days.reduce((s, d) => s + d.priceTo   + TRANSPORT_OPTIONS[getTransport(d)].priceAdd, 0);
 
-  // Fetch background routes for ALL selected interests in parallel, dedup by id
+  // Fetch background routes whenever interests change; defaults on mount
   useEffect(() => {
-    if (!recommendation || allInterests.length === 0) return;
+    const types = allInterests.length > 0
+      ? [...new Set(allInterests)]
+      : ['trekking', 'volcano', 'fishing'];
     let cancelled = false;
 
-    // Build unique activity types to query
-    const activityTypes = [...new Set(allInterests)];
+    setBgLoading(true);
 
-    // Parallel fetch — one request per activity_type, 30 routes each
-    const fetches = activityTypes.map(actType =>
+    const fetches = types.map(actType =>
       fetch(`/api/routes?activity_type=${encodeURIComponent(actType)}&hasCoords=true&limit=30`)
         .then(r => r.json())
-        .then(data => {
-          if (data.success && Array.isArray(data.data)) return data.data as RoutePoint[];
-          return [] as RoutePoint[];
-        })
+        .then(data => (data.success && Array.isArray(data.data) ? data.data as RoutePoint[] : [] as RoutePoint[]))
         .catch(() => [] as RoutePoint[])
     );
 
     Promise.all(fetches).then(results => {
       if (cancelled) return;
-      // Flatten + dedup by id
       const seen = new Set<string>();
       const deduped: RoutePoint[] = [];
       for (const batch of results) {
         for (const route of batch) {
-          if (!seen.has(route.id)) {
-            seen.add(route.id);
-            deduped.push(route);
-          }
+          if (!seen.has(route.id)) { seen.add(route.id); deduped.push(route); }
         }
       }
       setBgRoutes(deduped);
+      setBgLoading(false);
     });
 
     return () => { cancelled = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recommendation]);
+  }, [places.join(','), activities.join(',')])
 
   // Clear edit mode when days change (e.g. day deleted)
   useEffect(() => {
@@ -702,16 +789,17 @@ export function PlannerClient() {
   }
 
   function addDay() {
-    setDays(prev => {
-      if (prev.length === 0) return prev;
-      const last = prev[prev.length - 1];
-      const newNum = Math.max(...prev.map(d => d.day)) + 1;
-      return [...prev, { ...last, day: newNum }];
-    });
+    if (days.length === 0) return;
+    const last = days[days.length - 1];
+    const newNum = Math.max(...days.map(d => d.day)) + 1;
+    setDays(prev => [...prev, { ...last, day: newNum }]);
+    setEditingDayId(newNum);
+    setMobileTab('map');
   }
 
   function replaceDay(dayNum: number, route: RoutePoint) {
     setDays(prev => prev.map(d => d.day === dayNum ? routeToDayPlan(route, dayNum) : d));
+    setTransportByDay(prev => { const n = { ...prev }; delete n[dayNum]; return n; });
     setSelectedRoute(null);
     setEditingDayId(null);
   }
@@ -743,7 +831,6 @@ export function PlannerClient() {
         setRecommendation(data.data);
         setDays(data.data.days ?? []);
         setTransportByDay({});
-        setBgRoutes([]);
         setSelectedRoute(null);
         setEditingDayId(null);
         setShowItinerary(false);
@@ -883,81 +970,24 @@ export function PlannerClient() {
               </div>
 
               <Reorder.Group axis="y" values={days} onReorder={setDays} className="space-y-1.5">
-                {days.map((day, idx) => {
-                  const transport = getTransport(day);
-                  const { priceAdd, Icon: TransIcon } = TRANSPORT_OPTIONS[transport];
-                  const isEditing = day.day === editingDayId;
-
-                  return (
-                    <Reorder.Item key={day.day} value={day}
-                      ref={(el: HTMLElement | null) => {
-                        if (el) dayRefs.current.set(day.day, el);
-                        else dayRefs.current.delete(day.day);
-                      }}
-                      className={`rounded-lg cursor-grab active:cursor-grabbing select-none transition-all ${
-                        isEditing
-                          ? 'bg-[var(--bg-card)] border-2 border-[var(--accent)] ring-2 ring-[var(--accent)]/20'
-                          : 'bg-[var(--bg-card)] border border-[var(--border)]'
-                      }`}
-                      style={{ listStyle: 'none' }}>
-                      {/* Row 1 — clickable to toggle edit */}
-                      <div
-                        className="flex items-center gap-2 px-3 pt-3 pb-1.5 cursor-pointer"
-                        onClick={() => toggleEditDay(day.day)}
-                      >
-                        <GripVertical className="w-3.5 h-3.5 text-[var(--text-muted)] shrink-0" />
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0 transition-all ${
-                          isEditing ? 'ring-2 ring-[var(--accent)]/40' : ''
-                        }`}
-                          style={{ background: ZONE_COLORS[day.zone] ?? 'var(--accent)' }}>
-                          {idx + 1}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium text-[var(--text-primary)] truncate">{day.title}</p>
-                          <p className="text-[10px] text-[var(--text-muted)]">
-                            {ZONE_LABELS[day.zone] ?? day.zone}
-                            {isEditing && (
-                              <span className="ml-1.5 text-[var(--accent)] font-medium">
-                                — редактирование
-                              </span>
-                            )}
-                          </p>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <p className="text-xs font-semibold text-[var(--accent)]">от {fmt(day.priceFrom + priceAdd)} ₽</p>
-                          <p className="text-[10px] text-[var(--text-muted)]">до {fmt(day.priceTo + priceAdd)} ₽</p>
-                        </div>
-                      </div>
-                      {/* Row 2 */}
-                      <div className="flex items-center gap-2 px-3 pb-2.5 pt-0.5">
-                        <TransportSelector selected={transport} onChange={t => setTransport(day.day, t)} />
-                        {priceAdd > 0 && (
-                          <span className="text-[10px] text-[var(--text-muted)] flex items-center gap-0.5">
-                            <TransIcon className="w-3 h-3" />+{fmt(priceAdd)} ₽
-                          </span>
-                        )}
-                        <div className="flex-1" />
-                        {isEditing && (
-                          <button type="button" title="Показать на карте"
-                            onClick={() => setMobileTab('map')}
-                            className="lg:hidden w-7 h-7 flex items-center justify-center rounded-md border border-[var(--accent)] text-[var(--accent)] bg-[var(--accent)]/10 transition-colors">
-                            <MapIcon className="w-3.5 h-3.5" />
-                          </button>
-                        )}
-                        <button type="button" title="Операторы"
-                          onClick={() => setPartnersModal({ activityType: day.activityType })}
-                          className="w-7 h-7 flex items-center justify-center rounded-md border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--ocean)] hover:border-[var(--ocean)] transition-colors bg-[var(--bg-hover)]">
-                          <Users className="w-3.5 h-3.5" />
-                        </button>
-                        <button type="button" title="Удалить день"
-                          onClick={() => deleteDay(day.day)}
-                          className="w-7 h-7 flex items-center justify-center rounded-md border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--danger)] hover:border-[var(--danger)] transition-colors bg-[var(--bg-hover)]">
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </Reorder.Item>
-                  );
-                })}
+                {days.map((day, idx) => (
+                  <DayCard
+                    key={day.day}
+                    day={day}
+                    idx={idx}
+                    isEditing={day.day === editingDayId}
+                    transport={getTransport(day)}
+                    onToggleEdit={toggleEditDay}
+                    onTransportChange={setTransport}
+                    onShowPartners={(at) => setPartnersModal({ activityType: at })}
+                    onDelete={deleteDay}
+                    onShowMap={() => setMobileTab('map')}
+                    onRef={(el) => {
+                      if (el) dayRefs.current.set(day.day, el as HTMLElement);
+                      else dayRefs.current.delete(day.day);
+                    }}
+                  />
+                ))}
               </Reorder.Group>
 
               {/* Add day */}
@@ -1037,12 +1067,12 @@ export function PlannerClient() {
         onMarkerClick={handleMarkerClick}
       />
 
-      {/* Hint when no routes yet */}
-      {bgRoutes.length === 0 && !recommendation && (
+      {/* Hint / Loading */}
+      {bgLoading && bgRoutes.length === 0 && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 pointer-events-none">
           <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg px-4 py-2 text-xs text-[var(--text-muted)] flex items-center gap-2 shadow-sm">
-            <MapPin className="w-3.5 h-3.5 text-[var(--accent)]" />
-            Получите рекомендацию — на карте появятся маршруты
+            <Loader className="w-3.5 h-3.5 animate-spin text-[var(--accent)]" />
+            Загружаем маршруты...
           </div>
         </div>
       )}
@@ -1079,7 +1109,7 @@ export function PlannerClient() {
               <div className="w-2 h-2 rounded-full" style={{ background: 'var(--accent)' }} />
               <div className="w-2 h-2 rounded-full" style={{ background: 'var(--ocean)' }} />
               <div className="w-2 h-2 rounded-full" style={{ background: 'var(--success)' }} />
-              <div className="w-2 h-2 rounded-full" style={{ background: '#a855f7' }} />
+              <div className="w-2 h-2 rounded-full" style={{ background: 'var(--purple)' }} />
             </div>
             {bgRoutes.length} маршрутов по зонам
           </div>
