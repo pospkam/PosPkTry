@@ -58,6 +58,7 @@ const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/cron': ['GET'],              // cron jobs — дополнительная защита через CRON_SECRET внутри
   '/api/octo': 'ALL',               // OCTO API — авторизация через Bearer token внутри
   '/api/apply-op-tours-cols': ['GET'], // operator_tours колонки + marketplace view (migration 056)
+  '/api/link-fishingkam-tours': ['GET'], // линкует operator_tours kamchatskaya-rybalka → agent_route_knowledge
 };
 
 const API_ROLE_REQUIREMENTS: Record<string, AuthRole> = {
