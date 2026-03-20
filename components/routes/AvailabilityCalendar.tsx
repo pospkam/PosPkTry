@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, CheckCircle, Plane } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle, Calendar } from 'lucide-react';
 
 interface DateSlot {
   date: string;
@@ -52,27 +52,14 @@ export default function AvailabilityCalendar({ offers }: AvailabilityCalendarPro
 
   if (!hasSlots) {
     return (
-      <div className="ds-card p-5 space-y-4">
+      <div className="ds-card p-5 space-y-3">
         <div className="flex items-center gap-2">
-          <Plane className="w-4 h-4 text-[var(--ocean)]" />
-          <p className="text-sm font-semibold text-[var(--text-primary)]">Найти перелёт на Камчатку</p>
+          <Calendar className="w-4 h-4 text-[var(--text-muted)]" />
+          <p className="text-sm font-semibold text-[var(--text-primary)]">Расписание</p>
         </div>
         <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-          Расписание туров обновляется. Пока ищите билеты до Петропавловска-Камчатского (PKC) —
-          аэропорт Елизово, 30 мин от города.
+          Даты туров уточняются. Оставьте заявку — мы свяжемся с вами, когда откроется бронирование.
         </p>
-        <a
-          href="https://aviasales.ru"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center justify-between w-full px-4 py-3 bg-[var(--ocean)]/10 border border-[var(--ocean)]/30 rounded-lg hover:bg-[var(--ocean)]/20 transition-colors group"
-        >
-          <div>
-            <p className="text-sm font-semibold text-[var(--ocean)]">Aviasales</p>
-            <p className="text-xs text-[var(--text-muted)]">Поиск авиабилетов</p>
-          </div>
-          <Plane className="w-4 h-4 text-[var(--ocean)] group-hover:translate-x-0.5 transition-transform" />
-        </a>
       </div>
     );
   }
