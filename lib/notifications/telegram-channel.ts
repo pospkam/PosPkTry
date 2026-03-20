@@ -271,6 +271,131 @@ export async function postFriendToChannel(slug: string): Promise<{ ok: boolean; 
   return tgPost(channelId, text);
 }
 
+// ── А2. Кузьмич — AI-пост о конкретном маршруте (автономный cron) ────────────
+
+interface KuzmichRouteRow {
+  id: string;
+  title: string;
+  description: string | null;
+  location_type: string | null;
+  activity_type: string | null;
+  zone: string | null;
+  kuzmich_review: string | null;
+}
+
+/**
+ * Выбирает случайный маршрут, не постившийся последние 30 дней,
+ * генерирует пост голосом Кузьмича и публикует в канал.
+ * Логирует в ai_actions_log.
+ */
+export async function postKuzmichRoute(): Promise<{ ok: boolean; routeId?: string; error?: string }> {
+  const channelId = process.env.TELEGRAM_CHANNEL_ID;
+  if (!channelId) return { ok: false, error: 'TELEGRAM_CHANNEL_ID not set' };
+
+  // Берём маршрут, который не постили последние 30 дней
+  const pickResult = await query<KuzmichRouteRow>(`
+    SELECT id, title, description, location_type, activity_type, zone, kuzmich_review
+    FROM agent_route_knowledge
+    WHERE is_visible = TRUE
+      AND id::text NOT IN (
+        SELECT metadata->>'route_id'
+        FROM ai_actions_log
+        WHERE action_type = 'kuzmich_post'
+          AND created_at > NOW() - INTERVAL '30 days'
+          AND metadata->>'route_id' IS NOT NULL
+      )
+    ORDER BY RANDOM()
+    LIMIT 1
+  `, []);
+
+  if (!pickResult.rows[0]) return { ok: false, error: 'Нет маршрутов для поста (все опубликованы в последние 30 дней)' };
+  const r = pickResult.rows[0];
+
+  const locLabel = LOCATION_LABELS[r.location_type ?? ''] ?? r.location_type ?? '';
+  const actLabel = ACTIVITY_LABELS[r.activity_type ?? ''] ?? r.activity_type ?? '';
+  const appUrl   = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tourhab.ru';
+
+  const reviewCtx = r.kuzmich_review
+    ? `\nМои заметки об этом месте: "${r.kuzmich_review.slice(0, 280)}"`
+    : '';
+
+  const prompt = `Ты — Кузьмич, камчадал в третьем поколении. Напиши короткий пост для Telegram-канала о конкретном месте.
+
+Место: ${r.title}
+Тип: ${locLabel || 'природный объект'}${actLabel ? ', ' + actLabel : ''}
+Описание: ${r.description?.slice(0, 300) ?? 'нет данных'}${reviewCtx}
+
+Требования:
+- 70-100 слов, живой голос местного, без рекламы и пафоса
+- Конкретная деталь или секрет этого места, которую знают не все
+- Лёгкая ирония над городскими туристами которые едут и не знают куда
+- В конце обязательно ссылка: ${appUrl}/routes/${r.id}
+- HTML-теги Telegram: <b>жирный</b>, <i>курсив</i>
+- Не начинай с "Привет" или своего имени`;
+
+  const text = await callAIWaterfallDirect([{ role: 'user', content: prompt }]);
+  const result = await tgPost(channelId, text);
+
+  if (result.ok) {
+    try {
+      await query(
+        `INSERT INTO ai_actions_log (action_type, metadata) VALUES ($1, $2)`,
+        ['kuzmich_post', JSON.stringify({ route_id: r.id, route_title: r.title })]
+      );
+    } catch { /* таблица ещё не создана — не блокируем пост */ }
+  }
+
+  return { ...result, routeId: r.id };
+}
+
+const KUZMICH_TIP_TOPICS = [
+  'как правильно выбрать время для поездки на Камчатку',
+  'что взять с собой на вулкан — и чего точно не стоит',
+  'почему рыбалка на Камчатке — это не только про рыбу',
+  'как не облажаться с погодой на Камчатке',
+  'чем Камчатка отличается от любого другого путешествия',
+  'почему термальные источники лучше любого пятизвёздочного спа',
+  'как местные относятся к медведям — и как надо вести себя туристу',
+  'зачем ехать на Камчатку не в август, а в другое время',
+  'что туристы чаще всего недооценивают в поездке на Камчатку',
+];
+
+/**
+ * Генерирует практичный совет от Кузьмича и публикует в канал.
+ */
+export async function postKuzmichTip(): Promise<{ ok: boolean; error?: string }> {
+  const channelId = process.env.TELEGRAM_CHANNEL_ID;
+  if (!channelId) return { ok: false, error: 'TELEGRAM_CHANNEL_ID not set' };
+
+  const topic = KUZMICH_TIP_TOPICS[Math.floor(Math.random() * KUZMICH_TIP_TOPICS.length)];
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tourhab.ru';
+
+  const prompt = `Ты — Кузьмич, камчадал в третьем поколении. Напиши практичный совет для Telegram-канала.
+
+Тема: ${topic}
+
+Требования:
+- 60-90 слов, разговорный стиль, как объясняешь знакомому
+- Конкретный совет, никаких общих слов
+- Немного юмора или самоиронии
+- HTML-теги: <b>жирный</b>, <i>курсив</i>
+- В конце можно добавить: ${appUrl}/routes`;
+
+  const text = await callAIWaterfallDirect([{ role: 'user', content: prompt }]);
+  const result = await tgPost(channelId, text);
+
+  if (result.ok) {
+    try {
+      await query(
+        `INSERT INTO ai_actions_log (action_type, metadata) VALUES ($1, $2)`,
+        ['kuzmich_tip', JSON.stringify({ topic })]
+      );
+    } catch { /* таблица ещё не создана */ }
+  }
+
+  return result;
+}
+
 // ── Б. Оперативные уведомления (в admin-чат) ─────────────────────────────────
 
 /**
