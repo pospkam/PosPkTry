@@ -11,28 +11,39 @@ export default function NewTourClient() {
   const { user } = useAuth();
   const router = useRouter();
 
-  const operatorId = user?.id;
-
   const handleSubmit = async (formData: TourFormData) => {
-    try {
-      const response = await fetch(`/api/operator/tours?operatorId=${operatorId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
+    const response = await fetch('/api/hub/operator/tours', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title:            formData.name,
+        description:      formData.description,
+        location_type:    'other',
+        activity_type:    'other',
+        location_name:    formData.category,
+        latitude:         53.0,
+        longitude:        158.7,
+        base_price:       formData.price,
+        price_unit:       'per_person',
+        max_participants: formData.maxGroupSize,
+        min_participants: formData.minGroupSize,
+        duration_hours:   formData.duration,
+        difficulty:       formData.difficulty,
+        included:         formData.includes as string[],
+        not_included:     formData.excludes as string[],
+        tour_image:       formData.tourImage || undefined,
+        agent_route_id:   formData.routeId   || undefined,
+      }),
+    });
 
-      const result = await response.json();
+    const result = await response.json() as { success: boolean; error?: string };
 
-      if (result.success) {
-        toast.success('Тур успешно создан!');
-        router.push('/hub/operator/tours');
-      } else {
-        throw new Error(result.error || 'Failed to create tour');
-      }
-    } catch (error) {
-      console.error('Error creating tour:', error);
-      throw error;
+    if (!result.success) {
+      throw new Error(result.error ?? 'Ошибка создания тура');
     }
+
+    toast.success('Тур успешно создан!');
+    router.push('/hub/operator/tours');
   };
 
   const handleCancel = () => {
