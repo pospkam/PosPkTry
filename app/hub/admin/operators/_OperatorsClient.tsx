@@ -2,156 +2,362 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { Protected } from '@/components/auth/Protected';
-import { Building2, Search, Loader2, CheckCircle2, Ban, Star, AlertCircle } from 'lucide-react';
+import {
+  Building2, Search, Loader2, CheckCircle2, XCircle,
+  Clock, Phone, Mail, Calendar, ChevronDown, ChevronUp
+} from 'lucide-react';
 
-interface Operator {
-  id: string; name: string; status: 'active' | 'pending';
-  rating: number; reviewCount: number;
+type ProfileStatus = 'pending' | 'approved' | 'rejected';
+
+interface OperatorRow {
+  id: string;
+  company_name: string;
+  category: string;
+  description: string;
+  profile_status: ProfileStatus;
+  applied_at: string | null;
+  is_verified: boolean;
+  is_public: boolean;
+  profile_review_comment: string | null;
+  email: string;
+  contact_name: string;
+  registered_at: string;
+  application_id: string | null;
+  contact_phone: string | null;
+  contact_email: string | null;
+  inn: string | null;
+  application_status: string | null;
+  reviewed_at: string | null;
+}
+
+const TAB_LABELS: Record<string, string> = {
+  pending:  'На проверке',
+  approved: 'Одобрены',
+  rejected: 'Отклонены',
+  all:      'Все',
+};
+
+const STATUS_CLS: Record<ProfileStatus, string> = {
+  pending:  'bg-[var(--warning)]/15 text-[var(--warning)]',
+  approved: 'bg-[var(--success)]/15 text-[var(--success)]',
+  rejected: 'bg-[var(--danger)]/10  text-[var(--danger)]',
+};
+
+function formatDate(d: string | null) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+const CATEGORY_LABELS: Record<string, string> = {
+  operator: 'Туроператор',
+  guide:    'Гид',
+  transfer: 'Трансфер',
+  hotel:    'Отель',
+  rent:     'Аренда',
+  fishing:  'Рыбалка',
+};
+
+function RejectModal({
+  name,
+  onConfirm,
+  onCancel,
+}: { name: string; onConfirm: (comment: string) => void; onCancel: () => void }) {
+  const [comment, setComment] = useState('');
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl w-full max-w-md p-6 shadow-xl">
+        <h3 className="font-semibold text-[var(--text-primary)] mb-1">Отклонить заявку</h3>
+        <p className="text-sm text-[var(--text-secondary)] mb-4">{name}</p>
+        <textarea
+          value={comment}
+          onChange={e => setComment(e.target.value)}
+          placeholder="Причина отказа (будет отправлена на email оператора)"
+          rows={3}
+          className="w-full px-3 py-2 text-sm bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] resize-none"
+        />
+        <div className="flex gap-2 mt-4 justify-end">
+          <button onClick={onCancel} className="px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+            Отмена
+          </button>
+          <button
+            onClick={() => onConfirm(comment)}
+            className="px-4 py-2 text-sm bg-[var(--danger)] text-white rounded-lg hover:bg-[var(--danger)]/90 transition-colors"
+          >
+            Отклонить
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OperatorCard({
+  op,
+  onApprove,
+  onReject,
+  acting,
+}: {
+  op: OperatorRow;
+  onApprove: (id: string) => void;
+  onReject: (id: string, name: string) => void;
+  acting: string | null;
+}) {
+  const [expanded, setExpanded] = useState(op.profile_status === 'pending');
+
+  return (
+    <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden">
+      {/* Header row */}
+      <div
+        className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-[var(--bg-hover)] transition-colors"
+        onClick={() => setExpanded(e => !e)}
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <Building2 className="w-4 h-4 text-[var(--text-muted)] shrink-0" />
+          <div className="min-w-0">
+            <p className="font-medium text-[var(--text-primary)] truncate">{op.company_name}</p>
+            <p className="text-xs text-[var(--text-muted)]">
+              {CATEGORY_LABELS[op.category] ?? op.category} · {op.contact_name}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${STATUS_CLS[op.profile_status]}`}>
+            {TAB_LABELS[op.profile_status]}
+          </span>
+          {expanded ? <ChevronUp className="w-4 h-4 text-[var(--text-muted)]" /> : <ChevronDown className="w-4 h-4 text-[var(--text-muted)]" />}
+        </div>
+      </div>
+
+      {/* Expanded details */}
+      {expanded && (
+        <div className="px-4 pb-4 border-t border-[var(--border)]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3 text-sm">
+            <div className="flex items-center gap-2 text-[var(--text-secondary)]">
+              <Mail className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+              <a href={`mailto:${op.email}`} className="hover:text-[var(--accent)] transition-colors truncate">{op.email}</a>
+            </div>
+            {op.contact_phone && (
+              <div className="flex items-center gap-2 text-[var(--text-secondary)]">
+                <Phone className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+                <a href={`tel:${op.contact_phone}`} className="hover:text-[var(--accent)] transition-colors">{op.contact_phone}</a>
+              </div>
+            )}
+            {op.inn && (
+              <div className="flex items-center gap-2 text-[var(--text-secondary)]">
+                <span className="text-[var(--text-muted)] text-xs">ИНН:</span>
+                <span>{op.inn}</span>
+              </div>
+            )}
+            <div className="flex items-center gap-2 text-[var(--text-secondary)]">
+              <Calendar className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+              <span>Подано: {formatDate(op.applied_at ?? op.registered_at)}</span>
+            </div>
+          </div>
+
+          {op.description && (
+            <p className="mt-3 text-sm text-[var(--text-secondary)] line-clamp-3">{op.description}</p>
+          )}
+
+          {op.profile_review_comment && (
+            <div className="mt-3 px-3 py-2 bg-[var(--danger)]/5 border border-[var(--danger)]/15 rounded-lg">
+              <p className="text-xs text-[var(--danger)]"><b>Причина отказа:</b> {op.profile_review_comment}</p>
+            </div>
+          )}
+
+          {/* Actions */}
+          {op.profile_status === 'pending' && (
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={() => onApprove(op.id)}
+                disabled={acting === op.id}
+                className="flex items-center gap-1.5 px-4 py-2 bg-[var(--success)] hover:bg-[var(--success)]/90 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+              >
+                {acting === op.id
+                  ? <Loader2 className="w-4 h-4 animate-spin" />
+                  : <CheckCircle2 className="w-4 h-4" />
+                }
+                Одобрить
+              </button>
+              <button
+                onClick={() => onReject(op.id, op.company_name)}
+                disabled={acting === op.id}
+                className="flex items-center gap-1.5 px-4 py-2 border border-[var(--danger)]/30 text-[var(--danger)] hover:bg-[var(--danger)]/5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+              >
+                <XCircle className="w-4 h-4" />
+                Отклонить
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function OperatorsClient() {
+  const [tab, setTab]             = useState<'pending' | 'approved' | 'rejected' | 'all'>('pending');
+  const [operators, setOperators] = useState<OperatorRow[]>([]);
   const [loading, setLoading]     = useState(true);
-  const [error, setError]         = useState('');
-  const [operators, setOperators] = useState<Operator[]>([]);
   const [search, setSearch]       = useState('');
   const [acting, setActing]       = useState<string | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<{ id: string; name: string } | null>(null);
+  const [counts, setCounts]       = useState<Record<string, number>>({});
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (status: string) => {
     setLoading(true);
-    setError('');
     try {
-      const res = await fetch('/api/admin/content/partners?category=operator&limit=100');
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
-      if (!json.success) throw new Error(json.error ?? 'Ошибка загрузки');
-      const rows = json.data?.data ?? [];
-      setOperators(rows.map((p: {
-        id: string; name: string; isVerified: boolean; rating: number; reviewCount: number;
-      }) => ({
-        id: p.id,
-        name: p.name,
-        status: p.isVerified ? 'active' : 'pending',
-        rating: p.rating,
-        reviewCount: p.reviewCount,
-      })));
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Ошибка загрузки данных');
+      const res = await fetch(`/api/admin/operators?status=${status}&limit=100`);
+      const j: unknown = await res.json();
+      if (typeof j === 'object' && j !== null && 'data' in j) {
+        setOperators((j as { data: OperatorRow[] }).data);
+      }
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  // Load counts for badge display
+  const loadCounts = useCallback(async () => {
+    const statuses: Array<'pending' | 'approved' | 'rejected'> = ['pending', 'approved', 'rejected'];
+    const results = await Promise.all(
+      statuses.map(s =>
+        fetch(`/api/admin/operators?status=${s}&limit=1`)
+          .then(r => r.json())
+          .then((j: unknown) => {
+            const total = typeof j === 'object' && j !== null && 'meta' in j
+              ? (j as { meta: { total: number } }).meta.total
+              : 0;
+            return [s, total] as [string, number];
+          })
+          .catch(() => [s, 0] as [string, number])
+      )
+    );
+    setCounts(Object.fromEntries(results));
+  }, []);
 
-  async function activate(id: string) {
+  useEffect(() => { load(tab); }, [load, tab]);
+  useEffect(() => { loadCounts(); }, [loadCounts]);
+
+  async function approve(id: string) {
     setActing(id);
     try {
-      const res = await fetch(`/api/admin/content/partners/${id}/verify`, {
-        method: 'POST',
+      const res = await fetch(`/api/admin/operators/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'approve' }),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
-      if (!json.success) throw new Error(json.error ?? 'Ошибка');
-      setOperators(prev => prev.map(o => o.id === id ? { ...o, status: 'active' as const } : o));
-    } catch (e) {
-      alert(e instanceof Error ? e.message : 'Ошибка');
+      const j: unknown = await res.json();
+      if (typeof j === 'object' && j !== null && 'success' in j && (j as { success: boolean }).success) {
+        setOperators(prev => prev.filter(o => o.id !== id));
+        setCounts(prev => ({ ...prev, pending: (prev.pending ?? 1) - 1, approved: (prev.approved ?? 0) + 1 }));
+      }
+    } finally {
+      setActing(null);
+    }
+  }
+
+  async function reject(id: string, comment: string) {
+    setRejectTarget(null);
+    setActing(id);
+    try {
+      const res = await fetch(`/api/admin/operators/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reject', comment }),
+      });
+      const j: unknown = await res.json();
+      if (typeof j === 'object' && j !== null && 'success' in j && (j as { success: boolean }).success) {
+        setOperators(prev => prev.filter(o => o.id !== id));
+        setCounts(prev => ({ ...prev, pending: (prev.pending ?? 1) - 1, rejected: (prev.rejected ?? 0) + 1 }));
+      }
     } finally {
       setActing(null);
     }
   }
 
   const filtered = operators.filter(o =>
-    o.name.toLowerCase().includes(search.toLowerCase())
+    o.company_name.toLowerCase().includes(search.toLowerCase()) ||
+    o.contact_name.toLowerCase().includes(search.toLowerCase()) ||
+    o.email.toLowerCase().includes(search.toLowerCase())
   );
 
-  const STATUS_CLS: Record<string, string> = {
-    active:  'bg-[var(--success)]/15 text-[var(--success)]',
-    pending: 'bg-[var(--warning)]/15 text-[var(--warning)]',
-  };
-  const STATUS_LBL: Record<string, string> = {
-    active: 'Активен', pending: 'На проверке',
-  };
+  const TABS = ['pending', 'approved', 'rejected', 'all'] as const;
 
   return (
     <Protected roles={['admin']}>
-      <div className="max-w-5xl mx-auto p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <Building2 className="w-6 h-6 text-[var(--accent)]" />
-            <h1 className="text-2xl font-bold text-[var(--text-primary)]">Операторы</h1>
-            {!loading && <span className="text-sm text-[var(--text-muted)]">{operators.length}</span>}
-          </div>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Поиск..."
-              className="min-h-[44px] pl-10 pr-4 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30"
-            />
-          </div>
+      {rejectTarget && (
+        <RejectModal
+          name={rejectTarget.name}
+          onConfirm={comment => reject(rejectTarget.id, comment)}
+          onCancel={() => setRejectTarget(null)}
+        />
+      )}
+
+      <div className="max-w-4xl mx-auto p-6">
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-6">
+          <Building2 className="w-6 h-6 text-[var(--accent)]" />
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Операторы</h1>
+          {counts.pending > 0 && (
+            <span className="px-2 py-0.5 text-xs bg-[var(--warning)]/20 text-[var(--warning)] rounded-full font-medium">
+              {counts.pending} ожидают
+            </span>
+          )}
         </div>
 
+        {/* Tabs */}
+        <div className="flex gap-1 mb-4 bg-[var(--bg-primary)] rounded-lg p-1 w-fit">
+          {TABS.map(t => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors relative ${
+                tab === t
+                  ? 'bg-[var(--bg-card)] text-[var(--text-primary)] shadow-sm'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
+              }`}
+            >
+              {TAB_LABELS[t]}
+              {counts[t] !== undefined && counts[t] > 0 && t !== 'all' && (
+                <span className="ml-1.5 text-[10px] text-[var(--text-muted)]">({counts[t]})</span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Search */}
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Поиск по названию, контакту, email..."
+            className="w-full pl-10 pr-4 py-2.5 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)]"
+          />
+        </div>
+
+        {/* List */}
         {loading ? (
           <div className="flex justify-center py-16">
             <Loader2 className="w-6 h-6 animate-spin text-[var(--text-muted)]" />
           </div>
-        ) : error ? (
-          <div className="flex flex-col items-center py-16 gap-3">
-            <AlertCircle className="w-8 h-8 text-[var(--danger)]" />
-            <p className="text-[var(--text-secondary)] text-sm">{error}</p>
-            <button onClick={load} className="text-sm text-[var(--accent)] underline">Повторить</button>
-          </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-16">
-            <Building2 className="w-12 h-12 text-[var(--text-muted)] mx-auto mb-3" />
-            <p className="text-[var(--text-secondary)]">Операторы не найдены</p>
+            <Clock className="w-10 h-10 text-[var(--text-muted)] mx-auto mb-3" />
+            <p className="text-[var(--text-secondary)]">
+              {tab === 'pending' ? 'Нет заявок на проверке' : 'Ничего не найдено'}
+            </p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {filtered.map(op => (
-              <div key={op.id} className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4 flex items-center justify-between gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-[var(--text-primary)]">{op.name}</span>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_CLS[op.status]}`}>
-                      {STATUS_LBL[op.status]}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-4 mt-1.5 text-sm text-[var(--text-secondary)]">
-                    {op.rating > 0 ? (
-                      <span className="flex items-center gap-1">
-                        <Star className="w-3.5 h-3.5 text-[var(--warning)] fill-[var(--warning)]" />
-                        {op.rating.toFixed(1)}
-                        <span className="text-[var(--text-muted)] text-xs">({op.reviewCount})</span>
-                      </span>
-                    ) : (
-                      <span className="text-[var(--text-muted)] text-xs">Нет отзывов</span>
-                    )}
-                  </div>
-                </div>
-                {op.status === 'pending' ? (
-                  <button
-                    onClick={() => activate(op.id)}
-                    disabled={acting === op.id}
-                    className="min-h-[44px] px-3 py-2 rounded-lg text-sm border border-[var(--border)] inline-flex items-center gap-1.5 transition-colors text-[var(--success)] hover:bg-[var(--success)]/10 disabled:opacity-50"
-                  >
-                    {acting === op.id
-                      ? <Loader2 className="w-4 h-4 animate-spin" />
-                      : <CheckCircle2 className="w-4 h-4" />
-                    }
-                    Верифицировать
-                  </button>
-                ) : (
-                  <button
-                    className="min-h-[44px] px-3 py-2 rounded-lg text-sm border border-[var(--border)] inline-flex items-center gap-1.5 text-[var(--text-muted)] cursor-not-allowed opacity-40"
-                    title="Блокировка в разработке"
-                    disabled
-                  >
-                    <Ban className="w-4 h-4" /> Заблокировать
-                  </button>
-                )}
-              </div>
+              <OperatorCard
+                key={op.id}
+                op={op}
+                onApprove={approve}
+                onReject={(id, name) => setRejectTarget({ id, name })}
+                acting={acting}
+              />
             ))}
           </div>
         )}
