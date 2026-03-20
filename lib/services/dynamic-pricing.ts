@@ -146,7 +146,10 @@ export async function calculateDynamicPrice(input: PriceCalcInput): Promise<Pric
 }
 
 /**
- * Bulk расчёт для списка дат (для календаря доступности)
+ * Bulk расчёт для списка дат (для календаря доступности).
+ * Делает ровно 2 запроса к БД независимо от количества дат:
+ *   1. Загрузка правил тура (один раз)
+ *   2. Загрузка занятости слотов для всех дат (батч)
  */
 export async function bulkDynamicPrices(
   tourId: number | string,
@@ -154,11 +157,107 @@ export async function bulkDynamicPrices(
   guests: number,
   basePrice: number
 ): Promise<Record<string, PriceCalcResult>> {
-  const results: Record<string, PriceCalcResult> = {};
-  await Promise.all(
-    dates.map(async (date) => {
-      results[date] = await calculateDynamicPrice({ tourId, tourDate: date, guests, basePrice });
-    })
+  if (dates.length === 0) return {};
+
+  // 1. Загружаем правила один раз
+  const { rows: rules } = await pool.query<PricingRule>(
+    `SELECT rule_type, date_from, date_to, days_before_min, days_before_max,
+            occupancy_min, guests_min, multiplier
+     FROM tour_pricing_rules
+     WHERE operator_tour_id = $1 AND is_active = TRUE`,
+    [tourId]
   );
+
+  // 2. Загружаем занятость всех запрошенных слотов одним запросом
+  const { rows: slotRows } = await pool.query<{ date: string; available_slots: number | null; booked_slots: number }>(
+    `SELECT date::text, available_slots, COALESCE(booked_slots, 0) AS booked_slots
+     FROM tour_availability
+     WHERE operator_tour_id = $1
+       AND date = ANY($2::date[])
+       AND is_cancelled = FALSE`,
+    [tourId, dates]
+  );
+
+  const slotMap: Record<string, { available: number | null; booked: number }> = {};
+  for (const row of slotRows) {
+    slotMap[row.date] = { available: row.available_slots, booked: row.booked_slots };
+  }
+
+  const bookDate = new Date();
+  const results: Record<string, PriceCalcResult> = {};
+
+  // 3. Вычисляем цену для каждой даты в памяти (без DB запросов)
+  for (const date of dates) {
+    if (rules.length === 0) {
+      results[date] = { basePrice, finalPrice: basePrice, discount: 0, multiplier: 1, appliedRules: [] };
+      continue;
+    }
+
+    const tourDateObj = new Date(date);
+    const daysBeforeTour = Math.floor((tourDateObj.getTime() - bookDate.getTime()) / 86_400_000);
+    const isWeekend = [5, 6, 0].includes(tourDateObj.getDay());
+
+    const slot = slotMap[date];
+    let occupancyPct = 0;
+    if (slot?.available && slot.available > 0) {
+      occupancyPct = Math.round((slot.booked / slot.available) * 100);
+    }
+
+    let totalMultiplier = 1;
+    const appliedRules: string[] = [];
+
+    for (const rule of rules) {
+      const m = parseFloat(rule.multiplier);
+      let applies = false;
+
+      switch (rule.rule_type) {
+        case 'season_peak':
+        case 'season_low':
+          if (rule.date_from && rule.date_to) {
+            const from = new Date(rule.date_from);
+            const to   = new Date(rule.date_to);
+            const tourMD = tourDateObj.getMonth() * 100 + tourDateObj.getDate();
+            const fromMD = from.getMonth() * 100 + from.getDate();
+            const toMD   = to.getMonth()   * 100 + to.getDate();
+            applies = fromMD <= toMD
+              ? tourMD >= fromMD && tourMD <= toMD
+              : tourMD >= fromMD || tourMD <= toMD;
+          }
+          break;
+        case 'early_bird':
+        case 'last_minute':
+          applies =
+            (rule.days_before_min === null || daysBeforeTour >= rule.days_before_min) &&
+            (rule.days_before_max === null || daysBeforeTour <= rule.days_before_max);
+          break;
+        case 'occupancy_high':
+          applies = rule.occupancy_min !== null && occupancyPct >= rule.occupancy_min;
+          break;
+        case 'group_discount':
+          applies = rule.guests_min !== null && guests >= rule.guests_min;
+          break;
+        case 'weekend':
+          applies = isWeekend;
+          break;
+      }
+
+      if (applies) {
+        totalMultiplier *= m;
+        appliedRules.push(rule.rule_type);
+      }
+    }
+
+    const rawPrice   = basePrice * totalMultiplier;
+    const finalPrice = Math.round(rawPrice / 100) * 100;
+
+    results[date] = {
+      basePrice,
+      finalPrice,
+      discount:   finalPrice - basePrice,
+      multiplier: Math.round(totalMultiplier * 1000) / 1000,
+      appliedRules,
+    };
+  }
+
   return results;
 }

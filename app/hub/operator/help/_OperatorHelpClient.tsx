@@ -20,7 +20,7 @@ function SectionHelp({ href, icon: Icon, color, title, desc, tips }: SectionCard
   return (
     <div className="ds-card p-5">
       <div className="flex items-start gap-3 mb-3">
-        <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: color + '20' }}>
+        <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `color-mix(in srgb, ${color} 15%, transparent)` }}>
           <Icon size={18} style={{ color }} />
         </div>
         <div>
@@ -78,7 +78,7 @@ export default function OperatorHelpClient() {
     {
       href: '/hub/operator/bookings',
       icon: Users,
-      color: '#3FB950',
+      color: 'var(--success)',
       title: 'Бронирования',
       desc: 'Все входящие заявки и их статусы',
       tips: [
@@ -91,7 +91,7 @@ export default function OperatorHelpClient() {
     {
       href: '/hub/operator/finance',
       icon: DollarSign,
-      color: '#D29922',
+      color: 'var(--warning)',
       title: 'Финансы',
       desc: 'Выплаты, реквизиты и история транзакций',
       tips: [
@@ -128,7 +128,7 @@ export default function OperatorHelpClient() {
     {
       href: '/hub/operator/integrations',
       icon: Globe,
-      color: '#3FB950',
+      color: 'var(--success)',
       title: 'Интеграции',
       desc: 'OCTO API для подключения к OTA (Tiqets, Headout)',
       tips: [
@@ -140,7 +140,7 @@ export default function OperatorHelpClient() {
     {
       href: '/hub/operator',
       icon: TrendingUp,
-      color: '#D29922',
+      color: 'var(--warning)',
       title: 'Динамические цены',
       desc: 'Автоматическое управление ценой (настраивает admin)',
       tips: [

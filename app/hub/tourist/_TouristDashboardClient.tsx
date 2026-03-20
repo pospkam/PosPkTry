@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   Compass, Calendar, TrendingUp, Award, MapPin,
   Sun, Cloud, CloudRain, CloudSnow, Wind, Droplets,
-  ChevronRight, RefreshCw, Target,
+  ChevronRight, RefreshCw, Target, Star,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Weather } from '@/types';
@@ -314,7 +314,11 @@ export default function TouristDashboardClient() {
               <div key={review.id} className="px-5 py-3.5">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm font-medium text-[var(--text-primary)]">{review.tour_name}</span>
-                  <span className="text-sm text-[var(--warning)]">{'★'.repeat(review.rating)}</span>
+                  <span className="flex gap-0.5 text-[var(--warning)]">
+                    {Array.from({ length: review.rating }).map((_, i) => (
+                      <Star key={i} size={12} fill="currentColor" strokeWidth={0} />
+                    ))}
+                  </span>
                 </div>
                 {review.comment && (
                   <p className="text-xs text-[var(--text-muted)] truncate">{review.comment}</p>

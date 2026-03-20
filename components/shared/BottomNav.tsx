@@ -32,10 +32,9 @@ export default function BottomNav({ activePath, onNavClick }: BottomNavProps) {
         left: '16px',
         right: '16px',
         zIndex: 100,
-        background: 'rgba(255,255,255,0.2)',
-        backdropFilter: 'blur(10px)',
-        WebkitBackdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255,255,255,0.3)',
+        background: 'var(--bg-card)',
+        border: '1px solid var(--border)',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.12)',
         borderRadius: '50px',
         padding: '12px 24px',
         display: 'flex',
@@ -56,7 +55,7 @@ export default function BottomNav({ activePath, onNavClick }: BottomNavProps) {
               flexDirection: 'column',
               alignItems: 'center',
               gap: '2px',
-              color: sos ? '#ef4444' : isActive ? '#00D4FF' : 'rgba(255,255,255,0.8)',
+              color: sos ? 'var(--danger)' : isActive ? 'var(--accent)' : 'var(--text-secondary)',
               textDecoration: 'none',
               transition: 'color 200ms ease',
               position: 'relative',
@@ -68,7 +67,7 @@ export default function BottomNav({ activePath, onNavClick }: BottomNavProps) {
             <Icon size={20} strokeWidth={1.5} />
             <span
               style={{
-                fontFamily: "var(--font-inter,'Inter',sans-serif)",
+                fontFamily: "var(--font-outfit,'Outfit',sans-serif)",
                 fontSize: '10px',
                 fontWeight: 500,
               }}
