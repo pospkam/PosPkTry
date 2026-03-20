@@ -14,55 +14,39 @@ export async function GET(request: NextRequest) {
     const userOrResponse = await requireAgent(request);
     if (userOrResponse instanceof NextResponse) return userOrResponse;
 
-    // Get all active tours with commission info
+    // Published tours from operator_tours with operator info
     const result = await query<{
-      id: string; name: string; description: string; difficulty: string;
-      duration: string; price: string; max_group_size: number; min_group_size: number;
-      rating: string; review_count: number; is_active: boolean;
-      operator_name: string; operator_rating: string; images: (string | null)[];
+      id: string; title: string; description: string | null;
+      activity_type: string | null; duration_hours: number | null;
+      base_price: string; max_participants: number | null;
+      season_start: string | null; season_end: string | null;
+      operator_name: string;
     }>(
-      `SELECT 
-        t.id,
-        t.name,
-        t.description,
-        t.difficulty,
-        t.duration,
-        t.price,
-        t.max_group_size,
-        t.min_group_size,
-        t.rating,
-        t.review_count,
-        t.is_active,
-        p.name as operator_name,
-        p.rating as operator_rating,
-        array_agg(DISTINCT a.url) as images
-      FROM tours t
-      JOIN partners p ON t.operator_id = p.id
-      LEFT JOIN tour_assets ta ON t.id = ta.tour_id
-      LEFT JOIN assets a ON ta.asset_id = a.id
-      WHERE t.is_active = true
-      GROUP BY t.id, p.id
-      ORDER BY t.rating DESC, t.review_count DESC
-      LIMIT 100`,
+      `SELECT
+        t.id, t.title, t.description, t.activity_type,
+        t.duration_hours, t.base_price, t.max_participants,
+        t.season_start, t.season_end,
+        p.company_name as operator_name
+       FROM operator_tours t
+       JOIN partners p ON t.operator_id = p.id
+       WHERE t.is_published = true AND t.deleted_at IS NULL
+       ORDER BY t.title
+       LIMIT 200`,
       []
     );
 
     const tours = result.rows.map(row => ({
       id: row.id,
-      name: row.name,
+      name: row.title,
       description: row.description,
-      difficulty: row.difficulty,
-      duration: row.duration,
-      price: parseFloat(row.price),
-      maxGroupSize: row.max_group_size,
-      minGroupSize: row.min_group_size,
-      rating: parseFloat(row.rating),
-      reviewCount: row.review_count,
-      isActive: row.is_active,
+      activityType: row.activity_type,
+      duration: row.duration_hours ? `${row.duration_hours}ч` : null,
+      price: parseFloat(row.base_price),
+      maxGroupSize: row.max_participants,
+      seasonStart: row.season_start,
+      seasonEnd: row.season_end,
       operatorName: row.operator_name,
-      operatorRating: parseFloat(row.operator_rating),
-      images: row.images.filter(Boolean),
-      commission: parseFloat(row.price) * 0.15 // 15% commission for agents
+      commission: parseFloat(row.base_price) * 0.10, // 10% агентская комиссия
     }));
 
     return NextResponse.json({

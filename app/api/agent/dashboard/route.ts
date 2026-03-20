@@ -62,8 +62,8 @@ export async function GET(request: NextRequest) {
         c.name as client_name,
         c.email as client_email,
         b.tour_id,
-        t.name as tour_name,
-        p.name as tour_operator,
+        t.title as tour_name,
+        p.company_name as tour_operator,
         b.booking_date,
         b.tour_date,
         b.guests_count,
@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
         b.updated_at
       FROM agent_bookings b
       JOIN agent_clients c ON b.client_id = c.id
-      JOIN tours t ON b.tour_id = t.id
+      JOIN operator_tours t ON b.tour_id = t.id
       JOIN partners p ON t.operator_id = p.id
       WHERE b.agent_id = $1
       ORDER BY b.created_at DESC
@@ -128,13 +128,13 @@ export async function GET(request: NextRequest) {
       SELECT
         b.id,
         c.name as client_name,
-        t.name as tour_name,
+        t.title as tour_name,
         b.tour_date,
         b.total_price,
         b.agent_commission
       FROM agent_bookings b
       JOIN agent_clients c ON b.client_id = c.id
-      JOIN tours t ON b.tour_id = t.id
+      JOIN operator_tours t ON b.tour_id = t.id
       WHERE b.agent_id = $1
         AND b.status = 'confirmed'
         AND b.tour_date >= NOW()
@@ -196,7 +196,7 @@ export async function GET(request: NextRequest) {
         cp.created_at,
         cp.updated_at
       FROM commission_payouts cp
-      JOIN agents a ON cp.agent_id = a.id
+      JOIN users a ON cp.agent_id = a.id
       WHERE cp.agent_id = $1
         AND cp.status IN ('pending', 'processing')
       ORDER BY cp.created_at DESC

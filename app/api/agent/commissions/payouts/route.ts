@@ -35,27 +35,27 @@ export async function GET(request: NextRequest) {
         cp.status,
         cp.payment_method,
         cp.payout_date,
-        cp.completed_at,
-        cp.failure_reason,
         cp.created_at,
         cp.updated_at,
-        JSON_AGG(
-          JSON_BUILD_OBJECT(
-            'id', ac.id,
-            'bookingId', ac.booking_id,
-            'amount', ac.amount,
-            'rate', ac.rate,
-            'status', ac.status,
-            'paidAt', ac.paid_at
-          )
+        COALESCE(
+          JSON_AGG(
+            JSON_BUILD_OBJECT(
+              'id', ac.id,
+              'bookingId', ac.booking_id,
+              'amount', ac.amount,
+              'rate', ac.rate,
+              'status', ac.status,
+              'paidAt', ac.paid_at
+            )
+          ) FILTER (WHERE ac.id IS NOT NULL),
+          '[]'
         ) as commissions
       FROM commission_payouts cp
-      JOIN agents a ON cp.agent_id = a.id
-      LEFT JOIN agent_commissions ac ON cp.id = ac.payout_reference
+      JOIN users a ON cp.agent_id = a.id
+      LEFT JOIN agent_commissions ac ON ac.payout_reference = cp.id::text
       ${whereClause}
       GROUP BY cp.id, cp.agent_id, a.name, cp.total_amount, cp.status,
-               cp.payment_method, cp.payout_date, cp.completed_at,
-               cp.failure_reason, cp.created_at, cp.updated_at
+               cp.payment_method, cp.payout_date, cp.created_at, cp.updated_at
       ORDER BY cp.created_at DESC
       LIMIT $${params.length + 1}
     `;
@@ -64,8 +64,8 @@ export async function GET(request: NextRequest) {
     const payoutsResult = await query<{
       id: string; agent_id: string; agent_name: string; total_amount: string;
       status: string; payment_method: unknown; payout_date: unknown;
-      completed_at: unknown; failure_reason: unknown; created_at: unknown; updated_at: unknown;
-      commissions: Array<{ id: string | null; bookingId: string; amount: string; rate: string; status: string; paidAt: unknown }> | null;
+      created_at: unknown; updated_at: unknown;
+      commissions: Array<{ id: string | null; bookingId: string; amount: string; rate: string; status: string; paidAt: unknown }>;
     }>(payoutsQuery, params);
 
     const payouts: CommissionPayout[] = payoutsResult.rows.map((row) => ({
@@ -73,16 +73,16 @@ export async function GET(request: NextRequest) {
       agentId: row.agent_id,
       agentName: row.agent_name,
       totalAmount: parseFloat(row.total_amount),
-      commissions: (row.commissions || [])
-        .filter((commission) => commission.id !== null)
-        .map((commission) => ({
-          id: commission.id as string,
+      commissions: row.commissions
+        .filter((c) => c.id !== null)
+        .map((c) => ({
+          id: c.id as string,
           agentId: row.agent_id,
-          bookingId: commission.bookingId as string,
-          amount: parseFloat(commission.amount as string),
-          rate: parseFloat(commission.rate as string),
-          status: commission.status as string,
-          paidAt: commission.paidAt,
+          bookingId: c.bookingId,
+          amount: parseFloat(c.amount),
+          rate: parseFloat(c.rate),
+          status: c.status,
+          paidAt: c.paidAt,
           payoutReference: row.id,
           createdAt: row.created_at,
           updatedAt: row.updated_at,
@@ -90,8 +90,7 @@ export async function GET(request: NextRequest) {
       status: row.status,
       paymentMethod: row.payment_method,
       payoutDate: row.payout_date,
-      completedAt: row.completed_at,
-      failureReason: row.failure_reason,
+      completedAt: row.updated_at,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     }));

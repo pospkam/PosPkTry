@@ -51,8 +51,8 @@ export async function GET(request: NextRequest) {
         c.name as client_name,
         c.email as client_email,
         b.tour_id,
-        t.name as tour_name,
-        p.name as tour_operator,
+        t.title as tour_name,
+        p.company_name as tour_operator,
         b.booking_date,
         b.tour_date,
         b.guests_count,
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
         b.updated_at
       FROM agent_bookings b
       JOIN agent_clients c ON b.client_id = c.id
-      JOIN tours t ON b.tour_id = t.id
+      JOIN operator_tours t ON b.tour_id = t.id
       JOIN partners p ON t.operator_id = p.id
       ${whereClause}
       ORDER BY b.created_at DESC
@@ -143,13 +143,13 @@ export async function POST(request: NextRequest) {
 
     // Получаем информацию о туре
     const tourQuery = `
-      SELECT t.*, p.name as operator_name, p.commission_rate
-      FROM tours t
+      SELECT t.id, t.title, t.base_price, p.company_name as operator_name, p.commission_current as commission_rate
+      FROM operator_tours t
       JOIN partners p ON t.operator_id = p.id
-      WHERE t.id = $1
+      WHERE t.id = $1 AND t.is_published = true AND t.deleted_at IS NULL
     `;
 
-    const tourResult = await query<{ price: string; commission_rate: string }>(tourQuery, [tourId]);
+    const tourResult = await query<{ base_price: string; commission_rate: string }>(tourQuery, [tourId]);
     if (tourResult.rows.length === 0) {
       return NextResponse.json({
         success: false,
@@ -159,124 +159,65 @@ export async function POST(request: NextRequest) {
 
     const tour = tourResult.rows[0];
 
-    // Проверяем доступность тура на указанную дату
-    // TODO: Добавить проверку доступности
-
     // Рассчитываем стоимость
-    let totalPrice = parseFloat(tour.price) * guestsCount;
+    let totalPrice = parseFloat(tour.base_price) * guestsCount;
     let discountAmount = 0;
 
-    // Применяем ваучер если указан
+    // Применяем промокод если указан (из таблицы promo_codes)
     if (voucherCode) {
-      const voucherQuery = `
-        SELECT * FROM vouchers
-        WHERE code = $1 AND is_active = true
-          AND valid_from <= NOW() AND valid_to >= NOW()
-          AND (usage_limit IS NULL OR used_count < usage_limit)
-      `;
-
-      const voucherResult = await query<{ id: string; discountType: string; discountValue: string; maxDiscount: string | null }>(voucherQuery, [voucherCode]);
-      if (voucherResult.rows.length > 0) {
-        const voucher = voucherResult.rows[0];
-        if (voucher.discountType === 'percentage') {
-          discountAmount = totalPrice * (parseFloat(voucher.discountValue) / 100);
+      const promoResult = await query<{
+        id: string; discount_type: string; discount_value: string;
+      }>(
+        `SELECT id, discount_type, discount_value FROM promo_codes
+         WHERE code = $1 AND is_active = true
+           AND (expires_at IS NULL OR expires_at >= NOW())
+           AND (max_uses IS NULL OR current_uses < max_uses)`,
+        [voucherCode]
+      );
+      if (promoResult.rows.length > 0) {
+        const promo = promoResult.rows[0];
+        if (promo.discount_type === 'percentage') {
+          discountAmount = totalPrice * (parseFloat(promo.discount_value) / 100);
         } else {
-          discountAmount = Math.min(parseFloat(voucher.discountValue), totalPrice);
+          discountAmount = Math.min(parseFloat(promo.discount_value), totalPrice);
         }
-
-        if (voucher.maxDiscount && discountAmount > parseFloat(voucher.maxDiscount)) {
-          discountAmount = parseFloat(voucher.maxDiscount);
-        }
-
-        totalPrice -= discountAmount;
-
-        // Обновляем счетчик использований ваучера
+        totalPrice = Math.max(0, totalPrice - discountAmount);
         await query(
-          'UPDATE vouchers SET used_count = used_count + 1 WHERE id = $1',
-          [voucher.id]
+          'UPDATE promo_codes SET current_uses = current_uses + 1 WHERE id = $1',
+          [promo.id]
         );
-
-        // Записываем использование ваучера
-        await query(`
-          INSERT INTO voucher_usage (
-            id, voucher_id, voucher_code, booking_id, client_id,
-            original_price, discount_amount, final_price, used_at
-          ) VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, NOW())
-        `, [
-          voucher.id, voucherCode, 'temp-booking-id', clientId,
-          totalPrice + discountAmount, discountAmount, totalPrice
-        ]);
       }
     }
 
-    // Рассчитываем комиссию агента (стандартная ставка 10%, или индивидуальная из настроек)
-    const agentCommissionRate = parseFloat(tour.commission_rate) || 0.10; // Из настроек партнера или 10%
-    const agentCommission = totalPrice * agentCommissionRate;
+    // Комиссия агента: 10% от суммы тура (commission_current — это % от оператора, не агентский)
+    const agentCommissionRate = 10; // % от суммы бронирования агенту
+    const agentCommission = totalPrice * (agentCommissionRate / 100);
 
-    // Создаем бронирование
-    const bookingId = `booking-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
+    // Создаем бронирование (id — UUID генерируется автоматически)
     const createBookingQuery = `
       INSERT INTO agent_bookings (
-        id,
-        agent_id,
-        client_id,
-        tour_id,
-        booking_date,
-        tour_date,
-        guests_count,
-        total_price,
-        agent_commission,
-        commission_status,
-        status,
-        payment_status,
-        special_requests,
-        voucher_code,
-        discount_amount,
-        notes,
-        created_at,
-        updated_at
-      ) VALUES (
-        $1, $2, $3, $4, NOW(), $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW(), NOW()
-      )
+        agent_id, client_id, tour_id, tour_date, guests_count,
+        total_price, agent_commission, commission_rate,
+        special_requests, voucher_code, discount_amount, notes
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       RETURNING id, created_at
     `;
 
     const bookingResult = await query<{ id: string; created_at: unknown }>(createBookingQuery, [
-      bookingId,
-      agentId,
-      clientId,
-      tourId,
-      tourDate,
-      guestsCount,
-      totalPrice,
-      agentCommission,
-      'pending', // commission_status
-      'pending', // status
-      'pending', // payment_status
-      specialRequests || null,
-      voucherCode || null,
-      discountAmount,
-      notes || null
+      agentId, clientId, tourId, tourDate, guestsCount,
+      totalPrice, agentCommission, agentCommissionRate,
+      specialRequests || null, voucherCode || null, discountAmount, notes || null
     ]);
 
     // Обновляем статистику клиента
     await query(`
       UPDATE agent_clients
       SET total_bookings = total_bookings + 1,
-          total_spent = total_spent + $1,
-          last_booking = NOW(),
-          updated_at = NOW()
+          total_spent    = total_spent + $1,
+          last_booking   = NOW(),
+          updated_at     = NOW()
       WHERE id = $2
     `, [totalPrice, clientId]);
-
-    // Обновляем использование ваучера с реальным booking_id
-    if (voucherCode) {
-      await query(
-        'UPDATE voucher_usage SET booking_id = $1 WHERE booking_id = $2',
-        [bookingId, 'temp-booking-id']
-      );
-    }
 
     const newBooking = bookingResult.rows[0];
 
