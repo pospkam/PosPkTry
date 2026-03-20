@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { X, Calendar, Users, MessageSquare, CheckCircle, Loader2, LogIn, AlertCircle, Phone } from 'lucide-react';
+import { X, Calendar, Users, MessageSquare, CheckCircle, Loader2, LogIn, AlertCircle, Phone, Shield, ExternalLink } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface Departure {
@@ -372,20 +372,54 @@ export default function BookingModal({
 
           {/* ── Step: success ── */}
           {step === 'success' && (
-            <div className="py-4 text-center space-y-3">
-              <CheckCircle className="w-12 h-12 mx-auto text-[var(--success)]" />
-              <h3 className="text-base font-semibold text-[var(--text-primary)]">
-                Заявка отправлена!
-              </h3>
-              <p className="text-sm text-[var(--text-secondary)]">
-                Оператор получил уведомление и свяжется с вами в течение 24 часов для подтверждения и оплаты.
-              </p>
-              {bookingId && (
-                <p className="text-xs text-[var(--text-muted)]">
-                  Номер заявки: <span className="font-mono">{bookingId.substring(0, 8).toUpperCase()}</span>
+            <div className="py-4 space-y-4">
+              <div className="text-center space-y-3">
+                <CheckCircle className="w-12 h-12 mx-auto text-[var(--success)]" />
+                <h3 className="text-base font-semibold text-[var(--text-primary)]">
+                  Заявка отправлена!
+                </h3>
+                <p className="text-sm text-[var(--text-secondary)]">
+                  Оператор получил уведомление и свяжется с вами в течение 24 часов для подтверждения и оплаты.
                 </p>
-              )}
-              <div className="flex gap-2 pt-1">
+                {bookingId && (
+                  <p className="text-xs text-[var(--text-muted)]">
+                    Номер заявки: <span className="font-mono">{bookingId.substring(0, 8).toUpperCase()}</span>
+                  </p>
+                )}
+              </div>
+
+              {/* Insurance block */}
+              <div className="border border-[var(--border)] rounded-lg p-4 space-y-3 bg-[var(--bg-hover)]">
+                <div className="flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-[var(--ocean)] shrink-0" />
+                  <p className="text-sm font-semibold text-[var(--text-primary)]">Застрахуйте поездку</p>
+                </div>
+                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                  Вулканы, вертолёты, бездорожье — Камчатка требует страховки с покрытием активного отдыха. Оформите за 5 минут.
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <a
+                    href="https://www.tinkoff.ru/insurance/travel/?utm_source=tourhab&utm_medium=booking_success&utm_campaign=insurance"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-[var(--border)] text-xs font-medium text-[var(--text-secondary)] hover:border-[var(--ocean)] hover:text-[var(--ocean)] transition-all"
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                    Тинькофф
+                  </a>
+                  <a
+                    href="https://www.ingos.ru/travel/?utm_source=tourhab&utm_medium=booking_success&utm_campaign=insurance"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-[var(--border)] text-xs font-medium text-[var(--text-secondary)] hover:border-[var(--ocean)] hover:text-[var(--ocean)] transition-all"
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                    Ингосстрах
+                  </a>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
                 <Link href="/hub/tourist/bookings" className="ds-btn ds-btn-secondary flex-1 text-sm text-center">
                   Мои заявки
                 </Link>
