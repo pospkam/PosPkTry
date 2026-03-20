@@ -202,12 +202,14 @@ export function mapOption(row: OptionRow) {
 export function mapAvailability(
   row: AvailabilityRow,
   productId: string,
-  optionId: string
+  optionId: string,
+  dynamicPrice?: number | null
 ) {
   const slots = row.available_slots;
   const booked = Number(row.booked_slots ?? 0);
   const remaining = slots !== null ? Math.max(0, slots - booked) : null;
-  const price = row.base_price_override ?? row.base_price;
+  // Priority: dynamic price > slot override > base price
+  const price = dynamicPrice ?? row.base_price_override ?? row.base_price;
 
   let status: string;
   if (remaining === null) {
@@ -243,7 +245,8 @@ export function mapFreesaleAvailability(
   date: string,
   productId: string,
   optionId: string,
-  basePrice: string | number | null
+  basePrice: string | number | null,
+  dynamicPrice?: number | null
 ) {
   return {
     id: `${productId}-${optionId}-${date}`,
@@ -256,9 +259,9 @@ export function mapFreesaleAvailability(
       from: '08:00',
       to: '20:00',
     }],
-    pricing: basePrice ? {
+    pricing: (dynamicPrice ?? basePrice) ? {
       currency: CURRENCY,
-      amount: toKopecks(basePrice),
+      amount: toKopecks(dynamicPrice ?? basePrice),
       currencyPrecision: 2,
     } : null,
   };
