@@ -4,7 +4,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { Protected } from '@/components/auth/Protected';
 import {
   Building2, Search, Loader2, CheckCircle2, XCircle,
-  Clock, Phone, Mail, Calendar, ChevronDown, ChevronUp
+  Clock, Phone, Mail, Calendar, ChevronDown, ChevronUp,
+  Send, Pencil, Check
 } from 'lucide-react';
 
 type ProfileStatus = 'pending' | 'approved' | 'rejected';
@@ -28,6 +29,7 @@ interface OperatorRow {
   inn: string | null;
   application_status: string | null;
   reviewed_at: string | null;
+  telegram_chat_id: string | null;
 }
 
 const TAB_LABELS: Record<string, string> = {
@@ -103,6 +105,23 @@ function OperatorCard({
   acting: string | null;
 }) {
   const [expanded, setExpanded] = useState(op.profile_status === 'pending');
+  const [tgEdit, setTgEdit] = useState(false);
+  const [tgValue, setTgValue] = useState(op.telegram_chat_id ?? '');
+  const [tgSaving, setTgSaving] = useState(false);
+
+  async function saveTelegram() {
+    setTgSaving(true);
+    try {
+      await fetch(`/api/admin/operators/${op.id}/contacts`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ telegram_chat_id: tgValue.trim() || null }),
+      });
+      setTgEdit(false);
+    } finally {
+      setTgSaving(false);
+    }
+  }
 
   return (
     <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden">
@@ -163,6 +182,47 @@ function OperatorCard({
               <p className="text-xs text-[var(--danger)]"><b>Причина отказа:</b> {op.profile_review_comment}</p>
             </div>
           )}
+
+          {/* Telegram Chat ID */}
+          <div className="mt-3 flex items-center gap-2 text-sm">
+            <Send className="w-3.5 h-3.5 text-[var(--text-muted)] shrink-0" />
+            {tgEdit ? (
+              <div className="flex items-center gap-1.5 flex-1">
+                <input
+                  autoFocus
+                  value={tgValue}
+                  onChange={e => setTgValue(e.target.value)}
+                  placeholder="telegram_chat_id (число)"
+                  className="flex-1 px-2 py-1 text-xs bg-[var(--bg-primary)] border border-[var(--accent)] rounded text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none"
+                />
+                <button
+                  onClick={saveTelegram}
+                  disabled={tgSaving}
+                  className="p-1 text-[var(--success)] hover:bg-[var(--success)]/10 rounded transition-colors"
+                >
+                  {tgSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                </button>
+                <button
+                  onClick={() => { setTgEdit(false); setTgValue(op.telegram_chat_id ?? ''); }}
+                  className="p-1 text-[var(--text-muted)] hover:text-[var(--text-secondary)] rounded transition-colors"
+                >
+                  <XCircle className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 flex-1">
+                <span className={`text-xs ${tgValue ? 'text-[var(--text-secondary)]' : 'text-[var(--text-muted)] italic'}`}>
+                  {tgValue || 'telegram_chat_id не указан'}
+                </span>
+                <button
+                  onClick={() => setTgEdit(true)}
+                  className="p-1 text-[var(--text-muted)] hover:text-[var(--accent)] rounded transition-colors"
+                >
+                  <Pencil className="w-3 h-3" />
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Actions */}
           {op.profile_status === 'pending' && (

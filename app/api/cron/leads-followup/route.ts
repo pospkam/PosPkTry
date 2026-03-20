@@ -98,10 +98,20 @@ export async function GET(request: NextRequest) {
     `);
 
     if (leadsRes.rows.length === 0) {
-      return NextResponse.json({ ok: true, processed: 0 });
+      return NextResponse.json({ ok: true, processed: 0, message: 'Нет лидов для обработки' });
     }
 
+    // Диагностика: сколько операторов с telegram_chat_id
+    const diagRes = await pool.query<{ total: string; with_telegram: string }>(
+      `SELECT COUNT(*) AS total,
+              COUNT(*) FILTER (WHERE contacts->>'telegram_chat_id' IS NOT NULL) AS with_telegram
+       FROM partners WHERE is_public = TRUE`
+    );
+    const diag = diagRes.rows[0];
+
     let processed = 0;
+    let escalated = 0;
+    let noOperators = 0;
 
     for (const lead of leadsRes.rows) {
       const sd: LeadSourceData = lead.source_data ?? {};
@@ -117,8 +127,8 @@ export async function GET(request: NextRequest) {
           `SELECT p.name, p.slug, p.contacts->>'telegram_chat_id' AS telegram_chat_id
            FROM partners p
            JOIN operator_tours ot ON ot.operator_id = p.id
-           JOIN agent_route_knowledge ark ON ark.id = ot.agent_route_id
-           WHERE ark.activity_type = ANY($1)
+           WHERE ot.activity_type = ANY($1)
+             AND ot.is_active = TRUE
              AND p.is_public = TRUE
              AND (p.contacts->>'telegram_chat_id') IS NOT NULL
              AND NOT (p.slug = ANY($2))
@@ -185,6 +195,8 @@ export async function GET(request: NextRequest) {
 
       } else {
         // ── Операторы кончились — эскалация к admin ────────────────────────
+        noOperators++;
+        escalated++;
         if (adminChatId) {
           await telegramService.sendMessage({
             chatId: adminChatId,
@@ -226,7 +238,18 @@ export async function GET(request: NextRequest) {
       processed++;
     }
 
-    return NextResponse.json({ ok: true, processed });
+    return NextResponse.json({
+      ok: true,
+      processed,
+      escalated_to_admin: escalated,
+      no_operator_found: noOperators,
+      leads_found: leadsRes.rows.length,
+      operators_total: Number(diag.total),
+      operators_with_telegram: Number(diag.with_telegram),
+      warning: Number(diag.with_telegram) === 0
+        ? 'Ни один оператор не имеет telegram_chat_id — все лиды эскалируются к admin. Добавьте telegram_chat_id в contacts оператора через /hub/admin/operators.'
+        : null,
+    });
 
   } catch (err) {
     console.error('[cron/leads-followup] error:', err);

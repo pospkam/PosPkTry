@@ -35,6 +35,7 @@ export async function GET(request: NextRequest) {
     SELECT
       p.id,
       p.name            AS company_name,
+      p.contacts->>'telegram_chat_id' AS telegram_chat_id,
       p.category,
       p.description,
       p.profile_status,
