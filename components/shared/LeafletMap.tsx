@@ -26,6 +26,12 @@ export interface MapMarker {
   type?: MarkerType;
   category?: string;
   geometry?: MapMarkerGeometry;
+  /** Stable id returned by onMarkerClick. Defaults to title-based key. */
+  id?: string;
+  /** Yandex Maps 2.1 preset override, e.g. 'islands#grayDotIcon' */
+  preset?: string;
+  /** If true, no balloon is shown on click — only onMarkerClick fires */
+  suppressBalloon?: boolean;
 }
 
 interface LeafletMapProps {
@@ -35,6 +41,8 @@ interface LeafletMapProps {
   height?: string;
   className?: string;
   attribution?: boolean;
+  /** Called when any marker is clicked. Receives marker id (or title if no id). */
+  onMarkerClick?: (id: string) => void;
 }
 
 const COLOR_MAP: Record<string, string> = {
@@ -85,6 +93,7 @@ export default function LeafletMap({
   zoom = 8,
   height = '400px',
   className = '',
+  onMarkerClick,
 }: LeafletMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -119,9 +128,10 @@ export default function LeafletMap({
         const features: any[] = [];
         const bounds: [number, number][] = [];
 
-        markers.forEach(marker => {
+        markers.forEach((marker, idx) => {
           const hex = COLOR_MAP[marker.color ?? 'blue'] ?? '#2568B0';
           const presetInfo = getMarkerColor(hex, marker.type);
+          const markerId = marker.id ?? `mk_${idx}`;
           bounds.push(marker.coords);
 
           // Add geometry if present
@@ -133,7 +143,7 @@ export default function LeafletMap({
             if (marker.geometry.type === 'polygon') {
               features.push({
                 type: 'Feature',
-                id: `poly_${marker.title}`,
+                id: `poly_${markerId}`,
                 geometry: {
                   type: 'Polygon',
                   coordinates: [coordinates],
@@ -152,7 +162,7 @@ export default function LeafletMap({
             } else {
               features.push({
                 type: 'Feature',
-                id: `line_${marker.title}`,
+                id: `line_${markerId}`,
                 geometry: {
                   type: 'LineString',
                   coordinates,
@@ -173,21 +183,32 @@ export default function LeafletMap({
           // Add placemark
           features.push({
             type: 'Feature',
-            id: `marker_${marker.title}`,
+            id: markerId,
             geometry: {
               type: 'Point',
               coordinates: marker.coords,
             },
             properties: {
-              balloonContent: buildBalloonHtml(marker),
+              balloonContent: marker.suppressBalloon ? '' : buildBalloonHtml(marker),
               clusterCaption: marker.title,
               hintContent: marker.title,
             },
             options: {
-              preset: presetInfo.preset,
+              preset: marker.preset ?? presetInfo.preset,
             },
           });
         });
+
+        // Fire onMarkerClick for any marker click
+        if (onMarkerClick) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          objectManager.events.add('click', (e: any) => {
+            const objId = String(e.get('objectId') ?? '');
+            // Ignore geometry features (lines/polygons)
+            if (objId.startsWith('line_') || objId.startsWith('poly_')) return;
+            onMarkerClick(objId);
+          });
+        }
 
         objectManager.add(features);
         map.geoObjects.add(objectManager);
@@ -223,7 +244,7 @@ export default function LeafletMap({
         mapRef.current = null;
       }
     };
-  }, [markers, center, zoom]);
+  }, [markers, center, zoom, onMarkerClick]);
 
   return (
     <div

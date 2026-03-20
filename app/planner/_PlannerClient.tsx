@@ -1,0 +1,904 @@
+'use client';
+
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import dynamic from 'next/dynamic';
+import { Reorder } from 'framer-motion';
+import {
+  Check, AlertTriangle, Sparkles, Loader,
+  Fish, Mountain, PawPrint, Plane,
+  Thermometer, Footprints, Wind, Anchor,
+  Waves, Flame, Droplets, GripVertical,
+  MapPin, Users, Trash2, Plus, Star, Phone,
+  X, ChevronDown, ChevronUp, Truck,
+  ArrowRight, ExternalLink,
+} from 'lucide-react';
+import type { MapMarker } from '@/components/shared/LeafletMap';
+
+const LeafletMap = dynamic(() => import('@/components/shared/LeafletMap'), { ssr: false });
+
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+type TransportType = 'walking' | 'jeep' | 'helicopter' | 'boat';
+
+interface SelectItem {
+  id: string;
+  label: string;
+  Icon: React.ElementType;
+}
+
+interface DayPlan {
+  day: number;
+  zone: 'avachinsky' | 'western' | 'eastern' | 'northern';
+  title: string;
+  activityType: string;
+  priceFrom: number;
+  priceTo: number;
+  coords: [number, number];
+  defaultTransport: TransportType;
+}
+
+interface Recommendation {
+  zones: Array<{ zone: string; score: number; reason: string }>;
+  days: DayPlan[];
+  itinerary: string;
+  warning?: string;
+}
+
+interface RoutePoint {
+  id: string;
+  title: string;
+  description: string | null;
+  lat: number;
+  lng: number;
+  activity_type: string | null;
+  location_type: string | null;
+  zone: string | null;
+}
+
+interface Partner {
+  id: string;
+  name: string;
+  slug: string;
+  rating: number;
+  review_count: number;
+  short_description: string;
+  contacts: Array<{ name: string; phone: string; role: string }> | null;
+  has_matching_tours: boolean;
+}
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const PLACES: SelectItem[] = [
+  { id: 'volcano',    label: 'Вулканы',    Icon: Flame },
+  { id: 'hot_spring', label: 'Термальные', Icon: Thermometer },
+  { id: 'geyser',     label: 'Гейзеры',    Icon: Droplets },
+  { id: 'sea',        label: 'Побережье',  Icon: Waves },
+  { id: 'mountain',   label: 'Хребты',     Icon: Mountain },
+  { id: 'river',      label: 'Реки',       Icon: Anchor },
+];
+
+const ACTIVITIES: SelectItem[] = [
+  { id: 'trekking',   label: 'Треккинг',         Icon: Footprints },
+  { id: 'fishing',    label: 'Рыбалка',          Icon: Fish },
+  { id: 'helicopter', label: 'Вертолёт',         Icon: Plane },
+  { id: 'bears',      label: 'Медведи',          Icon: PawPrint },
+  { id: 'snowmobile', label: 'Снегоходы',        Icon: Wind },
+  { id: 'boat_trip',  label: 'Морская прогулка', Icon: Anchor },
+];
+
+const ZONE_LABELS: Record<string, string> = {
+  avachinsky: 'Авачинская — вулканы',
+  western:    'Западная — рыбалка',
+  eastern:    'Восточная — медведи',
+  northern:   'Северная — гейзеры',
+};
+
+const ZONE_COLORS: Record<string, string> = {
+  avachinsky: 'var(--accent)',
+  eastern:    'var(--ocean)',
+  northern:   'var(--success)',
+  western:    '#a855f7',
+};
+
+const ZONE_COORDS: Record<string, [number, number]> = {
+  avachinsky: [53.25, 158.75],
+  eastern:    [54.80, 160.50],
+  northern:   [56.50, 160.00],
+  western:    [52.50, 156.50],
+};
+
+const ACTIVITY_LABEL: Record<string, string> = {
+  trekking:   'Треккинг',
+  fishing:    'Рыбалка',
+  helicopter: 'Вертолёт',
+  bears:      'Медведи',
+  snowmobile: 'Снегоходы',
+  boat_trip:  'Катер',
+  volcano:    'Вулкан',
+  hot_spring: 'Термальные',
+  geyser:     'Гейзеры',
+  sea:        'Побережье',
+  mountain:   'Горы',
+  river:      'Реки',
+};
+
+const INTEREST_PRICE: Record<string, [number, number]> = {
+  trekking:   [3000,  8000],
+  fishing:    [8000,  20000],
+  bears:      [15000, 35000],
+  helicopter: [25000, 60000],
+  thermal:    [2000,  6000],
+  hot_spring: [2000,  5000],
+  boat_trip:  [5000,  15000],
+  snowmobile: [8000,  18000],
+  volcano:    [5000,  12000],
+  geyser:     [8000,  20000],
+  mountain:   [3000,  9000],
+  sea:        [4000,  12000],
+  river:      [5000,  15000],
+};
+
+const TRANSPORT_OPTIONS: Record<TransportType, { label: string; Icon: React.ElementType; priceAdd: number }> = {
+  walking:    { label: 'Пешком',   Icon: Footprints, priceAdd: 0 },
+  jeep:       { label: 'Джип',     Icon: Truck,      priceAdd: 3000 },
+  boat:       { label: 'Катер',    Icon: Anchor,     priceAdd: 8000 },
+  helicopter: { label: 'Вертолёт', Icon: Plane,      priceAdd: 25000 },
+};
+
+const ACTIVITY_DEFAULT_TRANSPORT: Record<string, TransportType> = {
+  trekking:   'walking',
+  fishing:    'boat',
+  bears:      'helicopter',
+  helicopter: 'helicopter',
+  thermal:    'walking',
+  hot_spring: 'walking',
+  boat_trip:  'boat',
+  snowmobile: 'jeep',
+  volcano:    'jeep',
+  geyser:     'helicopter',
+  mountain:   'walking',
+  sea:        'boat',
+  river:      'boat',
+};
+
+const DEFAULT_PRICE: [number, number] = [3000, 10000];
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function today(): string { return new Date().toISOString().split('T')[0]; }
+function maxDate(): string {
+  const d = new Date(); d.setFullYear(d.getFullYear() + 2); return d.toISOString().split('T')[0];
+}
+function calcDays(from: string, to: string): number | null {
+  if (!from || !to) return null;
+  const diff = new Date(to).getTime() - new Date(from).getTime();
+  return diff > 0 ? Math.round(diff / 86400000) : null;
+}
+function fmt(n: number): string { return n.toLocaleString('ru-RU'); }
+function trunc(s: string | null | undefined, len: number): string {
+  if (!s) return '';
+  return s.length > len ? s.slice(0, len).trimEnd() + '…' : s;
+}
+
+function guessZone(lat: number, lng: number): DayPlan['zone'] {
+  const entries = Object.entries(ZONE_COORDS) as [string, [number, number]][];
+  let best = 'avachinsky';
+  let bestDist = Infinity;
+  for (const [zone, coords] of entries) {
+    const dist = Math.abs(lat - coords[0]) + Math.abs(lng - coords[1]);
+    if (dist < bestDist) { bestDist = dist; best = zone; }
+  }
+  return best as DayPlan['zone'];
+}
+
+function routeToDayPlan(route: RoutePoint, dayNum: number): DayPlan {
+  const activity = route.activity_type ?? 'trekking';
+  const [priceFrom, priceTo] = INTEREST_PRICE[activity] ?? DEFAULT_PRICE;
+  return {
+    day: dayNum,
+    zone: guessZone(route.lat, route.lng),
+    title: route.title,
+    activityType: activity,
+    priceFrom,
+    priceTo,
+    coords: [route.lat, route.lng],
+    defaultTransport: ACTIVITY_DEFAULT_TRANSPORT[activity] ?? 'walking',
+  };
+}
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function SelectGroup({ title, items, selected, onToggle }: {
+  title: string; items: SelectItem[]; selected: string[]; onToggle: (id: string) => void;
+}) {
+  return (
+    <div className="space-y-2">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">{title}</p>
+      <div className="flex flex-wrap gap-2">
+        {items.map(({ id, label, Icon }) => {
+          const active = selected.includes(id);
+          return (
+            <button key={id} type="button" onClick={() => onToggle(id)} title={label}
+              className={`flex items-center justify-center w-10 h-10 rounded-lg transition-all border ${
+                active
+                  ? 'bg-[var(--accent)] border-[var(--accent)] text-white'
+                  : 'border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)]'
+              }`}>
+              <Icon className="w-4 h-4" />
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function TransportSelector({ selected, onChange }: {
+  selected: TransportType; onChange: (t: TransportType) => void;
+}) {
+  return (
+    <div className="flex gap-1">
+      {(Object.keys(TRANSPORT_OPTIONS) as TransportType[]).map(key => {
+        const { label, Icon, priceAdd } = TRANSPORT_OPTIONS[key];
+        const active = selected === key;
+        return (
+          <button key={key} type="button"
+            title={`${label}${priceAdd > 0 ? ` (+${fmt(priceAdd)} ₽)` : ''}`}
+            onClick={() => onChange(key)}
+            className={`flex items-center justify-center w-8 h-8 rounded-md transition-all border text-xs ${
+              active
+                ? 'bg-[var(--accent)] border-[var(--accent)] text-white'
+                : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--accent)] hover:text-[var(--accent)] bg-[var(--bg-hover)]'
+            }`}>
+            <Icon className="w-3.5 h-3.5" />
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// Route detail card — shown over the map when a background route is clicked
+function RouteDetailCard({ route, days, onReplace, onAddDay, onClose }: {
+  route: RoutePoint;
+  days: DayPlan[];
+  onReplace: (dayNum: number) => void;
+  onAddDay: () => void;
+  onClose: () => void;
+}) {
+  const [targetDay, setTargetDay] = useState<number>(days[0]?.day ?? 0);
+  const actLabel = route.activity_type ? (ACTIVITY_LABEL[route.activity_type] ?? route.activity_type) : null;
+
+  return (
+    <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg shadow-lg overflow-hidden">
+      {/* header */}
+      <div className="flex items-start gap-2 px-3 pt-3 pb-2">
+        <MapPin className="w-4 h-4 text-[var(--accent)] shrink-0 mt-0.5" />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-[var(--text-primary)] leading-tight">{route.title}</p>
+          <div className="flex flex-wrap gap-1 mt-1">
+            {actLabel && (
+              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[var(--accent)]/10 text-[var(--accent)]">
+                {actLabel}
+              </span>
+            )}
+            {route.location_type && (
+              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[var(--ocean)]/10 text-[var(--ocean)]">
+                {route.location_type}
+              </span>
+            )}
+          </div>
+        </div>
+        <button onClick={onClose}
+          className="w-6 h-6 flex items-center justify-center rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-colors shrink-0">
+          <X className="w-3.5 h-3.5" />
+        </button>
+      </div>
+
+      {route.description && (
+        <p className="px-3 pb-2 text-xs text-[var(--text-secondary)] leading-relaxed">
+          {trunc(route.description, 120)}
+        </p>
+      )}
+
+      {/* actions */}
+      <div className="px-3 pb-3 space-y-2 border-t border-[var(--border)] pt-2">
+        {days.length > 0 && (
+          <div className="flex items-center gap-2">
+            <select
+              value={targetDay}
+              onChange={e => setTargetDay(Number(e.target.value))}
+              className="ds-input flex-1 text-xs py-1.5"
+            >
+              {days.map((d, i) => (
+                <option key={d.day} value={d.day}>День {i + 1}: {trunc(d.title, 22)}</option>
+              ))}
+            </select>
+            <button
+              onClick={() => onReplace(targetDay)}
+              className="ds-btn ds-btn-primary px-3 py-1.5 text-xs font-medium flex items-center gap-1 shrink-0"
+            >
+              <ArrowRight className="w-3.5 h-3.5" />
+              Изменить
+            </button>
+          </div>
+        )}
+        <div className="flex items-center gap-2">
+          <button onClick={onAddDay}
+            className="ds-btn ds-btn-secondary flex-1 py-1.5 text-xs font-medium flex items-center justify-center gap-1">
+            <Plus className="w-3.5 h-3.5" />
+            Добавить в план
+          </button>
+          <a href={`/routes/${route.id}`} target="_blank" rel="noopener noreferrer"
+            className="ds-btn ds-btn-secondary py-1.5 px-2 text-xs flex items-center gap-1">
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Partners mini-modal
+function PartnersModal({ activityType, onClose }: {
+  activityType: string; onClose: () => void;
+}) {
+  const [partners, setPartners] = useState<Partner[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    fetch(`/api/planner/partners?activity_type=${encodeURIComponent(activityType)}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) setPartners(data.data as Partner[]);
+        else setError(data.error ?? 'Ошибка');
+      })
+      .catch(() => setError('Нет соединения'))
+      .finally(() => setLoading(false));
+  }, [activityType]);
+
+  const label = [...ACTIVITIES, ...PLACES].find(a => a.id === activityType)?.label ?? activityType;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="relative bg-[var(--bg-card)] rounded-lg border border-[var(--border)] w-full max-w-md max-h-[80vh] flex flex-col">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">Операторы</p>
+            <p className="text-sm font-semibold text-[var(--text-primary)]">{label}</p>
+          </div>
+          <button onClick={onClose}
+            className="w-7 h-7 flex items-center justify-center rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+        <div className="overflow-y-auto flex-1 p-3 space-y-2">
+          {loading && (
+            <div className="flex items-center justify-center py-8 gap-2 text-[var(--text-muted)]">
+              <Loader className="w-4 h-4 animate-spin" />
+              <span className="text-sm">Загружаем операторов…</span>
+            </div>
+          )}
+          {!loading && error && (
+            <p className="text-sm text-[var(--danger)] p-3">{error}</p>
+          )}
+          {!loading && !error && partners.length === 0 && (
+            <div className="text-center py-8">
+              <Users className="w-8 h-8 text-[var(--text-muted)] mx-auto mb-2" />
+              <p className="text-sm text-[var(--text-secondary)]">Операторы появятся скоро</p>
+            </div>
+          )}
+          {!loading && partners.map(p => {
+            const phone = Array.isArray(p.contacts) ? p.contacts[0]?.phone : null;
+            return (
+              <div key={p.id} className="bg-[var(--bg-hover)] border border-[var(--border)] rounded-lg p-3 space-y-1.5">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-sm font-semibold text-[var(--text-primary)]">{p.name}</p>
+                  {p.rating > 0 && (
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Star className="w-3 h-3 text-[var(--warning)] fill-current" />
+                      <span className="text-xs font-medium text-[var(--text-primary)]">{p.rating.toFixed(1)}</span>
+                    </div>
+                  )}
+                </div>
+                {p.short_description && (
+                  <p className="text-xs text-[var(--text-secondary)] line-clamp-2">{p.short_description}</p>
+                )}
+                {p.has_matching_tours && (
+                  <span className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded bg-[var(--success)]/15 text-[var(--success)]">
+                    Туры для этой активности
+                  </span>
+                )}
+                {phone && (
+                  <a href={`tel:${phone}`} className="flex items-center gap-1.5 text-xs text-[var(--ocean)] hover:underline">
+                    <Phone className="w-3 h-3" />{phone}
+                  </a>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <div className="px-4 py-3 border-t border-[var(--border)]">
+          <button onClick={onClose} className="w-full ds-btn ds-btn-secondary py-2 text-sm">Закрыть</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
+
+export function PlannerClient() {
+  // Interest + date
+  const [places, setPlaces]         = useState<string[]>([]);
+  const [activities, setActivities] = useState<string[]>([]);
+  const [arrival, setArrival]       = useState('');
+  const [departure, setDeparture]   = useState('');
+
+  // Plan
+  const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
+  const [days, setDays]   = useState<DayPlan[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError]   = useState('');
+  const [showItinerary, setShowItinerary] = useState(false);
+
+  // Level 2
+  const [transportByDay, setTransportByDay] = useState<Record<number, TransportType>>({});
+  const [partnersModal, setPartnersModal]   = useState<{ activityType: string } | null>(null);
+
+  // Background route markers
+  const [bgRoutes, setBgRoutes] = useState<RoutePoint[]>([]);
+
+  // Selected route on map
+  const [selectedRoute, setSelectedRoute] = useState<RoutePoint | null>(null);
+
+  // Lead form
+  const [showContact, setShowContact] = useState(false);
+  const [contactName, setContactName] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+  const [contactError, setContactError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const allInterests = [...new Set([...places, ...activities])];
+  const tripDays = useMemo(() => calcDays(arrival, departure), [arrival, departure]);
+
+  // Transport helpers
+  const getTransport = useCallback((day: DayPlan): TransportType =>
+    transportByDay[day.day] ?? day.defaultTransport, [transportByDay]);
+  const setTransport = useCallback((dayNum: number, t: TransportType) =>
+    setTransportByDay(prev => ({ ...prev, [dayNum]: t })), []);
+
+  // Map: plan markers (numbered) + polyline + background route dots
+  const mapMarkers = useMemo((): MapMarker[] => {
+    const result: MapMarker[] = [];
+
+    // Background route dots (small, grey, suppressed balloon)
+    bgRoutes.forEach(r => {
+      result.push({
+        id: r.id,
+        coords: [r.lat, r.lng],
+        title: r.title,
+        description: trunc(r.description, 80) || undefined,
+        preset: 'islands#grayDotIcon',
+        suppressBalloon: true,
+      });
+    });
+
+    if (days.length === 0) return result;
+
+    // Unique zones for polyline
+    const seen = new Set<string>();
+    const zoneOrder: DayPlan[] = [];
+    days.forEach(d => { if (!seen.has(d.zone)) { seen.add(d.zone); zoneOrder.push(d); } });
+
+    // Plan day markers (numbered pins, not suppressed)
+    days.forEach((d, i) => {
+      result.push({
+        id: `day_${d.day}`,
+        coords: d.coords,
+        title: `${i + 1}. ${d.title}`,
+        description: ZONE_LABELS[d.zone] ?? d.zone,
+        color: i === 0 ? 'red' : 'blue',
+      });
+    });
+
+    // Polyline
+    if (zoneOrder.length >= 2) {
+      result.push({
+        id: 'route_line',
+        coords: zoneOrder[0].coords,
+        title: 'Маршрут',
+        geometry: { type: 'polyline', coordinates: zoneOrder.map(d => d.coords), color: '#D44A0C', weight: 3 },
+      });
+    }
+
+    return result;
+  }, [days, bgRoutes]);
+
+  // Handle map marker click
+  const handleMarkerClick = useCallback((id: string) => {
+    if (id.startsWith('day_') || id === 'route_line') return; // plan markers — ignore
+    const route = bgRoutes.find(r => r.id === id);
+    if (route) setSelectedRoute(route);
+  }, [bgRoutes]);
+
+  // Totals
+  const totalFrom = days.reduce((s, d) => s + d.priceFrom + TRANSPORT_OPTIONS[getTransport(d)].priceAdd, 0);
+  const totalTo   = days.reduce((s, d) => s + d.priceTo   + TRANSPORT_OPTIONS[getTransport(d)].priceAdd, 0);
+
+  // Fetch background routes after recommendation
+  useEffect(() => {
+    if (!recommendation || allInterests.length === 0) return;
+    const actType = activities[0] ?? places[0] ?? 'trekking';
+    fetch(`/api/routes?activity_type=${actType}&hasCoords=true&limit=80`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.data)) {
+          setBgRoutes(data.data as RoutePoint[]);
+        }
+      })
+      .catch(() => {/* silent fail */});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recommendation]);
+
+  function deleteDay(dayNum: number) {
+    setDays(prev => prev.filter(d => d.day !== dayNum));
+    setTransportByDay(prev => { const n = { ...prev }; delete n[dayNum]; return n; });
+  }
+
+  function addDay() {
+    setDays(prev => {
+      if (prev.length === 0) return prev;
+      const last = prev[prev.length - 1];
+      const newNum = Math.max(...prev.map(d => d.day)) + 1;
+      return [...prev, { ...last, day: newNum }];
+    });
+  }
+
+  function replaceDay(dayNum: number, route: RoutePoint) {
+    setDays(prev => prev.map(d => d.day === dayNum ? routeToDayPlan(route, dayNum) : d));
+    setSelectedRoute(null);
+  }
+
+  function addRouteAsDay(route: RoutePoint) {
+    setDays(prev => {
+      const newNum = prev.length > 0 ? Math.max(...prev.map(d => d.day)) + 1 : 1;
+      return [...prev, routeToDayPlan(route, newNum)];
+    });
+    setSelectedRoute(null);
+  }
+
+  async function getRecommendation() {
+    if (allInterests.length === 0) { setError('Выберите место или активность'); return; }
+    setError('');
+    setLoading(true);
+    try {
+      const res = await fetch('/api/planner/recommend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          interests: allInterests,
+          arrivalDate: arrival || undefined,
+          departureDate: departure || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setRecommendation(data.data);
+        setDays(data.data.days ?? []);
+        setTransportByDay({});
+        setBgRoutes([]);
+        setSelectedRoute(null);
+        setShowItinerary(false);
+      } else {
+        setError(data.error || 'Ошибка при получении рекомендации');
+      }
+    } catch { setError('Нет соединения. Попробуйте снова.'); }
+    finally { setLoading(false); }
+  }
+
+  async function submitLead() {
+    setContactError('');
+    const name  = contactName.trim();
+    const phone = contactPhone.trim();
+    if (name.length < 2)   { setContactError('Введите имя'); return; }
+    if (phone.length < 10) { setContactError('Введите телефон'); return; }
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name, phone,
+          source_url: typeof window !== 'undefined' ? window.location.href : '/planner',
+          source_data: {
+            source: 'planner_page',
+            interests: allInterests,
+            arrival: arrival || undefined,
+            departure: departure || undefined,
+            trip_days: tripDays ?? undefined,
+            recommendation: recommendation?.zones,
+            transport_choices: transportByDay,
+          },
+        }),
+      });
+      const data = await res.json();
+      if (data.success) setDone(true);
+      else setContactError(data.error ?? 'Ошибка');
+    } catch { setContactError('Нет соединения'); }
+    finally { setSubmitting(false); }
+  }
+
+  // ── Layout ──────────────────────────────────────────────────────────────────
+  return (
+    <div className="flex flex-col lg:flex-row" style={{ height: 'calc(100vh - 64px)', minHeight: 500 }}>
+
+      {/* ── Map (left on desktop, bottom on mobile) ─────────────────────────── */}
+      <div className="relative flex-1 min-h-[50vw] lg:min-h-0 order-2 lg:order-1">
+        <LeafletMap
+          markers={mapMarkers}
+          center={[54.5, 158.5]}
+          zoom={6}
+          height="100%"
+          className="rounded-none border-0"
+          onMarkerClick={handleMarkerClick}
+        />
+
+        {/* Hint when no routes yet */}
+        {bgRoutes.length === 0 && !recommendation && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 pointer-events-none">
+            <div className="bg-[var(--bg-card)]/90 border border-[var(--border)] rounded-lg px-4 py-2 text-xs text-[var(--text-muted)] flex items-center gap-2">
+              <MapPin className="w-3.5 h-3.5 text-[var(--accent)]" />
+              Получите рекомендацию — на карте появятся маршруты
+            </div>
+          </div>
+        )}
+
+        {/* Background routes count badge */}
+        {bgRoutes.length > 0 && (
+          <div className="absolute top-4 left-4 pointer-events-none">
+            <div className="bg-[var(--bg-card)]/90 border border-[var(--border)] rounded-lg px-3 py-1.5 text-xs text-[var(--text-secondary)] flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-gray-400 shrink-0" />
+              {bgRoutes.length} маршрутов — кликните чтобы добавить в план
+            </div>
+          </div>
+        )}
+
+        {/* Route detail card overlay */}
+        {selectedRoute && (
+          <div className="absolute bottom-4 left-4 right-4 lg:right-auto lg:w-80 z-10">
+            <RouteDetailCard
+              route={selectedRoute}
+              days={days}
+              onReplace={dayNum => replaceDay(dayNum, selectedRoute)}
+              onAddDay={() => addRouteAsDay(selectedRoute)}
+              onClose={() => setSelectedRoute(null)}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* ── Plan panel (right on desktop, top on mobile) ─────────────────────── */}
+      <div className="w-full lg:w-[400px] shrink-0 overflow-y-auto order-1 lg:order-2 border-b lg:border-b-0 lg:border-l border-[var(--border)] bg-[var(--bg-primary)]">
+        {done ? (
+          <div className="flex flex-col items-center justify-center h-full p-10 text-center">
+            <div className="w-12 h-12 rounded-full bg-[var(--success)]/15 flex items-center justify-center mb-4">
+              <Check className="w-6 h-6 text-[var(--success)]" />
+            </div>
+            <h2 className="font-playfair text-2xl font-bold text-[var(--text-primary)] mb-2">Готово!</h2>
+            <p className="text-sm text-[var(--text-secondary)]">Ваши предпочтения отправлены. Скоро свяжемся с вами.</p>
+          </div>
+        ) : (
+          <div className="p-5 space-y-6">
+
+            {/* Header */}
+            <div>
+              <h1 className="font-playfair text-2xl font-bold text-[var(--text-primary)]">
+                Маршрут по Камчатке
+              </h1>
+              <p className="text-sm text-[var(--text-secondary)] mt-0.5">
+                Выберите интересы — AI подберёт программу по дням
+              </p>
+            </div>
+
+            {/* Interests */}
+            <SelectGroup title="Места" items={PLACES} selected={places} onToggle={id => setPlaces(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} />
+            <SelectGroup title="Активности" items={ACTIVITIES} selected={activities} onToggle={id => setActivities(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} />
+
+            {/* Dates */}
+            <div className="space-y-2">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">Даты</p>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <label className="text-xs text-[var(--text-muted)]">Прилёт</label>
+                  <input type="date" value={arrival} min={today()} max={maxDate()}
+                    onChange={e => { setArrival(e.target.value); if (departure && departure < e.target.value) setDeparture(''); }}
+                    className="ds-input w-full text-sm" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-[var(--text-muted)]">Отъезд</label>
+                  <input type="date" value={departure} min={arrival || today()} max={maxDate()}
+                    onChange={e => setDeparture(e.target.value)}
+                    className="ds-input w-full text-sm" />
+                </div>
+              </div>
+              {tripDays != null && tripDays > 0 && (
+                <p className="text-xs text-[var(--success)] font-medium flex items-center gap-1.5">
+                  <Check className="w-3.5 h-3.5" />
+                  {tripDays} {tripDays === 1 ? 'день' : tripDays < 5 ? 'дня' : 'дней'}
+                </p>
+              )}
+            </div>
+
+            {error && (
+              <div className="flex items-start gap-2 p-3 bg-[var(--danger)]/10 border border-[var(--danger)]/30 rounded-lg">
+                <AlertTriangle className="w-4 h-4 text-[var(--danger)] shrink-0 mt-0.5" />
+                <p className="text-sm text-[var(--danger)]">{error}</p>
+              </div>
+            )}
+
+            <button onClick={getRecommendation} disabled={loading || allInterests.length === 0}
+              className="w-full ds-btn ds-btn-primary py-3 font-semibold flex items-center justify-center gap-2 disabled:opacity-50">
+              {loading
+                ? <><Loader className="w-4 h-4 animate-spin" />Генерирую маршрут...</>
+                : <><Sparkles className="w-4 h-4" />Получить рекомендацию</>}
+            </button>
+
+            {/* Results */}
+            {recommendation && (
+              <>
+                {recommendation.warning && (
+                  <div className="flex items-start gap-2 p-3 bg-[var(--warning)]/10 border border-[var(--warning)]/30 rounded-lg">
+                    <AlertTriangle className="w-4 h-4 text-[var(--warning)] shrink-0 mt-0.5" />
+                    <p className="text-sm text-[var(--warning)]">{recommendation.warning}</p>
+                  </div>
+                )}
+
+                {/* Zones */}
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Зоны</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {recommendation.zones.map(z => (
+                      <div key={z.zone} className="flex items-center gap-1.5 px-2.5 py-1 bg-[var(--bg-hover)] rounded-full border border-[var(--border)]">
+                        <div className="w-2 h-2 rounded-full" style={{ background: ZONE_COLORS[z.zone] ?? 'var(--accent)' }} />
+                        <span className="text-xs font-medium text-[var(--text-primary)]">{ZONE_LABELS[z.zone] ?? z.zone}</span>
+                        <span className="text-[10px] text-[var(--text-muted)]">{z.score}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Days */}
+                {days.length > 0 && (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">
+                        {days.length} {days.length === 1 ? 'день' : days.length < 5 ? 'дня' : 'дней'}
+                      </p>
+                      <p className="text-[10px] text-[var(--text-muted)]">перетащите для изменения порядка</p>
+                    </div>
+
+                    <Reorder.Group axis="y" values={days} onReorder={setDays} className="space-y-1.5">
+                      {days.map((day, idx) => {
+                        const transport = getTransport(day);
+                        const { priceAdd, Icon: TransIcon } = TRANSPORT_OPTIONS[transport];
+                        return (
+                          <Reorder.Item key={day.day} value={day}
+                            className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg cursor-grab active:cursor-grabbing select-none"
+                            style={{ listStyle: 'none' }}>
+                            {/* Row 1 */}
+                            <div className="flex items-center gap-2 px-3 pt-3 pb-1.5">
+                              <GripVertical className="w-3.5 h-3.5 text-[var(--text-muted)] shrink-0" />
+                              <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0"
+                                style={{ background: ZONE_COLORS[day.zone] ?? 'var(--accent)' }}>
+                                {idx + 1}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-medium text-[var(--text-primary)] truncate">{day.title}</p>
+                                <p className="text-[10px] text-[var(--text-muted)]">{ZONE_LABELS[day.zone] ?? day.zone}</p>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <p className="text-xs font-semibold text-[var(--accent)]">от {fmt(day.priceFrom + priceAdd)} ₽</p>
+                                <p className="text-[10px] text-[var(--text-muted)]">до {fmt(day.priceTo + priceAdd)} ₽</p>
+                              </div>
+                            </div>
+                            {/* Row 2 */}
+                            <div className="flex items-center gap-2 px-3 pb-2.5 pt-0.5">
+                              <TransportSelector selected={transport} onChange={t => setTransport(day.day, t)} />
+                              {priceAdd > 0 && (
+                                <span className="text-[10px] text-[var(--text-muted)] flex items-center gap-0.5">
+                                  <TransIcon className="w-3 h-3" />+{fmt(priceAdd)} ₽
+                                </span>
+                              )}
+                              <div className="flex-1" />
+                              <button type="button" title="Операторы"
+                                onClick={() => setPartnersModal({ activityType: day.activityType })}
+                                className="w-7 h-7 flex items-center justify-center rounded-md border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--ocean)] hover:border-[var(--ocean)] transition-colors bg-[var(--bg-hover)]">
+                                <Users className="w-3.5 h-3.5" />
+                              </button>
+                              <button type="button" title="Удалить день"
+                                onClick={() => deleteDay(day.day)}
+                                className="w-7 h-7 flex items-center justify-center rounded-md border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--danger)] hover:border-[var(--danger)] transition-colors bg-[var(--bg-hover)]">
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </Reorder.Item>
+                        );
+                      })}
+                    </Reorder.Group>
+
+                    {/* Add day */}
+                    <button type="button" onClick={addDay}
+                      className="mt-1.5 w-full flex items-center justify-center gap-1.5 py-2 rounded-lg border border-dashed border-[var(--border)] text-[10px] font-medium text-[var(--text-muted)] hover:text-[var(--accent)] hover:border-[var(--accent)] transition-colors">
+                      <Plus className="w-3.5 h-3.5" />
+                      Добавить день
+                    </button>
+
+                    {/* Total */}
+                    <div className="flex items-center justify-between px-1 mt-2 pt-2 border-t border-[var(--border)]">
+                      <span className="text-xs text-[var(--text-secondary)]">Итого за поездку</span>
+                      <span className="text-sm font-semibold text-[var(--accent)]">
+                        от {fmt(totalFrom)} ₽ — до {fmt(totalTo)} ₽
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* AI itinerary */}
+                {recommendation.itinerary && (
+                  <div>
+                    <button onClick={() => setShowItinerary(v => !v)}
+                      className="flex items-center gap-1.5 text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors">
+                      {showItinerary ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                      {showItinerary ? 'Скрыть программу' : 'Подробная программа'}
+                    </button>
+                    {showItinerary && (
+                      <div className="mt-2 text-sm text-[var(--text-secondary)] leading-relaxed space-y-1.5 p-3 bg-[var(--bg-hover)] rounded-lg">
+                        {recommendation.itinerary.split('\n').filter(l => l.trim()).map((line, i) => (
+                          <p key={i}>{line}</p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Contact form */}
+                {!showContact ? (
+                  <button onClick={() => setShowContact(true)} className="w-full ds-btn ds-btn-primary py-2.5 font-semibold">
+                    Запросить подробное предложение
+                  </button>
+                ) : (
+                  <div className="space-y-3 pt-1 border-t border-[var(--border)]">
+                    <p className="text-xs font-bold uppercase tracking-widest text-[var(--text-muted)]">Контакты</p>
+                    <input type="text" value={contactName} onChange={e => setContactName(e.target.value)}
+                      placeholder="Ваше имя" className="ds-input w-full text-sm" />
+                    <input type="tel" value={contactPhone} onChange={e => setContactPhone(e.target.value)}
+                      placeholder="+7 900 000-00-00" className="ds-input w-full text-sm" />
+                    {contactError && (
+                      <div className="flex items-center gap-2 p-2 bg-[var(--danger)]/10 rounded-lg">
+                        <AlertTriangle className="w-3.5 h-3.5 text-[var(--danger)] shrink-0" />
+                        <p className="text-xs text-[var(--danger)]">{contactError}</p>
+                      </div>
+                    )}
+                    <button onClick={submitLead} disabled={submitting}
+                      className="w-full ds-btn ds-btn-primary py-2.5 font-semibold disabled:opacity-50">
+                      {submitting ? 'Отправляем…' : 'Отправить заявку'}
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Partners modal */}
+      {partnersModal && (
+        <PartnersModal activityType={partnersModal.activityType} onClose={() => setPartnersModal(null)} />
+      )}
+    </div>
+  );
+}
