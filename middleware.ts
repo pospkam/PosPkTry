@@ -57,8 +57,6 @@ const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/hub/operator/payments/webhook': ['POST'],       // CloudPayments webhook for operator tours — HMAC validated inside
   '/api/cron': ['GET'],              // cron jobs — дополнительная защита через CRON_SECRET внутри
   '/api/octo': 'ALL',               // OCTO API — авторизация через Bearer token внутри
-  '/api/mig057': ['GET'],           // seed: Камчатка маршруты (разовое)
-  '/api/mig058': ['GET'],           // cleanup: дубль Быстрой
 };
 
 const API_ROLE_REQUIREMENTS: Record<string, AuthRole> = {
