@@ -53,7 +53,7 @@ FROM operator_tours ot
 JOIN partners p ON p.id=ot.operator_id
 JOIN agent_route_knowledge ark ON ark.id=ot.agent_route_id
 LEFT JOIN LATERAL (
-  SELECT ta.date, ta.available_slots, ta.price_override
+  SELECT ta.date, ta.available_slots, ta.base_price_override AS price_override
   FROM tour_availability ta
   WHERE ta.operator_tour_id=ot.id AND ta.is_cancelled=FALSE
     AND ta.available_slots>COALESCE(ta.booked_slots,0) AND ta.date>=CURRENT_DATE
