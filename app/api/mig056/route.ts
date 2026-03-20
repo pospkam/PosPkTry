@@ -6,11 +6,21 @@ import path from 'path';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  const sql = fs.readFileSync(
-    path.join(process.cwd(), 'migrations/056_marketplace_view_operator_tours.sql'),
-    'utf8'
-  );
-  await pool.query(sql);
+  let sql: string;
+  try {
+    sql = fs.readFileSync(
+      path.join(process.cwd(), 'migrations/056_marketplace_view_operator_tours.sql'),
+      'utf8'
+    );
+  } catch (e) {
+    return NextResponse.json({ success: false, error: 'Cannot read SQL file', detail: String(e) }, { status: 500 });
+  }
+
+  try {
+    await pool.query(sql);
+  } catch (e) {
+    return NextResponse.json({ success: false, error: 'SQL error', detail: String(e) }, { status: 500 });
+  }
 
   // Проверяем результат
   const cols = await pool.query(`
