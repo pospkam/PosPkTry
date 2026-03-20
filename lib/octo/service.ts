@@ -5,6 +5,7 @@
  */
 
 import { pool } from '@/lib/db-pool';
+import { notifyOctoWebhooks } from '@/lib/octo/webhooks';
 
 // --- Suppliers ---
 
@@ -234,6 +235,11 @@ export async function createBooking(data: {
     );
 
     await client.query('COMMIT');
+
+    // Webhook notification (fire-and-forget)
+    const fullBooking = await getBookingByUuid(booking.octo_uuid);
+    notifyOctoWebhooks('booking:created', booking.id, fullBooking ?? {}).catch(() => {});
+
     return { booking };
   } catch (err) {
     await client.query('ROLLBACK');
@@ -303,7 +309,12 @@ export async function confirmBooking(octoUuid: string, apiKeyId: string) {
     );
 
     await client.query('COMMIT');
-    return rows[0];
+
+    const confirmed = rows[0];
+    const fullBooking = await getBookingByUuid(octoUuid);
+    notifyOctoWebhooks('booking:confirmed', confirmed.id, fullBooking ?? {}).catch(() => {});
+
+    return confirmed;
   } catch (err) {
     await client.query('ROLLBACK');
     throw err;
@@ -348,6 +359,10 @@ export async function cancelBooking(octoUuid: string, apiKeyId: string, reason?:
     );
 
     await client.query('COMMIT');
+
+    const fullBooking = await getBookingByUuid(octoUuid);
+    notifyOctoWebhooks('booking:cancelled', booking.id, fullBooking ?? {}).catch(() => {});
+
     return booking;
   } catch (err) {
     await client.query('ROLLBACK');

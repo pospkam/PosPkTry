@@ -54,16 +54,21 @@ export async function POST(request: NextRequest) {
   const data = parsed.data;
   const apiKey = randomBytes(32).toString('hex');
 
+  const webhookUrl    = (body as Record<string, unknown>)['webhookUrl']    as string | undefined;
+  const webhookSecret = (body as Record<string, unknown>)['webhookSecret'] as string | undefined;
+
   const { rows } = await pool.query(
     `INSERT INTO octo_api_keys (
        name, api_key, operator_id, can_read_products, can_read_availability,
-       can_create_bookings, rate_limit_per_minute, created_by, notes
-     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       can_create_bookings, rate_limit_per_minute, created_by, notes,
+       webhook_url, webhook_secret
+     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
      RETURNING id, name, api_key, operator_id, is_active, created_at`,
     [
       data.name, apiKey, data.operatorId ?? null,
       data.canReadProducts, data.canReadAvailability, data.canCreateBookings,
       data.rateLimitPerMinute, user.userId, data.notes ?? null,
+      webhookUrl ?? null, webhookSecret ?? null,
     ]
   );
 

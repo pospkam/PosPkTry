@@ -1,10 +1,12 @@
 /**
- * OCTO API Authentication
- * Bearer token auth via octo_api_keys table
+ * OCTO API Authentication + Rate limiting
+ * Bearer token auth via octo_api_keys table.
+ * Per-key in-memory rate limiter (rateLimitPerMinute from DB).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { pool } from '@/lib/db-pool';
+import { createRateLimiter, RateLimiter } from '@/lib/rate-limit';
 
 export interface OctoApiKeyPayload {
   id: string;
@@ -14,14 +16,30 @@ export interface OctoApiKeyPayload {
   canReadAvailability: boolean;
   canCreateBookings: boolean;
   rateLimitPerMinute: number;
+  webhookUrl: string | null;
 }
 
-function octoError(status: number, error: string, errorMessage: string): NextResponse {
+export function octoError(status: number, error: string, errorMessage: string): NextResponse {
   return NextResponse.json({ error, errorMessage }, { status });
 }
 
+// Per-key rate limiters: keyId → limiter instance
+// Limiters are created lazily and keyed by "{keyId}:{rateLimit}"
+// so that a changed rateLimit auto-creates a fresh limiter.
+const limiters = new Map<string, RateLimiter>();
+
+function getLimiter(keyId: string, ratePerMinute: number): RateLimiter {
+  const cacheKey = `${keyId}:${ratePerMinute}`;
+  let limiter = limiters.get(cacheKey);
+  if (!limiter) {
+    limiter = createRateLimiter({ windowMs: 60_000, max: ratePerMinute });
+    limiters.set(cacheKey, limiter);
+  }
+  return limiter;
+}
+
 /**
- * Validates Bearer token from Authorization header.
+ * Validates Bearer token, enforces per-key rate limit.
  * Returns OctoApiKeyPayload or NextResponse (error).
  */
 export async function requireOctoAuth(
@@ -45,9 +63,10 @@ export async function requireOctoAuth(
     can_read_availability: boolean;
     can_create_bookings: boolean;
     rate_limit_per_minute: number;
+    webhook_url: string | null;
   }>(
     `SELECT id, name, operator_id, can_read_products, can_read_availability,
-            can_create_bookings, rate_limit_per_minute
+            can_create_bookings, rate_limit_per_minute, webhook_url
      FROM octo_api_keys
      WHERE api_key = $1 AND is_active = true`,
     [apiKey]
@@ -58,6 +77,16 @@ export async function requireOctoAuth(
   }
 
   const key = rows[0];
+
+  // Rate limiting: per API key, per minute
+  const limiter = getLimiter(key.id, key.rate_limit_per_minute);
+  if (!limiter.check(key.id)) {
+    return octoError(
+      429,
+      'RATE_LIMIT_EXCEEDED',
+      `Too many requests. Limit: ${key.rate_limit_per_minute} requests/minute`
+    );
+  }
 
   // Update last_used_at (fire and forget)
   pool.query('UPDATE octo_api_keys SET last_used_at = NOW() WHERE id = $1', [key.id]).catch(() => {});
@@ -70,5 +99,6 @@ export async function requireOctoAuth(
     canReadAvailability: key.can_read_availability,
     canCreateBookings: key.can_create_bookings,
     rateLimitPerMinute: key.rate_limit_per_minute,
+    webhookUrl: key.webhook_url,
   };
 }
