@@ -224,14 +224,25 @@ function SelectGroup({ title, items, selected, onToggle }: {
   );
 }
 
-function TransportSelector({ selected, onChange }: {
-  selected: TransportType; onChange: (t: TransportType) => void;
+// Boat only makes sense for coastal/river zones; helicopter not for sea crossings only
+const ZONE_TRANSPORTS: Record<string, TransportType[]> = {
+  avachinsky: ['walking', 'jeep', 'helicopter'],
+  northern:   ['walking', 'jeep', 'helicopter'],
+  eastern:    ['walking', 'jeep', 'helicopter', 'boat'],
+  western:    ['walking', 'jeep', 'boat'],
+};
+
+function TransportSelector({ selected, onChange, zone }: {
+  selected: TransportType; onChange: (t: TransportType) => void; zone?: string;
 }) {
+  const allowed = zone ? (ZONE_TRANSPORTS[zone] ?? Object.keys(TRANSPORT_OPTIONS) as TransportType[]) : Object.keys(TRANSPORT_OPTIONS) as TransportType[];
+  // if currently selected transport is not allowed in this zone, use first allowed
+  const effective = allowed.includes(selected) ? selected : allowed[0];
   return (
     <div className="flex gap-1">
-      {(Object.keys(TRANSPORT_OPTIONS) as TransportType[]).map(key => {
+      {allowed.map(key => {
         const { label, Icon, priceAdd } = TRANSPORT_OPTIONS[key];
-        const active = selected === key;
+        const active = effective === key;
         return (
           <button key={key} type="button"
             title={`${label}${priceAdd > 0 ? ` (+${fmt(priceAdd)} ₽)` : ''}`}
@@ -317,7 +328,7 @@ function DayCard({
         </div>
         {/* Row 2 — transport + actions */}
         <div className="flex items-center gap-2 px-3 pb-2.5 pt-0.5">
-          <TransportSelector selected={transport} onChange={t => onTransportChange(day.day, t)} />
+          <TransportSelector selected={transport} onChange={t => onTransportChange(day.day, t)} zone={day.zone} />
           {priceAdd > 0 && (
             <span className="text-[10px] text-[var(--text-muted)] flex items-center gap-0.5">
               <TransIcon className="w-3 h-3" />+{fmt(priceAdd)} ₽
@@ -502,10 +513,10 @@ function PartnersModal({ activityType, onClose }: {
               <div key={p.id} className="bg-[var(--bg-hover)] border border-[var(--border)] rounded-lg p-3 space-y-1.5">
                 <div className="flex items-start justify-between gap-2">
                   <p className="text-sm font-semibold text-[var(--text-primary)]">{p.name}</p>
-                  {p.rating > 0 && (
+                  {Number(p.rating) > 0 && (
                     <div className="flex items-center gap-1 shrink-0">
                       <Star className="w-3 h-3 text-[var(--warning)] fill-current" />
-                      <span className="text-xs font-medium text-[var(--text-primary)]">{p.rating.toFixed(1)}</span>
+                      <span className="text-xs font-medium text-[var(--text-primary)]">{Number(p.rating).toFixed(1)}</span>
                     </div>
                   )}
                 </div>
