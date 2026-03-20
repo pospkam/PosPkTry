@@ -91,3 +91,64 @@ INSERT INTO partners (
   status = EXCLUDED.status;
 
 SELECT id, name, slug, is_public, is_verified FROM partners WHERE slug = 'kamchatka-wild';
+
+-- Insert operator_tours for Камчатка Дикая with transportation data
+INSERT INTO operator_tours (
+  operator_id, title, description, short_description,
+  location_type, activity_type, location_name, latitude, longitude,
+  base_price, currency, max_participants, min_participants,
+  duration_hours, duration_type, season_start, season_end, seasonal_only,
+  is_active, is_published, difficulty, transportation
+)
+SELECT
+  p.id,
+  'Медведи на Курильском озере',
+  'Вертолётный тур к Курильскому озеру — главному нерестилищу нерки в России. До 50 медведей одновременно на берегу. Егерь-сопровождающий. Безопасное наблюдение с берега. Пикник.',
+  'Медведи на Курильском озере с вертолёта. До 50 медведей. От 45 000 ₽.',
+  'lake', 'bears', 'Курильское озеро', 51.4489, 157.0283,
+  45000, 'RUB', 12, 4,
+  8, 'day', '2026-07-01', '2026-09-30', TRUE,
+  TRUE, TRUE, 'easy',
+  '[{"type":"helicopter","price_add":0,"duration_hours":1.5},{"type":"boat","price_add":-5000,"duration_hours":4}]'::jsonb
+FROM partners p WHERE p.slug = 'kamchatka-wild'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO operator_tours (
+  operator_id, title, description, short_description,
+  location_type, activity_type, location_name, latitude, longitude,
+  base_price, currency, max_participants, min_participants,
+  duration_hours, duration_type, season_start, season_end, seasonal_only,
+  is_active, is_published, difficulty, transportation
+)
+SELECT
+  p.id,
+  'Долина гейзеров с вертолёта',
+  'Объект ЮНЕСКО. 40 крупных гейзеров и 200+ выходов пара. Горячие источники, каньоны, уникальные термофилы. Единственный способ добраться — вертолёт. Включена термальная ванна и пикник.',
+  'Долина гейзеров на Ми-8. Объект ЮНЕСКО. Термальная ванна. От 38 000 ₽.',
+  'geyser', 'helicopter', 'Долина гейзеров', 54.4337, 160.1354,
+  38000, 'RUB', 12, 4,
+  7, 'day', '2026-06-15', '2026-10-15', TRUE,
+  TRUE, TRUE, 'easy',
+  '[{"type":"helicopter","price_add":0,"duration_hours":1}]'::jsonb
+FROM partners p WHERE p.slug = 'kamchatka-wild'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO operator_tours (
+  operator_id, title, description, short_description,
+  location_type, activity_type, location_name, latitude, longitude,
+  base_price, currency, max_participants, min_participants,
+  duration_hours, duration_type, season_start, season_end, seasonal_only,
+  is_active, is_published, difficulty, transportation
+)
+SELECT
+  p.id,
+  'Морской тур: касатки и сивучи',
+  'Катамаран по Авачинской бухте и в Тихий океан. Касатки, морские выдры, сивучи. Мыс Кекурный — лежбище 400+ сивучей. Гид-натуралист объясняет поведение каждого вида.',
+  'Катамаран: касатки и сивучи в Авачинской бухте. 6 часов. От 8 500 ₽.',
+  'bay', 'boat_trip', 'Авачинская бухта', 52.9873, 158.7648,
+  8500, 'RUB', 12, 2,
+  6, 'day', '2026-06-01', '2026-10-31', TRUE,
+  TRUE, TRUE, 'easy',
+  '[{"type":"boat","price_add":0,"duration_hours":6}]'::jsonb
+FROM partners p WHERE p.slug = 'kamchatka-wild'
+ON CONFLICT DO NOTHING;

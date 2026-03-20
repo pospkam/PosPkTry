@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { Reorder } from 'framer-motion';
 import {
@@ -9,16 +9,53 @@ import {
   Thermometer, Footprints, Wind, Anchor,
   Waves, Flame, Droplets, GripVertical,
   ChevronDown, ChevronUp, MapPin,
+  Truck, Users, Trash2, Plus, Star, Phone, X,
 } from 'lucide-react';
 import type { MapMarker } from '@/components/shared/LeafletMap';
+import type { TransportType } from '@/lib/services/trip-recommender';
 
 const LeafletMap = dynamic(() => import('@/components/shared/LeafletMap'), { ssr: false });
+
+// ─── Types ───────────────────────────────────────────────────────────────────
 
 interface SelectItem {
   id: string;
   label: string;
   Icon: React.ElementType;
 }
+
+interface DayPlan {
+  day: number;
+  zone: string;
+  title: string;
+  activityType: string;
+  priceFrom: number;
+  priceTo: number;
+  coords: [number, number];
+  defaultTransport: TransportType;
+}
+
+interface Recommendation {
+  zones: Array<{ zone: string; score: number; reason: string }>;
+  days: DayPlan[];
+  itinerary: string;
+  warning?: string;
+}
+
+interface Partner {
+  id: string;
+  name: string;
+  slug: string;
+  rating: number;
+  review_count: number;
+  hero_image: string | null;
+  short_description: string;
+  contacts: Array<{ name: string; phone: string; role: string }> | null;
+  activity_types: string[];
+  has_matching_tours: boolean;
+}
+
+// ─── Constants ────────────────────────────────────────────────────────────────
 
 const PLACES: SelectItem[] = [
   { id: 'volcano',    label: 'Вулканы',       Icon: Flame },
@@ -52,22 +89,16 @@ const ZONE_COLORS: Record<string, string> = {
   western:    '#a855f7',
 };
 
-interface DayPlan {
-  day: number;
-  zone: string;
-  title: string;
-  activityType: string;
-  priceFrom: number;
-  priceTo: number;
-  coords: [number, number];
-}
+const TRANSPORT_OPTIONS: Record<TransportType, { label: string; Icon: React.ElementType; priceAdd: number }> = {
+  walking:    { label: 'Пешком',    Icon: Footprints, priceAdd: 0 },
+  jeep:       { label: 'Джип',      Icon: Truck,      priceAdd: 3000 },
+  boat:       { label: 'Катер',     Icon: Anchor,     priceAdd: 8000 },
+  helicopter: { label: 'Вертолёт',  Icon: Plane,      priceAdd: 25000 },
+};
 
-interface Recommendation {
-  zones: Array<{ zone: string; score: number; reason: string }>;
-  days: DayPlan[];
-  itinerary: string;
-  warning?: string;
-}
+const TRANSPORT_KEYS = Object.keys(TRANSPORT_OPTIONS) as TransportType[];
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function today(): string { return new Date().toISOString().split('T')[0]; }
 function maxDate(): string {
@@ -85,6 +116,9 @@ function formatDays(n: number): string {
   return dLabel + nLabel;
 }
 function fmt(n: number): string { return n.toLocaleString('ru-RU'); }
+function fmtRating(r: number): string { return r.toFixed(1); }
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
 
 function SelectGroup({ title, items, selected, onToggle }: {
   title: string; items: SelectItem[]; selected: string[]; onToggle: (id: string) => void;
@@ -111,6 +145,143 @@ function SelectGroup({ title, items, selected, onToggle }: {
   );
 }
 
+function TransportSelector({ selected, onChange }: {
+  selected: TransportType;
+  onChange: (t: TransportType) => void;
+}) {
+  return (
+    <div className="flex gap-1">
+      {TRANSPORT_KEYS.map(key => {
+        const { label, Icon, priceAdd } = TRANSPORT_OPTIONS[key];
+        const active = selected === key;
+        return (
+          <button
+            key={key}
+            type="button"
+            title={`${label}${priceAdd > 0 ? ` (+${fmt(priceAdd)} ₽)` : ''}`}
+            onClick={() => onChange(key)}
+            className={`flex items-center justify-center w-8 h-8 rounded-md transition-all border text-xs ${
+              active
+                ? 'bg-[var(--accent)] border-[var(--accent)] text-white'
+                : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--accent)] hover:text-[var(--accent)] bg-[var(--bg-hover)]'
+            }`}
+          >
+            <Icon className="w-3.5 h-3.5" />
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function PartnersModal({ activityType, onClose }: {
+  activityType: string;
+  onClose: () => void;
+}) {
+  const [partners, setPartners] = useState<Partner[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    fetch(`/api/planner/partners?activity_type=${encodeURIComponent(activityType)}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) setPartners(data.data as Partner[]);
+        else setError(data.error ?? 'Ошибка');
+      })
+      .catch(() => setError('Нет соединения'))
+      .finally(() => setLoading(false));
+  }, [activityType]);
+
+  const activityLabel = ACTIVITIES.find(a => a.id === activityType)?.label
+    ?? PLACES.find(p => p.id === activityType)?.label
+    ?? activityType;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="relative bg-[var(--bg-card)] rounded-lg border border-[var(--border)] w-full max-w-md max-h-[80vh] flex flex-col">
+        {/* header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">Операторы</p>
+            <p className="text-sm font-semibold text-[var(--text-primary)]">{activityLabel}</p>
+          </div>
+          <button onClick={onClose}
+            className="w-7 h-7 flex items-center justify-center rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* body */}
+        <div className="overflow-y-auto flex-1 p-3 space-y-2">
+          {loading && (
+            <div className="flex items-center justify-center py-8 gap-2 text-[var(--text-muted)]">
+              <Loader className="w-4 h-4 animate-spin" />
+              <span className="text-sm">Загружаем операторов…</span>
+            </div>
+          )}
+          {!loading && error && (
+            <div className="flex items-center gap-2 p-3 bg-[var(--danger)]/10 rounded-lg">
+              <AlertTriangle className="w-4 h-4 text-[var(--danger)] shrink-0" />
+              <p className="text-sm text-[var(--danger)]">{error}</p>
+            </div>
+          )}
+          {!loading && !error && partners.length === 0 && (
+            <div className="text-center py-8">
+              <Users className="w-8 h-8 text-[var(--text-muted)] mx-auto mb-2" />
+              <p className="text-sm text-[var(--text-secondary)]">Операторы для этого типа тура появятся скоро</p>
+            </div>
+          )}
+          {!loading && partners.map(p => {
+            const phone = Array.isArray(p.contacts) ? p.contacts[0]?.phone : null;
+            return (
+              <div key={p.id}
+                className="bg-[var(--bg-hover)] border border-[var(--border)] rounded-lg p-3 space-y-1.5">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-sm font-semibold text-[var(--text-primary)] leading-tight">{p.name}</p>
+                  {p.rating > 0 && (
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Star className="w-3 h-3 text-[var(--warning)] fill-current" />
+                      <span className="text-xs font-medium text-[var(--text-primary)]">{fmtRating(p.rating)}</span>
+                      {p.review_count > 0 && (
+                        <span className="text-[10px] text-[var(--text-muted)]">({p.review_count})</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+                {p.short_description && (
+                  <p className="text-xs text-[var(--text-secondary)] line-clamp-2">{p.short_description}</p>
+                )}
+                {p.has_matching_tours && (
+                  <span className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded bg-[var(--success)]/15 text-[var(--success)]">
+                    Туры для этой активности
+                  </span>
+                )}
+                {phone && (
+                  <a href={`tel:${phone}`}
+                    className="flex items-center gap-1.5 text-xs text-[var(--ocean)] hover:underline">
+                    <Phone className="w-3 h-3" />
+                    {phone}
+                  </a>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="px-4 py-3 border-t border-[var(--border)]">
+          <button onClick={onClose} className="w-full ds-btn ds-btn-secondary py-2 text-sm">
+            Закрыть
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
+
 export function TripPlanner() {
   const [places, setPlaces]         = useState<string[]>([]);
   const [activities, setActivities] = useState<string[]>([]);
@@ -122,6 +293,11 @@ export function TripPlanner() {
   const [done, setDone]             = useState(false);
   const [error, setError]           = useState('');
   const [showItinerary, setShowItinerary] = useState(false);
+
+  // Level 2 state
+  const [transportByDay, setTransportByDay] = useState<Record<number, TransportType>>({});
+  const [partnersModal, setPartnersModal]   = useState<{ dayIdx: number; activityType: string } | null>(null);
+
   // contact form
   const [showContact, setShowContact] = useState(false);
   const [contactName, setContactName] = useState('');
@@ -134,6 +310,15 @@ export function TripPlanner() {
 
   const allInterests = [...new Set([...places, ...activities])];
   const tripDays = useMemo(() => calcDays(arrival, departure), [arrival, departure]);
+
+  // Transport for a given day (defaults to day's AI-suggested transport)
+  const getTransport = useCallback((day: DayPlan): TransportType => {
+    return transportByDay[day.day] ?? day.defaultTransport;
+  }, [transportByDay]);
+
+  const setTransport = useCallback((dayNum: number, t: TransportType) => {
+    setTransportByDay(prev => ({ ...prev, [dayNum]: t }));
+  }, []);
 
   // Map markers — unique zones in order, with route polyline
   const mapMarkers = useMemo((): MapMarker[] => {
@@ -156,8 +341,26 @@ export function TripPlanner() {
     return markers;
   }, [days]);
 
-  const totalFrom = days.reduce((s, d) => s + d.priceFrom, 0);
-  const totalTo   = days.reduce((s, d) => s + d.priceTo, 0);
+  const totalFrom = days.reduce((s, d) => s + d.priceFrom + TRANSPORT_OPTIONS[getTransport(d)].priceAdd, 0);
+  const totalTo   = days.reduce((s, d) => s + d.priceTo   + TRANSPORT_OPTIONS[getTransport(d)].priceAdd, 0);
+
+  function deleteDay(dayNum: number) {
+    setDays(prev => prev.filter(d => d.day !== dayNum));
+    setTransportByDay(prev => {
+      const next = { ...prev };
+      delete next[dayNum];
+      return next;
+    });
+  }
+
+  function addDay() {
+    setDays(prev => {
+      if (prev.length === 0) return prev;
+      const last = prev[prev.length - 1];
+      const newDayNum = Math.max(...prev.map(d => d.day)) + 1;
+      return [...prev, { ...last, day: newDayNum }];
+    });
+  }
 
   async function getRecommendation() {
     if (allInterests.length === 0) { setError('Выберите место или активность'); return; }
@@ -173,6 +376,7 @@ export function TripPlanner() {
       if (data.success) {
         setRecommendation(data.data);
         setDays(data.data.days ?? []);
+        setTransportByDay({});
         setShowItinerary(false);
       } else {
         setError(data.error || 'Ошибка при получении рекомендации');
@@ -211,6 +415,7 @@ export function TripPlanner() {
             departure: departure || undefined,
             trip_days: tripDays ?? undefined,
             recommendation: recommendation?.zones,
+            transport_choices: transportByDay,
           },
         }),
       });
@@ -318,34 +523,89 @@ export function TripPlanner() {
             {/* Маршрут по дням */}
             {days.length > 0 && (
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">
-                  Маршрут · {days.length} {days.length === 1 ? 'день' : days.length < 5 ? 'дня' : 'дней'}
-                </p>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">
+                    Маршрут · {days.length} {days.length === 1 ? 'день' : days.length < 5 ? 'дня' : 'дней'}
+                  </p>
+                  <p className="text-[10px] text-[var(--text-muted)]">перетащите чтобы изменить порядок</p>
+                </div>
+
                 <Reorder.Group axis="y" values={days} onReorder={setDays} className="space-y-1.5">
-                  {days.map((day, idx) => (
-                    <Reorder.Item key={day.day} value={day}
-                      className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg cursor-grab active:cursor-grabbing select-none"
-                      style={{ listStyle: 'none' }}>
-                      <div className="flex items-center gap-2 p-3">
-                        <GripVertical className="w-3.5 h-3.5 text-[var(--text-muted)] shrink-0" />
-                        <div
-                          className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0"
-                          style={{ background: ZONE_COLORS[day.zone] ?? 'var(--accent)' }}
-                        >
-                          {idx + 1}
+                  {days.map((day, idx) => {
+                    const transport = getTransport(day);
+                    const { priceAdd, Icon: TransIcon } = TRANSPORT_OPTIONS[transport];
+                    return (
+                      <Reorder.Item key={day.day} value={day}
+                        className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg cursor-grab active:cursor-grabbing select-none"
+                        style={{ listStyle: 'none' }}>
+
+                        {/* Row 1: info + price */}
+                        <div className="flex items-center gap-2 px-3 pt-3 pb-1.5">
+                          <GripVertical className="w-3.5 h-3.5 text-[var(--text-muted)] shrink-0" />
+                          <div
+                            className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0"
+                            style={{ background: ZONE_COLORS[day.zone] ?? 'var(--accent)' }}
+                          >
+                            {idx + 1}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium text-[var(--text-primary)] truncate">{day.title}</p>
+                            <p className="text-[10px] text-[var(--text-muted)]">{ZONE_LABELS[day.zone] ?? day.zone}</p>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <p className="text-xs font-semibold text-[var(--accent)]">
+                              от {fmt(day.priceFrom + priceAdd)} ₽
+                            </p>
+                            <p className="text-[10px] text-[var(--text-muted)]">
+                              до {fmt(day.priceTo + priceAdd)} ₽
+                            </p>
+                          </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium text-[var(--text-primary)] truncate">{day.title}</p>
-                          <p className="text-[10px] text-[var(--text-muted)]">{ZONE_LABELS[day.zone] ?? day.zone}</p>
+
+                        {/* Row 2: transport selector + actions */}
+                        <div className="flex items-center gap-2 px-3 pb-2.5 pt-0.5">
+                          <TransportSelector
+                            selected={transport}
+                            onChange={t => setTransport(day.day, t)}
+                          />
+                          {priceAdd > 0 && (
+                            <span className="text-[10px] text-[var(--text-muted)] flex items-center gap-0.5">
+                              <TransIcon className="w-3 h-3" />
+                              +{fmt(priceAdd)} ₽
+                            </span>
+                          )}
+                          <div className="flex-1" />
+                          <button
+                            type="button"
+                            title="Операторы для этого дня"
+                            onClick={() => setPartnersModal({ dayIdx: idx, activityType: day.activityType })}
+                            className="w-7 h-7 flex items-center justify-center rounded-md border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--ocean)] hover:border-[var(--ocean)] transition-colors bg-[var(--bg-hover)]"
+                          >
+                            <Users className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            title="Удалить день"
+                            onClick={() => deleteDay(day.day)}
+                            className="w-7 h-7 flex items-center justify-center rounded-md border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--danger)] hover:border-[var(--danger)] transition-colors bg-[var(--bg-hover)]"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
-                        <div className="text-right shrink-0">
-                          <p className="text-xs font-semibold text-[var(--accent)]">от {fmt(day.priceFrom)} ₽</p>
-                          <p className="text-[10px] text-[var(--text-muted)]">до {fmt(day.priceTo)} ₽</p>
-                        </div>
-                      </div>
-                    </Reorder.Item>
-                  ))}
+                      </Reorder.Item>
+                    );
+                  })}
                 </Reorder.Group>
+
+                {/* Add day */}
+                <button
+                  type="button"
+                  onClick={addDay}
+                  className="mt-1.5 w-full flex items-center justify-center gap-1.5 py-2 rounded-lg border border-dashed border-[var(--border)] text-[10px] font-medium text-[var(--text-muted)] hover:text-[var(--accent)] hover:border-[var(--accent)] transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Добавить день
+                </button>
 
                 {/* Итого */}
                 <div className="flex items-center justify-between px-1 mt-2 pt-2 border-t border-[var(--border)]">
@@ -421,6 +681,14 @@ export function TripPlanner() {
           </div>
         )}
       </div>
+
+      {/* Partners modal */}
+      {partnersModal && (
+        <PartnersModal
+          activityType={partnersModal.activityType}
+          onClose={() => setPartnersModal(null)}
+        />
+      )}
     </section>
   );
 }

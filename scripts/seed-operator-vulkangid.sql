@@ -90,3 +90,65 @@ INSERT INTO partners (
   status = EXCLUDED.status;
 
 SELECT id, name, slug, is_public, is_verified FROM partners WHERE slug = 'vulkan-gid';
+
+-- Insert operator_tours for Вулкан Гид with transportation data
+-- Uses a subquery to resolve operator_id by slug (safe with ON CONFLICT)
+INSERT INTO operator_tours (
+  operator_id, title, description, short_description,
+  location_type, activity_type, location_name, latitude, longitude,
+  base_price, currency, max_participants, min_participants,
+  duration_hours, duration_type, season_start, season_end, seasonal_only,
+  is_active, is_published, difficulty, transportation
+)
+SELECT
+  p.id,
+  'Авачинский — однодневное восхождение',
+  'Классическое восхождение на Авачинский вулкан (2741 м). Выход в 5 утра, подъём по южному склону, 3–4 часа до кратера. Вид на Тихий океан и Авачинскую бухту. Возврат к ужину.',
+  'Восхождение на вулкан Авачинский за один день. От 3 500 ₽.',
+  'volcano', 'trekking', 'Авачинский вулкан', 53.2559, 158.8347,
+  3500, 'RUB', 12, 2,
+  12, 'day', '2026-06-01', '2026-10-01', TRUE,
+  TRUE, TRUE, 'moderate',
+  '[{"type":"walking","price_add":0,"duration_hours":12},{"type":"jeep","price_add":2000,"duration_hours":10}]'::jsonb
+FROM partners p WHERE p.slug = 'vulkan-gid'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO operator_tours (
+  operator_id, title, description, short_description,
+  location_type, activity_type, location_name, latitude, longitude,
+  base_price, currency, max_participants, min_participants,
+  duration_hours, duration_type, multi_day_count, season_start, season_end, seasonal_only,
+  is_active, is_published, difficulty, transportation
+)
+SELECT
+  p.id,
+  'Мутновский + Горелый — 2 дня',
+  'Два действующих вулкана за один поход. День 1: Мутновский (фумарольное поле, водопад, кратер). Ночёвка в лагере у подножия. День 2: Горелый (три кратера, лавовые поля). Возврат к вечеру.',
+  'Мутновский и Горелый за 2 дня. Фумаролы, кратеры, ночёвка в лагере. От 8 500 ₽.',
+  'volcano', 'trekking', 'Мутновский вулкан', 52.4531, 158.1967,
+  8500, 'RUB', 10, 2,
+  24, 'multi_day', 2, '2026-06-15', '2026-09-30', TRUE,
+  TRUE, TRUE, 'hard',
+  '[{"type":"jeep","price_add":3000,"duration_hours":3},{"type":"walking","price_add":0,"duration_hours":5}]'::jsonb
+FROM partners p WHERE p.slug = 'vulkan-gid'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO operator_tours (
+  operator_id, title, description, short_description,
+  location_type, activity_type, location_name, latitude, longitude,
+  base_price, currency, max_participants, min_participants,
+  duration_hours, duration_type, season_start, season_end, seasonal_only,
+  is_active, is_published, difficulty, transportation
+)
+SELECT
+  p.id,
+  'Вилючинский зимой — ски-тур',
+  'Зимнее восхождение на Вилючинский вулкан по снежным склонам. Вид на Авачинскую бухту. Спуск на лыжах или сноуборде по непринуждённым склонам. Подходит для уверенных лыжников.',
+  'Зимнее восхождение Вилючинский + ски-тур. От 5 500 ₽.',
+  'volcano', 'snowmobile', 'Вилючинский вулкан', 52.7006, 158.3669,
+  5500, 'RUB', 8, 2,
+  10, 'day', '2026-01-10', '2026-04-10', TRUE,
+  TRUE, TRUE, 'hard',
+  '[{"type":"jeep","price_add":2500,"duration_hours":2},{"type":"helicopter","price_add":18000,"duration_hours":0.5}]'::jsonb
+FROM partners p WHERE p.slug = 'vulkan-gid'
+ON CONFLICT DO NOTHING;

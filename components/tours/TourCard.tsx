@@ -97,7 +97,7 @@ export function TourCard({ tour, href }: TourCardProps) {
 
         {/* Badges overlay */}
         <div className="absolute top-3 left-3 flex gap-2">
-          <span className="px-2 py-1 rounded-full text-xs font-bold bg-black/60 text-[var(--text-secondary)]">
+          <span className="px-2 py-1 rounded-full text-xs font-bold bg-[var(--bg-card)] text-[var(--text-primary)]">
             {categoryLabel}
           </span>
           <span className={`px-2 py-1 rounded-full text-xs font-bold ${diff.cls}`}>
@@ -107,7 +107,7 @@ export function TourCard({ tour, href }: TourCardProps) {
 
         {/* Рейтинг */}
         {tour.rating > 0 && (
-          <div className="absolute top-3 right-3 bg-black/60 px-2 py-1 rounded-full flex items-center gap-1">
+          <div className="absolute top-3 right-3 bg-[var(--bg-card)] px-2 py-1 rounded-full flex items-center gap-1">
             <Star className="w-3 h-3 text-[var(--accent)] fill-[var(--accent)]" />
             <span className="text-[var(--text-primary)] text-xs font-bold">{tour.rating.toFixed(1)}</span>
             {tour.reviewCount > 0 && (
@@ -120,7 +120,8 @@ export function TourCard({ tour, href }: TourCardProps) {
       {/* Контент */}
       <div className="p-5 flex flex-col flex-1">
         {/* Название */}
-        <h3 className="text-lg font-bold text-[var(--text-primary)] line-clamp-2 group-hover:text-[var(--accent)] transition-colors mb-1">
+        <h3 className="text-lg font-bold text-[var(--text-primary)] line-clamp-2 group-hover:text-[var(--accent)] transition-colors mb-1"
+            style={{ fontFamily: 'var(--font-playfair)' }}>
           {tour.name}
         </h3>
 
@@ -151,7 +152,7 @@ export function TourCard({ tour, href }: TourCardProps) {
 
         {/* Включено (первые 2 пункта) */}
         {tour.included.length > 0 && (
-          <div className="mb-4 p-3 bg-[var(--bg-card)] rounded-xl">
+          <div className="mb-4 p-3 bg-[var(--bg-card)] rounded-lg">
             <p className="text-xs text-[var(--text-muted)] mb-1">Включено:</p>
             <p className="text-sm text-[var(--text-secondary)] line-clamp-1">
               {tour.included.slice(0, 2).join(' • ')}
@@ -176,16 +177,10 @@ export function TourCard({ tour, href }: TourCardProps) {
 
         {/* Кнопки */}
         <div className="flex gap-3 mt-auto">
-          <Link
-            href={link}
-            className="flex-1 px-4 py-3 bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] rounded-lg text-center font-medium text-[var(--text-primary)] transition-colors text-sm"
-          >
+          <Link href={link} className="ds-btn ds-btn-secondary flex-1 text-center text-sm">
             Подробнее
           </Link>
-          <Link
-            href={`${link}?tab=booking`}
-            className="flex-1 px-4 py-3 bg-[var(--accent)] hover:bg-[var(--accent)]/80 rounded-lg text-center font-bold text-[var(--bg-card)] transition-colors text-sm"
-          >
+          <Link href={`${link}?tab=booking`} className="ds-btn ds-btn-primary flex-1 text-center text-sm">
             Забронировать
           </Link>
         </div>

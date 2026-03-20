@@ -97,3 +97,14 @@ ON CONFLICT (slug) DO UPDATE SET
   legal_info = EXCLUDED.legal_info,
   is_public = EXCLUDED.is_public,
   updated_at = NOW();
+
+-- Add boat transportation to existing fishingkam operator_tours
+UPDATE operator_tours ot
+SET transportation = '[
+  {"type":"boat","price_add":3000,"duration_hours":2},
+  {"type":"walking","price_add":0,"duration_hours":1}
+]'::jsonb
+FROM partners p
+WHERE ot.operator_id = p.id
+  AND p.slug = 'kamchatskaya-rybalka'
+  AND (ot.transportation IS NULL OR ot.transportation = '[]'::jsonb);

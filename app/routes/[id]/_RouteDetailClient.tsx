@@ -177,14 +177,18 @@ function OfferCard({ offer, activityType, onBook }: {
         {/* Badge типа / сложность */}
         <div className="absolute top-2 left-2 flex gap-1.5">
           {offer.durationType && (
-            <span className="text-[10px] font-bold uppercase tracking-wider bg-black/70 text-white px-2 py-0.5 rounded">
+            <span className="text-[10px] font-bold uppercase tracking-wider bg-[var(--bg-card)] text-[var(--text-secondary)] border border-[var(--border)] px-2 py-0.5 rounded">
               {offer.durationType === 'multi_day' ? `${offer.multiDayCount ?? ''}д` : '1д'}
             </span>
           )}
           {offer.difficulty && (
             <span
-              className="text-[10px] font-bold uppercase tracking-wider text-white px-2 py-0.5 rounded"
-              style={{ background: `color-mix(in srgb, ${DIFFICULTY_COLOR[offer.difficulty]} 60%, black)` }}
+              className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded"
+              style={{
+                color: DIFFICULTY_COLOR[offer.difficulty],
+                background: `color-mix(in srgb, ${DIFFICULTY_COLOR[offer.difficulty]} 20%, transparent)`,
+                border: `1px solid color-mix(in srgb, ${DIFFICULTY_COLOR[offer.difficulty]} 40%, transparent)`,
+              }}
             >
               {DIFFICULTY_RU[offer.difficulty]}
             </span>
@@ -243,6 +247,22 @@ function OfferCard({ offer, activityType, onBook }: {
             </span>
           )}
         </div>
+
+        {/* Включено в стоимость */}
+        {offer.included.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {offer.included.slice(0, 3).map((item, i) => (
+              <span key={i} className="text-[10px] bg-[var(--bg-hover)] text-[var(--text-secondary)] px-1.5 py-0.5 rounded">
+                {String(item)}
+              </span>
+            ))}
+            {offer.included.length > 3 && (
+              <span className="text-[10px] text-[var(--text-muted)] self-center">
+                +{offer.included.length - 3}
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Цена + кнопка */}
         <div className="flex items-end justify-between gap-3 mt-auto pt-2 border-t border-[var(--border)]">

@@ -148,7 +148,7 @@ export default function RouteCard({ route }: { route: RouteItem }) {
 
         {/* Цена поверх градиента — левый низ */}
         {displayPrice != null && displayPrice > 0 && (
-          <span className="absolute bottom-3 left-3 text-sm font-bold text-white leading-none">
+          <span className="absolute bottom-3 left-3 text-sm font-bold text-[var(--text-primary)] bg-[var(--bg-card)] px-2 py-0.5 rounded leading-none">
             от {displayPrice.toLocaleString('ru-RU')} ₽
           </span>
         )}

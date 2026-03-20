@@ -19,6 +19,8 @@ interface ZoneRecommendation {
   bestMonths: number[];
 }
 
+export type TransportType = 'walking' | 'jeep' | 'helicopter' | 'boat';
+
 export interface DayPlan {
   day: number;
   zone: 'avachinsky' | 'western' | 'eastern' | 'northern';
@@ -27,6 +29,7 @@ export interface DayPlan {
   priceFrom: number;
   priceTo: number;
   coords: [number, number];
+  defaultTransport: TransportType;
 }
 
 interface TripRecommendation {
@@ -117,6 +120,22 @@ const INTEREST_PRICE: Record<string, [number, number]> = {
 
 const DEFAULT_PRICE: [number, number] = [3000, 10000];
 
+const ACTIVITY_DEFAULT_TRANSPORT: Record<string, TransportType> = {
+  trekking:   'walking',
+  fishing:    'boat',
+  bears:      'helicopter',
+  helicopter: 'helicopter',
+  thermal:    'walking',
+  hot_spring: 'walking',
+  boat_trip:  'boat',
+  snowmobile: 'jeep',
+  volcano:    'jeep',
+  geyser:     'helicopter',
+  mountain:   'walking',
+  sea:        'boat',
+  river:      'boat',
+};
+
 function generateDayPlans(
   zones: ZoneRecommendation[],
   interests: string[],
@@ -166,6 +185,7 @@ function generateDayPlans(
         priceFrom,
         priceTo,
         coords: ZONE_COORDS[zone] as [number, number],
+        defaultTransport: ACTIVITY_DEFAULT_TRANSPORT[activeInterest] ?? 'walking',
       });
     }
   }
