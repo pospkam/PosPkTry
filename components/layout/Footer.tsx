@@ -6,7 +6,9 @@ const PLATFORM = [
   { label: 'Маршруты', href: '/routes' },
   { label: 'Карта Камчатки', href: '/map' },
   { label: 'Партнёры', href: '/operators' },
-  { label: 'Стать партнёром', href: '/auth/login' },
+  { label: 'Стать партнёром', href: '/auth/register-operator' },
+  { label: 'Помощь туристам', href: '/help/tourists' },
+  { label: 'Помощь операторам', href: '/help/operators' },
 ];
 
 const LEGAL = [

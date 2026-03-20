@@ -78,14 +78,14 @@ function SelectGroup({ title, items, selected, onToggle }: {
               key={id}
               type="button"
               onClick={() => onToggle(id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all border ${
+              title={label}
+              className={`flex items-center justify-center w-10 h-10 rounded-lg transition-all border ${
                 active
                   ? 'bg-[var(--accent)] border-[var(--accent)] text-white'
                   : 'border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)]'
               }`}
             >
-              <Icon className="w-3.5 h-3.5" />
-              {label}
+              <Icon className="w-4 h-4" />
             </button>
           );
         })}
@@ -103,6 +103,12 @@ export function TripPlanner() {
   const [loading, setLoading]     = useState(false);
   const [done, setDone]           = useState(false);
   const [error, setError]         = useState('');
+  // contact form
+  const [showContact, setShowContact] = useState(false);
+  const [contactName, setContactName] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+  const [contactError, setContactError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const togglePlace    = (id: string) => setPlaces(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   const toggleActivity = (id: string) => setActivities(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
@@ -128,6 +134,14 @@ export function TripPlanner() {
   }
 
   async function submitLead() {
+    setContactError('');
+    const name  = contactName.trim();
+    const phone = contactPhone.trim();
+    if (name.length < 2)  { setContactError('Введите имя'); return; }
+    if (phone.length < 10) { setContactError('Введите телефон'); return; }
+
+    setSubmitting(true);
+    const allInt = [...new Set([...places, ...activities])];
     const parts: string[] = [];
     if (places.length)    parts.push(`Места: ${places.join(', ')}`);
     if (activities.length) parts.push(`Активности: ${activities.join(', ')}`);
@@ -140,16 +154,27 @@ export function TripPlanner() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: 'Турист', phone: '+7',
+          name,
+          phone,
           comment: parts.join(' · ') || undefined,
           source_url: typeof window !== 'undefined' ? window.location.href : '/',
-          source_data: { places, activities, arrival, departure, trip_days: tripDays, recommendation: recommendation?.zones, source: 'ai_trip_planner' },
+          source_data: {
+            source: 'trip_planner',
+            interests: allInt,
+            places,
+            activities,
+            arrival: arrival || undefined,
+            departure: departure || undefined,
+            trip_days: tripDays ?? undefined,
+            recommendation: recommendation?.zones,
+          },
         }),
       });
       const data = await res.json();
       if (data.success) setDone(true);
-      else setError(data.error ?? 'Ошибка');
-    } catch { setError('Нет соединения'); }
+      else setContactError(data.error ?? 'Ошибка');
+    } catch { setContactError('Нет соединения'); }
+    finally { setSubmitting(false); }
   }
 
   if (done) {
@@ -260,9 +285,45 @@ export function TripPlanner() {
               </div>
             </div>
 
-            <button onClick={submitLead} className="w-full ds-btn ds-btn-primary py-2.5 font-semibold">
-              Запросить подробное предложение
-            </button>
+            {!showContact ? (
+              <button
+                onClick={() => setShowContact(true)}
+                className="w-full ds-btn ds-btn-primary py-2.5 font-semibold"
+              >
+                Запросить подробное предложение
+              </button>
+            ) : (
+              <div className="space-y-3 pt-1 border-t border-[var(--border)]">
+                <p className="text-xs font-bold uppercase tracking-widest text-[var(--text-muted)]">Контакты</p>
+                <input
+                  type="text"
+                  value={contactName}
+                  onChange={e => setContactName(e.target.value)}
+                  placeholder="Ваше имя"
+                  className="ds-input w-full text-sm"
+                />
+                <input
+                  type="tel"
+                  value={contactPhone}
+                  onChange={e => setContactPhone(e.target.value)}
+                  placeholder="+7 900 000-00-00"
+                  className="ds-input w-full text-sm"
+                />
+                {contactError && (
+                  <div className="flex items-center gap-2 p-2 bg-[var(--danger)]/10 rounded-lg">
+                    <AlertTriangle className="w-3.5 h-3.5 text-[var(--danger)] shrink-0" />
+                    <p className="text-xs text-[var(--danger)]">{contactError}</p>
+                  </div>
+                )}
+                <button
+                  onClick={submitLead}
+                  disabled={submitting}
+                  className="w-full ds-btn ds-btn-primary py-2.5 font-semibold disabled:opacity-50"
+                >
+                  {submitting ? 'Отправляем…' : 'Отправить заявку'}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
