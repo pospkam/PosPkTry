@@ -6,6 +6,19 @@ import { hashPassword } from '@/lib/auth/password';
 import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
 import { emailService } from '@/lib/notifications/email-service';
 
+async function notifyAdminTelegram(companyName: string, contactName: string, phone: string, email: string, partnerId: string) {
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!chatId || !token) return;
+  const text = `Новая заявка оператора\n\nКомпания: ${companyName}\nКонтакт: ${contactName}\nТел: ${phone}\nEmail: ${email}\n\nhttps://tourhab.ru/hub/admin/operators`;
+  await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' }),
+  }).catch(() => {});
+  void partnerId;
+}
+
 const CATEGORIES = ['operator', 'guide', 'transfer', 'hotel', 'rent', 'fishing'] as const;
 
 const Schema = z.object({
@@ -71,12 +84,25 @@ export async function POST(request: NextRequest) {
 
     const contact = JSON.stringify({ name: contactName, phone, email });
     const partnerResult = await client.query(
-      `INSERT INTO partners (user_id, name, category, description, short_description, contact, is_public, is_verified, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $4, $5::jsonb, false, false, NOW(), NOW())
+      `INSERT INTO partners (
+         user_id, name, company_name, category, description, short_description,
+         contact, contacts, is_public, is_verified,
+         profile_status, applied_at,
+         created_at, updated_at
+       )
+       VALUES ($1,$2,$2,$3,$4,$4,$5::jsonb,$5::jsonb,false,false,'pending',NOW(),NOW(),NOW())
        RETURNING id, slug`,
       [user.id, companyName, category, description || companyName, contact]
     );
     const partner = partnerResult.rows[0];
+
+    // Audit trail
+    await client.query(
+      `INSERT INTO operator_applications
+         (partner_id, user_id, company_name, contact_phone, contact_email, description)
+       VALUES ($1,$2,$3,$4,$5,$6)`,
+      [partner.id, user.id, companyName, phone, email, description || '']
+    );
 
     await client.query('COMMIT');
 
@@ -87,7 +113,8 @@ export async function POST(request: NextRequest) {
       .setExpirationTime('7d')
       .sign(JWT_SECRET);
 
-    // Уведомить админа (fire-and-forget)
+    // Уведомления админу (fire-and-forget)
+    notifyAdminTelegram(companyName, contactName, phone, email, partner.id).catch(() => {});
     const adminEmail = process.env.SMTP_USER;
     if (adminEmail) {
       emailService.sendEmail({
@@ -97,9 +124,8 @@ export async function POST(request: NextRequest) {
                <p><b>Компания:</b> ${companyName}<br>
                <b>Категория:</b> ${category}<br>
                <b>Контакт:</b> ${contactName}, ${phone}<br>
-               <b>Email:</b> ${email}<br>
-               <b>Partner ID:</b> ${partner.id}</p>
-               <p><a href="https://tourhab.ru/hub/admin/content/partners/${partner.id}">Открыть в админке →</a></p>`,
+               <b>Email:</b> ${email}</p>
+               <p><a href="https://tourhab.ru/hub/admin/operators">Очередь заявок →</a></p>`,
       }).catch(() => {});
     }
 
