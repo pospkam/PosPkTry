@@ -60,6 +60,34 @@ async function handlePaid(bookingId: bigint, webhook: CloudPaymentsWebhook) {
     [bookingId, webhook.TransactionId.toString()]
   );
 
+  // Записываем платёж в tour_payments (HELD до release_after = конец тура + 36ч)
+  await query(
+    `INSERT INTO tour_payments (
+       booking_id, operator_id,
+       retail_amount, net_amount, commission_amount, commission_rate,
+       cp_transaction_id, cp_invoice_id,
+       status, paid_at, release_after
+     )
+     SELECT
+       ob.id,
+       ot.operator_id,
+       ob.final_price,
+       ROUND(ob.final_price * (1 - p.commission_current / 100), 2),
+       ROUND(ob.final_price * p.commission_current / 100, 2),
+       p.commission_current,
+       $2, $3,
+       'HELD', NOW(),
+       ob.booking_date::timestamp
+         + (COALESCE(ot.multi_day_count, 1) * INTERVAL '1 day')
+         + INTERVAL '36 hours'
+     FROM operator_bookings ob
+     JOIN operator_tours ot ON ot.id = ob.operator_tour_id
+     JOIN partners p ON p.id = ot.operator_id
+     WHERE ob.id = $1
+     ON CONFLICT (cp_transaction_id) DO NOTHING`,
+    [bookingId, webhook.TransactionId.toString(), webhook.InvoiceId]
+  );
+
   // Increment booked_slots for the corresponding availability date
   await query(
     `UPDATE tour_availability ta
