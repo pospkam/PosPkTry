@@ -2,13 +2,14 @@
 
 import { ReactNode } from 'react';
 import {
-  Compass, Calendar, Star, Heart, Award, MessageSquare, User, Bell,
+  Compass, Calendar, Star, Heart, Award, MessageSquare, User, Bell, Route,
 } from 'lucide-react';
 import { HubLayout } from '@/components/layout/HubLayout';
 import { ChatWidget } from '@/components/chat/ChatWidget';
 
 const SIDEBAR_ITEMS = [
   { href: '/hub/tourist', label: 'Обзор', icon: Compass },
+  { href: '/hub/tourist/trips', label: 'Мои маршруты', icon: Route },
   { href: '/hub/tourist/bookings', label: 'Бронирования', icon: Calendar },
   { href: '/hub/tourist/bookings/new', label: 'Новое бронирование', icon: Star },
   { href: '/hub/tourist/wishlist', label: 'Избранное', icon: Heart },
