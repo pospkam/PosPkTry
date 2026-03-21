@@ -232,8 +232,8 @@ export async function createBooking(data: {
          operator_tour_id, booking_date, participants, adult_count, child_count,
          base_total_price, final_price, booking_status,
          tourist_name, tourist_email, tourist_phone, special_requests,
-         octo_api_key_id, option_id, hold_expires_at, availability_id, created_via
-       ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'new', $8, $9, $10, $11, $12, $13, $14, $15, 'api')
+         octo_api_key_id, option_id, hold_expires_at, availability_id, reseller_reference, created_via
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'new', $8, $9, $10, $11, $12, $13, $14, $15, $16, 'api')
        RETURNING id, octo_uuid, booking_status, created_at`,
       [
         data.tourId, data.bookingDate, participants,
@@ -242,6 +242,7 @@ export async function createBooking(data: {
         data.contactName ?? null, data.contactEmail ?? null,
         data.contactPhone ?? null, data.notes ?? null,
         data.apiKeyId, data.optionId, holdExpiresAt, data.availabilityId,
+        data.resellerReference ?? null,
       ]
     );
 

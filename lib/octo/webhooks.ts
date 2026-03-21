@@ -8,6 +8,9 @@
  *   booking:created   — ON_HOLD
  *   booking:confirmed — CONFIRMED
  *   booking:cancelled — CANCELLED
+ *   booking:redeemed  — REDEEMED (tourist attended)
+ *   booking:no_show   — NO_SHOW (tourist didn't attend)
+ *   booking:expired   — EXPIRED (hold expired after 30 min)
  */
 
 import { pool } from '@/lib/db-pool';
@@ -17,6 +20,8 @@ export type OctoWebhookEvent =
   | 'booking:created'
   | 'booking:confirmed'
   | 'booking:cancelled'
+  | 'booking:redeemed'
+  | 'booking:no_show'
   | 'booking:expired';
 
 interface WebhookTarget {

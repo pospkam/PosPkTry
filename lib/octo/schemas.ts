@@ -11,6 +11,15 @@ const UnitItemSchema = z.object({
   unitId: z.enum(['ADULT', 'CHILD', 'YOUTH']),
 });
 
+// Stricter unit item validation for bookings
+const BookingUnitItemSchema = z.object({
+  unitId: z.enum(['ADULT', 'CHILD', 'YOUTH']),
+});
+
+// Helper to check if array has at least one ADULT
+const hasAtLeastOneAdult = (items: Array<{ unitId: string }>) =>
+  items.some(item => item.unitId === 'ADULT');
+
 // --- Availability ---
 
 export const AvailabilityCheckSchema = z.object({
@@ -23,27 +32,34 @@ export const AvailabilityCheckSchema = z.object({
 
 // --- Booking ---
 
-const ContactSchema = z.object({
-  fullName: z.string().optional(),
-  emailAddress: z.string().email().optional(),
-  phoneNumber: z.string().optional(),
-  locales: z.array(z.string()).optional(),
-  country: z.string().optional(),
-});
+// Contact validation: fullName required, and at least email OR phone (OCTO requirement)
+const ContactSchema = z
+  .object({
+    fullName: z.string().min(1, 'Full name is required'),
+    emailAddress: z.string().email().optional(),
+    phoneNumber: z.string().optional(),
+    locales: z.array(z.string()).optional(),
+    country: z.string().optional(),
+  })
+  .refine(
+    data => data.emailAddress || data.phoneNumber,
+    'At least email address or phone number is required'
+  );
 
-const BookingUnitItemSchema = z.object({
-  unitId: z.enum(['ADULT', 'CHILD', 'YOUTH']),
-});
-
-export const BookingCreateSchema = z.object({
-  productId: z.string().min(1),
-  optionId: z.string().min(1),
-  availabilityId: z.string().min(1),
-  unitItems: z.array(BookingUnitItemSchema).min(1).max(50),
-  contact: ContactSchema.optional(),
-  resellerReference: z.string().optional(),
-  notes: z.string().optional(),
-});
+export const BookingCreateSchema = z
+  .object({
+    productId: z.string().min(1),
+    optionId: z.string().min(1),
+    availabilityId: z.string().min(1),
+    unitItems: z.array(BookingUnitItemSchema).min(1).max(50),
+    contact: ContactSchema, // Required for OTA integration
+    resellerReference: z.string().optional(),
+    notes: z.string().optional(),
+  })
+  .refine(
+    data => hasAtLeastOneAdult(data.unitItems),
+    'At least one ADULT unit item is required'
+  );
 
 export const BookingConfirmSchema = z.object({
   resellerReference: z.string().optional(),
