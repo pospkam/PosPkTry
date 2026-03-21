@@ -564,9 +564,9 @@ export function ModernTourSearch() {
             autoComplete="off"
           />
           {voiceSupported && (
-            <motion.button 
+            <motion.button
               onClick={toggleVoiceInput}
-              className={`voice-input-btn p-2 rounded-lg transition-colors ${isListening ? 'bg-red-500/20 text-[var(--danger)]' : 'text-[var(--text-muted)] hover:bg-[var(--bg-hover)]'}`}
+              className={`voice-input-btn p-2 rounded-lg transition-colors ${isListening ? 'bg-[var(--danger)]/20 text-[var(--danger)]' : 'text-[var(--text-muted)] hover:bg-[var(--bg-hover)]'}`}
               title="Голосовой ввод"
               aria-label="Голосовой ввод"
               aria-pressed={isListening}
@@ -730,8 +730,8 @@ export function ModernTourSearch() {
               role="status"
               aria-label="Загрузка результатов поиска"
             >
-              <div className="w-16 h-16 bg-gradient-to-r from-ocean to-moss rounded-full flex items-center justify-center mb-4 animate-spin">
-                <Search size={24} className="text-white" />
+              <div className="w-16 h-16 bg-gradient-to-r from-[var(--ocean)] to-[var(--success)] rounded-full flex items-center justify-center mb-4 animate-spin">
+                <Search size={24} className="text-[var(--text-primary)]" />
               </div>
               <p className="text-xl font-semibold text-[var(--text-primary)] mb-2">Ищем варианты...</p>
               <p className="text-sm text-[var(--text-muted)]">Мгновенный поиск по 100+ турам</p>
