@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
         ON CONFLICT DO NOTHING`,
         [tourId, month]
       );
-      slotsCreated += res.rowCount;
+      slotsCreated += res.rowCount ?? 0;
     }
 
     return NextResponse.json({

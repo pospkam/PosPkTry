@@ -33,13 +33,21 @@ interface DayPlan {
   priceTo: number;
   coords: [number, number];
   defaultTransport: TransportType;
+  type?: string;
+  description?: string;
+}
+
+interface TripWarning {
+  type: string;
+  severity: 'critical' | 'important' | 'info';
+  message: string;
 }
 
 interface Recommendation {
   zones: Array<{ zone: string; score: number; reason: string }>;
   days: DayPlan[];
+  warnings?: TripWarning[];
   itinerary: string;
-  warning?: string;
 }
 
 interface Partner {
@@ -499,12 +507,20 @@ export function TripPlanner() {
         {/* Результат */}
         {recommendation && (
           <div className="space-y-5">
-            {recommendation.warning && (
-              <div className="flex items-start gap-2 p-3 bg-[var(--warning)]/10 border border-[var(--warning)]/30 rounded-lg">
-                <AlertTriangle className="w-4 h-4 text-[var(--warning)] flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-[var(--warning)]">{recommendation.warning}</p>
+            {recommendation.warnings && recommendation.warnings.filter(w => w.severity !== 'info').slice(0, 2).map((w, i) => (
+              <div key={i} className={`flex items-start gap-2 p-3 rounded-lg border ${
+                w.severity === 'critical'
+                  ? 'bg-[var(--danger)]/10 border-[var(--danger)]/30'
+                  : 'bg-[var(--warning)]/10 border-[var(--warning)]/30'
+              }`}>
+                <AlertTriangle className={`w-4 h-4 flex-shrink-0 mt-0.5 ${
+                  w.severity === 'critical' ? 'text-[var(--danger)]' : 'text-[var(--warning)]'
+                }`} />
+                <p className={`text-sm ${w.severity === 'critical' ? 'text-[var(--danger)]' : 'text-[var(--warning)]'}`}>
+                  {w.message}
+                </p>
               </div>
-            )}
+            ))}
 
             {/* Зоны — компактно */}
             <div>

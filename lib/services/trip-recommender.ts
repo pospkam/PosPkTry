@@ -1,398 +1,1159 @@
 /**
- * TripPlanner AI Recommender
- * Analyzes user interests + dates → recommends optimal zones + day plans
+ * TripPlanner AI Recommender v3
+ * Knowledge-driven engine: distances, constraints, seasons, safety, real pricing
  */
 
 import { callAIWaterfall } from '@/lib/ai/providers';
 import type { ChatMessage } from '@/lib/ai/prompts';
+import { pool } from '@/lib/db-pool';
 
-interface UserProfile {
+// ─── Public types ────────────────────────────────────────────────────────────
+
+export type ZoneId = 'avachinsky' | 'western' | 'eastern' | 'northern';
+export type TransportType = 'walking' | 'jeep' | 'helicopter' | 'boat';
+export type FitnessLevel = 'beginner' | 'moderate' | 'active';
+export type BudgetTier = 'economy' | 'comfort' | 'premium';
+export type DayType = 'arrival' | 'activity' | 'travel' | 'rest' | 'buffer' | 'departure';
+
+export interface TripProfile {
   interests: string[];
   arrivalDate?: string;
   departureDate?: string;
-  flightArrivalTime?: string;   // "HH:MM"
-  needsAirportTransfer?: boolean;
+  flightArrivalTime?: string;
+  flightDepartureTime?: string;
+  adults: number;
+  children: number[];           // ages array, e.g. [8, 12]
+  fitnessLevel: FitnessLevel;
+  budgetTier: BudgetTier;
+  seasickness?: boolean;        // motion sickness — avoid boat activities
 }
-
-interface ZoneRecommendation {
-  zone: 'avachinsky' | 'western' | 'eastern' | 'northern';
-  score: number; // 0-100
-  reason: string;
-  bestMonths: number[];
-}
-
-export type TransportType = 'walking' | 'jeep' | 'helicopter' | 'boat';
 
 export interface DayPlan {
   day: number;
-  zone: 'avachinsky' | 'western' | 'eastern' | 'northern';
+  type: DayType;
+  zone: ZoneId;
   title: string;
+  description: string;
   activityType: string;
   priceFrom: number;
   priceTo: number;
   coords: [number, number];
   defaultTransport: TransportType;
+  allowedTransports: TransportType[];
+  difficulty: 'easy' | 'moderate' | 'hard';
+  childFriendly: boolean;
+  minChildAge: number;
+  dayWarnings: string[];
 }
 
-interface TripRecommendation {
+export interface TripWarning {
+  type: 'permit' | 'season' | 'safety' | 'children' | 'fitness' | 'duration' | 'weather' | 'license' | 'seasickness' | 'crowd' | 'mchs';
+  severity: 'critical' | 'important' | 'info';
+  message: string;
+}
+
+export interface PriceBreakdown {
+  activities: [number, number];
+  accommodation: [number, number];
+  transport: [number, number];
+  perPersonTotal: [number, number];
+}
+
+interface ZoneRecommendation {
+  zone: ZoneId;
+  score: number;
+  reason: string;
+  bestMonths: number[];
+  crowdScore?: number;          // 0-100: how crowded this zone is during trip dates
+}
+
+export interface TripRecommendation {
   zones: ZoneRecommendation[];
   days: DayPlan[];
+  warnings: TripWarning[];
+  priceBreakdown: PriceBreakdown;
   itinerary: string;
-  warning?: string;
 }
 
-const INTEREST_TO_ZONES: Record<string, string[]> = {
-  volcano:    ['avachinsky', 'northern'],
-  fishing:    ['western', 'avachinsky'],
-  bears:      ['eastern', 'northern'],
-  helicopter: ['avachinsky', 'northern'],
-  thermal:    ['eastern', 'northern', 'avachinsky'],
-  trekking:   ['avachinsky', 'eastern', 'northern'],
-  snowmobile: ['avachinsky', 'northern', 'western'],
-  sea:        ['eastern', 'western', 'avachinsky'],
-  hot_spring: ['avachinsky', 'eastern'],
-  geyser:     ['northern', 'eastern'],
-  mountain:   ['avachinsky', 'northern'],
-  river:      ['western', 'avachinsky'],
-  boat_trip:  ['western', 'eastern'],
+// ─── Knowledge base ──────────────────────────────────────────────────────────
+
+const PKC_COORDS: [number, number] = [53.01, 158.65];
+
+export const ZONE_NAMES: Record<ZoneId, string> = {
+  avachinsky: 'Авачинская зона',
+  western:    'Западная зона',
+  eastern:    'Восточная зона',
+  northern:   'Северная зона',
 };
 
-const ZONE_NAMES: Record<string, string> = {
-  avachinsky: 'Авачинская зона (вулканы, парк)',
-  western:    'Западная зона (рыбалка, реки)',
-  eastern:    'Восточная зона (медведи, заповедник)',
-  northern:   'Северная зона (гейзеры, дикая природа)',
-};
-
-const ZONE_BEST_MONTHS: Record<string, number[]> = {
-  avachinsky: [6, 7, 8, 9],
-  western:    [5, 6, 7, 8, 9],
-  eastern:    [7, 8, 9],
-  northern:   [6, 7, 8, 9],
-};
-
-export const ZONE_COORDS: Record<string, [number, number]> = {
+export const ZONE_COORDS: Record<ZoneId, [number, number]> = {
   avachinsky: [53.25, 158.75],
   eastern:    [54.80, 160.50],
-  northern:   [56.50, 160.00],
+  northern:   [54.50, 160.27],
   western:    [52.50, 156.50],
 };
 
-const ZONE_DAY_TITLES: Record<string, string[]> = {
-  avachinsky: [
-    'Вулкан Авачинский', 'Долина Налычево', 'Термальные источники Паратунки',
-    'Мутновский вулкан', 'Вилючинский водопад',
+const ZONE_BEST_MONTHS: Record<ZoneId, number[]> = {
+  avachinsky: [6, 7, 8, 9],
+  western:    [5, 6, 7, 8, 9],
+  eastern:    [7, 8, 9],
+  northern:   [6, 7, 8, 9, 10],
+};
+
+// ── Zone travel graph ────────────────────────────────────────────────────────
+
+interface ZoneEdge {
+  distanceKm: number;
+  travelHours: number | null;   // null = no road, helicopter only
+  transports: TransportType[];
+  costPerPerson: [number, number];  // [economy, comfort]
+  needsTravelDay: boolean;
+}
+
+const ZONE_GRAPH: Record<ZoneId, Partial<Record<ZoneId, ZoneEdge>>> = {
+  avachinsky: {
+    western:  { distanceKm: 300, travelHours: 7,    transports: ['jeep'],       costPerPerson: [5000, 8000],   needsTravelDay: true },
+    eastern:  { distanceKm: 250, travelHours: 5,    transports: ['jeep', 'helicopter'], costPerPerson: [5000, 15000], needsTravelDay: true },
+    northern: { distanceKm: 400, travelHours: null,  transports: ['helicopter'], costPerPerson: [0, 0],         needsTravelDay: false },
+  },
+  western: {
+    avachinsky: { distanceKm: 300, travelHours: 7,   transports: ['jeep'],       costPerPerson: [5000, 8000],   needsTravelDay: true },
+    eastern:    { distanceKm: 500, travelHours: null, transports: ['helicopter'], costPerPerson: [0, 0],         needsTravelDay: true },
+    northern:   { distanceKm: 600, travelHours: null, transports: ['helicopter'], costPerPerson: [0, 0],         needsTravelDay: true },
+  },
+  eastern: {
+    avachinsky: { distanceKm: 250, travelHours: 5,   transports: ['jeep', 'helicopter'], costPerPerson: [5000, 15000], needsTravelDay: true },
+    western:    { distanceKm: 500, travelHours: null, transports: ['helicopter'],         costPerPerson: [0, 0],        needsTravelDay: true },
+    northern:   { distanceKm: 200, travelHours: null, transports: ['helicopter'],         costPerPerson: [0, 0],        needsTravelDay: false },
+  },
+  northern: {
+    avachinsky: { distanceKm: 400, travelHours: null, transports: ['helicopter'], costPerPerson: [0, 0], needsTravelDay: false },
+    eastern:    { distanceKm: 200, travelHours: null, transports: ['helicopter'], costPerPerson: [0, 0], needsTravelDay: false },
+    western:    { distanceKm: 600, travelHours: null, transports: ['helicopter'], costPerPerson: [0, 0], needsTravelDay: true },
+  },
+};
+
+// ── Zone transport constraints ──────────────────────────────────────────────
+
+const ZONE_ALLOWED_TRANSPORT: Record<ZoneId, TransportType[]> = {
+  avachinsky: ['walking', 'jeep', 'helicopter'],
+  western:    ['jeep', 'boat', 'helicopter'],
+  eastern:    ['jeep', 'helicopter', 'boat'],
+  northern:   ['helicopter'],
+};
+
+// ── Activity constraints ─────────────────────────────────────────────────────
+
+interface ActivityConstraints {
+  allowedTransports: TransportType[];
+  requiredTransport?: TransportType;      // hard requirement
+  defaultTransport: TransportType;
+  difficulty: 'easy' | 'moderate' | 'hard';
+  minChildAge: number;                    // 0 = any
+  childAlternative?: string;
+  fitnessRequired: FitnessLevel;
+  minDays: number;                        // minimum days to enjoy activity
+  bestZones: ZoneId[];
+  months: number[];                       // when available
+  seasonNote?: string;
+  pricePerPerson: [number, number];       // [from, to] RUB
+  priceNote?: string;
+  requiresPermit?: string;
+  requiresLicense?: boolean;
+  safetyNotes?: string[];
+}
+
+const ACTIVITY_CONSTRAINTS: Record<string, ActivityConstraints> = {
+  trekking: {
+    allowedTransports: ['walking', 'jeep'],
+    defaultTransport: 'walking',
+    difficulty: 'moderate',
+    minChildAge: 10,
+    childAlternative: 'Лёгкие пешие прогулки в Налычево или окрестностях Паратунки',
+    fitnessRequired: 'moderate',
+    minDays: 1,
+    bestZones: ['avachinsky', 'eastern'],
+    months: [6, 7, 8, 9],
+    seasonNote: 'Снег на тропах тает к середине июня',
+    pricePerPerson: [3000, 8000],
+  },
+  volcano: {
+    allowedTransports: ['jeep', 'helicopter'],
+    defaultTransport: 'jeep',
+    difficulty: 'hard',
+    minChildAge: 12,
+    childAlternative: 'Облёт вулканов на вертолёте (от 5 лет)',
+    fitnessRequired: 'active',
+    minDays: 1,
+    bestZones: ['avachinsky'],
+    months: [7, 8, 9],
+    seasonNote: 'Восхождение на Авачинский 8-10 часов, перепад 1500 м',
+    pricePerPerson: [5000, 15000],
+    safetyNotes: [
+      'Обязательны: трекинговые ботинки, дождевик, слои одежды',
+      'Рекомендуется гид — активная вулканическая зона',
+    ],
+  },
+  fishing: {
+    allowedTransports: ['jeep', 'boat', 'helicopter'],
+    defaultTransport: 'jeep',
+    difficulty: 'easy',
+    minChildAge: 5,
+    fitnessRequired: 'beginner',
+    minDays: 2,
+    bestZones: ['western', 'avachinsky'],
+    months: [6, 7, 8, 9],
+    seasonNote: 'Чавыча: июль. Нерка: июль-авг. Кижуч: сентябрь',
+    pricePerPerson: [8000, 25000],
+    priceNote: 'Многодневные пакеты дешевле: 3 дня от 45 000',
+    requiresLicense: true,
+  },
+  bears: {
+    allowedTransports: ['helicopter', 'jeep'],
+    defaultTransport: 'helicopter',
+    difficulty: 'easy',
+    minChildAge: 6,
+    fitnessRequired: 'beginner',
+    minDays: 1,
+    bestZones: ['eastern', 'avachinsky'],
+    months: [7, 8, 9],
+    seasonNote: 'Курильское озеро: авг-сен. Речные медведи: июль-сен',
+    pricePerPerson: [15000, 45000],
+    priceNote: 'Вертолёт до Курильского озера ~300 000/рейс (8 мест)',
+    requiresPermit: 'Южно-Камчатский федеральный заказник — бронь за 14 дней',
+    safetyNotes: [
+      'Только с аккредитованным гидом',
+      'Минимальная дистанция от медведей — 50 м',
+    ],
+  },
+  helicopter: {
+    allowedTransports: ['helicopter'],
+    requiredTransport: 'helicopter',
+    defaultTransport: 'helicopter',
+    difficulty: 'easy',
+    minChildAge: 3,
+    fitnessRequired: 'beginner',
+    minDays: 1,
+    bestZones: ['avachinsky', 'northern'],
+    months: [5, 6, 7, 8, 9, 10],
+    seasonNote: 'Нелётная погода отменяет 30-50% рейсов — нужен запасной день',
+    pricePerPerson: [20000, 60000],
+    priceNote: 'Ми-8: 120 000-350 000 за рейс (8 мест). Цена на человека зависит от группы',
+  },
+  geyser: {
+    allowedTransports: ['helicopter'],
+    requiredTransport: 'helicopter',
+    defaultTransport: 'helicopter',
+    difficulty: 'easy',
+    minChildAge: 8,
+    childAlternative: 'Малые гейзеры и кальдера Узон — от 8 лет',
+    fitnessRequired: 'beginner',
+    minDays: 1,
+    bestZones: ['northern'],
+    months: [6, 7, 8, 9, 10],
+    seasonNote: 'Только вертолёт. Бронь Кроноцкого заповедника обязательна',
+    pricePerPerson: [30000, 60000],
+    priceNote: 'Вертолёт до Долины гейзеров ~250 000/рейс (8 мест). Вход в заповедник ~4 000/чел',
+    requiresPermit: 'Кроноцкий заповедник — бронирование через kronoki.ru за 30 дней',
+  },
+  hot_spring: {
+    allowedTransports: ['walking', 'jeep'],
+    defaultTransport: 'walking',
+    difficulty: 'easy',
+    minChildAge: 0,
+    fitnessRequired: 'beginner',
+    minDays: 1,
+    bestZones: ['avachinsky', 'eastern'],
+    months: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    pricePerPerson: [1500, 5000],
+  },
+  thermal: {
+    allowedTransports: ['walking', 'jeep'],
+    defaultTransport: 'walking',
+    difficulty: 'easy',
+    minChildAge: 0,
+    fitnessRequired: 'beginner',
+    minDays: 1,
+    bestZones: ['avachinsky'],
+    months: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    pricePerPerson: [1500, 5000],
+  },
+  boat_trip: {
+    allowedTransports: ['boat'],
+    requiredTransport: 'boat',
+    defaultTransport: 'boat',
+    difficulty: 'easy',
+    minChildAge: 5,
+    fitnessRequired: 'beginner',
+    minDays: 1,
+    bestZones: ['avachinsky', 'western', 'eastern'],
+    months: [5, 6, 7, 8, 9, 10],
+    seasonNote: 'Океанские экскурсии зависят от волнения моря',
+    pricePerPerson: [8000, 25000],
+    priceNote: 'Катер на 8-12 чел: 80 000-200 000/рейс',
+  },
+  snowmobile: {
+    allowedTransports: ['jeep'],
+    defaultTransport: 'jeep',
+    difficulty: 'moderate',
+    minChildAge: 14,
+    fitnessRequired: 'moderate',
+    minDays: 1,
+    bestZones: ['avachinsky', 'western'],
+    months: [12, 1, 2, 3, 4],
+    seasonNote: 'Только зимний период. Летом недоступно',
+    pricePerPerson: [8000, 18000],
+  },
+  sea: {
+    allowedTransports: ['boat', 'walking'],
+    defaultTransport: 'boat',
+    difficulty: 'easy',
+    minChildAge: 5,
+    fitnessRequired: 'beginner',
+    minDays: 1,
+    bestZones: ['avachinsky', 'eastern', 'western'],
+    months: [5, 6, 7, 8, 9, 10],
+    pricePerPerson: [4000, 15000],
+  },
+  mountain: {
+    allowedTransports: ['walking', 'jeep'],
+    defaultTransport: 'walking',
+    difficulty: 'hard',
+    minChildAge: 12,
+    childAlternative: 'Лёгкие маршруты в предгорьях Авачинского залива',
+    fitnessRequired: 'active',
+    minDays: 2,
+    bestZones: ['avachinsky', 'northern'],
+    months: [7, 8, 9],
+    pricePerPerson: [3000, 10000],
+    safetyNotes: ['Многодневный треккинг — обязателен опытный гид'],
+  },
+  river: {
+    allowedTransports: ['boat', 'jeep'],
+    defaultTransport: 'boat',
+    difficulty: 'moderate',
+    minChildAge: 8,
+    fitnessRequired: 'moderate',
+    minDays: 1,
+    bestZones: ['western', 'avachinsky'],
+    months: [6, 7, 8, 9],
+    pricePerPerson: [5000, 18000],
+  },
+};
+
+const INTEREST_TO_ZONES: Record<string, ZoneId[]> = {
+  volcano:    ['avachinsky'],
+  fishing:    ['western', 'avachinsky'],
+  bears:      ['eastern'],
+  helicopter: ['avachinsky', 'northern'],
+  thermal:    ['avachinsky'],
+  trekking:   ['avachinsky', 'eastern'],
+  snowmobile: ['avachinsky', 'western'],
+  sea:        ['avachinsky', 'eastern', 'western'],
+  hot_spring: ['avachinsky'],
+  geyser:     ['northern'],
+  mountain:   ['avachinsky'],
+  river:      ['western', 'avachinsky'],
+  boat_trip:  ['avachinsky', 'western', 'eastern'],
+};
+
+// ── Accommodation by zone ───────────────────────────────────────────────────
+
+interface AccommodationInfo {
+  types: string[];
+  pricePerNight: [number, number, number]; // [economy, comfort, premium]
+  note: string;
+}
+
+const ZONE_ACCOMMODATION: Record<ZoneId, AccommodationInfo> = {
+  avachinsky: {
+    types: ['гостиница', 'апартаменты', 'хостел'],
+    pricePerNight: [3000, 7000, 15000],
+    note: 'Петропавловск / Паратунка — широкий выбор',
+  },
+  western: {
+    types: ['рыболовная база', 'палатка'],
+    pricePerNight: [8000, 20000, 40000],
+    note: 'Удалённые базы, питание включено',
+  },
+  eastern: {
+    types: ['эко-лодж', 'палатка', 'модуль'],
+    pricePerNight: [10000, 25000, 50000],
+    note: 'Ограниченное размещение, бронь заранее',
+  },
+  northern: {
+    types: [],
+    pricePerNight: [0, 0, 0],
+    note: 'Однодневная экскурсия, ночёвка в Авачинской зоне',
+  },
+};
+
+// ── Permits by zone ──────────────────────────────────────────────────────────
+
+interface PermitInfo {
+  type: 'reserve' | 'border' | 'license';
+  name: string;
+  advanceDays: number;
+  note: string;
+}
+
+const ZONE_PERMITS: Partial<Record<ZoneId, PermitInfo[]>> = {
+  northern: [
+    { type: 'reserve', name: 'Кроноцкий государственный заповедник', advanceDays: 30,
+      note: 'Бронирование через kronoki.ru — Долина гейзеров, кальдера Узон' },
   ],
   eastern: [
-    'Долина реки Жупанова', 'Наблюдение за медведями', 'Кроноцкий заповедник',
-    'Бухта Ольга', 'Река Козыревка',
-  ],
-  northern: [
-    'Долина гейзеров', 'Кальдера Узон', 'Перевал Кроноцкий',
-    'Вулкан Шивелуч', 'Озеро Курильское',
-  ],
-  western: [
-    'Рыбалка на реке Быстрой', 'Мыс Лопатка', 'Морская прогулка',
-    'Устье реки Камчатки', 'Охотское побережье',
+    { type: 'reserve', name: 'Южно-Камчатский федеральный заказник', advanceDays: 14,
+      note: 'Для посещения Курильского озера' },
+    { type: 'border', name: 'Пограничная зона ФСБ', advanceDays: 30,
+      note: 'Мыс Лопатка и части восточного побережья — заявка через Госуслуги или ФСБ' },
   ],
 };
 
-const ZONE_PRIMARY_INTERESTS: Record<string, string[]> = {
-  avachinsky: ['volcano', 'trekking', 'helicopter', 'thermal', 'hot_spring', 'mountain'],
-  eastern:    ['bears', 'thermal', 'fishing', 'sea', 'trekking'],
-  northern:   ['geyser', 'bears', 'helicopter', 'trekking', 'snowmobile'],
-  western:    ['fishing', 'boat_trip', 'sea', 'snowmobile', 'river'],
-};
+// ─── Database helpers ────────────────────────────────────────────────────────
 
-const INTEREST_PRICE: Record<string, [number, number]> = {
-  trekking:   [3000,  8000],
-  fishing:    [8000,  20000],
-  bears:      [15000, 35000],
-  helicopter: [25000, 60000],
-  thermal:    [2000,  6000],
-  hot_spring: [2000,  5000],
-  boat_trip:  [5000,  15000],
-  snowmobile: [8000,  18000],
-  volcano:    [5000,  12000],
-  geyser:     [8000,  20000],
-  mountain:   [3000,  9000],
-  sea:        [4000,  12000],
-  river:      [5000,  15000],
-};
+interface RouteFromDB {
+  id: string;
+  title: string;
+  lat: number;
+  lng: number;
+  zone: string;
+  activity_type: string;
+  location_type: string;
+}
 
-const DEFAULT_PRICE: [number, number] = [3000, 10000];
+async function fetchRoutesForZone(zone: ZoneId, activityType: string, limit: number = 5): Promise<RouteFromDB[]> {
+  try {
+    const { rows } = await pool.query<RouteFromDB>(
+      `SELECT id, title, lat, lng, zone, activity_type, location_type
+       FROM agent_route_knowledge
+       WHERE zone = $1 AND activity_type = $2 AND is_visible = TRUE
+         AND lat IS NOT NULL AND lng IS NOT NULL
+       ORDER BY RANDOM() LIMIT $3`,
+      [zone, activityType, limit]
+    );
+    return rows;
+  } catch {
+    return [];
+  }
+}
 
-const ACTIVITY_DEFAULT_TRANSPORT: Record<string, TransportType> = {
-  trekking:   'walking',
-  fishing:    'boat',
-  bears:      'helicopter',
-  helicopter: 'helicopter',
-  thermal:    'walking',
-  hot_spring: 'walking',
-  boat_trip:  'boat',
-  snowmobile: 'jeep',
-  volcano:    'jeep',
-  geyser:     'helicopter',
-  mountain:   'walking',
-  sea:        'boat',
-  river:      'boat',
-};
+// ─── Crowd load ───────────────────────────────────────────────────────────────
 
-// Petropavlovsk-Kamchatsky airport area coords
-const PKC_COORDS: [number, number] = [53.01, 158.65];
+interface CrowdRow {
+  total_departures: string;
+  booked_ratio: string;
+}
 
-function generateDayPlans(
-  zones: ZoneRecommendation[],
-  interests: string[],
-  tripDays: number,
-  arrivalTime?: string,
-  needsTransfer?: boolean,
-): DayPlan[] {
-  if (tripDays <= 0 || zones.length === 0) return [];
+/**
+ * Returns a crowd score 0-100 for a date range.
+ * Based on tour_departures load during the trip dates.
+ * Higher score = more crowded. Affects zone scoring.
+ */
+async function fetchCrowdLoad(arrivalDate?: string, departureDate?: string): Promise<number> {
+  if (!arrivalDate || !departureDate) {
+    // No dates: estimate from season (July-August = peak)
+    const month = new Date().getMonth() + 1;
+    if ([7, 8].includes(month)) return 75;
+    if ([6, 9].includes(month)) return 50;
+    return 20;
+  }
+  try {
+    const { rows } = await pool.query<CrowdRow>(
+      `SELECT
+         COUNT(*)::text                                                          AS total_departures,
+         ROUND(
+           COALESCE(
+             SUM(booked_slots)::numeric / NULLIF(SUM(available_slots), 0) * 100,
+             0
+           )
+         )::text                                                                AS booked_ratio
+       FROM tour_departures
+       WHERE status IN ('active', 'sold_out')
+         AND start_date BETWEEN $1::date AND $2::date`,
+      [arrivalDate, departureDate]
+    );
+    const row = rows[0];
+    if (!row) return 20;
+    const ratio = parseFloat(row.booked_ratio) || 0;
+    const count = parseInt(row.total_departures, 10) || 0;
+    // Weighted: bookings ratio + volume bonus
+    return Math.min(100, Math.round(ratio * 0.7 + Math.min(count * 2, 30)));
+  } catch {
+    return 20;
+  }
+}
 
-  // For trips >= 3 days: reserve Day 1 (arrival) and last day (departure)
-  const hasBufferDays = tripDays >= 3;
-  const activeDays = hasBufferDays ? tripDays - 2 : tripDays;
-  const transferCost = needsTransfer ? 2500 : 0;
+// ─── Safety alerts ────────────────────────────────────────────────────────────
 
-  const days: DayPlan[] = [];
+export interface SafetyAlert {
+  id: string;
+  zone: string;
+  severity: 'critical' | 'important' | 'info';
+  title: string;
+  message: string;
+  source: string;
+}
 
-  // Day 1 — arrival buffer (content depends on arrival time)
-  if (hasBufferDays) {
-    const lightInterest = interests.find(i => ['thermal', 'hot_spring', 'trekking', 'mountain'].includes(i)) ?? 'thermal';
-    const [lightFrom, lightTo] = INTEREST_PRICE[lightInterest] ?? DEFAULT_PRICE;
+interface SafetyAlertRow {
+  id: string;
+  zone: string;
+  severity: string;
+  title: string;
+  message: string;
+  source: string;
+}
 
-    let day1Title: string;
-    let day1PriceFrom: number;
-    let day1PriceTo: number;
-
-    if (arrivalTime) {
-      const hour = parseInt(arrivalTime.split(':')[0], 10);
-      if (hour < 12) {
-        day1Title = 'Прилёт утром + размещение + вечер на термальных источниках';
-        day1PriceFrom = Math.round(lightFrom * 0.8) + transferCost;
-        day1PriceTo   = Math.round(lightTo   * 0.8) + transferCost;
-      } else if (hour < 17) {
-        day1Title = 'Прилёт днём + размещение + прогулка по городу';
-        day1PriceFrom = Math.round(lightFrom * 0.5) + transferCost;
-        day1PriceTo   = Math.round(lightTo   * 0.5) + transferCost;
-      } else {
-        day1Title = 'Прилёт вечером + размещение + ужин. Отдых с дороги';
-        day1PriceFrom = transferCost;
-        day1PriceTo   = 2000 + transferCost;
-      }
-    } else {
-      day1Title    = 'Прилёт + размещение + знакомство с городом';
-      day1PriceFrom = Math.round(lightFrom * 0.5) + transferCost;
-      day1PriceTo   = Math.round(lightTo   * 0.5) + transferCost;
+/**
+ * Fetch active МЧС / safety alerts from DB.
+ * Falls back to empty array if table doesn't exist yet.
+ */
+async function fetchSafetyAlerts(arrivalDate?: string, departureDate?: string): Promise<SafetyAlert[]> {
+  try {
+    const params: string[] = [];
+    let dateFilter = '';
+    if (arrivalDate && departureDate) {
+      params.push(arrivalDate, departureDate);
+      dateFilter = `AND (active_until IS NULL OR active_until >= $1::date)
+                    AND active_from <= $2::date`;
     }
+    const { rows } = await pool.query<SafetyAlertRow>(
+      `SELECT id, zone, severity, title, message, source
+       FROM safety_alerts
+       WHERE is_active = TRUE ${dateFilter}
+       ORDER BY severity = 'critical' DESC, created_at DESC
+       LIMIT 10`,
+      params
+    );
+    return rows as SafetyAlert[];
+  } catch {
+    // Table may not exist yet — graceful fallback
+    return [];
+  }
+}
 
-    days.push({
-      day: 1,
-      zone: 'avachinsky',
-      title: day1Title,
-      activityType: lightInterest,
-      priceFrom: day1PriceFrom,
-      priceTo: day1PriceTo,
-      coords: PKC_COORDS,
-      defaultTransport: 'walking',
+// ─── Core engine ─────────────────────────────────────────────────────────────
+
+function getMonth(profile: TripProfile): number {
+  return profile.arrivalDate
+    ? new Date(profile.arrivalDate).getMonth() + 1
+    : new Date().getMonth() + 1;
+}
+
+function getTripDays(profile: TripProfile): number {
+  if (!profile.arrivalDate || !profile.departureDate) return 0;
+  const diff = new Date(profile.departureDate).getTime() - new Date(profile.arrivalDate).getTime();
+  return Math.max(0, Math.round(diff / 86400000));
+}
+
+function hasYoungChildren(profile: TripProfile): boolean {
+  return profile.children.some(age => age < 10);
+}
+
+function youngestChild(profile: TripProfile): number | null {
+  if (profile.children.length === 0) return null;
+  return Math.min(...profile.children);
+}
+
+function groupSize(profile: TripProfile): number {
+  return profile.adults + profile.children.length;
+}
+
+function budgetIndex(tier: BudgetTier): 0 | 1 | 2 {
+  return tier === 'economy' ? 0 : tier === 'comfort' ? 1 : 2;
+}
+
+// ── Warnings collector ──────────────────────────────────────────────────────
+
+function collectWarnings(
+  profile: TripProfile,
+  zones: ZoneRecommendation[],
+  tripDays: number,
+  crowdLoad: number = 0,
+  alerts: SafetyAlert[] = [],
+): TripWarning[] {
+  const warnings: TripWarning[] = [];
+  const month = getMonth(profile);
+  const youngest = youngestChild(profile);
+
+  // ── МЧС / safety alerts ───────────────────────────────────────────────────
+  for (const alert of alerts) {
+    const zoneMatch = alert.zone === 'all' || zones.some(z => z.zone === alert.zone);
+    if (zoneMatch) {
+      warnings.push({
+        type: 'mchs',
+        severity: alert.severity as TripWarning['severity'],
+        message: `[${alert.source}] ${alert.title}: ${alert.message}`,
+      });
+    }
+  }
+
+  // ── Seasickness ───────────────────────────────────────────────────────────
+  if (profile.seasickness) {
+    const boatRequired = profile.interests.filter(i => ACTIVITY_CONSTRAINTS[i]?.requiredTransport === 'boat');
+    const boatOptional = profile.interests.filter(i => {
+      const c = ACTIVITY_CONSTRAINTS[i];
+      return c && c.allowedTransports.includes('boat') && c.requiredTransport !== 'boat';
+    });
+
+    if (boatRequired.length > 0) {
+      warnings.push({
+        type: 'seasickness', severity: 'critical',
+        message: `Морская болезнь: "${boatRequired.join(', ')}" требует катера. Прибрежные прогулки и наблюдение с берега заменят морские выходы. Уточните с оператором.`,
+      });
+    }
+    if (boatOptional.length > 0) {
+      warnings.push({
+        type: 'seasickness', severity: 'important',
+        message: `Морская болезнь учтена: рыбалка и речные маршруты скорректированы на береговые и джип-варианты.`,
+      });
+    }
+    // If significant sea activities
+    if (profile.interests.some(i => ['boat_trip', 'sea'].includes(i))) {
+      warnings.push({
+        type: 'seasickness', severity: 'important',
+        message: 'Авачинская бухта и побережье доступны без морских выходов: пешие маршруты, смотровые площадки, маяки.',
+      });
+    }
+  }
+
+  // ── Crowd load ────────────────────────────────────────────────────────────
+  if (crowdLoad > 70) {
+    warnings.push({
+      type: 'crowd', severity: 'important',
+      message: `Высокий сезон: популярные локации загружены на ~${crowdLoad}%. Рекомендуем бронировать гидов и трансфер за 2-3 недели. Некоторые дни скорректированы на менее популярные маршруты.`,
+    });
+  } else if (crowdLoad > 50) {
+    warnings.push({
+      type: 'crowd', severity: 'info',
+      message: `Умеренная загрузка (~${crowdLoad}%). Брони лучше подтвердить за 1 неделю до выезда.`,
     });
   }
 
-  // Distribute active days proportionally by zone score
-  if (activeDays > 0) {
-    const totalScore = zones.reduce((sum, z) => sum + z.score, 0) || 1;
-    const zoneDays = zones.map(z => ({
-      zone: z.zone,
-      count: Math.max(0, Math.round((z.score / totalScore) * activeDays)),
-    }));
+  // Min trip duration
+  if (tripDays > 0 && tripDays < 5) {
+    warnings.push({
+      type: 'duration', severity: 'important',
+      message: `${tripDays} дня — очень мало для Камчатки. Перелёт 8-9 часов из Москвы + джетлаг (UTC+12). Рекомендуем минимум 7 дней.`,
+    });
+  }
 
-    if (zoneDays[0]) zoneDays[0].count = Math.max(1, zoneDays[0].count);
+  // Season warnings per activity
+  for (const interest of profile.interests) {
+    const c = ACTIVITY_CONSTRAINTS[interest];
+    if (!c) continue;
+    if (!c.months.includes(month)) {
+      warnings.push({
+        type: 'season', severity: 'critical',
+        message: `${interest}: недоступно в выбранный период. ${c.seasonNote ?? ''}`.trim(),
+      });
+    }
+  }
 
-    let total = zoneDays.reduce((s, z) => s + z.count, 0);
-    while (total > activeDays && zoneDays.length > 1) { zoneDays[zoneDays.length - 1].count = Math.max(0, zoneDays[zoneDays.length - 1].count - 1); total--; }
-    while (total < activeDays) { zoneDays[0].count++; total++; }
-
-    let dayNum = hasBufferDays ? 2 : 1;
-
-    for (const { zone, count } of zoneDays) {
-      if (count <= 0) continue;
-
-      const zoneInterests = ZONE_PRIMARY_INTERESTS[zone] ?? [];
-      const matchingInterests = interests.filter(i => zoneInterests.includes(i));
-      const activeInterest = matchingInterests[0] ?? interests[0] ?? 'trekking';
-
-      const prices = matchingInterests
-        .map(i => INTEREST_PRICE[i] ?? DEFAULT_PRICE)
-        .sort(([a], [b]) => b - a);
-      const [priceFrom, priceTo] = prices[0] ?? DEFAULT_PRICE;
-
-      const titles = ZONE_DAY_TITLES[zone] ?? [`День в зоне ${zone}`];
-
-      for (let d = 0; d < count; d++) {
-        days.push({
-          day: dayNum++,
-          zone: zone as DayPlan['zone'],
-          title: titles[d % titles.length],
-          activityType: activeInterest,
-          priceFrom,
-          priceTo,
-          coords: ZONE_COORDS[zone] as [number, number],
-          defaultTransport: ACTIVITY_DEFAULT_TRANSPORT[activeInterest] ?? 'walking',
+  // Children constraints
+  if (youngest !== null) {
+    for (const interest of profile.interests) {
+      const c = ACTIVITY_CONSTRAINTS[interest];
+      if (!c) continue;
+      if (youngest < c.minChildAge) {
+        const alt = c.childAlternative ? ` Альтернатива: ${c.childAlternative}` : '';
+        warnings.push({
+          type: 'children', severity: 'important',
+          message: `${interest}: минимальный возраст ${c.minChildAge} лет, ребёнку ${youngest}.${alt}`,
         });
       }
     }
   }
 
-  // Last day — pack + transfer to airport + departure
-  if (hasBufferDays) {
+  // Fitness
+  for (const interest of profile.interests) {
+    const c = ACTIVITY_CONSTRAINTS[interest];
+    if (!c) continue;
+    const levels: FitnessLevel[] = ['beginner', 'moderate', 'active'];
+    if (levels.indexOf(c.fitnessRequired) > levels.indexOf(profile.fitnessLevel)) {
+      warnings.push({
+        type: 'fitness', severity: 'important',
+        message: `${interest}: требуется уровень "${c.fitnessRequired}", у вас "${profile.fitnessLevel}". ${c.safetyNotes?.[0] ?? ''}`.trim(),
+      });
+    }
+  }
+
+  // Permits
+  for (const zr of zones) {
+    const permits = ZONE_PERMITS[zr.zone];
+    if (!permits) continue;
+    for (const p of permits) {
+      warnings.push({
+        type: 'permit', severity: 'critical',
+        message: `${ZONE_NAMES[zr.zone]}: требуется ${p.name}. Оформление за ${p.advanceDays} дней. ${p.note}`,
+      });
+    }
+  }
+
+  // Fishing license
+  if (profile.interests.includes('fishing')) {
+    warnings.push({
+      type: 'license', severity: 'important',
+      message: 'Рыбалка: требуется рыболовная путёвка. Правила зависят от реки и вида рыбы. Оформляет оператор.',
+    });
+  }
+
+  // Helicopter weather buffer
+  const heliActivities = profile.interests.filter(i => {
+    const c = ACTIVITY_CONSTRAINTS[i];
+    return c?.requiredTransport === 'helicopter';
+  });
+  if (heliActivities.length > 0) {
+    warnings.push({
+      type: 'weather', severity: 'important',
+      message: `Вертолётные экскурсии (${heliActivities.join(', ')}): 30-50% рейсов отменяют из-за тумана. В план добавлен запасной день.`,
+    });
+  }
+
+  // Safety for remote areas
+  const remoteZones = zones.filter(z => z.zone !== 'avachinsky');
+  if (remoteZones.length > 0) {
+    warnings.push({
+      type: 'safety', severity: 'info',
+      message: 'Удалённые зоны: нет сотовой связи, нет дорог. Рекомендуется спутниковый телефон и опытный гид.',
+    });
+  }
+
+  // Bear safety
+  if (profile.interests.some(i => ['bears', 'fishing', 'trekking'].includes(i))) {
+    warnings.push({
+      type: 'safety', severity: 'info',
+      message: 'Территория медведей. Гид с фальшфейером обязателен. Перцовый спрей рекомендован.',
+    });
+  }
+
+  return warnings;
+}
+
+// ── Zone scoring ─────────────────────────────────────────────────────────────
+
+function scoreZones(profile: TripProfile, crowdLoad: number = 0): ZoneRecommendation[] {
+  const month = getMonth(profile);
+  const scores: Record<string, number> = {};
+
+  for (const interest of profile.interests) {
+    const c = ACTIVITY_CONSTRAINTS[interest];
+    if (!c) continue;
+    // Skip unavailable activities
+    if (!c.months.includes(month)) continue;
+    for (const zone of c.bestZones) {
+      scores[zone] = (scores[zone] ?? 0) + 25;
+    }
+  }
+
+  // Penalize off-season zones
+  for (const [zone, months] of Object.entries(ZONE_BEST_MONTHS)) {
+    if (!months.includes(month)) {
+      scores[zone] = Math.max(0, (scores[zone] ?? 0) - 15);
+    }
+  }
+
+  // If children < 8 and northern is scored, reduce (geyser minAge=8)
+  const youngest = youngestChild(profile);
+  if (youngest !== null && youngest < 8 && scores['northern']) {
+    scores['northern'] = Math.max(0, scores['northern'] - 20);
+  }
+
+  // Seasickness: penalize zones with mandatory boat access
+  if (profile.seasickness) {
+    // Western zone heavily relies on boat for fishing/river
+    scores['western'] = Math.max(0, (scores['western'] ?? 0) - 15);
+  }
+
+  // Crowd penalty: when crowd load is high, boost alternative zones to distribute tourists
+  if (crowdLoad > 60 && scores['avachinsky'] && scores['avachinsky'] > 0) {
+    // Avachinsky gets most traffic — small boost to other zones to spread load
+    const penalty = Math.round((crowdLoad - 60) / 4); // 0-10 pts
+    scores['avachinsky'] = Math.max(0, scores['avachinsky'] - penalty);
+    if (scores['eastern']) scores['eastern'] += Math.round(penalty / 2);
+    if (scores['western']) scores['western'] += Math.round(penalty / 2);
+  }
+
+  return Object.entries(scores)
+    .filter(([, s]) => s > 0)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 3)
+    .map(([zone, score]) => ({
+      zone: zone as ZoneId,
+      score: Math.min(100, score),
+      reason: `${profile.interests.filter(i => ACTIVITY_CONSTRAINTS[i]?.bestZones.includes(zone as ZoneId)).join(', ')}`,
+      bestMonths: ZONE_BEST_MONTHS[zone as ZoneId] ?? [],
+      crowdScore: zone === 'avachinsky' ? crowdLoad : Math.max(0, crowdLoad - 20),
+    }));
+}
+
+// ── Day plan generator ──────────────────────────────────────────────────────
+
+async function generateDayPlans(
+  profile: TripProfile,
+  zones: ZoneRecommendation[],
+  tripDays: number,
+): Promise<DayPlan[]> {
+  if (tripDays <= 0 || zones.length === 0) return [];
+  const youngest = youngestChild(profile);
+  const month = getMonth(profile);
+
+  const days: DayPlan[] = [];
+  let dayNum = 1;
+
+  // ── Day 1: Arrival ──
+  const arrHour = profile.flightArrivalTime
+    ? parseInt(profile.flightArrivalTime.split(':')[0], 10)
+    : 14;
+
+  let arrivalTitle: string;
+  if (arrHour < 12) {
+    arrivalTitle = 'Прилёт утром. Размещение, отдых. Вечер: термальные источники Паратунки';
+  } else if (arrHour < 17) {
+    arrivalTitle = 'Прилёт днём. Размещение, акклиматизация. Прогулка по городу';
+  } else {
+    arrivalTitle = 'Прилёт вечером. Размещение, ужин, отдых с дороги';
+  }
+
+  days.push({
+    day: dayNum++, type: 'arrival', zone: 'avachinsky',
+    title: arrivalTitle,
+    description: 'Перелёт 8-9 часов. Разница с Москвой +9 часов. Акклиматизация обязательна.',
+    activityType: 'hot_spring', priceFrom: 0, priceTo: 3000,
+    coords: PKC_COORDS, defaultTransport: 'walking',
+    allowedTransports: ['walking'], difficulty: 'easy',
+    childFriendly: true, minChildAge: 0, dayWarnings: [],
+  });
+
+  if (dayNum > tripDays) return days;
+
+  // ── Active days budget ──
+  const departureDays = 1;
+  let activeBudget = tripDays - 1 - departureDays; // minus arrival, minus departure
+
+  // Determine zone allocation
+  const zoneBlocks: Array<{ zone: ZoneId; interests: string[]; activeDays: number }> = [];
+  const totalScore = zones.reduce((s, z) => s + z.score, 0) || 1;
+
+  for (const z of zones) {
+    const zoneInterests = profile.interests.filter(i => {
+      const c = ACTIVITY_CONSTRAINTS[i];
+      return c?.bestZones.includes(z.zone) && c.months.includes(month);
+    });
+    if (zoneInterests.length === 0) continue;
+    const rawDays = Math.max(1, Math.round((z.score / totalScore) * activeBudget));
+    zoneBlocks.push({ zone: z.zone, interests: zoneInterests, activeDays: rawDays });
+  }
+
+  // Normalize to active budget
+  let totalAllocated = zoneBlocks.reduce((s, b) => s + b.activeDays, 0);
+  while (totalAllocated > activeBudget && zoneBlocks.length > 1) {
+    const last = zoneBlocks[zoneBlocks.length - 1];
+    if (last.activeDays > 1) { last.activeDays--; totalAllocated--; }
+    else { zoneBlocks.pop(); totalAllocated--; }
+  }
+  while (totalAllocated < activeBudget && zoneBlocks[0]) {
+    zoneBlocks[0].activeDays++;
+    totalAllocated++;
+  }
+
+  // Need helicopter buffer day?
+  const needsHeliBuffer = profile.interests.some(i => ACTIVITY_CONSTRAINTS[i]?.requiredTransport === 'helicopter');
+
+  // Insert travel days between different zones
+  let prevZone: ZoneId = 'avachinsky';
+
+  for (let bi = 0; bi < zoneBlocks.length; bi++) {
+    const block = zoneBlocks[bi];
+
+    // Travel day if zone changes
+    if (block.zone !== prevZone && dayNum <= tripDays - departureDays) {
+      const edge = ZONE_GRAPH[prevZone]?.[block.zone];
+      if (edge?.needsTravelDay) {
+        const transportLabel = edge.transports.includes('jeep')
+          ? `Переезд на внедорожнике (~${edge.travelHours ?? '?'}ч, ${edge.distanceKm} км)`
+          : `Перелёт на вертолёте (${edge.distanceKm} км)`;
+        days.push({
+          day: dayNum++, type: 'travel', zone: prevZone,
+          title: `Переезд: ${ZONE_NAMES[prevZone]} → ${ZONE_NAMES[block.zone]}`,
+          description: transportLabel,
+          activityType: 'travel', priceFrom: edge.costPerPerson[0], priceTo: edge.costPerPerson[1],
+          coords: ZONE_COORDS[block.zone], defaultTransport: edge.transports[0],
+          allowedTransports: edge.transports, difficulty: 'easy',
+          childFriendly: true, minChildAge: 0, dayWarnings: [],
+        });
+        if (dayNum > tripDays - departureDays) break;
+      }
+    }
+
+    // Fetch real routes from DB for this zone/interests
+    const primaryInterest = block.interests[0];
+    const dbRoutes = await fetchRoutesForZone(block.zone, primaryInterest, block.activeDays + 2);
+
+    // Generate activity days for this zone
+    for (let d = 0; d < block.activeDays && dayNum <= tripDays - departureDays; d++) {
+      const interestIdx = d % block.interests.length;
+      const interest = block.interests[interestIdx];
+      const c = ACTIVITY_CONSTRAINTS[interest];
+      if (!c) continue;
+
+      // Use real route data if available
+      const route = dbRoutes[d];
+      const coords: [number, number] = route
+        ? [route.lat, route.lng]
+        : ZONE_COORDS[block.zone];
+      const title = route?.title ?? `${interest} — ${ZONE_NAMES[block.zone]}`;
+
+      const childOk = youngest === null || youngest >= c.minChildAge;
+      const dayWarnings: string[] = [];
+      if (!childOk && c.childAlternative) {
+        dayWarnings.push(`Детям < ${c.minChildAge}: ${c.childAlternative}`);
+      }
+      if (c.safetyNotes) dayWarnings.push(...c.safetyNotes);
+
+      // Allowed transports = intersection of zone + activity
+      const zoneTransports = ZONE_ALLOWED_TRANSPORT[block.zone];
+      let allowed = c.allowedTransports.filter(t => zoneTransports.includes(t));
+
+      // Seasickness: replace boat with best non-boat alternative
+      if (profile.seasickness && allowed.includes('boat')) {
+        const noBoat = allowed.filter(t => t !== 'boat');
+        if (c.requiredTransport === 'boat') {
+          // Activity strictly requires boat — keep it but warn prominently
+          dayWarnings.unshift('Морская болезнь: этот выход на воду. Примите таблетки от укачивания заранее. Уточните у оператора береговую альтернативу.');
+        } else {
+          // Boat is optional — remove it from options
+          allowed = noBoat.length > 0 ? noBoat : allowed;
+          dayWarnings.unshift('Маршрут скорректирован: береговой / джип-вариант вместо катера.');
+        }
+      }
+
+      const transport = c.requiredTransport && !(profile.seasickness && c.requiredTransport === 'boat')
+        ? c.requiredTransport
+        : (allowed.includes(c.defaultTransport) ? c.defaultTransport : allowed[0] ?? 'walking');
+
+      // Seasickness alternative for boat_required activities — adjust title
+      let dayTitle = title;
+      if (profile.seasickness && c.requiredTransport === 'boat' && interest === 'boat_trip') {
+        dayTitle = 'Прогулка вдоль Авачинской бухты (береговой маршрут)';
+      }
+
+      days.push({
+        day: dayNum++, type: 'activity', zone: block.zone,
+        title: dayTitle,
+        description: c.seasonNote ?? '',
+        activityType: interest,
+        priceFrom: c.pricePerPerson[0],
+        priceTo: c.pricePerPerson[1],
+        coords,
+        defaultTransport: transport,
+        allowedTransports: allowed.length > 0 ? allowed : [transport],
+        difficulty: c.difficulty,
+        childFriendly: childOk,
+        minChildAge: c.minChildAge,
+        dayWarnings,
+      });
+
+      // Insert rest day after hard activities (if budget allows)
+      if (c.difficulty === 'hard' && d < block.activeDays - 1 && dayNum <= tripDays - departureDays - 1) {
+        days.push({
+          day: dayNum++, type: 'rest', zone: block.zone,
+          title: 'День отдыха. Термальные источники',
+          description: 'Восстановление после сложной активности. Горячие источники, прогулки.',
+          activityType: 'hot_spring',
+          priceFrom: 1500, priceTo: 5000,
+          coords: block.zone === 'avachinsky' ? PKC_COORDS : ZONE_COORDS[block.zone],
+          defaultTransport: 'walking', allowedTransports: ['walking'],
+          difficulty: 'easy', childFriendly: true, minChildAge: 0, dayWarnings: [],
+        });
+      }
+    }
+
+    prevZone = block.zone;
+  }
+
+  // ── Helicopter buffer day (before departure) ──
+  if (needsHeliBuffer && dayNum <= tripDays - departureDays) {
     days.push({
-      day: tripDays,
-      zone: 'avachinsky',
-      title: 'Сборы + трансфер в аэропорт + вылет',
-      activityType: 'thermal',
-      priceFrom: transferCost,
-      priceTo:   2000 + transferCost,
-      coords: PKC_COORDS,
-      defaultTransport: 'walking',
+      day: dayNum++, type: 'buffer', zone: 'avachinsky',
+      title: 'Резервный день (нелётная погода)',
+      description: 'Если все вертолётные экскурсии состоялись — свободный день: термальные источники, город, сувениры.',
+      activityType: 'hot_spring',
+      priceFrom: 0, priceTo: 5000,
+      coords: PKC_COORDS, defaultTransport: 'walking',
+      allowedTransports: ['walking', 'jeep'], difficulty: 'easy',
+      childFriendly: true, minChildAge: 0,
+      dayWarnings: ['Резерв на случай отмены вертолётных рейсов из-за погоды'],
+    });
+  }
+
+  // ── Travel back to Avachinsky if last zone was not avachinsky ──
+  if (prevZone !== 'avachinsky' && dayNum <= tripDays - departureDays) {
+    const backEdge = ZONE_GRAPH[prevZone]?.['avachinsky'];
+    if (backEdge) {
+      days.push({
+        day: dayNum++, type: 'travel', zone: 'avachinsky',
+        title: `Возвращение: ${ZONE_NAMES[prevZone]} → Петропавловск`,
+        description: backEdge.transports.includes('jeep')
+          ? `Переезд ~${backEdge.travelHours ?? '?'}ч`
+          : 'Перелёт на вертолёте',
+        activityType: 'travel', priceFrom: backEdge.costPerPerson[0], priceTo: backEdge.costPerPerson[1],
+        coords: PKC_COORDS, defaultTransport: backEdge.transports[0],
+        allowedTransports: backEdge.transports, difficulty: 'easy',
+        childFriendly: true, minChildAge: 0, dayWarnings: [],
+      });
+    }
+  }
+
+  // ── Fill remaining days with light activities ──
+  while (dayNum <= tripDays - departureDays) {
+    days.push({
+      day: dayNum++, type: 'activity', zone: 'avachinsky',
+      title: 'Свободный день. Город, сувениры, рыбный рынок',
+      description: 'Прогулка по Петропавловску, смотровые площадки, кафе.',
+      activityType: 'hot_spring', priceFrom: 0, priceTo: 5000,
+      coords: PKC_COORDS, defaultTransport: 'walking',
+      allowedTransports: ['walking', 'jeep'], difficulty: 'easy',
+      childFriendly: true, minChildAge: 0, dayWarnings: [],
+    });
+  }
+
+  // ── Last day: Departure ──
+  if (dayNum <= tripDays) {
+    const depHour = profile.flightDepartureTime
+      ? parseInt(profile.flightDepartureTime.split(':')[0], 10)
+      : 12;
+    const depTitle = depHour >= 17
+      ? 'Утро свободно. Лёгкая прогулка. Трансфер в аэропорт, вылет вечером'
+      : depHour >= 12
+        ? 'Сборы утром. Трансфер в аэропорт, вылет днём'
+        : 'Ранний подъём. Трансфер в аэропорт, вылет утром';
+
+    days.push({
+      day: dayNum, type: 'departure', zone: 'avachinsky',
+      title: depTitle,
+      description: 'Аэропорт Елизово (PKC). Трансфер 30 мин из Петропавловска.',
+      activityType: 'departure', priceFrom: 0, priceTo: 2500,
+      coords: PKC_COORDS, defaultTransport: 'walking',
+      allowedTransports: ['walking'], difficulty: 'easy',
+      childFriendly: true, minChildAge: 0, dayWarnings: [],
     });
   }
 
   return days;
 }
 
-export async function recommendTrip(profile: UserProfile): Promise<TripRecommendation> {
+// ── Price breakdown ─────────────────────────────────────────────────────────
+
+function calculatePriceBreakdown(days: DayPlan[], profile: TripProfile): PriceBreakdown {
+  const bi = budgetIndex(profile.budgetTier);
+  const nightCount = Math.max(0, days.length - 1);
+
+  // Activities total
+  const actFrom = days.filter(d => d.type === 'activity' || d.type === 'buffer').reduce((s, d) => s + d.priceFrom, 0);
+  const actTo   = days.filter(d => d.type === 'activity' || d.type === 'buffer').reduce((s, d) => s + d.priceTo, 0);
+
+  // Accommodation — estimate by zone nights
+  let accFrom = 0;
+  let accTo = 0;
+  for (const day of days) {
+    if (day.type === 'departure') continue;
+    const acc = ZONE_ACCOMMODATION[day.zone];
+    const nightPrice = acc.pricePerNight[bi] || acc.pricePerNight[0];
+    accFrom += Math.round(nightPrice * 0.8);
+    accTo   += Math.round(nightPrice * 1.2);
+  }
+  if (nightCount === 0) { accFrom = 0; accTo = 0; }
+
+  // Transport — travel days + transfers
+  const travelDays = days.filter(d => d.type === 'travel');
+  const transFrom = travelDays.reduce((s, d) => s + d.priceFrom, 0) + 2500; // arrival transfer
+  const transTo   = travelDays.reduce((s, d) => s + d.priceTo, 0) + 5000;   // both transfers
+
+  return {
+    activities: [actFrom, actTo],
+    accommodation: [accFrom, accTo],
+    transport: [transFrom, transTo],
+    perPersonTotal: [actFrom + accFrom + transFrom, actTo + accTo + transTo],
+  };
+}
+
+// ── AI itinerary ────────────────────────────────────────────────────────────
+
+function buildAIPrompt(profile: TripProfile, zones: ZoneRecommendation[], days: DayPlan[], warnings: TripWarning[]): string {
+  const groupDesc = [`${profile.adults} взрослых`];
+  if (profile.children.length > 0) {
+    groupDesc.push(`дети: ${profile.children.map(a => `${a} лет`).join(', ')}`);
+  }
+
+  const daysSummary = days.map(d =>
+    `День ${d.day} (${d.type}): ${d.title} [${d.zone}]`
+  ).join('\n');
+
+  const warningsSummary = warnings
+    .filter(w => w.severity === 'critical' || w.severity === 'important')
+    .map(w => `- ${w.message}`)
+    .join('\n');
+
+  return `Ты помощник туристического планирования на Камчатке. Создай вдохновляющее описание маршрута (5-8 предложений).
+
+Группа: ${groupDesc.join(', ')}
+Уровень: ${profile.fitnessLevel}
+Бюджет: ${profile.budgetTier}
+Даты: ${profile.arrivalDate ?? 'не указаны'} — ${profile.departureDate ?? 'не указаны'}
+
+Зоны: ${zones.map(z => `${ZONE_NAMES[z.zone]} (${z.score}%)`).join(', ')}
+
+План по дням:
+${daysSummary}
+
+${warningsSummary ? `Предупреждения:\n${warningsSummary}` : ''}
+
+Опиши маршрут на русском, учитывая:
+- Дни переезда и отдыха — это норма, не извиняйся за них
+- Если есть дети — упомяни что программа адаптирована
+- Упомяни ключевые впечатления: что увидят, что почувствуют
+- Не нумеруй дни, пиши связным текстом`;
+}
+
+// ─── Main export ─────────────────────────────────────────────────────────────
+
+export async function recommendTrip(profile: TripProfile): Promise<TripRecommendation> {
   if (!profile.interests || profile.interests.length === 0) {
     return {
-      zones: [],
-      days: [],
-      itinerary: 'Пожалуйста, выберите ваши интересы',
-      warning: 'Нужны интересы для рекомендации',
+      zones: [], days: [], warnings: [],
+      priceBreakdown: { activities: [0, 0], accommodation: [0, 0], transport: [0, 0], perPersonTotal: [0, 0] },
+      itinerary: 'Выберите интересы для рекомендации.',
     };
   }
 
-  // Map interests to zones
-  const zoneScores: Record<string, number> = {};
-  profile.interests.forEach(interest => {
-    const zones = INTEREST_TO_ZONES[interest] || [];
-    zones.forEach(zone => {
-      zoneScores[zone] = (zoneScores[zone] || 0) + 25;
-    });
-  });
+  const tripDays = getTripDays(profile);
 
-  // Check seasonality
-  const month = profile.arrivalDate
-    ? new Date(profile.arrivalDate).getMonth() + 1
-    : new Date().getMonth() + 1;
+  // Fetch context data in parallel
+  const [crowdLoad, alerts] = await Promise.all([
+    fetchCrowdLoad(profile.arrivalDate, profile.departureDate),
+    fetchSafetyAlerts(profile.arrivalDate, profile.departureDate),
+  ]);
 
-  let warning: string | undefined;
-  const unseasonalZones = Object.entries(ZONE_BEST_MONTHS)
-    .filter(([, months]) => !months.includes(month))
-    .map(([zone]) => zone);
+  const zones = scoreZones(profile, crowdLoad);
+  const warnings = collectWarnings(profile, zones, tripDays, crowdLoad, alerts);
+  const days = await generateDayPlans(profile, zones, tripDays);
+  const priceBreakdown = calculatePriceBreakdown(days, profile);
 
-  if (unseasonalZones.length > 0 && unseasonalZones.length <= 2) {
-    warning = `В выбранный период для ${unseasonalZones.map(z => ZONE_NAMES[z]).join(', ')} не сезон`;
-  }
-
-  // Penalize off-season zones
-  unseasonalZones.forEach(zone => {
-    zoneScores[zone] = Math.max(0, (zoneScores[zone] || 0) - 15);
-  });
-
-  // Calculate trip days
-  let tripDays = 0;
-  if (profile.arrivalDate && profile.departureDate) {
-    const diff = new Date(profile.departureDate).getTime() - new Date(profile.arrivalDate).getTime();
-    tripDays = Math.round(diff / 86400000);
-  }
-
-  // Build zone recommendations
-  const zones: ZoneRecommendation[] = Object.entries(zoneScores)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 3)
-    .map(([zone, score]) => ({
-      zone: zone as ZoneRecommendation['zone'],
-      score: Math.min(100, score),
-      reason: `Отлично подходит для: ${profile.interests.filter(i => INTEREST_TO_ZONES[i]?.includes(zone)).join(', ')}`,
-      bestMonths: ZONE_BEST_MONTHS[zone] || [],
-    }));
-
-  // Generate structured day plans
-  const days = generateDayPlans(zones, profile.interests, tripDays, profile.flightArrivalTime, profile.needsAirportTransfer);
-
-  // Use AI to generate itinerary text
-  let itinerary = generateBasicItinerary(zones, tripDays, profile.interests);
+  // AI itinerary — include seasickness context
+  let itinerary = `Маршрут на ${tripDays} дней по Камчатке: ${zones.map(z => ZONE_NAMES[z.zone]).join(', ')}.`;
 
   try {
-    const aiPrompt = buildAIPrompt(profile, zones, tripDays);
+    const aiPrompt = buildAIPrompt(profile, zones, days, warnings);
     const messages: ChatMessage[] = [
-      { role: 'system', content: 'Вы ассистент по туристическому планированию Камчатки.' },
+      { role: 'system', content: 'Ты ассистент по туристическому планированию Камчатки.' },
       { role: 'user', content: aiPrompt },
     ];
     const aiResponse = await callAIWaterfall(messages);
-    if (aiResponse && aiResponse.trim()) itinerary = aiResponse;
+    if (aiResponse?.trim()) itinerary = aiResponse;
   } catch {
-    // AI unavailable — fallback itinerary already set
+    // fallback already set
   }
 
-  return { zones, days, itinerary, warning };
-}
-
-function generateBasicItinerary(
-  zones: ZoneRecommendation[],
-  tripDays: number,
-  interests: string[],
-): string {
-  if (zones.length === 0) return 'Нет рекомендаций. Пожалуйста, выберите интересы и даты.';
-
-  const mainZone = ZONE_NAMES[zones[0].zone];
-  const activities = interests.join(', ');
-
-  if (tripDays <= 1) {
-    return `Однодневный тур — ${mainZone}. Выезд рано утром, день насыщен активностями (${activities}), возврат к вечеру.`;
-  }
-  if (tripDays <= 3) {
-    return `${tripDays}-дневный тур по ${mainZone}. День 1: прилёт, размещение, отдых. День 2: ${activities}. День ${tripDays}: трансфер в аэропорт, вылет.`;
-  }
-  if (tripDays <= 7) {
-    const secondZone = zones[1] ? ZONE_NAMES[zones[1].zone] : 'соседняя зона';
-    return `Недельный тур. День 1: прилёт, размещение. Дни 2–${tripDays - 3}: ${mainZone} (${activities}). День ${tripDays - 2}: переезд в ${secondZone}. Дни ${tripDays - 1}: активности. День ${tripDays}: сборы, вылет.`;
-  }
-
-  return `${tripDays}-дневный тур по Камчатке. День 1 — прилёт и акклиматизация. Дни 2–${tripDays - 1}: ${mainZone}, затем ${zones.slice(1).map(z => ZONE_NAMES[z.zone]).join(' и ')} — насыщенные активности. День ${tripDays}: ранние сборы и вылет.`;
-}
-
-function buildAIPrompt(
-  profile: UserProfile,
-  zones: ZoneRecommendation[],
-  tripDays: number,
-): string {
-  const zoneList = zones.map(z => `- ${ZONE_NAMES[z.zone]} (${z.score}%)`).join('\n');
-  const bufferNote = tripDays >= 3
-    ? (() => {
-        const timeCtx = profile.flightArrivalTime
-          ? (() => {
-              const h = parseInt(profile.flightArrivalTime!.split(':')[0], 10);
-              return h < 12 ? `рейс в ${profile.flightArrivalTime} — успевает на лёгкую активность после обеда`
-                : h < 17 ? `рейс в ${profile.flightArrivalTime} — небольшая прогулка вечером`
-                : `рейс в ${profile.flightArrivalTime} — только ужин и отдых`;
-            })()
-          : 'время прилёта не указано';
-        const transferCtx = profile.needsAirportTransfer
-          ? '\n- Заказан трансфер от/до аэропорта (~2 500 ₽/сторона) — включи в описание дней прилёта и отъезда'
-          : '';
-        return `\n- День 1: прилёт в ПКЦ (${timeCtx}), размещение — никаких насыщенных активностей${transferCtx}\n- День ${tripDays}: сборы, трансфер в аэропорт, вылет — все активности завершаются накануне`;
-      })()
-    : '';
-  return `Ты помощник туристического планирования на Камчатке.
-
-Профиль туриста:
-- Интересы: ${profile.interests.join(', ')}
-- Дней: ${tripDays || 'не указано'}
-- Даты: ${profile.arrivalDate || 'не указаны'}
-
-Рекомендованные зоны:
-${zoneList}${bufferNote}
-
-Создай короткое (3–5 предложений) вдохновляющее описание маршрута с учётом буферных дней на прилёт и вылет. Укажи зоны, активности, почему это идеально для туриста и примерный график. Ответь на русском, единым текстом без нумерации.`;
+  return { zones, days, warnings, priceBreakdown, itinerary };
 }

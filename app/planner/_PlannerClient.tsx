@@ -12,7 +12,9 @@ import {
   X, ChevronDown, ChevronUp, Truck,
   ArrowRight, ExternalLink, Map as MapIcon, List, Pencil,
   Save, BookmarkCheck, PlaneLanding, PlaneTakeoff, Lock,
-  Send,
+  Send, ShieldAlert, Info, Baby, Dumbbell, Wallet,
+  ArrowLeftRight, Coffee, CloudOff,
+  CheckCircle, Download, MessageCircle, Eye,
 } from 'lucide-react';
 import type { MapMarker } from '@/components/shared/LeafletMap';
 
@@ -21,6 +23,9 @@ const LeafletMap = dynamic(() => import('@/components/shared/LeafletMap'), { ssr
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 type TransportType = 'walking' | 'jeep' | 'helicopter' | 'boat';
+type DayType = 'arrival' | 'activity' | 'travel' | 'rest' | 'buffer' | 'departure';
+type FitnessLevel = 'beginner' | 'moderate' | 'active';
+type BudgetTier = 'economy' | 'comfort' | 'premium';
 
 interface SelectItem {
   id: string;
@@ -30,20 +35,41 @@ interface SelectItem {
 
 interface DayPlan {
   day: number;
+  type: DayType;
   zone: 'avachinsky' | 'western' | 'eastern' | 'northern';
   title: string;
+  description: string;
   activityType: string;
   priceFrom: number;
   priceTo: number;
   coords: [number, number];
   defaultTransport: TransportType;
+  allowedTransports: TransportType[];
+  difficulty: 'easy' | 'moderate' | 'hard';
+  childFriendly: boolean;
+  minChildAge: number;
+  dayWarnings: string[];
+}
+
+interface TripWarning {
+  type: string;
+  severity: 'critical' | 'important' | 'info';
+  message: string;
+}
+
+interface PriceBreakdown {
+  activities: [number, number];
+  accommodation: [number, number];
+  transport: [number, number];
+  perPersonTotal: [number, number];
 }
 
 interface Recommendation {
-  zones: Array<{ zone: string; score: number; reason: string }>;
+  zones: Array<{ zone: string; score: number; reason: string; crowdScore?: number }>;
   days: DayPlan[];
+  warnings: TripWarning[];
+  priceBreakdown: PriceBreakdown;
   itinerary: string;
-  warning?: string;
 }
 
 interface RoutePoint {
@@ -195,14 +221,24 @@ function guessZone(lat: number, lng: number): DayPlan['zone'] {
 function routeToDayPlan(route: RoutePoint, dayNum: number): DayPlan {
   const activity = route.activity_type ?? 'trekking';
   const [priceFrom, priceTo] = INTEREST_PRICE[activity] ?? DEFAULT_PRICE;
+  const transport = ACTIVITY_DEFAULT_TRANSPORT[activity] ?? 'walking';
+  const zone = guessZone(route.lat, route.lng);
+  const zoneTransports = ZONE_TRANSPORTS[zone] ?? ['walking', 'jeep'];
   return {
     day: dayNum,
-    zone: guessZone(route.lat, route.lng),
+    type: 'activity',
+    zone,
     title: route.title,
+    description: '',
     activityType: activity,
     priceFrom, priceTo,
     coords: [route.lat, route.lng],
-    defaultTransport: ACTIVITY_DEFAULT_TRANSPORT[activity] ?? 'walking',
+    defaultTransport: transport,
+    allowedTransports: zoneTransports.filter(t => t === transport || ['walking', 'jeep'].includes(t)) as TransportType[],
+    difficulty: 'moderate',
+    childFriendly: true,
+    minChildAge: 0,
+    dayWarnings: [],
   };
 }
 
@@ -269,6 +305,10 @@ function TransportSelector({ selected, onChange, zone }: {
   );
 }
 
+const DIFFICULTY_LABEL: Record<string, string> = {
+  easy: 'Легкий', moderate: 'Средний', hard: 'Сложный',
+};
+
 // ─── Day card (DnD-aware) ─────────────────────────────────────────────────────
 
 interface DayCardProps {
@@ -278,22 +318,37 @@ interface DayCardProps {
   transport: TransportType;
   flightBadge?: string;
   isLocked?: boolean;
+  isConfirmed?: boolean;
   topTour?: TourPreview;
   onToggleEdit: (dayId: number) => void;
   onTransportChange: (dayNum: number, t: TransportType) => void;
   onShowPartners: (activityType: string) => void;
   onDelete: (dayNum: number) => void;
   onShowMap: () => void;
+  onConfirm: (dayNum: number) => void;
   onRef: (el: HTMLElement | null) => void;
 }
 
 function DayCard({
-  day, idx, isEditing, transport, flightBadge, isLocked, topTour,
-  onToggleEdit, onTransportChange, onShowPartners, onDelete, onShowMap, onRef,
+  day, idx, isEditing, transport, flightBadge, isLocked, isConfirmed, topTour,
+  onToggleEdit, onTransportChange, onShowPartners, onDelete, onShowMap, onConfirm, onRef,
 }: DayCardProps) {
   const dragControls = useDragControls();
-  const { priceAdd, Icon: TransIcon } = TRANSPORT_OPTIONS[transport];
+  const { Icon: TransIcon } = TRANSPORT_OPTIONS[transport];
   const FlightIcon = idx === 0 ? PlaneLanding : PlaneTakeoff;
+  const [showDetail, setShowDetail] = useState(false);
+
+  // Day type styling
+  const isSpecialDay = day.type !== 'activity';
+  const dayTypeConfig: Record<DayType, { label: string; Icon: React.ElementType; color: string }> = {
+    arrival:   { label: 'Прилёт',    Icon: PlaneLanding,  color: 'var(--ocean)' },
+    departure: { label: 'Вылет',     Icon: PlaneTakeoff,  color: 'var(--ocean)' },
+    travel:    { label: 'Переезд',   Icon: ArrowLeftRight, color: 'var(--warning)' },
+    rest:      { label: 'Отдых',     Icon: Coffee,         color: 'var(--success)' },
+    buffer:    { label: 'Резерв',    Icon: CloudOff,       color: 'var(--text-muted)' },
+    activity:  { label: '',          Icon: Sparkles,       color: 'var(--accent)' },
+  };
+  const typeConf = dayTypeConfig[day.type] ?? dayTypeConfig.activity;
 
   return (
     <Reorder.Item
@@ -301,7 +356,9 @@ function DayCard({
       dragControls={dragControls}
       dragListener={false}
       className={`rounded-lg select-none transition-all ${
-        isEditing
+        isConfirmed
+          ? 'bg-[var(--bg-card)] border-2 border-[var(--success)]/40 ring-1 ring-[var(--success)]/10'
+          : isEditing
           ? 'bg-[var(--bg-card)] border-2 border-[var(--accent)] ring-2 ring-[var(--accent)]/20'
           : 'bg-[var(--bg-card)] border border-[var(--border)]'
       }`}
@@ -313,7 +370,9 @@ function DayCard({
           className="flex items-center gap-2 px-3 pt-3 pb-1.5 cursor-pointer"
           onClick={() => onToggleEdit(day.day)}
         >
-          {isLocked
+          {isConfirmed
+            ? <CheckCircle className="w-3.5 h-3.5 text-[var(--success)] shrink-0" />
+            : isLocked
             ? <Lock className="w-3.5 h-3.5 text-[var(--text-muted)]/40 shrink-0" />
             : <GripVertical
                 className="w-3.5 h-3.5 text-[var(--text-muted)] shrink-0 cursor-grab active:cursor-grabbing touch-none"
@@ -331,7 +390,14 @@ function DayCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 min-w-0">
               <p className="text-xs font-medium text-[var(--text-primary)] truncate">{day.title}</p>
-              {flightBadge && (
+              {isSpecialDay && (
+                <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold shrink-0 whitespace-nowrap"
+                  style={{ background: `color-mix(in srgb, ${typeConf.color} 15%, transparent)`, color: typeConf.color }}>
+                  <typeConf.Icon className="w-2.5 h-2.5" />
+                  {typeConf.label}
+                </span>
+              )}
+              {flightBadge && !isSpecialDay && (
                 <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-[var(--ocean)]/15 text-[var(--ocean)] text-[9px] font-bold shrink-0 whitespace-nowrap">
                   <FlightIcon className="w-2.5 h-2.5" />
                   {flightBadge}
@@ -346,19 +412,28 @@ function DayCard({
             </p>
           </div>
           <div className="text-right shrink-0">
-            <p className="text-xs font-semibold text-[var(--accent)]">от {fmt(day.priceFrom + priceAdd)} ₽</p>
-            <p className="text-[10px] text-[var(--text-muted)]">до {fmt(day.priceTo + priceAdd)} ₽</p>
+            <p className="text-xs font-semibold text-[var(--accent)]">от {fmt(day.priceFrom)} ₽</p>
+            <p className="text-[10px] text-[var(--text-muted)]">до {fmt(day.priceTo)} ₽</p>
           </div>
         </div>
         {/* Row 2 — transport + actions */}
         <div className="flex items-center gap-2 px-3 pb-2.5 pt-0.5">
-          <TransportSelector selected={transport} onChange={t => onTransportChange(day.day, t)} zone={day.zone} />
-          {priceAdd > 0 && (
-            <span className="text-[10px] text-[var(--text-muted)] flex items-center gap-0.5">
-              <TransIcon className="w-3 h-3" />+{fmt(priceAdd)} ₽
-            </span>
+          {day.type === 'activity' && !isConfirmed && (
+            <TransportSelector selected={transport} onChange={t => onTransportChange(day.day, t)} zone={day.zone} />
+          )}
+          {day.description && day.type !== 'activity' && (
+            <p className="text-[10px] text-[var(--text-muted)] italic">{day.description}</p>
           )}
           <div className="flex-1" />
+          {/* Detail toggle */}
+          <button type="button" title="Подробнее" onClick={(e) => { e.stopPropagation(); setShowDetail(v => !v); }}
+            className={`w-7 h-7 flex items-center justify-center rounded-md border transition-colors bg-[var(--bg-hover)] ${
+              showDetail
+                ? 'border-[var(--accent)] text-[var(--accent)]'
+                : 'border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--accent)] hover:border-[var(--accent)]'
+            }`}>
+            <Eye className="w-3.5 h-3.5" />
+          </button>
           {isEditing && (
             <button type="button" title="Показать на карте" onClick={onShowMap}
               className="lg:hidden w-7 h-7 flex items-center justify-center rounded-md border border-[var(--accent)] text-[var(--accent)] bg-[var(--accent)]/10 transition-colors">
@@ -369,7 +444,7 @@ function DayCard({
             className="w-7 h-7 flex items-center justify-center rounded-md border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--ocean)] hover:border-[var(--ocean)] transition-colors bg-[var(--bg-hover)]">
             <Users className="w-3.5 h-3.5" />
           </button>
-          {!isLocked && (
+          {!isLocked && !isConfirmed && (
             <button type="button" title="Удалить день" onClick={() => onDelete(day.day)}
               className="w-7 h-7 flex items-center justify-center rounded-md border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--danger)] hover:border-[var(--danger)] transition-colors bg-[var(--bg-hover)]">
               <Trash2 className="w-3.5 h-3.5" />
@@ -377,7 +452,7 @@ function DayCard({
           )}
         </div>
         {/* Top matching tour */}
-        {topTour && (
+        {topTour && day.type === 'activity' && (
           <a
             href={`/operators/${topTour.operator_slug}`}
             target="_blank"
@@ -392,6 +467,80 @@ function DayCard({
               от {Number(topTour.base_price).toLocaleString('ru-RU')} ₽
             </span>
           </a>
+        )}
+        {/* Day warnings */}
+        {day.dayWarnings && day.dayWarnings.length > 0 && (
+          <div className="mx-3 mb-2 space-y-1">
+            {day.dayWarnings.map((w, i) => (
+              <div key={i} className="flex items-start gap-1.5 px-2 py-1 rounded bg-[var(--warning)]/8 text-[10px] text-[var(--warning)]">
+                <AlertTriangle className="w-3 h-3 shrink-0 mt-0.5" />
+                <span>{w}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        {/* Expandable detail panel */}
+        {showDetail && (
+          <div className="mx-3 mb-2.5 p-3 rounded-lg bg-[var(--bg-hover)] border border-[var(--border)] space-y-2.5">
+            {day.description && (
+              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{day.description}</p>
+            )}
+            <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+              <div className="flex items-center gap-1.5 text-[10px] text-[var(--text-muted)]">
+                <MapPin className="w-3 h-3" />
+                <span>{ZONE_LABELS[day.zone] ?? day.zone}</span>
+              </div>
+              {day.type === 'activity' && (
+                <div className="flex items-center gap-1.5 text-[10px] text-[var(--text-muted)]">
+                  <Dumbbell className="w-3 h-3" />
+                  <span>{DIFFICULTY_LABEL[day.difficulty] ?? day.difficulty}</span>
+                </div>
+              )}
+              {day.minChildAge > 0 && (
+                <div className="flex items-center gap-1.5 text-[10px] text-[var(--text-muted)]">
+                  <Baby className="w-3 h-3" />
+                  <span>от {day.minChildAge} лет</span>
+                </div>
+              )}
+              {day.childFriendly && day.minChildAge === 0 && (
+                <div className="flex items-center gap-1.5 text-[10px] text-[var(--success)]">
+                  <Baby className="w-3 h-3" />
+                  <span>для всех возрастов</span>
+                </div>
+              )}
+              {day.allowedTransports.length > 1 && (
+                <div className="flex items-center gap-1.5 text-[10px] text-[var(--text-muted)]">
+                  <Truck className="w-3 h-3" />
+                  <span>{day.allowedTransports.map(t => TRANSPORT_OPTIONS[t].label).join(', ')}</span>
+                </div>
+              )}
+            </div>
+            {day.type === 'activity' && (
+              <div className="flex items-center gap-1.5 text-[10px] text-[var(--text-muted)]">
+                <Wallet className="w-3 h-3" />
+                <span>{fmt(day.priceFrom)} — {fmt(day.priceTo)} ₽ на человека</span>
+              </div>
+            )}
+            {day.coords[0] !== 53.01 && (
+              <div className="text-[10px] text-[var(--text-muted)]">
+                {day.coords[0].toFixed(4)}, {day.coords[1].toFixed(4)}
+              </div>
+            )}
+            {/* Confirm day button */}
+            {!isConfirmed && (
+              <button type="button" onClick={(e) => { e.stopPropagation(); onConfirm(day.day); }}
+                className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg bg-[var(--success)]/10 border border-[var(--success)]/30 text-[var(--success)] text-xs font-medium hover:bg-[var(--success)]/20 transition-colors">
+                <CheckCircle className="w-3.5 h-3.5" />
+                Подтвердить день
+              </button>
+            )}
+            {isConfirmed && (
+              <div className="flex items-center gap-1.5 py-1.5 text-xs text-[var(--success)] font-medium">
+                <CheckCircle className="w-3.5 h-3.5" />
+                День подтверждён
+              </div>
+            )}
+          </div>
         )}
       </div>
     </Reorder.Item>
@@ -635,6 +784,131 @@ function MobileTabBar({ active, onChange, editingDay }: {
   );
 }
 
+// ─── Companion widget (trip helper) ──────────────────────────────────────────
+
+function CompanionWidget({ days, arrival, departure }: {
+  days: DayPlan[];
+  arrival: string;
+  departure: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [message, setMessage] = useState('');
+  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; text: string }>>([]);
+  const [loading, setLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  async function sendMessage() {
+    const text = message.trim();
+    if (!text || loading) return;
+    setMessage('');
+    setMessages(prev => [...prev, { role: 'user', text }]);
+    setLoading(true);
+
+    const daysSummary = days.map((d, i) =>
+      `День ${i + 1}: ${d.title} (${d.zone}, ${d.activityType})`
+    ).join('\n');
+
+    try {
+      const res = await fetch('/api/planner/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: text,
+          context: `Маршрут: ${arrival || '?'} — ${departure || '?'}, ${days.length} дней.\n${daysSummary}`,
+        }),
+      });
+      const data = await res.json();
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        text: data.success ? data.data?.reply ?? 'Нет ответа' : data.error ?? 'Ошибка',
+      }]);
+    } catch {
+      setMessages(prev => [...prev, { role: 'assistant', text: 'Ошибка соединения' }]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        className="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full bg-[var(--accent)] text-white shadow-lg flex items-center justify-center hover:scale-105 transition-transform"
+        title="Помощник путешественника"
+      >
+        <MessageCircle className="w-5 h-5" />
+      </button>
+    );
+  }
+
+  return (
+    <div className="fixed bottom-6 right-6 z-50 w-80 max-h-[70vh] bg-[var(--bg-card)] border border-[var(--border)] rounded-xl shadow-xl flex flex-col overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)] bg-[var(--bg-hover)]">
+        <div className="flex items-center gap-2">
+          <MessageCircle className="w-4 h-4 text-[var(--accent)]" />
+          <span className="text-sm font-semibold text-[var(--text-primary)]">Помощник</span>
+        </div>
+        <button onClick={() => setOpen(false)}
+          className="w-6 h-6 flex items-center justify-center rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-3 space-y-2 min-h-[200px] max-h-[400px]">
+        {messages.length === 0 && (
+          <div className="text-center py-8 space-y-2">
+            <MessageCircle className="w-8 h-8 text-[var(--text-muted)]/30 mx-auto" />
+            <p className="text-xs text-[var(--text-muted)]">
+              Задайте любой вопрос о маршруте, локациях, погоде, экипировке или безопасности
+            </p>
+          </div>
+        )}
+        {messages.map((m, i) => (
+          <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div className={`max-w-[85%] px-3 py-2 rounded-lg text-xs leading-relaxed ${
+              m.role === 'user'
+                ? 'bg-[var(--accent)] text-white'
+                : 'bg-[var(--bg-hover)] text-[var(--text-secondary)] border border-[var(--border)]'
+            }`}>
+              {m.text}
+            </div>
+          </div>
+        ))}
+        {loading && (
+          <div className="flex justify-start">
+            <div className="px-3 py-2 rounded-lg bg-[var(--bg-hover)] border border-[var(--border)]">
+              <Loader className="w-3.5 h-3.5 animate-spin text-[var(--text-muted)]" />
+            </div>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      <div className="border-t border-[var(--border)] p-2 flex gap-2">
+        <input
+          type="text"
+          value={message}
+          onChange={e => setMessage(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') sendMessage(); }}
+          placeholder="Ваш вопрос..."
+          className="flex-1 ds-input text-xs py-2"
+        />
+        <button
+          onClick={sendMessage}
+          disabled={loading || !message.trim()}
+          className="w-8 h-8 flex items-center justify-center rounded-lg bg-[var(--accent)] text-white disabled:opacity-40 transition-opacity shrink-0"
+        >
+          <Send className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function PlannerClient({ initialUserId }: { initialUserId?: string | null }) {
@@ -648,6 +922,13 @@ export function PlannerClient({ initialUserId }: { initialUserId?: string | null
   const [flightArrivalTime, setFlightArrivalTime]       = useState('');
   const [flightDepartureTime, setFlightDepartureTime]   = useState('');
   const [needsAirportTransfer, setNeedsAirportTransfer] = useState(false);
+
+  // Group profile
+  const [adults, setAdults] = useState(2);
+  const [childAges, setChildAges] = useState<number[]>([]);
+  const [fitnessLevel, setFitnessLevel] = useState<FitnessLevel>('moderate');
+  const [budgetTier, setBudgetTier] = useState<BudgetTier>('comfort');
+  const [seasickness, setSeasickness] = useState(false);
 
   // Trip persistence
   const [tripId, setTripId]         = useState<string | null>(null);
@@ -699,6 +980,9 @@ export function PlannerClient({ initialUserId }: { initialUserId?: string | null
   // TripBuilder v2: AI route validation after DnD
   const [validation, setValidation] = useState<{ valid: boolean; message: string } | null>(null);
   const validationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Day confirmation
+  const [confirmedDays, setConfirmedDays] = useState<Set<number>>(new Set());
 
   const allInterests = [...new Set([...places, ...activities])];
   const tripDays = useMemo(() => calcDays(arrival, departure), [arrival, departure]);
@@ -887,9 +1171,6 @@ export function PlannerClient({ initialUserId }: { initialUserId?: string | null
     if (route) setSelectedRoute(route);
   }, [bgRoutes, toggleEditDay]);
 
-  // Totals
-  const totalFrom = days.reduce((s, d) => s + d.priceFrom + TRANSPORT_OPTIONS[getTransport(d)].priceAdd, 0);
-  const totalTo   = days.reduce((s, d) => s + d.priceTo   + TRANSPORT_OPTIONS[getTransport(d)].priceAdd, 0);
 
   // Fetch background routes whenever interests change; defaults on mount
   useEffect(() => {
@@ -934,14 +1215,112 @@ export function PlannerClient({ initialUserId }: { initialUserId?: string | null
   function deleteDay(dayNum: number) {
     setDays(prev => prev.filter(d => d.day !== dayNum));
     setTransportByDay(prev => { const n = { ...prev }; delete n[dayNum]; return n; });
+    setConfirmedDays(prev => { const n = new Set(prev); n.delete(dayNum); return n; });
     if (editingDayId === dayNum) setEditingDayId(null);
+  }
+
+  function confirmDay(dayNum: number) {
+    setConfirmedDays(prev => new Set(prev).add(dayNum));
+    if (editingDayId === dayNum) setEditingDayId(null);
+  }
+
+  function exportPDF() {
+    const dayTypeLabels: Record<string, string> = {
+      arrival: 'Прилёт', departure: 'Вылет', travel: 'Переезд',
+      rest: 'Отдых', buffer: 'Резерв', activity: 'Активность',
+    };
+
+    const dateRange = arrival && departure ? `${arrival} — ${departure}` : '';
+    const pb = recommendation?.priceBreakdown;
+
+    const html = `<!DOCTYPE html>
+<html lang="ru"><head><meta charset="UTF-8"/>
+<title>Маршрут по Камчатке${dateRange ? ` | ${dateRange}` : ''}</title>
+<style>
+  body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 40px; color: #1a1714; line-height: 1.5; }
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  .subtitle { color: #6b6560; font-size: 13px; margin-bottom: 24px; }
+  .day { border: 1px solid #e5e5e5; border-radius: 8px; padding: 14px 16px; margin-bottom: 10px; page-break-inside: avoid; }
+  .day-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .day-num { width: 26px; height: 26px; border-radius: 50%; background: #D44A0C; color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+  .day-title { font-weight: 600; font-size: 14px; flex: 1; }
+  .day-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: #f0f0f0; }
+  .day-price { font-size: 12px; color: #D44A0C; font-weight: 600; white-space: nowrap; }
+  .day-desc { font-size: 12px; color: #6b6560; margin-top: 4px; }
+  .day-meta { font-size: 11px; color: #9a9590; margin-top: 4px; }
+  .day-warn { font-size: 11px; color: #d29922; margin-top: 4px; padding: 4px 8px; background: #fef9ec; border-radius: 4px; }
+  .confirmed { border-color: #3fb950; border-width: 2px; }
+  .footer { margin-top: 24px; padding-top: 16px; border-top: 1px solid #e5e5e5; font-size: 12px; color: #6b6560; }
+  .price-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
+  .price-total { display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e5e5; color: #D44A0C; }
+  .warnings { margin-top: 16px; }
+  .warning { padding: 6px 10px; border-radius: 6px; font-size: 12px; margin-bottom: 6px; }
+  .warning-critical { background: #fde8e8; color: #dc2626; }
+  .warning-important { background: #fef9ec; color: #d29922; }
+  .warning-info { background: #eef6ff; color: #2568b0; }
+  @media print { body { margin: 20px; } }
+</style></head><body>
+<h1>Маршрут по Камчатке</h1>
+<div class="subtitle">${dateRange ? `${dateRange} | ` : ''}${days.length} дней | ${adults} взрослых${childAges.length > 0 ? ` + дети: ${childAges.join(', ')} лет` : ''}</div>
+${days.map((d, i) => `<div class="day${confirmedDays.has(d.day) ? ' confirmed' : ''}">
+  <div class="day-header">
+    <div class="day-num">${i + 1}</div>
+    <div class="day-title">${d.title}</div>
+    ${d.type !== 'activity' ? `<span class="day-badge">${dayTypeLabels[d.type] ?? d.type}</span>` : ''}
+    <span class="day-price">от ${fmt(d.priceFrom)} ₽</span>
+  </div>
+  ${d.description ? `<div class="day-desc">${d.description}</div>` : ''}
+  <div class="day-meta">${ZONE_LABELS[d.zone] ?? d.zone}${d.type === 'activity' ? ` | ${DIFFICULTY_LABEL[d.difficulty] ?? d.difficulty}` : ''}</div>
+  ${d.dayWarnings.map(w => `<div class="day-warn">${w}</div>`).join('')}
+</div>`).join('\n')}
+${pb ? `<div class="footer">
+  <div class="price-row"><span>Активности</span><span>${fmt(pb.activities[0])} — ${fmt(pb.activities[1])} ₽</span></div>
+  <div class="price-row"><span>Размещение</span><span>${fmt(pb.accommodation[0])} — ${fmt(pb.accommodation[1])} ₽</span></div>
+  <div class="price-row"><span>Транспорт</span><span>${fmt(pb.transport[0])} — ${fmt(pb.transport[1])} ₽</span></div>
+  <div class="price-total"><span>Итого на человека</span><span>${fmt(pb.perPersonTotal[0])} — ${fmt(pb.perPersonTotal[1])} ₽</span></div>
+  <div style="font-size:11px;color:#9a9590;margin-top:6px">Без авиабилетов Москва — Камчатка</div>
+</div>` : ''}
+${recommendation?.warnings && recommendation.warnings.length > 0 ? `<div class="warnings">
+  ${recommendation.warnings.map(w => `<div class="warning warning-${w.severity}">${w.message}</div>`).join('')}
+</div>` : ''}
+<div style="margin-top:24px;font-size:11px;color:#9a9590;text-align:center">tourhab.ru — Камчатка с заботой</div>
+</body></html>`;
+
+    const win = window.open('', '_blank');
+    if (!win) return;
+    win.document.write(html);
+    win.document.close();
+    // auto-print after a short delay for rendering
+    setTimeout(() => { win.print(); }, 400);
   }
 
   function addDay() {
     if (days.length === 0) return;
-    const last = days[days.length - 1];
     const newNum = Math.max(...days.map(d => d.day)) + 1;
-    setDays(prev => [...prev, { ...last, day: newNum }]);
+    // Insert a free/rest day before the departure day
+    const newDay: DayPlan = {
+      day: newNum,
+      type: 'activity',
+      zone: 'avachinsky',
+      title: 'Свободный день',
+      description: 'Выберите активность или замените на карте',
+      activityType: 'hot_spring',
+      priceFrom: 0, priceTo: 5000,
+      coords: [53.01, 158.65],
+      defaultTransport: 'walking',
+      allowedTransports: ['walking', 'jeep', 'helicopter'],
+      difficulty: 'easy',
+      childFriendly: true,
+      minChildAge: 0,
+      dayWarnings: [],
+    };
+    // Insert before departure day if exists
+    const depIdx = days.findIndex(d => d.type === 'departure');
+    if (depIdx >= 0) {
+      setDays(prev => [...prev.slice(0, depIdx), newDay, ...prev.slice(depIdx)]);
+    } else {
+      setDays(prev => [...prev, newDay]);
+    }
     setEditingDayId(newNum);
     setMobileTab('map');
   }
@@ -974,7 +1353,12 @@ export function PlannerClient({ initialUserId }: { initialUserId?: string | null
           arrivalDate: arrival || undefined,
           departureDate: departure || undefined,
           flightArrivalTime: flightArrivalTime || undefined,
-          needsAirportTransfer: needsAirportTransfer || undefined,
+          flightDepartureTime: flightDepartureTime || undefined,
+          adults,
+          children: childAges,
+          fitnessLevel,
+          budgetTier,
+          seasickness,
         }),
       });
       const data = await res.json();
@@ -982,6 +1366,7 @@ export function PlannerClient({ initialUserId }: { initialUserId?: string | null
         setRecommendation(data.data);
         setDays(data.data.days ?? []);
         setTransportByDay({});
+        setConfirmedDays(new Set());
         setSelectedRoute(null);
         setEditingDayId(null);
         setShowItinerary(false);
@@ -1103,6 +1488,85 @@ export function PlannerClient({ initialUserId }: { initialUserId?: string | null
       <SelectGroup title="Активности" items={ACTIVITIES} selected={activities}
         onToggle={id => setActivities(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} />
 
+      {/* Group profile */}
+      <div className="space-y-3">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">Группа</p>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-1">
+            <label className="text-xs text-[var(--text-muted)] flex items-center gap-1">
+              <Users className="w-3 h-3" />Взрослых
+            </label>
+            <select value={adults} onChange={e => setAdults(Number(e.target.value))} className="ds-input w-full text-sm">
+              {[1,2,3,4,5,6,7,8].map(n => <option key={n} value={n}>{n}</option>)}
+            </select>
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-[var(--text-muted)] flex items-center gap-1">
+              <Baby className="w-3 h-3" />Дети
+            </label>
+            <select value={childAges.length} onChange={e => {
+              const count = Number(e.target.value);
+              setChildAges(prev => {
+                if (count > prev.length) return [...prev, ...Array(count - prev.length).fill(10) as number[]];
+                return prev.slice(0, count);
+              });
+            }} className="ds-input w-full text-sm">
+              {[0,1,2,3,4].map(n => <option key={n} value={n}>{n === 0 ? 'Нет' : n}</option>)}
+            </select>
+          </div>
+        </div>
+        {childAges.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {childAges.map((age, i) => (
+              <div key={i} className="flex items-center gap-1">
+                <span className="text-[10px] text-[var(--text-muted)]">Возраст:</span>
+                <select value={age} onChange={e => {
+                  const newAge = Number(e.target.value);
+                  setChildAges(prev => prev.map((a, j) => j === i ? newAge : a));
+                }} className="ds-input py-0.5 px-1.5 text-xs w-16">
+                  {Array.from({ length: 18 }, (_, k) => <option key={k} value={k}>{k} {k === 0 ? 'мес+' : ''}</option>)}
+                </select>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-1">
+            <label className="text-xs text-[var(--text-muted)] flex items-center gap-1">
+              <Dumbbell className="w-3 h-3" />Подготовка
+            </label>
+            <select value={fitnessLevel} onChange={e => setFitnessLevel(e.target.value as FitnessLevel)} className="ds-input w-full text-sm">
+              <option value="beginner">Первый раз</option>
+              <option value="moderate">Активный турист</option>
+              <option value="active">Опытный</option>
+            </select>
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-[var(--text-muted)] flex items-center gap-1">
+              <Wallet className="w-3 h-3" />Бюджет
+            </label>
+            <select value={budgetTier} onChange={e => setBudgetTier(e.target.value as BudgetTier)} className="ds-input w-full text-sm">
+              <option value="economy">Эконом</option>
+              <option value="comfort">Комфорт</option>
+              <option value="premium">Премиум</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Seasickness toggle */}
+        <label className="flex items-center gap-2.5 cursor-pointer select-none mt-1">
+          <input
+            type="checkbox"
+            checked={seasickness}
+            onChange={e => setSeasickness(e.target.checked)}
+            className="w-4 h-4 rounded accent-[var(--accent)]"
+          />
+          <span className="text-xs text-[var(--text-secondary)]">
+            Морская болезнь — избегать катеров и морских выходов
+          </span>
+        </label>
+      </div>
+
       {/* Dates */}
       <div className="space-y-2">
         <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">Даты</p>
@@ -1192,10 +1656,36 @@ export function PlannerClient({ initialUserId }: { initialUserId?: string | null
       {/* Results */}
       {recommendation && (
         <>
-          {recommendation.warning && (
-            <div className="flex items-start gap-2 p-3 bg-[var(--warning)]/10 border border-[var(--warning)]/30 rounded-lg">
-              <AlertTriangle className="w-4 h-4 text-[var(--warning)] shrink-0 mt-0.5" />
-              <p className="text-sm text-[var(--warning)]">{recommendation.warning}</p>
+          {recommendation.warnings && recommendation.warnings.length > 0 && (
+            <div className="space-y-1.5">
+              {recommendation.warnings.filter(w => w.severity === 'critical').map((w, i) => (
+                <div key={`crit-${i}`} className="flex items-start gap-2 p-3 bg-[var(--danger)]/10 border border-[var(--danger)]/30 rounded-lg">
+                  <ShieldAlert className="w-4 h-4 text-[var(--danger)] shrink-0 mt-0.5" />
+                  <p className="text-xs text-[var(--danger)]">
+                    {w.type === 'mchs' && <span className="font-bold mr-1">МЧС</span>}
+                    {w.message}
+                  </p>
+                </div>
+              ))}
+              {recommendation.warnings.filter(w => w.severity === 'important').map((w, i) => (
+                <div key={`imp-${i}`} className="flex items-start gap-2 p-3 bg-[var(--warning)]/10 border border-[var(--warning)]/30 rounded-lg">
+                  <AlertTriangle className="w-4 h-4 text-[var(--warning)] shrink-0 mt-0.5" />
+                  <p className="text-xs text-[var(--warning)]">
+                    {w.type === 'mchs' && <span className="font-bold mr-1">МЧС</span>}
+                    {w.type === 'crowd' && <span className="font-bold mr-1">Загрузка</span>}
+                    {w.message}
+                  </p>
+                </div>
+              ))}
+              {recommendation.warnings.filter(w => w.severity === 'info').map((w, i) => (
+                <div key={`info-${i}`} className="flex items-start gap-2 p-3 bg-[var(--ocean)]/10 border border-[var(--ocean)]/20 rounded-lg">
+                  <Info className="w-4 h-4 text-[var(--ocean)] shrink-0 mt-0.5" />
+                  <p className="text-xs text-[var(--ocean)]">
+                    {w.type === 'crowd' && <span className="font-bold mr-1">Загрузка</span>}
+                    {w.message}
+                  </p>
+                </div>
+              ))}
             </div>
           )}
 
@@ -1208,6 +1698,11 @@ export function PlannerClient({ initialUserId }: { initialUserId?: string | null
                   <div className="w-2 h-2 rounded-full" style={{ background: ZONE_COLORS[z.zone] ?? 'var(--accent)' }} />
                   <span className="text-xs font-medium text-[var(--text-primary)]">{ZONE_LABELS[z.zone] ?? z.zone}</span>
                   <span className="text-[10px] text-[var(--text-muted)]">{z.score}%</span>
+                  {z.crowdScore !== undefined && z.crowdScore > 50 && (
+                    <span className={`text-[10px] font-medium ${z.crowdScore > 70 ? 'text-[var(--warning)]' : 'text-[var(--text-muted)]'}`}>
+                      {z.crowdScore > 70 ? 'загружено' : 'умеренно'}
+                    </span>
+                  )}
                 </div>
               ))}
             </div>
@@ -1262,6 +1757,7 @@ export function PlannerClient({ initialUserId }: { initialUserId?: string | null
                     day={day}
                     idx={idx}
                     isEditing={day.day === editingDayId}
+                    isConfirmed={confirmedDays.has(day.day)}
                     transport={getTransport(day)}
                     topTour={toursPerActivity[day.activityType]}
                     flightBadge={
@@ -1277,6 +1773,7 @@ export function PlannerClient({ initialUserId }: { initialUserId?: string | null
                     onShowPartners={(at) => setPartnersModal({ activityType: at })}
                     onDelete={deleteDay}
                     onShowMap={() => setMobileTab('map')}
+                    onConfirm={confirmDay}
                     onRef={(el) => {
                       if (el) dayRefs.current.set(day.day, el as HTMLElement);
                       else dayRefs.current.delete(day.day);
@@ -1306,13 +1803,36 @@ export function PlannerClient({ initialUserId }: { initialUserId?: string | null
                 Добавить день
               </button>
 
-              {/* Total */}
-              <div className="flex items-center justify-between px-1 mt-2 pt-2 border-t border-[var(--border)]">
-                <span className="text-xs text-[var(--text-secondary)]">Итого за поездку</span>
-                <span className="text-sm font-semibold text-[var(--accent)]">
-                  от {fmt(totalFrom)} ₽ — до {fmt(totalTo)} ₽
-                </span>
-              </div>
+              {/* Price breakdown */}
+              {recommendation.priceBreakdown && (
+                <div className="mt-2 pt-2 border-t border-[var(--border)] space-y-1">
+                  <div className="flex items-center justify-between px-1">
+                    <span className="text-[10px] text-[var(--text-muted)]">Активности</span>
+                    <span className="text-[10px] text-[var(--text-secondary)]">
+                      {fmt(recommendation.priceBreakdown.activities[0])} — {fmt(recommendation.priceBreakdown.activities[1])} ₽
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between px-1">
+                    <span className="text-[10px] text-[var(--text-muted)]">Размещение</span>
+                    <span className="text-[10px] text-[var(--text-secondary)]">
+                      {fmt(recommendation.priceBreakdown.accommodation[0])} — {fmt(recommendation.priceBreakdown.accommodation[1])} ₽
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between px-1">
+                    <span className="text-[10px] text-[var(--text-muted)]">Транспорт</span>
+                    <span className="text-[10px] text-[var(--text-secondary)]">
+                      {fmt(recommendation.priceBreakdown.transport[0])} — {fmt(recommendation.priceBreakdown.transport[1])} ₽
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between px-1 pt-1 border-t border-[var(--border)]">
+                    <span className="text-xs font-medium text-[var(--text-secondary)]">Итого на человека</span>
+                    <span className="text-sm font-semibold text-[var(--accent)]">
+                      {fmt(recommendation.priceBreakdown.perPersonTotal[0])} — {fmt(recommendation.priceBreakdown.perPersonTotal[1])} ₽
+                    </span>
+                  </div>
+                  <p className="text-[9px] text-[var(--text-muted)] px-1">Без авиабилетов Москва — Камчатка (25 000-60 000 ₽)</p>
+                </div>
+              )}
             </div>
           )}
 
@@ -1331,6 +1851,34 @@ export function PlannerClient({ initialUserId }: { initialUserId?: string | null
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Confirmation progress + PDF export */}
+          {days.length > 0 && (
+            <div className="space-y-2">
+              {confirmedDays.size > 0 && (
+                <div className="flex items-center gap-2 px-1">
+                  <div className="flex-1 h-1.5 bg-[var(--border)] rounded-full overflow-hidden">
+                    <div className="h-full bg-[var(--success)] rounded-full transition-all duration-300"
+                      style={{ width: `${Math.round((confirmedDays.size / days.length) * 100)}%` }} />
+                  </div>
+                  <span className="text-[10px] font-medium text-[var(--text-muted)] shrink-0">
+                    {confirmedDays.size}/{days.length}
+                  </span>
+                </div>
+              )}
+              {confirmedDays.size === days.length && days.length > 0 && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--success)]/10 border border-[var(--success)]/20">
+                  <CheckCircle className="w-4 h-4 text-[var(--success)] shrink-0" />
+                  <span className="text-xs font-medium text-[var(--success)]">Все дни подтверждены. Маршрут готов!</span>
+                </div>
+              )}
+              <button type="button" onClick={exportPDF}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border border-[var(--border)] text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--accent)] hover:border-[var(--accent)] transition-colors bg-[var(--bg-card)]">
+                <Download className="w-4 h-4" />
+                Скачать PDF маршрута
+              </button>
             </div>
           )}
 
@@ -1523,6 +2071,11 @@ export function PlannerClient({ initialUserId }: { initialUserId?: string | null
       {/* Partners modal */}
       {partnersModal && (
         <PartnersModal activityType={partnersModal.activityType} onClose={() => setPartnersModal(null)} />
+      )}
+
+      {/* Companion widget — available during trip planning */}
+      {days.length > 0 && (
+        <CompanionWidget days={days} arrival={arrival} departure={departure} />
       )}
     </div>
   );

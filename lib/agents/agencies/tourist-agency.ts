@@ -46,6 +46,10 @@ export class TouristAgency {
       interests: parsed.interests,
       arrivalDate:   parsed.dateFrom,
       departureDate: parsed.dateTo,
+      adults: 2,
+      children: [],
+      fitnessLevel: 'moderate',
+      budgetTier: 'comfort',
     });
 
     const topZones = trip.zones
@@ -71,8 +75,8 @@ export class TouristAgency {
       lines.push('', `Маршрут рассчитан на ${trip.days.length} дней.`);
     }
 
-    if (trip.warning) {
-      lines.push('', trip.warning);
+    if (trip.warnings.length > 0) {
+      lines.push('', trip.warnings.map(w => w.message).join('\n'));
     }
 
     return {
