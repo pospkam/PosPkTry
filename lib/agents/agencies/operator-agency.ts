@@ -1,13 +1,19 @@
 /**
  * OperatorAgency — агент для операторов турплатформы.
  *
- * Возможности:
+ * READ:
  *   op_tours_summary  — список туров с заполненностью и ближайшими датами
  *   op_bookings_today — бронирования за сегодня
  *   op_revenue        — выручка за 7/30 дней
+ *
+ * WRITE (ApprovalRequired — категория 'safe'):
+ *   op_create_tour    — создать черновик тура из текста
+ *   op_fill_ai        — запустить AI-заполнение тура
+ *   op_add_slots      — добавить слоты доступности
  */
 
 import { pool } from '@/lib/db-pool';
+import { approvalRequired } from '../safeguards/approval-required';
 import type { AgentContext } from '../context-hub';
 
 export interface AgencyResult {
@@ -43,11 +49,14 @@ interface RevenueRow {
 interface PartnerRow { id: number }
 
 export class OperatorAgency {
-  async run(intent: string, context: AgentContext): Promise<AgencyResult> {
+  async run(intent: string, context: AgentContext, originalMessage = ''): Promise<AgencyResult> {
     switch (intent) {
       case 'op_tours_summary':  return this.getToursSummary(context);
       case 'op_bookings_today': return this.getBookingsToday(context);
       case 'op_revenue':        return this.getRevenue(context);
+      case 'op_create_tour':    return this.createTour(context, originalMessage);
+      case 'op_fill_ai':        return this.fillAI(context, originalMessage);
+      case 'op_add_slots':      return this.addSlots(context, originalMessage);
       default:                  return { response: 'OperatorAgency: команда не поддерживается.' };
     }
   }
@@ -151,5 +160,139 @@ export class OperatorAgency {
     ].join('\n');
 
     return { response, data: { revenue: r } };
+  }
+
+  // ── Write: создать тур ─────────────────────────────────────────────────────
+
+  async createTour(context: AgentContext, message: string): Promise<AgencyResult> {
+    const partnerId = await this.getPartnerId(context.user.userId);
+    if (!partnerId) return { response: 'Профиль оператора не найден.' };
+
+    // Извлечь заголовок и цену из сообщения простыми эвристиками
+    const priceMatch = message.match(/(\d[\d\s]{2,8})/);
+    const price = priceMatch ? parseInt(priceMatch[1].replace(/\s/g, ''), 10) : null;
+
+    // Заголовок — первое предложение или всё сообщение (макс. 120 символов)
+    const rawTitle = message.replace(/создай|новый тур|тур|за \d+/gi, '').trim().slice(0, 120);
+    const title = rawTitle || 'Новый тур';
+
+    const checkResult = await approvalRequired.request({
+      type:         'schedule_suggest',
+      description:  `Создать черновик тура: "${title}"${price ? `, цена ${price} руб` : ''}`,
+      context:      { partnerId, title, price, originalMessage: message },
+      requested_by: `operator:${context.user.userId ?? 'unknown'}`,
+    });
+
+    if (checkResult.needs_approval) {
+      return { response: `Запрос заблокирован: ${checkResult.reason}` };
+    }
+
+    const { rows } = await pool.query<{ id: number; title: string }>(
+      `INSERT INTO operator_tours (partner_id, title, base_price, is_published, created_via)
+       VALUES ($1, $2, $3, false, 'agent')
+       RETURNING id, title`,
+      [partnerId, title, price ?? 0]
+    );
+
+    const tour = rows[0];
+    return {
+      response: `Черновик тура создан.\nНазвание: ${tour.title}\nID: ${tour.id}\nЗапусти AI-заполнение командой: "заполни тур ${tour.id}"`,
+      data: { tourId: tour.id, title: tour.title },
+    };
+  }
+
+  // ── Write: AI-заполнение тура ──────────────────────────────────────────────
+
+  async fillAI(_context: AgentContext, message: string): Promise<AgencyResult> {
+    const idMatch = message.match(/\b(\d{1,8})\b/);
+    if (!idMatch) {
+      return { response: 'Укажи ID тура. Пример: "заполни тур 42"' };
+    }
+    const tourId = idMatch[1];
+
+    // Вызываем существующий AI-fill endpoint как внутренний fetch
+    // (мы в Node.js runtime, вне Edge — прямой pool-вызов недоступен для auto-fill логики)
+    try {
+      const baseUrl = process.env.NEXTAUTH_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
+      const res = await fetch(`${baseUrl}/api/operator/tours/auto-fill-ai`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ tourId: parseInt(tourId, 10) }),
+      });
+      const json = await res.json() as { success?: boolean; error?: string };
+
+      if (!res.ok || !json.success) {
+        return { response: `Ошибка AI-заполнения: ${json.error ?? res.status}` };
+      }
+
+      return {
+        response: `AI-заполнение тура ${tourId} запущено. Поля обновлены автоматически.`,
+        data:     { tourId },
+      };
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      return { response: `Не удалось запустить AI-заполнение: ${msg}` };
+    }
+  }
+
+  // ── Write: добавить слоты доступности ─────────────────────────────────────
+
+  async addSlots(_context: AgentContext, message: string): Promise<AgencyResult> {
+    // Парсим: tour ID, дата начала, дата конца, кол-во мест
+    const idMatch    = message.match(/тур(?:у|ам?)?\s+(\d+)/i);
+    const datesMatch = message.match(/(\d{4}-\d{2}-\d{2}).*?(\d{4}-\d{2}-\d{2})/);
+    const slotsMatch = message.match(/(\d+)\s*(?:мест|чел|человек)/i);
+
+    if (!idMatch || !datesMatch) {
+      return {
+        response:
+          'Укажи ID тура, даты и (опционально) количество мест.\n' +
+          'Пример: "добавь слоты туру 42 с 2026-07-01 по 2026-07-31, 10 мест"',
+      };
+    }
+
+    const tourId   = parseInt(idMatch[1], 10);
+    const dateFrom = datesMatch[1];
+    const dateTo   = datesMatch[2];
+    const slots    = slotsMatch ? parseInt(slotsMatch[1], 10) : 10;
+
+    // Генерируем список дат между dateFrom и dateTo
+    const dates: string[] = [];
+    const cur = new Date(dateFrom);
+    const end = new Date(dateTo);
+    while (cur <= end) {
+      dates.push(cur.toISOString().slice(0, 10));
+      cur.setDate(cur.getDate() + 1);
+    }
+
+    if (dates.length === 0) return { response: 'Некорректный диапазон дат.' };
+    if (dates.length > 366)  return { response: 'Диапазон дат слишком большой (макс. 366 дней).' };
+
+    // Проверяем тур
+    const { rows: tourCheck } = await pool.query<{ id: number }>(
+      `SELECT id FROM operator_tours WHERE id = $1 AND deleted_at IS NULL`,
+      [tourId]
+    );
+    if (tourCheck.length === 0) return { response: `Тур ${tourId} не найден.` };
+
+    // Batch INSERT с ON CONFLICT IGNORE
+    let inserted = 0;
+    for (const date of dates) {
+      const { rowCount } = await pool.query(
+        `INSERT INTO tour_availability (operator_tour_id, date, available_slots, booked_slots, is_available)
+         VALUES ($1, $2, $3, 0, true)
+         ON CONFLICT (operator_tour_id, date) DO NOTHING`,
+        [tourId, date, slots]
+      );
+      inserted += rowCount ?? 0;
+    }
+
+    return {
+      response:
+        `Добавлено ${inserted} слотов для тура ${tourId}.\n` +
+        `Период: ${dateFrom} — ${dateTo}, ${slots} мест на день.\n` +
+        `(${dates.length - inserted} дат уже существовало)`,
+      data: { tourId, dateFrom, dateTo, slots, inserted },
+    };
   }
 }

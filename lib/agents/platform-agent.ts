@@ -26,6 +26,9 @@ export type AgentIntent =
   | 'op_tours_summary'
   | 'op_bookings_today'
   | 'op_revenue'
+  | 'op_create_tour'
+  | 'op_fill_ai'
+  | 'op_add_slots'
   | 'tourist_recommend'
   | 'unknown';
 
@@ -51,6 +54,7 @@ export interface AgentResult {
 const VALID_INTENTS: AgentIntent[] = [
   'admin_digest', 'admin_health', 'admin_leads',
   'op_tours_summary', 'op_bookings_today', 'op_revenue',
+  'op_create_tour', 'op_fill_ai', 'op_add_slots',
   'tourist_recommend', 'unknown',
 ];
 
@@ -145,9 +149,12 @@ class PlatformAgentClass {
       }
       case 'op_tours_summary':
       case 'op_bookings_today':
-      case 'op_revenue': {
+      case 'op_revenue':
+      case 'op_create_tour':
+      case 'op_fill_ai':
+      case 'op_add_slots': {
         const { OperatorAgency } = await import('./agencies/operator-agency');
-        return new OperatorAgency().run(intent, context);
+        return new OperatorAgency().run(intent, context, originalMessage);
       }
       case 'tourist_recommend': {
         const { TouristAgency } = await import('./agencies/tourist-agency');

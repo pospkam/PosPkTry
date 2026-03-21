@@ -16,6 +16,18 @@ export const INTENT_KEYWORDS: Record<AgentIntent, string[]> = {
   op_tours_summary:  ['мои туры', 'список туров', 'туры оператора', 'расписание туров', 'покажи туры'],
   op_bookings_today: ['бронирования сегодня', 'брони сегодня', 'сегодня бронирования'],
   op_revenue:        ['выручка', 'доходы', 'revenue', 'заработал', 'прибыль', 'деньги за'],
+  op_create_tour:    [
+    'создай тур', 'новый тур', 'добавь тур', 'создать тур', 'добавить тур',
+    'хочу создать', 'сделай тур',
+  ],
+  op_fill_ai:        [
+    'заполни тур', 'заполнить тур', 'ai заполнение', 'запусти заполнение',
+    'автозаполнение', 'заполни ai', 'fill ai', 'автоматически заполни',
+  ],
+  op_add_slots:      [
+    'добавь слоты', 'добавить слоты', 'новые слоты', 'слоты на', 'добавь даты',
+    'добавить даты', 'расписание добавь', 'открой даты',
+  ],
   tourist_recommend: [
     'рекомендуй тур', 'посоветуй', 'хочу тур', 'что посмотреть на камчатке',
     'хочу на камчатку', 'вулкан', 'рыбалка', 'медведи', 'гейзер', 'трекинг',
@@ -25,7 +37,10 @@ export const INTENT_KEYWORDS: Record<AgentIntent, string[]> = {
 };
 
 const ADMIN_INTENTS    = new Set<AgentIntent>(['admin_digest', 'admin_health', 'admin_leads']);
-const OPERATOR_INTENTS = new Set<AgentIntent>(['op_tours_summary', 'op_bookings_today', 'op_revenue']);
+const OPERATOR_INTENTS = new Set<AgentIntent>([
+  'op_tours_summary', 'op_bookings_today', 'op_revenue',
+  'op_create_tour', 'op_fill_ai', 'op_add_slots',
+]);
 
 /**
  * Определить намерение по ключевым словам.
