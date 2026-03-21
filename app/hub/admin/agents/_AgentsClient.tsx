@@ -8,7 +8,7 @@ import {
   ShieldCheck, TrendingUp, ThumbsUp, ThumbsDown, Activity,
   Shield, Scale, Lock, Binoculars, Leaf, FileSearch, Star,
   Cpu, BarChart3, Megaphone, CalendarDays, GitMerge, Network,
-  Loader2, ExternalLink,
+  Loader2, ExternalLink, UserCheck, Target,
 } from 'lucide-react';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -104,7 +104,13 @@ interface Approval {
   id: string;
   action_type: string;
   description: string | null;
+  topic: string | null;
   status: 'pending' | 'approved' | 'rejected' | 'expired';
+  executor_agent_id: string | null;
+  executor_name: string | null;
+  execution_status: 'pending' | 'assigned' | 'in_progress' | 'done' | 'failed' | null;
+  execution_notes: string | null;
+  due_date: string | null;
   requested_by: string | null;
   expires_at: string | null;
   created_at: string;
@@ -568,15 +574,55 @@ function ExperimentsTab() {
 
 // ── Approvals Tab ─────────────────────────────────────────────────────────────
 
+const BOARD_AGENTS = [
+  { id: 'admin',    label: 'AI Администратор' },
+  { id: 'legal',    label: 'AI Юрист'         },
+  { id: 'security', label: 'AI Безопасность'  },
+  { id: 'hacker',   label: 'AI Хакер'         },
+  { id: 'rescue',   label: 'AI Спасатель'     },
+  { id: 'eco',      label: 'AI Эколог'        },
+  { id: 'content',  label: 'AI Аудитор'       },
+  { id: 'quality',  label: 'AI Качество'      },
+  { id: 'planning', label: 'AI Планировщик'   },
+  { id: 'evo',      label: 'AI Эволюция'      },
+];
+
+const EXEC_STATUS_LABELS: Record<string, string> = {
+  pending:     'Ожидает',
+  assigned:    'Назначен',
+  in_progress: 'В работе',
+  done:        'Выполнено',
+  failed:      'Ошибка',
+};
+
+function ExecStatusBadge({ status }: { status: string | null }) {
+  if (!status || status === 'pending') return null;
+  const colors: Record<string, string> = {
+    assigned:    'var(--ocean)',
+    in_progress: 'var(--warning)',
+    done:        'var(--success)',
+    failed:      'var(--danger)',
+  };
+  const color = colors[status] ?? 'var(--text-muted)';
+  return (
+    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded border"
+      style={{ color, borderColor: `color-mix(in srgb, ${color} 30%, transparent)`, background: `color-mix(in srgb, ${color} 10%, transparent)` }}>
+      {EXEC_STATUS_LABELS[status] ?? status}
+    </span>
+  );
+}
+
 function ApprovalsTab() {
-  const [data, setData]    = useState<Approval[] | null>(null);
-  const [loading, setLoad] = useState(true);
-  const [error, setError]  = useState('');
+  const [data,     setData]    = useState<Approval[] | null>(null);
+  const [loading,  setLoad]    = useState(true);
+  const [error,    setError]   = useState('');
   const [reviewing, setReviewing] = useState<string | null>(null);
+  const [assigning, setAssigning] = useState<string | null>(null);
+  const [section,  setSection] = useState<'pending' | 'tracking'>('pending');
 
   const load = useCallback(() => {
     setLoad(true);
-    fetch('/api/agents/approvals')
+    fetch('/api/agents/approvals?status=all')
       .then(r => r.json() as Promise<ApprovalsResponse>)
       .then(j => { if (j.success) setData(j.data); else setError('Ошибка загрузки'); })
       .catch(() => setError('Ошибка запроса'))
@@ -596,6 +642,34 @@ function ApprovalsTab() {
     setReviewing(null);
   }
 
+  async function assignExecutor(approval_id: string, executor_agent_id: string) {
+    setAssigning(approval_id);
+    const agent = BOARD_AGENTS.find(a => a.id === executor_agent_id);
+    await fetch('/api/agents/approvals', {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        approval_id,
+        executor_agent_id,
+        executor_name: agent?.label ?? executor_agent_id,
+        execution_status: 'assigned',
+      }),
+    });
+    load();
+    setAssigning(null);
+  }
+
+  async function updateExecStatus(approval_id: string, execution_status: string) {
+    setAssigning(approval_id);
+    await fetch('/api/agents/approvals', {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ approval_id, execution_status }),
+    });
+    load();
+    setAssigning(null);
+  }
+
   if (loading) return (
     <div className="space-y-3">
       {[1, 2].map(i => <div key={i} className="h-14 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg animate-pulse" />)}
@@ -608,52 +682,159 @@ function ApprovalsTab() {
     </div>
   );
 
-  const pending = data?.filter(a => a.status === 'pending') ?? [];
+  const pending  = data?.filter(a => a.status === 'pending')  ?? [];
+  const approved = data?.filter(a => a.status === 'approved') ?? [];
 
   return (
-    <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden">
-      <SectionHeader label={`Ожидают одобрения (${pending.length})`} />
-      {pending.length === 0 && <EmptyState text="Нет ожидающих запросов" />}
-      {pending.length > 0 && (
-        <div className="divide-y divide-[var(--border)]">
-          {pending.map(ap => (
-            <div key={ap.id} className="px-4 py-3 space-y-2">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-[var(--text-primary)]">{ap.action_type}</p>
-                  {ap.description && (
-                    <p className="text-[11px] text-[var(--text-muted)] mt-0.5">{ap.description}</p>
-                  )}
-                  <div className="flex items-center gap-3 mt-1">
-                    {ap.requested_by && (
-                      <span className="text-[10px] font-mono text-[var(--text-muted)]">от: {ap.requested_by}</span>
-                    )}
-                    {ap.expires_at && (
-                      <span className="flex items-center gap-0.5 text-[10px] font-mono text-[var(--warning)]">
-                        <Clock className="w-2.5 h-2.5" />{fmtDate(ap.expires_at)}
-                      </span>
-                    )}
+    <div className="space-y-4">
+      {/* Section tabs */}
+      <div className="flex gap-1 border-b border-[var(--border)]">
+        {[
+          { id: 'pending'  as const, label: `Ожидают (${pending.length})`,       icon: Clock      },
+          { id: 'tracking' as const, label: `В работе (${approved.length})`,      icon: Target     },
+        ].map(s => {
+          const Icon = s.icon;
+          return (
+            <button key={s.id} onClick={() => setSection(s.id)}
+              className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors ${
+                section === s.id
+                  ? 'text-[var(--accent)] border-b-2 border-[var(--accent)] -mb-px'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
+              }`}>
+              <Icon className="w-3 h-3" />{s.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Pending section */}
+      {section === 'pending' && (
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden">
+          {pending.length === 0 && <EmptyState text="Нет ожидающих запросов" />}
+          {pending.length > 0 && (
+            <div className="divide-y divide-[var(--border)]">
+              {pending.map(ap => (
+                <div key={ap.id} className="px-4 py-3 space-y-2">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-[var(--text-primary)]">{ap.action_type}</p>
+                      {ap.topic && (
+                        <p className="text-[10px] text-[var(--ocean)] mt-0.5 font-medium">Тема: {ap.topic}</p>
+                      )}
+                      {ap.description && (
+                        <p className="text-[11px] text-[var(--text-muted)] mt-0.5">{ap.description}</p>
+                      )}
+                      <div className="flex items-center gap-3 mt-1">
+                        {ap.requested_by && (
+                          <span className="text-[10px] font-mono text-[var(--text-muted)]">от: {ap.requested_by}</span>
+                        )}
+                        {ap.expires_at && (
+                          <span className="flex items-center gap-0.5 text-[10px] font-mono text-[var(--warning)]">
+                            <Clock className="w-2.5 h-2.5" />{fmtDate(ap.expires_at)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                      <button
+                        onClick={() => review(ap.id, 'approve')}
+                        disabled={reviewing === ap.id}
+                        className="flex items-center gap-1 px-2.5 py-1.5 text-xs bg-green-100 dark:bg-green-900/30 text-[var(--success)] rounded-md hover:opacity-80 transition-opacity disabled:opacity-50"
+                      >
+                        <CheckCircle className="w-3 h-3" />Одобрить
+                      </button>
+                      <button
+                        onClick={() => review(ap.id, 'reject')}
+                        disabled={reviewing === ap.id}
+                        className="flex items-center gap-1 px-2.5 py-1.5 text-xs bg-red-100 dark:bg-red-900/30 text-[var(--danger)] rounded-md hover:opacity-80 transition-opacity disabled:opacity-50"
+                      >
+                        <XCircle className="w-3 h-3" />Отклонить
+                      </button>
+                    </div>
                   </div>
                 </div>
-                <div className="flex gap-2 shrink-0">
-                  <button
-                    onClick={() => review(ap.id, 'approve')}
-                    disabled={reviewing === ap.id}
-                    className="flex items-center gap-1 px-2.5 py-1.5 text-xs bg-green-100 dark:bg-green-900/30 text-[var(--success)] rounded-md hover:opacity-80 transition-opacity disabled:opacity-50"
-                  >
-                    <CheckCircle className="w-3 h-3" />Одобрить
-                  </button>
-                  <button
-                    onClick={() => review(ap.id, 'reject')}
-                    disabled={reviewing === ap.id}
-                    className="flex items-center gap-1 px-2.5 py-1.5 text-xs bg-red-100 dark:bg-red-900/30 text-[var(--danger)] rounded-md hover:opacity-80 transition-opacity disabled:opacity-50"
-                  >
-                    <XCircle className="w-3 h-3" />Отклонить
-                  </button>
-                </div>
-              </div>
+              ))}
             </div>
-          ))}
+          )}
+        </div>
+      )}
+
+      {/* Tracking section */}
+      {section === 'tracking' && (
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden">
+          {approved.length === 0 && <EmptyState text="Нет одобренных инициатив" />}
+          {approved.length > 0 && (
+            <div className="divide-y divide-[var(--border)]">
+              {approved.map(ap => (
+                <div key={ap.id} className="px-4 py-3 space-y-2">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-xs font-semibold text-[var(--text-primary)]">{ap.action_type}</p>
+                        <ExecStatusBadge status={ap.execution_status} />
+                      </div>
+                      {ap.topic && (
+                        <p className="text-[10px] text-[var(--ocean)] mt-0.5 font-medium">Тема: {ap.topic}</p>
+                      )}
+                      {ap.description && (
+                        <p className="text-[11px] text-[var(--text-muted)] mt-0.5">{ap.description}</p>
+                      )}
+                      {ap.executor_name && (
+                        <div className="flex items-center gap-1 mt-1 text-[10px] text-[var(--text-secondary)]">
+                          <UserCheck className="w-3 h-3" />
+                          Исполнитель: <span className="font-medium">{ap.executor_name}</span>
+                        </div>
+                      )}
+                      {ap.execution_notes && (
+                        <p className="text-[10px] text-[var(--text-muted)] italic mt-0.5">{ap.execution_notes}</p>
+                      )}
+                      <span className="text-[9px] text-[var(--text-muted)] font-mono">{fmtDate(ap.created_at)}</span>
+                    </div>
+                  </div>
+
+                  {/* Executor assignment */}
+                  {!ap.executor_agent_id && (
+                    <div className="flex items-center gap-2">
+                      <UserCheck className="w-3.5 h-3.5 text-[var(--text-muted)] shrink-0" />
+                      <select
+                        defaultValue=""
+                        disabled={assigning === ap.id}
+                        onChange={e => { if (e.target.value) void assignExecutor(ap.id, e.target.value); }}
+                        className="ds-input text-xs py-1 flex-1 max-w-[200px]"
+                      >
+                        <option value="" disabled>Назначить исполнителя...</option>
+                        {BOARD_AGENTS.map(a => (
+                          <option key={a.id} value={a.id}>{a.label}</option>
+                        ))}
+                      </select>
+                      {assigning === ap.id && <Loader2 className="w-3 h-3 animate-spin text-[var(--text-muted)]" />}
+                    </div>
+                  )}
+
+                  {/* Status controls */}
+                  {ap.executor_agent_id && ap.execution_status !== 'done' && ap.execution_status !== 'failed' && (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[10px] text-[var(--text-muted)]">Статус:</span>
+                      {(['in_progress', 'done', 'failed'] as const).map(s => (
+                        ap.execution_status !== s && (
+                          <button key={s}
+                            disabled={assigning === ap.id}
+                            onClick={() => void updateExecStatus(ap.id, s)}
+                            className={`text-[10px] px-2 py-0.5 rounded border transition-colors disabled:opacity-50 ${
+                              s === 'done'       ? 'text-[var(--success)] border-[color-mix(in_srgb,var(--success)_30%,transparent)]' :
+                              s === 'failed'     ? 'text-[var(--danger)] border-[color-mix(in_srgb,var(--danger)_30%,transparent)]' :
+                                                   'text-[var(--ocean)] border-[color-mix(in_srgb,var(--ocean)_30%,transparent)]'
+                            }`}>
+                            {EXEC_STATUS_LABELS[s]}
+                          </button>
+                        )
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

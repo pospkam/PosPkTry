@@ -188,10 +188,14 @@ async function generateProposal(
   cfg:      ProposalConfig,
   consensus: string,
   meetingId: string,
+  topic?:   string | null,
 ): Promise<AgentProposal | null> {
+  const topicLine = topic
+    ? `\nТЕМА СОВЕЩАНИЯ: "${topic}"\nТвоё предложение должно быть НАПРЯМУЮ связано с этой темой.\n`
+    : '';
   const prompt = [
     cfg.persona,
-    '',
+    topicLine,
     `На совещании (${meetingId}) ты подготовил отчёт:`,
     `"${agent.report.replace(/<[^>]+>/g, '').substring(0, 300)}..."`,
     '',
@@ -269,10 +273,30 @@ export async function POST(req: NextRequest) {
   const authResult = await requireAdmin(req);
   if (authResult instanceof NextResponse) return authResult;
 
+  // Повестка дня от администратора (опционально)
+  let topic: string | null = null;
+  try {
+    const body = await req.json().catch(() => ({})) as { topic?: string };
+    topic = (typeof body.topic === 'string' && body.topic.trim())
+      ? body.topic.trim().substring(0, 500)
+      : null;
+  } catch { /* topic remains null */ }
+
   const meetingStart = Date.now();
   const meetingId    = `mtg_${Date.now()}`;
   const startedAt    = new Date().toISOString();
   const encoder      = new TextEncoder();
+
+  // Создаём запись сессии совещания
+  let sessionDbId: string | null = null;
+  try {
+    const sesRes = await pool.query<{ id: string }>(
+      `INSERT INTO board_meeting_sessions (topic, initiated_by, status)
+       VALUES ($1, $2, 'running') RETURNING id`,
+      [topic, parseInt(authResult.userId, 10)]
+    );
+    sessionDbId = sesRes.rows[0]?.id ?? null;
+  } catch { /* таблица может не существовать на старом проде */ }
 
   const send = (controller: ReadableStreamDefaultController, data: unknown) => {
     controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
@@ -299,8 +323,13 @@ export async function POST(req: NextRequest) {
           ...evoInsights.map(m => ({ key: m.key, value: m.value, confidence: m.confidence })),
         ];
 
+        // Инжектируем тему совещания в контекст
+        if (topic) {
+          context.topic = topic;
+        }
+
         // ── Разведка внешних источников (параллельно с UI-стартом) ────────────
-        send(controller, { type: 'meeting_start', meeting_id: meetingId, started_at: startedAt });
+        send(controller, { type: 'meeting_start', meeting_id: meetingId, started_at: startedAt, topic });
         send(controller, { type: 'signals_start' });
 
         const externalSignals = await externalResearcher
@@ -361,7 +390,7 @@ export async function POST(req: NextRequest) {
           if (!cfg) continue;
 
           try {
-            const proposal = await generateProposal(agent, cfg, consensus, meetingId);
+            const proposal = await generateProposal(agent, cfg, consensus, meetingId, topic);
             if (proposal) {
               send(controller, { type: 'proposal', proposal });
             }
@@ -403,6 +432,7 @@ export async function POST(req: NextRequest) {
             memory_type: 'insight',
             key:         `meeting_${meetingId}`,
             value: {
+              topic:           topic ?? null,
               consensus:       consensus.substring(0, 2000),
               agents_ok:       okCount,
               reactions_count: reactions.length,
@@ -411,6 +441,16 @@ export async function POST(req: NextRequest) {
             source:      'board_meeting',
             expires_at:  new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
           });
+
+          // Закрываем запись сессии
+          if (sessionDbId) {
+            await pool.query(
+              `UPDATE board_meeting_sessions
+               SET status='completed', completed_at=NOW(), consensus=$2
+               WHERE id=$1`,
+              [sessionDbId, consensus.substring(0, 2000)]
+            ).catch(() => null);
+          }
         } catch { /* non-critical */ }
 
       } catch (err) {

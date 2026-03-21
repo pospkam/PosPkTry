@@ -43,6 +43,8 @@ export interface AgentContext {
   memories?: Array<{ key: string; value: Record<string, unknown>; confidence: number }>;
   /** Внешние сигналы из интернета — по domainId агента */
   external_signals?: Record<string, string>;
+  /** Тема совещания (board meeting) */
+  topic?: string | null;
 }
 
 // ── ContextHub ────────────────────────────────────────────────────────────────

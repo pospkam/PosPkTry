@@ -6,7 +6,7 @@ import {
   Shield, Scale, Lock, TrendingUp, Binoculars, Leaf, FileSearch, Star,
   Cpu, PlayCircle, CheckCircle, AlertCircle, Clock, ChevronDown, ChevronUp,
   Download, Loader2, Users, MessageSquare, GitMerge, TriangleAlert, ThumbsUp,
-  HelpCircle, Swords, ThumbsDown, Lightbulb, Check, X, Zap, Globe,
+  HelpCircle, Swords, ThumbsDown, Lightbulb, Check, X, Zap, Globe, CalendarDays,
 } from 'lucide-react';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -57,6 +57,7 @@ const AGENT_CONFIG: Record<string, { icon: LucideIcon; color: string; label: str
   eco:      { icon: Leaf,       color: '#10B981',        label: 'Эколог'        },
   content:  { icon: FileSearch, color: 'var(--ocean)',   label: 'Аудитор'       },
   quality:  { icon: Star,       color: '#F59E0B',        label: 'Качество'      },
+  planning: { icon: CalendarDays, color: '#6366F1',      label: 'Планировщик'   },
   evo:      { icon: Cpu,        color: '#EC4899',        label: 'Эволюция'      },
 };
 
@@ -369,6 +370,7 @@ function ProposalCard({ proposal }: { proposal: AgentProposal }) {
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 export default function BoardMeetingClient() {
+  const [topic,          setTopic]          = useState('');
   const [meetingId,      setMeetingId]      = useState('');
   const [startedAt,      setStartedAt]      = useState('');
   const [agents,         setAgents]         = useState<AgentReport[]>([]);
@@ -411,7 +413,12 @@ export default function BoardMeetingClient() {
     setSignalsLoading(false); setSignalsCount(0);
 
     try {
-      const res = await fetch('/api/agents/board-meeting', { method: 'POST', signal: ctrl.signal });
+      const res = await fetch('/api/agents/board-meeting', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topic: topic.trim() || null }),
+        signal: ctrl.signal,
+      });
       if (!res.ok || !res.body) { setError(`Ошибка сервера: ${res.status}`); setStage(-1); return; }
 
       const reader  = res.body.getReader();
@@ -503,6 +510,20 @@ export default function BoardMeetingClient() {
               );
             })}
           </div>
+          <div className="mb-6 max-w-md mx-auto text-left">
+            <label className="ds-label block mb-1.5">Тема совещания</label>
+            <textarea
+              value={topic}
+              onChange={e => setTopic(e.target.value)}
+              placeholder="Например: как увеличить конверсию на 20% за квартал?"
+              maxLength={500}
+              rows={3}
+              className="ds-input w-full resize-none text-sm"
+            />
+            <p className="text-[10px] text-[var(--text-muted)] mt-1">
+              Необязательно. Агенты учтут тему при подготовке отчётов и инициатив.
+            </p>
+          </div>
           <button onClick={handleStart} className="ds-btn-primary px-8 py-3 text-sm font-bold">
             Открыть совещание
           </button>
@@ -523,6 +544,11 @@ export default function BoardMeetingClient() {
               </span>
               {startedAt && (
                 <span className="text-xs text-[var(--text-muted)]">{new Date(startedAt).toLocaleString('ru-RU')}</span>
+              )}
+              {topic && (
+                <span className="text-xs font-medium text-[var(--ocean)] max-w-[220px] truncate">
+                  Тема: {topic}
+                </span>
               )}
             </div>
             <div className="flex items-center gap-3 text-xs text-[var(--text-muted)]">
