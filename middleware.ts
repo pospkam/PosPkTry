@@ -81,6 +81,7 @@ const API_ROLE_REQUIREMENTS: Record<string, AuthRole> = {
   '/api/transfer-operator': 'transfer_operator',
   '/api/transfer': 'transfer_operator',
   '/api/agent': 'agent',
+  '/api/agents/operator': 'operator',
 };
 
 function isPathMatch(pathname: string, route: string): boolean {

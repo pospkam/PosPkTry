@@ -929,6 +929,7 @@ export function PlannerClient({ initialUserId }: { initialUserId?: string | null
   const [fitnessLevel, setFitnessLevel] = useState<FitnessLevel>('moderate');
   const [budgetTier, setBudgetTier] = useState<BudgetTier>('comfort');
   const [seasickness, setSeasickness] = useState(false);
+  const [riskMode, setRiskMode] = useState<'safe_only' | 'adventure' | 'available'>('safe_only');
 
   // Trip persistence
   const [tripId, setTripId]         = useState<string | null>(null);
@@ -1359,6 +1360,7 @@ ${recommendation?.warnings && recommendation.warnings.length > 0 ? `<div class="
           fitnessLevel,
           budgetTier,
           seasickness,
+          riskMode,
         }),
       });
       const data = await res.json();
@@ -1565,6 +1567,42 @@ ${recommendation?.warnings && recommendation.warnings.length > 0 ? `<div class="
             Морская болезнь — избегать катеров и морских выходов
           </span>
         </label>
+      </div>
+
+      {/* Risk Mode */}
+      <div className="space-y-2">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] flex items-center gap-1">
+          <ShieldAlert className="w-3 h-3" />Режим маршрутов
+        </p>
+        <div className="grid grid-cols-3 gap-1">
+          {([
+            { value: 'safe_only', label: 'Безопасный', desc: 'Только проверенные, без alerts' },
+            { value: 'adventure', label: 'Приключение', desc: 'Все маршруты включая опасные' },
+            { value: 'available', label: 'Свободные', desc: 'Все что есть по наличию мест' },
+          ] as const).map(m => (
+            <button
+              key={m.value}
+              type="button"
+              onClick={() => setRiskMode(m.value)}
+              title={m.desc}
+              className={`px-2 py-2 rounded text-xs font-medium transition-all border ${
+                riskMode === m.value
+                  ? m.value === 'adventure'
+                    ? 'bg-[var(--warning)] bg-opacity-20 border-[var(--warning)] text-[var(--warning)]'
+                    : 'bg-[var(--accent)] bg-opacity-20 border-[var(--accent)] text-[var(--accent)]'
+                  : 'border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]'
+              }`}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+        {riskMode === 'adventure' && (
+          <p className="text-[10px] text-[var(--warning)] flex items-start gap-1">
+            <AlertTriangle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+            Включены маршруты с предупреждениями МЧС. Требуется опыт и снаряжение.
+          </p>
+        )}
       </div>
 
       {/* Dates */}

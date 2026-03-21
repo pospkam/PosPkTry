@@ -20,17 +20,33 @@ interface RouteRow {
 /**
  * GET /api/safety/routes
  * Smart recommender for tourists
+ *
+ * mode=safe_only  — only green/yellow, no serious alerts (DEFAULT)
+ * mode=adventure  — all routes including risky, with warnings
+ * mode=available  — only by capacity (ignore risk filter)
  */
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
+    const mode = searchParams.get('mode') || 'safe_only';
     const date = searchParams.get('date') || new Date().toISOString().split('T')[0];
     const groupSize = parseInt(searchParams.get('group_size') || '1');
     const maxDifficulty = parseInt(searchParams.get('difficulty') || '5');
     const activityType = searchParams.get('activity_type');
+    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 50);
 
-    let activityFilter = '';
     const params: unknown[] = [groupSize, maxDifficulty];
+
+    let riskFilter = '';
+    let activityFilter = '';
+
+    if (mode === 'safe_only') {
+      riskFilter = 'AND lrs.alert_severity = 0 AND lrs.is_open = TRUE';
+    } else if (mode === 'adventure') {
+      riskFilter = '';  // no filter — show everything including dangerous
+    } else if (mode === 'available') {
+      riskFilter = 'AND lrs.is_open = TRUE';  // only availability
+    }
 
     if (activityType) {
       activityFilter = ` AND ark.activity_type = $${params.length + 1}`;
@@ -41,14 +57,15 @@ export async function GET(req: Request) {
       SELECT
         lrs.agent_route_id,
         ark.title,
+        ark.description,
         ark.location_type,
         ark.activity_type,
+        ark.lat,
+        ark.lng,
         lsp.capacity_per_day,
         lsp.difficulty_level,
         lsp.hazard_types,
-        lsp.weather_threshold,
         lrs.tourists_today,
-        lrs.tourists_hour,
         lrs.recommender_status,
         lrs.active_alerts,
         lrs.alert_severity,
@@ -57,30 +74,30 @@ export async function GET(req: Request) {
         COALESCE(lsp.optimal_group_size, 8) as optimal_group_size,
         (
           CASE
-            WHEN lrs.alert_severity >= 2 THEN 0
-            WHEN lrs.recommender_status = 'yellow' THEN 0.5
-            WHEN COALESCE(lsp.capacity_per_day, 50) - COALESCE(lrs.tourists_today, 0) < $1 THEN 0
-            WHEN lsp.difficulty_level > $2 THEN 0
             WHEN lrs.is_open = FALSE THEN 0
-            ELSE 
-              (1 - (COALESCE(lrs.tourists_today, 0)::FLOAT / COALESCE(lsp.capacity_per_day, 50))) *
-              (1 - (lsp.difficulty_level::FLOAT / 5)) *
-              (1 - (COALESCE(array_length(lrs.active_alerts, 1), 0)::FLOAT / 3))
+            WHEN lrs.alert_severity >= 2 AND '${mode}' != 'adventure' THEN 0
+            WHEN COALESCE(lsp.capacity_per_day, 50) - COALESCE(lrs.tourists_today, 0) < $1 THEN 0
+            WHEN COALESCE(lsp.difficulty_level, 2) > $2 AND '${mode}' = 'safe_only' THEN 0
+            ELSE
+              (1 - (COALESCE(lrs.tourists_today, 0)::FLOAT / COALESCE(lsp.capacity_per_day, 50))) * 0.5 +
+              (1 - (COALESCE(lsp.difficulty_level, 2)::FLOAT / 5)) * 0.3 +
+              (1 - (COALESCE(array_length(lrs.active_alerts, 1), 0)::FLOAT / 5)) * 0.2
           END
         ) as safety_score
       FROM location_real_time_status lrs
       LEFT JOIN agent_route_knowledge ark ON lrs.agent_route_id = ark.id
       LEFT JOIN location_safety_profile lsp ON lsp.agent_route_id = lrs.agent_route_id
       WHERE
-        lrs.is_open = TRUE
-        AND COALESCE(lsp.capacity_per_day, 50) - COALESCE(lrs.tourists_today, 0) >= $1
-        AND lsp.difficulty_level <= $2
+        COALESCE(lsp.capacity_per_day, 50) - COALESCE(lrs.tourists_today, 0) >= $1
+        AND COALESCE(lsp.difficulty_level, 2) <= $2
+        ${riskFilter}
         ${activityFilter}
       ORDER BY safety_score DESC
-      LIMIT 20
+      LIMIT ${limit}
     `, params);
 
     const rows = routes.rows as unknown as RouteRow[];
+
     const recommendations = rows.map((r) => ({
       id: r.agent_route_id,
       title: r.title,
@@ -91,15 +108,18 @@ export async function GET(req: Request) {
       optimal_group_size: r.optimal_group_size,
       hazards: r.hazard_types || [],
       alerts: r.active_alerts || [],
-      alert_severity: r.alert_severity,
+      alert_severity: r.alert_severity ?? 0,
       status: r.recommender_status,
       safety_score: r.safety_score,
+      is_dangerous: (r.alert_severity ?? 0) >= 2,
       reason:
-        r.alert_severity >= 2
-          ? 'Закрыто: опасность'
-          : r.recommender_status === 'yellow'
-            ? 'Заполняется'
-            : 'Безопасно',
+        !r.is_open
+          ? 'Закрыто'
+          : (r.alert_severity ?? 0) >= 2
+            ? `Риск: ${(r.active_alerts || []).join(', ')}`
+            : r.recommender_status === 'yellow'
+              ? 'Заполняется, незначительный риск'
+              : 'Безопасно и свободно',
     }));
 
     return Response.json({
@@ -107,9 +127,12 @@ export async function GET(req: Request) {
       data: recommendations,
       meta: {
         date,
+        mode,
         group_size: groupSize,
-        total_available: recommendations.length,
-        recommended: recommendations.filter((r) => r.safety_score > 0.7).length,
+        total: recommendations.length,
+        safe: recommendations.filter((r) => r.alert_severity === 0).length,
+        with_warnings: recommendations.filter((r) => r.alert_severity === 1).length,
+        dangerous: recommendations.filter((r) => r.alert_severity >= 2).length,
       },
     });
   } catch (error) {

@@ -26,6 +26,7 @@ export interface TripProfile {
   fitnessLevel: FitnessLevel;
   budgetTier: BudgetTier;
   seasickness?: boolean;        // motion sickness — avoid boat activities
+  riskMode?: 'safe_only' | 'adventure' | 'available'; // default: safe_only
 }
 
 export interface DayPlan {
@@ -1137,6 +1138,15 @@ export async function recommendTrip(profile: TripProfile): Promise<TripRecommend
 
   const zones = scoreZones(profile, crowdLoad);
   const warnings = collectWarnings(profile, zones, tripDays, crowdLoad, alerts);
+
+  // Adventure mode warning
+  if (profile.riskMode === 'adventure') {
+    warnings.unshift({
+      type: 'safety',
+      severity: 'important',
+      message: 'Вы выбрали режим Приключение. Маршруты могут содержать активные предупреждения МЧС, лавинную или вулканическую опасность. Убедитесь в наличии правильного снаряжения и гидa.',
+    });
+  }
   const days = await generateDayPlans(profile, zones, tripDays);
   const priceBreakdown = calculatePriceBreakdown(days, profile);
 

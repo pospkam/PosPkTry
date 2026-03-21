@@ -194,6 +194,7 @@
     "e2e",
     "scripts",
     "playwright.config.ts",
-    "timeweb-mcp-server.ts"
+    "timeweb-mcp-server.ts",
+    "lib/mcp"
   ]
 }

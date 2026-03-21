@@ -18,6 +18,7 @@ const RecommendSchema = z.object({
   fitnessLevel: z.enum(['beginner', 'moderate', 'active']).default('moderate'),
   budgetTier: z.enum(['economy', 'comfort', 'premium']).default('comfort'),
   seasickness: z.boolean().default(false),
+  riskMode: z.enum(['safe_only', 'adventure', 'available']).default('safe_only'),
 });
 
 export async function POST(req: NextRequest) {
