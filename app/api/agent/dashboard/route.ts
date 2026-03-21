@@ -17,7 +17,12 @@ export async function GET(request: NextRequest) {
     const agentId = userOrResponse.userId;
 
     const { searchParams } = new URL(request.url);
-    const period = searchParams.get('period') || '30'; // дни
+    const ALLOWED_PERIODS = ['7', '30', '90', '365'] as const;
+    type AllowedPeriod = typeof ALLOWED_PERIODS[number];
+    const rawPeriod = searchParams.get('period') || '30';
+    const period: AllowedPeriod = (ALLOWED_PERIODS as readonly string[]).includes(rawPeriod)
+      ? (rawPeriod as AllowedPeriod)
+      : '30';
 
     // Метрики агента
     const metricsQuery = `
@@ -36,7 +41,7 @@ export async function GET(request: NextRequest) {
       FROM agent_clients c
       LEFT JOIN agent_bookings b ON c.id = b.client_id AND b.agent_id = $1
       WHERE c.agent_id = $1
-        AND c.created_at >= NOW() - INTERVAL '${period} days'
+        AND c.created_at >= NOW() - ($2::int * INTERVAL '1 day')
     `;
 
     const metricsResult = await query<{
@@ -44,7 +49,7 @@ export async function GET(request: NextRequest) {
       pending_bookings: string; confirmed_bookings: string; completed_bookings: string;
       cancelled_bookings: string; total_revenue: string; avg_booking_value: string;
       total_commission: string; pending_commission: string;
-    }>(metricsQuery, [agentId]);
+    }>(metricsQuery, [agentId, parseInt(period)]);
     const metrics = metricsResult.rows[0];
 
     // Расчет конверсии (отношение завершенных бронирований к общему числу)
