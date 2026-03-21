@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireOctoAuth } from '@/lib/octo/auth';
+import { requireOctoAuth, applyOctoRateLimitHeaders } from '@/lib/octo/auth';
 import { getBookingByUuid } from '@/lib/octo/service';
 import { mapBooking } from '@/lib/octo/mappers';
 
@@ -21,11 +21,13 @@ export async function GET(
   const booking = await getBookingByUuid(uuid);
 
   if (!booking) {
-    return NextResponse.json(
+    const response = NextResponse.json(
       { error: 'NOT_FOUND', errorMessage: 'Booking not found' },
       { status: 404 }
     );
+    return applyOctoRateLimitHeaders(response, authResult);
   }
 
-  return NextResponse.json(mapBooking(booking));
+  const response = NextResponse.json(mapBooking(booking));
+  return applyOctoRateLimitHeaders(response, authResult);
 }

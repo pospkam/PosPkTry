@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireOctoAuth } from '@/lib/octo/auth';
+import { requireOctoAuth, applyOctoRateLimitHeaders } from '@/lib/octo/auth';
 import { BookingCancelSchema } from '@/lib/octo/schemas';
 import { cancelBooking, getBookingByUuid } from '@/lib/octo/service';
 import { mapBooking } from '@/lib/octo/mappers';
@@ -19,10 +19,11 @@ export async function POST(
   if (authResult instanceof NextResponse) return authResult;
 
   if (!authResult.canCreateBookings) {
-    return NextResponse.json(
+    const response = NextResponse.json(
       { error: 'FORBIDDEN', errorMessage: 'API key lacks booking permission' },
       { status: 403 }
     );
+    return applyOctoRateLimitHeaders(response, authResult);
   }
 
   let body: unknown = {};
@@ -39,19 +40,22 @@ export async function POST(
   const result = await cancelBooking(uuid, authResult.id, reason);
 
   if (!result) {
-    return NextResponse.json(
+    const response = NextResponse.json(
       { error: 'NOT_FOUND', errorMessage: 'Booking not found or already cancelled/completed' },
       { status: 404 }
     );
+    return applyOctoRateLimitHeaders(response, authResult);
   }
 
   const full = await getBookingByUuid(uuid);
   if (!full) {
-    return NextResponse.json(
+    const response = NextResponse.json(
       { error: 'INTERNAL_ERROR', errorMessage: 'Cancelled but failed to retrieve booking' },
       { status: 500 }
     );
+    return applyOctoRateLimitHeaders(response, authResult);
   }
 
-  return NextResponse.json(mapBooking(full));
+  const response = NextResponse.json(mapBooking(full));
+  return applyOctoRateLimitHeaders(response, authResult);
 }

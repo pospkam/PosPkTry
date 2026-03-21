@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireOctoAuth } from '@/lib/octo/auth';
+import { requireOctoAuth, applyOctoRateLimitHeaders } from '@/lib/octo/auth';
 import { getProducts, getProductOptions } from '@/lib/octo/service';
 import { mapProduct } from '@/lib/octo/mappers';
 
@@ -15,10 +15,11 @@ export async function GET(request: NextRequest) {
   if (authResult instanceof NextResponse) return authResult;
 
   if (!authResult.canReadProducts) {
-    return NextResponse.json(
+    const response = NextResponse.json(
       { error: 'FORBIDDEN', errorMessage: 'API key lacks product read permission' },
       { status: 403 }
     );
+    return applyOctoRateLimitHeaders(response, authResult);
   }
 
   const { searchParams } = new URL(request.url);
@@ -32,5 +33,6 @@ export async function GET(request: NextRequest) {
     })
   );
 
-  return NextResponse.json(products);
+  const response = NextResponse.json(products);
+  return applyOctoRateLimitHeaders(response, authResult);
 }

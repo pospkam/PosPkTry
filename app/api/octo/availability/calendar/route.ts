@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireOctoAuth } from '@/lib/octo/auth';
+import { requireOctoAuth, applyOctoRateLimitHeaders } from '@/lib/octo/auth';
 import { AvailabilityCheckSchema } from '@/lib/octo/schemas';
 import { checkAvailability } from '@/lib/octo/service';
 import { mapCalendarDay, mapFreesaleCalendarDay } from '@/lib/octo/mappers';
@@ -18,39 +18,43 @@ export async function POST(request: NextRequest) {
   if (authResult instanceof NextResponse) return authResult;
 
   if (!authResult.canReadAvailability) {
-    return NextResponse.json(
+    const response = NextResponse.json(
       { error: 'FORBIDDEN', errorMessage: 'API key lacks availability read permission' },
       { status: 403 }
     );
+    return applyOctoRateLimitHeaders(response, authResult);
   }
 
   let body: unknown;
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json(
+    const response = NextResponse.json(
       { error: 'BAD_REQUEST', errorMessage: 'Invalid JSON body' },
       { status: 400 }
     );
+    return applyOctoRateLimitHeaders(response, authResult);
   }
 
   const parsed = AvailabilityCheckSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json(
+    const response = NextResponse.json(
       { error: 'BAD_REQUEST', errorMessage: parsed.error.issues.map(i => i.message).join(', ') },
       { status: 400 }
     );
+    return applyOctoRateLimitHeaders(response, authResult);
   }
 
   const { productId, optionId, localDateStart, localDateEnd } = parsed.data;
   const result = await checkAvailability(productId, optionId, localDateStart, localDateEnd);
 
   if (result.mode === 'empty') {
-    return NextResponse.json([]);
+    const response = NextResponse.json([]);
+    return applyOctoRateLimitHeaders(response, authResult);
   }
 
   if (result.mode === 'calendar') {
-    return NextResponse.json(
+    const response = NextResponse.json(
       result.slots.map((slot) =>
         mapCalendarDay(
           slot as unknown as Parameters<typeof mapCalendarDay>[0],
@@ -59,6 +63,7 @@ export async function POST(request: NextRequest) {
         )
       )
     );
+    return applyOctoRateLimitHeaders(response, authResult);
   }
 
   // FREESALE — generate one entry per day in the requested range
@@ -69,5 +74,6 @@ export async function POST(request: NextRequest) {
     days.push(d.toISOString().slice(0, 10));
   }
 
-  return NextResponse.json(days.map(mapFreesaleCalendarDay));
+  const response = NextResponse.json(days.map(mapFreesaleCalendarDay));
+  return applyOctoRateLimitHeaders(response, authResult);
 }

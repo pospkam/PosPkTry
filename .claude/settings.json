@@ -24,7 +24,28 @@
       "Bash(grep -r leads /workspaces/PosPkTry/app/api/ --include=*.ts -l)",
       "Bash(grep \"\\\\.tsx$\")",
       "Bash(ls scripts/seed-*.sql)",
-      "Bash(find /workspaces/PosPkTry/app -type f -path */help* -o -path *help*)"
+      "Bash(find /workspaces/PosPkTry/app -type f -path */help* -o -path *help*)",
+      "Bash(find public/images -name *.jpg -o -name *.png -o -name *.webp)",
+      "WebFetch(domain:fishingkam.ru)",
+      "Bash(curl -s \"https://fishingkam.ru/\")",
+      "Bash(curl -s \"https://fishingkam.ru/api/tstore/products.json\")",
+      "Bash(/dev/null curl:*)",
+      "Bash(curl -sL \"https://fishingkam.ru/\")",
+      "Bash(curl -s \"https://static.tildacdn.com/ws/project11714597/tilda-blocks-page62480851.min.js\")",
+      "Bash(grep -n \"rounded-full\" /workspaces/PosPkTry/app/routes/[id]/_RouteDetailClient.tsx)",
+      "Bash(grep -n \"black/\\\\|white/\" /workspaces/PosPkTry/app/routes/[id]/_RouteDetailClient.tsx)",
+      "Bash(grep -E \"#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3}\" /workspaces/PosPkTry/app/routes/[id]/_RouteDetailClient.tsx)",
+      "Bash(grep -r \"text-white\\\\|bg-white\\\\|#fff\\\\|volcano\\\\|moss\" /workspaces/PosPkTry/components/booking /workspaces/PosPkTry/components/routes /workspaces/PosPkTry/components/tours --include=*.tsx)",
+      "Bash(grep -r \"text-white\\\\|bg-\\\\\\(red\\\\|green\\\\\\)-\\\\|#fff\\\\|#[0-9a-fA-F]\\\\{6\\\\}\" /workspaces/PosPkTry/components/booking --include=*.tsx)",
+      "Bash(grep -r \"text-white\\\\|bg-\\\\\\(red\\\\|green\\\\|yellow\\\\\\)-\" /workspaces/PosPkTry/components/booking --include=*.tsx)",
+      "Bash(grep -r \"text-white\\\\|bg-\\\\\\(red\\\\|green\\\\|yellow\\\\\\)-\\\\|#fff\" /workspaces/PosPkTry/components/shared --include=*.tsx)",
+      "Bash(grep -rn \"text-white\\\\|bg-\\\\\\(red\\\\|green\\\\|yellow\\\\\\)-\\\\|#fff\" /workspaces/PosPkTry/components/shared --include=*.tsx)",
+      "Bash(find /workspaces/PosPkTry -name *octo* -type f)",
+      "Bash(grep -r \"OCTO\\\\|octo\" /workspaces/PosPkTry/*.md)",
+      "Bash(grep -B5 -A15 \"def.*cancellation\\\\|created_via\" /workspaces/PosPkTry/migrations/*.sql)",
+      "Read(//workspaceså/PosPkTry/lib/octo/**)",
+      "Bash(find /workspaces/PosPkTry -maxdepth 3 -name 0*.sql)",
+      "Bash(ls /workspaces/PosPkTry/app/api/octo/bookings/[uuid]/)"
     ]
   }
 }

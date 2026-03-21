@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { requireOctoAuth, octoError } from '@/lib/octo/auth';
+import { requireOctoAuth, octoError, applyOctoRateLimitHeaders } from '@/lib/octo/auth';
 import { pool } from '@/lib/db-pool';
 import { mapBooking } from '@/lib/octo/mappers';
 import { notifyOctoWebhooks } from '@/lib/octo/webhooks';
@@ -37,12 +37,14 @@ export async function PATCH(
     try {
       body = await request.json();
     } catch {
-      return octoError(400, 'BAD_REQUEST', 'Invalid JSON');
+      const err = octoError(400, 'BAD_REQUEST', 'Invalid JSON');
+      return applyOctoRateLimitHeaders(err, authResult);
     }
 
     const parsed = StatusTransitionSchema.safeParse(body);
     if (!parsed.success) {
-      return octoError(400, 'BAD_REQUEST', parsed.error.errors[0].message);
+      const err = octoError(400, 'BAD_REQUEST', parsed.error.errors[0].message);
+      return applyOctoRateLimitHeaders(err, authResult);
     }
 
     const { status } = parsed.data;
@@ -59,18 +61,20 @@ export async function PATCH(
     );
 
     if (bookingResult.rows.length === 0) {
-      return octoError(404, 'NOT_FOUND', 'Booking not found');
+      const err = octoError(404, 'NOT_FOUND', 'Booking not found');
+      return applyOctoRateLimitHeaders(err, authResult);
     }
 
     const booking = bookingResult.rows[0];
 
     // Validate status transition: only CONFIRMED → REDEEMED or NO_SHOW
     if (booking.booking_status !== 'confirmed') {
-      return octoError(
+      const err = octoError(
         422,
         'INVALID_STATE_TRANSITION',
         `Cannot transition from ${booking.booking_status} to ${status}. Only CONFIRMED bookings can be marked as REDEEMED or NO_SHOW.`
       );
+      return applyOctoRateLimitHeaders(err, authResult);
     }
 
     // Update booking status
@@ -100,9 +104,15 @@ export async function PATCH(
     const mappedBooking = mapBooking(updatedBooking);
     notifyOctoWebhooks(webhookEvent, booking.id, mappedBooking).catch(() => {});
 
-    return NextResponse.json(mappedBooking, { status: 200 });
+    const response = NextResponse.json(mappedBooking, { status: 200 });
+    return applyOctoRateLimitHeaders(response, authResult);
   } catch (error) {
     console.error('[OCTO PATCH /status]', error);
-    return octoError(500, 'INTERNAL_ERROR', 'Internal server error');
+    const authResult = await requireOctoAuth(request);
+    const err = octoError(500, 'INTERNAL_ERROR', 'Internal server error');
+    if (authResult instanceof NextResponse) {
+      return err;
+    }
+    return applyOctoRateLimitHeaders(err, authResult);
   }
 }

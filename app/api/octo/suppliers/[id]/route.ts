@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireOctoAuth } from '@/lib/octo/auth';
+import { requireOctoAuth, applyOctoRateLimitHeaders } from '@/lib/octo/auth';
 import { getSupplierById } from '@/lib/octo/service';
 import { mapSupplier } from '@/lib/octo/mappers';
 
@@ -18,20 +18,23 @@ export async function GET(
   if (authResult instanceof NextResponse) return authResult;
 
   if (!authResult.canReadProducts) {
-    return NextResponse.json(
+    const response = NextResponse.json(
       { error: 'FORBIDDEN', errorMessage: 'API key lacks product read permission' },
       { status: 403 }
     );
+    return applyOctoRateLimitHeaders(response, authResult);
   }
 
   const { id } = await params;
   const supplier = await getSupplierById(id);
   if (!supplier) {
-    return NextResponse.json(
+    const response = NextResponse.json(
       { error: 'NOT_FOUND', errorMessage: 'Supplier not found' },
       { status: 404 }
     );
+    return applyOctoRateLimitHeaders(response, authResult);
   }
 
-  return NextResponse.json(mapSupplier(supplier));
+  const response = NextResponse.json(mapSupplier(supplier));
+  return applyOctoRateLimitHeaders(response, authResult);
 }

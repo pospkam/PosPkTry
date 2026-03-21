@@ -17,10 +17,27 @@ export interface OctoApiKeyPayload {
   canCreateBookings: boolean;
   rateLimitPerMinute: number;
   webhookUrl: string | null;
+  // Rate limit headers for OCTO standard compliance
+  rateLimitRemaining: number;
+  rateLimitReset: number;
 }
 
 export function octoError(status: number, error: string, errorMessage: string): NextResponse {
   return NextResponse.json({ error, errorMessage }, { status });
+}
+
+/**
+ * Apply OCTO-standard rate limit headers to a response.
+ * Headers: X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset
+ */
+export function applyOctoRateLimitHeaders(
+  response: NextResponse,
+  authPayload: OctoApiKeyPayload
+): NextResponse {
+  response.headers.set('X-RateLimit-Limit', authPayload.rateLimitPerMinute.toString());
+  response.headers.set('X-RateLimit-Remaining', authPayload.rateLimitRemaining.toString());
+  response.headers.set('X-RateLimit-Reset', Math.ceil(authPayload.rateLimitReset / 1000).toString());
+  return response;
 }
 
 // Per-key rate limiters: keyId → limiter instance
@@ -80,6 +97,8 @@ export async function requireOctoAuth(
 
   // Rate limiting: per API key, per minute
   const limiter = getLimiter(key.id, key.rate_limit_per_minute);
+  const status = limiter.getStatus(key.id, key.rate_limit_per_minute);
+
   if (!limiter.check(key.id)) {
     return octoError(
       429,
@@ -100,5 +119,7 @@ export async function requireOctoAuth(
     canCreateBookings: key.can_create_bookings,
     rateLimitPerMinute: key.rate_limit_per_minute,
     webhookUrl: key.webhook_url,
+    rateLimitRemaining: status.remaining,
+    rateLimitReset: status.resetAt,
   };
 }

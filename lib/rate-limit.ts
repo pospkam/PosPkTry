@@ -21,9 +21,18 @@ interface RateLimiterOptions {
   max: number;
 }
 
+export interface RateLimitStatus {
+  /** Number of requests remaining in current window */
+  remaining: number;
+  /** Unix timestamp (ms) when window resets */
+  resetAt: number;
+}
+
 export interface RateLimiter {
   /** Returns true if the request is allowed, false if rate-limited */
   check(key: string): boolean;
+  /** Get current rate limit status for a key */
+  getStatus(key: string, max: number): RateLimitStatus;
 }
 
 export function createRateLimiter({ windowMs, max }: RateLimiterOptions): RateLimiter {
@@ -55,6 +64,23 @@ export function createRateLimiter({ windowMs, max }: RateLimiterOptions): RateLi
 
       entry.count += 1;
       return true;
+    },
+    getStatus(key: string, max: number): RateLimitStatus {
+      cleanup();
+      const now = Date.now();
+      const entry = store.get(key);
+
+      if (!entry || entry.resetAt <= now) {
+        return {
+          remaining: max - 1,
+          resetAt: now + windowMs,
+        };
+      }
+
+      return {
+        remaining: Math.max(0, max - entry.count),
+        resetAt: entry.resetAt,
+      };
     },
   };
 }
