@@ -3,9 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import {
   CheckCircle2, AlertCircle, RefreshCw, TrendingUp, Zap, AlertTriangle, ChevronDown,
+  X, Zap as ZapIcon,
 } from 'lucide-react';
 import { LoadingSpinner, EmptyState } from '@/components/admin/shared';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 
 interface TourCompletion {
   tour_id: string;
@@ -89,11 +91,21 @@ const ScoreBar = ({ score, size = 'md' }: { score: number; size?: 'sm' | 'md' | 
   );
 };
 
+interface QuickFillModal {
+  open: boolean;
+  tourId?: string;
+  tourTitle?: string;
+  field?: string;
+  value: string;
+  saving?: boolean;
+}
+
 export default function CompletenessClient() {
   const [data, setData] = useState<CompletenessData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedTour, setExpandedTour] = useState<string | null>(null);
+  const [quickFill, setQuickFill] = useState<QuickFillModal>({ open: false, value: '' });
 
   const fetchData = async () => {
     try {
@@ -107,6 +119,41 @@ export default function CompletenessClient() {
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleQuickFill = (tourId: string, tourTitle: string, field: string) => {
+    setQuickFill({ open: true, tourId, tourTitle, field, value: '' });
+  };
+
+  const handleSaveQuickFill = async () => {
+    if (!quickFill.tourId || !quickFill.field || !quickFill.value.trim()) {
+      toast.error('Заполните значение');
+      return;
+    }
+
+    try {
+      setQuickFill(prev => ({ ...prev, saving: true }));
+      const res = await fetch('/api/operator/tours/quick-fill', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tourId: quickFill.tourId,
+          field: quickFill.field,
+          value: quickFill.value,
+        }),
+      });
+
+      const result = await res.json();
+      if (!result.success) throw new Error(result.error);
+
+      toast.success(`${FIELD_LABELS[quickFill.field]} обновлено!`);
+      setQuickFill({ open: false, value: '' });
+      await fetchData();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Ошибка при сохранении');
+    } finally {
+      setQuickFill(prev => ({ ...prev, saving: false }));
     }
   };
 
@@ -290,12 +337,14 @@ export default function CompletenessClient() {
                         </p>
                         <div className="space-y-1.5 ml-2.5">
                           {tour.missing_required.map(field => (
-                            <div
+                            <button
                               key={field}
-                              className="inline-block px-2 py-1 bg-[var(--danger)]/10 text-[var(--danger)] rounded text-xs"
+                              onClick={() => handleQuickFill(tour.tour_id, tour.tour_title, field)}
+                              className="group inline-flex items-center gap-1.5 px-2 py-1 bg-[var(--danger)]/10 text-[var(--danger)] rounded text-xs hover:bg-[var(--danger)]/20 transition-colors"
                             >
-                              {FIELD_LABELS[field] || field}
-                            </div>
+                              <span>{FIELD_LABELS[field] || field}</span>
+                              <ZapIcon className="w-3 h-3 opacity-0 group-hover:opacity-100" />
+                            </button>
                           ))}
                         </div>
                       </div>
@@ -310,12 +359,14 @@ export default function CompletenessClient() {
                         </p>
                         <div className="space-y-1.5 ml-2.5">
                           {tour.missing_recommended.slice(0, 5).map(field => (
-                            <div
+                            <button
                               key={field}
-                              className="inline-block px-2 py-1 bg-[var(--warning)]/10 text-[var(--warning)] rounded text-xs"
+                              onClick={() => handleQuickFill(tour.tour_id, tour.tour_title, field)}
+                              className="group inline-flex items-center gap-1.5 px-2 py-1 bg-[var(--warning)]/10 text-[var(--warning)] rounded text-xs hover:bg-[var(--warning)]/20 transition-colors"
                             >
-                              {FIELD_LABELS[field] || field}
-                            </div>
+                              <span>{FIELD_LABELS[field] || field}</span>
+                              <ZapIcon className="w-3 h-3 opacity-0 group-hover:opacity-100" />
+                            </button>
                           ))}
                           {tour.missing_recommended.length > 5 && (
                             <div className="text-xs text-[var(--text-muted)] mt-1">
@@ -346,6 +397,113 @@ export default function CompletenessClient() {
           </div>
         )}
       </div>
+
+      {/* Quick Fill Modal */}
+      {quickFill.open && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg max-w-md w-full p-5 space-y-4">
+            {/* Header */}
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm font-semibold text-[var(--text-primary)]">
+                  Заполнить поле
+                </p>
+                <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                  {quickFill.tourTitle}
+                </p>
+              </div>
+              <button
+                onClick={() => setQuickFill({ open: false, value: '' })}
+                className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Field info */}
+            <div className="bg-[var(--bg-hover)] rounded p-3">
+              <p className="text-xs uppercase tracking-widest text-[var(--text-muted)] mb-1">
+                Поле
+              </p>
+              <p className="text-sm font-medium text-[var(--text-primary)]">
+                {FIELD_LABELS[quickFill.field!] || quickFill.field}
+              </p>
+            </div>
+
+            {/* Input */}
+            <div>
+              <label className="text-xs uppercase tracking-widest text-[var(--text-muted)] block mb-2">
+                Значение
+              </label>
+              {quickFill.field === 'base_price' || quickFill.field === 'price_old' ? (
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={quickFill.value}
+                  onChange={e => setQuickFill(prev => ({ ...prev, value: e.target.value }))}
+                  placeholder="0.00"
+                  className="w-full px-3 py-2 text-sm bg-[var(--bg-primary)] border border-[var(--border)] rounded text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                  disabled={quickFill.saving}
+                />
+              ) : quickFill.field === 'duration_hours' ? (
+                <input
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  value={quickFill.value}
+                  onChange={e => setQuickFill(prev => ({ ...prev, value: e.target.value }))}
+                  placeholder="1.0"
+                  className="w-full px-3 py-2 text-sm bg-[var(--bg-primary)] border border-[var(--border)] rounded text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                  disabled={quickFill.saving}
+                />
+              ) : quickFill.field?.includes('date') || quickFill.field === 'season_start' || quickFill.field === 'season_end' ? (
+                <input
+                  type="date"
+                  value={quickFill.value}
+                  onChange={e => setQuickFill(prev => ({ ...prev, value: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm bg-[var(--bg-primary)] border border-[var(--border)] rounded text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                  disabled={quickFill.saving}
+                />
+              ) : (
+                <textarea
+                  value={quickFill.value}
+                  onChange={e => setQuickFill(prev => ({ ...prev, value: e.target.value }))}
+                  placeholder="Введите значение..."
+                  rows={3}
+                  className="w-full px-3 py-2 text-sm bg-[var(--bg-primary)] border border-[var(--border)] rounded text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] resize-none"
+                  disabled={quickFill.saving}
+                />
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={() => setQuickFill({ open: false, value: '' })}
+                disabled={quickFill.saving}
+                className="flex-1 px-3 py-2 text-sm text-[var(--text-secondary)] bg-[var(--bg-hover)] rounded hover:bg-[var(--bg-primary)] transition-colors disabled:opacity-50"
+              >
+                Отмена
+              </button>
+              <button
+                onClick={handleSaveQuickFill}
+                disabled={quickFill.saving}
+                className="flex-1 px-3 py-2 text-sm text-white bg-[var(--accent)] rounded hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-1.5"
+              >
+                {quickFill.saving ? (
+                  <>
+                    <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Сохранение...
+                  </>
+                ) : (
+                  'Сохранить'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
