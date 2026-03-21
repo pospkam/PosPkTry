@@ -244,8 +244,11 @@ export async function GET(request: NextRequest) {
   const secret = request.nextUrl.searchParams.get('secret')
     ?? request.headers.get('authorization')?.replace('Bearer ', '');
 
-  if (secret !== process.env.CRON_SECRET) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const cronSecret = process.env.CRON_SECRET;
+  if (cronSecret) {
+    if (secret !== cronSecret) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
   }
 
   const date = new Date().toLocaleDateString('ru-RU', {
