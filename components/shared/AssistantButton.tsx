@@ -18,19 +18,19 @@ function RobotAvatar() {
   return (
     <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
       {/* Антенна */}
-      <line x1="11" y1="0.5" x2="11" y2="4" stroke="white" strokeWidth="1.4" strokeLinecap="round" />
-      <circle cx="11" cy="0.5" r="1.2" fill="white" />
+      <line x1="11" y1="0.5" x2="11" y2="4" stroke="var(--bg-card)" strokeWidth="1.4" strokeLinecap="round" />
+      <circle cx="11" cy="0.5" r="1.2" fill="var(--bg-card)" />
       {/* Уши */}
-      <rect x="1" y="7" width="2" height="4" rx="1" fill="white" opacity="0.85" />
-      <rect x="19" y="7" width="2" height="4" rx="1" fill="white" opacity="0.85" />
+      <rect x="1" y="7" width="2" height="4" rx="1" fill="var(--bg-card)" opacity="0.85" />
+      <rect x="19" y="7" width="2" height="4" rx="1" fill="var(--bg-card)" opacity="0.85" />
       {/* Голова */}
-      <rect x="3.5" y="4" width="15" height="13" rx="3.5" fill="white" />
+      <rect x="3.5" y="4" width="15" height="13" rx="3.5" fill="var(--bg-card)" />
       {/* Глаза */}
       <circle cx="8.5" cy="9.5" r="2.2" fill="var(--accent)" />
       <circle cx="13.5" cy="9.5" r="2.2" fill="var(--accent)" />
       {/* Блики в глазах */}
-      <circle cx="9.2" cy="8.8" r="0.7" fill="white" />
-      <circle cx="14.2" cy="8.8" r="0.7" fill="white" />
+      <circle cx="9.2" cy="8.8" r="0.7" fill="var(--bg-card)" />
+      <circle cx="14.2" cy="8.8" r="0.7" fill="var(--bg-card)" />
       {/* Улыбка */}
       <path d="M7.5 13 Q11 15.5 14.5 13" stroke="var(--accent)" strokeWidth="1.3" strokeLinecap="round" fill="none" />
     </svg>
@@ -314,7 +314,7 @@ export function AssistantButton({ pageContext }: { pageContext?: PageContext }) 
                     background: msg.role === 'user'
                       ? 'var(--accent)'
                       : 'var(--bg-hover)',
-                    color: msg.role === 'user' ? '#fff' : 'var(--text-primary)',
+                    color: msg.role === 'user' ? 'var(--bg-card)' : 'var(--text-primary)',
                     fontSize: '13px',
                     lineHeight: '1.5',
                     whiteSpace: 'pre-wrap',
@@ -416,7 +416,7 @@ export function AssistantButton({ pageContext }: { pageContext?: PageContext }) 
                   display: 'inline-block',
                   padding: '8px 20px',
                   background: 'var(--accent)',
-                  color: '#fff',
+                  color: 'var(--bg-card)',
                   borderRadius: '8px',
                   fontSize: '13px',
                   fontWeight: 600,
@@ -472,7 +472,7 @@ export function AssistantButton({ pageContext }: { pageContext?: PageContext }) 
                 padding: '8px',
                 cursor: input.trim() && !loading ? 'pointer' : 'default',
                 opacity: input.trim() && !loading ? 1 : 0.45,
-                color: '#fff',
+                color: 'var(--bg-card)',
                 display: 'flex',
                 alignItems: 'center',
                 flexShrink: 0,
@@ -510,7 +510,7 @@ export function AssistantButton({ pageContext }: { pageContext?: PageContext }) 
           justifyContent: 'center',
           background: isOpen ? 'var(--bg-hover)' : 'var(--accent)',
           border: isOpen ? '1.5px solid var(--border)' : 'none',
-          color: isOpen ? 'var(--text-secondary)' : '#fff',
+          color: isOpen ? 'var(--text-secondary)' : 'var(--bg-card)',
           cursor: 'pointer',
           boxShadow: '0 4px 20px rgba(0,0,0,0.22)',
           transition: 'background 0.2s, color 0.2s, transform 0.15s',
@@ -529,11 +529,11 @@ export function AssistantButton({ pageContext }: { pageContext?: PageContext }) 
             }}>
               <span className="animate-ping" style={{
                 position: 'absolute', inset: 0,
-                borderRadius: '50%', background: '#4ade80', opacity: 0.75,
+                borderRadius: '50%', background: 'var(--success)', opacity: 0.75,
               }} />
               <span style={{
                 position: 'absolute', inset: '2px',
-                borderRadius: '50%', background: '#22c55e',
+                borderRadius: '50%', background: 'var(--success)',
               }} />
             </span>
           </div>

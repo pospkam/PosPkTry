@@ -72,7 +72,7 @@ function SOSButton({ className = '' }: { className?: string }) {
   return (
     <>
       <motion.button
-        className={`fixed top-4 right-4 z-50 w-12 h-12 rounded-full bg-red-600 text-white flex flex-col items-center justify-center font-bold text-sm shadow-2xl sos-pulse min-h-[44px] min-w-[44px] ${className}`}
+        className={`fixed top-4 right-4 z-50 w-12 h-12 rounded-full bg-[var(--danger)] text-[var(--bg-card)] flex flex-col items-center justify-center font-bold text-sm shadow-2xl sos-pulse min-h-[44px] min-w-[44px] ${className}`}
         onClick={() => setIsOpen(true)}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
@@ -101,7 +101,7 @@ function SOSButton({ className = '' }: { className?: string }) {
               exit={{ scale: 0.9, opacity: 0 }}
             >
               <div className="flex items-center gap-3 mb-6">
-                <ShieldCheck size={28} className="text-red-600" aria-hidden="true" />
+                <ShieldCheck size={28} className="text-[var(--danger)]" aria-hidden="true" />
                 <h2 className="text-xl font-bold text-[var(--text-primary)]">Экстренная помощь</h2>
               </div>
 
@@ -113,7 +113,7 @@ function SOSButton({ className = '' }: { className?: string }) {
               <div className="space-y-3 mb-8">
                 <motion.a
                   href="tel:112"
-                  className="w-full flex items-center justify-between p-4 bg-red-600 text-white rounded-xl font-semibold min-h-[44px]"
+                  className="w-full flex items-center justify-between p-4 bg-[var(--danger)] text-[var(--bg-card)] rounded-lg font-semibold min-h-[44px]"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   aria-label="Позвонить в МЧС 112"
@@ -127,7 +127,7 @@ function SOSButton({ className = '' }: { className?: string }) {
 
                 <motion.a
                   href="tel:103"
-                  className="w-full flex items-center justify-between p-4 bg-red-600 text-white rounded-xl font-semibold min-h-[44px]"
+                  className="w-full flex items-center justify-between p-4 bg-[var(--danger)] text-[var(--bg-card)] rounded-lg font-semibold min-h-[44px]"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   aria-label="Позвонить в скорую 103"
@@ -153,7 +153,7 @@ function SOSButton({ className = '' }: { className?: string }) {
                 </motion.button>
 
                 <motion.button
-                  className="w-full flex items-center justify-between p-4 bg-green-700 text-white rounded-xl font-semibold min-h-[44px] disabled:opacity-60"
+                  className="w-full flex items-center justify-between p-4 bg-[var(--success)] text-[var(--bg-card)] rounded-lg font-semibold min-h-[44px] disabled:opacity-60"
                   whileHover={{ scale: sosStatus === 'sent' ? 1 : 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handleSendCoords}
@@ -180,7 +180,7 @@ function SOSButton({ className = '' }: { className?: string }) {
               <div className="bg-[var(--warning)]/10 border border-[var(--warning)]/30 rounded-lg p-4" aria-live="polite">
                 <AlertTriangle size={20} className="text-[var(--warning)] inline mr-2 mb-2 block" aria-hidden="true" />
                 {errorMsg ? (
-                  <p className="text-sm text-red-400 leading-relaxed">{errorMsg}</p>
+                  <p className="text-sm text-[var(--danger)] leading-relaxed">{errorMsg}</p>
                 ) : (
                   <p className="text-sm text-[var(--warning)] leading-relaxed">
                     Если нет связи: оставайтесь на месте · свисток 3 сигнала · сохраняйте тепло

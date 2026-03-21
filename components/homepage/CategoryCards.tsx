@@ -113,11 +113,11 @@ function CategoryCard({ cat, index, count, onHoverStart, onHoverEnd, onClick }: 
 
       {/* label + count */}
       <div className="absolute bottom-2 left-3 right-3">
-        <span className="text-white text-xs font-semibold tracking-wide drop-shadow-sm">
+        <span className="text-[var(--text-primary)] text-xs font-semibold tracking-wide drop-shadow-sm">
           {cat.label}
         </span>
         {count != null && count > 0 && (
-          <span className="ml-1.5 text-white/60 text-[10px] drop-shadow-sm">{count}</span>
+          <span className="ml-1.5 text-[var(--text-muted)] text-[10px] drop-shadow-sm">{count}</span>
         )}
       </div>
     </Link>

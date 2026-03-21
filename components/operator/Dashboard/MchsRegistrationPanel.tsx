@@ -139,10 +139,10 @@ function getStatusLabel(status: MchsStatus): string {
 
 function getStatusClasses(status: MchsStatus): string {
   const classes: Record<MchsStatus, string> = {
-    pending: 'bg-volcano/20 text-volcano border border-volcano/30',
+    pending: 'bg-[var(--accent)]/20 text-[var(--accent)] border border-[var(--accent)]/30',
     submitted: 'bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/30',
-    confirmed: 'bg-moss/20 text-moss border border-moss/30',
-    rejected: 'bg-red-600/20 text-[var(--danger)] border border-red-600/30',
+    confirmed: 'bg-[var(--success)]/20 text-[var(--success)] border border-[var(--success)]/30',
+    rejected: 'bg-[var(--danger)]/20 text-[var(--danger)] border border-[var(--danger)]/30',
   };
   return classes[status] ?? 'bg-[var(--bg-card)] text-[var(--text-muted)]';
 }
@@ -383,7 +383,7 @@ export function MchsRegistrationPanel() {
             Подача данных о группе и маршруте в МЧС перед стартом тура.
           </p>
         </div>
-        <div className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-red-600/20 border border-red-500/40 text-red-200 text-sm">
+        <div className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--danger)]/20 border border-[var(--danger)]/40 text-[var(--danger)] text-sm">
           <AlertTriangle className="w-4 h-4" />
           Safety First
         </div>
@@ -401,19 +401,19 @@ export function MchsRegistrationPanel() {
               <p className="text-xs text-[var(--text-muted)]">Всего</p>
               <p className="text-xl font-semibold text-[var(--text-primary)]">{summary.total}</p>
             </div>
-            <div className="bg-volcano/15 rounded-xl p-3">
+            <div className="bg-[var(--accent)]/15 rounded-xl p-3">
               <p className="text-xs text-[var(--text-muted)]">Ожидает</p>
-              <p className="text-xl font-semibold text-volcano">{summary.pending}</p>
+              <p className="text-xl font-semibold text-[var(--accent)]">{summary.pending}</p>
             </div>
             <div className="bg-[var(--bg-card)] rounded-xl p-3">
               <p className="text-xs text-[var(--text-muted)]">Отправлено</p>
               <p className="text-xl font-semibold text-[var(--accent)]">{summary.submitted}</p>
             </div>
-            <div className="bg-moss/15 rounded-xl p-3">
+            <div className="bg-[var(--success)]/15 rounded-xl p-3">
               <p className="text-xs text-[var(--text-muted)]">Подтверждено</p>
-              <p className="text-xl font-semibold text-moss">{summary.confirmed}</p>
+              <p className="text-xl font-semibold text-[var(--success)]">{summary.confirmed}</p>
             </div>
-            <div className="bg-red-600/15 rounded-xl p-3">
+            <div className="bg-[var(--danger)]/15 rounded-xl p-3">
               <p className="text-xs text-[var(--text-muted)]">Отклонено</p>
               <p className="text-xl font-semibold text-[var(--danger)]">{summary.rejected}</p>
             </div>
@@ -559,7 +559,7 @@ export function MchsRegistrationPanel() {
                       <button
                         type="button"
                         onClick={() => removeMember(idx)}
-                        className="min-h-[44px] min-w-[44px] p-2 rounded-xl text-[var(--danger)] hover:bg-red-600/20 transition-colors self-end"
+                        className="min-h-[44px] min-w-[44px] p-2 rounded-xl text-[var(--danger)] hover:bg-[var(--danger)]/20 transition-colors self-end"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -609,7 +609,7 @@ export function MchsRegistrationPanel() {
                       <button
                         type="button"
                         onClick={() => removeEmergencyContact(idx)}
-                        className="min-h-[44px] min-w-[44px] p-2 rounded-xl text-[var(--danger)] hover:bg-red-600/20 transition-colors self-end"
+                        className="min-h-[44px] min-w-[44px] p-2 rounded-xl text-[var(--danger)] hover:bg-[var(--danger)]/20 transition-colors self-end"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -620,12 +620,12 @@ export function MchsRegistrationPanel() {
 
               {/* Ошибки и успех */}
               {submitError && (
-                <div className="px-3 py-2 rounded-xl bg-red-600/20 border border-red-600/30 text-red-200 text-sm">
+                <div className="px-3 py-2 rounded-xl bg-[var(--danger)]/20 border border-[var(--danger)]/30 text-[var(--danger)] text-sm">
                   {submitError}
                 </div>
               )}
               {successMessage && (
-                <div className="px-3 py-2 rounded-xl bg-moss/20 border border-moss/30 text-moss text-sm inline-flex items-center gap-2">
+                <div className="px-3 py-2 rounded-xl bg-[var(--success)]/20 border border-[var(--success)]/30 text-[var(--success)] text-sm inline-flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4" />
                   {successMessage}
                 </div>
@@ -650,7 +650,7 @@ export function MchsRegistrationPanel() {
             </h3>
 
             {error && (
-              <div className="px-3 py-2 rounded-xl bg-red-600/20 border border-red-600/30 text-red-200 text-sm">
+              <div className="px-3 py-2 rounded-xl bg-[var(--danger)]/20 border border-[var(--danger)]/30 text-[var(--danger)] text-sm">
                 {error}
               </div>
             )}
