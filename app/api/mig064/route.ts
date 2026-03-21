@@ -1,46 +1,46 @@
-/**
- * GET /api/mig064
- * Idempotent migration: creates agent_memory table.
- */
-
-import { NextResponse } from 'next/server';
+import fs from 'fs';
+import path from 'path';
 import { pool } from '@/lib/db-pool';
 
-export const dynamic = 'force-dynamic';
+/**
+ * GET /api/mig064
+ * Runs migration 064: Safety & Capacity Layer
+ */
 
-export async function GET() {
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const cronSecret = url.searchParams.get('secret');
+  const authHeader = req.headers.get('authorization');
+
+  if (cronSecret !== process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return Response.json(
+      { error: 'Unauthorized' },
+      { status: 401 }
+    );
+  }
+
   try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS agent_memory (
-        id          UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
-        agent_id    VARCHAR(50)  NOT NULL,
-        memory_type VARCHAR(50)  NOT NULL,
-        key         VARCHAR(200) NOT NULL,
-        value       JSONB        NOT NULL DEFAULT '{}',
-        confidence  NUMERIC(3,2) DEFAULT 1.00,
-        source      VARCHAR(100),
-        expires_at  TIMESTAMPTZ,
-        created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
-        updated_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
-        UNIQUE(agent_id, memory_type, key)
-      )
-    `);
+    const migrationPath = path.join(process.cwd(), 'migrations', '064_safety_capacity_layer.sql');
+    const sql = fs.readFileSync(migrationPath, 'utf-8');
 
-    await pool.query(`
-      CREATE INDEX IF NOT EXISTS idx_agent_memory_agent
-        ON agent_memory(agent_id, memory_type, updated_at DESC)
-    `);
+    const statements = sql.split(';').filter(s => s.trim());
 
-    await pool.query(`
-      CREATE INDEX IF NOT EXISTS idx_agent_memory_expires
-        ON agent_memory(expires_at)
-        WHERE expires_at IS NOT NULL
-    `);
+    for (const statement of statements) {
+      if (!statement.trim()) continue;
+      await pool.query(statement);
+    }
 
-    return NextResponse.json({ success: true, message: 'Migration 064 applied: agent_memory' });
+    return Response.json({
+      success: true,
+      message: 'Migration 064 completed',
+      statements_executed: statements.length,
+    });
   } catch (error) {
-    return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : String(error) },
+    return Response.json(
+      {
+        success: false,
+        error: (error as Error).message,
+      },
       { status: 500 }
     );
   }
