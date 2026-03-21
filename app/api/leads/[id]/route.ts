@@ -74,3 +74,24 @@ export async function GET(
 
   return NextResponse.json({ lead: res.rows[0] });
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const authError = await requireAdmin(request);
+  if (authError) return authError;
+
+  const { id } = await params;
+
+  const res = await pool.query<{ id: string }>(
+    'DELETE FROM leads WHERE id = $1 RETURNING id',
+    [id]
+  );
+
+  if (!res.rows.length) {
+    return NextResponse.json({ error: 'Лид не найден' }, { status: 404 });
+  }
+
+  return NextResponse.json({ success: true });
+}

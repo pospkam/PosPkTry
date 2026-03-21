@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Phone, MessageSquare, Clock, ChevronDown, ChevronUp, Copy, Check, RefreshCw, Search, MapPin, Calendar } from 'lucide-react';
+import { Phone, MessageSquare, Clock, ChevronDown, ChevronUp, Copy, Check, RefreshCw, Search, MapPin, Calendar, Trash2 } from 'lucide-react';
 
 type LeadStatus = 'new' | 'contacted' | 'qualified' | 'converted' | 'lost';
 
@@ -103,6 +103,31 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
+function DeleteConfirmModal({ name, onConfirm, onCancel }: { name: string; onConfirm: () => void; onCancel: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg w-full max-w-sm p-6 shadow-xl">
+        <h3 className="font-semibold text-[var(--text-primary)] mb-2">Удалить лид?</h3>
+        <p className="text-sm text-[var(--text-secondary)] mb-6">{name}</p>
+        <div className="flex gap-3 justify-end">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 text-sm text-[var(--text-secondary)] border border-[var(--border)] rounded-lg hover:bg-[var(--bg-hover)] transition-colors"
+          >
+            Отмена
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 text-sm bg-[var(--danger)] text-white rounded-lg hover:opacity-90 transition-opacity"
+          >
+            Удалить
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SourceDataBlock({ sd }: { sd: LeadSourceData }) {
   const interests = sd.interests ?? [];
   const dateFrom  = sd.date_from ?? sd.arrival;
@@ -164,11 +189,13 @@ function SourceDataBlock({ sd }: { sd: LeadSourceData }) {
   );
 }
 
-function LeadCard({ lead, onUpdate }: { lead: Lead; onUpdate: (id: string, patch: Partial<Lead>) => void }) {
+function LeadCard({ lead, onUpdate, onDelete }: { lead: Lead; onUpdate: (id: string, patch: Partial<Lead>) => void; onDelete: (id: string) => void }) {
   const [open, setOpen]           = useState(false);
   const [notes, setNotes]         = useState(lead.notes ?? '');
   const [saving, setSaving]       = useState(false);
   const [localStatus, setLocalStatus] = useState<LeadStatus>(lead.status);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const save = useCallback(async (newStatus?: LeadStatus, skipNotes = false) => {
     setSaving(true);
@@ -195,6 +222,19 @@ function LeadCard({ lead, onUpdate }: { lead: Lead; onUpdate: (id: string, patch
   const handleStatusClick = (s: LeadStatus) => {
     setLocalStatus(s);
     save(s, true);
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/leads/${lead.id}`, { method: 'DELETE' });
+      if (res.ok) {
+        onDelete(lead.id);
+        setShowDeleteConfirm(false);
+      }
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const sm        = STATUS_META[localStatus];
@@ -244,9 +284,29 @@ function LeadCard({ lead, onUpdate }: { lead: Lead; onUpdate: (id: string, patch
 
         <div className="flex items-center gap-2 shrink-0">
           <span className="text-xs text-[var(--text-muted)]">{formatDate(lead.created_at)}</span>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowDeleteConfirm(true);
+            }}
+            disabled={deleting}
+            className="p-1 text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--bg-hover)] rounded transition-colors"
+            title="Удалить лид"
+          >
+            <Trash2 size={16} />
+          </button>
           {open ? <ChevronUp size={16} className="text-[var(--text-muted)]" /> : <ChevronDown size={16} className="text-[var(--text-muted)]" />}
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <DeleteConfirmModal
+          name={lead.name}
+          onConfirm={handleDelete}
+          onCancel={() => setShowDeleteConfirm(false)}
+        />
+      )}
 
       {/* Expanded */}
       {open && (
@@ -371,6 +431,11 @@ export function LeadsClient() {
     loadCounts();
   }, [loadCounts]);
 
+  const handleDelete = useCallback((id: string) => {
+    setLeads(ls => ls.filter(l => l.id !== id));
+    loadCounts();
+  }, [loadCounts]);
+
   // Client-side search
   const filtered = search.trim()
     ? leads.filter(l =>
@@ -449,7 +514,7 @@ export function LeadsClient() {
       ) : (
         <div className="space-y-3">
           {filtered.map(lead => (
-            <LeadCard key={lead.id} lead={lead} onUpdate={handleUpdate} />
+            <LeadCard key={lead.id} lead={lead} onUpdate={handleUpdate} onDelete={handleDelete} />
           ))}
 
           {/* Load more — only when not searching */}
