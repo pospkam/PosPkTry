@@ -847,6 +847,20 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // Admin free-form → PlatformAgent intent dispatch (с fallback на Кузьмич)
+      if (admin) {
+        try {
+          const agentResult = await PlatformAgent.dispatch({ message: text, role: 'admin' });
+          if (agentResult.intent !== 'unknown') {
+            await sendHTML(chatId, agentResult.response);
+            return NextResponse.json({ ok: true });
+          }
+          // unknown intent → fall through to kuzmichReply below
+        } catch {
+          // на ошибке агента — тоже уходим в kuzmichReply
+        }
+      }
+
       // Regular AI chat
       const answer = await kuzmichReply(text, chatId);
       await sendHTML(chatId, answer);

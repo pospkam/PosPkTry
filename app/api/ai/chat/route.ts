@@ -13,6 +13,7 @@ import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
 import { callAIWaterfall } from '@/lib/ai/providers';
 import { getUserFromRequest } from '@/lib/auth/jwt';
 import { extractAndEncryptInterests } from '@/lib/ai/interest-extractor';
+import { PlatformAgent } from '@/lib/agents/platform-agent';
 
 export const dynamic = 'force-dynamic';
 
@@ -138,7 +139,19 @@ export async function POST(request: NextRequest) {
     const systemPrompt = getSystemPrompt(safeRole);
     const messagesForAI = buildMessageHistory(systemPrompt, history, 10);
 
-    const answer = await callAIWaterfall(messagesForAI);
+    // PlatformAgent intercept: admin/operator с распознанным интентом
+    let answer: string | null = null;
+    if (isAuthenticated && user && (safeRole === 'admin' || safeRole === 'operator')) {
+      try {
+        const agentResult = await PlatformAgent.dispatch({
+          message: message.trim(),
+          userId: user.userId ? parseInt(user.userId, 10) : undefined,
+          role: safeRole,
+        });
+        if (agentResult.intent !== 'unknown') answer = agentResult.response;
+      } catch { /* fall through to raw AI */ }
+    }
+    answer ??= await callAIWaterfall(messagesForAI);
 
     const assistantMsg: ChatMessage = { role: 'assistant', content: answer, timestamp: Date.now() };
     history.push(assistantMsg);
