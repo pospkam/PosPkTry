@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { productId, optionId, availabilityId, unitItems, contact, notes } = parsed.data;
+  const { productId, optionId, availabilityId, unitItems, contact, notes, resellerReference } = parsed.data;
 
   // Parse date from availabilityId (format: productId-optionId-YYYY-MM-DD)
   const datePart = availabilityId.split('-').slice(-3).join('-');
@@ -59,6 +59,7 @@ export async function POST(request: NextRequest) {
     contactPhone: contact?.phoneNumber,
     notes,
     apiKeyId: authResult.id,
+    resellerReference,
   });
 
   if ('error' in result) {

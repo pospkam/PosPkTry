@@ -153,17 +153,20 @@ export async function createBooking(data: {
   contactPhone?: string;
   notes?: string;
   apiKeyId: string;
+  resellerReference?: string;
 }) {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
 
-    // Idempotency: same availabilityId + apiKeyId = return existing booking
-    const { rows: existing } = await client.query(
-      `SELECT octo_uuid FROM operator_bookings
-       WHERE availability_id = $1 AND octo_api_key_id = $2 AND deleted_at IS NULL`,
-      [data.availabilityId, data.apiKeyId]
-    );
+    // Idempotency: resellerReference (если передан) или availabilityId + apiKeyId
+    const idempotencyQuery = data.resellerReference
+      ? `SELECT octo_uuid FROM operator_bookings
+         WHERE reseller_reference = $1 AND octo_api_key_id = $2 AND deleted_at IS NULL`
+      : `SELECT octo_uuid FROM operator_bookings
+         WHERE availability_id = $1 AND octo_api_key_id = $2 AND deleted_at IS NULL`;
+    const idempotencyParam = data.resellerReference ?? data.availabilityId;
+    const { rows: existing } = await client.query(idempotencyQuery, [idempotencyParam, data.apiKeyId]);
     if (existing.length > 0) {
       await client.query('ROLLBACK');
       const full = await getBookingByUuid(existing[0].octo_uuid);
@@ -197,6 +200,23 @@ export async function createBooking(data: {
     const totalPrice = adultPrice * data.adultCount + childPrice * data.childCount;
     const participants = data.adultCount + data.childCount;
     const holdExpiresAt = new Date(Date.now() + 30 * 60_000).toISOString();
+
+    // Проверка слотов с блокировкой строки (FOR UPDATE SKIP LOCKED)
+    const slotCheck = await client.query<{ id: string; available_slots: number; booked_slots: number }>(
+      `SELECT id, available_slots, booked_slots
+       FROM tour_availability
+       WHERE operator_tour_id = $1 AND date = $2
+       FOR UPDATE SKIP LOCKED`,
+      [data.tourId, data.bookingDate]
+    );
+    if (slotCheck.rows.length > 0) {
+      const slot = slotCheck.rows[0];
+      const remaining = slot.available_slots - slot.booked_slots;
+      if (remaining < participants) {
+        await client.query('ROLLBACK');
+        return { error: 'AVAILABILITY_SOLD_OUT' };
+      }
+    }
 
     // Increment booked_slots if calendar-based
     await client.query(
