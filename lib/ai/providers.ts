@@ -1,9 +1,51 @@
 /**
  * Shared AI provider functions — waterfall pattern.
- * OpenRouter (GPT-4o-mini — cost-optimized) → xAI → Minimax → Anthropic
+ * MiMo-V2-Pro (Xiaomi) → OpenRouter (GPT-4o-mini) → xAI (Grok) → Anthropic (Haiku)
+ *
+ * Env vars:
+ *   XIAOMI_API_KEY          — Xiaomi MiMo ($1/1M tokens, 1M context)
+ *   OPENROUTER_API_KEY      — OpenRouter GPT-4o-mini
+ *   XAI_API_KEY             — xAI Grok-4
+ *   ANTHROPIC_API_KEY       — Claude Haiku (fallback)
+ *   MINIMAX_API_KEY         — Minimax (резерв, отдельный от основного waterfall)
  */
 
 import type { ChatMessage } from '@/lib/ai/prompts';
+
+// ── Xiaomi MiMo-V2-Pro ────────────────────────────────────────
+export async function callMiMo(messages: ChatMessage[]): Promise<string | null> {
+  const apiKey = process.env.XIAOMI_API_KEY;
+  if (!apiKey) return null;
+
+  try {
+    const payload = messages.map(({ role, content }) => ({ role, content }));
+    const res = await fetch('https://api.xiaomimimo.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'MiMo-V2-Pro',
+        temperature: 0.4,
+        max_tokens: 800,
+        messages: payload,
+      }),
+      signal: AbortSignal.timeout(20_000),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      console.error(`[AI] MiMo ${res.status}:`, errText.slice(0, 200));
+      return null;
+    }
+    const data = await res.json();
+    return data?.choices?.[0]?.message?.content ?? null;
+  } catch (e) {
+    console.error('[AI] MiMo exception:', e instanceof Error ? e.message : String(e));
+    return null;
+  }
+}
 
 // ── OpenRouter ─────────────────────────────────────────────────
 export async function callOpenrouter(messages: ChatMessage[]): Promise<string | null> {
@@ -180,11 +222,11 @@ export async function callAnthropic(messages: ChatMessage[]): Promise<string | n
 }
 
 // ── Waterfall: пробует провайдеров по очереди ─────────────────
-// OpenRouter (GPT-4o-mini) → xAI → Minimax → Anthropic
+// MiMo-V2-Pro → OpenRouter → xAI → Anthropic
 export async function callAIWaterfall(messages: ChatMessage[]): Promise<string> {
-  let answer = await callOpenrouter(messages);
+  let answer = await callMiMo(messages);
+  if (!answer) answer = await callOpenrouter(messages);
   if (!answer) answer = await callXai(messages);
-  if (!answer) answer = await callMinimax(messages);
   if (!answer) answer = await callAnthropic(messages);
   return answer ?? 'Извините, сервис временно недоступен. Попробуйте позже.';
 }
