@@ -63,6 +63,8 @@ const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/octo': 'ALL',               // OCTO API — авторизация через Bearer token внутри
   '/api/apply-op-tours-cols': ['GET'], // operator_tours колонки + marketplace view (migration 056)
   '/api/link-fishingkam-tours': ['GET'], // линкует operator_tours kamchatskaya-rybalka → agent_route_knowledge
+  '/api/setup-rafting-tour': ['POST'], // create rafting tour (temporary)
+  '/api/exec-migration-060': ['GET'], // execute migration 060
 };
 
 const API_ROLE_REQUIREMENTS: Record<string, AuthRole> = {

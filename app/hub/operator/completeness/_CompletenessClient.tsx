@@ -44,9 +44,13 @@ const FIELD_LABELS: Record<string, string> = {
   not_included: 'Что не включено',
   what_to_bring: 'Что взять с собой',
   location_name: 'Название места',
+  latitude: 'Широта на карте',
+  longitude: 'Долгота на карте',
   coordinates: 'Координаты на карте',
   duration_hours: 'Длительность (часы)',
+  duration_type: 'Тип длительности',
   price_unit: 'Единица цены',
+  notes: 'Интересные факты',
   transportation: 'Способы транспорта',
 };
 
