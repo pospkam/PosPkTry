@@ -1,94 +1,162 @@
 /**
  * POST /api/telegram/admin
- * Личный admin-бот владельца. Работает 24/7 независимо от локальной сессии.
- * Токен: TELEGRAM_ADMIN_BOT_TOKEN (отдельный от KuzmichKam_bot)
+ * Личный admin-бот владельца (@tourhab_bot). Работает 24/7.
+ * Вызывает функции напрямую — не зависит от CRON_SECRET.
  *
- * Команды:
- *   /health   — проверка системы
- *   /digest   — дайджест прямо сейчас
- *   /kuzmich  — запустить пост Кузьмича
- *   /leads    — статус лидов
- *   /stats    — краткая статистика БД
- *   любой текст — Claude отвечает с контекстом платформы
- *
- * Безопасность: принимает сообщения только от TELEGRAM_OWNER_ID
+ * Env vars (Timeweb):
+ *   TELEGRAM_ADMIN_BOT_TOKEN — токен @tourhab_bot
+ *   TELEGRAM_OWNER_ID        — Telegram user ID владельца (171286547)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { pool } from '@/lib/db-pool';
-import { callAnthropic } from '@/lib/ai/providers';
+import { callAnthropic, callMiMo } from '@/lib/ai/providers';
+import { postKuzmichRoute, postKuzmichTip } from '@/lib/notifications/telegram-channel';
 import type { ChatMessage } from '@/lib/ai/prompts';
 
 export const dynamic = 'force-dynamic';
 
-// ── Telegram helpers ──────────────────────────────────────────────────────────
-
-async function tg(method: string, body: Record<string, unknown>): Promise<{ ok: boolean }> {
-  const token = process.env.TELEGRAM_ADMIN_BOT_TOKEN;
-  if (!token) return { ok: false };
-  const res = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  }).catch(() => null);
-  if (!res) return { ok: false };
-  return res.json() as Promise<{ ok: boolean }>;
-}
+// ── Telegram helper ───────────────────────────────────────────────────────────
 
 async function reply(chatId: number, text: string): Promise<void> {
-  await tg('sendMessage', { chat_id: chatId, text, parse_mode: 'HTML' });
+  const token = process.env.TELEGRAM_ADMIN_BOT_TOKEN;
+  if (!token) return;
+  await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML', disable_web_page_preview: true }),
+  }).catch(() => {});
 }
 
-// ── Platform data helpers ─────────────────────────────────────────────────────
+// ── Platform stats ────────────────────────────────────────────────────────────
 
-async function getQuickStats(): Promise<string> {
+async function getStats(): Promise<string> {
   try {
-    const [leads, bookings, users, tours, heldPayments] = await Promise.all([
-      pool.query<{ cnt: string; new_cnt: string }>(
-        `SELECT COUNT(*) as cnt, COUNT(*) FILTER (WHERE status='new') as new_cnt FROM leads`
+    const [leads, bookings, users, tours, held, views] = await Promise.all([
+      pool.query<{ total: string; new_cnt: string }>(
+        `SELECT COUNT(*) as total,
+                COUNT(*) FILTER (WHERE status='new') as new_cnt
+         FROM leads`
       ),
-      pool.query<{ cnt: string }>(
-        `SELECT COUNT(*) as cnt FROM operator_bookings WHERE created_at >= CURRENT_DATE`
+      pool.query<{ today: string; pending: string }>(
+        `SELECT COUNT(*) FILTER (WHERE created_at >= CURRENT_DATE) as today,
+                COUNT(*) FILTER (WHERE booking_status='new') as pending
+         FROM operator_bookings`
       ),
       pool.query<{ cnt: string }>(`SELECT COUNT(*) as cnt FROM users`),
       pool.query<{ cnt: string }>(
         `SELECT COUNT(*) as cnt FROM operator_tours WHERE is_active = true`
       ),
-      pool.query<{ cnt: string }>(
-        `SELECT COUNT(*) as cnt FROM tour_payments WHERE status = 'HELD'`
+      pool.query<{ cnt: string; amt: string }>(
+        `SELECT COUNT(*) as cnt,
+                COALESCE(SUM(retail_amount),0) as amt
+         FROM tour_payments WHERE status='HELD'`
       ),
+      pool.query<{ cnt: string }>(
+        `SELECT COUNT(*) as cnt FROM page_views WHERE created_at >= CURRENT_DATE`
+      ).catch(() => ({ rows: [{ cnt: 'n/a' }] })),
     ]);
 
+    const heldAmt = parseFloat(held.rows[0]?.amt ?? '0');
     return [
-      `Лиды: ${leads.rows[0]?.cnt ?? 0} всего, ${leads.rows[0]?.new_cnt ?? 0} новых`,
-      `Брони сегодня: ${bookings.rows[0]?.cnt ?? 0}`,
-      `Пользователей: ${users.rows[0]?.cnt ?? 0}`,
-      `Активных туров: ${tours.rows[0]?.cnt ?? 0}`,
-      `Платежей HELD: ${heldPayments.rows[0]?.cnt ?? 0}`,
+      `Лиды: ${leads.rows[0]?.total ?? 0} всего, ${leads.rows[0]?.new_cnt ?? 0} новых`,
+      `Брони сегодня: ${bookings.rows[0]?.today ?? 0} | ожидают: ${bookings.rows[0]?.pending ?? 0}`,
+      `HELD-платежи: ${held.rows[0]?.cnt ?? 0} шт. на ${heldAmt.toLocaleString('ru-RU')} руб`,
+      `Пользователей: ${users.rows[0]?.cnt ?? 0} | Туров: ${tours.rows[0]?.cnt ?? 0}`,
+      `Просмотров сегодня: ${views.rows[0]?.cnt ?? 0}`,
     ].join('\n');
-  } catch {
-    return 'Ошибка получения данных';
+  } catch (e) {
+    return `Ошибка БД: ${e instanceof Error ? e.message : 'unknown'}`;
   }
 }
 
-async function getLeadsDetail(): Promise<string> {
+async function getLeads(): Promise<string> {
   try {
     const res = await pool.query<{
-      id: string; name: string; phone: string;
-      status: string; created_at: Date; route_title: string | null;
+      name: string; phone: string; status: string;
+      route_title: string | null; created_at: Date;
     }>(
-      `SELECT id, name, phone, status, created_at, route_title
-       FROM leads ORDER BY created_at DESC LIMIT 10`
+      `SELECT name, phone, status, route_title, created_at
+       FROM leads ORDER BY created_at DESC LIMIT 8`
     );
     if (!res.rows.length) return 'Лидов нет';
     return res.rows.map(l =>
-      `${l.name} | ${l.phone} | ${l.status} | ${l.route_title ?? '—'} | ${
-        new Date(l.created_at).toLocaleDateString('ru-RU')
-      }`
+      `${l.name} | ${l.phone} | ${l.status}${l.route_title ? ' | ' + l.route_title.slice(0, 25) : ''}`
     ).join('\n');
-  } catch {
-    return 'Ошибка';
-  }
+  } catch { return 'Ошибка получения лидов'; }
+}
+
+// ── AI health check ───────────────────────────────────────────────────────────
+
+async function checkHealth(): Promise<string> {
+  const ping: ChatMessage[] = [
+    { role: 'system', content: 'Ты помощник.' },
+    { role: 'user', content: 'ок' },
+  ];
+
+  const probe = async (fn: (m: ChatMessage[]) => Promise<string | null>): Promise<boolean> => {
+    try {
+      const r = await Promise.race([
+        fn(ping),
+        new Promise<null>((res) => setTimeout(() => res(null), 7000)),
+      ]);
+      return !!r;
+    } catch { return false; }
+  };
+
+  const [mimoOk, anthropicOk] = await Promise.all([
+    probe(callMiMo),
+    probe(callAnthropic),
+  ]);
+
+  // DB checks
+  const issues: string[] = [];
+  try {
+    const held = await pool.query<{ cnt: string }>(
+      `SELECT COUNT(*) as cnt FROM tour_payments
+       WHERE status='HELD' AND release_after < NOW() - INTERVAL '2 hours'`
+    );
+    const n = parseInt(held.rows[0]?.cnt ?? '0', 10);
+    if (n > 0) issues.push(`${n} HELD-платежей просрочены`);
+  } catch { issues.push('Ошибка проверки платежей'); }
+
+  try {
+    const stuck = await pool.query<{ cnt: string }>(
+      `SELECT COUNT(*) as cnt FROM leads WHERE status='new' AND created_at < NOW() - INTERVAL '6 hours'`
+    );
+    const n = parseInt(stuck.rows[0]?.cnt ?? '0', 10);
+    if (n > 3) issues.push(`${n} лидов без обработки > 6ч`);
+  } catch { /* skip */ }
+
+  return [
+    `AI: MiMo=${mimoOk ? 'OK' : 'X'} | Anthropic=${anthropicOk ? 'OK' : 'X'}`,
+    `БД: ${issues.length === 0 ? 'OK' : issues.join('; ')}`,
+    `Сайт: https://tourhab.ru`,
+  ].join('\n');
+}
+
+// ── Claude digest ─────────────────────────────────────────────────────────────
+
+async function runDigest(): Promise<string> {
+  const stats = await getStats();
+  const date = new Date().toLocaleDateString('ru-RU', {
+    timeZone: 'Asia/Kamchatka', day: 'numeric', month: 'long',
+  });
+
+  const messages: ChatMessage[] = [
+    {
+      role: 'system',
+      content: `Ты AI-директор туристической платформы TourHab (Камчатка).
+Анализируй метрики кратко. Дай 1 строку общей оценки и 3 приоритета на день.`,
+    },
+    {
+      role: 'user',
+      content: `Метрики за ${date}:\n${stats}\n\nДай оценку и 3 приоритета.`,
+    },
+  ];
+
+  const answer = await callAnthropic(messages);
+  return answer ?? 'Claude временно недоступен';
 }
 
 // ── Command handlers ──────────────────────────────────────────────────────────
@@ -98,156 +166,104 @@ async function handleCommand(cmd: string, chatId: number): Promise<void> {
     case '/start':
     case '/help':
       await reply(chatId, [
-        '<b>TourHab Admin Bot</b>',
+        '<b>TourHab Admin</b>',
         '',
-        '/health — состояние системы',
-        '/digest — дайджест + анализ Claude',
-        '/kuzmich — пост Кузьмича прямо сейчас',
-        '/leads — последние 10 лидов',
-        '/stats — статистика платформы',
+        '/health — AI + БД',
+        '/stats — цифры платформы',
+        '/leads — последние лиды',
+        '/digest — анализ Claude',
+        '/kuzmich — пост маршрута',
+        '/tip — совет Кузьмича',
         '',
-        'Или пиши вопрос — отвечу с данными платформы',
+        'Любой вопрос — Claude ответит с данными платформы',
       ].join('\n'));
       break;
 
-    case '/health': {
+    case '/health':
       await reply(chatId, 'Проверяю...');
-      const cronSecret = process.env.CRON_SECRET;
-      if (!cronSecret) { await reply(chatId, 'CRON_SECRET не задан'); return; }
-      try {
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tourhab.ru';
-        const res = await fetch(`${appUrl}/api/cron/health?secret=${cronSecret}`, {
-          signal: AbortSignal.timeout(20_000),
-        });
-        const data = await res.json() as Record<string, unknown>;
-        const ai = data.ai as Record<string, boolean> | undefined;
-        const issues = data.issues as Array<{ level: string; text: string }> | undefined;
-        const lines = [
-          data.ok ? 'Система: OK' : 'Система: проблемы',
-          `AI: MiMo=${ai?.mimo ? 'OK' : 'X'} OR=${ai?.openrouter ? 'OK' : 'X'} Ant=${ai?.anthropic ? 'OK' : 'X'}`,
-          ...(issues?.length ? issues.map(i => `${i.level.toUpperCase()}: ${i.text}`) : ['Проблем не обнаружено']),
-        ];
-        await reply(chatId, lines.join('\n'));
-      } catch {
-        await reply(chatId, 'Health endpoint недоступен');
+      await reply(chatId, await checkHealth());
+      break;
+
+    case '/stats':
+      await reply(chatId, '<b>Статистика</b>\n\n' + await getStats());
+      break;
+
+    case '/leads':
+      await reply(chatId, '<b>Последние лиды</b>\n\n<code>' + await getLeads() + '</code>');
+      break;
+
+    case '/digest':
+      await reply(chatId, 'Анализирую...');
+      await reply(chatId, '<b>Дайджест Claude</b>\n\n' + await runDigest());
+      break;
+
+    case '/kuzmich':
+      await reply(chatId, 'Публикую маршрут...');
+      {
+        const r = await postKuzmichRoute();
+        await reply(chatId, r.ok ? `Опубликовано (${r.routeId ?? 'ok'})` : `Ошибка: ${r.error ?? 'unknown'}`);
       }
       break;
-    }
 
-    case '/digest': {
-      await reply(chatId, 'Собираю метрики и спрашиваю Claude...');
-      const cronSecret = process.env.CRON_SECRET;
-      if (!cronSecret) { await reply(chatId, 'CRON_SECRET не задан'); return; }
-      try {
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tourhab.ru';
-        const res = await fetch(`${appUrl}/api/cron/digest?secret=${cronSecret}`, {
-          signal: AbortSignal.timeout(30_000),
-        });
-        const data = await res.json() as { ok: boolean; analysis?: string };
-        if (data.ok && data.analysis) {
-          await reply(chatId, `<b>Дайджест готов</b>\n\n${data.analysis}`);
-        } else {
-          await reply(chatId, 'Дайджест не удалось получить');
-        }
-      } catch {
-        await reply(chatId, 'Digest endpoint недоступен');
+    case '/tip':
+      await reply(chatId, 'Публикую совет...');
+      {
+        const r = await postKuzmichTip();
+        await reply(chatId, r.ok ? 'Совет опубликован' : `Ошибка: ${r.error ?? 'unknown'}`);
       }
       break;
-    }
-
-    case '/kuzmich': {
-      await reply(chatId, 'Запускаю Кузьмича...');
-      const cronSecret = process.env.CRON_SECRET;
-      if (!cronSecret) { await reply(chatId, 'CRON_SECRET не задан'); return; }
-      try {
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tourhab.ru';
-        const res = await fetch(
-          `${appUrl}/api/cron/kuzmich?type=route&secret=${cronSecret}`,
-          { signal: AbortSignal.timeout(30_000) }
-        );
-        const data = await res.json() as { ok?: boolean; type?: string; routeId?: string };
-        await reply(chatId, data.ok ? `Кузьмич опубликовал пост (route ${data.routeId ?? ''})` : 'Не удалось опубликовать');
-      } catch {
-        await reply(chatId, 'Kuzmich endpoint недоступен');
-      }
-      break;
-    }
-
-    case '/leads': {
-      const detail = await getLeadsDetail();
-      await reply(chatId, `<b>Последние лиды</b>\n\n<code>${detail}</code>`);
-      break;
-    }
-
-    case '/stats': {
-      const stats = await getQuickStats();
-      await reply(chatId, `<b>Статистика TourHab</b>\n\n${stats}`);
-      break;
-    }
 
     default:
-      await reply(chatId, `Неизвестная команда: ${cmd}\nНапиши /help`);
+      await reply(chatId, `Неизвестная команда. /help`);
   }
 }
 
-// ── Free-text: Claude с контекстом платформы ──────────────────────────────────
+// ── Free text → Claude ────────────────────────────────────────────────────────
 
 async function handleFreeText(text: string, chatId: number): Promise<void> {
-  const stats = await getQuickStats();
-
+  const stats = await getStats();
   const messages: ChatMessage[] = [
     {
       role: 'system',
-      content: `Ты AI-директор туристической платформы TourHab (Камчатка).
-Отвечаешь владельцу платформы коротко и по делу.
-Текущие данные платформы:\n${stats}
-Дата: ${new Date().toLocaleDateString('ru-RU', { timeZone: 'Asia/Kamchatka' })} KMT`,
+      content: `Ты AI-директор платформы TourHab (Камчатка). Отвечаешь владельцу кратко и по делу.
+Данные платформы прямо сейчас:\n${stats}`,
     },
     { role: 'user', content: text },
   ];
-
-  const answer = await callAnthropic(messages);
-  await reply(chatId, answer ?? 'Не удалось получить ответ от AI');
+  const answer = (await callAnthropic(messages)) ?? (await callMiMo(messages)) ?? 'AI недоступен';
+  await reply(chatId, answer);
 }
 
-// ── Webhook handler ───────────────────────────────────────────────────────────
+// ── Webhook ───────────────────────────────────────────────────────────────────
 
-interface TelegramUpdate {
-  message?: {
-    chat: { id: number };
-    from?: { id: number };
-    text?: string;
-  };
+interface TgUpdate {
+  message?: { chat: { id: number }; from?: { id: number }; text?: string };
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    const update = await request.json() as TelegramUpdate;
+    const update = await request.json() as TgUpdate;
     const msg = update.message;
     if (!msg?.text) return NextResponse.json({ ok: true });
 
     const chatId = msg.chat.id;
     const fromId = msg.from?.id;
-    const ownerId = parseInt(process.env.TELEGRAM_OWNER_ID ?? '0', 10);
+    const ownerId = parseInt(process.env.TELEGRAM_OWNER_ID ?? '171286547', 10);
 
-    // Только владелец
-    if (!ownerId || fromId !== ownerId) {
-      await reply(chatId, 'Доступ только для владельца платформы.');
+    if (fromId !== ownerId) {
+      await reply(chatId, 'Доступ закрыт.');
       return NextResponse.json({ ok: true });
     }
 
     const text = msg.text.trim();
-    const cmd = text.split(' ')[0]?.toLowerCase();
-    const isCommand = cmd?.startsWith('/');
+    const cmd = text.split(' ')[0]?.toLowerCase() ?? '';
 
-    if (isCommand) {
-      await handleCommand(cmd!, chatId);
+    if (cmd.startsWith('/')) {
+      await handleCommand(cmd, chatId);
     } else {
       await handleFreeText(text, chatId);
     }
+  } catch { /* silent */ }
 
-    return NextResponse.json({ ok: true });
-  } catch {
-    return NextResponse.json({ ok: true });
-  }
+  return NextResponse.json({ ok: true });
 }
