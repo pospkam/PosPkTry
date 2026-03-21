@@ -157,6 +157,32 @@ export default function CompletenessClient() {
     }
   };
 
+  const handleAutoFillAI = async (tourId: string, tourTitle: string) => {
+    try {
+      const loadingToast = toast.loading(`🤖 AI заполняет ${tourTitle}...`);
+      const res = await fetch('/api/operator/tours/auto-fill-ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tourId }),
+      });
+
+      const result = await res.json();
+      if (!result.success) throw new Error(result.error);
+
+      const filled = result.data.filled;
+      toast.dismiss(loadingToast);
+
+      if (filled > 0) {
+        toast.success(`✨ AI заполнил ${filled} полей!`);
+        await fetchData();
+      } else {
+        toast.error('Нечего заполнять');
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Ошибка AI');
+    }
+  };
+
   useEffect(() => {
     void fetchData();
   }, []);
@@ -390,6 +416,17 @@ export default function CompletenessClient() {
                         <p className="text-[var(--text-primary)] font-semibold mt-1">{tour.recommended_score}%</p>
                       </div>
                     </div>
+
+                    {/* AI Auto-fill button */}
+                    {(tour.missing_required.length > 0 || tour.missing_recommended.length > 0) && (
+                      <button
+                        onClick={() => handleAutoFillAI(tour.tour_id, tour.tour_title)}
+                        className="w-full mt-3 px-3 py-2 text-xs font-medium text-white bg-gradient-to-r from-[var(--accent)] to-[var(--ocean)] rounded hover:opacity-90 transition-opacity flex items-center justify-center gap-1.5"
+                      >
+                        <ZapIcon className="w-3.5 h-3.5" />
+                        Auto-fill AI (заполнить AI)
+                      </button>
+                    )}
                   </div>
                 )}
               </div>

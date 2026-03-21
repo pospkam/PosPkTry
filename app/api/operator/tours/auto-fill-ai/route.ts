@@ -1,0 +1,226 @@
+/**
+ * POST /api/operator/tours/auto-fill-ai
+ * AI agent to auto-fill missing tour fields based on existing data
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { pool } from '@/lib/db-pool';
+import { requireOperator } from '@/lib/auth/middleware';
+
+export const dynamic = 'force-dynamic';
+
+interface TourData {
+  id: string;
+  title: string;
+  description: string;
+  activity_type: string;
+  location_type: string;
+}
+
+interface AIFillResult {
+  short_description?: string;
+  difficulty?: string;
+  included?: string[];
+  not_included?: string[];
+  what_to_bring?: string[];
+  duration_hours?: number;
+  duration_type?: string;
+}
+
+async function generateTourFills(tour: TourData): Promise<AIFillResult> {
+  const prompt = `You are an expert travel guide assistant. Analyze this tour and generate realistic field values in JSON format.
+
+Tour Information:
+- Title: ${tour.title}
+- Description: ${tour.description}
+- Activity Type: ${tour.activity_type}
+- Location Type: ${tour.location_type}
+
+Generate the following JSON object with realistic values (respond ONLY with valid JSON, no markdown):
+{
+  "short_description": "One sentence summary (max 100 chars)",
+  "difficulty": "easy|moderate|hard",
+  "included": ["item1", "item2", "item3"],
+  "not_included": ["item1", "item2"],
+  "what_to_bring": ["item1", "item2", "item3", "item4"],
+  "duration_hours": 4.5,
+  "duration_type": "day|half_day|multi_day"
+}
+
+Rules:
+- difficulty: must be one of easy, moderate, hard
+- duration_type: day (full day), half_day (2-4h), multi_day (3+ days)
+- Generate realistic, specific items not generic ones
+- Focus on what would be needed for this type of activity
+- Keep arrays to 3-5 items max
+- For fishing: include rod, license, waders, bait, etc
+- For trekking: include water, sunscreen, proper shoes, etc`;
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': process.env.ANTHROPIC_API_KEY || '',
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: 'claude-opus-4-6',
+      max_tokens: 500,
+      messages: [{ role: 'user', content: prompt }],
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Claude API error: ${response.statusText}`);
+  }
+
+  const data = await response.json() as { content: Array<{ type: string; text: string }> };
+  const responseText =
+    data.content[0]?.type === 'text' ? data.content[0].text : '{}';
+
+  // Parse JSON response
+  const parsed = JSON.parse(responseText);
+
+  return {
+    short_description: parsed.short_description || undefined,
+    difficulty: parsed.difficulty || undefined,
+    included: parsed.included || undefined,
+    not_included: parsed.not_included || undefined,
+    what_to_bring: parsed.what_to_bring || undefined,
+    duration_hours: parsed.duration_hours || undefined,
+    duration_type: parsed.duration_type || undefined,
+  };
+}
+
+export async function POST(request: NextRequest) {
+  const userOrResponse = await requireOperator(request);
+  if (userOrResponse instanceof NextResponse) {
+    return userOrResponse;
+  }
+
+  const operatorId = userOrResponse.userId;
+
+  try {
+    const body = await request.json();
+    const { tourId } = body;
+
+    if (!tourId) {
+      return NextResponse.json({ error: 'Missing tourId' }, { status: 400 });
+    }
+
+    // Get tour data
+    const { rows: tours } = await pool.query<TourData>(
+      `SELECT id, title, description, activity_type, location_type
+       FROM operator_tours
+       WHERE id = $1 AND operator_id = $2 AND deleted_at IS NULL`,
+      [tourId, operatorId]
+    );
+
+    if (tours.length === 0) {
+      return NextResponse.json(
+        { error: 'Tour not found' },
+        { status: 404 }
+      );
+    }
+
+    const tour = tours[0];
+
+    // Validate required fields exist
+    if (!tour.title || !tour.description) {
+      return NextResponse.json(
+        {
+          error: 'Tour must have title and description before AI fill',
+        },
+        { status: 400 }
+      );
+    }
+
+    // Generate fills with AI
+    const fills = await generateTourFills(tour);
+
+    // Update tour with AI-generated data
+    const updates: { [key: string]: any } = {};
+    const values: any[] = [];
+    let paramIndex = 1;
+
+    if (fills.short_description) {
+      updates[`short_description`] = `$${paramIndex++}`;
+      values.push(fills.short_description);
+    }
+    if (fills.difficulty) {
+      updates[`difficulty`] = `$${paramIndex++}`;
+      values.push(fills.difficulty);
+    }
+    if (fills.included) {
+      updates[`included`] = `$${paramIndex++}`;
+      values.push(fills.included);
+    }
+    if (fills.not_included) {
+      updates[`not_included`] = `$${paramIndex++}`;
+      values.push(fills.not_included);
+    }
+    if (fills.what_to_bring) {
+      updates[`what_to_bring`] = `$${paramIndex++}`;
+      values.push(fills.what_to_bring);
+    }
+    if (fills.duration_hours) {
+      updates[`duration_hours`] = `$${paramIndex++}`;
+      values.push(fills.duration_hours);
+    }
+    if (fills.duration_type) {
+      updates[`duration_type`] = `$${paramIndex++}`;
+      values.push(fills.duration_type);
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({
+        success: true,
+        data: { filled: 0, fills: {} },
+      });
+    }
+
+    const setClause = Object.entries(updates)
+      .map(([key, val]) => `${key} = ${val}`)
+      .join(', ');
+
+    values.push(tourId);
+    const updateQuery = `
+      UPDATE operator_tours
+      SET ${setClause}, updated_at = NOW()
+      WHERE id = $${paramIndex}
+      RETURNING short_description, difficulty, included, not_included, what_to_bring, duration_hours, duration_type
+    `;
+
+    const { rows: updated } = await pool.query(updateQuery, values);
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        filled: Object.keys(updates).length,
+        fills: {
+          short_description: fills.short_description,
+          difficulty: fills.difficulty,
+          included: fills.included,
+          not_included: fills.not_included,
+          what_to_bring: fills.what_to_bring,
+          duration_hours: fills.duration_hours,
+          duration_type: fills.duration_type,
+        },
+      },
+    });
+  } catch (error) {
+    console.error('[tours/auto-fill-ai]', error);
+
+    if (error instanceof SyntaxError) {
+      return NextResponse.json(
+        { error: 'AI generated invalid response, please try again' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json(
+      { error: 'Failed to auto-fill tour' },
+      { status: 500 }
+    );
+  }
+}
