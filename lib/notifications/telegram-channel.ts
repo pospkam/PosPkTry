@@ -281,6 +281,32 @@ interface KuzmichRouteRow {
   activity_type: string | null;
   zone: string | null;
   kuzmich_review: string | null;
+  lat: number | null;
+  lng: number | null;
+}
+
+// Карта activity_type → фото из public/images/activities/ (fallback)
+const ACTIVITY_PHOTO: Record<string, string> = {
+  trekking:    '/images/activities/volcanoes.jpg',
+  fishing:     '/images/activities/fishing.jpg',
+  helicopter:  '/images/activities/helicopter.jpg',
+  thermal:     '/images/activities/hotsprings.jpg',
+  boat_trip:   '/images/activities/sea.jpg',
+  snowmobile:  '/images/activities/snowmobile.jpg',
+  bears:       '/images/hero/bears-kurilskoye.jpg',
+};
+
+function buildRoutePhotoUrl(r: KuzmichRouteRow): string | null {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tourhab.ru';
+  // 1. Яндекс Static Maps если есть координаты
+  if (r.lat && r.lng) {
+    const ll = `${r.lng},${r.lat}`;
+    return `https://static-maps.yandex.ru/1.x/?ll=${ll}&z=11&size=650,400&pt=${ll},pm2rdm&l=map`;
+  }
+  // 2. Тематическое фото по типу активности
+  const actPhoto = ACTIVITY_PHOTO[r.activity_type ?? ''];
+  if (actPhoto) return `${appUrl}${actPhoto}`;
+  return null;
 }
 
 /**
@@ -294,7 +320,7 @@ export async function postKuzmichRoute(): Promise<{ ok: boolean; routeId?: strin
 
   // Берём маршрут, который не постили последние 30 дней
   const pickResult = await query<KuzmichRouteRow>(`
-    SELECT id, title, description, location_type, activity_type, zone, kuzmich_review
+    SELECT id, title, description, location_type, activity_type, zone, kuzmich_review, lat, lng
     FROM agent_route_knowledge
     WHERE is_visible = TRUE
       AND id::text NOT IN (
@@ -334,7 +360,10 @@ export async function postKuzmichRoute(): Promise<{ ok: boolean; routeId?: strin
 - Не начинай с "Привет" или своего имени`;
 
   const text = await callAIWaterfallDirect([{ role: 'user', content: prompt }]);
-  const result = await tgPost(channelId, text);
+  const photoUrl = buildRoutePhotoUrl(r);
+  const result = photoUrl
+    ? await tgPostPhoto(channelId, photoUrl, text)
+    : await tgPost(channelId, text);
 
   if (result.ok) {
     try {
