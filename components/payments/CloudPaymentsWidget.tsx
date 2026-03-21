@@ -25,7 +25,7 @@ interface CPFailOptions { reasonCode?: number }
 
 declare global {
   interface Window {
-    cp: {
+    cp?: {
       CloudPayments: new () => {
         charge: (
           payment: Record<string, unknown>,

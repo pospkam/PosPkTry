@@ -31,6 +31,11 @@ const UpdateTripSchema = z.object({
   activities: z.array(z.string()).max(20).optional(),
   days: z.array(DayPlanSchema).max(30).optional(),
   transportByDay: z.record(z.string(), z.enum(['walking', 'jeep', 'helicopter', 'boat'])).optional(),
+  flightArrival: z.string().max(20).nullable().optional(),
+  flightDeparture: z.string().max(20).nullable().optional(),
+  flightArrivalTime: z.string().max(5).nullable().optional(),
+  flightDepartureTime: z.string().max(5).nullable().optional(),
+  needsAirportTransfer: z.boolean().optional(),
 });
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -86,13 +91,18 @@ export async function PATCH(request: NextRequest, ctx: RouteContext) {
 
     const { rows } = await pool.query<UserTripRow>(`
       UPDATE user_trips SET
-        title            = COALESCE($2, title),
-        arrival_date     = CASE WHEN $3::TEXT IS NOT NULL THEN $3::DATE ELSE arrival_date END,
-        departure_date   = CASE WHEN $4::TEXT IS NOT NULL THEN $4::DATE ELSE departure_date END,
-        places           = COALESCE($5, places),
-        activities       = COALESCE($6, activities),
-        days             = COALESCE($7, days),
-        transport_by_day = COALESCE($8, transport_by_day)
+        title                 = COALESCE($2, title),
+        arrival_date          = CASE WHEN $3::TEXT IS NOT NULL THEN $3::DATE ELSE arrival_date END,
+        departure_date        = CASE WHEN $4::TEXT IS NOT NULL THEN $4::DATE ELSE departure_date END,
+        places                = COALESCE($5, places),
+        activities            = COALESCE($6, activities),
+        days                  = COALESCE($7, days),
+        transport_by_day      = COALESCE($8, transport_by_day),
+        flight_arrival        = COALESCE($9, flight_arrival),
+        flight_departure      = COALESCE($10, flight_departure),
+        flight_arrival_time   = COALESCE($11, flight_arrival_time),
+        flight_departure_time = COALESCE($12, flight_departure_time),
+        needs_airport_transfer = COALESCE($13, needs_airport_transfer)
       WHERE id = $1
       RETURNING *
     `, [
@@ -104,6 +114,11 @@ export async function PATCH(request: NextRequest, ctx: RouteContext) {
       d.activities ?? null,
       d.days !== undefined ? JSON.stringify(d.days) : null,
       d.transportByDay !== undefined ? JSON.stringify(d.transportByDay) : null,
+      d.flightArrival !== undefined ? d.flightArrival : null,
+      d.flightDeparture !== undefined ? d.flightDeparture : null,
+      d.flightArrivalTime !== undefined ? d.flightArrivalTime : null,
+      d.flightDepartureTime !== undefined ? d.flightDepartureTime : null,
+      d.needsAirportTransfer !== undefined ? d.needsAirportTransfer : null,
     ]);
 
     return NextResponse.json({ success: true, data: rows[0] });

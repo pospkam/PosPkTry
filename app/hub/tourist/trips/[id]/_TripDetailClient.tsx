@@ -6,7 +6,7 @@ import { Protected } from '@/components/auth/Protected';
 import {
   ArrowLeft, Calendar, MapPin, Loader, AlertTriangle,
   Footprints, Truck, Anchor, Plane, ChevronDown, ChevronUp,
-  Phone, Check, Pencil,
+  Phone, Check, Pencil, PlaneLanding, PlaneTakeoff,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -27,6 +27,8 @@ interface TripDetail {
   title: string;
   arrival_date: string | null;
   departure_date: string | null;
+  flight_arrival: string | null;
+  flight_departure: string | null;
   places: string[];
   activities: string[];
   days: DayPlan[];
@@ -120,6 +122,8 @@ export function TripDetailClient({ tripId }: { tripId: string }) {
             trip_title: trip?.title,
             arrival: trip?.arrival_date,
             departure: trip?.departure_date,
+            flight_arrival: trip?.flight_arrival ?? undefined,
+            flight_departure: trip?.flight_departure ?? undefined,
             places: trip?.places,
             activities: trip?.activities,
           },
@@ -200,6 +204,18 @@ export function TripDetailClient({ tripId }: { tripId: string }) {
                 {trip.days.length} {trip.days.length === 1 ? 'день' : trip.days.length < 5 ? 'дня' : 'дней'}
               </span>
             )}
+            {trip.flight_arrival && (
+              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--ocean)]/10 text-[var(--ocean)] text-xs font-semibold">
+                <Plane className="w-3.5 h-3.5" />
+                {trip.flight_arrival}
+              </span>
+            )}
+            {trip.flight_departure && (
+              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--ocean)]/10 text-[var(--ocean)] text-xs font-semibold">
+                <Plane className="w-3.5 h-3.5 rotate-180" />
+                {trip.flight_departure}
+              </span>
+            )}
           </div>
 
           {trip.days.length > 0 && (
@@ -230,6 +246,9 @@ export function TripDetailClient({ tripId }: { tripId: string }) {
                   const transport = trip.transport_by_day[String(d.day)] ?? d.defaultTransport;
                   const TransIcon = TRANSPORT_ICONS[transport] ?? Footprints;
                   const priceAdd = TRANSPORT_PRICE[transport] ?? 0;
+                  const flightBadge = idx === 0 && trip.flight_arrival ? trip.flight_arrival
+                    : idx === trip.days.length - 1 && trip.flight_departure ? trip.flight_departure
+                    : null;
                   return (
                     <div key={d.day} className="flex items-center gap-3 px-5 py-3">
                       <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0"
@@ -237,7 +256,15 @@ export function TripDetailClient({ tripId }: { tripId: string }) {
                         {idx + 1}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-[var(--text-primary)] truncate">{d.title}</p>
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <p className="text-sm font-medium text-[var(--text-primary)] truncate">{d.title}</p>
+                          {flightBadge && (
+                            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-[var(--ocean)]/15 text-[var(--ocean)] text-[9px] font-bold shrink-0 whitespace-nowrap">
+                              <Plane className="w-2.5 h-2.5" />
+                              {flightBadge}
+                            </span>
+                          )}
+                        </div>
                         <p className="text-[11px] text-[var(--text-muted)]">
                           {ZONE_LABELS[d.zone] ?? d.zone}
                         </p>

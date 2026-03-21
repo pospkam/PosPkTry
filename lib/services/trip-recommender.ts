@@ -10,6 +10,8 @@ interface UserProfile {
   interests: string[];
   arrivalDate?: string;
   departureDate?: string;
+  flightArrivalTime?: string;   // "HH:MM"
+  needsAirportTransfer?: boolean;
 }
 
 interface ZoneRecommendation {
@@ -136,58 +138,124 @@ const ACTIVITY_DEFAULT_TRANSPORT: Record<string, TransportType> = {
   river:      'boat',
 };
 
+// Petropavlovsk-Kamchatsky airport area coords
+const PKC_COORDS: [number, number] = [53.01, 158.65];
+
 function generateDayPlans(
   zones: ZoneRecommendation[],
   interests: string[],
   tripDays: number,
+  arrivalTime?: string,
+  needsTransfer?: boolean,
 ): DayPlan[] {
   if (tripDays <= 0 || zones.length === 0) return [];
 
-  // Distribute days proportionally by zone score
-  const totalScore = zones.reduce((sum, z) => sum + z.score, 0) || 1;
-  const zoneDays = zones.map(z => ({
-    zone: z.zone,
-    count: Math.max(0, Math.round((z.score / totalScore) * tripDays)),
-  }));
-
-  // Ensure top zone gets at least 1 day
-  if (zoneDays[0]) zoneDays[0].count = Math.max(1, zoneDays[0].count);
-
-  // Adjust total to match tripDays
-  let total = zoneDays.reduce((s, z) => s + z.count, 0);
-  while (total > tripDays && zoneDays.length > 1) { zoneDays[zoneDays.length - 1].count = Math.max(0, zoneDays[zoneDays.length - 1].count - 1); total--; }
-  while (total < tripDays) { zoneDays[0].count++; total++; }
+  // For trips >= 3 days: reserve Day 1 (arrival) and last day (departure)
+  const hasBufferDays = tripDays >= 3;
+  const activeDays = hasBufferDays ? tripDays - 2 : tripDays;
+  const transferCost = needsTransfer ? 2500 : 0;
 
   const days: DayPlan[] = [];
-  let dayNum = 1;
 
-  for (const { zone, count } of zoneDays) {
-    if (count <= 0) continue;
+  // Day 1 — arrival buffer (content depends on arrival time)
+  if (hasBufferDays) {
+    const lightInterest = interests.find(i => ['thermal', 'hot_spring', 'trekking', 'mountain'].includes(i)) ?? 'thermal';
+    const [lightFrom, lightTo] = INTEREST_PRICE[lightInterest] ?? DEFAULT_PRICE;
 
-    const zoneInterests = ZONE_PRIMARY_INTERESTS[zone] ?? [];
-    const matchingInterests = interests.filter(i => zoneInterests.includes(i));
-    const activeInterest = matchingInterests[0] ?? interests[0] ?? 'trekking';
+    let day1Title: string;
+    let day1PriceFrom: number;
+    let day1PriceTo: number;
 
-    // Pick best price range from matching zone interests
-    const prices = matchingInterests
-      .map(i => INTEREST_PRICE[i] ?? DEFAULT_PRICE)
-      .sort(([a], [b]) => b - a); // sort descending by priceFrom
-    const [priceFrom, priceTo] = prices[0] ?? DEFAULT_PRICE;
-
-    const titles = ZONE_DAY_TITLES[zone] ?? [`День в зоне ${zone}`];
-
-    for (let d = 0; d < count; d++) {
-      days.push({
-        day: dayNum++,
-        zone: zone as DayPlan['zone'],
-        title: titles[d % titles.length],
-        activityType: activeInterest,
-        priceFrom,
-        priceTo,
-        coords: ZONE_COORDS[zone] as [number, number],
-        defaultTransport: ACTIVITY_DEFAULT_TRANSPORT[activeInterest] ?? 'walking',
-      });
+    if (arrivalTime) {
+      const hour = parseInt(arrivalTime.split(':')[0], 10);
+      if (hour < 12) {
+        day1Title = 'Прилёт утром + размещение + вечер на термальных источниках';
+        day1PriceFrom = Math.round(lightFrom * 0.8) + transferCost;
+        day1PriceTo   = Math.round(lightTo   * 0.8) + transferCost;
+      } else if (hour < 17) {
+        day1Title = 'Прилёт днём + размещение + прогулка по городу';
+        day1PriceFrom = Math.round(lightFrom * 0.5) + transferCost;
+        day1PriceTo   = Math.round(lightTo   * 0.5) + transferCost;
+      } else {
+        day1Title = 'Прилёт вечером + размещение + ужин. Отдых с дороги';
+        day1PriceFrom = transferCost;
+        day1PriceTo   = 2000 + transferCost;
+      }
+    } else {
+      day1Title    = 'Прилёт + размещение + знакомство с городом';
+      day1PriceFrom = Math.round(lightFrom * 0.5) + transferCost;
+      day1PriceTo   = Math.round(lightTo   * 0.5) + transferCost;
     }
+
+    days.push({
+      day: 1,
+      zone: 'avachinsky',
+      title: day1Title,
+      activityType: lightInterest,
+      priceFrom: day1PriceFrom,
+      priceTo: day1PriceTo,
+      coords: PKC_COORDS,
+      defaultTransport: 'walking',
+    });
+  }
+
+  // Distribute active days proportionally by zone score
+  if (activeDays > 0) {
+    const totalScore = zones.reduce((sum, z) => sum + z.score, 0) || 1;
+    const zoneDays = zones.map(z => ({
+      zone: z.zone,
+      count: Math.max(0, Math.round((z.score / totalScore) * activeDays)),
+    }));
+
+    if (zoneDays[0]) zoneDays[0].count = Math.max(1, zoneDays[0].count);
+
+    let total = zoneDays.reduce((s, z) => s + z.count, 0);
+    while (total > activeDays && zoneDays.length > 1) { zoneDays[zoneDays.length - 1].count = Math.max(0, zoneDays[zoneDays.length - 1].count - 1); total--; }
+    while (total < activeDays) { zoneDays[0].count++; total++; }
+
+    let dayNum = hasBufferDays ? 2 : 1;
+
+    for (const { zone, count } of zoneDays) {
+      if (count <= 0) continue;
+
+      const zoneInterests = ZONE_PRIMARY_INTERESTS[zone] ?? [];
+      const matchingInterests = interests.filter(i => zoneInterests.includes(i));
+      const activeInterest = matchingInterests[0] ?? interests[0] ?? 'trekking';
+
+      const prices = matchingInterests
+        .map(i => INTEREST_PRICE[i] ?? DEFAULT_PRICE)
+        .sort(([a], [b]) => b - a);
+      const [priceFrom, priceTo] = prices[0] ?? DEFAULT_PRICE;
+
+      const titles = ZONE_DAY_TITLES[zone] ?? [`День в зоне ${zone}`];
+
+      for (let d = 0; d < count; d++) {
+        days.push({
+          day: dayNum++,
+          zone: zone as DayPlan['zone'],
+          title: titles[d % titles.length],
+          activityType: activeInterest,
+          priceFrom,
+          priceTo,
+          coords: ZONE_COORDS[zone] as [number, number],
+          defaultTransport: ACTIVITY_DEFAULT_TRANSPORT[activeInterest] ?? 'walking',
+        });
+      }
+    }
+  }
+
+  // Last day — pack + transfer to airport + departure
+  if (hasBufferDays) {
+    days.push({
+      day: tripDays,
+      zone: 'avachinsky',
+      title: 'Сборы + трансфер в аэропорт + вылет',
+      activityType: 'thermal',
+      priceFrom: transferCost,
+      priceTo:   2000 + transferCost,
+      coords: PKC_COORDS,
+      defaultTransport: 'walking',
+    });
   }
 
   return days;
@@ -250,7 +318,7 @@ export async function recommendTrip(profile: UserProfile): Promise<TripRecommend
     }));
 
   // Generate structured day plans
-  const days = generateDayPlans(zones, profile.interests, tripDays);
+  const days = generateDayPlans(zones, profile.interests, tripDays, profile.flightArrivalTime, profile.needsAirportTransfer);
 
   // Use AI to generate itinerary text
   let itinerary = generateBasicItinerary(zones, tripDays, profile.interests);
@@ -284,14 +352,14 @@ function generateBasicItinerary(
     return `Однодневный тур — ${mainZone}. Выезд рано утром, день насыщен активностями (${activities}), возврат к вечеру.`;
   }
   if (tripDays <= 3) {
-    return `${tripDays}-дневный тур по ${mainZone}. День 1: прибытие, первые активности. Дни 2–${tripDays - 1}: ${activities}. День ${tripDays}: отъезд.`;
+    return `${tripDays}-дневный тур по ${mainZone}. День 1: прилёт, размещение, отдых. День 2: ${activities}. День ${tripDays}: трансфер в аэропорт, вылет.`;
   }
   if (tripDays <= 7) {
     const secondZone = zones[1] ? ZONE_NAMES[zones[1].zone] : 'соседняя зона';
-    return `Недельный тур. Дни 1–3: ${mainZone} (${activities}). День 4: переезд. Дни 5–${tripDays - 1}: ${secondZone}. День ${tripDays}: отъезд.`;
+    return `Недельный тур. День 1: прилёт, размещение. Дни 2–${tripDays - 3}: ${mainZone} (${activities}). День ${tripDays - 2}: переезд в ${secondZone}. Дни ${tripDays - 1}: активности. День ${tripDays}: сборы, вылет.`;
   }
 
-  return `${tripDays}-дневный тур по Камчатке. Начинаем с ${mainZone}, затем охватываем ${zones.slice(1).map(z => ZONE_NAMES[z.zone]).join(' и ')}. Достаточно времени для глубокого погружения в природу.`;
+  return `${tripDays}-дневный тур по Камчатке. День 1 — прилёт и акклиматизация. Дни 2–${tripDays - 1}: ${mainZone}, затем ${zones.slice(1).map(z => ZONE_NAMES[z.zone]).join(' и ')} — насыщенные активности. День ${tripDays}: ранние сборы и вылет.`;
 }
 
 function buildAIPrompt(
@@ -300,6 +368,22 @@ function buildAIPrompt(
   tripDays: number,
 ): string {
   const zoneList = zones.map(z => `- ${ZONE_NAMES[z.zone]} (${z.score}%)`).join('\n');
+  const bufferNote = tripDays >= 3
+    ? (() => {
+        const timeCtx = profile.flightArrivalTime
+          ? (() => {
+              const h = parseInt(profile.flightArrivalTime!.split(':')[0], 10);
+              return h < 12 ? `рейс в ${profile.flightArrivalTime} — успевает на лёгкую активность после обеда`
+                : h < 17 ? `рейс в ${profile.flightArrivalTime} — небольшая прогулка вечером`
+                : `рейс в ${profile.flightArrivalTime} — только ужин и отдых`;
+            })()
+          : 'время прилёта не указано';
+        const transferCtx = profile.needsAirportTransfer
+          ? '\n- Заказан трансфер от/до аэропорта (~2 500 ₽/сторона) — включи в описание дней прилёта и отъезда'
+          : '';
+        return `\n- День 1: прилёт в ПКЦ (${timeCtx}), размещение — никаких насыщенных активностей${transferCtx}\n- День ${tripDays}: сборы, трансфер в аэропорт, вылет — все активности завершаются накануне`;
+      })()
+    : '';
   return `Ты помощник туристического планирования на Камчатке.
 
 Профиль туриста:
@@ -308,7 +392,7 @@ function buildAIPrompt(
 - Даты: ${profile.arrivalDate || 'не указаны'}
 
 Рекомендованные зоны:
-${zoneList}
+${zoneList}${bufferNote}
 
-Создай короткое (3–5 предложений) вдохновляющее описание маршрута. Укажи зоны, активности, почему это идеально для туриста и примерный график. Ответь на русском, единым текстом без нумерации.`;
+Создай короткое (3–5 предложений) вдохновляющее описание маршрута с учётом буферных дней на прилёт и вылет. Укажи зоны, активности, почему это идеально для туриста и примерный график. Ответь на русском, единым текстом без нумерации.`;
 }

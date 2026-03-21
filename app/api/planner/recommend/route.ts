@@ -11,12 +11,14 @@ const RecommendSchema = z.object({
   interests: z.array(z.string()).min(1).max(8),
   arrivalDate: z.string().date().optional(),
   departureDate: z.string().date().optional(),
+  flightArrivalTime: z.string().max(5).optional(),
+  needsAirportTransfer: z.boolean().optional(),
 });
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { interests, arrivalDate, departureDate } = RecommendSchema.parse(body);
+    const { interests, arrivalDate, departureDate, flightArrivalTime, needsAirportTransfer } = RecommendSchema.parse(body);
 
     if (arrivalDate && departureDate && departureDate <= arrivalDate) {
       return NextResponse.json(
@@ -25,7 +27,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const recommendation = await recommendTrip({ interests, arrivalDate, departureDate });
+    const recommendation = await recommendTrip({ interests, arrivalDate, departureDate, flightArrivalTime, needsAirportTransfer });
 
     return NextResponse.json({ success: true, data: recommendation });
   } catch (err) {

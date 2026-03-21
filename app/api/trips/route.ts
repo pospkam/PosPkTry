@@ -30,6 +30,11 @@ const CreateTripSchema = z.object({
   activities: z.array(z.string()).max(20).default([]),
   days: z.array(DayPlanSchema).max(30).default([]),
   transportByDay: z.record(z.string(), z.enum(['walking', 'jeep', 'helicopter', 'boat'])).default({}),
+  flightArrival: z.string().max(20).nullable().optional(),
+  flightDeparture: z.string().max(20).nullable().optional(),
+  flightArrivalTime: z.string().max(5).nullable().optional(),
+  flightDepartureTime: z.string().max(5).nullable().optional(),
+  needsAirportTransfer: z.boolean().default(false).optional(),
 });
 
 // ─── GET — list ───────────────────────────────────────────────────────────────
@@ -80,12 +85,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { title, arrivalDate, departureDate, places, activities, days, transportByDay } = parsed.data;
+    const { title, arrivalDate, departureDate, places, activities, days, transportByDay, flightArrival, flightDeparture, flightArrivalTime, flightDepartureTime, needsAirportTransfer } = parsed.data;
 
     const { rows } = await pool.query<UserTripRow>(`
       INSERT INTO user_trips
-        (user_id, title, arrival_date, departure_date, places, activities, days, transport_by_day)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        (user_id, title, arrival_date, departure_date, places, activities, days, transport_by_day,
+         flight_arrival, flight_departure, flight_arrival_time, flight_departure_time, needs_airport_transfer)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       RETURNING *
     `, [
       userId,
@@ -96,6 +102,11 @@ export async function POST(request: NextRequest) {
       activities,
       JSON.stringify(days),
       JSON.stringify(transportByDay),
+      flightArrival ?? null,
+      flightDeparture ?? null,
+      flightArrivalTime ?? null,
+      flightDepartureTime ?? null,
+      needsAirportTransfer ?? false,
     ]);
 
     return NextResponse.json({ success: true, data: rows[0] }, { status: 201 });

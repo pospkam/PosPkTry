@@ -85,6 +85,8 @@ async function handleSuccessfulPayment(webhook: CloudPaymentsWebhook) {
     ]);
 
     if (paymentResult.rows.length === 0) {
+      // Попробуем tour_payments (новые бронирования через operator_tours)
+      await handleTourPaymentSuccess(paymentId, transactionId.toString(), webhook);
       return;
     }
 
@@ -223,6 +225,39 @@ async function handleSuccessfulPayment(webhook: CloudPaymentsWebhook) {
 
   } catch (error) {
     throw error;
+  }
+}
+
+/**
+ * Обработка успешного платежа через tour_payments (operator_tours bookings)
+ */
+async function handleTourPaymentSuccess(invoiceId: string, transactionId: string, webhook: CloudPaymentsWebhook) {
+  try {
+    const result = await query<{ booking_id: string }>(
+      `UPDATE tour_payments
+       SET status = 'HELD',
+           cp_transaction_id = $1,
+           cp_invoice_id = $2,
+           cp_payment_method = $3,
+           paid_at = NOW(),
+           release_after = NOW() + INTERVAL '36 hours',
+           updated_at = NOW()
+       WHERE id = $4
+       RETURNING booking_id`,
+      [transactionId, invoiceId, webhook.CardType ?? 'card', invoiceId]
+    );
+
+    if (result.rows.length === 0) return;
+
+    const { booking_id } = result.rows[0];
+    await query(
+      `UPDATE operator_bookings
+       SET payment_status = 'paid', payment_id = $1, paid_at = NOW(), booking_status = 'confirmed', updated_at = NOW()
+       WHERE id = $2`,
+      [invoiceId, booking_id]
+    );
+  } catch {
+    // не прерываем выполнение
   }
 }
 

@@ -13,7 +13,7 @@ import {
 import dynamic from 'next/dynamic';
 import { Header } from '@/components/layout/Header';
 import LeadModal from '@/components/routes/LeadModal';
-import BookingModal from '@/components/routes/BookingModal';
+import TourPaymentModal from '@/components/booking/TourPaymentModal';
 import AvailabilityCalendar from '@/components/routes/AvailabilityCalendar';
 import RouteCard, { type RouteItem } from '@/components/routes/RouteCard';
 import { useSourceTracker } from '@/hooks/useSourceTracker';
@@ -916,7 +916,7 @@ export default function RouteDetailClient({ id }: { id: string }) {
 
       <LeadModal open={showLead} onClose={() => setShowLead(false)} routeId={route.id} routeTitle={route.title} />
       {bookingOffer && (
-        <BookingModal
+        <TourPaymentModal
           open={bookingOffer !== null}
           onClose={() => setBookingOffer(null)}
           tourId={bookingOffer.tourId}
@@ -925,6 +925,7 @@ export default function RouteDetailClient({ id }: { id: string }) {
           priceBase={bookingOffer.priceBase}
           minGroupSize={bookingOffer.minGroupSize}
           maxGroupSize={bookingOffer.maxGroupSize}
+          nextDeparture={bookingOffer.nextDeparture}
         />
       )}
       <AssistantButton pageContext={{ type: 'route', title: route.title, category: locLabel }} />

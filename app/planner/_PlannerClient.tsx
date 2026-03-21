@@ -11,7 +11,7 @@ import {
   MapPin, Users, Trash2, Plus, Star, Phone,
   X, ChevronDown, ChevronUp, Truck,
   ArrowRight, ExternalLink, Map as MapIcon, List, Pencil,
-  Save, BookmarkCheck,
+  Save, BookmarkCheck, PlaneLanding, PlaneTakeoff, Lock,
 } from 'lucide-react';
 import type { MapMarker } from '@/components/shared/LeafletMap';
 
@@ -267,6 +267,8 @@ interface DayCardProps {
   idx: number;
   isEditing: boolean;
   transport: TransportType;
+  flightBadge?: string;
+  isLocked?: boolean;
   onToggleEdit: (dayId: number) => void;
   onTransportChange: (dayNum: number, t: TransportType) => void;
   onShowPartners: (activityType: string) => void;
@@ -276,11 +278,12 @@ interface DayCardProps {
 }
 
 function DayCard({
-  day, idx, isEditing, transport,
+  day, idx, isEditing, transport, flightBadge, isLocked,
   onToggleEdit, onTransportChange, onShowPartners, onDelete, onShowMap, onRef,
 }: DayCardProps) {
   const dragControls = useDragControls();
   const { priceAdd, Icon: TransIcon } = TRANSPORT_OPTIONS[transport];
+  const FlightIcon = idx === 0 ? PlaneLanding : PlaneTakeoff;
 
   return (
     <Reorder.Item
@@ -300,10 +303,13 @@ function DayCard({
           className="flex items-center gap-2 px-3 pt-3 pb-1.5 cursor-pointer"
           onClick={() => onToggleEdit(day.day)}
         >
-          <GripVertical
-            className="w-3.5 h-3.5 text-[var(--text-muted)] shrink-0 cursor-grab active:cursor-grabbing touch-none"
-            onPointerDown={(e) => { e.stopPropagation(); dragControls.start(e); }}
-          />
+          {isLocked
+            ? <Lock className="w-3.5 h-3.5 text-[var(--text-muted)]/40 shrink-0" />
+            : <GripVertical
+                className="w-3.5 h-3.5 text-[var(--text-muted)] shrink-0 cursor-grab active:cursor-grabbing touch-none"
+                onPointerDown={(e) => { e.stopPropagation(); dragControls.start(e); }}
+              />
+          }
           <div
             className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0 transition-all ${
               isEditing ? 'ring-2 ring-[var(--accent)]/40' : ''
@@ -313,7 +319,15 @@ function DayCard({
             {idx + 1}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium text-[var(--text-primary)] truncate">{day.title}</p>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <p className="text-xs font-medium text-[var(--text-primary)] truncate">{day.title}</p>
+              {flightBadge && (
+                <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-[var(--ocean)]/15 text-[var(--ocean)] text-[9px] font-bold shrink-0 whitespace-nowrap">
+                  <FlightIcon className="w-2.5 h-2.5" />
+                  {flightBadge}
+                </span>
+              )}
+            </div>
             <p className="text-[10px] text-[var(--text-muted)]">
               {ZONE_LABELS[day.zone] ?? day.zone}
               {isEditing && (
@@ -345,10 +359,12 @@ function DayCard({
             className="w-7 h-7 flex items-center justify-center rounded-md border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--ocean)] hover:border-[var(--ocean)] transition-colors bg-[var(--bg-hover)]">
             <Users className="w-3.5 h-3.5" />
           </button>
-          <button type="button" title="Удалить день" onClick={() => onDelete(day.day)}
-            className="w-7 h-7 flex items-center justify-center rounded-md border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--danger)] hover:border-[var(--danger)] transition-colors bg-[var(--bg-hover)]">
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
+          {!isLocked && (
+            <button type="button" title="Удалить день" onClick={() => onDelete(day.day)}
+              className="w-7 h-7 flex items-center justify-center rounded-md border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--danger)] hover:border-[var(--danger)] transition-colors bg-[var(--bg-hover)]">
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
     </Reorder.Item>
@@ -600,6 +616,11 @@ export function PlannerClient({ initialUserId }: { initialUserId?: string | null
   const [activities, setActivities] = useState<string[]>([]);
   const [arrival, setArrival]       = useState('');
   const [departure, setDeparture]   = useState('');
+  const [flightArrival, setFlightArrival]     = useState('');
+  const [flightDeparture, setFlightDeparture] = useState('');
+  const [flightArrivalTime, setFlightArrivalTime]       = useState('');
+  const [flightDepartureTime, setFlightDepartureTime]   = useState('');
+  const [needsAirportTransfer, setNeedsAirportTransfer] = useState(false);
 
   // Trip persistence
   const [tripId, setTripId]         = useState<string | null>(null);
@@ -681,6 +702,11 @@ export function PlannerClient({ initialUserId }: { initialUserId?: string | null
         activities,
         days,
         transportByDay,
+        flightArrival: flightArrival || null,
+        flightDeparture: flightDeparture || null,
+        flightArrivalTime: flightArrivalTime || null,
+        flightDepartureTime: flightDepartureTime || null,
+        needsAirportTransfer,
       };
 
       let res: Response;
@@ -708,7 +734,7 @@ export function PlannerClient({ initialUserId }: { initialUserId?: string | null
       setSaveStatus('error');
       setTimeout(() => setSaveStatus('idle'), 3000);
     }
-  }, [initialUserId, days, arrival, departure, places, activities, transportByDay, recommendation, tripId]);
+  }, [initialUserId, days, arrival, departure, places, activities, transportByDay, flightArrival, flightDeparture, flightArrivalTime, flightDepartureTime, needsAirportTransfer, recommendation, tripId]);
 
   // Map: plan markers (numbered) + polyline + background route dots (colored by zone)
   const mapMarkers = useMemo((): MapMarker[] => {
@@ -890,6 +916,8 @@ export function PlannerClient({ initialUserId }: { initialUserId?: string | null
           interests: allInterests,
           arrivalDate: arrival || undefined,
           departureDate: departure || undefined,
+          flightArrivalTime: flightArrivalTime || undefined,
+          needsAirportTransfer: needsAirportTransfer || undefined,
         }),
       });
       const data = await res.json();
@@ -926,6 +954,11 @@ export function PlannerClient({ initialUserId }: { initialUserId?: string | null
             interests: allInterests,
             arrival: arrival || undefined,
             departure: departure || undefined,
+            flight_arrival: flightArrival || undefined,
+            flight_departure: flightDeparture || undefined,
+            flight_arrival_time: flightArrivalTime || undefined,
+            flight_departure_time: flightDepartureTime || undefined,
+            needs_airport_transfer: needsAirportTransfer || undefined,
             trip_days: tripDays ?? undefined,
             recommendation: recommendation?.zones,
             transport_choices: transportByDay,
@@ -983,6 +1016,53 @@ export function PlannerClient({ initialUserId }: { initialUserId?: string | null
             {tripDays} {tripDays === 1 ? 'день' : tripDays < 5 ? 'дня' : 'дней'}
           </p>
         )}
+        {/* Flight numbers */}
+        <div className="grid grid-cols-2 gap-2 pt-1">
+          <div className="space-y-1">
+            <label className="text-xs text-[var(--text-muted)] flex items-center gap-1">
+              <PlaneLanding className="w-3 h-3" />
+              Рейс прилёта
+            </label>
+            <input type="text" value={flightArrival}
+              onChange={e => setFlightArrival(e.target.value.toUpperCase())}
+              placeholder="SU 1234" maxLength={20}
+              className="ds-input w-full text-sm" />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-[var(--text-muted)] flex items-center gap-1">
+              <PlaneTakeoff className="w-3 h-3" />
+              Рейс вылета
+            </label>
+            <input type="text" value={flightDeparture}
+              onChange={e => setFlightDeparture(e.target.value.toUpperCase())}
+              placeholder="S7 456" maxLength={20}
+              className="ds-input w-full text-sm" />
+          </div>
+        </div>
+        {/* Flight times */}
+        <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-1">
+            <label className="text-xs text-[var(--text-muted)]">Время прилёта</label>
+            <input type="time" value={flightArrivalTime}
+              onChange={e => setFlightArrivalTime(e.target.value)}
+              className="ds-input w-full text-sm" />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-[var(--text-muted)]">Время вылета</label>
+            <input type="time" value={flightDepartureTime}
+              onChange={e => setFlightDepartureTime(e.target.value)}
+              className="ds-input w-full text-sm" />
+          </div>
+        </div>
+        {/* Airport transfer */}
+        <label className="flex items-center gap-2 cursor-pointer select-none">
+          <input type="checkbox" checked={needsAirportTransfer}
+            onChange={e => setNeedsAirportTransfer(e.target.checked)}
+            className="w-4 h-4 rounded accent-[var(--accent)]" />
+          <span className="text-xs text-[var(--text-muted)]">
+            Нужна встреча в аэропорту и трансфер (~2 500 ₽/сторона)
+          </span>
+        </label>
       </div>
 
       {error && (
@@ -1043,6 +1123,14 @@ export function PlannerClient({ initialUserId }: { initialUserId?: string | null
                     idx={idx}
                     isEditing={day.day === editingDayId}
                     transport={getTransport(day)}
+                    flightBadge={
+                      days.length >= 3 && idx === 0
+                        ? (flightArrival || 'Прилёт')
+                        : days.length >= 3 && idx === days.length - 1
+                          ? (flightDeparture || 'Вылет')
+                          : undefined
+                    }
+                    isLocked={days.length >= 3 && (idx === 0 || idx === days.length - 1)}
                     onToggleEdit={toggleEditDay}
                     onTransportChange={setTransport}
                     onShowPartners={(at) => setPartnersModal({ activityType: at })}

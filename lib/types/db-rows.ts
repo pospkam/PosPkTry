@@ -1408,6 +1408,11 @@ export interface UserTripRow {
   activities: string[];
   days: TripDayPlan[];
   transport_by_day: Record<string, string>;
+  flight_arrival: string | null;
+  flight_departure: string | null;
+  flight_arrival_time: string | null;
+  flight_departure_time: string | null;
+  needs_airport_transfer: boolean;
   deleted_at: Date | null;
   created_at: Date;
   updated_at: Date;
