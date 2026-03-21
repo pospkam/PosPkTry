@@ -145,11 +145,11 @@ export function TourDeparturesCalendar({
       {/* Legend */}
       <div className="flex items-center gap-4 mb-4 text-xs text-[var(--text-muted)]">
         <span className="flex items-center gap-1">
-          <span className="w-2.5 h-2.5 rounded-full bg-green-400 inline-block" />
+          <span className="w-2.5 h-2.5 rounded-full bg-[var(--success)] inline-block" />
           Есть места
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-2.5 h-2.5 rounded-full bg-yellow-400 inline-block" />
+          <span className="w-2.5 h-2.5 rounded-full bg-[var(--warning)] inline-block" />
           Мало мест
         </span>
       </div>
@@ -190,7 +190,7 @@ export function TourDeparturesCalendar({
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-[var(--text-muted)]">Свободно мест</span>
-              <span className={`font-semibold ${selectedDeparture.spotsLeft <= 3 ? 'text-yellow-400' : 'text-green-400'}`}>
+              <span className="font-semibold" style={{ color: selectedDeparture.spotsLeft <= 3 ? 'var(--warning)' : 'var(--success)' }}>
                 {selectedDeparture.spotsLeft} из {selectedDeparture.availableSlots}
               </span>
             </div>

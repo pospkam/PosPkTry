@@ -240,7 +240,7 @@ export function StayBookingForm({
         />
         
         {checkInDate && checkOutDate && (
-          <div className="mt-4 p-4 bg-green-500/10 border border-green-500/30 rounded-xl">
+          <div className="mt-4 p-4 bg-[var(--success)]/10 border border-[var(--success)]/30 rounded-xl">
             <p className="text-[var(--success)]">
               [] Заезд: {checkInDate.toLocaleDateString('ru-RU')}
             </p>

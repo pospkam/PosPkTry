@@ -95,7 +95,7 @@ export const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
                   size="md"
                 />
               ) : (
-                <span className="text-red-400 text-sm font-medium">
+                <span className="text-[var(--danger)] text-sm font-medium">
                   SOLD OUT
                 </span>
               )}

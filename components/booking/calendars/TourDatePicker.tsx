@@ -323,14 +323,14 @@ export const TourDatePicker: React.FC<TourDatePickerProps> = ({
 
       {/* Предупреждение о погоде */}
       {tourType === 'individual' && selectedDate && (
-        <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-sm text-yellow-200" role="alert" aria-live="polite">
+        <div className="mt-4 p-3 bg-[var(--warning)]/10 border border-[var(--warning)]/30 rounded-lg text-sm text-[var(--warning)]" role="alert" aria-live="polite">
           ! Погодные условия проверяются за 24 часа до тура
         </div>
       )}
 
       {/* Ошибка */}
       {error && (
-        <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-sm text-red-200" role="alert" aria-live="assertive">
+        <div className="mt-4 p-3 bg-[var(--danger)]/10 border border-[var(--danger)]/30 rounded-lg text-sm text-[var(--danger)]" role="alert" aria-live="assertive">
           ! {error}
         </div>
       )}
