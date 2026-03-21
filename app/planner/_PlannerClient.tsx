@@ -12,6 +12,7 @@ import {
   X, ChevronDown, ChevronUp, Truck,
   ArrowRight, ExternalLink, Map as MapIcon, List, Pencil,
   Save, BookmarkCheck, PlaneLanding, PlaneTakeoff, Lock,
+  Send,
 } from 'lucide-react';
 import type { MapMarker } from '@/components/shared/LeafletMap';
 
@@ -65,6 +66,14 @@ interface Partner {
   short_description: string;
   contacts: Array<{ name: string; phone: string; role: string }> | null;
   has_matching_tours: boolean;
+}
+
+interface TourPreview {
+  id: string;
+  title: string;
+  base_price: string;
+  price_unit: string | null;
+  operator_slug: string;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -269,6 +278,7 @@ interface DayCardProps {
   transport: TransportType;
   flightBadge?: string;
   isLocked?: boolean;
+  topTour?: TourPreview;
   onToggleEdit: (dayId: number) => void;
   onTransportChange: (dayNum: number, t: TransportType) => void;
   onShowPartners: (activityType: string) => void;
@@ -278,7 +288,7 @@ interface DayCardProps {
 }
 
 function DayCard({
-  day, idx, isEditing, transport, flightBadge, isLocked,
+  day, idx, isEditing, transport, flightBadge, isLocked, topTour,
   onToggleEdit, onTransportChange, onShowPartners, onDelete, onShowMap, onRef,
 }: DayCardProps) {
   const dragControls = useDragControls();
@@ -366,6 +376,23 @@ function DayCard({
             </button>
           )}
         </div>
+        {/* Top matching tour */}
+        {topTour && (
+          <a
+            href={`/operators/${topTour.operator_slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-between gap-2 mx-3 mb-2.5 px-2.5 py-1.5 rounded-md bg-[var(--bg-hover)] border border-[var(--border)] hover:border-[var(--ocean)] transition-colors"
+          >
+            <div className="flex items-center gap-1.5 min-w-0">
+              <Star className="w-3 h-3 text-[var(--warning)] shrink-0" />
+              <span className="text-[10px] text-[var(--text-secondary)] truncate">{topTour.title}</span>
+            </div>
+            <span className="text-[10px] font-semibold text-[var(--ocean)] whitespace-nowrap">
+              от {Number(topTour.base_price).toLocaleString('ru-RU')} ₽
+            </span>
+          </a>
+        )}
       </div>
     </Reorder.Item>
   );
@@ -661,6 +688,18 @@ export function PlannerClient({ initialUserId }: { initialUserId?: string | null
   // Refs for scrolling to day card
   const dayRefs = useRef<Map<number, HTMLElement>>(new Map());
 
+  // TripBuilder v2: AI chat fill
+  const [chatInput, setChatInput]   = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
+
+  // TripBuilder v2: marketplace tours per activity type
+  const [toursPerActivity, setToursPerActivity] = useState<Record<string, TourPreview>>({});
+  const loadedActivitiesRef = useRef<Set<string>>(new Set());
+
+  // TripBuilder v2: AI route validation after DnD
+  const [validation, setValidation] = useState<{ valid: boolean; message: string } | null>(null);
+  const validationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const allInterests = [...new Set([...places, ...activities])];
   const tripDays = useMemo(() => calcDays(arrival, departure), [arrival, departure]);
 
@@ -677,6 +716,24 @@ export function PlannerClient({ initialUserId }: { initialUserId?: string | null
     transportByDay[day.day] ?? day.defaultTransport, [transportByDay]);
   const setTransport = useCallback((dayNum: number, t: TransportType) =>
     setTransportByDay(prev => ({ ...prev, [dayNum]: t })), []);
+
+  // Load top tour per activity type when days change
+  useEffect(() => {
+    const uniqueActivities = [...new Set(days.map(d => d.activityType))].filter(
+      at => !loadedActivitiesRef.current.has(at)
+    );
+    if (uniqueActivities.length === 0) return;
+    uniqueActivities.forEach(at => loadedActivitiesRef.current.add(at));
+    void Promise.all(uniqueActivities.map(async (at) => {
+      try {
+        const res = await fetch(`/api/planner/tours-for-day?activity_type=${encodeURIComponent(at)}&limit=1`);
+        const data: { success: boolean; tours?: TourPreview[] } = await res.json();
+        if (data.success && data.tours && data.tours.length > 0) {
+          setToursPerActivity(prev => ({ ...prev, [at]: data.tours![0] }));
+        }
+      } catch { /* silent — tours are optional */ }
+    }));
+  }, [days]);
 
   // Toggle edit mode on a day
   const toggleEditDay = useCallback((dayId: number) => {
@@ -973,6 +1030,35 @@ export function PlannerClient({ initialUserId }: { initialUserId?: string | null
     finally { setSubmitting(false); }
   }
 
+  async function handleChatFill() {
+    const text = chatInput.trim();
+    if (!text) return;
+    setChatLoading(true);
+    try {
+      const res = await fetch('/api/planner/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text }),
+      });
+      const data: {
+        success: boolean;
+        places?: string[];
+        activities?: string[];
+        arrival?: string | null;
+        departure?: string | null;
+        auto_recommend?: boolean;
+      } = await res.json();
+      if (!data.success) return;
+      if (data.places && data.places.length > 0)     setPlaces(data.places);
+      if (data.activities && data.activities.length > 0) setActivities(data.activities);
+      if (data.arrival)   setArrival(data.arrival);
+      if (data.departure) setDeparture(data.departure);
+      setChatInput('');
+      if (data.auto_recommend) setTimeout(getRecommendation, 0);
+    } catch { /* silent */ }
+    finally { setChatLoading(false); }
+  }
+
   // ── Plan panel content ─────────────────────────────────────────────────────
 
   const planPanel = (
@@ -988,6 +1074,30 @@ export function PlannerClient({ initialUserId }: { initialUserId?: string | null
       </div>
 
       {/* Interests */}
+      <div className="space-y-1.5">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">Опишите поездку</p>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={chatInput}
+            onChange={e => setChatInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' && !chatLoading) void handleChatFill(); }}
+            placeholder="вулканы и рыбалка, 7 дней в июне"
+            className="ds-input flex-1 text-sm"
+          />
+          <button
+            type="button"
+            onClick={() => void handleChatFill()}
+            disabled={chatLoading || !chatInput.trim()}
+            className="ds-btn ds-btn-primary px-3 py-2 flex items-center gap-1.5 text-sm disabled:opacity-50"
+          >
+            {chatLoading
+              ? <Loader className="w-4 h-4 animate-spin" />
+              : <Send className="w-4 h-4" />}
+          </button>
+        </div>
+      </div>
+
       <SelectGroup title="Места" items={PLACES} selected={places}
         onToggle={id => setPlaces(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} />
       <SelectGroup title="Активности" items={ACTIVITIES} selected={activities}
@@ -1115,7 +1225,37 @@ export function PlannerClient({ initialUserId }: { initialUserId?: string | null
                 </p>
               </div>
 
-              <Reorder.Group axis="y" values={days} onReorder={setDays} className="space-y-1.5">
+              <Reorder.Group
+                axis="y"
+                values={days}
+                onReorder={(newDays) => {
+                  setDays(newDays);
+                  setValidation(null);
+                  if (validationTimerRef.current) clearTimeout(validationTimerRef.current);
+                  if (newDays.length >= 2) {
+                    validationTimerRef.current = setTimeout(() => {
+                      void fetch('/api/planner/validate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          days: newDays.map(d => ({
+                            day: d.day,
+                            zone: d.zone,
+                            title: d.title,
+                            activityType: d.activityType,
+                            defaultTransport: d.defaultTransport,
+                          })),
+                        }),
+                      }).then(r => r.json()).then((data: { success: boolean; valid?: boolean; message?: string }) => {
+                        if (data.success && data.message) {
+                          setValidation({ valid: data.valid ?? true, message: data.message });
+                        }
+                      }).catch(() => { /* silent */ });
+                    }, 800);
+                  }
+                }}
+                className="space-y-1.5"
+              >
                 {days.map((day, idx) => (
                   <DayCard
                     key={day.day}
@@ -1123,6 +1263,7 @@ export function PlannerClient({ initialUserId }: { initialUserId?: string | null
                     idx={idx}
                     isEditing={day.day === editingDayId}
                     transport={getTransport(day)}
+                    topTour={toursPerActivity[day.activityType]}
                     flightBadge={
                       days.length >= 3 && idx === 0
                         ? (flightArrival || 'Прилёт')
@@ -1143,6 +1284,20 @@ export function PlannerClient({ initialUserId }: { initialUserId?: string | null
                   />
                 ))}
               </Reorder.Group>
+
+              {/* AI route validation result */}
+              {validation && (
+                <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium mt-1.5 ${
+                  validation.valid
+                    ? 'bg-[var(--success)]/10 text-[var(--success)] border border-[var(--success)]/20'
+                    : 'bg-[var(--warning)]/10 text-[var(--warning)] border border-[var(--warning)]/20'
+                }`}>
+                  {validation.valid
+                    ? <Check className="w-3.5 h-3.5 shrink-0" />
+                    : <AlertTriangle className="w-3.5 h-3.5 shrink-0" />}
+                  <span>{validation.message}</span>
+                </div>
+              )}
 
               {/* Add day */}
               <button type="button" onClick={addDay}

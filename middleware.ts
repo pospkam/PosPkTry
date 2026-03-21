@@ -42,14 +42,18 @@ const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/ai/chat': ['POST', 'GET'],
   '/api/ai/crew-plan': ['POST'],
   '/api/ai/health': ['GET'],
+  '/api/agents/health': ['GET'],       // agent system health (lightly protected via HEALTH_SECRET)
   '/api/safety': 'ALL',
   '/api/mcp': 'ALL',
   '/api/telegram': 'ALL',          // Telegram webhook
   '/api/operators': ['GET'],        // публичный каталог партнёров
   '/api/assistant': ['GET', 'POST'],  // «AI-помощник Камчатки» — история + чат
   '/api/loyalty/levels': ['GET'],   // уровни программы лояльности (публичный каталог)
-  '/api/planner/recommend': ['POST'], // AI trip recommender
-  '/api/planner/partners': ['GET'],   // операторы для дня маршрута
+  '/api/planner/recommend':      ['POST'], // AI trip recommender
+  '/api/planner/partners':       ['GET'],  // операторы для дня маршрута
+  '/api/planner/chat':           ['POST'], // NL → plan fill
+  '/api/planner/tours-for-day':  ['GET'],  // marketplace tours per activity
+  '/api/planner/validate':       ['POST'], // AI route sequence validation
   '/api/mig057': ['GET'],             // migration 057: transportation column
   '/api/mig058': ['GET'],             // migration 058: user_trips table
   '/api/mig059': ['GET'],             // migration 059: ai_actions_log table
@@ -65,6 +69,7 @@ const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/link-fishingkam-tours': ['GET'], // линкует operator_tours kamchatskaya-rybalka → agent_route_knowledge
   '/api/setup-rafting-tour': ['POST'], // create rafting tour (temporary)
   '/api/exec-migration-060': ['GET'], // execute migration 060
+  '/api/mig063': ['GET'],             // migration 063: agent_experiments + agent_approvals
 };
 
 const API_ROLE_REQUIREMENTS: Record<string, AuthRole> = {

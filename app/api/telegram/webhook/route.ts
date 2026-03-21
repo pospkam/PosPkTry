@@ -16,6 +16,10 @@
  * Admin (только TELEGRAM_CHAT_ID):
  *   /stats              — статистика платформы
  *   /leads              — последние 5 заявок
+ *   /digest             — AI дайджест платформы (лиды, брони, рекомендации)
+ *   /agent <text>       — прямой запрос к PlatformAgent (любой intent)
+ *   /approve_<id>       — одобрить ожидающее действие агента
+ *   /reject_<id>        — отклонить ожидающее действие агента
  *   /post operator slug — публикация оператора в канал
  *   /post route uuid    — публикация маршрута в канал
  *   /post sezon         — AI генерирует сезонный пост в канал
@@ -38,6 +42,8 @@ import {
   postSezonToChannel,
   postFriendToChannel,
 } from '@/lib/notifications/telegram-channel';
+import { PlatformAgent } from '@/lib/agents/platform-agent';
+import { approvalRequired } from '@/lib/agents/safeguards/approval-required';
 
 export const dynamic = 'force-dynamic';
 
@@ -526,7 +532,7 @@ export async function POST(request: NextRequest) {
     // /help
     if (text.startsWith('/help')) {
       const adminBlock = admin
-        ? '\n<b>Админ:</b>\n/stats — статистика\n/leads — последние заявки\n/post operator &lt;slug&gt;\n/post route &lt;uuid&gt;\n/post sezon — AI-пост в канал'
+        ? '\n<b>Админ:</b>\n/stats — статистика\n/leads — последние заявки\n/digest — AI дайджест\n/agent &lt;текст&gt; — PlatformAgent\n/approve_&lt;id&gt; | /reject_&lt;id&gt; — решение по запросу агента\n/post operator &lt;slug&gt;\n/post route &lt;uuid&gt;\n/post sezon — AI-пост в канал'
         : '';
       await sendHTML(chatId, [
         '<b>Команды Кузьмича:</b>',
@@ -619,6 +625,104 @@ export async function POST(request: NextRequest) {
       }
       const leads = await getLastLeads();
       await sendHTML(chatId, leads);
+      return NextResponse.json({ ok: true });
+    }
+
+    // /digest — AI дайджест платформы (только admin)
+    if (text.startsWith('/digest')) {
+      if (!admin) {
+        await sendHTML(chatId, '<b>Нет прав.</b>');
+        return NextResponse.json({ ok: true });
+      }
+      await sendHTML(chatId, 'Формирую дайджест...');
+      try {
+        const digestText = await PlatformAgent.digest();
+        await sendHTML(chatId, digestText);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        await sendHTML(chatId, `Ошибка дайджеста: <code>${esc(msg)}</code>`);
+      }
+      return NextResponse.json({ ok: true });
+    }
+
+    // /agent <text> — прямой вызов PlatformAgent (только admin)
+    if (text.startsWith('/agent')) {
+      if (!admin) {
+        await sendHTML(chatId, '<b>Нет прав.</b>');
+        return NextResponse.json({ ok: true });
+      }
+      const agentMsg = text.slice('/agent'.length).trim();
+      if (!agentMsg) {
+        await sendHTML(chatId, 'Использование: <code>/agent &lt;запрос&gt;</code>\nПример: <code>/agent мои туры</code>');
+        return NextResponse.json({ ok: true });
+      }
+      await sendHTML(chatId, 'Обрабатываю...');
+      try {
+        const result = await PlatformAgent.dispatch({ message: agentMsg, role: 'admin' });
+        const header = `<i>intent: ${result.intent} | ${result.duration_ms}ms</i>\n\n`;
+        await sendHTML(chatId, header + result.response);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        await sendHTML(chatId, `Ошибка агента: <code>${esc(msg)}</code>`);
+      }
+      return NextResponse.json({ ok: true });
+    }
+
+    // /approve_<shortId> — одобрить действие агента (только admin)
+    if (text.startsWith('/approve_') && admin) {
+      const shortId = text.slice('/approve_'.length).trim().slice(0, 8);
+      try {
+        const { rows } = await pool.query<{ id: string }>(
+          `SELECT id FROM agent_approvals WHERE id::text LIKE $1 AND status = 'pending' LIMIT 1`,
+          [`${shortId}%`]
+        );
+        if (!rows[0]) {
+          await sendHTML(chatId, `Запрос одобрения не найден: <code>${esc(shortId)}</code>`);
+        } else {
+          const { rows: adminUsers } = await pool.query<{ id: number }>(
+            `SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1`
+          );
+          const reviewerId = adminUsers[0]?.id;
+          if (!reviewerId) {
+            await sendHTML(chatId, 'Ошибка: admin пользователь не найден в БД.');
+          } else {
+            await approvalRequired.approve(rows[0].id, reviewerId, 'Одобрено через Telegram');
+            await sendHTML(chatId, `Одобрено: <code>${rows[0].id.slice(0, 8)}</code>`);
+          }
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        await sendHTML(chatId, `Ошибка: <code>${esc(msg)}</code>`);
+      }
+      return NextResponse.json({ ok: true });
+    }
+
+    // /reject_<shortId> — отклонить действие агента (только admin)
+    if (text.startsWith('/reject_') && admin) {
+      const shortId = text.slice('/reject_'.length).trim().slice(0, 8);
+      try {
+        const { rows } = await pool.query<{ id: string }>(
+          `SELECT id FROM agent_approvals WHERE id::text LIKE $1 AND status = 'pending' LIMIT 1`,
+          [`${shortId}%`]
+        );
+        if (!rows[0]) {
+          await sendHTML(chatId, `Запрос одобрения не найден: <code>${esc(shortId)}</code>`);
+        } else {
+          const { rows: adminUsers } = await pool.query<{ id: number }>(
+            `SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1`
+          );
+          const reviewerId = adminUsers[0]?.id;
+          if (!reviewerId) {
+            await sendHTML(chatId, 'Ошибка: admin пользователь не найден в БД.');
+          } else {
+            await approvalRequired.reject(rows[0].id, reviewerId, 'Отклонено через Telegram');
+            await sendHTML(chatId, `Отклонено: <code>${rows[0].id.slice(0, 8)}</code>`);
+          }
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        await sendHTML(chatId, `Ошибка: <code>${esc(msg)}</code>`);
+      }
       return NextResponse.json({ ok: true });
     }
 

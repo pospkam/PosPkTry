@@ -4,7 +4,7 @@ import { ReactNode } from 'react';
 import {
   Shield, Users, Calendar, CalendarDays, FileText, MessageSquareText,
   Briefcase, UserCheck, BarChart3, DollarSign,
-  Activity, Bell, Settings, Brain, Tag, Award, ClipboardList, Plug, TrendingUp,
+  Activity, Bell, Settings, Brain, Tag, Award, ClipboardList, Plug, TrendingUp, Zap,
 } from 'lucide-react';
 import { HubLayout } from '@/components/layout/HubLayout';
 import { AiAssistant } from '@/components/admin/AiAssistant';
@@ -26,6 +26,7 @@ const SIDEBAR_ITEMS = [
   { href: '/hub/admin/promo-codes', label: 'Промокоды', icon: Tag },
   { href: '/hub/admin/activity', label: 'Активность', icon: Activity },
   { href: '/hub/admin/knowledge', label: 'База знаний AI', icon: Brain },
+  { href: '/hub/admin/agents',   label: 'Агенты AI',      icon: Zap },
   { href: '/hub/admin/notifications', label: 'Уведомления', icon: Bell },
   { href: '/hub/admin/pricing', label: 'Динамические цены', icon: TrendingUp },
   { href: '/hub/admin/integrations', label: 'Интеграции / OCTO', icon: Plug },
