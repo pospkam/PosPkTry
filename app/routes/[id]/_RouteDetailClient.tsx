@@ -58,7 +58,7 @@ const LOCATION_TYPE_IMAGES: Record<string, string> = {
 const ACTIVITY_COLORS: Record<string, string> = {
   fishing: 'var(--ocean)', trekking: 'var(--success)', thermal: 'var(--warning)',
   helicopter: 'var(--accent)', bear_watching: 'var(--danger)', boat_trip: 'var(--ocean)',
-  snowmobile: '#6366f1', jeep: 'var(--accent)', other: 'var(--text-muted)',
+  snowmobile: 'var(--ocean)', jeep: 'var(--accent)', other: 'var(--text-muted)',
 };
 
 const DIFFICULTY_RU: Record<string, string> = {
@@ -420,45 +420,46 @@ export default function RouteDetailClient({ id }: { id: string }) {
       <div className="relative w-full overflow-hidden" style={{ height: '52vh', minHeight: 320, maxHeight: 520 }}>
         <div className="absolute inset-0 pt-16">
           <Image src={heroImage} alt={route.title} fill className="object-cover" priority sizes="100vw" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-black/10" />
         </div>
 
         {/* Навигация */}
         <div className="absolute top-20 left-0 right-0 px-4 md:px-8 flex items-center justify-between">
           <Link
             href="/routes"
-            className="inline-flex items-center gap-1.5 text-sm text-white/80 hover:text-white bg-black/30 hover:bg-black/50 px-3 py-1.5 rounded-full transition-all"
+            className="inline-flex items-center gap-1.5 text-sm text-[var(--text-primary)] hover:text-[var(--accent)] bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] px-3 py-1.5 rounded-lg transition-all border border-[var(--border)]"
           >
             <ArrowLeft className="w-3.5 h-3.5" /> Маршруты
           </Link>
 
           {/* Счётчик фото */}
           {photos.length > 1 && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 bg-[var(--bg-card)] rounded-lg px-3 py-1.5 border border-[var(--border)]">
               <button type="button" onClick={() => setGalleryIdx(i => Math.max(0, i - 1))}
-                className="w-7 h-7 flex items-center justify-center bg-black/40 hover:bg-black/60 text-white rounded-full transition-all">
+                className="w-6 h-6 flex items-center justify-center hover:bg-[var(--bg-hover)] text-[var(--text-primary)] rounded transition-all">
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <span className="text-white/70 text-xs">{galleryIdx + 1}/{photos.length}</span>
+              <span className="text-[var(--text-secondary)] text-xs">{galleryIdx + 1}/{photos.length}</span>
               <button type="button" onClick={() => setGalleryIdx(i => Math.min(photos.length - 1, i + 1))}
-                className="w-7 h-7 flex items-center justify-center bg-black/40 hover:bg-black/60 text-white rounded-full transition-all">
+                className="w-6 h-6 flex items-center justify-center hover:bg-[var(--bg-hover)] text-[var(--text-primary)] rounded transition-all">
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           )}
         </div>
+      </div>
 
-        {/* Заголовок */}
-        <div className="absolute bottom-0 left-0 right-0 px-4 md:px-8 pb-6">
-          <div className="flex items-center gap-2 mb-2">
+      {/* ── МЕТА-ИНФОРМАЦИЯ (переместили из hero) ─────────────────────────── */}
+      <div className="bg-[var(--bg-card)] border-b border-[var(--border)] sticky top-16 z-20">
+        <div className="max-w-6xl mx-auto px-4 md:px-8 py-6 space-y-3">
+          <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-[var(--accent)] uppercase tracking-widest">
               {locLabel}
             </span>
-            <span className="text-white/30 text-xs">·</span>
-            <span className="text-xs text-white/60">{actLabel}</span>
+            <span className="text-[var(--text-muted)] text-xs">·</span>
+            <span className="text-xs text-[var(--text-secondary)]">{actLabel}</span>
           </div>
           <h1
-            className="text-2xl sm:text-3xl md:text-4xl font-bold text-white leading-tight max-w-3xl"
+            className="text-3xl sm:text-4xl md:text-5xl font-bold text-[var(--text-primary)] leading-tight max-w-4xl"
             style={{ fontFamily: 'var(--font-playfair)' }}
           >
             {route.title}
@@ -573,7 +574,7 @@ export default function RouteDetailClient({ id }: { id: string }) {
                       onClick={() => setSortBy(option)}
                       className={`flex-shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
                         sortBy === option
-                          ? 'bg-[var(--accent)] text-white'
+                          ? 'bg-[var(--accent)] text-[var(--bg-primary)]'
                           : 'bg-[var(--bg-hover)] text-[var(--text-primary)] hover:bg-[var(--border)]'
                       }`}
                     >
@@ -602,7 +603,7 @@ export default function RouteDetailClient({ id }: { id: string }) {
                               onClick={() => setFilterDifficulty(filterDifficulty === diff ? null : diff)}
                               className={`px-2.5 py-1 text-xs font-semibold rounded transition-all ${
                                 filterDifficulty === diff
-                                  ? `text-white`
+                                  ? `text-[var(--bg-primary)]`
                                   : 'bg-[var(--bg-hover)] text-[var(--text-primary)] hover:bg-[var(--border)]'
                               }`}
                               style={{
@@ -636,7 +637,7 @@ export default function RouteDetailClient({ id }: { id: string }) {
                               onClick={() => setFilterDurationType(filterDurationType === dt ? null : dt)}
                               className={`px-2.5 py-1 text-xs font-semibold rounded transition-all ${
                                 filterDurationType === dt
-                                  ? 'bg-[var(--accent)] text-white'
+                                  ? 'bg-[var(--accent)] text-[var(--bg-primary)]'
                                   : 'bg-[var(--bg-hover)] text-[var(--text-primary)] hover:bg-[var(--border)]'
                               }`}
                             >
@@ -740,7 +741,7 @@ export default function RouteDetailClient({ id }: { id: string }) {
                   {MONTHS.map((m, i) => (
                     <span key={i} className={`text-xs px-2.5 py-2 rounded-lg font-medium min-w-[3rem] text-center ${
                       route.bestMonths!.includes(i + 1)
-                        ? 'bg-[var(--accent)] text-white font-semibold'
+                        ? 'bg-[var(--accent)] text-[var(--bg-primary)] font-semibold'
                         : 'bg-[var(--bg-hover)] text-[var(--text-muted)]'
                     }`}>
                       {m}
