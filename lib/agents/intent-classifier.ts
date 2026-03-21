@@ -33,10 +33,147 @@ export const INTENT_KEYWORDS: Record<AgentIntent, string[]> = {
     'хочу на камчатку', 'вулкан', 'рыбалка', 'медведи', 'гейзер', 'трекинг',
     'горячие источники', 'маршрут на камчатке', 'отдых на камчатке',
   ],
+  // AI Юрист
+  legal_contract:    [
+    'проверь договоры', 'юридическая проверка', 'договоры туров', 'условия туров',
+    'политика отмены', 'legal check', 'юрист', 'проверь контракты',
+  ],
+  legal_compliance:  [
+    'аудит соответствия', 'compliance', 'нарушения требований', 'правовой аудит',
+    'соответствие законодательству', 'проверь операторов', 'юридический аудит',
+  ],
+  legal_risks:       [
+    'юридические риски', 'legal risks', 'риски бронирований', 'правовые риски',
+    'риски договоров', 'анализ рисков юрист',
+  ],
+  // AI Служба безопасности
+  sec_access_audit:  [
+    'аудит доступа', 'подозрительная активность', 'security audit', 'проверь безопасность',
+    'кто входил', 'аудит входов', 'безопасность доступа',
+  ],
+  sec_anomaly:       [
+    'аномалии', 'подозрительные бронирования', 'fraud', 'мошенничество',
+    'аномальные платежи', 'странные брони', 'detect anomaly',
+  ],
+  sec_report:        [
+    'отчёт безопасности', 'security report', 'состояние безопасности',
+    'служба безопасности', 'безопасность платформы', 'полный security',
+  ],
+  // AI Хакер (growth hacker)
+  hack_growth:       [
+    'точки роста', 'growth hack', 'рост платформы', 'конверсия', 'как вырасти',
+    'что улучшить', 'анализ роста', 'growth analysis',
+  ],
+  hack_funnel:       [
+    'воронка', 'funnel', 'где теряем', 'потери конверсии', 'воронка продаж',
+    'анализ воронки', 'где уходят пользователи',
+  ],
+  hack_automate:     [
+    'что автоматизировать', 'automation', 'автоматизация', 'автоматические задачи',
+    'automate', 'что можно автоматизировать', 'ботом',
+  ],
+  // AI Спасатель
+  rescue_sos_stats:  [
+    'sos статистика', 'инциденты', 'sos события', 'активные sos',
+    'сигналы бедствия', 'rescue stats', 'sos мониторинг',
+  ],
+  rescue_weather_risk: [
+    'погодные риски', 'риски погоды', 'weather risk', 'угроза погода',
+    'опасные туры погода', 'предупреждения туры', 'спасатель погода',
+  ],
+  rescue_protocols:  [
+    'протоколы', 'экстренные протоколы', 'emergency protocols', 'спасение',
+    'мчс', 'инструкция sos', 'алгоритм спасения', 'что делать при sos',
+  ],
+  // AI Эколог
+  eco_impact:        [
+    'экологическое воздействие', 'eco impact', 'нагрузка на природу',
+    'экология туризма', 'зелёный туризм', 'эколог', 'eco points отчёт',
+  ],
+  eco_zones:         [
+    'охраняемые зоны', 'заповедник', 'eco zones', 'кроноцкий',
+    'природные зоны', 'зоны камчатки', 'экологические зоны', 'фгбу',
+  ],
+  // AI Эволюция
+  evo_optimize:      [
+    'самооптимизация', 'оптимизируй агентов', 'улучши систему',
+    'слабые агенты', 'evo optimize', 'эволюция агентов', 'самоанализ',
+  ],
+  evo_experiments:   [
+    'создай эксперимент', 'auto ab test', 'запусти тест', 'авто эксперимент',
+    'evo experiment', 'новый тест агентов',
+  ],
+  evo_adapt:         [
+    'адаптация', 'учись на ошибках', 'обучение агентов', 'evo adapt',
+    'адаптируй агентов', 'изучи фидбек', 'learn from feedback',
+  ],
+  // Контент
+  content_audit:     [
+    'аудит контента', 'content audit', 'качество туров', 'заполненность туров',
+    'проверь туры контент', 'что не заполнено',
+  ],
+  content_flag:      [
+    'туры для заполнения', 'content flag', 'кандидаты ai заполнения', 'flagged tours',
+    'что заполнить',
+  ],
+  // Маркетинг
+  mkt_performance:   [
+    'маркетинг', 'marketing', 'эффективность маркетинга', 'трафик источники',
+    'откуда приходят', 'мкт отчёт', 'marketing performance',
+  ],
+  mkt_content_plan:  [
+    'контент-план', 'план публикаций', 'content plan', 'telegram план',
+    'что постить', 'план контента', 'контентный план',
+  ],
+  // Планирование
+  plan_forecast:     [
+    'прогноз', 'forecast', 'тренд бронирований', 'прогноз продаж',
+    'предсказание', 'plan forecast', 'тренд',
+  ],
+  plan_season:       [
+    'сезон', 'сезонность', 'season analysis', 'по месяцам',
+    'сезонный анализ', 'план сезон',
+  ],
+  plan_gaps:         [
+    'пробелы', 'нехватка туров', 'gaps', 'gap analysis',
+    'план пробелы', 'дефицит туров', 'что не хватает',
+  ],
+  // Качество
+  qa_reviews:        [
+    'отзывы', 'reviews', 'рейтинг туров', 'оценки туристов',
+    'qa отзывы', 'аномалии отзывов', 'плохие отзывы',
+  ],
+  qa_slots:          [
+    'слоты', 'qa слоты', 'туры без слотов', 'доступность туров',
+    'нет расписания', 'slots check',
+  ],
+  qa_operators:      [
+    'здоровье операторов', 'operator health', 'qa операторы',
+    'активность операторов', 'слабые операторы',
+  ],
+  lead_qualify:      [
+    'квалифицируй лиды', 'evaluate leads', 'оценить лиды', 'analyse leads', 'проверь активных',
+  ],
+  lead_suggest:      [
+    'рекомендуй туры', 'suggest tours', 'какие туры предложить', 'подбери тур для лида',
+  ],
   unknown: [],
 };
 
-const ADMIN_INTENTS    = new Set<AgentIntent>(['admin_digest', 'admin_health', 'admin_leads']);
+const ADMIN_INTENTS    = new Set<AgentIntent>([
+  'admin_digest', 'admin_health', 'admin_leads',
+  'lead_qualify', 'lead_suggest',
+  'legal_contract', 'legal_compliance', 'legal_risks',
+  'sec_access_audit', 'sec_anomaly', 'sec_report',
+  'hack_growth', 'hack_funnel', 'hack_automate',
+  'rescue_sos_stats', 'rescue_weather_risk',
+  'eco_impact', 'eco_zones',
+  'evo_optimize', 'evo_experiments', 'evo_adapt',
+  'content_audit', 'content_flag',
+  'mkt_performance', 'mkt_content_plan',
+  'plan_forecast', 'plan_season', 'plan_gaps',
+  'qa_reviews', 'qa_slots', 'qa_operators',
+]);
 const OPERATOR_INTENTS = new Set<AgentIntent>([
   'op_tours_summary', 'op_bookings_today', 'op_revenue',
   'op_create_tour', 'op_fill_ai', 'op_add_slots',

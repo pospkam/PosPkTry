@@ -40,6 +40,7 @@ export interface AgentContext {
   task: TaskContext;
   platform: PlatformContext;
   execution: ExecutionContext;
+  memories?: Array<{ key: string; value: Record<string, unknown>; confidence: number }>;
 }
 
 // ── ContextHub ────────────────────────────────────────────────────────────────

@@ -32,6 +32,7 @@ export default function JoinClient() {
     phone: '',
     email: '',
     password: '',
+    passwordConfirm: '',
     pd_consent: false,
   });
 
@@ -45,6 +46,8 @@ export default function JoinClient() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.category) { setError('Выберите категорию деятельности'); return; }
+    if (form.password.length < 8) { setError('Пароль должен быть минимум 8 символов'); return; }
+    if (form.password !== form.passwordConfirm) { setError('Пароли не совпадают'); return; }
     if (!form.pd_consent) { setError('Необходимо согласие на обработку персональных данных'); return; }
 
     setLoading(true);
@@ -198,6 +201,7 @@ export default function JoinClient() {
                   placeholder="info@example.ru"
                   value={form.email}
                   onChange={e => set('email', e.target.value)}
+                  autoComplete="off"
                   required
                 />
               </div>
@@ -209,9 +213,26 @@ export default function JoinClient() {
                   placeholder="Минимум 8 символов"
                   value={form.password}
                   onChange={e => set('password', e.target.value)}
+                  autoComplete="new-password"
                   minLength={8}
                   required
                 />
+              </div>
+              <div>
+                <label className="ds-label block mb-1">Повторите пароль *</label>
+                <input
+                  className="ds-input w-full"
+                  type="password"
+                  placeholder="Повторите пароль"
+                  value={form.passwordConfirm}
+                  onChange={e => set('passwordConfirm', e.target.value)}
+                  autoComplete="new-password"
+                  minLength={8}
+                  required
+                />
+                {form.passwordConfirm && form.password !== form.passwordConfirm && (
+                  <p className="text-xs text-[var(--danger)] mt-1">Пароли не совпадают</p>
+                )}
               </div>
             </div>
 

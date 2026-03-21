@@ -33,6 +33,7 @@ export default function AuthPageClient() {
   // Форма
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [partnerRoles, setPartnerRoles] = useState<string[]>([]);
@@ -92,6 +93,11 @@ export default function AuthPageClient() {
     }
     if (password.length < 6) {
       setError('Пароль должен быть минимум 6 символов');
+      setLoading(false);
+      return;
+    }
+    if (password !== passwordConfirm) {
+      setError('Пароли не совпадают');
       setLoading(false);
       return;
     }
@@ -159,6 +165,7 @@ export default function AuthPageClient() {
   const resetForm = () => {
     setEmail('');
     setPassword('');
+    setPasswordConfirm('');
     setName('');
     setPhone('');
     setPartnerRoles([]);
@@ -377,6 +384,7 @@ export default function AuthPageClient() {
                     onChange={e => setPassword(e.target.value)}
                     className={INPUT}
                     placeholder="Минимум 6 символов"
+                    autoComplete="new-password"
                   />
                   <button
                     type="button"
@@ -397,6 +405,24 @@ export default function AuthPageClient() {
                       />
                     ))}
                   </div>
+                )}
+              </div>
+
+              {/* Повторите пароль */}
+              <div>
+                <label htmlFor="reg-password-confirm" className={LABEL}>Повторите пароль *</label>
+                <input
+                  id="reg-password-confirm"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={passwordConfirm}
+                  onChange={e => setPasswordConfirm(e.target.value)}
+                  className={INPUT}
+                  placeholder="Повторите пароль"
+                  autoComplete="new-password"
+                />
+                {passwordConfirm && password !== passwordConfirm && (
+                  <p className="text-xs text-[var(--danger)] mt-1">Пароли не совпадают</p>
                 )}
               </div>
 

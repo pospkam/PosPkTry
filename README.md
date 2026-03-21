@@ -1,6 +1,8 @@
-# TourHab — Туристический агрегатор Камчатки
+# TourHab — AI-система для туристического бизнеса Камчатки
 
-Единая платформа для поиска маршрутов, бронирования туров и взаимодействия с операторами Камчатки. Турист видит точку на карте, описание, список операторов с ценами, датами и отзывами.
+Платформа, которая одновременно решает задачу туриста (маршрут + бронь) и автоматизирует работу оператора (туры, брони, прогноз погоды, финансы). Внутри — самоэволюционирующий агентский слой: система анализирует свои решения, учится на обратной связи и оптимизирует себя без ручного вмешательства.
+
+**Текущий статус:** MVP завершён, строим Agent Framework поверх готовой инфраструктуры. Полный план: `.claude/plan.md`
 
 [![Build](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/pospkam/PosPkTry)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict%2C%200%20errors-blue)](https://www.typescriptlang.org/)
@@ -12,14 +14,32 @@
 
 ## Архитектура
 
+### AI-слой (строится сейчас)
+
 ```
-Маршрут (agent_route_knowledge)     Тур (tours)
-  1189 маршрутов, 16 типов локаций    66 туров от 5 операторов
-  Источник: скрапинг 12 сайтов        Источник: операторы через CRM
-  kuzmich_review AI-отзыв             Цена, выезды, бронирование
-         |                                    |
-         +---- v_route_marketplace -----------+
-                   |
+Admin / Operator / Tourist / Guide
+          │ intent
+   PlatformAgent (lib/agents/)
+          │
+   Context Hub  ──── user/task/platform/execution contexts
+          │
+   Agency Layer ──── AdminAgency / OperatorAgency / TouristAgency
+          │
+   Learning Layer ── Feedback loop → Pattern recognition → Prompt tuning
+          │
+   Execution Layer ─ (API routes, DB, Telegram, Payments — всё ниже)
+```
+
+### Data Flow (существующий)
+
+```
+Маршрут (agent_route_knowledge)     Тур (operator_tours)
+  1189 маршрутов, 16 типов локаций    Операторы: слоты, цены, сезон
+  Источник: скрапинг 12 сайтов        Бронирование → CloudPayments
+  kuzmich_review AI-отзыв
+         │                                    │
+         +──── v_route_marketplace ───────────+
+                   │
             Карточка маршрута
          (цена + оператор + дата + бронирование)
 ```
@@ -32,9 +52,10 @@
 | Backend | Next.js API Routes, PostgreSQL (pg pool, прямой SQL) |
 | Auth | JWT (jose) + bcrypt, 6 ролей |
 | Storage | Timeweb S3 (`s3.twcstorage.ru`) + fallback на `/tmp` |
-| AI | OpenRouter / xAI / Anthropic Haiku (waterfall) |
-| Maps | Leaflet + OpenStreetMap (маркеры с попапами и ссылками) |
-| Telegram | @KuzmichKam_bot — уведомления, TG-канал, AI чат-бот |
+| AI | OpenRouter / xAI / Anthropic (waterfall) + 5 AI подсистем |
+| Agent Layer | `lib/agents/` — PlatformAgent, Context Hub, Learning Loop (строится) |
+| Maps | Yandex Maps API 2.1 (маркеры с попапами и ссылками) |
+| Telegram | @KuzmichKam_bot (tourist) + admin bot (owner) |
 | Analytics | page_views (собственная) + Яндекс Метрика |
 | Deploy | Timeweb Cloud, GitHub Actions CI/CD |
 
@@ -89,12 +110,19 @@ components/
   layout/                        # Header, Footer
 
 lib/
+  agents/                        # AI Agent Framework (строится — .claude/plan.md)
+    platform-agent.ts            # Intent dispatcher, единая точка входа
+    context-hub.ts               # Персистентный контекст (user/task/platform)
+    agencies/                    # AdminAgency, OperatorAgency, TouristAgency
+    learning/                    # Feedback loop, prompt tuning, A/B tests
   storage/s3.ts                  # S3 клиент (Timeweb Object Storage)
   ai/providers.ts                # AI waterfall (4 провайдера)
+  ai/embeddings.ts               # Smart search (embedding-based)
+  services/trip-recommender.ts   # Tourist recommendations
+  ai/crew-agents.ts              # Multi-agent patterns
   auth/                          # JWT middleware
   db-pool.ts                     # PostgreSQL pool (named export: { pool })
-  bookings/booking.service.ts    # Полная логика бронирований (транзакции, возврат, стейт-машина)
-  services/                      # Доменные сервисы
+  bookings/booking.service.ts    # Полная логика бронирований
   notifications/telegram-channel.ts  # Постинг в TG-канал
 
 hooks/
@@ -109,6 +137,21 @@ scripts/
 
 ## Ключевые фичи
 
+### AI Agent Layer (строится: .claude/plan.md)
+- **PlatformAgent** — единая точка входа для любого интента (Admin/Operator/Tourist)
+- **Context Hub** — персистентный контекст: кто пользователь, что делал, что может
+- **AdminAgency** — `/digest`: ежедневный AI-анализ метрик + 3 приоритета на день
+- **OperatorAgency** — управление турами/бронями через Natural Language в TG
+- **TouristAgency** — smart TripBuilder v2 (AI-aware, DnD, marketplace)
+- **Learning Loop** — система анализирует успех/fail → оптимизирует промпты автоматически
+
+### AI подсистемы (готовы)
+- AI waterfall: OpenRouter → xAI → Anthropic (4 провайдера)
+- Smart search (embedding-based, `lib/ai/embeddings.ts`)
+- Trip recommender (`lib/services/trip-recommender.ts`)
+- RAG / Knowledge Base (`lib/services/rag.service.ts`)
+- Tour auto-fill AI (`app/api/.../auto-fill-ai/`)
+
 ### Каталог маршрутов
 - **1189 маршрутов**, 16 типов локаций, 15 типов активностей
 - Фильтрация по `location_type` (volcano, geyser, hot_spring...) и `activity_type`
@@ -121,7 +164,7 @@ scripts/
 - Бейджи: сезонность, сложность, "Бронирование"
 
 ### Карта
-- Leaflet + OpenStreetMap, цвета по типу локации
+- Yandex Maps API 2.1, цвета по типу локации
 - 900+ маркеров, кликабельные попапы → детальная страница
 - Фильтр по location_type и activity_type
 
@@ -233,7 +276,7 @@ users                    -- 6 ролей: tourist, operator, guide, transfer_ope
 
 ### Миграции
 
-40 файлов в `lib/database/migrations/` (001–039). Следующая: **`040_`**.
+58 файлов в `lib/database/migrations/` (001–058). Следующая: **`059_`**.
 
 ```bash
 # Применить миграцию напрямую (без psql):
@@ -286,12 +329,14 @@ git push origin main
 Страниц:              94
 API endpoints:       256+
 Компонентов:         119
-SQL-миграций:         40  (lib/database/migrations/ 001–039)
+SQL-миграций:         58  (lib/database/migrations/ 001–058)
 Маршрутов в БД:    1 189  (16 типов локаций, 15 типов активностей)
 Кузьмич-отзывов:     101+
 Операторов:            5
-Туров:                66  (330 выездов)
 TS-ошибок:             0
+
+Следующий этап: Agent Framework (lib/agents/) — 7 недель
+Полный план:     .claude/plan.md
 ```
 
 ### Юр. лицо
@@ -307,6 +352,6 @@ TS-ошибок:             0
 - SQL только параметризованный (`$1, $2`)
 - Pool: `import { pool } from '@/lib/db-pool'` (named export)
 - Стили: только CSS-переменные, glassmorphism запрещён
-- Миграции: без изменения существующих (001–039), следующая `040_`
+- Миграции: без изменения существующих (001–058), следующая `059_`
 - Бронирования: использовать `lib/bookings/booking.service.ts`, не `lib/services/booking.service.ts`
 - Server components не делают self-fetch через URL — только `import { query } from '@/lib/database'`

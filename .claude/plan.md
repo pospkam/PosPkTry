@@ -1,111 +1,264 @@
-# План: Bright Data MCP + массовый сбор точек в базу
+# AI System Plan — KamchatourHub
 
-## Проблема
-- В БД 260 маршрутов из 3 источников (curated JSON, idilesom, agent scraper)
-- Существующие скрейперы используют прямой fetch — блокируются капчами и anti-bot защитой
-- Bright Data Web Unlocker API уже используется в `scrape-idilesom.js` (токен есть)
-- Обогащение (season, difficulty, duration, equipment, altitude, danger) — phantom fields, никогда не заполняются
-- Нет единого MCP-интерфейса для AI-агентов для структурированного чтения интернета
+> Трансформация туристической платформы в AI-систему для туристического бизнеса,
+> которая одновременно самоэволюционирует.
+>
+> Обновлено: Март 2026
 
-## Решение: Bright Data MCP + обогащенный scraper pipeline
+---
 
-### Шаг 1: Подключить Bright Data MCP Server
-**Что:** Добавить `@brightdata/mcp` в конфигурацию MCP серверов.
-**Файлы:**
-- `.cursor/mcp.json` — добавить brightdata MCP server
-- `.claude/settings.json` или Claude Code MCP config — аналогично
+## ОСНОВНАЯ ЗАДАЧА
 
-**Конфигурация:**
-```json
-{
-  "mcpServers": {
-    "brightdata": {
-      "command": "npx",
-      "args": ["@brightdata/mcp"],
-      "env": {
-        "API_TOKEN": "${BRIGHTDATA_API_TOKEN}",
-        "WEB_UNLOCKER_ZONE": "unlocker"
-      }
-    }
-  }
-}
+Построить AI-систему ДЛЯ туристического бизнеса, которая умеет самоэволюционироваться:
+- Продакшн-работает (ценность за неделю для каждой роли)
+- Самоэволюционирует (анализирует себя, учится, оптимизирует промпты)
+
+---
+
+## АРХИТЕКТУРА (7 недель)
+
+```
+Нед.  Слой                          Выход
+──────────────────────────────────────────────────────────────────
+1-2   Core Agent Framework          PlatformAgent, Context Hub, Observation Logger
+      (Safe + Observable)           → Admin bot /digest Claude работает
+
+2-3   Multi-Role Agencies           AdminAgency, OperatorAgency, TouristAgency
+      (Production Ready)            → Все три роли получают AI-ценность
+
+3-4   Learning Layer                Feedback loop, Pattern recognition, A/B tests
+      (Self-Evolution v1)           → Система анализирует и предлагает улучшения
+
+4-5   TripBuilder v2                AI-aware builder + Smart recommendations + DnD
+      (User Delight)                → Турист: "вулканы + рыбалка" → 2 клика
+
+5-6   Optimization Engine           Runtime prompt tuning, Dynamic rules, Telemetry
+      (Auto-improvement)            → Система сама пишет лучшие промпты
+
+6-7   Scale Layer                   Guide Agency, Transfer-Operator Agency
+      (Next Roles)                  → Готовность к расширению на все 6 ролей
 ```
 
-**Бесплатный тариф:** 5000 запросов/мес — `search_engine` + `scrape_as_markdown`.
-Этого хватит на 500+ новых точек за один прогон.
+---
 
-### Шаг 2: Создать универсальный скрипт-скрейпер через Bright Data API
-**Что:** Новый скрипт `scripts/scrape-routes-brightdata.js` — использует Bright Data API напрямую (не MCP, а raw API) для массового сбора.
-**Файлы:**
-- `scripts/scrape-routes-brightdata.js` — новый скрипт
+## СХЕМА СИСТЕМЫ
 
-**Логика:**
-1. Список целевых URL (сайты Камчатки + Яндекс.Карты + 2ГИС + форумы)
-2. Для каждого: `scrape_as_markdown` через Bright Data API
-3. Парсинг markdown → JSON через regexp + AI fallback
-4. Дедупликация по `route_dedupe_key`
-5. Сохранение в `agent_route_knowledge` с payload enrichment
-
-**Новые источники (помимо существующих 12):**
-- `kamchatkaland.ru` — местный портал
-- `tour.kam-krai.ru` — краевой туристический портал
-- `wikimapia.org` (Камчатка)
-- `2gis.ru` (Петропавловск-Камчатский, nature objects)
-- `nakamchatku.ru` — форум путешественников
-- `kamforum.ru` — региональный форум
-- `wikiloc.com/kamchatka` — GPS-треки
-
-### Шаг 3: Обогащение маршрутов (enrichment pipeline)
-**Что:** Заполнить phantom fields в `payload` JSONB таблицы `agent_route_knowledge`.
-**Файлы:**
-- `scripts/enrich-routes.js` — новый скрипт
-
-**Логика:**
-1. SELECT из `agent_route_knowledge` WHERE `payload->>'difficulty' IS NULL`
-2. Для каждого маршрута: пере-скрейпить source_url через Bright Data
-3. Извлечь из текста: `difficulty`, `duration`, `season`, `best_months`, `altitude`, `danger_level`, `required_equipment`, `price_from`
-4. UPDATE `payload` JSONB
-
-**Где брать обогащение:**
-- `difficulty` — из текста ("легкий"/"средний"/"сложный"/"экстремальный")
-- `duration` — "2 часа", "Целый день", "3-5 дней"
-- `season` — "июнь-сентябрь", "зимний", "круглогодичный"
-- `best_months` — массив месяцев [6,7,8,9]
-- `altitude` — метры над уровнем моря (из текста или координат + elevation API)
-- `danger_level` — "low"/"moderate"/"high"/"extreme"
-- `required_equipment` — массив строк ["треккинговые ботинки", "каска", "ледоруб"]
-- `price_from` — числовое значение в рублях
-
-**Без миграции** — все через JSONB `payload` (уже в схеме).
-
-### Шаг 4: Обновить npm scripts
-**Файл:** `package.json`
-
-```json
-"scripts": {
-  "scrape:brightdata": "node scripts/scrape-routes-brightdata.js",
-  "scrape:brightdata:dry": "node scripts/scrape-routes-brightdata.js --dry-run",
-  "scrape:enrich": "node scripts/enrich-routes.js",
-  "scrape:enrich:dry": "node scripts/enrich-routes.js --dry-run"
-}
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                USERS (Admin / Operator / Tourist / Guide)        │
+└──────────────────────┬──────────────────────────────────────────┘
+                       │ intent
+              ┌────────▼─────────┐
+              │  PlatformAgent   │  единая точка входа
+              │  Intent Parser   │  (lib/agents/platform-agent.ts)
+              └────────┬─────────┘
+                       │
+              ┌────────▼──────────────────────────────┐
+              │          CONTEXT HUB                  │
+              │  (lib/agents/context-hub.ts)           │
+              ├───────────────────────────────────────┤
+              │  user_context    (роль, история)      │
+              │  task_context    (текущая задача)      │
+              │  platform_knowledge  (1189 маршрутов)  │
+              │  execution_state (running, logs)       │
+              └────────┬──────────────────────────────┘
+                       │
+              ┌────────▼──────────────────────────────┐
+              │     AGENT REGISTRY & SPAWNER           │
+              │  (lib/agents/agencies/)                │
+              ├──────────────┬──────────────┬──────────┤
+              │ AdminAgency  │ OpAgency     │ TAgency  │
+              │ /digest      │ tours/mgmt   │ TripBuild│
+              │ /health      │ booking/mgmt │ recommend│
+              │ /leads       │ weather_ai   │ personlz │
+              └──────────────┴──────────────┴──────────┘
+                       │
+              ┌────────▼──────────────────────────────┐
+              │       LEARNING & EVOLUTION LAYER       │
+              │  (lib/agents/learning/)                │
+              ├───────────────────────────────────────┤
+              │  feedback_loop      success/fail log   │
+              │  pattern_recognition  что работало?    │
+              │  experiment_tracker   A/B testing      │
+              │  prompt_tuning        авто-оптимизация │
+              └────────┬──────────────────────────────┘
+                       │
+              ┌────────▼──────────────────────────────┐
+              │   EXECUTION LAYER (существующий код)   │
+              │  operator_tours, bookings, leads        │
+              │  cloudpayments, telegram, analytics      │
+              └───────────────────────────────────────┘
 ```
 
-### Шаг 5: Обновить `.env.local.example`
-**Файл:** `.env.local.example`
-Добавить: `BRIGHTDATA_API_TOKEN=`
+---
 
-## Порядок реализации
-1. Шаг 1 — MCP конфигурация (2 файла, 5 минут)
-2. Шаг 2 — Скрипт скрейпера (1 файл, основная работа)
-3. Шаг 3 — Скрипт обогащения (1 файл)
-4. Шаг 4+5 — package.json + env example
+## СТРУКТУРА ФАЙЛОВ (новая)
 
-## Что НЕ трогаем
-- Существующие скрейперы (route-scraper-agent.js, unique-routes-scraper.js) — работают, не ломаем
-- Схему БД (миграции) — всё через `payload` JSONB
-- middleware.ts, auth, payments, SOS
+```
+lib/agents/
+├── platform-agent.ts             # Main entry — intent dispatch
+├── context-hub.ts                # OpenViking-like memory system
+├── feedback-loop.ts              # Log all decisions for learning
+├── pattern-recognition.ts        # Learn from success/fail patterns
+├── agencies/
+│   ├── admin-agency.ts           # /digest, /health, /forecast, /leads AI
+│   ├── operator-agency.ts        # tour mgmt, booking, weather AI
+│   ├── tourist-agency.ts         # recommendations, personalization
+│   └── subagent-spawner.ts       # Spawn child agents for parallel tasks
+├── learning/
+│   ├── experiment-tracker.ts     # A/B testing framework
+│   ├── prompt-tuning.ts          # Runtime prompt optimization
+│   └── rule-generator.ts         # Auto-generate rules from patterns
+└── safeguards/
+    ├── approval-required.ts      # Зона, требующая одобрения admin
+    └── audit-log.ts              # Все изменения системы логируются
 
-## Риски
-- Bright Data free tier: 5000 req/мес. Если мало — переходим на Pro ($0.001/req)
-- Некоторые сайты могут всё равно блокировать (но Bright Data обходит 99%)
-- AI-enrichment (difficulty, season из текста) — не 100% точность, нужен human review
+app/api/agents/
+├── dispatch/route.ts             # Intent routing
+├── feedback/route.ts             # Log success/fail + context
+└── learning/route.ts             # Analytics: что работает
+
+app/hub/admin/agents/             # Admin UI: Agent Activity Dashboard
+```
+
+---
+
+## SAFETY GUARDRAILS (самоэволюция без рисков)
+
+```
+SAFE (применяется автоматически):
+  - Prompt optimization (better results = better prompts)
+  - Pattern recognition (что сработало для похожих задач)
+  - Scheduling recommendations (когда лучше делать X)
+  - UI/UX improvements (flow, wording, layout)
+
+NEED REVIEW (требует одобрения admin):
+  - Изменение бизнес-логики (условия бронирования)
+  - Новые API-вызовы (расширение доступа)
+  - Изменение цен, комиссий, скидок
+  - Массовые рассылки
+
+FORBIDDEN (система никогда не может):
+  - Удалять данные
+  - Обходить авторизацию
+  - Изменять schema БД напрямую
+  - Выполнять платежи без явного подтверждения
+  - Изменять safeguards сами по себе
+```
+
+---
+
+## ЧТО ПОЛУЧИТ КАЖДАЯ РОЛЬ
+
+### Admin (tourhab_bot /digest):
+```
+→ "34 новых лида (↑12% к прошлой неделе), 8 бронирований,
+   3 тура без слотов на июнь.
+   Рекомендую: #1 добавить слоты рыбалке, #2 -15% на треккинг в пятницу,
+   #3 weather alert: Авачинский — 4 тура в риске на этих выходных"
+```
+
+### Operator (TG или UI):
+```
+"Какие туры у меня не заполнены?"
+→ "Тур #5 (рыбалка, 3/8 мест). Предлагаю скидку -15% или перенос среду
+   (исторически популярнее пятницы для этого сегмента)"
+→ [Применить скидку] [Перенести] [Посмотреть]
+```
+
+### Tourist (TripBuilder v2):
+```
+"Хочу вулканы + рыбалку, 5 дней, июнь, с гидом"
+→ 3 готовых маршрута с картой, ценами, рейтингами операторов
+→ Бронирование в 2 клика
+```
+
+---
+
+## НЕДЕЛЯ ЗА НЕДЕЛЕЙ
+
+### Нед. 1-2: Core (Safe Foundation)
+```
+- PlatformAgent класс (intent dispatch, tool registry)
+- Context Hub (4 типа контекста: user/task/platform/execution)
+- Observation Logger (все решения логируются, база для обучения)
+- Интеграция с существующими 5 AI подсистемами
+- Admin bot /digest v1 — работает в production
+- Tests + TypeScript strict
+```
+
+### Нед. 2-3: Agencies (Production Value)
+```
+- OperatorAgency (обёртка над operator_tours/bookings API)
+- TouristAgency (рекомендации, TripBuilder backbone)
+- AdminAgency (все dashboard операции через AI)
+- Telegram command routing через PlatformAgent
+- Error handling + fallback strategies
+```
+
+### Нед. 3-4: Learning (Self-Evolution v1)
+```
+- Feedback Loop API (log success/fail + context)
+- Pattern Recognition (MiroFish-like swarm approach)
+- Experiment Tracking (A/B тест новых подходов)
+- Prompt version control (безопасный апгрейд)
+- ApprovalRequired зона + Admin review dashboard
+```
+
+### Нед. 4-5: TripBuilder v2 (User Delight)
+```
+- AI-aware builder (знает интересы из context hub)
+- Smart recommendations (context-based, не random)
+- DnD с AI-валидацией (логичность маршрута)
+- Marketplace интеграция (operator tours в TripBuilder)
+- Save/share trips (user_trips table, migration 058 готова)
+```
+
+### Нед. 5-6: Optimization Engine
+```
+- Runtime prompt optimization (лучше результат = лучше промпт)
+- Performance metrics dashboard (что улучшилось)
+- Dynamic rules engine (if X then Y из паттернов)
+- Telemetry: что работает, что нет
+```
+
+### Нед. 6-7: Scale
+```
+- Guide Agency прототип
+- Transfer-Operator Agency
+- Agent (referral partner) Agency
+- Context Hub расширяется на новые роли
+- Integration tests
+```
+
+---
+
+## ЗАВИСИМОСТИ (что уже готово)
+
+```
+ГОТОВО (используем напрямую):
+  lib/ai/providers.ts          ← AI waterfall (4 провайдера)
+  lib/ai/embeddings.ts         ← Smart search (embedding-based)
+  lib/services/trip-recommender.ts  ← Tourist recommendations
+  lib/ai/crew-agents.ts        ← Multi-agent patterns (reference)
+  lib/ai/role-assistants.ts    ← Role-based chat
+  app/api/.../auto-fill-ai/    ← Tour card auto-fill
+  lib/services/rag.service.ts  ← RAG / KB queries
+
+СТРОИМ ПОВЕРХ:
+  lib/agents/platform-agent.ts  ← NEW, orchestrates all above
+  lib/agents/context-hub.ts     ← NEW, persistent context
+  lib/agents/learning/          ← NEW, evolution layer
+```
+
+---
+
+## РИСКИ И МИТИГАЦИЯ
+
+| Риск | Вероятность | Митигация |
+|------|------------|-----------|
+| Самоэволюция ломает продакшн | Средняя | ApprovalRequired зона, audit log |
+| AI галлюцинирует в бизнес-логике | Высокая | Только факты из БД, no free generation |
+| Prompt tuning ухудшает результат | Средняя | A/B testing, rollback механизм |
+| Context hub разрастается | Низкая | TTL на execution_state, сжатие |
+| один человек не успевает | Высокая | Фокус на Core сначала, остальное итеративно |
