@@ -3,7 +3,7 @@
 import { ReactNode } from 'react';
 import {
   BarChart3, Map, Calendar, CalendarDays, Users, CreditCard,
-  Settings, Bell, FileText, ArrowLeftRight, HelpCircle,
+  Settings, Bell, FileText, ArrowLeftRight, HelpCircle, CheckCircle,
 } from 'lucide-react';
 import { HubLayout } from '@/components/layout/HubLayout';
 import { ChatWidget } from '@/components/chat/ChatWidget';
@@ -11,6 +11,7 @@ import { ChatWidget } from '@/components/chat/ChatWidget';
 const SIDEBAR_ITEMS = [
   { href: '/hub/operator', label: 'Обзор', icon: BarChart3 },
   { href: '/hub/operator/tours', label: 'Туры', icon: Map },
+  { href: '/hub/operator/completeness', label: 'Полнота туров', icon: CheckCircle },
   { href: '/hub/operator/bookings', label: 'Бронирования', icon: Calendar },
   { href: '/hub/operator/clients', label: 'Клиенты', icon: Users },
   { href: '/hub/operator/finance', label: 'Финансы', icon: CreditCard },
