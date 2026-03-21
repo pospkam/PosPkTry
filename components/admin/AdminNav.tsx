@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { clsx } from 'clsx';
-import { BarChart3, Users, Mountain, Handshake, MessageCircle, Banknote, Settings, User, LucideIcon } from 'lucide-react';
+import { BarChart3, Users, Mountain, Handshake, MessageCircle, Banknote, Settings, User, LucideIcon, UsersRound } from 'lucide-react';
 
 interface NavItem {
   name: string;
@@ -20,6 +20,7 @@ const navItems: NavItem[] = [
   { name: 'Отзывы', path: '/hub/admin/content/reviews', icon: MessageCircle },
   { name: 'Финансы', path: '/hub/admin/finance', icon: Banknote },
   { name: 'Настройки', path: '/hub/admin/settings', icon: Settings },
+  { name: 'Совет', path: '/hub/admin/board-meeting', icon: UsersRound },
 ];
 
 export function AdminNav() {

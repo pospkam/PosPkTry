@@ -41,6 +41,8 @@ export interface AgentContext {
   platform: PlatformContext;
   execution: ExecutionContext;
   memories?: Array<{ key: string; value: Record<string, unknown>; confidence: number }>;
+  /** Внешние сигналы из интернета — по domainId агента */
+  external_signals?: Record<string, string>;
 }
 
 // ── ContextHub ────────────────────────────────────────────────────────────────

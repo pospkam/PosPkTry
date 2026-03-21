@@ -1,12 +1,17 @@
 /**
  * POST /api/agents/board-meeting
  *
- * Трёхраундовое совещание директора с межагентным взаимодействием:
- *   Раунд 1 — каждый агент независимо готовит отчёт (параллельно)
- *   Раунд 2 — каждый агент читает чужие отчёты и реагирует (параллельно)
- *   Раунд 3 — Evolution фасилитирует консенсус и конфликты (AI-синтез)
+ * SSE-стриминг, 4 раунда:
+ *   Раунд 1 — каждый агент готовит отчёт (последовательно)
+ *   Раунд 2 — перекрёстные реакции (AgentMesh)
+ *   Раунд 3 — консенсус фасилитатора (Evolution)
+ *   Раунд 4 — инициативы агентов → agent_approvals
  *
- * Требует роль admin.
+ * Memory loop:
+ *   - перед стартом: читаем решения директора + evo-инсайты → context.memories
+ *   - после совещания: consensus + proposals → agent_memory['evo']['insight']
+ *
+ * PUT /api/agents/board-meeting — зафиксировать решение директора.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -17,9 +22,13 @@ import { AgentMesh } from '@/lib/agents/mesh/agent-mesh';
 import type { AgentReaction } from '@/lib/agents/mesh/agent-mesh';
 import { pool } from '@/lib/db-pool';
 import { agentMemory } from '@/lib/agents/memory/agent-memory';
+import { approvalRequired } from '@/lib/agents/safeguards/approval-required';
+import { callAIWaterfall } from '@/lib/ai/providers';
+import type { ChatMessage } from '@/lib/ai/prompts';
+import { externalResearcher } from '@/lib/agents/research/external-researcher';
 
 export const dynamic     = 'force-dynamic';
-export const maxDuration = 90;
+export const maxDuration = 300;
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -31,32 +40,81 @@ export interface AgentReport {
   report:      string;
   duration_ms: number;
   status:      'ok' | 'error';
+  has_signals?: boolean;
 }
 
-export interface BoardMeetingResult {
-  meeting_id:  string;
-  started_at:  string;
-  agents:      AgentReport[];
-  reactions:   AgentReaction[];
-  consensus:   string;
-  /** @deprecated kept for backwards compat with old client */
-  synthesis:   string;
-  duration_ms: number;
+export interface AgentProposal {
+  from_id:         string;
+  from_name:       string;
+  from_role:       string;
+  action_type:     string;
+  title:           string;
+  description:     string;
+  priority:        'high' | 'medium' | 'low';
+  color:           string;
+  needs_approval:  boolean;
+  approval_id:     string | null;
 }
 
 // ── Agent registry ────────────────────────────────────────────────────────────
 
 const MEETING_AGENTS = [
-  { id: 'admin',    name: 'AI Администратор',       role: 'Операционный директор',   intent: 'admin_digest'     },
-  { id: 'legal',    name: 'AI Юрист',               role: 'Юрисконсульт',            intent: 'legal_risks'      },
-  { id: 'security', name: 'AI Служба безопасности', role: 'Руководитель безопасности', intent: 'sec_report'     },
-  { id: 'hacker',   name: 'AI Хакер',               role: 'Директор по росту',       intent: 'hack_growth'      },
-  { id: 'rescue',   name: 'AI Спасатель',           role: 'Начальник SAR',           intent: 'rescue_sos_stats' },
-  { id: 'eco',      name: 'AI Эколог',              role: 'Эколог-аналитик',         intent: 'eco_impact'       },
-  { id: 'content',  name: 'AI Аудитор',             role: 'Контент-директор',        intent: 'content_audit'    },
-  { id: 'quality',  name: 'AI Качество',            role: 'Директор по качеству',    intent: 'qa_operators'     },
-  { id: 'evo',      name: 'AI Эволюция',            role: 'Архитектор платформы',    intent: 'evo_optimize'     },
+  { id: 'admin',    name: 'AI Администратор',       role: 'Операционный директор',     intent: 'admin_digest',     color: 'var(--accent)' },
+  { id: 'legal',    name: 'AI Юрист',               role: 'Юрисконсульт',              intent: 'legal_risks',      color: '#8B5CF6'       },
+  { id: 'security', name: 'AI Служба безопасности', role: 'Руководитель безопасности', intent: 'sec_report',       color: 'var(--danger)' },
+  { id: 'hacker',   name: 'AI Хакер',               role: 'Директор по росту',         intent: 'hack_growth',      color: 'var(--success)'},
+  { id: 'rescue',   name: 'AI Спасатель',           role: 'Начальник SAR',             intent: 'rescue_sos_stats', color: 'var(--warning)'},
+  { id: 'eco',      name: 'AI Эколог',              role: 'Эколог-аналитик',           intent: 'eco_impact',       color: '#10B981'       },
+  { id: 'content',  name: 'AI Аудитор',             role: 'Контент-директор',          intent: 'content_audit',    color: 'var(--ocean)'  },
+  { id: 'quality',  name: 'AI Качество',            role: 'Директор по качеству',      intent: 'qa_operators',     color: '#F59E0B'       },
+  { id: 'evo',      name: 'AI Эволюция',            role: 'Архитектор платформы',      intent: 'evo_optimize',     color: '#EC4899'       },
 ] as const;
+
+// ── Proposal config per agent ─────────────────────────────────────────────────
+
+interface ProposalConfig {
+  persona:       string;
+  allowed_types: string[];
+}
+
+const PROPOSAL_CONFIGS: Record<string, ProposalConfig> = {
+  admin: {
+    persona:       'Ты операционный директор туристической платформы Камчатки.',
+    allowed_types: ['booking_rule_change', 'commission_change', 'bulk_notify'],
+  },
+  legal: {
+    persona:       'Ты юрисконсульт туристической платформы Камчатки.',
+    allowed_types: ['booking_rule_change'],
+  },
+  security: {
+    persona:       'Ты руководитель службы безопасности платформы.',
+    allowed_types: ['api_scope_expand', 'bulk_notify'],
+  },
+  hacker: {
+    persona:       'Ты директор по росту (growth hacker) туристической платформы.',
+    allowed_types: ['price_change', 'ui_copy_change'],
+  },
+  rescue: {
+    persona:       'Ты начальник поисково-спасательной службы (SAR) Камчатки.',
+    allowed_types: ['bulk_notify', 'schedule_suggest'],
+  },
+  eco: {
+    persona:       'Ты эколог-аналитик туристических маршрутов Камчатки.',
+    allowed_types: ['schedule_suggest', 'booking_rule_change'],
+  },
+  content: {
+    persona:       'Ты контент-директор туристической платформы.',
+    allowed_types: ['ui_copy_change', 'prompt_optimize'],
+  },
+  quality: {
+    persona:       'Ты директор по качеству туристических операторов.',
+    allowed_types: ['bulk_notify', 'tour_auto_cancel'],
+  },
+  evo: {
+    persona:       'Ты архитектор AI-системы туристической платформы — следишь за её эволюцией.',
+    allowed_types: ['prompt_optimize', 'schedule_suggest'],
+  },
+};
 
 // ── Agent runner ──────────────────────────────────────────────────────────────
 
@@ -123,7 +181,89 @@ async function runAgent(
   }
 }
 
-// ── POST ──────────────────────────────────────────────────────────────────────
+// ── Proposal generator (Round 4) ──────────────────────────────────────────────
+
+async function generateProposal(
+  agent:    AgentReport,
+  cfg:      ProposalConfig,
+  consensus: string,
+  meetingId: string,
+): Promise<AgentProposal | null> {
+  const prompt = [
+    cfg.persona,
+    '',
+    `На совещании (${meetingId}) ты подготовил отчёт:`,
+    `"${agent.report.replace(/<[^>]+>/g, '').substring(0, 300)}..."`,
+    '',
+    `Итог совещания:`,
+    `"${consensus.replace(/<[^>]+>/g, '').substring(0, 250)}..."`,
+    '',
+    'Предложи ОДНО конкретное действие для директора платформы — строго из твоей зоны компетенции.',
+    'Если действий нет — ответь ровно: NULL',
+    '',
+    'Если есть предложение — только JSON (без markdown, без пояснений):',
+    '{',
+    `  "action_type": "${cfg.allowed_types.join(' | ')}",`,
+    '  "title": "краткое название действия до 60 символов",',
+    '  "description": "что конкретно сделать — 1-2 предложения",',
+    '  "priority": "high | medium | low"',
+    '}',
+  ].join('\n');
+
+  const messages: ChatMessage[] = [{ role: 'user', content: prompt }];
+  const text = await callAIWaterfall(messages);
+
+  if (!text || text.trim().toUpperCase() === 'NULL' || text.trim() === '') return null;
+
+  // Extract JSON — AI may add extra text around it
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) return null;
+
+  let parsed: { action_type?: string; title?: string; description?: string; priority?: string };
+  try { parsed = JSON.parse(match[0]); }
+  catch { return null; }
+
+  if (!parsed.title || !parsed.description) return null;
+
+  const actionType = cfg.allowed_types.includes(parsed.action_type ?? '')
+    ? parsed.action_type!
+    : cfg.allowed_types[0];
+
+  const priority = (['high', 'medium', 'low'] as const).includes(parsed.priority as 'high' | 'medium' | 'low')
+    ? parsed.priority as 'high' | 'medium' | 'low'
+    : 'medium';
+
+  // Submit to approval queue
+  const approval = await approvalRequired.request({
+    type:         actionType,
+    description:  parsed.title.substring(0, 255),
+    context: {
+      from_agent:       agent.id,
+      full_description: parsed.description,
+      meeting_id:       meetingId,
+      priority,
+    },
+    requested_by:  `agent_${agent.id}`,
+    expires_hours: 48,
+  });
+
+  const agentDef = MEETING_AGENTS.find(a => a.id === agent.id);
+
+  return {
+    from_id:        agent.id,
+    from_name:      agent.name,
+    from_role:      agent.role,
+    action_type:    actionType,
+    title:          parsed.title.substring(0, 120),
+    description:    parsed.description.substring(0, 400),
+    priority,
+    color:          agentDef?.color ?? 'var(--accent)',
+    needs_approval: approval.needs_approval,
+    approval_id:    approval.id ?? null,
+  };
+}
+
+// ── POST — SSE стриминг ───────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
   const authResult = await requireAdmin(req);
@@ -132,103 +272,166 @@ export async function POST(req: NextRequest) {
   const meetingStart = Date.now();
   const meetingId    = `mtg_${Date.now()}`;
   const startedAt    = new Date().toISOString();
+  const encoder      = new TextEncoder();
 
-  // Строим контекст один раз — используют все агенты
-  const contextHub = new ContextHub();
-  const context    = await contextHub.build(
-    parseInt(authResult.userId, 10),
-    'admin',
-    'board-meeting'
-  );
-
-  // ── Раунд 1: параллельные отчёты ────────────────────────────────────────────
-  const round1 = await Promise.allSettled(
-    MEETING_AGENTS.map(async (agent): Promise<AgentReport> => {
-      const result = await runAgent(agent.intent, context);
-      const failed = result.response.startsWith('Ошибка:');
-      return {
-        id:          agent.id,
-        name:        agent.name,
-        role:        agent.role,
-        intent:      agent.intent,
-        report:      result.response,
-        duration_ms: result.duration_ms,
-        status:      failed ? 'error' : 'ok',
-      };
-    })
-  );
-
-  const agents: AgentReport[] = round1.map((r, i) =>
-    r.status === 'fulfilled'
-      ? r.value
-      : {
-          id:          MEETING_AGENTS[i].id,
-          name:        MEETING_AGENTS[i].name,
-          role:        MEETING_AGENTS[i].role,
-          intent:      MEETING_AGENTS[i].intent,
-          report:      'Агент не ответил.',
-          duration_ms: 0,
-          status:      'error' as const,
-        }
-  );
-
-  // ── Раунд 2: межагентные реакции ─────────────────────────────────────────────
-  const mesh      = new AgentMesh();
-  const reactions = await mesh.runReactions(agents);
-
-  // ── Раунд 3: консенсус фасилитатора ──────────────────────────────────────────
-  const consensus = await mesh.runConsensus(agents, reactions);
-
-  // ── Логируем ─────────────────────────────────────────────────────────────────
-  const okCount = agents.filter(a => a.status === 'ok').length;
-  try {
-    await pool.query(
-      `INSERT INTO ai_actions_log (action_type, metadata)
-       VALUES ($1, $2)`,
-      [
-        'agent_board-meeting',
-        JSON.stringify({
-          intent: 'board_meeting',
-          decision: meetingId,
-          result: 'success',
-          duration_ms: Date.now() - meetingStart,
-          user_id: parseInt(authResult.userId, 10),
-          agents_count: agents.length,
-          ok: okCount,
-          reactions_count: reactions.length,
-        }),
-      ]
-    );
-    // Store consensus as shared memory
-    await agentMemory.remember({
-      agent_id: 'evo',
-      memory_type: 'insight',
-      key: `meeting_${meetingId}`,
-      value: {
-        consensus: consensus.substring(0, 2000),
-        agents_ok: okCount,
-        reactions_count: reactions.length,
-        duration_ms: Date.now() - meetingStart,
-      },
-      source: 'board_meeting',
-      expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-    });
-  } catch { /* non-critical */ }
-
-  const result: BoardMeetingResult = {
-    meeting_id:  meetingId,
-    started_at:  startedAt,
-    agents,
-    reactions,
-    consensus,
-    synthesis:   consensus,   // backwards compat
-    duration_ms: Date.now() - meetingStart,
+  const send = (controller: ReadableStreamDefaultController, data: unknown) => {
+    controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
   };
 
-  return NextResponse.json({ success: true, ...result });
+  const stream = new ReadableStream({
+    async start(controller) {
+      try {
+        // ── Строим контекст + инжектируем память ─────────────────────────────
+        const contextHub = new ContextHub();
+        const context    = await contextHub.build(
+          parseInt(authResult.userId, 10),
+          'admin',
+          'board-meeting'
+        );
+
+        // Fix 1: читаем решения директора и evo-инсайты прошлых совещаний
+        const [directorDecisions, evoInsights] = await Promise.all([
+          agentMemory.recall('director', 'decision', 3),
+          agentMemory.recall('evo', 'insight', 5),
+        ]);
+        context.memories = [
+          ...directorDecisions.map(m => ({ key: m.key, value: m.value, confidence: m.confidence })),
+          ...evoInsights.map(m => ({ key: m.key, value: m.value, confidence: m.confidence })),
+        ];
+
+        // ── Разведка внешних источников (параллельно с UI-стартом) ────────────
+        send(controller, { type: 'meeting_start', meeting_id: meetingId, started_at: startedAt });
+        send(controller, { type: 'signals_start' });
+
+        const externalSignals = await externalResearcher
+          .fetchSignals(MEETING_AGENTS.map(a => a.id))
+          .catch(() => ({} as Record<string, string>));
+
+        context.external_signals = externalSignals;
+        const signalsCount = Object.keys(externalSignals).length;
+        send(controller, { type: 'signals_done', count: signalsCount });
+
+        // ── Раунд 1: агенты последовательно ─────────────────────────────────
+        const agents: AgentReport[] = [];
+
+        for (const agentDef of MEETING_AGENTS) {
+          send(controller, { type: 'agent_start', id: agentDef.id, name: agentDef.name, role: agentDef.role });
+
+          const result = await runAgent(agentDef.intent, context);
+          const failed = result.response.startsWith('Ошибка:');
+
+          // Дополняем отчёт внешними сигналами если есть
+          const signal   = externalSignals[agentDef.id];
+          const fullReport = signal && !failed
+            ? `${result.response}\n\n<b>Внешние сигналы:</b>\n${signal}`
+            : result.response;
+
+          const report: AgentReport = {
+            id:          agentDef.id,
+            name:        agentDef.name,
+            role:        agentDef.role,
+            intent:      agentDef.intent,
+            report:      fullReport,
+            duration_ms: result.duration_ms,
+            status:      failed ? 'error' : 'ok',
+            has_signals: signal ? true : false,
+          };
+
+          agents.push(report);
+          send(controller, { type: 'agent_done', agent: report });
+        }
+
+        // ── Раунд 2: межагентные реакции ─────────────────────────────────────
+        send(controller, { type: 'round2_start' });
+        const mesh      = new AgentMesh();
+        const reactions = await mesh.runReactions(agents);
+        send(controller, { type: 'reactions_done', reactions });
+
+        // ── Раунд 3: консенсус фасилитатора ──────────────────────────────────
+        send(controller, { type: 'round3_start' });
+        const consensus   = await mesh.runConsensus(agents, reactions);
+        send(controller, { type: 'consensus_done', consensus });
+
+        // ── Раунд 4: инициативы агентов ──────────────────────────────────────
+        send(controller, { type: 'round4_start' });
+        const successfulAgents = agents.filter(a => a.status === 'ok');
+
+        for (const agent of successfulAgents) {
+          const cfg = PROPOSAL_CONFIGS[agent.id];
+          if (!cfg) continue;
+
+          try {
+            const proposal = await generateProposal(agent, cfg, consensus, meetingId);
+            if (proposal) {
+              send(controller, { type: 'proposal', proposal });
+            }
+          } catch { /* non-critical — пропускаем агента */ }
+        }
+
+        // ── Финал ─────────────────────────────────────────────────────────────
+        const duration_ms = Date.now() - meetingStart;
+        send(controller, {
+          type:       'done',
+          meeting_id: meetingId,
+          started_at: startedAt,
+          consensus,
+          synthesis:  consensus,
+          duration_ms,
+        });
+
+        // ── Логируем ─────────────────────────────────────────────────────────
+        const okCount = agents.filter(a => a.status === 'ok').length;
+        try {
+          await pool.query(
+            `INSERT INTO ai_actions_log (action_type, metadata) VALUES ($1, $2)`,
+            [
+              'agent_board-meeting',
+              JSON.stringify({
+                intent:          'board_meeting',
+                decision:        meetingId,
+                result:          'success',
+                duration_ms,
+                user_id:         parseInt(authResult.userId, 10),
+                agents_count:    agents.length,
+                ok:              okCount,
+                reactions_count: reactions.length,
+              }),
+            ]
+          );
+          await agentMemory.remember({
+            agent_id:    'evo',
+            memory_type: 'insight',
+            key:         `meeting_${meetingId}`,
+            value: {
+              consensus:       consensus.substring(0, 2000),
+              agents_ok:       okCount,
+              reactions_count: reactions.length,
+              duration_ms,
+            },
+            source:      'board_meeting',
+            expires_at:  new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          });
+        } catch { /* non-critical */ }
+
+      } catch (err) {
+        send(controller, { type: 'error', message: err instanceof Error ? err.message : 'Неизвестная ошибка' });
+      } finally {
+        controller.close();
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      'Content-Type':      'text/event-stream',
+      'Cache-Control':     'no-cache',
+      'Connection':        'keep-alive',
+      'X-Accel-Buffering': 'no',
+    },
+  });
 }
 
-// ── PUT: сохранить решение директора ─────────────────────────────────────────
+// ── PUT: зафиксировать решение директора ─────────────────────────────────────
 
 export async function PUT(req: NextRequest) {
   const authResult = await requireAdmin(req);
@@ -248,28 +451,32 @@ export async function PUT(req: NextRequest) {
   }
 
   await pool.query(
-    `INSERT INTO ai_actions_log (action_type, metadata)
-     VALUES ($1, $2)`,
+    `INSERT INTO ai_actions_log (action_type, metadata) VALUES ($1, $2)`,
     [
       'agent_board-meeting',
       JSON.stringify({
-        intent: 'board_meeting_decision',
-        decision: meeting_id,
-        result: 'success',
-        duration_ms: 0,
-        user_id: parseInt(authResult.userId, 10),
+        intent:        'board_meeting_decision',
+        decision:      meeting_id,
+        result:        'success',
+        duration_ms:   0,
+        user_id:       parseInt(authResult.userId, 10),
         decision_text: decision.substring(0, 2000),
       }),
     ]
   );
 
-  // Store director's decision as shared memory
+  // Fix 2: сохраняем решение директора — EvolutionAgency прочитает на следующем совещании
   await agentMemory.remember({
-    agent_id: 'director',
+    agent_id:    'director',
     memory_type: 'decision',
-    key: meeting_id,
-    value: { decision: decision.substring(0, 2000), meeting_id },
-    source: 'board_meeting',
+    key:         meeting_id,
+    value: {
+      decision:   decision.substring(0, 2000),
+      meeting_id,
+      decided_at: new Date().toISOString(),
+    },
+    source:     'board_meeting',
+    confidence: 1.0,
   });
 
   return NextResponse.json({ success: true });

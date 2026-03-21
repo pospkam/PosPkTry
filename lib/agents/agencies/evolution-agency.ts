@@ -53,7 +53,7 @@ export class EvolutionAgency {
    * и предлагает конкретные улучшения.
    */
   private async selfOptimize(): Promise<AgencyResult> {
-    const [systemPatterns, feedbackSummary, intentMetrics] = await Promise.all([
+    const [systemPatterns, feedbackSummary, intentMetrics, directorDecisions] = await Promise.all([
       this.patterns.detectPatterns(168), // 7 дней
       this.feedback.getSummary(168),
       pool.query<IntentMetricRow>(`
@@ -83,6 +83,7 @@ export class EvolutionAgency {
         ORDER BY count::int DESC
         LIMIT 15
       `),
+      agentMemory.recall('director', 'decision', 3),
     ]);
 
     const lines: string[] = [
@@ -129,11 +130,28 @@ export class EvolutionAgency {
       );
     }
 
+    // Fix 2: решения директора с прошлых совещаний
+    const decisionLines: string[] = [];
+    for (const d of directorDecisions) {
+      const val = d.value as { decision?: string; decided_at?: string };
+      if (val.decision) {
+        decisionLines.push(`- [${val.decided_at?.slice(0, 10) ?? 'ранее'}] ${val.decision.substring(0, 200)}`);
+      }
+    }
+    if (decisionLines.length > 0) {
+      lines.push('', '<b>Решения директора с прошлых совещаний:</b>', ...decisionLines);
+    }
+
+    const decisionsContext = decisionLines.length > 0
+      ? `Решения директора: ${decisionLines.join('; ')}. `
+      : '';
+
     const aiEvolution = await this.callAI(
       `Ты AI-эволюция туристической платформы. Данные за 7 дней: ` +
       `${critical.length} критичных паттернов, ${warnings.length} предупреждений, ` +
       `удовлетворённость: ${Math.round((feedbackSummary.overall_satisfaction ?? 0) * 100)}%. ` +
-      `Предложи ТОП-3 конкретных улучшения архитектуры агентной системы. ` +
+      decisionsContext +
+      `Предложи ТОП-3 конкретных улучшения архитектуры агентной системы с учётом курса директора. ` +
       `Мыслишь как эволюционный алгоритм — выжить и улучшиться.`
     );
 

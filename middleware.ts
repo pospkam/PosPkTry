@@ -70,6 +70,7 @@ const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/setup-rafting-tour': ['POST'], // create rafting tour (temporary)
   '/api/exec-migration-060': ['GET'], // execute migration 060
   '/api/mig063': ['GET'],             // migration 063: agent_experiments + agent_approvals
+  '/api/mig064': ['GET'],             // migration 064: agent_memory
 };
 
 const API_ROLE_REQUIREMENTS: Record<string, AuthRole> = {
