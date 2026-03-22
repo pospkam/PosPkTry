@@ -42,7 +42,7 @@ export function validateProposalAgainstChecklist(
   ];
 
   for (const pattern of unverifiedPatterns) {
-    if (pattern.test(description)) {
+    if (pattern.test(proposal.description)) {
       violations.push(`Unverified claim detected: Use data, not guesses. Avoid "probably", "likely", "seems", "I think"`);
       break;
     }
@@ -54,8 +54,8 @@ export function validateProposalAgainstChecklist(
   ];
 
   for (const pattern of urgencyPatterns) {
-    if (pattern.test(description) && !description.toLowerCase().includes('will cause') &&
-        !description.toLowerCase().includes('lead to') && !description.toLowerCase().includes('result in')) {
+    if (pattern.test(proposal.description) && !proposal.description.toLowerCase().includes('will cause') &&
+        !proposal.description.toLowerCase().includes('lead to') && !proposal.description.toLowerCase().includes('result in')) {
       warnings.push(`False urgency detected: Cite consequences. Why now vs later?`);
       break;
     }
@@ -69,20 +69,20 @@ export function validateProposalAgainstChecklist(
   ];
 
   for (const pattern of oversimplifPatterns) {
-    if (pattern.test(description)) {
+    if (pattern.test(proposal.description)) {
       violations.push(`Oversimplification: Name specific cases, acknowledge complexity. Avoid blanket statements like "all X are Y"`);
       break;
     }
   }
 
   // FLAG 4: Check for agent bias (bias toward role's interests)
-  if (agentId === 'security' && description.toLowerCase().includes('potential security risk')) {
+  if (agentId === 'security' && proposal.description.toLowerCase().includes('potential security risk')) {
     warnings.push(`Potential Security agent bias: Quantify exploitability, don't just assume hypothetical threat`);
   }
-  if (agentId === 'eco' && description.toLowerCase().includes('tourism damages')) {
+  if (agentId === 'eco' && proposal.description.toLowerCase().includes('tourism damages')) {
     warnings.push(`Potential Eco agent bias: Cite impact studies, don't assume activism is fact`);
   }
-  if (agentId === 'rescue' && description.toLowerCase().includes('need more resources')) {
+  if (agentId === 'rescue' && proposal.description.toLowerCase().includes('need more resources')) {
     warnings.push(`Potential Rescue agent bias: Show incident trend data, don't just request resources`);
   }
 
@@ -94,16 +94,16 @@ export function validateProposalAgainstChecklist(
   ];
 
   for (const pattern of hallucinationPatterns) {
-    if (pattern.test(description)) {
+    if (pattern.test(proposal.description)) {
       warnings.push(`Possible hallucination: Only claim things you verified. Mark AI estimates with confidence bounds`);
       break;
     }
   }
 
   // Check for missing implementation feasibility
-  if (!description.toLowerCase().includes('can') && !description.toLowerCase().includes('should') &&
-      !description.toLowerCase().includes('implement') && !description.toLowerCase().includes('do') &&
-      !description.toLowerCase().includes('change')) {
+  if (!proposal.description.toLowerCase().includes('can') && !proposal.description.toLowerCase().includes('should') &&
+      !proposal.description.toLowerCase().includes('implement') && !proposal.description.toLowerCase().includes('do') &&
+      !proposal.description.toLowerCase().includes('change')) {
     warnings.push(`No implementation clarity: Describe what to do, who does it, timeline, risks`);
   }
 
@@ -114,7 +114,7 @@ export function validateProposalAgainstChecklist(
   ];
 
   for (const pattern of flattery) {
-    if (pattern.test(description)) {
+    if (pattern.test(proposal.description)) {
       violations.push(`Sycophancy detected: No flattery. Speak directly. "This metric declined 30%, here's why"`);
       break;
     }

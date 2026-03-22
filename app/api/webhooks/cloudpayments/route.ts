@@ -60,10 +60,6 @@ export async function POST(request: NextRequest) {
     const validation = await processCloudPaymentsWebhook(rawBody, signature);
     
     if (!validation.success) {
-        error: validation.error,
-        errorCode: validation.errorCode
-      });
-      
       // CloudPayments код 13 = отклонено (повторит позже)
       return NextResponse.json({ code: 13 });
     }
