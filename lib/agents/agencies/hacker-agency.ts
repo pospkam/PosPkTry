@@ -72,10 +72,10 @@ export class HackerAgency {
           (SELECT COUNT(*)::text FROM operator_bookings
             WHERE created_at >= NOW() - INTERVAL '7 days'
               AND deleted_at IS NULL)                                   AS bookings_7d,
-          (SELECT ROUND(AVG(total_amount))::text FROM operator_bookings
+          (SELECT ROUND(AVG(final_price))::text FROM operator_bookings
             WHERE created_at >= NOW() - INTERVAL '30 days'
               AND deleted_at IS NULL
-              AND total_amount > 0)                                     AS avg_booking_value,
+              AND final_price > 0)                                     AS avg_booking_value,
           (SELECT COALESCE(
             (SELECT source_url FROM leads
               WHERE created_at >= NOW() - INTERVAL '7 days'
@@ -223,7 +223,7 @@ export class HackerAgency {
         WHERE ot.deleted_at IS NULL AND ot.is_active = true
           AND NOT EXISTS (
             SELECT 1 FROM tour_availability ta
-            WHERE ta.tour_id = ot.id
+            WHERE ta.operator_tour_id = ot.id
               AND ta.date >= CURRENT_DATE
               AND ta.date <= CURRENT_DATE + 30
           )
