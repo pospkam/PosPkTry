@@ -209,6 +209,15 @@ export async function POST(request: NextRequest) {
       specialRequests || null, voucherCode || null, discountAmount, notes || null
     ]);
 
+    const newBooking = bookingResult.rows[0];
+
+    // 📌 Create agent_commissions record (was missing)
+    await query(
+      `INSERT INTO agent_commissions (agent_id, booking_id, amount, rate, status)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [agentId, newBooking.id, agentCommission, agentCommissionRate, 'pending']
+    );
+
     // Обновляем статистику клиента
     await query(`
       UPDATE agent_clients
@@ -218,8 +227,6 @@ export async function POST(request: NextRequest) {
           updated_at     = NOW()
       WHERE id = $2
     `, [totalPrice, clientId]);
-
-    const newBooking = bookingResult.rows[0];
 
     return NextResponse.json({
       success: true,
