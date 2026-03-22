@@ -61,11 +61,11 @@ echo ""
 echo "$PREFIX Applying database migrations..."
 if [ "$DRY_RUN" == "true" ]; then
   echo "    DRY RUN MODE"
-  npx ts-node scripts/run-all-missing-migrations.ts --dry-run
+  npx tsx scripts/run-all-missing-migrations.ts --dry-run
 else
-  npx ts-node scripts/run-all-missing-migrations.ts
+  npx tsx scripts/run-all-missing-migrations.ts
 fi
-echo -e "${GREEN}✓${NC} Migrations checked"
+echo -e "${GREEN}✓${NC} Migrations applied""
 
 # 4. Create Ирина account
 echo ""
@@ -73,31 +73,7 @@ echo "$PREFIX Setting up Ирина agent account..."
 if [ "$DRY_RUN" == "true" ]; then
   echo "    DRY RUN: Would create kamlandinfo@yandex.ru"
 else
-  # Check if user exists first
-  IRINA_EXISTS=$(npx ts-node -e "
-    import { pool } from './lib/db-pool';
-    pool.query('SELECT id FROM users WHERE email = \$1', ['kamlandinfo@yandex.ru'])
-      .then(r => {
-        if (r.rows.length > 0) {
-          console.log('exists');
-        } else {
-          console.log('missing');
-        }
-        process.exit(0);
-      })
-      .catch(() => {
-        console.log('error');
-        process.exit(1);
-      });
-  " 2>/dev/null || echo "error")
-
-  if [ "$IRINA_EXISTS" == "exists" ]; then
-    echo "    ⚠  Ирина account already exists"
-  elif [ "$IRINA_EXISTS" == "missing" ]; then
-    npx ts-node scripts/setup-agent-irina.ts
-  else
-    echo -e "${YELLOW}⚠  Could not verify account status${NC}"
-  fi
+  npx tsx scripts/setup-agent-irina.ts
 fi
 echo -e "${GREEN}✓${NC} Account setup"
 
