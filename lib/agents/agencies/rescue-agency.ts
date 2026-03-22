@@ -72,7 +72,7 @@ export class RescueAgency {
       }>(`
         SELECT
           COUNT(*)::text                                                        AS total_30d,
-          COUNT(*) FILTER (WHERE status NOT IN ('resolved','cancelled'))::text  AS active,
+          COUNT(*) FILTER (WHERE booking_status NOT IN ('resolved','cancelled'))::text  AS active,
           COUNT(*) FILTER (WHERE status = 'resolved')::text                    AS resolved,
           COALESCE(ROUND(
             AVG(EXTRACT(EPOCH FROM (updated_at - created_at)) / 60)
@@ -119,23 +119,23 @@ export class RescueAgency {
         p.name                AS operator,
         (
           SELECT COUNT(*)::text FROM operator_bookings ob
-          WHERE ob.tour_id = ot.id
-            AND ob.status IN ('new','confirmed')
+          WHERE ob.operator_tour_id = ot.id
+            AND ob.booking_status IN ('new','confirmed')
             AND ob.deleted_at IS NULL
         )                     AS booking_count,
-        wa.message            AS alert_message,
+        COALESCE(wa.alert_type, '') || CASE WHEN wa.severity IS NOT NULL THEN ' / ' || wa.severity ELSE '' END AS alert_message,
         wa.created_at::text   AS alert_created_at,
-        wa.location
+        wa.location_name      AS location
       FROM operator_tours ot
       JOIN partners p ON p.id = ot.operator_id
-      LEFT JOIN weather_alerts wa ON wa.tour_id = ot.id
+      LEFT JOIN weather_alerts wa ON wa.operator_tour_id = ot.id
         AND wa.created_at >= NOW() - INTERVAL '6 hours'
       WHERE ot.deleted_at IS NULL
         AND ot.is_active = true
         AND EXISTS (
           SELECT 1 FROM operator_bookings ob
-          WHERE ob.tour_id = ot.id
-            AND ob.status IN ('new','confirmed')
+          WHERE ob.operator_tour_id = ot.id
+            AND ob.booking_status IN ('new','confirmed')
             AND ob.deleted_at IS NULL
         )
       ORDER BY wa.created_at DESC NULLS LAST, ot.id

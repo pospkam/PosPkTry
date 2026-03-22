@@ -49,7 +49,7 @@ export class EcoAgency {
           COALESCE(ark.activity_type, 'не указан')          AS activity_type,
           COUNT(DISTINCT ot.id)::text                       AS tour_count,
           COUNT(DISTINCT ob.id)::text                       AS booking_count,
-          COALESCE(SUM(ob.participants_count), 0)::text     AS tourist_count,
+          COALESCE(SUM(ob.participants), 0)::text     AS tourist_count,
           CASE
             WHEN COALESCE(ark.activity_type, '') IN ('trekking', 'boat_trip') THEN '75'
             WHEN COALESCE(ark.activity_type, '') IN ('fishing')               THEN '60'
@@ -61,7 +61,7 @@ export class EcoAgency {
         FROM operator_tours ot
         LEFT JOIN agent_route_knowledge ark ON ark.id = ot.agent_route_id
         LEFT JOIN operator_bookings ob
-          ON ob.tour_id = ot.id AND ob.deleted_at IS NULL
+          ON ob.operator_tour_id = ot.id AND ob.deleted_at IS NULL
           AND ob.created_at >= NOW() - INTERVAL '30 days'
         WHERE ot.deleted_at IS NULL AND ot.is_active = true
         GROUP BY ark.activity_type
@@ -132,7 +132,7 @@ export class EcoAgency {
       FROM agent_route_knowledge ark
       LEFT JOIN operator_tours ot ON ot.agent_route_id = ark.id
         AND ot.deleted_at IS NULL AND ot.is_active = true
-      LEFT JOIN operator_bookings ob ON ob.tour_id = ot.id
+      LEFT JOIN operator_bookings ob ON ob.operator_tour_id = ot.id
         AND ob.deleted_at IS NULL
         AND ob.created_at >= NOW() - INTERVAL '30 days'
       WHERE ark.is_visible = true
