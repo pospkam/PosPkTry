@@ -40,17 +40,17 @@ interface TripDetail {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const ZONE_COLORS: Record<string, string> = {
-  elizovsky:  'var(--accent)',
-  karaginsky: 'var(--ocean)',
-  tigil:      'var(--success)',
-  milkovsky:  'var(--purple)',
+  avachinsky: 'var(--accent)',
+  eastern:    'var(--ocean)',
+  northern:   'var(--success)',
+  western:    'var(--purple)',
 };
 
 const ZONE_LABELS: Record<string, string> = {
-  elizovsky:  'Елизовский — вулканы',
-  karaginsky: 'Карагинский — остров',
-  tigil:      'Тигильский — гейзеры',
-  milkovsky:  'Мильковский — рыбалка',
+  avachinsky: 'Авачинская — вулканы',
+  eastern:    'Карагинская — остров',
+  northern:   'Тигильская — гейзеры',
+  western:    'Мильковская — рыбалка',
 };
 
 const TRANSPORT_ICONS: Record<string, React.ElementType> = {

@@ -145,7 +145,7 @@ const ZONE_BEST_MONTHS: Record<ZoneId, number[]> = {
 
 // ── Zone travel graph ────────────────────────────────────────────────────────
 
-interface ZoneEdge {
+export interface ZoneEdge {
   distanceKm: number;
   travelHours: number | null;   // null = no road, helicopter only
   transports: TransportType[];
@@ -153,7 +153,7 @@ interface ZoneEdge {
   needsTravelDay: boolean;
 }
 
-const ZONE_GRAPH: Record<ZoneId, Partial<Record<ZoneId, ZoneEdge>>> = {
+export const ZONE_GRAPH: Record<ZoneId, Partial<Record<ZoneId, ZoneEdge>>> = {
   avachinsky: {
     western:  { distanceKm: 300, travelHours: 7,    transports: ['jeep'],       costPerPerson: [5000, 8000],   needsTravelDay: true },
     eastern:  { distanceKm: 250, travelHours: 5,    transports: ['jeep', 'helicopter'], costPerPerson: [5000, 15000], needsTravelDay: true },
@@ -178,7 +178,7 @@ const ZONE_GRAPH: Record<ZoneId, Partial<Record<ZoneId, ZoneEdge>>> = {
 
 // ── Zone transport constraints ──────────────────────────────────────────────
 
-const ZONE_ALLOWED_TRANSPORT: Record<ZoneId, TransportType[]> = {
+export const ZONE_ALLOWED_TRANSPORT: Record<ZoneId, TransportType[]> = {
   avachinsky: ['walking', 'jeep', 'helicopter'],
   western:    ['jeep', 'boat', 'helicopter'],
   eastern:    ['jeep', 'helicopter', 'boat'],

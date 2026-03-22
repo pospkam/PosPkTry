@@ -54,6 +54,7 @@ const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/planner/chat':           ['POST'], // NL → plan fill
   '/api/planner/tours-for-day':  ['GET'],  // marketplace tours per activity
   '/api/planner/validate':       ['POST'], // AI route sequence validation
+  '/api/planner/companion':      ['POST'], // AI trip companion chat
   '/api/mig057': ['GET'],             // migration 057: transportation column
   '/api/mig058': ['GET'],             // migration 058: user_trips table
   '/api/mig059': ['GET'],             // migration 059: ai_actions_log table

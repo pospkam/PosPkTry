@@ -346,14 +346,14 @@ function extractLocationData(raw: unknown): LocationData | null {
 function inferZoneFromCoords(lat: number, lng: number): string {
   // Все районы Камчатки по реальным координатам центров
   const ZONE_CENTERS: Record<string, [number, number]> = {
-    elizovsky:  [52.80, 158.80],
-    milkovsky:  [55.33, 157.12],
-    karaginsky: [55.20, 161.42],
-    tigil:      [57.73, 158.71],
+    avachinsky: [52.80, 158.80],
+    western:    [55.33, 157.12],
+    eastern:    [55.20, 161.42],
+    northern:   [57.73, 158.71],
   };
 
   // Найди ближайший район по евклидовой дистанции
-  let closest = 'elizovsky';
+  let closest = 'avachinsky';
   let minDist = Infinity;
 
   for (const [zone, [centerLat, centerLng]] of Object.entries(ZONE_CENTERS)) {

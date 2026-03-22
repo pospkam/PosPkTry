@@ -123,7 +123,7 @@ const INTEREST_KEYWORDS: Record<string, string[]> = {
 
 // ── Сезонность: какие активности НЕДОСТУПНЫ в каком месяце ───────────────────
 
-const SEASON_BLOCKED: Record<number, string[]> = {
+export const SEASON_BLOCKED: Record<number, string[]> = {
   // Зима (декабрь-февраль): нет моря, медведи спят, нет серфа, нет дайвинга
   12: ['boat_trip', 'bear_watching', 'surf', 'diving', 'camping'],
   1:  ['boat_trip', 'bear_watching', 'surf', 'diving', 'camping'],

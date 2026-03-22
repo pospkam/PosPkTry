@@ -17,90 +17,13 @@ import {
   CheckCircle, Download, MessageCircle, Eye,
 } from 'lucide-react';
 import type { MapMarker } from '@/components/shared/LeafletMap';
+import type {
+  TransportType, DayType, FitnessLevel, BudgetTier,
+  SelectItem, DayPlan, TripWarning, PriceBreakdown, Recommendation,
+  RoutePoint, Partner, TourPreview, ValidationResult, MobileTab,
+} from './planner-types';
 
 const LeafletMap = dynamic(() => import('@/components/shared/LeafletMap'), { ssr: false });
-
-// ─── Types ───────────────────────────────────────────────────────────────────
-
-type TransportType = 'walking' | 'jeep' | 'helicopter' | 'boat';
-type DayType = 'arrival' | 'activity' | 'travel' | 'rest' | 'buffer' | 'departure';
-type FitnessLevel = 'beginner' | 'moderate' | 'active';
-type BudgetTier = 'economy' | 'comfort' | 'premium';
-
-interface SelectItem {
-  id: string;
-  label: string;
-  Icon: React.ElementType;
-}
-
-interface DayPlan {
-  day: number;
-  type: DayType;
-  zone: 'elizovsky' | 'milkovsky' | 'karaginsky' | 'tigil';
-  title: string;
-  description: string;
-  activityType: string;
-  priceFrom: number;
-  priceTo: number;
-  coords: [number, number];
-  defaultTransport: TransportType;
-  allowedTransports: TransportType[];
-  difficulty: 'easy' | 'moderate' | 'hard';
-  childFriendly: boolean;
-  minChildAge: number;
-  dayWarnings: string[];
-}
-
-interface TripWarning {
-  type: string;
-  severity: 'critical' | 'important' | 'info';
-  message: string;
-}
-
-interface PriceBreakdown {
-  activities: [number, number];
-  accommodation: [number, number];
-  transport: [number, number];
-  perPersonTotal: [number, number];
-}
-
-interface Recommendation {
-  zones: Array<{ zone: string; score: number; reason: string; crowdScore?: number }>;
-  days: DayPlan[];
-  warnings: TripWarning[];
-  priceBreakdown: PriceBreakdown;
-  itinerary: string;
-}
-
-interface RoutePoint {
-  id: string;
-  title: string;
-  description: string | null;
-  lat: number;
-  lng: number;
-  activity_type: string | null;
-  location_type: string | null;
-  zone: string | null;
-}
-
-interface Partner {
-  id: string;
-  name: string;
-  slug: string;
-  rating: number;
-  review_count: number;
-  short_description: string;
-  contacts: Array<{ name: string; phone: string; role: string }> | null;
-  has_matching_tours: boolean;
-}
-
-interface TourPreview {
-  id: string;
-  title: string;
-  base_price: string;
-  price_unit: string | null;
-  operator_slug: string;
-}
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -123,24 +46,24 @@ const ACTIVITIES: SelectItem[] = [
 ];
 
 const ZONE_LABELS: Record<string, string> = {
-  elizovsky:  'Елизовский — вулканы и ПКК',
-  milkovsky:  'Мильковский — озёра и рыбалка',
-  karaginsky: 'Карагинский — медведи и остров',
-  tigil:      'Тигильский — гейзеры и север',
+  avachinsky: 'Авачинская — вулканы и ПКК',
+  western:    'Мильковская — озёра и рыбалка',
+  eastern:    'Карагинская — медведи и остров',
+  northern:   'Тигильская — гейзеры и север',
 };
 
 const ZONE_COLORS: Record<string, string> = {
-  elizovsky:  'var(--accent)',
-  karaginsky: 'var(--ocean)',
-  tigil:      'var(--success)',
-  milkovsky:  'var(--purple)',
+  avachinsky: 'var(--accent)',
+  eastern:    'var(--ocean)',
+  northern:   'var(--success)',
+  western:    'var(--purple)',
 };
 
 const ZONE_COORDS: Record<string, [number, number]> = {
-  elizovsky:  [52.80, 158.80],
-  milkovsky:  [55.33, 157.12],
-  karaginsky: [55.20, 161.42],
-  tigil:      [57.73, 158.71],
+  avachinsky: [52.80, 158.80],
+  western:    [55.33, 157.12],
+  eastern:    [55.20, 161.42],
+  northern:   [57.73, 158.71],
 };
 
 const ACTIVITY_LABEL: Record<string, string> = {
@@ -209,7 +132,7 @@ function trunc(s: string | null | undefined, len: number): string {
 
 function guessZone(lat: number, lng: number): DayPlan['zone'] {
   const entries = Object.entries(ZONE_COORDS) as [string, [number, number]][];
-  let best = 'elizovsky';
+  let best = 'avachinsky';
   let bestDist = Infinity;
   for (const [zone, coords] of entries) {
     const dist = Math.abs(lat - coords[0]) + Math.abs(lng - coords[1]);
@@ -271,10 +194,10 @@ function SelectGroup({ title, items, selected, onToggle }: {
 
 // Boat only makes sense for coastal/river zones; helicopter not for sea crossings only
 const ZONE_TRANSPORTS: Record<string, TransportType[]> = {
-  elizovsky:  ['walking', 'jeep', 'helicopter'],
-  tigil:      ['walking', 'jeep', 'helicopter'],
-  karaginsky: ['walking', 'jeep', 'helicopter', 'boat'],
-  milkovsky:  ['walking', 'jeep', 'boat'],
+  avachinsky: ['walking', 'jeep', 'helicopter'],
+  northern:   ['walking', 'jeep', 'helicopter'],
+  eastern:    ['walking', 'jeep', 'helicopter', 'boat'],
+  western:    ['walking', 'jeep', 'boat'],
 };
 
 function TransportSelector({ selected, onChange, zone }: {
@@ -739,8 +662,6 @@ function PartnersModal({ activityType, onClose }: {
 
 // ─── Mobile Tab Switcher ─────────────────────────────────────────────────────
 
-type MobileTab = 'plan' | 'map';
-
 function MobileTabBar({ active, onChange, editingDay }: {
   active: MobileTab;
   onChange: (tab: MobileTab) => void;
@@ -813,7 +734,7 @@ function CompanionWidget({ days, arrival, departure }: {
     ).join('\n');
 
     try {
-      const res = await fetch('/api/planner/chat', {
+      const res = await fetch('/api/planner/companion', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -824,7 +745,7 @@ function CompanionWidget({ days, arrival, departure }: {
       const data = await res.json();
       setMessages(prev => [...prev, {
         role: 'assistant',
-        text: data.success ? data.data?.reply ?? 'Нет ответа' : data.error ?? 'Ошибка',
+        text: data.success ? data.reply : (data.error ?? 'Ошибка'),
       }]);
     } catch {
       setMessages(prev => [...prev, { role: 'assistant', text: 'Ошибка соединения' }]);
@@ -979,7 +900,7 @@ export function PlannerClient({ initialUserId }: { initialUserId?: string | null
   const loadedActivitiesRef = useRef<Set<string>>(new Set());
 
   // TripBuilder v2: AI route validation after DnD
-  const [validation, setValidation] = useState<{ valid: boolean; message: string } | null>(null);
+  const [validation, setValidation] = useState<ValidationResult | null>(null);
   const validationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Day confirmation
@@ -1011,12 +932,17 @@ export function PlannerClient({ initialUserId }: { initialUserId?: string | null
     uniqueActivities.forEach(at => loadedActivitiesRef.current.add(at));
     void Promise.all(uniqueActivities.map(async (at) => {
       try {
-        const res = await fetch(`/api/planner/tours-for-day?activity_type=${encodeURIComponent(at)}&limit=1`);
+        // Find the zone of the first day with this activity
+        const dayWithActivity = days.find(d => d.activityType === at);
+        const zone = dayWithActivity?.zone ?? '';
+        const params = new URLSearchParams({ activity_type: at, limit: '1' });
+        if (zone) params.set('zone', zone);
+        const res = await fetch(`/api/planner/tours-for-day?${params.toString()}`);
         const data: { success: boolean; tours?: TourPreview[] } = await res.json();
         if (data.success && data.tours && data.tours.length > 0) {
           setToursPerActivity(prev => ({ ...prev, [at]: data.tours![0] }));
         }
-      } catch { /* silent — tours are optional */ }
+      } catch { /* silent -- tours are optional */ }
     }));
   }, [days]);
 
@@ -1084,10 +1010,10 @@ export function PlannerClient({ initialUserId }: { initialUserId?: string | null
 
     // Zone → Yandex preset color mapping for suggestion dots
     const ZONE_DOT_PRESET: Record<string, string> = {
-      elizovsky:  'islands#orangeDotIcon',
-      karaginsky: 'islands#blueDotIcon',
-      tigil:      'islands#greenDotIcon',
-      milkovsky:  'islands#violetDotIcon',
+      avachinsky: 'islands#orangeDotIcon',
+      eastern:    'islands#blueDotIcon',
+      northern:   'islands#greenDotIcon',
+      western:    'islands#violetDotIcon',
     };
 
     // Background route dots — colored by zone, bright in edit mode
@@ -1302,7 +1228,7 @@ ${recommendation?.warnings && recommendation.warnings.length > 0 ? `<div class="
     const newDay: DayPlan = {
       day: newNum,
       type: 'activity',
-      zone: 'elizovsky',
+      zone: 'avachinsky',
       title: 'Свободный день',
       description: 'Выберите активность или замените на карте',
       activityType: 'hot_spring',
@@ -1778,10 +1704,17 @@ ${recommendation?.warnings && recommendation.warnings.length > 0 ? `<div class="
                             activityType: d.activityType,
                             defaultTransport: d.defaultTransport,
                           })),
+                          arrivalDate: arrival || undefined,
+                          fitnessLevel,
+                          seasickness,
+                          children: childAges.length > 0 ? childAges : undefined,
                         }),
-                      }).then(r => r.json()).then((data: { success: boolean; valid?: boolean; message?: string }) => {
+                      }).then(r => r.json()).then((data: { success: boolean; valid?: boolean; message?: string; issues?: Array<{ type: string; severity: string; message: string; day?: number }> }) => {
                         if (data.success && data.message) {
-                          setValidation({ valid: data.valid ?? true, message: data.message });
+                          const issueText = data.issues && data.issues.length > 0
+                            ? `${data.message}\n${data.issues.map(i => `- ${i.message}`).join('\n')}`
+                            : data.message;
+                          setValidation({ valid: data.valid ?? true, message: issueText });
                         }
                       }).catch(() => { /* silent */ });
                     }, 800);
@@ -1822,15 +1755,24 @@ ${recommendation?.warnings && recommendation.warnings.length > 0 ? `<div class="
 
               {/* AI route validation result */}
               {validation && (
-                <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium mt-1.5 ${
+                <div className={`px-3 py-2 rounded-lg text-xs font-medium mt-1.5 ${
                   validation.valid
                     ? 'bg-[var(--success)]/10 text-[var(--success)] border border-[var(--success)]/20'
                     : 'bg-[var(--warning)]/10 text-[var(--warning)] border border-[var(--warning)]/20'
                 }`}>
-                  {validation.valid
-                    ? <Check className="w-3.5 h-3.5 shrink-0" />
-                    : <AlertTriangle className="w-3.5 h-3.5 shrink-0" />}
-                  <span>{validation.message}</span>
+                  <div className="flex items-center gap-2">
+                    {validation.valid
+                      ? <Check className="w-3.5 h-3.5 shrink-0" />
+                      : <AlertTriangle className="w-3.5 h-3.5 shrink-0" />}
+                    <span>{validation.message.split('\n')[0]}</span>
+                  </div>
+                  {validation.message.includes('\n') && (
+                    <ul className="mt-1.5 ml-5 space-y-0.5 text-[var(--text-secondary)]">
+                      {validation.message.split('\n').slice(1).filter(Boolean).map((line, i) => (
+                        <li key={i}>{line}</li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               )}
 

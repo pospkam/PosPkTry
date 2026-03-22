@@ -19,11 +19,45 @@ export const RECOMMENDER_TO_PLACES: Record<string, string> = {
   thermal: 'hot_spring',
 };
 
-export const ZONE_LABEL: Record<string, string> = {
+// ─── Zones (canonical IDs match DB: agent_route_knowledge.zone) ───────────────
+
+export type ZoneId = 'avachinsky' | 'western' | 'eastern' | 'northern';
+export const ZONE_IDS: ZoneId[] = ['avachinsky', 'western', 'eastern', 'northern'];
+
+export const ZONE_LABEL: Record<ZoneId, string> = {
   avachinsky: 'Авачинская — вулканы',
   western:    'Западная — рыбалка',
   eastern:    'Восточная — медведи',
   northern:   'Северная — гейзеры',
+};
+
+export const ZONE_COLORS: Record<ZoneId, string> = {
+  avachinsky: 'var(--accent)',
+  eastern:    'var(--ocean)',
+  northern:   'var(--success)',
+  western:    '#a855f7',
+};
+
+export const ZONE_COORDS: Record<ZoneId, [number, number]> = {
+  avachinsky: [52.80, 158.80],
+  western:    [55.33, 157.12],
+  eastern:    [55.20, 161.42],
+  northern:   [57.73, 158.71],
+};
+
+type TransportType = 'walking' | 'jeep' | 'helicopter' | 'boat';
+export const ZONE_TRANSPORTS: Record<ZoneId, TransportType[]> = {
+  avachinsky: ['walking', 'jeep', 'helicopter'],
+  western:    ['walking', 'jeep', 'boat'],
+  eastern:    ['walking', 'jeep', 'helicopter', 'boat'],
+  northern:   ['walking', 'jeep', 'helicopter'],
+};
+
+export const ZONE_DOT_ICONS: Record<ZoneId, string> = {
+  avachinsky: 'islands#orangeDotIcon',
+  eastern:    'islands#blueDotIcon',
+  northern:   'islands#greenDotIcon',
+  western:    'islands#violetDotIcon',
 };
 
 export const ACTIVITY_LABEL: Record<string, string> = {
