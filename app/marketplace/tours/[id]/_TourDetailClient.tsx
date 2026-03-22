@@ -13,6 +13,7 @@ interface TourDetail {
   activity_type: string;
   location_type: string;
   location: string;
+  tour_image: string | null;
   operator_name: string;
   operator_id: number;
   bookings_count: number;
@@ -101,6 +102,17 @@ export default function TourDetailClient() {
           Оператор: <span className="font-semibold text-[var(--text-primary)]">{tour.operator_name}</span>
         </p>
       </div>
+
+      {/* Hero Image */}
+      {tour.tour_image && (
+        <div className="w-full h-96 rounded-lg overflow-hidden mb-8 shadow-lg">
+          <img
+            src={tour.tour_image}
+            alt={tour.title}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
         {/* Main Content */}

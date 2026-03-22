@@ -12,6 +12,7 @@ interface Tour {
   activity_type: string;
   location_type: string;
   location: string;
+  tour_image: string | null;
   operator_name: string;
   operator_id: number;
   bookings_count: number;
@@ -97,46 +98,60 @@ export default function MarketplaceClient() {
               href={`/marketplace/tours/${tour.id}`}
               className="ds-card hover:shadow-lg transition-shadow duration-200 overflow-hidden"
             >
-              <div className="p-6 h-full flex flex-col">
-                {/* Header */}
-                <div className="mb-3">
-                  <h3 className="ds-h2 line-clamp-2 mb-2">{tour.title}</h3>
-                  <p className="text-xs text-[var(--text-muted)]">
-                    {tour.operator_name}
+              <div className="p-0">
+                {/* Image */}
+                {tour.tour_image && (
+                  <div className="relative w-full h-48 bg-[var(--bg-hover)] overflow-hidden">
+                    <img
+                      src={tour.tour_image}
+                      alt={tour.title}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
+                    />
+                  </div>
+                )}
+
+                {/* Content */}
+                <div className="p-6 flex flex-col h-full">
+                  {/* Header */}
+                  <div className="mb-3">
+                    <h3 className="ds-h2 line-clamp-2 mb-2">{tour.title}</h3>
+                    <p className="text-xs text-[var(--text-muted)]">
+                      {tour.operator_name}
+                    </p>
+                  </div>
+
+                  {/* Description */}
+                  <p className="text-sm text-[var(--text-secondary)] line-clamp-3 mb-4 flex-grow">
+                    {tour.description}
                   </p>
-                </div>
 
-                {/* Description */}
-                <p className="text-sm text-[var(--text-secondary)] line-clamp-3 mb-4 flex-grow">
-                  {tour.description}
-                </p>
-
-                {/* Details */}
-                <div className="space-y-2 mb-4 text-sm">
-                  <div className="flex items-center gap-2 text-[var(--text-secondary)]">
-                    <MapPin size={16} className="flex-shrink-0" />
-                    <span>{tour.location_type}</span>
+                  {/* Details */}
+                  <div className="space-y-2 mb-4 text-sm">
+                    <div className="flex items-center gap-2 text-[var(--text-secondary)]">
+                      <MapPin size={16} className="flex-shrink-0" />
+                      <span>{tour.location_type}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-[var(--text-secondary)]">
+                      <Users size={16} className="flex-shrink-0" />
+                      <span>{tour.bookings_count} бронирований</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-[var(--text-secondary)]">
-                    <Users size={16} className="flex-shrink-0" />
-                    <span>{tour.bookings_count} бронирований</span>
-                  </div>
-                </div>
 
-                {/* Price */}
-                <div className="flex items-center justify-between pt-4 border-t border-[var(--border)]">
-                  <span className="text-xs text-[var(--text-muted)]">От</span>
-                  <div className="flex items-center gap-1 text-[var(--accent)] font-bold">
-                    <DollarSign size={16} />
-                    <span>{tour.base_price.toLocaleString('ru-RU')}₽</span>
+                  {/* Price */}
+                  <div className="flex items-center justify-between pt-4 border-t border-[var(--border)]">
+                    <span className="text-xs text-[var(--text-muted)]">От</span>
+                    <div className="flex items-center gap-1 text-[var(--accent)] font-bold">
+                      <DollarSign size={16} />
+                      <span>{tour.base_price.toLocaleString('ru-RU')}₽</span>
+                    </div>
                   </div>
-                </div>
 
-                {/* CTA */}
-                <div className="mt-4 pt-4 border-t border-[var(--border)]">
-                  <button className="w-full text-center text-sm text-[var(--ocean)] hover:text-[var(--accent)] transition-colors duration-200 font-semibold">
-                    Подробнее →
-                  </button>
+                  {/* CTA */}
+                  <div className="mt-4 pt-4 border-t border-[var(--border)]">
+                    <button className="w-full text-center text-sm text-[var(--ocean)] hover:text-[var(--accent)] transition-colors duration-200 font-semibold">
+                      Подробнее →
+                    </button>
+                  </div>
                 </div>
               </div>
             </Link>

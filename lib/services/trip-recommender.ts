@@ -6,6 +6,14 @@
 import { callAIWaterfall } from '@/lib/ai/providers';
 import type { ChatMessage } from '@/lib/ai/prompts';
 import { pool } from '@/lib/db-pool';
+import {
+  createPlannerCache, fetchRealToursForZone, fetchAvailabilityForTour,
+  fetchZoneCapacity, fetchContingencyAlternatives, fetchReviewSignals,
+  type PlannerCache, type RealTour,
+} from '@/lib/services/planner-data-layer';
+import {
+  fetchWeatherForecast, computeQualityScore, assessHealthCompatibility,
+} from '@/lib/services/planner-intelligence';
 
 // ─── Public types ────────────────────────────────────────────────────────────
 
@@ -27,6 +35,8 @@ export interface TripProfile {
   budgetTier: BudgetTier;
   seasickness?: boolean;        // motion sickness — avoid boat activities
   riskMode?: 'safe_only' | 'adventure' | 'available'; // default: safe_only
+  healthNotes?: string;         // free text: injuries, allergies, conditions
+  mobilityLevel?: 'full' | 'limited' | 'wheelchair';
 }
 
 export interface DayPlan {
@@ -45,6 +55,38 @@ export interface DayPlan {
   childFriendly: boolean;
   minChildAge: number;
   dayWarnings: string[];
+  // Reality-aware fields (all optional for backward compat)
+  realTour?: {
+    tourId: string;
+    operatorName: string;
+    operatorSlug: string;
+    operatorRating: number;
+    tourRating: number | null;
+    reviewCount: number;
+    verified: boolean;
+    maxParticipants: number;
+    weatherDependent: boolean;
+    durationHours: number | null;
+  };
+  realPrice?: number;
+  availableDate?: string;
+  slotsRemaining?: number;
+  capacityWarning?: string;
+  weatherForecast?: {
+    tempMax: number;
+    tempMin: number;
+    precipMm: number;
+    windKmh: number;
+    code: number;
+    description: string;
+  };
+  alternatives?: Array<{
+    tourId: string;
+    title: string;
+    price: number;
+    discountPercent: number;
+  }>;
+  qualityScore?: number;
 }
 
 export interface TripWarning {
@@ -164,7 +206,7 @@ interface ActivityConstraints {
   safetyNotes?: string[];
 }
 
-const ACTIVITY_CONSTRAINTS: Record<string, ActivityConstraints> = {
+export const ACTIVITY_CONSTRAINTS: Record<string, ActivityConstraints> = {
   trekking: {
     allowedTransports: ['walking', 'jeep'],
     defaultTransport: 'walking',
@@ -728,19 +770,40 @@ function collectWarnings(
     });
   }
 
+  // Health / mobility warnings
+  if (profile.mobilityLevel === 'wheelchair') {
+    warnings.push({
+      type: 'safety', severity: 'critical',
+      message: 'Камчатка имеет крайне ограниченную безбарьерную инфраструктуру. Доступные варианты: термальные источники Паратунки, обзорные вертолётные экскурсии.',
+    });
+  } else if (profile.mobilityLevel === 'limited') {
+    warnings.push({
+      type: 'fitness', severity: 'important',
+      message: 'Ограниченная подвижность: маршруты адаптированы, исключены многочасовые переходы и крутые подъёмы.',
+    });
+  }
+
+  // Large group advisory
+  const gs = groupSize(profile);
+  if (gs >= 8) {
+    warnings.push({
+      type: 'season', severity: 'important',
+      message: `Группа ${gs} человек — ограниченная вместимость на многих турах. Рекомендуем бронировать за 14+ дней.`,
+    });
+  }
+
   return warnings;
 }
 
 // ── Zone scoring ─────────────────────────────────────────────────────────────
 
-function scoreZones(profile: TripProfile, crowdLoad: number = 0): ZoneRecommendation[] {
+async function scoreZones(profile: TripProfile, cache: PlannerCache): Promise<ZoneRecommendation[]> {
   const month = getMonth(profile);
   const scores: Record<string, number> = {};
 
   for (const interest of profile.interests) {
     const c = ACTIVITY_CONSTRAINTS[interest];
     if (!c) continue;
-    // Skip unavailable activities
     if (!c.months.includes(month)) continue;
     for (const zone of c.bestZones) {
       scores[zone] = (scores[zone] ?? 0) + 25;
@@ -762,17 +825,28 @@ function scoreZones(profile: TripProfile, crowdLoad: number = 0): ZoneRecommenda
 
   // Seasickness: penalize zones with mandatory boat access
   if (profile.seasickness) {
-    // Western zone heavily relies on boat for fishing/river
     scores['western'] = Math.max(0, (scores['western'] ?? 0) - 15);
   }
 
-  // Crowd penalty: when crowd load is high, boost alternative zones to distribute tourists
-  if (crowdLoad > 60 && scores['avachinsky'] && scores['avachinsky'] > 0) {
-    // Avachinsky gets most traffic — small boost to other zones to spread load
-    const penalty = Math.round((crowdLoad - 60) / 4); // 0-10 pts
-    scores['avachinsky'] = Math.max(0, scores['avachinsky'] - penalty);
-    if (scores['eastern']) scores['eastern'] += Math.round(penalty / 2);
-    if (scores['western']) scores['western'] += Math.round(penalty / 2);
+  // Reality boosts: prefer zones with real operator tours + good ratings
+  for (const zone of Object.keys(scores) as ZoneId[]) {
+    if ((scores[zone] ?? 0) <= 0) continue;
+    const primaryInterest = profile.interests[0] ?? 'trekking';
+    const realTours = await fetchRealToursForZone(zone, primaryInterest, 3, cache);
+    if (realTours.length > 0) {
+      scores[zone] = (scores[zone] ?? 0) + 10;
+      const avgRating = realTours.reduce((s, t) => s + t.operatorRating, 0) / realTours.length;
+      if (avgRating >= 4.0) {
+        scores[zone] = (scores[zone] ?? 0) + 5;
+      }
+    }
+    // Capacity check: penalize overloaded zones
+    if (profile.arrivalDate && profile.departureDate) {
+      const cap = await fetchZoneCapacity(zone, profile.arrivalDate, profile.departureDate, cache);
+      if (cap.utilizationPercent > 80) {
+        scores[zone] = Math.max(0, (scores[zone] ?? 0) - 10);
+      }
+    }
   }
 
   return Object.entries(scores)
@@ -784,7 +858,7 @@ function scoreZones(profile: TripProfile, crowdLoad: number = 0): ZoneRecommenda
       score: Math.min(100, score),
       reason: `${profile.interests.filter(i => ACTIVITY_CONSTRAINTS[i]?.bestZones.includes(zone as ZoneId)).join(', ')}`,
       bestMonths: ZONE_BEST_MONTHS[zone as ZoneId] ?? [],
-      crowdScore: zone === 'avachinsky' ? crowdLoad : Math.max(0, crowdLoad - 20),
+      crowdScore: 0,
     }));
 }
 
@@ -794,6 +868,7 @@ async function generateDayPlans(
   profile: TripProfile,
   zones: ZoneRecommendation[],
   tripDays: number,
+  cache: PlannerCache,
 ): Promise<DayPlan[]> {
   if (tripDays <= 0 || zones.length === 0) return [];
   const youngest = youngestChild(profile);
@@ -887,9 +962,12 @@ async function generateDayPlans(
       }
     }
 
-    // Fetch real routes from DB for this zone/interests
+    // Fetch real operator tours (sorted by rating) + DB routes as fallback
     const primaryInterest = block.interests[0];
-    const dbRoutes = await fetchRoutesForZone(block.zone, primaryInterest, block.activeDays + 2);
+    const realTours = await fetchRealToursForZone(block.zone, primaryInterest, block.activeDays + 2, cache);
+    const dbRoutes = realTours.length >= block.activeDays
+      ? []
+      : await fetchRoutesForZone(block.zone, primaryInterest, block.activeDays - realTours.length + 2);
 
     // Generate activity days for this zone
     for (let d = 0; d < block.activeDays && dayNum <= tripDays - departureDays; d++) {
@@ -898,12 +976,14 @@ async function generateDayPlans(
       const c = ACTIVITY_CONSTRAINTS[interest];
       if (!c) continue;
 
-      // Use real route data if available
-      const route = dbRoutes[d];
-      const coords: [number, number] = route
-        ? [route.lat, route.lng]
-        : ZONE_COORDS[block.zone];
-      const title = route?.title ?? `${interest} — ${ZONE_NAMES[block.zone]}`;
+      // Reality layer: try real tour first, then DB route
+      const realTour: RealTour | null = d < realTours.length ? realTours[d] : null;
+      const route = !realTour && d - realTours.length >= 0 ? dbRoutes[d - realTours.length] : null;
+
+      const coords: [number, number] = realTour
+        ? [realTour.lat, realTour.lng]
+        : route ? [route.lat, route.lng] : ZONE_COORDS[block.zone];
+      const title = realTour?.title ?? route?.title ?? `${interest} — ${ZONE_NAMES[block.zone]}`;
 
       const childOk = youngest === null || youngest >= c.minChildAge;
       const dayWarnings: string[] = [];
@@ -911,6 +991,12 @@ async function generateDayPlans(
         dayWarnings.push(`Детям < ${c.minChildAge}: ${c.childAlternative}`);
       }
       if (c.safetyNotes) dayWarnings.push(...c.safetyNotes);
+
+      // Health compatibility check
+      const healthCheck = assessHealthCompatibility(
+        interest, profile.seasickness ?? false, profile.healthNotes, profile.mobilityLevel
+      );
+      dayWarnings.push(...healthCheck.warnings);
 
       // Allowed transports = intersection of zone + activity
       const zoneTransports = ZONE_ALLOWED_TRANSPORT[block.zone];
@@ -920,10 +1006,8 @@ async function generateDayPlans(
       if (profile.seasickness && allowed.includes('boat')) {
         const noBoat = allowed.filter(t => t !== 'boat');
         if (c.requiredTransport === 'boat') {
-          // Activity strictly requires boat — keep it but warn prominently
           dayWarnings.unshift('Морская болезнь: этот выход на воду. Примите таблетки от укачивания заранее. Уточните у оператора береговую альтернативу.');
         } else {
-          // Boat is optional — remove it from options
           allowed = noBoat.length > 0 ? noBoat : allowed;
           dayWarnings.unshift('Маршрут скорректирован: береговой / джип-вариант вместо катера.');
         }
@@ -933,26 +1017,98 @@ async function generateDayPlans(
         ? c.requiredTransport
         : (allowed.includes(c.defaultTransport) ? c.defaultTransport : allowed[0] ?? 'walking');
 
-      // Seasickness alternative for boat_required activities — adjust title
+      // Seasickness alternative for boat_required activities
       let dayTitle = title;
       if (profile.seasickness && c.requiredTransport === 'boat' && interest === 'boat_trip') {
         dayTitle = 'Прогулка вдоль Авачинской бухты (береговой маршрут)';
       }
 
+      // Build reality-enriched DayPlan fields
+      let realTourData: DayPlan['realTour'];
+      let realPrice: number | undefined;
+      let availableDate: string | undefined;
+      let slotsRemaining: number | undefined;
+      let capacityWarning: string | undefined;
+      let alternatives: DayPlan['alternatives'];
+      let qualityScore: number | undefined;
+
+      if (realTour) {
+        realTourData = {
+          tourId: realTour.tourId,
+          operatorName: realTour.operatorName,
+          operatorSlug: realTour.operatorSlug,
+          operatorRating: realTour.operatorRating,
+          tourRating: realTour.tourRating,
+          reviewCount: realTour.tourReviewCount,
+          verified: realTour.operatorVerified,
+          maxParticipants: realTour.maxParticipants,
+          weatherDependent: realTour.weatherDependent,
+          durationHours: realTour.durationHours,
+        };
+        realPrice = realTour.basePrice;
+
+        // Check availability for this tour
+        if (profile.arrivalDate && profile.departureDate) {
+          const slots = await fetchAvailabilityForTour(
+            realTour.tourId, profile.arrivalDate, profile.departureDate, cache
+          );
+          if (slots.length > 0) {
+            availableDate = slots[0].date;
+            slotsRemaining = slots[0].remaining;
+            const gs = groupSize(profile);
+            if (slots[0].remaining < gs) {
+              capacityWarning = `Свободно ${slots[0].remaining} из ${realTour.maxParticipants} мест, вас ${gs}. Возможно, придётся выбрать другую дату.`;
+            } else if (slots[0].remaining <= 3) {
+              capacityWarning = `Осталось ${slots[0].remaining} мест — высокий спрос`;
+            }
+          }
+        }
+
+        // Contingency alternatives
+        const alts = await fetchContingencyAlternatives(realTour.tourId, cache);
+        if (alts.length > 0) {
+          alternatives = alts.map(a => ({
+            tourId: a.tourId,
+            title: a.title,
+            price: a.basePrice,
+            discountPercent: a.discountPercent,
+          }));
+        }
+
+        // Quality score
+        const revSignals = await fetchReviewSignals(realTour.tourId, cache);
+        qualityScore = computeQualityScore({
+          tourRating: realTour.tourRating,
+          tourReviewCount: realTour.tourReviewCount,
+          operatorRating: realTour.operatorRating,
+          operatorReviewCount: realTour.operatorReviewCount,
+          operatorVerified: realTour.operatorVerified,
+          recentPositivePercent: revSignals?.recentPositivePercent ?? 0,
+          verifiedReviewCount: revSignals?.verifiedReviews ?? 0,
+        });
+      }
+
       days.push({
         day: dayNum++, type: 'activity', zone: block.zone,
         title: dayTitle,
-        description: c.seasonNote ?? '',
+        description: realTour?.shortDescription ?? c.seasonNote ?? '',
         activityType: interest,
-        priceFrom: c.pricePerPerson[0],
-        priceTo: c.pricePerPerson[1],
+        priceFrom: realPrice ?? c.pricePerPerson[0],
+        priceTo: realPrice ? Math.round(realPrice * 1.3) : c.pricePerPerson[1],
         coords,
         defaultTransport: transport,
         allowedTransports: allowed.length > 0 ? allowed : [transport],
-        difficulty: c.difficulty,
+        difficulty: (realTour?.difficulty as DayPlan['difficulty']) ?? c.difficulty,
         childFriendly: childOk,
         minChildAge: c.minChildAge,
         dayWarnings,
+        realTour: realTourData,
+        realPrice,
+        availableDate,
+        slotsRemaining,
+        capacityWarning,
+        alternatives,
+        qualityScore,
       });
 
       // Insert rest day after hard activities (if budget allows)
@@ -1051,8 +1207,8 @@ function calculatePriceBreakdown(days: DayPlan[], profile: TripProfile): PriceBr
   const nightCount = Math.max(0, days.length - 1);
 
   // Activities total
-  const actFrom = days.filter(d => d.type === 'activity' || d.type === 'buffer').reduce((s, d) => s + d.priceFrom, 0);
-  const actTo   = days.filter(d => d.type === 'activity' || d.type === 'buffer').reduce((s, d) => s + d.priceTo, 0);
+  const actFrom = days.filter(d => d.type === 'activity' || d.type === 'buffer').reduce((s, d) => s + (d.realPrice ?? d.priceFrom), 0);
+  const actTo   = days.filter(d => d.type === 'activity' || d.type === 'buffer').reduce((s, d) => s + (d.realPrice ? Math.round(d.realPrice * 1.2) : d.priceTo), 0);
 
   // Accommodation — estimate by zone nights
   let accFrom = 0;
@@ -1087,9 +1243,19 @@ function buildAIPrompt(profile: TripProfile, zones: ZoneRecommendation[], days: 
     groupDesc.push(`дети: ${profile.children.map(a => `${a} лет`).join(', ')}`);
   }
 
-  const daysSummary = days.map(d =>
-    `День ${d.day} (${d.type}): ${d.title} [${d.zone}]`
-  ).join('\n');
+  const daysSummary = days.map(d => {
+    let line = `День ${d.day} (${d.type}): ${d.title} [${d.zone}]`;
+    if (d.realTour) {
+      line += ` — оператор: ${d.realTour.operatorName} (${d.realTour.operatorRating.toFixed(1)})`;
+    }
+    if (d.realPrice) {
+      line += ` — ${d.realPrice} ₽`;
+    }
+    if (d.weatherForecast) {
+      line += ` | ${d.weatherForecast.description}, ${d.weatherForecast.tempMin}..${d.weatherForecast.tempMax} C`;
+    }
+    return line;
+  }).join('\n');
 
   const warningsSummary = warnings
     .filter(w => w.severity === 'critical' || w.severity === 'important')
@@ -1114,6 +1280,8 @@ ${warningsSummary ? `Предупреждения:\n${warningsSummary}` : ''}
 - Дни переезда и отдыха — это норма, не извиняйся за них
 - Если есть дети — упомяни что программа адаптирована
 - Упомяни ключевые впечатления: что увидят, что почувствуют
+- Если есть реальные операторы — упомяни их и рейтинг
+- Если есть прогноз погоды — кратко упомяни что ожидать
 - Не нумеруй дни, пиши связным текстом`;
 }
 
