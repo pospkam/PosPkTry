@@ -1,0 +1,401 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { TourFormData } from '@/types/operator';
+import toast from 'react-hot-toast';
+
+interface KamchatkaRoute {
+  id: string;
+  title: string;
+  category: string;
+  description: string;
+  lat: number | null;
+  lng: number | null;
+  sourceName: string | null;
+}
+
+interface TourFormProps {
+  initialData?: Partial<TourFormData>;
+  onSubmit: (data: TourFormData) => Promise<void>;
+  onCancel: () => void;
+  isEdit?: boolean;
+}
+
+export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: TourFormProps) {
+  const [loading, setLoading] = useState(false);
+  const [routes, setRoutes] = useState<KamchatkaRoute[]>([]);
+  const [formData, setFormData] = useState<TourFormData>({
+    name: initialData?.name || '',
+    description: initialData?.description || '',
+    category: initialData?.category || 'fishing',
+    difficulty: initialData?.difficulty || 'medium',
+    duration: initialData?.duration || 4,
+    maxGroupSize: initialData?.maxGroupSize || 15,
+    minGroupSize: initialData?.minGroupSize || 1,
+    price: initialData?.price || 0,
+    currency: initialData?.currency || 'RUB',
+    includes: initialData?.includes || [],
+    excludes: initialData?.excludes || [],
+    itinerary: initialData?.itinerary || [],
+    images: initialData?.images || [],
+    routeId: initialData?.routeId || '',
+  });
+
+  // Загрузка маршрутов при смене категории
+  useEffect(() => {
+    const fetchRoutes = async () => {
+      try {
+        const res = await fetch(`/api/kamchatka-routes?category=${formData.category}&limit=100`);
+        const json = await res.json();
+        if (json.success) setRoutes(json.data);
+      } catch {
+        setRoutes([]);
+      }
+    };
+    fetchRoutes();
+  }, [formData.category]);
+
+  const [newInclude, setNewInclude] = useState('');
+  const [newExclude, setNewExclude] = useState('');
+
+  const handleChange = (field: keyof TourFormData, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleAddInclude = () => {
+    if (newInclude.trim()) {
+      handleChange('includes', [...formData.includes, newInclude.trim()]);
+      setNewInclude('');
+    }
+  };
+
+  const handleRemoveInclude = (index: number) => {
+    handleChange('includes', formData.includes.filter((_, i) => i !== index));
+  };
+
+  const handleAddExclude = () => {
+    if (newExclude.trim()) {
+      handleChange('excludes', [...formData.excludes, newExclude.trim()]);
+      setNewExclude('');
+    }
+  };
+
+  const handleRemoveExclude = (index: number) => {
+    handleChange('excludes', formData.excludes.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Валидация
+    if (!formData.name || !formData.description || !formData.price) {
+      toast.error('Пожалуйста, заполните все обязательные поля');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await onSubmit(formData);
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      toast.error('Ошибка при сохранении тура');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-8">
+      {/* Основная информация */}
+      <section className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
+        <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-6">Основная информация</h2>
+        
+        <div className="space-y-6">
+          {/* Название */}
+          <div>
+            <label htmlFor="tour-name" className="block text-[var(--text-muted)] mb-2">
+              Название тура <span className="text-red-400">*</span>
+            </label>
+            <input
+              id="tour-name"
+              value={formData.name}
+              onChange={(e) => handleChange('name', e.target.value)}
+              placeholder="Например: Восхождение на вулкан Авачинский"
+              className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              required
+            />
+          </div>
+
+          {/* Описание */}
+          <div>
+            <label htmlFor="tour-description" className="block text-[var(--text-muted)] mb-2">
+              Описание <span className="text-red-400">*</span>
+            </label>
+            <textarea
+              id="tour-description"
+              value={formData.description}
+              onChange={(e) => handleChange('description', e.target.value)}
+              placeholder="Подробное описание тура..."
+              rows={6}
+              className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] resize-none"
+              required
+            />
+          </div>
+
+          {/* Категория и Сложность */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label htmlFor="tour-category" className="block text-[var(--text-muted)] mb-2">Категория</label>
+              <select
+                id="tour-category"
+                value={formData.category}
+                onChange={(e) => handleChange('category', e.target.value)}
+                className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              >
+                <option value="vulkani">Вулканы</option>
+                <option value="geyzery">Гейзеры</option>
+                <option value="rybalka">Рыбалка</option>
+                <option value="termalnye_istochniki">Термы / Горячие источники</option>
+                <option value="medvedi">Медведи / Дикая природа</option>
+                <option value="morskie_progulki">Морские прогулки</option>
+                <option value="vertoletnye_tury">Вертолётные туры</option>
+                <option value="trekking">Треккинг / Пешие туры</option>
+                <option value="snegohod">Снегоходы</option>
+                <option value="dzhip">Джип-туры</option>
+                <option value="ozera">Озёра</option>
+                <option value="gory">Горы</option>
+                <option value="reki">Реки</option>
+                <option value="eko">Эко-туры</option>
+                <option value="kombo">Комбо-тур</option>
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="tour-difficulty" className="block text-[var(--text-muted)] mb-2">Сложность</label>
+              <select
+                id="tour-difficulty"
+                value={formData.difficulty}
+                onChange={(e) => handleChange('difficulty', e.target.value as 'easy' | 'medium' | 'hard')}
+                className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              >
+                <option value="easy">Легко</option>
+                <option value="medium">Средне</option>
+                <option value="hard">Сложно</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Базовый маршрут */}
+          <div>
+            <label htmlFor="tour-route" className="block text-[var(--text-muted)] mb-2">
+              Базовый маршрут
+              <span className="ml-2 text-[var(--text-muted)] text-sm font-normal">(необязательно — маршрут из каталога Камчатки)</span>
+            </label>
+            <select
+              id="tour-route"
+              value={formData.routeId || ''}
+              onChange={(e) => handleChange('routeId', e.target.value || undefined)}
+              className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+            >
+              <option value="">— без привязки к маршруту —</option>
+              {routes.map(r => (
+                <option key={r.id} value={r.id}>
+                  {r.title}{r.sourceName ? ` (${r.sourceName})` : ''}
+                </option>
+              ))}
+            </select>
+            {routes.length === 0 && (
+              <p className="text-[var(--text-muted)] text-sm mt-1">Нет маршрутов для категории «{formData.category}»</p>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Параметры тура */}
+      <section className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
+        <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-6">Параметры тура</h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Длительность */}
+          <div>
+            <label htmlFor="tour-duration" className="block text-[var(--text-muted)] mb-2">
+              Длительность (часы)
+            </label>
+            <input
+              id="tour-duration"
+              value={formData.duration}
+              onChange={(e) => handleChange('duration', parseInt(e.target.value))}
+              min="1"
+              className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+            />
+          </div>
+
+          {/* Мин. группа */}
+          <div>
+            <label htmlFor="tour-min-group" className="block text-[var(--text-muted)] mb-2">
+              Мин. группа
+            </label>
+            <input
+              id="tour-min-group"
+              value={formData.minGroupSize}
+              onChange={(e) => handleChange('minGroupSize', parseInt(e.target.value))}
+              min="1"
+              className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+            />
+          </div>
+
+          {/* Макс. группа */}
+          <div>
+            <label htmlFor="tour-max-group" className="block text-[var(--text-muted)] mb-2">
+              Макс. группа
+            </label>
+            <input
+              id="tour-max-group"
+              type="number"
+              value={formData.maxGroupSize}
+              onChange={(e) => handleChange('maxGroupSize', parseInt(e.target.value))}
+              min="1"
+              className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+            />
+          </div>
+
+          {/* Цена */}
+          <div>
+            <label htmlFor="tour-price" className="block text-[var(--text-muted)] mb-2">
+              Цена <span className="text-red-400">*</span>
+            </label>
+            <input
+              id="tour-price"
+              type="number"
+              value={formData.price}
+              onChange={(e) => handleChange('price', parseFloat(e.target.value))}
+              min="0"
+              step="100"
+              className="w-full px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              required
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Что включено */}
+      <section className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
+        <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-6">Что включено в стоимость</h2>
+        
+        <div className="space-y-4">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={newInclude}
+              onChange={(e) => setNewInclude(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddInclude())}
+              placeholder="Например: Транспорт от места сбора"
+              className="flex-1 px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+            />
+            <button
+              type="button"
+              onClick={handleAddInclude}
+              className="px-6 py-3 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded-xl font-medium transition-colors"
+            >
+              Добавить
+            </button>
+          </div>
+
+          {formData.includes.length > 0 && (
+            <ul className="space-y-2">
+              {formData.includes.map((item, includeIndex) => (
+                <li
+                  key={`include-${includeIndex}`}
+                  className="flex items-center justify-between bg-[var(--bg-card)] px-4 py-3 rounded-xl"
+                >
+                  <span className="text-[var(--text-primary)]"> {item}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveInclude(includeIndex)}
+                    className="text-red-400 hover:text-red-300 transition-colors"
+                  >
+                    
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
+
+      {/* Что НЕ включено */}
+      <section className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
+        <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-6">Что НЕ включено в стоимость</h2>
+        
+        <div className="space-y-4">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={newExclude}
+              onChange={(e) => setNewExclude(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddExclude())}
+              placeholder="Например: Личное снаряжение"
+              className="flex-1 px-4 py-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+            />
+            <button
+              type="button"
+              onClick={handleAddExclude}
+              className="px-6 py-3 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-xl font-medium transition-colors"
+            >
+              Добавить
+            </button>
+          </div>
+
+          {formData.excludes.length > 0 && (
+            <ul className="space-y-2">
+              {formData.excludes.map((item, excludeIndex) => (
+                <li
+                  key={`exclude-${excludeIndex}`}
+                  className="flex items-center justify-between bg-[var(--bg-card)] px-4 py-3 rounded-xl"
+                >
+                  <span className="text-[var(--text-primary)]"> {item}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveExclude(excludeIndex)}
+                    className="text-red-400 hover:text-red-300 transition-colors"
+                  >
+                    
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
+
+      {/* Действия */}
+      <div className="flex justify-end gap-4">
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={loading}
+          className="px-6 py-3 bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] text-[var(--text-primary)] rounded-xl font-medium transition-colors disabled:opacity-50"
+        >
+          Отмена
+        </button>
+        <button
+          type="submit"
+          disabled={loading}
+          className="px-6 py-3 bg-[var(--accent)] hover:bg-[var(--accent)]/80 text-[var(--bg-primary)] font-bold rounded-xl transition-colors disabled:opacity-50 flex items-center"
+        >
+          {loading ? (
+            <>
+              <span className="animate-spin mr-2"></span>
+              Сохранение...
+            </>
+          ) : (
+            <>{isEdit ? 'Сохранить изменения' : 'Создать тур'}</>
+          )}
+        </button>
+      </div>
+    </form>
+  );
+}
+
+
+

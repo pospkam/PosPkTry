@@ -1,0 +1,9 @@
+{
+  "Дирижёр": ["claude-4-6-thinking", "grok-4-2"],
+  "Frontend": ["claude-4-6", "gemini-3-1-pro"],
+  "Backend": ["gemini-3-1-pro", "claude-4-6"],
+  "AI Integration": ["grok-4-2", "deepseek-r1"],
+  "Testing": ["gemini-3-1-pro"],
+  "DevOps": ["claude-4-6-thinking"],
+  "Research": ["grok-4-2", "perplexity"]
+}

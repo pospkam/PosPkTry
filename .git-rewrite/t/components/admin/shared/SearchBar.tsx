@@ -1,0 +1,79 @@
+'use client';
+
+import React, { useState, useCallback } from 'react';
+import { clsx } from 'clsx';
+import { Search, X } from 'lucide-react';
+
+export interface SearchBarProps {
+  placeholder?: string;
+  onSearch: (query: string) => void;
+  debounceMs?: number;
+  className?: string;
+}
+
+export function SearchBar({
+  placeholder = 'Поиск...',
+  onSearch,
+  debounceMs = 300,
+  className
+}: SearchBarProps) {
+  const [value, setValue] = useState('');
+  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
+
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setValue(newValue);
+
+    // Clear previous timeout
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+
+    // Set new timeout for debounced search
+    const newTimeoutId = setTimeout(() => {
+      onSearch(newValue);
+    }, debounceMs);
+
+    setTimeoutId(newTimeoutId);
+  }, [onSearch, debounceMs, timeoutId]);
+
+  const handleClear = () => {
+    setValue('');
+    onSearch('');
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  };
+
+  return (
+    <div className={clsx('relative', className)}>
+      <div className="relative">
+        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+          <Search className="w-5 h-5 text-[var(--text-muted)]" />
+        </div>
+        <input
+          type="text"
+          value={value}
+          onChange={handleChange}
+          placeholder={placeholder}
+          className={clsx(
+            'w-full pl-12 pr-12 py-3 rounded-lg',
+            'bg-[var(--bg-card)] border border-[var(--border)]',
+            'text-[var(--text-primary)] placeholder:text-[var(--text-muted)]',
+            'focus:outline-none focus:border-[var(--accent)]',
+            'transition-all duration-200'
+          )}
+        />
+        {value && (
+          <button
+            onClick={handleClear}
+            className="absolute inset-y-0 right-0 pr-4 flex items-center text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+

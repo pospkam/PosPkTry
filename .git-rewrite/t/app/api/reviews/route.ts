@@ -1,0 +1,241 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { ApiResponse, Review } from '@/types';
+import { query } from '@/lib/database';
+import { verifyAuth } from '@/lib/auth';
+import { z } from 'zod';
+import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
+
+const reviewLimiter = createRateLimiter({ windowMs: 60_000, max: 5 });
+
+const reviewListQuerySchema = z.object({
+  tourId: z.string().trim().min(1).optional(),
+  operatorId: z.string().trim().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(10),
+  offset: z.coerce.number().int().min(0).default(0),
+});
+
+const createReviewSchema = z.object({
+  tourId: z.string().trim().min(1),
+  rating: z.coerce.number().int().min(1).max(5),
+  comment: z.string().trim().max(5000).optional().default(''),
+  images: z.array(z.string().trim().min(1)).max(20).optional().default([]),
+});
+
+function queryParamOrUndefined(searchParams: URLSearchParams, key: string): string | undefined {
+  const value = searchParams.get(key);
+  if (!value) {
+    return undefined;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
+// GET /api/reviews - Получение отзывов (для тура, оператора и т.д.)
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const parsedQuery = reviewListQuerySchema.safeParse({
+      tourId: queryParamOrUndefined(searchParams, 'tourId'),
+      operatorId: queryParamOrUndefined(searchParams, 'operatorId'),
+      limit: queryParamOrUndefined(searchParams, 'limit'),
+      offset: queryParamOrUndefined(searchParams, 'offset'),
+    });
+
+    if (!parsedQuery.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Неверные параметры запроса',
+          details: parsedQuery.error.flatten(),
+        } as ApiResponse<null>,
+        { status: 400 }
+      );
+    }
+
+    const { tourId, operatorId, limit, offset } = parsedQuery.data;
+
+    let queryText = `
+      SELECT
+        r.id,
+        r.user_id as "userId",
+        r.tour_id as "tourId",
+        r.rating,
+        r.comment,
+        r.is_verified as "isVerified",
+        r.created_at as "createdAt",
+        r.updated_at as "updatedAt",
+        u.name as "userName",
+        t.name as "tourName",
+        COALESCE(ARRAY_AGG(DISTINCT a.url) FILTER (WHERE a.url IS NOT NULL), '{}') as images
+      FROM reviews r
+      LEFT JOIN users u ON r.user_id = u.id
+      LEFT JOIN tours t ON r.tour_id = t.id
+      LEFT JOIN review_assets ra ON r.id = ra.review_id
+      LEFT JOIN assets a ON ra.asset_id = a.id
+    `;
+
+    const conditions: string[] = [];
+    const params: unknown[] = [];
+
+    if (tourId) {
+      conditions.push(`r.tour_id = $${conditions.length + 1}`);
+      params.push(tourId);
+    }
+
+    if (operatorId) {
+      // Отзывы для оператора - через туры этого оператора
+      conditions.push(`t.operator_id = $${conditions.length + 1}`);
+      params.push(operatorId);
+    }
+
+    if (conditions.length > 0) {
+      queryText += ` WHERE ${conditions.join(' AND ')}`;
+    }
+
+    queryText += `
+      GROUP BY r.id, r.user_id, r.tour_id, r.rating, r.comment, r.is_verified, r.created_at, r.updated_at, u.name, t.name
+      ORDER BY r.created_at DESC
+      LIMIT $${params.length + 1} OFFSET $${params.length + 2}
+    `;
+
+    params.push(limit, offset);
+
+    const result = await query<Review & { userName: string; tourName: string; images: string[] }>(queryText, params);
+
+    const reviews: Review[] = result.rows.map(row => ({
+      id: row.id,
+      userId: row.userId,
+      tourId: row.tourId,
+      rating: row.rating,
+      comment: row.comment,
+      images: row.images || [],
+      isVerified: row.isVerified,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+    }));
+
+    return NextResponse.json({
+      success: true,
+      data: reviews,
+    } as ApiResponse<Review[]>);
+  } catch (error) {
+    console.error('Error fetching reviews:', error);
+    return NextResponse.json(
+      { success: false, error: 'Ошибка при получении отзывов' } as ApiResponse<null>,
+      { status: 500 }
+    );
+  }
+}
+
+// POST /api/reviews - Создание отзыва
+export async function POST(request: NextRequest) {
+  const ip = getClientIp(request.headers);
+  if (!reviewLimiter.check(ip)) {
+    return NextResponse.json(
+      { success: false, error: 'Слишком много отзывов. Попробуйте позже.' } as ApiResponse<null>,
+      { status: 429 }
+    );
+  }
+
+  try {
+    const auth = await verifyAuth(request);
+    if (!auth.userId) {
+      return NextResponse.json(
+        { success: false, error: 'Пользователь не авторизован' } as ApiResponse<null>,
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json();
+    const parsedBody = createReviewSchema.safeParse(body);
+    if (!parsedBody.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Неверные данные отзыва',
+          details: parsedBody.error.flatten(),
+        } as ApiResponse<null>,
+        { status: 400 }
+      );
+    }
+
+    const { tourId, rating: parsedRating, comment, images } = parsedBody.data;
+    const normalizedImages = [...new Set(images)];
+
+    const userId = auth.userId;
+
+    // Проверяем, что пользователь прошел тур (есть завершенная бронь)
+    const bookingCheck = await query(`
+      SELECT 1
+      FROM bookings
+      WHERE user_id = $1 AND tour_id = $2 AND status = 'completed'
+      LIMIT 1
+    `, [userId, tourId]);
+
+    if (bookingCheck.rows.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'Вы не можете оставить отзыв о туре, который не завершили' } as ApiResponse<null>,
+        { status: 403 }
+      );
+    }
+
+    // Проверяем, не оставлял ли уже пользователь отзыв об этом туре
+    const existingReview = await query(`
+      SELECT id FROM reviews WHERE user_id = $1 AND tour_id = $2
+    `, [userId, tourId]);
+
+    if (existingReview.rows.length > 0) {
+      return NextResponse.json(
+        { success: false, error: 'Вы уже оставляли отзыв об этом туре' } as ApiResponse<null>,
+        { status: 409 }
+      );
+    }
+
+    // Создаем отзыв в транзакции
+    const result = await query(`
+      INSERT INTO reviews (user_id, tour_id, rating, comment, is_verified)
+      VALUES ($1, $2, $3, $4, false)
+      RETURNING id, created_at, updated_at
+    `, [userId, tourId, parsedRating, comment]);
+
+    const newReview = result.rows[0];
+
+    // Сохраняем изображения, если они есть
+    if (normalizedImages.length > 0) {
+      for (const imageId of normalizedImages) {
+        await query(`
+          INSERT INTO review_assets (review_id, asset_id)
+          VALUES ($1, $2)
+        `, [newReview.id, imageId]);
+      }
+    }
+
+    // Рейтинг тура обновится автоматически через триггер update_tour_rating()
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        id: newReview.id,
+        userId,
+        tourId,
+        rating: parsedRating,
+        comment,
+        images: normalizedImages,
+        isVerified: false,
+        createdAt: newReview.created_at,
+        updatedAt: newReview.updated_at,
+      },
+      message: 'Спасибо за отзыв! Он будет опубликован после модерации.',
+    } as ApiResponse<unknown>);
+  } catch (error) {
+    console.error('Error creating review:', error);
+    return NextResponse.json(
+      { success: false, error: 'Ошибка при создании отзыва' } as ApiResponse<null>,
+      { status: 500 }
+    );
+  }
+}
+
+
+

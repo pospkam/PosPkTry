@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "timeweb-cloud": {
+      "command": "node",
+      "args": ["./timeweb-mcp-server.js"],
+      "env": {
+        "TIMEWEB_TOKEN": "${TIMEWEB_TOKEN1}"
+      }
+    }
+  }
+}

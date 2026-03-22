@@ -1,0 +1,30 @@
+name: Get Timeweb Logs
+
+on:
+  workflow_dispatch:  # Ручной запуск
+
+jobs:
+  get-logs:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Get Runtime Logs
+        run: |
+          echo "=== Fetching Timeweb App Logs ==="
+          
+          # Получаем логи через API
+          curl -s -X GET \
+            "https://api.timeweb.cloud/api/v1/apps/125051/logs?type=runtime&limit=100" \
+            -H "Authorization: Bearer ${{ secrets.TIMEWEB_TOKEN1 }}" \
+            -H "Content-Type: application/json" \
+            | jq -r '.logs[] | .message' || echo "Failed to fetch logs"
+          
+          echo ""
+          echo "=== App Status ==="
+          
+          # Проверяем статус приложения
+          curl -s -X GET \
+            "https://api.timeweb.cloud/api/v1/apps/125051" \
+            -H "Authorization: Bearer ${{ secrets.TIMEWEB_TOKEN1 }}" \
+            -H "Content-Type: application/json" \
+            | jq '.'

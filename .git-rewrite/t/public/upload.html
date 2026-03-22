@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Upload Design</title>
+<style>
+body { font-family: system-ui; background: #0B1120; color: white; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+.box { background: rgba(255,255,255,0.05); border: 2px dashed rgba(255,255,255,0.3); border-radius: 20px; padding: 60px 40px; text-align: center; max-width: 500px; }
+.box:hover { border-color: #00D4FF; }
+h1 { font-size: 24px; margin-bottom: 16px; }
+p { color: rgba(255,255,255,0.6); margin-bottom: 24px; }
+input[type=file] { display: none; }
+label { background: #00D4FF; color: #0B1120; padding: 14px 32px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 16px; }
+label:hover { background: #00b8d9; }
+#preview { margin-top: 24px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+#preview img { max-width: 200px; border-radius: 12px; }
+#status { margin-top: 16px; color: #00D4FF; }
+</style>
+</head>
+<body>
+<div class="box">
+<h1>📸 Загрузить дизайн</h1>
+<p>Выберите скриншоты дизайна (PNG, JPG)</p>
+<label for="files">Выбрать файлы</label>
+<input type="file" id="files" multiple accept="image/*">
+<div id="preview"></div>
+<div id="status"></div>
+</div>
+<script>
+document.getElementById('files').addEventListener('change', async (e) => {
+  const preview = document.getElementById('preview');
+  const status = document.getElementById('status');
+  preview.innerHTML = '';
+  const files = e.target.files;
+  for (const file of files) {
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(file);
+    preview.appendChild(img);
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const res = await fetch('/api/upload-design', { method: 'POST', body: formData });
+      if (res.ok) {
+        const data = await res.json();
+        status.textContent = `✅ Загружено: ${data.files?.join(', ') || file.name}`;
+      } else {
+        status.textContent = `⚠️ Файл ${file.name} — сохраните вручную в public/design/`;
+      }
+    } catch {
+      status.textContent = `📁 Превью показано. Сохраните файлы в public/design/`;
+    }
+  }
+});
+</script>
+</body>
+</html>

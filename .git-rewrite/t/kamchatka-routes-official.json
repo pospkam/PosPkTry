@@ -1,0 +1,22 @@
+[
+  {"name": "Вилючинский водопад", "season": "Зимний сезон", "organization": "Министерство туризма Камчатского края", "type": "", "length": "", "duration": "", "notes": ""},
+  {"name": "Долиновка-Побережье Тихого океана", "season": "Зимний сезон", "organization": "Министерство туризма Камчатского края", "type": "", "length": "", "duration": "", "notes": ""},
+  {"name": "Карымшинские источники", "season": "Зимний сезон", "organization": "Министерство туризма Камчатского края", "type": "", "length": "", "duration": "", "notes": ""},
+  {"name": "Лавовая падь", "season": "Зимний сезон", "organization": "Министерство туризма Камчатского края", "type": "", "length": "", "duration": "", "notes": ""},
+  {"name": "Смотровая с видом на Тихий океан", "season": "Зимний сезон", "organization": "Министерство туризма Камчатского края", "type": "", "length": "", "duration": "", "notes": ""},
+  {"name": "Горный массив Вачкажец (лыжный)", "season": "Зимний сезон", "organization": "Министерство туризма Камчатского края", "type": "lyzhi", "length": "", "duration": "", "notes": ""},
+  {"name": "Горный массив Вачкажец (снегоходный)", "season": "Зимний сезон", "organization": "Министерство туризма Камчатского края", "type": "snegohod", "length": "", "duration": "", "notes": ""},
+  {"name": "Мыс Маячный", "season": "Зимний сезон", "organization": "Министерство туризма Камчатского края", "type": "", "length": "", "duration": "", "notes": ""},
+  {"name": "Озеро Приливное – Халактырский пляж", "season": "Зимний сезон", "organization": "Министерство туризма Камчатского края", "type": "", "length": "", "duration": "", "notes": ""},
+  {"name": "Вилючинский водопад", "season": "Летний сезон", "organization": "Министерство туризма Камчатского края", "type": "", "length": "", "duration": "", "notes": ""},
+  {"name": "Гейзеры Камчатки", "season": "Летний сезон", "organization": "Министерство туризма Камчатского края", "type": "geyzery", "length": "", "duration": "", "notes": "Долина гейзеров"},
+  {"name": "Вулкан Авачинский", "season": "Летний сезон", "organization": "Министерство туризма Камчатского края", "type": "vulkani", "length": "", "duration": "", "notes": ""},
+  {"name": "Вулкан Мутновский", "season": "Летний сезон", "organization": "Министерство туризма Камчатского края", "type": "vulkani", "length": "", "duration": "", "notes": ""},
+  {"name": "Рыбалка на Камчатке", "season": "Летний сезон", "organization": "Министерство туризма Камчатского края", "type": "rybalka", "length": "", "duration": "", "notes": "Нерка, семга"},
+  {"name": "Медведи Камчатки", "season": "Летний сезон", "organization": "Министерство туризма Камчатского края", "type": "medvedi", "length": "", "duration": "", "notes": ""},
+  {"name": "Термальные источники Нальчева", "season": "Летний сезон", "organization": "Министерство туризма Камчатского края", "type": "termalnye_istochniki", "length": "", "duration": "", "notes": ""},
+  {"name": "Побережье Тихого океана", "season": "Летний сезон", "organization": "Министерство туризма Камчатского края", "type": "morskie_progulki", "length": "", "duration": "", "notes": ""},
+  {"name": "Вертолётный тур", "season": "Летний сезон", "organization": "Министерство туризма Камчатского края", "type": "vertoletnye_tury", "length": "", "duration": "", "notes": ""},
+  {"name": "Озеро Курильское", "season": "Летний сезон", "organization": "Министерство туризма Камчатского края", "type": "lakes", "length": "", "duration": "", "notes": ""},
+  {"name": "Горные вершины", "season": "Летний сезон", "организация": "Министерство туризма Камчатского края", "type": "mountains", "length": "", "duration": "", "notes": ""}
+]

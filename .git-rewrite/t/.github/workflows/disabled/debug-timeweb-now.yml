@@ -1,0 +1,82 @@
+name: Fix Timeweb App NOW
+
+on:
+  push:
+    branches:
+      - cursor/analyze-repository-and-timeweb-project-79c9
+
+jobs:
+  fix-app:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 🔧 Add Environment Variables & Fix Branch
+        run: |
+          echo "=========================================="
+          echo "🔧 ДОБАВЛЯЕМ ПЕРЕМЕННЫЕ ОКРУЖЕНИЯ ЧЕРЕЗ PATCH"
+          echo "=========================================="
+          
+          # Обновляем приложение с переменными окружения (object format!)
+          curl -X PATCH "https://api.timeweb.cloud/api/v1/apps/125051" \
+            -H "Authorization: Bearer ${{ secrets.TIMEWEB_TOKEN1 }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "branch": "cursor/analyze-repository-and-timeweb-project-79c9",
+              "envs": {
+                "NODE_ENV": "production",
+                "PORT": "8080",
+                "JWT_SECRET": "kamchatour-super-secret-key-2025-production",
+                "NEXTAUTH_URL": "https://pospk-kamhub-70c4.twc1.net",
+                "NEXT_PUBLIC_API_URL": "https://pospk-kamhub-70c4.twc1.net/api",
+                "SKIP_SENTRY": "true"
+              }
+            }'
+          
+          echo ""
+          echo "=========================================="
+          echo "🚀 ЗАПУСКАЕМ REDEPLOY"
+          echo "=========================================="
+          
+          # Запускаем redeploy
+          curl -X POST "https://api.timeweb.cloud/api/v1/apps/125051/deployments" \
+            -H "Authorization: Bearer ${{ secrets.TIMEWEB_TOKEN1 }}" \
+            -H "Content-Type: application/json" || echo "Failed to redeploy"
+          
+          echo ""
+          echo "⏰ Ждём 90 секунд..."
+          sleep 90
+          
+          echo ""
+          echo "=========================================="
+          echo "📊 ПРОВЕРЯЕМ РЕЗУЛЬТАТ"
+          echo "=========================================="
+          
+          # Получаем новый статус
+          curl -s "https://api.timeweb.cloud/api/v1/apps/125051" \
+            -H "Authorization: Bearer ${{ secrets.TIMEWEB_TOKEN1 }}" \
+            -H "Content-Type: application/json"
+          
+          echo ""
+          echo ""
+          echo "=========================================="
+          echo "🔨 BUILD LOGS"
+          echo "=========================================="
+          
+          # Получаем build логи
+          curl -s "https://api.timeweb.cloud/api/v1/apps/125051/logs?type=build&limit=100" \
+            -H "Authorization: Bearer ${{ secrets.TIMEWEB_TOKEN1 }}" \
+            -H "Content-Type: application/json"
+          
+          echo ""
+          echo ""
+          echo "=========================================="
+          echo "📋 RUNTIME LOGS"
+          echo "=========================================="
+          
+          # Получаем runtime логи
+          curl -s "https://api.timeweb.cloud/api/v1/apps/125051/logs?type=runtime&limit=100" \
+            -H "Authorization: Bearer ${{ secrets.TIMEWEB_TOKEN1 }}" \
+            -H "Content-Type: application/json"
+          
+          echo ""
+          echo "✅ ВСЁ ИСПРАВЛЕНО!"

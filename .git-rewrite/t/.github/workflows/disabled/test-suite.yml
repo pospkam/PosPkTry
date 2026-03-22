@@ -1,0 +1,296 @@
+name: Comprehensive Test Suite
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: kamhub_test
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test123
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5433:5432
+      
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6380:6379
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Unit Tests
+        run: npm run test:unit
+        env:
+          DATABASE_URL: postgresql://test:test123@localhost:5433/kamhub_test
+          REDIS_URL: redis://localhost:6380
+
+      - name: Upload Coverage Reports
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+
+      - name: Comment PR with Coverage
+        if: github.event_name == 'pull_request'
+        uses: romeovs/lcov-reporter-action@v0.3.1
+        with:
+          lcov-file: ./coverage/lcov.info
+
+  integration-tests:
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: kamhub_test
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test123
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5433:5432
+      
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6380:6379
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Integration Tests
+        run: npm run test:integration
+        env:
+          DATABASE_URL: postgresql://test:test123@localhost:5433/kamhub_test
+          REDIS_URL: redis://localhost:6380
+          NODE_ENV: test
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: integration-test-results
+          path: test-results/
+
+  security-tests:
+    runs-on: ubuntu-latest
+    needs: unit-tests
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Security Tests
+        run: npm run test:security
+
+      - name: OWASP Dependency Check
+        uses: jeremylong/DependencyCheck_Action@main
+        with:
+          project: 'kamhub'
+          path: '.'
+          format: 'JSON'
+          args: >
+            --enableRetired
+            --enable OWASP
+
+      - name: Upload Dependency Report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: dependency-check-report
+          path: dependency-check-report.json
+
+  performance-tests:
+    runs-on: ubuntu-latest
+    needs: integration-tests
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Performance Tests
+        run: npm run test:performance
+
+      - name: Upload Performance Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: performance-results
+          path: test-results/performance/
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+    needs: integration-tests
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      - name: Start Application
+        run: npm run start &
+        env:
+          DATABASE_URL: postgresql://test:test123@localhost:5433/kamhub_test
+
+      - name: Wait for Application
+        run: npx wait-on http://localhost:3000 --timeout 60000
+
+      - name: Run E2E Tests
+        run: npm run test:e2e
+
+      - name: Upload E2E Report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: e2e-report
+          path: playwright-report/
+
+  sast-analysis:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Run Sonarqube Analysis
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: ESLint Analysis
+        run: npx eslint src/**/*.ts --format json --output-file eslint-report.json
+        continue-on-error: true
+
+  test-report:
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests, security-tests, performance-tests, e2e-tests]
+    if: always()
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: all-test-results/
+
+      - name: Generate Test Report
+        run: |
+          npm install test-reporter
+          node scripts/generate-test-report.js
+
+      - name: Upload Final Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: final-test-report
+          path: final-test-report.html
+
+      - name: Comment PR with Summary
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = fs.readFileSync('all-test-results/summary.md', 'utf8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });
+
+  deploy-check:
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests, security-tests, performance-tests, e2e-tests]
+    if: github.ref == 'refs/heads/main' && success()
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Check Deployment Readiness
+        run: |
+          echo "✅ All tests passed!"
+          echo "🚀 Ready for deployment"

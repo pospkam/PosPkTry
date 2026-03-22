@@ -1,0 +1,102 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { query } from '@/lib/database';
+import { ApiResponse } from '@/types';
+import { requireOperator } from '@/lib/auth/middleware';
+import { z } from 'zod';
+
+const ReplySchema = z.object({
+  reply: z.string().min(1, 'Текст ответа не может быть пустым'),
+});
+
+export const dynamic = 'force-dynamic';
+
+/**
+ * POST /api/operator/reviews/[id]/reply
+ * Reply to a review
+ */
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const operatorOrResponse = await requireOperator(request);
+    if (operatorOrResponse instanceof NextResponse) {
+      return operatorOrResponse;
+    }
+    const userId = operatorOrResponse.userId;
+
+    const { id } = await params;
+
+    const body = await request.json();
+    const parsed = ReplySchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' }, { status: 400 });
+    }
+    const { reply } = parsed.data;
+
+    // Проверка владения на уровне SQL: оператор может отвечать только на отзывы по своим турам.
+    const checkResult = await query(
+      `SELECT r.id
+       FROM reviews r
+       JOIN tours t ON r.tour_id = t.id
+       JOIN partners p ON t.operator_id = p.id
+       WHERE r.id = $1 AND p.user_id = $2
+       LIMIT 1`,
+      [id, userId]
+    );
+
+    if (checkResult.rows.length === 0) {
+      return NextResponse.json({
+        success: false,
+        error: 'Отзыв не найден'
+      } as ApiResponse<null>, { status: 404 });
+    }
+
+    // Повторяем ownership-проверку в UPDATE для защиты от race-condition.
+    const result = await query(
+      `UPDATE reviews r
+       SET operator_reply = $1, operator_reply_at = NOW()
+       FROM tours t
+       JOIN partners p ON t.operator_id = p.id
+       WHERE r.id = $2
+         AND r.tour_id = t.id
+         AND p.user_id = $3
+       RETURNING r.*`,
+      [reply, id, userId]
+    );
+
+    if (result.rows.length === 0) {
+      return NextResponse.json({
+        success: false,
+        error: 'Отзыв не найден'
+      } as ApiResponse<null>, { status: 404 });
+    }
+
+    // Create notification for review author
+    const review = result.rows[0];
+    await query(
+      `INSERT INTO notifications (user_id, type, title, message, priority)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [
+        review.user_id,
+        'review_reply',
+        'Получен ответ на ваш отзыв',
+        `Оператор ответил на ваш отзыв`,
+        'normal'
+      ]
+    );
+
+    return NextResponse.json({
+      success: true,
+      data: result.rows[0],
+      message: 'Ответ успешно добавлен'
+    } as ApiResponse<unknown>);
+
+  } catch (error) {
+    console.error('Reply to review error:', error);
+    return NextResponse.json({
+      success: false,
+      error: 'Ошибка при добавлении ответа'
+    } as ApiResponse<null>, { status: 500 });
+  }
+}

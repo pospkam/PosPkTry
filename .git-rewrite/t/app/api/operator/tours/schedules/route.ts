@@ -1,0 +1,272 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { query } from '@/lib/database';
+import { ApiResponse } from '@/types';
+import { requireOperator } from '@/lib/auth/middleware';
+import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
+import {
+  OpTourScheduleRow,
+  OpTourOwnerRow,
+  OpTourForScheduleRow,
+  OpScheduleInsertRow,
+} from '@/lib/types/db-rows';
+import { z } from 'zod';
+
+const CreateScheduleSchema = z.object({
+  tourId: z.string().min(1, 'ID тура обязателен'),
+  startDate: z.string().min(1, 'Дата начала обязательна'),
+  endDate: z.string().min(1, 'Дата окончания обязательна'),
+  price: z.number().positive('Цена должна быть положительной'),
+  maxParticipants: z.number().int().min(1, 'Укажите максимальное количество участников'),
+});
+
+interface TourSchedule {
+  id: string;
+  tour_id: string;
+  tour_name: string;
+  start_date: Date;
+  end_date: Date;
+  price: number;
+  available_spots: number;
+  booked_spots: number;
+  status: 'open' | 'full' | 'cancelled';
+  season: string;
+}
+
+/**
+ * GET /api/operator/tours/schedules
+ * Получение расписания туров оператора
+ * 
+ * На основе fishingkam.ru:
+ * - Сезонные цены
+ * - Минимальная группа 5 человек
+ * - Разные периоды (зима, лето, межсезонье)
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const userOrResponse = await requireOperator(request);
+    if (userOrResponse instanceof NextResponse) {
+      return userOrResponse;
+    }
+    if (userOrResponse.role !== 'operator') {
+      return NextResponse.json({
+        success: false,
+        error: 'Недостаточно прав доступа'
+      } as ApiResponse<null>, { status: 403 });
+    }
+
+    const operatorId = await getOperatorPartnerId(userOrResponse.userId);
+    if (!operatorId) {
+      return NextResponse.json({
+        success: false,
+        error: 'Партнёрский профиль оператора не найден'
+      } as ApiResponse<null>, { status: 404 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const tourId = searchParams.get('tourId');
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
+
+    if (tourId) {
+      const ownershipCheck = await query<OpTourOwnerRow>(
+        `SELECT id FROM tours WHERE id = $1 AND operator_id = $2`,
+        [tourId, operatorId]
+      );
+
+      if (ownershipCheck.rows.length === 0) {
+        return NextResponse.json({
+          success: false,
+          error: 'Тур не найден'
+        } as ApiResponse<null>, { status: 404 });
+      }
+    }
+
+    let queryText = `
+      SELECT 
+        ts.id,
+        ts.tour_id,
+        t.name as tour_name,
+        ts.start_date,
+        ts.end_date,
+        ts.price,
+        ts.max_participants as available_spots,
+        COALESCE(
+          (SELECT COUNT(*) FROM bookings b WHERE b.schedule_id = ts.id AND b.status = 'confirmed'),
+          0
+        ) as booked_spots,
+        ts.status,
+        t.season
+      FROM tour_availability ts
+      JOIN tours t ON ts.tour_id = t.id
+      WHERE t.operator_id = $1
+    `;
+    const values: (string | number | boolean | null)[] = [operatorId];
+    let paramIndex = 2;
+
+    if (tourId) {
+      queryText += ` AND ts.tour_id = $${paramIndex}`;
+      values.push(tourId);
+      paramIndex++;
+    }
+
+    if (startDate) {
+      queryText += ` AND ts.start_date >= $${paramIndex}`;
+      values.push(startDate);
+      paramIndex++;
+    }
+
+    if (endDate) {
+      queryText += ` AND ts.end_date <= $${paramIndex}`;
+      values.push(endDate);
+      paramIndex++;
+    }
+
+    queryText += ` ORDER BY ts.start_date ASC LIMIT 500`;
+
+    const result = await query<OpTourScheduleRow>(queryText, values);
+
+    const schedules: TourSchedule[] = result.rows.map(row => ({
+      id: row.id,
+      tour_id: row.tour_id,
+      tour_name: row.tour_name,
+      start_date: row.start_date,
+      end_date: row.end_date,
+      price: parseFloat(row.price),
+      available_spots: row.available_spots - parseInt(row.booked_spots),
+      booked_spots: parseInt(row.booked_spots),
+      status: row.available_spots <= parseInt(row.booked_spots) ? 'full' : (row.status ?? 'open') as 'open' | 'full' | 'cancelled',
+      season: row.season
+    }));
+
+    return NextResponse.json({
+      success: true,
+      data: { schedules },
+      meta: {
+        total: schedules.length
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching schedules:', error);
+    return NextResponse.json({
+      success: false,
+      error: 'Failed to fetch schedules',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    } as ApiResponse<null>, { status: 500 });
+  }
+}
+
+/**
+ * POST /api/operator/tours/schedules
+ * Создание нового расписания тура
+ * 
+ * Сезонные цены на основе fishingkam.ru:
+ * - Зима (15.01-20.03): 18,000-20,000₽
+ * - Зима (20.02-18.04): 22,000-25,000₽
+ * - Лето (18.06-20.07): 28,000₽
+ * - Лето (25.08-30.10): 28,000₽
+ * - Осень (30.10-15.11): 25,000₽
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const userOrResponse = await requireOperator(request);
+    if (userOrResponse instanceof NextResponse) {
+      return userOrResponse;
+    }
+
+    const operatorId = await getOperatorPartnerId(userOrResponse.userId);
+    if (!operatorId) {
+      return NextResponse.json({
+        success: false,
+        error: 'Партнёрский профиль оператора не найден'
+      } as ApiResponse<null>, { status: 404 });
+    }
+
+    const body = await request.json();
+    const parsed = CreateScheduleSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' }, { status: 400 });
+    }
+    const { tourId, startDate, endDate, price, maxParticipants } = parsed.data;
+
+    // Проверка дат
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (start >= end) {
+        return NextResponse.json({
+          success: false,
+          error: 'Дата начала должна быть раньше даты окончания'
+        } as ApiResponse<null>, { status: 400 });
+      }
+      if (start < new Date()) {
+        return NextResponse.json({
+          success: false,
+          error: 'Дата начала не может быть в прошлом'
+        } as ApiResponse<null>, { status: 400 });
+      }
+    }
+
+    // Проверяем что тур принадлежит оператору
+    const tourResult = await query<OpTourForScheduleRow>(
+      `SELECT id, name, operator_id FROM tours WHERE id = $1`,
+      [tourId]
+    );
+
+    if (tourResult.rows.length === 0) {
+      return NextResponse.json({
+        success: false,
+        error: 'Тур не найден'
+      } as ApiResponse<null>, { status: 404 });
+    }
+
+    if (tourResult.rows[0].operator_id !== operatorId) {
+      return NextResponse.json({
+        success: false,
+        error: 'Тур не найден'
+      } as ApiResponse<null>, { status: 404 });
+    }
+
+    // Создаем расписание
+    const insertResult = await query<OpScheduleInsertRow>(
+      `INSERT INTO tour_availability (
+        tour_id,
+        start_date,
+        end_date,
+        price,
+        max_participants,
+        status,
+        created_at,
+        updated_at
+      ) VALUES ($1, $2, $3, $4, $5, 'open', NOW(), NOW())
+      RETURNING id, start_date, end_date, price, max_participants, status`,
+      [tourId, startDate, endDate, price, maxParticipants]
+    );
+
+    const schedule = insertResult.rows[0];
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        id: schedule.id,
+        tour_id: tourId,
+        tour_name: tourResult.rows[0].name,
+        start_date: schedule.start_date,
+        end_date: schedule.end_date,
+        price: parseFloat(schedule.price),
+        available_spots: schedule.max_participants,
+        booked_spots: 0,
+        status: schedule.status
+      },
+      message: 'Расписание создано'
+    }, { status: 201 });
+
+  } catch (error) {
+    console.error('Error creating schedule:', error);
+    return NextResponse.json({
+      success: false,
+      error: 'Failed to create schedule',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    } as ApiResponse<null>, { status: 500 });
+  }
+}

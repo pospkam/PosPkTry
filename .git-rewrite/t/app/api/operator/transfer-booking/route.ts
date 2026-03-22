@@ -1,0 +1,630 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import { query, transaction } from '@/lib/database';
+import { ApiResponse } from '@/types';
+import { requireOperator } from '@/lib/auth/middleware';
+import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
+
+export const dynamic = 'force-dynamic';
+
+const createTransferSchema = z.object({
+  bookingId: z.string().uuid(),
+  toOperatorPartnerId: z.string().uuid(),
+  commissionPercent: z.number().min(0).max(50).default(10),
+  note: z.string().max(2000).optional(),
+});
+
+const updateTransferSchema = z.object({
+  transferId: z.string().uuid(),
+  action: z.enum(['accept', 'reject', 'cancel']),
+  targetTourId: z.string().uuid().optional(),
+});
+
+const listTransfersQuerySchema = z.object({
+  direction: z.enum(['incoming', 'outgoing', 'all']).default('all'),
+  status: z.enum(['pending', 'accepted', 'rejected', 'cancelled', 'completed', 'all']).default('all'),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+});
+
+async function createNotification(params: {
+  userId: string;
+  type: string;
+  title: string;
+  message: string;
+  data?: Record<string, unknown>;
+  actionUrl?: string | null;
+}) {
+  const { userId, type, title, message, data, actionUrl } = params;
+
+  await query(
+    `INSERT INTO notifications (user_id, type, title, message, data, priority, action_url)
+     VALUES ($1, $2, $3, $4, $5, 'normal', $6)`,
+    [userId, type, title, message, JSON.stringify(data ?? {}), actionUrl ?? null]
+  );
+}
+
+async function resolveOperatorContext(userId: string): Promise<{ partnerId: string | null }> {
+  const partnerId = await getOperatorPartnerId(userId);
+  return { partnerId };
+}
+
+function ensureStrictOperatorRole(role: string): NextResponse | null {
+  if (role !== 'operator') {
+    return NextResponse.json(
+      { success: false, error: 'Действие доступно только оператору' } as ApiResponse<null>,
+      { status: 403 }
+    );
+  }
+
+  return null;
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const userOrResponse = await requireOperator(request);
+    if (userOrResponse instanceof NextResponse) {
+      return userOrResponse;
+    }
+
+    const { searchParams } = new URL(request.url);
+    const queryValidation = listTransfersQuerySchema.safeParse({
+      direction: searchParams.get('direction') ?? undefined,
+      status: searchParams.get('status') ?? undefined,
+      limit: searchParams.get('limit') ?? undefined,
+    });
+
+    if (!queryValidation.success) {
+      return NextResponse.json(
+        { success: false, error: queryValidation.error.issues } as unknown as ApiResponse<null>,
+        { status: 400 }
+      );
+    }
+
+    const { direction, status, limit } = queryValidation.data;
+
+    const whereParts: string[] = [];
+    const values: unknown[] = [];
+
+    if (direction === 'incoming') {
+      whereParts.push(`t.to_operator_user_id = $${values.length + 1}`);
+      values.push(userOrResponse.userId);
+    } else if (direction === 'outgoing') {
+      whereParts.push(`t.from_operator_user_id = $${values.length + 1}`);
+      values.push(userOrResponse.userId);
+    } else {
+      whereParts.push(`(t.to_operator_user_id = $${values.length + 1} OR t.from_operator_user_id = $${values.length + 2})`);
+      values.push(userOrResponse.userId, userOrResponse.userId);
+    }
+
+    if (status !== 'all') {
+      whereParts.push(`t.status = $${values.length + 1}`);
+      values.push(status);
+    }
+
+    values.push(limit);
+
+    const rows = await query<{
+      id: string;
+      booking_id: string;
+      from_operator_partner_id: string;
+      to_operator_partner_id: string;
+      from_operator_user_id: string;
+      to_operator_user_id: string;
+      commission_percent: string;
+      commission_amount: string;
+      status: string;
+      note: string | null;
+      target_tour_id: string | null;
+      responded_at: string | null;
+      created_at: string;
+      booking_total_price: string;
+      booking_start_date: string | null;
+      booking_status: string;
+      source_tour_name: string | null;
+      target_tour_name: string | null;
+      from_operator_name: string | null;
+      to_operator_name: string | null;
+      tourist_name: string | null;
+      tourist_email: string | null;
+    }>(
+      `SELECT
+         t.id,
+         t.booking_id,
+         t.from_operator_partner_id,
+         t.to_operator_partner_id,
+         t.from_operator_user_id,
+         t.to_operator_user_id,
+         t.commission_percent,
+         t.commission_amount,
+         t.status,
+         t.note,
+         t.target_tour_id,
+         t.responded_at,
+         t.created_at,
+         b.total_price as booking_total_price,
+         b.start_date as booking_start_date,
+         b.status as booking_status,
+         source_tour.name as source_tour_name,
+         target_tour.name as target_tour_name,
+         from_partner.name as from_operator_name,
+         to_partner.name as to_operator_name,
+         tourist.name as tourist_name,
+         tourist.email as tourist_email
+       FROM operator_booking_transfers t
+       JOIN bookings b ON b.id = t.booking_id
+       JOIN users tourist ON tourist.id = b.user_id
+       LEFT JOIN tours source_tour ON source_tour.id = b.tour_id
+       LEFT JOIN tours target_tour ON target_tour.id = t.target_tour_id
+       LEFT JOIN partners from_partner ON from_partner.id = t.from_operator_partner_id
+       LEFT JOIN partners to_partner ON to_partner.id = t.to_operator_partner_id
+       WHERE ${whereParts.join(' AND ')}
+       ORDER BY t.created_at DESC
+       LIMIT $${values.length}`,
+      values
+    );
+
+    return NextResponse.json({
+      success: true,
+      data: rows.rows.map(item => ({
+        id: item.id,
+        bookingId: item.booking_id,
+        fromOperatorPartnerId: item.from_operator_partner_id,
+        toOperatorPartnerId: item.to_operator_partner_id,
+        fromOperatorUserId: item.from_operator_user_id,
+        toOperatorUserId: item.to_operator_user_id,
+        fromOperatorName: item.from_operator_name,
+        toOperatorName: item.to_operator_name,
+        sourceTourName: item.source_tour_name,
+        targetTourId: item.target_tour_id,
+        targetTourName: item.target_tour_name,
+        bookingTotalPrice: parseFloat(item.booking_total_price) || 0,
+        bookingStartDate: item.booking_start_date,
+        commissionPercent: parseFloat(item.commission_percent) || 0,
+        commissionAmount: parseFloat(item.commission_amount) || 0,
+        status: item.status,
+        note: item.note,
+        respondedAt: item.responded_at,
+        createdAt: item.created_at,
+        touristName: item.tourist_name,
+        touristEmail: item.tourist_email,
+        bookingStatus: item.booking_status,
+      })),
+    } as ApiResponse<unknown>);
+  } catch (error) {
+    console.error('[TRANSFER_BOOKING_GET]', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to fetch transfer bookings' } as ApiResponse<null>,
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const userOrResponse = await requireOperator(request);
+    if (userOrResponse instanceof NextResponse) {
+      return userOrResponse;
+    }
+
+    const roleError = ensureStrictOperatorRole(userOrResponse.role);
+    if (roleError) {
+      return roleError;
+    }
+
+    const context = await resolveOperatorContext(userOrResponse.userId);
+    if (!context.partnerId) {
+      return NextResponse.json(
+        { success: false, error: 'Партнёрский профиль оператора не найден' } as ApiResponse<null>,
+        { status: 404 }
+      );
+    }
+
+    const payload = createTransferSchema.parse(await request.json());
+
+    if (payload.commissionPercent < 0 || payload.commissionPercent > 50) {
+      return NextResponse.json(
+        { success: false, error: 'Неверный процент комиссии' } as ApiResponse<null>,
+        { status: 400 }
+      );
+    }
+
+    const targetOperatorResult = await query<{
+      id: string;
+      user_id: string;
+      category: string;
+    }>(
+      `SELECT id, user_id, category
+       FROM partners
+       WHERE id = $1
+       LIMIT 1`,
+      [payload.toOperatorPartnerId]
+    );
+
+    if (targetOperatorResult.rows.length === 0 || targetOperatorResult.rows[0].category !== 'operator') {
+      return NextResponse.json(
+        { success: false, error: 'Целевой оператор не найден' } as ApiResponse<null>,
+        { status: 404 }
+      );
+    }
+
+    const targetOperator = targetOperatorResult.rows[0];
+    if (targetOperator.user_id === userOrResponse.userId) {
+      return NextResponse.json(
+        { success: false, error: 'Нельзя отправить переброс самому себе' } as ApiResponse<null>,
+        { status: 400 }
+      );
+    }
+
+    const bookingOwnershipResult = await query<{
+      id: string;
+      total_price: string;
+      status: string;
+      tour_name: string | null;
+    }>(
+      `SELECT b.id, b.total_price, b.status, t.name as tour_name
+       FROM bookings b
+       JOIN tours t ON t.id = b.tour_id
+       WHERE b.id = $1 AND t.operator_id = $2
+       LIMIT 1`,
+      [payload.bookingId, context.partnerId]
+    );
+
+    if (bookingOwnershipResult.rows.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'Бронирование не найдено или недоступно' } as ApiResponse<null>,
+        { status: 404 }
+      );
+    }
+
+    if (['completed', 'cancelled'].includes(bookingOwnershipResult.rows[0].status)) {
+      return NextResponse.json(
+        { success: false, error: 'Нельзя перебросить завершённое или отменённое бронирование' } as ApiResponse<null>,
+        { status: 400 }
+      );
+    }
+
+    const existingPending = await query<{ id: string }>(
+      `SELECT id
+       FROM operator_booking_transfers
+       WHERE booking_id = $1 AND status IN ('pending', 'accepted')
+       LIMIT 1`,
+      [payload.bookingId]
+    );
+
+    if (existingPending.rows.length > 0) {
+      return NextResponse.json(
+        { success: false, error: 'Для этого бронирования уже есть активный переброс' } as ApiResponse<null>,
+        { status: 409 }
+      );
+    }
+
+    const booking = bookingOwnershipResult.rows[0];
+    const bookingTotalPrice = parseFloat(booking.total_price) || 0;
+    // Комиссия фиксируется в момент предложения, чтобы обе стороны работали с одной суммой.
+    const commissionAmount = Number(((bookingTotalPrice * payload.commissionPercent) / 100).toFixed(2));
+
+    const fromOperator = await query<{ name: string | null }>(
+      `SELECT name FROM partners WHERE id = $1 LIMIT 1`,
+      [context.partnerId]
+    );
+
+    const inserted = await query<{
+      id: string;
+      status: string;
+      created_at: string;
+    }>(
+      `INSERT INTO operator_booking_transfers (
+         booking_id,
+         from_operator_partner_id,
+         to_operator_partner_id,
+         from_operator_user_id,
+         to_operator_user_id,
+         commission_percent,
+         commission_amount,
+         status,
+         note,
+         created_at,
+         updated_at
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending', $8, NOW(), NOW())
+       RETURNING id, status, created_at`,
+      [
+        payload.bookingId,
+        context.partnerId,
+        payload.toOperatorPartnerId,
+        userOrResponse.userId,
+        targetOperator.user_id,
+        payload.commissionPercent,
+        commissionAmount,
+        payload.note || null,
+      ]
+    );
+
+    await createNotification({
+      userId: targetOperator.user_id,
+      type: 'booking_transfer_request',
+      title: 'Вам предложен переброс бронирования',
+      message: `Вам предложен переброс бронирования #${payload.bookingId}`,
+      data: {
+        commissionPercent: payload.commissionPercent,
+        fromOperatorName: fromOperator.rows[0]?.name || 'Оператор',
+        tourName: booking.tour_name,
+        bookingId: payload.bookingId,
+      },
+      actionUrl: `/hub/operator/transfers`,
+    });
+
+    return NextResponse.json(
+      {
+        success: true,
+        data: {
+          transferId: inserted.rows[0].id,
+          status: inserted.rows[0].status,
+          commissionPercent: payload.commissionPercent,
+          commissionAmount,
+          createdAt: inserted.rows[0].created_at,
+        },
+      } as ApiResponse<unknown>,
+      { status: 201 }
+    );
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { success: false, error: error.issues } as unknown as ApiResponse<null>,
+        { status: 400 }
+      );
+    }
+
+    console.error('[TRANSFER_BOOKING_POST]', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to create transfer booking offer' } as ApiResponse<null>,
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const userOrResponse = await requireOperator(request);
+    if (userOrResponse instanceof NextResponse) {
+      return userOrResponse;
+    }
+
+    const roleError = ensureStrictOperatorRole(userOrResponse.role);
+    if (roleError) {
+      return roleError;
+    }
+
+    const context = await resolveOperatorContext(userOrResponse.userId);
+    if (!context.partnerId) {
+      return NextResponse.json(
+        { success: false, error: 'Партнёрский профиль оператора не найден' } as ApiResponse<null>,
+        { status: 404 }
+      );
+    }
+
+    const payload = updateTransferSchema.parse(await request.json());
+
+    const transferResult = await query<{
+      id: string;
+      booking_id: string;
+      from_operator_partner_id: string;
+      to_operator_partner_id: string;
+      from_operator_user_id: string;
+      to_operator_user_id: string;
+      status: string;
+      commission_amount: string;
+      commission_percent: string;
+    }>(
+      `SELECT
+         id,
+         booking_id,
+         from_operator_partner_id,
+         to_operator_partner_id,
+         from_operator_user_id,
+         to_operator_user_id,
+         status,
+         commission_amount,
+         commission_percent
+       FROM operator_booking_transfers
+       WHERE id = $1
+       LIMIT 1`,
+      [payload.transferId]
+    );
+
+    if (transferResult.rows.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'Запрос на переброс не найден' } as ApiResponse<null>,
+        { status: 404 }
+      );
+    }
+
+    const transfer = transferResult.rows[0];
+
+    if (payload.action === 'cancel') {
+      if (transfer.from_operator_user_id !== userOrResponse.userId || transfer.status !== 'pending') {
+        return NextResponse.json(
+          { success: false, error: 'Запрос на переброс не найден' } as ApiResponse<null>,
+          { status: 404 }
+        );
+      }
+
+      await query(
+        `UPDATE operator_booking_transfers
+         SET status = 'cancelled', responded_at = NOW(), updated_at = NOW()
+         WHERE id = $1`,
+        [payload.transferId]
+      );
+
+      return NextResponse.json({
+        success: true,
+        data: { transferId: payload.transferId, status: 'cancelled' },
+      } as ApiResponse<unknown>);
+    }
+
+    if (transfer.to_operator_user_id !== userOrResponse.userId || transfer.status !== 'pending') {
+      return NextResponse.json(
+        { success: false, error: 'Запрос на переброс не найден' } as ApiResponse<null>,
+        { status: 404 }
+      );
+    }
+
+    if (payload.action === 'reject') {
+      await query(
+        `UPDATE operator_booking_transfers
+         SET status = 'rejected', responded_at = NOW(), updated_at = NOW()
+         WHERE id = $1`,
+        [payload.transferId]
+      );
+
+      await createNotification({
+        userId: transfer.from_operator_user_id,
+        type: 'booking_transfer_rejected',
+        title: 'Переброс отклонён',
+        message: 'Ваш запрос на переброс отклонён',
+        actionUrl: '/hub/operator/transfers',
+      });
+
+      return NextResponse.json({
+        success: true,
+        data: { transferId: payload.transferId, status: 'rejected' },
+      } as ApiResponse<unknown>);
+    }
+
+    if (!payload.targetTourId) {
+      return NextResponse.json(
+        { success: false, error: 'При принятии нужно указать targetTourId' } as ApiResponse<null>,
+        { status: 400 }
+      );
+    }
+
+    const targetTourResult = await query<{ id: string }>(
+      `SELECT id
+       FROM tours
+       WHERE id = $1 AND operator_id = $2
+       LIMIT 1`,
+      [payload.targetTourId, context.partnerId]
+    );
+
+    if (targetTourResult.rows.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'Целевой тур не найден или недоступен' } as ApiResponse<null>,
+        { status: 404 }
+      );
+    }
+
+    const bookingInfo = await query<{
+      total_price: string;
+      status: string;
+    }>(
+      `SELECT total_price, status FROM bookings WHERE id = $1 LIMIT 1`,
+      [transfer.booking_id]
+    );
+
+    if (bookingInfo.rows.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'Бронирование не найдено' } as ApiResponse<null>,
+        { status: 404 }
+      );
+    }
+
+    if (['cancelled', 'completed'].includes(bookingInfo.rows[0].status)) {
+      return NextResponse.json(
+        { success: false, error: 'Нельзя принять переброс для завершённого или отменённого бронирования' } as ApiResponse<null>,
+        { status: 400 }
+      );
+    }
+
+    const bookingTotal = parseFloat(bookingInfo.rows[0].total_price) || 0;
+    const commissionPercent = parseFloat(transfer.commission_percent) || 0;
+    const commissionAmount = Number(((bookingTotal * commissionPercent) / 100).toFixed(2));
+    const netAmount = Number((bookingTotal - commissionAmount).toFixed(2));
+
+    await transaction(async client => {
+      // 1) Фиксируем принятие оффера переброса, целевой тур и итоговую комиссию.
+      await client.query(
+        `UPDATE operator_booking_transfers
+         SET
+           status = 'accepted',
+           target_tour_id = $2,
+           commission_amount = $3,
+           responded_at = NOW(),
+           updated_at = NOW()
+         WHERE id = $1`,
+        [payload.transferId, payload.targetTourId, commissionAmount]
+      );
+
+      // 2) Переназначаем бронирование на тур оператора Б (владение сменится через tour.operator_id).
+      await client.query(
+        `UPDATE bookings
+         SET tour_id = $2, updated_at = NOW()
+         WHERE id = $1`,
+        [transfer.booking_id, payload.targetTourId]
+      );
+
+      // 3) Закрываем все остальные pending-офферы по этому бронированию.
+      await client.query(
+        `UPDATE operator_booking_transfers
+         SET status = 'cancelled', responded_at = NOW(), updated_at = NOW()
+         WHERE booking_id = $1 AND id <> $2 AND status = 'pending'`,
+        [transfer.booking_id, payload.transferId]
+      );
+
+      // 4) Финансовые записи: комиссия оператора А и доход оператора Б.
+      await client.query(
+        `INSERT INTO payouts (
+           partner_id, booking_id, amount, currency, status, description, created_at, updated_at
+         ) VALUES ($1, $2, $3, 'RUB', 'pending', $4, NOW(), NOW())`,
+        [
+          transfer.from_operator_partner_id,
+          transfer.booking_id,
+          commissionAmount,
+          'Комиссия за переброс бронирования',
+        ]
+      );
+
+      await client.query(
+        `INSERT INTO payouts (
+           partner_id, booking_id, amount, currency, status, description, created_at, updated_at
+         ) VALUES ($1, $2, $3, 'RUB', 'pending', $4, NOW(), NOW())`,
+        [
+          transfer.to_operator_partner_id,
+          transfer.booking_id,
+          netAmount,
+          'Доход за переброшенное бронирование',
+        ]
+      );
+    });
+
+    await createNotification({
+      userId: transfer.from_operator_user_id,
+      type: 'booking_transfer_accepted',
+      title: 'Переброс принят',
+      message: 'Ваш запрос на переброс принят',
+      actionUrl: '/hub/operator/transfers',
+    });
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        transferId: payload.transferId,
+        status: 'accepted',
+        targetTourId: payload.targetTourId,
+        commissionPercent: commissionPercent,
+        commissionAmount,
+      },
+    } as ApiResponse<unknown>);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { success: false, error: error.issues } as unknown as ApiResponse<null>,
+        { status: 400 }
+      );
+    }
+
+    console.error('[TRANSFER_BOOKING_PATCH]', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to process transfer booking' } as ApiResponse<null>,
+      { status: 500 }
+    );
+  }
+}

@@ -1,0 +1,38 @@
+groups:
+  - name: kamhub_alerts
+    rules:
+      - alert: AppDown
+        expr: up{job="kamhub-app"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "KamHub приложение недоступно"
+          description: "Сервис kamhub-app не отвечает более 1 минуты."
+
+      - alert: PostgresDown
+        expr: up{job="postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL недоступен"
+          description: "Экспортёр postgres не отвечает более 1 минуты."
+
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis недоступен"
+          description: "Экспортёр redis не отвечает более 1 минуты."
+
+      - alert: HighMemoryUsage
+        expr: process_resident_memory_bytes{job="kamhub-app"} > 500 * 1024 * 1024
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Высокое потребление памяти"
+          description: "Приложение использует более 500MB RAM."

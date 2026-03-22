@@ -1,0 +1,34 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: kamhub
+
+resources:
+- ../base
+
+# Production-specific resource patches
+patchesStrategicMerge:
+- deployment-patch.yaml
+
+# Production-specific environment variables
+configMapGenerator:
+- name: kamhub-config
+  behavior: merge
+  literals:
+  - LOG_LEVEL=info
+  - NODE_ENV=production
+  - RATE_LIMIT_MAX_REQUESTS=100
+  - DATABASE_POOL_MAX=30
+
+# Resource limits for production
+commonLabels:
+  environment: production
+  managed-by: kustomize
+
+replicas:
+- name: kamhub-api
+  count: 3
+- name: postgres
+  count: 1
+- name: redis
+  count: 1

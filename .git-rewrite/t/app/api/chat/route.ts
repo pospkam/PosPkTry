@@ -1,0 +1,445 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import { query } from '@/lib/database';
+import { ChatMessage, ChatSession, ApiResponse } from '@/types';
+import { config } from '@/lib/config';
+import { verifyAuth } from '@/lib/auth';
+
+const SendChatMessageSchema = z.object({
+  sessionId: z.string().optional(),
+  userId: z.string().optional(),
+  message: z.string().min(1, 'Сообщение не может быть пустым'),
+  context: z.record(z.unknown()).optional(),
+});
+
+export const dynamic = 'force-dynamic';
+
+// GET /api/chat - Получение истории чата
+export async function GET(request: NextRequest) {
+  try {
+    const auth = await verifyAuth(request);
+    if (!auth.userId) {
+      return NextResponse.json({
+        success: false,
+        error: 'Unauthorized',
+      } as ApiResponse<null>, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const sessionId = searchParams.get('sessionId');
+    const requestedUserId = searchParams.get('userId');
+    const userId = requestedUserId || auth.userId;
+
+    if (!sessionId && !userId) {
+      return NextResponse.json({
+        success: false,
+        error: 'Session ID or User ID is required',
+      } as ApiResponse<null>, { status: 400 });
+    }
+
+    if (requestedUserId && requestedUserId !== auth.userId && auth.role !== 'admin') {
+      return NextResponse.json({
+        success: false,
+        error: 'Session not found',
+      } as ApiResponse<null>, { status: 404 });
+    }
+
+    let chatQuery: string;
+    let queryParams: unknown[];
+
+    if (sessionId) {
+      // Получаем чат по sessionId
+      chatQuery = `
+        SELECT 
+          s.id as session_id,
+          s.user_id,
+          s.context,
+          s.created_at as session_created_at,
+          s.updated_at as session_updated_at,
+          m.id as message_id,
+          m.role,
+          m.content,
+          m.timestamp,
+          m.metadata
+        FROM chat_sessions s
+        LEFT JOIN chat_messages m ON s.id = m.session_id
+        WHERE s.id = $1
+          ${auth.role === 'admin' ? '' : 'AND s.user_id = $2'}
+        ORDER BY m.timestamp ASC
+      `;
+      queryParams = auth.role === 'admin' ? [sessionId] : [sessionId, auth.userId];
+    } else {
+      // Получаем последний чат пользователя
+      chatQuery = `
+        SELECT 
+          s.id as session_id,
+          s.user_id,
+          s.context,
+          s.created_at as session_created_at,
+          s.updated_at as session_updated_at,
+          m.id as message_id,
+          m.role,
+          m.content,
+          m.timestamp,
+          m.metadata
+        FROM chat_sessions s
+        LEFT JOIN chat_messages m ON s.id = m.session_id
+        WHERE s.user_id = $1
+        ORDER BY s.updated_at DESC, m.timestamp ASC
+        LIMIT 1
+      `;
+      queryParams = [userId];
+    }
+
+    const result = await query<{
+      session_id: string;
+      user_id: string;
+      context: ChatSession['context'] | null;
+      session_created_at: string;
+      session_updated_at: string;
+      message_id: string | null;
+      role: 'user' | 'assistant';
+      content: string;
+      timestamp: string;
+      metadata: Record<string, unknown> | null;
+    }>(chatQuery, queryParams);
+
+    if (result.rows.length === 0) {
+      if (sessionId) {
+        return NextResponse.json({
+          success: false,
+          error: 'Session not found',
+        } as ApiResponse<null>, { status: 404 });
+      }
+
+      return NextResponse.json({
+        success: true,
+        data: null,
+      } as ApiResponse<ChatSession | null>);
+    }
+
+    // Группируем сообщения по сессиям
+    const sessionsMap = new Map<string, ChatSession>();
+    
+    for (const row of result.rows) {
+      if (!sessionsMap.has(row.session_id)) {
+        sessionsMap.set(row.session_id, {
+          id: row.session_id,
+          userId: row.user_id,
+          messages: [],
+          context: row.context || {},
+          createdAt: new Date(row.session_created_at),
+          updatedAt: new Date(row.session_updated_at),
+        });
+      }
+
+      if (row.message_id) {
+        const session = sessionsMap.get(row.session_id)!;
+        session.messages.push({
+          id: row.message_id,
+          role: row.role,
+          content: row.content,
+          timestamp: new Date(row.timestamp),
+          metadata: row.metadata || {},
+        });
+      }
+    }
+
+    const sessions = Array.from(sessionsMap.values());
+    const session = sessions[0]; // Берем первую (или единственную) сессию
+
+    return NextResponse.json({
+      success: true,
+      data: session,
+    } as ApiResponse<ChatSession>);
+
+  } catch (error) {
+    console.error('Error fetching chat:', error);
+    return NextResponse.json({
+      success: false,
+      error: 'Failed to fetch chat',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    } as ApiResponse<null>, { status: 500 });
+  }
+}
+
+// POST /api/chat - Отправка сообщения в чат
+export async function POST(request: NextRequest) {
+  try {
+    const auth = await verifyAuth(request);
+    if (!auth.userId) {
+      return NextResponse.json({
+        success: false,
+        error: 'Unauthorized',
+      } as ApiResponse<null>, { status: 401 });
+    }
+
+    const body = await request.json();
+    const parsed = SendChatMessageSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({
+        success: false,
+        error: parsed.error.issues[0]?.message || 'Некорректные данные',
+      } as ApiResponse<null>, { status: 400 });
+    }
+    const { sessionId, userId: requestedUserId, message, context } = parsed.data;
+    const userId = (auth.role === 'admin' && requestedUserId) ? requestedUserId : auth.userId;
+
+    if (!userId) {
+      return NextResponse.json({
+        success: false,
+        error: 'Message and userId are required',
+      } as ApiResponse<null>, { status: 400 });
+    }
+
+    if (requestedUserId && requestedUserId !== auth.userId && auth.role !== 'admin') {
+      return NextResponse.json({
+        success: false,
+        error: 'Session not found',
+      } as ApiResponse<null>, { status: 404 });
+    }
+
+    let currentSessionId = sessionId;
+
+    if (currentSessionId) {
+      const existingSession = auth.role === 'admin'
+        ? await query(
+            'SELECT user_id FROM chat_sessions WHERE id = $1 LIMIT 1',
+            [currentSessionId]
+          )
+        : await query(
+            'SELECT user_id FROM chat_sessions WHERE id = $1 AND user_id = $2 LIMIT 1',
+            [currentSessionId, auth.userId]
+          );
+
+      if (existingSession.rows.length === 0) {
+        return NextResponse.json({
+          success: false,
+          error: 'Session not found',
+        } as ApiResponse<null>, { status: 404 });
+      }
+    }
+
+    // Если sessionId не указан, создаем новую сессию
+    if (!currentSessionId) {
+      const createSessionQuery = `
+        INSERT INTO chat_sessions (user_id, context, created_at, updated_at)
+        VALUES ($1, $2, NOW(), NOW())
+        RETURNING id
+      `;
+      
+      const sessionResult = await query<{ id: string }>(createSessionQuery, [userId, JSON.stringify(context || {})]);
+      currentSessionId = sessionResult.rows[0].id;
+    }
+
+    // Сохраняем сообщение пользователя
+    const saveMessageQuery = `
+      INSERT INTO chat_messages (session_id, role, content, timestamp, metadata)
+      VALUES ($1, $2, $3, NOW(), $4)
+      RETURNING id, timestamp
+    `;
+
+    const messageResult = await query<{ id: string; timestamp: string }>(saveMessageQuery, [
+      currentSessionId,
+      'user',
+      message,
+      JSON.stringify({})
+    ]);
+
+    const userMessage: ChatMessage = {
+      id: messageResult.rows[0].id,
+      role: 'user',
+      content: message,
+      timestamp: new Date(messageResult.rows[0].timestamp),
+      metadata: {},
+    };
+
+    // Получаем ответ от AI
+    const aiResponse = await getAIResponse(message, context);
+
+    // Сохраняем ответ AI
+    const aiMessageResult = await query<{ id: string; timestamp: string }>(saveMessageQuery, [
+      currentSessionId,
+      'assistant',
+      aiResponse.content,
+      JSON.stringify(aiResponse.metadata || {})
+    ]);
+
+    const aiMessage: ChatMessage = {
+      id: aiMessageResult.rows[0].id,
+      role: 'assistant',
+      content: aiResponse.content,
+      timestamp: new Date(aiMessageResult.rows[0].timestamp),
+      metadata: aiResponse.metadata || {},
+    };
+
+    // Обновляем время последнего обновления сессии
+    await query(
+      'UPDATE chat_sessions SET updated_at = NOW() WHERE id = $1',
+      [currentSessionId]
+    );
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        sessionId: currentSessionId,
+        messages: [userMessage, aiMessage],
+      },
+    } as ApiResponse<{ sessionId: string; messages: ChatMessage[] }>);
+
+  } catch (error) {
+    console.error('Error sending chat message:', error);
+    return NextResponse.json({
+      success: false,
+      error: 'Failed to send chat message',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    } as ApiResponse<null>, { status: 500 });
+  }
+}
+
+// Функция для получения ответа от AI
+async function getAIResponse(message: string, context?: Record<string, unknown>): Promise<{ content: string; metadata?: Record<string, unknown> }> {
+  try {
+    // Формируем промпт с контекстом Камчатки
+    const systemPrompt = `Ты - AI-гид по Камчатке. Твоя задача - помогать туристам планировать путешествия, отвечать на вопросы о достопримечательностях, погоде, безопасности и местных особенностях.
+
+Контекст:
+- Ты находишься в Камчатском крае, России
+- Основные достопримечательности: вулканы, гейзеры, медведи, рыбалка, термальные источники
+- Сезонность: лето (июнь-сентябрь) - лучшее время для туризма
+- Безопасность: важно соблюдать правила в медвежьих зонах
+- Погода: переменчивая, нужно быть готовым к любым условиям
+
+Отвечай кратко, информативно и дружелюбно. Если не знаешь ответа, честно скажи об этом.`;
+
+    const userPrompt = `Пользователь: ${message}`;
+
+    // Пробуем получить ответ от DeepSeek
+    if (config.ai.deepseek.apiKey) {
+      try {
+        const response = await fetch(`${config.ai.deepseek.baseUrl}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${config.ai.deepseek.apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: config.ai.deepseek.model,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt }
+            ],
+            max_tokens: config.ai.deepseek.maxTokens,
+            temperature: config.ai.deepseek.temperature,
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          return {
+            content: data.choices[0].message.content,
+            metadata: {
+              model: config.ai.deepseek.model,
+              provider: 'deepseek',
+              tokens: data.usage?.total_tokens,
+            }
+          };
+        }
+      } catch (error) {
+        console.error('DeepSeek API error:', error);
+      }
+    }
+
+    // Если DeepSeek не работает, пробуем Minimax
+    if (config.ai.minimax.apiKey) {
+      try {
+        const response = await fetch(`${config.ai.minimax.baseUrl}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${config.ai.minimax.apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: config.ai.minimax.model,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt }
+            ],
+            max_tokens: config.ai.minimax.maxTokens,
+            temperature: config.ai.minimax.temperature,
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          return {
+            content: data.choices[0].message.content,
+            metadata: {
+              model: config.ai.minimax.model,
+              provider: 'minimax',
+              tokens: data.usage?.total_tokens,
+            }
+          };
+        }
+      } catch (error) {
+        console.error('Minimax API error:', error);
+      }
+    }
+
+    // Если Minimax не работает, пробуем x.ai (Grok)
+    if (config.ai.xai.apiKey) {
+      try {
+        const response = await fetch(`${config.ai.xai.baseUrl}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${config.ai.xai.apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: config.ai.xai.model,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt }
+            ],
+            max_tokens: config.ai.xai.maxTokens,
+            temperature: config.ai.xai.temperature,
+            stream: false,
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          return {
+            content: data.choices[0].message.content,
+            metadata: {
+              model: config.ai.xai.model,
+              provider: 'xai',
+              tokens: data.usage?.total_tokens,
+            }
+          };
+        }
+      } catch (error) {
+        console.error('x.ai API error:', error);
+      }
+    }
+
+    // Если все AI провайдеры не работают, возвращаем стандартный ответ
+    return {
+      content: "Извините, я временно недоступен. Попробуйте позже или обратитесь к нашим специалистам по телефону +7 (4152) 123-456.",
+      metadata: {
+        provider: 'fallback',
+        error: 'All AI providers unavailable'
+      }
+    };
+
+  } catch (error) {
+    console.error('Error getting AI response:', error);
+    return {
+      content: "Произошла ошибка при обработке вашего запроса. Попробуйте еще раз.",
+      metadata: {
+        provider: 'error',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }
+    };
+  }
+}

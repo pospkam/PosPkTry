@@ -1,0 +1,52 @@
+name: Deploy to Timeweb Cloud
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:  # Позволяет запустить вручную
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Deploy to Timeweb VPS
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.TIMEWEB_HOST }}
+          username: ${{ secrets.TIMEWEB_USER }}
+          password: ${{ secrets.TIMEWEB_PASSWORD }}
+          port: 22
+          script: |
+            # Переход в директорию проекта или клонирование
+            if [ -d "/var/www/kamhub" ]; then
+              cd /var/www/kamhub
+              git pull origin main
+            else
+              cd /var/www
+              git clone https://github.com/${{ github.repository }}.git kamhub
+              cd kamhub
+            fi
+            
+            # Установка зависимостей и сборка
+            npm ci --production=false
+            npm run build
+            
+            # Перезапуск через PM2
+            pm2 restart kamhub || pm2 start npm --name "kamhub" -- start
+            pm2 save
+            
+            echo "✓ Deployment successful!"
+            
+      - name: Notify deployment status
+        if: always()
+        run: |
+          if [ ${{ job.status }} == 'success' ]; then
+            echo "✓ Deployment to Timeweb successful!"
+          else
+            echo "✗ Deployment failed!"
+            exit 1
+          fi

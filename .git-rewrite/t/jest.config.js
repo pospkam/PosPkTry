@@ -1,0 +1,25 @@
+module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'jsdom',
+  roots: ['<rootDir>'],
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/$1',
+    '^@core-infrastructure/(.*)$': '<rootDir>/pillars/core-infrastructure/$1',
+    '^@support/(.*)$': '<rootDir>/pillars/support/$1',
+    '^@analytics/(.*)$': '<rootDir>/pillars/analytics/$1',
+    '^@discovery/(.*)$': '<rootDir>/pillars/discovery/$1',
+    '^@booking/(.*)$': '<rootDir>/pillars/booking/$1',
+    '^@engagement/(.*)$': '<rootDir>/pillars/engagement/$1',
+    '^@services/(.*)$': '<rootDir>/pillars/core-infrastructure/services/$1',
+    '^@types/(.*)$': '<rootDir>/pillars/core-infrastructure/types/$1',
+  },
+  testMatch: ['**/__tests__/**/*.ts?(x)', '**/?(*.)+(spec|test).ts?(x)'],
+  collectCoverageFrom: [
+    'pillars/**/*.{ts,tsx}',
+    'app/**/*.{ts,tsx}',
+    'components/**/*.{ts,tsx}',
+    '!**/*.d.ts',
+    '!**/node_modules/**',
+    '!**/.next/**',
+  ],
+};

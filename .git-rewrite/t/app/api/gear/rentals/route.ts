@@ -1,0 +1,244 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import { query } from '@/lib/database';
+import { ApiResponse } from '@/types';
+import { requireAuth } from '@/lib/auth/middleware';
+import { getGearPartnerId } from '@/lib/auth/gear-helpers';
+
+export const dynamic = 'force-dynamic';
+
+const CreateGearRentalSchema = z.object({
+  gearId: z.string().min(1, 'ID снаряжения обязателен'),
+  customer: z.object({
+    name: z.string().min(1, 'Имя обязательно'),
+    email: z.string().email('Некорректный email'),
+    phone: z.string().min(1, 'Номер телефона обязателен'),
+  }),
+  rental: z.object({
+    startDate: z.string().min(1, 'Дата начала обязательна'),
+    endDate: z.string().min(1, 'Дата окончания обязательна'),
+    quantity: z.number().int().positive('Количество должно быть целым числом больше 0'),
+    insurance: z.boolean().optional(),
+  }),
+  comments: z.string().optional(),
+});
+
+/**
+ * POST /api/gear/rentals - Создание заявки на аренду снаряжения
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const userOrResponse = await requireAuth(request);
+    if (userOrResponse instanceof NextResponse) {
+      return userOrResponse;
+    }
+
+    const body = await request.json();
+    const parsed = CreateGearRentalSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' } as ApiResponse<null>,
+        { status: 400 }
+      );
+    }
+
+    const {
+      gearId,
+      customer,
+      rental,
+      comments
+    } = parsed.data;
+
+    const startDate = new Date(rental.startDate);
+    const endDate = new Date(rental.endDate);
+    const quantity = rental.quantity;
+    const rentalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+
+    // Проверяем доступность снаряжения
+    const availabilityCheck = await query<{ available_quantity: number; price_per_day: string; price_per_week: string }>(`
+      SELECT available_quantity, price_per_day, price_per_week
+      FROM gear
+      WHERE id = $1
+    `, [gearId]);
+
+    if (availabilityCheck.rows.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'Снаряжение не найдено' } as ApiResponse<null>,
+        { status: 404 }
+      );
+    }
+
+    const gearData = availabilityCheck.rows[0];
+    if (gearData.available_quantity < quantity) {
+      return NextResponse.json(
+        { success: false, error: 'Недостаточное количество доступного снаряжения' } as ApiResponse<null>,
+        { status: 400 }
+      );
+    }
+
+    const pricePerDay = Number(gearData.price_per_day);
+    const pricePerWeek = Number(gearData.price_per_week);
+    if (!Number.isFinite(pricePerDay) || pricePerDay < 0) {
+      return NextResponse.json(
+        { success: false, error: 'Ошибка конфигурации цен снаряжения' } as ApiResponse<null>,
+        { status: 500 }
+      );
+    }
+
+    // Бизнес-правило: стоимость аренды рассчитывается на сервере, а не из клиентского payload.
+    const weeklyPrice = Number.isFinite(pricePerWeek) && pricePerWeek > 0 ? pricePerWeek : null;
+    const weeks = weeklyPrice ? Math.floor(rentalDays / 7) : 0;
+    const remainingDays = weeklyPrice ? rentalDays % 7 : rentalDays;
+    const basePrice = ((weeklyPrice ? weeks * weeklyPrice : 0) + remainingDays * pricePerDay) * quantity;
+    const insuranceCost = 0;
+    const totalPrice = basePrice + insuranceCost;
+
+    // Создаем заявку на аренду
+    const result = await query(`
+      INSERT INTO gear_rentals (
+        id, gear_id, customer_name, customer_email, customer_phone,
+        start_date, end_date, quantity, days_count, insurance,
+        base_price, insurance_cost, total_price, comments, status, created_at
+      ) VALUES (
+        gen_random_uuid(),
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 'pending', NOW()
+      ) RETURNING id
+    `, [
+      gearId,
+      customer.name,
+      customer.email,
+      customer.phone,
+      rental.startDate,
+      rental.endDate,
+      quantity,
+      rentalDays,
+      Boolean(rental.insurance),
+      basePrice,
+      insuranceCost,
+      totalPrice,
+      comments || null
+    ]);
+
+    const rentalId = result.rows[0].id;
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        rentalId,
+        message: 'Заявка на аренду создана успешно'
+      }
+    } as ApiResponse<{ rentalId: string; message: string }>);
+
+  } catch (error) {
+    console.error('Error creating gear rental:', error);
+    return NextResponse.json(
+      { success: false, error: 'Ошибка создания заявки на аренду' } as ApiResponse<null>,
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * GET /api/gear/rentals - Получение списка заявок на аренду (для администратора)
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const userOrResponse = await requireAuth(request);
+    if (userOrResponse instanceof NextResponse) {
+      return userOrResponse;
+    }
+
+    const userId = userOrResponse.userId;
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' } as ApiResponse<null>,
+        { status: 401 }
+      );
+    }
+
+    const isAdmin = userOrResponse.role === 'admin';
+    const partnerId = isAdmin ? null : await getGearPartnerId(userId);
+    if (!isAdmin && !partnerId) {
+      return NextResponse.json(
+        { success: false, error: 'Профиль партнёра не найден' } as ApiResponse<null>,
+        { status: 404 }
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get('status');
+    const parsedLimit = Number.parseInt(searchParams.get('limit') || '50', 10);
+    const limit = Number.isFinite(parsedLimit) ? Math.min(Math.max(parsedLimit, 1), 100) : 50;
+    const allowedStatuses = new Set(['pending', 'confirmed', 'active', 'completed', 'cancelled', 'overdue']);
+
+    if (status && !allowedStatuses.has(status)) {
+      return NextResponse.json(
+        { success: false, error: 'Некорректный статус' } as ApiResponse<null>,
+        { status: 400 }
+      );
+    }
+
+    let queryText = `
+      SELECT
+        gr.id,
+        gr.gear_id,
+        gr.customer_name,
+        gr.customer_email,
+        gr.customer_phone,
+        gr.start_date,
+        gr.end_date,
+        gr.quantity,
+        gr.days_count,
+        gr.insurance,
+        gr.base_price,
+        gr.insurance_cost,
+        gr.total_price,
+        gr.comments,
+        gr.status,
+        gr.created_at,
+        g.name as gear_name,
+        g.category as gear_category
+      FROM gear_rentals gr
+      JOIN gear g ON gr.gear_id = g.id
+    `;
+
+    const params: (string | number)[] = [];
+    const whereConditions: string[] = [];
+
+    // Бизнес-правило: партнёр видит только свои заявки, admin — все.
+    if (!isAdmin && partnerId) {
+      whereConditions.push(`g.partner_id = $${params.length + 1}`);
+      params.push(partnerId);
+    }
+
+    // Фильтр по статусу
+    if (status) {
+      whereConditions.push(`gr.status = $${params.length + 1}`);
+      params.push(status);
+    }
+
+    if (whereConditions.length > 0) {
+      queryText += ` WHERE ${whereConditions.join(' AND ')}`;
+    }
+
+    queryText += ` ORDER BY gr.created_at DESC LIMIT $${params.length + 1}`;
+    params.push(limit);
+
+    const result = await query(queryText, params);
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        rentals: result.rows,
+        count: result.rows.length
+      }
+    } as ApiResponse<unknown>);
+
+  } catch (error) {
+    console.error('Error fetching gear rentals:', error);
+    return NextResponse.json(
+      { success: false, error: 'Ошибка получения заявок на аренду' } as ApiResponse<null>,
+      { status: 500 }
+    );
+  }
+}

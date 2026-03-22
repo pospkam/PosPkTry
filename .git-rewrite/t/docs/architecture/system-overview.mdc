@@ -1,0 +1,108 @@
+# Системная архитектура Kamchatour
+
+## 🏗️ Общая архитектура
+
+```mermaid
+graph TB
+    subgraph "Frontend Layer"
+        A[Next.js Web App]
+        B[Admin Panel]
+        C[Mobile App]
+    end
+    
+    subgraph "API Layer"
+        D[API Gateway]
+        E[Auth Service]
+        F[Tour Service]
+        G[Booking Service]
+        H[AI Service]
+    end
+    
+    subgraph "Data Layer"
+        I[PostgreSQL]
+        J[Redis Cache]
+        K[File Storage]
+    end
+    
+    subgraph "External Services"
+        L[Yandex Maps]
+        M[Weather API]
+        N[Payment Gateway]
+        O[AI Providers]
+    end
+    
+    A --> D
+    B --> D
+    C --> D
+    D --> E
+    D --> F
+    D --> G
+    D --> H
+    E --> I
+    F --> I
+    G --> I
+    H --> I
+    F --> J
+    G --> J
+    H --> O
+    F --> L
+    F --> M
+    G --> N
+```
+
+## 🎯 Ключевые компоненты
+
+### Frontend (Next.js 14)
+- **App Router** - современная маршрутизация
+- **TypeScript** - типобезопасность
+- **TailwindCSS** - стилизация
+- **PWA** - оффлайн работа
+
+### Backend (Node.js)
+- **API Routes** - Next.js API
+- **PostgreSQL** - основная БД
+- **Redis** - кэширование
+- **JWT** - аутентификация
+
+### AI Integration
+- **DeepSeek API** - основной AI
+- **DeepSeek** - резервный AI
+- **SourceCraft** - семантический поиск
+- **Ollama** - локальные модели
+
+### External Integrations
+- **Yandex Maps** - карты и маршруты
+- **Weather API** - прогноз погоды
+- **Payment Gateway** - платежи
+- **SMS/Email** - уведомления
+
+## 🔒 Безопасность
+
+### Аутентификация
+- JWT токены
+- Refresh token rotation
+- Multi-factor authentication
+
+### Авторизация
+- Role-based access control
+- API rate limiting
+- Input validation
+
+### Данные
+- Шифрование в покое
+- HTTPS только
+- GDPR/152-ФЗ compliance
+
+## 📊 Мониторинг
+
+### Метрики
+- Performance metrics
+- Business metrics
+- Error tracking
+- User analytics
+
+### Логирование
+- Structured logging
+- Centralized log collection
+- Real-time monitoring
+- Alerting system

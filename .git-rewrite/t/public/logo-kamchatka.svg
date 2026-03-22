@@ -1,0 +1,107 @@
+<svg width="400" height="120" viewBox="0 0 400 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Градиент для подсветки -->
+    <linearGradient id="volcanoGlow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#e6c149;stop-opacity:0.2" />
+      <stop offset="50%" style="stop-color:#e6c149;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#ff6b35;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Фильтр свечения -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- Фильтр сильного свечения -->
+    <filter id="strongGlow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="5" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Группа вулканов с свечением -->
+  <g filter="url(#strongGlow)">
+    <!-- Задний вулкан (левый, меньше) -->
+    <path 
+      d="M 30 90 L 45 55 L 48 60 L 50 55 L 65 90" 
+      stroke="url(#volcanoGlow)" 
+      stroke-width="2" 
+      fill="none"
+      opacity="0.5"
+    />
+    
+    <!-- Средний вулкан (центральный, высокий) -->
+    <path 
+      d="M 60 90 L 85 35 L 88 42 L 92 35 L 95 40 L 98 35 L 123 90" 
+      stroke="url(#volcanoGlow)" 
+      stroke-width="3" 
+      fill="none"
+      opacity="0.8"
+    />
+    
+    <!-- Передний вулкан (правый) -->
+    <path 
+      d="M 110 90 L 135 50 L 138 55 L 142 50 L 167 90" 
+      stroke="url(#volcanoGlow)" 
+      stroke-width="3" 
+      fill="none"
+    />
+    
+    <!-- Вулканическое свечение от кратеров -->
+    <circle cx="92" cy="35" r="4" fill="#ff6b35" opacity="0.8" filter="url(#glow)"/>
+    <circle cx="92" cy="35" r="7" fill="#e6c149" opacity="0.4"/>
+    
+    <circle cx="142" cy="50" r="3" fill="#ff6b35" opacity="0.6" filter="url(#glow)"/>
+    <circle cx="142" cy="50" r="5" fill="#e6c149" opacity="0.3"/>
+  </g>
+  
+  <!-- Текст KAMCHATKA -->
+  <text 
+    x="190" 
+    y="50" 
+    font-family="Arial, sans-serif" 
+    font-size="32" 
+    font-weight="900"
+    letter-spacing="2"
+    fill="url(#volcanoGlow)"
+    filter="url(#glow)"
+  >
+    KAMCHATKA
+  </text>
+  
+  <!-- Подзаголовок -->
+  <text 
+    x="190" 
+    y="70" 
+    font-family="Arial, sans-serif" 
+    font-size="14" 
+    font-weight="400"
+    letter-spacing="4"
+    fill="#e6c149"
+    opacity="0.7"
+  >
+    TOUR HUB
+  </text>
+  
+  <!-- Дополнительная подсветка линии горизонта -->
+  <line 
+    x1="20" 
+    y1="90" 
+    x2="180" 
+    y2="90" 
+    stroke="#e6c149" 
+    stroke-width="1" 
+    opacity="0.3"
+    filter="url(#glow)"
+  />
+</svg>

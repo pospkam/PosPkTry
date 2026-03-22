@@ -1,0 +1,8 @@
+feat: админка загрузки видео + hover MP4/WebM на главной
+
+- /hub/admin/videos — 14 слотов по категориям, drag & drop, превью видео сразу
+- POST /api/admin/videos/upload — сохраняет в S3 или public/videos/
+- CategoryCards: <source webm> + <source mp4> — принимает оба формата
+- Сайдбар: добавлен пункт "Видео" рядом с "Фотографии"
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>

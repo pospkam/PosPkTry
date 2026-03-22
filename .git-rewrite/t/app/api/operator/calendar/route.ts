@@ -1,0 +1,180 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { query } from '@/lib/database';
+import { ApiResponse } from '@/types';
+import { requireOperator } from '@/lib/auth/middleware';
+import { getOperatorPartnerId, verifyTourOwnership } from '@/lib/auth/operator-helpers';
+import { OpCalendarRow } from '@/lib/types/db-rows';
+import { z } from 'zod';
+
+const SetAvailabilitySchema = z.object({
+  tourId: z.string().min(1, 'tourId обязателен'),
+  date: z.string().min(1, 'date обязательна'),
+  availableSpots: z.number().int().min(0).optional(),
+  isBlocked: z.boolean().optional(),
+  blockReason: z.string().optional(),
+  priceOverride: z.number().min(0).optional(),
+  notes: z.string().optional(),
+});
+
+export const dynamic = 'force-dynamic';
+
+/**
+ * GET /api/operator/calendar
+ * Get tour availability calendar
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const operatorOrResponse = await requireOperator(request);
+    if (operatorOrResponse instanceof NextResponse) {
+      return operatorOrResponse;
+    }
+    const userId = operatorOrResponse.userId;
+
+    const operatorId = await getOperatorPartnerId(userId);
+    
+    if (!operatorId) {
+      return NextResponse.json({
+        success: false,
+        error: 'Профиль оператора не найден'
+      } as ApiResponse<null>, { status: 404 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const tourId = searchParams.get('tourId');
+    const startDate = searchParams.get('startDate') || new Date().toISOString().split('T')[0];
+    const endDate = searchParams.get('endDate') || new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+    let queryStr = `
+      SELECT 
+        ta.id,
+        ta.tour_id,
+        t.name as tour_name,
+        t.max_group_size,
+        ta.date,
+        ta.available_spots,
+        ta.is_blocked,
+        ta.block_reason,
+        ta.price_override,
+        ta.notes,
+        COALESCE(
+          (SELECT COUNT(*) FROM bookings b 
+           WHERE b.tour_id = ta.tour_id 
+           AND b.start_date = ta.date 
+           AND b.status IN ('confirmed', 'pending')
+          ), 0
+        ) as booked_spots
+      FROM tour_availability ta
+      JOIN tours t ON ta.tour_id = t.id
+      WHERE t.operator_id = $1
+        AND ta.date >= $2
+        AND ta.date <= $3
+    `;
+
+    const params: (string | number | boolean | null)[] = [operatorId, startDate, endDate];
+    let paramIndex = 4;
+
+    if (tourId) {
+      queryStr += ` AND ta.tour_id = $${paramIndex}`;
+      params.push(tourId);
+      paramIndex++;
+    }
+
+    queryStr += ` ORDER BY ta.date ASC, t.name ASC`;
+
+    const result = await query<OpCalendarRow>(queryStr, params);
+
+    const availability = result.rows.map(row => ({
+      id: row.id,
+      tourId: row.tour_id,
+      tourName: row.tour_name,
+      date: row.date,
+      maxGroupSize: row.max_group_size,
+      availableSpots: row.available_spots,
+      bookedSpots: parseInt(row.booked_spots),
+      remainingSpots: row.available_spots - parseInt(row.booked_spots),
+      isBlocked: row.is_blocked,
+      blockReason: row.block_reason,
+      priceOverride: row.price_override ? parseFloat(row.price_override) : null,
+      notes: row.notes
+    }));
+
+    return NextResponse.json({
+      success: true,
+      data: { availability }
+    } as ApiResponse<unknown>);
+
+  } catch (error) {
+    console.error('Get calendar error:', error);
+    return NextResponse.json({
+      success: false,
+      error: 'Ошибка при получении календаря'
+    } as ApiResponse<null>, { status: 500 });
+  }
+}
+
+/**
+ * POST /api/operator/calendar
+ * Set availability for a tour date
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const operatorOrResponse = await requireOperator(request);
+    if (operatorOrResponse instanceof NextResponse) {
+      return operatorOrResponse;
+    }
+    const userId = operatorOrResponse.userId;
+
+    const body = await request.json();
+    const parsed = SetAvailabilitySchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' }, { status: 400 });
+    }
+    const { tourId, date, availableSpots, isBlocked, blockReason, priceOverride, notes } = parsed.data;
+
+    // Verify tour ownership
+    const isOwner = await verifyTourOwnership(userId, tourId);
+    
+    if (!isOwner) {
+      return NextResponse.json({
+        success: false,
+        error: 'Тур не найден или у вас нет прав'
+      } as ApiResponse<null>, { status: 404 });
+    }
+
+    // Insert or update availability
+    const result = await query(
+      `INSERT INTO tour_availability (
+        tour_id, date, available_spots, is_blocked, block_reason, price_override, notes
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+      ON CONFLICT (tour_id, date) DO UPDATE SET
+        available_spots = EXCLUDED.available_spots,
+        is_blocked = EXCLUDED.is_blocked,
+        block_reason = EXCLUDED.block_reason,
+        price_override = EXCLUDED.price_override,
+        notes = EXCLUDED.notes
+      RETURNING *`,
+      [
+        tourId,
+        date,
+        availableSpots || 0,
+        isBlocked || false,
+        blockReason,
+        priceOverride,
+        notes
+      ]
+    );
+
+    return NextResponse.json({
+      success: true,
+      data: result.rows[0],
+      message: 'Доступность обновлена'
+    } as ApiResponse<unknown>);
+
+  } catch (error) {
+    console.error('Set availability error:', error);
+    return NextResponse.json({
+      success: false,
+      error: 'Ошибка при установке доступности'
+    } as ApiResponse<null>, { status: 500 });
+  }
+}

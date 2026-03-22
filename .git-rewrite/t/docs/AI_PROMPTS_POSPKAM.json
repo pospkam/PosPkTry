@@ -1,0 +1,46 @@
+// AI-промпты для CodeCursor/Continue.dev под проект PosPkTry (Kamchatour Hub)
+// Скопируй нужные команды в settings.json → code-cursor.customCommands или в настройки Continue.dev
+// Можно использовать как быстрые команды через палитру VS Code
+
+[
+  {
+    "name": "Senior Refactor (Kamchatour)",
+    "prompt": "Ты senior full-stack по Next.js/TypeScript. Возьми выделенный код из Kamchatour Hub и рефактори на максимум: чистота, типизация, производительность, читаемость, паттерны. Добавь комментарии на русском. Сохрани бизнес-логику."
+  },
+  {
+    "name": "Fix Bugs Like a Pro",
+    "prompt": "Найди все баги, edge-кейсы, утечки памяти, race conditions в этом коде. Предложи фиксы с объяснением. Учитывай стек: Next.js, React, PostgreSQL, Tailwind, eco-points, SOS."
+  },
+  {
+    "name": "Make it Production-Ready",
+    "prompt": "Сделай этот код production-ready для Kamchatour Hub: добавь логирование, error handling, retries, rate limiting, типизацию, тесты, документацию. Не меняй бизнес-логику."
+  },
+  {
+    "name": "Write Tests (Vitest/Jest)",
+    "prompt": "Сгенерируй тесты (Vitest/Jest) для выделенной функции/компонента. Покрой edge-кейсы, ошибки, интеграцию с БД (PostgreSQL), eco-points, SOS, AI-ассистент."
+  },
+  {
+    "name": "Add Docs (JSDoc/TS Doc)",
+    "prompt": "Добавь подробный JSDoc/TS Doc к функции/компоненту: описание, @param, @returns, @throws, примеры. Учитывай специфику Kamchatour Hub."
+  },
+  {
+    "name": "New React Component (Next.js + Tailwind)",
+    "prompt": "Создай новый React-компонент {name} для Kamchatour Hub: TypeScript, Tailwind CSS, доступность (aria-*), responsive, dark mode, экспорт default и named, папка: components/{name}/index.tsx + styles + tests + README."
+  },
+  {
+    "name": "Eco-Points Logic Review",
+    "prompt": "Проанализируй выделенный код на соответствие бизнес-логике eco-points Kamchatour Hub. Проверь начисление, списание, edge-кейсы, безопасность."
+  },
+  {
+    "name": "SOS/Безопасность Audit",
+    "prompt": "Проверь выделенный код на безопасность: rate limiting, обработка ошибок, логирование, защиту от злоупотреблений. Учитывай специфику SOS/МЧС."
+  },
+  {
+    "name": "AI Assistant Prompt Tuning",
+    "prompt": "Оптимизируй промпт/код для AI-ассистента Kamchatour Hub: только туризм Камчатки, медицина — 'проконсультируйтесь с врачом', безопасность — всегда упоминать SOS/МЧС, язык ответа = язык вопроса."
+  },
+  {
+    "name": "DB Query Review (PostgreSQL)",
+    "prompt": "Проверь SQL-запросы на безопасность (SQL-инъекции), производительность, параметризацию ($1, $2), соответствие бизнес-логике Kamchatour Hub."
+  }
+]

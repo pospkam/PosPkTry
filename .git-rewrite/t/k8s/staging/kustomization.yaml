@@ -1,0 +1,61 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: kamhub-staging
+
+# Resources to use from base
+resources:
+  - ../base/namespace.yaml
+  - ../base/secrets.yaml
+  - ../base/configmap.yaml
+  - ../base/database.yaml
+  - ../base/deployment.yaml
+  - ../base/service.yaml
+  - ../base/ingress.yaml
+
+# Generate ConfigMap for staging environment
+configMapGenerator:
+  - name: kamhub-staging-config
+    namespace: kamhub-staging
+    behavior: merge
+    literals:
+      - NODE_ENV=staging
+      - LOG_LEVEL=debug
+      - API_URL=https://staging.kamhub.com
+      - CORS_ORIGIN=https://staging.kamhub.com,http://localhost:3000,http://localhost:5173
+      - DATABASE_URL=postgresql://kamhub:password@postgres-staging:5432/kamhub_staging
+      - REDIS_URL=redis://redis-staging:6379/0
+      - FEATURE_FLAG_BETA=true
+      - ENABLE_EXPERIMENTAL_FEATURES=true
+      - ENABLE_DEBUG_LOGS=true
+      - WEBHOOK_TIMEOUT=30000
+
+# Patches for staging-specific configuration
+patchesStrategicMerge:
+  - deployment-patch.yaml
+
+# Namespace labels
+commonLabels:
+  environment: staging
+  managed-by: kustomize
+
+# Replicas for staging (lower than production)
+replicas:
+  - name: kamhub-api
+    count: 2
+  - name: postgres-staging
+    count: 1
+  - name: redis-staging
+    count: 1
+
+# Resource limits for staging (less than production)
+commonAnnotations:
+  environment: staging
+  deployment-date: "2026-01-28"
+  team: platform-engineering
+
+# Metadata patches
+metadata:
+  labels:
+    version: v1.0.0-staging
+    deployment: kamhub-staging

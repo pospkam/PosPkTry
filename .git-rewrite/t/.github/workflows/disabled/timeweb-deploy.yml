@@ -1,0 +1,218 @@
+name: Deploy to Timeweb Cloud
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'deploy'
+        type: choice
+        options:
+          - setup
+          - deploy
+          - status
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  setup-infrastructure:
+    name: 🚀 Setup Timeweb Infrastructure
+    runs-on: ubuntu-latest
+    if: github.event.inputs.action == 'setup'
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v3
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 📦 Install dependencies
+        run: npm install -g tsx
+
+      - name: 🏗️ Setup Timeweb Cloud infrastructure
+        env:
+          TIMEWEB_TOKEN: ${{ secrets.TIMEWEB_TOKEN }}
+        run: |
+          echo "🚀 Starting Timeweb Cloud setup..."
+          echo "This will create: VDS, PostgreSQL, S3, Firewall"
+          tsx scripts/timeweb-setup.ts
+          
+      - name: 💾 Upload infrastructure info
+        uses: actions/upload-artifact@v3
+        with:
+          name: timeweb-resources
+          path: |
+            timeweb-resources.json
+            .env.production.timeweb
+          retention-days: 90
+
+      - name: 📋 Display next steps
+        run: |
+          echo "✅ Infrastructure setup completed!"
+          echo ""
+          echo "📋 Next steps:"
+          echo "1. Download artifacts from this run"
+          echo "2. Add these GitHub Secrets:"
+          echo "   - DATABASE_URL (from .env.production.timeweb)"
+          echo "   - SERVER_HOST (from timeweb-resources.json)"
+          echo "   - SERVER_USER (kamchatour)"
+          echo "   - SSH_PRIVATE_KEY (create and add)"
+          echo "3. Run 'deploy' action to deploy the application"
+
+  check-status:
+    name: 🔍 Check Infrastructure Status
+    runs-on: ubuntu-latest
+    if: github.event.inputs.action == 'status'
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v3
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 📦 Install dependencies
+        run: npm install -g tsx
+
+      - name: 📊 Check project status
+        env:
+          TIMEWEB_TOKEN: ${{ secrets.TIMEWEB_TOKEN }}
+        run: |
+          echo "🔍 Checking Timeweb Cloud status..."
+          tsx scripts/timeweb-manage.ts project
+          
+      - name: 📋 List all resources
+        env:
+          TIMEWEB_TOKEN: ${{ secrets.TIMEWEB_TOKEN }}
+        run: |
+          echo "📦 Listing all resources..."
+          tsx scripts/timeweb-manage.ts list
+
+  deploy:
+    name: 🚀 Deploy Application
+    runs-on: ubuntu-latest
+    if: github.event.inputs.action == 'deploy' || github.event_name == 'push'
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v3
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🧪 Run tests
+        run: npm test || echo "⚠️ No tests found, skipping..."
+
+      - name: 🏗️ Build application
+        run: npm run build
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXT_PUBLIC_APP_URL: http://${{ secrets.SERVER_HOST }}
+
+      - name: 🔑 Setup SSH
+        if: ${{ secrets.SSH_PRIVATE_KEY != '' }}
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: 🚀 Deploy to Timeweb Cloud
+        if: ${{ secrets.SERVER_HOST != '' && secrets.SERVER_USER != '' }}
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+        run: |
+          echo "🚀 Deploying to Timeweb Cloud..."
+          echo "Server: $SERVER_HOST"
+          echo "User: $SERVER_USER"
+          
+          # Add server to known hosts
+          mkdir -p ~/.ssh
+          ssh-keyscan -H $SERVER_HOST >> ~/.ssh/known_hosts
+          
+          # Sync files (excluding unnecessary directories)
+          rsync -avz --exclude 'node_modules' \
+                     --exclude '.next' \
+                     --exclude '.git' \
+                     --exclude 'logs' \
+                     --exclude '.github' \
+                     --exclude 'tests' \
+                     --delete \
+                     ./ $SERVER_USER@$SERVER_HOST:~/kamchatour-hub/
+          
+          echo "✅ Files synced successfully"
+          
+          # Deploy on server
+          echo "🔧 Installing dependencies and building on server..."
+          ssh $SERVER_USER@$SERVER_HOST << 'ENDSSH'
+            cd ~/kamchatour-hub
+            
+            # Install dependencies
+            echo "📦 Installing dependencies..."
+            npm ci
+            
+            # Run database migrations
+            echo "🗄️ Running database migrations..."
+            npx prisma migrate deploy || echo "⚠️ No migrations or Prisma not configured"
+            
+            # Build application
+            echo "🏗️ Building application..."
+            npm run build
+            
+            # Reload PM2
+            echo "🔄 Reloading PM2..."
+            if pm2 list | grep -q kamchatour-hub; then
+              pm2 reload kamchatour-hub --update-env
+            else
+              pm2 start ecosystem.config.js
+            fi
+            
+            # Save PM2 configuration
+            pm2 save
+            
+            echo "✅ Deployment completed on server!"
+          ENDSSH
+          
+          echo "✅ Deployment completed successfully!"
+
+      - name: 🏥 Health check
+        if: ${{ secrets.SERVER_HOST != '' }}
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+        run: |
+          echo "🏥 Performing health check..."
+          sleep 10
+          
+          if curl -f -s http://$SERVER_HOST/api/health > /dev/null 2>&1; then
+            echo "✅ Health check passed!"
+          else
+            echo "⚠️ Health check failed - server might still be starting"
+            echo "Check manually: http://$SERVER_HOST/api/health"
+          fi
+
+      - name: 📊 Deployment summary
+        if: always()
+        run: |
+          echo "📊 Deployment Summary:"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "Repository: ${{ github.repository }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Author: ${{ github.actor }}"
+          echo "Server: ${{ secrets.SERVER_HOST }}"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ Deployment workflow completed!"
