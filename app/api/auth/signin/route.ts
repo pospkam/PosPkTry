@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { query } from '@/lib/database';
 import { verifyPassword } from '@/lib/auth/password';
 import { createToken } from '@/lib/auth/jwt';
+import { sanitizeError } from '@/lib/errors/sanitize';
 import { ApiResponse } from '@/types';
 import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
 import { UsersRow } from '@/lib/types/db-rows';
@@ -116,10 +117,10 @@ export async function POST(request: NextRequest) {
     return response;
 
   } catch (error) {
+    const safeError = sanitizeError(error);
     return NextResponse.json({
       success: false,
-      error: 'Ошибка при входе в систему',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      error: safeError.message,
     } as ApiResponse<null>, { status: 500 });
   }
 }
