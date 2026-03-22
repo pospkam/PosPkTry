@@ -37,7 +37,16 @@ interface LocationData {
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const secret = url.searchParams.get('secret');
-  if (secret !== process.env.CRON_SECRET) {
+
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) {
+    return Response.json(
+      { error: 'CRON_SECRET not configured on server' },
+      { status: 500 }
+    );
+  }
+
+  if (secret !== cronSecret) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

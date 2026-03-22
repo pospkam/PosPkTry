@@ -15,13 +15,18 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   // Auth
   const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret) {
-    const authHeader = request.headers.get('Authorization');
-    const querySecret = request.nextUrl.searchParams.get('secret');
-    const provided = authHeader?.replace('Bearer ', '').trim() ?? querySecret ?? '';
-    if (provided !== cronSecret) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  if (!cronSecret) {
+    return NextResponse.json(
+      { error: 'CRON_SECRET not configured on server' },
+      { status: 500 }
+    );
+  }
+
+  const authHeader = request.headers.get('Authorization');
+  const querySecret = request.nextUrl.searchParams.get('secret');
+  const provided = authHeader?.replace('Bearer ', '').trim() ?? querySecret ?? '';
+  if (provided !== cronSecret) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const client = await pool.connect();

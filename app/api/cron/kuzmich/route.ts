@@ -44,7 +44,15 @@ export async function GET(request: NextRequest) {
   const secret = searchParams.get('secret')
     ?? request.headers.get('authorization')?.replace('Bearer ', '');
 
-  if (!secret || secret !== process.env.CRON_SECRET) {
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) {
+    return NextResponse.json(
+      { success: false, error: 'CRON_SECRET not configured on server' },
+      { status: 500 }
+    );
+  }
+
+  if (secret !== cronSecret) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
 

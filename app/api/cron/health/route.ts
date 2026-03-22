@@ -147,14 +147,20 @@ async function checkDB(): Promise<HealthIssue[]> {
 // ── Main handler ──────────────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
+  // SECURITY: CRON_SECRET must be configured - unauthenticated access is critical risk
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) {
+    return NextResponse.json(
+      { error: 'CRON_SECRET not configured on server' },
+      { status: 500 }
+    );
+  }
+
   const secret = request.nextUrl.searchParams.get('secret')
     ?? request.headers.get('authorization')?.replace('Bearer ', '');
 
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret) {
-    if (secret !== cronSecret) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  if (secret !== cronSecret) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const started = Date.now();

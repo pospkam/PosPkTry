@@ -245,10 +245,15 @@ export async function GET(request: NextRequest) {
     ?? request.headers.get('authorization')?.replace('Bearer ', '');
 
   const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret) {
-    if (secret !== cronSecret) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  if (!cronSecret) {
+    return NextResponse.json(
+      { error: 'CRON_SECRET not configured on server' },
+      { status: 500 }
+    );
+  }
+
+  if (secret !== cronSecret) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const date = new Date().toLocaleDateString('ru-RU', {
