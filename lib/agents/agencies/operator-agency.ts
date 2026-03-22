@@ -113,7 +113,7 @@ export class OperatorAgency {
       SELECT b.id, t.title AS tour_title, b.tourist_name, b.participants, b.final_price, b.booking_status AS status
       FROM operator_bookings b
       JOIN operator_tours t ON t.id = b.operator_tour_id
-      WHERE t.partner_id = $1
+      WHERE t.operator_id = $1
         AND b.created_at >= NOW()::date
         AND b.deleted_at IS NULL
       ORDER BY b.created_at DESC
@@ -162,7 +162,7 @@ export class OperatorAgency {
     return { response, data: { revenue: r } };
   }
 
-  // ── Write: создать тур ─────────────────────────────────────────────────────
+  // ── Write: создать тур ────────────────────────────────────────────────────────────
 
   async createTour(context: AgentContext, message: string): Promise<AgencyResult> {
     const partnerId = await this.getPartnerId(context.user.userId);
@@ -235,11 +235,11 @@ export class OperatorAgency {
     }
   }
 
-  // ── Write: добавить слоты доступности ─────────────────────────────────────
+  // ── Write: добавить слоты доступности ─────────────────────────────────────────────
 
   async addSlots(_context: AgentContext, message: string): Promise<AgencyResult> {
     // Парсим: tour ID, дата начала, дата конца, кол-во мест
-    const idMatch    = message.match(/тур(?:у|ам?)?\s+(\d+)/i);
+    const idMatch    = message.match(/тур(?:у|ам?)\s+(\d+)/i);
     const datesMatch = message.match(/(\d{4}-\d{2}-\d{2}).*?(\d{4}-\d{2}-\d{2})/);
     const slotsMatch = message.match(/(\d+)\s*(?:мест|чел|человек)/i);
 

@@ -72,12 +72,9 @@ export class RescueAgency {
       }>(`
         SELECT
           COUNT(*)::text                                                        AS total_30d,
-          COUNT(*) FILTER (WHERE booking_status NOT IN ('resolved','cancelled'))::text  AS active,
+          COUNT(*) FILTER (WHERE status NOT IN ('resolved','cancelled'))::text  AS active,
           COUNT(*) FILTER (WHERE status = 'resolved')::text                    AS resolved,
-          COALESCE(ROUND(
-            AVG(EXTRACT(EPOCH FROM (updated_at - created_at)) / 60)
-            FILTER (WHERE status = 'resolved')
-          ), 0)::text                                                           AS avg_resolve_min
+          '0'                                                                   AS avg_resolve_min
         FROM sos_events
         WHERE created_at >= NOW() - INTERVAL '30 days'
       `),

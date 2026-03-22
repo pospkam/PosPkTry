@@ -110,7 +110,7 @@ async function executeAPIKeyRotation(task: ExecutionTask): Promise<ExecutionResu
       errors.push(`Endpoint test failed: ${testResult.error}`);
       // ROLLBACK would happen here
     } else {
-      changes.push(`✓ All OCTO endpoints verified working`);
+      changes.push(`All OCTO endpoints verified working`);
     }
 
     return {
@@ -254,7 +254,7 @@ async function executeTourDescriptionRewrite(task: ExecutionTask): Promise<Execu
         new: newDesc || '',
       });
 
-      changes.push(`✓ Rewrote: "${tour.title}"`);
+      changes.push(`Rewrote: "${tour.title}"`);
     }
 
     // Step 3: Batch update descriptions
@@ -354,7 +354,7 @@ async function executeABTestSetup(task: ExecutionTask): Promise<ExecutionResult>
       );
     }
 
-    changes.push(`✓ A/B test active for 14 days (${lowVolumeTours.rowCount} tours)`);
+    changes.push(`A/B test active for 14 days (${lowVolumeTours.rowCount} tours)`);
 
     return {
       success: true,
@@ -402,7 +402,7 @@ async function executeCommissionOptimization(task: ExecutionTask): Promise<Execu
     const batchSize = 100;
     const parallelStreams = 4;
 
-    changes.push(`Strategy: Batch size ${batchSize} × ${parallelStreams} parallel streams`);
+    changes.push(`Strategy: Batch size ${batchSize} x ${parallelStreams} parallel streams`);
 
     // Step 3: Update configuration
     await pool.query(
@@ -419,13 +419,13 @@ async function executeCommissionOptimization(task: ExecutionTask): Promise<Execu
       [parallelStreams.toString()]
     );
 
-    changes.push(`✓ Configuration updated (batch_size=${batchSize}, parallel=${parallelStreams})`);
+    changes.push(`Configuration updated (batch_size=${batchSize}, parallel=${parallelStreams})`);
 
     // Step 4: Deploy to staging
     changes.push(`Deployed to staging environment`);
 
     // Step 5: Schedule gradual rollout
-    changes.push(`Rollout schedule: 5% → 25% → 50% → 100% (daily)`);
+    changes.push(`Rollout schedule: 5% -> 25% -> 50% -> 100% (daily)`);
 
     return {
       success: true,
@@ -453,7 +453,6 @@ async function executeCommissionOptimization(task: ExecutionTask): Promise<Execu
  */
 
 function generateSecureKey(): string {
-  // Generate cryptographically secure API key
   const prefix = 'sk_live_';
   const randomPart = randomBytes(32).toString('hex');
   return prefix + randomPart;
@@ -461,7 +460,6 @@ function generateSecureKey(): string {
 
 async function testOCTOEndpoints(): Promise<{ success: boolean; error?: string }> {
   try {
-    // Test OCTO API health endpoint
     const octoBaseUrl = process.env.OCTO_API_URL || 'https://api.octo.travel/v1';
     const octoApiKey = process.env.OCTO_API_KEY;
 

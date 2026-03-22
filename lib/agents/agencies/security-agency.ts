@@ -148,7 +148,9 @@ export class SecurityAgency {
                  THEN 'подозрительно низкая сумма'
             WHEN ob.booking_status = 'confirmed'
                  AND (SELECT COUNT(*) FROM operator_bookings ob2
-                       WHERE ob2.operator_id = ob.operator_id
+                       WHERE ob2.operator_tour_id IN (
+                         SELECT id FROM operator_tours WHERE operator_id = ot.operator_id
+                       )
                          AND ob2.created_at >= NOW() - INTERVAL '1 hour'
                      ) > 10
                  THEN 'массовые брони за 1 час'
@@ -156,7 +158,7 @@ export class SecurityAgency {
           END AS anomaly_type
         FROM operator_bookings ob
         JOIN operator_tours ot ON ot.id = ob.operator_tour_id
-        JOIN partners p        ON p.id  = ob.operator_id
+        JOIN partners p        ON p.id  = ot.operator_id
         WHERE ob.deleted_at IS NULL
           AND ob.created_at >= NOW() - INTERVAL '7 days'
         ORDER BY ob.created_at DESC

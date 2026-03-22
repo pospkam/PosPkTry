@@ -19,7 +19,7 @@ export interface AgencyResult {
   data?: Record<string, unknown>;
 }
 
-// ── Типы строк БД ─────────────────────────────────────────────────────────────
+// ── Типы строк БД ─────────────────────────────────────────────────────────────────
 
 interface LeadsStats {
   total: number;
@@ -52,7 +52,7 @@ interface PageViewsStats {
   last_7d: number;
 }
 
-// ── AdminAgency ───────────────────────────────────────────────────────────────
+// ── AdminAgency ─────────────────────────────────────────────────────────────────────
 
 export class AdminAgency {
   async run(intent: string, _context: AgentContext): Promise<AgencyResult> {
@@ -64,7 +64,7 @@ export class AdminAgency {
     }
   }
 
-  // ── /digest ────────────────────────────────────────────────────────────────
+  // ── /digest ──────────────────────────────────────────────────────────────────────
 
   async getDigest(): Promise<AgencyResult> {
     try {
@@ -112,7 +112,7 @@ export class AdminAgency {
     }
   }
 
-  // ── /leads ─────────────────────────────────────────────────────────────────
+  // ── /leads ─────────────────────────────────────────────────────────────────────
 
   async getLeadsSummary(): Promise<AgencyResult> {
     const stats = await this.fetchLeadsStats();
@@ -124,7 +124,7 @@ export class AdminAgency {
     return { response, data: { leads: stats } };
   }
 
-  // ── /health ────────────────────────────────────────────────────────────────
+  // ── /health ────────────────────────────────────────────────────────────────────
 
   async getHealth(): Promise<AgencyResult> {
     const [patterns, feedback, successRate] = await Promise.all([
@@ -165,7 +165,7 @@ export class AdminAgency {
     };
   }
 
-  // ── Запросы к БД ───────────────────────────────────────────────────────────
+  // ── Запросы к БД ────────────────────────────────────────────────────────────────────
 
   private async fetchLeadsStats(): Promise<LeadsStats> {
     const { rows } = await pool.query<LeadsStats>(`
@@ -240,7 +240,7 @@ export class AdminAgency {
   }
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────────────
 
 interface DigestData {
   leads: LeadsStats;
