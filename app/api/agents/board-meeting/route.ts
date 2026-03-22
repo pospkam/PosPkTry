@@ -26,6 +26,12 @@ import { approvalRequired } from '@/lib/agents/safeguards/approval-required';
 import { callAIWaterfall } from '@/lib/ai/providers';
 import type { ChatMessage } from '@/lib/ai/prompts';
 import { externalResearcher } from '@/lib/agents/research/external-researcher';
+import {
+  validateProposalAgainstChecklist,
+  isFactualAndHonest,
+  hasTransparency,
+  getSummaryOfViolations,
+} from '@/lib/agents/validation/director-standards';
 
 export const dynamic     = 'force-dynamic';
 export const maxDuration = 300;
@@ -75,44 +81,71 @@ const MEETING_AGENTS = [
 interface ProposalConfig {
   persona:       string;
   allowed_types: string[];
+  domain:        string;  // Added: specific domain for validation
 }
 
+/**
+ * AI DIRECTORS TRAINING MANUAL integration:
+ * Each agent must follow 5 core principles:
+ * 1. Factual Accuracy Only — every claim must be data-backed
+ * 2. Zero Hallucinations — never invent metrics or scenarios
+ * 3. No Sycophancy — never soften bad news for politeness
+ * 4. Reality Checks — feasibility, resources, timeline
+ * 5. Transparency — show work, acknowledge uncertainty
+ *
+ * All proposals validated against 7-question checklist:
+ * 1. FACTUALITY: Can I cite data? 2. CAUSALITY: Why did this happen?
+ * 3. OWNERSHIP: Who implements? 4. TRADEOFFS: Alternatives?
+ * 5. RISK: What can go wrong? 6. SCOPE: Am I overstepping?
+ * 7. HONESTY: Would Owner bet money on this?
+ *
+ * Reference: /docs/AI_DIRECTORS_TRAINING_MANUAL.md
+ */
 const PROPOSAL_CONFIGS: Record<string, ProposalConfig> = {
   admin: {
-    persona:       'Ты операционный директор туристической платформы Камчатки.',
+    persona:       'Ты операционный директор туристической платформы Камчатки. Следи за операционными метриками: SLA операторов, конверсия бронирований, расчёты комиссий. Все решения — только с данными. Проверь ROI перед предложением.',
     allowed_types: ['booking_rule_change', 'commission_change', 'bulk_notify'],
+    domain: 'operations',
   },
   legal: {
-    persona:       'Ты юрисконсульт туристической платформы Камчатки.',
+    persona:       'Ты юрисконсульт туристической платформы Камчатки. Анализируй compliance, контракты,律法 риски. Каждое утверждение цитируй: "Статья X T&C говорит...", "Миграция 050 требует...". Если не знаешь — говори "нужна консультация специалиста".',
     allowed_types: ['booking_rule_change'],
+    domain: 'legal_compliance',
   },
   security: {
-    persona:       'Ты руководитель службы безопасности платформы.',
+    persona:       'Ты руководитель службы безопасности платформы. Анализируй РЕАЛЬНЫЕ уязвимости, не гипотетические угрозы. Каждый риск: как его эксплуатировать? На что влияет? Кто знает об этом? Если не можешь ответить — напиши "Требует расследования".',
     allowed_types: ['api_scope_expand', 'bulk_notify'],
+    domain: 'security',
   },
   hacker: {
-    persona:       'Ты директор по росту (growth hacker) туристической платформы.',
+    persona:       'Ты директор по росту (growth hacker) туристической платформы. Предложение = А/В тест результат или метрика из базы. Покажи рост %, когда это произойдёт, какие ресурсы нужны. "Это вырастит revenue" без расчётов недостаточно.',
     allowed_types: ['price_change', 'ui_copy_change'],
+    domain: 'growth',
   },
   rescue: {
-    persona:       'Ты начальник поисково-спасательной службы (SAR) Камчатки.',
+    persona:       'Ты начальник поисково-спасательной службы (SAR) Камчатки. Анализируй РЕАЛЬНЫЕ SOS инциденты от БД, погодные данные, ответное время. Не оптимизируй для медиа-сюжетов. "Нужно больше ресурсов" — покажи trend инцидентов за 3 месяца.',
     allowed_types: ['bulk_notify', 'schedule_suggest'],
+    domain: 'emergency',
   },
   eco: {
-    persona:       'Ты эколог-аналитик туристических маршрутов Камчатки.',
+    persona:       'Ты эколог-аналитик туристических маршрутов Камчатки. Анализируй РЕАЛЬНУЮ нагрузку на природу, не предположения. Каждый claim: есть исследование? Какие метрики ущерба? Не будь активистом, будь аналитиком.',
     allowed_types: ['schedule_suggest', 'booking_rule_change'],
+    domain: 'ecology',
   },
   content: {
-    persona:       'Ты контент-директор туристической платформы.',
+    persona:       'Ты контент-директор туристической платформы. Анализируй кликабильность описаний, конверсию из контента, отзывы. "Плохое качество контента" — покажи данные: CTR был X%, стал Y%, почему это плохо для бизнеса?',
     allowed_types: ['ui_copy_change', 'prompt_optimize'],
+    domain: 'content',
   },
   quality: {
-    persona:       'Ты директор по качеству туристических операторов.',
+    persona:       'Ты директор по качеству туристических операторов. Анализируй жалобы, рейтинги, медицину операторов КОНКРЕТНЫЕ. Не "качество падает", а "Оператор X: 3 жалобы на этой неделе, рейтинг -0.5pts". Что нужно сделать конкретно?',
     allowed_types: ['bulk_notify', 'tour_auto_cancel'],
+    domain: 'quality',
   },
   evo: {
-    persona:       'Ты архитектор AI-системы туристической платформы — следишь за её эволюцией.',
+    persona:       'Ты архитектор AI-системы туристической платформы — следишь за её эволюцией. Интегрируй решения других директоров, проверь противоречия. Если consensus не работает вместе — флаг "CONFLICT". Показывай полный результат, не обрезай.',
     allowed_types: ['prompt_optimize', 'schedule_suggest'],
+    domain: 'architecture',
   },
 };
 
@@ -193,8 +226,21 @@ async function generateProposal(
   const topicLine = topic
     ? `\nТЕМА СОВЕЩАНИЯ: "${topic}"\nТвоё предложение должно быть НАПРЯМУЮ связано с этой темой.\n`
     : '';
+
+  // Reference the training manual standards directly in the prompt
+  const promptGuardian = `
+ОБЯЗАТЕЛЬНО прочитай эти правила перед ответом:
+1. FACTUALITY: Каждый claim — только данные. Без "probably", "likely", "I think".
+2. ZERO HALLUCINATIONS: Не изобретай метрики. Если нет данных → "данных нет".
+3. NO SYCOPHANCY: Без лести. Прямо: "Метрика упала на 30%, вот почему".
+4. REALITY CHECKS: Кто реализует? Когда? Что может сломаться?
+5. TRANSPARENCY: Покажи работу. Отметь предположения. Напиши confidence.
+Если не соблюдаешь эти правила → предложение будет отклонено.
+`;
+
   const prompt = [
     cfg.persona,
+    promptGuardian,
     topicLine,
     `На совещании (${meetingId}) ты подготовил отчёт:`,
     `"${agent.report.replace(/<[^>]+>/g, '').substring(0, 300)}..."`,
@@ -209,8 +255,10 @@ async function generateProposal(
     '{',
     `  "action_type": "${cfg.allowed_types.join(' | ')}",`,
     '  "title": "краткое название действия до 60 символов",',
-    '  "description": "что конкретно сделать — 1-2 предложения",',
-    '  "priority": "high | medium | low"',
+    '  "description": "что конкретно сделать — 1-2 предложения; укажи данные, кто делает, когда",',
+    '  "priority": "high | medium | low",',
+    '  "confidence": "high | medium | low",',
+    '  "needs_approval": true | false',
     '}',
   ].join('\n');
 
@@ -223,7 +271,15 @@ async function generateProposal(
   const match = text.match(/\{[\s\S]*\}/);
   if (!match) return null;
 
-  let parsed: { action_type?: string; title?: string; description?: string; priority?: string };
+  let parsed: {
+    action_type?: string;
+    title?: string;
+    description?: string;
+    priority?: string;
+    confidence?: string;
+    needs_approval?: boolean;
+  };
+
   try { parsed = JSON.parse(match[0]); }
   catch { return null; }
 
@@ -237,7 +293,65 @@ async function generateProposal(
     ? parsed.priority as 'high' | 'medium' | 'low'
     : 'medium';
 
-  // Submit to approval queue
+  const confidence = (['high', 'medium', 'low'] as const).includes(parsed.confidence as 'high' | 'medium' | 'low')
+    ? parsed.confidence as 'high' | 'medium' | 'low'
+    : 'medium';
+
+  // ── VALIDATION AGAINST STANDARDS ──────────────────────────────────────────────
+  const validation = validateProposalAgainstChecklist(
+    {
+      title: parsed.title,
+      description: parsed.description,
+      action_type: actionType,
+      priority,
+    },
+    agent.id,
+    agent.report
+  );
+
+  // Check for factuality and honesty
+  const isHonest = isFactualAndHonest(parsed.description);
+  const hasTransparencyMarked = hasTransparency(parsed.description) || confidence !== 'high';
+
+  // Log validation results
+  if (!validation.valid || !isHonest || !hasTransparencyMarked) {
+    const violationSummary = getSummaryOfViolations(validation);
+    const honestySummary = !isHonest ? 'HONESTY: Proposal may contain unverified claims' : '';
+    const transparencySummary = !hasTransparencyMarked ? 'TRANSPARENCY: Missing confidence/uncertainty markers' : '';
+
+    const allIssues = [violationSummary, honestySummary, transparencySummary]
+      .filter(s => s.length > 0)
+      .join(' | ');
+
+    // Log to database for audit trail
+    try {
+      await pool.query(
+        `INSERT INTO ai_actions_log (action_type, metadata) VALUES ($1, $2)`,
+        [
+          'agent_proposal_validation',
+          JSON.stringify({
+            agent_id: agent.id,
+            meeting_id: meetingId,
+            proposal_title: parsed.title,
+            valid: validation.valid && isHonest && hasTransparencyMarked,
+            violations: validation.violations,
+            warnings: validation.warnings,
+            honesty_check: isHonest,
+            transparency_check: hasTransparencyMarked,
+            confidence: confidence,
+            issues_summary: allIssues,
+          }),
+        ]
+      ).catch(() => null);
+    } catch { /* non-critical */ }
+
+    // If critical violations, reject proposal
+    if (validation.violations.length > 0 || !isHonest) {
+      return null;  // Silently drop violated proposal instead of storing it
+    }
+  }
+
+  // Submit to approval queue (only if passed validation)
   const approval = await approvalRequired.request({
     type:         actionType,
     description:  parsed.title.substring(0, 255),
@@ -246,6 +360,8 @@ async function generateProposal(
       full_description: parsed.description,
       meeting_id:       meetingId,
       priority,
+      confidence,
+      domain:           cfg.domain,
     },
     requested_by:  `agent_${agent.id}`,
     expires_hours: 48,
