@@ -240,7 +240,6 @@ export async function POST(request: NextRequest) {
       ]
     ).catch(err => {
       // Не блокируем регистрацию если аудит не записался
-      console.error('Audit log error:', err);
     });
 
     return NextResponse.json({
@@ -254,7 +253,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error registering partner:', error);
     return NextResponse.json(
       { 
         success: false, 

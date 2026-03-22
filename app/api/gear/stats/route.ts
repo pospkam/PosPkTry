@@ -29,7 +29,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Get gear stats error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при получении статистики'

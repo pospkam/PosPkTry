@@ -76,7 +76,6 @@ export async function POST(
     }
 
   } catch (error) {
-    console.error('Error moderating review:', error);
     return NextResponse.json({
       success: false,
       error: 'Failed to moderate review',

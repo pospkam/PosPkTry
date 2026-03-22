@@ -89,7 +89,6 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('[ADMIN] Create agent error:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to create agent user' },
       { status: 500 }

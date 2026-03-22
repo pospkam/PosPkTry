@@ -102,7 +102,6 @@ export async function POST(
       data: { sentiment, spamProbability, summary },
     });
   } catch (error) {
-    console.error('Review analysis error:', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка AI анализа' },
       { status: 500 }

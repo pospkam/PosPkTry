@@ -164,7 +164,6 @@ export async function POST(request: NextRequest) {
       },
     } as ApiResponse<unknown>);
   } catch (error) {
-    console.error('[AI_BOOKING_INTAKE]', error);
     return NextResponse.json(
       { success: false, error: 'Не удалось обработать запрос' } as ApiResponse<null>,
       { status: 500 }

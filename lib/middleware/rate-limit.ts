@@ -202,7 +202,6 @@ export function rateLimit(config: RateLimitConfig) {
       return response;
       
     } catch (error) {
-      console.error('Rate limit error:', error);
       // В случае ошибки пропускаем (fail open)
       return handler(request);
     }

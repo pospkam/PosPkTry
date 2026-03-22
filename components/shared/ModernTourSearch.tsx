@@ -221,7 +221,6 @@ export function ModernTourSearch() {
         };
 
         recognition.onerror = (event: any) => {
-          console.error('Speech recognition error:', event.error);
           setIsListening(false);
         };
 
@@ -393,7 +392,6 @@ export function ModernTourSearch() {
         setFilters(prev => ({ ...prev, query: keywords }));
       }
     } catch (error) {
-      console.error('AI search error:', error);
       setAiResponse('Извините, не удалось получить рекомендации. Попробуйте обычный поиск.');
     } finally {
       setAiLoading(false);
@@ -417,7 +415,6 @@ export function ModernTourSearch() {
         recognitionRef.current.start();
         setIsListening(true);
       } catch (error) {
-        console.error('Error starting recognition:', error);
       }
     }
   };

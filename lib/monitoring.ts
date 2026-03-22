@@ -109,7 +109,6 @@ class MonitoringSystem {
     try {
       // Здесь будет интеграция с внешним сервисом логирования
     } catch (error) {
-      console.error('Failed to send log to external service:', error);
     }
   }
 
@@ -117,7 +116,6 @@ class MonitoringSystem {
     try {
       // Здесь будет интеграция с сервисом метрик
     } catch (error) {
-      console.error('Failed to send metric to external service:', error);
     }
   }
 
@@ -125,7 +123,6 @@ class MonitoringSystem {
     try {
       // Здесь будет интеграция с сервисом ошибок
     } catch (error) {
-      console.error('Failed to send error to external service:', error);
     }
   }
 

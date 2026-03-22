@@ -53,7 +53,6 @@ export async function POST(request: NextRequest) {
     // Return 200 OK to acknowledge receipt
     return NextResponse.json({ status: 'ok' }, { status: 200 })
   } catch (error) {
-    console.error('Webhook processing failed:', error)
 
     // Always return 200 to prevent gateway retry
     // Log error for investigation

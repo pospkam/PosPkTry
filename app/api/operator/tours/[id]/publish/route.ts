@@ -106,7 +106,6 @@ export async function POST(
     });
 
   } catch (error) {
-    console.error('Error publishing tour:', error);
     return NextResponse.json({
       success: false,
       error: 'Failed to publish tour',

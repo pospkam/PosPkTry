@@ -113,7 +113,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Get schedule error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при получении расписания'
@@ -254,7 +253,6 @@ export async function POST(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error: any) {
-    console.error('Create schedule error:', error);
     
     // Handle exclusion constraint violation (overlapping schedules)
     if (error.code === '23P01') {

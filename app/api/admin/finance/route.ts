@@ -162,7 +162,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Error fetching admin finance data:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при получении финансовых данных'

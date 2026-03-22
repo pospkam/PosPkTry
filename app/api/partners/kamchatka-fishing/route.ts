@@ -33,7 +33,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error getting partner status:', error);
     return NextResponse.json({
       success: false,
       error: 'Failed to get partner status',
@@ -81,7 +80,6 @@ export async function POST(request: NextRequest) {
       data: result,
     });
   } catch (error) {
-    console.error('Error syncing with partner:', error);
     return NextResponse.json({
       success: false,
       error: 'Sync failed',

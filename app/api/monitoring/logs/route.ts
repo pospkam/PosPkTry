@@ -31,7 +31,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Error fetching logs:', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка получения логов' } as ApiResponse<null>,
       { status: 500 }

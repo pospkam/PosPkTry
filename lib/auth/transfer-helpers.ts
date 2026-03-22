@@ -20,7 +20,6 @@ export async function getTransferPartnerId(userId: string): Promise<string | nul
     
     return (result.rows[0]?.id as string | undefined) ?? null;
   } catch (error) {
-    console.error('Error getting transfer partner ID:', error);
     return null;
   }
 }
@@ -71,7 +70,6 @@ export async function getTransferPartnerByUserId(userId: string): Promise<Record
       updatedAt: partner.updated_at
     };
   } catch (error) {
-    console.error('Error getting transfer partner:', error);
     return null;
   }
 }
@@ -109,7 +107,6 @@ export async function ensureTransferPartnerExists(userId: string, userName: stri
     
     return result.rows[0].id as string;
   } catch (error) {
-    console.error('Error ensuring transfer partner exists:', error);
     throw error;
   }
 }
@@ -129,7 +126,6 @@ export async function verifyVehicleOwnership(userId: string, vehicleId: string):
     
     return result.rows.length > 0;
   } catch (error) {
-    console.error('Error verifying vehicle ownership:', error);
     return false;
   }
 }
@@ -149,7 +145,6 @@ export async function verifyDriverOwnership(userId: string, driverId: string): P
     
     return result.rows.length > 0;
   } catch (error) {
-    console.error('Error verifying driver ownership:', error);
     return false;
   }
 }
@@ -169,7 +164,6 @@ export async function verifyTransferOwnership(userId: string, transferId: string
     
     return result.rows.length > 0;
   } catch (error) {
-    console.error('Error verifying transfer ownership:', error);
     return false;
   }
 }
@@ -189,7 +183,6 @@ export async function verifyRouteOwnership(userId: string, routeId: string): Pro
     
     return result.rows.length > 0;
   } catch (error) {
-    console.error('Error verifying route ownership:', error);
     return false;
   }
 }
@@ -229,7 +222,6 @@ export async function checkDriverAvailability(
     // If no conflicting schedules found, driver is available
     return result.rows.length === 0;
   } catch (error) {
-    console.error('Error checking driver availability:', error);
     return false;
   }
 }
@@ -271,7 +263,6 @@ export async function checkVehicleAvailability(
     
     return result.rows.length === 0;
   } catch (error) {
-    console.error('Error checking vehicle availability:', error);
     return false;
   }
 }
@@ -288,7 +279,6 @@ export async function assignDriverToVehicle(driverId: string, vehicleId: string)
     
     return true;
   } catch (error) {
-    console.error('Error assigning driver to vehicle:', error);
     return false;
   }
 }
@@ -334,7 +324,6 @@ export async function calculateTransferPrice(
     
     return Math.round(price);
   } catch (error) {
-    console.error('Error calculating transfer price:', error);
     return 0;
   }
 }
@@ -393,7 +382,6 @@ export async function getTransferStats(userId: string): Promise<Record<string, u
       rating: parseFloat(String(stats.avg_rating ?? 0)).toFixed(2)
     };
   } catch (error) {
-    console.error('Error getting transfer stats:', error);
     return null;
   }
 }
@@ -442,7 +430,6 @@ export async function findAvailableVehicle(
     
     return null;
   } catch (error) {
-    console.error('Error finding available vehicle:', error);
     return null;
   }
 }
@@ -490,7 +477,6 @@ export async function findAvailableDriver(
     
     return null;
   } catch (error) {
-    console.error('Error finding available driver:', error);
     return null;
   }
 }

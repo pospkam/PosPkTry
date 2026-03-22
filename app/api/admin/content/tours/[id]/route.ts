@@ -112,7 +112,6 @@ export async function PUT(
     });
 
   } catch (error) {
-    console.error('Error updating tour:', error);
     return NextResponse.json({
       success: false,
       error: 'Failed to update tour',
@@ -163,7 +162,6 @@ export async function DELETE(
     });
 
   } catch (error) {
-    console.error('Error archiving tour:', error);
     return NextResponse.json({
       success: false,
       error: 'Failed to archive tour',

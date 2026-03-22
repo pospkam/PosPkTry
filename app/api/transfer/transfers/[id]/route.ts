@@ -131,7 +131,6 @@ export async function GET(
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Get transfer error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при получении трансфера'
@@ -269,7 +268,6 @@ export async function PUT(
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Update transfer error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при обновлении трансфера'

@@ -137,7 +137,6 @@ export function GearBookingForm({ gear, onBookingComplete, onCancel }: GearBooki
         throw new Error(result.error || 'Ошибка создания заявки');
       }
     } catch (error) {
-      console.error('Booking error:', error);
       toast.error('Произошла ошибка при создании заявки. Попробуйте позже.');
     } finally {
       setLoading(false);

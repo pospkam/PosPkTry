@@ -50,7 +50,6 @@ export async function POST(request: Request) {
       recommendations,
     });
   } catch (error) {
-    console.error('AI Smart Search error:', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }

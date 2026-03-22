@@ -121,7 +121,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('[operator/completeness]', error);
     return NextResponse.json(
       { error: 'Failed to fetch completeness data' },
       { status: 500 }

@@ -242,7 +242,6 @@ export async function findRoutesByInterests(
     });
 
     if (!res.ok) {
-      console.error('[routes-recommender] API error:', res.status);
       return [];
     }
 
@@ -260,7 +259,6 @@ export async function findRoutesByInterests(
 
     return data.data ?? [];
   } catch (err) {
-    console.error('[routes-recommender] fetch error:', err);
     return [];
   }
 }

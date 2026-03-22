@@ -46,7 +46,6 @@ export function AgentMetricsGrid({ period = '30' }: AgentMetricsGridProps) {
         setError(result.error);
       }
     } catch (err) {
-      console.error('Error fetching agent metrics:', err);
       setError('Ошибка загрузки метрик');
     } finally {
       setLoading(false);

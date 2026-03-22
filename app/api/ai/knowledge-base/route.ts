@@ -46,7 +46,6 @@ async function collectExternalUrlDocuments(urls: string[]): Promise<KnowledgeDoc
         url: sourceUrl,
       });
     } catch (error) {
-      console.error(`Ошибка конвертации URL через markdown.new (${sourceUrl}):`, error);
     }
   }
 
@@ -102,7 +101,6 @@ async function collectProjectDocuments(): Promise<KnowledgeDocument[]> {
         })
       }
     } catch (error) {
-      console.error(`Ошибка чтения ${docPath}:`, error)
     }
   }
 
@@ -176,7 +174,6 @@ async function collectProjectDocuments(): Promise<KnowledgeDocument[]> {
     })
 
   } catch (error) {
-    console.error('Ошибка получения данных из БД:', error)
   }
 
   const externalUrls = parseSourceUrls(process.env.KNOWLEDGE_BASE_SOURCE_URLS)
@@ -210,7 +207,6 @@ async function uploadToS3(file: File, fileName: string): Promise<string> {
     const fileUrl = `${s3Endpoint}/${s3Bucket}/knowledge-base/${fileName}`
     return fileUrl
   } catch (error) {
-    console.error('Ошибка загрузки в S3:', error)
     throw error
   }
 }
@@ -252,7 +248,6 @@ async function updateKnowledgeBase(documents: KnowledgeDocument[]): Promise<bool
 
       if (!response.ok) {
         const errorText = await response.text()
-        console.error(`Ошибка отправки чанка ${i + 1}/${chunks.length}:`, errorText)
         return false
       }
 
@@ -264,7 +259,6 @@ async function updateKnowledgeBase(documents: KnowledgeDocument[]): Promise<bool
 
     return true
   } catch (error) {
-    console.error('Ошибка обновления базы знаний:', error)
     return false
   }
 }
@@ -296,7 +290,6 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Ошибка получения статуса базы знаний:', error)
     return NextResponse.json({
       success: false,
       error: 'Failed to get knowledge base status'
@@ -390,7 +383,6 @@ export async function POST(request: NextRequest) {
         type: updateType
       })
     } else {
-      console.error('[✗] Ошибка обновления базы знаний')
       return NextResponse.json({
         success: false,
         error: 'Failed to update knowledge base'
@@ -398,7 +390,6 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('Ошибка обновления базы знаний:', error)
     return NextResponse.json({
       success: false,
       error: 'Internal server error'

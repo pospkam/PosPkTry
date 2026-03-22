@@ -84,7 +84,6 @@ export async function PUT(
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Update notification error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при обновлении уведомления'
@@ -124,7 +123,6 @@ export async function DELETE(
     } as ApiResponse<null>);
 
   } catch (error) {
-    console.error('Delete notification error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при удалении уведомления'

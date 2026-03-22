@@ -162,7 +162,6 @@ export function getEnv(): Env {
       }
     }
 
-    console.error(
       [
         '',
         '=== Environment Validation Failed ===',

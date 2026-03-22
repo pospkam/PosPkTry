@@ -47,7 +47,6 @@ export function RecentClientsTable({ limit = 5 }: RecentClientsTableProps) {
         setError(result.error);
       }
     } catch (err) {
-      console.error('Error fetching recent clients:', err);
       setError('Ошибка загрузки клиентов');
     } finally {
       setLoading(false);

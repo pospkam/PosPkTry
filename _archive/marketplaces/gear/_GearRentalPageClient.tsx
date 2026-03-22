@@ -36,7 +36,6 @@ export default function GearRentalPageClient() {
         setGear(result.data.gear);
       }
     } catch (error) {
-      console.error('Error:', error);
     } finally {
       setLoading(false);
     }

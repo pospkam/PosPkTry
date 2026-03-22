@@ -76,7 +76,6 @@ export async function POST(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Block dates error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при блокировке дат'

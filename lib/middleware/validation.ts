@@ -47,7 +47,6 @@ export function withValidation<T extends z.ZodType>(
       return handler(request, validationResult.data);
       
     } catch (error) {
-      console.error('Validation middleware error:', error);
       return NextResponse.json(
         {
           success: false,

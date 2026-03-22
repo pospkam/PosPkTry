@@ -149,7 +149,6 @@ async function uploadDocument(name: string, content: string): Promise<{ ok: bool
 
 // ── Probe KB document API to find correct format ──────────────
 async function probeDocumentFormat(): Promise<void> {
-  console.log('🔍 Определяю формат документов KB...\n');
 
   const testBody = JSON.stringify({ name: 'test', type: 'link', url: 'https://example.com' });
   const url = new URL(KB_API);
@@ -170,7 +169,6 @@ async function probeDocumentFormat(): Promise<void> {
       let data = '';
       res.on('data', chunk => { data += chunk; });
       res.on('end', () => {
-        console.log(`Probe → HTTP ${res.statusCode}: ${data.slice(0, 300)}\n`);
         resolve();
       });
     });
@@ -183,26 +181,19 @@ async function probeDocumentFormat(): Promise<void> {
 // ── Main ──────────────────────────────────────────────────────
 async function main() {
   if (!TIMEWEB_TOKEN) {
-    console.error('❌ TIMEWEB_TOKEN не задан');
     process.exit(1);
   }
   if (!KB_ID) {
-    console.error('❌ TIMEWEB_AI_KB_ID не задан\n');
-    console.error('Создай Knowledge Base на https://timeweb.cloud/my/cloud-ai/knowledge-bases');
-    console.error('Затем добавь в .env.local: TIMEWEB_AI_KB_ID=<числовой_id>');
     process.exit(1);
   }
 
   // Загружаем knowledge base
   const kbPath = path.join(__dirname, '../crew/knowledge-base.json');
   if (!fs.existsSync(kbPath)) {
-    console.error(`❌ Файл не найден: ${kbPath}`);
-    console.error('Запусти: npm run ai:setup-agent-rag');
     process.exit(1);
   }
 
   const kb: KnowledgeBase = JSON.parse(fs.readFileSync(kbPath, 'utf-8'));
-  console.log(`📚 Загружено ${kb.total} маршрутов, ${kb.categories.length} категорий\n`);
 
   // Проверяем формат API
   await probeDocumentFormat();
@@ -219,20 +210,16 @@ async function main() {
 
     const result = await uploadDocument(name, content);
     if (result.ok) {
-      console.log(`✅ id=${result.id}`);
       uploaded++;
     } else {
-      console.log(`❌ ${result.error}`);
       failed++;
     }
 
     await sleep(BATCH_DELAY_MS);
   }
 
-  console.log(`\n✅ Синхронизация завершена: ${uploaded} загружено, ${failed} ошибок`);
 }
 
 main().catch(e => {
-  console.error('Критическая ошибка:', e);
   process.exit(1);
 });

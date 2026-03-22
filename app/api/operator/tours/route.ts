@@ -187,7 +187,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<PaginatedResponse<OperatorTour>>);
 
   } catch (error) {
-    console.error('Error fetching operator tours:', error);
     return NextResponse.json({
       success: false,
       error: 'Failed to fetch tours',
@@ -361,7 +360,6 @@ export async function POST(request: NextRequest) {
     }, { status: 201 });
 
   } catch (error) {
-    console.error('Error creating tour:', error);
     return NextResponse.json({
       success: false,
       error: 'Failed to create tour',

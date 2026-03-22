@@ -266,7 +266,6 @@ export async function GET(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('Error in transfer search:', error);
     return NextResponse.json({
       success: false,
       error: 'Внутренняя ошибка сервера при поиске трансферов'

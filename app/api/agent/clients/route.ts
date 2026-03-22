@@ -101,7 +101,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Error fetching agent clients:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при получении списка клиентов'
@@ -193,7 +192,6 @@ export async function POST(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Error creating agent client:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при создании клиента'

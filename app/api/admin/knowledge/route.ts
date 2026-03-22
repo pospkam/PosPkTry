@@ -78,7 +78,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error fetching knowledge base:', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка загрузки базы знаний' },
       { status: 500 }

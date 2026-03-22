@@ -128,7 +128,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<PaginatedResponse<Partner>>);
 
   } catch (error) {
-    console.error('Error fetching partners:', error);
     return NextResponse.json({
       success: false,
       error: 'Failed to fetch partners',

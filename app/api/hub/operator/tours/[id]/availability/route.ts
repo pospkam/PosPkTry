@@ -63,7 +63,6 @@ export async function POST(
     if (error instanceof Error && error.message.includes('validation')) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
-    console.error('[OPERATOR API] Add availability error:', error);
     return NextResponse.json({ error: 'Failed to add availability' }, { status: 500 });
   }
 }
@@ -92,7 +91,6 @@ export async function GET(
       count: rows.length,
     });
   } catch (error) {
-    console.error('[OPERATOR API] Get availability error:', error);
     return NextResponse.json({ error: 'Failed to fetch availability' }, { status: 500 });
   }
 }

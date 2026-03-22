@@ -71,7 +71,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Get guide profile error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при получении профиля'
@@ -196,7 +195,6 @@ export async function PUT(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error: any) {
-    console.error('Update guide profile error:', error);
     
     // Handle constraint violations
     if (error.code === '23514') { // Check constraint violation

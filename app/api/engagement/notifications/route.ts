@@ -40,7 +40,6 @@ export async function GET(request: NextRequest) {
       data: { notifications, total, limit, offset },
     })
   } catch (error) {
-    console.error('GET /api/engagement/notifications:', error)
     return NextResponse.json(
       { error: 'Failed to fetch notifications' },
       { status: 500 }
@@ -82,7 +81,6 @@ export async function POST(request: NextRequest) {
       data: { notification },
     })
   } catch (error) {
-    console.error('POST /api/engagement/notifications:', error)
     return NextResponse.json(
       { error: 'Failed to create notification' },
       { status: 500 }

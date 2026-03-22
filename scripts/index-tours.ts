@@ -16,23 +16,18 @@ async function main() {
   const singleId = args.find((a) => a.startsWith('--id='))?.split('=')[1];
 
   if (singleId) {
-    console.log(`🔍 Индексирую тур ${singleId}...`);
     const ok = await indexTour(singleId);
-    console.log(ok ? `✅ Тур ${singleId} проиндексирован` : `❌ Ошибка индексации тура ${singleId}`);
     process.exit(ok ? 0 : 1);
   }
 
   // Все активные туры без эмбеддинга
-  console.log('🚀 Начинаю массовую индексацию туров...');
   const result = await query<{ id: string; title: string }>(
     `SELECT id, title FROM tours WHERE embedding IS NULL AND is_active = true ORDER BY created_at DESC`
   );
 
   const tours = result.rows;
-  console.log(`📊 Найдено туров без эмбеддинга: ${tours.length}`);
 
   if (tours.length === 0) {
-    console.log('✅ Все туры уже проиндексированы');
     process.exit(0);
   }
 
@@ -54,11 +49,9 @@ async function main() {
     await new Promise((r) => setTimeout(r, 200));
   }
 
-  console.log(`\n📈 Результат: ${success} успешно, ${failed} ошибок`);
   process.exit(failed > 0 ? 1 : 0);
 }
 
 main().catch((err) => {
-  console.error('Fatal error:', err);
   process.exit(1);
 });

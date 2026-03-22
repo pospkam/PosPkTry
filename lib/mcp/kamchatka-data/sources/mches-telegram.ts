@@ -54,7 +54,6 @@ export async function parseMchesAlerts(hoursBack: number = 24): Promise<unknown[
 
       alerts.push(...posts);
     } catch (error) {
-      console.error(`Failed to parse ${channel}:`, (error as Error).message);
     }
   }
 

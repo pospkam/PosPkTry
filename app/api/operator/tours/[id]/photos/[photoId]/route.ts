@@ -75,7 +75,6 @@ export async function PATCH(
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Update photo error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при обновлении фотографии'
@@ -148,7 +147,6 @@ export async function DELETE(
     } as ApiResponse<null>);
 
   } catch (error) {
-    console.error('Delete photo error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при удалении фотографии'

@@ -32,7 +32,6 @@ export async function POST(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Mark all read error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при обновлении уведомлений'

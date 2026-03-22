@@ -183,7 +183,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Get bookings report error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при формировании отчета'

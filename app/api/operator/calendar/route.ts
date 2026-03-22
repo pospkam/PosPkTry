@@ -104,7 +104,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Get calendar error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при получении календаря'
@@ -171,7 +170,6 @@ export async function POST(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Set availability error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при установке доступности'

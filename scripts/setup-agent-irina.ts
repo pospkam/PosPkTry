@@ -20,7 +20,6 @@ const AGENT_NAME = 'Ирина (YaKamchatka)';
 const TEMP_PASSWORD = 'TempPass2026!';
 
 async function setupAgentIrina() {
-  console.log('🚀 Setting up Ирина agent account...\n');
 
   try {
     // Check if user exists
@@ -30,16 +29,13 @@ async function setupAgentIrina() {
     );
 
     if (existingResult.rows.length > 0) {
-      console.log('⚠️  User already exists with ID:', existingResult.rows[0].id);
       process.exit(0);
     }
 
     // Hash the temporary password
-    console.log('🔐 Hashing temporary password...');
     const hashedPassword = await hashPassword(TEMP_PASSWORD);
 
     // Create the agent user
-    console.log('📝 Creating agent account...');
     const result = await pool.query(
       `INSERT INTO users (email, password_hash, name, role, preferences, pd_consent_at, pd_consent_ip, created_at, updated_at)
        VALUES ($1, $2, $3, $4, $5::jsonb, NOW(), $6, NOW(), NOW())
@@ -56,23 +52,9 @@ async function setupAgentIrina() {
 
     const user = result.rows[0];
 
-    console.log('\n✅ Agent account created successfully!\n');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('User ID:    ', user.id);
-    console.log('Email:      ', user.email);
-    console.log('Name:       ', user.name);
-    console.log('Role:       ', user.role);
-    console.log('Created:    ', user.created_at);
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('\n📌 Credentials for Ирина:');
-    console.log('   Email:    kamlandinfo@yandex.ru');
-    console.log('   Password: TempPass2026! (change on first login)');
-    console.log('   Login:    /auth/signin');
-    console.log('   Hub:      /hub/agent\n');
 
     process.exit(0);
   } catch (error) {
-    console.error('❌ Error:', error);
     process.exit(1);
   }
 }

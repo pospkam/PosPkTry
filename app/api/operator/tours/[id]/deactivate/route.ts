@@ -77,7 +77,6 @@ export async function POST(
     });
 
   } catch (error) {
-    console.error('Error deactivating tour:', error);
     return NextResponse.json({
       success: false,
       error: 'Failed to deactivate tour',

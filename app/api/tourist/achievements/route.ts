@@ -48,7 +48,6 @@ export async function GET(request: NextRequest) {
       }
     } as ApiResponse<unknown>);
   } catch (error) {
-    console.error('Error fetching achievements:', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка при получении достижений' } as ApiResponse<null>,
       { status: 500 }

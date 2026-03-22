@@ -135,7 +135,6 @@ export async function POST(request: NextRequest) {
 
         sentCount++;
       } catch (error) {
-        console.error('Error sending reminder for booking:', booking.id, error);
         errors.push(`Booking ${booking.id}: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     }
@@ -151,7 +150,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error sending tour reminders:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при отправке напоминаний',

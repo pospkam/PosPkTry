@@ -171,7 +171,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error creating accommodation:', error);
     return NextResponse.json(
       { 
         success: false, 

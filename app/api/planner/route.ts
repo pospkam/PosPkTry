@@ -57,7 +57,6 @@ export async function POST(req: NextRequest) {
       tours: result.rows,
     });
   } catch (err) {
-    console.error('Planner API error:', err);
     return NextResponse.json({ success: false, error: 'Ошибка сервера' }, { status: 500 });
   }
 }

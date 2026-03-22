@@ -102,7 +102,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Error fetching eco-points:', error);
     return NextResponse.json({
       success: false,
       error: 'Failed to fetch eco-points',
@@ -153,7 +152,6 @@ export async function POST(request: NextRequest) {
     } as ApiResponse<{ id: string; createdAt: Date }>);
 
   } catch (error) {
-    console.error('Error creating eco-point:', error);
     return NextResponse.json({
       success: false,
       error: 'Failed to create eco-point',

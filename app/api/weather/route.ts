@@ -41,7 +41,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<Weather>);
 
   } catch (error) {
-    console.error('Error fetching weather:', error);
     return NextResponse.json({
       success: false,
       error: 'Failed to fetch weather data',
@@ -83,7 +82,6 @@ async function getWeatherData(
           break;
       }
     } catch (error) {
-      console.error(`Provider ${provider} failed:`, error);
       continue;
     }
   }

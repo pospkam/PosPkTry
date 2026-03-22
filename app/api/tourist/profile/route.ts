@@ -73,7 +73,6 @@ export async function GET(request: NextRequest) {
       }
     } as ApiResponse<unknown>);
   } catch (error) {
-    console.error('Error fetching tourist profile:', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка при получении профиля' } as ApiResponse<null>,
       { status: 500 }
@@ -163,7 +162,6 @@ export async function PUT(request: NextRequest) {
       data: result.rows[0]
     } as ApiResponse<unknown>);
   } catch (error) {
-    console.error('Error updating tourist profile:', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка при обновлении профиля' } as ApiResponse<null>,
       { status: 500 }

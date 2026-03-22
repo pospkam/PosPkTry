@@ -121,7 +121,6 @@ export async function PUT(
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Update booking error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при обновлении бронирования'

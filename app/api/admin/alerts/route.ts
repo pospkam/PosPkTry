@@ -16,7 +16,6 @@ export async function GET(request: NextRequest) {
     const alerts = await getAdminAlerts();
     return NextResponse.json({ success: true, data: alerts });
   } catch (error) {
-    console.error('Error fetching admin alerts:', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка загрузки алертов' },
       { status: 500 }

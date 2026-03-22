@@ -99,7 +99,6 @@ export async function GET(
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Get schedule entry error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при получении записи расписания'
@@ -279,7 +278,6 @@ export async function PUT(
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Update schedule error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при обновлении расписания'
@@ -340,7 +338,6 @@ export async function DELETE(
     }
 
   } catch (error) {
-    console.error('Delete schedule error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при удалении записи расписания'

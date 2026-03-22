@@ -73,7 +73,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Get guide groups error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при получении групп'
@@ -163,7 +162,6 @@ export async function POST(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Create group error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при создании группы'

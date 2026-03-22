@@ -80,7 +80,6 @@ export class TicketService {
       );
       return result.rows[0];
     } catch (err) {
-      console.error('createTicket error:', err);
       throw new Error('Failed to create ticket');
     }
   }
@@ -124,7 +123,6 @@ export class TicketService {
       );
       return result.rows[0] || null;
     } catch (err) {
-      console.error('updateTicket error:', err);
       throw new Error('Failed to update ticket');
     }
   }
@@ -142,7 +140,6 @@ export class TicketService {
       );
       return result.rows[0] || null;
     } catch (err) {
-      console.error('updateTicketForUser error:', err);
       throw new Error('Failed to update ticket');
     }
   }

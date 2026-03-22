@@ -137,7 +137,6 @@ export async function GET(
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Error checking availability:', error);
     return NextResponse.json({
       success: false,
       error: 'Failed to check availability',

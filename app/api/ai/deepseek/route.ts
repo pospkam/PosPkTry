@@ -99,7 +99,6 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const errorData = await response.text();
-      console.error('DeepSeek API error:', errorData);
       
       return NextResponse.json({
         success: false,
@@ -122,7 +121,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error in DeepSeek API:', error);
     return NextResponse.json({
       success: false,
       error: 'Internal server error',

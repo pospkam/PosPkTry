@@ -71,7 +71,6 @@ export async function POST(request: NextRequest) {
     if (process.env.NODE_ENV === 'production') {
       const { stdout, stderr } = await execAsync('/usr/local/bin/kamhub-update');
       
-      console.error('Deployment stdout:', stdout);
       if (stderr) console.error('Deployment stderr:', stderr);
 
       return NextResponse.json({
@@ -85,7 +84,6 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error: any) {
-    console.error('Webhook error:', error);
     return NextResponse.json(
       { 
         error: 'Deployment failed',

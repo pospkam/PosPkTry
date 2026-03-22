@@ -10,17 +10,14 @@ async function seedTours() {
   const connectionString = process.env.DATABASE_URL;
   
   if (!connectionString) {
-    console.error('❌ DATABASE_URL не установлен');
     process.exit(1);
   }
 
   const pool = new Pool({ connectionString });
 
   try {
-    console.log('🔗 Подключение к БД...');
     const client = await pool.connect();
     
-    console.log('📦 Загрузка туров...');
     
     for (const tour of FISHING_TOURS) {
       const seasonJson = JSON.stringify([tour.season]);
@@ -63,15 +60,12 @@ async function seedTours() {
         true
       ]);
       
-      console.log(`  ✅ ${tour.name}`);
     }
     
     const result = await client.query('SELECT COUNT(*) FROM tours');
-    console.log(`\n✅ Всего туров в БД: ${result.rows[0].count}`);
     
     client.release();
   } catch (error) {
-    console.error('❌ Ошибка:', error);
     process.exit(1);
   } finally {
     await pool.end();

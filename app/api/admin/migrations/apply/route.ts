@@ -36,7 +36,6 @@ function readMigrationFile(migrationNumber: string): string | null {
     const filepath = path.join(migrationsDir, migFile);
     return fs.readFileSync(filepath, 'utf-8');
   } catch (error) {
-    console.error(`[MIGRATIONS] Error reading migration ${migrationNumber}:`, error);
     return null;
   }
 }
@@ -58,7 +57,6 @@ export async function POST(request: NextRequest) {
     const { migrations, dry_run } = parsed.data;
     const results: Array<{ migration: string; status: 'success' | 'error'; message: string }> = [];
 
-    console.log(`[MIGRATIONS] Starting ${dry_run ? 'DRY RUN' : 'LIVE'} for: ${migrations.join(', ')}`);
 
     for (const mig of migrations) {
       try {
@@ -73,7 +71,6 @@ export async function POST(request: NextRequest) {
         }
 
         if (dry_run) {
-          console.log(`[MIGRATIONS] DRY RUN: Would execute migration ${mig}`);
           results.push({
             migration: mig,
             status: 'success',
@@ -83,7 +80,6 @@ export async function POST(request: NextRequest) {
         }
 
         // Execute migration
-        console.log(`[MIGRATIONS] Applying migration ${mig}...`);
         await pool.query(sql);
 
         results.push({
@@ -92,7 +88,6 @@ export async function POST(request: NextRequest) {
           message: 'Applied successfully',
         });
 
-        console.log(`[MIGRATIONS] ✅ Migration ${mig} applied`);
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : String(error);
         results.push({
@@ -101,7 +96,6 @@ export async function POST(request: NextRequest) {
           message: errorMsg,
         });
 
-        console.error(`[MIGRATIONS] ❌ Migration ${mig} failed:`, errorMsg);
       }
     }
 
@@ -121,7 +115,6 @@ export async function POST(request: NextRequest) {
       { status: hasErrors ? 400 : 200 }
     );
   } catch (error) {
-    console.error('[MIGRATIONS] Error:', error);
     return NextResponse.json(
       { success: false, error: 'Migration application failed' },
       { status: 500 }

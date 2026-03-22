@@ -29,7 +29,6 @@ export async function ensureCsrfToken(): Promise<string | null> {
       const data = await response.json();
       token = data.token;
     } catch (error) {
-      console.error('Failed to fetch CSRF token:', error);
       return null;
     }
   }

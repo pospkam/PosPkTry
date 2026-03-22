@@ -107,7 +107,6 @@ export async function POST(request: NextRequest) {
       data: { answer },
     });
   } catch (error) {
-    console.error('AI assistant error:', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка AI ассистента' },
       { status: 500 }

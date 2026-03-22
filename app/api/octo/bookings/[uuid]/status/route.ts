@@ -107,7 +107,6 @@ export async function PATCH(
     const response = NextResponse.json(mappedBooking, { status: 200 });
     return applyOctoRateLimitHeaders(response, authResult);
   } catch (error) {
-    console.error('[OCTO PATCH /status]', error);
     const authResult = await requireOctoAuth(request);
     const err = octoError(500, 'INTERNAL_ERROR', 'Internal server error');
     if (authResult instanceof NextResponse) {

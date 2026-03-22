@@ -207,7 +207,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Dashboard analytics error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при получении аналитики'

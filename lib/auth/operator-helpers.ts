@@ -47,7 +47,6 @@ export async function getOperatorPartnerId(userId: string): Promise<string | nul
     
     return (partnerResult.rows[0]?.id as string | undefined) ?? null;
   } catch (error) {
-    console.error('Error getting operator partner ID:', error);
     return null;
   }
 }
@@ -66,7 +65,6 @@ export async function getGuidePartnerId(userId: string): Promise<string | null> 
     
     return (result.rows[0]?.id as string | undefined) ?? null;
   } catch (error) {
-    console.error('Error getting guide partner ID:', error);
     return null;
   }
 }
@@ -85,7 +83,6 @@ export async function getTransferPartnerId(userId: string): Promise<string | nul
     
     return (result.rows[0]?.id as string | undefined) ?? null;
   } catch (error) {
-    console.error('Error getting transfer partner ID:', error);
     return null;
   }
 }
@@ -145,7 +142,6 @@ export async function getPartnerByUserId(userId: string, category?: string): Pro
       updatedAt: partner.updated_at
     };
   } catch (error) {
-    console.error('Error getting partner by user ID:', error);
     return null;
   }
 }
@@ -193,7 +189,6 @@ export async function ensurePartnerExists(userId: string, userName: string, user
     
     return result.rows[0].id as string;
   } catch (error) {
-    console.error('Error ensuring partner exists:', error);
     throw error;
   }
 }
@@ -213,7 +208,6 @@ export async function verifyTourOwnership(userId: string, tourId: string): Promi
     
     return result.rows.length > 0;
   } catch (error) {
-    console.error('Error verifying tour ownership:', error);
     return false;
   }
 }
@@ -234,7 +228,6 @@ export async function verifyBookingOwnership(userId: string, bookingId: string):
     
     return result.rows.length > 0;
   } catch (error) {
-    console.error('Error verifying booking ownership:', error);
     return false;
   }
 }
@@ -343,7 +336,6 @@ export async function getOperatorStats(userId: string): Promise<any> {
       completionRate: parseFloat(String(stats.completion_rate ?? 0))
     };
   } catch (error) {
-    console.error('Error getting operator stats:', error);
     return null;
   }
 }

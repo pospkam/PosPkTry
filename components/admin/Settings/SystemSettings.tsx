@@ -38,7 +38,6 @@ export function SystemSettings() {
         setError(result.error);
       }
     } catch (err) {
-      console.error('Error fetching settings:', err);
       setError('Ошибка загрузки настроек');
     } finally {
       setLoading(false);
@@ -83,7 +82,6 @@ export function SystemSettings() {
         toast.error(`Ошибка: ${result.error}`);
       }
     } catch (err) {
-      console.error('Error saving settings:', err);
       toast.error('Ошибка при сохранении настроек');
     } finally {
       setSaving(false);

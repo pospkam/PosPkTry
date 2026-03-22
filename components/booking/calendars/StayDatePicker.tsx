@@ -101,7 +101,6 @@ export const StayDatePicker: React.FC<StayDatePickerProps> = ({
       const dates = data.blockedDates.map(dateStr => new Date(dateStr));
       setBlockedDates(dates);
     } catch (err) {
-      console.error('Error loading blocked dates:', err);
       toast.error('Не удалось загрузить календарь');
       setError(err instanceof Error ? err.message : 'Ошибка загрузки');
     } finally {
@@ -138,7 +137,6 @@ export const StayDatePicker: React.FC<StayDatePickerProps> = ({
           onDatesChange(checkInDate, null, null);
         }
       } catch (err) {
-        console.error('Error checking availability:', err);
         // Не блокируем выбор при ошибке проверки
       } finally {
         setChecking(false);

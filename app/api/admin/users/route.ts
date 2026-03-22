@@ -165,7 +165,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<PaginatedResponse<AdminUser>>);
 
   } catch (error) {
-    console.error('Error fetching users:', error);
     return NextResponse.json({
       success: false,
       error: 'Failed to fetch users',
@@ -243,7 +242,6 @@ export async function POST(request: NextRequest) {
     }>);
 
   } catch (error) {
-    console.error('Error creating user:', error);
     return NextResponse.json({
       success: false,
       error: 'Failed to create user',

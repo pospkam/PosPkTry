@@ -199,7 +199,6 @@ export async function PATCH(
       message: 'Переброс принят',
     } as ApiResponse<unknown>);
   } catch (error) {
-    console.error('[TRANSFER_ACCEPT]', error);
     return NextResponse.json(
       { success: false, error: 'Не удалось принять переброс' } as ApiResponse<null>,
       { status: 500 }

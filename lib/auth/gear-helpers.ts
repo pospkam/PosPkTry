@@ -20,7 +20,6 @@ export async function getGearPartnerId(userId: string): Promise<string | null> {
     
     return (result.rows[0]?.id as string | undefined) ?? null;
   } catch (error) {
-    console.error('Error getting gear partner ID:', error);
     return null;
   }
 }
@@ -71,7 +70,6 @@ export async function getGearPartnerByUserId(userId: string): Promise<Record<str
       updatedAt: partner.updated_at
     };
   } catch (error) {
-    console.error('Error getting gear partner:', error);
     return null;
   }
 }
@@ -109,7 +107,6 @@ export async function ensureGearPartnerExists(userId: string, userName: string, 
     
     return result.rows[0].id as string;
   } catch (error) {
-    console.error('Error ensuring gear partner exists:', error);
     throw error;
   }
 }
@@ -129,7 +126,6 @@ export async function verifyGearItemOwnership(userId: string, gearItemId: string
     
     return result.rows.length > 0;
   } catch (error) {
-    console.error('Error verifying gear item ownership:', error);
     return false;
   }
 }
@@ -149,7 +145,6 @@ export async function verifyGearRentalOwnership(userId: string, rentalId: string
     
     return result.rows.length > 0;
   } catch (error) {
-    console.error('Error verifying rental ownership:', error);
     return false;
   }
 }
@@ -176,7 +171,6 @@ export async function checkGearAvailability(
     const minAvailable = parseInt(String(result.rows[0]?.min_available ?? 0));
     return minAvailable >= quantity;
   } catch (error) {
-    console.error('Error checking gear availability:', error);
     return false;
   }
 }
@@ -244,7 +238,6 @@ export async function calculateRentalCost(
       totalAmount: rentalCost + insuranceCost
     };
   } catch (error) {
-    console.error('Error calculating rental cost:', error);
     return null;
   }
 }
@@ -352,7 +345,6 @@ export async function getGearStats(userId: string): Promise<Record<string, unkno
       topItems
     };
   } catch (error) {
-    console.error('Error getting gear stats:', error);
     return null;
   }
 }
@@ -456,7 +448,6 @@ export async function findAvailableGear(
       partnerRating: parseFloat(row.partner_rating as string)
     }));
   } catch (error) {
-    console.error('Error finding available gear:', error);
     return [];
   }
 }
@@ -499,7 +490,6 @@ export async function updateGearAvailability(
     
     return true;
   } catch (error) {
-    console.error('Error updating gear availability:', error);
     return false;
   }
 }

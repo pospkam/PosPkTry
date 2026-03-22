@@ -26,7 +26,6 @@ export async function parseTourismObjects(searchQuery: string): Promise<unknown[
       const parsed = parseWikipediaPage(response.data, url);
       objects.push(...parsed);
     } catch (error) {
-      console.error(`Failed to parse ${url}:`, (error as Error).message);
     }
   }
 

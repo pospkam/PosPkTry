@@ -73,7 +73,6 @@ export class PaymentService {
         expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
       };
     } catch (err) {
-      console.error('initiatePayment error:', err);
       throw new Error('Failed to initiate payment');
     }
   }
@@ -94,7 +93,6 @@ export class PaymentService {
         transaction: this.mapTransaction(result.rows[0]),
       };
     } catch (err) {
-      console.error('verifyPayment error:', err);
       throw new Error('Failed to verify payment');
     }
   }
@@ -127,7 +125,6 @@ export class PaymentService {
         processedAt: new Date().toISOString(),
       };
     } catch (err) {
-      console.error('refund error:', err);
       throw new Error('Failed to process refund');
     }
   }

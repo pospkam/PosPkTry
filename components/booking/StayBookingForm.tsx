@@ -84,7 +84,6 @@ export function StayBookingForm({
         setError('Не удалось загрузить информацию о доступности');
       }
     } catch (err) {
-      console.error('Error fetching availability:', err);
       setError('Ошибка при загрузке доступности');
     } finally {
       setLoading(false);
@@ -178,7 +177,6 @@ export function StayBookingForm({
       setPaymentId(booking.id);
       setShowPayment(true);
     } catch (err) {
-      console.error('Error submitting booking:', err);
       setError('Ошибка при создании бронирования');
     } finally {
       setSubmitting(false);
@@ -191,7 +189,6 @@ export function StayBookingForm({
   };
 
   const handlePaymentFail = (reason: string) => {
-    console.error('Payment failed:', reason);
     setError(`Ошибка оплаты: ${reason}`);
     setShowPayment(false);
   };

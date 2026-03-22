@@ -103,7 +103,6 @@ export async function GET(request: NextRequest) {
       },
     } as ApiResponse<unknown>);
   } catch (error) {
-    console.error('Error fetching commission payouts:', error);
     return NextResponse.json(
       {
         success: false,

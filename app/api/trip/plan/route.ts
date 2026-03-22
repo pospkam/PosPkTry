@@ -164,7 +164,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[✗] Ошибка планирования поездки:', error);
     return NextResponse.json({
       success: false,
       error: 'Failed to plan trip',
@@ -275,7 +274,6 @@ async function selectTours(
     }));
     
   } catch (error) {
-    console.error('Ошибка подбора туров:', error);
     return [];
   }
 }
@@ -328,7 +326,6 @@ async function selectAccommodations(
     }));
     
   } catch (error) {
-    console.error('Ошибка подбора размещения:', error);
     return [];
   }
 }
@@ -379,7 +376,6 @@ async function selectTransfers(
     }));
     
   } catch (error) {
-    console.error('Ошибка подбора трансферов:', error);
     return [];
   }
 }
@@ -502,7 +498,6 @@ ${transfers.slice(0, 5).map(t => `- ${t.route_name}: ${t.from_location} → ${t.
     return plan;
     
   } catch (error) {
-    console.error('Ошибка парсинга плана:', error);
     
     // Fallback: создаем базовый план
     return createFallbackPlan(request, tours, accommodations);
@@ -611,7 +606,6 @@ async function callAI(systemPrompt: string, userPrompt: string): Promise<string>
         return data.choices[0].message.content;
       }
     } catch (error) {
-      console.error('DeepSeek AI error:', error);
     }
   }
 

@@ -123,7 +123,6 @@ export async function GET() {
       }
     });
   } catch (error) {
-    console.error('[exec-migration-060]', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to execute migration' },
       { status: 500 }

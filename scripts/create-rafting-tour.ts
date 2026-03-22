@@ -28,7 +28,6 @@ async function createTour() {
     );
 
     const partnerId = partnerRes.rows[0].id;
-    console.log('✅ Partner created:', partnerId);
 
     // 2. Create tour
     const tourRes = await pool.query<{ id: string }>(
@@ -64,7 +63,6 @@ async function createTour() {
     );
 
     const tourId = tourRes.rows[0].id;
-    console.log('✅ Tour created:', tourId);
 
     // 3. Create availability slots for July-October 2026
     const months = [
@@ -92,22 +90,11 @@ async function createTour() {
       );
       slotsCreated += res.rowCount || 0;
     }
-    console.log('✅ Availability slots created:', slotsCreated);
 
-    console.log('\n📋 Tour details:');
-    console.log('  Partner ID:', partnerId);
-    console.log('  Tour ID:', tourId);
-    console.log('  Title: Однодневная экскурсия СПЛАВ ПО РЕКЕ БЫСТРАЯ');
-    console.log('  Price: 13 000 RUB per person');
-    console.log('  Season: July-October 2026');
-    console.log('  Slots available per day: 4');
-    console.log('\n⏭️  Next: Run AI auto-fill...');
 
     process.exit(0);
   } catch (err) {
-    console.error('❌ Error:', err);
     if (err instanceof Error) {
-      console.error('Stack:', err.stack);
     }
     process.exit(1);
   } finally {

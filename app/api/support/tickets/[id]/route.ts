@@ -46,7 +46,6 @@ export async function GET(
       data: ticket,
     })
   } catch (error) {
-    console.error(`GET /api/support/tickets/${ticketId} error:`, error)
     return NextResponse.json(
       { success: false, error: (error as Error).message },
       { status: 404 }
@@ -96,7 +95,6 @@ export async function PUT(
       data: ticket,
     })
   } catch (error) {
-    console.error(`PUT /api/support/tickets/${ticketId} error:`, error)
     return NextResponse.json(
       { success: false, error: (error as Error).message },
       { status: 400 }

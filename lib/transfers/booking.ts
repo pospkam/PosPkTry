@@ -228,7 +228,6 @@ export async function createBookingWithLock(
     });
 
   } catch (error: any) {
-    console.error('Critical error in createBookingWithLock:', error);
     
     return {
       success: false,
@@ -317,7 +316,6 @@ export async function holdSeats(
     });
 
   } catch (error: any) {
-    console.error('Error in holdSeats:', error);
     return {
       success: false,
       error: 'Ошибка блокировки мест',
@@ -342,7 +340,6 @@ export async function releaseHold(holdId: string): Promise<boolean> {
       return (result.rowCount ?? 0) > 0;
     });
   } catch (error) {
-    console.error('Error releasing hold:', error);
     return false;
   }
 }
@@ -363,7 +360,6 @@ export async function cleanupExpiredHolds(): Promise<number> {
       return result.rowCount || 0;
     });
   } catch (error) {
-    console.error('Error cleaning up expired holds:', error);
     return 0;
   }
 }
@@ -408,7 +404,6 @@ export async function checkAvailability(
       seatsLeft
     };
   } catch (error) {
-    console.error('Error checking availability:', error);
     return { available: false, seatsLeft: 0 };
   }
 }
@@ -494,7 +489,6 @@ export async function cancelBooking(
     });
 
   } catch (error) {
-    console.error('Error cancelling booking:', error);
     return {
       success: false,
       error: 'Ошибка отмены бронирования',

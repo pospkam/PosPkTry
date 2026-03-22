@@ -120,7 +120,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Get operator profile error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при получении профиля'
@@ -205,7 +204,6 @@ export async function PUT(request: NextRequest) {
     } as ApiResponse<null>);
 
   } catch (error) {
-    console.error('Update operator profile error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при обновлении профиля'

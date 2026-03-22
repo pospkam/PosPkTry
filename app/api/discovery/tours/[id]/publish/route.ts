@@ -61,7 +61,6 @@ export async function POST(
       { status: 200 }
     );
   } catch (error) {
-    console.error('POST /api/discovery/tours/[id]/publish error:', error);
 
     if (error instanceof TourNotFoundError) {
       return NextResponse.json(

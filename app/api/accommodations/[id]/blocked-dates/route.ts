@@ -88,7 +88,6 @@ export async function GET(
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Error fetching blocked dates:', error);
     return NextResponse.json({
       success: false,
       error: 'Failed to fetch blocked dates',

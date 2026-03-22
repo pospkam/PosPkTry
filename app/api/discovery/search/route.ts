@@ -146,7 +146,6 @@ export async function GET(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error('GET /api/discovery/search error:', error);
     return NextResponse.json(
       {
         success: false,

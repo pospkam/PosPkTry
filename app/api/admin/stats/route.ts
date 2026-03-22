@@ -81,7 +81,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ success: true, data: stats } as ApiResponse<typeof stats>);
 
   } catch (error) {
-    console.error('Error fetching admin stats:', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка при получении статистики' } as ApiResponse<null>,
       { status: 500 }

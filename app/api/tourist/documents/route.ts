@@ -58,7 +58,6 @@ export async function GET(request: NextRequest) {
       data: result.rows
     } as ApiResponse<unknown>);
   } catch (error) {
-    console.error('Error fetching documents:', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка при получении документов' } as ApiResponse<null>,
       { status: 500 }
@@ -136,7 +135,6 @@ export async function POST(request: NextRequest) {
       data: result.rows[0]
     } as ApiResponse<unknown>);
   } catch (error) {
-    console.error('Error adding document:', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка при добавлении документа' } as ApiResponse<null>,
       { status: 500 }

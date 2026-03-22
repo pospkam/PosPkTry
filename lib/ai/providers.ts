@@ -36,13 +36,11 @@ export async function callMiMo(messages: ChatMessage[]): Promise<string | null> 
 
     if (!res.ok) {
       const errText = await res.text().catch(() => '');
-      console.error(`[AI] MiMo ${res.status}:`, errText.slice(0, 200));
       return null;
     }
     const data = await res.json();
     return data?.choices?.[0]?.message?.content ?? null;
   } catch (e) {
-    console.error('[AI] MiMo exception:', e instanceof Error ? e.message : String(e));
     return null;
   }
 }
@@ -73,13 +71,11 @@ export async function callOpenrouter(messages: ChatMessage[]): Promise<string | 
 
     if (!res.ok) {
       const errText = await res.text().catch(() => '');
-      console.error(`[AI] OpenRouter ${res.status}:`, errText.slice(0, 200));
       return null;
     }
     const data = await res.json();
     return data?.choices?.[0]?.message?.content ?? null;
   } catch (e) {
-    console.error('[AI] OpenRouter exception:', e instanceof Error ? e.message : String(e));
     return null;
   }
 }
@@ -114,13 +110,11 @@ export async function callMinimax(messages: ChatMessage[]): Promise<string | nul
 
     if (!res.ok) {
       const errText = await res.text().catch(() => '');
-      console.error(`[AI] Minimax ${res.status}:`, errText.slice(0, 200));
       return null;
     }
     const data = await res.json();
     return data?.choices?.[0]?.message?.content ?? null;
   } catch (e) {
-    console.error('[AI] Minimax exception:', e instanceof Error ? e.message : String(e));
     return null;
   }
 }
@@ -148,13 +142,11 @@ export async function callXai(messages: ChatMessage[]): Promise<string | null> {
 
     if (!res.ok) {
       const errText = await res.text().catch(() => '');
-      console.error(`[AI] xAI ${res.status}:`, errText.slice(0, 200));
       return null;
     }
     const data = await res.json();
     return data?.choices?.[0]?.message?.content ?? null;
   } catch (e) {
-    console.error('[AI] xAI exception:', e instanceof Error ? e.message : String(e));
     return null;
   }
 }
@@ -199,7 +191,6 @@ export async function callAnthropic(messages: ChatMessage[]): Promise<string | n
 
     if (!res.ok) {
       const errText = await res.text().catch(() => '');
-      console.error(`[AI] Anthropic ${res.status}:`, errText.slice(0, 300));
       return null;
     }
 
@@ -216,7 +207,6 @@ export async function callAnthropic(messages: ChatMessage[]): Promise<string | n
     }
     return null;
   } catch (e) {
-    console.error('[AI] Anthropic exception:', e instanceof Error ? e.message : String(e));
     return null;
   }
 }

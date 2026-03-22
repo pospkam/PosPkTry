@@ -145,7 +145,6 @@ export async function GET(
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Get tour reviews error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при получении отзывов'
@@ -222,7 +221,6 @@ export async function POST(
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Create review error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при создании отзыва'

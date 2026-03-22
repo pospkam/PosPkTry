@@ -56,7 +56,6 @@ export async function GET(request: NextRequest) {
       data: result.rows
     } as ApiResponse<unknown>);
   } catch (error) {
-    console.error('Error fetching wishlist:', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка при получении избранного' } as ApiResponse<null>,
       { status: 500 }
@@ -106,7 +105,6 @@ export async function POST(request: NextRequest) {
       data: result.rows[0]
     } as ApiResponse<unknown>);
   } catch (error) {
-    console.error('Error adding to wishlist:', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка при добавлении в избранное' } as ApiResponse<null>,
       { status: 500 }
@@ -152,7 +150,6 @@ export async function DELETE(request: NextRequest) {
       data: { message: 'Удалено из избранного' }
     } as ApiResponse<unknown>);
   } catch (error) {
-    console.error('Error removing from wishlist:', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка при удалении из избранного' } as ApiResponse<null>,
       { status: 500 }

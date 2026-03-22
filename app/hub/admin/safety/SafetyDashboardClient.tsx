@@ -55,7 +55,6 @@ export function SafetyDashboardClient() {
         setCapacity(data.data || []);
       }
     } catch (error) {
-      console.error('Failed to fetch safety data:', error);
     } finally {
       setLoading(false);
     }

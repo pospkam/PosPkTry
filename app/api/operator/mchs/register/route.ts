@@ -189,7 +189,6 @@ export async function GET(request: NextRequest) {
       },
     } as ApiResponse<unknown>);
   } catch (error) {
-    console.error('[OPERATOR_MCHS_REGISTER_GET]', error);
     return NextResponse.json(
       { success: false, error: 'Не удалось загрузить регистрации МЧС' } as ApiResponse<null>,
       { status: 500 }
@@ -299,7 +298,6 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('[OPERATOR_MCHS_REGISTER_POST]', error);
     return NextResponse.json(
       { success: false, error: 'Не удалось создать регистрацию МЧС' } as ApiResponse<null>,
       { status: 500 }

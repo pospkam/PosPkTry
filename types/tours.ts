@@ -302,7 +302,6 @@ export function normalizeDifficulty(value: string | undefined | null): TourDiffi
   if (normalized) return normalized;
   
   // Fallback: если не нашли - берём medium
-  console.warn(`[TOUR_SCHEMA] Unknown difficulty: "${value}", using medium`);
   return TOUR_DIFFICULTY.MEDIUM;
 }
 

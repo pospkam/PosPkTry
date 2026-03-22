@@ -114,7 +114,6 @@ export async function GET(
       },
     } as ApiResponse<unknown>);
   } catch (error) {
-    console.error('[OPERATOR_MCHS_BY_ID_GET]', error);
     return NextResponse.json(
       { success: false, error: 'Не удалось загрузить регистрацию МЧС' } as ApiResponse<null>,
       { status: 500 }

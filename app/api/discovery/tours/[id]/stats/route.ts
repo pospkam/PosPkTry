@@ -106,7 +106,6 @@ export async function GET(
       { status: 404 }
     );
   } catch (error) {
-    console.error('GET /api/discovery/tours/[id]/stats error:', error);
 
     if (error instanceof TourNotFoundError) {
       return NextResponse.json(

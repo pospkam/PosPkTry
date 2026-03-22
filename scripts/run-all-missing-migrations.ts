@@ -52,15 +52,11 @@ async function checkAppliedMigrations(migrations: Migration[]): Promise<Migratio
       applied: applied.has(m.number),
     }));
   } catch (error) {
-    console.error('Error checking migrations:', error);
     return migrations;
   }
 }
 
 async function runMigrations() {
-  console.log('\n' + '='.repeat(80));
-  console.log('DATABASE MIGRATION RUNNER');
-  console.log('='.repeat(80));
 
   try {
     let migrations = await getAllMigrations();
@@ -68,28 +64,18 @@ async function runMigrations() {
 
     const pending = migrations.filter(m => !m.applied);
 
-    console.log(`Total migrations:   ${migrations.length}`);
-    console.log(`Already applied:    ${migrations.filter(m => m.applied).length}`);
-    console.log(`Pending:            ${pending.length}`);
-    console.log(`Mode:               ${dryRun ? '🔍 DRY RUN' : '🔥 LIVE'}`);
-    console.log('='.repeat(80) + '\n');
 
     if (pending.length === 0) {
-      console.log('✅ All migrations already applied\n');
       process.exit(0);
     }
 
-    console.log('Pending migrations:');
     pending.forEach(m => console.log(`  - ${m.filename}`));
-    console.log();
 
     if (dryRun) {
-      console.log('DRY RUN: would apply above migrations\n');
       process.exit(0);
     }
 
     // Apply pending migrations
-    console.log('Applying migrations...\n');
 
     for (const mig of pending) {
       const filepath = path.join(process.cwd(), 'migrations', mig.filename);
@@ -112,25 +98,16 @@ async function runMigrations() {
         await pool.query('COMMIT');
 
         const duration = Date.now() - startTime;
-        console.log(`  ✅ ${mig.filename} (${duration}ms)`);
       } catch (error) {
         await pool.query('ROLLBACK');
         const errorMsg = error instanceof Error ? error.message : String(error);
-        console.error(`  ❌ ${mig.filename}`);
-        console.error(`     Error: ${errorMsg}\n`);
         throw error;
       }
     }
 
-    console.log('\n' + '='.repeat(80));
-    console.log('✅ ALL MIGRATIONS APPLIED SUCCESSFULLY');
-    console.log('='.repeat(80) + '\n');
 
     process.exit(0);
   } catch (error) {
-    console.error('\n' + '='.repeat(80));
-    console.error('❌ MIGRATION FAILED');
-    console.error('='.repeat(80) + '\n');
     process.exit(1);
   }
 }

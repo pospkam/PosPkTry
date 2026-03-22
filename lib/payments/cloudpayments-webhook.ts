@@ -53,12 +53,10 @@ export function validateCloudPaymentsSignature(
   apiSecret: string
 ): boolean {
   if (!signature) {
-    console.error('CloudPayments signature missing');
     return false;
   }
   
   if (!apiSecret) {
-    console.error('CloudPayments API secret not configured');
     return false;
   }
   
@@ -78,20 +76,17 @@ export function validateCloudPaymentsSignature(
     const signatureBuffer = Buffer.from(signature);
     
     if (computedBuffer.length !== signatureBuffer.length) {
-      console.error('CloudPayments signature length mismatch');
       return false;
     }
     
     const isValid = crypto.timingSafeEqual(computedBuffer, signatureBuffer);
     
     if (!isValid) {
-      console.error('CloudPayments signature validation failed');
     }
     
     return isValid;
     
   } catch (error) {
-    console.error('CloudPayments signature validation error:', error);
     return false;
   }
 }
@@ -164,7 +159,6 @@ export async function checkWebhookDuplicate(
     
     return result.rows.length > 0;
   } catch (error) {
-    console.error('Error checking webhook duplicate:', error);
     return false;
   }
 }

@@ -136,7 +136,6 @@ export async function GET(
       } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Get tour error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при получении тура'
@@ -251,7 +250,6 @@ export async function PUT(
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Update tour error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при обновлении тура'
@@ -322,7 +320,6 @@ export async function DELETE(
     } as ApiResponse<null>);
 
   } catch (error) {
-    console.error('Delete tour error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при удалении тура'

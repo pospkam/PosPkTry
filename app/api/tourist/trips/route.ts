@@ -83,7 +83,6 @@ export async function GET(request: NextRequest) {
       }
     } as ApiResponse<unknown>);
   } catch (error) {
-    console.error('Error fetching tourist trips:', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка при получении поездок' } as ApiResponse<null>,
       { status: 500 }
@@ -163,7 +162,6 @@ export async function POST(request: NextRequest) {
       data: result.rows[0]
     } as ApiResponse<unknown>);
   } catch (error) {
-    console.error('Error creating trip:', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка при создании поездки' } as ApiResponse<null>,
       { status: 500 }

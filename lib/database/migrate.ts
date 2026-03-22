@@ -19,7 +19,6 @@ const MIGRATIONS_DIR = resolve(__dirname, 'migrations');
 async function main() {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
-    console.error('[migrate] DATABASE_URL is not set');
     process.exit(1);
   }
 
@@ -65,12 +64,9 @@ async function main() {
           [file]
         );
         await client.query('COMMIT');
-        console.error(`[migrate] Applied: ${file}`);
         count++;
       } catch (err) {
         await client.query('ROLLBACK');
-        console.error(`[migrate] FAILED: ${file}`);
-        console.error(err);
         process.exit(1);
       } finally {
         client.release();
@@ -78,9 +74,7 @@ async function main() {
     }
 
     if (count === 0) {
-      console.error('[migrate] No new migrations to apply.');
     } else {
-      console.error(`[migrate] Done. Applied ${count} migration(s).`);
     }
   } finally {
     await pool.end();

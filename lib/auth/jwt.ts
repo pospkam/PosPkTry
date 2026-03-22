@@ -67,7 +67,6 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
       exp: typeof payload.exp === 'number' ? payload.exp : undefined,
     };
   } catch (error) {
-    console.error('JWT verification failed:', error);
     return null;
   }
 }

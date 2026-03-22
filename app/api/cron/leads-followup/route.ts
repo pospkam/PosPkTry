@@ -257,7 +257,6 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (err) {
-    console.error('[cron/leads-followup] error:', err);
     return NextResponse.json({ ok: false, error: 'Internal error' }, { status: 500 });
   }
 }

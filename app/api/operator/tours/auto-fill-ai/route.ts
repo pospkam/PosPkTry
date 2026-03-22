@@ -260,7 +260,6 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('[tours/auto-fill-ai]', error);
 
     if (error instanceof SyntaxError) {
       return NextResponse.json(

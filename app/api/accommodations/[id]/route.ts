@@ -209,7 +209,6 @@ export async function GET(
     });
     
   } catch (error) {
-    console.error('Error fetching accommodation details:', error);
     return NextResponse.json(
       {
         success: false,

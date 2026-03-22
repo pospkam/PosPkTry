@@ -58,7 +58,6 @@ export async function GET(request: NextRequest) {
       data: result.rows
     } as ApiResponse<unknown>);
   } catch (error) {
-    console.error('Error fetching checklists:', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка при получении чек-листов' } as ApiResponse<null>,
       { status: 500 }
@@ -106,7 +105,6 @@ export async function POST(request: NextRequest) {
       data: result.rows[0]
     } as ApiResponse<unknown>);
   } catch (error) {
-    console.error('Error creating checklist:', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка при создании чек-листа' } as ApiResponse<null>,
       { status: 500 }
@@ -179,7 +177,6 @@ export async function PUT(request: NextRequest) {
       data: result.rows[0]
     } as ApiResponse<unknown>);
   } catch (error) {
-    console.error('Error updating checklist:', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка при обновлении чек-листа' } as ApiResponse<null>,
       { status: 500 }

@@ -104,7 +104,6 @@ export async function POST(
       },
     });
   } catch (error) {
-    console.error('Generate tags error:', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка генерации тегов' },
       { status: 500 }
@@ -141,7 +140,6 @@ export async function GET(
       data: result.rows[0].ai_tags ?? {},
     });
   } catch (error) {
-    console.error('Get tags error:', error);
     return NextResponse.json({ success: false, error: 'Ошибка' }, { status: 500 });
   }
 }

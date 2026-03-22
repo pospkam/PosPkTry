@@ -53,7 +53,6 @@ export default function TransferOperatorPageClient() {
 
       setData(result.data);
     } catch (err) {
-      console.error('Error fetching transfer operator data:', err);
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);

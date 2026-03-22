@@ -17,7 +17,6 @@ export default function CarRentalPageClient() {
       const result = await response.json();
       if (result.success) setCars(result.data.cars);
     } catch (error) {
-      console.error('Error:', error);
     } finally {
       setLoading(false);
     }

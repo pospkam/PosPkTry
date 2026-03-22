@@ -67,7 +67,6 @@ export async function POST(
         );
       }
     } catch (notifError) {
-      console.error('Notification error:', notifError);
       // Don't fail the reply if notification fails
     }
 
@@ -78,7 +77,6 @@ export async function POST(
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Reply to review error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при публикации ответа'
@@ -131,7 +129,6 @@ export async function PUT(
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Update reply error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при обновлении ответа'
@@ -175,7 +172,6 @@ export async function DELETE(
     } as ApiResponse<null>);
 
   } catch (error) {
-    console.error('Delete reply error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при удалении ответа'

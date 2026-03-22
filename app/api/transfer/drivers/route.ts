@@ -151,7 +151,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Get drivers error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при получении водителей'
@@ -230,7 +229,6 @@ export async function POST(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Create driver error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при создании водителя'

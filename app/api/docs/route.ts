@@ -100,7 +100,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Swagger generation error:', error);
     return NextResponse.json(
       { error: 'Failed to generate Swagger spec' },
       { status: 500 }

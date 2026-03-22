@@ -145,7 +145,6 @@ async function saveForCrewAI(tours: KnowledgeTour[]) {
   };
 
   writeFileSync('crew/knowledge-base.json', JSON.stringify(crewaiData, null, 2));
-  console.log('knowledge-base.json updated');
 }
 
 async function main() {
@@ -166,12 +165,9 @@ async function main() {
       {} as Record<string, number>,
     );
 
-    console.log(`total routes: ${tours.length}`);
     Object.entries(byCategory).forEach(([category, count]) => {
-      console.log(`${category}: ${count}`);
     });
   } catch (error) {
-    console.error('RAG setup failed:', error);
     process.exit(1);
   } finally {
     await pool.end();

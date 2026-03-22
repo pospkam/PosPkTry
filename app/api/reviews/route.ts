@@ -120,7 +120,6 @@ export async function GET(request: NextRequest) {
       data: reviews,
     } as ApiResponse<Review[]>);
   } catch (error) {
-    console.error('Error fetching reviews:', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка при получении отзывов' } as ApiResponse<null>,
       { status: 500 }
@@ -229,7 +228,6 @@ export async function POST(request: NextRequest) {
       message: 'Спасибо за отзыв! Он будет опубликован после модерации.',
     } as ApiResponse<unknown>);
   } catch (error) {
-    console.error('Error creating review:', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка при создании отзыва' } as ApiResponse<null>,
       { status: 500 }

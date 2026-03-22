@@ -64,7 +64,6 @@ export async function POST(request: NextRequest) {
         data,
       });
     } catch (crewaiError) {
-      console.warn('[AGENT] CrewAI сервер не доступен, используем fallback');
       
       // Fallback: локальный поиск по базе знаний
       return NextResponse.json({
@@ -83,7 +82,6 @@ export async function POST(request: NextRequest) {
       });
     }
   } catch (error) {
-    console.error('[AGENT]', error);
     return NextResponse.json(
       { error: 'Ошибка обработки запроса' },
       { status: 500 }
@@ -134,7 +132,6 @@ export async function GET(request: NextRequest) {
       });
     }
   } catch (error) {
-    console.error('[AGENT]', error);
     return NextResponse.json(
       { error: 'Ошибка поиска' },
       { status: 500 }

@@ -29,7 +29,6 @@ export async function GET(request: NextRequest) {
       data: metrics,
     })
   } catch (error) {
-    console.error('GET /api/support/sla/compliance error:', error)
     return NextResponse.json(
       { success: false, error: (error as Error).message },
       { status: 500 }
@@ -58,7 +57,6 @@ export async function POST(request: NextRequest) {
       data: violation,
     })
   } catch (error) {
-    console.error('POST /api/support/sla/check error:', error)
     return NextResponse.json(
       { success: false, error: (error as Error).message },
       { status: 400 }

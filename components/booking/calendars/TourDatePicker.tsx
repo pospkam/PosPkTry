@@ -95,7 +95,6 @@ export const TourDatePicker: React.FC<TourDatePickerProps> = ({
       const data = await response.json();
       setAvailableDates(data.dates || []);
     } catch (err) {
-      console.error('Error loading available dates:', err);
       toast.error('Не удалось загрузить календарь');
       setError(err instanceof Error ? err.message : 'Ошибка загрузки');
     } finally {
@@ -124,7 +123,6 @@ export const TourDatePicker: React.FC<TourDatePickerProps> = ({
         toast.error('На эту дату нет доступных слотов');
       }
     } catch (err) {
-      console.error('Error loading time slots:', err);
       toast.error('Не удалось загрузить расписание');
       setError(err instanceof Error ? err.message : 'Ошибка загрузки');
     } finally {

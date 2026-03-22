@@ -109,7 +109,6 @@ export async function GET(
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Get tour photos error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при получении фотографий'
@@ -195,7 +194,6 @@ export async function POST(
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Upload photo error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при загрузке фотографии',

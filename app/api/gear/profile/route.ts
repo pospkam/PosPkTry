@@ -60,7 +60,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Get gear profile error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при получении профиля'
@@ -135,7 +134,6 @@ export async function PUT(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Update gear profile error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при обновлении профиля'

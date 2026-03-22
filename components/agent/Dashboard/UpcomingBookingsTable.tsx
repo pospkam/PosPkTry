@@ -38,7 +38,6 @@ export function UpcomingBookingsTable({ limit = 5 }: UpcomingBookingsTableProps)
         setError(result.error);
       }
     } catch (err) {
-      console.error('Error fetching upcoming bookings:', err);
       setError('Ошибка загрузки бронирований');
     } finally {
       setLoading(false);

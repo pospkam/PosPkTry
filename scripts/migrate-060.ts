@@ -2,7 +2,6 @@ import { pool } from '../lib/db-pool';
 
 async function migrate() {
   try {
-    console.log('⏳ Creating partner Камчатка Рафтинг...');
 
     await pool.query(
       `INSERT INTO partners (slug, name, contacts, location, is_public, created_at)
@@ -25,8 +24,6 @@ async function migrate() {
       ]
     );
 
-    console.log('✅ Partner created');
-    console.log('⏳ Creating tour СПЛАВ ПО РЕКЕ БЫСТРАЯ...');
 
     const tourRes = await pool.query<{ id: string }>(
       `WITH partner AS (
@@ -69,8 +66,6 @@ async function migrate() {
     const tourId = tourRes.rows[0]?.id;
     if (!tourId) throw new Error('Tour not created');
 
-    console.log('✅ Tour created:', tourId);
-    console.log('⏳ Creating availability slots (Jul-Oct 2026)...');
 
     const avRes = await pool.query(
       `INSERT INTO tour_availability (
@@ -86,21 +81,9 @@ async function migrate() {
       [tourId]
     );
 
-    console.log(`✅ Created ${avRes.rowCount} availability slots`);
-    console.log('\n🎉 MIGRATION 060 COMPLETE!');
-    console.log('\n📋 Tour Details:');
-    console.log(`   Tour ID: ${tourId}`);
-    console.log('   Title: Однодневная экскурсия СПЛАВ ПО РЕКЕ БЫСТРАЯ');
-    console.log('   Price: 13 000 RUB per person');
-    console.log('   Season: July-October 2026');
-    console.log(`   Slots: ${avRes.rowCount} (4 per day)`);
-    console.log('\n⏭️  Next: Run AI auto-fill');
-    console.log(`   POST /api/operator/tours/auto-fill-ai`);
-    console.log(`   { "tourId": "${tourId}" }`);
 
     process.exit(0);
   } catch (err) {
-    console.error('❌ Migration failed:', err);
     process.exit(1);
   } finally {
     await pool.end();

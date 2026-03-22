@@ -275,7 +275,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<OperatorDashboardData>);
 
   } catch (error) {
-    console.error('Error fetching operator dashboard:', error);
     return NextResponse.json({
       success: false,
       error: 'Failed to fetch dashboard data',

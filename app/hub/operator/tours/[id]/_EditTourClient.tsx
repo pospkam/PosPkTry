@@ -40,7 +40,6 @@ export default function EditTourClient() {
         setError(result.error || 'Failed to fetch tour');
       }
     } catch (err) {
-      console.error('Error fetching tour:', err);
       setError('Failed to fetch tour');
     } finally {
       setLoading(false);
@@ -64,7 +63,6 @@ export default function EditTourClient() {
         throw new Error(result.error || 'Failed to update tour');
       }
     } catch (error) {
-      console.error('Error updating tour:', error);
       throw error;
     }
   };

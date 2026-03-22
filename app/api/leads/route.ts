@@ -80,7 +80,6 @@ export async function POST(req: NextRequest) {
     leadId = res.rows[0].id;
   } catch (err) {
     if (process.env.NODE_ENV !== 'production') {
-      console.error('[leads] DB error:', err);
     }
     return NextResponse.json({ success: false, error: 'Ошибка сервера. Попробуйте позже.' }, { status: 500 });
   }

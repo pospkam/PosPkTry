@@ -198,7 +198,6 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('Error in transfer booking:', error);
     return NextResponse.json({
       success: false,
       error: 'Внутренняя ошибка сервера при создании бронирования'
@@ -259,7 +258,6 @@ async function sendRealBookingNotifications(
 
 
   } catch (error) {
-    console.error('Error sending real notifications:', error);
     // Не прерываем выполнение при ошибке уведомлений
   }
 }

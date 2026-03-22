@@ -57,7 +57,6 @@ export async function GET(
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Get vehicle documents error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при получении документов'
@@ -133,7 +132,6 @@ export async function POST(
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Create vehicle document error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при добавлении документа'

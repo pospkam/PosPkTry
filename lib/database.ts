@@ -51,7 +51,6 @@ export async function testConnection(): Promise<boolean> {
     const result = await query('SELECT NOW()');
     return result.rows.length > 0;
   } catch (error) {
-    console.error('Database connection failed:', error);
     return false;
   }
 }
@@ -112,7 +111,6 @@ export async function createIndexes(): Promise<void> {
     try {
       await query(indexQuery);
     } catch (error) {
-      console.error(`Failed to create index: ${indexQuery}`, error);
     }
   }
 }
@@ -131,7 +129,6 @@ export async function cleanupOldData(): Promise<void> {
     try {
       const result = await query(cleanupQuery);
     } catch (error) {
-      console.error(`Cleanup failed: ${cleanupQuery}`, error);
     }
   }
 }

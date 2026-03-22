@@ -50,7 +50,6 @@ export async function GET(
 
     return NextResponse.json({ success: true, data: result.rows[0] });
   } catch (error) {
-    console.error('[OPERATOR API] Get booking error:', error);
     return NextResponse.json({ error: 'Failed to fetch booking' }, { status: 500 });
   }
 }
@@ -133,7 +132,6 @@ export async function PATCH(
     if (error instanceof SyntaxError) {
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
     }
-    console.error('[OPERATOR API] Update booking error:', error);
     return NextResponse.json({ error: 'Failed to update booking' }, { status: 500 });
   }
 }

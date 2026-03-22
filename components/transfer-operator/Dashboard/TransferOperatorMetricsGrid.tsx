@@ -49,7 +49,6 @@ export function TransferOperatorMetricsGrid({ period = '30', metrics: metricsPro
         setMetrics(data.data.metrics);
       }
     } catch (error) {
-      console.error('Error fetching transfer operator metrics:', error);
     } finally {
       setLoading(false);
     }

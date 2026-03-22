@@ -45,7 +45,6 @@ export async function GET(
 
     return NextResponse.json({ success: true, data: tour });
   } catch (error) {
-    console.error('[OPERATOR API] Get tour error:', error);
     return NextResponse.json({ error: 'Failed to fetch tour' }, { status: 500 });
   }
 }
@@ -120,7 +119,6 @@ export async function PATCH(
     if (error instanceof SyntaxError) {
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
     }
-    console.error('[OPERATOR API] Update tour error:', error);
     return NextResponse.json({ error: 'Failed to update tour' }, { status: 500 });
   }
 }
@@ -147,7 +145,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, message: 'Tour deleted' });
   } catch (error) {
-    console.error('[OPERATOR API] Delete tour error:', error);
     return NextResponse.json({ error: 'Failed to delete tour' }, { status: 500 });
   }
 }

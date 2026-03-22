@@ -82,7 +82,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Get operator settings error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при получении настроек'
@@ -199,7 +198,6 @@ export async function PUT(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Update operator settings error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при обновлении настроек'

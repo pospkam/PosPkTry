@@ -67,7 +67,6 @@ export async function GET(
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Error fetching email template:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при получении email шаблона'
@@ -136,7 +135,6 @@ export async function PUT(
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Error updating email template:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при обновлении email шаблона'
@@ -179,7 +177,6 @@ export async function DELETE(
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Error deleting email template:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при удалении email шаблона'

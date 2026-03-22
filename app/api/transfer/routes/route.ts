@@ -103,7 +103,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Get routes error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при получении маршрутов'
@@ -187,7 +186,6 @@ export async function POST(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Create route error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при создании маршрута'

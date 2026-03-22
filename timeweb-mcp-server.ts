@@ -17,7 +17,6 @@ const APP_ID = '159529';
 const TOKEN = process.env.TIMEWEB_TOKEN || process.env.TIMEWEB_TOKEN1;
 
 if (!TOKEN) {
-  console.error('Error: TIMEWEB_TOKEN or TIMEWEB_TOKEN1 environment variable is required');
   process.exit(1);
 }
 
@@ -228,10 +227,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error('Timeweb Cloud MCP server running on stdio');
 }
 
 main().catch((error) => {
-  console.error('Server error:', error);
   process.exit(1);
 });

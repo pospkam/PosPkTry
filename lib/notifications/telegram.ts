@@ -32,7 +32,6 @@ export class TelegramNotificationService {
     this.baseUrl = `https://api.telegram.org/bot${this.botToken}`;
     
     if (!this.botToken) {
-      console.warn('TELEGRAM_BOT_TOKEN not configured');
     }
   }
 
@@ -73,7 +72,6 @@ export class TelegramNotificationService {
         };
       }
     } catch (error) {
-      console.error('Telegram sending error:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error'

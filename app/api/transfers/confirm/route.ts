@@ -124,7 +124,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(response);
 
     } catch (dbError) {
-      console.error('Database error:', dbError);
 
       // Fallback к тестовому подтверждению
       const mockResponse: TransferConfirmationResponse = {
@@ -140,7 +139,6 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('Error in transfer confirmation:', error);
     return NextResponse.json({
       success: false,
       error: 'Внутренняя ошибка сервера при обработке подтверждения'
@@ -168,6 +166,5 @@ async function sendConfirmationNotifications(
     }
 
   } catch (error) {
-    console.error('Error sending confirmation notifications:', error);
   }
 }

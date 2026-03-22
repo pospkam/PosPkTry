@@ -330,7 +330,6 @@ export async function GET(request: NextRequest) {
       });
 
     } catch (dbError) {
-      console.error('Database error:', dbError);
       
       // Fallback к тестовым данным
       const mockDashboard = createMockDashboard();
@@ -342,7 +341,6 @@ export async function GET(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('Error in operator dashboard:', error);
     return NextResponse.json({
       success: false,
       error: 'Внутренняя ошибка сервера при получении дашборда'

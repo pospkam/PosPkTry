@@ -25,13 +25,10 @@ function sleep(ms: number) {
 }
 
 function log(stage: string, msg: string) {
-  console.log(`${BOLD}[${stage}]${RESET} ${msg}`);
 }
 
 async function demo() {
   console.clear();
-  console.log(`${BOLD}${CYAN}=== Safety Layer Demo Scenario ===${RESET}\n`);
-  console.log('Real-world flow: booking → tracking → alert → response\n');
 
   try {
     // STEP 1: Get a real route
@@ -135,20 +132,9 @@ async function demo() {
     await pool.query(`DELETE FROM external_alerts WHERE external_id = $1`, [alertId]);
     log('✓', 'Demo alert removed');
 
-    console.log(`\n${BOLD}${CYAN}=== Demo Complete ===${RESET}`);
-    console.log(`\nKey points demonstrated:`);
-    console.log(`1. Real route fetched from database (${route.title})`);
-    console.log(`2. Safety profile found (capacity, hazards)`);
-    console.log(`3. Current status checked (tourists, alert severity)`);
-    console.log(`4. МЧС alert inserted → system receives it`);
-    console.log(`5. Real-time status updated automatically`);
-    console.log(`6. Recommendation changes (tourists see warning/alternative)`);
-    console.log(`7. Demo data cleaned up`);
-    console.log(`\nThis flow repeats EVERY TIME a tourist searches or МЧС sends alert.`);
 
     process.exit(0);
   } catch (error) {
-    console.error(`${RED}Error:${RESET}`, error);
     process.exit(1);
   }
 }

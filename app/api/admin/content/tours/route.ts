@@ -154,7 +154,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<PaginatedResponse<AdminTour>>);
 
   } catch (error) {
-    console.error('Error fetching tours:', error);
     return NextResponse.json({
       success: false,
       error: 'Failed to fetch tours',

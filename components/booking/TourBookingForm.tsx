@@ -78,7 +78,6 @@ export function TourBookingForm({
         setAvailability(result.data.availability);
       }
     } catch (error) {
-      console.error('Error fetching availability:', error);
     } finally {
       setLoading(false);
     }
@@ -139,7 +138,6 @@ export function TourBookingForm({
       setBookingId((bookingResult as { id?: string })?.id || '');
       setShowPayment(true);
     } catch (error) {
-      console.error('Error submitting booking:', error);
       toast.error('Ошибка при создании бронирования');
     } finally {
       setSubmitting(false);
@@ -152,7 +150,6 @@ export function TourBookingForm({
   };
 
   const handlePaymentFail = (reason: string) => {
-    console.error('Payment failed:', reason);
     toast.error(`Ошибка оплаты: ${reason}`);
     setShowPayment(false);
   };

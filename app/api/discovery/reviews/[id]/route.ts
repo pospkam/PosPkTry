@@ -37,7 +37,6 @@ export async function GET(
       { status: 200 }
     );
   } catch (error) {
-    console.error(`GET /api/discovery/reviews/[id] error:`, error);
 
     if (error instanceof ReviewNotFoundError) {
       return NextResponse.json(
@@ -106,7 +105,6 @@ export async function PUT(
       { status: 200 }
     );
   } catch (error) {
-    console.error(`PUT /api/discovery/reviews/[id] error:`, error);
 
     if (error instanceof ReviewNotFoundError) {
       return NextResponse.json(
@@ -187,7 +185,6 @@ export async function DELETE(
       { status: 200 }
     );
   } catch (error) {
-    console.error(`DELETE /api/discovery/reviews/[id] error:`, error);
 
     if (error instanceof ReviewNotFoundError) {
       return NextResponse.json(
@@ -307,7 +304,6 @@ export async function POST(
       { status: 400 }
     );
   } catch (error) {
-    console.error(`POST /api/discovery/reviews/[id] error:`, error);
 
     if (error instanceof ReviewNotFoundError) {
       return NextResponse.json(

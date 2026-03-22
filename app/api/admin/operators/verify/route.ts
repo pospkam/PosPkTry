@@ -141,7 +141,6 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('Operator verification error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при верификации оператора'
@@ -183,7 +182,6 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error fetching pending operators:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при получении списка операторов'

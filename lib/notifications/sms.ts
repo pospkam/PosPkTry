@@ -24,7 +24,6 @@ export class SMSNotificationService {
   constructor() {
     this.apiKey = process.env.SMS_RU_API_KEY || '';
     if (!this.apiKey) {
-      console.warn('SMS_RU_API_KEY not configured');
     }
   }
 
@@ -68,7 +67,6 @@ export class SMSNotificationService {
         };
       }
     } catch (error) {
-      console.error('SMS sending error:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error'

@@ -57,7 +57,6 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('Payment confirmation error:', error);
     return NextResponse.json({
       success: false,
       error: 'Внутренняя ошибка сервера'
@@ -104,7 +103,6 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Payment status check error:', error);
     return NextResponse.json({
       success: false,
       error: 'Внутренняя ошибка сервера'

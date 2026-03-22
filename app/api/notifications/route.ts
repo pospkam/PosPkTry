@@ -90,7 +90,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Get notifications error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при получении уведомлений'
@@ -142,7 +141,6 @@ export async function POST(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Create notification error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при создании уведомления'

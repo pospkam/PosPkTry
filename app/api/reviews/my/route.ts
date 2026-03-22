@@ -55,7 +55,6 @@ export async function GET(request: NextRequest) {
       },
     } as ApiResponse<{ reviews: typeof reviews; total: number }>);
   } catch (error) {
-    console.error('Get my reviews error:', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка при получении отзывов' } as ApiResponse<null>,
       { status: 500 }

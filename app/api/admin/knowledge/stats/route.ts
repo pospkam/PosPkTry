@@ -69,7 +69,6 @@ export async function GET(request: NextRequest) {
       data: { totalRoutes, embeddedCount, categories, sources },
     });
   } catch (error) {
-    console.error('Error fetching knowledge stats:', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка загрузки статистики' },
       { status: 500 }

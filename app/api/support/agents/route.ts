@@ -42,7 +42,6 @@ export async function GET(request: NextRequest) {
       data: [],
     })
   } catch (error) {
-    console.error('GET /api/support/agents error:', error)
     return NextResponse.json(
       { success: false, error: (error as Error).message },
       { status: 500 }
@@ -71,7 +70,6 @@ export async function POST(request: NextRequest) {
       data: agent,
     })
   } catch (error) {
-    console.error('POST /api/support/agents error:', error)
     return NextResponse.json(
       { success: false, error: (error as Error).message },
       { status: 400 }

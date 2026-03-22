@@ -28,7 +28,6 @@ export async function GET(
       data: { notification },
     })
   } catch (error) {
-    console.error('GET /api/engagement/notifications/[id]:', error)
     return NextResponse.json(
       { error: 'Failed to fetch notification' },
       { status: 500 }
@@ -74,7 +73,6 @@ export async function PUT(
       data: { notification },
     })
   } catch (error) {
-    console.error('PUT /api/engagement/notifications/[id]:', error)
     return NextResponse.json(
       { error: 'Failed to update notification' },
       { status: 500 }
@@ -103,7 +101,6 @@ export async function DELETE(
       message: 'Notification deleted',
     })
   } catch (error) {
-    console.error('DELETE /api/engagement/notifications/[id]:', error)
     return NextResponse.json(
       { error: 'Failed to delete notification' },
       { status: 500 }

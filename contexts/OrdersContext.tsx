@@ -65,7 +65,6 @@ export const OrdersProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           setOrders(parsedOrders);
         }
       } catch (e) {
-        console.error('Failed to load orders', e);
       }
     })();
   }, []);
@@ -75,7 +74,6 @@ export const OrdersProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
       } catch (e) {
-        console.error('Failed to persist orders', e);
       }
     })();
   }, [orders]);

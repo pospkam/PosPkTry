@@ -92,7 +92,6 @@ export async function GET(request: NextRequest) {
 
   } catch (err) {
     await client.query('ROLLBACK').catch(() => {});
-    console.error('[cron/payouts] error:', err);
     return NextResponse.json({ ok: false, error: 'Internal error' }, { status: 500 });
   } finally {
     client.release();

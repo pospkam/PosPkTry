@@ -42,7 +42,6 @@ export function EmailTemplatesManager() {
         setError(result.error);
       }
     } catch (err) {
-      console.error('Error fetching templates:', err);
       setError('Ошибка загрузки шаблонов');
     } finally {
       setLoading(false);
@@ -73,7 +72,6 @@ export function EmailTemplatesManager() {
         toast.error(`Ошибка: ${result.error}`);
       }
     } catch (err) {
-      console.error('Error saving template:', err);
       toast.error('Ошибка при сохранении шаблона');
     }
   };
@@ -95,7 +93,6 @@ export function EmailTemplatesManager() {
         toast.error(`Ошибка: ${result.error}`);
       }
     } catch (err) {
-      console.error('Error deleting template:', err);
       toast.error('Ошибка при удалении шаблона');
     }
   };

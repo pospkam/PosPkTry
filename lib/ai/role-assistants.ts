@@ -377,7 +377,6 @@ export async function callRoleAssistant(
       throw new Error(result.error || 'AI request failed');
     }
   } catch (error) {
-    console.error('Role assistant error:', error);
     throw error;
   }
 }

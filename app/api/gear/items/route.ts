@@ -78,7 +78,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Get gear items error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при получении снаряжения'
@@ -147,7 +146,6 @@ export async function POST(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Create gear item error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при создании снаряжения'

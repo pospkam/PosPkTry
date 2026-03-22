@@ -106,7 +106,6 @@ export async function POST(request: NextRequest) {
       }
     });
   } catch (error) {
-    console.error('[setup-rafting-tour]', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to create tour' },
       { status: 500 }

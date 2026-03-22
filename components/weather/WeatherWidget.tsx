@@ -38,7 +38,6 @@ export function WeatherWidget({
         setHasAlert(!!data.data.alerts?.length);
       }
     } catch (err) {
-      console.error(err);
     } finally {
       setLoading(false);
     }

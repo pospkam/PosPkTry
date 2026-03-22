@@ -32,7 +32,6 @@ export async function GET(request: NextRequest) {
       data: { preferences },
     })
   } catch (error) {
-    console.error('GET /api/engagement/notifications/preferences:', error)
     return NextResponse.json(
       { error: 'Failed to fetch preferences' },
       { status: 500 }
@@ -69,7 +68,6 @@ export async function PUT(request: NextRequest) {
       data: { preferences: updated },
     })
   } catch (error) {
-    console.error('PUT /api/engagement/notifications/preferences:', error)
     return NextResponse.json(
       { error: 'Failed to update preferences' },
       { status: 500 }

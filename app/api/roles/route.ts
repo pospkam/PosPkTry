@@ -180,7 +180,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<any[]>);
 
   } catch (error) {
-    console.error('Error fetching roles:', error);
     return NextResponse.json({
       success: false,
       error: 'Failed to fetch roles',
@@ -239,7 +238,6 @@ export async function POST(request: NextRequest) {
     } as ApiResponse<{ userId: string; role: string; level: string | null; message: string }>);
 
   } catch (error) {
-    console.error('Error updating role:', error);
     return NextResponse.json({
       success: false,
       error: 'Failed to update role',

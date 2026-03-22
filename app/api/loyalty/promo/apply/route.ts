@@ -49,7 +49,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Promo code application error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка применения промокода'

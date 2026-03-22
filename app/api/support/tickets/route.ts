@@ -36,7 +36,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(result)
   } catch (error) {
-    console.error('GET /api/support/tickets error:', error)
     return NextResponse.json(
       { success: false, error: (error as Error).message },
       { status: 500 }
@@ -81,7 +80,6 @@ export async function POST(request: NextRequest) {
       data: ticket,
     })
   } catch (error) {
-    console.error('POST /api/support/tickets error:', error)
     return NextResponse.json(
       { success: false, error: (error as Error).message },
       { status: 400 }

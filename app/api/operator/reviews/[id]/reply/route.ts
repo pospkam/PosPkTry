@@ -93,7 +93,6 @@ export async function POST(
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Reply to review error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при добавлении ответа'

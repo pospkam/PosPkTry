@@ -129,14 +129,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
           }
         } catch (err) {
-          console.error('Session verification failed:', err);
         }
         
         // If verification failed, clear storage
         localStorage.removeItem('user');
       }
     } catch (error) {
-      console.error('Error loading user from storage:', error);
     } finally {
       setIsLoading(false);
     }
@@ -150,7 +148,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.removeItem('user');
       }
     } catch (error) {
-      console.error('Error saving user to storage:', error);
     }
   };
 
@@ -182,7 +179,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('user_roles', JSON.stringify(userData.roles));
       }
     } catch (error) {
-      console.error('Sign in error:', error);
       throw error;
     } finally {
       setIsLoading(false);
@@ -217,7 +213,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('user_roles', JSON.stringify(userData.roles));
       }
     } catch (error) {
-      console.error('Sign up error:', error);
       throw error;
     } finally {
       setIsLoading(false);
@@ -236,7 +231,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.removeItem('user_roles');
       }
     } catch (error) {
-      console.error('Sign out error:', error);
       throw error;
     } finally {
       setIsLoading(false);
@@ -255,7 +249,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(updatedUser);
       await saveUserToStorage(updatedUser);
     } catch (error) {
-      console.error('Update user error:', error);
       throw error;
     }
   };
@@ -272,7 +265,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(updatedUser);
       await saveUserToStorage(updatedUser);
     } catch (error) {
-      console.error('Update preferences error:', error);
       throw error;
     }
   };

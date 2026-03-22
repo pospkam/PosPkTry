@@ -206,7 +206,6 @@ export async function POST(
         }
       }
     } catch (paymentError) {
-      console.error('Error creating payment:', paymentError);
       // Не прерываем выполнение при ошибке платежа
     }
 
@@ -263,7 +262,6 @@ export async function POST(
     });
 
   } catch (error) {
-    console.error('Error creating booking:', error);
     return NextResponse.json(
       {
         success: false,

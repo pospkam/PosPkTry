@@ -131,7 +131,6 @@ export async function GET(
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Get driver error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при получении водителя'
@@ -216,7 +215,6 @@ export async function PUT(
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Update driver error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при обновлении водителя'
@@ -269,7 +267,6 @@ export async function DELETE(
     } as ApiResponse<null>);
 
   } catch (error) {
-    console.error('Delete driver error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при удалении водителя'

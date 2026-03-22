@@ -23,7 +23,6 @@ export interface TestTicket {
 export async function resetTestDatabase(): Promise<void> {
   // This function would be called to reset the test database
   // Implementation depends on your database setup
-  console.log('Test database reset complete');
 }
 
 /**
@@ -58,7 +57,6 @@ export async function seedTestData(): Promise<void> {
     }
   ];
 
-  console.log(`Seeded ${users.length} test users and ${tickets.length} test tickets`);
 }
 
 /**
@@ -99,5 +97,4 @@ export async function createTestTicket(data: {
  * Clean up test data
  */
 export async function cleanupTestData(): Promise<void> {
-  console.log('Test data cleanup complete');
 }

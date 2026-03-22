@@ -88,7 +88,6 @@ export async function GET(
     } as ApiResponse<AdminUser>);
 
   } catch (error) {
-    console.error('Error fetching user:', error);
     return NextResponse.json({
       success: false,
       error: 'Failed to fetch user',
@@ -223,7 +222,6 @@ export async function PUT(
     }>);
 
   } catch (error) {
-    console.error('Error updating user:', error);
     return NextResponse.json({
       success: false,
       error: 'Failed to update user',
@@ -281,7 +279,6 @@ export async function DELETE(
     } as ApiResponse<null>);
 
   } catch (error) {
-    console.error('Error deleting user:', error);
     return NextResponse.json({
       success: false,
       error: 'Failed to delete user',

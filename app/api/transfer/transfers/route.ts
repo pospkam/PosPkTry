@@ -147,7 +147,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Get transfers error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при получении трансферов'
@@ -289,7 +288,6 @@ export async function POST(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Create transfer error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при создании трансфера'

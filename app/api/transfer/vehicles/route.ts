@@ -176,7 +176,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Get vehicles error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при получении транспорта'
@@ -270,7 +269,6 @@ export async function POST(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Create vehicle error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при создании транспорта'

@@ -81,7 +81,6 @@ export async function PATCH(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('[tours/quick-fill]', error);
     return NextResponse.json(
       { error: 'Failed to update tour field' },
       { status: 500 }

@@ -35,7 +35,6 @@ export async function getTouristProfile(userId: string): Promise<Record<string, 
 
     return result.rows[0];
   } catch (error) {
-    console.error('Error getting tourist profile:', error);
     return null;
   }
 }
@@ -63,7 +62,6 @@ export async function updateTouristStats(userId: string): Promise<void> {
       [userId]
     );
   } catch (error) {
-    console.error('Error updating tourist stats:', error);
   }
 }
 
@@ -98,7 +96,6 @@ export async function awardAchievement(
 
     return true;
   } catch (error) {
-    console.error('Error awarding achievement:', error);
     return false;
   }
 }
@@ -135,7 +132,6 @@ export async function checkTripAchievements(userId: string): Promise<void> {
       }
     }
   } catch (error) {
-    console.error('Error checking trip achievements:', error);
   }
 }
 
@@ -161,7 +157,6 @@ export async function getExpiringDocuments(userId: string, daysBeforeExpiry: num
 
     return result.rows;
   } catch (error) {
-    console.error('Error getting expiring documents:', error);
     return [];
   }
 }
@@ -176,7 +171,6 @@ export async function markDocumentReminderSent(documentId: string): Promise<void
       [documentId]
     );
   } catch (error) {
-    console.error('Error marking document reminder sent:', error);
   }
 }
 
@@ -217,7 +211,6 @@ export async function getTouristRecommendations(userId: string, limit: number = 
       accommodations: []
     };
   } catch (error) {
-    console.error('Error getting tourist recommendations:', error);
     return { tours: [], accommodations: [] };
   }
 }
@@ -270,7 +263,6 @@ export async function getTouristTravelStats(userId: string): Promise<Record<stri
 
     return result.rows[0];
   } catch (error) {
-    console.error('Error getting tourist travel stats:', error);
     return null;
   }
 }
@@ -377,7 +369,6 @@ export async function getUpcomingTripsWithReminders(userId: string, daysAhead: n
 
     return result.rows;
   } catch (error) {
-    console.error('Error getting upcoming trips:', error);
     return [];
   }
 }

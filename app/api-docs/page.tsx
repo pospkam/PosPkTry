@@ -10,7 +10,6 @@ async function getApiSpec() {
     if (!res.ok) throw new Error('Failed to fetch');
     return res.json();
   } catch (error) {
-    console.error('Error fetching API spec:', error);
     return null;
   }
 }

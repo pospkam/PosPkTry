@@ -54,7 +54,6 @@ export default function IntegrationsPageClient() {
         setPartners([data.data]);
       }
     } catch (error) {
-      console.error('Error fetching partners:', error);
     } finally {
       setLoading(false);
     }

@@ -20,7 +20,6 @@ export async function getGuidePartnerId(userId: string): Promise<string | null> 
     
     return (result.rows[0]?.id as string | undefined) ?? null;
   } catch (error) {
-    console.error('Error getting guide partner ID:', error);
     return null;
   }
 }
@@ -89,7 +88,6 @@ export async function getGuidePartnerByUserId(userId: string): Promise<Record<st
       updatedAt: partner.updated_at
     };
   } catch (error) {
-    console.error('Error getting guide partner:', error);
     return null;
   }
 }
@@ -128,7 +126,6 @@ export async function ensureGuidePartnerExists(userId: string, userName: string,
     
     return result.rows[0].id as string;
   } catch (error) {
-    console.error('Error ensuring guide partner exists:', error);
     throw error;
   }
 }
@@ -148,7 +145,6 @@ export async function verifyScheduleOwnership(userId: string, scheduleId: string
     
     return result.rows.length > 0;
   } catch (error) {
-    console.error('Error verifying schedule ownership:', error);
     return false;
   }
 }
@@ -168,7 +164,6 @@ export async function verifyReviewOwnership(userId: string, reviewId: string): P
     
     return result.rows.length > 0;
   } catch (error) {
-    console.error('Error verifying review ownership:', error);
     return false;
   }
 }
@@ -203,7 +198,6 @@ export async function checkScheduleConflicts(
     
     return result.rows[0]?.no_conflicts === true;
   } catch (error) {
-    console.error('Error checking schedule conflicts:', error);
     return false;
   }
 }
@@ -241,7 +235,6 @@ export async function hasTourDayConflict(params: {
     const result = await query(queryStr, queryParams);
     return result.rows.length > 0;
   } catch (error) {
-    console.error('Error checking tour day conflict:', error);
     return false;
   }
 }
@@ -279,7 +272,6 @@ export async function recordGuideEarnings(
     
     return result.rows[0].id as string;
   } catch (error) {
-    console.error('Error recording guide earnings:', error);
     throw error;
   }
 }
@@ -369,7 +361,6 @@ export async function getGuideStats(userId: string): Promise<Record<string, unkn
       upcoming: parseInt(String(upcomingResult.rows[0].count ?? 0))
     };
   } catch (error) {
-    console.error('Error getting guide stats:', error);
     return null;
   }
 }
@@ -398,7 +389,6 @@ export async function getGuideAvailability(guideId: string): Promise<Record<stri
       isAvailable: row.is_available
     }));
   } catch (error) {
-    console.error('Error getting guide availability:', error);
     return [];
   }
 }
@@ -427,7 +417,6 @@ export async function isGuideAvailable(
     
     return noConflicts;
   } catch (error) {
-    console.error('Error checking guide availability:', error);
     return false;
   }
 }
@@ -518,7 +507,6 @@ export async function findAvailableGuides(
       logoUrl: row.logo_url
     }));
   } catch (error) {
-    console.error('Error finding available guides:', error);
     return [];
   }
 }
@@ -555,7 +543,6 @@ export async function getGuideExpertiseZones(guideId: string): Promise<Record<st
       difficultyLevel: row.difficulty_level
     }));
   } catch (error) {
-    console.error('Error getting guide expertise zones:', error);
     return [];
   }
 }

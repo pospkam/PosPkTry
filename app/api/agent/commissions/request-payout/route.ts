@@ -93,7 +93,6 @@ export async function POST(request: NextRequest) {
       message: 'Запрос на выплату комиссионных успешно создан',
     } as ApiResponse<unknown>);
   } catch (error) {
-    console.error('Error requesting commission payout:', error);
     return NextResponse.json(
       {
         success: false,

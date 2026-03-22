@@ -304,7 +304,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<AgentDashboardData>);
 
   } catch (error) {
-    console.error('Error fetching agent dashboard data:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при получении данных dashboard'

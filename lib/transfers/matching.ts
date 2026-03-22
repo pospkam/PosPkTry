@@ -95,7 +95,6 @@ export class TransferMatchingEngine {
       };
 
     } catch (error) {
-      console.error('Matching algorithm error:', error);
       return {
         success: false,
         drivers: [],
@@ -357,7 +356,6 @@ export class TransferMatchingEngine {
       };
 
     } catch (error) {
-      console.error('Auto assignment error:', error);
       return {
         success: false,
         message: 'Ошибка при назначении водителя'
@@ -375,7 +373,6 @@ export class TransferMatchingEngine {
       
       return result.rows.length > 0 && (result.rows[0].is_available as boolean);
     } catch (error) {
-      console.error('Driver availability check error:', error);
       return false;
     }
   }
@@ -429,7 +426,6 @@ export class TransferMatchingEngine {
       };
 
     } catch (error) {
-      console.error('Matching stats error:', error);
       return {
         totalBookings: 0,
         successfulMatches: 0,

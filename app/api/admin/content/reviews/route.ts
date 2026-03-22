@@ -115,7 +115,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<PaginatedResponse<AdminReview>>);
 
   } catch (error) {
-    console.error('Error fetching reviews:', error);
     return NextResponse.json({
       success: false,
       error: 'Failed to fetch reviews',

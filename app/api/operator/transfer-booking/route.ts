@@ -191,7 +191,6 @@ export async function GET(request: NextRequest) {
       })),
     } as ApiResponse<unknown>);
   } catch (error) {
-    console.error('[TRANSFER_BOOKING_GET]', error);
     return NextResponse.json(
       { success: false, error: 'Failed to fetch transfer bookings' } as ApiResponse<null>,
       { status: 500 }
@@ -374,7 +373,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('[TRANSFER_BOOKING_POST]', error);
     return NextResponse.json(
       { success: false, error: 'Failed to create transfer booking offer' } as ApiResponse<null>,
       { status: 500 }
@@ -621,7 +619,6 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    console.error('[TRANSFER_BOOKING_PATCH]', error);
     return NextResponse.json(
       { success: false, error: 'Failed to process transfer booking' } as ApiResponse<null>,
       { status: 500 }

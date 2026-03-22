@@ -52,7 +52,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Error fetching email templates:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при получении email шаблонов'
@@ -108,7 +107,6 @@ export async function POST(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Error creating email template:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при создании email шаблона'

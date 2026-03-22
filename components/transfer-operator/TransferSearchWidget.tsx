@@ -72,7 +72,6 @@ export function TransferSearchWidget({ className, onSearchResults }: TransferSea
       }
     } catch (err) {
       setError('Ошибка соединения с сервером');
-      console.error('Search error:', err);
     } finally {
       setIsLoading(false);
     }

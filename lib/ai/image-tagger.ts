@@ -102,7 +102,6 @@ Rules:
     });
 
     if (!res.ok) {
-      console.error(`Claude API error: ${res.status}`);
       return null;
     }
 
@@ -111,7 +110,6 @@ Rules:
     const raw = parseTagsFromText(text);
     return sanitizeTags(raw);
   } catch (err) {
-    console.error('Claude vision error:', err);
     return null;
   }
 }

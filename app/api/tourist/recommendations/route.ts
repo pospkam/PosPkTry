@@ -51,7 +51,6 @@ export async function GET(request: NextRequest) {
       meta: { cached: false, count: recommendations.length },
     });
   } catch (error) {
-    console.error('Recommendations API error:', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка получения рекомендаций' },
       { status: 500 }

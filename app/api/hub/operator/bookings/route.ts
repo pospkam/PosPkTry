@@ -112,7 +112,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('[OPERATOR API] Get bookings error:', error);
     return NextResponse.json({ error: 'Failed to fetch bookings' }, { status: 500 });
   }
 }
@@ -201,7 +200,6 @@ export async function POST(request: NextRequest) {
     if (error instanceof SyntaxError) {
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
     }
-    console.error('[OPERATOR API] Create booking error:', error);
     return NextResponse.json({ error: 'Failed to create booking' }, { status: 500 });
   }
 }

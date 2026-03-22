@@ -38,9 +38,6 @@ const verbose = args.includes('--verbose');
 const migrations = args.filter(a => /^\d{3}$/.test(a));
 
 if (migrations.length === 0) {
-  console.log('Usage: npx ts-node scripts/apply-migrations.ts <number> [<number>...] [--dry-run] [--verbose]');
-  console.log('\nExample:');
-  console.log('  npx ts-node scripts/apply-migrations.ts 054 064 066');
   process.exit(1);
 }
 
@@ -57,13 +54,6 @@ function readMigrationFile(migrationNumber: string): string | null {
 }
 
 async function applyMigrations() {
-  console.log(`\n${'='.repeat(80)}`);
-  console.log(`DATABASE MIGRATIONS`);
-  console.log(`${'='.repeat(80)}`);
-  console.log(`Mode:        ${dryRun ? '🔍 DRY RUN (no changes)' : '🔥 LIVE (will apply)'}`);
-  console.log(`Migrations:  ${migrations.join(', ')}`);
-  console.log(`Verbose:     ${verbose ? 'ON' : 'OFF'}`);
-  console.log(`${'='.repeat(80)}\n`);
 
   for (const mig of migrations) {
     const startTime = Date.now();
@@ -101,7 +91,6 @@ async function applyMigrations() {
         message: `✅ Applied in ${duration}ms`,
         duration_ms: duration,
       });
-      console.log(`✅ Migration ${mig}: SUCCESS (${duration}ms)`);
     } catch (error) {
       const duration = Date.now() - startTime;
       const errorMsg = error instanceof Error ? error.message : String(error);
@@ -111,49 +100,35 @@ async function applyMigrations() {
         message: `❌ ${errorMsg}`,
         duration_ms: duration,
       });
-      console.error(`❌ Migration ${mig}: ERROR`);
       if (verbose) console.error(`   ${errorMsg}\n`);
     }
   }
 
   // Summary
-  console.log(`\n${'='.repeat(80)}`);
-  console.log('SUMMARY');
-  console.log(`${'='.repeat(80)}`);
 
   const applied = results.filter(r => r.status === 'success').length;
   const failed = results.filter(r => r.status === 'error').length;
   const skipped = results.filter(r => r.status === 'skipped').length;
 
-  console.log(`Total:      ${results.length}`);
-  console.log(`Applied:    ${applied} ✅`);
-  console.log(`Failed:     ${failed} ❌`);
-  console.log(`Skipped:    ${skipped} ⏭️`);
 
   if (applied + skipped > 0) {
     const totalDuration = results.reduce((sum, r) => sum + (r.duration_ms || 0), 0);
-    console.log(`Duration:   ${totalDuration}ms`);
   }
 
-  console.log(`${'='.repeat(80)}\n`);
 
   // Exit code
   if (failed > 0) {
-    console.log('💥 SOME MIGRATIONS FAILED');
     process.exit(1);
   }
 
   if (dryRun) {
-    console.log('✅ DRY RUN OK — ready to apply for real');
     process.exit(0);
   }
 
-  console.log('✅ ALL MIGRATIONS APPLIED SUCCESSFULLY');
   process.exit(0);
 }
 
 // Run
 applyMigrations().catch(error => {
-  console.error('Fatal error:', error);
   process.exit(1);
 });

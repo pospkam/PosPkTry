@@ -96,7 +96,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<FinanceData>);
 
   } catch (error) {
-    console.error('Error fetching finance data:', error);
     return NextResponse.json({
       success: false,
       error: 'Failed to fetch finance data',

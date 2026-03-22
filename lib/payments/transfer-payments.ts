@@ -90,7 +90,6 @@ export class TransferPaymentSystem {
       };
 
     } catch (error) {
-      console.error('Payment creation error:', error);
       return {
         success: false,
         error: 'Ошибка создания платежа'
@@ -150,7 +149,6 @@ export class TransferPaymentSystem {
       }
 
     } catch (error) {
-      console.error('Payment confirmation error:', error);
       return {
         success: false,
         error: 'Ошибка подтверждения платежа'
@@ -208,7 +206,6 @@ export class TransferPaymentSystem {
       };
 
     } catch (error) {
-      console.error('Refund processing error:', error);
       return {
         success: false,
         error: 'Ошибка обработки возврата'
@@ -332,7 +329,6 @@ export class TransferPaymentSystem {
       };
 
     } catch (error) {
-      console.error('CloudPayments payment creation error:', error);
       return {
         success: false,
         error: 'Ошибка создания платежа в CloudPayments'
@@ -351,7 +347,6 @@ export class TransferPaymentSystem {
       return { status: 'success' };
 
     } catch (error) {
-      console.error('CloudPayments status check error:', error);
       return { status: 'failed' };
     }
   }
@@ -371,7 +366,6 @@ export class TransferPaymentSystem {
       return { success: true };
 
     } catch (error) {
-      console.error('CloudPayments refund creation error:', error);
       return {
         success: false,
         error: 'Ошибка создания возврата в CloudPayments'
@@ -476,7 +470,6 @@ export class TransferPaymentSystem {
       };
 
     } catch (error) {
-      console.error('Payment stats error:', error);
       return {
         totalPayments: 0,
         successfulPayments: 0,

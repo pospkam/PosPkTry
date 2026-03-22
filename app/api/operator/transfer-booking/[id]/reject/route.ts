@@ -75,7 +75,6 @@ export async function PATCH(
       message: 'Переброс отклонён',
     } as ApiResponse<unknown>);
   } catch (error) {
-    console.error('[TRANSFER_REJECT]', error);
     return NextResponse.json(
       { success: false, error: 'Не удалось отклонить переброс' } as ApiResponse<null>,
       { status: 500 }

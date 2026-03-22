@@ -37,7 +37,6 @@ export default function ShopPageClient() {
         setSouvenirs(result.data.souvenirs);
       }
     } catch (error) {
-      console.error('Error:', error);
     } finally {
       setLoading(false);
     }

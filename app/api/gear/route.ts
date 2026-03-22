@@ -43,7 +43,6 @@ export async function GET(request: NextRequest) {
       }
     } as ApiResponse<unknown>);
   } catch (error) {
-    console.error('Error fetching gear:', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка при получении снаряжения' } as ApiResponse<null>,
       { status: 500 }

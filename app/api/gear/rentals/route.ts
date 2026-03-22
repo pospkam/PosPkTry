@@ -130,7 +130,6 @@ export async function POST(request: NextRequest) {
     } as ApiResponse<{ rentalId: string; message: string }>);
 
   } catch (error) {
-    console.error('Error creating gear rental:', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка создания заявки на аренду' } as ApiResponse<null>,
       { status: 500 }
@@ -235,7 +234,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Error fetching gear rentals:', error);
     return NextResponse.json(
       { success: false, error: 'Ошибка получения заявок на аренду' } as ApiResponse<null>,
       { status: 500 }

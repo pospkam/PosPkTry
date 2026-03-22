@@ -134,7 +134,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<PaginatedResponse<Partner>>);
 
   } catch (error) {
-    console.error('Error fetching partners:', error);
     return NextResponse.json({
       success: false,
       error: 'Failed to fetch partners',
@@ -216,7 +215,6 @@ export async function POST(request: NextRequest) {
     } as ApiResponse<{ id: string; createdAt: Date }>);
 
   } catch (error) {
-    console.error('Error creating partner:', error);
     return NextResponse.json({
       success: false,
       error: 'Failed to create partner',

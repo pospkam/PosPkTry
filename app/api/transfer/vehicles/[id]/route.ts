@@ -145,7 +145,6 @@ export async function GET(
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Get vehicle error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при получении транспорта'
@@ -229,7 +228,6 @@ export async function PUT(
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Update vehicle error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при обновлении транспорта'
@@ -283,7 +281,6 @@ export async function DELETE(
     } as ApiResponse<null>);
 
   } catch (error) {
-    console.error('Delete vehicle error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при удалении транспорта'

@@ -43,7 +43,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ code: 0 });
   } catch (error) {
     // Log but return 200 — CloudPayments retries on any non-200, flooding logs for 24h
-    console.error('[OPERATOR WEBHOOK] Unhandled error:', webhookData?.InvoiceId, error);
     return NextResponse.json({ code: 0 });
   }
 }

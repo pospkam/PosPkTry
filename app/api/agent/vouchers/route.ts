@@ -112,7 +112,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Error fetching agent vouchers:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при получении ваучеров'
@@ -224,7 +223,6 @@ export async function POST(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Error creating voucher:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при создании ваучера'

@@ -44,12 +44,10 @@ describe('Support Pillar Integration Tests', () => {
     db = new MockDatabaseService();
     
     await db.connect();
-    console.log('✅ Test database connected');
   });
 
   afterAll(async () => {
     await db.disconnect();
-    console.log('✅ Test database disconnected');
   });
 
   describe('Ticket Flow', () => {
@@ -69,7 +67,6 @@ describe('Support Pillar Integration Tests', () => {
       expect(ticketData.customerEmail).toMatch(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
       expect(['low', 'medium', 'high', 'critical']).toContain(ticketData.priorityLevel);
 
-      console.log('✅ Ticket creation validated');
     });
 
     it('should validate ticket number format', async () => {
@@ -77,7 +74,6 @@ describe('Support Pillar Integration Tests', () => {
       const ticketNumberRegex = /^TKT-\d{8}-\d{3}$/;
       
       expect(ticketNumber).toMatch(ticketNumberRegex);
-      console.log('✅ Ticket number format validated');
     });
 
     it('should handle ticket status transitions', async () => {
@@ -93,7 +89,6 @@ describe('Support Pillar Integration Tests', () => {
         expect(Object.keys(transitions)).toContain(status);
       }
 
-      console.log('✅ Ticket status transitions validated');
     });
 
     it('should validate priority levels', async () => {
@@ -109,7 +104,6 @@ describe('Support Pillar Integration Tests', () => {
         expect(slaTimeframes[priority]).toBeGreaterThan(0);
       }
 
-      console.log('✅ Priority levels and SLA timeframes validated');
     });
   });
 
@@ -130,7 +124,6 @@ describe('Support Pillar Integration Tests', () => {
       expect(article.content).toBeTruthy();
       expect(article.views).toBeGreaterThanOrEqual(0);
 
-      console.log('✅ Article structure validated');
     });
 
     it('should validate search functionality', async () => {
@@ -146,7 +139,6 @@ describe('Support Pillar Integration Tests', () => {
       expect(Array.isArray(searchResults.results)).toBe(true);
       expect(searchResults.executionTime).toBeLessThan(1000);
 
-      console.log('✅ Search functionality validated');
     });
 
     it('should track article views', async () => {
@@ -161,7 +153,6 @@ describe('Support Pillar Integration Tests', () => {
       expect(articleStats.views).toBeGreaterThan(articleStats.views_previous);
       expect(articleStats.helpful_votes + articleStats.unhelpful_votes).toBeGreaterThan(0);
 
-      console.log('✅ Article view tracking validated');
     });
   });
 
@@ -181,7 +172,6 @@ describe('Support Pillar Integration Tests', () => {
       expect(['agent', 'customer', 'system']).toContain(message.senderType);
       expect(message.timestamp).toBeInstanceOf(Date);
 
-      console.log('✅ Message structure validated');
     });
 
     it('should validate attachment handling', async () => {
@@ -197,7 +187,6 @@ describe('Support Pillar Integration Tests', () => {
       expect(attachment.size).toBeLessThan(maxSize);
       expect(attachment.url).toMatch(/^https?:\/\//);
 
-      console.log('✅ Attachment handling validated');
     });
   });
 
@@ -214,7 +203,6 @@ describe('Support Pillar Integration Tests', () => {
       expect(assignment.agentId).toBeGreaterThan(0);
       expect(assignment.assignedAt).toBeInstanceOf(Date);
 
-      console.log('✅ Agent assignment validated');
     });
 
     it('should validate ticket resolution', async () => {
@@ -229,7 +217,6 @@ describe('Support Pillar Integration Tests', () => {
       expect(resolution.resolutionNotes).toBeTruthy();
       expect(resolution.resolutionTime).toBeGreaterThan(0);
 
-      console.log('✅ Ticket resolution validated');
     });
 
     it('should validate agent performance metrics', async () => {
@@ -245,7 +232,6 @@ describe('Support Pillar Integration Tests', () => {
       expect(metrics.customerSatisfaction).toBeGreaterThanOrEqual(0);
       expect(metrics.customerSatisfaction).toBeLessThanOrEqual(5);
 
-      console.log('✅ Agent performance metrics validated');
     });
   });
 
@@ -273,7 +259,6 @@ describe('Support Pillar Integration Tests', () => {
       expect(notificationTypes).toContain(notification.type);
       expect(notification.recipient).toMatch(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
 
-      console.log('✅ Notification system validated');
     });
   });
 
@@ -296,7 +281,6 @@ describe('Support Pillar Integration Tests', () => {
       
       expect(typeof responseTimeMissed).toBe('boolean');
 
-      console.log('✅ SLA violation detection validated');
     });
 
     it('should calculate performance metrics', async () => {
@@ -314,7 +298,6 @@ describe('Support Pillar Integration Tests', () => {
       expect(avgResolutionTime).toBeGreaterThan(0);
       expect(avgResolutionTime).toBeLessThan(24); // Меньше суток
 
-      console.log('✅ Performance metrics calculation validated');
     });
   });
 });

@@ -38,7 +38,6 @@ export function TransferDriverManagement({ operatorId, onDataChange }: TransferD
         setDrivers(result.data.drivers || []);
       }
     } catch (error) {
-      console.error('Error fetching drivers:', error);
     } finally {
       setLoading(false);
     }
@@ -57,7 +56,6 @@ export function TransferDriverManagement({ operatorId, onDataChange }: TransferD
           onDataChange();
         }
       } catch (error) {
-        console.error('Error updating driver status:', error);
       }
     };
 

@@ -147,7 +147,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<PaginatedResponse<OperatorBooking>>);
 
   } catch (error) {
-    console.error('Error fetching operator bookings:', error);
     return NextResponse.json({
       success: false,
       error: 'Failed to fetch bookings',

@@ -68,7 +68,6 @@ export function ClientFormModal({ client, onClose, onSave }: ClientFormModalProp
         toast.error(`Ошибка: ${result.error}`);
       }
     } catch (error) {
-      console.error('Error saving client:', error);
       toast.error('Ошибка при сохранении клиента');
     } finally {
       setSaving(false);

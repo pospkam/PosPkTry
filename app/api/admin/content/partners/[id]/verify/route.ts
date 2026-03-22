@@ -53,7 +53,6 @@ export async function POST(
     });
 
   } catch (error) {
-    console.error('Error verifying partner:', error);
     return NextResponse.json({
       success: false,
       error: 'Failed to verify partner',

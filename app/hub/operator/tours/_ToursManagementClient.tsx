@@ -59,7 +59,6 @@ export default function ToursManagementClient() {
         setTotalPages(result.data.pagination.totalPages);
       }
     } catch (error) {
-      console.error('Error fetching tours:', error);
     } finally {
       setLoading(false);
     }
@@ -77,7 +76,6 @@ export default function ToursManagementClient() {
         fetchTours();
       }
     } catch (error) {
-      console.error('Error toggling tour status:', error);
     }
   };
 
@@ -99,7 +97,6 @@ export default function ToursManagementClient() {
         toast.error(result.message || 'Ошибка при удалении тура');
       }
     } catch (error) {
-      console.error('Error deleting tour:', error);
       toast.error('Ошибка при удалении тура');
     }
   };

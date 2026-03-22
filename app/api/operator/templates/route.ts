@@ -52,7 +52,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Get templates error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при получении шаблонов'
@@ -101,7 +100,6 @@ export async function POST(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Create template error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при создании шаблона'

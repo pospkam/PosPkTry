@@ -146,7 +146,6 @@ export async function GET(request: NextRequest) {
       },
     } as ApiResponse<unknown>);
   } catch (error) {
-    console.error('[MCHS_REGISTRATIONS_GET]', error);
     return NextResponse.json(
       { success: false, error: 'Failed to fetch MCHS registrations' } as ApiResponse<null>,
       { status: 500 }
@@ -282,7 +281,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('[MCHS_REGISTRATIONS_POST]', error);
     return NextResponse.json(
       { success: false, error: 'Failed to create MCHS registration' } as ApiResponse<null>,
       { status: 500 }

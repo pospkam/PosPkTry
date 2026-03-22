@@ -54,7 +54,6 @@ export async function parseLocalIncidents(limit: number = 20): Promise<unknown[]
 
       if (incidents.length >= limit) break;
     } catch (error) {
-      console.error(`Failed to parse ${source.type}/${source.id}:`, (error as Error).message);
     }
   }
 

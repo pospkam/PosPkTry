@@ -113,7 +113,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Error fetching agent bookings:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при получении бронирований'
@@ -241,7 +240,6 @@ export async function POST(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Error creating agent booking:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при создании бронирования'

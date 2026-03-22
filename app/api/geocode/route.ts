@@ -55,7 +55,6 @@ export async function GET(request: NextRequest) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('❌ Ошибка геокодера:', response.status, errorText);
       return NextResponse.json({
         success: false,
         error: `Ошибка API: ${response.status}`
@@ -91,7 +90,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(result);
 
   } catch (error) {
-    console.error('❌ Ошибка геокодирования:', error);
     return NextResponse.json({
       success: false,
       error: 'Внутренняя ошибка сервера'

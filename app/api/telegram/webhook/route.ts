@@ -478,7 +478,6 @@ async function createLeadFromBot(
     }).catch(() => {});
 
   } catch (err) {
-    console.error('[telegram-bot-lead] error:', err);
   }
 }
 

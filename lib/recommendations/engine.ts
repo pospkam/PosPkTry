@@ -81,7 +81,6 @@ async function getSimilarUsersRecommendations(
       strategyLabel: STRATEGY_LABELS.SIMILAR_USERS,
     }));
   } catch (err) {
-    console.error('SIMILAR_USERS strategy error:', err);
     return [];
   }
 }
@@ -147,7 +146,6 @@ async function getContentBasedRecommendations(
       strategyLabel: STRATEGY_LABELS.TOUR_CONTENT,
     }));
   } catch (err) {
-    console.error('TOUR_CONTENT strategy error:', err);
     return [];
   }
 }
@@ -200,7 +198,6 @@ async function getEcoOptimizedRecommendations(
       strategyLabel: STRATEGY_LABELS.ECO_OPTIMIZED,
     }));
   } catch (err) {
-    console.error('ECO_OPTIMIZED strategy error:', err);
     return [];
   }
 }

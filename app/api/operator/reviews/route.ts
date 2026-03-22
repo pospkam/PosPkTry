@@ -167,7 +167,6 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<unknown>);
 
   } catch (error) {
-    console.error('Get operator reviews error:', error);
     return NextResponse.json({
       success: false,
       error: 'Ошибка при получении отзывов'

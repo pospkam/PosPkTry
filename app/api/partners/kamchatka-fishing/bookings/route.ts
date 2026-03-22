@@ -40,7 +40,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error fetching partner bookings:', error);
     return NextResponse.json({
       success: false,
       error: 'Failed to fetch bookings',
@@ -95,7 +94,6 @@ export async function POST(request: NextRequest) {
       data: booking,
     });
   } catch (error) {
-    console.error('Error creating partner booking:', error);
     return NextResponse.json({
       success: false,
       error: 'Failed to create booking',
