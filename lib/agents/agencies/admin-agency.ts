@@ -67,26 +67,49 @@ export class AdminAgency {
   // ── /digest ────────────────────────────────────────────────────────────────
 
   async getDigest(): Promise<AgencyResult> {
-    const [leads, bookings, emptyTours, weather, views] = await Promise.all([
-      this.fetchLeadsStats(),
-      this.fetchBookingsStats(),
-      this.fetchToursWithoutSlots(),
-      this.fetchWeatherAlerts(),
-      this.fetchPageViews(),
-    ]);
+    try {
+      const [leads, bookings, emptyTours, weather, views] = await Promise.all([
+        this.fetchLeadsStats().catch(e => {
+          console.error('[AdminAgency.digest] Error fetching leads:', e instanceof Error ? e.message : String(e));
+          return { total: 0, new_count: 0, contacted: 0, converted: 0, last_7d: 0 };
+        }),
+        this.fetchBookingsStats().catch(e => {
+          console.error('[AdminAgency.digest] Error fetching bookings:', e instanceof Error ? e.message : String(e));
+          return { today: 0, last_7d: 0, revenue_7d: null };
+        }),
+        this.fetchToursWithoutSlots().catch(e => {
+          console.error('[AdminAgency.digest] Error fetching empty tours:', e instanceof Error ? e.message : String(e));
+          return [];
+        }),
+        this.fetchWeatherAlerts().catch(e => {
+          console.error('[AdminAgency.digest] Error fetching weather:', e instanceof Error ? e.message : String(e));
+          return [];
+        }),
+        this.fetchPageViews().catch(e => {
+          console.error('[AdminAgency.digest] Error fetching views:', e instanceof Error ? e.message : String(e));
+          return { today: 0, last_7d: 0 };
+        }),
+      ]);
 
-    const data = { leads, bookings, emptyTours, weather, views };
+      const data = { leads, bookings, emptyTours, weather, views };
 
-    const prompt = buildDigestPrompt(data);
-    const aiText = await callAIWaterfall([{ role: 'user', content: prompt }]);
+      const prompt = buildDigestPrompt(data);
+      const aiText = await callAIWaterfall([{ role: 'user', content: prompt }]);
 
-    const date = new Date().toLocaleDateString('ru-RU', {
-      day: '2-digit', month: '2-digit', year: 'numeric',
-    });
+      const date = new Date().toLocaleDateString('ru-RU', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+      });
 
-    const response = `<b>Дайджест TourHub — ${date}</b>\n\n${aiText ?? formatFallbackDigest(data)}`;
+      const response = `<b>Дайджест TourHub — ${date}</b>\n\n${aiText ?? formatFallbackDigest(data)}`;
 
-    return { response, data };
+      return { response, data };
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      return {
+        response: `<b>Дайджест недоступен</b>\n\nОшибка: ${msg}\n\nДанные будут доступны после восстановления системы.`,
+        data: {}
+      };
+    }
   }
 
   // ── /leads ─────────────────────────────────────────────────────────────────
