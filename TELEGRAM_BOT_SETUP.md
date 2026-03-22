@@ -14,8 +14,8 @@ Your personal bot for real-time platform updates and commands.
 2. Add these variables:
 
 ```bash
-TELEGRAM_ADMIN_BOT_TOKEN=8334728813:AAFYDhqGwkYEoSZKWFBl2QQVJwdoglSRns4
-TELEGRAM_OWNER_ID=171286547  # Your Telegram user ID (or update with your actual ID)
+TELEGRAM_ADMIN_BOT_TOKEN=<your_bot_token_from_botfather>
+TELEGRAM_OWNER_ID=833478813  # Your actual Telegram user ID
 ```
 
 3. Save and redeploy (auto-restart)
@@ -27,7 +27,7 @@ TELEGRAM_OWNER_ID=171286547  # Your Telegram user ID (or update with your actual
 After deployment is live, run this command:
 
 ```bash
-curl -X POST "https://api.telegram.org/bot8334728813:AAFYDhqGwkYEoSZKWFBl2QQVJwdoglSRns4/setWebhook" \
+curl -X POST "https://api.telegram.org/bot<your_bot_token>/setWebhook" \
   -H "Content-Type: application/json" \
   -d '{
     "url": "https://tourhab.ru/api/telegram/admin",

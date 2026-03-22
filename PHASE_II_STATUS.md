@@ -33,7 +33,7 @@
 ### Telegram Admin Bot — CONFIGURED
 - **Purpose:** Owner-only private communication channel
 - **Endpoint:** `https://tourhab.ru/api/telegram/admin`
-- **Token:** Provided by owner: `8334728813:AAFYDhqGwkYEoSZKWFBl2QQVJwdoglSRns4`
+- **Token:** Store in `TELEGRAM_ADMIN_BOT_TOKEN` env var (see Timeweb setup below)
 - **Files:**
   - `TELEGRAM_BOT_SETUP.md` (complete setup guide)
   - `scripts/setup-telegram-admin-bot.sh` (automated webhook registration)
@@ -51,8 +51,8 @@
 Go to: https://timeweb.cloud/my/apps/159529 → Environment → Add variables
 
 ```bash
-TELEGRAM_ADMIN_BOT_TOKEN=8334728813:AAFYDhqGwkYEoSZKWFBl2QQVJwdoglSRns4
-TELEGRAM_OWNER_ID=171286547
+TELEGRAM_ADMIN_BOT_TOKEN=<your_bot_token_from_botfather>
+TELEGRAM_OWNER_ID=833478813
 ```
 
 **Then:** Save & Redeploy (auto-triggers app restart)
@@ -64,7 +64,7 @@ TELEGRAM_OWNER_ID=171286547
 **Action:** Run automated webhook setup
 
 ```bash
-bash scripts/setup-telegram-admin-bot.sh 8334728813:AAFYDhqGwkYEoSZKWFBl2QQVJwdoglSRns4 171286547
+bash scripts/setup-telegram-admin-bot.sh <your_bot_token> 833478813
 ```
 
 Expected output:
@@ -259,7 +259,7 @@ git revert HEAD && git push origin main
 contact Timeweb for database restore
 
 # Remove telegram bot
-curl -X POST https://api.telegram.org/bot8334728813:AAFYDhqGwkYEoSZKWFBl2QQVJwdoglSRns4/deleteWebhook
+curl -X POST https://api.telegram.org/bot<your_token>/deleteWebhook
 ```
 
 ---

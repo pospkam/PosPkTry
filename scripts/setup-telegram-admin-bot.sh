@@ -5,12 +5,12 @@
 # Usage: bash scripts/setup-telegram-admin-bot.sh <bot_token> [owner_id]
 #
 # Example:
-#   bash scripts/setup-telegram-admin-bot.sh 8334728813:AAFYDhqGwkYEoSZKWFBl2QQVJwdoglSRns4 171286547
+#   bash scripts/setup-telegram-admin-bot.sh <your_bot_token> 833478813
 
 set -e
 
 BOT_TOKEN="${1:-}"
-OWNER_ID="${2:-171286547}"
+OWNER_ID="${2:-833478813}"
 DOMAIN="tourhab.ru"
 WEBHOOK_URL="https://${DOMAIN}/api/telegram/admin"
 SECRET_TOKEN="kh-admin-webhook-2026"
@@ -19,7 +19,7 @@ if [ -z "$BOT_TOKEN" ]; then
   echo "Usage: bash scripts/setup-telegram-admin-bot.sh <bot_token> [owner_id]"
   echo ""
   echo "Example:"
-  echo "  bash scripts/setup-telegram-admin-bot.sh 8334728813:AAFYDhqGwkYEoSZKWFBl2QQVJwdoglSRns4 171286547"
+  echo "  bash scripts/setup-telegram-admin-bot.sh <your_bot_token> 833478813"
   exit 1
 fi
 
