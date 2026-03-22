@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
   Shield, Scale, Lock, TrendingUp, Binoculars, Leaf, FileSearch, Star,
@@ -8,6 +8,8 @@ import {
   Download, Loader2, Users, MessageSquare, GitMerge, TriangleAlert, ThumbsUp,
   HelpCircle, Swords, ThumbsDown, Lightbulb, Check, X, Zap, Globe, CalendarDays,
 } from 'lucide-react';
+import { PremeetingAccountabilityBriefing } from '@/components/admin/PremeetingAccountabilityBriefing';
+import type { AccountabilityData } from '@/components/admin/PremeetingAccountabilityBriefing';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -386,10 +388,19 @@ export default function BoardMeetingClient() {
   const [decision,       setDecision]       = useState('');
   const [saved,          setSaved]          = useState(false);
   const [saving,         setSaving]         = useState(false);
+  const [accountabilityData, setAccountabilityData] = useState<AccountabilityData | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   const isDone    = stage === 4;
   const isRunning = stage >= 0 && !isDone;
+
+  // Load accountability data once on mount
+  useEffect(() => {
+    fetch('/api/agents/board-meeting/accountability')
+      .then(r => r.json())
+      .then(setAccountabilityData)
+      .catch(() => { /* non-critical */ });
+  }, []);
 
   async function sendFeedback(intent: string, rating: 'good' | 'bad') {
     try {
@@ -490,7 +501,14 @@ export default function BoardMeetingClient() {
 
       {/* Pre-meeting */}
       {stage === -1 && (
-        <div className="ds-card p-8 text-center mb-6">
+        <>
+          {accountabilityData && (
+            <PremeetingAccountabilityBriefing
+              data={accountabilityData}
+              onClose={() => setAccountabilityData(null)}
+            />
+          )}
+          <div className="ds-card p-8 text-center mb-6">
           <div className="w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-4"
             style={{ background: 'var(--accent)20' }}>
             <PlayCircle size={32} style={{ color: 'var(--accent)' }} />
@@ -528,6 +546,7 @@ export default function BoardMeetingClient() {
             Открыть совещание
           </button>
         </div>
+        </>
       )}
 
       {/* Running / Done */}
