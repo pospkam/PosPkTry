@@ -11,6 +11,15 @@ import { randomBytes } from 'crypto';
 
 export const dynamic = 'force-dynamic';
 
+/**
+ * SECURITY: Mask sensitive API key before returning in response
+ * Shows only first 4 and last 4 characters to prevent leakage
+ */
+function maskApiKey(fullKey: string): string {
+  if (!fullKey || fullKey.length < 8) return '****';
+  return `${fullKey.substring(0, 4)}${'*'.repeat(fullKey.length - 8)}${fullKey.substring(fullKey.length - 4)}`;
+}
+
 export async function GET(request: NextRequest) {
   const authResult = await requireAdmin(request);
   if (authResult instanceof NextResponse) return authResult;
@@ -25,7 +34,13 @@ export async function GET(request: NextRequest) {
      ORDER BY k.created_at DESC`
   );
 
-  return NextResponse.json({ success: true, data: rows });
+  // SECURITY: Mask API keys before returning
+  const maskedRows = rows.map((row: Record<string, unknown>) => ({
+    ...row,
+    api_key: maskApiKey(row.api_key as string),
+  }));
+
+  return NextResponse.json({ success: true, data: maskedRows });
 }
 
 export async function POST(request: NextRequest) {
@@ -72,5 +87,11 @@ export async function POST(request: NextRequest) {
     ]
   );
 
-  return NextResponse.json({ success: true, data: rows[0] }, { status: 201 });
+  // SECURITY: Return masked API key to admin (full key was only visible at creation time in logs)
+  const maskedData = {
+    ...rows[0],
+    api_key: maskApiKey(rows[0]?.api_key as string),
+  };
+
+  return NextResponse.json({ success: true, data: maskedData }, { status: 201 });
 }
