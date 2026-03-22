@@ -39,7 +39,7 @@ import { getAgentKnowledgeBase } from '@/lib/agents/evolution/agent-knowledge';
 export const dynamic     = 'force-dynamic';
 export const maxDuration = 300;
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// ── Types ────────────────────────────────────────────────────────────────────────────
 
 export interface AgentReport {
   id:          string;
@@ -65,7 +65,7 @@ export interface AgentProposal {
   approval_id:     string | null;
 }
 
-// ── Agent registry ────────────────────────────────────────────────────────────
+// ── Agent registry ───────────────────────────────────────────────────────────────────
 
 const MEETING_AGENTS = [
   { id: 'admin',    name: 'AI Администратор',       role: 'Операционный директор',     intent: 'admin_digest',     color: 'var(--accent)' },
@@ -75,34 +75,26 @@ const MEETING_AGENTS = [
   { id: 'rescue',   name: 'AI Спасатель',           role: 'Начальник SAR',             intent: 'rescue_sos_stats', color: 'var(--warning)'},
   { id: 'eco',      name: 'AI Эколог',              role: 'Эколог-аналитик',           intent: 'eco_impact',       color: '#10B981'       },
   { id: 'content',  name: 'AI Аудитор',             role: 'Контент-директор',          intent: 'content_audit',    color: 'var(--ocean)'  },
-  { id: 'quality',  name: 'AI Качество',            role: 'Директор по качеству',      intent: 'qa_operators',     color: '#F59E0B'       },
+  { id: 'quality',  name: 'AI Качество',             role: 'Директор по качеству',      intent: 'qa_operators',     color: '#F59E0B'       },
   { id: 'evo',      name: 'AI Эволюция',            role: 'Архитектор платформы',      intent: 'evo_optimize',     color: '#EC4899'       },
 ] as const;
 
-// ── Proposal config per agent ─────────────────────────────────────────────────
+// ── Proposal config per agent ───────────────────────────────────────────────────────────
 
 interface ProposalConfig {
   persona:       string;
   allowed_types: string[];
-  domain:        string;  // Added: specific domain for validation
+  domain:        string;
 }
 
 /**
  * AI DIRECTORS TRAINING MANUAL integration:
  * Each agent must follow 5 core principles:
- * 1. Factual Accuracy Only — every claim must be data-backed
- * 2. Zero Hallucinations — never invent metrics or scenarios
- * 3. No Sycophancy — never soften bad news for politeness
- * 4. Reality Checks — feasibility, resources, timeline
- * 5. Transparency — show work, acknowledge uncertainty
- *
- * All proposals validated against 7-question checklist:
- * 1. FACTUALITY: Can I cite data? 2. CAUSALITY: Why did this happen?
- * 3. OWNERSHIP: Who implements? 4. TRADEOFFS: Alternatives?
- * 5. RISK: What can go wrong? 6. SCOPE: Am I overstepping?
- * 7. HONESTY: Would Owner bet money on this?
- *
- * Reference: /docs/AI_DIRECTORS_TRAINING_MANUAL.md
+ * 1. Factual Accuracy Only
+ * 2. Zero Hallucinations
+ * 3. No Sycophancy
+ * 4. Reality Checks
+ * 5. Transparency
  */
 const PROPOSAL_CONFIGS: Record<string, ProposalConfig> = {
   admin: {
@@ -111,48 +103,48 @@ const PROPOSAL_CONFIGS: Record<string, ProposalConfig> = {
     domain: 'operations',
   },
   legal: {
-    persona:       'Ты юрисконсульт туристической платформы Камчатки. Анализируй compliance, контракты,律法 риски. Каждое утверждение цитируй: "Статья X T&C говорит...", "Миграция 050 требует...". Если не знаешь — говори "нужна консультация специалиста".',
+    persona:       'Ты юрисконсульт туристической платформы Камчатки. Анализируй compliance, контракты, риски. Каждое утверждение цитируй: "Статья X T&C говорит...". Если не знаешь — говори "нужна консультация специалиста".',
     allowed_types: ['booking_rule_change'],
     domain: 'legal_compliance',
   },
   security: {
-    persona:       'Ты руководитель службы безопасности платформы. Анализируй РЕАЛЬНЫЕ уязвимости, не гипотетические угрозы. Каждый риск: как его эксплуатировать? На что влияет? Кто знает об этом? Если не можешь ответить — напиши "Требует расследования".',
-    allowed_types: ['api_scope_expand', 'bulk_notify'],
+    persona:       'Ты руководитель службы безопасности платформы. Анализируй РЕАЛЬНЫЕ уязвимости, не гипотетические угрозы. Каждый риск: как его эксплуатировать? На что влияет? Если не можешь ответить — напиши "Требует расследования".',
+    allowed_types: ['api_scope_expand', 'bulk_notify', 'sql_query_fix'],
     domain: 'security',
   },
   hacker: {
-    persona:       'Ты директор по росту (growth hacker) туристической платформы. Предложение = А/В тест результат или метрика из базы. Покажи рост %, когда это произойдёт, какие ресурсы нужны. "Это вырастит revenue" без расчётов недостаточно.',
+    persona:       'Ты директор по росту (growth hacker) туристической платформы. Предложение = А/В тест результат или метрика из базы. Покажи рост %, когда это произойдёт, какие ресурсы нужны.',
     allowed_types: ['price_change', 'ui_copy_change'],
     domain: 'growth',
   },
   rescue: {
-    persona:       'Ты начальник поисково-спасательной службы (SAR) Камчатки. Анализируй РЕАЛЬНЫЕ SOS инциденты от БД, погодные данные, ответное время. Не оптимизируй для медиа-сюжетов. "Нужно больше ресурсов" — покажи trend инцидентов за 3 месяца.',
+    persona:       'Ты начальник поисково-спасательной службы (SAR) Камчатки. Анализируй РЕАЛЬНЫЕ SOS инциденты из БД, погодные данные, ответное время.',
     allowed_types: ['bulk_notify', 'schedule_suggest'],
     domain: 'emergency',
   },
   eco: {
-    persona:       'Ты эколог-аналитик туристических маршрутов Камчатки. Анализируй РЕАЛЬНУЮ нагрузку на природу, не предположения. Каждый claim: есть исследование? Какие метрики ущерба? Не будь активистом, будь аналитиком.',
+    persona:       'Ты эколог-аналитик туристических маршрутов Камчатки. Анализируй РЕАЛЬНУЮ нагрузку на природу, не предположения. Не будь активистом, будь аналитиком.',
     allowed_types: ['schedule_suggest', 'booking_rule_change'],
     domain: 'ecology',
   },
   content: {
-    persona:       'Ты контент-директор туристической платформы. Анализируй кликабильность описаний, конверсию из контента, отзывы. "Плохое качество контента" — покажи данные: CTR был X%, стал Y%, почему это плохо для бизнеса?',
+    persona:       'Ты контент-директор туристической платформы. Анализируй кликабельность описаний, конверсию из контента, отзывы.',
     allowed_types: ['ui_copy_change', 'prompt_optimize'],
     domain: 'content',
   },
   quality: {
-    persona:       'Ты директор по качеству туристических операторов. Анализируй жалобы, рейтинги, медицину операторов КОНКРЕТНЫЕ. Не "качество падает", а "Оператор X: 3 жалобы на этой неделе, рейтинг -0.5pts". Что нужно сделать конкретно?',
+    persona:       'Ты директор по качеству туристических операторов. Анализируй жалобы, рейтинги КОНКРЕТНЫЕ. Не "качество падает", а "Оператор X: 3 жалобы, рейтинг -0.5pts".',
     allowed_types: ['bulk_notify', 'tour_auto_cancel'],
     domain: 'quality',
   },
   evo: {
-    persona:       'Ты архитектор AI-системы туристической платформы — следишь за её эволюцией. Интегрируй решения других директоров, проверь противоречия. Если consensus не работает вместе — флаг "CONFLICT". Показывай полный результат, не обрезай.',
-    allowed_types: ['prompt_optimize', 'schedule_suggest'],
+    persona:       'Ты архитектор AI-системы туристической платформы — следишь за её эволюцией. Интегрируй решения других директоров, проверь противоречия. Если consensus не работает вместе — флаг "CONFLICT".',
+    allowed_types: ['prompt_optimize', 'schedule_suggest', 'sql_query_fix'],
     domain: 'architecture',
   },
 };
 
-// ── Agent runner ──────────────────────────────────────────────────────────────
+// ── Agent runner ───────────────────────────────────────────────────────────────────────
 
 async function runAgent(
   intent: string,
@@ -217,7 +209,7 @@ async function runAgent(
   }
 }
 
-// ── Proposal generator (Round 4) ──────────────────────────────────────────────
+// ── Proposal generator (Round 4) ────────────────────────────────────────────────────────
 
 async function generateProposal(
   agent:    AgentReport,
@@ -230,7 +222,6 @@ async function generateProposal(
     ? `\nТЕМА СОВЕЩАНИЯ: "${topic}"\nТвоё предложение должно быть НАПРЯМУЮ связано с этой темой.\n`
     : '';
 
-  // Reference the training manual standards directly in the prompt
   const promptGuardian = `
 ОБЯЗАТЕЛЬНО прочитай эти правила перед ответом:
 1. FACTUALITY: Каждый claim — только данные. Без "probably", "likely", "I think".
@@ -270,7 +261,6 @@ async function generateProposal(
 
   if (!text || text.trim().toUpperCase() === 'NULL' || text.trim() === '') return null;
 
-  // Extract JSON — AI may add extra text around it
   const match = text.match(/\{[\s\S]*\}/);
   if (!match) return null;
 
@@ -300,7 +290,7 @@ async function generateProposal(
     ? parsed.confidence as 'high' | 'medium' | 'low'
     : 'medium';
 
-  // ── VALIDATION AGAINST STANDARDS ──────────────────────────────────────────────
+  // ── VALIDATION AGAINST STANDARDS ─────────────────────────────────────────────────────────────
   const validation = validateProposalAgainstChecklist(
     {
       title: parsed.title,
@@ -312,11 +302,9 @@ async function generateProposal(
     agent.report
   );
 
-  // Check for factuality and honesty
   const isHonest = isFactualAndHonest(parsed.description);
   const hasTransparencyMarked = hasTransparency(parsed.description) || confidence !== 'high';
 
-  // Log validation results
   if (!validation.valid || !isHonest || !hasTransparencyMarked) {
     const violationSummary = getSummaryOfViolations(validation);
     const honestySummary = !isHonest ? 'HONESTY: Proposal may contain unverified claims' : '';
@@ -326,7 +314,6 @@ async function generateProposal(
       .filter(s => s.length > 0)
       .join(' | ');
 
-    // Log to database for audit trail
     try {
       await pool.query(
         `INSERT INTO ai_actions_log (action_type, metadata) VALUES ($1, $2)`,
@@ -348,13 +335,11 @@ async function generateProposal(
       ).catch(() => null);
     } catch { /* non-critical */ }
 
-    // If critical violations, reject proposal
     if (validation.violations.length > 0 || !isHonest) {
-      return null;  // Silently drop violated proposal instead of storing it
+      return null;
     }
   }
 
-  // Submit to approval queue (only if passed validation)
   const approval = await approvalRequired.request({
     type:         actionType,
     description:  parsed.title.substring(0, 255),
@@ -386,13 +371,12 @@ async function generateProposal(
   };
 }
 
-// ── POST — SSE стриминг ───────────────────────────────────────────────────────
+// ── POST — SSE стриминг ─────────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
   const authResult = await requireAdmin(req);
   if (authResult instanceof NextResponse) return authResult;
 
-  // Повестка дня от администратора (опционально)
   let topic: string | null = null;
   try {
     const body = await req.json().catch(() => ({})) as { topic?: string };
@@ -406,7 +390,6 @@ export async function POST(req: NextRequest) {
   const startedAt    = new Date().toISOString();
   const encoder      = new TextEncoder();
 
-  // Создаём запись сессии совещания
   let sessionDbId: string | null = null;
   try {
     const sesRes = await pool.query<{ id: string }>(
@@ -424,7 +407,6 @@ export async function POST(req: NextRequest) {
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        // ── Строим контекст + инжектируем память ─────────────────────────────
         const contextHub = new ContextHub();
         const context    = await contextHub.build(
           parseInt(authResult.userId, 10),
@@ -432,7 +414,6 @@ export async function POST(req: NextRequest) {
           'board-meeting'
         );
 
-        // Fix 1: читаем решения директора и evo-инсайты прошлых совещаний
         const [directorDecisions, evoInsights] = await Promise.all([
           agentMemory.recall('director', 'decision', 3),
           agentMemory.recall('evo', 'insight', 5),
@@ -442,12 +423,10 @@ export async function POST(req: NextRequest) {
           ...evoInsights.map(m => ({ key: m.key, value: m.value, confidence: m.confidence })),
         ];
 
-        // Инжектируем тему совещания в контекст
         if (topic) {
           context.topic = topic;
         }
 
-        // ── Разведка внешних источников (параллельно с UI-стартом) ────────────
         send(controller, { type: 'meeting_start', meeting_id: meetingId, started_at: startedAt, topic });
         send(controller, { type: 'signals_start' });
 
@@ -459,7 +438,6 @@ export async function POST(req: NextRequest) {
         const signalsCount = Object.keys(externalSignals).length;
         send(controller, { type: 'signals_done', count: signalsCount });
 
-        // ── Раунд 1: агенты последовательно ─────────────────────────────────
         const agents: AgentReport[] = [];
 
         for (const agentDef of MEETING_AGENTS) {
@@ -468,7 +446,6 @@ export async function POST(req: NextRequest) {
           const result = await runAgent(agentDef.intent, context);
           const failed = result.response.startsWith('Ошибка:');
 
-          // Дополняем отчёт внешними сигналами если есть
           const signal   = externalSignals[agentDef.id];
           const fullReport = signal && !failed
             ? `${result.response}\n\n<b>Внешние сигналы:</b>\n${signal}`
@@ -489,18 +466,15 @@ export async function POST(req: NextRequest) {
           send(controller, { type: 'agent_done', agent: report });
         }
 
-        // ── Раунд 2: межагентные реакции ─────────────────────────────────────
         send(controller, { type: 'round2_start' });
         const mesh      = new AgentMesh();
         const reactions = await mesh.runReactions(agents);
         send(controller, { type: 'reactions_done', reactions });
 
-        // ── Раунд 3: консенсус фасилитатора ──────────────────────────────────
         send(controller, { type: 'round3_start' });
         const consensus   = await mesh.runConsensus(agents, reactions);
         send(controller, { type: 'consensus_done', consensus });
 
-        // ── Раунд 4: инициативы агентов ──────────────────────────────────────
         send(controller, { type: 'round4_start' });
         const successfulAgents = agents.filter(a => a.status === 'ok');
 
@@ -513,10 +487,9 @@ export async function POST(req: NextRequest) {
             if (proposal) {
               send(controller, { type: 'proposal', proposal });
             }
-          } catch { /* non-critical — пропускаем агента */ }
+          } catch { /* non-critical */ }
         }
 
-        // ── Финал ─────────────────────────────────────────────────────────────
         const duration_ms = Date.now() - meetingStart;
         send(controller, {
           type:       'done',
@@ -527,7 +500,6 @@ export async function POST(req: NextRequest) {
           duration_ms,
         });
 
-        // ── Логируем ─────────────────────────────────────────────────────────
         const okCount = agents.filter(a => a.status === 'ok').length;
         try {
           await pool.query(
@@ -561,7 +533,6 @@ export async function POST(req: NextRequest) {
             expires_at:  new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
           });
 
-          // Закрываем запись сессии
           if (sessionDbId) {
             await pool.query(
               `UPDATE board_meeting_sessions
@@ -590,7 +561,7 @@ export async function POST(req: NextRequest) {
   });
 }
 
-// ── PUT: зафиксировать решение директора ─────────────────────────────────────
+// ── PUT: зафиксировать решение директора ──────────────────────────────────────────────────
 
 export async function PUT(req: NextRequest) {
   const authResult = await requireAdmin(req);
@@ -624,7 +595,6 @@ export async function PUT(req: NextRequest) {
     ]
   );
 
-  // Fix 2: сохраняем решение директора — EvolutionAgency прочитает на следующем совещании
   await agentMemory.remember({
     agent_id:    'director',
     memory_type: 'decision',
