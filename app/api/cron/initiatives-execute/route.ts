@@ -14,9 +14,30 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { pool } from '@/lib/db-pool';
 import { executeInitiative } from '@/lib/agents/execution/initiative-executor';
-import { telegramService } from '@/lib/notifications/telegram';
 
 export const dynamic = 'force-dynamic';
+
+// Отправляет алерта в приватный чат owner
+async function notifyOwner(message: string): Promise<void> {
+  const token = process.env.TELEGRAM_ADMIN_BOT_TOKEN;
+  const ownerId = process.env.TELEGRAM_OWNER_ID;
+
+  if (!token || !ownerId) return;
+
+  try {
+    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: ownerId,
+        text: message,
+        parse_mode: 'HTML',
+      }),
+    });
+  } catch {
+    // Silent fail - не блокируем выполнение если Telegram недоступен
+  }
+}
 
 export async function GET(req: NextRequest) {
   const secret = req.nextUrl.searchParams.get('secret');
@@ -112,7 +133,7 @@ export async function GET(req: NextRequest) {
           .join('\n');
 
         // Telegram notification
-        await telegramService.notify(message, 'initiative_execution');
+        await notifyOwner(message);
 
         // Log to database
         await pool.query(
@@ -145,9 +166,8 @@ export async function GET(req: NextRequest) {
         });
 
         // Telegram alert
-        await telegramService.notify(
-          `❌ ERROR executing initiative\nExecutor: ${initiative.executor_name}\nError: ${errorMsg}`,
-          'initiative_error'
+        await notifyOwner(
+          `<b>ERROR executing initiative</b>\n<b>Executor:</b> ${initiative.executor_name}\n<b>Error:</b> ${errorMsg}`
         );
       }
     }
@@ -180,9 +200,8 @@ export async function GET(req: NextRequest) {
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err);
 
-    await telegramService.notify(
-      `❌ CRON ERROR: initiatives-execute\n${errorMsg}`,
-      'cron_error'
+    await notifyOwner(
+      `<b>CRON ERROR: initiatives-execute</b>\n${errorMsg}`
     );
 
     return NextResponse.json(
