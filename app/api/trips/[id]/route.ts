@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic';
 
 const DayPlanSchema = z.object({
   day: z.number().int().min(1),
-  zone: z.enum(['avachinsky', 'western', 'eastern', 'northern']),
+  zone: z.enum(['elizovsky', 'milkovsky', 'karaginsky', 'tigil']),
   title: z.string().min(1).max(255),
   activityType: z.string().max(50),
   priceFrom: z.number().min(0),

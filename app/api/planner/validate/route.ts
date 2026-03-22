@@ -15,7 +15,7 @@ export const dynamic = 'force-dynamic';
 
 const DaySchema = z.object({
   day:             z.number(),
-  zone:            z.enum(['avachinsky', 'western', 'eastern', 'northern']),
+  zone:            z.enum(['elizovsky', 'milkovsky', 'karaginsky', 'tigil']),
   title:           z.string(),
   activityType:    z.string(),
   defaultTransport: z.string(),

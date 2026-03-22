@@ -36,7 +36,7 @@ interface SelectItem {
 interface DayPlan {
   day: number;
   type: DayType;
-  zone: 'avachinsky' | 'western' | 'eastern' | 'northern';
+  zone: 'elizovsky' | 'milkovsky' | 'karaginsky' | 'tigil';
   title: string;
   description: string;
   activityType: string;
@@ -123,24 +123,24 @@ const ACTIVITIES: SelectItem[] = [
 ];
 
 const ZONE_LABELS: Record<string, string> = {
-  avachinsky: 'Авачинская — вулканы',
-  western:    'Западная — рыбалка',
-  eastern:    'Восточная — медведи',
-  northern:   'Северная — гейзеры',
+  elizovsky:  'Елизовский — вулканы и ПКК',
+  milkovsky:  'Мильковский — озёра и рыбалка',
+  karaginsky: 'Карагинский — медведи и остров',
+  tigil:      'Тигильский — гейзеры и север',
 };
 
 const ZONE_COLORS: Record<string, string> = {
-  avachinsky: 'var(--accent)',
-  eastern:    'var(--ocean)',
-  northern:   'var(--success)',
-  western:    'var(--purple)',
+  elizovsky:  'var(--accent)',
+  karaginsky: 'var(--ocean)',
+  tigil:      'var(--success)',
+  milkovsky:  'var(--purple)',
 };
 
 const ZONE_COORDS: Record<string, [number, number]> = {
-  avachinsky: [53.25, 158.75],
-  eastern:    [54.80, 160.50],
-  northern:   [56.50, 160.00],
-  western:    [52.50, 156.50],
+  elizovsky:  [52.80, 158.80],
+  milkovsky:  [55.33, 157.12],
+  karaginsky: [55.20, 161.42],
+  tigil:      [57.73, 158.71],
 };
 
 const ACTIVITY_LABEL: Record<string, string> = {
@@ -209,7 +209,7 @@ function trunc(s: string | null | undefined, len: number): string {
 
 function guessZone(lat: number, lng: number): DayPlan['zone'] {
   const entries = Object.entries(ZONE_COORDS) as [string, [number, number]][];
-  let best = 'avachinsky';
+  let best = 'elizovsky';
   let bestDist = Infinity;
   for (const [zone, coords] of entries) {
     const dist = Math.abs(lat - coords[0]) + Math.abs(lng - coords[1]);
@@ -271,10 +271,10 @@ function SelectGroup({ title, items, selected, onToggle }: {
 
 // Boat only makes sense for coastal/river zones; helicopter not for sea crossings only
 const ZONE_TRANSPORTS: Record<string, TransportType[]> = {
-  avachinsky: ['walking', 'jeep', 'helicopter'],
-  northern:   ['walking', 'jeep', 'helicopter'],
-  eastern:    ['walking', 'jeep', 'helicopter', 'boat'],
-  western:    ['walking', 'jeep', 'boat'],
+  elizovsky:  ['walking', 'jeep', 'helicopter'],
+  tigil:      ['walking', 'jeep', 'helicopter'],
+  karaginsky: ['walking', 'jeep', 'helicopter', 'boat'],
+  milkovsky:  ['walking', 'jeep', 'boat'],
 };
 
 function TransportSelector({ selected, onChange, zone }: {
@@ -1084,10 +1084,10 @@ export function PlannerClient({ initialUserId }: { initialUserId?: string | null
 
     // Zone → Yandex preset color mapping for suggestion dots
     const ZONE_DOT_PRESET: Record<string, string> = {
-      avachinsky: 'islands#orangeDotIcon',
-      eastern:    'islands#blueDotIcon',
-      northern:   'islands#greenDotIcon',
-      western:    'islands#violetDotIcon',
+      elizovsky:  'islands#orangeDotIcon',
+      karaginsky: 'islands#blueDotIcon',
+      tigil:      'islands#greenDotIcon',
+      milkovsky:  'islands#violetDotIcon',
     };
 
     // Background route dots — colored by zone, bright in edit mode
@@ -1302,12 +1302,12 @@ ${recommendation?.warnings && recommendation.warnings.length > 0 ? `<div class="
     const newDay: DayPlan = {
       day: newNum,
       type: 'activity',
-      zone: 'avachinsky',
+      zone: 'elizovsky',
       title: 'Свободный день',
       description: 'Выберите активность или замените на карте',
       activityType: 'hot_spring',
       priceFrom: 0, priceTo: 5000,
-      coords: [53.01, 158.65],
+      coords: [52.80, 158.80],
       defaultTransport: 'walking',
       allowedTransports: ['walking', 'jeep', 'helicopter'],
       difficulty: 'easy',

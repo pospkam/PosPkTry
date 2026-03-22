@@ -344,10 +344,25 @@ function extractLocationData(raw: unknown): LocationData | null {
 }
 
 function inferZoneFromCoords(lat: number, lng: number): string {
-  // Камчатка divided into zones by coordinates
-  if (lat > 55 && lng < 158) return 'western';
-  if (lat > 55 && lng >= 158) return 'eastern';
-  if (lat <= 55 && lng < 160) return 'northern';
-  if (lat <= 55 && lng >= 160) return 'northern';
-  return 'avachinsky';
+  // Все районы Камчатки по реальным координатам центров
+  const ZONE_CENTERS: Record<string, [number, number]> = {
+    elizovsky:  [52.80, 158.80],
+    milkovsky:  [55.33, 157.12],
+    karaginsky: [55.20, 161.42],
+    tigil:      [57.73, 158.71],
+  };
+
+  // Найди ближайший район по евклидовой дистанции
+  let closest = 'elizovsky';
+  let minDist = Infinity;
+
+  for (const [zone, [centerLat, centerLng]] of Object.entries(ZONE_CENTERS)) {
+    const dist = Math.abs(lat - centerLat) + Math.abs(lng - centerLng);
+    if (dist < minDist) {
+      minDist = dist;
+      closest = zone;
+    }
+  }
+
+  return closest;
 }
