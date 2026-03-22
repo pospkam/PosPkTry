@@ -1,11 +1,23 @@
 /**
+ * GET /api/telegram/admin?command=health
  * POST /api/telegram/admin
  * Личный admin-бот владельца (@tourhab_bot). Работает 24/7.
- * Вызывает функции напрямую — не зависит от CRON_SECRET.
+ *
+ * GET: Тестирование команд без webhook
+ *      ?command=health
+ *      ?command=stats
+ *      ?command=leads
+ *      ?command=tip
+ *
+ * POST: Webhook для получения команд из Telegram
+ *       Требует регистрации webhook:
+ *       curl -X POST https://api.telegram.org/botTOKEN/setWebhook \
+ *         -d url=https://tourhab.ru/api/telegram/admin \
+ *         -d secret_token=SECRET
  *
  * Env vars (Timeweb):
  *   TELEGRAM_ADMIN_BOT_TOKEN — токен @tourhab_bot
- *   TELEGRAM_OWNER_ID        — Telegram user ID владельца (171286547)
+ *   TELEGRAM_OWNER_ID        — Telegram user ID владельца (833478813)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -240,6 +252,39 @@ interface TgUpdate {
   message?: { chat: { id: number }; from?: { id: number }; text?: string };
 }
 
+// ── GET: Тестирование команд ─────────────────────────────────────────────────
+
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = request.nextUrl;
+    const command = searchParams.get('command')?.toLowerCase() ?? '';
+    const ownerId = parseInt(process.env.TELEGRAM_OWNER_ID ?? '833478813', 10);
+
+    if (!command) {
+      return NextResponse.json({
+        error: 'Missing command parameter',
+        available_commands: ['/health', '/stats', '/leads', '/digest', '/tip'],
+        example: '/api/telegram/admin?command=health'
+      }, { status: 400 });
+    }
+
+    // Используем owner ID как chat ID для тестирования
+    await handleCommand('/' + command, ownerId);
+
+    return NextResponse.json({
+      success: true,
+      command,
+      message_sent_to: ownerId,
+      hint: 'Чек сообщение в твоём Telegram чате'
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
+}
+
+// ── POST: Webhook Telegram ───────────────────────────────────────────────────
+
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const update = await request.json() as TgUpdate;
@@ -248,7 +293,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     const chatId = msg.chat.id;
     const fromId = msg.from?.id;
-    const ownerId = parseInt(process.env.TELEGRAM_OWNER_ID ?? '171286547', 10);
+    const ownerId = parseInt(process.env.TELEGRAM_OWNER_ID ?? '833478813', 10);
 
     if (fromId !== ownerId) {
       await reply(chatId, 'Доступ закрыт.');
