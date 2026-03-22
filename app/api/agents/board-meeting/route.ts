@@ -32,6 +32,9 @@ import {
   hasTransparency,
   getSummaryOfViolations,
 } from '@/lib/agents/validation/director-standards';
+import { buildRichAgentContext } from '@/lib/agents/evolution/agent-context-v2';
+import { runAgentsInParallel, createAgentPromptForRound } from '@/lib/agents/evolution/optimized-runner';
+import { getAgentKnowledgeBase } from '@/lib/agents/evolution/agent-knowledge';
 
 export const dynamic     = 'force-dynamic';
 export const maxDuration = 300;
