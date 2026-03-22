@@ -194,7 +194,7 @@ export async function measurePastActions(minAgeDays = 7): Promise<number> {
       const measurement = await tool.measure(
         action.id,
         { agent_id: action.agent_id, params: action.input as Record<string, unknown> },
-        action.output as ToolOutput
+        action.output as unknown as ToolOutput
       );
 
       await pool.query(

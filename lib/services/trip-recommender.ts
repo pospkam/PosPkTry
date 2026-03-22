@@ -1297,15 +1297,15 @@ export async function recommendTrip(profile: TripProfile): Promise<TripRecommend
   }
 
   const tripDays = getTripDays(profile);
+  const cache = createPlannerCache();
 
   // Fetch context data in parallel
-  const [crowdLoad, alerts] = await Promise.all([
-    fetchCrowdLoad(profile.arrivalDate, profile.departureDate),
+  const [alerts] = await Promise.all([
     fetchSafetyAlerts(profile.arrivalDate, profile.departureDate),
   ]);
 
-  const zones = scoreZones(profile, crowdLoad);
-  const warnings = collectWarnings(profile, zones, tripDays, crowdLoad, alerts);
+  const zones = await scoreZones(profile, cache);
+  const warnings = collectWarnings(profile, zones, tripDays, 0, alerts);
 
   // Adventure mode warning
   if (profile.riskMode === 'adventure') {
@@ -1315,7 +1315,36 @@ export async function recommendTrip(profile: TripProfile): Promise<TripRecommend
       message: 'Вы выбрали режим Приключение. Маршруты могут содержать активные предупреждения МЧС, лавинную или вулканическую опасность. Убедитесь в наличии правильного снаряжения и гидa.',
     });
   }
-  const days = await generateDayPlans(profile, zones, tripDays);
+  const days = await generateDayPlans(profile, zones, tripDays, cache);
+
+  // Inject weather forecasts for activity days
+  if (profile.arrivalDate && days.length > 0) {
+    const primaryZone = zones[0]?.zone ?? 'avachinsky';
+    try {
+      const forecasts = await fetchWeatherForecast(
+        ZONE_COORDS[primaryZone][0],
+        ZONE_COORDS[primaryZone][1],
+        Math.min(16, days.length),
+      );
+      for (const day of days) {
+        const idx = day.day - 1;
+        if (idx >= 0 && idx < forecasts.length) {
+          const fc = forecasts[idx];
+          day.weatherForecast = {
+            tempMax: fc.tempMax,
+            tempMin: fc.tempMin,
+            precipMm: fc.precipMm,
+            windKmh: fc.windKmh,
+            code: fc.weatherCode,
+            description: fc.description,
+          };
+        }
+      }
+    } catch {
+      // Weather unavailable — proceed without
+    }
+  }
+
   const priceBreakdown = calculatePriceBreakdown(days, profile);
 
   // AI itinerary — include seasickness context

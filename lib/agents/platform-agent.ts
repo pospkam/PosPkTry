@@ -34,6 +34,16 @@ export type AgentIntent =
   | 'op_fill_ai'
   | 'op_add_slots'
   | 'tourist_recommend'
+  // Гид
+  | 'guide_schedule'
+  | 'guide_groups'
+  | 'guide_earnings'
+  | 'guide_status'
+  // Трансфер-оператор
+  | 'transfer_fleet'
+  | 'transfer_drivers'
+  | 'transfer_bookings'
+  | 'transfer_status'
   // AI Юрист
   | 'legal_contract'
   | 'legal_compliance'
@@ -95,6 +105,8 @@ const VALID_INTENTS: AgentIntent[] = [
   'op_tours_summary', 'op_bookings_today', 'op_revenue',
   'op_create_tour', 'op_fill_ai', 'op_add_slots',
   'tourist_recommend',
+  'guide_schedule', 'guide_groups', 'guide_earnings', 'guide_status',
+  'transfer_fleet', 'transfer_drivers', 'transfer_bookings', 'transfer_status',
   'legal_contract', 'legal_compliance', 'legal_risks',
   'sec_access_audit', 'sec_anomaly', 'sec_report',
   'hack_growth', 'hack_funnel', 'hack_automate',
@@ -249,6 +261,20 @@ class PlatformAgentClass {
         const { TouristAgency } = await import('./agencies/tourist-agency');
         return new TouristAgency().run(intent, context, originalMessage);
       }
+      case 'guide_schedule':
+      case 'guide_groups':
+      case 'guide_earnings':
+      case 'guide_status': {
+        const { GuideAgency } = await import('./agencies/guide-agency');
+        return new GuideAgency().run(intent, context, originalMessage);
+      }
+      case 'transfer_fleet':
+      case 'transfer_drivers':
+      case 'transfer_bookings':
+      case 'transfer_status': {
+        const { TransferOperatorAgency } = await import('./agencies/transfer-operator-agency');
+        return new TransferOperatorAgency().run(intent, context, originalMessage);
+      }
       case 'legal_contract':
       case 'legal_compliance':
       case 'legal_risks': {
@@ -331,6 +357,7 @@ class PlatformAgentClass {
     const prefix = intent.split('_')[0];
     const map: Record<string, string> = {
       admin: 'admin', op: 'operator', tourist: 'tourist',
+      guide: 'guide', transfer: 'transfer',
       legal: 'legal', sec: 'security', hack: 'hacker',
       rescue: 'rescue', eco: 'eco', evo: 'evo',
       content: 'content', mkt: 'marketing', plan: 'planning',
