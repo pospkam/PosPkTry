@@ -220,26 +220,26 @@ export class LegalAgency {
         ot.title                 AS tour_title,
         p.name                   AS operator,
         ob.status,
-        ob.total_amount          AS amount,
+        ob.final_price          AS amount,
         ob.created_at::text,
         CASE
-          WHEN ob.status = 'cancelled' AND ob.total_amount > 0
+          WHEN ob.booking_status = 'cancelled' AND ob.final_price > 0
                THEN 'отмена без возврата'
-          WHEN ob.status = 'confirmed' AND ot.cancellation_policy IS NULL
+          WHEN ob.booking_status = 'confirmed' AND ot.cancellation_policy IS NULL
                THEN 'нет политики отмены'
-          WHEN ob.total_amount IS NULL OR ob.total_amount = 0
+          WHEN ob.final_price IS NULL OR ob.final_price = 0
                THEN 'нет суммы оплаты'
           ELSE 'проверяется'
         END AS issue
       FROM operator_bookings ob
-      JOIN operator_tours ot ON ot.id = ob.tour_id
+      JOIN operator_tours ot ON ot.id = ob.operator_tour_id
       JOIN partners p        ON p.id  = ob.operator_id
       WHERE ob.deleted_at IS NULL
         AND ob.created_at >= NOW() - INTERVAL '30 days'
         AND (
-          (ob.status = 'cancelled' AND ob.total_amount > 0) OR
-          (ob.status = 'confirmed' AND ot.cancellation_policy IS NULL) OR
-          (ob.total_amount IS NULL OR ob.total_amount = 0)
+          (ob.booking_status = 'cancelled' AND ob.final_price > 0) OR
+          (ob.booking_status = 'confirmed' AND ot.cancellation_policy IS NULL) OR
+          (ob.final_price IS NULL OR ob.final_price = 0)
         )
       ORDER BY ob.created_at DESC
       LIMIT 15
