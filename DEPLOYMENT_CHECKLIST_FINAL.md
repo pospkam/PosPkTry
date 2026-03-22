@@ -8,21 +8,28 @@
 
 ## 🎯 TIMEWEB CLOUD CONFIGURATION
 
+**See:** `TELEGRAM_BOT_ALLOCATION.md` for bot setup details
+
 ### Environment Variables (Set on Timeweb Cloud Panel):
 
 ```env
 # Security
 CRON_SECRET=<generate_unique_secret>
 
-# Telegram Integration
-TELEGRAM_ADMIN_BOT_TOKEN=8334728813:AAFYDhqGwkYEoSZKWFBl2QQVJwdoglSRns4
+# Telegram Admin Bot — Owner alerts for initiatives + board meetings
+# Use your existing admin bot (#5) for this
+TELEGRAM_ADMIN_BOT_TOKEN=<your_admin_bot_token>
 TELEGRAM_OWNER_ID=833478813
-TELEGRAM_CHAT_ID=833478813
 
 # OCTO Integration (optional, if using OCTO API)
 OCTO_API_KEY=<your_octo_key>
 OCTO_API_URL=https://api.octo.travel/v1
 ```
+
+**Important:**
+- Your existing КУЗЬМИЧ bot, AI_hab bot, and other bots remain unchanged
+- Only add TELEGRAM_ADMIN_BOT_TOKEN and TELEGRAM_OWNER_ID
+- This uses your existing admin bot (#5) to send alerts to 833478813
 
 ### Database Migrations:
 
@@ -69,11 +76,15 @@ Create job: https://cron-job.org/
 ```
 Timeweb Cloud → App ID 159529 → Settings → Environment
 Add/Update:
-  □ CRON_SECRET
-  □ TELEGRAM_ADMIN_BOT_TOKEN
+  □ CRON_SECRET = <generate_unique_secret>
+  □ TELEGRAM_ADMIN_BOT_TOKEN = <your_admin_bot_token>
   □ TELEGRAM_OWNER_ID = 833478813
-  □ TELEGRAM_CHAT_ID = 833478813
   □ OCTO_API_KEY (optional)
+
+Leave unchanged (already configured):
+  ✓ Your КУЗЬМИЧ bot variables
+  ✓ Your AI_hab bot variables
+  ✓ Other existing variables
 ```
 
 ### Step 2: Apply Migrations
@@ -173,25 +184,33 @@ Alerts sent: 1 summary + 5 per initiative
 After deployment, verify:
 
 ```
+□ Admin Bot configured for initiatives:
+  □ TELEGRAM_ADMIN_BOT_TOKEN is set
+  □ TELEGRAM_OWNER_ID = 833478813
+  □ Test: GET /api/telegram/admin?command=health
+    Expected: Stats message in 833478813 chat
+
 □ Board meeting runs: GET /api/agents/board-meeting
-  Expected: 4 rounds complete in ~26s
+  Expected: 4 rounds complete in ~26s, alert to 833478813
 
 □ Proposals generated: GET /api/agents/approvals?status=pending
-  Expected: 5 pending proposals
+  Expected: 5 pending proposals ready for approval
 
 □ Database migrations applied:
   SELECT * FROM platform_terms LIMIT 1;
   SELECT * FROM agent_experiments LIMIT 1;
 
-□ Telegram connection working:
-  Check 833478813 for test message
-
 □ CRON endpoint responds:
   curl https://tourhab.ru/api/cron/initiatives-execute?secret=TEST
-  Expected: 401 (wrong secret) or results if metrics exist
+  Expected: 401 (wrong secret) or execution results
 
 □ Executor functions ready:
-  review: /api/cron/initiatives-execute logs
+  Review: /api/cron/initiatives-execute logs for execution proof
+
+□ Existing bots still working:
+  ✓ КУЗЬМИЧ bot still posts to channel
+  ✓ AI_hab bot still posts news
+  ✓ No conflicts with new Admin Bot
 ```
 
 ---
