@@ -55,7 +55,6 @@ export class SecurityAgency {
   /** Анализирует паттерны входов и подозрительную активность агентов */
   private async accessAudit(): Promise<AgencyResult> {
     const [agentActivity, failedOps] = await Promise.all([
-      // Активность агентной системы за 24ч по часам
       pool.query<AuthEventRow>(`
         SELECT
           action_type,
@@ -72,7 +71,6 @@ export class SecurityAgency {
         LIMIT 20
       `),
 
-      // Неудачные операции за 24ч
       pool.query<{ agent_name: string; intent: string; error_message: string; created_at: string }>(`
         SELECT agent_name, decision AS intent, error_message, created_at::text
         FROM ai_actions_log
@@ -93,7 +91,6 @@ export class SecurityAgency {
       `Ошибок: ${failOps}`,
     ];
 
-    // Группируем по типам
     const byType: Record<string, number> = {};
     for (const r of agentActivity.rows) {
       byType[r.action_type] = (byType[r.action_type] ?? 0) + parseInt(r.count, 10);
@@ -148,7 +145,9 @@ export class SecurityAgency {
                  THEN 'подозрительно низкая сумма'
             WHEN ob.booking_status = 'confirmed'
                  AND (SELECT COUNT(*) FROM operator_bookings ob2
-                       WHERE ob2.operator_id = ob.operator_id
+                       WHERE ob2.operator_tour_id IN (
+                         SELECT id FROM operator_tours WHERE operator_id = ot.operator_id
+                       )
                          AND ob2.created_at >= NOW() - INTERVAL '1 hour'
                      ) > 10
                  THEN 'массовые брони за 1 час'
@@ -156,7 +155,7 @@ export class SecurityAgency {
           END AS anomaly_type
         FROM operator_bookings ob
         JOIN operator_tours ot ON ot.id = ob.operator_tour_id
-        JOIN partners p        ON p.id  = ob.operator_id
+        JOIN partners p        ON p.id  = ot.operator_id
         WHERE ob.deleted_at IS NULL
           AND ob.created_at >= NOW() - INTERVAL '7 days'
         ORDER BY ob.created_at DESC

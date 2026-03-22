@@ -69,11 +69,9 @@ export class EcoAgency {
       `),
       pool.query<{ total_eco_points: string; eco_tourists: string }>(`
         SELECT
-          COALESCE(SUM(points), 0)::text  AS total_eco_points,
-          COUNT(DISTINCT user_id)::text   AS eco_tourists
-        FROM eco_points
-        WHERE created_at >= NOW() - INTERVAL '30 days'
-          AND action_type NOT IN ('admin_grant', 'system_bonus')
+          COALESCE(SUM(total_points), 0)::text AS total_eco_points,
+          COUNT(*)::text                        AS eco_tourists
+        FROM user_eco_points
       `),
     ]);
 
