@@ -45,11 +45,18 @@ interface AutomationRow {
 
 export class HackerAgency {
   async run(intent: string, _context: AgentContext): Promise<AgencyResult> {
-    switch (intent) {
-      case 'hack_growth':    return this.growthAnalysis();
-      case 'hack_funnel':    return this.funnelAnalysis();
-      case 'hack_automate':  return this.automationOpportunities();
-      default:               return { response: 'HackerAgency: команда не поддерживается.' };
+    try {
+      switch (intent) {
+        case 'hack_growth':    return await this.growthAnalysis();
+        case 'hack_funnel':    return await this.funnelAnalysis();
+        case 'hack_automate':  return await this.automationOpportunities();
+        default:               return { response: 'HackerAgency: команда не поддерживается.' };
+      }
+    } catch (err) {
+      return {
+        response: `Ошибка growth-агента: ${err instanceof Error ? err.message : String(err)}`,
+        data: {}
+      };
     }
   }
 

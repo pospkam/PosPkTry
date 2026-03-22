@@ -47,11 +47,18 @@ interface OperatorHealthRow {
 
 export class QualityAgency {
   async run(intent: string, _context: AgentContext): Promise<AgencyResult> {
-    switch (intent) {
-      case 'qa_reviews':   return this.getReviews();
-      case 'qa_slots':     return this.getSlotless();
-      case 'qa_operators': return this.getOperatorHealth();
-      default:             return { response: 'QualityAgency: команда не поддерживается.' };
+    try {
+      switch (intent) {
+        case 'qa_reviews':   return await this.getReviews();
+        case 'qa_slots':     return await this.getSlotless();
+        case 'qa_operators': return await this.getOperatorHealth();
+        default:             return { response: 'QualityAgency: команда не поддерживается.' };
+      }
+    } catch (err) {
+      return {
+        response: `Ошибка QA-агента: ${err instanceof Error ? err.message : String(err)}`,
+        data: {}
+      };
     }
   }
 

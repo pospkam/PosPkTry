@@ -40,11 +40,18 @@ export class EvolutionAgency {
   private readonly experiments = new ExperimentTracker();
 
   async run(intent: string, _context: AgentContext): Promise<AgencyResult> {
-    switch (intent) {
-      case 'evo_optimize':     return this.selfOptimize();
-      case 'evo_experiments':  return this.autoExperiment();
-      case 'evo_adapt':        return this.adaptFromFeedback();
-      default:                 return { response: 'EvolutionAgency: команда не поддерживается.' };
+    try {
+      switch (intent) {
+        case 'evo_optimize':     return await this.selfOptimize();
+        case 'evo_experiments':  return await this.autoExperiment();
+        case 'evo_adapt':        return await this.adaptFromFeedback();
+        default:                 return { response: 'EvolutionAgency: команда не поддерживается.' };
+      }
+    } catch (err) {
+      return {
+        response: `Ошибка evolution-агента: ${err instanceof Error ? err.message : String(err)}`,
+        data: {}
+      };
     }
   }
 

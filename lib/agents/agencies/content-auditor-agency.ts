@@ -38,10 +38,17 @@ interface AuditSummaryRow {
 
 export class ContentAuditorAgency {
   async run(intent: string, _context: AgentContext): Promise<AgencyResult> {
-    switch (intent) {
-      case 'content_audit': return this.auditAll();
-      case 'content_flag':  return this.flagForFill();
-      default:              return { response: 'ContentAuditorAgency: команда не поддерживается.' };
+    try {
+      switch (intent) {
+        case 'content_audit': return await this.auditAll();
+        case 'content_flag':  return await this.flagForFill();
+        default:              return { response: 'ContentAuditorAgency: команда не поддерживается.' };
+      }
+    } catch (err) {
+      return {
+        response: `Ошибка контент-аудитора: ${err instanceof Error ? err.message : String(err)}`,
+        data: {}
+      };
     }
   }
 

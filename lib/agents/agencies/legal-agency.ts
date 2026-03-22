@@ -52,11 +52,19 @@ interface BookingRiskRow {
 
 export class LegalAgency {
   async run(intent: string, _context: AgentContext): Promise<AgencyResult> {
-    switch (intent) {
-      case 'legal_contract':   return this.reviewContracts();
-      case 'legal_compliance': return this.auditCompliance();
-      case 'legal_risks':      return this.assessRisks();
-      default:                 return { response: 'LegalAgency: команда не поддерживается.' };
+    try {
+      switch (intent) {
+        case 'legal_contract':   return await this.reviewContracts();
+        case 'legal_compliance': return await this.auditCompliance();
+        case 'legal_risks':      return await this.assessRisks();
+        default:                 return { response: 'LegalAgency: команда не поддерживается.' };
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      return {
+        response: `Ошибка юридического агента: ${msg}. Система восстановлена, попробуйте позже.`,
+        data: {}
+      };
     }
   }
 
