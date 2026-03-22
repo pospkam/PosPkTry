@@ -148,9 +148,9 @@ export class QualityAgency {
         COUNT(ob.id) FILTER (
           WHERE ob.created_at >= NOW() - INTERVAL '30 days'
         )::text                                                     AS bookings_30d,
-        COALESCE(SUM(ob.total_price) FILTER (
+        COALESCE(SUM(ob.final_price) FILTER (
           WHERE ob.created_at >= NOW() - INTERVAL '30 days'
-            AND ob.status IN ('confirmed','completed')
+            AND ob.booking_booking_status IN ('confirmed','completed')
         )::text, '0')                                               AS revenue_30d,
         COUNT(DISTINCT ta.date) FILTER (
           WHERE ta.date >= CURRENT_DATE AND ta.is_available = true

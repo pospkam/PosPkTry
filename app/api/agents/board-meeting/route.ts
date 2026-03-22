@@ -117,7 +117,7 @@ const PROPOSAL_CONFIGS: Record<string, ProposalConfig> = {
   },
   security: {
     persona:       'Ты руководитель службы безопасности платформы. Анализируй РЕАЛЬНЫЕ уязвимости, не гипотетические угрозы. Каждый риск: как его эксплуатировать? На что влияет? Кто знает об этом? Если не можешь ответить — напиши "Требует расследования".',
-    allowed_types: ['api_scope_expand', 'bulk_notify'],
+    allowed_types: ['api_scope_expand', 'bulk_notify', 'sql_query_fix'],
     domain: 'security',
   },
   hacker: {
@@ -147,7 +147,7 @@ const PROPOSAL_CONFIGS: Record<string, ProposalConfig> = {
   },
   evo: {
     persona:       'Ты архитектор AI-системы туристической платформы — следишь за её эволюцией. Интегрируй решения других директоров, проверь противоречия. Если consensus не работает вместе — флаг "CONFLICT". Показывай полный результат, не обрезай.',
-    allowed_types: ['prompt_optimize', 'schedule_suggest'],
+    allowed_types: ['prompt_optimize', 'schedule_suggest', 'sql_query_fix'],
     domain: 'architecture',
   },
 };

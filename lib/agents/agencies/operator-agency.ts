@@ -33,9 +33,9 @@ interface TourSummaryRow {
 interface BookingTodayRow {
   id: string;
   tour_title: string;
-  guest_name: string;
-  guests_count: number;
-  total_price: number;
+  tourist_name: string;
+  participants: number;
+  final_price: number;
   status: string;
 }
 
@@ -79,13 +79,13 @@ export class OperatorAgency {
         t.id,
         t.title,
         t.price_from,
-        COUNT(b.id) FILTER (WHERE b.status NOT IN ('cancelled') AND b.deleted_at IS NULL)::text AS bookings_count,
+        COUNT(b.id) FILTER (WHERE b.booking_status NOT IN ('cancelled') AND b.deleted_at IS NULL)::text AS bookings_count,
         MIN(a.date)::text  AS next_date,
         SUM(a.available_slots) FILTER (WHERE a.is_available = TRUE AND a.date >= NOW()::date)::text AS available_slots
       FROM operator_tours t
-      LEFT JOIN operator_bookings b  ON b.tour_id = t.id
-      LEFT JOIN tour_availability  a ON a.tour_id = t.id AND a.date >= NOW()::date
-      WHERE t.partner_id = $1 AND t.deleted_at IS NULL
+      LEFT JOIN operator_bookings b  ON b.operator_tour_id = t.id
+      LEFT JOIN tour_availability  a ON a.operator_tour_id = t.id AND a.date >= NOW()::date
+      WHERE t.operator_id = $1 AND t.deleted_at IS NULL
       GROUP BY t.id
       ORDER BY t.title
       LIMIT 10
@@ -110,9 +110,9 @@ export class OperatorAgency {
     if (!partnerId) return { response: 'Профиль оператора не найден.' };
 
     const { rows } = await pool.query<BookingTodayRow>(`
-      SELECT b.id, t.title AS tour_title, b.guest_name, b.guests_count, b.total_price, b.status
+      SELECT b.id, t.title AS tour_title, b.tourist_name, b.participants, b.final_price, b.booking_status AS status
       FROM operator_bookings b
-      JOIN operator_tours t ON t.id = b.tour_id
+      JOIN operator_tours t ON t.id = b.operator_tour_id
       WHERE t.partner_id = $1
         AND b.created_at >= NOW()::date
         AND b.deleted_at IS NULL
@@ -124,8 +124,8 @@ export class OperatorAgency {
     const lines = [`<b>Бронирования сегодня (${rows.length}):</b>`, ''];
     for (const r of rows) {
       lines.push(
-        `${r.tour_title} — ${r.guest_name}, ${r.guests_count} чел, ` +
-        `${Number(r.total_price).toLocaleString('ru-RU')} руб [${r.status}]`
+        `${r.tour_title} — ${r.tourist_name}, ${r.participants} чел, ` +
+        `${Number(r.final_price).toLocaleString('ru-RU')} руб [${r.status}]`
       );
     }
 
@@ -138,14 +138,14 @@ export class OperatorAgency {
 
     const { rows } = await pool.query<RevenueRow>(`
       SELECT
-        SUM(b.total_price) FILTER (WHERE b.created_at >= NOW() - INTERVAL '7 days')::text  AS revenue_7d,
-        SUM(b.total_price) FILTER (WHERE b.created_at >= NOW() - INTERVAL '30 days')::text AS revenue_30d,
+        SUM(b.final_price) FILTER (WHERE b.created_at >= NOW() - INTERVAL '7 days')::text  AS revenue_7d,
+        SUM(b.final_price) FILTER (WHERE b.created_at >= NOW() - INTERVAL '30 days')::text AS revenue_30d,
         COUNT(*) FILTER (WHERE b.created_at >= NOW() - INTERVAL '7 days')::text            AS bookings_7d,
         COUNT(*) FILTER (WHERE b.created_at >= NOW() - INTERVAL '30 days')::text           AS bookings_30d
       FROM operator_bookings b
-      JOIN operator_tours t ON t.id = b.tour_id
-      WHERE t.partner_id = $1
-        AND b.status NOT IN ('cancelled')
+      JOIN operator_tours t ON t.id = b.operator_tour_id
+      WHERE t.operator_id = $1
+        AND b.booking_status NOT IN ('cancelled')
         AND b.deleted_at IS NULL
     `, [partnerId]);
 

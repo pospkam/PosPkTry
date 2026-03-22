@@ -127,11 +127,11 @@ export class SecurityAgency {
     const { rows } = await pool.query<AnomalyRow>(`
       WITH stats AS (
         SELECT
-          AVG(total_amount)    AS avg_amount,
-          STDDEV(total_amount) AS std_amount
+          AVG(final_price)    AS avg_amount,
+          STDDEV(final_price) AS std_amount
         FROM operator_bookings
         WHERE deleted_at IS NULL
-          AND total_amount IS NOT NULL AND total_amount > 0
+          AND final_price IS NOT NULL AND final_price > 0
           AND created_at >= NOW() - INTERVAL '30 days'
       ),
       flagged AS (
@@ -139,14 +139,14 @@ export class SecurityAgency {
           ob.id             AS booking_id,
           ot.title          AS tour_title,
           p.name            AS operator,
-          ob.total_amount   AS amount,
+          ob.final_price   AS amount,
           ob.created_at::text,
           CASE
-            WHEN ob.total_amount > (SELECT avg_amount + 3 * COALESCE(std_amount, 0) FROM stats)
+            WHEN ob.final_price > (SELECT avg_amount + 3 * COALESCE(std_amount, 0) FROM stats)
                  THEN 'аномально высокая сумма'
-            WHEN ob.total_amount < 100 AND ob.total_amount > 0
+            WHEN ob.final_price < 100 AND ob.final_price > 0
                  THEN 'подозрительно низкая сумма'
-            WHEN ob.status = 'confirmed'
+            WHEN ob.booking_status = 'confirmed'
                  AND (SELECT COUNT(*) FROM operator_bookings ob2
                        WHERE ob2.operator_id = ob.operator_id
                          AND ob2.created_at >= NOW() - INTERVAL '1 hour'
@@ -155,7 +155,7 @@ export class SecurityAgency {
             ELSE 'нет описания'
           END AS anomaly_type
         FROM operator_bookings ob
-        JOIN operator_tours ot ON ot.id = ob.tour_id
+        JOIN operator_tours ot ON ot.id = ob.operator_tour_id
         JOIN partners p        ON p.id  = ob.operator_id
         WHERE ob.deleted_at IS NULL
           AND ob.created_at >= NOW() - INTERVAL '7 days'

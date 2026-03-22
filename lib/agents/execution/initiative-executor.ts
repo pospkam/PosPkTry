@@ -63,6 +63,11 @@ const EXECUTORS: Record<string, (task: ExecutionTask) => Promise<ExecutionResult
   'commission_change': async (task) => {
     return executeCommissionOptimization(task);
   },
+
+  // 6. SQL SELF-HEALING (Evolution / Security)
+  'sql_query_fix': async (task) => {
+    return executeSQLQueryFix(task);
+  },
 };
 
 /**
@@ -494,6 +499,84 @@ async function testOCTOEndpoints(): Promise<{ success: boolean; error?: string }
     return {
       success: false,
       error: err instanceof Error ? err.message : String(err),
+    };
+  }
+}
+
+/**
+ * ═══════════════════════════════════════════════════════════════
+ * EXECUTOR 6: SQL SELF-HEALING (Evolution / Security Agent)
+ * Агент обнаружил SQL-ошибки → система сама патчит agency-файлы
+ * ═══════════════════════════════════════════════════════════════
+ */
+async function executeSQLQueryFix(task: ExecutionTask): Promise<ExecutionResult> {
+  const changes: string[] = [];
+  const errors: string[] = [];
+
+  try {
+    const { fixSQLColumnErrors, scanSQLErrors } = await import('@/lib/agents/tools/board-executor-tools');
+
+    // Step 1: сканируем что сломано
+    const beforeScan = scanSQLErrors();
+    const totalIssues = beforeScan.reduce((s, f) => s + f.issues.length, 0);
+
+    if (totalIssues === 0) {
+      return {
+        success: true,
+        changes_made: ['SQL-ошибок не обнаружено — система в норме'],
+        errors: [],
+        rollback_available: false,
+        verification_passed: true,
+      };
+    }
+
+    changes.push(`Обнаружено ${totalIssues} SQL-ошибок в ${beforeScan.length} файлах`);
+
+    // Step 2: применяем патчи
+    const agencyFile = typeof task.context.agency_file === 'string'
+      ? task.context.agency_file
+      : undefined;
+
+    const result = await fixSQLColumnErrors(agencyFile);
+
+    if (!result.success) {
+      errors.push(result.message);
+    } else {
+      changes.push(result.message);
+      if (result.details?.changes && Array.isArray(result.details.changes)) {
+        for (const c of result.details.changes as string[]) {
+          changes.push(c);
+        }
+      }
+    }
+
+    // Step 3: верификация — сканируем снова
+    const afterScan = scanSQLErrors();
+    const remainingIssues = afterScan.reduce((s, f) => s + f.issues.length, 0);
+    const fixed = totalIssues - remainingIssues;
+    const verificationPassed = remainingIssues === 0;
+
+    changes.push(`Исправлено: ${fixed}/${totalIssues} ошибок`);
+    if (!verificationPassed) {
+      errors.push(`Осталось нерешённых проблем: ${remainingIssues}`);
+    }
+
+    return {
+      success: fixed > 0,
+      changes_made: changes,
+      errors,
+      rollback_available: false,
+      verification_passed: verificationPassed,
+    };
+
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return {
+      success: false,
+      changes_made: [],
+      errors: [`executeSQLQueryFix failed: ${msg}`],
+      rollback_available: false,
+      verification_passed: false,
     };
   }
 }
