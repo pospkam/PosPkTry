@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { pool } from '@/lib/db-pool';
-import { requireAuth } from '@/lib/auth/middleware';
+import { requireRole } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,10 +25,10 @@ const ContentConsentSchema = z.object({
 // ── GET: Текущие согласия контент-партнёра ────────────────────────────────
 
 export async function GET(req: NextRequest) {
-  const authOrResponse = await requireAuth(req, { role: 'operator' });
+  const authOrResponse = await requireRole(req, ['operator', 'admin']);
   if (authOrResponse instanceof NextResponse) return authOrResponse;
 
-  const userId = authOrResponse.userId;
+  const userId = authOrResponse.id;
 
   try {
     // Найти партнёра по user_id
@@ -77,10 +77,10 @@ export async function GET(req: NextRequest) {
 // ── POST: Обновить согласия контента ──────────────────────────────────────
 
 export async function POST(req: NextRequest) {
-  const authOrResponse = await requireAuth(req, { role: 'operator' });
+  const authOrResponse = await requireRole(req, ['operator', 'admin']);
   if (authOrResponse instanceof NextResponse) return authOrResponse;
 
-  const userId = authOrResponse.userId;
+  const userId = authOrResponse.id;
 
   try {
     const body = await req.json();

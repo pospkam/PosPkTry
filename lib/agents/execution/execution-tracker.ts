@@ -6,7 +6,6 @@
  */
 
 import { pool } from '@/lib/db-pool';
-import type { AgentApproval } from '../types/agent-approvals';
 
 export interface ExecutionStatus {
   initiative_id: string;
