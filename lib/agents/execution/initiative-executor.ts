@@ -16,6 +16,7 @@
 import { pool } from '@/lib/db-pool';
 import { callAIWaterfall } from '@/lib/ai/providers';
 import type { ChatMessage } from '@/lib/ai/prompts';
+import { randomBytes } from 'crypto';
 
 export interface ExecutionTask {
   approval_id: string;
@@ -45,7 +46,7 @@ const EXECUTORS: Record<string, (task: ExecutionTask) => Promise<ExecutionResult
 
   // 2. T&C UPDATE (Legal)
   'booking_rule_change': async (task) => {
-    return executeT&CUpdate(task);
+    return executeTCUpdate(task);
   },
 
   // 3. TOUR DESCRIPTION REWRITE (Content)
@@ -81,7 +82,7 @@ async function executeAPIKeyRotation(task: ExecutionTask): Promise<ExecutionResu
 
     changes.push(`Found ${allKeys.rowCount} old API keys to rotate`);
 
-    // Step 2: Generate new keys (simulated)
+    // Step 2: Generate new keys (crypto secure)
     const newKeys = allKeys.rows.map(row => ({
       old_id: row.id,
       old_key_last4: row.api_key.slice(-4),
@@ -131,7 +132,7 @@ async function executeAPIKeyRotation(task: ExecutionTask): Promise<ExecutionResu
  * EXECUTOR 2: T&C UPDATE (Legal Agent)
  * ═══════════════════════════════════════════════════════════════
  */
-async function executeT&CUpdate(task: ExecutionTask): Promise<ExecutionResult> {
+async function executeTCUpdate(task: ExecutionTask): Promise<ExecutionResult> {
   const changes: string[] = [];
   const errors: string[] = [];
 
@@ -447,17 +448,53 @@ async function executeCommissionOptimization(task: ExecutionTask): Promise<Execu
  */
 
 function generateSecureKey(): string {
-  // Placeholder: реально генерируется через crypto
-  return `sk_live_${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`;
+  // Generate cryptographically secure API key
+  const prefix = 'sk_live_';
+  const randomPart = randomBytes(32).toString('hex');
+  return prefix + randomPart;
 }
 
 async function testOCTOEndpoints(): Promise<{ success: boolean; error?: string }> {
   try {
-    // Placeholder: реально проверяет endpoints
-    await new Promise(resolve => setTimeout(resolve, 100));
-    return { success: true };
+    // Test OCTO API health endpoint
+    const octoBaseUrl = process.env.OCTO_API_URL || 'https://api.octo.travel/v1';
+    const octoApiKey = process.env.OCTO_API_KEY;
+
+    if (!octoApiKey) {
+      return { success: false, error: 'OCTO_API_KEY not configured' };
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+    try {
+      const response = await fetch(`${octoBaseUrl}/health`, {
+        method: 'GET',
+        headers: {
+          'X-API-KEY': octoApiKey,
+          'Content-Type': 'application/json',
+        },
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: `OCTO API returned ${response.status}`,
+        };
+      }
+
+      return { success: true };
+    } finally {
+      clearTimeout(timeoutId);
+    }
   } catch (err) {
-    return { success: false, error: String(err) };
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : String(err),
+    };
   }
 }
 
