@@ -24,7 +24,7 @@ export interface AgencyResult {
 interface TourSummaryRow {
   id: number;
   title: string;
-  price_from: number;
+  base_price: number;
   bookings_count: string;
   next_date: string | null;
   available_slots: string | null;
@@ -78,7 +78,7 @@ export class OperatorAgency {
       SELECT
         t.id,
         t.title,
-        t.price_from,
+        t.base_price,
         COUNT(b.id) FILTER (WHERE b.booking_status NOT IN ('cancelled') AND b.deleted_at IS NULL)::text AS bookings_count,
         MIN(a.date)::text  AS next_date,
         SUM(a.available_slots) FILTER (WHERE a.is_available = TRUE AND a.date >= NOW()::date)::text AS available_slots
@@ -99,7 +99,7 @@ export class OperatorAgency {
     for (const r of rows) {
       const slots = r.available_slots ? `${r.available_slots} мест` : 'нет слотов';
       const next  = r.next_date ? ` | след. ${r.next_date}` : '';
-      lines.push(`${r.title} — от ${Number(r.price_from).toLocaleString('ru-RU')} руб | ${slots}${next}`);
+      lines.push(`${r.title} — от ${Number(r.base_price).toLocaleString('ru-RU')} руб | ${slots}${next}`);
     }
 
     return { response: lines.join('\n'), data: { tours: rows } };
@@ -188,7 +188,7 @@ export class OperatorAgency {
     }
 
     const { rows } = await pool.query<{ id: number; title: string }>(
-      `INSERT INTO operator_tours (partner_id, title, base_price, is_published, created_via)
+      `INSERT INTO operator_tours (operator_id, title, base_price, is_published, created_via)
        VALUES ($1, $2, $3, false, 'agent')
        RETURNING id, title`,
       [partnerId, title, price ?? 0]
