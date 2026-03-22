@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { pool } from '@/lib/db-pool';
 import { callAnthropic } from '@/lib/ai/providers';
+import { timingSafeCompare } from '@/lib/security/timing-safe';
 import type { ChatMessage } from '@/lib/ai/prompts';
 
 export const dynamic = 'force-dynamic';
@@ -252,7 +253,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  if (secret !== cronSecret) {
+  if (!timingSafeCompare(secret, cronSecret)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
