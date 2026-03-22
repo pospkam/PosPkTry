@@ -19,7 +19,7 @@ export interface AgencyResult {
   data?: Record<string, unknown>;
 }
 
-// ── Типы строк БД ─────────────────────────────────────────────────────────────
+// ── Типы строк БД ─────────────────────────────────────────────────────────────────
 
 interface LeadsStats {
   total: number;
@@ -52,7 +52,7 @@ interface PageViewsStats {
   last_7d: number;
 }
 
-// ── AdminAgency ───────────────────────────────────────────────────────────────
+// ── AdminAgency ─────────────────────────────────────────────────────────────────────
 
 export class AdminAgency {
   async run(intent: string, _context: AgentContext): Promise<AgencyResult> {
@@ -64,7 +64,7 @@ export class AdminAgency {
     }
   }
 
-  // ── /digest ────────────────────────────────────────────────────────────────
+  // ── /digest ──────────────────────────────────────────────────────────────────────
 
   async getDigest(): Promise<AgencyResult> {
     try {
@@ -112,7 +112,7 @@ export class AdminAgency {
     }
   }
 
-  // ── /leads ─────────────────────────────────────────────────────────────────
+  // ── /leads ─────────────────────────────────────────────────────────────────────
 
   async getLeadsSummary(): Promise<AgencyResult> {
     const stats = await this.fetchLeadsStats();
@@ -124,7 +124,7 @@ export class AdminAgency {
     return { response, data: { leads: stats } };
   }
 
-  // ── /health ────────────────────────────────────────────────────────────────
+  // ── /health ────────────────────────────────────────────────────────────────────
 
   async getHealth(): Promise<AgencyResult> {
     const [patterns, feedback, successRate] = await Promise.all([
@@ -165,7 +165,7 @@ export class AdminAgency {
     };
   }
 
-  // ── Запросы к БД ───────────────────────────────────────────────────────────
+  // ── Запросы к БД ────────────────────────────────────────────────────────────────────
 
   private async fetchLeadsStats(): Promise<LeadsStats> {
     const { rows } = await pool.query<LeadsStats>(`
@@ -185,9 +185,9 @@ export class AdminAgency {
       SELECT
         COUNT(*) FILTER (WHERE created_at >= NOW()::date)::int                  AS today,
         COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days')::int    AS last_7d,
-        SUM(total_price) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days') AS revenue_7d
+        SUM(final_price) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days') AS revenue_7d
       FROM operator_bookings
-      WHERE status NOT IN ('cancelled')
+      WHERE booking_status NOT IN ('cancelled')
     `);
     return rows[0] ?? { today: 0, last_7d: 0, revenue_7d: null };
   }
@@ -204,7 +204,7 @@ export class AdminAgency {
       WHERE t.deleted_at IS NULL
         AND NOT EXISTS (
           SELECT 1 FROM tour_availability a
-          WHERE a.tour_id = t.id
+          WHERE a.operator_tour_id = t.id
             AND a.date >= $1::date
             AND a.date < ($1::date + INTERVAL '1 month')
             AND a.is_available = TRUE
@@ -216,7 +216,11 @@ export class AdminAgency {
 
   private async fetchWeatherAlerts(): Promise<WeatherAlertRow[]> {
     const { rows } = await pool.query<WeatherAlertRow>(`
-      SELECT id, message, severity, created_at
+      SELECT
+        id::text,
+        COALESCE(alert_type, '') || CASE WHEN severity IS NOT NULL THEN ' / ' || severity ELSE '' END AS message,
+        COALESCE(severity, 'low') AS severity,
+        created_at
       FROM weather_alerts
       WHERE created_at >= NOW() - INTERVAL '24 hours'
       ORDER BY severity DESC, created_at DESC
@@ -236,7 +240,7 @@ export class AdminAgency {
   }
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────────────
 
 interface DigestData {
   leads: LeadsStats;
