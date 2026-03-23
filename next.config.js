@@ -5,13 +5,12 @@ const nextConfig = {
   poweredByHeader: false,
   compress: true,
 
-  // Лимит тела запроса для API routes (загрузка фото)
+  // Лимит тела запроса для API routes (загрузка фото) — Next.js 15: top-level
+  serverBodySizeLimit: '60mb',
+
   experimental: {
-    serverBodySizeLimit: '60mb',
     // Параллельная компиляция страниц — 2-3x быстрее на multi-core
     workerThreads: true,
-    // Параллельный tracing для standalone output
-    parallelServerBuildTraces: true,
   },
 
   // ONNX Runtime (used by @huggingface/transformers) has native Node.js addons
