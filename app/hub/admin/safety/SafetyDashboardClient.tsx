@@ -1,7 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { AlertCircle, AlertTriangle, CheckCircle, Clock, Users, MapPin } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
+import {
+  AlertCircle, AlertTriangle, CheckCircle, Clock, Users,
+  RefreshCw, Radio, CloudRain, BookOpen, ShieldAlert, PhoneCall,
+} from 'lucide-react';
+
+// ── Types ──────────────────────────────────────────────────────────────────
 
 interface Alert {
   id: number;
@@ -26,202 +31,304 @@ interface CapacityItem {
   alert_severity: number;
 }
 
-export function SafetyDashboardClient() {
-  const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [capacity, setCapacity] = useState<CapacityItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'alerts' | 'capacity' | 'routes'>('alerts');
+type BriefingTab = 'sos' | 'weather' | 'protocols';
 
-  useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 60000); // refresh every 60 sec
-    return () => clearInterval(interval);
-  }, []);
+// ── RescueBriefing — AI Спасатель блок ────────────────────────────────────
 
-  async function fetchData() {
+function RescueBriefing() {
+  const [activeTab, setActiveTab] = useState<BriefingTab>('sos');
+  const [text, setText] = useState<string>('');
+  const [loading, setLoading] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
+  const fetchBriefing = useCallback(async (type: BriefingTab) => {
+    setLoading(true);
+    setText('');
     try {
-      const [alertsRes, capacityRes] = await Promise.all([
-        fetch('/api/safety/alerts'),
-        fetch('/api/safety/capacity'),
-      ]);
-
-      if (alertsRes.ok) {
-        const data = await alertsRes.json();
-        setAlerts(data.data || []);
+      const res = await fetch(`/api/agents/rescue-briefing?type=${type}`);
+      const data = await res.json();
+      if (data.success) {
+        setText(data.response ?? '');
+        setLastUpdated(new Date());
+      } else {
+        setText(`Ошибка брифинга: ${data.error}`);
       }
-
-      if (capacityRes.ok) {
-        const data = await capacityRes.json();
-        setCapacity(data.data || []);
-      }
-    } catch (error) {
+    } catch {
+      setText('Нет связи с AI Спасателем.');
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
-  const criticalAlerts = alerts.filter(a => a.severity >= 2);
-  const redLocations = capacity.filter(c => c.recommender_status === 'red');
+  useEffect(() => { fetchBriefing(activeTab); }, [activeTab, fetchBriefing]);
+
+  const TABS: { id: BriefingTab; label: string; Icon: typeof Radio }[] = [
+    { id: 'sos',       label: 'SOS-инциденты', Icon: Radio },
+    { id: 'weather',   label: 'Погода / риски', Icon: CloudRain },
+    { id: 'protocols', label: 'Протоколы',      Icon: BookOpen },
+  ];
+
+  return (
+    <div className="ds-card mb-8 border-l-4 border-[var(--warning)]">
+      {/* Agent header */}
+      <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-[var(--border)]">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-[var(--warning)] bg-opacity-20 flex items-center justify-center">
+            <ShieldAlert className="w-5 h-5 text-[var(--warning)]" />
+          </div>
+          <div>
+            <p className="font-semibold text-[var(--text-primary)]">AI Спасатель — Начальник SAR</p>
+            <p className="text-xs text-[var(--text-secondary)]">Поисково-спасательные операции · Мониторинг угроз</p>
+          </div>
+        </div>
+        <button
+          onClick={() => fetchBriefing(activeTab)}
+          disabled={loading}
+          className="ds-btn ds-btn-secondary flex items-center gap-2 text-sm"
+        >
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          Обновить
+        </button>
+      </div>
+
+      {/* Sub-tabs */}
+      <div className="flex border-b border-[var(--border)]">
+        {TABS.map(({ id, label, Icon }) => (
+          <button
+            key={id}
+            onClick={() => setActiveTab(id)}
+            className={`flex items-center gap-2 px-5 py-3 text-sm font-medium transition-colors ${
+              activeTab === id
+                ? 'text-[var(--warning)] border-b-2 border-[var(--warning)]'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+            }`}
+          >
+            <Icon className="w-4 h-4" />
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* AI briefing text */}
+      <div className="p-6 min-h-[120px]">
+        {loading ? (
+          <div className="flex items-center gap-3 text-[var(--text-secondary)]">
+            <div className="inline-block animate-spin rounded-full h-5 w-5 border border-[var(--border)] border-t-[var(--warning)]" />
+            Запрашиваю брифинг у AI Спасателя...
+          </div>
+        ) : (
+          <div
+            className="text-[var(--text-primary)] text-sm leading-relaxed whitespace-pre-line"
+            dangerouslySetInnerHTML={{ __html: text || 'Данные отсутствуют.' }}
+          />
+        )}
+        {lastUpdated && !loading && (
+          <p className="text-xs text-[var(--text-muted)] mt-4">
+            Обновлено: {lastUpdated.toLocaleTimeString('ru-RU')}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── SafetyDashboardClient ──────────────────────────────────────────────────
+
+export function SafetyDashboardClient() {
+  const [alerts, setAlerts]     = useState<Alert[]>([]);
+  const [capacity, setCapacity] = useState<CapacityItem[]>([]);
+  const [loading, setLoading]   = useState(true);
+  const [tab, setTab]           = useState<'alerts' | 'capacity'>('alerts');
+  const [refreshed, setRefreshed] = useState<Date | null>(null);
+
+  const fetchData = useCallback(async () => {
+    try {
+      const [ar, cr] = await Promise.all([
+        fetch('/api/safety/alerts'),
+        fetch('/api/safety/capacity'),
+      ]);
+      if (ar.ok) { const d = await ar.json(); setAlerts(d.data ?? []); }
+      if (cr.ok) { const d = await cr.json(); setCapacity(d.data ?? []); }
+      setRefreshed(new Date());
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+    const id = setInterval(fetchData, 60_000);
+    return () => clearInterval(id);
+  }, [fetchData]);
+
+  const criticalAlerts  = alerts.filter(a => a.severity >= 2);
+  const redLocations    = capacity.filter(c => c.recommender_status === 'red');
   const yellowLocations = capacity.filter(c => c.recommender_status === 'yellow');
+  const hasIncidents    = criticalAlerts.length > 0 || redLocations.length > 0;
 
   return (
     <div className="ds-page min-h-screen">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="ds-h1 mb-2">Safety Dashboard</h1>
-          <p className="text-[var(--text-secondary)]">Real-time monitoring of alerts and capacity</p>
+
+        {/* ── Заголовок ────────────────────────────────────────────── */}
+        <div className="flex items-start justify-between mb-8">
+          <div>
+            <h1 className="ds-h1 mb-1">Центр безопасности</h1>
+            <p className="text-[var(--text-secondary)]">Оперативный мониторинг · Камчатка</p>
+          </div>
+          <span className={`px-4 py-1.5 rounded-full text-sm font-medium ${
+            hasIncidents
+              ? 'bg-[var(--danger)] bg-opacity-15 text-[var(--danger)]'
+              : 'bg-[var(--success)] bg-opacity-15 text-[var(--success)]'
+          }`}>
+            {hasIncidents ? 'Есть инциденты' : 'Норма'}
+          </span>
         </div>
 
-        {/* Metrics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="ds-card p-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[var(--text-secondary)] text-sm">Critical Alerts</span>
-              <AlertCircle className="w-5 h-5 text-[var(--danger)]" />
-            </div>
-            <p className="ds-h2">{criticalAlerts.length}</p>
-          </div>
+        {/* ── AI Спасатель ─────────────────────────────────────────── */}
+        <RescueBriefing />
 
-          <div className="ds-card p-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[var(--text-secondary)] text-sm">Full Locations</span>
-              <AlertTriangle className="w-5 h-5 text-[var(--warning)]" />
+        {/* ── Метрики ──────────────────────────────────────────────── */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          {[
+            { label: 'Критических алертов', value: criticalAlerts.length,  Icon: AlertCircle,  color: 'var(--danger)'   },
+            { label: 'Локации переполнены', value: redLocations.length,    Icon: AlertTriangle, color: 'var(--danger)'  },
+            { label: 'Предупреждения (70%)', value: yellowLocations.length, Icon: Clock,        color: 'var(--warning)' },
+            { label: 'Локаций всего',         value: capacity.length,       Icon: CheckCircle,  color: 'var(--success)' },
+          ].map(({ label, value, Icon, color }) => (
+            <div key={label} className="ds-card p-5">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs text-[var(--text-secondary)]">{label}</span>
+                <Icon className="w-4 h-4" style={{ color }} />
+              </div>
+              <p className="text-3xl font-bold text-[var(--text-primary)]">{value}</p>
             </div>
-            <p className="ds-h2">{redLocations.length}</p>
-          </div>
-
-          <div className="ds-card p-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[var(--text-secondary)] text-sm">Warning (70%)</span>
-              <Clock className="w-5 h-5 text-[var(--warning)]" />
-            </div>
-            <p className="ds-h2">{yellowLocations.length}</p>
-          </div>
-
-          <div className="ds-card p-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[var(--text-secondary)] text-sm">Total Routes</span>
-              <CheckCircle className="w-5 h-5 text-[var(--success)]" />
-            </div>
-            <p className="ds-h2">{capacity.length}</p>
-          </div>
+          ))}
         </div>
 
-        {/* Tabs */}
-        <div className="ds-card mb-8">
+        {/* ── Вкладки: Алерты / Ёмкость ────────────────────────────── */}
+        <div className="ds-card mb-6">
           <div className="flex border-b border-[var(--border)]">
-            {(['alerts', 'capacity', 'routes'] as const).map(tab => (
+            {(['alerts', 'capacity'] as const).map(t => (
               <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
+                key={t}
+                onClick={() => setTab(t)}
                 className={`px-6 py-4 text-sm font-medium transition-colors ${
-                  activeTab === tab
+                  tab === t
                     ? 'text-[var(--accent)] border-b-2 border-[var(--accent)]'
                     : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
               >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                {t === 'alerts' ? `Алерты (${alerts.length})` : `Ёмкость (${capacity.length})`}
               </button>
             ))}
           </div>
 
-          {/* Tab Content */}
           <div className="p-6">
             {loading ? (
-              <div className="text-center py-12">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border border-[var(--border)] border-t-[var(--accent)]"></div>
+              <div className="flex justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border border-[var(--border)] border-t-[var(--accent)]" />
               </div>
-            ) : activeTab === 'alerts' ? (
-              <div className="space-y-4">
-                {alerts.length === 0 ? (
-                  <p className="text-[var(--text-secondary)] text-center py-8">No active alerts</p>
-                ) : (
-                  alerts.map(alert => (
-                    <div
-                      key={alert.id}
-                      className={`p-4 rounded-lg border-l-4 ${
-                        alert.severity >= 2
-                          ? 'bg-yellow-50 dark:bg-yellow-950/20 border-[var(--danger)]'
-                          : 'bg-blue-50 dark:bg-blue-950/20 border-[var(--ocean)]'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <h3 className="font-semibold text-[var(--text-primary)]">{alert.title}</h3>
-                          <p className="text-sm text-[var(--text-secondary)] mt-1">{alert.description}</p>
-                        </div>
-                        <span className={`px-3 py-1 rounded text-xs font-medium ${
-                          alert.severity >= 2 ? 'bg-[var(--danger)] text-white' : 'bg-[var(--ocean)] text-white'
-                        }`}>
-                          {alert.alert_type}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between text-xs text-[var(--text-secondary)]">
-                        <div className="flex gap-4">
-                          <span>Zones: {alert.affected_zones.join(', ')}</span>
-                          <span>Routes affected: {alert.affected_route_count}</span>
-                        </div>
-                        <span>Expires: {new Date(alert.expires_at).toLocaleString()}</span>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            ) : activeTab === 'capacity' ? (
+            ) : tab === 'alerts' ? (
               <div className="space-y-3">
-                {capacity.length === 0 ? (
-                  <p className="text-[var(--text-secondary)] text-center py-8">No capacity data</p>
-                ) : (
-                  capacity.map(item => (
-                    <div
-                      key={item.agent_route_id}
-                      className="ds-card p-4 flex items-center justify-between hover:bg-[var(--bg-hover)] transition-colors"
-                    >
-                      <div className="flex-1">
-                        <h3 className="font-medium text-[var(--text-primary)]">{item.title}</h3>
-                        <div className="flex gap-4 mt-2 text-sm text-[var(--text-secondary)]">
-                          <span className="flex items-center gap-1">
-                            <Users className="w-4 h-4" />
-                            {item.tourists_today}/{item.capacity_per_day}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            {item.capacity_remaining > 0 ? (
-                              <CheckCircle className="w-4 h-4 text-[var(--success)]" />
-                            ) : (
-                              <AlertCircle className="w-4 h-4 text-[var(--danger)]" />
-                            )}
-                            {item.capacity_remaining} remaining
-                          </span>
-                        </div>
+                {alerts.length === 0 ? (
+                  <p className="text-[var(--text-secondary)] text-center py-8">Активных алертов нет</p>
+                ) : alerts.map(alert => (
+                  <div
+                    key={alert.id}
+                    className={`p-4 rounded-lg border-l-4 bg-[var(--bg-hover)] ${
+                      alert.severity >= 2 ? 'border-[var(--danger)]' : 'border-[var(--ocean)]'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <h3 className="font-medium text-[var(--text-primary)]">{alert.title}</h3>
+                        <p className="text-sm text-[var(--text-secondary)] mt-1">{alert.description}</p>
                       </div>
-                      <div className="text-right">
-                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                          item.recommender_status === 'red'
-                            ? 'bg-[var(--danger)] bg-opacity-20 text-[var(--danger)]'
-                            : item.recommender_status === 'yellow'
-                              ? 'bg-[var(--warning)] bg-opacity-20 text-[var(--warning)]'
-                              : 'bg-[var(--success)] bg-opacity-20 text-[var(--success)]'
-                        }`}>
-                          {item.recommender_status.toUpperCase()}
-                        </span>
-                      </div>
+                      <span className={`ml-4 shrink-0 px-2 py-0.5 rounded text-xs font-medium ${
+                        alert.severity >= 2
+                          ? 'bg-[var(--danger)] bg-opacity-20 text-[var(--danger)]'
+                          : 'bg-[var(--ocean)] bg-opacity-20 text-[var(--ocean)]'
+                      }`}>
+                        {alert.alert_type}
+                      </span>
                     </div>
-                  ))
-                )}
+                    <div className="flex flex-wrap gap-4 text-xs text-[var(--text-muted)]">
+                      <span>Зоны: {alert.affected_zones.join(', ')}</span>
+                      <span>Маршрутов затронуто: {alert.affected_route_count}</span>
+                      <span>Истекает: {new Date(alert.expires_at).toLocaleString('ru-RU')}</span>
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-[var(--text-secondary)]">
-                Routes management coming soon
+              <div className="space-y-2">
+                {capacity.length === 0 ? (
+                  <p className="text-[var(--text-secondary)] text-center py-8">Нет данных о ёмкости</p>
+                ) : capacity.map(item => (
+                  <div
+                    key={item.agent_route_id}
+                    className="flex items-center justify-between p-4 rounded-lg bg-[var(--bg-hover)] hover:bg-[var(--bg-card)] transition-colors"
+                  >
+                    <div>
+                      <p className="font-medium text-[var(--text-primary)] text-sm">{item.title}</p>
+                      <div className="flex items-center gap-3 mt-1 text-xs text-[var(--text-secondary)]">
+                        <span className="flex items-center gap-1">
+                          <Users className="w-3 h-3" />
+                          {item.tourists_today} / {item.capacity_per_day} чел.
+                        </span>
+                        <span>
+                          {item.capacity_remaining > 0
+                            ? `Свободно: ${item.capacity_remaining}`
+                            : 'Заполнено'}
+                        </span>
+                      </div>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      item.recommender_status === 'red'
+                        ? 'bg-[var(--danger)] bg-opacity-15 text-[var(--danger)]'
+                        : item.recommender_status === 'yellow'
+                          ? 'bg-[var(--warning)] bg-opacity-15 text-[var(--warning)]'
+                          : 'bg-[var(--success)] bg-opacity-15 text-[var(--success)]'
+                    }`}>
+                      {item.recommender_status === 'red'   ? 'Закрыто'      :
+                       item.recommender_status === 'yellow' ? 'Предупреждение' : 'Норма'}
+                    </span>
+                  </div>
+                ))}
               </div>
             )}
           </div>
         </div>
 
-        {/* Last Updated */}
-        <div className="text-sm text-[var(--text-secondary)] text-center">
-          Last updated: {new Date().toLocaleTimeString()}
+        {/* ── Экстренные контакты ───────────────────────────────────── */}
+        <div className="ds-card p-5">
+          <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">
+            Экстренные контакты
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[
+              { label: 'МЧС Камчатка',     number: '112'          },
+              { label: 'Поисковый центр',   number: '+7 4152 41-61-64' },
+              { label: 'Скорая помощь',     number: '103'          },
+              { label: 'Диспетчер туров',   number: '+7 4152 26-44-44' },
+            ].map(({ label, number }) => (
+              <div key={label} className="flex items-center gap-2">
+                <PhoneCall className="w-4 h-4 shrink-0 text-[var(--accent)]" />
+                <div>
+                  <p className="text-xs text-[var(--text-secondary)]">{label}</p>
+                  <p className="text-sm font-medium text-[var(--text-primary)]">{number}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
+
+        {/* ── Footer ───────────────────────────────────────────────── */}
+        <p className="text-xs text-[var(--text-muted)] text-center mt-6">
+          Данные обновляются каждые 60 секунд
+          {refreshed && ` · последнее обновление ${refreshed.toLocaleTimeString('ru-RU')}`}
+        </p>
       </div>
     </div>
   );
