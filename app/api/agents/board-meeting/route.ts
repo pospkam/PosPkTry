@@ -89,7 +89,10 @@ const MEETING_AGENTS = [
   { id: 'eco',      name: 'AI Эколог',              role: 'Эколог-аналитик',           intent: 'eco_impact',       color: '#10B981'       },
   { id: 'content',  name: 'AI Аудитор',             role: 'Контент-директор',          intent: 'content_audit',    color: 'var(--ocean)'  },
   { id: 'quality',  name: 'AI Качество',             role: 'Директор по качеству',      intent: 'qa_operators',     color: '#F59E0B'       },
-  { id: 'evo',      name: 'AI Эволюция',            role: 'Архитектор платформы',      intent: 'evo_optimize',     color: '#EC4899'       },
+  { id: 'evo',       name: 'AI Эволюция',      role: 'Архитектор платформы',         intent: 'evo_optimize',   color: '#EC4899' },
+  { id: 'finance',   name: 'AI Финдиректор',  role: 'CFO / Финансовый директор',     intent: 'finance_report', color: '#6366F1' },
+  { id: 'infra',     name: 'AI DevOps',       role: 'SRE / Инфраструктура',          intent: 'infra_health',   color: '#14B8A6' },
+  { id: 'vibe_coder', name: 'AI Разработчик', role: 'Vibe Coder / Самомодификация',  intent: 'code_analysis',  color: '#F97316' },
 ] as const;
 
 // ── Proposal config per agent ───────────────────────────────────────────────────────────
@@ -155,6 +158,21 @@ const PROPOSAL_CONFIGS: Record<string, ProposalConfig> = {
     allowed_types: ['prompt_optimize', 'schedule_suggest', 'sql_query_fix'],
     domain: 'architecture',
   },
+  finance: {
+    persona:       'Ты CFO туристической платформы. Анализируй только реальные цифры из БД: выручка, комиссии, средний чек, возвраты. Каждый claim = конкретная цифра. Без "вероятно прибыльно" — только "выручка 47 000 руб за неделю".',
+    allowed_types: ['commission_change', 'booking_rule_change'],
+    domain: 'finance',
+  },
+  infra: {
+    persona:       'Ты SRE/DevOps инженер туристической платформы. Мониторишь здоровье системы: время ответа БД, ошибки AI-агентов, статус cron-задач. Каждая аномалия — с числами. Без гипотетических угроз.',
+    allowed_types: ['sql_query_fix', 'schedule_suggest'],
+    domain: 'infrastructure',
+  },
+  vibe_coder: {
+    persona:       'Ты senior TypeScript разработчик этой платформы. Анализируй реальный код и данные об ошибках. Предлагай ОДНО изменение с файлом, строками и обоснованием из данных. Не рефакторь ради рефакторинга.',
+    allowed_types: ['code_change', 'sql_query_fix'],
+    domain: 'codebase',
+  },
 };
 
 // ── Матрица компетенций: action_type → лучший исполнитель ───────────────────────────────
@@ -211,6 +229,10 @@ const EXECUTOR_SKILL_MAP: Record<string, ExecutorEntry> = {
     id: 'evo', name: 'AI Эволюция', color: '#EC4899',
     reason: 'Архитектурные изменения БД — зона архитектора платформы',
   },
+  code_change: {
+    id: 'vibe_coder', name: 'AI Разработчик', color: '#F97316',
+    reason: 'Изменения кода — зона Vibe Coder разработчика',
+  },
 };
 
 // ── Agent runner ───────────────────────────────────────────────────────────────────────
@@ -226,6 +248,9 @@ const AGENCY_LOADERS: Record<string, () => Promise<{ run(intent: string, ctx: Ag
   content_audit:   async () => { const { ContentAuditorAgency } = await import('@/lib/agents/agencies/content-auditor-agency'); return new ContentAuditorAgency(); },
   qa_operators:    async () => { const { QualityAgency } = await import('@/lib/agents/agencies/quality-agency'); return new QualityAgency(); },
   evo_optimize:    async () => { const { EvolutionAgency } = await import('@/lib/agents/agencies/evolution-agency'); return new EvolutionAgency(); },
+  finance_report:  async () => { const { FinanceAgency } = await import('@/lib/agents/agencies/finance-agency'); return new FinanceAgency(); },
+  infra_health:    async () => { const { InfraAgency } = await import('@/lib/agents/agencies/infra-agency'); return new InfraAgency(); },
+  code_analysis:   async () => { const { VibeCoderAgency } = await import('@/lib/agents/agencies/vibe-coder-agency'); return new VibeCoderAgency(); },
 };
 
 async function runAgent(

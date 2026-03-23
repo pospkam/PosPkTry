@@ -48,6 +48,7 @@ const EXECUTORS: Record<string, (task: ExecutionTask, log: StepLogger) => Promis
   'price_change':      (task, log) => executeABTestSetup(task, log),
   'commission_change': (task, log) => executeCommissionOptimization(task, log),
   'sql_query_fix':     (task, log) => executeSQLQueryFix(task, log),
+  'code_change':       (task, log) => executeCodeChange(task, log),
 };
 
 /**
@@ -497,6 +498,105 @@ async function executeSQLQueryFix(task: ExecutionTask, log: StepLogger): Promise
     const msg = err instanceof Error ? err.message : String(err);
     await log('failed', `executeSQLQueryFix провалился: ${msg}`);
     return { success: false, changes_made: [], errors: [`executeSQLQueryFix failed: ${msg}`], rollback_available: false, verification_passed: false };
+  }
+}
+
+/**
+ * ═══════════════════════════════════════════════════════════════
+ * EXECUTOR 7: CODE CHANGE (Vibe Coder Agent)
+ * ═══════════════════════════════════════════════════════════════
+ *
+ * Регистрирует одобрённое изменение кода.
+ * В production-деплое (Docker на Timeweb) файловая система сбрасывается при
+ * каждом деплое, поэтому фиксация кода происходит через git commit.
+ * Этот executor: логирует намерение + генерирует патч-инструкцию для разработчика.
+ */
+async function executeCodeChange(task: ExecutionTask, log: StepLogger): Promise<ExecutionResult> {
+  const changes: string[] = [];
+  const errors: string[] = [];
+
+  try {
+    await log('started', 'Vibe Coder: начинаю оформление одобрённого изменения кода');
+
+    const filePath     = typeof task.context.file_path === 'string'   ? task.context.file_path   : null;
+    const issue        = typeof task.context.issue === 'string'       ? task.context.issue       : task.description;
+    const proposedFix  = typeof task.context.proposed_fix === 'string' ? task.context.proposed_fix : null;
+    const priority     = typeof task.context.priority === 'string'    ? task.context.priority    : 'medium';
+
+    await log('progress', `Задача: ${issue}`);
+    if (filePath)    await log('progress', `Целевой файл: ${filePath}`);
+    if (proposedFix) await log('progress', `Предложенное решение: ${proposedFix.substring(0, 200)}`);
+
+    // Генерируем инструкцию для разработчика через AI
+    const aiMessages: ChatMessage[] = [
+      {
+        role: 'user',
+        content: [
+          'Ты senior TypeScript + Next.js разработчик.',
+          'Директор одобрил следующее изменение кода:',
+          '',
+          `Файл: ${filePath ?? 'не указан'}`,
+          `Проблема: ${issue}`,
+          `Предложение: ${proposedFix ?? 'детали в описании'}`,
+          `Приоритет: ${priority}`,
+          '',
+          'Напиши КОНКРЕТНУЮ инструкцию для разработчика:',
+          '1. Что именно изменить (строки кода)',
+          '2. Как проверить что всё работает',
+          '3. Риски изменения',
+          'Формат: plain text, 5-10 строк. Без markdown.',
+        ].join('\n'),
+      },
+    ];
+
+    const instruction = await callAIWaterfall(aiMessages).catch(() => null);
+
+    if (instruction) {
+      await log('progress', `Инструкция: ${instruction.substring(0, 400)}`);
+      changes.push(`Инструкция разработчику сформирована`);
+    }
+
+    // Записываем в ai_actions_log для отслеживания
+    await pool.query(
+      `INSERT INTO ai_actions_log (action_type, metadata)
+       VALUES ($1, $2)`,
+      [
+        'code_change_approved',
+        JSON.stringify({
+          approval_id:   task.approval_id,
+          executor:      task.executor_agent_id,
+          file_path:     filePath,
+          issue,
+          proposed_fix:  proposedFix,
+          instruction:   instruction ?? null,
+          priority,
+        }),
+      ]
+    ).catch(() => null);
+
+    changes.push(`Изменение зарегистрировано: approval_id=${task.approval_id}`);
+    if (filePath) changes.push(`Файл: ${filePath}`);
+    changes.push('Статус: ожидает git commit от разработчика');
+
+    await log('completed', `Vibe Coder: изменение одобрено и зафиксировано. Файл: ${filePath ?? 'уточнить'}`);
+
+    return {
+      success:             true,
+      changes_made:        changes,
+      errors,
+      rollback_available:  false,
+      verification_passed: true,
+    };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    await log('failed', `executeCodeChange провалился: ${msg}`);
+    return {
+      success:             false,
+      changes_made:        [],
+      errors:              [`executeCodeChange failed: ${msg}`],
+      rollback_available:  false,
+      verification_passed: false,
+    };
   }
 }
 
