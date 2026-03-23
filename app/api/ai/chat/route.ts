@@ -14,6 +14,12 @@ import { callAIWaterfall } from '@/lib/ai/providers';
 import { getUserFromRequest } from '@/lib/auth/jwt';
 import { extractAndEncryptInterests } from '@/lib/ai/interest-extractor';
 import { PlatformAgent } from '@/lib/agents/platform-agent';
+import {
+  loadUserMemory,
+  upsertUserMemory,
+  extractMemoryFromMessage,
+  buildMemoryContext,
+} from '@/lib/ai/user-memory';
 
 export const dynamic = 'force-dynamic';
 
@@ -117,6 +123,7 @@ export async function POST(request: NextRequest) {
     const session = sessionId ? await loadSession(sessionId) : null;
     const currentCount = session?.user_message_count ?? 0;
     const history: ChatMessage[] = session?.messages ?? [];
+    const isNewSession = !session; // первое сообщение = новая сессия
 
     // Check limit for anonymous users
     if (!isAuthenticated && currentCount >= FREE_MESSAGE_LIMIT) {
@@ -132,11 +139,17 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Долгосрочная память (только для авторизованных)
+    const userId = user?.userId ? parseInt(user.userId, 10) : null;
+    const userMemory = userId ? await loadUserMemory(userId) : null;
+
     // Build AI prompt
     const userMsg: ChatMessage = { role: 'user', content: message.trim(), timestamp: Date.now() };
     history.push(userMsg);
 
-    const systemPrompt = getSystemPrompt(safeRole);
+    const basePrompt   = getSystemPrompt(safeRole);
+    const memContext   = userMemory ? buildMemoryContext(userMemory) : '';
+    const systemPrompt = basePrompt + memContext;
     const messagesForAI = buildMessageHistory(systemPrompt, history, 10);
 
     // PlatformAgent intercept: admin/operator с распознанным интентом
@@ -159,6 +172,12 @@ export async function POST(request: NextRequest) {
     // Increment count and extract interests
     const newCount = currentCount + 1;
     const interestsEncrypted = extractAndEncryptInterests(message, session?.interests_encrypted ?? null);
+
+    // Обновить долгосрочную память пользователя (fire-and-forget, не блокирует ответ)
+    if (userId) {
+      const extracted = extractMemoryFromMessage(message.trim());
+      void upsertUserMemory(userId, extracted, true, isNewSession);
+    }
 
     // Save
     if (sessionId) {
