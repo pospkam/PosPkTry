@@ -16,7 +16,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Users, Plus, Star, Mountain } from 'lucide-react';
+import { Users, Plus, Star, Mountain, Upload } from 'lucide-react';
 
 const SELECT = 'px-3.5 py-2.5 text-sm bg-[var(--bg-primary)] border border-[var(--border)] rounded-md text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] transition-colors';
 
@@ -260,13 +260,22 @@ export default function ToursManagementClient() {
             Управление вашими турами и экскурсиями
           </p>
         </div>
-        <Link
-          href="/hub/operator/tours/new"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--accent)] text-[var(--bg-card)] text-sm font-semibold rounded-md hover:opacity-90 transition-opacity"
-        >
-          <Plus className="w-4 h-4" />
-          Создать тур
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/hub/operator/tours/import"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-secondary)] text-sm font-medium rounded-md hover:bg-[var(--bg-hover)] transition-colors"
+          >
+            <Upload className="w-4 h-4" />
+            Импорт CSV
+          </Link>
+          <Link
+            href="/hub/operator/tours/new"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--accent)] text-[var(--bg-card)] text-sm font-semibold rounded-md hover:opacity-90 transition-opacity"
+          >
+            <Plus className="w-4 h-4" />
+            Создать тур
+          </Link>
+        </div>
       </div>
 
       {/* Filters */}
