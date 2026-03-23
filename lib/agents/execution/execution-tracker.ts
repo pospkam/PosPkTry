@@ -62,8 +62,7 @@ export class ExecutionTracker {
         progress_pct: row.progress_pct,
         days_elapsed: row.days_elapsed,
       }));
-    } catch (err) {
-      console.error('[ExecutionTracker] Failed to fetch initiatives:', err);
+    } catch {
       return [];
     }
   }
@@ -107,8 +106,8 @@ export class ExecutionTracker {
          WHERE id = $2`,
         [JSON.stringify(context), initiativeId]
       );
-    } catch (err) {
-      console.error('[ExecutionTracker] Failed to update status:', err);
+    } catch {
+      // non-critical: status update failed silently
     }
   }
 

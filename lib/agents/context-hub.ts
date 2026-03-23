@@ -45,6 +45,8 @@ export interface AgentContext {
   external_signals?: Record<string, string>;
   /** Тема совещания (board meeting) */
   topic?: string | null;
+  /** Rich briefing preamble injected from agent-context-v2 (metrics, history) */
+  richBriefing?: string;
 }
 
 // ── ContextHub ────────────────────────────────────────────────────────────────

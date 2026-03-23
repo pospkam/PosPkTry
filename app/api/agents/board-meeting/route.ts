@@ -33,8 +33,6 @@ import {
   getSummaryOfViolations,
 } from '@/lib/agents/validation/director-standards';
 import { buildRichAgentContext } from '@/lib/agents/evolution/agent-context-v2';
-import { runAgentsInParallel, createAgentPromptForRound } from '@/lib/agents/evolution/optimized-runner';
-import { getAgentKnowledgeBase } from '@/lib/agents/evolution/agent-knowledge';
 
 export const dynamic     = 'force-dynamic';
 export const maxDuration = 300;
@@ -146,61 +144,32 @@ const PROPOSAL_CONFIGS: Record<string, ProposalConfig> = {
 
 // ── Agent runner ───────────────────────────────────────────────────────────────────────
 
+/** Intent → Agency class loader */
+const AGENCY_LOADERS: Record<string, () => Promise<{ run(intent: string, ctx: AgentContext): Promise<{ response: string }> }>> = {
+  admin_digest:    async () => { const { AdminAgency } = await import('@/lib/agents/agencies/admin-agency'); return new AdminAgency(); },
+  legal_risks:     async () => { const { LegalAgency } = await import('@/lib/agents/agencies/legal-agency'); return new LegalAgency(); },
+  sec_report:      async () => { const { SecurityAgency } = await import('@/lib/agents/agencies/security-agency'); return new SecurityAgency(); },
+  hack_growth:     async () => { const { HackerAgency } = await import('@/lib/agents/agencies/hacker-agency'); return new HackerAgency(); },
+  rescue_sos_stats: async () => { const { RescueAgency } = await import('@/lib/agents/agencies/rescue-agency'); return new RescueAgency(); },
+  eco_impact:      async () => { const { EcoAgency } = await import('@/lib/agents/agencies/eco-agency'); return new EcoAgency(); },
+  content_audit:   async () => { const { ContentAuditorAgency } = await import('@/lib/agents/agencies/content-auditor-agency'); return new ContentAuditorAgency(); },
+  qa_operators:    async () => { const { QualityAgency } = await import('@/lib/agents/agencies/quality-agency'); return new QualityAgency(); },
+  evo_optimize:    async () => { const { EvolutionAgency } = await import('@/lib/agents/agencies/evolution-agency'); return new EvolutionAgency(); },
+};
+
 async function runAgent(
   intent: string,
   context: AgentContext
 ): Promise<{ response: string; duration_ms: number }> {
   const start = Date.now();
   try {
-    switch (intent) {
-      case 'admin_digest': {
-        const { AdminAgency } = await import('@/lib/agents/agencies/admin-agency');
-        const r = await new AdminAgency().run(intent, context);
-        return { response: r.response, duration_ms: Date.now() - start };
-      }
-      case 'legal_risks': {
-        const { LegalAgency } = await import('@/lib/agents/agencies/legal-agency');
-        const r = await new LegalAgency().run(intent, context);
-        return { response: r.response, duration_ms: Date.now() - start };
-      }
-      case 'sec_report': {
-        const { SecurityAgency } = await import('@/lib/agents/agencies/security-agency');
-        const r = await new SecurityAgency().run(intent, context);
-        return { response: r.response, duration_ms: Date.now() - start };
-      }
-      case 'hack_growth': {
-        const { HackerAgency } = await import('@/lib/agents/agencies/hacker-agency');
-        const r = await new HackerAgency().run(intent, context);
-        return { response: r.response, duration_ms: Date.now() - start };
-      }
-      case 'rescue_sos_stats': {
-        const { RescueAgency } = await import('@/lib/agents/agencies/rescue-agency');
-        const r = await new RescueAgency().run(intent, context);
-        return { response: r.response, duration_ms: Date.now() - start };
-      }
-      case 'eco_impact': {
-        const { EcoAgency } = await import('@/lib/agents/agencies/eco-agency');
-        const r = await new EcoAgency().run(intent, context);
-        return { response: r.response, duration_ms: Date.now() - start };
-      }
-      case 'content_audit': {
-        const { ContentAuditorAgency } = await import('@/lib/agents/agencies/content-auditor-agency');
-        const r = await new ContentAuditorAgency().run(intent, context);
-        return { response: r.response, duration_ms: Date.now() - start };
-      }
-      case 'qa_operators': {
-        const { QualityAgency } = await import('@/lib/agents/agencies/quality-agency');
-        const r = await new QualityAgency().run(intent, context);
-        return { response: r.response, duration_ms: Date.now() - start };
-      }
-      case 'evo_optimize': {
-        const { EvolutionAgency } = await import('@/lib/agents/agencies/evolution-agency');
-        const r = await new EvolutionAgency().run(intent, context);
-        return { response: r.response, duration_ms: Date.now() - start };
-      }
-      default:
-        return { response: 'Агент не найден.', duration_ms: Date.now() - start };
+    const loader = AGENCY_LOADERS[intent];
+    if (!loader) {
+      return { response: 'Агент не найден.', duration_ms: Date.now() - start };
     }
+    const agency = await loader();
+    const r = await agency.run(intent, context);
+    return { response: r.response, duration_ms: Date.now() - start };
   } catch (err) {
     return {
       response:    `Ошибка: ${err instanceof Error ? err.message : String(err)}`,
@@ -438,18 +407,56 @@ export async function POST(req: NextRequest) {
         const signalsCount = Object.keys(externalSignals).length;
         send(controller, { type: 'signals_done', count: signalsCount });
 
-        const agents: AgentReport[] = [];
+        // Build rich contexts for all agents in parallel (metrics, history, briefing)
+        const richContexts = await Promise.allSettled(
+          MEETING_AGENTS.map(a => buildRichAgentContext(a.id, meetingId).catch(() => null))
+        );
+        const richContextMap = new Map<string, Awaited<ReturnType<typeof buildRichAgentContext>> | null>();
+        MEETING_AGENTS.forEach((a, i) => {
+          const r = richContexts[i];
+          richContextMap.set(a.id, r.status === 'fulfilled' ? r.value : null);
+        });
 
+        // Notify UI that all agents are starting
         for (const agentDef of MEETING_AGENTS) {
           send(controller, { type: 'agent_start', id: agentDef.id, name: agentDef.name, role: agentDef.role });
+        }
 
-          const result = await runAgent(agentDef.intent, context);
-          const failed = result.response.startsWith('Ошибка:');
+        // Run ALL agents in parallel (instead of sequential)
+        const agentResults = await Promise.allSettled(
+          MEETING_AGENTS.map(async (agentDef) => {
+            const richCtx = richContextMap.get(agentDef.id);
+            // Clone base context and inject rich briefing
+            const agentContext = { ...context };
+            if (richCtx) {
+              const { formatContextForPrompt } = await import('@/lib/agents/evolution/agent-context-v2');
+              agentContext.richBriefing = formatContextForPrompt(richCtx);
+            }
+            return { agentDef, result: await runAgent(agentDef.intent, agentContext) };
+          })
+        );
 
-          const signal   = externalSignals[agentDef.id];
+        const agents: AgentReport[] = [];
+        for (let i = 0; i < MEETING_AGENTS.length; i++) {
+          const agentDef = MEETING_AGENTS[i];
+          const settled = agentResults[i];
+
+          let response: string;
+          let durationMs: number;
+
+          if (settled.status === 'fulfilled') {
+            response = settled.value.result.response;
+            durationMs = settled.value.result.duration_ms;
+          } else {
+            response = `Ошибка: ${settled.reason instanceof Error ? settled.reason.message : String(settled.reason)}`;
+            durationMs = 0;
+          }
+
+          const failed = response.startsWith('Ошибка:');
+          const signal = externalSignals[agentDef.id];
           const fullReport = signal && !failed
-            ? `${result.response}\n\n<b>Внешние сигналы:</b>\n${signal}`
-            : result.response;
+            ? `${response}\n\n<b>Внешние сигналы:</b>\n${signal}`
+            : response;
 
           const report: AgentReport = {
             id:          agentDef.id,
@@ -457,7 +464,7 @@ export async function POST(req: NextRequest) {
             role:        agentDef.role,
             intent:      agentDef.intent,
             report:      fullReport,
-            duration_ms: result.duration_ms,
+            duration_ms: durationMs,
             status:      failed ? 'error' : 'ok',
             has_signals: signal ? true : false,
           };

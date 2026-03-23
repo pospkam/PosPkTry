@@ -69,24 +69,19 @@ export class AdminAgency {
   async getDigest(): Promise<AgencyResult> {
     try {
       const [leads, bookings, emptyTours, weather, views] = await Promise.all([
-        this.fetchLeadsStats().catch(e => {
-          console.error('[AdminAgency.digest] Error fetching leads:', e instanceof Error ? e.message : String(e));
+        this.fetchLeadsStats().catch(() => {
           return { total: 0, new_count: 0, contacted: 0, converted: 0, last_7d: 0 };
         }),
-        this.fetchBookingsStats().catch(e => {
-          console.error('[AdminAgency.digest] Error fetching bookings:', e instanceof Error ? e.message : String(e));
+        this.fetchBookingsStats().catch(() => {
           return { today: 0, last_7d: 0, revenue_7d: null };
         }),
-        this.fetchToursWithoutSlots().catch(e => {
-          console.error('[AdminAgency.digest] Error fetching empty tours:', e instanceof Error ? e.message : String(e));
+        this.fetchToursWithoutSlots().catch(() => {
           return [];
         }),
-        this.fetchWeatherAlerts().catch(e => {
-          console.error('[AdminAgency.digest] Error fetching weather:', e instanceof Error ? e.message : String(e));
+        this.fetchWeatherAlerts().catch(() => {
           return [];
         }),
-        this.fetchPageViews().catch(e => {
-          console.error('[AdminAgency.digest] Error fetching views:', e instanceof Error ? e.message : String(e));
+        this.fetchPageViews().catch(() => {
           return { today: 0, last_7d: 0 };
         }),
       ]);

@@ -3,7 +3,7 @@
  * перед началом совещания
  */
 
-import { AlertCircle, CheckCircle2, Clock, Zap } from 'lucide-react';
+import { AlertCircle, AlertTriangle, BarChart3, CheckCircle2, Clock, Lightbulb, X, Zap } from 'lucide-react';
 
 export interface AccountabilityData {
   briefing: string;
@@ -67,8 +67,9 @@ export function PremeetingAccountabilityBriefing({
             />
           )}
           <div>
-            <h3 className="font-bold text-sm text-[var(--text-primary)]">
-              📊 Отчёт об исполнении инициатив
+            <h3 className="font-bold text-sm text-[var(--text-primary)] flex items-center gap-1.5">
+              <BarChart3 size={14} className="text-[var(--text-secondary)]" />
+              Отчёт об исполнении инициатив
             </h3>
             <p className="text-xs text-[var(--text-muted)] mt-1">
               Статус решений из предыдущих совещаний. Требуется внимание?
@@ -85,7 +86,7 @@ export function PremeetingAccountabilityBriefing({
             onClick={onClose}
             className="text-[var(--text-muted)] hover:text-[var(--text-primary)]"
           >
-            ✕
+            <X size={16} />
           </button>
         )}
       </div>
@@ -151,8 +152,9 @@ export function PremeetingAccountabilityBriefing({
       {/* Overdue initiatives */}
       {accountability.overdue_count > 0 && (
         <div className="bg-[rgba(210,153,34,0.1)] border border-[var(--warning)] rounded-lg p-3 mb-4">
-          <p className="text-xs font-bold text-[var(--warning)] mb-2">
-            ⚠️ Просроченные инициативы ({accountability.overdue_count}):
+          <p className="text-xs font-bold text-[var(--warning)] mb-2 flex items-center gap-1.5">
+            <AlertTriangle size={12} className="shrink-0" />
+            Просроченные инициативы ({accountability.overdue_count}):
           </p>
           <ul className="space-y-1.5">
             {initiatives
@@ -195,7 +197,7 @@ export function PremeetingAccountabilityBriefing({
         <div className="mt-4 p-3 bg-[rgba(210,153,34,0.15)] rounded-lg border border-[var(--warning)] border-opacity-30">
           <p className="text-xs text-[var(--text-primary)]">
             <Zap size={12} className="inline mr-1" style={{ color: 'var(--warning)' }} />
-            <strong>💡 Рекомендация:</strong> На этом совещании обсудите почему инициативы
+            <strong>Рекомендация:</strong> На этом совещании обсудите почему инициативы
             не выполняются и что нужно для их ускорения.
           </p>
         </div>

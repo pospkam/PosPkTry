@@ -16,23 +16,13 @@ let initialized = false;
 export async function initializeAgentPlatform(): Promise<void> {
   if (initialized) return;
 
-  try {
-    console.log('[AgentPlatform] Initializing...');
+  // Initialize event bus (singleton)
+  getEventBus();
 
-    // Initialize event bus (singleton)
-    const eventBus = getEventBus();
-    console.log('[AgentPlatform] Event bus ready');
+  // Initialize scheduler (will start interval timers)
+  await initializeScheduler();
 
-    // Initialize scheduler (will start interval timers)
-    await initializeScheduler();
-    console.log('[AgentPlatform] Scheduler started');
-
-    initialized = true;
-    console.log('[AgentPlatform] Initialization complete');
-  } catch (err) {
-    console.error('[AgentPlatform] Initialization failed:', err);
-    throw err;
-  }
+  initialized = true;
 }
 
 /**
@@ -42,12 +32,10 @@ export async function shutdownAgentPlatform(): Promise<void> {
   if (!initialized) return;
 
   try {
-    console.log('[AgentPlatform] Shutting down...');
     await shutdownScheduler();
     initialized = false;
-    console.log('[AgentPlatform] Shutdown complete');
-  } catch (err) {
-    console.error('[AgentPlatform] Shutdown error:', err);
+  } catch {
+    // non-critical
   }
 }
 
