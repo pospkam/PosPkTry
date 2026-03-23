@@ -46,23 +46,31 @@ export async function GET(req: NextRequest) {
       LEFT JOIN agent_route_knowledge ark ON lrs.agent_route_id = ark.id
       LEFT JOIN location_safety_profile lsp ON lsp.agent_route_id = lrs.agent_route_id
       WHERE ${whereClause}
-      ORDER BY lrs.updated_at DESC
-      LIMIT 100
+      ORDER BY
+        CASE lrs.recommender_status WHEN 'red' THEN 0 WHEN 'yellow' THEN 1 ELSE 2 END,
+        lrs.alert_severity DESC,
+        lrs.updated_at DESC
+      LIMIT 200
     `, params);
 
-    const rows = capacityData.rows as Array<{recommender_status: string; capacity_remaining: number}>;
-    const fullCount = rows.filter((r) => r.capacity_remaining <= 0).length;
-    const yellowCount = rows.filter((r) => r.recommender_status === 'yellow').length;
-    const redCount = rows.filter((r) => r.recommender_status === 'red').length;
+    // Accurate totals across all rows (not capped at display limit)
+    const totals = await query(`
+      SELECT
+        count(*)::int                                            AS total,
+        count(*) FILTER (WHERE recommender_status = 'red')::int  AS red_count,
+        count(*) FILTER (WHERE recommender_status = 'yellow')::int AS yellow_count
+      FROM location_real_time_status
+      WHERE ${whereClause}
+    `, params);
+    const { total, red_count, yellow_count } = totals.rows[0] as {total: number; red_count: number; yellow_count: number};
 
     return Response.json({
       success: true,
-      data: rows,
+      data: capacityData.rows,
       meta: {
-        total: rows.length,
-        full_locations: fullCount,
-        yellow_locations: yellowCount,
-        red_locations: redCount,
+        total,
+        red_locations: red_count,
+        yellow_locations: yellow_count,
       },
     });
   } catch (error) {

@@ -440,10 +440,13 @@ function ArtemWishesChat() {
 
 // ── SafetyDashboardClient ──────────────────────────────────────────────────
 
+interface CapacityMeta { total: number; red_locations: number; yellow_locations: number; }
+
 export function SafetyDashboardClient() {
-  const [alerts, setAlerts]     = useState<Alert[]>([]);
-  const [capacity, setCapacity] = useState<CapacityItem[]>([]);
-  const [loading, setLoading]   = useState(true);
+  const [alerts, setAlerts]           = useState<Alert[]>([]);
+  const [capacity, setCapacity]       = useState<CapacityItem[]>([]);
+  const [capacityMeta, setCapacityMeta] = useState<CapacityMeta>({ total: 0, red_locations: 0, yellow_locations: 0 });
+  const [loading, setLoading]         = useState(true);
   const [tab, setTab] = useState<'alerts' | 'capacity' | 'consult' | 'artem'>('alerts');
   const [refreshed, setRefreshed] = useState<Date | null>(null);
 
@@ -454,7 +457,11 @@ export function SafetyDashboardClient() {
         fetch('/api/safety/capacity'),
       ]);
       if (ar.ok) { const d = await ar.json(); setAlerts(d.data ?? []); }
-      if (cr.ok) { const d = await cr.json(); setCapacity(d.data ?? []); }
+      if (cr.ok) {
+        const d = await cr.json();
+        setCapacity(d.data ?? []);
+        if (d.meta) setCapacityMeta(d.meta);
+      }
       setRefreshed(new Date());
     } finally {
       setLoading(false);
@@ -467,10 +474,8 @@ export function SafetyDashboardClient() {
     return () => clearInterval(id);
   }, [fetchData]);
 
-  const criticalAlerts  = alerts.filter(a => a.severity >= 2);
-  const redLocations    = capacity.filter(c => c.recommender_status === 'red');
-  const yellowLocations = capacity.filter(c => c.recommender_status === 'yellow');
-  const hasIncidents    = criticalAlerts.length > 0 || redLocations.length > 0;
+  const criticalAlerts = alerts.filter(a => a.severity >= 2);
+  const hasIncidents   = criticalAlerts.length > 0 || capacityMeta.red_locations > 0;
 
   return (
     <div className="ds-page min-h-screen">
@@ -497,10 +502,10 @@ export function SafetyDashboardClient() {
         {/* ── Метрики ──────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[
-            { label: 'Критических алертов', value: criticalAlerts.length,  Icon: AlertCircle,  color: 'var(--danger)'   },
-            { label: 'Локации переполнены', value: redLocations.length,    Icon: AlertTriangle, color: 'var(--danger)'  },
-            { label: 'Предупреждения (70%)', value: yellowLocations.length, Icon: Clock,        color: 'var(--warning)' },
-            { label: 'Локаций всего',         value: capacity.length,       Icon: CheckCircle,  color: 'var(--success)' },
+            { label: 'Критических алертов', value: criticalAlerts.length,        Icon: AlertCircle,   color: 'var(--danger)'   },
+            { label: 'Закрытых зон',        value: capacityMeta.red_locations,   Icon: AlertTriangle, color: 'var(--danger)'   },
+            { label: 'Предупреждений',       value: capacityMeta.yellow_locations, Icon: Clock,        color: 'var(--warning)'  },
+            { label: 'Всего локаций',        value: capacityMeta.total,           Icon: CheckCircle,  color: 'var(--success)'  },
           ].map(({ label, value, Icon, color }) => (
             <div key={label} className="ds-card p-5">
               <div className="flex items-center justify-between mb-2">
@@ -526,7 +531,7 @@ export function SafetyDashboardClient() {
                 }`}
               >
                 {t === 'alerts'   ? `Алерты (${alerts.length})` :
-                 t === 'capacity' ? `Ёмкость (${capacity.length})` :
+                 t === 'capacity' ? `Ёмкость (${capacityMeta.total})` :
                  t === 'consult'  ? 'Консультация МЧС' :
                  'Артём'}
               </button>
