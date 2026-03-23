@@ -27,64 +27,34 @@ export async function GET(req: Request) {
   const ingestResult = await ingestAll();
   errors.push(...ingestResult.kbgsras.errors, ...ingestResult.eqkam.errors);
 
-  // ── 2. Обновляем location_real_time_status по активным алертам ────────
+  // ── 2. Обновляем location_real_time_status ────────────────────────────
+  // Логика: если severity >= 2 хотя бы у одного активного алерта → все RED
+  // Если severity = 0 (нет алертов) → смотрим только на загруженность
   try {
     const updateResult = await query(`
       UPDATE location_real_time_status lrs
       SET
         active_alerts = (
-          SELECT array_agg(DISTINCT ea.title)
+          SELECT array_agg(ea.title)
           FROM external_alerts ea
           WHERE ea.expires_at > NOW()
-            AND (
-              ea.affected_locations @> ARRAY[lrs.agent_route_id]
-              OR ea.affected_zones && (
-                SELECT ARRAY[COALESCE(ark.zone, 'avachinsky')]
-                FROM agent_route_knowledge ark
-                WHERE ark.id = lrs.agent_route_id
-                LIMIT 1
-              )
-            )
         ),
-        alert_severity = COALESCE((
-          SELECT MAX(ea.severity)
+        alert_severity = (
+          SELECT COALESCE(MAX(ea.severity), 0)
           FROM external_alerts ea
           WHERE ea.expires_at > NOW()
-            AND (
-              ea.affected_locations @> ARRAY[lrs.agent_route_id]
-              OR ea.affected_zones && (
-                SELECT ARRAY[COALESCE(ark.zone, 'avachinsky')]
-                FROM agent_route_knowledge ark
-                WHERE ark.id = lrs.agent_route_id
-                LIMIT 1
-              )
-            )
-        ), 0),
+        ),
         recommender_status = CASE
-          WHEN COALESCE((
-            SELECT MAX(ea.severity)
-            FROM external_alerts ea
-            WHERE ea.expires_at > NOW()
-              AND (
-                ea.affected_locations @> ARRAY[lrs.agent_route_id]
-                OR ea.affected_zones && (
-                  SELECT ARRAY[COALESCE(ark.zone, 'avachinsky')]
-                  FROM agent_route_knowledge ark
-                  WHERE ark.id = lrs.agent_route_id
-                  LIMIT 1
-                )
-              )
-          ), 0) >= 2 THEN 'red'
-          WHEN lrs.tourists_today >= COALESCE((
-            SELECT capacity_per_day
-            FROM location_safety_profile
-            WHERE agent_route_id = lrs.agent_route_id
-          ), 50) THEN 'red'
-          WHEN lrs.tourists_today >= COALESCE((
-            SELECT capacity_per_day * 0.7
-            FROM location_safety_profile
-            WHERE agent_route_id = lrs.agent_route_id
-          ), 35) THEN 'yellow'
+          WHEN (SELECT COALESCE(MAX(severity), 0) FROM external_alerts WHERE expires_at > NOW()) >= 2
+            THEN 'red'
+          WHEN lrs.tourists_today >= COALESCE(
+            (SELECT capacity_per_day FROM location_safety_profile WHERE agent_route_id = lrs.agent_route_id),
+            50
+          ) THEN 'red'
+          WHEN lrs.tourists_today >= COALESCE(
+            (SELECT ROUND(capacity_per_day * 0.7) FROM location_safety_profile WHERE agent_route_id = lrs.agent_route_id),
+            35
+          ) THEN 'yellow'
           ELSE 'green'
         END,
         updated_at = NOW()
