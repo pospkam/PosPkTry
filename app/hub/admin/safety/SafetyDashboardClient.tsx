@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import {
   AlertCircle, AlertTriangle, CheckCircle, Clock, Users,
   RefreshCw, Radio, CloudRain, BookOpen, ShieldAlert, PhoneCall,
+  Send, MessageSquare,
 } from 'lucide-react';
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -32,6 +33,144 @@ interface CapacityItem {
 }
 
 type BriefingTab = 'sos' | 'weather' | 'protocols';
+
+interface ChatMsg {
+  role: 'user' | 'assistant';
+  content: string;
+  ts: number;
+}
+
+// ── MchsConsultChat ───────────────────────────────────────────────────────
+
+function MchsConsultChat() {
+  const [history, setHistory] = useState<ChatMsg[]>([]);
+  const [input, setInput]     = useState('');
+  const [sending, setSending] = useState(false);
+  const endRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [history]);
+
+  async function sendMessage() {
+    const text = input.trim();
+    if (!text || sending) return;
+
+    const userMsg: ChatMsg = { role: 'user', content: text, ts: Date.now() };
+    const nextHistory = [...history, userMsg];
+    setHistory(nextHistory);
+    setInput('');
+    setSending(true);
+
+    try {
+      const res = await fetch('/api/agents/rescue-consult', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: text,
+          history: nextHistory.slice(-10).map(m => ({ role: m.role, content: m.content })),
+        }),
+      });
+      const data = await res.json();
+      if (data.reply) {
+        setHistory(prev => [...prev, { role: 'assistant', content: data.reply, ts: Date.now() }]);
+      } else {
+        setHistory(prev => [...prev, { role: 'assistant', content: `Ошибка: ${data.error ?? 'нет ответа'}`, ts: Date.now() }]);
+      }
+    } catch {
+      setHistory(prev => [...prev, { role: 'assistant', content: 'Связь потеряна. Попробуйте снова.', ts: Date.now() }]);
+    } finally {
+      setSending(false);
+    }
+  }
+
+  function handleKey(e: React.KeyboardEvent) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  }
+
+  return (
+    <div className="flex flex-col h-[520px]">
+      {/* Agent header */}
+      <div className="flex items-center gap-3 px-6 py-4 border-b border-[var(--border)]">
+        <div className="w-9 h-9 rounded-full bg-[var(--warning)] bg-opacity-15 flex items-center justify-center">
+          <MessageSquare className="w-4 h-4 text-[var(--warning)]" />
+        </div>
+        <div>
+          <p className="font-semibold text-sm text-[var(--text-primary)]">AI Спасатель — Консультация МЧС</p>
+          <p className="text-xs text-[var(--text-secondary)]">
+            Задавайте вопросы — AI знает текущую обстановку по всем зонам Камчатки
+          </p>
+        </div>
+      </div>
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {history.length === 0 && (
+          <div className="text-center py-12 text-[var(--text-secondary)] text-sm">
+            <ShieldAlert className="w-8 h-8 mx-auto mb-3 text-[var(--warning)] opacity-40" />
+            <p className="font-medium mb-1">Опишите ситуацию или задайте вопрос</p>
+            <p className="text-xs text-[var(--text-muted)]">
+              Например: «Шивелуч дал выброс 8 км, у нас группа в р-не Ключей» или «Нужен протокол эвакуации при землетрясении»
+            </p>
+          </div>
+        )}
+        {history.map((msg, i) => (
+          <div
+            key={i}
+            className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
+          >
+            <div className={`w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold ${
+              msg.role === 'user'
+                ? 'bg-[var(--ocean)] bg-opacity-20 text-[var(--ocean)]'
+                : 'bg-[var(--warning)] bg-opacity-20 text-[var(--warning)]'
+            }`}>
+              {msg.role === 'user' ? 'МЧС' : 'AI'}
+            </div>
+            <div className={`max-w-[80%] px-4 py-3 rounded-lg text-sm leading-relaxed ${
+              msg.role === 'user'
+                ? 'bg-[var(--ocean)] bg-opacity-10 text-[var(--text-primary)]'
+                : 'bg-[var(--bg-hover)] text-[var(--text-primary)]'
+            }`}>
+              <p className="whitespace-pre-wrap">{msg.content}</p>
+              <p className="text-xs text-[var(--text-muted)] mt-1">
+                {new Date(msg.ts).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+              </p>
+            </div>
+          </div>
+        ))}
+        {sending && (
+          <div className="flex gap-3">
+            <div className="w-7 h-7 rounded-full bg-[var(--warning)] bg-opacity-20 flex items-center justify-center text-xs font-bold text-[var(--warning)]">AI</div>
+            <div className="bg-[var(--bg-hover)] px-4 py-3 rounded-lg flex items-center gap-2">
+              <div className="animate-spin rounded-full h-3 w-3 border border-[var(--border)] border-t-[var(--warning)]" />
+              <span className="text-xs text-[var(--text-secondary)]">Анализирую обстановку...</span>
+            </div>
+          </div>
+        )}
+        <div ref={endRef} />
+      </div>
+
+      {/* Input */}
+      <div className="p-4 border-t border-[var(--border)] flex gap-2">
+        <textarea
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={handleKey}
+          placeholder="Опишите ситуацию... (Enter — отправить)"
+          rows={2}
+          className="ds-input flex-1 resize-none text-sm"
+          disabled={sending}
+        />
+        <button
+          onClick={sendMessage}
+          disabled={sending || !input.trim()}
+          className="ds-btn ds-btn-primary px-4 self-end flex items-center gap-2"
+        >
+          <Send className="w-4 h-4" />
+          <span className="text-sm">Отправить</span>
+        </button>
+      </div>
+    </div>
+  );
+}
 
 // ── RescueBriefing — AI Спасатель блок ────────────────────────────────────
 
@@ -138,7 +277,7 @@ export function SafetyDashboardClient() {
   const [alerts, setAlerts]     = useState<Alert[]>([]);
   const [capacity, setCapacity] = useState<CapacityItem[]>([]);
   const [loading, setLoading]   = useState(true);
-  const [tab, setTab]           = useState<'alerts' | 'capacity'>('alerts');
+  const [tab, setTab] = useState<'alerts' | 'capacity' | 'consult'>('alerts');
   const [refreshed, setRefreshed] = useState<Date | null>(null);
 
   const fetchData = useCallback(async () => {
@@ -209,7 +348,7 @@ export function SafetyDashboardClient() {
         {/* ── Вкладки: Алерты / Ёмкость ────────────────────────────── */}
         <div className="ds-card mb-6">
           <div className="flex border-b border-[var(--border)]">
-            {(['alerts', 'capacity'] as const).map(t => (
+            {(['alerts', 'capacity', 'consult'] as const).map(t => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
@@ -219,13 +358,15 @@ export function SafetyDashboardClient() {
                     : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
               >
-                {t === 'alerts' ? `Алерты (${alerts.length})` : `Ёмкость (${capacity.length})`}
+                {t === 'alerts'   ? `Алерты (${alerts.length})` :
+                 t === 'capacity' ? `Ёмкость (${capacity.length})` :
+                 'Консультация МЧС'}
               </button>
             ))}
           </div>
 
-          <div className="p-6">
-            {loading ? (
+          <div className={tab === 'consult' ? '' : 'p-6'}>
+            {loading && tab !== 'consult' ? (
               <div className="flex justify-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border border-[var(--border)] border-t-[var(--accent)]" />
               </div>
@@ -261,6 +402,8 @@ export function SafetyDashboardClient() {
                   </div>
                 ))}
               </div>
+            ) : tab === 'consult' ? (
+              <MchsConsultChat />
             ) : (
               <div className="space-y-2">
                 {capacity.length === 0 ? (
