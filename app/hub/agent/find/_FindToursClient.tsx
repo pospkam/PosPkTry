@@ -28,7 +28,8 @@ interface TourSlot {
 const ACTIVITY_OPTIONS = [
   { value: '',            label: 'Все активности'  },
   { value: 'trekking',    label: 'Треккинг'        },
-  { value: 'boat_trip',   label: 'Сплав'           },
+  { value: 'rafting',     label: 'Сплав'           },
+  { value: 'boat_trip',   label: 'Морской тур'     },
   { value: 'fishing',     label: 'Рыбалка'         },
   { value: 'helicopter',  label: 'Вертолёт'        },
   { value: 'thermal',     label: 'Термальный'      },

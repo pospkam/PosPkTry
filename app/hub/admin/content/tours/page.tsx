@@ -60,7 +60,7 @@ const LOCATION_TYPE_LABELS: Record<string, string> = {
 };
 const ACTIVITY_TYPE_LABELS: Record<string, string> = {
   trekking: 'Трекинг', thermal: 'Термальный', boat_trip: 'Морская прогулка',
-  fishing: 'Рыбалка', helicopter: 'Вертолёт', jeep: 'Джип-тур', other: 'Другое',
+  rafting: 'Сплав', fishing: 'Рыбалка', helicopter: 'Вертолёт', jeep: 'Джип-тур', other: 'Другое',
 };
 const PRICE_UNIT_LABELS: Record<string, string> = {
   per_tour: 'за тур', per_person: 'за чел.', per_day_per_person: 'за день/чел.',

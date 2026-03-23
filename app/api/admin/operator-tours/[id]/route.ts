@@ -16,7 +16,7 @@ const UpdateSchema = z.object({
   description: z.string().max(2000).optional(),
   short_description: z.string().max(500).optional(),
   location_type: z.enum(['volcano', 'hot_spring', 'bay', 'lake', 'mountain', 'river', 'geyser', 'other']).optional(),
-  activity_type: z.enum(['trekking', 'thermal', 'boat_trip', 'fishing', 'helicopter', 'jeep', 'other']).optional(),
+  activity_type: z.enum(['trekking', 'thermal', 'boat_trip', 'rafting', 'fishing', 'helicopter', 'jeep', 'other']).optional(),
   location_name: z.string().min(3).max(255).optional(),
   latitude: z.number().min(-90).max(90).optional(),
   longitude: z.number().min(-180).max(180).optional(),

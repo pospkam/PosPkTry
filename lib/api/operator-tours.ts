@@ -15,7 +15,7 @@ export const CreateTourSchema = z.object({
   description: z.string().max(2000).optional(),
   short_description: z.string().max(500).optional(),
   location_type: z.enum(['volcano', 'hot_spring', 'bay', 'lake', 'mountain', 'river', 'geyser', 'other']),
-  activity_type: z.enum(['trekking', 'thermal', 'boat_trip', 'fishing', 'helicopter', 'jeep', 'other']),
+  activity_type: z.enum(['trekking', 'thermal', 'boat_trip', 'rafting', 'fishing', 'helicopter', 'jeep', 'other']),
   location_name: z.string().min(3).max(255),
   latitude: z.number().min(-90).max(90),
   longitude: z.number().min(-180).max(180),

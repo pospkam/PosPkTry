@@ -22,7 +22,7 @@ const BodySchema = z.object({
 });
 
 const PLANNER_PLACES    = ['volcano', 'hot_spring', 'geyser', 'sea', 'mountain', 'river'];
-const PLANNER_ACTIVITIES = ['trekking', 'fishing', 'helicopter', 'bears', 'snowmobile', 'boat_trip'];
+const PLANNER_ACTIVITIES = ['trekking', 'fishing', 'helicopter', 'bears', 'snowmobile', 'boat_trip', 'rafting'];
 
 const RECOMMENDER_TO_PLACES: Record<string, string> = {
   thermal: 'hot_spring',

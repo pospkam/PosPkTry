@@ -8,7 +8,7 @@ export const PLANNER_PLACE_IDS = [
 ] as const;
 
 export const PLANNER_ACTIVITY_IDS = [
-  'trekking', 'fishing', 'helicopter', 'bears', 'snowmobile', 'boat_trip',
+  'trekking', 'fishing', 'helicopter', 'bears', 'snowmobile', 'boat_trip', 'rafting',
 ] as const;
 
 export type PlannerPlaceId = typeof PLANNER_PLACE_IDS[number];
@@ -66,7 +66,8 @@ export const ACTIVITY_LABEL: Record<string, string> = {
   helicopter: 'Вертолёт',
   bears:      'Медведи',
   snowmobile: 'Снегоходы',
-  boat_trip:  'Катер',
+  rafting:    'Сплав',
+  boat_trip:  'Морской тур',
   volcano:    'Вулкан',
   hot_spring: 'Термальные',
   geyser:     'Гейзеры',

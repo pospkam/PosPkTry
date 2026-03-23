@@ -12,7 +12,7 @@ import { pool } from '@/lib/db-pool';
 export const dynamic = 'force-dynamic';
 
 const VALID_ACTIVITY_TYPES = [
-  'trekking', 'fishing', 'helicopter', 'bears', 'snowmobile', 'boat_trip',
+  'trekking', 'fishing', 'helicopter', 'bears', 'snowmobile', 'boat_trip', 'rafting',
   'volcano', 'hot_spring', 'geyser', 'sea', 'mountain', 'river', 'thermal', 'other',
 ] as const;
 

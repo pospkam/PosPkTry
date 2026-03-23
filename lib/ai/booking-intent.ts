@@ -32,6 +32,8 @@ const ACTIVITY_MAP: Record<string, string> = {
   рыбалк: 'fishing',    fishing:    'fishing',
   трекк:  'trekking',   trekking:   'trekking',
   поход:  'trekking',   trek:       'trekking',
+  сплав:  'rafting',    rafting:    'rafting',
+  река:   'rafting',    river:      'rafting',
   вулкан: 'volcano',    volcano:    'volcano',
   источник:'thermal',   термал:     'thermal',
   медвед: 'bears',      bears:      'bears',

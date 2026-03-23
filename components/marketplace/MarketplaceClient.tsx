@@ -24,17 +24,19 @@ const ACTIVITY_LABELS: Record<string, string> = {
   fishing: 'Рыбалка',
   thermal: 'Термальные',
   helicopter: 'Вертолёт',
-  boat_trip: 'Морские',
+  rafting: 'Сплав',
+  boat_trip: 'Морской тур',
   bears: 'Медведи',
   snowmobile: 'Снегоход',
 };
 
 const ACTIVITY_OPTIONS = [
-  { value: 'trekking',   label: 'Треккинг'   },
-  { value: 'fishing',    label: 'Рыбалка'    },
-  { value: 'thermal',    label: 'Термальные' },
-  { value: 'helicopter', label: 'Вертолёт'   },
-  { value: 'boat_trip',  label: 'Морские'    },
+  { value: 'trekking',   label: 'Треккинг'    },
+  { value: 'fishing',    label: 'Рыбалка'     },
+  { value: 'rafting',    label: 'Сплав'       },
+  { value: 'thermal',    label: 'Термальные'  },
+  { value: 'helicopter', label: 'Вертолёт'    },
+  { value: 'boat_trip',  label: 'Морской тур' },
 ];
 
 function TourCardSkeleton() {

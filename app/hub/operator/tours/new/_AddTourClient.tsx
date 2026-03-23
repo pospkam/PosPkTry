@@ -136,9 +136,10 @@ export default function AddTourClient() {
             >
               <option value="trekking">Трекинг</option>
               <option value="fishing">Рыбалка</option>
+              <option value="rafting">Сплав по реке</option>
               <option value="thermal">Горячие источники</option>
               <option value="helicopter">Вертолёт</option>
-              <option value="boat_trip">Лодка</option>
+              <option value="boat_trip">Морской тур</option>
             </select>
           </div>
 
@@ -152,6 +153,7 @@ export default function AddTourClient() {
             >
               <option value="mountain">Гора</option>
               <option value="volcano">Вулкан</option>
+              <option value="river">Река</option>
               <option value="hot_spring">Горячий источник</option>
               <option value="lake">Озеро</option>
               <option value="sea">Море</option>
