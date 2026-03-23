@@ -8,6 +8,10 @@ const nextConfig = {
   // Лимит тела запроса для API routes (загрузка фото)
   experimental: {
     serverBodySizeLimit: '60mb',
+    // Параллельная компиляция страниц — 2-3x быстрее на multi-core
+    workerThreads: true,
+    // Параллельный tracing для standalone output
+    parallelServerBuildTraces: true,
   },
 
   // ONNX Runtime (used by @huggingface/transformers) has native Node.js addons
