@@ -27,10 +27,10 @@ export default function HomePageClient() {
   return (
     <div className="bg-[var(--kh-bg)] text-[var(--kh-text)] min-h-[100dvh] transition-colors duration-300">
       <Header />
+      <NowOnKamchatka />
       <SafetyAlertBanner />
       <main>
         <HeroSection />
-        <NowOnKamchatka />
         <CategoryCards />
         <TripPlanner />
         <PlatformStats />

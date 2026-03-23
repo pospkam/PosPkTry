@@ -1,57 +1,132 @@
 'use client';
 
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useState, useRef } from 'react';
+import { Search, ArrowRight } from 'lucide-react';
 
-const HERO_SRC = '/images/hero/bears-kurilskoye.jpg';
+const HERO_LIGHT = '/images/hero/hero-light.jpg';
+const HERO_DARK  = '/images/hero/hero-dark.jpg';
+
+const CHIPS = [
+  'Рыбалка на чавычу',
+  'Подъём на вулкан',
+  'Горячие источники',
+  'Медведи Курильского',
+];
 
 export function HeroSection() {
+  const router = useRouter();
+  const [query, setQuery] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function submit(text?: string) {
+    const q = (text ?? query).trim();
+    if (!q) return;
+    router.push(`/ai-assistant?q=${encodeURIComponent(q)}`);
+  }
+
+  function handleKey(e: React.KeyboardEvent) {
+    if (e.key === 'Enter') submit();
+  }
+
   return (
-    <section className="relative h-[100svh] min-h-[580px] flex flex-col overflow-hidden">
-      {/* Фотография на весь экран */}
+    <section className="relative h-[100svh] min-h-[600px] flex flex-col overflow-hidden">
+
+      {/* Фото — светлое/тёмное через CSS media */}
       <Image
-        src={HERO_SRC}
-        alt="Курильское озеро — медведи, Камчатка"
+        src={HERO_LIGHT}
+        alt="Камчатка"
         fill
         priority
         sizes="100vw"
-        className="object-cover object-center"
+        className="object-cover object-center dark:opacity-0 transition-opacity duration-500"
+      />
+      <Image
+        src={HERO_DARK}
+        alt="Камчатка"
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover object-center opacity-0 dark:opacity-100 transition-opacity duration-500"
       />
 
-      {/* Тонкий градиент только снизу — фото не душим */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+      {/* Градиент снизу и сверху */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/30" />
 
-      {/* Координаты — верхний левый угол */}
+      {/* Координаты — верх */}
       <div className="relative z-10 p-6 md:p-10">
-        <p className="text-[10px] font-medium uppercase tracking-[4px] text-white/60">
-          52°N · Курильское озеро · Камчатка
+        <p className="text-[10px] font-medium uppercase tracking-[4px] text-white/50">
+          52°N · Камчатский полуостров · Россия
         </p>
       </div>
 
-      {/* Текст + CTA — прижаты к низу */}
-      <div className="relative z-10 mt-auto px-6 md:px-10 pb-12 md:pb-16 max-w-2xl">
+      {/* Основной контент — центр/низ */}
+      <div className="relative z-10 mt-auto px-5 md:px-10 pb-16 md:pb-20 max-w-3xl">
+
+        {/* Бейдж */}
+        <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-5">
+          <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] animate-pulse" />
+          <span className="text-[11px] text-white/80 font-medium tracking-wide">
+            AI-помощник Кузьмич онлайн
+          </span>
+        </div>
+
+        {/* Заголовок */}
         <h1
-          className="font-playfair text-4xl sm:text-5xl md:text-6xl font-bold text-white leading-tight mb-6"
-          style={{ textShadow: '0 2px 24px rgba(0,0,0,0.5)' }}
+          className="font-playfair text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-[1.1] mb-4"
+          style={{ textShadow: '0 2px 32px rgba(0,0,0,0.4)' }}
         >
           Дикая Камчатка.
           <br />
-          Ваш маршрут.
+          <span className="text-[var(--accent)] [text-shadow:0_2px_24px_rgba(212,74,12,0.4)]">Ваш маршрут.</span>
         </h1>
 
-        <div className="flex items-center gap-3 flex-wrap">
+        <p className="text-white/70 text-sm md:text-base mb-8 max-w-lg leading-relaxed">
+          14 направлений, реальные гиды, SOS-безопасность.
+          Спросите Кузьмича — он подберёт тур за 30 секунд.
+        </p>
+
+        {/* Поисковая строка Кузьмича */}
+        <div className="flex items-center gap-2 bg-white dark:bg-[#21262D] rounded-full px-4 py-3 shadow-2xl max-w-xl mb-4">
+          <Search className="w-4 h-4 text-[var(--text-muted)] flex-shrink-0" />
+          <input
+            ref={inputRef}
+            type="text"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            onKeyDown={handleKey}
+            placeholder="Куда хочешь на Камчатку?"
+            className="flex-1 bg-transparent text-[var(--text-primary)] placeholder:text-[var(--text-muted)] text-sm outline-none"
+          />
           <button
             type="button"
-            onClick={() => document.getElementById('planner')?.scrollIntoView({ behavior: 'smooth' })}
-            className="inline-flex items-center gap-3 bg-[var(--bg-card)] text-[var(--text-primary)] font-semibold text-sm px-6 py-3.5 rounded-full hover:opacity-90 transition-all"
+            onClick={() => submit()}
+            disabled={!query.trim()}
+            className="flex-shrink-0 w-8 h-8 rounded-full bg-[var(--accent)] flex items-center justify-center disabled:opacity-40 transition-opacity hover:opacity-90"
+            aria-label="Найти"
           >
-            Спланировать поездку
-            <span className="text-base">→</span>
+            <ArrowRight className="w-4 h-4 text-white" />
           </button>
+        </div>
+
+        {/* Chips-подсказки */}
+        <div className="flex flex-wrap gap-2">
+          {CHIPS.map(chip => (
+            <button
+              key={chip}
+              type="button"
+              onClick={() => submit(chip)}
+              className="text-[11px] text-white/80 border border-white/25 rounded-full px-3 py-1 hover:bg-white/15 hover:text-white transition-all"
+            >
+              {chip}
+            </button>
+          ))}
           <a
-            href="/routes"
-            className="inline-flex items-center gap-2 border border-[var(--border)] text-[var(--bg-card)] font-medium text-sm px-6 py-3.5 rounded-full hover:bg-[var(--bg-card)]/10 transition-all"
+            href="/marketplace"
+            className="text-[11px] text-white/60 border border-white/15 rounded-full px-3 py-1 hover:bg-white/10 hover:text-white/80 transition-all"
           >
-            Все маршруты
+            Все туры →
           </a>
         </div>
       </div>
