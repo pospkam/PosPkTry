@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, User, Briefcase, Check } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import TelegramLoginButton, { type TelegramUser } from './_TelegramLoginButton';
 
 type Mode = 'login' | 'register';
 type UserType = 'tourist' | 'partner';
@@ -175,6 +176,28 @@ export default function AuthPageClient() {
   const switchMode = (newMode: Mode) => {
     setMode(newMode);
     resetForm();
+  };
+
+  const handleTelegramAuth = async (tgUser: TelegramUser) => {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await fetch('/api/auth/telegram', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(tgUser),
+      });
+      const result = await res.json();
+      if (!res.ok || !result.success) throw new Error(result.error || 'Ошибка Telegram входа');
+
+      const userData = { ...result.data, preferences: {}, createdAt: new Date(), updatedAt: new Date() };
+      localStorage.setItem('user', JSON.stringify(userData));
+      router.push('/hub/tourist');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка входа через Telegram');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -453,6 +476,19 @@ export default function AuthPageClient() {
             </div>
           </form>
         )}
+
+        {/* Telegram Login */}
+        <div className="mt-4">
+          <div className="flex items-center gap-3 my-4">
+            <div className="flex-1 h-px bg-[var(--border)]" />
+            <span className="text-xs text-[var(--text-muted)]">или</span>
+            <div className="flex-1 h-px bg-[var(--border)]" />
+          </div>
+          <TelegramLoginButton onAuth={handleTelegramAuth} />
+          <p className="text-[10px] text-center text-[var(--text-muted)] mt-2">
+            Telegram-аккаунт создаётся автоматически
+          </p>
+        </div>
 
         {/* Footer */}
         <div className="mt-6 text-center">
