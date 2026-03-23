@@ -43,7 +43,7 @@ const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/ai/crew-plan': ['POST'],
   '/api/ai/health': ['GET'],
   '/api/agents/health': ['GET'],       // agent system health (lightly protected via HEALTH_SECRET)
-  '/api/safety': 'ALL',
+  '/api/safety/sos': 'ALL',         // SOS distress signal — must remain public
   '/api/mcp': 'ALL',
   '/api/telegram': 'ALL',          // Telegram webhook
   '/api/operators': ['GET'],        // публичный каталог партнёров

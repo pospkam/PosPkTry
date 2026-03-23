@@ -1,10 +1,15 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/auth/middleware';
 import { query } from '@/lib/database';
 
 /**
  * GET /api/safety/capacity?route_id=123
- * Returns capacity status for specific route(s)
+ * Returns capacity status — admin only
  */
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
+  const auth = await requireAdmin(req);
+  if (auth instanceof NextResponse) return auth;
+
   try {
     const { searchParams } = new URL(req.url);
     const routeId = searchParams.get('route_id');

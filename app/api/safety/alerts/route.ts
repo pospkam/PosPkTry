@@ -1,10 +1,15 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/auth/middleware';
 import { query } from '@/lib/database';
 
 /**
  * GET /api/safety/alerts
- * Returns active alerts affecting locations
+ * Returns active alerts — admin only
  */
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const auth = await requireAdmin(req);
+  if (auth instanceof NextResponse) return auth;
+
   try {
     const alerts = await query(`
       SELECT
