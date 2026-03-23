@@ -44,6 +44,8 @@ import {
 } from '@/lib/notifications/telegram-channel';
 import { PlatformAgent } from '@/lib/agents/platform-agent';
 import { approvalRequired } from '@/lib/agents/safeguards/approval-required';
+import { verifyConnectToken } from '@/lib/telegram/connect-token';
+import { sendWelcomeMessage } from '@/lib/telegram/welcome';
 
 export const dynamic = 'force-dynamic';
 
@@ -136,6 +138,25 @@ function isAdmin(userId: number): boolean {
 
 async function sendHTML(chatId: string, text: string): Promise<void> {
   await telegramService.sendMessage({ chatId, text, parseMode: 'HTML' });
+}
+
+// ── Поиск пользователя по Telegram ID ────────────────────────────────────────
+
+interface LinkedUser {
+  id: string;
+  name: string;
+  role: string;
+  email: string;
+}
+
+async function getUserByTelegramId(telegramId: number): Promise<LinkedUser | null> {
+  try {
+    const res = await query<LinkedUser>(
+      `SELECT id, name, role, email FROM users WHERE telegram_id = $1 LIMIT 1`,
+      [telegramId]
+    );
+    return res.rows[0] ?? null;
+  } catch { return null; }
 }
 
 // ── История диалога (chat_sessions) ──────────────────────────────────────────
@@ -516,24 +537,100 @@ export async function POST(request: NextRequest) {
     const text    = update.message.text.trim();
     const admin   = isAdmin(fromId);
 
-    // /start
+    // /start [link_{token}] — привязка аккаунта или приветствие
     if (text.startsWith('/start')) {
-      await sendHTML(chatId, [
-        '<b>Привет! Я — Кузьмич.</b>',
-        '',
-        'Камчадал в третьем поколении, прошёл больше 300 маршрутов.',
-        'Знаю Камчатку как свои пять пальцев — вулканы, медведи, рыбалка, термалки.',
-        '',
-        '<b>Что умею:</b>',
-        '/route — случайный маршрут',
-        '/weather — погода сейчас',
-        '/tip — совет путешественнику',
-        '/operators — список партнёров',
-        '/sezon — что актуально прямо сейчас',
-        '/help — полный список',
-        '',
-        'Или просто спроси — отвечу честно.',
-      ].join('\n'));
+      const arg = text.slice('/start'.length).trim();
+
+      // /start link_{token} — привязка email-аккаунта к Telegram
+      if (arg.startsWith('link_')) {
+        const token = arg.slice('link_'.length);
+        const userId = verifyConnectToken(token);
+
+        if (!userId) {
+          await sendHTML(chatId, [
+            '<b>Ссылка недействительна или истекла.</b>',
+            '',
+            'Получи новую в личном кабинете: Профиль → Подключить Telegram.',
+          ].join('\n'));
+          return NextResponse.json({ ok: true });
+        }
+
+        // Связываем telegram_id с аккаунтом
+        const linkRes = await query<{ name: string; role: string }>(
+          `UPDATE users SET telegram_id = $1, telegram_username = $2
+           WHERE id = $3 AND (telegram_id IS NULL OR telegram_id = $1)
+           RETURNING name, role`,
+          [update.message.from.id, update.message.from.username ?? null, userId]
+        );
+
+        if (!linkRes.rows[0]) {
+          await sendHTML(chatId, 'Аккаунт уже привязан к другому Telegram. Обратись в поддержку.');
+          return NextResponse.json({ ok: true });
+        }
+
+        const { name, role } = linkRes.rows[0];
+
+        // Если оператор/гид — обновляем partners.telegram_chat_id
+        if (role === 'operator' || role === 'guide') {
+          await query(
+            `UPDATE partners SET telegram_chat_id = $1 WHERE user_id = $2`,
+            [update.message.from.id, userId]
+          ).catch(() => null);
+        }
+
+        // Отправляем персональное приветствие
+        void sendWelcomeMessage(userId, {
+          telegramId: update.message.from.id,
+          name,
+          role,
+          isNewUser: false,
+        });
+
+        return NextResponse.json({ ok: true });
+      }
+
+      // /start без параметра — проверяем знаем ли мы этого пользователя
+      const linkedUser = await getUserByTelegramId(fromId);
+
+      if (linkedUser) {
+        const firstName = linkedUser.name.split(' ')[0];
+        const roleLabel: Record<string, string> = {
+          tourist: 'Рад снова видеть тебя',
+          operator: 'Кабинет оператора',
+          guide: 'Кабинет гида',
+          agent: 'Кабинет агента',
+          admin: 'Командный центр',
+        };
+        await sendHTML(chatId, [
+          `<b>${roleLabel[linkedUser.role] ?? 'Привет'}, ${firstName}!</b>`,
+          '',
+          'Твой личный канал активен. Команды:',
+          '/help — всё что я умею',
+          '/route — случайный маршрут',
+          '/weather — погода сейчас',
+          '',
+          'Или просто спроси — отвечу.',
+        ].join('\n'));
+      } else {
+        await sendHTML(chatId, [
+          '<b>Привет! Я — Кузьмич.</b>',
+          '',
+          'Камчадал в третьем поколении, прошёл больше 300 маршрутов.',
+          'Знаю Камчатку как свои пять пальцев — вулканы, медведи, рыбалка, термалки.',
+          '',
+          '<b>Что умею:</b>',
+          '/route — случайный маршрут',
+          '/weather — погода сейчас',
+          '/tip — совет путешественнику',
+          '/operators — список партнёров',
+          '/sezon — что актуально прямо сейчас',
+          '/help — полный список',
+          '',
+          'Или просто спроси — отвечу честно.',
+          '',
+          'Уже зарегистрирован на <a href="https://tourhab.ru">tourhab.ru</a>? Привяжи аккаунт в профиле — и я буду знать о твоих поездках.',
+        ].join('\n'));
+      }
       return NextResponse.json({ ok: true });
     }
 

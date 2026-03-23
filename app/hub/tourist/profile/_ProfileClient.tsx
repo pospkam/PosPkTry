@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Protected } from '@/components/auth/Protected';
-import { User, Loader2, Save, Lock, AlertCircle, CheckCircle } from 'lucide-react';
+import { User, Loader2, Save, Lock, AlertCircle, CheckCircle, Send, ExternalLink } from 'lucide-react';
 
 const INPUT_CLASS =
   'w-full min-h-[44px] px-4 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]';
@@ -76,6 +76,10 @@ export default function ProfileClient() {
   const [pwdSuccess, setPwdSuccess] = useState(false);
   const [pwdError, setPwdError] = useState<string | null>(null);
 
+  const [tgLinked, setTgLinked] = useState<boolean | null>(null);
+  const [tgUsername, setTgUsername] = useState<string | null>(null);
+  const [tgLink, setTgLink] = useState<string | null>(null);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -108,6 +112,15 @@ export default function ProfileClient() {
         setPhone(profile.phone ?? '');
         setBio(profile.bio ?? '');
         setEmail(meResult.data.email ?? '');
+
+        // Загружаем статус Telegram
+        const tgRes = await fetch('/api/telegram/connect');
+        if (tgRes.ok) {
+          const tgData = await tgRes.json() as { linked: boolean; username?: string; link?: string };
+          setTgLinked(tgData.linked);
+          setTgUsername(tgData.username ?? null);
+          setTgLink(tgData.link ?? null);
+        }
       } catch {
         if (!cancelled) {
           setFetchError('Не удалось загрузить профиль. Проверьте соединение.');
@@ -307,6 +320,56 @@ export default function ProfileClient() {
                 {saving ? 'Сохранение...' : 'Сохранить'}
               </button>
             </form>
+
+            {/* Telegram personal channel */}
+            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <Send className="w-5 h-5 text-[var(--ocean)]" />
+                <h2 className="text-lg font-semibold text-[var(--text-primary)]">
+                  Личный Telegram-канал
+                </h2>
+              </div>
+
+              {tgLinked === null ? (
+                <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Проверяем статус...
+                </div>
+              ) : tgLinked ? (
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 text-sm text-[var(--success)]">
+                    <CheckCircle className="w-5 h-5" />
+                    <span>
+                      Telegram подключён{tgUsername ? ` (@${tgUsername})` : ''}
+                    </span>
+                  </div>
+                  <span className="text-xs text-[var(--text-muted)]">
+                    Уведомления о поездках приходят в бот @KuzmichKam_bot
+                  </span>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-sm text-[var(--text-secondary)]">
+                    Подключи Telegram — Кузьмич будет присылать статусы броней,
+                    напоминания о поездках и отвечать на вопросы прямо в чате.
+                  </p>
+                  {tgLink ? (
+                    <a
+                      href={tgLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ds-btn ds-btn-primary inline-flex items-center gap-2 min-h-[44px] px-5"
+                    >
+                      <Send className="w-4 h-4" />
+                      Открыть в Telegram
+                      <ExternalLink className="w-3 h-3 opacity-70" />
+                    </a>
+                  ) : (
+                    <p className="text-sm text-[var(--text-muted)]">Ссылка недоступна</p>
+                  )}
+                </div>
+              )}
+            </div>
 
             {/* Password change form */}
             <form

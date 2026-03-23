@@ -18,6 +18,7 @@ import { z } from 'zod';
 import { query } from '@/lib/database';
 import { createToken } from '@/lib/auth/jwt';
 import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
+import { sendWelcomeMessage } from '@/lib/telegram/welcome';
 
 export const dynamic = 'force-dynamic';
 
@@ -135,6 +136,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: 'Подпись Telegram недействительна.' }, { status: 401 });
   }
 
+  // Проверяем: первый ли раз этот аккаунт входит через Telegram
+  const existing = await query<{ id: string }>(
+    `SELECT id FROM users WHERE telegram_id = $1 LIMIT 1`,
+    [tgData.id],
+  );
+  const isFirstTgLink = existing.rows.length === 0;
+
   // Find or create
   const user = await findOrCreateTelegramUser(tgData);
 
@@ -145,6 +153,17 @@ export async function POST(request: NextRequest) {
       `UPDATE partners SET telegram_chat_id = $1 WHERE user_id = $2 AND telegram_chat_id IS DISTINCT FROM $1`,
       [tgData.id, user.id],
     ).catch(() => null);
+  }
+
+  // Персональное приветствие при первом подключении Telegram-канала
+  if (isFirstTgLink) {
+    const name = [tgData.first_name, tgData.last_name].filter(Boolean).join(' ') || 'Путешественник';
+    void sendWelcomeMessage(user.id, {
+      telegramId: tgData.id,
+      name,
+      role: user.role,
+      isNewUser: true,
+    });
   }
 
   // Issue JWT
