@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Bot, Send, Loader2, User, Sun, Moon } from 'lucide-react';
 import Logo from '@/components/shared/Logo';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -22,12 +23,23 @@ export default function AIAssistantPage() {
   const [loading, setLoading] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const { isDark, toggleTheme } = useTheme();
+  const searchParams = useSearchParams();
 
-  async function handleSend(e: React.FormEvent) {
-    e.preventDefault();
-    const text = input.trim();
-    if (!text || loading) return;
+  // Auto-send query from hero search bar (?q=...)
+  useEffect(() => {
+    const q = searchParams.get('q');
+    if (!q) return;
+    setInput(q);
+    // small delay so state settles before sending
+    const t = setTimeout(() => {
+      void sendMessage(q);
+    }, 200);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
+  async function sendMessage(text: string) {
+    if (!text.trim() || loading) return;
     setMessages(prev => [...prev, { role: 'user', content: text }]);
     setInput('');
     setLoading(true);
@@ -130,7 +142,7 @@ export default function AIAssistantPage() {
       </div>
 
       <div className="sticky bottom-0 bg-[var(--bg-primary)] border-t border-[var(--border)] -mx-4 px-4 py-3">
-        <form onSubmit={handleSend} className="flex gap-2">
+        <form onSubmit={e => { e.preventDefault(); void sendMessage(input.trim()); }} className="flex gap-2">
           <input
             value={input}
             onChange={e => setInput(e.target.value)}
