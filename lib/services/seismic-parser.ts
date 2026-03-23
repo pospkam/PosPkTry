@@ -203,10 +203,9 @@ function classifyMessage(id: string, text: string, datetime: string): SeismicEve
       if (/северо?|ключевск|парамушир/i.test(text)) zones.push('northern');
       if (/восток|кроноцк|карымск/i.test(text)) zones.push('eastern');
 
-      const severity: 0 | 1 | 2 | 3 = mag >= 7 ? 3 : mag >= 6 ? 2 : mag >= 5 ? 1 : 0;
-
-      // Бюллетень (не одиночное событие)
+      // Бюллетень (не одиночное событие) — severity всегда 0 (информация, не угроза)
       const isBulletin = /за неделю|сейсмическая обстановка|по состоянию на/i.test(text);
+      const severity: 0 | 1 | 2 | 3 = isBulletin ? 0 : mag >= 7 ? 3 : mag >= 6 ? 2 : mag >= 5 ? 1 : 0;
 
       return {
         source_id: id,
@@ -215,7 +214,7 @@ function classifyMessage(id: string, text: string, datetime: string): SeismicEve
         alert_type: isBulletin ? 'seismic_bulletin' : 'earthquake',
         severity,
         title: isBulletin
-          ? `Сейсмобюллетень — до ML ${mag}`
+          ? `Сейсмобюллетень КБГС — до ML ${mag}`
           : `Землетрясение ML ${mag} — ${epicenter.slice(0, 50)}`,
         description: text.slice(0, 600),
         affected_zones: [...new Set(zones)],
