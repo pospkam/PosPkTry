@@ -47,6 +47,8 @@ import { approvalRequired } from '@/lib/agents/safeguards/approval-required';
 import { verifyConnectToken } from '@/lib/telegram/connect-token';
 import { sendWelcomeMessage } from '@/lib/telegram/welcome';
 import { notifyTouristBookingConfirmed, notifyTouristBookingCancelled } from '@/lib/telegram/booking-notify';
+import { createTicket, getUserOpenTickets, addTicketMessage } from '@/lib/support/ticket.service';
+import { categorizeSupport, CATEGORY_LABELS, RESIDENT_INTRO } from '@/lib/support/categorize';
 
 export const dynamic = 'force-dynamic';
 
@@ -158,6 +160,21 @@ async function getUserByTelegramId(telegramId: number): Promise<LinkedUser | nul
     );
     return res.rows[0] ?? null;
   } catch { return null; }
+}
+
+// ── Определение обращений в поддержку ─────────────────────────────────────────
+
+const SUPPORT_TRIGGERS = [
+  'помогите', 'помощь', 'поддержка', 'жалоба', 'обращение',
+  'проблема', 'не работает', 'ошибка', 'баг', 'сломалось',
+  'оператор не отвечает', 'деньги не пришли', 'возврат', 'верните',
+  'не подтвердил', 'обманул', 'неправильно', 'недоволен', 'претензия',
+  'не могу войти', 'заблокировали', 'что делать', 'куда обратиться',
+];
+
+function isSupportRequest(text: string): boolean {
+  const lower = text.toLowerCase();
+  return SUPPORT_TRIGGERS.some(trigger => lower.includes(trigger));
 }
 
 // ── История диалога (chat_sessions) ──────────────────────────────────────────
@@ -950,6 +967,60 @@ export async function POST(request: NextRequest) {
           await createLeadFromBot(chatId, phoneText, lastIntests);
           await sendHTML(chatId, '✅ Спасибо! Оператор свяжется с вами в ближайшее время.');
           return NextResponse.json({ ok: true });
+        }
+      }
+
+      // Поддержка: обращение в тикет-систему
+      if (isSupportRequest(text)) {
+        const linkedUser = await getUserByTelegramId(fromId);
+
+        if (linkedUser) {
+          // Проверяем открытые тикеты
+          const openTickets = await getUserOpenTickets(linkedUser.id);
+
+          if (openTickets.length > 0) {
+            // Добавляем сообщение к существующему тикету
+            const ticket = openTickets[0];
+            await addTicketMessage(ticket.id, { role: 'user', text });
+            await sendHTML(chatId, [
+              `<b>Тикет #${ticket.id.slice(0, 8)} обновлён</b>`,
+              '',
+              `Категория: ${CATEGORY_LABELS[ticket.category]}`,
+              `Статус: рассматривается Резидентом ${ticket.assignedAgent ?? 'Admin'}`,
+              '',
+              'Ответим в ближайшее время.',
+            ].join('\n'));
+          } else {
+            // Создаём новый тикет
+            const { category, resident } = categorizeSupport(text);
+            const ticket = await createTicket({
+              userId:       linkedUser.id,
+              channel:      'telegram',
+              subject:      text.slice(0, 100),
+              firstMessage: text,
+            });
+            await sendHTML(chatId, [
+              '<b>Обращение принято!</b>',
+              '',
+              `Тикет: <code>#${ticket.id.slice(0, 8)}</code>`,
+              `Категория: ${CATEGORY_LABELS[category]}`,
+              '',
+              RESIDENT_INTRO[resident] ?? `Назначен Резидент ${resident}.`,
+              '',
+              'Срок ответа: до 2 часов в рабочее время.',
+              'Продолжай писать здесь — я передам ответ.',
+            ].join('\n'));
+          }
+          return NextResponse.json({ ok: true });
+        } else {
+          // Незарегистрированный пользователь — направляем к регистрации
+          await sendHTML(chatId, [
+            'Для обращения в поддержку нужен аккаунт на TourHab.',
+            '',
+            'Зарегистрируйся на <a href="https://tourhab.ru/auth/register">tourhab.ru</a> и привяжи Telegram в профиле.',
+            'Или опиши проблему — помогу решить здесь.',
+          ].join('\n'));
+          // Не возвращаем — пусть Кузьмич тоже ответит
         }
       }
 
