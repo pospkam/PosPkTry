@@ -71,6 +71,11 @@ export interface AgentProposal {
   color:           string;
   needs_approval:  boolean;
   approval_id:     string | null;
+  /** Назначенный исполнитель — определяется матрицей компетенций */
+  executor_id:     string;
+  executor_name:   string;
+  executor_color:  string;
+  executor_reason: string;
 }
 
 // ── Agent registry ───────────────────────────────────────────────────────────────────
@@ -149,6 +154,62 @@ const PROPOSAL_CONFIGS: Record<string, ProposalConfig> = {
     persona:       'Ты архитектор AI-системы туристической платформы — следишь за её эволюцией. Интегрируй решения других директоров, проверь противоречия. Если consensus не работает вместе — флаг "CONFLICT". Показывай полный результат, не обрезай.',
     allowed_types: ['prompt_optimize', 'schedule_suggest', 'sql_query_fix'],
     domain: 'architecture',
+  },
+};
+
+// ── Матрица компетенций: action_type → лучший исполнитель ───────────────────────────────
+//
+// Правило: исполнителем назначается агент с наилучшей доменной экспертизой для данного
+// типа действия — независимо от того, кто его предложил.
+// Нельзя назначить юриста хакером, эколога — операционным директором и т.д.
+
+interface ExecutorEntry {
+  id:     string;
+  name:   string;
+  color:  string;
+  reason: string; // Почему именно этот агент
+}
+
+const EXECUTOR_SKILL_MAP: Record<string, ExecutorEntry> = {
+  booking_rule_change: {
+    id: 'admin', name: 'AI Администратор', color: 'var(--accent)',
+    reason: 'Правила бронирования — операционная зона администратора',
+  },
+  commission_change: {
+    id: 'admin', name: 'AI Администратор', color: 'var(--accent)',
+    reason: 'Финансовые параметры платформы — исключительная зона операций',
+  },
+  bulk_notify: {
+    id: 'admin', name: 'AI Администратор', color: 'var(--accent)',
+    reason: 'Массовые коммуникации — координация администратора',
+  },
+  price_change: {
+    id: 'hacker', name: 'AI Хакер', color: 'var(--success)',
+    reason: 'Ценовая стратегия и A/B-тесты — зона директора по росту',
+  },
+  ui_copy_change: {
+    id: 'content', name: 'AI Аудитор', color: 'var(--ocean)',
+    reason: 'Текст интерфейса и копирайтинг — зона контент-директора',
+  },
+  prompt_optimize: {
+    id: 'evo', name: 'AI Эволюция', color: '#EC4899',
+    reason: 'Оптимизация AI-промптов — зона архитектора платформы',
+  },
+  api_scope_expand: {
+    id: 'security', name: 'AI Служба безопасности', color: 'var(--danger)',
+    reason: 'Расширение прав доступа — исключительная зона безопасности',
+  },
+  schedule_suggest: {
+    id: 'rescue', name: 'AI Спасатель', color: 'var(--warning)',
+    reason: 'Расписание маршрутов и SAR-операций — зона начальника SAR',
+  },
+  tour_auto_cancel: {
+    id: 'quality', name: 'AI Качество', color: '#F59E0B',
+    reason: 'Отмена туров по качеству — зона директора по качеству',
+  },
+  sql_query_fix: {
+    id: 'evo', name: 'AI Эволюция', color: '#EC4899',
+    reason: 'Архитектурные изменения БД — зона архитектора платформы',
   },
 };
 
@@ -336,17 +397,42 @@ async function generateProposal(
 
   const agentDef = MEETING_AGENTS.find(a => a.id === agent.id);
 
+  // Назначаем исполнителя по матрице компетенций
+  // Если тип действия не в матрице — исполнитель = агент-инициатор
+  const executorEntry = EXECUTOR_SKILL_MAP[actionType] ?? {
+    id:     agent.id,
+    name:   agent.name,
+    color:  agentDef?.color ?? 'var(--accent)',
+    reason: `Инициатор ${agent.name} — единственный компетентный исполнитель`,
+  };
+
+  // Обновляем agent_approvals: выставляем executor и execution_status=assigned
+  if (approval.id) {
+    await pool.query(
+      `UPDATE agent_approvals
+       SET executor_agent_id = $2,
+           executor_name     = $3,
+           execution_status  = 'assigned'
+       WHERE id = $1`,
+      [approval.id, executorEntry.id, executorEntry.name]
+    ).catch(() => null);
+  }
+
   return {
-    from_id:        agent.id,
-    from_name:      agent.name,
-    from_role:      agent.role,
-    action_type:    actionType,
-    title:          parsed.title.substring(0, 120),
-    description:    parsed.description.substring(0, 400),
+    from_id:         agent.id,
+    from_name:       agent.name,
+    from_role:       agent.role,
+    action_type:     actionType,
+    title:           parsed.title.substring(0, 120),
+    description:     parsed.description.substring(0, 400),
     priority,
-    color:          agentDef?.color ?? 'var(--accent)',
-    needs_approval: approval.needs_approval,
-    approval_id:    approval.id ?? null,
+    color:           agentDef?.color ?? 'var(--accent)',
+    needs_approval:  approval.needs_approval,
+    approval_id:     approval.id ?? null,
+    executor_id:     executorEntry.id,
+    executor_name:   executorEntry.name,
+    executor_color:  executorEntry.color,
+    executor_reason: executorEntry.reason,
   };
 }
 

@@ -31,6 +31,8 @@ interface AgentProposal {
   action_type: string; title: string; description: string;
   priority: 'high' | 'medium' | 'low';
   color: string; needs_approval: boolean; approval_id: string | null;
+  executor_id: string; executor_name: string;
+  executor_color: string; executor_reason: string;
 }
 
 interface AgentVote {
@@ -347,6 +349,34 @@ function ProposalCard({ proposal }: { proposal: AgentProposal }) {
         </div>
 
         <p className="text-sm text-[var(--text-secondary)] mb-3 leading-relaxed">{proposal.description}</p>
+
+        {/* Исполнитель — назначен матрицей компетенций */}
+        {proposal.executor_id && (
+          <div className="flex items-start gap-2 mb-3 p-2.5 rounded-lg"
+            style={{ background: `${proposal.executor_color}08`, border: `1px solid ${proposal.executor_color}20` }}>
+            <div className="w-6 h-6 rounded-md flex items-center justify-center shrink-0 mt-0.5"
+              style={{ background: `${proposal.executor_color}20` }}>
+              {(() => {
+                const ExecutorIcon = AGENT_CONFIG[proposal.executor_id]?.icon ?? Shield;
+                return <ExecutorIcon size={12} style={{ color: proposal.executor_color }} />;
+              })()}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wide font-bold">Исполнитель</span>
+                <span className="text-xs font-bold" style={{ color: proposal.executor_color }}>
+                  {proposal.executor_name}
+                </span>
+                {proposal.from_id !== proposal.executor_id && (
+                  <span className="text-[10px] text-[var(--text-muted)]">
+                    (предложил {proposal.from_name})
+                  </span>
+                )}
+              </div>
+              <p className="text-[10px] text-[var(--text-muted)] leading-relaxed mt-0.5">{proposal.executor_reason}</p>
+            </div>
+          </div>
+        )}
 
         <div className="flex items-center gap-2">
           {decision === 'approved' ? (
