@@ -43,17 +43,25 @@ const envSchema = z.object({
   MINIMAX_API_KEY: z.string().optional().default(''),
   XAI_API_KEY: z.string().optional().default(''),
   OPENROUTER_API_KEY: z.string().optional().default(''),
+  OPENROUTER_MANAGEMENT_KEY: z.string().optional().default(''), // for balance check via /api/v1/credits
   ANTHROPIC_API_KEY: z.string().optional().default(''),
   AI_MAX_TOKENS: z.string().optional().default('800'),
   AI_DAILY_BUDGET_USD: z.string().optional().default('10.0'),
 
   // ── Telegram ──────────────────────────────────────────────────────
-  TELEGRAM_BOT_TOKEN: z.string().optional().default(''),
-  TELEGRAM_CHAT_ID: z.string().optional().default(''),
-  TELEGRAM_FISHING_CHAT_ID: z.string().optional().default(''),
-  TELEGRAM_WEBHOOK_SECRET: z.string().optional().default(''),
-  TELEGRAM_LEADS_CHAT_ID: z.string().optional().default(''),
-  TELEGRAM_CHANNEL_ID: z.string().optional().default(''),
+  // @KuzmichKam_bot — public bot (AI chat, booking buttons, channel posts)
+  TELEGRAM_BOT_TOKEN:            z.string().optional().default(''),
+  TELEGRAM_CHAT_ID:              z.string().optional().default(''), // admin group chat
+  TELEGRAM_FISHING_CHAT_ID:      z.string().optional().default(''), // operator auth chat
+  TELEGRAM_WEBHOOK_SECRET:       z.string().optional().default(''),
+  TELEGRAM_CHANNEL_ID:           z.string().optional().default(''), // public channel
+  TELEGRAM_LEADS_CHAT_ID:        z.string().optional().default(''), // diagnostic only
+  // @tourhab_bot — owner-only admin bot (digest, SOS, board initiatives)
+  TELEGRAM_ADMIN_BOT_TOKEN:      z.string().optional().default(''),
+  TELEGRAM_OWNER_ID:             z.string().optional().default(''), // numeric Telegram user ID
+  TELEGRAM_ADMIN_CHAT_ID:        z.string().optional().default(''), // SOS alerts
+  // Login Widget — set bot @username only after /setdomain tourhab.ru in BotFather
+  NEXT_PUBLIC_TELEGRAM_BOT_USERNAME: z.string().optional().default(''),
 
   // ── Email (SMTP) ──────────────────────────────────────────────────
   SMTP_HOST: z.string().optional().default('smtp.gmail.com'),
@@ -112,6 +120,7 @@ const envSchema = z.object({
   MCHS_API_TOKEN: z.string().optional().default(''),
 
   // ── External Services ─────────────────────────────────────────────
+  CRON_SECRET: z.string().optional().default(''),          // protects /api/cron/* endpoints
   CREWAI_API_URL: z.string().optional().default('http://localhost:8001'),
   WEBHOOK_SECRET: z.string().optional().default(''),
   KNOWLEDGE_BASE_SOURCE_URLS: z.string().optional().default(''),
