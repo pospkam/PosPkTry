@@ -129,6 +129,28 @@ export async function POST(request: NextRequest) {
       }).catch(() => {});
     }
 
+    // Приветственное письмо оператору
+    emailService.sendEmail({
+      to: email,
+      subject: `Добро пожаловать в KamchatourHub, ${companyName}!`,
+      html: `
+        <h2>Ваш кабинет оператора активирован</h2>
+        <p>Здравствуйте, ${contactName}!</p>
+        <p>Компания <b>${companyName}</b> успешно зарегистрирована на платформе KamchatourHub.</p>
+        <h3>Следующие шаги:</h3>
+        <ol>
+          <li><a href="https://tourhab.ru/hub/operator">Войдите в личный кабинет</a></li>
+          <li>Добавьте первый тур (кнопка «Создать тур»)</li>
+          <li>Настройте расписание и доступность</li>
+          <li>Туристы увидят ваши туры в каталоге</li>
+        </ol>
+        <p>Комиссия платформы: <b>15%</b> от стоимости тура. Выплаты — еженедельно по пятницам.</p>
+        <p>Вопросы? Пишите: <a href="mailto:${adminEmail ?? 'info@tourhab.ru'}">${adminEmail ?? 'info@tourhab.ru'}</a></p>
+        <hr>
+        <p style="color:#888;font-size:12px">KamchatourHub — tourhab.ru</p>
+      `,
+    }).catch(() => {});
+
     const response = NextResponse.json({
       success: true,
       message: 'Регистрация успешна. Ваш кабинет активирован.',
