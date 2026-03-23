@@ -59,33 +59,33 @@ export async function GET(req: NextRequest) {
 
   const sql = `
     SELECT
-      t.id                                                    AS tour_id,
+      t.id                                                             AS tour_id,
       t.title,
       t.description,
       t.activity_type,
       t.duration_hours,
       t.max_participants,
-      t.includes_guide,
-      t.includes_equipment,
+      t.difficulty,
       t.season_start,
       t.season_end,
-      p.id                                                    AS operator_id,
-      p.company_name                                          AS operator_name,
-      p.contacts->>'phone'                                    AS operator_phone,
-      a.available_date,
-      COALESCE(a.available_spots, t.max_participants)         AS available_spots,
-      COALESCE(a.price_override, t.base_price)::numeric       AS price,
-      ROUND(COALESCE(a.price_override, t.base_price) * 0.10) AS agent_commission
+      p.id                                                             AS operator_id,
+      p.company_name                                                   AS operator_name,
+      p.contacts->>'phone'                                             AS operator_phone,
+      a.date                                                           AS available_date,
+      (a.available_slots - COALESCE(a.booked_slots, 0))               AS available_spots,
+      COALESCE(a.base_price_override, t.base_price)::numeric          AS price,
+      ROUND(COALESCE(a.base_price_override, t.base_price) * 0.10)     AS agent_commission
     FROM operator_tours t
     JOIN partners p ON t.operator_id = p.id
     JOIN tour_availability a
-      ON a.tour_id = t.id
-      AND a.available_date BETWEEN $1 AND $2
+      ON a.operator_tour_id = t.id
+      AND a.date BETWEEN $1 AND $2
+      AND a.deleted_at IS NULL
     WHERE t.is_published  = TRUE
       AND t.deleted_at    IS NULL
-      AND COALESCE(a.available_spots, t.max_participants) >= $3
+      AND (a.available_slots - COALESCE(a.booked_slots, 0)) >= $3
       ${activityFilter}
-    ORDER BY a.available_date ASC, price ASC
+    ORDER BY a.date ASC, price ASC
     LIMIT $4
   `;
 

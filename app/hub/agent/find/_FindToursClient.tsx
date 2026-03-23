@@ -3,25 +3,24 @@
 import { useState, useEffect } from 'react';
 import {
   Search, Calendar, Users, MapPin, Clock, Phone,
-  RefreshCw, ChevronRight, Banknote, Star,
+  RefreshCw, ChevronRight, Banknote,
 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 
 interface TourSlot {
-  tour_id:         number;
-  title:           string;
-  description:     string | null;
-  activity_type:   string | null;
-  duration_hours:  number | null;
+  tour_id:          number;
+  title:            string;
+  description:      string | null;
+  activity_type:    string | null;
+  duration_hours:   number | null;
   max_participants: number;
-  includes_guide:  boolean;
-  includes_equipment: boolean;
-  operator_id:     number;
-  operator_name:   string;
-  operator_phone:  string | null;
-  available_date:  string;
-  available_spots: number;
-  price:           string;
+  difficulty:       string | null;
+  operator_id:      number;
+  operator_name:    string;
+  operator_phone:   string | null;
+  available_date:   string;
+  available_spots:  number;
+  price:            string;
   agent_commission: string;
 }
 
@@ -215,21 +214,13 @@ export default function FindToursClient() {
                 </div>
 
                 {/* Теги */}
-                <div className="flex flex-wrap gap-1">
-                  {t.includes_guide && (
-                    <span className="text-xs px-2 py-0.5 rounded-full
-                      bg-[var(--success)]/10 text-[var(--success)]">
-                      <Star size={10} className="inline mr-1" />
-                      Гид включён
+                {t.difficulty && (
+                  <div className="flex flex-wrap gap-1">
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--bg-hover)] text-[var(--text-secondary)]">
+                      {{ easy: 'Легко', medium: 'Средне', hard: 'Сложно', expert: 'Эксперт' }[t.difficulty] ?? t.difficulty}
                     </span>
-                  )}
-                  {t.includes_equipment && (
-                    <span className="text-xs px-2 py-0.5 rounded-full
-                      bg-[var(--ocean)]/10 text-[var(--ocean)]">
-                      Снаряжение
-                    </span>
-                  )}
-                </div>
+                  </div>
+                )}
 
                 {/* Цена + комиссия */}
                 <div className="flex items-end justify-between pt-2 border-t border-[var(--border)]">
