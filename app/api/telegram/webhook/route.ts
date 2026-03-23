@@ -115,7 +115,16 @@ function esc(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-function isAuthorizedOperator(chatId: number): boolean {
+async function isAuthorizedOperator(chatId: number): Promise<boolean> {
+  // Проверяем по БД (partners.telegram_chat_id — заполняется при Telegram-авторизации)
+  try {
+    const res = await query(
+      `SELECT 1 FROM partners WHERE telegram_chat_id = $1 LIMIT 1`,
+      [chatId],
+    );
+    if (res.rows.length > 0) return true;
+  } catch {}
+  // Fallback: legacy env var TELEGRAM_FISHING_CHAT_ID
   const ids = (process.env.TELEGRAM_FISHING_CHAT_ID ?? '').split(',').map(s => s.trim()).filter(Boolean);
   return ids.includes(String(chatId));
 }
@@ -903,7 +912,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
-    if (!isAuthorizedOperator(senderChatId)) {
+    if (!(await isAuthorizedOperator(senderChatId))) {
       await telegramService.answerCallback(cq.id, 'Нет прав');
       return NextResponse.json({ ok: true });
     }

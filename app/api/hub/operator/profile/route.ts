@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
       p.hero_image, p.logo_image,
       p.payout_method, p.payout_verified, p.commission_current,
       p.profile_review_comment,
+      p.telegram_chat_id,
       u.email, u.name AS contact_name
     FROM partners p
     JOIN users u ON u.id = p.user_id
@@ -52,6 +53,7 @@ const PatchSchema = z.object({
     city:    z.string().max(100).optional(),
   }).optional(),
   complete_onboarding: z.boolean().optional(),
+  telegram_chat_id:    z.number().int().nullable().optional(),
 });
 
 export async function PATCH(request: NextRequest) {
@@ -76,7 +78,7 @@ export async function PATCH(request: NextRequest) {
     description, short_description,
     website, phone, telegram,
     services, features, location,
-    complete_onboarding,
+    complete_onboarding, telegram_chat_id,
   } = parsed.data;
 
   // Merge contacts
@@ -104,6 +106,7 @@ export async function PATCH(request: NextRequest) {
   if (features          !== undefined) p('features',          JSON.stringify(features));
   if (location          !== undefined) p('location',          JSON.stringify(location));
   if (complete_onboarding)             p('onboarding_completed', true);
+  if (telegram_chat_id !== undefined)  p('telegram_chat_id', telegram_chat_id);
   p('contacts', JSON.stringify(newContacts));
 
   params.push(partnerId);

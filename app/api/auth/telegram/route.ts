@@ -138,6 +138,15 @@ export async function POST(request: NextRequest) {
   // Find or create
   const user = await findOrCreateTelegramUser(tgData);
 
+  // Если пользователь — оператор/гид, сохраняем telegram_chat_id в partners
+  // Это позволяет боту отправлять уведомления и авторизовать inline-кнопки автоматически
+  if (user.role === 'operator' || user.role === 'guide') {
+    await query(
+      `UPDATE partners SET telegram_chat_id = $1 WHERE user_id = $2 AND telegram_chat_id IS DISTINCT FROM $1`,
+      [tgData.id, user.id],
+    ).catch(() => null);
+  }
+
   // Issue JWT
   const token = await createToken({ userId: user.id, email: user.email, role: user.role });
 
