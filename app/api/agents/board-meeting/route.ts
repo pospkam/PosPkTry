@@ -50,6 +50,16 @@ export interface AgentReport {
   has_signals?: boolean;
 }
 
+export interface AgentVote {
+  agent_id:   string;
+  agent_name: string;
+  agent_role: string;
+  color:      string;
+  verdict:    'support' | 'oppose' | 'neutral';
+  confidence: number; // 0-100
+  reason:     string; // 1 sentence
+}
+
 export interface AgentProposal {
   from_id:         string;
   from_name:       string;
@@ -340,6 +350,58 @@ async function generateProposal(
   };
 }
 
+// ── Vote extractor (only when topic is set) ─────────────────────────────────────────────
+
+async function extractVote(
+  agent:  AgentReport,
+  topic:  string,
+): Promise<AgentVote | null> {
+  const agentDef = MEETING_AGENTS.find(a => a.id === agent.id);
+  const snippet  = agent.report.replace(/<[^>]+>/g, '').substring(0, 400);
+
+  const prompt = `Ты ${agent.name} (${agent.role}).
+Тема на голосование: "${topic}"
+Твой отчёт (фрагмент): "${snippet}"
+
+Ответь строго JSON (без markdown, без пояснений):
+{"verdict":"support"|"oppose"|"neutral","confidence":0-100,"reason":"одно предложение на русском"}
+
+Правила:
+- support = однозначно поддерживаю тему/инициативу
+- oppose = против, вижу риски или нецелесообразность
+- neutral = воздерживаюсь, недостаточно данных
+- confidence = твоя уверенность в своей позиции (0-100)
+- reason = конкретное обоснование в 1 предложении, без воды`;
+
+  const text = await callAIWaterfall([{ role: 'user', content: prompt }]).catch(() => null);
+  if (!text) return null;
+
+  const match = text.match(/\{[\s\S]*?\}/);
+  if (!match) return null;
+
+  let parsed: { verdict?: string; confidence?: number; reason?: string };
+  try { parsed = JSON.parse(match[0]); } catch { return null; }
+
+  const verdicts = ['support', 'oppose', 'neutral'] as const;
+  const verdict  = verdicts.includes(parsed.verdict as typeof verdicts[number])
+    ? parsed.verdict as typeof verdicts[number]
+    : 'neutral';
+  const confidence = typeof parsed.confidence === 'number'
+    ? Math.max(0, Math.min(100, Math.round(parsed.confidence)))
+    : 50;
+  const reason = typeof parsed.reason === 'string' ? parsed.reason.substring(0, 150) : '';
+
+  return {
+    agent_id:   agent.id,
+    agent_name: agent.name,
+    agent_role: agent.role,
+    color:      agentDef?.color ?? 'var(--accent)',
+    verdict,
+    confidence,
+    reason,
+  };
+}
+
 // ── POST — SSE стриминг ─────────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
@@ -473,6 +535,21 @@ export async function POST(req: NextRequest) {
           send(controller, { type: 'agent_done', agent: report });
         }
 
+        // ── Vote extraction (only when topic is set) ────────────────────────────
+        if (topic) {
+          const voteResults = await Promise.allSettled(
+            agents
+              .filter(a => a.status === 'ok')
+              .map(a => extractVote(a, topic).catch(() => null))
+          );
+          const votes: AgentVote[] = voteResults
+            .map(r => r.status === 'fulfilled' ? r.value : null)
+            .filter((v): v is AgentVote => v !== null);
+          if (votes.length > 0) {
+            send(controller, { type: 'votes_done', votes });
+          }
+        }
+
         send(controller, { type: 'round2_start' });
         const mesh      = new AgentMesh();
         const reactions = await mesh.runReactions(agents);
@@ -485,16 +562,19 @@ export async function POST(req: NextRequest) {
         send(controller, { type: 'round4_start' });
         const successfulAgents = agents.filter(a => a.status === 'ok');
 
-        for (const agent of successfulAgents) {
-          const cfg = PROPOSAL_CONFIGS[agent.id];
-          if (!cfg) continue;
-
-          try {
-            const proposal = await generateProposal(agent, cfg, consensus, meetingId, topic);
-            if (proposal) {
-              send(controller, { type: 'proposal', proposal });
-            }
-          } catch { /* non-critical */ }
+        // Run all proposals in parallel (instead of sequential)
+        const proposalResults = await Promise.allSettled(
+          successfulAgents
+            .filter(a => !!PROPOSAL_CONFIGS[a.id])
+            .map(async (agent) => {
+              const cfg = PROPOSAL_CONFIGS[agent.id];
+              return generateProposal(agent, cfg, consensus, meetingId, topic);
+            })
+        );
+        for (const res of proposalResults) {
+          if (res.status === 'fulfilled' && res.value) {
+            send(controller, { type: 'proposal', proposal: res.value });
+          }
         }
 
         const duration_ms = Date.now() - meetingStart;

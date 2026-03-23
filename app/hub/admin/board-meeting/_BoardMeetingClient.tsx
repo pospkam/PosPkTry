@@ -33,12 +33,21 @@ interface AgentProposal {
   color: string; needs_approval: boolean; approval_id: string | null;
 }
 
+interface AgentVote {
+  agent_id: string; agent_name: string; agent_role: string;
+  color: string;
+  verdict: 'support' | 'oppose' | 'neutral';
+  confidence: number;
+  reason: string;
+}
+
 type StreamEvent =
   | { type: 'meeting_start';  meeting_id: string; started_at: string }
   | { type: 'signals_start' }
   | { type: 'signals_done';   count: number }
   | { type: 'agent_start';    id: string; name: string; role: string }
   | { type: 'agent_done';     agent: AgentReport }
+  | { type: 'votes_done';     votes: AgentVote[] }
   | { type: 'round2_start' }
   | { type: 'reactions_done'; reactions: AgentReaction[] }
   | { type: 'round3_start' }
@@ -85,6 +94,7 @@ const ACTION_TYPE_LABELS: Record<string, string> = {
   prompt_optimize:     'Оптимизация AI',
   api_scope_expand:    'Расширение прав',
   schedule_suggest:    'Расписание',
+  sql_query_fix:       'SQL-исправление',
   tour_auto_cancel:    'Отмена туров',
 };
 
@@ -369,6 +379,112 @@ function ProposalCard({ proposal }: { proposal: AgentProposal }) {
   );
 }
 
+// ── VotingSummary ─────────────────────────────────────────────────────────────
+
+const VERDICT_CONFIG = {
+  support: { label: 'За',         color: 'var(--success)',  icon: ThumbsUp   },
+  oppose:  { label: 'Против',     color: 'var(--danger)',   icon: ThumbsDown },
+  neutral: { label: 'Воздержался', color: 'var(--text-muted)', icon: HelpCircle },
+} as const;
+
+function VotingSummary({ votes, topic }: { votes: AgentVote[]; topic: string }) {
+  const support = votes.filter(v => v.verdict === 'support');
+  const oppose  = votes.filter(v => v.verdict === 'oppose');
+  const neutral = votes.filter(v => v.verdict === 'neutral');
+  const total   = votes.length;
+
+  const supportPct = total > 0 ? Math.round((support.length / total) * 100) : 0;
+  const opposePct  = total > 0 ? Math.round((oppose.length  / total) * 100) : 0;
+  const neutralPct = total > 0 ? 100 - supportPct - opposePct               : 0;
+
+  const avgConfidence = total > 0
+    ? Math.round(votes.reduce((s, v) => s + v.confidence, 0) / total)
+    : 0;
+
+  return (
+    <div className="mb-6">
+      <div className="flex items-center gap-2 mb-3 px-1">
+        <span className="w-5 h-5 rounded-full bg-[var(--ocean)] text-[var(--bg-primary)] text-xs font-bold flex items-center justify-center shrink-0">
+          <Check size={11} />
+        </span>
+        <span className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wide">
+          Голосование по теме
+        </span>
+        <span className="text-xs text-[var(--text-muted)] truncate max-w-[300px]">— {topic}</span>
+      </div>
+
+      <div className="ds-card p-5">
+        {/* Summary bar */}
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex-1 flex h-3 rounded-full overflow-hidden gap-px bg-[var(--bg-primary)]">
+            {supportPct > 0 && (
+              <div className="h-full transition-all" style={{ width: `${supportPct}%`, background: 'var(--success)' }} />
+            )}
+            {neutralPct > 0 && (
+              <div className="h-full transition-all" style={{ width: `${neutralPct}%`, background: 'var(--text-muted)' }} />
+            )}
+            {opposePct > 0 && (
+              <div className="h-full transition-all" style={{ width: `${opposePct}%`, background: 'var(--danger)' }} />
+            )}
+          </div>
+          <span className="text-xs text-[var(--text-muted)] shrink-0">уверен. {avgConfidence}%</span>
+        </div>
+
+        {/* Counters */}
+        <div className="grid grid-cols-3 gap-2 mb-5">
+          {(['support', 'oppose', 'neutral'] as const).map(v => {
+            const cfg   = VERDICT_CONFIG[v];
+            const count = votes.filter(x => x.verdict === v).length;
+            const pct   = v === 'support' ? supportPct : v === 'oppose' ? opposePct : neutralPct;
+            const Icon  = cfg.icon;
+            return (
+              <div key={v} className="text-center p-2 rounded-lg border border-[var(--border)]"
+                style={{ background: count > 0 ? `color-mix(in srgb, ${cfg.color} 8%, var(--bg-card))` : 'var(--bg-primary)' }}>
+                <Icon size={14} className="mx-auto mb-1" style={{ color: count > 0 ? cfg.color : 'var(--text-muted)' }} />
+                <div className="text-lg font-bold" style={{ color: count > 0 ? cfg.color : 'var(--text-muted)' }}>
+                  {count}
+                </div>
+                <div className="text-[10px] text-[var(--text-muted)]">{cfg.label} · {pct}%</div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Per-agent votes */}
+        <div className="space-y-2">
+          {votes.map(v => {
+            const cfg  = VERDICT_CONFIG[v.verdict];
+            const Icon = cfg.icon;
+            const agentCfg = AGENT_CONFIG[v.agent_id];
+            const AgentIcon = agentCfg?.icon ?? Shield;
+            return (
+              <div key={v.agent_id}
+                className="flex items-start gap-3 p-2.5 rounded-lg border border-[var(--border)]"
+                style={{ borderLeftColor: v.color, borderLeftWidth: '3px' }}>
+                <div className="w-7 h-7 rounded-md flex items-center justify-center shrink-0 mt-0.5"
+                  style={{ background: `${v.color}15` }}>
+                  <AgentIcon size={13} style={{ color: v.color }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-bold text-xs text-[var(--text-primary)]">{v.agent_name}</span>
+                    <span className="flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded"
+                      style={{ background: `${cfg.color}15`, color: cfg.color }}>
+                      <Icon size={9} />{cfg.label}
+                    </span>
+                    <span className="text-[10px] text-[var(--text-muted)] ml-auto">{v.confidence}% уверен</span>
+                  </div>
+                  <p className="text-xs text-[var(--text-secondary)] mt-0.5 leading-relaxed">{v.reason}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 export default function BoardMeetingClient() {
@@ -377,6 +493,7 @@ export default function BoardMeetingClient() {
   const [startedAt,      setStartedAt]      = useState('');
   const [agents,         setAgents]         = useState<AgentReport[]>([]);
   const [pendingAgent,   setPendingAgent]   = useState<{ id: string; name: string; role: string } | null>(null);
+  const [votes,          setVotes]          = useState<AgentVote[]>([]);
   const [reactions,      setReactions]      = useState<AgentReaction[]>([]);
   const [consensus,      setConsensus]      = useState('');
   const [proposals,      setProposals]      = useState<AgentProposal[]>([]);
@@ -421,7 +538,7 @@ export default function BoardMeetingClient() {
     setConsensus(''); setProposals([]); setDurationMs(0);
     setMeetingId(''); setStartedAt(''); setError(null);
     setSaved(false); setDecision(''); setStage(0);
-    setSignalsLoading(false); setSignalsCount(0);
+    setSignalsLoading(false); setSignalsCount(0); setVotes([]);
 
     try {
       const res = await fetch('/api/agents/board-meeting', {
@@ -454,6 +571,7 @@ export default function BoardMeetingClient() {
             case 'signals_done':   setSignalsLoading(false); setSignalsCount(event.count); break;
             case 'agent_start':    setPendingAgent({ id: event.id, name: event.name, role: event.role }); break;
             case 'agent_done':     setAgents(prev => [...prev, event.agent]); setPendingAgent(null); break;
+            case 'votes_done':     setVotes(event.votes); break;
             case 'round2_start':   setStage(1); break;
             case 'reactions_done': setReactions(event.reactions); break;
             case 'round3_start':   setStage(2); break;
@@ -616,6 +734,11 @@ export default function BoardMeetingClient() {
                 {pendingAgent && <AgentCard pending={pendingAgent} onFeedback={sendFeedback} />}
               </div>
             </div>
+          )}
+
+          {/* Голосование по теме */}
+          {votes.length > 0 && topic && (
+            <VotingSummary votes={votes} topic={topic} />
           )}
 
           {/* Раунд 2 */}
