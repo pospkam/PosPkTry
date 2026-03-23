@@ -72,7 +72,7 @@ export class RescueAgency {
       }>(`
         SELECT
           COUNT(*)::text                                                        AS total_30d,
-          COUNT(*) FILTER (WHERE status NOT IN ('resolved','false_alarm'))::text  AS active,
+          COUNT(*) FILTER (WHERE status NOT IN ('resolved','cancelled'))::text  AS active,
           COUNT(*) FILTER (WHERE status = 'resolved')::text                    AS resolved,
           '0'                                                                   AS avg_resolve_min
         FROM sos_events
@@ -183,7 +183,7 @@ export class RescueAgency {
       '• Автоматическое уведомление → МЧС Камчатского края: 8 (4152) 27-02-17',
       '• Передать координаты GPS оператору тура',
       '• Активировать план эвакуации маршрута',
-      '• Контроль через /hub/safety каждые 15 мин.',
+      '• Контроль через /hub/admin/safety каждые 15 мин.',
       '',
       '<b>2. Экстремальная погода</b>',
       '• Ветер > 25 м/с: прекратить все маршруты',

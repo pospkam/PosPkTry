@@ -27,6 +27,13 @@ import { callAIWaterfall } from '@/lib/ai/providers';
 import type { ChatMessage } from '@/lib/ai/prompts';
 import { externalResearcher } from '@/lib/agents/research/external-researcher';
 import {
+  runExternalObservers,
+  summarizeReportsForObservers,
+  buildMetricsForObservers,
+  hasObserverKeys,
+} from '@/lib/agents/observers/external-observers';
+import type { ObserverReport } from '@/lib/agents/observers/external-observers';
+import {
   validateProposalAgainstChecklist,
   isFactualAndHonest,
   hasTransparency,
@@ -662,12 +669,35 @@ export async function POST(req: NextRequest) {
         }
 
         send(controller, { type: 'round2_start' });
+
+        // ── Observer Round: external AI observers (Grok + Gemini) ─────────
+        let observerReports: ObserverReport[] = [];
+        if (hasObserverKeys()) {
+          send(controller, { type: 'observers_start' });
+          const reportsSummary = summarizeReportsForObservers(agents);
+          const metrics = buildMetricsForObservers(context as unknown as Record<string, unknown>);
+          observerReports = await runExternalObservers(reportsSummary, metrics);
+          for (const obs of observerReports) {
+            send(controller, { type: 'observer_done', observer: obs });
+          }
+          send(controller, { type: 'observers_done', count: observerReports.length });
+        }
+
         const mesh      = new AgentMesh();
         const reactions = await mesh.runReactions(agents);
         send(controller, { type: 'reactions_done', reactions });
 
         send(controller, { type: 'round3_start' });
-        const consensus   = await mesh.runConsensus(agents, reactions);
+
+        // Inject observer insights into consensus if available
+        let observerInsights = '';
+        const okObservers = observerReports.filter(o => o.status === 'ok');
+        if (okObservers.length > 0) {
+          observerInsights = '\n\nВНЕШНИЕ НАБЛЮДАТЕЛИ (независимые AI, не часть команды):\n' +
+            okObservers.map(o => `[${o.name}]: ${o.report.substring(0, 500)}`).join('\n');
+        }
+
+        const consensus   = await mesh.runConsensus(agents, reactions, observerInsights);
         send(controller, { type: 'consensus_done', consensus });
 
         send(controller, { type: 'round4_start' });
@@ -713,6 +743,8 @@ export async function POST(req: NextRequest) {
                 agents_count:    agents.length,
                 ok:              okCount,
                 reactions_count: reactions.length,
+                observers_count: observerReports.length,
+                observers_ok:    observerReports.filter(o => o.status === 'ok').length,
               }),
             ]
           );

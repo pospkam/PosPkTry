@@ -143,3 +143,7 @@ node_modules/
 # Raw photos (processed locally, not committed)
 scripts/raw-photos/
 public/images/processed/
+
+# Understand Anything generated artifacts
+.understand-anything/knowledge-graph.json
+.understand-anything/cache/

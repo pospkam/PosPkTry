@@ -76,19 +76,39 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { latitude, longitude, accuracy, message, sessionId } = validationResult.data;
+  const { latitude, longitude, accuracy, message, emergency_type, sessionId } = validationResult.data;
 
   // Логируем в БД (не блокируем ответ при ошибке БД)
   try {
     await query(
-      `INSERT INTO sos_events (user_id, session_id, lat, lng, accuracy, ip_address, user_agent)
-       VALUES ($1, $2, $3, $4, $5, $6::inet, $7)`,
-      [userId, sessionId, latitude, longitude, accuracy, ip, userAgent]
+      `INSERT INTO sos_events (user_id, session_id, lat, lng, accuracy, ip_address, user_agent, message, emergency_type)
+       VALUES ($1, $2, $3, $4, $5, $6::inet, $7, $8, $9)`,
+      [userId, sessionId, latitude, longitude, accuracy, ip, userAgent, message ?? null, emergency_type ?? null]
     );
     setRateLimit(rateLimitKey);
   } catch {
     // Даже при ошибке БД — сохраняем rate limit и возвращаем success
     setRateLimit(rateLimitKey);
+  }
+
+  // Telegram-уведомление админу (fire-and-forget)
+  const botToken = process.env.TELEGRAM_ADMIN_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_ADMIN_CHAT_ID;
+  if (botToken && chatId) {
+    const loc = latitude && longitude ? `${latitude.toFixed(4)}, ${longitude.toFixed(4)}` : 'нет координат';
+    const text = [
+      'SOS! Экстренный сигнал',
+      `Тип: ${emergency_type ?? 'не указан'}`,
+      `Координаты: ${loc}`,
+      message ? `Сообщение: ${message}` : '',
+      `IP: ${ip}`,
+    ].filter(Boolean).join('\n');
+
+    fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' }),
+    }).catch(() => { /* fire-and-forget */ });
   }
 
   return NextResponse.json({

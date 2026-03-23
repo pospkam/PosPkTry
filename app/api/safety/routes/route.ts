@@ -28,14 +28,15 @@ interface RouteRow {
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const mode = searchParams.get('mode') || 'safe_only';
+    const rawMode = searchParams.get('mode') || 'safe_only';
+    const mode = ['safe_only', 'adventure', 'available'].includes(rawMode) ? rawMode : 'safe_only';
     const date = searchParams.get('date') || new Date().toISOString().split('T')[0];
     const groupSize = parseInt(searchParams.get('group_size') || '1');
     const maxDifficulty = parseInt(searchParams.get('difficulty') || '5');
     const activityType = searchParams.get('activity_type');
     const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 50);
 
-    const params: unknown[] = [groupSize, maxDifficulty];
+    const params: unknown[] = [groupSize, maxDifficulty, mode, limit];
 
     let riskFilter = '';
     let activityFilter = '';
@@ -75,9 +76,9 @@ export async function GET(req: Request) {
         (
           CASE
             WHEN lrs.is_open = FALSE THEN 0
-            WHEN lrs.alert_severity >= 2 AND '${mode}' != 'adventure' THEN 0
+            WHEN lrs.alert_severity >= 2 AND $3 != 'adventure' THEN 0
             WHEN COALESCE(lsp.capacity_per_day, 50) - COALESCE(lrs.tourists_today, 0) < $1 THEN 0
-            WHEN COALESCE(lsp.difficulty_level, 2) > $2 AND '${mode}' = 'safe_only' THEN 0
+            WHEN COALESCE(lsp.difficulty_level, 2) > $2 AND $3 = 'safe_only' THEN 0
             ELSE
               (1 - (COALESCE(lrs.tourists_today, 0)::FLOAT / COALESCE(lsp.capacity_per_day, 50))) * 0.5 +
               (1 - (COALESCE(lsp.difficulty_level, 2)::FLOAT / 5)) * 0.3 +
@@ -93,7 +94,7 @@ export async function GET(req: Request) {
         ${riskFilter}
         ${activityFilter}
       ORDER BY safety_score DESC
-      LIMIT ${limit}
+      LIMIT $4
     `, params);
 
     const rows = routes.rows as unknown as RouteRow[];

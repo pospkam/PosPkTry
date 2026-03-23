@@ -55,6 +55,7 @@ export class SecurityAgency {
   /** Анализирует паттерны входов и подозрительную активность агентов */
   private async accessAudit(): Promise<AgencyResult> {
     const [agentActivity, failedOps] = await Promise.all([
+      // Активность агентной системы за 24ч по часам
       pool.query<AuthEventRow>(`
         SELECT
           action_type,
@@ -71,6 +72,7 @@ export class SecurityAgency {
         LIMIT 20
       `),
 
+      // Неудачные операции за 24ч
       pool.query<{ agent_name: string; intent: string; error_message: string; created_at: string }>(`
         SELECT agent_name, decision AS intent, error_message, created_at::text
         FROM ai_actions_log
@@ -91,6 +93,7 @@ export class SecurityAgency {
       `Ошибок: ${failOps}`,
     ];
 
+    // Группируем по типам
     const byType: Record<string, number> = {};
     for (const r of agentActivity.rows) {
       byType[r.action_type] = (byType[r.action_type] ?? 0) + parseInt(r.count, 10);

@@ -9,7 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { pool } from '@/lib/db-pool';
-import { executeInitiative, type ExecutionTask, type StepLogger } from '@/lib/agents/execution/initiative-executor';
+import { executeInitiative, type ExecutionTask } from '@/lib/agents/execution/initiative-executor';
 
 export const dynamic = 'force-dynamic';
 
@@ -76,11 +76,7 @@ export async function POST(
       try {
         send({ type: 'started', executor: task.executor_agent_id, action_type: task.action_type });
 
-        const onStep: StepLogger = async (eventType, message) => {
-          send({ type: 'step', event_type: eventType, message, ts: Date.now() });
-        };
-
-        const result = await executeInitiative(task, onStep);
+        const result = await executeInitiative(task);
 
         send({
           type: result.success ? 'done' : 'failed',

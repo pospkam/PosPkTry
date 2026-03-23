@@ -7,6 +7,7 @@ import {
   Cpu, PlayCircle, CheckCircle, AlertCircle, Clock, ChevronDown, ChevronUp,
   Download, Loader2, Users, MessageSquare, GitMerge, TriangleAlert, ThumbsUp,
   HelpCircle, Swords, ThumbsDown, Lightbulb, Check, X, Zap, Globe, CalendarDays,
+  ExternalLink, Wallet,
 } from 'lucide-react';
 import { PremeetingAccountabilityBriefing } from '@/components/admin/PremeetingAccountabilityBriefing';
 import type { AccountabilityData } from '@/components/admin/PremeetingAccountabilityBriefing';
@@ -43,6 +44,12 @@ interface AgentVote {
   reason: string;
 }
 
+interface ObserverReport {
+  id: string; name: string; role: string; provider: 'grok' | 'gemini';
+  report: string; duration_ms: number; status: 'ok' | 'error' | 'unavailable';
+  color: string;
+}
+
 type StreamEvent =
   | { type: 'meeting_start';  meeting_id: string; started_at: string }
   | { type: 'signals_start' }
@@ -51,6 +58,9 @@ type StreamEvent =
   | { type: 'agent_done';     agent: AgentReport }
   | { type: 'votes_done';     votes: AgentVote[] }
   | { type: 'round2_start' }
+  | { type: 'observers_start' }
+  | { type: 'observer_done';  observer: ObserverReport }
+  | { type: 'observers_done'; count: number }
   | { type: 'reactions_done'; reactions: AgentReaction[] }
   | { type: 'round3_start' }
   | { type: 'consensus_done'; consensus: string }
@@ -525,6 +535,8 @@ export default function BoardMeetingClient() {
   const [pendingAgent,   setPendingAgent]   = useState<{ id: string; name: string; role: string } | null>(null);
   const [votes,          setVotes]          = useState<AgentVote[]>([]);
   const [reactions,      setReactions]      = useState<AgentReaction[]>([]);
+  const [observers,      setObservers]      = useState<ObserverReport[]>([]);
+  const [observersLoading, setObserversLoading] = useState(false);
   const [consensus,      setConsensus]      = useState('');
   const [proposals,      setProposals]      = useState<AgentProposal[]>([]);
   const [durationMs,     setDurationMs]     = useState(0);
@@ -536,6 +548,9 @@ export default function BoardMeetingClient() {
   const [saved,          setSaved]          = useState(false);
   const [saving,         setSaving]         = useState(false);
   const [accountabilityData, setAccountabilityData] = useState<AccountabilityData | null>(null);
+  const [preflightWarning,   setPreflightWarning]   = useState<string | null>(null);
+  const [preflightLoading,   setPreflightLoading]   = useState(false);
+  const [orBalance,          setOrBalance]          = useState<{ remaining: number; low: boolean } | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   const isDone    = stage === 4;
@@ -569,6 +584,38 @@ export default function BoardMeetingClient() {
     setMeetingId(''); setStartedAt(''); setError(null);
     setSaved(false); setDecision(''); setStage(0);
     setSignalsLoading(false); setSignalsCount(0); setVotes([]);
+    setObservers([]); setObserversLoading(false);
+    setPreflightWarning(null); setPreflightLoading(true); setOrBalance(null);
+
+    // Preflight: проверяем доступность AI-провайдеров
+    try {
+      const pfRes = await fetch('/api/agents/board-meeting/preflight', { signal: ctrl.signal });
+      if (pfRes.ok) {
+        const pfData = await pfRes.json() as {
+          any_available: boolean;
+          providers: Array<{ id: string; name: string; available: boolean; latency_ms?: number; error?: string }>;
+          openrouter_balance: { remaining: number; low: boolean } | null;
+        };
+        if (pfData.openrouter_balance) {
+          setOrBalance(pfData.openrouter_balance);
+        }
+        if (!pfData.any_available) {
+          const names = pfData.providers.map(p => p.name).join(', ');
+          setPreflightWarning(`Ни один AI-провайдер не доступен (${names}). Проверьте баланс и API-ключи.`);
+          setStage(-1);
+          setPreflightLoading(false);
+          return;
+        }
+        const available = pfData.providers.filter(p => p.available);
+        if (available.length < 2) {
+          setPreflightWarning(`Доступен только 1 провайдер: ${available[0]?.name}. Совещание может быть нестабильным.`);
+        }
+      }
+    } catch (e) {
+      if ((e as Error).name === 'AbortError') return;
+      // Preflight failed — не блокируем, пробуем запустить совещание
+    }
+    setPreflightLoading(false);
 
     try {
       const res = await fetch('/api/agents/board-meeting', {
@@ -603,6 +650,9 @@ export default function BoardMeetingClient() {
             case 'agent_done':     setAgents(prev => [...prev, event.agent]); setPendingAgent(null); break;
             case 'votes_done':     setVotes(event.votes); break;
             case 'round2_start':   setStage(1); break;
+            case 'observers_start': setObserversLoading(true); break;
+            case 'observer_done':  setObservers(prev => [...prev, event.observer]); break;
+            case 'observers_done': setObserversLoading(false); break;
             case 'reactions_done': setReactions(event.reactions); break;
             case 'round3_start':   setStage(2); break;
             case 'consensus_done': setConsensus(event.consensus); break;
@@ -641,10 +691,25 @@ export default function BoardMeetingClient() {
         <div className="w-10 h-10 rounded-lg bg-[var(--accent)] flex items-center justify-center shrink-0">
           <Users size={20} className="text-[var(--bg-primary)]" />
         </div>
-        <div>
+        <div className="flex-1">
           <h1 className="ds-h1">Совет директоров</h1>
           <p className="text-sm text-[var(--text-muted)]">4 раунда: отчёты — реакции — консенсус — инициативы</p>
         </div>
+        {orBalance && (
+          <a href="https://openrouter.ai/credits" target="_blank" rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors hover:opacity-80"
+            style={{
+              background: orBalance.low
+                ? 'color-mix(in srgb, var(--danger) 10%, transparent)'
+                : 'color-mix(in srgb, var(--success) 10%, transparent)',
+              color: orBalance.low ? 'var(--danger)' : 'var(--success)',
+              border: `1px solid ${orBalance.low ? 'var(--danger)' : 'var(--success)'}30`,
+            }}>
+            <Wallet size={13} />
+            ${orBalance.remaining.toFixed(2)}
+            <ExternalLink size={10} className="opacity-50" />
+          </a>
+        )}
       </div>
 
       {/* Pre-meeting */}
@@ -691,8 +756,32 @@ export default function BoardMeetingClient() {
             </p>
           </div>
           <button onClick={handleStart} className="ds-btn-primary px-8 py-3 text-sm font-bold">
-            Открыть совещание
+            {preflightLoading ? <Loader2 size={16} className="animate-spin inline mr-2" /> : null}
+            {preflightLoading ? 'Проверка провайдеров...' : 'Открыть совещание'}
           </button>
+          {preflightWarning && stage === -1 && !error && (
+            <div className="mt-4 max-w-md mx-auto ds-card p-3 border-l-4" style={{ borderLeftColor: 'var(--warning)' }}>
+              <div className="flex items-start gap-2">
+                <AlertCircle size={16} className="shrink-0 mt-0.5" style={{ color: 'var(--warning)' }} />
+                <div>
+                  <p className="text-sm font-bold text-[var(--text-primary)]">AI-провайдеры недоступны</p>
+                  <p className="text-xs text-[var(--text-secondary)] mt-1">{preflightWarning}</p>
+                  {orBalance && (
+                    <p className="text-xs mt-1" style={{ color: orBalance.low ? 'var(--danger)' : 'var(--success)' }}>
+                      <Wallet size={10} className="inline mr-1" />
+                      OpenRouter: ${orBalance.remaining.toFixed(2)} осталось
+                    </p>
+                  )}
+                  <a href="https://openrouter.ai/credits" target="_blank" rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 mt-2 text-xs font-bold px-3 py-1.5 rounded transition-colors"
+                    style={{ background: 'var(--ocean)', color: 'var(--bg-primary)' }}>
+                    <Wallet size={12} />Пополнить OpenRouter
+                    <ExternalLink size={10} />
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
         </>
       )}
@@ -700,6 +789,25 @@ export default function BoardMeetingClient() {
       {/* Running / Done */}
       {stage >= 0 && (
         <>
+          {/* Preflight warning (non-blocking) */}
+          {preflightWarning && stage >= 0 && (
+            <div className="ds-card p-2.5 mb-3 flex items-center gap-2 border-l-4 flex-wrap" style={{ borderLeftColor: 'var(--warning)' }}>
+              <AlertCircle size={14} style={{ color: 'var(--warning)' }} />
+              <span className="text-xs text-[var(--text-secondary)] flex-1">{preflightWarning}</span>
+              {orBalance && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded" style={{
+                  background: orBalance.low ? 'color-mix(in srgb, var(--danger) 10%, transparent)' : 'color-mix(in srgb, var(--success) 10%, transparent)',
+                  color: orBalance.low ? 'var(--danger)' : 'var(--success)',
+                }}>
+                  <Wallet size={9} className="inline mr-0.5" />${orBalance.remaining.toFixed(2)}
+                </span>
+              )}
+              <a href="https://openrouter.ai/credits" target="_blank" rel="noopener noreferrer"
+                className="text-[10px] font-bold flex items-center gap-0.5" style={{ color: 'var(--ocean)' }}>
+                Пополнить<ExternalLink size={9} />
+              </a>
+            </div>
+          )}
           {/* Meta bar */}
           <div className="ds-card p-3 mb-4 flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
@@ -769,6 +877,57 @@ export default function BoardMeetingClient() {
           {/* Голосование по теме */}
           {votes.length > 0 && topic && (
             <VotingSummary votes={votes} topic={topic} />
+          )}
+
+          {/* External Observers */}
+          {(observers.length > 0 || observersLoading) && (
+            <div className="mb-6">
+              <div className="flex items-center gap-2 px-1 mb-3">
+                <span className="w-5 h-5 rounded-full bg-[#1DA1F2] text-white text-xs font-bold flex items-center justify-center">
+                  <Globe size={11} />
+                </span>
+                <span className="text-xs text-[var(--text-primary)] uppercase tracking-wide font-bold">Внешние наблюдатели</span>
+                <span className="text-xs text-[var(--text-muted)]">— независимый взгляд извне</span>
+              </div>
+              {observersLoading && observers.length === 0 && (
+                <div className="ds-card p-4 flex items-center gap-3">
+                  <Loader2 size={14} className="animate-spin shrink-0" style={{ color: '#1DA1F2' }} />
+                  <span className="text-sm text-[var(--text-muted)]">Запрашиваю внешних наблюдателей (Grok, Gemini)...</span>
+                </div>
+              )}
+              <div className="space-y-3">
+                {observers.map(obs => (
+                  <div key={obs.id} className="ds-card p-4" style={{ borderLeft: `3px solid ${obs.color}` }}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
+                        style={{ background: `${obs.color}15` }}>
+                        <Globe size={13} style={{ color: obs.color }} />
+                      </div>
+                      <div className="flex-1">
+                        <span className="font-bold text-xs text-[var(--text-primary)]">{obs.name}</span>
+                        <span className="text-[10px] text-[var(--text-muted)] ml-2">{obs.role}</span>
+                      </div>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
+                        obs.status === 'ok' ? 'bg-[var(--success)]/10 text-[var(--success)]' :
+                        obs.status === 'unavailable' ? 'bg-[var(--warning)]/10 text-[var(--warning)]' :
+                        'bg-[var(--danger)]/10 text-[var(--danger)]'
+                      }`}>
+                        {obs.status === 'ok' ? 'Online' : obs.status === 'unavailable' ? 'N/A' : 'Error'}
+                      </span>
+                      <span className="text-[10px] text-[var(--text-muted)]">{(obs.duration_ms / 1000).toFixed(1)}s</span>
+                    </div>
+                    {obs.status === 'ok' && (
+                      <div className="space-y-0.5 text-xs text-[var(--text-secondary)] leading-relaxed">
+                        {renderFormattedText(obs.report)}
+                      </div>
+                    )}
+                    {obs.status !== 'ok' && (
+                      <p className="text-xs text-[var(--text-muted)] italic">{obs.report}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
 
           {/* Раунд 2 */}

@@ -258,7 +258,7 @@ function RescueBriefing() {
         ) : (
           <div
             className="text-[var(--text-primary)] text-sm leading-relaxed whitespace-pre-line"
-            dangerouslySetInnerHTML={{ __html: text || 'Данные отсутствуют.' }}
+            dangerouslySetInnerHTML={{ __html: (text || 'Данные отсутствуют.').replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '').replace(/on\w+\s*=/gi, '') }}
           />
         )}
         {lastUpdated && !loading && (
@@ -271,13 +271,180 @@ function RescueBriefing() {
   );
 }
 
+// ── ArtemWishesChat ───────────────────────────────────────────────────────
+
+interface Wish {
+  id: number;
+  message: string;
+  category: string;
+  priority: string;
+  status: string;
+  admin_reply: string | null;
+  created_at: string;
+}
+
+const STATUS_LABELS: Record<string, { label: string; color: string }> = {
+  new:         { label: 'Новое',       color: 'var(--ocean)'   },
+  reviewed:    { label: 'Рассмотрено', color: 'var(--warning)' },
+  in_progress: { label: 'В работе',    color: 'var(--accent)'  },
+  done:        { label: 'Готово',       color: 'var(--success)' },
+  rejected:    { label: 'Отклонено',   color: 'var(--danger)'  },
+};
+
+const CATEGORY_LABELS: Record<string, string> = {
+  feature: 'Функция',
+  bug:     'Баг',
+  safety:  'Безопасность',
+  general: 'Общее',
+};
+
+function ArtemWishesChat() {
+  const [wishes, setWishes] = useState<Wish[]>([]);
+  const [input, setInput] = useState('');
+  const [category, setCategory] = useState<'feature' | 'bug' | 'safety' | 'general'>('general');
+  const [sending, setSending] = useState(false);
+  const [loadingWishes, setLoadingWishes] = useState(true);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  const fetchWishes = useCallback(async () => {
+    try {
+      const res = await fetch('/api/safety/wishes?stakeholder=artem');
+      if (res.ok) {
+        const data = await res.json();
+        setWishes(data.wishes ?? []);
+      }
+    } finally {
+      setLoadingWishes(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchWishes(); }, [fetchWishes]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [wishes]);
+
+  async function handleSend() {
+    if (!input.trim() || sending) return;
+    setSending(true);
+    try {
+      const res = await fetch('/api/safety/wishes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stakeholder: 'artem', message: input.trim(), category }),
+      });
+      if (res.ok) {
+        setInput('');
+        await fetchWishes();
+      }
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function updateStatus(wishId: number, status: string) {
+    await fetch('/api/safety/wishes', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ wish_id: wishId, status }),
+    });
+    await fetchWishes();
+  }
+
+  return (
+    <div className="flex flex-col h-[500px]">
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        {loadingWishes ? (
+          <div className="flex justify-center py-12">
+            <div className="animate-spin rounded-full h-6 w-6 border border-[var(--border)] border-t-[var(--accent)]" />
+          </div>
+        ) : wishes.length === 0 ? (
+          <div className="text-center py-12">
+            <MessageSquare className="w-8 h-8 mx-auto mb-2 text-[var(--text-muted)]" />
+            <p className="text-sm text-[var(--text-muted)]">Пока нет пожеланий. Запишите первое.</p>
+          </div>
+        ) : (
+          [...wishes].reverse().map(w => {
+            const st = STATUS_LABELS[w.status] ?? STATUS_LABELS.new;
+            return (
+              <div key={w.id} className="p-3 rounded-lg bg-[var(--bg-hover)] border border-[var(--border)]">
+                <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                    style={{ background: `${st.color}15`, color: st.color }}>
+                    {st.label}
+                  </span>
+                  <span className="text-[10px] text-[var(--text-muted)] bg-[var(--bg-card)] px-1.5 py-0.5 rounded">
+                    {CATEGORY_LABELS[w.category] ?? w.category}
+                  </span>
+                  <span className="text-[10px] text-[var(--text-muted)] ml-auto">
+                    {new Date(w.created_at).toLocaleDateString('ru-RU')}
+                  </span>
+                </div>
+                <p className="text-sm text-[var(--text-primary)] leading-relaxed">{w.message}</p>
+                {w.admin_reply && (
+                  <p className="text-xs text-[var(--text-secondary)] mt-2 pl-3 border-l-2 border-[var(--accent)]">
+                    {w.admin_reply}
+                  </p>
+                )}
+                {w.status === 'new' && (
+                  <div className="flex gap-1.5 mt-2">
+                    <button onClick={() => updateStatus(w.id, 'reviewed')}
+                      className="text-[10px] px-2 py-0.5 rounded bg-[var(--bg-card)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+                      Прочитано
+                    </button>
+                    <button onClick={() => updateStatus(w.id, 'in_progress')}
+                      className="text-[10px] px-2 py-0.5 rounded bg-[var(--accent)] bg-opacity-10 text-[var(--accent)] hover:bg-opacity-20 transition-colors">
+                      В работу
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
+        <div ref={bottomRef} />
+      </div>
+
+      {/* Input */}
+      <div className="border-t border-[var(--border)] p-4">
+        <div className="flex gap-2 mb-2">
+          {(['general', 'feature', 'safety', 'bug'] as const).map(c => (
+            <button key={c} onClick={() => setCategory(c)}
+              className={`text-[10px] px-2 py-1 rounded font-medium transition-colors ${
+                category === c
+                  ? 'bg-[var(--accent)] text-white'
+                  : 'bg-[var(--bg-hover)] text-[var(--text-secondary)]'
+              }`}>
+              {CATEGORY_LABELS[c]}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <input
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
+            placeholder="Пожелание от Артёма..."
+            className="ds-input flex-1 text-sm"
+          />
+          <button onClick={handleSend} disabled={!input.trim() || sending}
+            className="ds-btn-primary px-4 py-2 text-sm disabled:opacity-50 flex items-center gap-1.5">
+            <Send size={14} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── SafetyDashboardClient ──────────────────────────────────────────────────
 
 export function SafetyDashboardClient() {
   const [alerts, setAlerts]     = useState<Alert[]>([]);
   const [capacity, setCapacity] = useState<CapacityItem[]>([]);
   const [loading, setLoading]   = useState(true);
-  const [tab, setTab] = useState<'alerts' | 'capacity' | 'consult'>('alerts');
+  const [tab, setTab] = useState<'alerts' | 'capacity' | 'consult' | 'artem'>('alerts');
   const [refreshed, setRefreshed] = useState<Date | null>(null);
 
   const fetchData = useCallback(async () => {
@@ -348,7 +515,7 @@ export function SafetyDashboardClient() {
         {/* ── Вкладки: Алерты / Ёмкость ────────────────────────────── */}
         <div className="ds-card mb-6">
           <div className="flex border-b border-[var(--border)]">
-            {(['alerts', 'capacity', 'consult'] as const).map(t => (
+            {(['alerts', 'capacity', 'consult', 'artem'] as const).map(t => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
@@ -360,7 +527,8 @@ export function SafetyDashboardClient() {
               >
                 {t === 'alerts'   ? `Алерты (${alerts.length})` :
                  t === 'capacity' ? `Ёмкость (${capacity.length})` :
-                 'Консультация МЧС'}
+                 t === 'consult'  ? 'Консультация МЧС' :
+                 'Артём'}
               </button>
             ))}
           </div>
@@ -404,6 +572,8 @@ export function SafetyDashboardClient() {
               </div>
             ) : tab === 'consult' ? (
               <MchsConsultChat />
+            ) : tab === 'artem' ? (
+              <ArtemWishesChat />
             ) : (
               <div className="space-y-2">
                 {capacity.length === 0 ? (

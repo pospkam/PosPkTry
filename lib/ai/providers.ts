@@ -211,6 +211,133 @@ export async function callAnthropic(messages: ChatMessage[]): Promise<string | n
   }
 }
 
+// ── Google Gemini (via OpenRouter) ────────────────────────────
+export async function callGemini(messages: ChatMessage[]): Promise<string | null> {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) return null;
+
+  try {
+    const systemMsg = messages.find(m => m.role === 'system');
+    const turns = messages.filter(m => m.role !== 'system');
+    const payload = turns.map(({ role, content }) => ({
+      role: role === 'assistant' ? 'assistant' : 'user',
+      content,
+    }));
+
+    if (systemMsg) {
+      payload.unshift({ role: 'user', content: `[System]: ${systemMsg.content}` });
+    }
+
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+        'HTTP-Referer': 'https://tourhab.ru',
+        'X-Title': 'TourHab Kamchatka',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.0-flash-001',
+        temperature: 0.4,
+        max_tokens: 1200,
+        messages: payload,
+      }),
+      signal: AbortSignal.timeout(20_000),
+    });
+
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data?.choices?.[0]?.message?.content ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// ── Preflight: быстрая проверка доступности провайдеров ──────
+// Минимальный запрос к каждому провайдеру, параллельно, 5s timeout
+export interface ProviderStatus {
+  id: string;
+  name: string;
+  available: boolean;
+  latency_ms?: number;
+  error?: string;
+}
+
+export interface OpenRouterBalance {
+  total_credits: number;
+  total_usage: number;
+  remaining: number;
+  low: boolean;
+}
+
+/** Проверяет баланс OpenRouter (работает только с management key) */
+export async function checkOpenRouterBalance(): Promise<OpenRouterBalance | null> {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) return null;
+
+  try {
+    const res = await fetch('https://openrouter.ai/api/v1/credits', {
+      headers: { Authorization: `Bearer ${apiKey}` },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) return null;
+    const data = await res.json() as { data: { total_credits: number; total_usage: number } };
+    const remaining = data.data.total_credits - data.data.total_usage;
+    return {
+      total_credits: data.data.total_credits,
+      total_usage: data.data.total_usage,
+      remaining: Math.round(remaining * 100) / 100,
+      low: remaining < 0.5,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function preflightProviders(): Promise<{
+  providers: ProviderStatus[];
+  any_available: boolean;
+  openrouter_balance: OpenRouterBalance | null;
+}> {
+  const testMsg: ChatMessage[] = [{ role: 'user', content: 'ok' }];
+
+  async function probe(
+    id: string,
+    name: string,
+    fn: (msgs: ChatMessage[]) => Promise<string | null>,
+  ): Promise<ProviderStatus> {
+    const start = Date.now();
+    try {
+      const result = await Promise.race([
+        fn(testMsg),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000)),
+      ]);
+      if (result === null) {
+        return { id, name, available: false, latency_ms: Date.now() - start, error: 'no response / no key' };
+      }
+      return { id, name, available: true, latency_ms: Date.now() - start };
+    } catch (e) {
+      return { id, name, available: false, latency_ms: Date.now() - start, error: (e as Error).message };
+    }
+  }
+
+  const [providers, openrouter_balance] = await Promise.all([
+    Promise.all([
+      probe('mimo', 'MiMo-V2-Pro (Xiaomi)', callMiMo),
+      probe('openrouter', 'OpenRouter (GPT-4o-mini)', callOpenrouter),
+      probe('xai', 'Grok (xAI)', callXai),
+      probe('anthropic', 'Claude Haiku (Anthropic)', callAnthropic),
+    ]),
+    checkOpenRouterBalance(),
+  ]);
+
+  return {
+    providers,
+    any_available: providers.some(p => p.available),
+    openrouter_balance,
+  };
+}
+
 // ── Waterfall: пробует провайдеров по очереди ─────────────────
 // MiMo-V2-Pro → OpenRouter → xAI → Anthropic
 export async function callAIWaterfall(messages: ChatMessage[]): Promise<string> {

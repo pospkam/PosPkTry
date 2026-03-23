@@ -162,15 +162,17 @@ export class OperatorAgency {
     return { response, data: { revenue: r } };
   }
 
-  // ── Write: создать тур ────────────────────────────────────────────────
+  // ── Write: создать тур ────────────────────────────────────────────────────────────
 
   async createTour(context: AgentContext, message: string): Promise<AgencyResult> {
     const partnerId = await this.getPartnerId(context.user.userId);
     if (!partnerId) return { response: 'Профиль оператора не найден.' };
 
+    // Извлечь заголовок и цену из сообщения простыми эвристиками
     const priceMatch = message.match(/(\d[\d\s]{2,8})/);
     const price = priceMatch ? parseInt(priceMatch[1].replace(/\s/g, ''), 10) : null;
 
+    // Заголовок — первое предложение или всё сообщение (макс. 120 символов)
     const rawTitle = message.replace(/создай|новый тур|тур|за \d+/gi, '').trim().slice(0, 120);
     const title = rawTitle || 'Новый тур';
 
@@ -199,7 +201,7 @@ export class OperatorAgency {
     };
   }
 
-  // ── Write: AI-заполнение тура ──────────────────────────────────
+  // ── Write: AI-заполнение тура ──────────────────────────────────────────────
 
   async fillAI(_context: AgentContext, message: string): Promise<AgencyResult> {
     const idMatch = message.match(/\b(\d{1,8})\b/);
@@ -208,6 +210,8 @@ export class OperatorAgency {
     }
     const tourId = idMatch[1];
 
+    // Вызываем существующий AI-fill endpoint как внутренний fetch
+    // (мы в Node.js runtime, вне Edge — прямой pool-вызов недоступен для auto-fill логики)
     try {
       const baseUrl = process.env.NEXTAUTH_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
       const res = await fetch(`${baseUrl}/api/operator/tours/auto-fill-ai`, {
@@ -231,10 +235,11 @@ export class OperatorAgency {
     }
   }
 
-  // ── Write: добавить слоты доступности ───────────────────────────────────────────────
+  // ── Write: добавить слоты доступности ─────────────────────────────────────────────
 
   async addSlots(_context: AgentContext, message: string): Promise<AgencyResult> {
-    const idMatch    = message.match(/тур(?:у|ам?)с+(\d+)/i);
+    // Парсим: tour ID, дата начала, дата конца, кол-во мест
+    const idMatch    = message.match(/тур(?:у|ам?)\s+(\d+)/i);
     const datesMatch = message.match(/(\d{4}-\d{2}-\d{2}).*?(\d{4}-\d{2}-\d{2})/);
     const slotsMatch = message.match(/(\d+)\s*(?:мест|чел|человек)/i);
 
@@ -251,6 +256,7 @@ export class OperatorAgency {
     const dateTo   = datesMatch[2];
     const slots    = slotsMatch ? parseInt(slotsMatch[1], 10) : 10;
 
+    // Генерируем список дат между dateFrom и dateTo
     const dates: string[] = [];
     const cur = new Date(dateFrom);
     const end = new Date(dateTo);
@@ -262,12 +268,14 @@ export class OperatorAgency {
     if (dates.length === 0) return { response: 'Некорректный диапазон дат.' };
     if (dates.length > 366)  return { response: 'Диапазон дат слишком большой (макс. 366 дней).' };
 
+    // Проверяем тур
     const { rows: tourCheck } = await pool.query<{ id: number }>(
       `SELECT id FROM operator_tours WHERE id = $1 AND deleted_at IS NULL`,
       [tourId]
     );
     if (tourCheck.length === 0) return { response: `Тур ${tourId} не найден.` };
 
+    // Batch INSERT с ON CONFLICT IGNORE
     let inserted = 0;
     for (const date of dates) {
       const { rowCount } = await pool.query(

@@ -27,26 +27,47 @@ export async function GET(req: Request) {
   const ingestResult = await ingestAll();
   errors.push(...ingestResult.kbgsras.errors, ...ingestResult.eqkam.errors);
 
-  // ── 2. Обновляем location_real_time_status ────────────────────────────
-  // Логика: если severity >= 2 хотя бы у одного активного алерта → все RED
-  // Если severity = 0 (нет алертов) → смотрим только на загруженность
+  // ── 2. Обновляем location_real_time_status (zone-aware) ──────
+  // Алерты привязываются к маршрутам через зоны (affected_zones)
+  // Маршрут получает только алерты из СВОЕЙ зоны, а не глобальные
   try {
     const updateResult = await query(`
       UPDATE location_real_time_status lrs
       SET
         active_alerts = (
-          SELECT array_agg(ea.title)
+          SELECT COALESCE(array_agg(ea.title), '{}')
           FROM external_alerts ea
+          LEFT JOIN agent_route_knowledge ark ON ark.id = lrs.agent_route_id
           WHERE ea.expires_at > NOW()
+            AND (
+              ea.affected_zones IS NULL
+              OR ea.affected_zones = '{}'
+              OR ark.zone = ANY(ea.affected_zones)
+            )
         ),
         alert_severity = (
           SELECT COALESCE(MAX(ea.severity), 0)
           FROM external_alerts ea
+          LEFT JOIN agent_route_knowledge ark ON ark.id = lrs.agent_route_id
           WHERE ea.expires_at > NOW()
+            AND (
+              ea.affected_zones IS NULL
+              OR ea.affected_zones = '{}'
+              OR ark.zone = ANY(ea.affected_zones)
+            )
         ),
         recommender_status = CASE
-          WHEN (SELECT COALESCE(MAX(severity), 0) FROM external_alerts WHERE expires_at > NOW()) >= 2
-            THEN 'red'
+          WHEN (
+            SELECT COALESCE(MAX(ea.severity), 0)
+            FROM external_alerts ea
+            LEFT JOIN agent_route_knowledge ark ON ark.id = lrs.agent_route_id
+            WHERE ea.expires_at > NOW()
+              AND (
+                ea.affected_zones IS NULL
+                OR ea.affected_zones = '{}'
+                OR ark.zone = ANY(ea.affected_zones)
+              )
+          ) >= 2 THEN 'red'
           WHEN lrs.tourists_today >= COALESCE(
             (SELECT capacity_per_day FROM location_safety_profile WHERE agent_route_id = lrs.agent_route_id),
             50

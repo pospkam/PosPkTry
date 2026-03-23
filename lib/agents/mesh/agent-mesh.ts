@@ -177,7 +177,8 @@ export class AgentMesh {
    */
   async runConsensus(
     agents:    AgentReport[],
-    reactions: AgentReaction[]
+    reactions: AgentReaction[],
+    observerInsights?: string,
   ): Promise<string> {
     const reportsSummary = agents
       .filter(a => a.status === 'ok')
@@ -190,17 +191,23 @@ export class AgentMesh {
           .join('\n')
       : 'Реакций нет — участники приняли всё к сведению.';
 
+    const observerBlock = observerInsights
+      ? `\n\nВНЕШНИЕ НАБЛЮДАТЕЛИ:${observerInsights}\n`
+      : '';
+
     const messages: ChatMessage[] = [{
       role: 'user',
       content:
         `Ты фасилитатор совещания директоров туристической платформы Камчатки.\n\n` +
         `ОТЧЁТЫ ПОДРАЗДЕЛЕНИЙ:\n${reportsSummary}\n\n` +
         `ПЕРЕКРЁСТНЫЕ РЕАКЦИИ:\n${reactionsSummary}\n\n` +
+        `${observerBlock}` +
         `Составь ИТОГ СОВЕЩАНИЯ в трёх блоках:\n\n` +
         `1. КОНСЕНСУС — что все агенты подтверждают, нет разногласий (2–3 пункта)\n` +
         `2. КОНФЛИКТЫ — где мнения расходятся, требуется решение директора (1–3 пункта)\n` +
-        `3. ПРИОРИТЕТЫ — ТОП-3 действия, которые нужно сделать СЕГОДНЯ\n\n` +
-        `Формат: маркированный список. Деловой стиль. Без воды.`,
+        `3. ПРИОРИТЕТЫ — ТОП-3 действия, которые нужно сделать СЕГОДНЯ\n` +
+        (observerInsights ? `\n4. ВНЕШНИЙ ВЗГЛЯД — ключевые инсайты от независимых наблюдателей, которые совет должен учесть (1–3 пункта)\n` : '') +
+        `\nФормат: маркированный список. Деловой стиль. Без воды.`,
     }];
 
     try {
