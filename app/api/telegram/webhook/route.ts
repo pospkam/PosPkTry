@@ -46,6 +46,7 @@ import { PlatformAgent } from '@/lib/agents/platform-agent';
 import { approvalRequired } from '@/lib/agents/safeguards/approval-required';
 import { verifyConnectToken } from '@/lib/telegram/connect-token';
 import { sendWelcomeMessage } from '@/lib/telegram/welcome';
+import { notifyTouristBookingConfirmed, notifyTouristBookingCancelled } from '@/lib/telegram/booking-notify';
 
 export const dynamic = 'force-dynamic';
 
@@ -1025,6 +1026,13 @@ export async function POST(request: NextRequest) {
           text: `<b>Бронирование подтверждено</b>\nТур: ${booking.tour.title}\nДата: ${booking.date.toLocaleDateString('ru-RU')}\nУчастников: ${booking.participants}\nID: ${match[0]}`,
           parseMode: 'HTML',
         });
+        // Уведомляем туриста в его личный канал
+        notifyTouristBookingConfirmed(booking.tourist.id, {
+          id:           match[0],
+          tourTitle:    booking.tour.title,
+          date:         booking.date,
+          participants: booking.participants,
+        });
       } catch (err) {
         await telegramService.answerCallback(cq.id, err instanceof Error ? err.message : 'Ошибка');
       }
@@ -1033,12 +1041,21 @@ export async function POST(request: NextRequest) {
       const match = data.match(uuidPattern);
       if (!match) { await telegramService.answerCallback(cq.id, 'Неверный формат'); return NextResponse.json({ ok: true }); }
       try {
-        const { booking } = await cancelBooking(match[0], `tg:${senderChatId}`, 'operator', 'Отменено оператором через Telegram');
+        const { booking, refund } = await cancelBooking(match[0], `tg:${senderChatId}`, 'operator', 'Отменено оператором через Telegram');
         await telegramService.answerCallback(cq.id, 'Отменено');
         await telegramService.sendMessage({
           chatId: callbackChatId,
           text: `<b>Бронирование отменено</b>\nТур: ${booking.tour.title}\nID: ${match[0]}`,
           parseMode: 'HTML',
+        });
+        // Уведомляем туриста в его личный канал
+        notifyTouristBookingCancelled(booking.tourist.id, {
+          id:            match[0],
+          tourTitle:     booking.tour.title,
+          cancelledBy:   'operator',
+          refundPercent: refund.percent,
+          refundAmount:  refund.amount,
+          refundReason:  refund.reason,
         });
       } catch (err) {
         await telegramService.answerCallback(cq.id, err instanceof Error ? err.message : 'Ошибка');

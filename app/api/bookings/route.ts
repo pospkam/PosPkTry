@@ -22,6 +22,7 @@ import type { BookingWithDetails, CreateBookingInput } from '@/types/booking.typ
 import { telegramService } from '@/lib/notifications/telegram';
 import { notifyAdminNewBooking } from '@/lib/notifications/telegram-channel';
 import { emailService } from '@/lib/notifications/email-service';
+import { notifyTouristBookingCreated } from '@/lib/telegram/booking-notify';
 import { query } from '@/lib/database';
 
 const CreateBookingSchema = z.object({
@@ -203,12 +204,20 @@ export async function POST(request: NextRequest) {
 
     const booking = await createBooking(auth.userId, input);
 
+    // Telegram-уведомление туристу: бронь принята
+    notifyTouristBookingCreated(auth.userId, {
+      id:           booking.id,
+      tourTitle:    booking.tour.title,
+      date:         booking.date,
+      participants: booking.participants,
+      totalAmount:  booking.totalAmount ?? 0,
+    });
+
     // Telegram-уведомление партнёру (fire-and-forget, не блокируем ответ)
-    // Динамически получаем telegram_chat_id из partners.contact
     ;(async () => {
       try {
         const partnerRow = await query<{ telegram_chat_id: string }>(
-          `SELECT p.contact->>'telegram_chat_id' AS telegram_chat_id
+          `SELECT p.telegram_chat_id::text
            FROM tours t
            JOIN partners p ON p.id = t.operator_id
            WHERE t.id = $1`,
