@@ -8,6 +8,7 @@
 
 import { query } from '@/lib/database';
 import { categorizeSupport, type SupportCategory } from './categorize';
+import { notifyAdminNewTicket } from '@/lib/telegram/admin-notify';
 
 export interface SupportMessage {
   role: 'user' | 'agent' | 'system';
@@ -18,6 +19,8 @@ export interface SupportMessage {
 export interface SupportTicket {
   id: string;
   userId: string;
+  userName: string | null;
+  userEmail: string | null;
   channel: string;
   category: SupportCategory;
   subject: string;
@@ -34,6 +37,8 @@ export interface SupportTicket {
 interface TicketRow {
   id: string;
   user_id: string;
+  user_name: string | null;
+  user_email: string | null;
   channel: string;
   category: SupportCategory;
   subject: string;
@@ -51,6 +56,8 @@ function normalizeRow(row: TicketRow): SupportTicket {
   return {
     id:           row.id,
     userId:       row.user_id,
+    userName:     row.user_name ?? null,
+    userEmail:    row.user_email ?? null,
     channel:      row.channel,
     category:     row.category,
     subject:      row.subject,
@@ -97,7 +104,9 @@ export async function createTicket(input: {
     ]
   );
 
-  return normalizeRow(res.rows[0]);
+  const ticket = normalizeRow(res.rows[0]);
+  notifyAdminNewTicket(ticket);
+  return ticket;
 }
 
 /**
@@ -188,16 +197,19 @@ export async function listTickets(filter?: { status?: string; category?: string 
 
   if (filter?.status) {
     params.push(filter.status);
-    conditions.push(`status = $${params.length}`);
+    conditions.push(`st.status = $${params.length}`);
   }
   if (filter?.category) {
     params.push(filter.category);
-    conditions.push(`category = $${params.length}`);
+    conditions.push(`st.category = $${params.length}`);
   }
 
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
   const res = await query<TicketRow>(
-    `SELECT * FROM support_tickets ${where} ORDER BY created_at DESC LIMIT 50`,
+    `SELECT st.*, u.name AS user_name, u.email AS user_email
+     FROM support_tickets st
+     LEFT JOIN users u ON u.id = st.user_id
+     ${where} ORDER BY st.created_at DESC LIMIT 50`,
     params
   );
   return res.rows.map(normalizeRow);
