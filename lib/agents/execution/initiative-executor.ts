@@ -35,39 +35,19 @@ export interface ExecutionResult {
   verification_passed: boolean;
 }
 
+/** Callback вызывается на каждом шаге исполнения */
+export type StepLogger = (eventType: 'started' | 'progress' | 'completed' | 'failed' | 'warning', message: string) => Promise<void>;
+
 /**
  * Executor для каждого типа инициативы
  */
-const EXECUTORS: Record<string, (task: ExecutionTask) => Promise<ExecutionResult>> = {
-  // 1. API KEY ROTATION (Security)
-  'api_scope_expand': async (task) => {
-    return executeAPIKeyRotation(task);
-  },
-
-  // 2. T&C UPDATE (Legal)
-  'booking_rule_change': async (task) => {
-    return executeTCUpdate(task);
-  },
-
-  // 3. TOUR DESCRIPTION REWRITE (Content)
-  'ui_copy_change': async (task) => {
-    return executeTourDescriptionRewrite(task);
-  },
-
-  // 4. A/B PRICING TEST (Hacker)
-  'price_change': async (task) => {
-    return executeABTestSetup(task);
-  },
-
-  // 5. COMMISSION BATCH OPTIMIZATION (Admin)
-  'commission_change': async (task) => {
-    return executeCommissionOptimization(task);
-  },
-
-  // 6. SQL SELF-HEALING (Evolution / Security)
-  'sql_query_fix': async (task) => {
-    return executeSQLQueryFix(task);
-  },
+const EXECUTORS: Record<string, (task: ExecutionTask, log: StepLogger) => Promise<ExecutionResult>> = {
+  'api_scope_expand':  (task, log) => executeAPIKeyRotation(task, log),
+  'booking_rule_change': (task, log) => executeTCUpdate(task, log),
+  'ui_copy_change':    (task, log) => executeTourDescriptionRewrite(task, log),
+  'price_change':      (task, log) => executeABTestSetup(task, log),
+  'commission_change': (task, log) => executeCommissionOptimization(task, log),
+  'sql_query_fix':     (task, log) => executeSQLQueryFix(task, log),
 };
 
 /**
@@ -75,16 +55,19 @@ const EXECUTORS: Record<string, (task: ExecutionTask) => Promise<ExecutionResult
  * EXECUTOR 1: API KEY ROTATION (Security Agent)
  * ═══════════════════════════════════════════════════════════════
  */
-async function executeAPIKeyRotation(task: ExecutionTask): Promise<ExecutionResult> {
+async function executeAPIKeyRotation(task: ExecutionTask, log: StepLogger): Promise<ExecutionResult> {
   const changes: string[] = [];
   const errors: string[] = [];
 
   try {
+    await log('started', 'Начинаю ротацию API-ключей OCTO');
+
     // Step 1: Get all OCTO API keys
     const allKeys = await pool.query(
       `SELECT id, api_key, created_at FROM octo_api_keys ORDER BY created_at DESC`
     );
 
+    await log('progress', `Найдено ${allKeys.rowCount} ключей для ротации`);
     changes.push(`Found ${allKeys.rowCount} old API keys to rotate`);
 
     // Step 2: Generate new keys (crypto secure)
@@ -101,34 +84,37 @@ async function executeAPIKeyRotation(task: ExecutionTask): Promise<ExecutionResu
         `UPDATE octo_api_keys SET api_key = $1, updated_at = NOW(), is_active = true WHERE id = $2`,
         [keyPair.new_key, keyPair.old_id]
       );
+      const msg = `Ротация ключа id ${keyPair.old_id} (был ...${keyPair.old_key_last4})`;
+      await log('progress', msg);
       changes.push(`Rotated key id ${keyPair.old_id} (was ${keyPair.old_key_last4}...)`);
     }
 
     // Step 4: Test connectivity to key endpoints
+    await log('progress', 'Проверяю подключение к OCTO endpoints...');
     const testResult = await testOCTOEndpoints();
     if (!testResult.success) {
       errors.push(`Endpoint test failed: ${testResult.error}`);
-      // ROLLBACK would happen here
+      await log('warning', `Проверка endpoint провалилась: ${testResult.error}`);
     } else {
       changes.push(`All OCTO endpoints verified working`);
+      await log('progress', 'Все OCTO endpoints работают');
     }
 
+    const ok = errors.length === 0;
+    await log(ok ? 'completed' : 'failed', ok ? `Ротация завершена (${newKeys.length} ключей)` : `Ротация с ошибками: ${errors[0]}`);
+
     return {
-      success: errors.length === 0,
+      success: ok,
       changes_made: changes,
       errors,
       rollback_available: true,
       verification_passed: testResult.success,
     };
   } catch (err) {
-    errors.push(`Rotation error: ${err instanceof Error ? err.message : String(err)}`);
-    return {
-      success: false,
-      changes_made: changes,
-      errors,
-      rollback_available: true,
-      verification_passed: false,
-    };
+    const msg = err instanceof Error ? err.message : String(err);
+    errors.push(`Rotation error: ${msg}`);
+    await log('failed', `Критическая ошибка: ${msg}`);
+    return { success: false, changes_made: changes, errors, rollback_available: true, verification_passed: false };
   }
 }
 
@@ -137,12 +123,13 @@ async function executeAPIKeyRotation(task: ExecutionTask): Promise<ExecutionResu
  * EXECUTOR 2: T&C UPDATE (Legal Agent)
  * ═══════════════════════════════════════════════════════════════
  */
-async function executeTCUpdate(task: ExecutionTask): Promise<ExecutionResult> {
+async function executeTCUpdate(task: ExecutionTask, log: StepLogger): Promise<ExecutionResult> {
   const changes: string[] = [];
   const errors: string[] = [];
 
   try {
-    // Step 1: Get current T&C version
+    await log('started', 'Обновляю условия бронирования (weather policy)');
+
     const currentTC = await pool.query(
       `SELECT id, content, version FROM platform_terms WHERE type = 'weather_policy' ORDER BY version DESC LIMIT 1`
     );
@@ -150,7 +137,8 @@ async function executeTCUpdate(task: ExecutionTask): Promise<ExecutionResult> {
     const oldVersion = currentTC.rows[0]?.version ?? 0;
     const newVersion = oldVersion + 1;
 
-    // Step 2: Generate updated weather clause
+    await log('progress', `Текущая версия: v${oldVersion} → создаю v${newVersion}`);
+
     const updatedClause = `
       Weather Cancellation Policy (v${newVersion}):
       - Operator must provide 48-hour notice for weather-related cancellations
@@ -160,7 +148,6 @@ async function executeTCUpdate(task: ExecutionTask): Promise<ExecutionResult> {
 
     changes.push(`Created new T&C version ${newVersion}`);
 
-    // Step 3: Store new version (immutable)
     const newTC = await pool.query(
       `INSERT INTO platform_terms (type, content, version, created_at)
        VALUES ('weather_policy', $1, $2, NOW())
@@ -168,17 +155,17 @@ async function executeTCUpdate(task: ExecutionTask): Promise<ExecutionResult> {
       [updatedClause, newVersion]
     );
 
+    await log('progress', `T&C v${newVersion} записан в БД (id: ${newTC.rows[0].id})`);
     changes.push(`Stored T&C v${newVersion} (id: ${newTC.rows[0].id})`);
 
-    // Step 4: Identify affected contracts
     const affectedContracts = await pool.query(
       `SELECT id, operator_id FROM partners WHERE contract_version < $1 LIMIT 10`,
       [newVersion]
     );
 
+    await log('progress', `Найдено ${affectedContracts.rowCount} договоров к обновлению`);
     changes.push(`Found ${affectedContracts.rowCount} affected operator contracts`);
 
-    // Step 5: Update references (staging)
     for (const contract of affectedContracts.rows) {
       await pool.query(
         `UPDATE partners SET contract_version = $1, updated_at = NOW() WHERE id = $2`,
@@ -187,23 +174,14 @@ async function executeTCUpdate(task: ExecutionTask): Promise<ExecutionResult> {
     }
 
     changes.push(`Updated ${affectedContracts.rowCount} contract references`);
+    await log('completed', `T&C обновлён до v${newVersion}, ${affectedContracts.rowCount} договоров актуализировано`);
 
-    return {
-      success: true,
-      changes_made: changes,
-      errors,
-      rollback_available: true,
-      verification_passed: true,
-    };
+    return { success: true, changes_made: changes, errors, rollback_available: true, verification_passed: true };
   } catch (err) {
-    errors.push(`T&C update error: ${err instanceof Error ? err.message : String(err)}`);
-    return {
-      success: false,
-      changes_made: changes,
-      errors,
-      rollback_available: false,
-      verification_passed: false,
-    };
+    const msg = err instanceof Error ? err.message : String(err);
+    errors.push(`T&C update error: ${msg}`);
+    await log('failed', `Ошибка обновления T&C: ${msg}`);
+    return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
   }
 }
 
@@ -212,12 +190,13 @@ async function executeTCUpdate(task: ExecutionTask): Promise<ExecutionResult> {
  * EXECUTOR 3: TOUR DESCRIPTION REWRITE (Content Agent)
  * ═══════════════════════════════════════════════════════════════
  */
-async function executeTourDescriptionRewrite(task: ExecutionTask): Promise<ExecutionResult> {
+async function executeTourDescriptionRewrite(task: ExecutionTask, log: StepLogger): Promise<ExecutionResult> {
   const changes: string[] = [];
   const errors: string[] = [];
 
   try {
-    // Step 1: Find 23 tours with CTR < 0.5%
+    await log('started', 'Ищу туры с низким CTR для переработки описаний');
+
     const lowCTRTours = await pool.query(
       `SELECT id, title, short_description, agent_route_id
        FROM agent_route_knowledge
@@ -226,9 +205,9 @@ async function executeTourDescriptionRewrite(task: ExecutionTask): Promise<Execu
        LIMIT 23`
     );
 
+    await log('progress', `Найдено ${lowCTRTours.rowCount} туров с низким CTR`);
     changes.push(`Found ${lowCTRTours.rowCount} low-CTR tours to optimize`);
 
-    // Step 2: For each tour, generate improved description via AI
     const improvedDescriptions: Array<{ id: number; old: string; new: string }> = [];
 
     for (const tour of lowCTRTours.rows) {
@@ -239,8 +218,7 @@ async function executeTourDescriptionRewrite(task: ExecutionTask): Promise<Execu
         'Rewrite this tour description to be:',
         '1. Emotionally engaging (specific details, sensory)',
         '2. Value-focused (what tourist gets)',
-        '3. Competitive (compared to similar tours)',
-        '4. Action-oriented (call to action)',
+        '3. Action-oriented (call to action)',
         '',
         'Keep under 150 chars. Only return the new description.',
       ].join('\n');
@@ -248,16 +226,11 @@ async function executeTourDescriptionRewrite(task: ExecutionTask): Promise<Execu
       const messages: ChatMessage[] = [{ role: 'user', content: prompt }];
       const newDesc = await callAIWaterfall(messages);
 
-      improvedDescriptions.push({
-        id: tour.id,
-        old: tour.short_description || '',
-        new: newDesc || '',
-      });
-
+      improvedDescriptions.push({ id: tour.id, old: tour.short_description || '', new: newDesc || '' });
+      await log('progress', `Переписано: "${tour.title.substring(0, 50)}..."`);
       changes.push(`Rewrote: "${tour.title}"`);
     }
 
-    // Step 3: Batch update descriptions
     for (const desc of improvedDescriptions) {
       await pool.query(
         `UPDATE agent_route_knowledge SET short_description = $1, updated_at = NOW() WHERE id = $2`,
@@ -266,26 +239,14 @@ async function executeTourDescriptionRewrite(task: ExecutionTask): Promise<Execu
     }
 
     changes.push(`Updated ${improvedDescriptions.length} descriptions in database`);
+    await log('completed', `Все ${improvedDescriptions.length} описаний обновлены в БД`);
 
-    // Step 4: Verification (spot check CTR improvement tracking)
-    changes.push(`Publishing to production`);
-
-    return {
-      success: errors.length === 0,
-      changes_made: changes,
-      errors,
-      rollback_available: true,
-      verification_passed: true,
-    };
+    return { success: errors.length === 0, changes_made: changes, errors, rollback_available: true, verification_passed: true };
   } catch (err) {
-    errors.push(`Description rewrite error: ${err instanceof Error ? err.message : String(err)}`);
-    return {
-      success: false,
-      changes_made: changes,
-      errors,
-      rollback_available: false,
-      verification_passed: false,
-    };
+    const msg = err instanceof Error ? err.message : String(err);
+    errors.push(`Description rewrite error: ${msg}`);
+    await log('failed', `Ошибка переработки описаний: ${msg}`);
+    return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
   }
 }
 
@@ -294,12 +255,13 @@ async function executeTourDescriptionRewrite(task: ExecutionTask): Promise<Execu
  * EXECUTOR 4: A/B TEST SETUP (Hacker Agent)
  * ═══════════════════════════════════════════════════════════════
  */
-async function executeABTestSetup(task: ExecutionTask): Promise<ExecutionResult> {
+async function executeABTestSetup(task: ExecutionTask, log: StepLogger): Promise<ExecutionResult> {
   const changes: string[] = [];
   const errors: string[] = [];
 
   try {
-    // Step 1: Identify low-volume tours (<10 bookings/month)
+    await log('started', 'Запускаю A/B тест цен на туры с низким спросом');
+
     const lowVolumeTours = await pool.query(
       `SELECT id, title, base_price, booking_count_30d
        FROM operator_tours
@@ -309,30 +271,27 @@ async function executeABTestSetup(task: ExecutionTask): Promise<ExecutionResult>
     );
 
     changes.push(`Selected ${lowVolumeTours.rowCount} tours for A/B test`);
+    await log('progress', `Выбрано ${lowVolumeTours.rowCount} туров для A/B теста (-10% цена)`);
 
-    // Step 2: Split into control (50%) and treatment (50%)
-    const controlTours = lowVolumeTours.rows.slice(0, 15);
+    const controlTours   = lowVolumeTours.rows.slice(0, 15);
     const treatmentTours = lowVolumeTours.rows.slice(15, 30);
 
-    // Step 3: Create experiment record
     const experiment = await pool.query(
       `INSERT INTO agent_experiments (
-        name, type, description, status, control_group, treatment_group,
-        start_date, end_date, primary_metric, created_at
+        name, description, status, variant_a, variant_b, metric, created_at
       ) VALUES (
         'Dynamic Pricing -10% A/B Test',
-        'pricing',
         'Test -10% dynamic pricing on low-volume tours',
-        'active',
-        $1, $2, NOW(), NOW() + '14 days'::interval, 'conversion_rate', NOW()
+        'running',
+        $1, $2, 'conversion_rate', NOW()
       )
       RETURNING id`,
-      [JSON.stringify(controlTours.map(t => t.id)), JSON.stringify(treatmentTours.map(t => t.id))]
+      [JSON.stringify({ tours: controlTours.map(t => t.id) }), JSON.stringify({ tours: treatmentTours.map(t => t.id) })]
     );
 
+    await log('progress', `Эксперимент создан: ${experiment.rows[0].id}`);
     changes.push(`Created experiment ID: ${experiment.rows[0].id}`);
 
-    // Step 4: Apply treatment (75% of original price)
     for (const tour of treatmentTours) {
       const discountedPrice = Math.round(tour.base_price * 0.9);
       await pool.query(
@@ -341,37 +300,27 @@ async function executeABTestSetup(task: ExecutionTask): Promise<ExecutionResult>
          WHERE id = $3`,
         [discountedPrice, experiment.rows[0].id, tour.id]
       );
-      changes.push(`Applied -10% pricing to tour ${tour.id} (${tour.title})`);
+      changes.push(`Applied -10% pricing to tour ${tour.id}`);
     }
 
-    // Step 5: Mark control group
+    await log('progress', `Скидка -10% применена к ${treatmentTours.length} турам`);
+
     for (const tour of controlTours) {
       await pool.query(
-        `UPDATE operator_tours
-         SET ab_test_variant = 'control', ab_test_id = $1, updated_at = NOW()
-         WHERE id = $2`,
+        `UPDATE operator_tours SET ab_test_variant = 'control', ab_test_id = $1, updated_at = NOW() WHERE id = $2`,
         [experiment.rows[0].id, tour.id]
       );
     }
 
     changes.push(`A/B test active for 14 days (${lowVolumeTours.rowCount} tours)`);
+    await log('completed', `A/B тест запущен: ${controlTours.length} контроль + ${treatmentTours.length} treatment`);
 
-    return {
-      success: true,
-      changes_made: changes,
-      errors,
-      rollback_available: true,
-      verification_passed: true,
-    };
+    return { success: true, changes_made: changes, errors, rollback_available: true, verification_passed: true };
   } catch (err) {
-    errors.push(`A/B test setup error: ${err instanceof Error ? err.message : String(err)}`);
-    return {
-      success: false,
-      changes_made: changes,
-      errors,
-      rollback_available: false,
-      verification_passed: false,
-    };
+    const msg = err instanceof Error ? err.message : String(err);
+    errors.push(`A/B test setup error: ${msg}`);
+    await log('failed', `Ошибка запуска A/B теста: ${msg}`);
+    return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
   }
 }
 
@@ -380,12 +329,13 @@ async function executeABTestSetup(task: ExecutionTask): Promise<ExecutionResult>
  * EXECUTOR 5: COMMISSION BATCH OPTIMIZATION (Admin Agent)
  * ═══════════════════════════════════════════════════════════════
  */
-async function executeCommissionOptimization(task: ExecutionTask): Promise<ExecutionResult> {
+async function executeCommissionOptimization(task: ExecutionTask, log: StepLogger): Promise<ExecutionResult> {
   const changes: string[] = [];
   const errors: string[] = [];
 
   try {
-    // Step 1: Analyze current batch processing
+    await log('started', 'Анализирую очередь комиссий и настраиваю батч-обработку');
+
     const stats = await pool.query(
       `SELECT
         COUNT(*) as pending_count,
@@ -395,16 +345,15 @@ async function executeCommissionOptimization(task: ExecutionTask): Promise<Execu
       WHERE status = 'pending'`
     );
 
-    changes.push(`${stats.rows[0].pending_count} pending commissions`);
-    changes.push(`Average wait: ${Math.round(stats.rows[0].avg_wait_seconds)}s (was 2.3h = 8280s)`);
+    const pending = stats.rows[0].pending_count;
+    const avgWait = Math.round(stats.rows[0].avg_wait_seconds ?? 0);
+    await log('progress', `${pending} комиссий в очереди, средное ожидание: ${avgWait}с`);
+    changes.push(`${pending} pending commissions`);
+    changes.push(`Average wait: ${avgWait}s`);
 
-    // Step 2: Create optimized processing strategy
-    const batchSize = 100;
+    const batchSize    = 100;
     const parallelStreams = 4;
 
-    changes.push(`Strategy: Batch size ${batchSize} x ${parallelStreams} parallel streams`);
-
-    // Step 3: Update configuration
     await pool.query(
       `INSERT INTO platform_config (key, value, updated_at)
        VALUES ('commission_batch_size', $1, NOW())
@@ -419,30 +368,17 @@ async function executeCommissionOptimization(task: ExecutionTask): Promise<Execu
       [parallelStreams.toString()]
     );
 
+    await log('progress', `Конфигурация обновлена: batch=${batchSize}, parallel=${parallelStreams}`);
     changes.push(`Configuration updated (batch_size=${batchSize}, parallel=${parallelStreams})`);
-
-    // Step 4: Deploy to staging
-    changes.push(`Deployed to staging environment`);
-
-    // Step 5: Schedule gradual rollout
     changes.push(`Rollout schedule: 5% -> 25% -> 50% -> 100% (daily)`);
+    await log('completed', `Оптимизация батча комиссий активирована`);
 
-    return {
-      success: true,
-      changes_made: changes,
-      errors,
-      rollback_available: true,
-      verification_passed: true,
-    };
+    return { success: true, changes_made: changes, errors, rollback_available: true, verification_passed: true };
   } catch (err) {
-    errors.push(`Commission optimization error: ${err instanceof Error ? err.message : String(err)}`);
-    return {
-      success: false,
-      changes_made: changes,
-      errors,
-      rollback_available: false,
-      verification_passed: false,
-    };
+    const msg = err instanceof Error ? err.message : String(err);
+    errors.push(`Commission optimization error: ${msg}`);
+    await log('failed', `Ошибка оптимизации комиссий: ${msg}`);
+    return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
   }
 }
 
@@ -507,48 +443,42 @@ async function testOCTOEndpoints(): Promise<{ success: boolean; error?: string }
  * Агент обнаружил SQL-ошибки → система сама патчит agency-файлы
  * ═══════════════════════════════════════════════════════════════
  */
-async function executeSQLQueryFix(task: ExecutionTask): Promise<ExecutionResult> {
+async function executeSQLQueryFix(task: ExecutionTask, log: StepLogger): Promise<ExecutionResult> {
   const changes: string[] = [];
   const errors: string[] = [];
 
   try {
+    await log('started', 'Сканирую SQL-ошибки в agency-файлах');
+
     const { fixSQLColumnErrors, scanSQLErrors } = await import('@/lib/agents/tools/board-executor-tools');
 
-    // Step 1: сканируем что сломано
     const beforeScan = scanSQLErrors();
     const totalIssues = beforeScan.reduce((s, f) => s + f.issues.length, 0);
 
     if (totalIssues === 0) {
-      return {
-        success: true,
-        changes_made: ['SQL-ошибок не обнаружено — система в норме'],
-        errors: [],
-        rollback_available: false,
-        verification_passed: true,
-      };
+      await log('completed', 'SQL-ошибок не обнаружено — система в норме');
+      return { success: true, changes_made: ['SQL-ошибок не обнаружено — система в норме'], errors: [], rollback_available: false, verification_passed: true };
     }
 
+    await log('progress', `Обнаружено ${totalIssues} SQL-ошибок в ${beforeScan.length} файлах`);
     changes.push(`Обнаружено ${totalIssues} SQL-ошибок в ${beforeScan.length} файлах`);
 
-    // Step 2: применяем патчи
-    const agencyFile = typeof task.context.agency_file === 'string'
-      ? task.context.agency_file
-      : undefined;
-
+    const agencyFile = typeof task.context.agency_file === 'string' ? task.context.agency_file : undefined;
     const result = await fixSQLColumnErrors(agencyFile);
 
     if (!result.success) {
       errors.push(result.message);
+      await log('warning', `Частичное исправление: ${result.message}`);
     } else {
       changes.push(result.message);
       if (result.details?.changes && Array.isArray(result.details.changes)) {
         for (const c of result.details.changes as string[]) {
           changes.push(c);
+          await log('progress', c);
         }
       }
     }
 
-    // Step 3: верификация — сканируем снова
     const afterScan = scanSQLErrors();
     const remainingIssues = afterScan.reduce((s, f) => s + f.issues.length, 0);
     const fixed = totalIssues - remainingIssues;
@@ -557,63 +487,56 @@ async function executeSQLQueryFix(task: ExecutionTask): Promise<ExecutionResult>
     changes.push(`Исправлено: ${fixed}/${totalIssues} ошибок`);
     if (!verificationPassed) {
       errors.push(`Осталось нерешённых проблем: ${remainingIssues}`);
+      await log('warning', `Осталось ${remainingIssues} нерешённых SQL-ошибок`);
     }
 
-    return {
-      success: fixed > 0,
-      changes_made: changes,
-      errors,
-      rollback_available: false,
-      verification_passed: verificationPassed,
-    };
+    await log(verificationPassed ? 'completed' : 'failed', `SQL самолечение: исправлено ${fixed}/${totalIssues}`);
 
+    return { success: fixed > 0, changes_made: changes, errors, rollback_available: false, verification_passed: verificationPassed };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    return {
-      success: false,
-      changes_made: [],
-      errors: [`executeSQLQueryFix failed: ${msg}`],
-      rollback_available: false,
-      verification_passed: false,
-    };
+    await log('failed', `executeSQLQueryFix провалился: ${msg}`);
+    return { success: false, changes_made: [], errors: [`executeSQLQueryFix failed: ${msg}`], rollback_available: false, verification_passed: false };
   }
 }
 
 /**
  * Main executor entry point
  */
-export async function executeInitiative(task: ExecutionTask): Promise<ExecutionResult> {
+export async function executeInitiative(task: ExecutionTask, onStep?: StepLogger): Promise<ExecutionResult> {
   const executor = EXECUTORS[task.action_type];
 
   if (!executor) {
-    return {
-      success: false,
-      changes_made: [],
-      errors: [`No executor for action type: ${task.action_type}`],
-      rollback_available: false,
-      verification_passed: false,
-    };
+    const err = `No executor for action type: ${task.action_type}`;
+    if (onStep) await onStep('failed', err).catch(() => null);
+    return { success: false, changes_made: [], errors: [err], rollback_available: false, verification_passed: false };
   }
 
-  // Update status to in_progress
+  // Combined logger: DB + SSE callback
+  const log: StepLogger = async (eventType, message) => {
+    await pool.query(
+      `INSERT INTO approval_execution_log (approval_id, actor, event_type, message)
+       VALUES ($1, $2, $3, $4)`,
+      [task.approval_id, task.executor_agent_id ?? 'system', eventType, message]
+    ).catch(() => null);
+    if (onStep) await onStep(eventType, message).catch(() => null);
+  };
+
+  // Mark in_progress
   await pool.query(
     `UPDATE agent_approvals SET execution_status = 'in_progress', updated_at = NOW() WHERE id = $1`,
     [task.approval_id]
   );
 
   // Execute
-  const result = await executor(task);
+  const result = await executor(task, log);
 
-  // Update status to done or failed
+  // Mark done or failed
   await pool.query(
     `UPDATE agent_approvals
      SET execution_status = $1, execution_notes = $2, completed_at = NOW(), updated_at = NOW()
      WHERE id = $3`,
-    [
-      result.success ? 'done' : 'failed',
-      JSON.stringify(result),
-      task.approval_id,
-    ]
+    [result.success ? 'done' : 'failed', JSON.stringify({ changes: result.changes_made, errors: result.errors }), task.approval_id]
   );
 
   return result;

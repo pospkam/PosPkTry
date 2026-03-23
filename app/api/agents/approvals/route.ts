@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { approvalRequired } from '@/lib/agents/safeguards/approval-required';
 import { pool } from '@/lib/db-pool';
+import { executeInitiative, type ExecutionTask } from '@/lib/agents/execution/initiative-executor';
 
 export const dynamic = 'force-dynamic';
 
@@ -76,6 +77,27 @@ export async function POST(req: NextRequest) {
 
   if (parsed.data.action === 'approve') {
     await approvalRequired.approve(parsed.data.approval_id, reviewerId, parsed.data.notes);
+
+    // Auto-trigger execution (fire-and-forget — не ждём завершения)
+    pool.query(
+      `SELECT id, action_type, description, context, executor_agent_id, due_date
+       FROM agent_approvals WHERE id = $1`,
+      [parsed.data.approval_id]
+    ).then(r => {
+      const ap = r.rows[0];
+      if (ap?.executor_agent_id) {
+        const task: ExecutionTask = {
+          approval_id:       ap.id,
+          executor_agent_id: ap.executor_agent_id,
+          action_type:       ap.action_type,
+          description:       ap.description ?? '',
+          context:           (ap.context as Record<string, unknown>) ?? {},
+          due_date:          ap.due_date ?? '',
+        };
+        executeInitiative(task);  // intentionally not awaited — runs in background
+      }
+    }).catch(() => null);
+
   } else {
     await approvalRequired.reject(parsed.data.approval_id, reviewerId, parsed.data.notes);
   }

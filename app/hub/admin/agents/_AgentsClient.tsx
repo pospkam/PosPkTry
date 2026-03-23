@@ -8,7 +8,7 @@ import {
   ShieldCheck, TrendingUp, ThumbsUp, ThumbsDown, Activity,
   Shield, Scale, Lock, Binoculars, Leaf, FileSearch, Star,
   Cpu, BarChart3, Megaphone, CalendarDays, GitMerge, Network,
-  Loader2, ExternalLink, UserCheck, Target,
+  Loader2, ExternalLink, UserCheck, Target, Terminal, X,
 } from 'lucide-react';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -574,6 +574,132 @@ function ExperimentsTab() {
 
 // ── Approvals Tab ─────────────────────────────────────────────────────────────
 
+interface ExecLogEntry {
+  actor: string;
+  event_type: string;
+  message: string;
+  created_at?: string;
+}
+
+function ExecutionLogDrawer({ approvalId, onClose }: { approvalId: string; onClose: () => void }) {
+  const [log,     setLog]     = useState<ExecLogEntry[]>([]);
+  const [running, setRunning] = useState(false);
+  const [status,  setStatus]  = useState<string | null>(null);
+
+  // Load stored log on open
+  useEffect(() => {
+    fetch(`/api/agents/execute/${approvalId}`)
+      .then(r => r.json() as Promise<{ success: boolean; log: ExecLogEntry[]; status: { execution_status: string } | null }>)
+      .then(j => {
+        if (j.success) {
+          setLog(j.log ?? []);
+          setStatus(j.status?.execution_status ?? null);
+        }
+      })
+      .catch(() => null);
+  }, [approvalId]);
+
+  async function triggerExecution() {
+    setRunning(true);
+    setLog([]);
+    try {
+      const resp = await fetch(`/api/agents/execute/${approvalId}`, { method: 'POST' });
+      if (!resp.ok || !resp.body) {
+        setLog([{ actor: 'system', event_type: 'failed', message: `HTTP ${resp.status}` }]);
+        return;
+      }
+      const reader  = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let   buf = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop() ?? '';
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const evt = JSON.parse(line.slice(6)) as { type: string; event_type?: string; message?: string; error?: string };
+            if (evt.type === 'step') {
+              setLog(prev => [...prev, { actor: 'executor', event_type: evt.event_type ?? 'progress', message: evt.message ?? '' }]);
+            } else if (evt.type === 'done' || evt.type === 'failed') {
+              setStatus(evt.type === 'done' ? 'done' : 'failed');
+              setLog(prev => [...prev, { actor: 'system', event_type: evt.type, message: evt.type === 'done' ? 'Исполнение завершено' : (evt.error ?? 'Ошибка') }]);
+            } else if (evt.type === 'started') {
+              setStatus('in_progress');
+              setLog(prev => [...prev, { actor: 'system', event_type: 'started', message: `Запущен исполнитель: ${(evt as Record<string, string>).executor ?? ''} [${(evt as Record<string, string>).action_type ?? ''}]` }]);
+            }
+          } catch { /* ignore parse error */ }
+        }
+      }
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  const statusColor: Record<string, string> = {
+    started:   'var(--ocean)',
+    progress:  'var(--text-secondary)',
+    completed: 'var(--success)',
+    done:      'var(--success)',
+    failed:    'var(--danger)',
+    warning:   'var(--warning)',
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-4"
+      style={{ background: 'rgba(0,0,0,0.5)' }}>
+      <div className="w-full max-w-lg bg-[var(--bg-card)] border border-[var(--border)] rounded-xl shadow-2xl max-h-[80vh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]">
+          <div className="flex items-center gap-2">
+            <Terminal className="w-4 h-4 text-[var(--accent)]" />
+            <span className="text-sm font-semibold text-[var(--text-primary)]">Лог исполнения</span>
+            {status && <ExecStatusBadge status={status} />}
+          </div>
+          <button onClick={onClose} className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Log entries */}
+        <div className="flex-1 overflow-y-auto p-3 space-y-1 font-mono text-[11px] bg-[var(--bg-primary)]">
+          {log.length === 0 && !running && (
+            <p className="text-[var(--text-muted)] text-center py-6">Нет записей в логе</p>
+          )}
+          {log.map((entry, i) => (
+            <div key={i} className="flex gap-2 items-start">
+              <span className="text-[var(--text-muted)] shrink-0 text-[10px]">[{String(i + 1).padStart(2, '0')}]</span>
+              <span style={{ color: statusColor[entry.event_type] ?? 'var(--text-secondary)' }} className="uppercase text-[9px] shrink-0 w-16">{entry.event_type}</span>
+              <span className="text-[var(--text-primary)] break-all">{entry.message}</span>
+            </div>
+          ))}
+          {running && (
+            <div className="flex items-center gap-2 text-[var(--warning)] py-1">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              <span>Выполняется...</span>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-4 py-3 border-t border-[var(--border)] flex gap-2">
+          {(!status || status === 'pending' || status === 'assigned') && (
+            <button onClick={() => void triggerExecution()} disabled={running}
+              className="ds-btn ds-btn-primary text-xs py-1.5 px-4 flex items-center gap-1.5 disabled:opacity-50">
+              {running ? <Loader2 className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
+              {running ? 'Запуск...' : 'Запустить'}
+            </button>
+          )}
+          <button onClick={onClose} className="ds-btn text-xs py-1.5 px-4">Закрыть</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 const BOARD_AGENTS = [
   { id: 'admin',    label: 'AI Администратор' },
   { id: 'legal',    label: 'AI Юрист'         },
@@ -619,6 +745,7 @@ function ApprovalsTab() {
   const [reviewing, setReviewing] = useState<string | null>(null);
   const [assigning, setAssigning] = useState<string | null>(null);
   const [section,  setSection] = useState<'pending' | 'tracking'>('pending');
+  const [openLogId, setOpenLogId] = useState<string | null>(null);
 
   const load = useCallback(() => {
     setLoad(true);
@@ -790,6 +917,12 @@ function ApprovalsTab() {
                       )}
                       <span className="text-[9px] text-[var(--text-muted)] font-mono">{fmtDate(ap.created_at)}</span>
                     </div>
+                    {/* Log open button */}
+                    <button onClick={() => setOpenLogId(ap.id)}
+                      className="shrink-0 flex items-center gap-1 text-[10px] text-[var(--ocean)] hover:text-[var(--accent)] transition-colors">
+                      <Terminal className="w-3 h-3" />
+                      Лог
+                    </button>
                   </div>
 
                   {/* Executor assignment */}
@@ -836,6 +969,14 @@ function ApprovalsTab() {
             </div>
           )}
         </div>
+      )}
+
+      {/* Execution Log Drawer */}
+      {openLogId && (
+        <ExecutionLogDrawer
+          approvalId={openLogId}
+          onClose={() => { setOpenLogId(null); load(); }}
+        />
       )}
     </div>
   );
