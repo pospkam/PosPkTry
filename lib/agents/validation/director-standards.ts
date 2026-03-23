@@ -39,6 +39,11 @@ export function validateProposalAgainstChecklist(
     /users? (?:are|seem) (unhappy|upset|mad|angry)/i,
     /\bguess\b|\busually\b/i,
     /everyone |most |almost all |typically |generally /i,
+    // Russian equivalents
+    /вероятно|похоже|я думаю|я считаю|мне кажется|видимо|по всей видимости|скорее всего(?! по данным)/i,
+    /пользователи (?:недовольны|злятся|расстроены|кажется)/i,
+    /\bобычно\b|\bкак правило\b|\bвсе?\b(?! данные| результаты| участники)/i,
+    /все операторы|большинство|почти все|как правило|в целом /i,
   ];
 
   for (const pattern of unverifiedPatterns) {
@@ -51,11 +56,15 @@ export function validateProposalAgainstChecklist(
   // FLAG 2: Check for false urgency without justification
   const urgencyPatterns = [
     /must act immediately|act now|critical urgency|emergency|asap/i,
+    // Russian equivalents
+    /нужно действовать немедленно|действуйте сейчас|критическая срочность|срочно без обоснования/i,
   ];
 
   for (const pattern of urgencyPatterns) {
     if (pattern.test(proposal.description) && !proposal.description.toLowerCase().includes('will cause') &&
-        !proposal.description.toLowerCase().includes('lead to') && !proposal.description.toLowerCase().includes('result in')) {
+        !proposal.description.toLowerCase().includes('lead to') && !proposal.description.toLowerCase().includes('result in') &&
+        !proposal.description.toLowerCase().includes('приведёт') && !proposal.description.toLowerCase().includes('вызовет') &&
+        !proposal.description.toLowerCase().includes('следствием')) {
       warnings.push(`False urgency detected: Cite consequences. Why now vs later?`);
       break;
     }
@@ -66,6 +75,10 @@ export function validateProposalAgainstChecklist(
     /operators? (?:are) (?:unmotivated|lazy|incompetent)/i,
     /tourists? (?:don't|don't) understand|tourists? (?:are) dumb/i,
     /\ball \w+ (?:are|is)/i,  // "all X are..."
+    // Russian equivalents
+    /операторы (?:ленивые|некомпетентные|не хотят работать)/i,
+    /туристы не понимают|туристы тупые|туристы не хотят/i,
+    /все \w+ (?:являются|это)/i,  // "все X являются..."
   ];
 
   for (const pattern of oversimplifPatterns) {
@@ -76,13 +89,14 @@ export function validateProposalAgainstChecklist(
   }
 
   // FLAG 4: Check for agent bias (bias toward role's interests)
-  if (agentId === 'security' && proposal.description.toLowerCase().includes('potential security risk')) {
+  const desc = proposal.description.toLowerCase();
+  if (agentId === 'security' && (desc.includes('potential security risk') || desc.includes('потенциальный риск безопасности') || desc.includes('угроза безопасности'))) {
     warnings.push(`Potential Security agent bias: Quantify exploitability, don't just assume hypothetical threat`);
   }
-  if (agentId === 'eco' && proposal.description.toLowerCase().includes('tourism damages')) {
+  if (agentId === 'eco' && (desc.includes('tourism damages') || desc.includes('туризм наносит ущерб') || desc.includes('туризм повреждает'))) {
     warnings.push(`Potential Eco agent bias: Cite impact studies, don't assume activism is fact`);
   }
-  if (agentId === 'rescue' && proposal.description.toLowerCase().includes('need more resources')) {
+  if (agentId === 'rescue' && (desc.includes('need more resources') || desc.includes('нужны дополнительные ресурсы') || desc.includes('требуются ресурсы'))) {
     warnings.push(`Potential Rescue agent bias: Show incident trend data, don't just request resources`);
   }
 
@@ -91,6 +105,9 @@ export function validateProposalAgainstChecklist(
     /ai predicts|ai estimates(?!\s+with confidence bounds)/i,
     /didn't notice|wasn't aware|turns out|happens to be/i,
     /created|developed|invented|designed \(if no before\/after data\)/i,
+    // Russian equivalents
+    /ии предсказывает|ии оценивает(?! с известной погрешностью)/i,
+    /не заметил|не знал|оказывается|как выяснилось/i,
   ];
 
   for (const pattern of hallucinationPatterns) {
@@ -101,9 +118,13 @@ export function validateProposalAgainstChecklist(
   }
 
   // Check for missing implementation feasibility
-  if (!proposal.description.toLowerCase().includes('can') && !proposal.description.toLowerCase().includes('should') &&
-      !proposal.description.toLowerCase().includes('implement') && !proposal.description.toLowerCase().includes('do') &&
-      !proposal.description.toLowerCase().includes('change')) {
+  const implText = proposal.description.toLowerCase();
+  const hasImplClarity = implText.includes('can') || implText.includes('should') ||
+    implText.includes('implement') || implText.includes('do') || implText.includes('change') ||
+    implText.includes('можно') || implText.includes('следует') || implText.includes('нужно') ||
+    implText.includes('реализовать') || implText.includes('внедрить') || implText.includes('изменить') ||
+    implText.includes('добавить') || implText.includes('обновить') || implText.includes('настроить');
+  if (!hasImplClarity) {
     warnings.push(`No implementation clarity: Describe what to do, who does it, timeline, risks`);
   }
 
@@ -111,6 +132,9 @@ export function validateProposalAgainstChecklist(
   const flattery = [
     /brilliant decision|brilliant move|excellent|genius|smart move|perfect/i,
     /owner's? (?:brilliant|smart|excellent)/i,
+    // Russian equivalents
+    /блестящее решение|отличное решение|гениально|умный ход|прекрасно|великолепно/i,
+    /владелец правильно|директор верно|мудрое решение/i,
   ];
 
   for (const pattern of flattery) {
@@ -168,6 +192,10 @@ export function hasTransparency(text: string): boolean {
     /confidence: (high|medium|low)/i,
     /uncertain|unknown|unclear|need (?:more )?data|insufficient data|requires (?:further )?investigation/i,
     /could be wrong if|assuming|if .*then|depends on/i,
+    // Russian equivalents
+    /уверенность: (высокая|средняя|низкая)/i,
+    /неизвестно|неясно|нужны данные|недостаточно данных|требует проверки|требует анализа/i,
+    /могу ошибаться|при условии|если .{0,40}то|зависит от/i,
   ];
 
   for (const indicator of transparencyIndicators) {

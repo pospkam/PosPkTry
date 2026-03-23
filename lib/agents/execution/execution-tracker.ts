@@ -30,18 +30,18 @@ export class ExecutionTracker {
       -- Last meeting initiatives with execution status
       SELECT
         aa.id as initiative_id,
-        aa.context->>'from_agent' as from_agent_id,
+        aa.requested_by as from_agent_id,
         aa.description as title,
         aa.created_at as decision_at,
-        aa.context->>'assigned_to' as assigned_to,
-        COALESCE(aa.context->>'execution_status', 'assigned')::text as execution_status,
-        aa.context->>'started_at' as started_at,
-        aa.context->>'completed_at' as completed_at,
-        aa.context->>'failure_reason' as failure_reason,
-        COALESCE((aa.context->>'progress_pct')::int, 0) as progress_pct,
+        aa.executor_agent_id as assigned_to,
+        COALESCE(aa.execution_status, 'assigned') as execution_status,
+        NULL as started_at,
+        aa.completed_at,
+        aa.execution_notes as failure_reason,
+        0 as progress_pct,
         EXTRACT(DAY FROM NOW() - aa.created_at)::int as days_elapsed
       FROM agent_approvals aa
-      WHERE aa.type IN ('initiative', 'board_proposal')
+      WHERE aa.executor_agent_id IS NOT NULL
         AND aa.created_at > NOW() - INTERVAL '7 days'
       ORDER BY aa.created_at DESC
       LIMIT 20
@@ -92,19 +92,17 @@ export class ExecutionTracker {
     }
   ): Promise<void> {
     try {
-      const context = {
-        execution_status: status,
-        updated_at: new Date().toISOString(),
-        progress_pct: metadata?.progress_pct ?? 0,
-        failure_reason: metadata?.failure_reason ?? null,
-        notes: metadata?.notes ?? null,
-      };
+      // 'blocked' is not in DB constraint, map to 'failed' + store reason in notes
+      const dbStatus = status === 'blocked' ? 'failed' : status;
+      const notes = metadata?.failure_reason ?? metadata?.notes ?? null;
 
       await pool.query(
         `UPDATE agent_approvals
-         SET context = jsonb_set(context, '{execution_status}', $1::jsonb)
-         WHERE id = $2`,
-        [JSON.stringify(context), initiativeId]
+         SET execution_status = $1,
+             execution_notes  = COALESCE($2, execution_notes),
+             completed_at     = CASE WHEN $1 = 'done' THEN NOW() ELSE completed_at END
+         WHERE id = $3`,
+        [dbStatus, notes, initiativeId]
       );
     } catch {
       // non-critical: status update failed silently
@@ -157,7 +155,7 @@ export class ExecutionTracker {
     const overdue = initiatives.filter(i => i.days_elapsed > 3 && i.execution_status !== 'done');
 
     if (initiatives.length === 0) {
-      return '✅ Предыдущих инициатив нет. Чистый лист.';
+      return 'Предыдущих инициатив нет. Чистый лист.';
     }
 
     const completed = initiatives.filter(i => i.execution_status === 'done').length;
@@ -165,22 +163,22 @@ export class ExecutionTracker {
     const failed = initiatives.filter(i => i.execution_status === 'failed').length;
     const blocked = initiatives.filter(i => i.execution_status === 'blocked').length;
 
-    let briefing = `📊 СТАТУС ИНИЦИАТИВ (последние 7 дней)\n\n`;
-    briefing += `✅ Завершено: ${completed}/${initiatives.length}\n`;
-    briefing += `⏳ В процессе: ${inProgress}\n`;
-    briefing += `❌ Ошибки: ${failed}\n`;
-    briefing += `🚫 Заблокировано: ${blocked}\n\n`;
+    let briefing = `СТАТУС ИНИЦИАТИВ (последние 7 дней)\n\n`;
+    briefing += `Завершено: ${completed}/${initiatives.length}\n`;
+    briefing += `В процессе: ${inProgress}\n`;
+    briefing += `Ошибки: ${failed}\n`;
+    briefing += `Заблокировано: ${blocked}\n\n`;
 
     if (overdue.length > 0) {
-      briefing += `⚠️ ПРОСРОЧЕННЫЕ (более 3 дней, не выполнены):\n`;
+      briefing += `ПРОСРОЧЕННЫЕ (более 3 дней, не выполнены):\n`;
       for (const i of overdue.slice(0, 5)) {
-        briefing += `  • [${i.days_elapsed}d] ${i.title}\n`;
+        briefing += `  • [${i.days_elapsed}д] ${i.title}\n`;
         briefing += `    Статус: ${i.execution_status} | Агент: ${i.from_agent_id}\n`;
       }
       briefing += '\n';
     }
 
-    briefing += `💡 ДИРЕКТОРУ НУЖНО: разобраться с просроченными инициативами перед следующим совещанием.`;
+    briefing += `ДИРЕКТОРУ НУЖНО: разобраться с просроченными инициативами перед следующим совещанием.`;
 
     return briefing;
   }

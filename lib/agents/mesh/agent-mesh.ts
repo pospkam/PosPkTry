@@ -111,7 +111,7 @@ function buildReactionPrompt(
 ): string {
   const others = allReports
     .filter(r => r.id !== agent.id && r.status === 'ok')
-    .map(r => `[${r.name} — ${r.role}]:\n${r.report.replace(/<[^>]+>/g, '').substring(0, 250)}...`)
+    .map(r => `[${r.name} — ${r.role}]:\n${r.report.replace(/<[^>]+>/g, '').substring(0, 1000)}...`)
     .join('\n\n');
 
   return (
@@ -181,7 +181,7 @@ export class AgentMesh {
   ): Promise<string> {
     const reportsSummary = agents
       .filter(a => a.status === 'ok')
-      .map(a => `[${a.name}]: ${a.report.replace(/<[^>]+>/g, '').substring(0, 200)}`)
+      .map(a => `[${a.name}]: ${a.report.replace(/<[^>]+>/g, '').substring(0, 1000)}`)
       .join('\n');
 
     const reactionsSummary = reactions.length > 0
