@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { TourDatePicker } from './calendars/TourDatePicker';
 import { GuestSelector } from './ui/GuestSelector';
 import { LoadingSpinner } from '@/components/admin/shared';
@@ -53,6 +54,7 @@ export function TourBookingForm({
   const [paymentId, setPaymentId] = useState<string | null>(null);
   const [showPayment, setShowPayment] = useState(false);
   const { user } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     fetchAvailability();
@@ -146,7 +148,7 @@ export function TourBookingForm({
 
   const handlePaymentSuccess = async (_transactionId: number) => {
     toast.success('Оплата прошла успешно! Бронирование подтверждено.');
-    // TODO: Редирект на страницу подтверждения
+    router.push('/hub/tourist/bookings');
   };
 
   const handlePaymentFail = (reason: string) => {

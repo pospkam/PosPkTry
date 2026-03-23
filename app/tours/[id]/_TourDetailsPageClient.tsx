@@ -126,10 +126,14 @@ export default function TourDetailsPageClient() {
   }, [tourId]);
 
   const handleBooking = async (bookingData: unknown): Promise<{ id?: string }> => {
+    const data = bookingData as Record<string, unknown>;
+    const date = data.date instanceof Date
+      ? data.date.toISOString().split('T')[0]
+      : String(data.date).split('T')[0];
     const res = await fetch(`/api/tours/${tourId}/book`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(bookingData),
+      body: JSON.stringify({ ...data, date }),
     });
     const result = await res.json();
     if (!result.success) throw new Error(result.error || 'Ошибка бронирования');
