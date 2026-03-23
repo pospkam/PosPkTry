@@ -22,7 +22,9 @@ export async function GET(req: NextRequest) {
         ea.affected_locations,
         ea.created_at,
         ea.expires_at,
-        array_length(ea.affected_locations, 1) as affected_route_count
+        (SELECT count(*)::int FROM location_real_time_status lrs
+         JOIN agent_route_knowledge ark ON ark.id = lrs.agent_route_id
+         WHERE ark.zone = ANY(ea.affected_zones)) as affected_route_count
       FROM external_alerts ea
       WHERE ea.expires_at > NOW()
       ORDER BY ea.severity DESC, ea.created_at DESC

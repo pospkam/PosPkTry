@@ -228,6 +228,56 @@ function classifyMessage(id: string, text: string, datetime: string): SeismicEve
   return null;
 }
 
+// ── Парсер формата eqkam (структурированные сообщения) ───────────────────
+// Пример: «Время UTC: 15 MAR 2026  12:07:52\nКоординаты: 51.27, 159.73\n...Магнитуда (Ml): 4.8»
+
+function classifyEqkam(id: string, text: string, datetime: string): SeismicEvent | null {
+  const magMatch = text.match(/Магнитуда\s*\(Ml\):\s*(\d+\.?\d*)/i);
+  if (!magMatch) return null;
+
+  const mag = parseFloat(magMatch[1]);
+  if (isNaN(mag) || mag < 1) return null;
+
+  // Координаты для определения зоны
+  const coordMatch = text.match(/Координаты:\s*([\d.]+),\s*([\d.]+)/);
+  const lat = coordMatch ? parseFloat(coordMatch[1]) : 52;
+  const lon = coordMatch ? parseFloat(coordMatch[2]) : 158;
+
+  // Глубина
+  const depthMatch = text.match(/Глубина\s*\(КМ\):\s*([\d.]+)/i);
+  const depthKm = depthMatch ? parseFloat(depthMatch[1]) : undefined;
+
+  // Расстояние от ПК
+  const distMatch = text.match(/Расстояние\s+от\s+ПК:\s*(\d+)/i);
+  const distKm = distMatch ? parseInt(distMatch[1]) : undefined;
+
+  // Зона по координатам
+  const zones: string[] = [];
+  if (lat >= 55.5) zones.push('northern');
+  else if (lat >= 52 && lon >= 161) zones.push('eastern');
+  else zones.push('avachinsky');
+
+  const severity: 0 | 1 | 2 | 3 = mag >= 7 ? 3 : mag >= 6 ? 2 : mag >= 5 ? 1 : 0;
+  const epicenter = distKm !== undefined
+    ? `${distKm} км от Петропавловска-Камчатского`
+    : `${lat.toFixed(2)}°N ${lon.toFixed(2)}°E`;
+
+  return {
+    source_id: id,
+    source_url: `https://${id}`,
+    published_at: new Date(datetime),
+    alert_type: 'earthquake',
+    severity,
+    title: `Землетрясение ML ${mag} — ${epicenter.slice(0, 50)}`,
+    description: text.slice(0, 600),
+    affected_zones: zones,
+    magnitude: mag,
+    depth_km: depthKm,
+    epicenter,
+    expires_hours: severity >= 2 ? 48 : 24,
+  };
+}
+
 // ── Сохранение в БД ───────────────────────────────────────────────────────
 
 async function saveEvent(event: SeismicEvent): Promise<'inserted' | 'skipped'> {
@@ -299,7 +349,9 @@ export async function ingestEqkam(): Promise<ParseResult> {
     const messages = extractMessages(html);
 
     for (const msg of messages) {
-      const event = classifyMessage(msg.id, msg.text, msg.datetime);
+      // eqkam использует структурированный формат «Магнитуда (Ml): X»
+      const event = classifyEqkam(msg.id, msg.text, msg.datetime)
+                 ?? classifyMessage(msg.id, msg.text, msg.datetime);
       if (!event) continue;
 
       result.events.push(event);
