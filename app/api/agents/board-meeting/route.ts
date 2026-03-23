@@ -23,7 +23,7 @@ import type { AgentReaction } from '@/lib/agents/mesh/agent-mesh';
 import { pool } from '@/lib/db-pool';
 import { agentMemory } from '@/lib/agents/memory/agent-memory';
 import { approvalRequired } from '@/lib/agents/safeguards/approval-required';
-import { callAIWaterfall } from '@/lib/ai/providers';
+import { callAIWaterfall, callAIFast } from '@/lib/ai/providers';
 import type { ChatMessage } from '@/lib/ai/prompts';
 import { externalResearcher } from '@/lib/agents/research/external-researcher';
 import {
@@ -329,7 +329,8 @@ async function generateProposal(
   ].join('\n');
 
   const messages: ChatMessage[] = [{ role: 'user', content: prompt }];
-  const text = await callAIWaterfall(messages);
+  // Round 4 proposals: structured JSON — fast/cheap model is sufficient
+  const text = await callAIFast(messages);
 
   if (!text || text.trim().toUpperCase() === 'NULL' || text.trim() === '') return null;
 
@@ -491,7 +492,8 @@ async function extractVote(
 - confidence = твоя уверенность в своей позиции (0-100)
 - reason = конкретное обоснование в 1 предложении, без воды`;
 
-  const text = await callAIWaterfall([{ role: 'user', content: prompt }]).catch(() => null);
+  // Voting is binary JSON — fast/cheap model handles it perfectly
+  const text = await callAIFast([{ role: 'user', content: prompt }]).catch(() => null);
   if (!text) return null;
 
   const match = text.match(/\{[\s\S]*?\}/);

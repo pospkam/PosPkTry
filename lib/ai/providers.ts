@@ -270,24 +270,61 @@ export interface OpenRouterBalance {
   low: boolean;
 }
 
-/** Проверяет баланс OpenRouter (работает только с management key) */
+/**
+ * Проверяет баланс OpenRouter.
+ *
+ * Приоритет:
+ *   1. OPENROUTER_MANAGEMENT_KEY → /api/v1/credits  (точный баланс, management key)
+ *   2. OPENROUTER_API_KEY        → /api/v1/auth/key  (usage/limit, стандартный ключ)
+ *
+ * Добавь в Timeweb env:
+ *   OPENROUTER_MANAGEMENT_KEY=sk-or-v1-mgmt-...
+ */
 export async function checkOpenRouterBalance(): Promise<OpenRouterBalance | null> {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) return null;
+  const mgmtKey = process.env.OPENROUTER_MANAGEMENT_KEY;
+  const apiKey  = process.env.OPENROUTER_API_KEY;
 
+  // ── Вариант 1: management key → /api/v1/credits ──────────────
+  if (mgmtKey) {
+    try {
+      const res = await fetch('https://openrouter.ai/api/v1/credits', {
+        headers: { Authorization: `Bearer ${mgmtKey}` },
+        signal: AbortSignal.timeout(5000),
+      });
+      if (res.ok) {
+        const json = await res.json() as {
+          data: { total_credits: number; total_usage: number }
+        };
+        const { total_credits, total_usage } = json.data;
+        const remaining = Math.round((total_credits - total_usage) * 100) / 100;
+        return {
+          total_credits: Math.round(total_credits * 100) / 100,
+          total_usage:   Math.round(total_usage   * 100) / 100,
+          remaining,
+          low: remaining < 0.5,
+        };
+      }
+    } catch { /* fallthrough */ }
+  }
+
+  // ── Вариант 2: стандартный API key → /api/v1/auth/key ────────
+  if (!apiKey) return null;
   try {
-    const res = await fetch('https://openrouter.ai/api/v1/credits', {
+    const res = await fetch('https://openrouter.ai/api/v1/auth/key', {
       headers: { Authorization: `Bearer ${apiKey}` },
       signal: AbortSignal.timeout(5000),
     });
     if (!res.ok) return null;
-    const data = await res.json() as { data: { total_credits: number; total_usage: number } };
-    const remaining = data.data.total_credits - data.data.total_usage;
+    const json = await res.json() as {
+      data: { usage: number; limit: number | null }
+    };
+    const { usage, limit } = json.data;
+    const remaining = limit != null ? Math.round((limit - usage) * 100) / 100 : null;
     return {
-      total_credits: data.data.total_credits,
-      total_usage: data.data.total_usage,
-      remaining: Math.round(remaining * 100) / 100,
-      low: remaining < 0.5,
+      total_credits: limit ?? 0,
+      total_usage:   Math.round(usage * 100) / 100,
+      remaining:     remaining ?? 999, // null limit = pay-as-you-go
+      low:           remaining != null && remaining < 0.5,
     };
   } catch {
     return null;
@@ -301,32 +338,123 @@ export async function preflightProviders(): Promise<{
 }> {
   const testMsg: ChatMessage[] = [{ role: 'user', content: 'ok' }];
 
-  async function probe(
-    id: string,
-    name: string,
-    fn: (msgs: ChatMessage[]) => Promise<string | null>,
+  // Пробует провайдера и возвращает подробный статус (HTTP-код + тело ошибки)
+  async function probeDetailed(
+    id:     string,
+    name:   string,
+    fn:     () => Promise<{ ok: boolean; status?: number; error?: string }>,
   ): Promise<ProviderStatus> {
     const start = Date.now();
     try {
       const result = await Promise.race([
-        fn(testMsg),
-        new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000)),
+        fn(),
+        new Promise<{ ok: boolean; error: string }>((resolve) =>
+          setTimeout(() => resolve({ ok: false, error: 'timeout 5s' }), 5000),
+        ),
       ]);
-      if (result === null) {
-        return { id, name, available: false, latency_ms: Date.now() - start, error: 'no response / no key' };
-      }
-      return { id, name, available: true, latency_ms: Date.now() - start };
+      return {
+        id,
+        name,
+        available:  result.ok,
+        latency_ms: Date.now() - start,
+        error:      result.ok ? undefined : result.error,
+      };
     } catch (e) {
-      return { id, name, available: false, latency_ms: Date.now() - start, error: (e as Error).message };
+      return { id, name, available: false, latency_ms: Date.now() - start, error: String(e) };
     }
+  }
+
+  async function probeMiMo() {
+    const apiKey = process.env.XIAOMI_API_KEY;
+    if (!apiKey) return { ok: false, error: 'XIAOMI_API_KEY not set' };
+    try {
+      const res = await fetch('https://api.xiaomimimo.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+        body: JSON.stringify({ model: 'MiMo-V2-Pro', max_tokens: 5, messages: testMsg }),
+        signal: AbortSignal.timeout(5000),
+      });
+      if (!res.ok) {
+        const body = await res.text().catch(() => '');
+        return { ok: false, status: res.status, error: `HTTP ${res.status}: ${body.slice(0, 120)}` };
+      }
+      return { ok: true };
+    } catch (e) { return { ok: false, error: String(e) }; }
+  }
+
+  async function probeOpenrouter() {
+    const apiKey = process.env.OPENROUTER_API_KEY;
+    if (!apiKey) return { ok: false, error: 'OPENROUTER_API_KEY not set' };
+    try {
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+          'HTTP-Referer': 'https://tourhab.ru',
+          'X-Title': 'TourHab Kamchatka',
+        },
+        body: JSON.stringify({ model: 'openai/gpt-4o-mini', max_tokens: 5, messages: testMsg }),
+        signal: AbortSignal.timeout(5000),
+      });
+      if (!res.ok) {
+        const body = await res.text().catch(() => '');
+        return { ok: false, status: res.status, error: `HTTP ${res.status}: ${body.slice(0, 200)}` };
+      }
+      return { ok: true };
+    } catch (e) { return { ok: false, error: String(e) }; }
+  }
+
+  async function probeXai() {
+    const apiKey = process.env.XAI_API_KEY;
+    if (!apiKey) return { ok: false, error: 'XAI_API_KEY not set' };
+    try {
+      const res = await fetch('https://api.x.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+        body: JSON.stringify({ model: 'grok-4', max_tokens: 5, messages: testMsg }),
+        signal: AbortSignal.timeout(5000),
+      });
+      if (!res.ok) {
+        const body = await res.text().catch(() => '');
+        return { ok: false, status: res.status, error: `HTTP ${res.status}: ${body.slice(0, 120)}` };
+      }
+      return { ok: true };
+    } catch (e) { return { ok: false, error: String(e) }; }
+  }
+
+  async function probeAnthropic() {
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) return { ok: false, error: 'ANTHROPIC_API_KEY not set' };
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 5,
+          messages: [{ role: 'user', content: 'ok' }],
+        }),
+        signal: AbortSignal.timeout(5000),
+      });
+      if (!res.ok) {
+        const body = await res.text().catch(() => '');
+        return { ok: false, status: res.status, error: `HTTP ${res.status}: ${body.slice(0, 120)}` };
+      }
+      return { ok: true };
+    } catch (e) { return { ok: false, error: String(e) }; }
   }
 
   const [providers, openrouter_balance] = await Promise.all([
     Promise.all([
-      probe('mimo', 'MiMo-V2-Pro (Xiaomi)', callMiMo),
-      probe('openrouter', 'OpenRouter (GPT-4o-mini)', callOpenrouter),
-      probe('xai', 'Grok (xAI)', callXai),
-      probe('anthropic', 'Claude Haiku (Anthropic)', callAnthropic),
+      probeDetailed('mimo',       'MiMo-V2-Pro (Xiaomi)',        probeMiMo),
+      probeDetailed('openrouter', 'OpenRouter (GPT-4o-mini)',     probeOpenrouter),
+      probeDetailed('xai',        'Grok-4 (xAI)',                 probeXai),
+      probeDetailed('anthropic',  'Claude Haiku (Anthropic)',     probeAnthropic),
     ]),
     checkOpenRouterBalance(),
   ]);
@@ -346,6 +474,47 @@ export async function callAIWaterfall(messages: ChatMessage[]): Promise<string> 
   if (!answer) answer = await callXai(messages);
   if (!answer) answer = await callAnthropic(messages);
   return answer ?? 'Извините, сервис временно недоступен. Попробуйте позже.';
+}
+
+// ── Fast Waterfall — только дешёвые провайдеры ──────────────────
+// Для структурированных задач (JSON, бинарные ответы, голосование).
+// MiMo ($1/1M) → DeepSeek via OpenRouter ($0.27/1M).
+// НЕ использует Grok-4 и Anthropic — только для high-stakes выводов.
+export async function callAIFast(messages: ChatMessage[]): Promise<string> {
+  // Попытка 1: MiMo-V2-Pro (самый дешёвый)
+  const mimo = await callMiMo(messages);
+  if (mimo) return mimo;
+
+  // Попытка 2: DeepSeek через OpenRouter (~$0.27/1M tokens)
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (apiKey) {
+    try {
+      const payload = messages.map(({ role, content }) => ({ role, content }));
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+          'HTTP-Referer': 'https://tourhab.ru',
+          'X-Title': 'TourHab Kamchatka',
+        },
+        body: JSON.stringify({
+          model: 'deepseek/deepseek-chat-v3-0324',
+          temperature: 0.3,
+          max_tokens: 600,
+          messages: payload,
+        }),
+        signal: AbortSignal.timeout(12_000),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const text: string | undefined = data?.choices?.[0]?.message?.content;
+        if (text) return text;
+      }
+    } catch { /* fallthrough */ }
+  }
+
+  return 'Сервис временно недоступен.';
 }
 
 // ── Waterfall Direct — алиас основного ────────────────────────

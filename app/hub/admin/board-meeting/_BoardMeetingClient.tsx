@@ -551,6 +551,7 @@ export default function BoardMeetingClient() {
   const [preflightWarning,   setPreflightWarning]   = useState<string | null>(null);
   const [preflightLoading,   setPreflightLoading]   = useState(false);
   const [orBalance,          setOrBalance]          = useState<{ remaining: number; low: boolean } | null>(null);
+  const [computeFund,        setComputeFund]        = useState<{ total_rub: number; estimated_meetings: number } | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   const isDone    = stage === 4;
@@ -595,20 +596,29 @@ export default function BoardMeetingClient() {
           any_available: boolean;
           providers: Array<{ id: string; name: string; available: boolean; latency_ms?: number; error?: string }>;
           openrouter_balance: { remaining: number; low: boolean } | null;
+          compute_fund: { total_rub: number; estimated_meetings: number } | null;
         };
         if (pfData.openrouter_balance) {
           setOrBalance(pfData.openrouter_balance);
         }
+        if (pfData.compute_fund) {
+          setComputeFund(pfData.compute_fund);
+        }
         if (!pfData.any_available) {
-          const names = pfData.providers.map(p => p.name).join(', ');
-          setPreflightWarning(`Ни один AI-провайдер не доступен (${names}). Проверьте баланс и API-ключи.`);
+          // Показываем реальную причину отказа каждого провайдера
+          const details = pfData.providers
+            .map(p => `${p.name}: ${p.error ?? 'недоступен'}`)
+            .join(' | ');
+          setPreflightWarning(`Ни один AI-провайдер не доступен. ${details}`);
           setStage(-1);
           setPreflightLoading(false);
           return;
         }
         const available = pfData.providers.filter(p => p.available);
+        const unavailable = pfData.providers.filter(p => !p.available);
         if (available.length < 2) {
-          setPreflightWarning(`Доступен только 1 провайдер: ${available[0]?.name}. Совещание может быть нестабильным.`);
+          const failInfo = unavailable.map(p => `${p.name}: ${p.error ?? 'нет ответа'}`).join('; ');
+          setPreflightWarning(`Доступен только 1 провайдер: ${available[0]?.name}. Остальные: ${failInfo}`);
         }
       }
     } catch (e) {
@@ -695,6 +705,18 @@ export default function BoardMeetingClient() {
           <h1 className="ds-h1">Совет директоров</h1>
           <p className="text-sm text-[var(--text-muted)]">4 раунда: отчёты — реакции — консенсус — инициативы</p>
         </div>
+        {computeFund && computeFund.total_rub > 0 && (
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
+            style={{
+              background: 'color-mix(in srgb, var(--ocean) 10%, transparent)',
+              color: 'var(--ocean)',
+              border: '1px solid color-mix(in srgb, var(--ocean) 20%, transparent)',
+            }}
+            title={`Фонд AI: ~${computeFund.estimated_meetings} совещаний`}>
+            <Cpu size={12} />
+            {computeFund.total_rub.toFixed(0)} ₽
+          </div>
+        )}
         {orBalance && (
           <a href="https://openrouter.ai/credits" target="_blank" rel="noopener noreferrer"
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors hover:opacity-80"

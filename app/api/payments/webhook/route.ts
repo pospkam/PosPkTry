@@ -3,6 +3,7 @@ import { query } from '@/lib/database';
 import { processCloudPaymentsWebhook, CloudPaymentsWebhook } from '@/lib/payments/cloudpayments-webhook';
 import { emailService } from '@/lib/notifications/email-service';
 import { PaymentWebhookReturnRow, PaymentRow, EmailRow } from '@/lib/types/db-rows';
+import { addBookingContribution } from '@/lib/compute-fund';
 
 export const dynamic = 'force-dynamic';
 
@@ -121,6 +122,14 @@ async function handleSuccessfulPayment(webhook: CloudPaymentsWebhook) {
     if (updateBookingQuery) {
       await query(updateBookingQuery, [payment.booking_id]);
     }
+
+    // 1% от суммы → фонд AI-вычислений (fire-and-forget, не блокирует платёж)
+    void addBookingContribution(
+      payment.booking_type === 'transfer' ? 'booking_transfer' : 'booking_tour',
+      String(payment.booking_id),
+      webhook.Amount,
+      `${payment.booking_type} confirmed`,
+    );
 
     // Отправляем email уведомление о подтверждении оплаты
     try {
@@ -256,6 +265,9 @@ async function handleTourPaymentSuccess(invoiceId: string, transactionId: string
        WHERE id = $2`,
       [invoiceId, booking_id]
     );
+
+    // 1% от суммы → фонд AI-вычислений (fire-and-forget)
+    void addBookingContribution('booking_operator', booking_id, webhook.Amount, 'operator booking confirmed');
   } catch {
     // не прерываем выполнение
   }
