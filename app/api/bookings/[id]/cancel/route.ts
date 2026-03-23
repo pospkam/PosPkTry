@@ -40,6 +40,39 @@ export async function POST(
     } catch {
       // Тело необязательно
     }
+
+    // Operator marketplace bookings have the "op-" prefix
+    if (bookingId.startsWith('op-')) {
+      const opId = bookingId.slice(3);
+      const ownerCheck = await query<{ id: string; booking_status: string }>(
+        `SELECT id, booking_status FROM operator_bookings
+         WHERE id = $1 AND metadata->>'user_id' = $2`,
+        [opId, auth.userId]
+      );
+      if (ownerCheck.rows.length === 0) {
+        return NextResponse.json(
+          { success: false, error: 'Бронирование не найдено' } as ApiResponse<null>,
+          { status: 404 }
+        );
+      }
+      const opBooking = ownerCheck.rows[0];
+      if (!['new', 'confirmed'].includes(opBooking.booking_status)) {
+        return NextResponse.json(
+          { success: false, error: 'Бронирование нельзя отменить в текущем статусе' } as ApiResponse<null>,
+          { status: 409 }
+        );
+      }
+      await query(
+        `UPDATE operator_bookings SET booking_status = 'cancelled', cancelled_at = NOW(), updated_at = NOW() WHERE id = $1`,
+        [opId]
+      );
+      return NextResponse.json({
+        success: true,
+        message: 'Бронирование отменено.',
+        data: { booking: { id: bookingId }, refund: { amount: 0, reason: '' } },
+      });
+    }
+
     const reason = typeof body.reason === 'string' ? body.reason : undefined;
 
     // 2. Проверка доступа: турист — только свои, оператор — свои туры, админ — всё
