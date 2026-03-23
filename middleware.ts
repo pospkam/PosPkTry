@@ -72,6 +72,7 @@ const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/exec-migration-060': ['GET'], // execute migration 060
   '/api/mig063': ['GET'],             // migration 063: agent_experiments + agent_approvals
   '/api/mig064': ['GET'],             // migration 064: agent_memory
+  '/api/hub/marketplace/tours': ['GET'], // публичный каталог туров маршрутплейса
 };
 
 const API_ROLE_REQUIREMENTS: Record<string, AuthRole> = {

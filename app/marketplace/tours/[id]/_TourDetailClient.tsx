@@ -30,10 +30,10 @@ export default function TourDetailClient() {
   useEffect(() => {
     const fetchTour = async () => {
       try {
-        const res = await fetch(`/api/hub/marketplace/tours?limit=1&offset=0`);
+        const res = await fetch(`/api/hub/marketplace/tours?id=${tourId}&limit=1`);
         if (res.ok) {
           const data = await res.json();
-          const found = data.tours.find((t: TourDetail) => t.id === tourId);
+          const found = (data.tours as TourDetail[])[0] ?? null;
           if (found) {
             setTour(found);
           } else {

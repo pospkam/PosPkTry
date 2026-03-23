@@ -14,6 +14,7 @@ export async function GET(req: NextRequest) {
     const activity = searchParams.get('activity_type');
     const location = searchParams.get('location_type');
     const search = searchParams.get('search');
+    const idParam = searchParams.get('id');
     const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
     const offset = parseInt(searchParams.get('offset') || '0');
 
@@ -36,8 +37,13 @@ export async function GET(req: NextRequest) {
       WHERE ot.deleted_at IS NULL AND ot.is_active = true
     `;
 
-    const params: any[] = [];
+    const params: unknown[] = [];
     let paramCount = 1;
+
+    if (idParam) {
+      query += ` AND ot.id = $${paramCount++}`;
+      params.push(parseInt(idParam));
+    }
 
     if (activity) {
       query += ` AND ot.activity_type = $${paramCount++}`;
@@ -68,7 +74,6 @@ export async function GET(req: NextRequest) {
       offset
     });
   } catch (err) {
-    console.error('[Marketplace API]', err);
     return NextResponse.json(
       { error: 'Failed to fetch tours' },
       { status: 500 }
