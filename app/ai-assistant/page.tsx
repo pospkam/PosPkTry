@@ -2,19 +2,74 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Bot, Send, Loader2, User, Sun, Moon } from 'lucide-react';
+import { Bot, Send, Loader2, User, Sun, Moon, MapPin, ChevronRight } from 'lucide-react';
 import Logo from '@/components/shared/Logo';
 import { useTheme } from '@/contexts/ThemeContext';
 import BottomNav from '@/components/shared/BottomNav';
 import Link from 'next/link';
+import Image from 'next/image';
+
+interface TourSuggestion {
+  id: number;
+  title: string;
+  description: string | null;
+  base_price: number;
+  activity_type: string | null;
+  location: string | null;
+  tour_image: string | null;
+  operator_name: string;
+}
 
 interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
+  tours?: TourSuggestion[];
 }
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null;
+}
+
+function isTourSuggestion(v: unknown): v is TourSuggestion {
+  return isRecord(v) && typeof v.id === 'number' && typeof v.title === 'string';
+}
+
+function formatPrice(p: number): string {
+  return new Intl.NumberFormat('ru-RU').format(p) + ' ₽';
+}
+
+function TourCard({ tour }: { tour: TourSuggestion }) {
+  return (
+    <Link
+      href={`/marketplace/tours/${tour.id}`}
+      className="group flex items-start gap-3 p-3 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] hover:border-[var(--accent)]/40 hover:bg-[var(--bg-hover)] transition-all"
+    >
+      <div className="relative w-16 h-16 rounded-md overflow-hidden shrink-0 bg-[var(--bg-hover)]">
+        {tour.tour_image ? (
+          <Image
+            src={tour.tour_image}
+            alt={tour.title}
+            fill
+            sizes="64px"
+            className="object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <MapPin className="w-5 h-5 text-[var(--text-muted)]" />
+          </div>
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-[var(--text-primary)] truncate">{tour.title}</p>
+        <p className="text-xs text-[var(--text-secondary)] truncate">{tour.operator_name}</p>
+        {tour.description && (
+          <p className="text-xs text-[var(--text-muted)] mt-0.5 line-clamp-2">{tour.description}</p>
+        )}
+        <p className="text-xs font-medium text-[var(--accent)] mt-1">от {formatPrice(tour.base_price)}</p>
+      </div>
+      <ChevronRight className="w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--accent)] shrink-0 mt-1 transition-colors" />
+    </Link>
+  );
 }
 
 export default function AIAssistantPage() {
@@ -56,12 +111,19 @@ export default function AIAssistantPage() {
       const data: unknown = await res.json();
 
       let reply = 'Извините, не удалось получить ответ. Попробуйте позже.';
+      let tours: TourSuggestion[] | undefined;
+
       if (isRecord(data) && isRecord(data.data)) {
         const answer = data.data.answer;
         if (typeof answer === 'string') reply = answer;
+
+        const rawTours = data.data.tours;
+        if (Array.isArray(rawTours)) {
+          tours = rawTours.filter(isTourSuggestion);
+        }
       }
 
-      setMessages(prev => [...prev, { role: 'assistant', content: reply }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: reply, tours }]);
     } catch {
       setMessages(prev => [...prev, {
         role: 'assistant',
@@ -121,16 +183,34 @@ export default function AIAssistantPage() {
           </div>
         )}
         {messages.map((msg, i) => (
-          <div key={`${msg.role}-${i}`} className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            {msg.role === 'assistant' && <Bot className="w-5 h-5 text-[var(--ocean)] mt-1 shrink-0" />}
-            <div className={`max-w-[80%] px-4 py-3 text-sm whitespace-pre-wrap ${
-              msg.role === 'user'
-                ? 'bg-[var(--accent)]/20 text-[var(--text-primary)] rounded-lg rounded-br-sm'
-                : 'bg-[var(--bg-card)] text-[var(--text-primary)] rounded-lg rounded-bl-sm'
-            }`}>
-              {msg.content}
+          <div key={`${msg.role}-${i}`} className={`flex flex-col gap-2 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+            <div className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'} w-full`}>
+              {msg.role === 'assistant' && <Bot className="w-5 h-5 text-[var(--ocean)] mt-1 shrink-0" />}
+              <div className={`max-w-[80%] px-4 py-3 text-sm whitespace-pre-wrap ${
+                msg.role === 'user'
+                  ? 'bg-[var(--accent)]/20 text-[var(--text-primary)] rounded-lg rounded-br-sm'
+                  : 'bg-[var(--bg-card)] text-[var(--text-primary)] rounded-lg rounded-bl-sm'
+              }`}>
+                {msg.content}
+              </div>
+              {msg.role === 'user' && <User className="w-5 h-5 text-[var(--text-muted)] mt-1 shrink-0" />}
             </div>
-            {msg.role === 'user' && <User className="w-5 h-5 text-[var(--text-muted)] mt-1 shrink-0" />}
+
+            {/* Tour suggestion cards */}
+            {msg.role === 'assistant' && msg.tours && msg.tours.length > 0 && (
+              <div className="ml-7 w-full max-w-[80%] space-y-2">
+                <p className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">Подходящие туры</p>
+                {msg.tours.map(tour => (
+                  <TourCard key={tour.id} tour={tour} />
+                ))}
+                <Link
+                  href="/marketplace"
+                  className="block text-xs text-[var(--ocean)] hover:underline pt-1"
+                >
+                  Все туры на Камчатке
+                </Link>
+              </div>
+            )}
           </div>
         ))}
         {loading && (

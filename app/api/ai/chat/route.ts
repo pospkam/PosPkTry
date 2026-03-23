@@ -20,6 +20,7 @@ import {
   extractMemoryFromMessage,
   buildMemoryContext,
 } from '@/lib/ai/user-memory';
+import { detectTourIntent, findRelevantTours, type TourSuggestion } from '@/lib/ai/booking-intent';
 
 export const dynamic = 'force-dynamic';
 
@@ -166,6 +167,15 @@ export async function POST(request: NextRequest) {
     }
     answer ??= await callAIWaterfall(messagesForAI);
 
+    // Tour suggestions — only for tourist role (fire-and-forget fetch, non-blocking)
+    let tourSuggestions: TourSuggestion[] = [];
+    if (safeRole === 'tourist') {
+      const intentResult = detectTourIntent(message.trim());
+      if (intentResult.detected) {
+        tourSuggestions = await findRelevantTours(intentResult.activityType, intentResult.rawWords);
+      }
+    }
+
     const assistantMsg: ChatMessage = { role: 'assistant', content: answer, timestamp: Date.now() };
     history.push(assistantMsg);
 
@@ -195,6 +205,7 @@ export async function POST(request: NextRequest) {
         messagesInHistory: history.length,
         remainingFree: remaining,
         isAuthenticated,
+        ...(tourSuggestions.length > 0 ? { tours: tourSuggestions } : {}),
       },
     });
   } catch (error) {
