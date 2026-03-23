@@ -72,7 +72,7 @@ export class RescueAgency {
       }>(`
         SELECT
           COUNT(*)::text                                                        AS total_30d,
-          COUNT(*) FILTER (WHERE status NOT IN ('resolved','cancelled'))::text  AS active,
+          COUNT(*) FILTER (WHERE status NOT IN ('resolved','false_alarm'))::text  AS active,
           COUNT(*) FILTER (WHERE status = 'resolved')::text                    AS resolved,
           '0'                                                                   AS avg_resolve_min
         FROM sos_events
@@ -81,7 +81,7 @@ export class RescueAgency {
     ]);
 
     const s = stats.rows[0];
-    const activeEvents = recent.rows.filter(r => !['resolved', 'cancelled'].includes(r.status));
+    const activeEvents = recent.rows.filter(r => !['resolved', 'false_alarm'].includes(r.status));
 
     const lines: string[] = [
       '<b>SOS-мониторинг (30 дней)</b>',
