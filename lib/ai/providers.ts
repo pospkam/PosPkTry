@@ -254,7 +254,7 @@ export async function callYandexGPT(messages: ChatMessage[]): Promise<string | n
           'x-folder-id': folderId,
         },
         body: JSON.stringify({
-          modelUri: `gpt://${folderId}/yandexgpt-lite/latest`,
+          modelUri: `gpt://${folderId}/yandexgpt-5.1/latest`,
           completionOptions: {
             stream: false,
             temperature: 0.4,
