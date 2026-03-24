@@ -1,19 +1,24 @@
 /**
  * GET /api/ai/debug-waterfall
  * Diagnostic endpoint: calls every AI provider with a real prompt and reports detailed errors.
- * Admin-only (requireAdmin).
+ * Protected by CRON_SECRET query param (no cookie auth needed).
+ *
+ * Usage: /api/ai/debug-waterfall?secret=YOUR_CRON_SECRET
  */
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/auth/middleware';
 import { callAIWaterfallDebug } from '@/lib/ai/providers';
 import { getSystemPrompt } from '@/lib/ai/prompts';
 import type { ChatMessage } from '@/lib/ai/prompts';
 
 export async function GET(request: NextRequest) {
-  const authError = await requireAdmin(request);
-  if (authError) return authError;
+  // Simple secret check — no cookie/JWT needed
+  const secret = request.nextUrl.searchParams.get('secret');
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret || secret !== cronSecret) {
+    return NextResponse.json({ error: 'Forbidden. Pass ?secret=CRON_SECRET' }, { status: 403 });
+  }
 
-  const testMessage = request.nextUrl.searchParams.get('q') || 'Привет, расскажи про вулканы Камчатки';
+  const testMessage = request.nextUrl.searchParams.get('q') || 'Привет, расскажи коротко про вулканы Камчатки';
 
   const systemPrompt = getSystemPrompt('tourist');
   const messages: ChatMessage[] = [
