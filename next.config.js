@@ -20,8 +20,7 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   typescript: {
-    // TODO: вернуть false после первого успешного деплоя на 4cpu сервере
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
 
   // unoptimized: убирает sharp/@img (~33MB) из standalone — критично для Timeweb лимита 50MB
