@@ -73,6 +73,20 @@ export function isClientError(error: unknown): boolean {
 }
 
 /**
+ * Safe error message for client response.
+ * In production: never exposes raw error.message.
+ * In development: returns the actual message for debugging.
+ *
+ * Drop-in replacement for: `error instanceof Error ? error.message : 'Unknown'`
+ */
+export function safeMsg(error: unknown, fallback = 'Внутренняя ошибка сервера'): string {
+  const isProduction = process.env.NODE_ENV === 'production';
+  if (isProduction) return fallback;
+  if (error instanceof Error) return error.message;
+  return String(error);
+}
+
+/**
  * Log error for debugging (without exposing to client)
  */
 export function logError(context: string, error: unknown): void {

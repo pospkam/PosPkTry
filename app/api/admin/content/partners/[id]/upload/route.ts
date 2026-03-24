@@ -1,3 +1,4 @@
+import { safeMsg } from '@/lib/errors/sanitize';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { requireAdmin } from '@/lib/auth/middleware';
@@ -73,7 +74,7 @@ export async function POST(
     return NextResponse.json({ success: true, url });
   } catch (error) {
     return NextResponse.json(
-      { success: false, error: 'Ошибка загрузки файла', details: error instanceof Error ? error.message : 'Unknown' },
+      { success: false, error: 'Ошибка загрузки файла', details: safeMsg(error) },
       { status: 500 }
     );
   }
@@ -120,7 +121,7 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json(
-      { success: false, error: 'Ошибка удаления', details: error instanceof Error ? error.message : 'Unknown' },
+      { success: false, error: 'Ошибка удаления', details: safeMsg(error) },
       { status: 500 }
     );
   }

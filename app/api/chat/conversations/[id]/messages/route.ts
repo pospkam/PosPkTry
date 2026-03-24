@@ -1,3 +1,4 @@
+import { safeMsg } from '@/lib/errors/sanitize';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/middleware';
 import { chatService } from '@/lib/services/chat.service';
@@ -42,7 +43,7 @@ export async function GET(
       );
     }
     return NextResponse.json(
-      { success: false, error: 'Ошибка загрузки сообщений', details: error instanceof Error ? error.message : 'Unknown' },
+      { success: false, error: 'Ошибка загрузки сообщений', details: safeMsg(error) },
       { status: 500 }
     );
   }
@@ -101,7 +102,7 @@ export async function POST(
       );
     }
     return NextResponse.json(
-      { success: false, error: 'Ошибка отправки сообщения', details: error instanceof Error ? error.message : 'Unknown' },
+      { success: false, error: 'Ошибка отправки сообщения', details: safeMsg(error) },
       { status: 500 }
     );
   }

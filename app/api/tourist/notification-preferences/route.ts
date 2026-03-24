@@ -1,3 +1,4 @@
+import { safeMsg } from '@/lib/errors/sanitize';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAuth } from '@/lib/auth/middleware';
@@ -75,7 +76,7 @@ export async function GET(request: NextRequest) {
       data: result.rows[0] ?? null,
     });
   } catch (error) {
-    const msg = error instanceof Error ? error.message : 'Unknown';
+    const msg = safeMsg(error);
     return NextResponse.json({ success: false, error: msg }, { status: 500 });
   }
 }
@@ -149,7 +150,7 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ success: true, message: 'Настройки обновлены' });
   } catch (error) {
-    const msg = error instanceof Error ? error.message : 'Unknown';
+    const msg = safeMsg(error);
     return NextResponse.json({ success: false, error: msg }, { status: 500 });
   }
 }

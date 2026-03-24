@@ -5,6 +5,7 @@
  * Encrypted interest collection from user messages.
  */
 
+import { safeMsg } from '@/lib/errors/sanitize';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getSystemPrompt, buildMessageHistory, ChatRole, ChatMessage } from '@/lib/ai/prompts';
@@ -211,7 +212,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    const msg = error instanceof Error ? error.message : 'Unknown';
+    const msg = safeMsg(error);
     return NextResponse.json(
       { success: false, error: 'Внутренняя ошибка сервера', details: msg },
       { status: 500 }
@@ -247,7 +248,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    const msg = error instanceof Error ? error.message : 'Unknown';
+    const msg = safeMsg(error);
     return NextResponse.json({ success: false, error: 'Ошибка загрузки истории', details: msg }, { status: 500 });
   }
 }

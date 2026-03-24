@@ -1,3 +1,4 @@
+import { safeMsg } from '@/lib/errors/sanitize';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/middleware';
 import { query } from '@/lib/database';
@@ -41,7 +42,7 @@ export async function GET(
       data: result.rows,
     });
   } catch (error) {
-    const msg = error instanceof Error ? error.message : 'Unknown';
+    const msg = safeMsg(error);
     return NextResponse.json({ success: false, error: msg }, { status: 500 });
   }
 }

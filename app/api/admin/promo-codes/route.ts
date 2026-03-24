@@ -1,3 +1,4 @@
+import { safeMsg } from '@/lib/errors/sanitize';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { query } from '@/lib/database';
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ success: true, data: result.rows });
   } catch (error) {
-    const msg = error instanceof Error ? error.message : 'Unknown';
+    const msg = safeMsg(error);
     return NextResponse.json({ success: false, error: `Ошибка: ${msg}` }, { status: 500 });
   }
 }
@@ -71,7 +72,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, data: { id, code: code.toUpperCase() }, message: 'Промокод создан' }, { status: 201 });
   } catch (error) {
-    const msg = error instanceof Error ? error.message : 'Unknown';
+    const msg = safeMsg(error);
     if (msg.includes('unique') || msg.includes('duplicate')) {
       return NextResponse.json({ success: false, error: 'Промокод с таким кодом уже существует' }, { status: 409 });
     }
@@ -95,7 +96,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true, message: 'Промокод деактивирован' });
   } catch (error) {
-    const msg = error instanceof Error ? error.message : 'Unknown';
+    const msg = safeMsg(error);
     return NextResponse.json({ success: false, error: `Ошибка: ${msg}` }, { status: 500 });
   }
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { classifyError } from '@/lib/errors/api-handler';
 import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { verifyAuth } from '@/lib/auth';
@@ -140,11 +141,8 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    return NextResponse.json({
-      success: false,
-      error: 'Failed to create payment',
-      message: error instanceof Error ? error.message : 'Unknown error'
-    } as ApiResponse<null>, { status: 500 });
+    const { message, status } = classifyError(error);
+    return NextResponse.json({ success: false, error: message } as ApiResponse<null>, { status });
   }
 }
 
