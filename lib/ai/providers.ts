@@ -4,10 +4,12 @@
  *
  * Env vars:
  *   XIAOMI_API_KEY          — Xiaomi MiMo ($1/1M tokens, 1M context)
- *   OPENROUTER_API_KEY      — OpenRouter GPT-4o-mini
- *   XAI_API_KEY             — xAI Grok-4
- *   ANTHROPIC_API_KEY       — Claude Haiku (fallback)
- *   MINIMAX_API_KEY         — Minimax (резерв, отдельный от основного waterfall)
+ *   OPENROUTER_API_KEY      — OpenRouter multi-model (GPT-4o-mini → DeepSeek → Claude Haiku)
+ *   DEEPSEEK_API_KEY        — DeepSeek direct API
+ *   GEMINI_API_KEY          — Google Gemini 2.0 Flash direct
+ *   XAI_API_KEY             — xAI Grok-4 (geo-blocked RU)
+ *   ANTHROPIC_API_KEY       — Claude Haiku direct (geo-blocked RU)
+ *   MINIMAX_API_KEY         — Minimax (резерв)
  */
 
 import type { ChatMessage } from '@/lib/ai/prompts';
@@ -262,6 +264,68 @@ export async function callGemini(messages: ChatMessage[]): Promise<string | null
   }
 }
 
+// ── DeepSeek (direct API) ──────────────────────────────────────
+export async function callDeepSeek(messages: ChatMessage[]): Promise<string | null> {
+  const apiKey = process.env.DEEPSEEK_API_KEY;
+  if (!apiKey) return null;
+
+  try {
+    const payload = messages.map(({ role, content }) => ({ role, content }));
+    const res = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        temperature: 0.4,
+        max_tokens: 800,
+        messages: payload,
+      }),
+      signal: AbortSignal.timeout(20_000),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const text: string | undefined = data?.choices?.[0]?.message?.content;
+    return text?.trim() || null;
+  } catch { return null; }
+}
+
+// ── Google Gemini (direct API) ─────────────────────────────────
+export async function callGeminiDirect(messages: ChatMessage[]): Promise<string | null> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return null;
+
+  try {
+    const systemMsg = messages.find(m => m.role === 'system');
+    const turns = messages.filter(m => m.role !== 'system');
+    const contents = turns.map(({ role, content }) => ({
+      role: role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: content }],
+    }));
+
+    const body: Record<string, unknown> = { contents };
+    if (systemMsg) {
+      body.systemInstruction = { parts: [{ text: systemMsg.content }] };
+    }
+
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(20_000),
+      }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    const text: string | undefined = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    return text?.trim() || null;
+  } catch { return null; }
+}
+
 // ── Preflight: быстрая проверка доступности провайдеров ──────
 // Минимальный запрос к каждому провайдеру, параллельно, 5s timeout
 export interface ProviderStatus {
@@ -479,9 +543,11 @@ export async function preflightProviders(): Promise<{
 // MiMo-V2-Pro → OpenRouter → xAI → Anthropic
 export async function callAIWaterfall(messages: ChatMessage[]): Promise<string> {
   let answer = await callMiMo(messages);
-  if (!answer) answer = await callOpenrouter(messages);
-  if (!answer) answer = await callXai(messages);
-  if (!answer) answer = await callAnthropic(messages);
+  if (!answer) answer = await callOpenrouter(messages);   // GPT-4o-mini → DeepSeek → Claude Haiku (OR)
+  if (!answer) answer = await callDeepSeek(messages);     // DeepSeek direct
+  if (!answer) answer = await callGeminiDirect(messages); // Gemini 2.0 Flash direct
+  if (!answer) answer = await callXai(messages);          // Grok (может быть geo-blocked)
+  if (!answer) answer = await callAnthropic(messages);    // Claude Haiku direct (может быть geo-blocked)
   return answer ?? 'Извините, сервис временно недоступен. Попробуйте позже.';
 }
 
