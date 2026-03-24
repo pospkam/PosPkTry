@@ -305,7 +305,8 @@ export async function middleware(request: NextRequest) {
 // Apply middleware to specific routes
 export const config = {
   matcher: [
-    '/api/:path*',
+    // All API routes EXCEPT public feeds (Avito autoload, etc.)
+    '/api/((?!channels/avito/feed).*)',
     '/hub/:path*',
     '/profile/:path*'
   ],
