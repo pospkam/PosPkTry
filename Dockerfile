@@ -32,7 +32,11 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN npm run build
+
+# --mount=type=cache: .next/cache переживает между сборками.
+# Webpack/Turbopack переиспользует кеш → инкрементальный билд вместо full rebuild.
+RUN --mount=type=cache,target=/app/.next/cache \
+    npm run build
 
 # ── 3. Продакшн-образ ──────────────────────────────────────────
 FROM base AS runner
