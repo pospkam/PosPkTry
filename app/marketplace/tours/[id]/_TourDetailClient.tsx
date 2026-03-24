@@ -17,6 +17,7 @@ interface TourDetail {
   operator_name: string;
   operator_id: number;
   bookings_count: number;
+  max_participants: number;
 }
 
 export default function TourDetailClient() {
@@ -169,26 +170,14 @@ export default function TourDetailClient() {
         </div>
 
         {/* Booking Sidebar */}
-        <div>
-          <div className="ds-card p-6 mb-4 sticky top-4">
-            <div className="mb-6">
-              <p className="text-xs text-[var(--text-muted)] mb-1">Стартовая цена</p>
-              <div className="text-3xl font-bold text-[var(--accent)]">
-                {tour.base_price.toLocaleString('ru-RU')}₽
-              </div>
-              <p className="text-xs text-[var(--text-muted)] mt-1">на одного участника</p>
-            </div>
-
-            <div className="bg-[var(--bg-hover)] rounded-lg p-4 mb-4 text-sm text-[var(--text-secondary)]">
-              <p>Финальная цена рассчитывается в зависимости от количества участников.</p>
-            </div>
-          </div>
+        <div className="sticky top-4">
+          <BookingFormClient
+            tourId={tour.id}
+            basePrice={tour.base_price}
+            maxParticipants={tour.max_participants}
+            tourTitle={tour.title}
+          />
         </div>
-      </div>
-
-      {/* Booking Form */}
-      <div className="mb-12">
-        <BookingFormClient tourId={tour.id} />
       </div>
 
       {/* Info Box */}

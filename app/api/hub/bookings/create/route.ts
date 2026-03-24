@@ -15,6 +15,7 @@ const BookingSchema = z.object({
   tourist_email: z.string().email(),
   tourist_phone: z.string().min(10).max(20),
   participants_count: z.number().min(1).max(100),
+  booking_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Формат даты: YYYY-MM-DD'),
   special_requests: z.string().max(2000).optional()
 });
 
@@ -40,8 +41,8 @@ export async function POST(req: NextRequest) {
     const bookingResult = await pool.query(
       `INSERT INTO operator_bookings (
         tour_id, partner_id, tourist_name, tourist_email, tourist_phone,
-        participants_count, special_requests, status, created_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'new', NOW())
+        participants_count, booking_date, special_requests, status, created_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'new', NOW())
       RETURNING id`,
       [
         data.tour_id,
@@ -50,6 +51,7 @@ export async function POST(req: NextRequest) {
         data.tourist_email,
         data.tourist_phone,
         data.participants_count,
+        data.booking_date,
         data.special_requests || ''
       ]
     );
