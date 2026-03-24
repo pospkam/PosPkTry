@@ -75,9 +75,9 @@ export async function createBookingWithLock(
       let scheduleResult;
       try {
         scheduleResult = await client.query(lockQuery, [request.scheduleId]);
-      } catch (error: any) {
+      } catch (error: unknown) {
         // NOWAIT вернет ошибку если строка уже заблокирована
-        if (error.code === '55P03') { // lock_not_available
+        if ((error as { code?: string }).code === '55P03') { // lock_not_available
           return {
             success: false,
             error: 'Это расписание сейчас бронируется другим пользователем. Попробуйте еще раз.',
@@ -227,7 +227,7 @@ export async function createBookingWithLock(
       };
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     
     return {
       success: false,
@@ -262,8 +262,8 @@ export async function holdSeats(
       let scheduleResult;
       try {
         scheduleResult = await client.query(lockQuery, [scheduleId]);
-      } catch (error: any) {
-        if (error.code === '55P03') {
+      } catch (error: unknown) {
+        if ((error as { code?: string }).code === '55P03') {
           return {
             success: false,
             error: 'Расписание занято другим пользователем',
@@ -315,7 +315,7 @@ export async function holdSeats(
       };
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
       error: 'Ошибка блокировки мест',

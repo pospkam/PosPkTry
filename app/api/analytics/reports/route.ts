@@ -1,3 +1,4 @@
+import { safeMsg } from '@/lib/errors/sanitize';
 import { NextRequest, NextResponse } from 'next/server'
 import { reportService } from '@/lib/services'
 import { requireRole } from '@/lib/auth/middleware'
@@ -27,9 +28,9 @@ export async function GET(request: NextRequest) {
       data: response.reports,
       total: response.total,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: safeMsg(error) },
       { status: 500 }
     )
   }
@@ -54,9 +55,9 @@ export async function POST(request: NextRequest) {
       success: true,
       data: report,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: safeMsg(error) },
       { status: 400 }
     )
   }

@@ -194,10 +194,10 @@ export async function PUT(request: NextRequest) {
       message: 'Профиль успешно обновлён'
     } as ApiResponse<unknown>);
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     
     // Handle constraint violations
-    if (error.code === '23514') { // Check constraint violation
+    if ((error as { code?: string }).code === '23514') { // Check constraint violation
       return NextResponse.json({
         success: false,
         error: 'Некорректные данные. Проверьте значения полей.'

@@ -173,9 +173,9 @@ export async function POST(request: NextRequest) {
       message: 'Расписание успешно создано'
     } as ApiResponse<unknown>);
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     
-    if (error.code === '23505') { // Unique violation
+    if ((error as { code?: string }).code === '23505') { // Unique violation
       return NextResponse.json({
         success: false,
         error: 'Водитель уже имеет запись в это время'

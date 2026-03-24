@@ -1,3 +1,4 @@
+import { safeMsg } from '@/lib/errors/sanitize';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { exec } from 'child_process';
@@ -83,11 +84,11 @@ export async function POST(request: NextRequest) {
       });
     }
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
       { 
         error: 'Deployment failed',
-        message: error.message 
+        message: safeMsg(error) 
       },
       { status: 500 }
     );

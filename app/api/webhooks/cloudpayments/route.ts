@@ -13,6 +13,7 @@
  * @date 2025-10-30
  */
 
+import { safeMsg } from '@/lib/errors/sanitize';
 import { NextRequest, NextResponse } from 'next/server';
 import { processCloudPaymentsWebhook } from '@/lib/payments/cloudpayments-webhook';
 import { transaction } from '@/lib/database';
@@ -196,12 +197,12 @@ export async function POST(request: NextRequest) {
     // CloudPayments ожидает { code: 0 } для успеха
     return NextResponse.json({ code: 0 });
     
-  } catch (error: any) {
+  } catch (error: unknown) {
     
     // CloudPayments код 13 = ошибка (повторит позже)
     return NextResponse.json({ 
       code: 13,
-      error: error.message 
+      error: safeMsg(error) 
     });
   } finally {
     const duration = Date.now() - startTime;

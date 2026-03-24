@@ -123,7 +123,7 @@ export async function GET(req: NextRequest) {
 
     // Сгруппировать по типам (только последняя версия каждого типа)
     const grouped: Record<string, any> = {};
-    rows.forEach((row: any) => {
+    rows.forEach((row: { id: string; document_version: string; document_date: string; agreement_type: string }) => {
       if (!grouped[row.agreement_type] ||
           grouped[row.agreement_type].document_version < row.document_version) {
         grouped[row.agreement_type] = row;

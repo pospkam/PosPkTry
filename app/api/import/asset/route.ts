@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
 
     await client.end()
     return NextResponse.json({ ok: true, key, sha256: sha, mime: file.mime, bytes: file.bytes.length })
-  } catch (e: any) {
-    return NextResponse.json({ error: 'IMPORT_FAILED', message: e?.message || String(e) }, { status: 500 })
+  } catch (e: unknown) {
+    return NextResponse.json({ error: 'IMPORT_FAILED', message: e instanceof Error ? e.message : String(e) || String(e) }, { status: 500 })
   }
 }

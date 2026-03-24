@@ -170,8 +170,8 @@ export async function POST(request: NextRequest) {
     const fills = await generateTourFills(tour);
 
     // Update tour with AI-generated data
-    const updates: { [key: string]: any } = {};
-    const values: any[] = [];
+    const updates: Record<string, string | number | boolean | null> = {};
+    const values: (string | number | boolean | null | string[])[] = [];
     let paramIndex = 1;
 
     if (fills.short_description) {

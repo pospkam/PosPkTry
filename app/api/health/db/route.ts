@@ -19,8 +19,8 @@ export async function GET(_req: NextRequest) {
       `select relname as table, reltuples::bigint as approx_rows
          from pg_class where relkind='r' order by 1`)
     return NextResponse.json({ tables: tables.rows, approx: rows.rows })
-  } catch (e: any) {
-    return NextResponse.json({ error: 'DB_FAILED', message: e?.message }, { status: 500 })
+  } catch (e: unknown) {
+    return NextResponse.json({ error: 'DB_FAILED', message: e instanceof Error ? e.message : String(e) }, { status: 500 })
   } finally {
     try { await client.end() } catch {}
   }

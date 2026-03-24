@@ -1,3 +1,4 @@
+import { safeMsg } from '@/lib/errors/sanitize';
 import { NextRequest, NextResponse } from 'next/server'
 import { dashboardService } from '@/lib/services'
 import { requireAuth } from '@/lib/auth/middleware'
@@ -21,9 +22,9 @@ export async function GET(request: NextRequest) {
       success: true,
       data: dashboards,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: safeMsg(error) },
       { status: 500 }
     )
   }
@@ -48,9 +49,9 @@ export async function POST(request: NextRequest) {
       success: true,
       data: dashboard,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: safeMsg(error) },
       { status: 400 }
     )
   }

@@ -252,10 +252,10 @@ export async function POST(request: NextRequest) {
       message: 'Мероприятие успешно добавлено в расписание'
     } as ApiResponse<unknown>);
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     
     // Handle exclusion constraint violation (overlapping schedules)
-    if (error.code === '23P01') {
+    if ((error as { code?: string }).code === '23P01') {
       return NextResponse.json({
         success: false,
         error: 'Конфликт расписания! Время пересекается с существующим мероприятием.'
