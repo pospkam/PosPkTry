@@ -660,3 +660,252 @@ export async function callAIFast(messages: ChatMessage[]): Promise<string> {
 export async function callAIWaterfallDirect(messages: ChatMessage[]): Promise<string> {
   return callAIWaterfall(messages);
 }
+
+// ── Debug Waterfall: диагностика каждого провайдера ──────────
+export interface WaterfallDebugResult {
+  provider: string;
+  model: string;
+  status: 'success' | 'no_key' | 'http_error' | 'empty_response' | 'error_in_body' | 'exception';
+  http_status?: number;
+  error?: string;
+  answer_preview?: string;
+  latency_ms: number;
+}
+
+export async function callAIWaterfallDebug(messages: ChatMessage[]): Promise<WaterfallDebugResult[]> {
+  const results: WaterfallDebugResult[] = [];
+  const payload = messages.map(({ role, content }) => ({ role, content }));
+
+  // 1. MiMo
+  {
+    const start = Date.now();
+    const apiKey = process.env.XIAOMI_API_KEY;
+    if (!apiKey) {
+      results.push({ provider: 'mimo', model: 'MiMo-V2-Pro', status: 'no_key', latency_ms: 0 });
+    } else {
+      try {
+        const res = await fetch('https://api.xiaomimimo.com/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+          body: JSON.stringify({ model: 'MiMo-V2-Pro', temperature: 0.4, max_tokens: 200, messages: payload }),
+          signal: AbortSignal.timeout(15_000),
+        });
+        const ms = Date.now() - start;
+        if (!res.ok) {
+          const errText = await res.text().catch(() => '');
+          results.push({ provider: 'mimo', model: 'MiMo-V2-Pro', status: 'http_error', http_status: res.status, error: errText.slice(0, 200), latency_ms: ms });
+        } else {
+          const data = await res.json();
+          const text = data?.choices?.[0]?.message?.content;
+          results.push({ provider: 'mimo', model: 'MiMo-V2-Pro', status: text ? 'success' : 'empty_response', answer_preview: text?.slice(0, 100), latency_ms: ms });
+        }
+      } catch (e) {
+        results.push({ provider: 'mimo', model: 'MiMo-V2-Pro', status: 'exception', error: String(e).slice(0, 200), latency_ms: Date.now() - start });
+      }
+    }
+  }
+
+  // 2. OpenRouter (each model)
+  {
+    const apiKey = process.env.OPENROUTER_API_KEY;
+    if (!apiKey) {
+      results.push({ provider: 'openrouter', model: 'all', status: 'no_key', latency_ms: 0 });
+    } else {
+      for (const { id, timeout } of OR_MODELS) {
+        const start = Date.now();
+        try {
+          const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${apiKey}`,
+              'HTTP-Referer': 'https://tourhab.ru',
+              'X-Title': 'TourHab Kamchatka',
+            },
+            body: JSON.stringify({ model: id, temperature: 0.4, max_tokens: 200, messages: payload }),
+            signal: AbortSignal.timeout(timeout),
+          });
+          const ms = Date.now() - start;
+          if (!res.ok) {
+            const errText = await res.text().catch(() => '');
+            results.push({ provider: 'openrouter', model: id, status: 'http_error', http_status: res.status, error: errText.slice(0, 200), latency_ms: ms });
+          } else {
+            const data = await res.json();
+            if (data?.error) {
+              results.push({ provider: 'openrouter', model: id, status: 'error_in_body', error: JSON.stringify(data.error).slice(0, 200), latency_ms: ms });
+            } else {
+              const text = data?.choices?.[0]?.message?.content;
+              results.push({ provider: 'openrouter', model: id, status: text ? 'success' : 'empty_response', answer_preview: text?.slice(0, 100), latency_ms: ms });
+            }
+          }
+        } catch (e) {
+          results.push({ provider: 'openrouter', model: id, status: 'exception', error: String(e).slice(0, 200), latency_ms: Date.now() - start });
+        }
+      }
+    }
+  }
+
+  // 3. YandexGPT
+  {
+    const start = Date.now();
+    const apiKey = process.env.YANDEX_API_KEY;
+    const folderId = process.env.YANDEX_FOLDER_ID;
+    if (!apiKey || !folderId) {
+      results.push({ provider: 'yandex', model: 'yandexgpt-5.1', status: 'no_key', latency_ms: 0 });
+    } else {
+      try {
+        const yMessages = messages.filter(m => m.role !== 'system').map(({ role, content }) => ({
+          role: role === 'assistant' ? 'assistant' : 'user', text: content,
+        }));
+        const systemMsg = messages.find(m => m.role === 'system');
+        if (systemMsg) yMessages.unshift({ role: 'system', text: systemMsg.content });
+
+        const res = await fetch('https://llm.api.cloud.yandex.net/foundationModels/v1/completion', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Api-Key ${apiKey}`, 'x-folder-id': folderId },
+          body: JSON.stringify({ modelUri: `gpt://${folderId}/yandexgpt-5.1/latest`, completionOptions: { stream: false, temperature: 0.4, maxTokens: '200' }, messages: yMessages }),
+          signal: AbortSignal.timeout(15_000),
+        });
+        const ms = Date.now() - start;
+        if (!res.ok) {
+          const errText = await res.text().catch(() => '');
+          results.push({ provider: 'yandex', model: 'yandexgpt-5.1', status: 'http_error', http_status: res.status, error: errText.slice(0, 200), latency_ms: ms });
+        } else {
+          const data = await res.json();
+          const text = data?.result?.alternatives?.[0]?.message?.text;
+          results.push({ provider: 'yandex', model: 'yandexgpt-5.1', status: text ? 'success' : 'empty_response', answer_preview: text?.slice(0, 100), latency_ms: ms });
+        }
+      } catch (e) {
+        results.push({ provider: 'yandex', model: 'yandexgpt-5.1', status: 'exception', error: String(e).slice(0, 200), latency_ms: Date.now() - start });
+      }
+    }
+  }
+
+  // 4. DeepSeek direct
+  {
+    const start = Date.now();
+    const apiKey = process.env.DEEPSEEK_API_KEY;
+    if (!apiKey) {
+      results.push({ provider: 'deepseek', model: 'deepseek-chat', status: 'no_key', latency_ms: 0 });
+    } else {
+      try {
+        const res = await fetch('https://api.deepseek.com/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+          body: JSON.stringify({ model: 'deepseek-chat', temperature: 0.4, max_tokens: 200, messages: payload }),
+          signal: AbortSignal.timeout(15_000),
+        });
+        const ms = Date.now() - start;
+        if (!res.ok) {
+          const errText = await res.text().catch(() => '');
+          results.push({ provider: 'deepseek', model: 'deepseek-chat', status: 'http_error', http_status: res.status, error: errText.slice(0, 200), latency_ms: ms });
+        } else {
+          const data = await res.json();
+          const text = data?.choices?.[0]?.message?.content;
+          results.push({ provider: 'deepseek', model: 'deepseek-chat', status: text ? 'success' : 'empty_response', answer_preview: text?.slice(0, 100), latency_ms: ms });
+        }
+      } catch (e) {
+        results.push({ provider: 'deepseek', model: 'deepseek-chat', status: 'exception', error: String(e).slice(0, 200), latency_ms: Date.now() - start });
+      }
+    }
+  }
+
+  // 5. Gemini direct
+  {
+    const start = Date.now();
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      results.push({ provider: 'gemini', model: 'gemini-2.0-flash', status: 'no_key', latency_ms: 0 });
+    } else {
+      try {
+        const systemMsg = messages.find(m => m.role === 'system');
+        const turns = messages.filter(m => m.role !== 'system');
+        const contents = turns.map(({ role, content }) => ({ role: role === 'assistant' ? 'model' : 'user', parts: [{ text: content }] }));
+        const reqBody: Record<string, unknown> = { contents };
+        if (systemMsg) reqBody.systemInstruction = { parts: [{ text: systemMsg.content }] };
+
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(reqBody), signal: AbortSignal.timeout(15_000),
+        });
+        const ms = Date.now() - start;
+        if (!res.ok) {
+          const errText = await res.text().catch(() => '');
+          results.push({ provider: 'gemini', model: 'gemini-2.0-flash', status: 'http_error', http_status: res.status, error: errText.slice(0, 200), latency_ms: ms });
+        } else {
+          const data = await res.json();
+          const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+          results.push({ provider: 'gemini', model: 'gemini-2.0-flash', status: text ? 'success' : 'empty_response', answer_preview: text?.slice(0, 100), latency_ms: ms });
+        }
+      } catch (e) {
+        results.push({ provider: 'gemini', model: 'gemini-2.0-flash', status: 'exception', error: String(e).slice(0, 200), latency_ms: Date.now() - start });
+      }
+    }
+  }
+
+  // 6. xAI
+  {
+    const start = Date.now();
+    const apiKey = process.env.XAI_API_KEY;
+    if (!apiKey) {
+      results.push({ provider: 'xai', model: 'grok-4', status: 'no_key', latency_ms: 0 });
+    } else {
+      try {
+        const res = await fetch('https://api.x.ai/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+          body: JSON.stringify({ model: 'grok-4', temperature: 0.4, max_tokens: 200, messages: payload }),
+          signal: AbortSignal.timeout(15_000),
+        });
+        const ms = Date.now() - start;
+        if (!res.ok) {
+          const errText = await res.text().catch(() => '');
+          results.push({ provider: 'xai', model: 'grok-4', status: 'http_error', http_status: res.status, error: errText.slice(0, 200), latency_ms: ms });
+        } else {
+          const data = await res.json();
+          const text = data?.choices?.[0]?.message?.content;
+          results.push({ provider: 'xai', model: 'grok-4', status: text ? 'success' : 'empty_response', answer_preview: text?.slice(0, 100), latency_ms: ms });
+        }
+      } catch (e) {
+        results.push({ provider: 'xai', model: 'grok-4', status: 'exception', error: String(e).slice(0, 200), latency_ms: Date.now() - start });
+      }
+    }
+  }
+
+  // 7. Anthropic direct
+  {
+    const start = Date.now();
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      results.push({ provider: 'anthropic', model: 'claude-haiku-4.5', status: 'no_key', latency_ms: 0 });
+    } else {
+      try {
+        const systemMsg = messages.find(m => m.role === 'system');
+        const turns = messages.filter(m => m.role !== 'system');
+        const firstUserIdx = turns.findIndex(m => m.role === 'user');
+        const clean = firstUserIdx >= 0 ? turns.slice(firstUserIdx) : turns;
+        const anthropicMessages = clean.slice(-6).map(m => ({ role: m.role as 'user' | 'assistant', content: m.content }));
+
+        const res = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+          body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 200, temperature: 0.4, ...(systemMsg ? { system: systemMsg.content } : {}), messages: anthropicMessages }),
+          signal: AbortSignal.timeout(15_000),
+        });
+        const ms = Date.now() - start;
+        if (!res.ok) {
+          const errText = await res.text().catch(() => '');
+          results.push({ provider: 'anthropic', model: 'claude-haiku-4.5', status: 'http_error', http_status: res.status, error: errText.slice(0, 200), latency_ms: ms });
+        } else {
+          const data = await res.json() as Record<string, unknown>;
+          const content = Array.isArray(data.content) ? data.content as Array<Record<string, unknown>> : [];
+          const text = typeof content[0]?.text === 'string' ? content[0].text as string : undefined;
+          results.push({ provider: 'anthropic', model: 'claude-haiku-4.5', status: text ? 'success' : 'empty_response', answer_preview: text?.slice(0, 100), latency_ms: ms });
+        }
+      } catch (e) {
+        results.push({ provider: 'anthropic', model: 'claude-haiku-4.5', status: 'exception', error: String(e).slice(0, 200), latency_ms: Date.now() - start });
+      }
+    }
+  }
+
+  return results;
+}
