@@ -73,6 +73,7 @@ const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/mig063': ['GET'],             // migration 063: agent_experiments + agent_approvals
   '/api/mig064': ['GET'],             // migration 064: agent_memory
   '/api/hub/marketplace/tours': ['GET'], // публичный каталог туров маршрутплейса
+  '/api/channels/avito/feed':  ['GET'], // Avito Autoload XML feed — публичный
 };
 
 const API_ROLE_REQUIREMENTS: Record<string, AuthRole> = {
