@@ -46,38 +46,47 @@ export async function callMiMo(messages: ChatMessage[]): Promise<string | null> 
 }
 
 // ── OpenRouter ─────────────────────────────────────────────────
+// Пробует несколько моделей по очереди — защита от rate limit одной модели.
+// Порядок: GPT-4o-mini → DeepSeek V3 → Claude Haiku (через OR-прокси, без геоблока)
+const OR_MODELS = [
+  { id: 'openai/gpt-4o-mini',                timeout: 15_000 },
+  { id: 'deepseek/deepseek-chat-v3-0324',    timeout: 15_000 },
+  { id: 'anthropic/claude-haiku-4-5',        timeout: 20_000 },
+];
+
 export async function callOpenrouter(messages: ChatMessage[]): Promise<string | null> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) return null;
 
-  try {
-    const payload = messages.map(({ role, content }) => ({ role, content }));
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-        'HTTP-Referer': 'https://tourhab.ru',
-        'X-Title': 'TourHab Kamchatka',
-      },
-      body: JSON.stringify({
-        model: 'openai/gpt-4o-mini',
-        temperature: 0.4,
-        max_tokens: 800,
-        messages: payload,
-      }),
-      signal: AbortSignal.timeout(15_000),
-    });
+  const payload = messages.map(({ role, content }) => ({ role, content }));
 
-    if (!res.ok) {
-      const errText = await res.text().catch(() => '');
-      return null;
-    }
-    const data = await res.json();
-    return data?.choices?.[0]?.message?.content ?? null;
-  } catch (e) {
-    return null;
+  for (const { id, timeout } of OR_MODELS) {
+    try {
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+          'HTTP-Referer': 'https://tourhab.ru',
+          'X-Title': 'TourHab Kamchatka',
+        },
+        body: JSON.stringify({
+          model: id,
+          temperature: 0.4,
+          max_tokens: 800,
+          messages: payload,
+        }),
+        signal: AbortSignal.timeout(timeout),
+      });
+
+      if (!res.ok) continue; // следующая модель
+      const data = await res.json();
+      const text: string | undefined = data?.choices?.[0]?.message?.content;
+      if (text?.trim()) return text;
+    } catch { continue; }
   }
+
+  return null;
 }
 
 // ── Minimax ────────────────────────────────────────────────────
