@@ -13,6 +13,7 @@
 
 import { PoolClient } from 'pg';
 import { query, transaction } from '@/lib/database';
+import { notifyBookingConfirmed, notifyBookingCancelled } from '@/lib/notifications/booking-notifications';
 import {
   BookingStatus,
   BookingWithDetails,
@@ -258,8 +259,8 @@ export async function confirmBooking(
       throw new Error('Бронирование не найдено');
     }
 
-    const booking = result.rows[0];
-    const currentStatus = String(booking.status) as BookingStatus;
+    const rawRow = result.rows[0];
+    const currentStatus = String(rawRow.status) as BookingStatus;
 
     validateTransition(currentStatus, 'confirmed');
 
@@ -281,13 +282,22 @@ export async function confirmBooking(
 
     await logStatusChange(client, bookingId, currentStatus, 'confirmed', operatorId, 'Бронирование подтверждено оператором');
 
-    // TODO: уведомить туриста о подтверждении бронирования
-
     const updated = await client.query(
       `${BOOKING_SELECT} WHERE b.id = $1`,
       [bookingId]
     );
-    return normalizeBookingRow(updated.rows[0]);
+    const confirmed = normalizeBookingRow(updated.rows[0]);
+
+    // Уведомить туриста (fire-and-forget, не блокирует транзакцию)
+    void notifyBookingConfirmed(confirmed.tourist.id, {
+      id: bookingId,
+      tourName: confirmed.tour.title,
+      date: confirmed.date instanceof Date ? confirmed.date.toISOString().slice(0, 10) : String(confirmed.date),
+      participants: confirmed.participants,
+      totalPrice: confirmed.totalAmount,
+    });
+
+    return confirmed;
   });
 }
 
@@ -377,15 +387,25 @@ export async function cancelBooking(
       );
     }
 
-    // TODO: уведомить туриста о возврате средств
-
     const updated = await client.query(
       `${BOOKING_SELECT} WHERE b.id = $1`,
       [bookingId]
     );
-    const booking = normalizeBookingRow(updated.rows[0]);
+    const cancelled = normalizeBookingRow(updated.rows[0]);
 
-    return { booking, refund };
+    // Уведомить туриста (fire-and-forget)
+    void notifyBookingCancelled(cancelled.tourist.id, {
+      id: bookingId,
+      tourName: cancelled.tour.title,
+      date: cancelled.date instanceof Date ? cancelled.date.toISOString().slice(0, 10) : String(cancelled.date),
+      participants: cancelled.participants,
+      totalPrice: cancelled.totalAmount,
+      refundAmount: refund.amount,
+      refundPercent: refund.percent,
+      refundReason: refund.reason,
+    });
+
+    return { booking: cancelled, refund };
   });
 }
 

@@ -269,6 +269,91 @@ class EmailService {
     });
   }
 
+  async sendBookingCancellation(data: {
+    bookingId: string;
+    touristName: string;
+    touristEmail: string;
+    tourTitle: string;
+    refundAmount: number;
+    refundPercent: number;
+    refundReason?: string;
+  }): Promise<EmailResult> {
+    const amountStr = new Intl.NumberFormat('ru-RU').format(data.refundAmount);
+    const shortId = data.bookingId.slice(0, 8).toUpperCase();
+    const hasRefund = data.refundAmount > 0;
+
+    const html = `<!DOCTYPE html>
+<html lang="ru">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#F5F0EB;font-family:'Helvetica Neue',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0EB;padding:32px 0;">
+  <tr><td align="center">
+    <table width="560" cellpadding="0" cellspacing="0" style="background:#FFFFFF;border-radius:12px;overflow:hidden;max-width:560px;width:100%;">
+      <tr>
+        <td style="background:#6B6560;padding:24px 32px;">
+          <p style="margin:0;font-size:22px;font-weight:700;color:#FFFFFF;">TourHab</p>
+          <p style="margin:4px 0 0;font-size:13px;color:rgba(255,255,255,0.8);">Бронирование отменено</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:32px 32px 0;">
+          <p style="margin:0 0 8px;font-size:13px;color:#6B6560;text-transform:uppercase;letter-spacing:0.08em;">Здравствуйте, ${this.esc(data.touristName)}</p>
+          <h1 style="margin:0 0 24px;font-size:24px;font-weight:700;color:#1A1714;line-height:1.3;">Бронирование отменено</h1>
+          <p style="margin:0 0 24px;font-size:14px;color:#6B6560;line-height:1.6;">
+            Бронирование <strong>#${shortId}</strong> на тур &laquo;${this.esc(data.tourTitle)}&raquo; отменено.
+          </p>
+        </td>
+      </tr>
+      ${hasRefund ? `
+      <tr>
+        <td style="padding:0 32px;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0EB;border-radius:8px;">
+            <tr>
+              <td style="padding:20px 24px;">
+                ${this.detailRow('Возврат', `${amountStr}\u00A0\u20BD (${data.refundPercent}%)`)}
+                ${data.refundReason ? this.detailRow('Основание', this.esc(data.refundReason)) : ''}
+                ${this.detailRow('Срок', '3\u20135 рабочих дней')}
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>` : `
+      <tr>
+        <td style="padding:0 32px;">
+          <p style="font-size:14px;color:#6B6560;line-height:1.6;">
+            Согласно условиям отмены, возврат средств не предусмотрен.
+          </p>
+        </td>
+      </tr>`}
+      <tr>
+        <td style="padding:24px 32px;">
+          <a href="https://tourhab.ru/marketplace" style="display:inline-block;background:#D44A0C;color:#FFFFFF;text-decoration:none;padding:12px 24px;border-radius:6px;font-size:14px;font-weight:600;">
+            Найти другой тур →
+          </a>
+        </td>
+      </tr>
+      <tr><td style="padding:0 32px;"><div style="border-top:1px solid #F0ECE7;"></div></td></tr>
+      <tr>
+        <td style="padding:16px 32px;background:#FAFAFA;">
+          <p style="margin:0;font-size:11px;color:#9A9590;">
+            ООО &laquo;Трей&raquo;, ИНН&nbsp;4100053571 &mdash; tourhab.ru<br>
+            Вопросы: <a href="mailto:support@tourhab.ru" style="color:#D44A0C;text-decoration:none;">support@tourhab.ru</a>
+          </p>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`;
+
+    return this.sendEmail({
+      to: data.touristEmail,
+      subject: `Бронирование отменено — ${data.tourTitle}`,
+      html,
+    });
+  }
+
   async verifyConnection(): Promise<boolean> {
     try {
       const transporter = this.initTransporter();
