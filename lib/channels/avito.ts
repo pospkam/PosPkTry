@@ -90,7 +90,7 @@ export function generateAvitoXmlFeed(tours: ChannelTour[]): string {
       return `
   <Ad>
     <Id>${tour.id}</Id>
-    <Category>Активный отдых</Category>
+    <Category>Охота и рыбалка</Category>
     <Title>${escapeXml(tour.title.slice(0, 50))}</Title>
     <Description>${escapeXml(tourDescription(tour))}</Description>
     <Price>${price}</Price>
@@ -162,7 +162,7 @@ export const avitoAdapter: ChannelAdapter = {
     return { success: false, error: 'Авито не поддерживает прямое бронирование — пользователи направляются на tourhab.ru' };
   },
 
-  async pollOrders(since: Date): Promise<ChannelBooking[]> {
+  async pollOrders(_since: Date): Promise<ChannelBooking[]> {
     const userId = process.env.AVITO_USER_ID;
     if (!userId || !process.env.AVITO_CLIENT_ID) return [];  // не настроен
 
