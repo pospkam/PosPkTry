@@ -5,7 +5,7 @@ import {
   Shield, Users, Calendar, CalendarDays, FileText, MessageSquareText,
   Briefcase, UserCheck, BarChart3, DollarSign,
   Activity, Bell, Settings, Brain, Tag, Award, ClipboardList, Plug, TrendingUp, Zap,
-  Building2,
+  Building2, HardHat, AlertTriangle,
 } from 'lucide-react';
 import { HubLayout } from '@/components/layout/HubLayout';
 import { AiAssistant } from '@/components/admin/AiAssistant';
@@ -32,6 +32,8 @@ const SIDEBAR_ITEMS = [
   { href: '/hub/admin/notifications', label: 'Уведомления', icon: Bell },
   { href: '/hub/admin/pricing', label: 'Динамические цены', icon: TrendingUp },
   { href: '/hub/admin/integrations', label: 'Интеграции / OCTO', icon: Plug },
+  { href: '/hub/admin/safety',  label: 'Безопасность', icon: AlertTriangle },
+  { href: '/hub/admin/artem',  label: 'Рабочее место МЧС', icon: HardHat },
   { href: '/hub/admin/settings', label: 'Настройки', icon: Settings },
 ];
 
