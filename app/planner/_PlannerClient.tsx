@@ -6,7 +6,7 @@ import { Reorder, useDragControls } from 'framer-motion';
 import {
   Check, AlertTriangle, Sparkles, Loader,
   Fish, Mountain, PawPrint, Plane,
-  Thermometer, Footprints, Wind, Anchor,
+  Thermometer, Footprints, Wind, Anchor, Snowflake,
   Waves, Flame, Droplets, GripVertical,
   MapPin, Users, Trash2, Plus, Star, Phone,
   X, ChevronDown, ChevronUp, Truck,
@@ -33,7 +33,7 @@ const PLACES: SelectItem[] = [
   { id: 'geyser',     label: 'Гейзеры',    Icon: Droplets },
   { id: 'sea',        label: 'Побережье',  Icon: Waves },
   { id: 'mountain',   label: 'Хребты',     Icon: Mountain },
-  { id: 'river',      label: 'Реки',       Icon: Anchor },
+  { id: 'river',      label: 'Реки',       Icon: Waves },
 ];
 
 const ACTIVITIES: SelectItem[] = [
@@ -41,7 +41,7 @@ const ACTIVITIES: SelectItem[] = [
   { id: 'fishing',    label: 'Рыбалка',          Icon: Fish },
   { id: 'helicopter', label: 'Вертолёт',         Icon: Plane },
   { id: 'bears',      label: 'Медведи',          Icon: PawPrint },
-  { id: 'snowmobile', label: 'Снегоходы',        Icon: Wind },
+  { id: 'snowmobile', label: 'Снегоходы',        Icon: Snowflake },
   { id: 'boat_trip',  label: 'Морская прогулка', Icon: Anchor },
 ];
 
@@ -884,6 +884,7 @@ export function PlannerClient({ initialUserId }: { initialUserId?: string | null
   const [showContact, setShowContact] = useState(false);
   const [contactName, setContactName] = useState('');
   const [contactPhone, setContactPhone] = useState('');
+  const [contactComment, setContactComment] = useState('');
   const [contactError, setContactError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
@@ -1318,6 +1319,7 @@ ${recommendation?.warnings && recommendation.warnings.length > 0 ? `<div class="
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name, phone,
+          comment: contactComment.trim() || undefined,
           source_url: typeof window !== 'undefined' ? window.location.href : '/planner',
           source_data: {
             source: 'planner_page',
@@ -1610,12 +1612,26 @@ ${recommendation?.warnings && recommendation.warnings.length > 0 ? `<div class="
         </div>
       )}
 
-      <button onClick={getRecommendation} disabled={loading || allInterests.length === 0}
-        className="w-full ds-btn ds-btn-primary py-3 font-semibold flex items-center justify-center gap-2 disabled:opacity-50">
-        {loading
-          ? <><Loader className="w-4 h-4 animate-spin" />Генерирую маршрут...</>
-          : <><Sparkles className="w-4 h-4" />Получить рекомендацию</>}
-      </button>
+      {allInterests.length === 0 ? (
+        <div className="rounded-lg border border-[var(--border)] bg-[var(--bg-card)] p-4 space-y-2">
+          <p className="text-sm font-semibold text-[var(--text-primary)]">Готовый пакетный тур</p>
+          <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+            Не знаете с чего начать? Оставьте заявку — мы подберём готовый пакет под ваши даты и бюджет, включая размещение, трансфер и программу.
+          </p>
+          <button onClick={() => setShowContact(true)}
+            className="w-full ds-btn ds-btn-primary py-2.5 font-semibold flex items-center justify-center gap-2">
+            <Sparkles className="w-4 h-4" />
+            Запросить пакетный тур
+          </button>
+        </div>
+      ) : (
+        <button onClick={getRecommendation} disabled={loading}
+          className="w-full ds-btn ds-btn-primary py-3 font-semibold flex items-center justify-center gap-2 disabled:opacity-50">
+          {loading
+            ? <><Loader className="w-4 h-4 animate-spin" />Генерирую маршрут...</>
+            : <><Sparkles className="w-4 h-4" />Получить рекомендацию</>}
+        </button>
+      )}
 
       {/* Results */}
       {recommendation && (
@@ -1911,6 +1927,10 @@ ${recommendation?.warnings && recommendation.warnings.length > 0 ? `<div class="
                 placeholder="Ваше имя" className="ds-input w-full text-sm" />
               <input type="tel" value={contactPhone} onChange={e => setContactPhone(e.target.value)}
                 placeholder="+7 900 000-00-00" className="ds-input w-full text-sm" />
+              <textarea value={contactComment} onChange={e => setContactComment(e.target.value)}
+                placeholder="Пожелания, вопросы, особые требования..."
+                rows={3}
+                className="ds-input w-full text-sm resize-none" />
               {contactError && (
                 <div className="flex items-center gap-2 p-2 bg-[var(--danger)]/10 rounded-lg">
                   <AlertTriangle className="w-3.5 h-3.5 text-[var(--danger)] shrink-0" />
