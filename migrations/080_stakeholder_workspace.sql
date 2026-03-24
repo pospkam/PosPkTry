@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS stakeholder_wishes (
   priority     VARCHAR(10)   NOT NULL DEFAULT 'medium',
   status       VARCHAR(20)   NOT NULL DEFAULT 'new',
   admin_reply  TEXT,
-  created_by   BIGINT,
+  created_by   UUID,
   created_at   TIMESTAMP     NOT NULL DEFAULT NOW(),
   updated_at   TIMESTAMP     NOT NULL DEFAULT NOW()
 );

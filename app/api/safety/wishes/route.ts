@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
     `INSERT INTO stakeholder_wishes (stakeholder, message, category, priority, created_by)
      VALUES ($1, $2, $3, $4, $5)
      RETURNING id, created_at`,
-    [stakeholder, message, category, priority, parseInt(authResult.userId, 10)]
+    [stakeholder, message, category, priority, authResult.userId]
   );
 
   return NextResponse.json({ success: true, wish: rows[0] });
