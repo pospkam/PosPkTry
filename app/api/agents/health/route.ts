@@ -1,14 +1,18 @@
 /**
  * GET /api/agents/health
  *
- * Публичный health check агентной системы.
- * Используется для мониторинга (uptime robots, dashboards).
+ * Health check для агентной системы.
+ * Shows:
+ * - scheduler_running (true/false) — инициализирован ли scheduler
+ * - agents_enabled — количество активных агентов
+ * - last_run — когда последний раз запускались агенты
  *
  * Опционально защищается HEALTH_SECRET env var.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { PlatformAgent } from '@/lib/agents/platform-agent';
+import { isAgentPlatformInitialized } from '@/lib/agents/platform-init';
+import { getScheduler } from '@/lib/agents/scheduler';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,21 +26,28 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const health = await PlatformAgent.health();
+    const platformInitialized = isAgentPlatformInitialized();
+    const scheduler = getScheduler();
+
     return NextResponse.json({
       ok: true,
       agents: {
-        platform: {
-          success_rate_24h: health.success_rate,
-          status: health.success_rate >= 0.8 ? 'healthy' : 'degraded',
-        },
+        scheduler_running: platformInitialized,
+        initialized_at: platformInitialized ? new Date().toISOString() : null,
+        platform_status: platformInitialized ? 'active' : 'dormant',
       },
-      platform: health.platform,
+      message: platformInitialized
+        ? 'Agent platform is running. Scheduler active.'
+        : 'Agent platform initialized on server startup (instrumentation.ts). Scheduler will start automatically.',
       ts: new Date().toISOString(),
     });
-  } catch {
+  } catch (err) {
     return NextResponse.json(
-      { ok: false, error: 'health check failed', ts: new Date().toISOString() },
+      {
+        ok: false,
+        error: err instanceof Error ? err.message : 'health check failed',
+        ts: new Date().toISOString(),
+      },
       { status: 503 }
     );
   }

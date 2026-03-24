@@ -14,6 +14,7 @@ import { z } from 'zod';
 import { callAIWaterfall } from '@/lib/ai/providers';
 import type { ChatMessage } from '@/lib/ai/prompts';
 import { parseInterestsFromText } from '@/lib/services/routes-recommender';
+import { recordTouristDemand } from '@/lib/ai/tourist-demand-aggregator';
 
 export const dynamic = 'force-dynamic';
 
@@ -197,6 +198,19 @@ export async function POST(req: NextRequest) {
   const interpreted = parts.length > 0 ? parts.join(' | ') : null;
 
   const hasEnoughData = (places.length > 0 || activities.length > 0);
+
+  // Bridge demand signal to agent system (fire-and-forget)
+  if (hasEnoughData) {
+    void recordTouristDemand({
+      userId: null, // TripBuilder has no auth context
+      activities,
+      locations: places,
+      travelStyle: null,
+      budgetLevel: null,
+      bookingIntentDetected: hasEnoughData && (!!arrival || !!departure),
+      sessionId: null,
+    });
+  }
 
   return NextResponse.json({
     success: true,

@@ -38,8 +38,12 @@ export class EvolutionAgency {
   private readonly patterns    = new PatternRecognition();
   private readonly feedback    = new FeedbackLoop();
   private readonly experiments = new ExperimentTracker();
+  private briefing = '';
+  private tools: Record<string, (...args: unknown[]) => Promise<{ success: boolean; message: string; details?: Record<string, unknown> }>> = {};
 
-  async run(intent: string, _context: AgentContext): Promise<AgencyResult> {
+  async run(intent: string, context: AgentContext): Promise<AgencyResult> {
+    this.briefing = context.richBriefing ?? '';
+    this.tools = context.tools ?? {};
     try {
       switch (intent) {
         case 'evo_optimize':     return await this.selfOptimize();
@@ -93,6 +97,34 @@ export class EvolutionAgency {
       agentMemory.recall('director', 'decision', 3),
     ]);
 
+    // Tool: cross-agent shared memory for system-wide context
+    let sharedMemoryContext = '';
+    if (this.tools.recallSharedMemory) {
+      try {
+        const memResult = await this.tools.recallSharedMemory();
+        if (memResult.success && memResult.details) {
+          sharedMemoryContext = memResult.message;
+        }
+      } catch {
+        // Non-blocking: shared memory unavailable
+      }
+    }
+
+    // Tool: run diagnostic query to check system health
+    let diagnosticContext = '';
+    if (this.tools.runDiagnostic) {
+      try {
+        const diagResult = await this.tools.runDiagnostic(
+          'SELECT COUNT(*) AS total, COUNT(*) FILTER (WHERE metadata->>\'error\' IS NOT NULL) AS errors FROM ai_actions_log WHERE created_at >= NOW() - INTERVAL \'7 days\''
+        );
+        if (diagResult.success) {
+          diagnosticContext = diagResult.message;
+        }
+      } catch {
+        // Non-blocking: diagnostic unavailable
+      }
+    }
+
     const lines: string[] = [
       '<b>Самоанализ AI-системы (7 дней)</b>',
       '',
@@ -103,6 +135,13 @@ export class EvolutionAgency {
           : 'нет данных'
       }`,
     ];
+
+    if (sharedMemoryContext) {
+      lines.push('', `Контекст от других агентов: ${sharedMemoryContext}`);
+    }
+    if (diagnosticContext) {
+      lines.push(`Диагностика системы: ${diagnosticContext}`);
+    }
 
     // Критичные паттерны
     const critical = systemPatterns.filter(p => p.severity === 'critical');
@@ -215,6 +254,19 @@ export class EvolutionAgency {
     const activeIntents = new Set(activeExps.map(e => e.intent ?? ''));
     const candidate = topIntents.rows.find(r => !activeIntents.has(r.decision));
 
+    // Tool: review existing experiment outcomes before proposing new ones
+    let pastExperimentContext = '';
+    if (this.tools.getExperimentResults) {
+      try {
+        const expResult = await this.tools.getExperimentResults();
+        if (expResult.success) {
+          pastExperimentContext = expResult.message;
+        }
+      } catch {
+        // Non-blocking: experiment results unavailable
+      }
+    }
+
     if (!candidate) {
       return {
         response: `Все популярные интенты (${topIntents.rows.map(r => r.decision).join(', ')}) уже участвуют в A/B-тестах.`,
@@ -222,9 +274,11 @@ export class EvolutionAgency {
     }
 
     // Создаём эксперимент автоматически
+    const experimentDescription = `Автоэксперимент: оптимизация интента "${candidate.decision}" (${candidate.count} вызовов/нед.)` +
+      (pastExperimentContext ? ` | Прошлые результаты: ${pastExperimentContext.substring(0, 200)}` : '');
     const exp = await this.experiments.create({
       name:        `auto_${candidate.decision}_${Date.now()}`,
-      description: `Автоэксперимент: оптимизация интента "${candidate.decision}" (${candidate.count} вызовов/нед.)`,
+      description: experimentDescription,
       variant_a:   { label: 'control',          prompt_style: 'current' },
       variant_b:   { label: 'optimized_prompt', prompt_style: 'concise_structured' },
       intent:      candidate.decision,
@@ -339,7 +393,8 @@ export class EvolutionAgency {
 
   private async callAI(prompt: string): Promise<string | null> {
     try {
-      const messages: ChatMessage[] = [{ role: 'user', content: prompt }];
+      const fullPrompt = this.briefing ? `${this.briefing}\n\n${prompt}` : prompt;
+      const messages: ChatMessage[] = [{ role: 'user', content: fullPrompt }];
       return await callAIWaterfall(messages);
     } catch {
       return null;

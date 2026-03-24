@@ -100,6 +100,7 @@ const MEETING_AGENTS = [
   { id: 'finance',   name: 'AI Финдиректор',  role: 'CFO / Финансовый директор',     intent: 'finance_report', color: '#6366F1' },
   { id: 'infra',     name: 'AI DevOps',       role: 'SRE / Инфраструктура',          intent: 'infra_health',   color: '#14B8A6' },
   { id: 'vibe_coder', name: 'AI Разработчик', role: 'Vibe Coder / Самомодификация',  intent: 'code_analysis',  color: '#F97316' },
+  { id: 'planning',   name: 'AI Плановик',  role: 'Стратегический плановик',        intent: 'plan_forecast',  color: '#3B82F6' },
 ] as const;
 
 // ── Proposal config per agent ───────────────────────────────────────────────────────────
@@ -614,6 +615,9 @@ export async function POST(req: NextRequest) {
               const { formatContextForPrompt } = await import('@/lib/agents/evolution/agent-context-v2');
               agentContext.richBriefing = formatContextForPrompt(richCtx);
             }
+            // Inject per-agent toolkit
+            const { getToolkitForAgent } = await import('@/lib/agents/tools/agent-toolkits');
+            agentContext.tools = getToolkitForAgent(agentDef.id);
             return { agentDef, result: await runAgent(agentDef.intent, agentContext) };
           })
         );

@@ -7,6 +7,8 @@
 
 import { initializeScheduler, shutdownScheduler } from '@/lib/agents/scheduler';
 import { getEventBus } from '@/lib/events/agent-bus';
+import { registerEventSubscribers } from '@/lib/events/subscribers';
+import { seedAgentTraining } from '@/lib/agents/training/seed-training';
 
 let initialized = false;
 
@@ -16,11 +18,15 @@ let initialized = false;
 export async function initializeAgentPlatform(): Promise<void> {
   if (initialized) return;
 
-  // Initialize event bus (singleton)
+  // Initialize event bus (singleton) and register subscribers
   getEventBus();
+  registerEventSubscribers();
 
   // Initialize scheduler (will start interval timers)
   await initializeScheduler();
+
+  // Seed domain knowledge for all 13 agents (fire-and-forget, non-blocking)
+  seedAgentTraining().catch(() => { /* non-critical */ });
 
   initialized = true;
 }

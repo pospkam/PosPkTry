@@ -55,7 +55,12 @@ interface PageViewsStats {
 // ── AdminAgency ─────────────────────────────────────────────────────────────────────
 
 export class AdminAgency {
-  async run(intent: string, _context: AgentContext): Promise<AgencyResult> {
+  private briefing = '';
+  private tools: Record<string, (...args: unknown[]) => Promise<{ success: boolean; message: string; details?: Record<string, unknown> }>> = {};
+
+  async run(intent: string, context: AgentContext): Promise<AgencyResult> {
+    this.briefing = context.richBriefing ?? '';
+    this.tools = context.tools ?? {};
     switch (intent) {
       case 'admin_digest': return this.getDigest();
       case 'admin_leads':  return this.getLeadsSummary();
@@ -69,38 +74,49 @@ export class AdminAgency {
   async getDigest(): Promise<AgencyResult> {
     try {
       const [leads, bookings, emptyTours, weather, views] = await Promise.all([
-        this.fetchLeadsStats().catch(e => {
-          console.error('[AdminAgency.digest] Error fetching leads:', e instanceof Error ? e.message : String(e));
-          return { total: 0, new_count: 0, contacted: 0, converted: 0, last_7d: 0 };
-        }),
-        this.fetchBookingsStats().catch(e => {
-          console.error('[AdminAgency.digest] Error fetching bookings:', e instanceof Error ? e.message : String(e));
-          return { today: 0, last_7d: 0, revenue_7d: null };
-        }),
-        this.fetchToursWithoutSlots().catch(e => {
-          console.error('[AdminAgency.digest] Error fetching empty tours:', e instanceof Error ? e.message : String(e));
-          return [];
-        }),
-        this.fetchWeatherAlerts().catch(e => {
-          console.error('[AdminAgency.digest] Error fetching weather:', e instanceof Error ? e.message : String(e));
-          return [];
-        }),
-        this.fetchPageViews().catch(e => {
-          console.error('[AdminAgency.digest] Error fetching views:', e instanceof Error ? e.message : String(e));
-          return { today: 0, last_7d: 0 };
-        }),
+        this.fetchLeadsStats().catch(() =>
+          ({ total: 0, new_count: 0, contacted: 0, converted: 0, last_7d: 0 })
+        ),
+        this.fetchBookingsStats().catch(() =>
+          ({ today: 0, last_7d: 0, revenue_7d: null })
+        ),
+        this.fetchToursWithoutSlots().catch(() => [] as TourRow[]),
+        this.fetchWeatherAlerts().catch(() => [] as WeatherAlertRow[]),
+        this.fetchPageViews().catch(() =>
+          ({ today: 0, last_7d: 0 })
+        ),
       ]);
 
       const data = { leads, bookings, emptyTours, weather, views };
 
+      let sharedInsights = '';
+      if (this.tools.recallSharedMemory) {
+        try {
+          const mem = await this.tools.recallSharedMemory('insight', 5);
+          if (mem.success && mem.details?.entries) {
+            const entries = mem.details.entries as Array<{ agent_id: string; key: string; value: Record<string, unknown> }>;
+            sharedInsights = entries.map(e => `[${e.agent_id}] ${e.key}`).join(', ');
+          }
+        } catch { /* non-critical */ }
+      }
+
       const prompt = buildDigestPrompt(data);
-      const aiText = await callAIWaterfall([{ role: 'user', content: prompt }]);
+      const insightsAddendum = sharedInsights ? `\n\nИнсайты от других агентов: ${sharedInsights}` : '';
+      const fullPrompt = this.briefing ? `${this.briefing}\n\n${prompt}${insightsAddendum}` : `${prompt}${insightsAddendum}`;
+      const aiText = await callAIWaterfall([{ role: 'user', content: fullPrompt }]);
 
       const date = new Date().toLocaleDateString('ru-RU', {
         day: '2-digit', month: '2-digit', year: 'numeric',
       });
 
       const response = `<b>Дайджест TourHub — ${date}</b>\n\n${aiText ?? formatFallbackDigest(data)}`;
+
+      // Send formatted digest notification via toolkit (non-blocking)
+      if (this.tools.sendDigestNotification) {
+        try {
+          await this.tools.sendDigestNotification(response);
+        } catch { /* tool failure is non-blocking */ }
+      }
 
       return { response, data };
     } catch (err) {

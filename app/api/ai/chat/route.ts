@@ -20,9 +20,11 @@ import {
   upsertUserMemory,
   extractMemoryFromMessage,
   buildMemoryContext,
+  buildAgentInsightsForTourist,
 } from '@/lib/ai/user-memory';
 import { detectTourIntent, findRelevantTours, type TourSuggestion } from '@/lib/ai/booking-intent';
 import { buildRAGContext } from '@/lib/ai/rag-context';
+import { recordTouristDemand } from '@/lib/ai/tourist-demand-aggregator';
 
 export const dynamic = 'force-dynamic';
 
@@ -153,7 +155,8 @@ export async function POST(request: NextRequest) {
     const basePrompt   = getSystemPrompt(safeRole);
     const memContext   = userMemory ? buildMemoryContext(userMemory) : '';
     const ragContext   = await buildRAGContext(message.trim(), safeRole);
-    const systemPrompt = basePrompt + ragContext + memContext;
+    const agentInsights = safeRole === 'tourist' ? await buildAgentInsightsForTourist() : '';
+    const systemPrompt = basePrompt + ragContext + memContext + agentInsights;
     const messagesForAI = buildMessageHistory(systemPrompt, history, 10);
 
     // PlatformAgent intercept: admin/operator с распознанным интентом
@@ -187,9 +190,23 @@ export async function POST(request: NextRequest) {
     const interestsEncrypted = extractAndEncryptInterests(message, session?.interests_encrypted ?? null);
 
     // Обновить долгосрочную память пользователя (fire-and-forget, не блокирует ответ)
+    const extracted = extractMemoryFromMessage(message.trim());
     if (userId) {
-      const extracted = extractMemoryFromMessage(message.trim());
       void upsertUserMemory(userId, extracted, true, isNewSession);
+    }
+
+    // Bridge tourist demand to agent system (fire-and-forget)
+    if (safeRole === 'tourist') {
+      const intentResult = detectTourIntent(message.trim());
+      void recordTouristDemand({
+        userId,
+        activities: extracted.preferred_activities ?? [],
+        locations: extracted.preferred_locations ?? [],
+        travelStyle: extracted.travel_style ?? null,
+        budgetLevel: extracted.budget_level ?? null,
+        bookingIntentDetected: intentResult.detected,
+        sessionId: sessionId ?? null,
+      });
     }
 
     // Save

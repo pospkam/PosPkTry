@@ -51,7 +51,12 @@ interface BookingRiskRow {
 }
 
 export class LegalAgency {
-  async run(intent: string, _context: AgentContext): Promise<AgencyResult> {
+  private briefing = '';
+  private tools: Record<string, (...args: unknown[]) => Promise<{ success: boolean; message: string; details?: Record<string, unknown> }>> = {};
+
+  async run(intent: string, context: AgentContext): Promise<AgencyResult> {
+    this.briefing = context.richBriefing ?? '';
+    this.tools = context.tools ?? {};
     try {
       switch (intent) {
         case 'legal_contract':   return await this.reviewContracts();
@@ -188,6 +193,16 @@ export class LegalAgency {
         )
       : 100;
 
+    let agreementStr = '';
+    if (this.tools.getAgreementStats) {
+      try {
+        const as = await this.tools.getAgreementStats();
+        if (as.success && as.details?.stats) {
+          agreementStr = `\nСтатистика соглашений: ${JSON.stringify(as.details.stats)}`;
+        }
+      } catch { /* non-critical */ }
+    }
+
     const lines: string[] = [
       '<b>Аудит соответствия требованиям</b>',
       '',
@@ -201,6 +216,10 @@ export class LegalAgency {
       `• Нет политики отмены: ${s.no_cancellation} туров`,
       `• Операторы без контактов: ${s.operators_without_contacts}`,
     ];
+
+    if (agreementStr) {
+      lines.push(agreementStr);
+    }
 
     if (operatorIssues.rows.length > 0) {
       lines.push('', 'Операторы с нарушениями:');
@@ -275,7 +294,8 @@ export class LegalAgency {
 
   private async callAI(prompt: string): Promise<string | null> {
     try {
-      const messages: ChatMessage[] = [{ role: 'user', content: prompt }];
+      const fullPrompt = this.briefing ? `${this.briefing}\n\n${prompt}` : prompt;
+      const messages: ChatMessage[] = [{ role: 'user', content: fullPrompt }];
       return await callAIWaterfall(messages);
     } catch {
       return null;

@@ -47,6 +47,8 @@ export interface AgentContext {
   topic?: string | null;
   /** Rich briefing preamble injected from agent-context-v2 (metrics, history) */
   richBriefing?: string;
+  /** Per-agent toolkit: real executable tools matching agent role */
+  tools?: Record<string, (...args: unknown[]) => Promise<{ success: boolean; message: string; details?: Record<string, unknown> }>>;
 }
 
 // ── ContextHub ────────────────────────────────────────────────────────────────

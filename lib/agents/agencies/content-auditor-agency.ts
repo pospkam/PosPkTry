@@ -37,7 +37,12 @@ interface AuditSummaryRow {
 }
 
 export class ContentAuditorAgency {
-  async run(intent: string, _context: AgentContext): Promise<AgencyResult> {
+  private briefing = '';
+  private tools: Record<string, (...args: unknown[]) => Promise<{ success: boolean; message: string; details?: Record<string, unknown> }>> = {};
+
+  async run(intent: string, context: AgentContext): Promise<AgencyResult> {
+    this.briefing = context.richBriefing ?? '';
+    this.tools = context.tools ?? {};
     try {
       switch (intent) {
         case 'content_audit': return await this.auditAll();
@@ -102,6 +107,17 @@ export class ContentAuditorAgency {
       ? Math.round((parseInt(s.fully_complete, 10) / parseInt(s.total, 10)) * 100)
       : 0;
 
+    // Enrich with low-CTR tours from external tool
+    let lowCTRStr = '';
+    if (this.tools.getLowCTRTours) {
+      try {
+        const ctr = await this.tools.getLowCTRTours(10);
+        if (ctr.success && ctr.details?.tours) {
+          lowCTRStr = `\nТуры с низкой конверсией: ${JSON.stringify(ctr.details.tours).slice(0, 500)}`;
+        }
+      } catch { /* non-critical */ }
+    }
+
     const lines: string[] = [
       '<b>Аудит контента туров</b>',
       '',
@@ -126,6 +142,10 @@ export class ContentAuditorAgency {
         ].filter(Boolean);
         lines.push(`• [${t.id}] ${t.title} (${t.operator}) — ${flags.join(', ')}`);
       }
+    }
+
+    if (lowCTRStr) {
+      lines.push('', lowCTRStr);
     }
 
     return { response: lines.join('\n'), data: { summary: s, worst: worst.rows } };

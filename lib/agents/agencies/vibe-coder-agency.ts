@@ -47,12 +47,16 @@ const MAX_FILE_SIZE = 30_000;
 
 export class VibeCoderAgency {
   private readonly rootDir: string;
+  private briefing = '';
+  private tools: Record<string, (...args: unknown[]) => Promise<{ success: boolean; message: string; details?: Record<string, unknown> }>> = {};
 
   constructor() {
     this.rootDir = process.cwd();
   }
 
-  async run(intent: string, _context: AgentContext): Promise<AgencyResult> {
+  async run(intent: string, context: AgentContext): Promise<AgencyResult> {
+    this.briefing = context.richBriefing ?? '';
+    this.tools = context.tools ?? {};
     switch (intent) {
       case 'code_analysis': return this.analyzeCodebase();
       case 'code_debt':     return this.debtReport();
@@ -98,6 +102,16 @@ export class VibeCoderAgency {
       // 2. Читаем структуру одной проблемной директории как пример
       const agentFiles = this.listFiles('lib/agents/agencies').slice(0, 12);
 
+      let uiPatternsStr = '';
+      if (this.tools.scanComponentPatterns) {
+        try {
+          const patterns = await this.tools.scanComponentPatterns();
+          if (patterns.success && patterns.details?.patterns) {
+            uiPatternsStr = `\nUI-паттерны (30д): ${JSON.stringify(patterns.details.patterns)}`;
+          }
+        } catch { /* non-critical */ }
+      }
+
       const data = {
         failed_executions: failedExec.rows,
         ai_errors:         recentErrors.rows,
@@ -124,6 +138,7 @@ export class VibeCoderAgency {
         '',
         'ФАЙЛЫ АГЕНТОВ:',
         agentFiles.join(', '),
+        uiPatternsStr ? `\nUI-ПАТТЕРНЫ КОМПОНЕНТОВ:${uiPatternsStr}` : '',
         '',
         'Правила:',
         '1. Предложи ОДНО изменение. Не общие слова — конкретный файл и что именно изменить',
@@ -133,7 +148,8 @@ export class VibeCoderAgency {
         'Если есть предложение — формат: файл → что изменить → почему (данные из БД)',
       ].join('\n');
 
-      const aiText = await callAIWaterfall([{ role: 'user', content: prompt }]);
+      const fullPrompt = this.briefing ? `${this.briefing}\n\n${prompt}` : prompt;
+      const aiText = await callAIWaterfall([{ role: 'user', content: fullPrompt }]);
 
       const date = new Date().toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
       const response = [

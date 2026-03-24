@@ -49,7 +49,12 @@ interface PaymentRow {
 // ── FinanceAgency ──────────────────────────────────────────────────────────────
 
 export class FinanceAgency {
-  async run(intent: string, _context: AgentContext): Promise<AgencyResult> {
+  private briefing = '';
+  private tools: Record<string, (...args: unknown[]) => Promise<{ success: boolean; message: string; details?: Record<string, unknown> }>> = {};
+
+  async run(intent: string, context: AgentContext): Promise<AgencyResult> {
+    this.briefing = context.richBriefing ?? '';
+    this.tools = context.tools ?? {};
     switch (intent) {
       case 'finance_report':   return this.unitEconomicsReport();
       case 'finance_cashflow': return this.cashflowReport();
@@ -186,10 +191,32 @@ export class FinanceAgency {
         '4. Укажи confidence: high/medium/low',
       ].join('\n');
 
-      const aiText = await callAIWaterfall([{ role: 'user', content: prompt }]);
+      let paymentHealthStr = '';
+      if (this.tools.getPaymentHealth) {
+        try {
+          const ph = await this.tools.getPaymentHealth();
+          if (ph.success && ph.details?.health) {
+            paymentHealthStr = `\nЗдоровье платежей: ${JSON.stringify(ph.details.health)}`;
+          }
+        } catch { /* non-critical */ }
+      }
+
+      const fullPrompt = this.briefing ? `${this.briefing}\n\n${prompt}${paymentHealthStr}` : `${prompt}${paymentHealthStr}`;
+      const aiText = await callAIWaterfall([{ role: 'user', content: fullPrompt }]);
 
       const date = new Date().toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
       const response = `<b>Финансовый отчёт — ${date}</b>\n\nВыручка: ${grossRev.toLocaleString('ru-RU')} руб | Платформа: ${platformRev.toLocaleString('ru-RU')} руб | Брони: ${t.total_bookings}\n\n${aiText ?? this.formatFallback(t)}`;
+
+      // Alert on stuck payments (pending commissions that may need attention)
+      const pendingCommissions = commissions.rows.find(c => c.status === 'pending');
+      const stuckCount = pendingCommissions ? parseInt(pendingCommissions.count, 10) : 0;
+      if (this.tools.sendFinanceAlert && stuckCount > 0) {
+        try {
+          await this.tools.sendFinanceAlert(
+            `${stuckCount} pending commissions, total: ${pendingCommissions?.total_amount ?? '0'} rub`
+          );
+        } catch { /* tool failure is non-blocking */ }
+      }
 
       return { response, data };
     } catch (err) {

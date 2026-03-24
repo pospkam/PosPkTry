@@ -35,7 +35,12 @@ interface GapRow {
 }
 
 export class PlanningAgency {
-  async run(intent: string, _context: AgentContext): Promise<AgencyResult> {
+  private briefing = '';
+  private tools: Record<string, (...args: unknown[]) => Promise<{ success: boolean; message: string; details?: Record<string, unknown> }>> = {};
+
+  async run(intent: string, context: AgentContext): Promise<AgencyResult> {
+    this.briefing = context.richBriefing ?? '';
+    this.tools = context.tools ?? {};
     switch (intent) {
       case 'plan_forecast': return this.getForecast();
       case 'plan_season':   return this.getSeasonalAnalysis();
@@ -73,11 +78,23 @@ export class PlanningAgency {
     // Автоматический анализ тренда через AI
     const last4 = trend.slice(-4).map(r => `${r.week}: ${r.bookings}`).join(', ');
     const prev4 = trend.slice(-8, -4).map(r => `${r.week}: ${r.bookings}`).join(', ');
-    const aiPrompt = `Туристическая платформа Камчатки. Брони за последние 4 недели: ${last4}. Предыдущие 4 недели: ${prev4}. Какой тренд и прогноз на следующий месяц? 2 предложения, без эмодзи.`;
+
+    let demandSnapshot = '';
+    if (this.tools.getDemandSnapshot) {
+      try {
+        const snap = await this.tools.getDemandSnapshot();
+        if (snap.success && snap.details) {
+          demandSnapshot = `\nCнимок спроса: ${JSON.stringify(snap.details).slice(0, 500)}`;
+        }
+      } catch { /* non-critical */ }
+    }
+
+    const aiPrompt = `Туристическая платформа Камчатки. Брони за последние 4 недели: ${last4}. Предыдущие 4 недели: ${prev4}. ${demandSnapshot}Какой тренд и прогноз на следующий месяц? 2 предложения, без эмодзи.`;
+    const fullAiPrompt = this.briefing ? `${this.briefing}\n\n${aiPrompt}` : aiPrompt;
 
     let forecast = '';
     try {
-      const aiResult = await callAIWaterfall([{ role: 'user', content: aiPrompt }]);
+      const aiResult = await callAIWaterfall([{ role: 'user', content: fullAiPrompt }]);
       if (aiResult) forecast = aiResult.trim();
     } catch { /* silent */ }
 

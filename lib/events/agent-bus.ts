@@ -69,7 +69,7 @@ export class AgentEventBus extends EventEmitter {
     const eventKey = `agent:${event.type}`;
     super.emit(eventKey, event);
 
-    console.log(`[AgentEventBus] Emitted ${event.type} from ${event.agentId} (${event.severity})`);
+    // Event emitted (audit trail in ai_actions_log)
   }
 
   /**
@@ -146,5 +146,12 @@ export const AGENT_EVENTS = {
 
   // Security events
   ANOMALY_DETECTED: 'anomaly_detected',  // Security issue
-  RATE_LIMIT_HIT: 'rate_limit_hit'       // DDoS-like pattern
+  RATE_LIMIT_HIT: 'rate_limit_hit',      // DDoS-like pattern
+
+  // Content events
+  TOUR_UPDATED: 'tour_updated',          // Tour created or modified
+  BOOKING_CREATED: 'booking_created',    // Individual booking created
+
+  // Demand intelligence
+  TOURIST_INTEREST: 'tourist_interest',  // Aggregated tourist demand signal
 } as const;

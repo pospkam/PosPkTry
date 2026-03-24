@@ -7,6 +7,7 @@
  */
 
 import { pool } from '@/lib/db-pool';
+import { agentMemory } from '@/lib/agents/memory/agent-memory';
 
 export interface UserMemory {
   user_id:              number;
@@ -182,4 +183,31 @@ export function buildMemoryContext(mem: UserMemory): string {
   if (parts.length === 0) return '';
 
   return `\n\n[ПАМЯТЬ О ПОЛЬЗОВАТЕЛЕ]\n${parts.join(' ')}\nУчитывай эти данные при ответах — адаптируй рекомендации. Не упоминай явно что "ты запомнил".`;
+}
+
+// ── Reverse bridge: Agent insights for tourist chat system prompt ──
+/**
+ * Reads active alerts from agent memory (eco zone alerts, rescue weather alerts)
+ * and formats them for injection into Kuzmich's system prompt.
+ */
+export async function buildAgentInsightsForTourist(): Promise<string> {
+  try {
+    const ecoAlerts = await agentMemory.recall('eco', 'zone_alert', 3);
+    const rescueAlerts = await agentMemory.recall('rescue', 'weather_alert', 3);
+
+    const parts: string[] = [];
+    for (const alert of ecoAlerts) {
+      const val = alert.value as Record<string, unknown>;
+      parts.push(`[Эко-предупреждение]: ${val.zone ?? 'зона'} — ${val.message ?? JSON.stringify(val)}`);
+    }
+    for (const alert of rescueAlerts) {
+      const val = alert.value as Record<string, unknown>;
+      parts.push(`[Безопасность]: ${val.area ?? 'район'} — ${val.message ?? JSON.stringify(val)}`);
+    }
+
+    if (parts.length === 0) return '';
+    return `\n\n[ПЛАТФОРМЕННЫЕ ПРЕДУПРЕЖДЕНИЯ]\n${parts.join('\n')}\nУчитывай эти предупреждения при рекомендациях. Если зона перегружена или опасна — предупреди туриста.`;
+  } catch {
+    return '';
+  }
 }

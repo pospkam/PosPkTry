@@ -31,7 +31,7 @@ export interface AgentKnowledgeBase {
 }
 
 /**
- * KNOWLEDGE BASES FOR ALL 9 DIRECTORS
+ * KNOWLEDGE BASES FOR ALL 13 DIRECTORS
  * When an agent arrives, they already know:
  * - Their job, role, constraints
  * - What metrics to look for
@@ -96,7 +96,7 @@ export const AGENT_KNOWLEDGE_BASES: Record<string, AgentKnowledgeBase> = {
     blind_spots: ['marketing', 'content', 'ui_design'],
 
     metrics: ['failed_auth_attempts', 'suspicious_api_calls', 'key_rotation_days', 'security_incidents'],
-    dataSourcesNeeded: ['users', 'octo_api_keys', 'auth_logs', 'cron_jobs'],
+    dataSourcesNeeded: ['users', 'ai_actions_log', 'agent_approvals', 'sos_events'],
     questionsToAsk: [
       'Какие API ключи старше 90 дней?',
       'Есть ли необычная активность в auth_logs?',
@@ -142,7 +142,7 @@ export const AGENT_KNOWLEDGE_BASES: Record<string, AgentKnowledgeBase> = {
     blind_spots: ['profitability', 'ui_design', 'marketing'],
 
     metrics: ['sos_incidents_7d', 'response_time_avg', 'successful_rescues', 'false_alarms', 'weather_alerts'],
-    dataSourcesNeeded: ['safety_sos', 'weather_data', 'operator_tours', 'incident_logs'],
+    dataSourcesNeeded: ['sos_events', 'operator_tours', 'weather_alerts'],
     questionsToAsk: [
       'Сколько SOS за последнюю неделю и их природа?',
       'Есть ли тренд по регионам/сезонам?',
@@ -234,7 +234,7 @@ export const AGENT_KNOWLEDGE_BASES: Record<string, AgentKnowledgeBase> = {
     blind_spots: ['day_to_day_operations', 'minor_tactical_fixes'],
 
     metrics: ['agent_agreement_rate', 'decision_contradiction_count', 'system_health_score', 'evolution_progress'],
-    dataSourcesNeeded: ['all_previous_rounds', 'agent_decisions', 'board_history'],
+    dataSourcesNeeded: ['board_meeting_sessions', 'ai_actions_log', 'agent_approvals'],
     questionsToAsk: [
       'Есть ли противоречия между рекомендациями агентов?',
       'Какова общая стратегическая направленность?',
@@ -243,6 +243,98 @@ export const AGENT_KNOWLEDGE_BASES: Record<string, AgentKnowledgeBase> = {
 
     tone: 'analytical',
     decisionStyle: 'consensus-first',
+  },
+
+  planning: {
+    agentId: 'planning',
+    agentName: 'AI Плановый отдел',
+    agentRole: 'Стратегический плановик',
+    color: 'hsl(210, 70%, 50%)',
+
+    mission: 'Прогнозировать спрос, выявлять сезонные тренды и находить разрывы между спросом и предложением.',
+    expertise: ['forecasting', 'seasonality', 'demand_supply', 'capacity_planning', 'scheduling'],
+    respondsTo: ['forecast', 'demand', 'season', 'capacity', 'schedule', 'planning', 'trend'],
+    blind_spots: ['legal', 'security', 'content_quality'],
+
+    metrics: ['booking_trend_7d', 'demand_supply_gap', 'seasonal_index', 'capacity_utilization'],
+    dataSourcesNeeded: ['agent_bookings', 'operator_tours', 'user_ai_memory'],
+    questionsToAsk: [
+      'Какой тренд бронирований за последние 4 недели?',
+      'Есть ли дефицит туров по популярным активностям?',
+      'Какие месяцы показывают пиковый спрос?',
+    ],
+
+    tone: 'analytical',
+    decisionStyle: 'data-first',
+  },
+
+  finance: {
+    agentId: 'finance',
+    agentName: 'AI Финдиректор',
+    agentRole: 'CFO / Финансовый директор',
+    color: 'hsl(240, 60%, 60%)',
+
+    mission: 'Анализировать unit-экономику, контролировать cashflow и максимизировать доход платформы.',
+    expertise: ['finance', 'unit_economics', 'revenue', 'commissions', 'cashflow', 'pricing'],
+    respondsTo: ['revenue', 'commission', 'payment', 'cashflow', 'price', 'finance', 'refund'],
+    blind_spots: ['ecology', 'content_quality', 'ux_design'],
+
+    metrics: ['gross_revenue', 'platform_commission', 'avg_booking_value', 'refund_rate', 'ltv'],
+    dataSourcesNeeded: ['operator_bookings', 'agent_commissions', 'partners', 'operator_tours'],
+    questionsToAsk: [
+      'Какова динамика выручки за последние 4 недели?',
+      'Какой средний чек и есть ли тренд к снижению?',
+      'Какая доля возвратов и как она влияет на маржу?',
+    ],
+
+    tone: 'analytical',
+    decisionStyle: 'data-first',
+  },
+
+  infra: {
+    agentId: 'infra',
+    agentName: 'AI DevOps',
+    agentRole: 'SRE / Инфраструктура',
+    color: 'hsl(170, 60%, 45%)',
+
+    mission: 'Мониторить здоровье инфраструктуры, AI-провайдеров и минимизировать downtime.',
+    expertise: ['infrastructure', 'devops', 'monitoring', 'database', 'api_health', 'ai_providers'],
+    respondsTo: ['infra', 'error', 'downtime', 'latency', 'database', 'api', 'cron'],
+    blind_spots: ['marketing', 'legal', 'ecology'],
+
+    metrics: ['db_response_ms', 'ai_call_count', 'ai_cost_usd', 'failed_executions', 'cron_health'],
+    dataSourcesNeeded: ['ai_actions_log', 'agent_approvals', 'board_meeting_sessions'],
+    questionsToAsk: [
+      'Какое время отклика БД и есть ли деградация?',
+      'Сколько AI-вызовов за 24ч и какая стоимость?',
+      'Есть ли провалившиеся инициативы или совещания?',
+    ],
+
+    tone: 'operational',
+    decisionStyle: 'data-first',
+  },
+
+  vibe_coder: {
+    agentId: 'vibe_coder',
+    agentName: 'AI Разработчик',
+    agentRole: 'Vibe Coder / Самомодификация',
+    color: 'hsl(25, 90%, 55%)',
+
+    mission: 'Анализировать кодовую базу, выявлять технический долг и предлагать улучшения через approval.',
+    expertise: ['code_quality', 'technical_debt', 'architecture', 'refactoring', 'testing'],
+    respondsTo: ['code', 'bug', 'refactor', 'debt', 'architecture', 'test', 'error'],
+    blind_spots: ['finance', 'marketing', 'ecology'],
+
+    metrics: ['failed_executions', 'ai_error_count', 'large_files_count', 'code_quality_score'],
+    dataSourcesNeeded: ['ai_actions_log', 'agent_approvals'],
+    questionsToAsk: [
+      'Какие агентные инициативы провалились и почему?',
+      'Какие AI-интенты генерируют больше всего ошибок?',
+      'Есть ли монолитные файлы, требующие декомпозиции?',
+    ],
+
+    tone: 'analytical',
+    decisionStyle: 'data-first',
   },
 };
 

@@ -24,6 +24,7 @@ import { notifyAdminNewBooking } from '@/lib/notifications/telegram-channel';
 import { emailService } from '@/lib/notifications/email-service';
 import { notifyTouristBookingCreated } from '@/lib/telegram/booking-notify';
 import { query } from '@/lib/database';
+import { emitEvent, AGENT_EVENTS } from '@/lib/events/emit';
 
 const CreateBookingSchema = z.object({
   tourId: z.string({ required_error: 'ID тура обязателен' }).uuid('tourId должен быть валидным UUID'),
@@ -203,6 +204,15 @@ export async function POST(request: NextRequest) {
     };
 
     const booking = await createBooking(auth.userId, input);
+
+    // Emit booking event to agent bus (fire-and-forget)
+    emitEvent(AGENT_EVENTS.BOOKING_SURGE, 'system', 'info', {
+      bookingId: booking.id,
+      tourId,
+      participants,
+      totalAmount: booking.totalAmount,
+      userId: auth.userId,
+    });
 
     // Telegram-уведомление туристу: бронь принята
     notifyTouristBookingCreated(auth.userId, {

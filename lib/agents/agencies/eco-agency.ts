@@ -33,7 +33,12 @@ interface ZoneRiskRow {
 }
 
 export class EcoAgency {
-  async run(intent: string, _context: AgentContext): Promise<AgencyResult> {
+  private briefing = '';
+  private tools: Record<string, (...args: unknown[]) => Promise<{ success: boolean; message: string; details?: Record<string, unknown> }>> = {};
+
+  async run(intent: string, context: AgentContext): Promise<AgencyResult> {
+    this.briefing = context.richBriefing ?? '';
+    this.tools = context.tools ?? {};
     switch (intent) {
       case 'eco_impact': return this.impactReport();
       case 'eco_zones':  return this.zoneAudit();
@@ -114,6 +119,17 @@ export class EcoAgency {
 
   /** Аудит туров в охраняемых природных зонах */
   private async zoneAudit(): Promise<AgencyResult> {
+    // Enrich with external booking-per-zone data (non-blocking)
+    let zoneBookingContext = '';
+    if (this.tools.getBookingsByZone) {
+      try {
+        const result = await this.tools.getBookingsByZone();
+        if (result.success) {
+          zoneBookingContext = result.message;
+        }
+      } catch { /* tool failure is non-blocking */ }
+    }
+
     const { rows } = await pool.query<ZoneRiskRow>(`
       SELECT
         COALESCE(ark.zone, 'не определена')                     AS zone,
@@ -138,6 +154,13 @@ export class EcoAgency {
       ORDER BY COUNT(DISTINCT ob.id) DESC
     `);
 
+    // Alert on high-load zones via tool
+    for (const zone of rows) {
+      if (parseInt(zone.booking_count) > 50 && this.tools.writeZoneWarning) {
+        this.tools.writeZoneWarning(zone.zone, `Зона ${zone.zone}: высокая нагрузка (${zone.booking_count} бронирований)`).catch(() => {});
+      }
+    }
+
     const highRisk = rows.filter(r => r.risk_level.startsWith('высокий'));
 
     const lines: string[] = [
@@ -156,8 +179,19 @@ export class EcoAgency {
       lines.push('', '<b>Зоны повышенного контроля:</b>');
       for (const z of highRisk) {
         lines.push(`• Зона "${z.zone}": ${z.booking_count} броней за 30 дней. Требуется разрешение ФГБУ.`);
+
+        // Emit zone alert for high-risk zones (non-blocking)
+        if (this.tools.emitZoneAlert) {
+          try {
+            await this.tools.emitZoneAlert(z.zone, parseInt(z.booking_count, 10), z.risk_level);
+          } catch { /* tool failure is non-blocking */ }
+        }
       }
       lines.push('', 'Контакты: Кроноцкий заповедник +7(4152)41-02-60, ФГБУ «Заповедники Камчатки»');
+    }
+
+    if (zoneBookingContext) {
+      lines.push('', `Дополнительный контекст: ${zoneBookingContext}`);
     }
 
     return { response: lines.join('\n'), data: { zones: rows, high_risk_zones: highRisk } };
@@ -165,7 +199,8 @@ export class EcoAgency {
 
   private async callAI(prompt: string): Promise<string | null> {
     try {
-      const messages: ChatMessage[] = [{ role: 'user', content: prompt }];
+      const fullPrompt = this.briefing ? `${this.briefing}\n\n${prompt}` : prompt;
+      const messages: ChatMessage[] = [{ role: 'user', content: fullPrompt }];
       return await callAIWaterfall(messages);
     } catch {
       return null;

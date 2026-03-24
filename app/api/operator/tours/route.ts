@@ -6,6 +6,7 @@ import { requireOperator } from '@/lib/auth/middleware';
 import { getOperatorPartnerId } from '@/lib/auth/operator-helpers';
 import { OpTourListRow, OpTourCreateRow, CountRow } from '@/lib/types/db-rows';
 import { z } from 'zod';
+import { emitEvent, AGENT_EVENTS } from '@/lib/events/emit';
 
 export const dynamic = 'force-dynamic';
 
@@ -344,6 +345,16 @@ export async function POST(request: NextRequest) {
 
     const result = await query<OpTourCreateRow>(insertQuery, values);
     const newTour = result.rows[0];
+
+    // Emit tour creation event to agent bus (fire-and-forget)
+    emitEvent(AGENT_EVENTS.TOUR_UPDATED, 'system', 'info', {
+      tourId: newTour.id,
+      tourName: newTour.name,
+      operatorId,
+      category: category || 'fishing',
+      price,
+      action: 'created',
+    });
 
     return NextResponse.json({
       success: true,

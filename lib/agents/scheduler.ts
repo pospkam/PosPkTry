@@ -144,12 +144,16 @@ export class AgentScheduler {
 
       const agency = new Agency();
 
+      // Inject per-agent toolkit
+      const { getToolkitForAgent } = await import('@/lib/agents/tools/agent-toolkits');
+      const agentContext = { tools: getToolkitForAgent(config.agentId) } as Record<string, unknown>;
+
       // Run with timeout
       const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Agent timeout')), config.timeout)
       );
 
-      const result = await Promise.race([agency.run(config.intent, {}), timeoutPromise]);
+      const result = await Promise.race([agency.run(config.intent, agentContext), timeoutPromise]);
 
       return {
         status: 'success',
@@ -190,7 +194,11 @@ export class AgentScheduler {
       eco: 'eco-agency',
       content: 'content-auditor-agency',
       quality: 'quality-agency',
-      evo: 'evolution-agency'
+      evo: 'evolution-agency',
+      planning: 'planning-agency',
+      finance: 'finance-agency',
+      infra: 'infra-agency',
+      vibe_coder: 'vibe-coder-agency'
     };
     return map[id] || `${id}-agency`;
   }
@@ -205,7 +213,11 @@ export class AgentScheduler {
       eco: 'EcoAgency',
       content: 'ContentAuditorAgency',
       quality: 'QualityAgency',
-      evo: 'EvolutionAgency'
+      evo: 'EvolutionAgency',
+      planning: 'PlanningAgency',
+      finance: 'FinanceAgency',
+      infra: 'InfraAgency',
+      vibe_coder: 'VibeCoderAgency',
     };
     return map[id] || `${id.charAt(0).toUpperCase()}${id.slice(1)}Agency`;
   }
@@ -291,20 +303,65 @@ export const DEFAULT_AGENT_SCHEDULE: ScheduledAgentConfig[] = [
   // Security: audit every 2h
   {
     agentId: 'security',
-    intent: 'security_audit',
+    intent: 'sec_report',
     intervalMs: 2 * 60 * 60 * 1000, // 2h
     timeout: 45000,
-    enabled: false // Disable for now, too noisy
+    enabled: true
   },
 
   // Legal: compliance check once per day
   {
     agentId: 'legal',
-    intent: 'legal_compliance',
+    intent: 'legal_risks',
     intervalMs: 24 * 60 * 60 * 1000, // 24h
     timeout: 30000,
-    enabled: false // Disable for now
-  }
+    enabled: true
+  },
+
+  // Content: audit every 8h
+  {
+    agentId: 'content',
+    intent: 'content_audit',
+    intervalMs: 8 * 60 * 60 * 1000, // 8h
+    timeout: 45000,
+    enabled: true
+  },
+
+  // Planning: forecast every 12h
+  {
+    agentId: 'planning',
+    intent: 'plan_forecast',
+    intervalMs: 12 * 60 * 60 * 1000, // 12h
+    timeout: 45000,
+    enabled: true
+  },
+
+  // Finance: revenue check every 6h
+  {
+    agentId: 'finance',
+    intent: 'finance_report',
+    intervalMs: 6 * 60 * 60 * 1000, // 6h
+    timeout: 45000,
+    enabled: true
+  },
+
+  // Infra: health check every 1h
+  {
+    agentId: 'infra',
+    intent: 'infra_health',
+    intervalMs: 60 * 60 * 1000, // 1h
+    timeout: 30000,
+    enabled: true
+  },
+
+  // VibeCoder: code analysis every 24h
+  {
+    agentId: 'vibe_coder',
+    intent: 'code_analysis',
+    intervalMs: 24 * 60 * 60 * 1000, // 24h
+    timeout: 60000,
+    enabled: true
+  },
 ];
 
 // Singleton instance

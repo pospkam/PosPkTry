@@ -4,6 +4,7 @@ import { query } from '@/lib/database';
 import { verifyAuth } from '@/lib/auth';
 import { z } from 'zod';
 import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
+import { emitEvent, AGENT_EVENTS } from '@/lib/events/emit';
 
 const reviewLimiter = createRateLimiter({ windowMs: 60_000, max: 5 });
 
@@ -199,6 +200,17 @@ export async function POST(request: NextRequest) {
     `, [userId, tourId, parsedRating, comment]);
 
     const newReview = result.rows[0];
+
+    // Emit negative feedback event for low ratings (fire-and-forget)
+    if (parsedRating <= 2) {
+      emitEvent(AGENT_EVENTS.NEGATIVE_FEEDBACK, 'system', 'warning', {
+        reviewId: newReview.id,
+        tourId,
+        rating: parsedRating,
+        userId,
+        comment: comment?.slice(0, 200) ?? '',
+      });
+    }
 
     // Сохраняем изображения, если они есть
     if (normalizedImages.length > 0) {

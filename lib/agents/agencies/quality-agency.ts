@@ -46,7 +46,12 @@ interface OperatorHealthRow {
 }
 
 export class QualityAgency {
-  async run(intent: string, _context: AgentContext): Promise<AgencyResult> {
+  private briefing = '';
+  private tools: Record<string, (...args: unknown[]) => Promise<{ success: boolean; message: string; details?: Record<string, unknown> }>> = {};
+
+  async run(intent: string, context: AgentContext): Promise<AgencyResult> {
+    this.briefing = context.richBriefing ?? '';
+    this.tools = context.tools ?? {};
     try {
       switch (intent) {
         case 'qa_reviews':   return await this.getReviews();
@@ -82,6 +87,18 @@ export class QualityAgency {
     ]);
 
     const s = stats.rows[0];
+
+    // Enrich with bad reviews from external tool
+    let badReviewsStr = '';
+    if (this.tools.getRecentBadReviews) {
+      try {
+        const br = await this.tools.getRecentBadReviews(7);
+        if (br.success && br.details?.reviews) {
+          badReviewsStr = `\nПоследние негативные отзывы: ${JSON.stringify(br.details.reviews).slice(0, 500)}`;
+        }
+      } catch { /* non-critical */ }
+    }
+
     const lines: string[] = [
       '<b>QA — отзывы (30 дней)</b>',
       '',
@@ -97,6 +114,10 @@ export class QualityAgency {
         const date = new Date(r.created_at).toLocaleDateString('ru-RU');
         lines.push(`• ${stars} ${r.reviewer_name ?? 'Аноним'} (${date}): ${shortComment}`);
       }
+    }
+
+    if (badReviewsStr) {
+      lines.push('', badReviewsStr);
     }
 
     return { response: lines.join('\n'), data: { stats: s, recent: recent.rows } };

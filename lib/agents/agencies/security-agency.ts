@@ -43,7 +43,12 @@ interface SecuritySummaryRow {
 }
 
 export class SecurityAgency {
-  async run(intent: string, _context: AgentContext): Promise<AgencyResult> {
+  private briefing = '';
+  private tools: Record<string, (...args: unknown[]) => Promise<{ success: boolean; message: string; details?: Record<string, unknown> }>> = {};
+
+  async run(intent: string, context: AgentContext): Promise<AgencyResult> {
+    this.briefing = context.richBriefing ?? '';
+    this.tools = context.tools ?? {};
     switch (intent) {
       case 'sec_access_audit': return this.accessAudit();
       case 'sec_anomaly':      return this.detectAnomalies();
@@ -54,6 +59,17 @@ export class SecurityAgency {
 
   /** Анализирует паттерны входов и подозрительную активность агентов */
   private async accessAudit(): Promise<AgencyResult> {
+    // Enrich audit with external failed actions data (non-blocking)
+    let failedActionsContext = '';
+    if (this.tools.getFailedActions) {
+      try {
+        const result = await this.tools.getFailedActions(24);
+        if (result.success) {
+          failedActionsContext = result.message;
+        }
+      } catch { /* tool failure is non-blocking */ }
+    }
+
     const [agentActivity, failedOps] = await Promise.all([
       // Активность агентной системы за 24ч по часам
       pool.query<AuthEventRow>(`
@@ -116,6 +132,24 @@ export class SecurityAgency {
     const threatLevel = failOps > 10 ? 'ВЫСОКИЙ' : failOps > 3 ? 'СРЕДНИЙ' : 'НИЗКИЙ';
     lines.push('', `Уровень угроз: ${threatLevel}`);
 
+    if (failedActionsContext) {
+      lines.push('', `Внешний контекст: ${failedActionsContext}`);
+    }
+
+    // Emit anomaly event when suspicious pattern detected (>10 failures)
+    if (this.tools.emitAnomaly && failOps > 10) {
+      try {
+        await this.tools.emitAnomaly('high_failure_rate', failOps, threatLevel);
+      } catch { /* tool failure is non-blocking */ }
+    }
+
+    // Send critical security alert only for high threat level
+    if (this.tools.sendSecurityAlert && threatLevel === 'ВЫСОКИЙ') {
+      try {
+        await this.tools.sendSecurityAlert(`Threat level: ${threatLevel}, failed ops: ${failOps}`);
+      } catch { /* tool failure is non-blocking */ }
+    }
+
     return {
       response: lines.join('\n'),
       data: { by_type: byType, failed_ops: failedOps.rows, threat_level: threatLevel },
@@ -172,6 +206,10 @@ export class SecurityAgency {
       return {
         response: 'Аномалий в бронированиях за последние 7 дней не выявлено. Система в норме.',
       };
+    }
+
+    if (this.tools.emitAnomaly && rows.length > 0) {
+      this.tools.emitAnomaly({ count: rows.length, types: rows.map(a => a.anomaly_type) }).catch(() => {});
     }
 
     const lines: string[] = [
@@ -240,7 +278,8 @@ export class SecurityAgency {
 
   private async callAI(prompt: string): Promise<string | null> {
     try {
-      const messages: ChatMessage[] = [{ role: 'user', content: prompt }];
+      const fullPrompt = this.briefing ? `${this.briefing}\n\n${prompt}` : prompt;
+      const messages: ChatMessage[] = [{ role: 'user', content: fullPrompt }];
       return await callAIWaterfall(messages);
     } catch {
       return null;

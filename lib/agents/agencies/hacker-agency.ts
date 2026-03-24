@@ -44,7 +44,12 @@ interface AutomationRow {
 }
 
 export class HackerAgency {
-  async run(intent: string, _context: AgentContext): Promise<AgencyResult> {
+  private briefing = '';
+  private tools: Record<string, (...args: unknown[]) => Promise<{ success: boolean; message: string; details?: Record<string, unknown> }>> = {};
+
+  async run(intent: string, context: AgentContext): Promise<AgencyResult> {
+    this.briefing = context.richBriefing ?? '';
+    this.tools = context.tools ?? {};
     try {
       switch (intent) {
         case 'hack_growth':    return await this.growthAnalysis();
@@ -129,11 +134,23 @@ export class HackerAgency {
       }
     }
 
+    let demandStr = '';
+    if (this.tools.getDemandSignals) {
+      try {
+        const ds = await this.tools.getDemandSignals(30);
+        if (ds.success && ds.details?.signals) {
+          const signals = ds.details.signals as Array<Record<string, unknown>>;
+          demandStr = `\nСигналы спроса туристов (30д): ${JSON.stringify(signals.slice(0, 10)).slice(0, 500)}`;
+        }
+      } catch { /* non-critical */ }
+    }
+
     const aiAdvice = await this.callAI(
       `Growth-хакер для туристической платформы Камчатки. Данные за 7 дней: ` +
       `${views} просмотров, ${leads} лидов (${visitToLead}% конверсия), ` +
       `${bookings} бронирований (${leadToBooking}% лид→бронь), ` +
       `средний чек: ${m.avg_booking_value} руб. ` +
+      demandStr +
       `Дай ТОП-3 конкретных действия для удвоения конверсии. Без воды, только факты.`
     );
 
@@ -190,6 +207,15 @@ export class HackerAgency {
       '',
     ];
 
+    // Toolkit enrichment (non-blocking)
+    let funnelToolData = '';
+    try {
+      if (this.tools.getConversionFunnel) {
+        const res = await this.tools.getConversionFunnel();
+        if (res.success) funnelToolData = res.message;
+      }
+    } catch { /* non-blocking */ }
+
     for (const r of rows) {
       const conv = r.conversion === '100' ? '' : ` (↓${r.conversion}% от пред.)`;
       lines.push(`• ${r.stage}: ${r.count}${conv}`);
@@ -205,6 +231,10 @@ export class HackerAgency {
       const worst = drops[0];
       lines.push('', `Самый слабый переход: "${worst.stage}" (потери ${worst.drop.toFixed(1)}%)`);
       lines.push('Фокус: оптимизировать именно этот шаг.');
+    }
+
+    if (funnelToolData) {
+      lines.push('', 'Данные воронки (toolkit):', funnelToolData);
     }
 
     return { response: lines.join('\n'), data: { funnel: rows, drops } };
@@ -288,7 +318,8 @@ export class HackerAgency {
 
   private async callAI(prompt: string): Promise<string | null> {
     try {
-      const messages: ChatMessage[] = [{ role: 'user', content: prompt }];
+      const fullPrompt = this.briefing ? `${this.briefing}\n\n${prompt}` : prompt;
+      const messages: ChatMessage[] = [{ role: 'user', content: fullPrompt }];
       return await callAIWaterfall(messages);
     } catch {
       return null;

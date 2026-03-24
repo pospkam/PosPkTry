@@ -49,7 +49,12 @@ interface MeetingStatsRow {
 // ── InfraAgency ────────────────────────────────────────────────────────────────
 
 export class InfraAgency {
-  async run(intent: string, _context: AgentContext): Promise<AgencyResult> {
+  private briefing = '';
+  private tools: Record<string, (...args: unknown[]) => Promise<{ success: boolean; message: string; details?: Record<string, unknown> }>> = {};
+
+  async run(intent: string, context: AgentContext): Promise<AgencyResult> {
+    this.briefing = context.richBriefing ?? '';
+    this.tools = context.tools ?? {};
     switch (intent) {
       case 'infra_health': return this.healthReport();
       case 'infra_crons':  return this.cronReport();
@@ -141,6 +146,25 @@ export class InfraAgency {
       const doneExec   = execStats.rows.find(r => r.execution_status === 'done');
       const failedMeet = meetingStats.rows.find(r => r.status === 'failed');
 
+      // Toolkit enrichment (non-blocking)
+      let providerStatus = '';
+      let cronToolStatus = '';
+      try {
+        if (this.tools.probeAIProviders) {
+          const probe = await this.tools.probeAIProviders();
+          providerStatus = probe.message;
+          if (!probe.success && this.tools.sendInfraAlert) {
+            await this.tools.sendInfraAlert('ai_providers_unreachable', probe.message);
+          }
+        }
+      } catch { /* non-blocking */ }
+      try {
+        if (this.tools.getCronStatus) {
+          const cronRes = await this.tools.getCronStatus();
+          cronToolStatus = cronRes.message;
+        }
+      } catch { /* non-blocking */ }
+
       const prompt = [
         'Ты DevOps/SRE инженер туристической платформы Камчатки.',
         'Данные за последние 24 часа. Дай честный технический анализ:',
@@ -162,6 +186,8 @@ export class InfraAgency {
         'СОВЕЩАНИЯ (30 дней):',
         meetingStats.rows.map(r => `  ${r.status}: ${r.count} (ср. ${parseFloat(r.avg_proposals || '0').toFixed(1)} предложений)`).join('\n') || '  нет данных',
         failedMeet ? `  ВНИМАНИЕ: ${failedMeet.count} упавших совещаний` : '',
+        providerStatus ? `\nAI-ПРОВАЙДЕРЫ (probe):\n  ${providerStatus}` : '',
+        cronToolStatus ? `\nCRON (toolkit):\n  ${cronToolStatus}` : '',
         '',
         'Правила:',
         '1. Только факты из данных выше',
@@ -170,7 +196,8 @@ export class InfraAgency {
         '4. confidence: high/medium/low',
       ].filter(Boolean).join('\n');
 
-      const aiText = await callAIWaterfall([{ role: 'user', content: prompt }]);
+      const fullPrompt = this.briefing ? `${this.briefing}\n\n${prompt}` : prompt;
+      const aiText = await callAIWaterfall([{ role: 'user', content: fullPrompt }]);
 
       const statusIcon = dbMs < 200
         ? (failedExec && parseInt(failedExec.count, 10) > 2 ? 'ПРЕДУПРЕЖДЕНИЕ' : 'ОК')

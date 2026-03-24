@@ -38,7 +38,12 @@ interface WeatherRiskRow {
 }
 
 export class RescueAgency {
-  async run(intent: string, _context: AgentContext): Promise<AgencyResult> {
+  private briefing = '';
+  private tools: Record<string, (...args: unknown[]) => Promise<{ success: boolean; message: string; details?: Record<string, unknown> }>> = {};
+
+  async run(intent: string, context: AgentContext): Promise<AgencyResult> {
+    this.briefing = context.richBriefing ?? '';
+    this.tools = context.tools ?? {};
     switch (intent) {
       case 'rescue_sos_stats':     return this.sosSummary();
       case 'rescue_weather_risk':  return this.weatherRisk();
@@ -49,6 +54,17 @@ export class RescueAgency {
 
   /** Статистика SOS и активных инцидентов */
   private async sosSummary(): Promise<AgencyResult> {
+    // Fetch active incidents from external toolkit (non-blocking)
+    let incidentContext = '';
+    if (this.tools.getActiveIncidents) {
+      try {
+        const result = await this.tools.getActiveIncidents();
+        if (result.success && result.details) {
+          incidentContext = `\nВнешние инциденты: ${result.message}`;
+        }
+      } catch { /* tool failure is non-blocking */ }
+    }
+
     const [recent, stats] = await Promise.all([
       pool.query<SosEventRow>(`
         SELECT
@@ -74,7 +90,10 @@ export class RescueAgency {
           COUNT(*)::text                                                        AS total_30d,
           COUNT(*) FILTER (WHERE status NOT IN ('resolved','cancelled'))::text  AS active,
           COUNT(*) FILTER (WHERE status = 'resolved')::text                    AS resolved,
-          '0'                                                                   AS avg_resolve_min
+          COALESCE(ROUND(EXTRACT(EPOCH FROM AVG(
+            CASE WHEN status = 'resolved' AND resolved_at IS NOT NULL
+              THEN resolved_at - created_at END
+          )) / 60), 0)::text                                                     AS avg_resolve_min
         FROM sos_events
         WHERE created_at >= NOW() - INTERVAL '30 days'
       `),
@@ -100,8 +119,17 @@ export class RescueAgency {
           : 'координаты не получены';
         lines.push(`• SOS #${e.id} — ${location} | ${e.age_minutes} мин. назад | статус: ${e.status}`);
       }
+
+      // Notify via SOS alert tool when active incidents exist
+      if (this.tools.sendSosAlert && activeEvents.length > 0) {
+        this.tools.sendSosAlert(`${activeEvents.length} active SOS`).catch(() => {});
+      }
     } else {
       lines.push('', 'Активных SOS-инцидентов нет.');
+    }
+
+    if (incidentContext) {
+      lines.push('', incidentContext);
     }
 
     return { response: lines.join('\n'), data: { stats: s, active_events: activeEvents } };
@@ -109,6 +137,17 @@ export class RescueAgency {
 
   /** Анализ погодных рисков для активных туров */
   private async weatherRisk(): Promise<AgencyResult> {
+    // Enrich with real weather forecast
+    let weatherInfo = '';
+    if (this.tools.fetchWeather) {
+      try {
+        const w = await this.tools.fetchWeather(53.0, 158.6, 3);
+        if (w.success && w.details?.forecast) {
+          weatherInfo = `\nПрогноз погоды Камчатка: ${JSON.stringify(w.details.forecast).slice(0, 500)}`;
+        }
+      } catch { /* non-critical */ }
+    }
+
     const { rows } = await pool.query<WeatherRiskRow>(`
       SELECT
         ot.id                 AS tour_id,
@@ -166,6 +205,7 @@ export class RescueAgency {
     const aiRisk = await this.callAI(
       `Оценка погодных рисков для туризма на Камчатке: ` +
       `${rows.length} туров с активными бронями, ${withAlerts.length} погодных предупреждений. ` +
+      weatherInfo +
       `Дай краткий инструктаж для операторов (2-3 пункта) при получении погодного алерта.`
     );
 
@@ -213,7 +253,8 @@ export class RescueAgency {
 
   private async callAI(prompt: string): Promise<string | null> {
     try {
-      const messages: ChatMessage[] = [{ role: 'user', content: prompt }];
+      const fullPrompt = this.briefing ? `${this.briefing}\n\n${prompt}` : prompt;
+      const messages: ChatMessage[] = [{ role: 'user', content: fullPrompt }];
       return await callAIWaterfall(messages);
     } catch {
       return null;
