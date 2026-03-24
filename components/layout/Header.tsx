@@ -30,10 +30,10 @@ export function Header() {
         padding: '12px 16px',
         fontFamily: FO,
         transition: 'background 0.3s, backdrop-filter 0.3s, box-shadow 0.3s',
-        background: scrolled ? 'var(--kh-header-bg)' : 'transparent',
+        background: scrolled ? 'var(--bg-card)' : 'transparent',
         backdropFilter: scrolled ? 'blur(16px)' : 'none',
         WebkitBackdropFilter: scrolled ? 'blur(16px)' : 'none',
-        boxShadow: scrolled ? '0 1px 0 var(--kh-border)' : 'none',
+        boxShadow: scrolled ? '0 1px 0 var(--border)' : 'none',
       }}
     >
       {/* Logo */}
@@ -43,7 +43,7 @@ export function Header() {
         style={{
           display: 'flex',
           alignItems: 'center',
-          color: 'var(--kh-text)',
+          color: 'var(--text-primary)',
           textDecoration: 'none',
           flexShrink: 0,
         }}
@@ -63,7 +63,7 @@ export function Header() {
             borderRadius: '50%',
             border: 'none',
             background: 'transparent',
-            color: 'var(--kh-text)',
+            color: 'var(--text-primary)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -83,12 +83,12 @@ export function Header() {
             width: '34px',
             height: '34px',
             borderRadius: '50%',
-            background: 'var(--kh-surface)',
-            border: '1px solid var(--kh-border)',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: 'var(--kh-text-dim)',
+            color: 'var(--text-muted)',
             textDecoration: 'none',
           }}
         >
@@ -123,12 +123,12 @@ export function Header() {
             width: '34px',
             height: '34px',
             borderRadius: '50%',
-            background: 'var(--kh-surface)',
-            border: '1px solid var(--kh-border)',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: 'var(--kh-text-dim)',
+            color: 'var(--text-muted)',
             textDecoration: 'none',
           }}
         >

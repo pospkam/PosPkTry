@@ -21,11 +21,11 @@ export default function HomePageClient() {
   useSourceTracker();
 
   if (!mounted) {
-    return <div className="min-h-[100dvh] bg-[var(--kh-bg)]" />;
+    return <div className="min-h-[100dvh] bg-[var(--bg-primary)]" />;
   }
 
   return (
-    <div className="bg-[var(--kh-bg)] text-[var(--kh-text)] min-h-[100dvh] transition-colors duration-300">
+    <div className="bg-[var(--bg-primary)] text-[var(--text-primary)] min-h-[100dvh] transition-colors duration-300">
       <Header />
       <NowOnKamchatka />
       <SafetyAlertBanner />

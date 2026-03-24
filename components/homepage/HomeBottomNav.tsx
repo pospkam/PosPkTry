@@ -31,11 +31,11 @@ export function HomeBottomNav() {
         padding: '6px',
         borderRadius: '100px',
         fontFamily: FO,
-        background: 'var(--kh-nav-bg)',
+        background: 'var(--bg-card)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
-        border: '1px solid var(--kh-border)',
-        boxShadow: 'var(--kh-nav-shadow)',
+        border: '1px solid var(--border)',
+        boxShadow: '0 -1px 0 var(--border)',
       }}
     >
       {NAV_ITEMS.map((item) => {
@@ -51,7 +51,7 @@ export function HomeBottomNav() {
               padding: item.label ? '7px 16px' : '7px 12px',
               borderRadius: '100px',
               background: 'transparent',
-              color: 'var(--kh-text-dim)',
+              color: 'var(--text-muted)',
               textDecoration: 'none',
               fontSize: '11px',
               fontWeight: 500,

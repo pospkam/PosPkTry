@@ -137,7 +137,7 @@ export function FishingPageClient({ tours }: { tours: FishingTour[] }) {
     <div className="ds-page min-h-screen">
 
       {/* ── Hero ────────────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-2xl mb-10"
+      <div className="relative overflow-hidden rounded-lg mb-10"
         style={{ background: 'linear-gradient(135deg, #0a1628 0%, #1a3a5c 50%, #0d2137 100%)' }}>
         <div className="relative px-8 py-14 md:py-20 max-w-3xl">
           <div className="flex items-center gap-2 mb-4">
@@ -149,20 +149,20 @@ export function FishingPageClient({ tours }: { tours: FishingTour[] }) {
           <h1 className="font-playfair text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">
             Рыбалка на реке Камчатка
           </h1>
-          <p className="text-lg text-white/70 mb-8 leading-relaxed max-w-xl">
+          <p className="text-lg text-[rgba(255,255,255,0.7)] mb-8 leading-relaxed max-w-xl">
             Лосось, кижуч, чавыча, нерка. Профессиональные гиды, снаряжение включено,
             трансфер от Петропавловска-Камчатского.
           </p>
           <div className="flex flex-wrap gap-3">
-            <div className="flex items-center gap-2 bg-white/10 rounded-lg px-4 py-2">
+            <div className="flex items-center gap-2 bg-[rgba(255,255,255,0.1)] rounded-md px-4 py-2">
               <Fish className="w-4 h-4 text-[var(--ocean)]" />
               <span className="text-sm text-white">5 видов лосося</span>
             </div>
-            <div className="flex items-center gap-2 bg-white/10 rounded-lg px-4 py-2">
+            <div className="flex items-center gap-2 bg-[rgba(255,255,255,0.1)] rounded-md px-4 py-2">
               <Calendar className="w-4 h-4 text-[var(--ocean)]" />
               <span className="text-sm text-white">Весь год</span>
             </div>
-            <div className="flex items-center gap-2 bg-white/10 rounded-lg px-4 py-2">
+            <div className="flex items-center gap-2 bg-[rgba(255,255,255,0.1)] rounded-md px-4 py-2">
               <Mountain className="w-4 h-4 text-[var(--ocean)]" />
               <span className="text-sm text-white">от {priceLabel(minPrice)}</span>
             </div>

@@ -66,7 +66,7 @@ export function PlatformStats() {
   ];
 
   return (
-    <section className="py-16 bg-[var(--kh-surface)]">
+    <section className="py-16 bg-[var(--bg-card)]">
       <div className="max-w-6xl mx-auto px-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-6">
           {items.map((item, i) => {
@@ -74,13 +74,13 @@ export function PlatformStats() {
             return (
               <Reveal key={item.label} delay={Math.min(i + 1, 4) as 1 | 2 | 3 | 4}>
                 <div className="text-center">
-                  <div className="w-12 h-12 mx-auto mb-3 rounded-lg bg-[var(--kh-accent)]/10 flex items-center justify-center">
-                    <Icon className="w-6 h-6 text-[var(--kh-accent)]" />
+                  <div className="w-12 h-12 mx-auto mb-3 rounded-lg bg-[var(--accent)]/10 flex items-center justify-center">
+                    <Icon className="w-6 h-6 text-[var(--accent)]" />
                   </div>
-                  <p className="font-playfair text-3xl md:text-4xl font-bold text-[var(--kh-text)]">
+                  <p className="font-playfair text-3xl md:text-4xl font-bold text-[var(--text-primary)]">
                     <AnimatedNumber target={item.value} suffix={item.suffix} />
                   </p>
-                  <p className="text-xs text-[var(--kh-text-dim)] mt-1">{item.label}</p>
+                  <p className="text-xs text-[var(--text-muted)] mt-1">{item.label}</p>
                 </div>
               </Reveal>
             );
