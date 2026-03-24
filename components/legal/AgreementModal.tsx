@@ -132,7 +132,7 @@ export function AgreementModal({
           >
             {loading ? (
               <>
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-[rgba(255,255,255,0.3)] border-t-white rounded-full animate-spin" />
                 Принятие...
               </>
             ) : allChecked && scrolledToBottom ? (

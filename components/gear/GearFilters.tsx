@@ -59,7 +59,7 @@ export function GearFilters({
                   ...priceRange,
                   min: parseInt(e.target.value) || 0
                 })}
-                className="w-full px-3 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded text-white placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                className="w-full px-3 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
               />
               <input
                 type="number"
@@ -69,7 +69,7 @@ export function GearFilters({
                   ...priceRange,
                   max: parseInt(e.target.value) || 10000
                 })}
-                className="w-full px-3 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded text-white placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                className="w-full px-3 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
               />
             </div>
           </div>

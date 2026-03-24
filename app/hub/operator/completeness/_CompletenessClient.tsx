@@ -534,7 +534,7 @@ export default function CompletenessClient() {
               >
                 {quickFill.saving ? (
                   <>
-                    <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <div className="w-3 h-3 border-2 border-[rgba(255,255,255,0.3)] border-t-white rounded-full animate-spin" />
                     Сохранение...
                   </>
                 ) : (

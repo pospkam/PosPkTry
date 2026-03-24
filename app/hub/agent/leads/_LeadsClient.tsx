@@ -143,7 +143,7 @@ export default function LeadsClient() {
             >
               {t.label}
               {t.key === 'new' && newCount > 0 && (
-                <span className="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full bg-white/20 text-xs">
+                <span className="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full bg-[rgba(255,255,255,0.2)] text-xs">
                   {newCount}
                 </span>
               )}

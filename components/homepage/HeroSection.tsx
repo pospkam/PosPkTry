@@ -56,7 +56,7 @@ export function HeroSection() {
 
       {/* Координаты — верх */}
       <div className="relative z-10 p-6 md:p-10">
-        <p className="text-[10px] font-medium uppercase tracking-[4px] text-white/50">
+        <p className="text-[10px] font-medium uppercase tracking-[4px] text-[rgba(255,255,255,0.5)]">
           52°N · Камчатский полуостров · Россия
         </p>
       </div>
@@ -65,9 +65,9 @@ export function HeroSection() {
       <div className="relative z-10 mt-auto px-5 md:px-10 pb-16 md:pb-20 max-w-3xl">
 
         {/* Бейдж */}
-        <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-5">
+        <div className="inline-flex items-center gap-2 bg-black/25 border border-[rgba(255,255,255,0.2)] rounded-full px-3 py-1 mb-5">
           <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] animate-pulse" />
-          <span className="text-[11px] text-white/80 font-medium tracking-wide">
+          <span className="text-[11px] text-white font-medium tracking-wide">
             AI-помощник Кузьмич онлайн
           </span>
         </div>
@@ -82,7 +82,7 @@ export function HeroSection() {
           <span className="text-[var(--accent)] [text-shadow:0_2px_24px_rgba(212,74,12,0.4)]">Ваш маршрут.</span>
         </h1>
 
-        <p className="text-white/70 text-sm md:text-base mb-8 max-w-lg leading-relaxed">
+        <p className="text-[rgba(255,255,255,0.75)] text-sm md:text-base mb-8 max-w-lg leading-relaxed">
           14 направлений, реальные гиды, SOS-безопасность.
           Спросите Кузьмича — он подберёт тур за 30 секунд.
         </p>
@@ -117,14 +117,14 @@ export function HeroSection() {
               key={chip}
               type="button"
               onClick={() => submit(chip)}
-              className="text-[11px] text-white/80 border border-white/25 rounded-full px-3 py-1 hover:bg-white/15 hover:text-white transition-all"
+              className="text-[11px] text-[rgba(255,255,255,0.8)] border border-[rgba(255,255,255,0.25)] rounded-full px-3 py-1 hover:bg-[rgba(255,255,255,0.15)] hover:text-white transition-all"
             >
               {chip}
             </button>
           ))}
           <a
             href="/marketplace"
-            className="text-[11px] text-white/60 border border-white/15 rounded-full px-3 py-1 hover:bg-white/10 hover:text-white/80 transition-all"
+            className="text-[11px] text-[rgba(255,255,255,0.6)] border border-[rgba(255,255,255,0.15)] rounded-full px-3 py-1 hover:bg-[rgba(255,255,255,0.1)] hover:text-[rgba(255,255,255,0.8)] transition-all"
           >
             Все туры →
           </a>
