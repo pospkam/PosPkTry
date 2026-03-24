@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import VehiclesPageClient from './_VehiclesPageClient';
 
 export const metadata: Metadata = {
-  title: 'Транспорт | Оператор трансферов | Kamhub',
+  title: 'Транспорт | Оператор трансферов | Tourhab',
   description: 'Управление транспортными средствами',
   robots: 'noindex, nofollow',
 };

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import NewTourClient from './_NewTourClient';
 
 export const metadata: Metadata = {
-  title: 'Новый тур | Оператор | Kamhub',
+  title: 'Новый тур | Оператор | Tourhab',
   description: 'Создание нового тура на Камчатке',
   robots: 'noindex, nofollow',
 };

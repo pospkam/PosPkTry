@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import GuideEarningsPageClient from './_GuideEarningsPageClient';
 
 export const metadata: Metadata = {
-  title: 'Доходы | Гид | Kamhub',
+  title: 'Доходы | Гид | Tourhab',
   description: 'Статистика и аналитика доходов гида',
   robots: 'noindex, nofollow',
 };

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import AgentCommissionsPageClient from './_AgentCommissionsPageClient';
 
 export const metadata: Metadata = {
-  title: 'Комиссионные | Агент | Kamhub',
+  title: 'Комиссионные | Агент | Tourhab',
   description: 'Статистика и управление комиссионными агента',
   robots: 'noindex, nofollow',
 };

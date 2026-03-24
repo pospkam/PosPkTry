@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import CompletenessClient from './_CompletenessClient';
 
 export const metadata: Metadata = {
-  title: 'Полнота туров | Оператор | Kamhub',
+  title: 'Полнота туров | Оператор | Tourhab',
   description: 'Проверка заполненности полей туров',
   robots: 'noindex, nofollow',
 };

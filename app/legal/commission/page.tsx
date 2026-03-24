@@ -3,8 +3,8 @@ import { ChevronLeft } from 'lucide-react';
 import PageShell from '@/components/shared/PageShell';
 
 export const metadata = {
-  title: 'Условия комиссионного вознаграждения | KamHub',
-  description: 'Подробные условия комиссии платформы KamHub для партнеров',
+  title: 'Условия комиссионного вознаграждения | Tourhab',
+  description: 'Подробные условия комиссии платформы Tourhab для партнеров',
 };
 
 export default function CommissionPage() {

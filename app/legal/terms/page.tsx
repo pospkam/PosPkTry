@@ -3,8 +3,8 @@ import { ChevronLeft } from 'lucide-react';
 import PageShell from '@/components/shared/PageShell';
 
 export const metadata = {
-  title: 'Пользовательское соглашение | KamHub',
-  description: 'Условия использования платформы KamHub',
+  title: 'Пользовательское соглашение | Tourhab',
+  description: 'Условия использования платформы Tourhab',
 };
 
 export default function TermsPage() {

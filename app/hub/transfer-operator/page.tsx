@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import TransferOperatorDashboardClient from './_TransferOperatorDashboardClient';
 
 export const metadata: Metadata = {
-  title: 'Кабинет оператора трансферов | Kamhub',
+  title: 'Кабинет оператора трансферов | Tourhab',
   description: 'Управление трансферами и маршрутами',
   robots: 'noindex, nofollow',
 };

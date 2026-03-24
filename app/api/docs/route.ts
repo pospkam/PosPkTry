@@ -10,11 +10,11 @@ const options: swaggerJsdoc.Options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'Kamhub API',
+      title: 'Tourhab API',
       version: '1.0.0',
       description: 'Туристическая платформа Камчатки - API документация',
       contact: {
-        name: 'Kamhub Support',
+        name: 'Tourhab Support',
         email: 'support@kamhub.ru',
       },
     },

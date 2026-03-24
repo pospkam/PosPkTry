@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import AgentClientsPageClient from './_AgentClientsPageClient';
 
 export const metadata: Metadata = {
-  title: 'Клиенты | Агент | Kamhub',
+  title: 'Клиенты | Агент | Tourhab',
   description: 'База клиентов и управление контактами',
   robots: 'noindex, nofollow',
 };

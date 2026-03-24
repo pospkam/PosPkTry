@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import BookingHistoryPageClient from './_BookingHistoryPageClient';
 
 export const metadata: Metadata = {
-  title: 'Мои бронирования | Kamhub',
+  title: 'Мои бронирования | Tourhab',
   description: 'Список активных и прошедших бронирований',
   robots: 'noindex, nofollow',
 };

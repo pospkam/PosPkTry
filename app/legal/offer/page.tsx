@@ -3,8 +3,8 @@ import { ChevronLeft } from 'lucide-react';
 import PageShell from '@/components/shared/PageShell';
 
 export const metadata = {
-  title: 'Договор-оферта для партнеров | KamHub',
-  description: 'Условия сотрудничества с платформой KamHub для партнеров',
+  title: 'Договор-оферта для партнеров | Tourhab',
+  description: 'Условия сотрудничества с платформой Tourhab для партнеров',
 };
 
 export default function OfferPage() {
@@ -32,7 +32,7 @@ export default function OfferPage() {
             </p>
             <p>
               Платформа предоставляет Партнеру возможность размещения информации о своих 
-              услугах и приема бронирований через сервис KamHub.
+              услугах и приема бронирований через сервис Tourhab.
             </p>
           </section>
 

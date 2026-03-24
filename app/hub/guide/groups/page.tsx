@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import GuideGroupsPageClient from './_GuideGroupsPageClient';
 
 export const metadata: Metadata = {
-  title: 'Группы | Гид | Kamhub',
+  title: 'Группы | Гид | Tourhab',
   description: 'Управление туристическими группами',
   robots: 'noindex, nofollow',
 };

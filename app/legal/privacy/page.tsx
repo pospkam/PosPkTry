@@ -3,8 +3,8 @@ import { ChevronLeft } from 'lucide-react';
 import PageShell from '@/components/shared/PageShell';
 
 export const metadata = {
-  title: 'Политика конфиденциальности | KamHub',
-  description: 'Политика обработки персональных данных платформы KamHub',
+  title: 'Политика конфиденциальности | Tourhab',
+  description: 'Политика обработки персональных данных платформы Tourhab',
 };
 
 export default function PrivacyPage() {

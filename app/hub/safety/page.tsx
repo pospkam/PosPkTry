@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import SafetyHubClient from './_SafetyHubClient';
 
 export const metadata: Metadata = {
-  title: 'Безопасность | Kamhub',
+  title: 'Безопасность | Tourhab',
   description: 'Управление безопасностью туров',
   robots: 'noindex, nofollow',
 };

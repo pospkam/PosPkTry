@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import AgentBookingsPageClient from './_AgentBookingsPageClient';
 
 export const metadata: Metadata = {
-  title: 'Бронирования | Агент | Kamhub',
+  title: 'Бронирования | Агент | Tourhab',
   description: 'Управление бронированиями клиентов',
   robots: 'noindex, nofollow',
 };

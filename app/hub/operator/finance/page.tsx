@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import FinancePageClient from './_FinancePageClient';
 
 export const metadata: Metadata = {
-  title: 'Финансы | Оператор | Kamhub',
+  title: 'Финансы | Оператор | Tourhab',
   description: 'Финансовый учёт и статистика оператора',
   robots: 'noindex, nofollow',
 };

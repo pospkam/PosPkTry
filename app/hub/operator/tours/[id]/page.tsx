@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import EditTourClient from './_EditTourClient';
 
 export const metadata: Metadata = {
-  title: 'Редактирование тура | Оператор | Kamhub',
+  title: 'Редактирование тура | Оператор | Tourhab',
   description: 'Редактирование параметров тура',
   robots: 'noindex, nofollow',
 };
