@@ -1,6 +1,8 @@
-import { MetadataRoute } from 'next';
+import type { MetadataRoute } from 'next';
 import { query } from '@/lib/database';
 import { CATEGORY_SLUGS } from '@/lib/routes/category-meta';
+
+export const dynamic = 'force-dynamic';
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://tourhab.ru';
 
@@ -9,68 +11,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Статические страницы
   const staticPages: MetadataRoute.Sitemap = [
-    {
-      url: BASE_URL,
-      lastModified: now,
-      changeFrequency: 'daily',
-      priority: 1,
-    },
-    {
-      url: `${BASE_URL}/map`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.6,
-    },
-    {
-      url: `${BASE_URL}/routes`,
-      lastModified: now,
-      changeFrequency: 'daily',
-      priority: 0.9,
-    },
-    {
-      url: `${BASE_URL}/operators`,
-      lastModified: now,
-      changeFrequency: 'weekly',
-      priority: 0.9,
-    },
-    // Legal pages
-    {
-      url: `${BASE_URL}/legal/privacy`,
-      lastModified: now,
-      changeFrequency: 'yearly',
-      priority: 0.3,
-    },
-    {
-      url: `${BASE_URL}/legal/terms`,
-      lastModified: now,
-      changeFrequency: 'yearly',
-      priority: 0.3,
-    },
-    {
-      url: `${BASE_URL}/legal/offer`,
-      lastModified: now,
-      changeFrequency: 'yearly',
-      priority: 0.3,
-    },
-    {
-      url: `${BASE_URL}/legal/commission`,
-      lastModified: now,
-      changeFrequency: 'yearly',
-      priority: 0.3,
-    },
-    // Auth
-    {
-      url: `${BASE_URL}/auth/login`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.5,
-    },
-    {
-      url: `${BASE_URL}/auth/register`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.5,
-    },
+    { url: BASE_URL,                                 lastModified: now, changeFrequency: 'daily',   priority: 1.0 },
+    { url: `${BASE_URL}/marketplace`,                lastModified: now, changeFrequency: 'daily',   priority: 0.9 },
+    { url: `${BASE_URL}/routes`,                     lastModified: now, changeFrequency: 'daily',   priority: 0.9 },
+    { url: `${BASE_URL}/fishing`,                    lastModified: now, changeFrequency: 'weekly',  priority: 0.8 },
+    { url: `${BASE_URL}/planner`,                    lastModified: now, changeFrequency: 'weekly',  priority: 0.8 },
+    { url: `${BASE_URL}/ai-assistant`,               lastModified: now, changeFrequency: 'weekly',  priority: 0.7 },
+    { url: `${BASE_URL}/marketplace/operators`,      lastModified: now, changeFrequency: 'weekly',  priority: 0.7 },
+    { url: `${BASE_URL}/map`,                        lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${BASE_URL}/faq`,                        lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
+    { url: `${BASE_URL}/help`,                       lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
+    { url: `${BASE_URL}/auth/login`,                 lastModified: now, changeFrequency: 'monthly', priority: 0.4 },
+    { url: `${BASE_URL}/auth/register`,              lastModified: now, changeFrequency: 'monthly', priority: 0.4 },
+    { url: `${BASE_URL}/legal/privacy`,              lastModified: now, changeFrequency: 'yearly',  priority: 0.3 },
+    { url: `${BASE_URL}/legal/terms`,                lastModified: now, changeFrequency: 'yearly',  priority: 0.3 },
+    { url: `${BASE_URL}/legal/offer`,                lastModified: now, changeFrequency: 'yearly',  priority: 0.3 },
+    { url: `${BASE_URL}/legal/commission`,           lastModified: now, changeFrequency: 'yearly',  priority: 0.3 },
   ];
 
   // Категорийные страницы маршрутов (SEO)
@@ -80,6 +36,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: 'weekly' as const,
     priority: 0.9,
   }));
+
+  // Активные туры marketplace
+  let tourPages: MetadataRoute.Sitemap = [];
+  try {
+    const tourResult = await query<{ id: number; updated_at: string }>(
+      `SELECT id, updated_at FROM operator_tours
+       WHERE is_active = TRUE AND deleted_at IS NULL
+       ORDER BY updated_at DESC LIMIT 500`,
+    );
+    tourPages = tourResult.rows.map((t) => ({
+      url:             `${BASE_URL}/marketplace/tours/${t.id}`,
+      lastModified:    new Date(t.updated_at),
+      changeFrequency: 'weekly' as const,
+      priority:        0.7,
+    }));
+  } catch { /* continues without tours */ }
 
   // Динамические страницы маршрутов из agent_route_knowledge
   let routePages: MetadataRoute.Sitemap = [];
@@ -112,5 +84,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
   } catch { /* sitemap continues without operators if DB unavailable */ }
 
-  return [...staticPages, ...categoryPages, ...routePages, ...operatorPages];
+  return [...staticPages, ...categoryPages, ...tourPages, ...routePages, ...operatorPages];
 }

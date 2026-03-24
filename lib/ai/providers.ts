@@ -222,6 +222,60 @@ export async function callAnthropic(messages: ChatMessage[]): Promise<string | n
   }
 }
 
+// ── YandexGPT Lite (Yandex Cloud) ─────────────────────────────
+// Лучший по русскому языку. Без геоблока для России.
+// Env: YANDEX_API_KEY (Api-Key), YANDEX_FOLDER_ID (каталог YC)
+export async function callYandexGPT(messages: ChatMessage[]): Promise<string | null> {
+  const apiKey   = process.env.YANDEX_API_KEY;
+  const folderId = process.env.YANDEX_FOLDER_ID;
+  if (!apiKey || !folderId) return null;
+
+  try {
+    // YandexGPT использует `text` вместо `content`
+    const yMessages = messages
+      .filter((m) => m.role !== 'system')
+      .map(({ role, content }) => ({
+        role: role === 'assistant' ? 'assistant' : 'user',
+        text: content,
+      }));
+
+    const systemMsg = messages.find((m) => m.role === 'system');
+    if (systemMsg) {
+      yMessages.unshift({ role: 'system', text: systemMsg.content });
+    }
+
+    const res = await fetch(
+      'https://llm.api.cloud.yandex.net/foundationModels/v1/completion',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Api-Key ${apiKey}`,
+          'x-folder-id': folderId,
+        },
+        body: JSON.stringify({
+          modelUri: `gpt://${folderId}/yandexgpt-lite/latest`,
+          completionOptions: {
+            stream: false,
+            temperature: 0.4,
+            maxTokens: '800',
+          },
+          messages: yMessages,
+        }),
+        signal: AbortSignal.timeout(15_000),
+      },
+    );
+
+    if (!res.ok) return null;
+    const data = await res.json();
+    const text: string | undefined =
+      data?.result?.alternatives?.[0]?.message?.text;
+    return text?.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
 // ── Google Gemini (via OpenRouter) ────────────────────────────
 export async function callGemini(messages: ChatMessage[]): Promise<string | null> {
   const apiKey = process.env.OPENROUTER_API_KEY;
@@ -540,10 +594,11 @@ export async function preflightProviders(): Promise<{
 }
 
 // ── Waterfall: пробует провайдеров по очереди ─────────────────
-// MiMo-V2-Pro → OpenRouter → xAI → Anthropic
+// MiMo → OpenRouter → YandexGPT (лучший русский) → DeepSeek → Gemini → xAI → Anthropic
 export async function callAIWaterfall(messages: ChatMessage[]): Promise<string> {
   let answer = await callMiMo(messages);
   if (!answer) answer = await callOpenrouter(messages);   // GPT-4o-mini → DeepSeek → Claude Haiku (OR)
+  if (!answer) answer = await callYandexGPT(messages);   // YandexGPT Lite — лучший русский, без геоблока
   if (!answer) answer = await callDeepSeek(messages);     // DeepSeek direct
   if (!answer) answer = await callGeminiDirect(messages); // Gemini 2.0 Flash direct
   if (!answer) answer = await callXai(messages);          // Grok (может быть geo-blocked)

@@ -21,6 +21,7 @@ import {
   buildMemoryContext,
 } from '@/lib/ai/user-memory';
 import { detectTourIntent, findRelevantTours, type TourSuggestion } from '@/lib/ai/booking-intent';
+import { buildRAGContext } from '@/lib/ai/rag-context';
 
 export const dynamic = 'force-dynamic';
 
@@ -150,7 +151,8 @@ export async function POST(request: NextRequest) {
 
     const basePrompt   = getSystemPrompt(safeRole);
     const memContext   = userMemory ? buildMemoryContext(userMemory) : '';
-    const systemPrompt = basePrompt + memContext;
+    const ragContext   = await buildRAGContext(message.trim(), safeRole);
+    const systemPrompt = basePrompt + ragContext + memContext;
     const messagesForAI = buildMessageHistory(systemPrompt, history, 10);
 
     // PlatformAgent intercept: admin/operator с распознанным интентом
