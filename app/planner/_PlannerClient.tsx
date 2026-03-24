@@ -7,7 +7,7 @@ import {
   Check, AlertTriangle, Sparkles, Loader,
   Fish, Mountain, PawPrint, Plane,
   Thermometer, Footprints, Wind, Anchor, Snowflake,
-  Waves, Flame, Droplets, GripVertical,
+  Waves, Flame, Droplets, Droplet, Leaf, GripVertical,
   MapPin, Users, Trash2, Plus, Star, Phone,
   X, ChevronDown, ChevronUp, Truck,
   ArrowRight, ExternalLink, Map as MapIcon, List, Pencil,
@@ -34,6 +34,7 @@ const PLACES: SelectItem[] = [
   { id: 'sea',        label: 'Побережье',  Icon: Waves },
   { id: 'mountain',   label: 'Хребты',     Icon: Mountain },
   { id: 'river',      label: 'Реки',       Icon: Waves },
+  { id: 'lakes',      label: 'Озёра',      Icon: Droplet },
 ];
 
 const ACTIVITIES: SelectItem[] = [
@@ -43,6 +44,7 @@ const ACTIVITIES: SelectItem[] = [
   { id: 'bears',      label: 'Медведи',          Icon: PawPrint },
   { id: 'snowmobile', label: 'Снегоходы',        Icon: Snowflake },
   { id: 'boat_trip',  label: 'Морская прогулка', Icon: Anchor },
+  { id: 'eco',        label: 'Экотуризм',        Icon: Leaf },
 ];
 
 const ZONE_LABELS: Record<string, string> = {
@@ -79,6 +81,8 @@ const ACTIVITY_LABEL: Record<string, string> = {
   sea:        'Побережье',
   mountain:   'Горы',
   river:      'Реки',
+  lakes:      'Озёра',
+  eco:        'Экотуризм',
 };
 
 const INTEREST_PRICE: Record<string, [number, number]> = {
@@ -95,6 +99,8 @@ const INTEREST_PRICE: Record<string, [number, number]> = {
   mountain:   [3000,  9000],
   sea:        [4000,  12000],
   river:      [5000,  15000],
+  lakes:      [3000,  10000],
+  eco:        [2000,   8000],
 };
 
 const TRANSPORT_OPTIONS: Record<TransportType, { label: string; Icon: React.ElementType; priceAdd: number }> = {
