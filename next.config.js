@@ -8,10 +8,7 @@ const nextConfig = {
   // Лимит тела запроса для API routes (загрузка фото) — Next.js 15: top-level
   serverBodySizeLimit: '60mb',
 
-  experimental: {
-    // Параллельная компиляция страниц — 2-3x быстрее на multi-core
-    workerThreads: true,
-  },
+  experimental: {},
 
   // ONNX Runtime (used by @huggingface/transformers) has native Node.js addons
   // that cannot be bundled by webpack — must be resolved at runtime.
