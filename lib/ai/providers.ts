@@ -615,7 +615,11 @@ export async function callAIFast(messages: ChatMessage[]): Promise<string> {
   const mimo = await callMiMo(messages);
   if (mimo) return mimo;
 
-  // Попытка 2: DeepSeek через OpenRouter (~$0.27/1M tokens)
+  // Попытка 2: YandexGPT 5.1 — без геоблока, быстрый русский
+  const yandex = await callYandexGPT(messages);
+  if (yandex) return yandex;
+
+  // Попытка 3: DeepSeek через OpenRouter
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (apiKey) {
     try {
@@ -643,6 +647,10 @@ export async function callAIFast(messages: ChatMessage[]): Promise<string> {
       }
     } catch { /* fallthrough */ }
   }
+
+  // Попытка 4: Gemini Direct
+  const gemini = await callGeminiDirect(messages);
+  if (gemini) return gemini;
 
   return 'Сервис временно недоступен.';
 }
