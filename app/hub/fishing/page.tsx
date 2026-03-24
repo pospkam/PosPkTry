@@ -53,7 +53,63 @@ async function getFishingTours(): Promise<FishingTour[]> {
   return rows;
 }
 
+const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://tourhab.ru';
+
 export default async function FishingPage() {
   const tours = await getFishingTours();
-  return <FishingPageClient tours={tours} />;
+
+  // Schema.org structured data — индексируется Яндексом, Google, Алисой
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'Рыболовные туры на Камчатке',
+    description: 'Рыбалка на реке Камчатка: лосось, кижуч, чавыча, нерка. Профессиональные гиды.',
+    url: `${SITE}/hub/fishing`,
+    numberOfItems: tours.length,
+    itemListElement: tours.map((t, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      item: {
+        '@type': 'TouristTrip',
+        '@id': `${SITE}/hub/marketplace/${t.id}`,
+        name: t.title,
+        description: t.short_description ?? t.description ?? '',
+        url: `${SITE}/hub/marketplace/${t.id}`,
+        touristType: 'Рыбаки, любители активного отдыха',
+        availableLanguage: 'Russian',
+        provider: {
+          '@type': 'TouristInformationCenter',
+          name: t.operator_name,
+          url: `${SITE}/operators/${t.operator_slug}`,
+        },
+        offers: {
+          '@type': 'Offer',
+          price: t.base_price,
+          priceCurrency: 'RUB',
+          availability: 'https://schema.org/InStock',
+          url: `${SITE}/hub/marketplace/${t.id}`,
+        },
+        ...(t.duration_hours && {
+          itinerary: {
+            '@type': 'ItemList',
+            numberOfItems: 1,
+            description: `Продолжительность: ${Math.round(t.duration_hours / 24)} дн.`,
+          },
+        }),
+        ...(t.photos?.[0] && {
+          image: t.photos[0],
+        }),
+      },
+    })),
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      <FishingPageClient tours={tours} />
+    </>
+  );
 }
