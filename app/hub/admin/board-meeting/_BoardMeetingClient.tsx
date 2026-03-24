@@ -565,6 +565,17 @@ export default function BoardMeetingClient() {
       .catch(() => { /* non-critical */ });
   }, []);
 
+  // Load OpenRouter balance on mount (не ждём нажатия кнопки)
+  useEffect(() => {
+    fetch('/api/agents/board-meeting/preflight')
+      .then(r => r.ok ? r.json() : null)
+      .then((d: { openrouter_balance?: { remaining: number; low: boolean } | null; compute_fund?: { total_rub: number; estimated_meetings: number } | null } | null) => {
+        if (d?.openrouter_balance) setOrBalance(d.openrouter_balance);
+        if (d?.compute_fund)       setComputeFund(d.compute_fund);
+      })
+      .catch(() => { /* non-critical */ });
+  }, []);
+
   async function sendFeedback(intent: string, rating: 'good' | 'bad') {
     try {
       await fetch('/api/agents/feedback', {
@@ -743,6 +754,69 @@ export default function BoardMeetingClient() {
               onClose={() => setAccountabilityData(null)}
             />
           )}
+          {/* OpenRouter Balance Info */}
+          <div className="ds-card p-4 mb-4">
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+                  style={{
+                    background: orBalance
+                      ? orBalance.low
+                        ? 'color-mix(in srgb, var(--danger) 12%, transparent)'
+                        : 'color-mix(in srgb, var(--success) 12%, transparent)'
+                      : 'var(--bg-hover)',
+                  }}>
+                  <Wallet size={16} style={{
+                    color: orBalance
+                      ? orBalance.low ? 'var(--danger)' : 'var(--success)'
+                      : 'var(--text-muted)',
+                  }} />
+                </div>
+                <div>
+                  <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wide font-bold mb-0.5">
+                    OpenRouter баланс
+                  </p>
+                  {orBalance ? (
+                    <p className="text-lg font-bold leading-none"
+                      style={{ color: orBalance.low ? 'var(--danger)' : 'var(--success)' }}>
+                      ${orBalance.remaining.toFixed(2)}
+                      {orBalance.low && (
+                        <span className="text-xs font-normal text-[var(--danger)] ml-2">
+                          — низкий, пополните
+                        </span>
+                      )}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-[var(--text-muted)]">загрузка...</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                {computeFund && computeFund.estimated_meetings > 0 && (
+                  <div className="text-right">
+                    <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wide font-bold mb-0.5">
+                      Хватит на
+                    </p>
+                    <p className="text-sm font-bold text-[var(--ocean)]">
+                      ~{computeFund.estimated_meetings} совещаний
+                    </p>
+                  </div>
+                )}
+                <a
+                  href="https://openrouter.ai/credits"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-opacity hover:opacity-80 shrink-0"
+                  style={{ background: 'var(--ocean)', color: 'var(--bg-primary)' }}>
+                  <Wallet size={12} />
+                  Пополнить
+                  <ExternalLink size={10} className="opacity-70" />
+                </a>
+              </div>
+            </div>
+          </div>
+
           <div className="ds-card p-8 text-center mb-6">
           <div className="w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-4"
             style={{ background: 'var(--accent)20' }}>
