@@ -259,6 +259,7 @@ const AGENCY_LOADERS: Record<string, () => Promise<{ run(intent: string, ctx: Ag
   finance_report:  async () => { const { FinanceAgency } = await import('@/lib/agents/agencies/finance-agency'); return new FinanceAgency(); },
   infra_health:    async () => { const { InfraAgency } = await import('@/lib/agents/agencies/infra-agency'); return new InfraAgency(); },
   code_analysis:   async () => { const { VibeCoderAgency } = await import('@/lib/agents/agencies/vibe-coder-agency'); return new VibeCoderAgency(); },
+  plan_forecast:   async () => { const { PlanningAgency } = await import('@/lib/agents/agencies/planning-agency'); return new PlanningAgency(); },
 };
 
 async function runAgent(
