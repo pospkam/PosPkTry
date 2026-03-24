@@ -22,13 +22,10 @@ export class ObservationLogger {
   async log(entry: ObservationEntry): Promise<void> {
     try {
       await pool.query(
-        `INSERT INTO ai_actions_log (action_type, provider, tokens_in, tokens_out, metadata)
-         VALUES ($1, $2, $3, $4, $5)`,
+        `INSERT INTO ai_actions_log (action_type, metadata)
+         VALUES ($1, $2)`,
         [
           `agent_${entry.agent_name}`,
-          entry.provider ?? null,
-          entry.tokens_in ?? null,
-          entry.tokens_out ?? null,
           JSON.stringify({
             intent: entry.intent,
             decision: entry.decision,
@@ -36,6 +33,9 @@ export class ObservationLogger {
             duration_ms: entry.duration_ms,
             user_id: entry.user_id,
             error_message: entry.error_message,
+            provider: entry.provider,
+            tokens_in: entry.tokens_in,
+            tokens_out: entry.tokens_out,
           }),
         ]
       );

@@ -75,10 +75,10 @@ export class FinanceAgency {
             COALESCE(SUM(ob.final_price), 0)::text               AS gross_revenue,
             COALESCE(SUM(ob.final_price * 0.15), 0)::text        AS platform_fee_total,
             COALESCE(AVG(ob.final_price), 0)::text               AS avg_booking_value,
-            COUNT(DISTINCT ob.tourist_email)::text               AS paying_tourists
+            COUNT(DISTINCT ob.tourist_name)::text                AS paying_tourists
           FROM operator_bookings ob
           WHERE ob.created_at >= NOW() - INTERVAL '28 days'
-            AND ob.payment_status = 'paid'
+            AND ob.booking_status = 'confirmed'
             AND ob.deleted_at IS NULL
           GROUP BY DATE_TRUNC('week', ob.created_at)
           ORDER BY DATE_TRUNC('week', ob.created_at) ASC
@@ -87,18 +87,18 @@ export class FinanceAgency {
         // Топ-5 операторов по выручке (30 дней)
         pool.query<TopOperatorRow>(`
           SELECT
-            u.id::text                                     AS operator_id,
-            COALESCE(u.name, u.email, 'Без имени')         AS operator_name,
+            p.id::text                                     AS operator_id,
+            COALESCE(p.name, p.company_name, 'Без имени')  AS operator_name,
             COUNT(ob.id)::text                             AS booking_count,
             COALESCE(SUM(ob.final_price), 0)::text         AS revenue,
             COALESCE(SUM(ob.final_price * 0.15), 0)::text  AS platform_cut
           FROM operator_bookings ob
           JOIN operator_tours ot ON ot.id = ob.operator_tour_id
-          JOIN users u            ON u.id  = ot.operator_id
+          JOIN partners p        ON p.id  = ot.operator_id
           WHERE ob.created_at >= NOW() - INTERVAL '30 days'
-            AND ob.payment_status = 'paid'
+            AND ob.booking_status = 'confirmed'
             AND ob.deleted_at IS NULL
-          GROUP BY u.id, u.name, u.email
+          GROUP BY p.id, p.name, p.company_name
           ORDER BY SUM(ob.final_price) DESC NULLS LAST
           LIMIT 5
         `),

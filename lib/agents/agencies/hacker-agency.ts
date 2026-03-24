@@ -186,7 +186,7 @@ export class HackerAgency {
         UNION ALL
         SELECT 5, 'Подтверждённые (7д)',
           (SELECT COUNT(*) FROM operator_bookings
-            WHERE status = 'confirmed'
+            WHERE booking_status = 'confirmed'
               AND created_at >= NOW() - INTERVAL '7 days'
               AND deleted_at IS NULL)
       )
