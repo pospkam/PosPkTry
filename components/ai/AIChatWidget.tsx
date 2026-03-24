@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bot, X, Calendar, Thermometer, ShieldCheck, Send, Loader2 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 type Message = {
   id: string;
@@ -18,7 +19,13 @@ interface AIChatWidgetProps {
   userId?: string;
 }
 
-const SESSION_STORAGE_KEY = 'kamhub_ai_session_id';
+const SESSION_STORAGE_KEY = 'tourhab_ai_session_id';
+
+function toAIRole(dbRole?: string): string {
+  if (dbRole === 'transfer_operator') return 'transfer';
+  const valid = ['tourist', 'operator', 'guide', 'admin', 'agent', 'transfer'];
+  return valid.includes(dbRole ?? '') ? dbRole! : 'tourist';
+}
 
 const CREW_KEYWORDS = ['вулкан','маршрут','тур','рыбалк','поход','термы','гейзер','планир','поездк','путешеств'];
 const CREW_STEPS = ['Анализирую запрос...', 'Ищу маршруты...', 'Составляю план...', 'Проверяю план...', 'Форматирую...'];
@@ -36,6 +43,8 @@ function createSessionId(): string {
 }
 
 export function AIChatWidget({ isOpen = false, onClose, className, userId }: AIChatWidgetProps) {
+  const { user } = useAuth();
+  const aiRole = toAIRole(user?.role);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -59,18 +68,28 @@ export function AIChatWidget({ isOpen = false, onClose, className, userId }: AIC
     setSessionId(nextId);
   }, []);
 
-  // Приветствие при открытии
+  // Приветствие при открытии — зависит от роли
+  const WELCOME: Record<string, string> = {
+    tourist:  'Привет! Помогу подобрать тур на Камчатку. Напишите даты, бюджет и интересы.',
+    operator: 'Добро пожаловать! Чем могу помочь с вашими турами или бронированиями?',
+    guide:    'Добро пожаловать! Готов помочь с маршрутами, безопасностью или работой с группами.',
+    admin:    'Добрый день! Готов помочь с аналитикой, модерацией или стратегическими вопросами платформы.',
+    agent:    'Добро пожаловать! Помогу подобрать туры для ваших клиентов или рассчитать групповое бронирование.',
+    transfer: 'Добро пожаловать! Помогу с планированием трансферов или координацией транспорта.',
+  };
+
   useEffect(() => {
     if (isOpen && messages.length === 0) {
       setMessages([
         {
           id: 'welcome',
-          text: 'Привет! Я помогу подобрать тур по Камчатке. Напишите даты, бюджет, количество человек и интересы.',
+          text: WELCOME[aiRole] ?? WELCOME.tourist,
           role: 'ai',
           timestamp: new Date(),
         },
       ]);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, messages.length]);
 
   // Автофокус при открытии
@@ -163,7 +182,7 @@ export function AIChatWidget({ isOpen = false, onClose, className, userId }: AIC
           body: JSON.stringify({
             message: text,
             sessionId: sessionId || createSessionId(),
-            role: 'tourist',
+            role: aiRole,
             userId: userId ?? null,
           }),
         });
@@ -245,8 +264,15 @@ export function AIChatWidget({ isOpen = false, onClose, className, userId }: AIC
             <div className="flex items-center gap-3">
               <Bot size={24} className="text-[var(--accent)]" aria-hidden="true" />
               <div>
-                <h3 className="text-lg font-semibold text-[var(--text-primary)]">AI-помощник Камчатки</h3>
-                <p className="text-sm text-[var(--text-muted)]">Спросите о турах и безопасности</p>
+                <h3 className="text-lg font-semibold text-[var(--text-primary)]">AI-помощник TourHab</h3>
+                <p className="text-sm text-[var(--text-muted)]">
+                  {aiRole === 'tourist' ? 'Туры и маршруты Камчатки' :
+                   aiRole === 'operator' ? 'Управление турами и бронированиями' :
+                   aiRole === 'guide' ? 'Маршруты, группы, безопасность' :
+                   aiRole === 'admin' ? 'Аналитика и управление платформой' :
+                   aiRole === 'agent' ? 'Подбор туров для клиентов' :
+                   'Трансферы и логистика'}
+                </p>
               </div>
             </div>
             <motion.button
