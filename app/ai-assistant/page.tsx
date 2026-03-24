@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Bot, Send, Loader2, User, Sun, Moon, MapPin, ChevronRight } from 'lucide-react';
 import Logo from '@/components/shared/Logo';
@@ -72,22 +72,19 @@ function TourCard({ tour }: { tour: TourSuggestion }) {
   );
 }
 
-export default function AIAssistantPage() {
+function AIAssistantContent({ initialQuery }: { initialQuery: string | null }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const { isDark, toggleTheme } = useTheme();
-  const searchParams = useSearchParams();
 
   // Auto-send query from hero search bar (?q=...)
   useEffect(() => {
-    const q = searchParams.get('q');
-    if (!q) return;
-    setInput(q);
-    // small delay so state settles before sending
+    if (!initialQuery) return;
+    setInput(initialQuery);
     const t = setTimeout(() => {
-      void sendMessage(q);
+      void sendMessage(initialQuery);
     }, 200);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -243,5 +240,18 @@ export default function AIAssistantPage() {
 
       <BottomNav activePath="/" />
     </div>
+  );
+}
+
+function AIAssistantPageInner() {
+  const searchParams = useSearchParams();
+  return <AIAssistantContent initialQuery={searchParams.get('q')} />;
+}
+
+export default function AIAssistantPage() {
+  return (
+    <Suspense fallback={<AIAssistantContent initialQuery={null} />}>
+      <AIAssistantPageInner />
+    </Suspense>
   );
 }
