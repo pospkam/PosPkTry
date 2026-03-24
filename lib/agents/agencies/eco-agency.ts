@@ -65,7 +65,7 @@ export class EcoAgency {
           AND ob.created_at >= NOW() - INTERVAL '30 days'
         WHERE ot.deleted_at IS NULL AND ot.is_active = true
         GROUP BY ark.activity_type
-        ORDER BY booking_count::int DESC
+        ORDER BY COUNT(DISTINCT ob.id) DESC
       `),
       pool.query<{ total_eco_points: string; eco_tourists: string }>(`
         SELECT
@@ -135,7 +135,7 @@ export class EcoAgency {
         AND ob.created_at >= NOW() - INTERVAL '30 days'
       WHERE ark.is_visible = true
       GROUP BY ark.zone
-      ORDER BY booking_count::int DESC
+      ORDER BY COUNT(DISTINCT ob.id) DESC
     `);
 
     const highRisk = rows.filter(r => r.risk_level.startsWith('высокий'));

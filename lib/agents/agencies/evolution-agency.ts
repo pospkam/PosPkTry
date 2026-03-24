@@ -87,7 +87,7 @@ export class EvolutionAgency {
           AND created_at >= NOW() - INTERVAL '7 days'
           AND metadata->>'decision' IS NOT NULL
         GROUP BY metadata->>'decision'
-        ORDER BY count::int DESC
+        ORDER BY COUNT(*) DESC
         LIMIT 15
       `),
       agentMemory.recall('director', 'decision', 3),
@@ -206,7 +206,7 @@ export class EvolutionAgency {
           AND metadata->>'decision' IS NOT NULL
           AND metadata->>'decision' != 'unknown'
         GROUP BY metadata->>'decision'
-        ORDER BY count::int DESC
+        ORDER BY COUNT(*) DESC
         LIMIT 5
       `),
       this.experiments.list('running'),

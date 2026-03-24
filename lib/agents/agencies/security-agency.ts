@@ -199,7 +199,7 @@ export class SecurityAgency {
   private async fullReport(): Promise<AgencyResult> {
     const { rows } = await pool.query<SecuritySummaryRow>(`
       SELECT
-        (SELECT COUNT(*)::text  FROM users WHERE deleted_at IS NULL)       AS total_users,
+        (SELECT COUNT(*)::text  FROM users)                                AS total_users,
         (SELECT COUNT(*)::text  FROM users
           WHERE created_at >= NOW() - INTERVAL '24 hours')                 AS new_users_24h,
         (SELECT COUNT(*)::text  FROM ai_actions_log

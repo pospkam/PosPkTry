@@ -233,9 +233,8 @@ export class LegalAgency {
         END AS issue
       FROM operator_bookings ob
       JOIN operator_tours ot ON ot.id = ob.operator_tour_id
-      JOIN partners p        ON p.id  = ob.operator_id
-      WHERE ob.deleted_at IS NULL
-        AND ob.created_at >= NOW() - INTERVAL '30 days'
+      JOIN partners p        ON p.id  = ot.operator_id
+      WHERE ob.created_at >= NOW() - INTERVAL '30 days'
         AND (
           (ob.booking_status = 'cancelled' AND ob.final_price > 0) OR
           (ob.booking_status = 'confirmed' AND ot.cancellation_policy IS NULL) OR

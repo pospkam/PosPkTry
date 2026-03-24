@@ -54,8 +54,8 @@ export class RescueAgency {
         SELECT
           id,
           user_id,
-          lat,
-          lng,
+          lat::float,
+          lng::float,
           status,
           created_at::text,
           ROUND(EXTRACT(EPOCH FROM (NOW() - created_at)) / 60)::int AS age_minutes

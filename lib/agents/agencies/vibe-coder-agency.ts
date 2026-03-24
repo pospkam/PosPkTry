@@ -87,7 +87,7 @@ export class VibeCoderAgency {
           WHERE created_at >= NOW() - INTERVAL '7 days'
           GROUP BY action_type
           HAVING COUNT(*) FILTER (WHERE metadata->>'error' IS NOT NULL) > 0
-          ORDER BY fail_count::int DESC
+          ORDER BY COUNT(*) FILTER (WHERE metadata->>'error' IS NOT NULL) DESC
           LIMIT 5
         `),
 

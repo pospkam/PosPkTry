@@ -103,7 +103,7 @@ export class InfraAgency {
           WHERE updated_at >= NOW() - INTERVAL '7 days'
           GROUP BY execution_status
           ORDER BY COUNT(*) DESC
-        `),
+        `).catch(() => ({ rows: [] as ExecutionStatsRow[] })),
 
         // Статистика совещаний (последние 10)
         pool.query<MeetingStatsRow>(`
