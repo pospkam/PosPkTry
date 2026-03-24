@@ -148,3 +148,8 @@ public/images/processed/
 .understand-anything/knowledge-graph.json
 .understand-anything/cache/
 .mcp.json
+
+# Marketplace research reports (screenshots + sensitive data)
+scripts/research/reports/*.json
+scripts/research/reports/*.md
+scripts/research/reports/screenshots/
