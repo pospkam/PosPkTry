@@ -652,6 +652,41 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
+    // /login — magic link для входа на сайт (только для привязанных admin/operator/guide)
+    if (text.startsWith('/login')) {
+      const linkedUser = await getUserByTelegramId(fromId);
+      if (!linkedUser) {
+        await sendHTML(chatId, [
+          '<b>Аккаунт не привязан.</b>',
+          '',
+          'Зарегистрируйся на <a href="https://tourhab.ru">tourhab.ru</a>',
+          'и привяжи Telegram в разделе Профиль.',
+        ].join('\n'));
+        return NextResponse.json({ ok: true });
+      }
+
+      // Генерируем magic token (15 минут)
+      const { SignJWT } = await import('jose');
+      const secret = new TextEncoder().encode('magic:' + (process.env.JWT_SECRET ?? ''));
+      const magicToken = await new SignJWT({ userId: linkedUser.id })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setExpirationTime('15m')
+        .sign(secret);
+
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://tourhab.ru';
+      const link = `${siteUrl}/api/auth/magic?token=${magicToken}`;
+
+      await sendHTML(chatId, [
+        `<b>Привет, ${linkedUser.name.split(' ')[0]}!</b>`,
+        '',
+        'Нажми кнопку ниже — войдёшь без пароля.',
+        '<i>Ссылка действует 15 минут.</i>',
+        '',
+        `<a href="${link}">Войти в систему →</a>`,
+      ].join('\n'));
+      return NextResponse.json({ ok: true });
+    }
+
     // /help
     if (text.startsWith('/help')) {
       const adminBlock = admin
