@@ -99,16 +99,28 @@ export default function RouteCard({ route }: { route: RouteItem }) {
     <article className="group">
       {/* ── Фото ─────────────────────────────────────────────────────────────── */}
       <Link href={`/routes/${route.id}`} className="block relative overflow-hidden rounded-lg" style={{ aspectRatio: '3/4' }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={image}
-          alt={route.title}
-          loading="lazy"
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-        />
-
-        {/* Градиент */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
+        {route.category === 'rybalka' ? (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={image}
+              alt={route.title}
+              loading="lazy"
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+            {/* Градиент */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
+          </>
+        ) : (
+          <>
+            <div
+              className="w-full h-full flex items-center justify-center bg-[var(--bg-hover)] transition-colors duration-200 group-hover:bg-[var(--border)]"
+            >
+              <Icon className="w-10 h-10 opacity-30" style={{ color: meta.accent }} />
+            </div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+          </>
+        )}
 
         {/* Категория — левый верх */}
         <span
