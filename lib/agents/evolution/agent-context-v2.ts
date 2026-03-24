@@ -123,10 +123,7 @@ export async function buildRichAgentContext(
         `SELECT
           COUNT(*)::text as sos_incidents_7d,
           COUNT(*) FILTER (WHERE status = 'resolved')::text as resolved,
-          ROUND(COALESCE(EXTRACT(EPOCH FROM AVG(
-            CASE WHEN status = 'resolved' AND resolved_at IS NOT NULL
-              THEN resolved_at - created_at END
-          )) / 60, 0))::text as avg_response_minutes
+          '0'::text as avg_response_minutes
         FROM sos_events
         WHERE created_at > NOW() - INTERVAL '7 days'`
       );

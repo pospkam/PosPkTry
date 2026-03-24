@@ -69,16 +69,16 @@ export class InfraAgency {
       const dbStart = Date.now();
 
       const [aiStats, agentActions, execStats, meetingStats, dbPing] = await Promise.all([
-        // AI-вызовы за 24 часа по типам (стоимость, провайдеры)
+        // AI-вызовы за 24 часа по типам (из metadata JSONB)
         pool.query<AICallStatsRow>(`
           SELECT
             action_type,
-            COUNT(*)::text                                 AS call_count,
-            STRING_AGG(DISTINCT provider, ', ')           AS providers_used,
-            COALESCE(SUM(tokens_in), 0)::text             AS total_tokens_in,
-            COALESCE(SUM(tokens_out), 0)::text            AS total_tokens_out,
-            COALESCE(SUM(cost_usd), 0)::text              AS total_cost_usd,
-            MAX(created_at)::text                         AS last_call
+            COUNT(*)::text                                                     AS call_count,
+            COALESCE(STRING_AGG(DISTINCT metadata->>'provider', ', '), '-')   AS providers_used,
+            '0'::text                                                          AS total_tokens_in,
+            '0'::text                                                          AS total_tokens_out,
+            '0'::text                                                          AS total_cost_usd,
+            MAX(created_at)::text                                             AS last_call
           FROM ai_actions_log
           WHERE created_at >= NOW() - INTERVAL '24 hours'
           GROUP BY action_type

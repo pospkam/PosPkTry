@@ -51,9 +51,10 @@ export async function callMiMo(messages: ChatMessage[]): Promise<string | null> 
 // Пробует несколько моделей по очереди — защита от rate limit одной модели.
 // Порядок: GPT-4o-mini → DeepSeek V3 → Claude Haiku (через OR-прокси, без геоблока)
 const OR_MODELS = [
-  { id: 'openai/gpt-4o-mini',                timeout: 15_000 },
-  { id: 'deepseek/deepseek-chat-v3-0324',    timeout: 15_000 },
-  { id: 'anthropic/claude-haiku-4-5',        timeout: 20_000 },
+  { id: 'openai/gpt-4o-mini',                timeout: 25_000 },
+  { id: 'deepseek/deepseek-chat-v3-0324',    timeout: 25_000 },
+  { id: 'google/gemini-2.0-flash-001',       timeout: 25_000 },
+  { id: 'anthropic/claude-haiku-4-5',        timeout: 25_000 },
 ];
 
 export async function callOpenrouter(messages: ChatMessage[]): Promise<string | null> {
@@ -81,8 +82,10 @@ export async function callOpenrouter(messages: ChatMessage[]): Promise<string | 
         signal: AbortSignal.timeout(timeout),
       });
 
-      if (!res.ok) continue; // следующая модель
+      if (!res.ok) continue; // next model
       const data = await res.json();
+      // OpenRouter can return 200 with error in body
+      if (data?.error) continue;
       const text: string | undefined = data?.choices?.[0]?.message?.content;
       if (text?.trim()) return text;
     } catch { continue; }

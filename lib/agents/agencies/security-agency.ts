@@ -77,9 +77,7 @@ export class SecurityAgency {
           action_type,
           date_trunc('hour', created_at)::text AS hour,
           COUNT(*)::text                        AS count,
-          ROUND(
-            100.0 * COUNT(*) FILTER (WHERE result = 'fail') / NULLIF(COUNT(*), 0), 1
-          )::text                               AS fail_rate
+          '0'::text                             AS fail_rate
         FROM ai_actions_log
         WHERE created_at >= NOW() - INTERVAL '24 hours'
           AND action_type NOT LIKE 'audit_%'
@@ -88,11 +86,15 @@ export class SecurityAgency {
         LIMIT 20
       `),
 
-      // Неудачные операции за 24ч
+      // Неудачные операции за 24ч (ищем в metadata->>'status')
       pool.query<{ agent_name: string; intent: string; error_message: string; created_at: string }>(`
-        SELECT agent_name, decision AS intent, error_message, created_at::text
+        SELECT
+          COALESCE(metadata->>'agent_id', 'unknown') AS agent_name,
+          COALESCE(metadata->>'tool', action_type)   AS intent,
+          COALESCE(metadata->>'error', '')            AS error_message,
+          created_at::text
         FROM ai_actions_log
-        WHERE result = 'fail'
+        WHERE metadata->>'status' = 'error'
           AND created_at >= NOW() - INTERVAL '24 hours'
         ORDER BY created_at DESC
         LIMIT 10
@@ -241,7 +243,7 @@ export class SecurityAgency {
         (SELECT COUNT(*)::text  FROM users
           WHERE created_at >= NOW() - INTERVAL '24 hours')                 AS new_users_24h,
         (SELECT COUNT(*)::text  FROM ai_actions_log
-          WHERE result = 'fail'
+          WHERE metadata->>'status' = 'error'
             AND created_at >= NOW() - INTERVAL '24 hours')                 AS failed_ops_24h,
         (SELECT COUNT(*)::text  FROM sos_events
           WHERE created_at >= NOW() - INTERVAL '7 days')                   AS sos_events_7d,

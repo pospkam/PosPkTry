@@ -48,8 +48,7 @@ export class EcoAgency {
 
   /** Экологическое воздействие по типам активности */
   private async impactReport(): Promise<AgencyResult> {
-    const [impact, ecoPoints] = await Promise.all([
-      pool.query<EcoImpactRow>(`
+    const impact = await pool.query<EcoImpactRow>(`
         SELECT
           COALESCE(ark.activity_type, 'не указан')          AS activity_type,
           COUNT(DISTINCT ot.id)::text                       AS tour_count,
@@ -71,16 +70,23 @@ export class EcoAgency {
         WHERE ot.deleted_at IS NULL AND ot.is_active = true
         GROUP BY ark.activity_type
         ORDER BY COUNT(DISTINCT ob.id) DESC
-      `),
-      pool.query<{ total_eco_points: string; eco_tourists: string }>(`
+      `);
+
+    // user_eco_points may not exist on production — safe fallback
+    let ep = { total_eco_points: '0', eco_tourists: '0' };
+    try {
+      const ecoResult = await pool.query<{ total_eco_points: string; eco_tourists: string }>(`
         SELECT
           COALESCE(SUM(total_points), 0)::text AS total_eco_points,
           COUNT(*)::text                        AS eco_tourists
         FROM user_eco_points
-      `),
-    ]);
+      `);
+      if (ecoResult.rows[0]) ep = ecoResult.rows[0];
+    } catch {
+      // table does not exist — use defaults
+    }
 
-    const ep = ecoPoints.rows[0];
+    // ep is set above with safe fallback
     const totalTourists = impact.rows.reduce((s, r) => s + parseInt(r.tourist_count, 10), 0);
     const avgEcoScore   = impact.rows.length > 0
       ? Math.round(impact.rows.reduce((s, r) => s + parseInt(r.eco_score, 10), 0) / impact.rows.length)
