@@ -2,9 +2,10 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Sun, Moon, UserCircle } from 'lucide-react';
+import { Sun, Moon, UserCircle, ShoppingCart } from 'lucide-react';
 import { useScrollY } from '@/hooks/useScrollY';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useCart } from '@/contexts/CartContext';
 import Logo from '@/components/shared/Logo';
 
 const FO = "var(--font-outfit,'Outfit',system-ui,sans-serif)";
@@ -13,6 +14,7 @@ export function Header() {
   const scrollY = useScrollY();
   const scrolled = scrollY > 60;
   const { isDark, toggleTheme } = useTheme();
+  const { count } = useCart();
 
   return (
     <header
@@ -71,6 +73,47 @@ export function Header() {
         >
           {isDark ? <Sun size={18} /> : <Moon size={18} />}
         </button>
+
+        {/* Cart */}
+        <Link
+          href="/hub/tourist/cart"
+          aria-label="Корзина"
+          style={{
+            position: 'relative',
+            width: '34px',
+            height: '34px',
+            borderRadius: '50%',
+            background: 'var(--kh-surface)',
+            border: '1px solid var(--kh-border)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'var(--kh-text-dim)',
+            textDecoration: 'none',
+          }}
+        >
+          <ShoppingCart size={18} />
+          {count > 0 && (
+            <span style={{
+              position: 'absolute',
+              top: '-4px',
+              right: '-4px',
+              minWidth: '16px',
+              height: '16px',
+              borderRadius: '8px',
+              background: 'var(--accent)',
+              color: '#fff',
+              fontSize: '10px',
+              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '0 3px',
+            }}>
+              {count}
+            </span>
+          )}
+        </Link>
 
         {/* User / ЛК */}
         <Link

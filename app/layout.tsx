@@ -95,6 +95,7 @@ import { ThemeProvider } from '@/contexts/ThemeContext'
 import { Toaster } from 'react-hot-toast'
 import YandexMetrika from '@/components/shared/YandexMetrika'
 import PageViewTracker from '@/components/shared/PageViewTracker'
+import { CartProvider } from '@/contexts/CartContext'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -104,7 +105,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <AuthProvider>
             <RoleProvider>
               <OrdersProvider>
+                <CartProvider>
                 {children}
+                </CartProvider>
                 <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
                 <PageViewTracker />
               </OrdersProvider>

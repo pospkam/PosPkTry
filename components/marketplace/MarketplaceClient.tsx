@@ -3,7 +3,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { MapPin, Users, ChevronRight, Heart } from 'lucide-react';
+import { MapPin, Users, ChevronRight, Heart, ShoppingCart, Check } from 'lucide-react';
+import { useCart } from '@/contexts/CartContext';
 
 interface Tour {
   id: number;
@@ -85,9 +86,27 @@ function TourCard({
   isLiked: boolean;
   onToggleLike: (tourId: number) => void;
 }) {
+  const { add, remove, has } = useCart();
+  const inCart = has(tour.id);
   const activityLabel = ACTIVITY_LABELS[tour.activity_type] ?? tour.activity_type;
   const locationLabel = LOCATION_LABELS[tour.location_type] ?? tour.location_type;
   const imageSrc = tour.tour_image ?? ACTIVITY_IMAGES[tour.activity_type] ?? '/images/activities/volcanoes.jpg';
+
+  const toggleCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (inCart) {
+      remove(tour.id);
+    } else {
+      add({
+        tourId: tour.id,
+        title: tour.title,
+        operatorName: tour.operator_name,
+        price: tour.base_price,
+        activityType: tour.activity_type,
+        image: tour.tour_image,
+      });
+    }
+  };
 
   return (
     <div className="ds-card overflow-hidden group flex flex-col hover:shadow-md transition-shadow duration-200 relative">
@@ -150,9 +169,22 @@ function TourCard({
               {tour.base_price.toLocaleString('ru-RU')} ₽
             </span>
           </div>
-          <span className="flex items-center gap-0.5 text-xs text-[var(--ocean)] font-medium group-hover:gap-1.5 transition-all">
-            Подробнее <ChevronRight className="w-3.5 h-3.5" />
-          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleCart}
+              title={inCart ? 'Убрать из корзины' : 'В корзину'}
+              className={`w-7 h-7 rounded-lg flex items-center justify-center border transition-all duration-150 ${
+                inCart
+                  ? 'bg-[var(--success)] border-[var(--success)] text-white'
+                  : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]'
+              }`}
+            >
+              {inCart ? <Check className="w-3.5 h-3.5" /> : <ShoppingCart className="w-3.5 h-3.5" />}
+            </button>
+            <span className="flex items-center gap-0.5 text-xs text-[var(--ocean)] font-medium group-hover:gap-1.5 transition-all">
+              Подробнее <ChevronRight className="w-3.5 h-3.5" />
+            </span>
+          </div>
         </div>
       </Link>
     </div>
