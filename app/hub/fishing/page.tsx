@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { pool } from '@/lib/db-pool';
 import { FishingPageClient } from './_FishingPageClient';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Рыбалка на Камчатке — туры от профессионалов | KamchatourHub',
   description: 'Рыболовные туры на Камчатке: лосось, кижуч, чавыча, нерка. Зимняя и летняя рыбалка на реке Камчатка. Профессиональные гиды, снаряжение включено. Бронирование онлайн.',
