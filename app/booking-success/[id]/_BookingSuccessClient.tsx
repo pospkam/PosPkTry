@@ -78,7 +78,7 @@ export default function BookingSuccessClient() {
               <p className="text-xs text-[var(--text-muted)] mb-2">Статус</p>
               <div className="flex items-center gap-3">
                 <div className="w-3 h-3 rounded-full bg-[var(--success)]" />
-                <p className="text-[var(--text-primary)] font-semibold">Подтвержено</p>
+                <p className="text-[var(--text-primary)] font-semibold">Подтверждено</p>
               </div>
             </div>
 
