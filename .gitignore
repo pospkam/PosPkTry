@@ -147,3 +147,4 @@ public/images/processed/
 # Understand Anything generated artifacts
 .understand-anything/knowledge-graph.json
 .understand-anything/cache/
+.mcp.json

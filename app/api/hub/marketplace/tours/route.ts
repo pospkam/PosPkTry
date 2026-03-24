@@ -67,13 +67,16 @@ export async function GET(req: NextRequest) {
 
     const result = await pool.query(query, params);
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       success: true,
       tours: result.rows,
       count: result.rows.length,
       limit,
       offset
     });
+    // Публичные данные — кешируем в браузере и CDN
+    res.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
+    return res;
   } catch (err) {
     return NextResponse.json(
       { error: 'Failed to fetch tours' },
