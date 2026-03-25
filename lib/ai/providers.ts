@@ -13,10 +13,11 @@
  */
 
 import type { ChatMessage } from '@/lib/ai/prompts';
+import { getOpenRouterKey, getMiMoKey, getDeepSeekKey, getAnthropicKey, getXaiKey, getGeminiKey, getYandexKey } from '@/lib/ai/provider-config';
 
 // ── Xiaomi MiMo-V2-Pro ────────────────────────────────────────
 export async function callMiMo(messages: ChatMessage[]): Promise<string | null> {
-  const apiKey = process.env.XIAOMI_API_KEY;
+  const apiKey = getMiMoKey();
   if (!apiKey) return null;
 
   try {
@@ -58,7 +59,7 @@ const OR_MODELS = [
 ];
 
 export async function callOpenrouter(messages: ChatMessage[]): Promise<string | null> {
-  const apiKey = process.env.OR_API_KEY || process.env.OR_API_KEY || process.env.OPENROUTER_API_KEY;
+  const apiKey = getOpenRouterKey();
   if (!apiKey) return null;
 
   const payload = messages.map(({ role, content }) => ({ role, content }));
@@ -84,10 +85,9 @@ export async function callOpenrouter(messages: ChatMessage[]): Promise<string | 
 
       if (!res.ok) continue; // next model
       const data = await res.json();
-      // OpenRouter can return 200 with error in body
-      if (data?.error) continue;
       const text: string | undefined = data?.choices?.[0]?.message?.content;
       if (text?.trim()) return text;
+      // No valid content — try next model
     } catch { continue; }
   }
 
@@ -135,7 +135,7 @@ export async function callMinimax(messages: ChatMessage[]): Promise<string | nul
 
 // ── xAI (Grok) ────────────────────────────────────────────────
 export async function callXai(messages: ChatMessage[]): Promise<string | null> {
-  const apiKey = process.env.XAI_API_KEY;
+  const apiKey = getXaiKey();
   if (!apiKey) return null;
 
   try {
@@ -167,7 +167,7 @@ export async function callXai(messages: ChatMessage[]): Promise<string | null> {
 
 // ── Anthropic Claude (direct API) ───────────────────────────
 export async function callAnthropic(messages: ChatMessage[]): Promise<string | null> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = getAnthropicKey();
   if (!apiKey) return null;
 
   try {
@@ -229,9 +229,9 @@ export async function callAnthropic(messages: ChatMessage[]): Promise<string | n
 // Лучший по русскому языку. Без геоблока для России.
 // Env: YANDEX_API_KEY (Api-Key), YANDEX_FOLDER_ID (каталог YC)
 export async function callYandexGPT(messages: ChatMessage[]): Promise<string | null> {
-  const apiKey   = process.env.YANDEX_API_KEY;
-  const folderId = process.env.YANDEX_FOLDER_ID;
-  if (!apiKey || !folderId) return null;
+  const yandex = getYandexKey();
+  if (!yandex) return null;
+  const { apiKey, folderId } = yandex;
 
   try {
     // YandexGPT использует `text` вместо `content`
@@ -281,7 +281,7 @@ export async function callYandexGPT(messages: ChatMessage[]): Promise<string | n
 
 // ── Google Gemini (via OpenRouter) ────────────────────────────
 export async function callGemini(messages: ChatMessage[]): Promise<string | null> {
-  const apiKey = process.env.OR_API_KEY || process.env.OPENROUTER_API_KEY;
+  const apiKey = getOpenRouterKey();
   if (!apiKey) return null;
 
   try {
@@ -323,7 +323,7 @@ export async function callGemini(messages: ChatMessage[]): Promise<string | null
 
 // ── DeepSeek (direct API) ──────────────────────────────────────
 export async function callDeepSeek(messages: ChatMessage[]): Promise<string | null> {
-  const apiKey = process.env.DEEPSEEK_API_KEY;
+  const apiKey = getDeepSeekKey();
   if (!apiKey) return null;
 
   try {
@@ -351,7 +351,7 @@ export async function callDeepSeek(messages: ChatMessage[]): Promise<string | nu
 
 // ── Google Gemini (direct API) ─────────────────────────────────
 export async function callGeminiDirect(messages: ChatMessage[]): Promise<string | null> {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = getGeminiKey();
   if (!apiKey) return null;
 
   try {
@@ -412,7 +412,7 @@ export interface OpenRouterBalance {
  */
 export async function checkOpenRouterBalance(): Promise<OpenRouterBalance | null> {
   const mgmtKey = process.env.OPENROUTER_MANAGEMENT_KEY;
-  const apiKey  = process.env.OR_API_KEY || process.env.OPENROUTER_API_KEY;
+  const apiKey  = getOpenRouterKey();
 
   // ── Вариант 1: management key → /api/v1/credits ──────────────
   if (mgmtKey) {
@@ -513,7 +513,7 @@ export async function preflightProviders(): Promise<{
   }
 
   async function probeOpenrouter() {
-    const apiKey = process.env.OR_API_KEY || process.env.OPENROUTER_API_KEY;
+    const apiKey = getOpenRouterKey();
     if (!apiKey) return { ok: false, error: 'OPENROUTER_API_KEY not set' };
     try {
       const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -620,7 +620,7 @@ export async function callAIFast(messages: ChatMessage[]): Promise<string> {
   if (mimo) return mimo;
 
   // Попытка 2: DeepSeek через OpenRouter
-  const apiKey = process.env.OR_API_KEY || process.env.OPENROUTER_API_KEY;
+  const apiKey = getOpenRouterKey();
   if (apiKey) {
     try {
       const payload = messages.map(({ role, content }) => ({ role, content }));
@@ -708,7 +708,7 @@ export async function callAIWaterfallDebug(messages: ChatMessage[]): Promise<Wat
 
   // 2. OpenRouter (each model)
   {
-    const apiKey = process.env.OR_API_KEY || process.env.OPENROUTER_API_KEY;
+    const apiKey = getOpenRouterKey();
     if (!apiKey) {
       results.push({ provider: 'openrouter', model: 'all', status: 'no_key', latency_ms: 0 });
     } else {
