@@ -84,20 +84,21 @@ export class LegalAgency {
         p.name                                                          AS operator,
         ot.base_price,
         (ot.description IS NOT NULL AND length(ot.description) >= 100) AS has_description,
-        (ot.cancellation_policy IS NOT NULL
-          AND length(ot.cancellation_policy) > 10)                     AS has_cancellation_policy,
+        (os.cancellation_policy IS NOT NULL
+          AND length(os.cancellation_policy) > 10)                     AS has_cancellation_policy,
         (ot.min_participants IS NOT NULL AND ot.min_participants > 0)   AS has_min_participants,
         (ot.duration_hours IS NOT NULL AND ot.duration_hours > 0)      AS has_duration,
         ot.is_published,
         (
           CASE WHEN ot.description IS NOT NULL AND length(ot.description) >= 100 THEN 0 ELSE 2 END +
-          CASE WHEN ot.cancellation_policy IS NOT NULL AND length(ot.cancellation_policy) > 10 THEN 0 ELSE 3 END +
+          CASE WHEN os.cancellation_policy IS NOT NULL AND length(os.cancellation_policy) > 10 THEN 0 ELSE 3 END +
           CASE WHEN ot.min_participants IS NOT NULL THEN 0 ELSE 1 END +
           CASE WHEN ot.duration_hours IS NOT NULL   THEN 0 ELSE 1 END +
           CASE WHEN ot.base_price IS NOT NULL AND ot.base_price > 0 THEN 0 ELSE 3 END
         ) AS risk_score
       FROM operator_tours ot
       JOIN partners p ON p.id = ot.operator_id
+      LEFT JOIN operator_settings os ON os.user_id = p.user_id
       WHERE ot.deleted_at IS NULL AND ot.is_active = true
       ORDER BY risk_score DESC, ot.is_published DESC
       LIMIT 15
@@ -148,18 +149,20 @@ export class LegalAgency {
       pool.query<ComplianceSummaryRow>(`
         SELECT
           COUNT(*)::text                                              AS total_tours,
-          COUNT(*) FILTER (WHERE is_published)::text                 AS published_tours,
-          COUNT(*) FILTER (WHERE base_price IS NULL OR base_price = 0)::text AS no_price,
-          COUNT(*) FILTER (WHERE description IS NULL
-                             OR length(description) < 50)::text     AS no_description,
-          COUNT(*) FILTER (WHERE duration_hours IS NULL)::text       AS no_duration,
-          COUNT(*) FILTER (WHERE cancellation_policy IS NULL
-                             OR length(cancellation_policy) < 10)::text AS no_cancellation,
+          COUNT(*) FILTER (WHERE ot.is_published)::text              AS published_tours,
+          COUNT(*) FILTER (WHERE ot.base_price IS NULL OR ot.base_price = 0)::text AS no_price,
+          COUNT(*) FILTER (WHERE ot.description IS NULL
+                             OR length(ot.description) < 50)::text   AS no_description,
+          COUNT(*) FILTER (WHERE ot.duration_hours IS NULL)::text    AS no_duration,
+          COUNT(*) FILTER (WHERE os.cancellation_policy IS NULL
+                             OR length(os.cancellation_policy) < 10)::text AS no_cancellation,
           (SELECT COUNT(*)::text FROM partners
             WHERE type = 'operator' AND deleted_at IS NULL
               AND (contacts IS NULL OR contacts->>'phone' IS NULL))  AS operators_without_contacts
-        FROM operator_tours
-        WHERE deleted_at IS NULL AND is_active = true
+        FROM operator_tours ot
+        JOIN partners p ON p.id = ot.operator_id
+        LEFT JOIN operator_settings os ON os.user_id = p.user_id
+        WHERE ot.deleted_at IS NULL AND ot.is_active = true
       `),
       pool.query<{ id: number; name: string; issue: string }>(`
         SELECT p.id, p.name,
@@ -167,20 +170,15 @@ export class LegalAgency {
             CASE WHEN p.contacts IS NULL OR p.contacts->>'phone' IS NULL
                  THEN 'нет телефона' END,
             CASE WHEN p.is_public = false THEN 'профиль скрыт' END,
-            CASE WHEN (SELECT COUNT(*) FROM operator_tours ot
-                       WHERE ot.operator_id = p.id AND ot.deleted_at IS NULL
-                         AND ot.cancellation_policy IS NULL) > 0
-                 THEN 'туры без политики отмены' END
+            CASE WHEN os.cancellation_policy IS NULL
+                 THEN 'нет политики отмены' END
           ) AS issue
         FROM partners p
+        LEFT JOIN operator_settings os ON os.user_id = p.user_id
         WHERE p.type = 'operator' AND p.deleted_at IS NULL
           AND (
             p.contacts IS NULL OR p.contacts->>'phone' IS NULL OR p.is_public = false OR
-            EXISTS (
-              SELECT 1 FROM operator_tours ot
-              WHERE ot.operator_id = p.id AND ot.deleted_at IS NULL
-                AND ot.cancellation_policy IS NULL AND ot.is_active = true
-            )
+            os.cancellation_policy IS NULL
           )
         ORDER BY p.name
         LIMIT 10
@@ -246,7 +244,7 @@ export class LegalAgency {
         CASE
           WHEN ob.booking_status = 'cancelled' AND ob.final_price > 0
                THEN 'отмена без возврата'
-          WHEN ob.booking_status = 'confirmed' AND ot.cancellation_policy IS NULL
+          WHEN ob.booking_status = 'confirmed' AND os.cancellation_policy IS NULL
                THEN 'нет политики отмены'
           WHEN ob.final_price IS NULL OR ob.final_price = 0
                THEN 'нет суммы оплаты'
@@ -255,10 +253,11 @@ export class LegalAgency {
       FROM operator_bookings ob
       JOIN operator_tours ot ON ot.id = ob.operator_tour_id
       JOIN partners p        ON p.id  = ot.operator_id
+      LEFT JOIN operator_settings os ON os.user_id = p.user_id
       WHERE ob.created_at >= NOW() - INTERVAL '30 days'
         AND (
           (ob.booking_status = 'cancelled' AND ob.final_price > 0) OR
-          (ob.booking_status = 'confirmed' AND ot.cancellation_policy IS NULL) OR
+          (ob.booking_status = 'confirmed' AND os.cancellation_policy IS NULL) OR
           (ob.final_price IS NULL OR ob.final_price = 0)
         )
       ORDER BY ob.created_at DESC

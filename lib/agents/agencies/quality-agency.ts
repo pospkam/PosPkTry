@@ -174,7 +174,7 @@ export class QualityAgency {
             AND ob.booking_status IN ('confirmed','completed')
         )::text, '0')                                               AS revenue_30d,
         COUNT(DISTINCT ta.date) FILTER (
-          WHERE ta.date >= CURRENT_DATE AND ta.is_available = true
+          WHERE ta.date >= CURRENT_DATE AND ta.is_cancelled = false
         )::text                                                     AS slots_ahead
       FROM partners p
       LEFT JOIN operator_tours ot ON ot.operator_id = p.id AND ot.deleted_at IS NULL

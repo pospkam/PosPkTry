@@ -225,7 +225,7 @@ export class AdminAgency {
           WHERE a.operator_tour_id = t.id
             AND a.date >= $1::date
             AND a.date < ($1::date + INTERVAL '1 month')
-            AND a.is_available = TRUE
+            AND a.is_cancelled = FALSE
         )
       LIMIT 5
     `, [dateStr]);

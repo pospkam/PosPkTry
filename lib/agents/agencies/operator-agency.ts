@@ -81,7 +81,7 @@ export class OperatorAgency {
         t.base_price,
         COUNT(b.id) FILTER (WHERE b.booking_status NOT IN ('cancelled') AND b.deleted_at IS NULL)::text AS bookings_count,
         MIN(a.date)::text  AS next_date,
-        SUM(a.available_slots) FILTER (WHERE a.is_available = TRUE AND a.date >= NOW()::date)::text AS available_slots
+        SUM(a.available_slots) FILTER (WHERE a.is_cancelled = FALSE AND a.date >= NOW()::date)::text AS available_slots
       FROM operator_tours t
       LEFT JOIN operator_bookings b  ON b.operator_tour_id = t.id
       LEFT JOIN tour_availability  a ON a.operator_tour_id = t.id AND a.date >= NOW()::date
@@ -279,8 +279,8 @@ export class OperatorAgency {
     let inserted = 0;
     for (const date of dates) {
       const { rowCount } = await pool.query(
-        `INSERT INTO tour_availability (operator_tour_id, date, available_slots, booked_slots, is_available)
-         VALUES ($1, $2, $3, 0, true)
+        `INSERT INTO tour_availability (operator_tour_id, date, available_slots, booked_slots, is_cancelled)
+         VALUES ($1, $2, $3, 0, false)
          ON CONFLICT (operator_tour_id, date) DO NOTHING`,
         [tourId, date, slots]
       );

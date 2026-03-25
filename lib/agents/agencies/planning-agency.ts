@@ -138,7 +138,7 @@ export class PlanningAgency {
         COUNT(DISTINCT l.id)::text                                 AS demand_leads,
         COUNT(DISTINCT ot.id)::text                                AS tours_active,
         COALESCE(SUM(
-          CASE WHEN ta.date >= CURRENT_DATE AND ta.is_available = true
+          CASE WHEN ta.date >= CURRENT_DATE AND ta.is_cancelled = false
             THEN ta.available_slots - COALESCE(ta.booked_slots, 0)
           ELSE 0 END
         ), 0)::text                                                AS slots_ahead
