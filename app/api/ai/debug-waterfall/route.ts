@@ -15,14 +15,15 @@ export async function GET(request: NextRequest) {
 
   // Public mode: just show which env keys are set (no secrets exposed)
   if (mode === 'env') {
-    const orKey = process.env.OPENROUTER_API_KEY || '';
+    const orKey = process.env.OR_API_KEY || process.env.OPENROUTER_API_KEY || '';
     return NextResponse.json({
       env_keys: {
         CRON_SECRET: !!process.env.CRON_SECRET,
         XIAOMI_API_KEY: !!process.env.XIAOMI_API_KEY,
+        OR_API_KEY: !!process.env.OR_API_KEY,
         OPENROUTER_API_KEY: !!process.env.OPENROUTER_API_KEY,
-        OPENROUTER_KEY_PREFIX: orKey.slice(0, 12) + '...',
-        OPENROUTER_KEY_LENGTH: orKey.length,
+        ACTIVE_OR_KEY_PREFIX: orKey.slice(0, 12) + '...',
+        ACTIVE_OR_KEY_LENGTH: orKey.length,
         YANDEX_API_KEY: !!process.env.YANDEX_API_KEY,
         DEEPSEEK_API_KEY: !!process.env.DEEPSEEK_API_KEY,
         GEMINI_API_KEY: !!process.env.GEMINI_API_KEY,

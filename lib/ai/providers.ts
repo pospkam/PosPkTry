@@ -58,7 +58,7 @@ const OR_MODELS = [
 ];
 
 export async function callOpenrouter(messages: ChatMessage[]): Promise<string | null> {
-  const apiKey = process.env.OPENROUTER_API_KEY;
+  const apiKey = process.env.OR_API_KEY || process.env.OR_API_KEY || process.env.OPENROUTER_API_KEY;
   if (!apiKey) return null;
 
   const payload = messages.map(({ role, content }) => ({ role, content }));
@@ -281,7 +281,7 @@ export async function callYandexGPT(messages: ChatMessage[]): Promise<string | n
 
 // ── Google Gemini (via OpenRouter) ────────────────────────────
 export async function callGemini(messages: ChatMessage[]): Promise<string | null> {
-  const apiKey = process.env.OPENROUTER_API_KEY;
+  const apiKey = process.env.OR_API_KEY || process.env.OPENROUTER_API_KEY;
   if (!apiKey) return null;
 
   try {
@@ -412,7 +412,7 @@ export interface OpenRouterBalance {
  */
 export async function checkOpenRouterBalance(): Promise<OpenRouterBalance | null> {
   const mgmtKey = process.env.OPENROUTER_MANAGEMENT_KEY;
-  const apiKey  = process.env.OPENROUTER_API_KEY;
+  const apiKey  = process.env.OR_API_KEY || process.env.OPENROUTER_API_KEY;
 
   // ── Вариант 1: management key → /api/v1/credits ──────────────
   if (mgmtKey) {
@@ -513,7 +513,7 @@ export async function preflightProviders(): Promise<{
   }
 
   async function probeOpenrouter() {
-    const apiKey = process.env.OPENROUTER_API_KEY;
+    const apiKey = process.env.OR_API_KEY || process.env.OPENROUTER_API_KEY;
     if (!apiKey) return { ok: false, error: 'OPENROUTER_API_KEY not set' };
     try {
       const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -620,7 +620,7 @@ export async function callAIFast(messages: ChatMessage[]): Promise<string> {
   if (mimo) return mimo;
 
   // Попытка 2: DeepSeek через OpenRouter
-  const apiKey = process.env.OPENROUTER_API_KEY;
+  const apiKey = process.env.OR_API_KEY || process.env.OPENROUTER_API_KEY;
   if (apiKey) {
     try {
       const payload = messages.map(({ role, content }) => ({ role, content }));
@@ -708,7 +708,7 @@ export async function callAIWaterfallDebug(messages: ChatMessage[]): Promise<Wat
 
   // 2. OpenRouter (each model)
   {
-    const apiKey = process.env.OPENROUTER_API_KEY;
+    const apiKey = process.env.OR_API_KEY || process.env.OPENROUTER_API_KEY;
     if (!apiKey) {
       results.push({ provider: 'openrouter', model: 'all', status: 'no_key', latency_ms: 0 });
     } else {
