@@ -11,7 +11,29 @@ import { getSystemPrompt } from '@/lib/ai/prompts';
 import type { ChatMessage } from '@/lib/ai/prompts';
 
 export async function GET(request: NextRequest) {
-  // Simple secret check — no cookie/JWT needed
+  const mode = request.nextUrl.searchParams.get('check');
+
+  // Public mode: just show which env keys are set (no secrets exposed)
+  if (mode === 'env') {
+    const orKey = process.env.OPENROUTER_API_KEY || '';
+    return NextResponse.json({
+      env_keys: {
+        CRON_SECRET: !!process.env.CRON_SECRET,
+        XIAOMI_API_KEY: !!process.env.XIAOMI_API_KEY,
+        OPENROUTER_API_KEY: !!process.env.OPENROUTER_API_KEY,
+        OPENROUTER_KEY_PREFIX: orKey.slice(0, 12) + '...',
+        OPENROUTER_KEY_LENGTH: orKey.length,
+        YANDEX_API_KEY: !!process.env.YANDEX_API_KEY,
+        DEEPSEEK_API_KEY: !!process.env.DEEPSEEK_API_KEY,
+        GEMINI_API_KEY: !!process.env.GEMINI_API_KEY,
+        XAI_API_KEY: !!process.env.XAI_API_KEY,
+        ANTHROPIC_API_KEY: !!process.env.ANTHROPIC_API_KEY,
+      },
+      node_env: process.env.NODE_ENV,
+    });
+  }
+
+  // Full diagnostic mode: requires CRON_SECRET
   const secret = request.nextUrl.searchParams.get('secret');
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret || secret !== cronSecret) {
