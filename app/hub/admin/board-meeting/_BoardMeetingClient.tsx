@@ -632,7 +632,10 @@ export default function BoardMeetingClient() {
         }
         const available = pfData.providers.filter(p => p.available);
         const unavailable = pfData.providers.filter(p => !p.available);
-        if (available.length < 2) {
+        const orAvailable = available.some(p => p.id === 'openrouter');
+        // Предупреждаем только если OpenRouter недоступен —
+        // он единственный хаб для всех 13 агентов (все модели роутятся через него)
+        if (!orAvailable && available.length < 2) {
           const failInfo = unavailable.map(p => `${p.name}: ${p.error ?? 'нет ответа'}`).join('; ');
           setPreflightWarning(`Доступен только 1 провайдер: ${available[0]?.name}. Остальные: ${failInfo}`);
         }
