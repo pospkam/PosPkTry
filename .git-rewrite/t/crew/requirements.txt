@@ -1,3 +1,0 @@
-crewai
-crewai-tools
-llama-index
