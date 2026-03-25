@@ -39,14 +39,14 @@ export function HeroSection() {
         className="object-cover object-center opacity-0 dark:opacity-100 transition-opacity duration-700"
       />
 
-      {/* Gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/15" />
+      {/* Gradient overlay — stronger in center for text readability */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/20" />
 
       {/* Centered content */}
       <div className="relative z-10 flex flex-col items-center text-center px-5 max-w-3xl">
 
         {/* Coordinates */}
-        <p className="text-[10px] font-medium uppercase tracking-[6px] text-[rgba(255,255,255,0.4)] mb-8">
+        <p className="text-[10px] font-medium uppercase tracking-[6px] text-[rgba(255,255,255,0.55)] mb-8">
           52°N · Камчатка · Россия
         </p>
 
@@ -63,7 +63,10 @@ export function HeroSection() {
         </h1>
 
         {/* Subtitle */}
-        <p className="text-[rgba(255,255,255,0.7)] text-base md:text-lg mb-10 max-w-md leading-relaxed font-light">
+        <p
+          className="text-[rgba(255,255,255,0.85)] text-base md:text-lg mb-10 max-w-md leading-relaxed font-light"
+          style={{ textShadow: '0 2px 16px rgba(0,0,0,0.6)' }}
+        >
           AI-помощник подберёт маршрут за минуту.
           Вулканы, медведи, океан — всё настоящее.
         </p>
@@ -98,7 +101,7 @@ export function HeroSection() {
               key={chip}
               type="button"
               onClick={() => submit(chip)}
-              className="text-xs text-[rgba(255,255,255,0.75)] border border-[rgba(255,255,255,0.2)] rounded-full px-4 py-1.5 hover:bg-[rgba(255,255,255,0.15)] hover:text-white transition-all"
+              className="text-xs text-[rgba(255,255,255,0.85)] border border-[rgba(255,255,255,0.25)] rounded-full px-4 py-1.5 hover:bg-[rgba(255,255,255,0.15)] hover:text-white transition-all"
             >
               {chip}
             </button>
@@ -108,7 +111,7 @@ export function HeroSection() {
 
       {/* Scroll indicator */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 animate-bounce">
-        <ChevronDown className="w-5 h-5 text-[rgba(255,255,255,0.4)]" />
+        <ChevronDown className="w-5 h-5 text-[rgba(255,255,255,0.5)]" />
       </div>
     </section>
   );
