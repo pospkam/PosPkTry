@@ -73,7 +73,7 @@ export function HeroSection() {
 
         {/* AI Search bar */}
         <div className="w-full max-w-xl mb-6">
-          <div className="flex items-center gap-3 bg-white/95 dark:bg-[#21262D]/95 rounded-full px-5 py-3.5 shadow-2xl">
+          <div className="flex items-center gap-3 bg-[var(--bg-card)]/95 rounded-full px-5 py-3.5 shadow-2xl">
             <Sparkles className="w-5 h-5 text-[var(--accent)] flex-shrink-0" />
             <input
               type="text"

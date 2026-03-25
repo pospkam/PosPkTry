@@ -125,10 +125,10 @@
 /* Glow-pulse для активных элементов */
 @keyframes khGlowPulse {
   0%, 100% {
-    box-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
+    box-shadow: 0 0 8px rgba(212, 74, 12, 0.3);
   }
   50% {
-    box-shadow: 0 0 20px rgba(0, 212, 255, 0.6);
+    box-shadow: 0 0 20px rgba(212, 74, 12, 0.6);
   }
 }
 
@@ -195,16 +195,16 @@ a:focus-visible {
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.05);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.15);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.25);
 }
 
 /* Анимация мерцания звёзд */
@@ -225,7 +225,7 @@ a:focus-visible {
 
 /* Shimmer skeleton */
 .skeleton {
-  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-hover) 50%, var(--bg-card) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
@@ -316,8 +316,8 @@ a:focus-visible {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: #21262D;
-  border: 1px solid rgba(255,255,255,0.08);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 0.25rem 0.5rem;
 }
@@ -403,13 +403,13 @@ a:focus-visible {
   transition: all 0.15s;
 }
 .activity-chip:hover {
-  border-color: var(--accent, #00D4FF);
-  color: var(--accent, #00D4FF);
+  border-color: var(--accent, #D44A0C);
+  color: var(--accent, #D44A0C);
 }
 .activity-chip.active {
-  background: var(--accent-muted, rgba(0,212,255,0.1));
-  border-color: var(--accent, #00D4FF);
-  color: var(--accent, #00D4FF);
+  background: var(--accent-muted, rgba(212,74,12,0.1));
+  border-color: var(--accent, #D44A0C);
+  color: var(--accent, #D44A0C);
 }
 
 .advanced-filters {
@@ -538,7 +538,7 @@ a:focus-visible {
   margin-top: 0.5rem;
   font-size: 1rem;
   font-weight: 700;
-  color: var(--accent, #00D4FF);
+  color: var(--accent, #D44A0C);
 }
 
 .search-loading {
@@ -553,7 +553,7 @@ a:focus-visible {
   width: 24px;
   height: 24px;
   border: 2px solid var(--border, rgba(255,255,255,0.08));
-  border-top-color: var(--accent, #00D4FF);
+  border-top-color: var(--accent, #D44A0C);
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
 }
@@ -583,7 +583,7 @@ a:focus-visible {
 .try-ai-btn {
   padding: 0.5rem 1rem;
   border-radius: var(--radius-md, 12px);
-  background: var(--accent, #00D4FF);
+  background: var(--accent, #D44A0C);
   color: #fff;
   font-size: 0.8125rem;
   font-weight: 500;
@@ -678,8 +678,8 @@ a:focus-visible {
   transition: all 0.15s;
 }
 .ai-example-chips button:hover {
-  border-color: var(--accent, #00D4FF);
-  color: var(--accent, #00D4FF);
+  border-color: var(--accent, #D44A0C);
+  color: var(--accent, #D44A0C);
 }
 .ai-input {
   width: 100%;
@@ -700,7 +700,7 @@ a:focus-visible {
   min-height: 44px;
   padding: 0.5rem 1rem;
   border-radius: var(--radius-md, 12px);
-  background: var(--accent, #00D4FF);
+  background: var(--accent, #D44A0C);
   color: #fff;
   font-size: 0.875rem;
   font-weight: 500;
@@ -718,7 +718,7 @@ a:focus-visible {
   animation: spin 0.6s linear infinite;
 }
 .ai-response {
-  background: var(--accent-muted, rgba(0,212,255,0.1));
+  background: var(--accent-muted, rgba(212,74,12,0.1));
   border-radius: var(--radius-md, 12px);
   padding: 0.75rem;
 }
@@ -728,7 +728,7 @@ a:focus-visible {
 .ai-badge {
   font-size: 0.6875rem;
   font-weight: 600;
-  color: var(--accent, #00D4FF);
+  color: var(--accent, #D44A0C);
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
@@ -885,13 +885,13 @@ body {
 
 /* Scrollbar pod temnuyu/svetluyu temu */
 :root[data-theme="light"] ::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(0, 0, 0, 0.03);
 }
 :root[data-theme="light"] ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.15);
 }
 :root[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(0, 0, 0, 0.25);
 }
 
 /* ===== Star field effect for hero section ===== */

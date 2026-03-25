@@ -75,6 +75,8 @@ const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/mig064': ['GET'],             // migration 064: agent_memory
   '/api/hub/marketplace/tours': ['GET'], // публичный каталог туров маршрутплейса
   '/api/channels/avito/feed':  ['GET'], // Avito Autoload XML feed — публичный
+  '/api/widget': ['POST', 'GET', 'OPTIONS'],    // Partner widget API — CORS-enabled
+  '/api/mig082': ['GET'],             // migration 082: widget_partners
 };
 
 const API_ROLE_REQUIREMENTS: Record<string, AuthRole> = {
@@ -138,18 +140,31 @@ function extractBearerToken(authHeader: string | null): string | null {
   return trimmedHeader.slice(7).trim() || null;
 }
 
-function applySecurityHeaders(response: NextResponse): NextResponse {
+function applySecurityHeaders(response: NextResponse, pathname?: string): NextResponse {
   response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-XSS-Protection', '1; mode=block');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
 
+  // Widget paths: allow iframe embedding
+  if (pathname && (pathname.startsWith('/widget/') || pathname.startsWith('/api/widget'))) {
+    response.headers.set('X-Frame-Options', 'ALLOWALL');
+  } else {
+    response.headers.set('X-Frame-Options', 'DENY');
+  }
+
   // Content Security Policy (базовый)
   if (process.env.NODE_ENV === 'production') {
-    response.headers.set(
-      'Content-Security-Policy',
-      "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:;"
-    );
+    if (pathname && pathname.startsWith('/widget/')) {
+      response.headers.set(
+        'Content-Security-Policy',
+        "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; frame-ancestors *;"
+      );
+    } else {
+      response.headers.set(
+        'Content-Security-Policy',
+        "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:;"
+      );
+    }
   }
 
   return response;
@@ -206,7 +221,8 @@ export async function middleware(request: NextRequest) {
 
     if (!success) {
       return applySecurityHeaders(
-        NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+        NextResponse.json({ error: 'Too many requests' }, { status: 429 }),
+        request.nextUrl.pathname
       );
     }
   }
@@ -216,17 +232,17 @@ export async function middleware(request: NextRequest) {
 
   // MCP server — public, no auth required (Timeweb AI agent calls this)
   if (pathname.startsWith('/api/mcp')) {
-    return applySecurityHeaders(NextResponse.next());
+    return applySecurityHeaders(NextResponse.next(), pathname);
   }
 
   // Check if route requires authentication
   const isProtectedRoute = PROTECTED_ROUTES.some(route => pathname.startsWith(route));
   const isPublicApiRoute = isPublicRoute(pathname, method);
   const isApiRoute = pathname.startsWith('/api');
-  
+
   // Skip auth check for public routes
   if (!isProtectedRoute && (isPublicApiRoute || !isApiRoute)) {
-    return applySecurityHeaders(NextResponse.next());
+    return applySecurityHeaders(NextResponse.next(), pathname);
   }
   
   // Get token from cookie or Authorization header
@@ -239,25 +255,26 @@ export async function middleware(request: NextRequest) {
       const url = request.nextUrl.clone();
       url.pathname = '/auth/login';
       url.searchParams.set('from', pathname);
-      return applySecurityHeaders(NextResponse.redirect(url));
+      return applySecurityHeaders(NextResponse.redirect(url), pathname);
     }
-    
+
     // Return 401 for protected API routes
     if (isApiRoute && !isPublicApiRoute) {
       return applySecurityHeaders(
         NextResponse.json(
           { success: false, error: 'Не авторизован' },
           { status: 401 }
-        )
+        ),
+        pathname
       );
     }
   }
-  
+
   // Verify JWT token
   if (token) {
     try {
       const { payload } = await jwtVerify(token, getJWTSecret());
-      
+
       const userRole = typeof payload.role === 'string' ? payload.role : null;
 
       // Проверяем RBAC для API-маршрутов на основе роли из JWT
@@ -268,14 +285,15 @@ export async function middleware(request: NextRequest) {
             NextResponse.json(
               { success: false, error: 'Forbidden' },
               { status: 403 }
-            )
+            ),
+            pathname
           );
         }
-        return applySecurityHeaders(NextResponse.next());
+        return applySecurityHeaders(NextResponse.next(), pathname);
       }
-      
-      return applySecurityHeaders(NextResponse.next());
-      
+
+      return applySecurityHeaders(NextResponse.next(), pathname);
+
     } catch {
 
       // Clear invalid token
@@ -286,21 +304,22 @@ export async function middleware(request: NextRequest) {
         url.searchParams.set('error', 'session_expired');
         const redirect = NextResponse.redirect(url);
         redirect.cookies.delete('auth_token');
-        return applySecurityHeaders(redirect);
+        return applySecurityHeaders(redirect, pathname);
       }
-      
+
       if (isApiRoute && !isPublicApiRoute) {
         return applySecurityHeaders(
           NextResponse.json(
             { success: false, error: 'Неверный или истекший токен' },
             { status: 401 }
-          )
+          ),
+          pathname
         );
       }
     }
   }
-  
-  return applySecurityHeaders(NextResponse.next());
+
+  return applySecurityHeaders(NextResponse.next(), pathname);
 }
 
 // Apply middleware to specific routes
@@ -308,6 +327,7 @@ export const config = {
   matcher: [
     '/api/:path*',
     '/hub/:path*',
-    '/profile/:path*'
+    '/profile/:path*',
+    '/widget/:path*'
   ],
 };

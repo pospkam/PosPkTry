@@ -29,10 +29,8 @@ export function Header() {
         justifyContent: 'space-between',
         padding: '12px 16px',
         fontFamily: FO,
-        transition: 'background 0.3s, backdrop-filter 0.3s, box-shadow 0.3s',
+        transition: 'background 0.3s, box-shadow 0.3s',
         background: scrolled ? 'var(--bg-card)' : 'transparent',
-        backdropFilter: scrolled ? 'blur(16px)' : 'none',
-        WebkitBackdropFilter: scrolled ? 'blur(16px)' : 'none',
         boxShadow: scrolled ? '0 1px 0 var(--border)' : 'none',
       }}
     >

@@ -32,8 +32,6 @@ export function HomeBottomNav() {
         borderRadius: '100px',
         fontFamily: FO,
         background: 'var(--bg-card)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
         border: '1px solid var(--border)',
         boxShadow: '0 -1px 0 var(--border)',
       }}
