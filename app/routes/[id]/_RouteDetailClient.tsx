@@ -75,7 +75,8 @@ const MONTHS = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'И�
 
 function formatDuration(hours: number, durationType?: string | null, multiDay?: number | null): string {
   if (durationType === 'multi_day' && multiDay) {
-    if (multiDay < 5) return `${multiDay} дня`;
+    if (multiDay === 1) return '1 день';
+    if (multiDay >= 2 && multiDay <= 4) return `${multiDay} дня`;
     return `${multiDay} дней`;
   }
   const days = Math.round(hours / 24);
@@ -480,7 +481,7 @@ export default function RouteDetailClient({ id }: { id: string }) {
             {route.durationDays != null && (
               <div className="flex-shrink-0 px-4 py-3">
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-muted)] mb-0.5">Длительность</p>
-                <p className="text-sm font-semibold text-[var(--text-primary)]">{formatDuration(route.durationDays)}</p>
+                <p className="text-sm font-semibold text-[var(--text-primary)]">{formatDuration(0, 'multi_day', route.durationDays)}</p>
               </div>
             )}
             {route.difficulty && (
