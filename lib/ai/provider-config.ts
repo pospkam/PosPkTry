@@ -29,6 +29,13 @@ export function getMiMoKey(): string | null {
   return process.env.XIAOMI_API_KEY || null;
 }
 
+export function getMiniMaxKey(): { apiKey: string; groupId: string } | null {
+  const apiKey = process.env.MINIMAX_API_KEY;
+  const groupId = process.env.MINIMAX_GROUP_ID;
+  if (!apiKey || !groupId) return null;
+  return { apiKey, groupId };
+}
+
 export function getYandexKey(): { apiKey: string; folderId: string } | null {
   const apiKey = process.env.YANDEX_API_KEY;
   const folderId = process.env.YANDEX_FOLDER_ID;

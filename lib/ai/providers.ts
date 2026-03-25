@@ -13,7 +13,7 @@
  */
 
 import type { ChatMessage } from '@/lib/ai/prompts';
-import { getOpenRouterKey, getMiMoKey, getDeepSeekKey, getAnthropicKey, getXaiKey, getGeminiKey, getYandexKey } from '@/lib/ai/provider-config';
+import { getOpenRouterKey, getMiMoKey, getDeepSeekKey, getAnthropicKey, getXaiKey, getGeminiKey, getYandexKey, getMiniMaxKey } from '@/lib/ai/provider-config';
 
 // ── Xiaomi MiMo-V2-Pro ────────────────────────────────────────
 export async function callMiMo(messages: ChatMessage[]): Promise<string | null> {
@@ -349,6 +349,37 @@ export async function callDeepSeek(messages: ChatMessage[]): Promise<string | nu
   } catch { return null; }
 }
 
+// ── MiniMax 2.5 (direct API) ─────────────────────────────────
+export async function callMiniMax(messages: ChatMessage[]): Promise<string | null> {
+  const keys = getMiniMaxKey();
+  if (!keys) return null;
+
+  try {
+    const payload = messages.map(({ role, content }) => ({ role, content }));
+    const res = await fetch(
+      `https://api.minimax.chat/v1/text/chatcompletion_v2?GroupId=${keys.groupId}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${keys.apiKey}`,
+        },
+        body: JSON.stringify({
+          model: 'MiniMax-Text-01',
+          temperature: 0.4,
+          max_tokens: 800,
+          messages: payload,
+        }),
+        signal: AbortSignal.timeout(20_000),
+      }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    const text: string | undefined = data?.choices?.[0]?.message?.content;
+    return text?.trim() || null;
+  } catch { return null; }
+}
+
 // ── Google Gemini (direct API) ─────────────────────────────────
 export async function callGeminiDirect(messages: ChatMessage[]): Promise<string | null> {
   const apiKey = getGeminiKey();
@@ -597,11 +628,11 @@ export async function preflightProviders(): Promise<{
 }
 
 // ── Waterfall: пробует провайдеров по очереди ─────────────────
-// DeepSeek (primary, $19 balance) → OpenRouter → YandexGPT → остальные
-// Порядок оптимизирован: сначала рабочие, потом fallback
+// DeepSeek (primary) → MiniMax → OpenRouter → YandexGPT → остальные
 export async function callAIWaterfall(messages: ChatMessage[]): Promise<string> {
   let answer: string | null = null;
   if (!answer) answer = await callDeepSeek(messages);
+  if (!answer) answer = await callMiniMax(messages);
   if (!answer) answer = await callOpenrouter(messages);
   if (!answer) answer = await callYandexGPT(messages);
   if (!answer) answer = await callMiMo(messages);
