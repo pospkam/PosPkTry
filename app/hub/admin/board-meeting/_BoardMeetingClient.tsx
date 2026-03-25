@@ -45,7 +45,7 @@ interface AgentVote {
 }
 
 interface ObserverReport {
-  id: string; name: string; role: string; provider: 'grok' | 'gemini';
+  id: string; name: string; role: string; provider: 'deepseek' | 'gemini';
   report: string; duration_ms: number; status: 'ok' | 'error' | 'unavailable';
   color: string;
 }
@@ -992,8 +992,8 @@ export default function BoardMeetingClient() {
               </div>
               {observersLoading && observers.length === 0 && (
                 <div className="ds-card p-4 flex items-center gap-3">
-                  <Loader2 size={14} className="animate-spin shrink-0" style={{ color: '#1DA1F2' }} />
-                  <span className="text-sm text-[var(--text-muted)]">Запрашиваю внешних наблюдателей (Grok, Gemini)...</span>
+                  <Loader2 size={14} className="animate-spin shrink-0" style={{ color: '#5B6EE1' }} />
+                  <span className="text-sm text-[var(--text-muted)]">Запрашиваю внешних наблюдателей (DeepSeek, Gemini)...</span>
                 </div>
               )}
               <div className="space-y-3">

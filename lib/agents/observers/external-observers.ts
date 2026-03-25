@@ -1,7 +1,7 @@
 /**
  * External AI Observers — независимые наблюдатели в совете директоров.
  *
- * Grok (xAI)   — Trend Observer:  тренды из X/Twitter, социальные настроения
+ * DeepSeek       — Trend Observer:  тренды, социальные настроения, внешний взгляд
  * Gemini (Google) — Market Observer: поисковые тренды, спрос, конкуренты
  *
  * Observers are advisory-only (non-voting). They provide external perspective
@@ -10,7 +10,7 @@
  * Called between Round 1 (reports) and Round 2 (reactions).
  */
 
-import { callXai, callGemini } from '@/lib/ai/providers';
+import { callDeepSeek, callGemini } from '@/lib/ai/providers';
 import type { ChatMessage } from '@/lib/ai/prompts';
 
 // ── Types ─────────────────────────────────────────────────────
@@ -19,7 +19,7 @@ export interface ObserverReport {
   id:          string;
   name:        string;
   role:        string;
-  provider:    'grok' | 'gemini';
+  provider:    'deepseek' | 'gemini';
   report:      string;
   duration_ms: number;
   status:      'ok' | 'error' | 'unavailable';
@@ -32,7 +32,7 @@ interface ObserverDef {
   id:       string;
   name:     string;
   role:     string;
-  provider: 'grok' | 'gemini';
+  provider: 'deepseek' | 'gemini';
   color:    string;
   persona:  string;
   focus:    string;
@@ -40,11 +40,11 @@ interface ObserverDef {
 
 const OBSERVERS: ObserverDef[] = [
   {
-    id:       'observer_grok',
-    name:     'Grok Observer',
-    role:     'Trend Observer (xAI)',
-    provider: 'grok',
-    color:    '#1DA1F2',
+    id:       'observer_deepseek',
+    name:     'DeepSeek Observer',
+    role:     'Trend Observer (DeepSeek)',
+    provider: 'deepseek',
+    color:    '#5B6EE1',
     persona:  'Ты независимый внешний наблюдатель совета директоров туристической платформы Камчатки (TourHab). Ты НЕ часть команды — ты независимый аудитор трендов.',
     focus:    'Социальные тренды, настроения в соцсетях, хайп/антихайп вокруг Камчатки и туризма в России. Что обсуждают люди? Какие тренды в adventure travel? Есть ли негатив про регион?',
   },
@@ -111,8 +111,8 @@ async function runObserver(
   try {
     let response: string | null = null;
 
-    if (observer.provider === 'grok') {
-      response = await callXai(messages);
+    if (observer.provider === 'deepseek') {
+      response = await callDeepSeek(messages);
     } else if (observer.provider === 'gemini') {
       response = await callGemini(messages);
     }
@@ -201,10 +201,10 @@ export async function runExternalObservers(
 
 /**
  * Check if any observer API keys are configured.
- * Grok needs XAI_API_KEY, Gemini now uses OPENROUTER_API_KEY.
+ * DeepSeek needs DEEPSEEK_API_KEY, Gemini uses OPENROUTER_API_KEY.
  */
 export function hasObserverKeys(): boolean {
-  return !!(process.env.XAI_API_KEY || process.env.OPENROUTER_API_KEY);
+  return !!(process.env.DEEPSEEK_API_KEY || process.env.OPENROUTER_API_KEY);
 }
 
 export { OBSERVERS };

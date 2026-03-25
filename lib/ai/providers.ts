@@ -621,6 +621,24 @@ export async function preflightProviders(): Promise<{
     } catch (e) { return { ok: false, error: String(e) }; }
   }
 
+  async function probeDeepSeek() {
+    const apiKey = getDeepSeekKey();
+    if (!apiKey) return { ok: false, error: 'DEEPSEEK_API_KEY not set' };
+    try {
+      const res = await fetch('https://api.deepseek.com/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+        body: JSON.stringify({ model: 'deepseek-chat', max_tokens: 5, messages: testMsg }),
+        signal: AbortSignal.timeout(5000),
+      });
+      if (!res.ok) {
+        const body = await res.text().catch(() => '');
+        return { ok: false, status: res.status, error: `HTTP ${res.status}: ${body.slice(0, 120)}` };
+      }
+      return { ok: true };
+    } catch (e) { return { ok: false, error: String(e) }; }
+  }
+
   async function probeXai() {
     const apiKey = process.env.XAI_API_KEY;
     if (!apiKey) return { ok: false, error: 'XAI_API_KEY not set' };
@@ -669,6 +687,7 @@ export async function preflightProviders(): Promise<{
     Promise.all([
       probeDetailed('mimo',       'MiMo-V2-Pro (Xiaomi)',        probeMiMo),
       probeDetailed('openrouter', 'OpenRouter (GPT-4o-mini)',     probeOpenrouter),
+      probeDetailed('deepseek',   'DeepSeek-V3 (DeepSeek)',       probeDeepSeek),
       probeDetailed('xai',        'Grok-4 (xAI)',                 probeXai),
       probeDetailed('anthropic',  'Claude Haiku (Anthropic)',     probeAnthropic),
     ]),
