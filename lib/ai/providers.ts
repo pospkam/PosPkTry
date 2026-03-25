@@ -29,7 +29,7 @@ export async function callMiMo(messages: ChatMessage[]): Promise<string | null> 
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'MiMo-V2-Pro',
+        model: 'mimo-v2-pro',
         temperature: 0.4,
         max_tokens: 800,
         messages: payload,
@@ -587,7 +587,7 @@ export async function preflightProviders(): Promise<{
       const res = await fetch('https://api.xiaomimimo.com/v1/chat/completions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-        body: JSON.stringify({ model: 'MiMo-V2-Pro', max_tokens: 5, messages: testMsg }),
+        body: JSON.stringify({ model: 'mimo-v2-pro', max_tokens: 5, messages: testMsg }),
         signal: AbortSignal.timeout(5000),
       });
       if (!res.ok) {
@@ -831,7 +831,7 @@ export async function callAIWaterfallDebug(messages: ChatMessage[]): Promise<Wat
         const res = await fetch('https://api.xiaomimimo.com/v1/chat/completions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-          body: JSON.stringify({ model: 'MiMo-V2-Pro', temperature: 0.4, max_tokens: 200, messages: payload }),
+          body: JSON.stringify({ model: 'mimo-v2-pro', temperature: 0.4, max_tokens: 200, messages: payload }),
           signal: AbortSignal.timeout(15_000),
         });
         const ms = Date.now() - start;
