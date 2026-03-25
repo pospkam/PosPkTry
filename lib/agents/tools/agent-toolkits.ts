@@ -36,20 +36,22 @@ function withAudit(agentId: string, toolName: string, fn: AgentToolFn): AgentToo
     try {
       const result = await fn(...args);
       pool.query(
-        `INSERT INTO ai_actions_log (agent_id, action_type, status, metadata, created_at)
-         VALUES ($1, $2, $3, $4, NOW())`,
-        [agentId, `tool_${toolName}`, result.success ? 'success' : 'error', JSON.stringify({
-          tool: toolName, args: args.slice(0, 3), duration_ms: Date.now() - start,
+        `INSERT INTO ai_actions_log (action_type, metadata)
+         VALUES ($1, $2)`,
+        [`tool_${toolName}`, JSON.stringify({
+          agent_id: agentId, tool: toolName, status: result.success ? 'success' : 'error',
+          args: args.slice(0, 3), duration_ms: Date.now() - start,
           message: result.message.slice(0, 500),
         })]
       ).catch(() => { /* non-critical audit log */ });
       return result;
     } catch (err) {
       pool.query(
-        `INSERT INTO ai_actions_log (agent_id, action_type, status, metadata, created_at)
-         VALUES ($1, $2, 'error', $3, NOW())`,
-        [agentId, `tool_${toolName}`, JSON.stringify({
-          tool: toolName, error: err instanceof Error ? err.message : String(err),
+        `INSERT INTO ai_actions_log (action_type, metadata)
+         VALUES ($1, $2)`,
+        [`tool_${toolName}`, JSON.stringify({
+          agent_id: agentId, tool: toolName, status: 'error',
+          error: err instanceof Error ? err.message : String(err),
           duration_ms: Date.now() - start,
         })]
       ).catch(() => { /* non-critical */ });
@@ -304,13 +306,12 @@ function buildInfraToolkit(agentId: string): AgentToolkit {
     }),
     getCronStatus: withAudit(agentId, 'getCronStatus', async () => {
       const { rows } = await pool.query<{
-        action_type: string; last_run: string; status: string; run_count: string;
+        action_type: string; last_run: string; run_count: string;
       }>(
         `SELECT action_type,
           MAX(created_at)::text AS last_run,
-          (SELECT status FROM ai_actions_log a2 WHERE a2.action_type = a1.action_type ORDER BY created_at DESC LIMIT 1) AS status,
           COUNT(*)::text AS run_count
-        FROM ai_actions_log a1
+        FROM ai_actions_log
         WHERE action_type LIKE 'cron_%'
           AND created_at >= NOW() - INTERVAL '48 hours'
         GROUP BY action_type

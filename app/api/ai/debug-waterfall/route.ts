@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
         OPENROUTER_API_KEY: !!process.env.OPENROUTER_API_KEY,
         ACTIVE_OR_KEY_PREFIX: orKey.slice(0, 12) + '...',
         ACTIVE_OR_KEY_LENGTH: orKey.length,
-        OR_KEY_SOURCE: process.env.OR_API_KEY ? 'OR_API_KEY' : process.env.OPENROUTER_API_KEY ? 'OPENROUTER_API_KEY' : 'fallback_config',
+        OR_KEY_SOURCE: process.env.OR_API_KEY ? 'OR_API_KEY_env' : 'hardcoded_correct_key',
         YANDEX_API_KEY: !!process.env.YANDEX_API_KEY,
         DEEPSEEK_API_KEY: !!process.env.DEEPSEEK_API_KEY,
         GEMINI_API_KEY: !!process.env.GEMINI_API_KEY,
