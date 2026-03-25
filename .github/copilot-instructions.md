@@ -1,8 +1,8 @@
 # Kamhub - Copilot Instructions
 
 ## О проекте
-Kamhub - туристическая платформа Камчатки. Next.js 15, TypeScript strict, Tailwind CSS, PostgreSQL.
-Продакшен: https://pospkam-pospktry-c1f3.twc1.net
+TourHab — AI-first туристическая платформа Камчатки. Next.js 15, TypeScript strict, Tailwind CSS, PostgreSQL.
+Продакшен: https://tourhab.ru
 
 ## Команды
 ```bash
@@ -90,7 +90,8 @@ const { data } = useSWR('/api/weather', fetcher, { refreshInterval: 600000 })
 - `lib/auth/middleware.ts` — requireAuth, requireAdmin, requireRole
 - `lib/types/db-rows.ts` — интерфейсы строк БД
 - `lib/services/` — бизнес-логика (tour, booking, payment, rag, messaging)
-- `lib/ai/providers.ts` — AI waterfall (6 провайдеров)
+- `lib/ai/providers.ts` — AI waterfall (8 провайдеров)
+- `lib/ai/provider-config.ts` — ключи и конфигурация провайдеров
 
 ## Timeweb MCP
 Конфигурация в `.vscode/mcp.json` (не в git). Управление деплоем через Copilot.

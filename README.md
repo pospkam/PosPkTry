@@ -1,63 +1,46 @@
-# TourHab — AI-система для туристического бизнеса Камчатки
+# TourHab — AI-first туристическая платформа Камчатки
 
-Платформа, которая одновременно решает задачу туриста (маршрут + бронь) и автоматизирует работу оператора (туры, брони, прогноз погоды, финансы). Внутри — самоэволюционирующий агентский слой: система анализирует свои решения, учится на обратной связи и оптимизирует себя без ручного вмешательства.
+AI-помощник Кузьмич подбирает маршрут за минуту. Турист описывает мечту — система комбинирует базовые туры в персональный план. Каталог работает как страховка для тех, кто предпочитает выбирать руками.
 
-**Текущий статус:** MVP завершён, строим Agent Framework поверх готовой инфраструктуры. Полный план: `.claude/plan.md`
+Внутри — 13 AI-директоров (Board of Directors), которые управляют платформой: от безопасности и экологии до роста и финансов. Собственник имеет финальное слово через систему одобрений.
 
 [![Build](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/pospkam/PosPkTry)
-[![TypeScript](https://img.shields.io/badge/TypeScript-strict%2C%200%20errors-blue)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/)
 
 **Продакшен:** [tourhab.ru](https://tourhab.ru)
 
 ---
 
-## Архитектура
-
-### AI-слой (строится сейчас)
+## Концепция
 
 ```
-Admin / Operator / Tourist / Guide
-          │ intent
-   PlatformAgent (lib/agents/)
-          │
-   Context Hub  ──── user/task/platform/execution contexts
-          │
-   Agency Layer ──── AdminAgency / OperatorAgency / TouristAgency
-          │
-   Learning Layer ── Feedback loop → Pattern recognition → Prompt tuning
-          │
-   Execution Layer ─ (API routes, DB, Telegram, Payments — всё ниже)
+Турист: "Хочу 3 дня — рыбалка + вулканы + медведи"
+    │
+    ▼
+Кузьмич AI → находит Reference Tours → комбинирует → генерирует план
+    │
+    ▼
+Бронирование прямо из чата
 ```
 
-### Data Flow (существующий)
+**Гибридная модель:** AI как суперсила, каталог как страховка.
 
-```
-Маршрут (agent_route_knowledge)     Тур (operator_tours)
-  1189 маршрутов, 16 типов локаций    Операторы: слоты, цены, сезон
-  Источник: скрапинг 12 сайтов        Бронирование → CloudPayments
-  kuzmich_review AI-отзыв
-         │                                    │
-         +──── v_route_marketplace ───────────+
-                   │
-            Карточка маршрута
-         (цена + оператор + дата + бронирование)
-```
+---
 
-### Стек
+## Стек
 
 | Слой | Технология |
 |------|-----------|
 | Frontend | Next.js 15 App Router, React 19, TypeScript strict, Tailwind CSS |
 | Backend | Next.js API Routes, PostgreSQL (pg pool, прямой SQL) |
 | Auth | JWT (jose) + bcrypt, 6 ролей |
-| Storage | Timeweb S3 (`s3.twcstorage.ru`) + fallback на `/tmp` |
-| AI | OpenRouter / xAI / Anthropic (waterfall) + 5 AI подсистем |
-| Agent Layer | `lib/agents/` — PlatformAgent, Context Hub, Learning Loop (строится) |
-| Maps | Yandex Maps API 2.1 (маркеры с попапами и ссылками) |
-| Telegram | @KuzmichKam_bot (tourist) + admin bot (owner) |
-| Analytics | page_views (собственная) + Яндекс Метрика |
-| Deploy | Timeweb Cloud, GitHub Actions CI/CD |
+| AI Providers | DeepSeek (primary) → MiniMax 2.5 → OpenRouter → YandexGPT → MiMo → Gemini → Anthropic → xAI |
+| Agent Layer | 13 AI-директоров + 7 рабочих агентов (`lib/agents/`) |
+| Maps | Yandex Maps API 2.1 |
+| Telegram | @KuzmichKam_bot (tourist) + admin bot |
+| Storage | Timeweb S3 (`s3.twcstorage.ru`) |
+| Deploy | Timeweb Cloud, GitHub → автодеплой |
 
 ---
 
@@ -79,10 +62,6 @@ npm run dev              # Dev-сервер (порт 3000)
 npm run build            # Production-сборка
 npx tsc --noEmit         # TypeScript (0 ошибок)
 npx vitest run           # Тесты
-
-# Генерация AI-отзывов Кузьмича для маршрутов
-node scripts/generate-kuzmich-reviews.js --limit 100
-node scripts/generate-kuzmich-reviews.js --dry-run --limit 5
 ```
 
 ---
@@ -91,111 +70,137 @@ node scripts/generate-kuzmich-reviews.js --dry-run --limit 5
 
 ```
 app/
-  page.tsx                       # Главная (Hero + CategoryCards + TripPlanner)
-  routes/                        # Каталог маршрутов (1189 шт.)
-    [id]/                        # Детальная: описание + Кузьмич-отзыв + офферы операторов
-  operators/                     # Каталог операторов (5 шт.)
-    [slug]/                      # Профиль оператора + его маршруты
-  map/                           # Интерактивная карта (Leaflet, 900+ маркеров)
-  hub/                           # Личные кабинеты (6 ролей)
-    tourist/ operator/ guide/ admin/ agent/ transfer-operator/
-  api/                           # 256+ API endpoints
-    routes/ leads/ operators/ assistant/ public/ tours/ bookings/
-    analytics/ telegram/
+  page.tsx                       # Главная (Hero + AI Section + Directions + Trust)
+  ai-assistant/                  # AI-чат с Кузьмичом
+  routes/                        # Каталог маршрутов
+    [id]/                        # Детальная: описание + AI-отзыв + офферы
+  operators/                     # Каталог операторов
+    [slug]/                      # Профиль оператора
+  map/                           # Интерактивная карта (Yandex Maps)
+  hub/                           # Личные кабинеты (8 хабов)
+    tourist/ operator/ guide/ admin/ agent/
+    transfer/ transfer-operator/ fishing/
+  api/                           # 386 API endpoints
+    ai/                          # AI chat, waterfall, debug
+    agents/                      # Board meeting, dispatch, approvals
+    planner/compose/             # AI composition engine
+    reference-tours/             # Базовые туры для AI
+    routes/ bookings/ tours/     # Каталог, бронирования
+    telegram/                    # Webhook бота
 
 components/
-  homepage/                      # Hero, CategoryCards, TripPlanner
+  homepage/                      # HeroSection, AISection, FeaturedDirections,
+                                 # TrustSection, HomeBottomNav, Reveal
   routes/                        # RouteCard, LeadModal, BookingModal
-  shared/                        # LeafletMap, AssistantButton, SOSButton, PageViewTracker
+  shared/                        # SOSButton, AssistantButton, LeafletMap
   layout/                        # Header, Footer
 
 lib/
-  agents/                        # AI Agent Framework (строится — .claude/plan.md)
-    platform-agent.ts            # Intent dispatcher, единая точка входа
-    context-hub.ts               # Персистентный контекст (user/task/platform)
-    agencies/                    # AdminAgency, OperatorAgency, TouristAgency
-    learning/                    # Feedback loop, prompt tuning, A/B tests
-  storage/s3.ts                  # S3 клиент (Timeweb Object Storage)
-  ai/providers.ts                # AI waterfall (4 провайдера)
-  ai/embeddings.ts               # Smart search (embedding-based)
-  services/trip-recommender.ts   # Tourist recommendations
-  ai/crew-agents.ts              # Multi-agent patterns
+  agents/                        # AI Agent Framework
+    agencies/                    # 20 agency-классов (13 директоров + 7 рабочих)
+    tools/agent-toolkits.ts      # Инструменты для всех 13 директоров
+    evolution/                   # Knowledge base, context builder
+    learning/                    # Feedback loop, A/B experiments
+    execution/                   # Initiative executor
+    scheduler.ts                 # Автономное расписание агентов
+    platform-agent.ts            # Intent dispatcher
+  ai/
+    providers.ts                 # AI waterfall (8 провайдеров)
+    provider-config.ts           # Ключи и конфигурация
+    embeddings.ts                # Smart search
+  services/                      # Доменные сервисы
+  bookings/booking.service.ts    # Бронирования
   auth/                          # JWT middleware
-  db-pool.ts                     # PostgreSQL pool (named export: { pool })
-  bookings/booking.service.ts    # Полная логика бронирований
-  notifications/telegram-channel.ts  # Постинг в TG-канал
+  db-pool.ts                     # PostgreSQL pool ({ pool })
+  types/db-rows.ts               # Интерфейсы строк БД
 
 hooks/
-  useSourceTracker.ts            # UTM/referrer first-touch attribution
-  useInterestTracker.ts          # Профиль интересов (localStorage)
-
-scripts/
-  generate-kuzmich-reviews.js    # AI-генерация отзывов для маршрутов (Anthropic Haiku)
+  useSourceTracker.ts            # UTM/referrer attribution
+  useInterestTracker.ts          # Профиль интересов
 ```
+
+---
+
+## AI-архитектура
+
+### Waterfall провайдеров
+
+```
+DeepSeek ($19) → MiniMax 2.5 → OpenRouter (4 sub-models)
+    → YandexGPT → MiMo → Gemini → Anthropic → xAI
+```
+
+Каждый провайдер пробуется по очереди. Первый успешный ответ возвращается.
+Файл: `lib/ai/providers.ts`
+
+### AI Composition (planner)
+
+```
+Турист описывает мечту → /api/planner/compose
+    → парсинг интента
+    → поиск Reference Tours в БД (activity_type, zone, price)
+    → AI генерирует день-за-днём план
+    → бронирование из чата
+```
+
+### 13 AI-директоров (Board of Directors)
+
+| Агент | Роль | Частота |
+|-------|------|---------|
+| Admin | Операционный директор | 4ч |
+| Legal | Юрисконсульт | 24ч |
+| Security | Безопасность | 2ч |
+| Hacker | Директор по росту | 6ч |
+| Rescue | SAR / Спасатель | 30 мин |
+| Eco | Эколог | 1ч |
+| Content | Контент-аудитор | 8ч |
+| Quality | Качество сервиса | 12ч |
+| Evo | Архитектор/эволюция | 24ч |
+| Finance | CFO | 6ч |
+| Infra | SRE / DevOps | 1ч |
+| VibeCoder | Качество кода | 24ч |
+| Planning | Стратег/прогнозы | 12ч |
+
+Совещание: `/hub/admin/board-meeting` (4 раунда: отчёты → реакции → голосование → инициативы).
+Подробности: `AGENTS.md`
+
+---
+
+## Homepage
+
+Четыре секции:
+
+1. **Hero** — полноэкранный фон (light/dark), заголовок "Камчатка ждёт тебя", AI-поиск, quick chips
+2. **AI Section** — "Расскажите, о чём мечтаете" + 6 suggestion cards → `/ai-assistant`
+3. **Featured Directions** — 6 карточек: Вулканы, Медведи, Рыбалка, Термальные, Океан, Вертолёты
+4. **Trust Section** — статистика (1000+ маршрутов, 18 операторов, 24/7 SOS, рейтинг 4.8) + отзывы
 
 ---
 
 ## Ключевые фичи
 
-### AI Agent Layer (строится: .claude/plan.md)
-- **PlatformAgent** — единая точка входа для любого интента (Admin/Operator/Tourist)
-- **Context Hub** — персистентный контекст: кто пользователь, что делал, что может
-- **AdminAgency** — `/digest`: ежедневный AI-анализ метрик + 3 приоритета на день
-- **OperatorAgency** — управление турами/бронями через Natural Language в TG
-- **TouristAgency** — smart TripBuilder v2 (AI-aware, DnD, marketplace)
-- **Learning Loop** — система анализирует успех/fail → оптимизирует промпты автоматически
-
-### AI подсистемы (готовы)
-- AI waterfall: OpenRouter → xAI → Anthropic (4 провайдера)
-- Smart search (embedding-based, `lib/ai/embeddings.ts`)
-- Trip recommender (`lib/services/trip-recommender.ts`)
-- RAG / Knowledge Base (`lib/services/rag.service.ts`)
-- Tour auto-fill AI (`app/api/.../auto-fill-ai/`)
+### AI-помощник Кузьмич
+- Чат на `/ai-assistant` + виджет на каждой странице
+- Голос местного жителя, знает Камчатку
+- Подбор маршрутов, ответы на вопросы, бронирование
 
 ### Каталог маршрутов
-- **1189 маршрутов**, 16 типов локаций, 15 типов активностей
-- Фильтрация по `location_type` (volcano, geyser, hot_spring...) и `activity_type`
-- **kuzmich_review** — AI-отзыв в голосе местного жителя (101+ маршрутов заполнены)
-- Поиск, сортировка, пагинация
-
-### Marketplace
-- **v_route_marketplace** — VIEW: маршрут + тур + оператор + следующая дата
-- На детальной странице: предложения операторов с ценами, датами, рейтингами
-- Бейджи: сезонность, сложность, "Бронирование"
-
-### Карта
-- Yandex Maps API 2.1, цвета по типу локации
-- 900+ маркеров, кликабельные попапы → детальная страница
-- Фильтр по location_type и activity_type
+- 1189 маршрутов, 16 типов локаций, 15 типов активностей
+- AI-отзывы Кузьмича (101+ маршрутов)
+- Фильтрация, поиск, пагинация
 
 ### Бронирования
-- `lib/bookings/booking.service.ts` — полная реализация:
-  - Стейт-машина (`ALLOWED_TRANSITIONS`)
-  - Защита от double-booking (`FOR UPDATE` lock)
-  - Атомарные транзакции (BEGIN/COMMIT/ROLLBACK)
-  - Правила возврата: оператор = 100%; турист >48ч = 100%, 24-48ч = 50%, <24ч = 0%
-  - BookingLog на каждую смену статуса
-- 330 выездов (tour_departures), BookingModal на сайте
+- Стейт-машина (7 статусов)
+- Защита от double-booking (`FOR UPDATE` lock)
+- Правила возврата: оператор 100%, турист >48ч 100%, 24-48ч 50%, <24ч 0%
 
-### Операторы
-- 5 операторов: Камчатинтур, TopKam, Камчатская Рыбалка, Вулкан Гид, Камчатка Дикая
-- Профили с услугами, галереей, отзывами, FAQ, сезонным календарём
+### Карта
+- Yandex Maps, 900+ маркеров с попапами
+- Фильтр по типу локации и активности
 
-### Telegram-бот (@KuzmichKam_bot)
-- Публичные команды: `/start` `/help` `/route` `/weather` `/tip` `/operators` `/sezon`
-- Admin-команды: `/stats` `/leads` `/post operator|route|sezon` `/diag`
-- AI диалог в голосе Кузьмича с историей чата
-- Постинг в TG-канал с фото
-
-### Analytics
-- Собственная: `page_views` таблица, `POST /api/analytics/hit`
-- Яндекс Метрика: `NEXT_PUBLIC_YANDEX_METRIKA_ID`
-- UTM/referrer трекинг first-touch → в leads.source_data
-
-### Lead Capture
-- Форма заявки без регистрации (LeadModal)
-- UTM/referrer трекинг (first-touch attribution)
-- Уведомления в Telegram с source_data
+### Telegram-бот
+- @KuzmichKam_bot: AI-диалог, маршруты, погода, операторы
+- Admin-команды: статистика, лиды, постинг в канал
 
 ---
 
@@ -206,23 +211,25 @@ scripts/
 DATABASE_URL=postgresql://user:pass@host:5432/dbname
 JWT_SECRET=...
 
+# === AI (waterfall, хотя бы один) ===
+DEEPSEEK_API_KEY=...
+MINIMAX_API_KEY=...
+MINIMAX_GROUP_ID=...
+OR_API_KEY=...               # OpenRouter (primary key)
+OPENROUTER_API_KEY=...       # OpenRouter (fallback key)
+
 # === S3 Storage (Timeweb) ===
 S3_ACCESS_KEY=...
 S3_SECRET_KEY=...
 S3_ENDPOINT=https://s3.twcstorage.ru
 S3_BUCKET=kamhub-uploads
-S3_REGION=ru-1
-
-# === AI (хотя бы один) ===
-OPENROUTER_API_KEY=...
-ANTHROPIC_API_KEY=...        # sk-ant-api03-...
 
 # === Telegram ===
 TELEGRAM_BOT_TOKEN=...
-TELEGRAM_WEBHOOK_SECRET=kh-webhook-2026
-TELEGRAM_CHAT_ID=...         # ID админа (для admin-команд бота)
-TELEGRAM_CHANNEL_ID=...      # ID канала (для постинга, со знаком минус)
-TELEGRAM_LEADS_CHAT_ID=...   # Чат для входящих лидов
+TELEGRAM_WEBHOOK_SECRET=...
+TELEGRAM_CHAT_ID=...
+TELEGRAM_CHANNEL_ID=...
+TELEGRAM_LEADS_CHAT_ID=...
 
 # === Analytics ===
 NEXT_PUBLIC_YANDEX_METRIKA_ID=...
@@ -236,10 +243,6 @@ SMTP_PASS=...
 # === Платежи (опционально) ===
 CLOUDPAYMENTS_API_SECRET=...
 NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID=...
-
-# === Rate Limiting (опционально) ===
-UPSTASH_REDIS_REST_URL=...
-UPSTASH_REDIS_REST_TOKEN=...
 ```
 
 ---
@@ -249,41 +252,35 @@ UPSTASH_REDIS_REST_TOKEN=...
 ### Ключевые таблицы
 
 ```sql
--- Маршруты (knowledge base)
-agent_route_knowledge    -- 1189 маршрутов, kuzmich_review TEXT, location_type, activity_type
+-- AI-first
+reference_tours          -- Базовые туры (1 активность = 1 тур) для AI composition
+composite_bookings       -- Составные бронирования от AI planner
+
+-- Knowledge base
+agent_route_knowledge    -- 1189 маршрутов, kuzmich_review, location/activity types
 
 -- Marketplace
-v_route_marketplace      -- VIEW: маршрут + тур + оператор + цена + следующая дата
+v_route_marketplace      -- VIEW: маршрут + тур + оператор + цена + дата
 
--- Операторы
-partners                 -- 5 операторов, slug, профиль, контакты
-
--- Туры и бронирования
-tours                    -- 66 туров (operator_id → partners)
-tour_departures          -- 330 выездов (start_date, slots, price)
-bookings                 -- бронирования (7 статусов: pending/confirmed/cancelled_by_tourist/...)
-booking_logs             -- лог каждой смены статуса
-
--- Лиды
-leads                    -- заявки без регистрации, source_data JSONB
-
--- Аналитика
-page_views               -- path, referrer, created_at
+-- Операторы и туры
+partners                 -- Операторы (slug, профиль, контакты)
+tours                    -- Туры операторов
+tour_departures          -- Выезды (дата, слоты, цена)
+bookings                 -- Бронирования (7 статусов)
+booking_logs             -- Лог смен статуса
 
 -- Пользователи
 users                    -- 6 ролей: tourist, operator, guide, transfer_operator, agent, admin
+leads                    -- Заявки без регистрации
+
+-- Аналитика
+page_views               -- Собственная аналитика
 ```
 
 ### Миграции
 
-58 файлов в `lib/database/migrations/` (001–058). Следующая: **`059_`**.
-
-```bash
-# Применить миграцию напрямую (без psql):
-node -e "require('dotenv').config({path:'.env.local',override:true}); \
-  const {Pool}=require('pg'); const p=new Pool({connectionString:process.env.DATABASE_URL}); \
-  p.query(require('fs').readFileSync('lib/database/migrations/040_xxx.sql','utf8')).then(()=>p.end())"
-```
+107 файлов: `lib/database/migrations/` (001-078) + `migrations/` (079-081).
+Следующая: **`082_`**.
 
 ---
 
@@ -312,31 +309,28 @@ node -e "require('dotenv').config({path:'.env.local',override:true}); \
 ## Деплой
 
 ```
-git push origin main
-  → GitHub Actions (tsc)
-    → Timeweb Cloud (автодеплой, App ID: 159529)
-      → tourhab.ru
+git push origin main → Timeweb Cloud (App 159529) → tourhab.ru
 ```
 
-**Домен:** tourhab.ru (DNS: ns1/ns2.reg.ru, A → 51.250.0.136)
-**Build time:** ~5-7 минут после push
+**Проверки перед пушем:**
+```bash
+npx tsc --noEmit      # 0 ошибок
+npx vitest run        # Тесты зелёные
+```
 
 ---
 
 ## Текущее состояние (март 2026)
 
 ```
-Страниц:              94
-API endpoints:       256+
-Компонентов:         119
-SQL-миграций:         58  (lib/database/migrations/ 001–058)
-Маршрутов в БД:    1 189  (16 типов локаций, 15 типов активностей)
-Кузьмич-отзывов:     101+
-Операторов:            5
+Страниц:             107
+API endpoints:       386
+Компонентов:         110
+Миграций:            107  (001-081)
+Маршрутов в БД:    1 189
+AI-провайдеров:        8  (waterfall)
+AI-директоров:        13  (Board of Directors)
 TS-ошибок:             0
-
-Следующий этап: Agent Framework (lib/agents/) — 7 недель
-Полный план:     .claude/plan.md
 ```
 
 ### Юр. лицо
@@ -346,12 +340,11 @@ TS-ошибок:             0
 
 ## Правила разработки
 
-Полные правила: `CLAUDE.md`
+Полные правила: `CLAUDE.md` | Copilot: `.github/copilot-instructions.md` | Агенты: `AGENTS.md`
 
 - TypeScript strict, `any` запрещён
 - SQL только параметризованный (`$1, $2`)
 - Pool: `import { pool } from '@/lib/db-pool'` (named export)
 - Стили: только CSS-переменные, glassmorphism запрещён
-- Миграции: без изменения существующих (001–058), следующая `059_`
-- Бронирования: использовать `lib/bookings/booking.service.ts`, не `lib/services/booking.service.ts`
-- Server components не делают self-fetch через URL — только `import { query } from '@/lib/database'`
+- Маршруты: только через `v_kamchatka_routes_api`, не `SELECT * FROM kamchatka_routes`
+- Миграции: не менять существующие 001-081, следующая `082_`
