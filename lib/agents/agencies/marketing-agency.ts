@@ -6,7 +6,7 @@
  */
 
 import { pool } from '@/lib/db-pool';
-import { callAIWaterfall } from '@/lib/ai/providers';
+import { callAIWithModel } from '@/lib/ai/providers';
 import type { AgentContext } from '../context-hub';
 
 export interface AgencyResult {
@@ -33,7 +33,10 @@ interface TopSourceRow {
 }
 
 export class MarketingAgency {
+  private preferredModel: string | null = null;
+
   async run(intent: string, context: AgentContext): Promise<AgencyResult> {
+    this.preferredModel = context.preferredModel ?? null;
     switch (intent) {
       case 'mkt_performance':  return this.getPerformance();
       case 'mkt_content_plan': return this.getContentPlan(context);
@@ -135,7 +138,7 @@ export class MarketingAgency {
 
     let plan = 'Контент-план временно недоступен.';
     try {
-      const aiResult = await callAIWaterfall([{ role: 'user', content: prompt }]);
+      const { text: aiResult } = await callAIWithModel([{ role: 'user', content: prompt }], this.preferredModel);
       if (aiResult) plan = aiResult.trim();
     } catch { /* silent */ }
 

@@ -9,7 +9,8 @@
  * - Мониторинга изменений законодательства
  */
 
-import { callAIWaterfall } from '@/lib/ai/providers';
+import { callAIWithModelDirect } from '@/lib/ai/providers';
+import { getModelForAgent } from '@/lib/ai/agent-models';
 import type { ChatMessage } from '@/lib/ai/prompts';
 
 export interface LegalReview {
@@ -111,9 +112,9 @@ export async function reviewLegalDocument(
   try {
     const prompt = buildLegalReviewPrompt(documentType, content, jurisdiction);
 
-    const aiResponse = await callAIWaterfall([
+    const aiResponse = await callAIWithModelDirect([
       { role: 'user', content: prompt } as ChatMessage,
-    ]);
+    ], getModelForAgent('legal'));
 
     // Парсить JSON из ответа
     const jsonMatch = aiResponse?.match(/\{[\s\S]*\}/);
@@ -164,9 +165,9 @@ ${newVersion}
   `;
 
   try {
-    const response = await callAIWaterfall([
+    const response = await callAIWithModelDirect([
       { role: 'user', content: prompt } as ChatMessage,
-    ]);
+    ], getModelForAgent('legal'));
 
     return response?.split('\n').filter(line => line.trim().length > 0) || [];
   } catch (err) {

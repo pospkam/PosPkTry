@@ -1,7 +1,8 @@
 import { z } from 'zod';
-import { callAIWaterfall } from '@/lib/ai/providers';
+import { callAIWithModel } from '@/lib/ai/providers';
 import { query } from '@/lib/database';
 import type { ChatMessage } from '@/lib/ai/prompts';
+import { getModelForAgent } from '@/lib/ai/agent-models';
 
 export interface LeadContext {
   leadId?: string;
@@ -47,7 +48,7 @@ ${leads.map(l => `- ${l.name} (${l.phone}): "${l.comment || ''}"`).join('\n')}
 }
     `;
 
-    const response = await callAIWaterfall([{ role: 'user', content: prompt }] as ChatMessage[]);
+    const { text: response } = await callAIWithModel([{ role: 'user', content: prompt }] as ChatMessage[], getModelForAgent('legal'));
 
     try {
       const parsed = JSON.parse(response);
@@ -102,7 +103,7 @@ ${leads.map(l => `- ${l.name} (${l.phone}): "${l.comment || ''}"`).join('\n')}
 Ответь JSON: { "tours": [{ "type": "fishing|trekking|...", "reason": "..." }] }
     `;
 
-    const response = await callAIWaterfall([{ role: 'user', content: prompt }] as ChatMessage[]);
+    const { text: response } = await callAIWithModel([{ role: 'user', content: prompt }] as ChatMessage[], getModelForAgent('legal'));
     try {
       const parsed = JSON.parse(response);
       return { success: true, suggestions: parsed.tours };

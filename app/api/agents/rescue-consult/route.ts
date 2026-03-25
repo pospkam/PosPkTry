@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth/middleware';
-import { callAIWaterfall } from '@/lib/ai/providers';
+import { callAIWithModelDirect } from '@/lib/ai/providers';
+import { getModelForAgent } from '@/lib/ai/agent-models';
 import { getFullDangerSummary } from '@/lib/agents/agencies/danger-analyst-agency';
 import { query } from '@/lib/database';
 import type { ChatMessage } from '@/lib/ai/prompts';
@@ -60,7 +61,7 @@ export async function POST(req: NextRequest) {
 
   let reply: string;
   try {
-    reply = await callAIWaterfall(messages);
+    reply = await callAIWithModelDirect(messages, getModelForAgent('rescue'));
   } catch {
     return NextResponse.json(
       { error: 'AI Спасатель временно недоступен. Попробуйте через несколько секунд.' },

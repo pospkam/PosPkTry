@@ -33,7 +33,8 @@ import { pool } from '@/lib/db-pool';
 import { telegramService } from '@/lib/notifications/telegram';
 import { confirmBooking, cancelBooking } from '@/lib/bookings/booking.service';
 import { query } from '@/lib/database';
-import { callAIWaterfallDirect } from '@/lib/ai/providers';
+import { callAIWithModelDirect } from '@/lib/ai/providers';
+import { getModelForAgent } from '@/lib/ai/agent-models';
 import { KUZMICH_PROMPT, type ChatMessage } from '@/lib/ai/prompts';
 import { parseInterestsFromText, findRoutesByInterests, formatRoutesForTelegram } from '@/lib/services/routes-recommender';
 import {
@@ -229,13 +230,13 @@ async function kuzmichReply(userText: string, chatId: string): Promise<string> {
       { role: 'assistant', content: 'Узнал ваши интересы и даты. Показываю подходящие туры.' },
       { role: 'user', content: `Пожалуйста, покажи эти туры в красивом формате с ссылками:${routesText}` },
     ];
-    const reply = await callAIWaterfallDirect(withRoutes);
+    const reply = await callAIWithModelDirect(withRoutes, getModelForAgent('kuzmich'));
     saveHistory(chatId, [...history, { role: 'user', content: userText }, { role: 'assistant', content: reply }]);
     return reply;
   }
 
   // Regular chat flow if no interests detected
-  const reply = await callAIWaterfallDirect(messages);
+  const reply = await callAIWithModelDirect(messages, getModelForAgent('kuzmich'));
   saveHistory(chatId, [...history, { role: 'user', content: userText }, { role: 'assistant', content: reply }]);
   return reply;
 }
@@ -718,10 +719,10 @@ export async function POST(request: NextRequest) {
 
     // /tip
     if (text.startsWith('/tip')) {
-      const tip = await callAIWaterfallDirect([
+      const tip = await callAIWithModelDirect([
         { role: 'system', content: KUZMICH_CHAT_SYSTEM },
         { role: 'user', content: 'Дай один конкретный практический совет туристу, который едет на Камчатку первый раз. Не общие слова — что-то реально полезное из личного опыта.' },
-      ]);
+      ], getModelForAgent('kuzmich'));
       await sendHTML(chatId, tip);
       return NextResponse.json({ ok: true });
     }

@@ -8,7 +8,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { callAIWaterfall } from '@/lib/ai/providers';
+import { callAIWithModelDirect } from '@/lib/ai/providers';
+import { getModelForAgent } from '@/lib/ai/agent-models';
 import type { ChatMessage } from '@/lib/ai/prompts';
 
 export const dynamic = 'force-dynamic';
@@ -54,7 +55,7 @@ export async function POST(req: NextRequest) {
   ];
 
   try {
-    const reply = await callAIWaterfall(messages);
+    const reply = await callAIWithModelDirect(messages, getModelForAgent('planner'));
     return NextResponse.json({ success: true, reply });
   } catch {
     return NextResponse.json(

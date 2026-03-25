@@ -146,7 +146,11 @@ export class AgentScheduler {
 
       // Inject per-agent toolkit
       const { getToolkitForAgent } = await import('@/lib/agents/tools/agent-toolkits');
-      const agentContext = { tools: getToolkitForAgent(config.agentId) } as Record<string, unknown>;
+      const { getModelForAgent } = await import('@/lib/ai/agent-models');
+      const agentContext = {
+        tools: getToolkitForAgent(config.agentId),
+        preferredModel: getModelForAgent(config.agentId),
+      } as Record<string, unknown>;
 
       // Run with timeout
       const timeoutPromise = new Promise((_, reject) =>

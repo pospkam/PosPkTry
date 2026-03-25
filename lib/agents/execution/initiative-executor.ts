@@ -14,7 +14,8 @@
  */
 
 import { pool } from '@/lib/db-pool';
-import { callAIWaterfall } from '@/lib/ai/providers';
+import { callAIWithModelDirect } from '@/lib/ai/providers';
+import { getModelForAgent } from '@/lib/ai/agent-models';
 import type { ChatMessage } from '@/lib/ai/prompts';
 import { randomBytes } from 'crypto';
 
@@ -246,7 +247,7 @@ async function executeTourDescriptionRewrite(task: ExecutionTask): Promise<Execu
       ].join('\n');
 
       const messages: ChatMessage[] = [{ role: 'user', content: prompt }];
-      const newDesc = await callAIWaterfall(messages);
+      const newDesc = await callAIWithModelDirect(messages, getModelForAgent('content'));
 
       improvedDescriptions.push({
         id: tour.id,

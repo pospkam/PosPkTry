@@ -11,7 +11,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { callAIWaterfall } from '@/lib/ai/providers';
+import { callAIWithModelDirect } from '@/lib/ai/providers';
+import { getModelForAgent } from '@/lib/ai/agent-models';
 import type { ChatMessage } from '@/lib/ai/prompts';
 import { parseInterestsFromText } from '@/lib/services/routes-recommender';
 import { recordTouristDemand } from '@/lib/ai/tourist-demand-aggregator';
@@ -147,7 +148,7 @@ export async function POST(req: NextRequest) {
       { role: 'user', content: message },
     ];
 
-    const aiResponse = await callAIWaterfall(messages);
+    const aiResponse = await callAIWithModelDirect(messages, getModelForAgent('planner'));
 
     // Extract JSON from response (handle potential wrapping)
     const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);

@@ -8,7 +8,7 @@
  */
 
 import { pool } from '@/lib/db-pool';
-import { callAIWaterfall } from '@/lib/ai/providers';
+import { callAIWithModel } from '@/lib/ai/providers';
 import { PatternRecognition } from '../learning/pattern-recognition';
 import { FeedbackLoop } from '../learning/feedback-loop';
 import { ObservationLogger } from '../observation-logger';
@@ -56,10 +56,12 @@ interface PageViewsStats {
 
 export class AdminAgency {
   private briefing = '';
+  private preferredModel: string | null = null;
   private tools: Record<string, (...args: unknown[]) => Promise<{ success: boolean; message: string; details?: Record<string, unknown> }>> = {};
 
   async run(intent: string, context: AgentContext): Promise<AgencyResult> {
     this.briefing = context.richBriefing ?? '';
+    this.preferredModel = context.preferredModel ?? null;
     this.tools = context.tools ?? {};
     switch (intent) {
       case 'admin_digest': return this.getDigest();
@@ -103,7 +105,7 @@ export class AdminAgency {
       const prompt = buildDigestPrompt(data);
       const insightsAddendum = sharedInsights ? `\n\nИнсайты от других агентов: ${sharedInsights}` : '';
       const fullPrompt = this.briefing ? `${this.briefing}\n\n${prompt}${insightsAddendum}` : `${prompt}${insightsAddendum}`;
-      const aiText = await callAIWaterfall([{ role: 'user', content: fullPrompt }]);
+      const { text: aiText } = await callAIWithModel([{ role: 'user', content: fullPrompt }], this.preferredModel);
 
       const date = new Date().toLocaleDateString('ru-RU', {
         day: '2-digit', month: '2-digit', year: 'numeric',

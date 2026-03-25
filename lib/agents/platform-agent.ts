@@ -13,11 +13,12 @@
 
 import { ContextHub, type AgentContext } from './context-hub';
 import { ObservationLogger } from './observation-logger';
-import { callAIWaterfall } from '@/lib/ai/providers';
+import { callAIWithModelDirect } from '@/lib/ai/providers';
 import { classifyIntentByKeywords } from './intent-classifier';
 import type { ChatMessage } from '@/lib/ai/prompts';
 import { agentMemory } from './memory/agent-memory';
 import { ExperimentTracker } from './learning/experiment-tracker';
+import { getModelForAgent } from '@/lib/ai/agent-models';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -146,6 +147,8 @@ class PlatformAgentClass {
     // Load agent memories for context enrichment
     const agentId = this.intentToAgentId(intent);
     if (agentId) {
+      // Inject per-agent AI model
+      context.preferredModel = getModelForAgent(agentId);
       try {
         const memories = await agentMemory.recall(agentId, undefined, 5);
         context.memories = memories.map(m => ({
@@ -229,7 +232,7 @@ class PlatformAgentClass {
       `Варианты: ${VALID_INTENTS.join(', ')}`;
 
     const messages: ChatMessage[] = [{ role: 'user', content: prompt }];
-    const raw = await callAIWaterfall(messages);
+    const raw = await callAIWithModelDirect(messages, getModelForAgent('router'));
     const cleaned = (raw ?? '').trim().toLowerCase().split(/\s/)[0] as AgentIntent;
     return VALID_INTENTS.includes(cleaned) ? cleaned : 'unknown';
   }

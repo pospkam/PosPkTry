@@ -8,7 +8,8 @@
  * Result: From timeout errors → all agents complete in < 20s
  */
 
-import { callAIWaterfall } from '@/lib/ai/providers';
+import { callAIWithModelDirect } from '@/lib/ai/providers';
+import { getModelForAgent } from '@/lib/ai/agent-models';
 import type { ChatMessage } from '@/lib/ai/prompts';
 import type { RichAgentContext } from './agent-context-v2';
 import { formatContextForPrompt } from './agent-context-v2';
@@ -28,7 +29,8 @@ export interface AgentExecutionResult {
 async function executeAgentWithTimeout(
   context: RichAgentContext,
   prompt: string,
-  timeoutMs: number
+  timeoutMs: number,
+  agentId?: string,
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     let completed = false;
@@ -45,7 +47,8 @@ async function executeAgentWithTimeout(
     (async () => {
       try {
         const messages: ChatMessage[] = [{ role: 'user', content: prompt }];
-        const result = await callAIWaterfall(messages);
+        const model = agentId ? getModelForAgent(agentId) : null;
+        const result = await callAIWithModelDirect(messages, model);
 
         if (!completed) {
           completed = true;
@@ -89,7 +92,8 @@ export async function runAgentsInParallel(
       const report = await executeAgentWithTimeout(
         agent.context,
         fullPrompt,
-        agent.context.timeLimit
+        agent.context.timeLimit,
+        agent.id,
       );
 
       return {

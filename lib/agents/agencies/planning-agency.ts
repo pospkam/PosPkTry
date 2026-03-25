@@ -7,7 +7,7 @@
  */
 
 import { pool } from '@/lib/db-pool';
-import { callAIWaterfall } from '@/lib/ai/providers';
+import { callAIWithModel } from '@/lib/ai/providers';
 import type { AgentContext } from '../context-hub';
 
 export interface AgencyResult {
@@ -36,10 +36,12 @@ interface GapRow {
 
 export class PlanningAgency {
   private briefing = '';
+  private preferredModel: string | null = null;
   private tools: Record<string, (...args: unknown[]) => Promise<{ success: boolean; message: string; details?: Record<string, unknown> }>> = {};
 
   async run(intent: string, context: AgentContext): Promise<AgencyResult> {
     this.briefing = context.richBriefing ?? '';
+    this.preferredModel = context.preferredModel ?? null;
     this.tools = context.tools ?? {};
     switch (intent) {
       case 'plan_forecast': return this.getForecast();
@@ -94,7 +96,7 @@ export class PlanningAgency {
 
     let forecast = '';
     try {
-      const aiResult = await callAIWaterfall([{ role: 'user', content: fullAiPrompt }]);
+      const { text: aiResult } = await callAIWithModel([{ role: 'user', content: fullAiPrompt }], this.preferredModel);
       if (aiResult) forecast = aiResult.trim();
     } catch { /* silent */ }
 

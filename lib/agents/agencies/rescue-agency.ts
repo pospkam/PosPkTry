@@ -8,7 +8,7 @@
  */
 
 import { pool } from '@/lib/db-pool';
-import { callAIWaterfall } from '@/lib/ai/providers';
+import { callAIWithModel } from '@/lib/ai/providers';
 import type { AgentContext } from '../context-hub';
 import type { ChatMessage } from '@/lib/ai/prompts';
 
@@ -39,10 +39,12 @@ interface WeatherRiskRow {
 
 export class RescueAgency {
   private briefing = '';
+  private preferredModel: string | null = null;
   private tools: Record<string, (...args: unknown[]) => Promise<{ success: boolean; message: string; details?: Record<string, unknown> }>> = {};
 
   async run(intent: string, context: AgentContext): Promise<AgencyResult> {
     this.briefing = context.richBriefing ?? '';
+    this.preferredModel = context.preferredModel ?? null;
     this.tools = context.tools ?? {};
     switch (intent) {
       case 'rescue_sos_stats':     return this.sosSummary();
@@ -252,7 +254,8 @@ export class RescueAgency {
     try {
       const fullPrompt = this.briefing ? `${this.briefing}\n\n${prompt}` : prompt;
       const messages: ChatMessage[] = [{ role: 'user', content: fullPrompt }];
-      return await callAIWaterfall(messages);
+      const { text } = await callAIWithModel(messages, this.preferredModel);
+      return text;
     } catch {
       return null;
     }

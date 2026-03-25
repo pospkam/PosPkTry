@@ -11,7 +11,7 @@
  * Раунд 3 (consensus) выполняется через EvolutionAgency.runFacilitator().
  */
 
-import { callAIWaterfall } from '@/lib/ai/providers';
+import { callAIWithModel } from '@/lib/ai/providers';
 import type { ChatMessage } from '@/lib/ai/prompts';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -153,7 +153,10 @@ export class AgentMesh {
    * Раунд 2: каждый агент реагирует на чужие отчёты.
    * Все вызовы параллельны. NULL-ответы фильтруются.
    */
-  async runReactions(agents: AgentReport[]): Promise<AgentReaction[]> {
+  async runReactions(
+    agents: AgentReport[],
+    modelMap?: Record<string, string>,
+  ): Promise<AgentReaction[]> {
     const tasks = agents
       .filter(a => a.status === 'ok')
       .map(async (agent): Promise<AgentReaction | null> => {
@@ -164,7 +167,8 @@ export class AgentMesh {
         try {
           const prompt = buildReactionPrompt(agent, agents, cfg.persona);
           const messages: ChatMessage[] = [{ role: 'user', content: prompt }];
-          const text = await callAIWaterfall(messages);
+          const agentModel = modelMap?.[agent.id] ?? null;
+          const { text } = await callAIWithModel(messages, agentModel);
 
           if (!text || text.trim().toUpperCase() === 'NULL' || text.trim() === '') {
             return null;
@@ -199,6 +203,7 @@ export class AgentMesh {
     agents:    AgentReport[],
     reactions: AgentReaction[],
     observerInsights?: string,
+    consensusModel?: string | null,
   ): Promise<string> {
     const reportsSummary = agents
       .filter(a => a.status === 'ok')
@@ -231,7 +236,8 @@ export class AgentMesh {
     }];
 
     try {
-      return await callAIWaterfall(messages) ?? 'AI-синтез недоступен.';
+      const { text } = await callAIWithModel(messages, consensusModel);
+      return text || 'AI-синтез недоступен.';
     } catch {
       return 'AI-синтез временно недоступен.';
     }

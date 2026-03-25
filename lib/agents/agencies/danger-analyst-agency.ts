@@ -14,8 +14,9 @@
  */
 
 import { query } from '@/lib/database';
-import { callAIWaterfall } from '@/lib/ai/providers';
+import { callAIWithModel } from '@/lib/ai/providers';
 import type { ChatMessage } from '@/lib/ai/prompts';
+import { getModelForAgent } from '@/lib/ai/agent-models';
 
 // ── Константы ─────────────────────────────────────────────────────────────
 
@@ -239,7 +240,8 @@ async function analyzeZoneWithAI(data: ZoneRawData, quickScore: number): Promise
     },
   ];
 
-  return callAIWaterfall(messages);
+  const { text } = await callAIWithModel(messages, getModelForAgent('rescue'));
+  return text;
 }
 
 // ── Сохранение оценки в БД ────────────────────────────────────────────────

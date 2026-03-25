@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { requireAdmin } from '@/lib/auth/middleware';
-import { callAIWaterfall } from '@/lib/ai/providers';
+import { callAIWithModelDirect } from '@/lib/ai/providers';
+import { getModelForAgent } from '@/lib/ai/agent-models';
 import type { ChatMessage } from '@/lib/ai/prompts';
 import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
 import { z } from 'zod';
@@ -100,7 +101,7 @@ export async function POST(request: NextRequest) {
       { role: 'user', content: question, timestamp: Date.now() },
     ];
 
-    const answer = await callAIWaterfall(messages);
+    const answer = await callAIWithModelDirect(messages, getModelForAgent('admin'));
 
     return NextResponse.json({
       success: true,

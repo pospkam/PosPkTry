@@ -11,7 +11,8 @@ import { z } from 'zod';
 import { getSystemPrompt, buildMessageHistory, ChatRole, ChatMessage } from '@/lib/ai/prompts';
 import { query } from '@/lib/database';
 import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
-import { callAIWaterfall } from '@/lib/ai/providers';
+import { callAIWithModelDirect } from '@/lib/ai/providers';
+import { getModelForAgent } from '@/lib/ai/agent-models';
 import { getUserFromRequest } from '@/lib/auth/jwt';
 import { extractAndEncryptInterests } from '@/lib/ai/interest-extractor';
 import { PlatformAgent } from '@/lib/agents/platform-agent';
@@ -171,7 +172,7 @@ export async function POST(request: NextRequest) {
         if (agentResult.intent !== 'unknown') answer = agentResult.response;
       } catch { /* fall through to raw AI */ }
     }
-    answer ??= await callAIWaterfall(messagesForAI);
+    answer ??= await callAIWithModelDirect(messagesForAI, getModelForAgent('kuzmich'));
 
     // Tour suggestions — only for tourist role (fire-and-forget fetch, non-blocking)
     let tourSuggestions: TourSuggestion[] = [];

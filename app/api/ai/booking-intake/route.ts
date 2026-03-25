@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { ApiResponse } from '@/types';
 import { requireOperator } from '@/lib/auth/middleware';
-import { callAIWaterfall } from '@/lib/ai/providers';
+import { callAIWithModelDirect } from '@/lib/ai/providers';
+import { getModelForAgent } from '@/lib/ai/agent-models';
 import type { ChatMessage } from '@/lib/ai/prompts';
 import { query } from '@/lib/database';
 import { emitEvent, AGENT_EVENTS } from '@/lib/events/emit';
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
     let provider: string;
 
     try {
-      reply = await callAIWaterfall(messages);
+      reply = await callAIWithModelDirect(messages, getModelForAgent('operator'));
       provider = 'waterfall';
     } catch {
       // Fallback: если все провайдеры недоступны

@@ -24,7 +24,7 @@ interface AgentReaction {
 interface AgentReport {
   id: string; name: string; role: string; intent: string;
   report: string; duration_ms: number; status: 'ok' | 'error';
-  has_signals?: boolean;
+  has_signals?: boolean; model_used?: string;
 }
 
 interface AgentProposal {
@@ -225,7 +225,12 @@ function AgentCard({
         </div>
         <div className="flex-1 text-left min-w-0">
           <div className="font-bold text-[var(--text-primary)] text-sm">{agent.name}</div>
-          <div className="text-xs text-[var(--text-muted)] truncate">{agent.role}</div>
+          <div className="text-xs text-[var(--text-muted)] truncate">
+            {agent.role}
+            {agent.model_used && (
+              <span className="ml-1.5 text-[10px] opacity-60">({agent.model_used})</span>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {agent.status === 'ok'

@@ -25,6 +25,7 @@ import { agentMemory } from '@/lib/agents/memory/agent-memory';
 import { approvalRequired } from '@/lib/agents/safeguards/approval-required';
 import { callAIWaterfall, callAIFast } from '@/lib/ai/providers';
 import type { ChatMessage } from '@/lib/ai/prompts';
+import { getModelForAgent, getModelDisplayName, CONSENSUS_MODEL } from '@/lib/ai/agent-models';
 import { externalResearcher } from '@/lib/agents/research/external-researcher';
 import {
   runExternalObservers,
@@ -55,6 +56,7 @@ export interface AgentReport {
   duration_ms: number;
   status:      'ok' | 'error';
   has_signals?: boolean;
+  model_used?: string;
 }
 
 export interface AgentVote {
@@ -619,6 +621,8 @@ export async function POST(req: NextRequest) {
             // Inject per-agent toolkit
             const { getToolkitForAgent } = await import('@/lib/agents/tools/agent-toolkits');
             agentContext.tools = getToolkitForAgent(agentDef.id);
+            // Inject per-agent AI model
+            agentContext.preferredModel = getModelForAgent(agentDef.id);
             return { agentDef, result: await runAgent(agentDef.intent, agentContext) };
           })
         );
@@ -645,6 +649,7 @@ export async function POST(req: NextRequest) {
             ? `${response}\n\n<b>Внешние сигналы:</b>\n${signal}`
             : response;
 
+          const agentModel = getModelForAgent(agentDef.id);
           const report: AgentReport = {
             id:          agentDef.id,
             name:        agentDef.name,
@@ -654,6 +659,7 @@ export async function POST(req: NextRequest) {
             duration_ms: durationMs,
             status:      failed ? 'error' : 'ok',
             has_signals: signal ? true : false,
+            model_used:  agentModel ? getModelDisplayName(agentModel) : undefined,
           };
 
           agents.push(report);
@@ -691,7 +697,13 @@ export async function POST(req: NextRequest) {
         }
 
         const mesh      = new AgentMesh();
-        const reactions = await mesh.runReactions(agents);
+        // Build per-agent model map for mesh reactions
+        const agentModelMap: Record<string, string> = {};
+        for (const a of MEETING_AGENTS) {
+          const m = getModelForAgent(a.id);
+          if (m) agentModelMap[a.id] = m;
+        }
+        const reactions = await mesh.runReactions(agents, agentModelMap);
         send(controller, { type: 'reactions_done', reactions });
 
         send(controller, { type: 'round3_start' });
@@ -704,7 +716,7 @@ export async function POST(req: NextRequest) {
             okObservers.map(o => `[${o.name}]: ${o.report.substring(0, 500)}`).join('\n');
         }
 
-        const consensus   = await mesh.runConsensus(agents, reactions, observerInsights);
+        const consensus   = await mesh.runConsensus(agents, reactions, observerInsights, CONSENSUS_MODEL);
         send(controller, { type: 'consensus_done', consensus });
 
         send(controller, { type: 'round4_start' });

@@ -7,7 +7,7 @@
  */
 
 import { pool } from '@/lib/db-pool';
-import { callAIWaterfall } from '@/lib/ai/providers';
+import { callAIWithModel } from '@/lib/ai/providers';
 import type { AgentContext } from '../context-hub';
 
 export interface AgencyResult {
@@ -50,10 +50,12 @@ interface MeetingStatsRow {
 
 export class InfraAgency {
   private briefing = '';
+  private preferredModel: string | null = null;
   private tools: Record<string, (...args: unknown[]) => Promise<{ success: boolean; message: string; details?: Record<string, unknown> }>> = {};
 
   async run(intent: string, context: AgentContext): Promise<AgencyResult> {
     this.briefing = context.richBriefing ?? '';
+    this.preferredModel = context.preferredModel ?? null;
     this.tools = context.tools ?? {};
     switch (intent) {
       case 'infra_health': return this.healthReport();
@@ -197,7 +199,7 @@ export class InfraAgency {
       ].filter(Boolean).join('\n');
 
       const fullPrompt = this.briefing ? `${this.briefing}\n\n${prompt}` : prompt;
-      const aiText = await callAIWaterfall([{ role: 'user', content: fullPrompt }]);
+      const { text: aiText } = await callAIWithModel([{ role: 'user', content: fullPrompt }], this.preferredModel);
 
       const statusIcon = dbMs < 200
         ? (failedExec && parseInt(failedExec.count, 10) > 2 ? 'ПРЕДУПРЕЖДЕНИЕ' : 'ОК')

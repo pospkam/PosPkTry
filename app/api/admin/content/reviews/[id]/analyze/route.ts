@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { requireAdmin } from '@/lib/auth/middleware';
-import { callAIWaterfall } from '@/lib/ai/providers';
+import { callAIWithModelDirect } from '@/lib/ai/providers';
+import { getModelForAgent } from '@/lib/ai/agent-models';
 import type { ChatMessage } from '@/lib/ai/prompts';
 import type { ReviewForAnalysisRow } from '@/lib/types/db-rows';
 
@@ -67,7 +68,7 @@ export async function POST(
       { role: 'user', content: prompt, timestamp: Date.now() },
     ];
 
-    const aiResponse = await callAIWaterfall(messages);
+    const aiResponse = await callAIWithModelDirect(messages, getModelForAgent('content'));
 
     // Parse AI response
     let sentiment: 'positive' | 'negative' | 'neutral' = 'neutral';

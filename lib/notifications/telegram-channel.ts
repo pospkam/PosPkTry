@@ -7,7 +7,8 @@
  */
 
 import { query } from '@/lib/database';
-import { callAIWaterfallDirect } from '@/lib/ai/providers';
+import { callAIWithModelDirect } from '@/lib/ai/providers';
+import { getModelForAgent } from '@/lib/ai/agent-models';
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -211,9 +212,9 @@ export async function postSezonToChannel(): Promise<{ ok: boolean; error?: strin
 - HTML-теги Telegram: <b>жирный</b>, <i>курсив</i>
 - начни с эмодзи настроения месяца`;
 
-  const text = await callAIWaterfallDirect([
+  const text = await callAIWithModelDirect([
     { role: 'user', content: prompt },
-  ]);
+  ], getModelForAgent('kuzmich'));
 
   return tgPost(channelId, text);
 }
@@ -264,9 +265,9 @@ export async function postFriendToChannel(slug: string): Promise<{ ok: boolean; 
 - HTML-теги Telegram: <b>жирный</b>, <i>курсив</i>
 - Начни не с имени, а с наблюдения или ситуации`;
 
-  const text = await callAIWaterfallDirect([
+  const text = await callAIWithModelDirect([
     { role: 'user', content: prompt },
-  ]);
+  ], getModelForAgent('kuzmich'));
 
   return tgPost(channelId, text);
 }
@@ -359,7 +360,7 @@ export async function postKuzmichRoute(): Promise<{ ok: boolean; routeId?: strin
 - HTML-теги Telegram: <b>жирный</b>, <i>курсив</i>
 - Не начинай с "Привет" или своего имени`;
 
-  const text = await callAIWaterfallDirect([{ role: 'user', content: prompt }]);
+  const text = await callAIWithModelDirect([{ role: 'user', content: prompt }], getModelForAgent('kuzmich'));
   const photoUrl = buildRoutePhotoUrl(r);
   const result = photoUrl
     ? await tgPostPhoto(channelId, photoUrl, text)
@@ -410,7 +411,7 @@ export async function postKuzmichTip(): Promise<{ ok: boolean; error?: string }>
 - HTML-теги: <b>жирный</b>, <i>курсив</i>
 - В конце можно добавить: ${appUrl}/routes`;
 
-  const text = await callAIWaterfallDirect([{ role: 'user', content: prompt }]);
+  const text = await callAIWithModelDirect([{ role: 'user', content: prompt }], getModelForAgent('kuzmich'));
   const result = await tgPost(channelId, text);
 
   if (result.ok) {

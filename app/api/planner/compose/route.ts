@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { query } from '@/lib/database';
-import { callAIWaterfall } from '@/lib/ai/providers';
+import { callAIWithModelDirect } from '@/lib/ai/providers';
+import { getModelForAgent } from '@/lib/ai/agent-models';
 import { getSystemPrompt } from '@/lib/ai/prompts';
 import type { ChatMessage } from '@/lib/ai/prompts';
 
@@ -45,7 +46,7 @@ Example response:
       { role: 'user', content: message },
     ];
 
-    const parseResponse = await callAIWaterfall(parseMessages);
+    const parseResponse = await callAIWithModelDirect(parseMessages, getModelForAgent('planner'));
     if (!parseResponse) {
       return NextResponse.json({ error: 'AI parsing failed' }, { status: 500 });
     }
@@ -126,7 +127,7 @@ OUTPUT ONLY VALID JSON (no other text):
       { role: 'user', content: 'Create the itinerary' },
     ];
 
-    const composeResponse = await callAIWaterfall(composeMessages);
+    const composeResponse = await callAIWithModelDirect(composeMessages, getModelForAgent('planner'));
     let composedItinerary;
 
     try {

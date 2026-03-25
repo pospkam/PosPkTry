@@ -10,7 +10,8 @@
  * wttr.in — бесплатная погода для агента Спасатель.
  */
 
-import { callAIWaterfall } from '@/lib/ai/providers';
+import { callAIWithModelDirect } from '@/lib/ai/providers';
+import { getModelForAgent } from '@/lib/ai/agent-models';
 import type { ChatMessage } from '@/lib/ai/prompts';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -264,7 +265,7 @@ async function filterRelevant(
   ].join('\n');
 
   const messages: ChatMessage[] = [{ role: 'user', content: prompt }];
-  const text = await callAIWaterfall(messages).catch(() => null);
+  const text = await callAIWithModelDirect(messages, getModelForAgent(agentId)).catch(() => null);
   if (!text || text.trim().toUpperCase() === 'NULL') return null;
   return text.trim();
 }

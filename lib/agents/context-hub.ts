@@ -49,6 +49,8 @@ export interface AgentContext {
   richBriefing?: string;
   /** Per-agent toolkit: real executable tools matching agent role */
   tools?: Record<string, (...args: unknown[]) => Promise<{ success: boolean; message: string; details?: Record<string, unknown> }>>;
+  /** Preferred OpenRouter model ID for this agent's AI calls */
+  preferredModel?: string | null;
 }
 
 // ── ContextHub ────────────────────────────────────────────────────────────────

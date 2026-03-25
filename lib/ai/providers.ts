@@ -94,6 +94,60 @@ export async function callOpenrouter(messages: ChatMessage[]): Promise<string | 
   return null;
 }
 
+// ── OpenRouter: specific model ────────────────────────────────
+// Calls a single specific model via OpenRouter. Used for per-agent model assignment.
+
+export async function callOpenRouterModel(
+  messages: ChatMessage[],
+  modelId: string,
+  timeoutMs = 30_000,
+): Promise<{ text: string; model_used: string } | null> {
+  const apiKey = getOpenRouterKey();
+  if (!apiKey) return null;
+
+  const payload = messages.map(({ role, content }) => ({ role, content }));
+
+  try {
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+        'HTTP-Referer': 'https://tourhab.ru',
+        'X-Title': 'TourHab Kamchatka',
+      },
+      body: JSON.stringify({
+        model: modelId,
+        temperature: 0.4,
+        max_tokens: 800,
+        messages: payload,
+      }),
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+
+    if (!res.ok) return null;
+    const data = await res.json() as { choices?: Array<{ message?: { content?: string } }> };
+    const text = data?.choices?.[0]?.message?.content;
+    if (!text?.trim()) return null;
+    return { text: text.trim(), model_used: modelId };
+  } catch {
+    return null;
+  }
+}
+
+// Call AI with a preferred model. Falls back to full waterfall if preferred model fails.
+export async function callAIWithModel(
+  messages: ChatMessage[],
+  preferredModel?: string | null,
+): Promise<{ text: string; model_used: string }> {
+  if (preferredModel) {
+    const result = await callOpenRouterModel(messages, preferredModel);
+    if (result) return result;
+  }
+  const text = await callAIWaterfall(messages);
+  return { text, model_used: 'waterfall-fallback' };
+}
+
 // ── Minimax ────────────────────────────────────────────────────
 export async function callMinimax(messages: ChatMessage[]): Promise<string | null> {
   const apiKey = process.env.MINIMAX_API_KEY;
@@ -692,6 +746,15 @@ export async function callAIFast(messages: ChatMessage[]): Promise<string> {
 // поэтому отдельный обход больше не нужен.
 export async function callAIWaterfallDirect(messages: ChatMessage[]): Promise<string> {
   return callAIWaterfall(messages);
+}
+
+/** Like callAIWithModel but returns plain string (for callsites that don't need model_used). */
+export async function callAIWithModelDirect(
+  messages: ChatMessage[],
+  preferredModel?: string | null,
+): Promise<string> {
+  const { text } = await callAIWithModel(messages, preferredModel);
+  return text;
 }
 
 // ── Debug Waterfall: диагностика каждого провайдера ──────────

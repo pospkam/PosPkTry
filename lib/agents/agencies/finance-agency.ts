@@ -7,7 +7,7 @@
  */
 
 import { pool } from '@/lib/db-pool';
-import { callAIWaterfall } from '@/lib/ai/providers';
+import { callAIWithModel } from '@/lib/ai/providers';
 import type { AgentContext } from '../context-hub';
 
 export interface AgencyResult {
@@ -50,10 +50,12 @@ interface PaymentRow {
 
 export class FinanceAgency {
   private briefing = '';
+  private preferredModel: string | null = null;
   private tools: Record<string, (...args: unknown[]) => Promise<{ success: boolean; message: string; details?: Record<string, unknown> }>> = {};
 
   async run(intent: string, context: AgentContext): Promise<AgencyResult> {
     this.briefing = context.richBriefing ?? '';
+    this.preferredModel = context.preferredModel ?? null;
     this.tools = context.tools ?? {};
     switch (intent) {
       case 'finance_report':   return this.unitEconomicsReport();
@@ -202,7 +204,7 @@ export class FinanceAgency {
       }
 
       const fullPrompt = this.briefing ? `${this.briefing}\n\n${prompt}${paymentHealthStr}` : `${prompt}${paymentHealthStr}`;
-      const aiText = await callAIWaterfall([{ role: 'user', content: fullPrompt }]);
+      const { text: aiText } = await callAIWithModel([{ role: 'user', content: fullPrompt }], this.preferredModel);
 
       const date = new Date().toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
       const response = `<b>Финансовый отчёт — ${date}</b>\n\nВыручка: ${grossRev.toLocaleString('ru-RU')} руб | Платформа: ${platformRev.toLocaleString('ru-RU')} руб | Брони: ${t.total_bookings}\n\n${aiText ?? this.formatFallback(t)}`;

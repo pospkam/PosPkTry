@@ -3,7 +3,8 @@
  * Knowledge-driven engine: distances, constraints, seasons, safety, real pricing
  */
 
-import { callAIWaterfall } from '@/lib/ai/providers';
+import { callAIWithModelDirect } from '@/lib/ai/providers';
+import { getModelForAgent } from '@/lib/ai/agent-models';
 import type { ChatMessage } from '@/lib/ai/prompts';
 import { pool } from '@/lib/db-pool';
 import {
@@ -1356,7 +1357,7 @@ export async function recommendTrip(profile: TripProfile): Promise<TripRecommend
       { role: 'system', content: 'Ты ассистент по туристическому планированию Камчатки.' },
       { role: 'user', content: aiPrompt },
     ];
-    const aiResponse = await callAIWaterfall(messages);
+    const aiResponse = await callAIWithModelDirect(messages, getModelForAgent('planner'));
     if (aiResponse?.trim()) itinerary = aiResponse;
   } catch {
     // fallback already set
