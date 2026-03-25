@@ -555,7 +555,7 @@ export default function BoardMeetingClient() {
   const [accountabilityData, setAccountabilityData] = useState<AccountabilityData | null>(null);
   const [preflightWarning,   setPreflightWarning]   = useState<string | null>(null);
   const [preflightLoading,   setPreflightLoading]   = useState(false);
-  const [orBalance,          setOrBalance]          = useState<{ remaining: number; low: boolean } | null>(null);
+  const [orBalance,          setOrBalance]          = useState<{ remaining: number | null; low: boolean } | null>(null);
   const [computeFund,        setComputeFund]        = useState<{ total_rub: number; estimated_meetings: number } | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -574,7 +574,7 @@ export default function BoardMeetingClient() {
   useEffect(() => {
     fetch('/api/agents/board-meeting/preflight')
       .then(r => r.ok ? r.json() : null)
-      .then((d: { openrouter_balance?: { remaining: number; low: boolean } | null; compute_fund?: { total_rub: number; estimated_meetings: number } | null } | null) => {
+      .then((d: { openrouter_balance?: { remaining: number | null; low: boolean } | null; compute_fund?: { total_rub: number; estimated_meetings: number } | null } | null) => {
         if (d?.openrouter_balance) setOrBalance(d.openrouter_balance);
         if (d?.compute_fund)       setComputeFund(d.compute_fund);
       })
@@ -611,7 +611,7 @@ export default function BoardMeetingClient() {
         const pfData = await pfRes.json() as {
           any_available: boolean;
           providers: Array<{ id: string; name: string; available: boolean; latency_ms?: number; error?: string }>;
-          openrouter_balance: { remaining: number; low: boolean } | null;
+          openrouter_balance: { remaining: number | null; low: boolean } | null;
           compute_fund: { total_rub: number; estimated_meetings: number } | null;
         };
         if (pfData.openrouter_balance) {
@@ -744,7 +744,7 @@ export default function BoardMeetingClient() {
               border: `1px solid ${orBalance.low ? 'var(--danger)' : 'var(--success)'}30`,
             }}>
             <Wallet size={13} />
-            ${orBalance.remaining.toFixed(2)}
+            ${orBalance.remaining != null ? orBalance.remaining.toFixed(2) : '~'}
             <ExternalLink size={10} className="opacity-50" />
           </a>
         )}
@@ -784,7 +784,7 @@ export default function BoardMeetingClient() {
                   {orBalance ? (
                     <p className="text-lg font-bold leading-none"
                       style={{ color: orBalance.low ? 'var(--danger)' : 'var(--success)' }}>
-                      ${orBalance.remaining.toFixed(2)}
+                      ${orBalance.remaining != null ? orBalance.remaining.toFixed(2) : '~'}
                       {orBalance.low && (
                         <span className="text-xs font-normal text-[var(--danger)] ml-2">
                           — низкий, пополните
@@ -870,7 +870,7 @@ export default function BoardMeetingClient() {
                   {orBalance && (
                     <p className="text-xs mt-1" style={{ color: orBalance.low ? 'var(--danger)' : 'var(--success)' }}>
                       <Wallet size={10} className="inline mr-1" />
-                      OpenRouter: ${orBalance.remaining.toFixed(2)} осталось
+                      OpenRouter: ${orBalance.remaining != null ? orBalance.remaining.toFixed(2) : '~'} осталось
                     </p>
                   )}
                   <a href="https://openrouter.ai/credits" target="_blank" rel="noopener noreferrer"
@@ -900,7 +900,7 @@ export default function BoardMeetingClient() {
                   background: orBalance.low ? 'color-mix(in srgb, var(--danger) 10%, transparent)' : 'color-mix(in srgb, var(--success) 10%, transparent)',
                   color: orBalance.low ? 'var(--danger)' : 'var(--success)',
                 }}>
-                  <Wallet size={9} className="inline mr-0.5" />${orBalance.remaining.toFixed(2)}
+                  <Wallet size={9} className="inline mr-0.5" />${orBalance.remaining != null ? orBalance.remaining.toFixed(2) : '~'}
                 </span>
               )}
               <a href="https://openrouter.ai/credits" target="_blank" rel="noopener noreferrer"

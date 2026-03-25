@@ -482,7 +482,7 @@ export interface ProviderStatus {
 export interface OpenRouterBalance {
   total_credits: number;
   total_usage: number;
-  remaining: number;
+  remaining: number | null; // null = pay-as-you-go (no limit)
   low: boolean;
 }
 
@@ -539,7 +539,7 @@ export async function checkOpenRouterBalance(): Promise<OpenRouterBalance | null
     return {
       total_credits: limit ?? 0,
       total_usage:   Math.round(usage * 100) / 100,
-      remaining:     remaining ?? 999, // null limit = pay-as-you-go
+      remaining,     // null = pay-as-you-go, no hard limit
       low:           remaining != null && remaining < 0.5,
     };
   } catch {
