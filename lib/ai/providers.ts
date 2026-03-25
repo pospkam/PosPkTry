@@ -206,6 +206,7 @@ export async function callXai(messages: ChatMessage[]): Promise<string | null> {
         max_tokens: 800,
         messages: payload,
       }),
+      signal: AbortSignal.timeout(20_000),
     });
 
     if (!res.ok) {
@@ -681,36 +682,69 @@ export async function preflightProviders(): Promise<{
   };
 }
 
-// ── Waterfall: пробует провайдеров по очереди ─────────────────
-// DeepSeek (primary) → MiniMax → OpenRouter → YandexGPT → остальные
-export async function callAIWaterfall(messages: ChatMessage[]): Promise<string> {
-  let answer: string | null = null;
-  if (!answer) answer = await callDeepSeek(messages);
-  if (!answer) answer = await callMiniMax(messages);
-  if (!answer) answer = await callOpenrouter(messages);
-  if (!answer) answer = await callYandexGPT(messages);
-  if (!answer) answer = await callMiMo(messages);
-  if (!answer) answer = await callGeminiDirect(messages);
-  if (!answer) answer = await callAnthropic(messages);
-  if (!answer) answer = await callXai(messages);
-  return answer ?? 'Извините, сервис временно недоступен. Попробуйте позже.';
+// ── Race Helper: first non-empty result from parallel calls ──────
+async function raceProviders(calls: Promise<string | null>[]): Promise<string | null> {
+  return new Promise<string | null>((resolve) => {
+    let pending = calls.length;
+    if (pending === 0) { resolve(null); return; }
+    let settled = false;
+    calls.forEach(p =>
+      p.then(result => {
+        if (!settled && result?.trim()) { settled = true; resolve(result); }
+      }).catch(() => {}).finally(() => {
+        pending--;
+        if (pending === 0 && !settled) resolve(null);
+      })
+    );
+  });
 }
 
-// ── Fast Waterfall — только дешёвые провайдеры ──────────────────
-// Для структурированных задач (JSON, бинарные ответы, голосование).
-// MiMo ($1/1M) → DeepSeek via OpenRouter ($0.27/1M).
-// НЕ использует Grok-4 и Anthropic — только для high-stakes выводов.
-export async function callAIFast(messages: ChatMessage[]): Promise<string> {
-  // Попытка 1: MiMo-V2-Pro (самый дешёвый)
-  const mimo = await callMiMo(messages);
-  if (mimo) return mimo;
+// ── Waterfall: race tiers for speed ─────────────────────────
+// Tier 1: fastest (DeepSeek + Gemini + MiMo) — race
+// Tier 2: mid-tier (OpenRouter + Yandex + MiniMax) — race
+// Tier 3: expensive/geo-blocked (Anthropic, xAI) — sequential fallback
+export async function callAIWaterfall(messages: ChatMessage[]): Promise<string> {
+  // Tier 1: race fastest providers
+  const tier1 = await raceProviders([
+    callDeepSeek(messages),
+    callGeminiDirect(messages),
+    callMiMo(messages),
+  ]);
+  if (tier1) return tier1;
 
-  // Попытка 2: DeepSeek через OpenRouter
+  // Tier 2: race mid-tier
+  const tier2 = await raceProviders([
+    callOpenrouter(messages),
+    callYandexGPT(messages),
+    callMiniMax(messages),
+  ]);
+  if (tier2) return tier2;
+
+  // Tier 3: sequential fallback (rarely reached)
+  const anthropic = await callAnthropic(messages);
+  if (anthropic) return anthropic;
+  const xai = await callXai(messages);
+  if (xai) return xai;
+
+  return 'Извините, сервис временно недоступен. Попробуйте позже.';
+}
+
+// ── Fast Waterfall — race cheap providers ────────────────────
+// Для структурированных задач (JSON, бинарные ответы, голосование).
+// Races MiMo + DeepSeek-via-OR + Gemini simultaneously.
+export async function callAIFast(messages: ChatMessage[]): Promise<string> {
   const apiKey = getOpenRouterKey();
+
+  const calls: Promise<string | null>[] = [
+    callMiMo(messages),
+    callGeminiDirect(messages),
+  ];
+
+  // DeepSeek via OpenRouter (inline to avoid extra function)
   if (apiKey) {
-    try {
-      const payload = messages.map(({ role, content }) => ({ role, content }));
-      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const payload = messages.map(({ role, content }) => ({ role, content }));
+    calls.push(
+      fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -725,20 +759,15 @@ export async function callAIFast(messages: ChatMessage[]): Promise<string> {
           messages: payload,
         }),
         signal: AbortSignal.timeout(12_000),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const text: string | undefined = data?.choices?.[0]?.message?.content;
-        if (text) return text;
-      }
-    } catch { /* fallthrough */ }
+      })
+        .then(res => res.ok ? res.json() : null)
+        .then(data => (data?.choices?.[0]?.message?.content as string) ?? null)
+        .catch(() => null)
+    );
   }
 
-  // Попытка 4: Gemini Direct
-  const gemini = await callGeminiDirect(messages);
-  if (gemini) return gemini;
-
-  return 'Сервис временно недоступен.';
+  const result = await raceProviders(calls);
+  return result ?? 'Сервис временно недоступен.';
 }
 
 // ── Waterfall Direct — алиас основного ────────────────────────

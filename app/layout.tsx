@@ -88,32 +88,16 @@ export const metadata: Metadata = {
 
 import './globals.css'
 import React from 'react'
-import { RoleProvider } from '@/contexts/RoleContext'
-import { AuthProvider } from '@/contexts/AuthContext'
-import { OrdersProvider } from '@/contexts/OrdersContext'
-import { ThemeProvider } from '@/contexts/ThemeContext'
-import { Toaster } from 'react-hot-toast'
+import { Providers } from '@/components/Providers'
 import YandexMetrika from '@/components/shared/YandexMetrika'
-import PageViewTracker from '@/components/shared/PageViewTracker'
-import { CartProvider } from '@/contexts/CartContext'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ru" suppressHydrationWarning>
       <body className={`min-h-screen transition-colors duration-300 ${inter.className} ${playfairDisplay.variable} ${inter.variable}`}>
-        <ThemeProvider>
-          <AuthProvider>
-            <RoleProvider>
-              <OrdersProvider>
-                <CartProvider>
-                {children}
-                </CartProvider>
-                <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
-                <PageViewTracker />
-              </OrdersProvider>
-            </RoleProvider>
-          </AuthProvider>
-        </ThemeProvider>
+        <Providers>
+          {children}
+        </Providers>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

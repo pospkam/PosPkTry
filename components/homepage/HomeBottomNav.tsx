@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { MapPin, Heart, Search, House } from 'lucide-react';
+import { MapPin, Heart, Sparkles, House } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 
 const FO = "var(--font-outfit,'Outfit',system-ui,sans-serif)";
@@ -10,7 +10,7 @@ const FO = "var(--font-outfit,'Outfit',system-ui,sans-serif)";
 const NAV_ITEMS = [
   { icon: House,  label: undefined,    href: '/'        },
   { icon: MapPin, label: 'Карта',      href: '/map'     },
-  { icon: Search, label: 'Поиск',      href: '/routes'  },
+  { icon: Sparkles, label: 'Кузьмич',  href: '/ai-assistant' },
   { icon: Heart,  label: undefined,    href: '/profile' },
 ];
 

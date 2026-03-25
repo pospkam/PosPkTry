@@ -14,6 +14,22 @@
 import { pool } from '@/lib/db-pool';
 import { detectTourIntent, findRelevantTours } from './booking-intent';
 
+// ── In-memory TTL cache (5 min, max 200 entries) ────────────────
+const RAG_CACHE = new Map<string, { data: string; ts: number }>();
+const RAG_TTL = 5 * 60 * 1000;
+
+function getCacheKey(message: string): string {
+  return message.toLowerCase().replace(/[^а-яёa-z\s]/gi, '').trim();
+}
+
+function evictStale(): void {
+  if (RAG_CACHE.size <= 200) return;
+  const now = Date.now();
+  for (const [k, v] of RAG_CACHE) {
+    if (now - v.ts > RAG_TTL) RAG_CACHE.delete(k);
+  }
+}
+
 // ── Полнотекстовый поиск маршрутов (russian tsvector) ─────────────
 
 async function findRoutesByText(
@@ -58,6 +74,11 @@ export async function buildRAGContext(
   // RAG для туристов и агентов — нужны конкретные туры и маршруты
   if (role !== 'tourist' && role !== 'agent') return '';
 
+  // Check cache
+  const cacheKey = getCacheKey(message);
+  const cached = RAG_CACHE.get(cacheKey);
+  if (cached && Date.now() - cached.ts < RAG_TTL) return cached.data;
+
   const intent = detectTourIntent(message);
 
   const [routes, tours] = await Promise.all([
@@ -94,6 +115,10 @@ export async function buildRAGContext(
   }
 
   ctx += '\n--- КОНЕЦ КОНТЕКСТА ---';
+
+  // Store in cache
+  RAG_CACHE.set(cacheKey, { data: ctx, ts: Date.now() });
+  evictStale();
 
   return ctx;
 }

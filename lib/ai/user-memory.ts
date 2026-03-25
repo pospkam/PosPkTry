@@ -192,8 +192,10 @@ export function buildMemoryContext(mem: UserMemory): string {
  */
 export async function buildAgentInsightsForTourist(): Promise<string> {
   try {
-    const ecoAlerts = await agentMemory.recall('eco', 'zone_alert', 3);
-    const rescueAlerts = await agentMemory.recall('rescue', 'weather_alert', 3);
+    const [ecoAlerts, rescueAlerts] = await Promise.all([
+      agentMemory.recall('eco', 'zone_alert', 3),
+      agentMemory.recall('rescue', 'weather_alert', 3),
+    ]);
 
     const parts: string[] = [];
     for (const alert of ecoAlerts) {

@@ -155,8 +155,10 @@ export async function POST(request: NextRequest) {
 
     const basePrompt   = getSystemPrompt(safeRole);
     const memContext   = userMemory ? buildMemoryContext(userMemory) : '';
-    const ragContext   = await buildRAGContext(message.trim(), safeRole);
-    const agentInsights = safeRole === 'tourist' ? await buildAgentInsightsForTourist() : '';
+    const [ragContext, agentInsights] = await Promise.all([
+      buildRAGContext(message.trim(), safeRole),
+      safeRole === 'tourist' ? buildAgentInsightsForTourist() : Promise.resolve(''),
+    ]);
     const systemPrompt = basePrompt + ragContext + memContext + agentInsights;
     const messagesForAI = buildMessageHistory(systemPrompt, history, 10);
 

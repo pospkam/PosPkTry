@@ -30,7 +30,7 @@ export const AGENT_MODEL_MAP: Record<AgentId, string> = {
   infra:      'meta-llama/llama-4-scout',
   vibe_coder: 'qwen/qwen-2.5-coder-32b-instruct',
   // Site-wide agents (not board members)
-  kuzmich:    'anthropic/claude-sonnet-4-6',
+  kuzmich:    'google/gemini-2.5-flash-preview',
   planner:    'google/gemini-2.5-flash-preview',
   operator:   'openai/gpt-4o-mini',
   router:     'deepseek/deepseek-chat-v3-0324',
