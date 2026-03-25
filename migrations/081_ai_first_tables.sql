@@ -1,12 +1,9 @@
 /**
- * Migration SQL for pospktry-v2
- * Run these commands against the database before deploying
+ * Migration 081: AI-First Platform Tables
+ * Reference tours and composite bookings for AI composition engine
  */
 
--- ─────────────────────────────────────────────────────
--- 001: Create reference_tours table (minimal, reusable tours)
--- ─────────────────────────────────────────────────────
-
+-- reference_tours: Minimal, reusable tour components
 CREATE TABLE IF NOT EXISTS reference_tours (
   id SERIAL PRIMARY KEY,
   operator_id INT NOT NULL REFERENCES operators(id) ON DELETE CASCADE,
@@ -29,10 +26,7 @@ CREATE INDEX idx_reference_tours_zone ON reference_tours(zone);
 CREATE INDEX idx_reference_tours_operator ON reference_tours(operator_id);
 
 
--- ─────────────────────────────────────────────────────
--- 002: Create composite_bookings table (multi-activity)
--- ─────────────────────────────────────────────────────
-
+-- composite_bookings: Multi-activity bookings created by AI composition
 CREATE TABLE IF NOT EXISTS composite_bookings (
   id SERIAL PRIMARY KEY,
   tourist_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
