@@ -688,8 +688,6 @@ export async function preflightProviders(): Promise<{
       probeDetailed('mimo',       'MiMo-V2-Pro (Xiaomi)',        probeMiMo),
       probeDetailed('openrouter', 'OpenRouter (GPT-4o-mini)',     probeOpenrouter),
       probeDetailed('deepseek',   'DeepSeek-V3 (DeepSeek)',       probeDeepSeek),
-      probeDetailed('xai',        'Grok-4 (xAI)',                 probeXai),
-      probeDetailed('anthropic',  'Claude Haiku (Anthropic)',     probeAnthropic),
     ]),
     checkOpenRouterBalance(),
   ]);
