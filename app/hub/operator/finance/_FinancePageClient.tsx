@@ -139,7 +139,7 @@ function PayoutDetailsForm({ initialMethod }: { initialMethod: string | null }) 
               </div>
               <div>
                 <label className={labelCls}>КПП (для ООО)</label>
-                <input className={inputCls} placeholder="410001001"
+                <input className={inputCls} placeholder="410101001"
                   value={fields.kpp} onChange={e => setFields(f => ({ ...f, kpp: e.target.value }))} />
               </div>
             </div>
