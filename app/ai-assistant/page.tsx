@@ -76,6 +76,18 @@ function AIAssistantContent({ initialQuery }: { initialQuery: string | null }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [sessionId] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    const key = 'th_ai_assistant_session';
+    let id = localStorage.getItem(key);
+    if (!id) {
+      id = crypto.randomUUID();
+      localStorage.setItem(key, id);
+    }
+    return id;
+  });
+  const [limitReached, setLimitReached] = useState(false);
+  const [remainingFree, setRemainingFree] = useState<number | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const { isDark, toggleTheme } = useTheme();
 
@@ -91,7 +103,7 @@ function AIAssistantContent({ initialQuery }: { initialQuery: string | null }) {
   }, []);
 
   async function sendMessage(text: string) {
-    if (!text.trim() || loading) return;
+    if (!text.trim() || loading || limitReached) return;
     setMessages(prev => [...prev, { role: 'user', content: text }]);
     setInput('');
     setLoading(true);
@@ -102,10 +114,23 @@ function AIAssistantContent({ initialQuery }: { initialQuery: string | null }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: text,
-          history: messages.map(m => ({ role: m.role, content: m.content })),
+          sessionId,
+          role: 'tourist',
         }),
       });
       const data: unknown = await res.json();
+
+      if (isRecord(data) && isRecord(data.data) && data.data.limitReached === true) {
+        setLimitReached(true);
+        const dd = data.data;
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: typeof dd.message === 'string'
+            ? dd.message
+            : 'Вы использовали все бесплатные сообщения. Зарегистрируйтесь, чтобы продолжить.',
+        }]);
+        return;
+      }
 
       let reply = 'Извините, не удалось получить ответ. Попробуйте позже.';
       let tours: TourSuggestion[] | undefined;
@@ -117,6 +142,10 @@ function AIAssistantContent({ initialQuery }: { initialQuery: string | null }) {
         const rawTours = data.data.tours;
         if (Array.isArray(rawTours)) {
           tours = rawTours.filter(isTourSuggestion);
+        }
+
+        if (typeof data.data.remainingFree === 'number') {
+          setRemainingFree(data.data.remainingFree);
         }
       }
 
