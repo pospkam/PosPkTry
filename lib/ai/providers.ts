@@ -597,15 +597,16 @@ export async function preflightProviders(): Promise<{
 }
 
 // ── Waterfall: пробует провайдеров по очереди ─────────────────
-// OpenRouter → DeepSeek → Anthropic → остальные
+// DeepSeek (primary, $19 balance) → OpenRouter → YandexGPT → остальные
+// Порядок оптимизирован: сначала рабочие, потом fallback
 export async function callAIWaterfall(messages: ChatMessage[]): Promise<string> {
   let answer: string | null = null;
-  if (!answer) answer = await callOpenrouter(messages);
   if (!answer) answer = await callDeepSeek(messages);
-  if (!answer) answer = await callAnthropic(messages);
-  if (!answer) answer = await callMiMo(messages);
+  if (!answer) answer = await callOpenrouter(messages);
   if (!answer) answer = await callYandexGPT(messages);
+  if (!answer) answer = await callMiMo(messages);
   if (!answer) answer = await callGeminiDirect(messages);
+  if (!answer) answer = await callAnthropic(messages);
   if (!answer) answer = await callXai(messages);
   return answer ?? 'Извините, сервис временно недоступен. Попробуйте позже.';
 }
