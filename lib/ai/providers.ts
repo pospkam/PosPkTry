@@ -597,15 +597,16 @@ export async function preflightProviders(): Promise<{
 }
 
 // ── Waterfall: пробует провайдеров по очереди ─────────────────
-// MiMo → OpenRouter → YandexGPT (лучший русский) → DeepSeek → Gemini → xAI → Anthropic
+// OpenRouter → DeepSeek → Anthropic → остальные
 export async function callAIWaterfall(messages: ChatMessage[]): Promise<string> {
-  let answer = await callMiMo(messages);
-  if (!answer) answer = await callOpenrouter(messages);   // GPT-4o-mini → DeepSeek → Claude Haiku (OR)
-  if (!answer) answer = await callYandexGPT(messages);   // YandexGPT Lite — лучший русский, без геоблока
-  if (!answer) answer = await callDeepSeek(messages);     // DeepSeek direct
-  if (!answer) answer = await callGeminiDirect(messages); // Gemini 2.0 Flash direct
-  if (!answer) answer = await callXai(messages);          // Grok (может быть geo-blocked)
-  if (!answer) answer = await callAnthropic(messages);    // Claude Haiku direct (может быть geo-blocked)
+  let answer: string | null = null;
+  if (!answer) answer = await callOpenrouter(messages);
+  if (!answer) answer = await callDeepSeek(messages);
+  if (!answer) answer = await callAnthropic(messages);
+  if (!answer) answer = await callMiMo(messages);
+  if (!answer) answer = await callYandexGPT(messages);
+  if (!answer) answer = await callGeminiDirect(messages);
+  if (!answer) answer = await callXai(messages);
   return answer ?? 'Извините, сервис временно недоступен. Попробуйте позже.';
 }
 
