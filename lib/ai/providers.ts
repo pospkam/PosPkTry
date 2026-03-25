@@ -535,9 +535,11 @@ export async function checkOpenRouterBalance(): Promise<OpenRouterBalance | null
       data: { usage: number; limit: number | null }
     };
     const { usage, limit } = json.data;
-    const remaining = limit != null ? Math.round((limit - usage) * 100) / 100 : null;
+    // OR returns limit=999 as sentinel for "no hard limit" (pay-as-you-go)
+    const effectiveLimit = limit != null && limit < 999 ? limit : null;
+    const remaining = effectiveLimit != null ? Math.round((effectiveLimit - usage) * 100) / 100 : null;
     return {
-      total_credits: limit ?? 0,
+      total_credits: effectiveLimit ?? 0,
       total_usage:   Math.round(usage * 100) / 100,
       remaining,     // null = pay-as-you-go, no hard limit
       low:           remaining != null && remaining < 0.5,
