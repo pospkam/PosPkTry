@@ -71,7 +71,7 @@ export function FeaturedDirections() {
         {/* Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {DIRECTIONS.map((dir, i) => (
-            <Reveal key={dir.slug} delay={i}>
+            <Reveal key={dir.slug} delay={i > 0 && i <= 4 ? (i as 1 | 2 | 3 | 4) : undefined}>
               <Link
                 href={`/routes?category=${dir.slug}`}
                 className="group relative block aspect-[4/3] rounded-lg overflow-hidden"

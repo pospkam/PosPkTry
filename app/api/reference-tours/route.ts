@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { query } from '@/lib/database/db-pool';
+import { query } from '@/lib/database';
 import { verifyToken, extractToken } from '@/lib/auth/jwt';
 import type { ReferenceTour } from '@/lib/types/db-rows';
 

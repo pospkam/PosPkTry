@@ -1208,6 +1208,32 @@ export interface CustomerRow {
 }
 
 // ──────────────────────────────────────────────────────────
+// AI-first — Reference Tours & Composite Bookings
+// ──────────────────────────────────────────────────────────
+
+export interface ReferenceTour {
+  id: string;
+  operator_id: string;
+  activity_type: string;
+  zone: string;
+  price_per_person: string;
+  duration_hours: string;
+  max_participants: number;
+  description: string | null;
+  created_at: Date;
+}
+
+export interface CompositeBooking {
+  id: string;
+  tourist_id: string;
+  reference_tour_ids: number[];
+  itinerary: Record<string, unknown>;
+  total_cost: string;
+  status: string;
+  created_at: Date;
+}
+
+// ──────────────────────────────────────────────────────────
 // Admin — Knowledge Base (agent_route_knowledge)
 // ──────────────────────────────────────────────────────────
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { query } from '@/lib/database/db-pool';
+import { query } from '@/lib/database';
 import { callAIWaterfall } from '@/lib/ai/providers';
 import { getSystemPrompt } from '@/lib/ai/prompts';
 import type { ChatMessage } from '@/lib/ai/prompts';
