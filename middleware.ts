@@ -40,6 +40,7 @@ const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/partners': ['GET'],
   '/api/eco-points': ['GET'],
   '/api/ai/chat': ['POST', 'GET'],
+  '/api/ai/debug-waterfall': ['GET'],  // protected by CRON_SECRET inside handler
   '/api/ai/crew-plan': ['POST'],
   '/api/ai/health': ['GET'],
   '/api/agents/health': ['GET'],       // agent system health (lightly protected via HEALTH_SECRET)
