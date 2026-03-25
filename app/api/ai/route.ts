@@ -109,24 +109,21 @@ async function callOpenrouter(prompt: string) {
 // AUTH: Public — AI assistant for visitors
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.formData().catch(async () => await req.json().catch(() => null))
-    const prompt = typeof (body as any)?.prompt === 'string' ? (body as any).prompt : (typeof (body as any)?.input === 'string' ? (body as any).input : '')
-    const q = String(prompt || '').slice(0, 800)
+    const body: unknown = await req.formData().catch(async () => await req.json().catch(() => null));
+    const parsed = body as Record<string, unknown> | null;
+    const raw = parsed?.prompt ?? parsed?.input ?? '';
+    const q = String(raw).slice(0, 800);
     if (!q) return NextResponse.json({ error: 'EMPTY' }, { status: 400 })
 
-    // Приоритет: DeepSeek → Minimax → xAI → OpenRouter (Timeweb AI временно отключен)
+    // Приоритет: DeepSeek → Minimax → xAI → OpenRouter
     let answer = await callDeepseek(q)
     if (!answer) answer = await callMinimax(q)
     if (!answer) answer = await callXai(q)
     if (!answer) answer = await callOpenrouter(q)
     if (!answer) answer = 'Сейчас не могу ответить. Попробуйте позже.'
 
-    // TODO: Включить Timeweb AI после исправления API
-    // let answer = await callTimeweb(q)
-    // if (!answer) answer = await callDeepseek(q)
-
     return NextResponse.json({ ok: true, answer })
-  } catch (e) {
-    return NextResponse.json({ ok: false, error: 'AI_FAILED' }, { status: 200 })
+  } catch {
+    return NextResponse.json({ ok: false, error: 'AI_FAILED' }, { status: 500 })
   }
 }

@@ -85,10 +85,10 @@ export function FeaturedDirections() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-5">
-                  <h3 className="font-playfair text-xl font-bold text-white mb-0.5">
+                  <h3 className="font-playfair text-xl font-bold text-[#F0F6FC] mb-0.5">
                     {dir.title}
                   </h3>
-                  <p className="text-sm text-[rgba(255,255,255,0.7)]">{dir.desc}</p>
+                  <p className="text-sm text-[#8B949E]">{dir.desc}</p>
                 </div>
               </Link>
             </Reveal>
