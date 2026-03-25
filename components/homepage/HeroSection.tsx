@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useState, useRef } from 'react';
 import { Search, ArrowRight } from 'lucide-react';
 
-const HERO_LIGHT = '/images/hero/hero-light.jpg';
-const HERO_DARK  = '/images/hero/hero-dark.jpg';
+const HERO_LIGHT = '/images/hero/hero-light.jpeg';
+const HERO_DARK  = '/images/hero/hero-dark.jpeg';
 
 const CHIPS = [
   'Рыбалка на чавычу',
