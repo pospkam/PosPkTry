@@ -68,31 +68,35 @@ export class EvolutionAgency {
       this.patterns.detectPatterns(168), // 7 дней
       this.feedback.getSummary(168),
       pool.query<IntentMetricRow>(`
-        SELECT
-          metadata->>'decision'                                          AS decision,
-          COUNT(*)::text                                                 AS count,
-          ROUND(
-            100.0 * COUNT(*) FILTER (WHERE metadata->>'result' = 'success')
-            / NULLIF(COUNT(*), 0), 1
-          )::text                                                        AS success_rate,
-          ROUND(AVG((metadata->>'duration_ms')::numeric))::text          AS avg_duration_ms,
+        WITH decisions AS (
+          SELECT
+            metadata->>'decision'                                          AS decision,
+            COUNT(*)::text                                                 AS count,
+            ROUND(
+              100.0 * COUNT(*) FILTER (WHERE metadata->>'result' = 'success')
+              / NULLIF(COUNT(*), 0), 1
+            )::text                                                        AS success_rate,
+            ROUND(AVG((metadata->>'duration_ms')::numeric))::text          AS avg_duration_ms
+          FROM ai_actions_log al
+          WHERE action_type LIKE 'agent_%'
+            AND action_type NOT IN ('agent_feedback', 'agent_experiment_result')
+            AND created_at >= NOW() - INTERVAL '7 days'
+            AND metadata->>'decision' IS NOT NULL
+          GROUP BY metadata->>'decision'
+          ORDER BY COUNT(*) DESC
+          LIMIT 15
+        )
+        SELECT d.*,
           COALESCE(
             (SELECT ROUND(100.0 * COUNT(*) FILTER (WHERE metadata->>'rating' = 'good')
                           / NULLIF(COUNT(*), 0), 1)
              FROM ai_actions_log fb
              WHERE fb.action_type = 'agent_feedback'
-               AND fb.metadata->>'intent' = al.metadata->>'decision'
-             )::text,
+               AND fb.metadata->>'intent' = d.decision
+            )::text,
             'нет данных'
-          )                                                              AS feedback_score
-        FROM ai_actions_log al
-        WHERE action_type LIKE 'agent_%'
-          AND action_type NOT IN ('agent_feedback', 'agent_experiment_result')
-          AND created_at >= NOW() - INTERVAL '7 days'
-          AND metadata->>'decision' IS NOT NULL
-        GROUP BY metadata->>'decision'
-        ORDER BY COUNT(*) DESC
-        LIMIT 15
+          ) AS feedback_score
+        FROM decisions d
       `),
       agentMemory.recall('director', 'decision', 3),
     ]);

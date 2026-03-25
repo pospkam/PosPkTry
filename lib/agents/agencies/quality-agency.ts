@@ -134,7 +134,7 @@ export class QualityAgency {
           SELECT 1 FROM tour_availability ta
           WHERE ta.operator_tour_id = ot.id
             AND ta.date BETWEEN CURRENT_DATE AND CURRENT_DATE + 30
-            AND ta.is_available = true
+            AND ta.is_cancelled = false
             AND ta.available_slots > COALESCE(ta.booked_slots, 0)
         )
       ORDER BY ot.is_published DESC, ot.id

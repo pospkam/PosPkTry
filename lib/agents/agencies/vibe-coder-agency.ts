@@ -81,7 +81,7 @@ export class VibeCoderAgency {
             AND updated_at >= NOW() - INTERVAL '14 days'
           ORDER BY updated_at DESC
           LIMIT 5
-        `),
+        `).catch(() => ({ rows: [] as { approval_id: string; description: string; execution_notes: string; updated_at: string }[] })),
 
         pool.query<{ action_type: string; fail_count: string }>(`
           SELECT

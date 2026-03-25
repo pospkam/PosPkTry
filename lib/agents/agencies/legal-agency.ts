@@ -238,7 +238,7 @@ export class LegalAgency {
         ob.id                    AS booking_id,
         ot.title                 AS tour_title,
         p.name                   AS operator,
-        ob.status,
+        ob.booking_status AS status,
         ob.final_price          AS amount,
         ob.created_at::text,
         CASE

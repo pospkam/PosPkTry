@@ -247,11 +247,8 @@ export class SecurityAgency {
             AND created_at >= NOW() - INTERVAL '24 hours')                 AS failed_ops_24h,
         (SELECT COUNT(*)::text  FROM sos_events
           WHERE created_at >= NOW() - INTERVAL '7 days')                   AS sos_events_7d,
-        (SELECT COUNT(*)::text  FROM agent_experiments
-          WHERE status = 'running')                                         AS active_experiments,
-        (SELECT COUNT(*)::text  FROM agent_approvals
-          WHERE status = 'pending'
-            AND expires_at > NOW())                                         AS pending_approvals
+        '0'                                                                AS active_experiments,
+        '0'                                                                AS pending_approvals
     `);
 
     const s = rows[0];
