@@ -129,6 +129,9 @@ lib/services/ — доменные сервисы
 lib/types/db-rows.ts — интерфейсы строк БД
 page.tsx      — server (metadata)
 _*Client.tsx  — client (логика, useState)
+lib/services/lead-processor.service.ts — AI Lead Processor (квалификация лидов)
+lib/pdf/proposal-generator.ts          — PDF-предложения (PDFKit)
+lib/notifications/lead-notify.ts       — Telegram-нотификации о лидах
 ```
 
 ---

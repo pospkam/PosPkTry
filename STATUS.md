@@ -1,6 +1,6 @@
 # KamchatourHub — Статус платформы
 
-_Обновлено: 2026-03-08_
+_Обновлено: 2026-03-26_
 
 ---
 
@@ -10,11 +10,11 @@ _Обновлено: 2026-03-08_
 |---|---|
 | Build | ✅ `npm run build` проходит |
 | TypeScript | ✅ 0 ошибок (`tsc --noEmit`) |
-| Страниц | 91 (App Router) |
-| API endpoints | 210+ |
+| Страниц | 94 (App Router) |
+| API endpoints | 217+ |
 | Роли | 6 (admin / operator / guide / tourist / moderator / support) |
-| Миграции | 023 (raw SQL) |
-| Туров в БД | 11 (10 рыбалка, 1 комбо) |
+| Миграции | 083 (raw SQL) |
+| Туров в БД | 11+ |
 | Маршрутов (kamchatka_routes) | 129 |
 | Маршрутов (agent_route_knowledge) | 129 |
 | Маршрутов (knowledge-base.json) | 129 |
@@ -47,6 +47,30 @@ _Обновлено: 2026-03-08_
 ---
 
 ## Реализованные фичи (эта сессия)
+
+### AI Lead Processor (26.03.2026)
+
+AI-обработка входящих заявок для операторов. Цель: 80% заявок без участия человека.
+
+**Пайплайн:** входящий лид → AI-квалификация → подбор туров → персональное предложение → PDF → Telegram-уведомление оператора
+
+- Миграция `083_lead_processor.sql` — расширены `leads` (9 статусов), новые таблицы `lead_proposals`, `lead_activity_log`
+- `lib/services/lead-processor.service.ts` — `LeadProcessorService` (AI-квалификация через `callAIFast`, ранжирование туров, генерация предложения)
+- `lib/pdf/proposal-generator.ts` — PDF на PDFKit: шапка TourHab, headline, summary, highlights, карточка тура, контакты
+- `lib/notifications/lead-notify.ts` — Telegram-нотификации: новый лид + готовое предложение со ссылкой
+- `app/api/leads/process/route.ts` — `POST /api/leads/process` — запуск AI-обработки
+- `app/api/leads/[id]/proposal/route.ts` — `GET /api/leads/[id]/proposal` — данные предложения
+- `app/api/leads/[id]/proposal/pdf/route.ts` — `GET /api/leads/[id]/proposal/pdf` — скачать PDF
+- `app/hub/operator/leads/` — страница лидов оператора с фильтрами, statcard, one-click AI-обработкой
+
+**Зависимости:** `pdfkit` + `@types/pdfkit` добавлены в package.json
+
+**Статусы лида (state machine):**
+`new` → `ai_processing` → `ai_qualified` → `proposal_sent` → `awaiting_confirm` → `converted` / `lost`
+
+**Booking state machine** расширен до 10 статусов (добавлены `awaiting_payment`, `deposit_paid`, `in_progress`).
+
+---
 
 ### route_id у туров
 Туры теперь ссылаются на объект `kamchatka_routes` через FK `route_id`.

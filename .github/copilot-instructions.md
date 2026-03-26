@@ -92,6 +92,9 @@ const { data } = useSWR('/api/weather', fetcher, { refreshInterval: 600000 })
 - `lib/services/` — бизнес-логика (tour, booking, payment, rag, messaging)
 - `lib/ai/providers.ts` — AI waterfall (8 провайдеров)
 - `lib/ai/provider-config.ts` — ключи и конфигурация провайдеров
+- `lib/services/lead-processor.service.ts` — AI Lead Processor (квалификация лидов)
+- `lib/pdf/proposal-generator.ts` — PDF-предложения (PDFKit)
+- `lib/notifications/lead-notify.ts` — Telegram-нотификации о лидах
 
 ## Timeweb MCP
 Конфигурация в `.vscode/mcp.json` (не в git). Управление деплоем через Copilot.

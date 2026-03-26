@@ -4,7 +4,17 @@ import { pool } from '@/lib/db-pool';
 import { requireAdmin } from '@/lib/auth/middleware';
 
 const PatchSchema = z.object({
-  status: z.enum(['new', 'contacted', 'qualified', 'converted', 'lost']).optional(),
+  status: z.enum([
+    'new',
+    'ai_processing',
+    'ai_qualified',
+    'proposal_sent',
+    'awaiting_confirm',
+    'contacted',
+    'qualified',
+    'converted',
+    'lost',
+  ]).optional(),
   notes: z.string().max(2000).optional(),
 });
 

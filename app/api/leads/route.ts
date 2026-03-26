@@ -4,6 +4,7 @@ import { pool } from '@/lib/db-pool';
 import { telegramService } from '@/lib/notifications/telegram';
 import { notifyAdminNewLead } from '@/lib/notifications/telegram-channel';
 import { requireAdmin } from '@/lib/auth/middleware';
+import { notifyOperatorNewLead } from '@/lib/notifications/lead-notify';
 
 const LeadSchema = z.object({
   name:        z.string().min(2, 'Укажите имя').max(120),
@@ -16,7 +17,10 @@ const LeadSchema = z.object({
 });
 
 const ListSchema = z.object({
-  status: z.enum(['new', 'contacted', 'qualified', 'converted', 'lost', 'all']).optional().default('all'),
+  status: z.enum([
+    'new', 'ai_processing', 'ai_qualified', 'proposal_sent',
+    'awaiting_confirm', 'contacted', 'qualified', 'converted', 'lost', 'all',
+  ]).optional().default('all'),
   limit:  z.coerce.number().min(1).max(100).optional().default(50),
   offset: z.coerce.number().min(0).optional().default(0),
 });
@@ -38,7 +42,11 @@ export async function GET(req: NextRequest) {
 
   const [rows, cnt] = await Promise.all([
     pool.query(
-      `SELECT id, name, phone, comment, route_title, source_url, source_data, status, notes, created_at, updated_at
+      `SELECT id, name, phone, email, comment, route_title, source_url, source_data,
+              group_size, budget_rub, desired_dates,
+              status, notes,
+              ai_score, ai_summary, matched_tour_ids, proposal_id, processed_at,
+              operator_id, created_at, updated_at
        FROM leads ${where} ORDER BY created_at DESC LIMIT $${lIdx} OFFSET $${oIdx}`,
       vals
     ),
@@ -117,6 +125,15 @@ export async function POST(req: NextRequest) {
     sourceUrl:  source_url ?? null,
     sourceData: source_data ?? null,
   }).catch((e: unknown) => console.error('[leads] notifyAdminNewLead failed:', e));
+
+  // Уведомление оператора с ссылкой на AI-обработку
+  notifyOperatorNewLead({
+    leadId,
+    name,
+    phone,
+    comment:    comment,
+    routeTitle: route_title,
+  }).catch(() => undefined);
 
   return NextResponse.json({ success: true, id: leadId }, { status: 201 });
 }

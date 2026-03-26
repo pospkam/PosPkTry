@@ -1,8 +1,9 @@
 # KamchatourHub — AI Agents Reference
 
 > Полный реестр всех AI-агентов платформы.
+> Полный реестр всех AI-агентов платформы.
 > Где вызываются, за что отвечают, какие инструменты имеют.
-> Обновлено: 24 марта 2026
+> Обновлено: 26 марта 2026
 
 ---
 
@@ -350,6 +351,28 @@
 
 ---
 
+### Lead Processor — AI Обработчик лидов
+
+| Параметр | Значение |
+|----------|----------|
+| **Файл** | `lib/services/lead-processor.service.ts` |
+| **Класс** | `LeadProcessorService` |
+| **Где** | `POST /api/leads/process`, вызывается оператором из `/hub/operator/leads` |
+| **Что делает** | Квалификация лида → подбор туров → генерация персонального предложения (PDF) → Telegram-нотификация |
+
+**Пайплайн:**
+1. AI-квалификация (`callAIFast`) — извлекает activity_types, бюджет, даты, интересы из свободного текста
+2. Матчинг туров — SQL-запрос по activity_type + бюджету + ключевым словам + ранжирование
+3. Генерация предложения — headline + summary + highlights через AI
+4. Сохранение в `lead_proposals`, обновление статуса лида
+5. Telegram-уведомление оператора со ссылками на лид и PDF
+
+**State machine лида:** `new` → `ai_processing` → `ai_qualified` → `proposal_sent` → `awaiting_confirm` → `converted` / `lost`
+
+**PDF:** `lib/pdf/proposal-generator.ts` — PDFKit, генерация на сервере, ~1-2 сек
+
+---
+
 ## СТРАНИЦЫ И API
 
 ### UI-страницы с агентами
@@ -360,6 +383,7 @@
 | **Agents Dashboard** | `/hub/admin/agents` | 4 вкладки: Activity / Insights / Experiments / Approvals |
 | **Safety Dashboard** | `/hub/admin/safety` | Данные danger-analyst (опасности по зонам) |
 | **AI Chat** | `/ai-assistant` | Чат с AI: для admin/operator перехватывается PlatformAgent |
+| **Leads (Operator)** | `/hub/operator/leads` | AI Lead Processor: список лидов, one-click AI-обработка, скачать PDF |
 
 ### API endpoints агентов
 
@@ -382,6 +406,9 @@
 | `/api/agents/rescue-consult` | GET | SAR-консультация с данными об опасностях |
 | `/api/ai/chat` | POST | Главный чат: PlatformAgent intercept + AI waterfall |
 | `/api/telegram/webhook` | POST | Telegram: `/agent` команда вызывает PlatformAgent |
+| `/api/leads/process` | POST | AI Lead Processor: квалификация + подбор тура + генерация предложения |
+| `/api/leads/[id]/proposal` | GET | Данные готового предложения по лиду |
+| `/api/leads/[id]/proposal/pdf` | GET | Скачать PDF-предложение (PDFKit, ~1-2 сек) |
 
 ### Cron-задачи с агентами
 
@@ -461,3 +488,12 @@ app/hub/admin/
 4. **`user_eco_points` не в миграциях** — только в schema.sql, может не быть на проде
 5. **Cron-задачи не настроены на cron-job.org** — агенты не работают автономно
 6. **Миграции 077, 078 не применены на проде** — Telegram chat_id + support tickets
+## ИЗВЕСТНЫЕ ПРОБЛЕМЫ (26.03.2026)
+
+1. **AI на проде работает только через OpenRouter** — остальные 6 провайдеров не настроены или geo-blocked
+2. **`ai_actions_log` на проде имеет только 4 колонки** (id, action_type, metadata, created_at) — нужна миграция для расширения
+3. **`sos_events.resolved_at` не существует** — нужна миграция
+4. **`user_eco_points` не в миграциях** — только в schema.sql, может не быть на проде
+5. **Cron-задачи не настроены на cron-job.org** — агенты не работают автономно
+6. **Миграции 077, 078 не применены на проде** — Telegram chat_id + support tickets
+7. **Миграция 083 требует применения на проде** — AI Lead Processor + lead_proposals + lead_activity_log
