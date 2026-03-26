@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/auth/middleware';
+import { requireOperator } from '@/lib/auth/middleware';
 import { pool } from '@/lib/db-pool';
 import { leadProcessor } from '@/lib/services/lead-processor.service';
 import { generateProposalPDF } from '@/lib/pdf/proposal-generator';
@@ -15,7 +15,7 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const authResult = await requireAdmin(req);
+  const authResult = await requireOperator(req);
   if (authResult instanceof NextResponse) return authResult;
 
   const { id } = await params;
