@@ -72,9 +72,9 @@ export async function POST(req: NextRequest) {
   // Логируем консультацию
   try {
     await query(
-      `INSERT INTO ai_actions_log (action_type, agent_id, input_summary, result_summary, success)
-       VALUES ('rescue_consult', 'rescue', $1, $2, true)`,
-      [message.slice(0, 200), reply.slice(0, 200)]
+      `INSERT INTO ai_actions_log (action_type, metadata)
+       VALUES ('rescue_consult', $1)`,
+      [JSON.stringify({ input: message.slice(0, 200), reply: reply.slice(0, 200) })]
     );
   } catch { /* не критично */ }
 
