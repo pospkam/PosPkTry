@@ -16,7 +16,7 @@ import fs from 'fs';
 import path from 'path';
 
 const ApplyMigrationsSchema = z.object({
-  migrations: z.array(z.enum(['054', '064', '066', '083'])).min(1),
+  migrations: z.array(z.enum(['054', '064', '066', '083', '084'])).min(1),
   dry_run: z.boolean().default(false),
 });
 
@@ -24,7 +24,6 @@ const ApplyMigrationsSchema = z.object({
  * Read migration SQL file safely
  */
 function readMigrationFile(migrationNumber: string): string | null {
-  const filename = `${migrationNumber}_*.sql`;
   const migrationsDir = path.join(process.cwd(), 'migrations');
 
   try {

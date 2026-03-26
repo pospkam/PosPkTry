@@ -268,8 +268,47 @@ async function handleTourPaymentSuccess(invoiceId: string, transactionId: string
 
     // 1% от суммы → фонд AI-вычислений (fire-and-forget)
     void addBookingContribution('booking_operator', booking_id, webhook.Amount, 'operator booking confirmed');
+
+    // Авто-запись комиссии платформы (12%) — idempotent по payment_id
+    void createCommissionRecord(booking_id, invoiceId, webhook.Amount);
   } catch {
     // не прерываем выполнение
+  }
+}
+
+/**
+ * Создаёт запись комиссии платформы при успешной оплате.
+ * Idempotent: повторный вызов с тем же invoice_id игнорируется.
+ */
+async function createCommissionRecord(
+  bookingId: string,
+  invoiceId: string,
+  amount: number
+): Promise<void> {
+  try {
+    const PLATFORM_RATE = 0.12; // 12% комиссия платформы
+    const commissionAmount = Math.round(amount * PLATFORM_RATE * 100) / 100;
+
+    // Ищем operator_id из бронирования
+    const bookingRes = await query<{ operator_id: string | null }>(
+      `SELECT operator_id FROM operator_bookings WHERE id = $1`,
+      [bookingId]
+    );
+    if (!bookingRes.rows.length) return;
+
+    const operatorId = bookingRes.rows[0].operator_id;
+    if (!operatorId) return;
+
+    // Upsert — если уже есть запись по invoice_id, пропускаем
+    await query(
+      `INSERT INTO operator_commissions
+         (operator_id, booking_id, invoice_id, amount, rate, status, created_at)
+       VALUES ($1, $2, $3, $4, $5, 'pending', NOW())
+       ON CONFLICT (invoice_id) DO NOTHING`,
+      [operatorId, bookingId, invoiceId, commissionAmount, PLATFORM_RATE]
+    );
+  } catch {
+    // Не прерываем платёжный flow при ошибке записи комиссии
   }
 }
 
