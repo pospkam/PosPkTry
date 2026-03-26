@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createRateLimiter, getClientIp } from '@/lib/rate-limit'
 
 // Для Timeweb Cloud Apps можно использовать nodejs runtime
 // Edge runtime работает только на некоторых PaaS платформах
 export const runtime = 'nodejs'
+
+const aiLimiter = createRateLimiter({ windowMs: 60_000, max: 20 })
 
 // async function callTimeweb(prompt: string) { ... } // Временно отключено TODO
 
@@ -108,6 +111,11 @@ async function callOpenrouter(prompt: string) {
 
 // AUTH: Public — AI assistant for visitors
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req.headers)
+  if (!aiLimiter.check(ip)) {
+    return NextResponse.json({ ok: false, error: 'Слишком много запросов. Попробуйте позже.' }, { status: 429 })
+  }
+
   try {
     const body: unknown = await req.formData().catch(async () => await req.json().catch(() => null));
     const parsed = body as Record<string, unknown> | null;
