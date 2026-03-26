@@ -80,7 +80,7 @@ app/
   hub/                           # Личные кабинеты (8 хабов)
     tourist/ operator/ guide/ admin/ agent/
     transfer/ transfer-operator/ fishing/
-  api/                           # 386 API endpoints
+  api/                           # 390+ API endpoints
     ai/                          # AI chat, waterfall, debug
     agents/                      # Board meeting, dispatch, approvals
     planner/compose/             # AI composition engine
@@ -179,6 +179,25 @@ DeepSeek ($19) → MiniMax 2.5 → OpenRouter (4 sub-models)
 
 ## Ключевые фичи
 
+### AI Lead Processor (Operator Hub)
+- Страница: `/hub/operator/leads` (one-click обработка лида)
+- API: `POST /api/leads/process` — AI-квалификация + матчинг туров + персональное предложение
+- API: `GET /api/leads/[id]/proposal` — готовое предложение
+- API: `GET /api/leads/[id]/proposal/pdf` — PDF предложения (PDFKit)
+- Telegram-нотификация оператора после обработки
+- Цель: до 80% заявок без ручной обработки оператором
+
+**Пайплайн:**
+```
+Новая заявка (lead)
+  -> AI квалификация (callAIFast / DeepSeek)
+  -> Подбор 1-3 туров
+  -> Генерация headline + summary + highlights
+  -> Сохранение в lead_proposals
+  -> PDF за ~1-2 сек
+  -> Telegram оператору + ссылка на one-click подтверждение
+```
+
 ### AI-помощник Кузьмич
 - Чат на `/ai-assistant` + виджет на каждой странице
 - Голос местного жителя, знает Камчатку
@@ -190,9 +209,15 @@ DeepSeek ($19) → MiniMax 2.5 → OpenRouter (4 sub-models)
 - Фильтрация, поиск, пагинация
 
 ### Бронирования
-- Стейт-машина (7 статусов)
+- Стейт-машина (10 статусов)
 - Защита от double-booking (`FOR UPDATE` lock)
 - Правила возврата: оператор 100%, турист >48ч 100%, 24-48ч 50%, <24ч 0%
+
+**Booking статусы:**
+`pending`, `awaiting_payment`, `deposit_paid`, `confirmed`, `in_progress`, `completed`, `cancelled`, `cancelled_by_tourist`, `cancelled_by_operator`, `refunded`
+
+**Lead статусы:**
+`new`, `ai_processing`, `ai_qualified`, `proposal_sent`, `awaiting_confirm`, `contacted`, `qualified`, `converted`, `lost`
 
 ### Карта
 - Yandex Maps, 900+ маркеров с попапами
@@ -230,6 +255,7 @@ TELEGRAM_WEBHOOK_SECRET=...
 TELEGRAM_CHAT_ID=...
 TELEGRAM_CHANNEL_ID=...
 TELEGRAM_LEADS_CHAT_ID=...
+NEXT_PUBLIC_TELEGRAM_BOT_USERNAME=...
 
 # === Analytics ===
 NEXT_PUBLIC_YANDEX_METRIKA_ID=...
@@ -243,6 +269,8 @@ SMTP_PASS=...
 # === Платежи (опционально) ===
 CLOUDPAYMENTS_API_SECRET=...
 NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID=...
+YANDEX_PAYMENT_SHOP_ID=...       # YooKassa
+YANDEX_PAYMENT_SECRET_KEY=...    # YooKassa
 ```
 
 ---
@@ -266,12 +294,14 @@ v_route_marketplace      -- VIEW: маршрут + тур + оператор + �
 partners                 -- Операторы (slug, профиль, контакты)
 tours                    -- Туры операторов
 tour_departures          -- Выезды (дата, слоты, цена)
-bookings                 -- Бронирования (7 статусов)
+bookings                 -- Бронирования (10 статусов)
 booking_logs             -- Лог смен статуса
 
 -- Пользователи
 users                    -- 6 ролей: tourist, operator, guide, transfer_operator, agent, admin
 leads                    -- Заявки без регистрации
+lead_proposals           -- AI-предложения по лидам
+lead_activity_log        -- Журнал действий по лидам
 
 -- Аналитика
 page_views               -- Собственная аналитика
@@ -279,8 +309,8 @@ page_views               -- Собственная аналитика
 
 ### Миграции
 
-107 файлов: `lib/database/migrations/` (001-078) + `migrations/` (079-081).
-Следующая: **`082_`**.
+Миграции: `lib/database/migrations/` + `migrations/`.
+Последняя: **`083_lead_processor.sql`** (обязательно применить на проде).
 
 ---
 
@@ -323,10 +353,10 @@ npx vitest run        # Тесты зелёные
 ## Текущее состояние (март 2026)
 
 ```
-Страниц:             107
-API endpoints:       386
+Страниц:              94
+API endpoints:       390+
 Компонентов:         110
-Миграций:            107  (001-081)
+Миграций:            108+ (до 083)
 Маршрутов в БД:    1 189
 AI-провайдеров:        8  (waterfall)
 AI-директоров:        13  (Board of Directors)
@@ -347,4 +377,4 @@ TS-ошибок:             0
 - Pool: `import { pool } from '@/lib/db-pool'` (named export)
 - Стили: только CSS-переменные, glassmorphism запрещён
 - Маршруты: только через `v_kamchatka_routes_api`, не `SELECT * FROM kamchatka_routes`
-- Миграции: не менять существующие 001-081, следующая `082_`
+- Миграции: не менять существующие, добавлять новые (текущая последняя: `083_`)
