@@ -54,7 +54,7 @@ export function OperatorPromo() {
               <div className="w-12 h-12 rounded-lg bg-[var(--success)]/10 flex items-center justify-center">
                 <BarChart3 className="w-6 h-6 text-[var(--success)]" />
               </div>
-              <h3 className="font-semibold text-[var(--text-primary)]">PDF + Telegram 🚀</h3>
+              <h3 className="font-semibold text-[var(--text-primary)]">PDF + Telegram</h3>
             </div>
             <p className="text-sm text-[var(--text-secondary)]">
               Генерирует красивое PDF-предложение и отправляет ссылку оператору в Telegram
@@ -103,7 +103,7 @@ export function OperatorPromo() {
         <div className="text-center">
           <div className="mb-8 inline-block">
             <p className="text-sm text-[var(--text-muted)] mb-2">
-              ✨ Первые 3 месяца бесплатно
+              Первые 3 месяца бесплатно
             </p>
             <h3 className="text-2xl font-bold text-[var(--text-primary)]">
               Попробуйте AI Lead Processor сейчас
