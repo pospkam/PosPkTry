@@ -5,10 +5,13 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { pool } from '@/lib/db-pool';
+import { requireAdmin } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
+  const authOrResponse = await requireAdmin(request);
+  if (authOrResponse instanceof NextResponse) return authOrResponse;
 
   try {
     // 1. Create partner
