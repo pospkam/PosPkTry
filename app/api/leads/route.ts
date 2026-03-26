@@ -3,7 +3,8 @@ import { z } from 'zod';
 import { pool } from '@/lib/db-pool';
 import { telegramService } from '@/lib/notifications/telegram';
 import { notifyAdminNewLead } from '@/lib/notifications/telegram-channel';
-import { requireAdmin } from '@/lib/auth/middleware';
+import { requireRole } from '@/lib/auth/middleware';
+import type { JWTPayload } from '@/lib/auth/jwt';
 import { notifyOperatorNewLead } from '@/lib/notifications/lead-notify';
 import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
 
@@ -29,8 +30,11 @@ const ListSchema = z.object({
 });
 
 export async function GET(req: NextRequest) {
-  const authResult = await requireAdmin(req);
+  const authResult = await requireRole(req, ['admin', 'operator']);
   if (authResult instanceof NextResponse) return authResult;
+
+  const user = authResult as JWTPayload;
+  const isAdmin = user.role === 'admin';
 
   const { searchParams } = new URL(req.url);
   const parse = ListSchema.safeParse(Object.fromEntries(searchParams));
@@ -38,10 +42,33 @@ export async function GET(req: NextRequest) {
 
   const { status, limit, offset } = parse.data;
 
-  const where = status !== 'all' ? `WHERE status = $1` : '';
-  const vals  = status !== 'all' ? [status, limit, offset] : [limit, offset];
-  const lIdx  = status !== 'all' ? 2 : 1;
-  const oIdx  = lIdx + 1;
+  // Операторы видят только свои лиды (по operator_id или unassigned с их route_id)
+  // Для простоты: оператор видит все лиды, где operator_id IS NULL или operator_id = их partner_id
+  let operatorId: string | null = null;
+  if (!isAdmin) {
+    const opRes = await pool.query<{ id: string }>(
+      `SELECT id FROM partners WHERE user_id = $1 LIMIT 1`,
+      [user.userId]
+    );
+    operatorId = opRes.rows[0]?.id ?? null;
+  }
+
+  const conditions: string[] = [];
+  const vals: unknown[] = [];
+
+  if (status !== 'all') {
+    vals.push(status);
+    conditions.push(`status = $${vals.length}`);
+  }
+  if (!isAdmin && operatorId) {
+    vals.push(operatorId);
+    conditions.push(`(operator_id = $${vals.length} OR operator_id IS NULL)`);
+  }
+
+  const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+  const lIdx = vals.length + 1;
+  const oIdx = lIdx + 1;
+  vals.push(limit, offset);
 
   const [rows, cnt] = await Promise.all([
     pool.query(
@@ -55,7 +82,7 @@ export async function GET(req: NextRequest) {
     ),
     pool.query(
       `SELECT COUNT(*)::int AS total FROM leads ${where}`,
-      status !== 'all' ? [status] : []
+      vals.slice(0, -2) // без limit/offset
     ),
   ]);
 

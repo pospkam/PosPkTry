@@ -10,7 +10,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { requireAdmin } from '@/lib/auth/middleware';
+import { requireOperator } from '@/lib/auth/middleware';
 import { leadProcessor } from '@/lib/services/lead-processor.service';
 import { notifyOperatorProposal } from '@/lib/notifications/lead-notify';
 
@@ -19,7 +19,7 @@ const Schema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const authResult = await requireAdmin(req);
+  const authResult = await requireOperator(req);
   if (authResult instanceof NextResponse) return authResult;
 
   let body: unknown;
