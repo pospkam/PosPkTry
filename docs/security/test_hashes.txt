@@ -1,5 +1,0 @@
-$2b$12$y.ks7o7q.TfiZiXOmeAY2e7/If/dxBme.IUzdlDlf0Mv9YEJZOCrK:password123
-$2b$12$pzKyBGRdyrPVC/qnp0Ast.tZlwIMU64a68DSrSn7WxLBno50VCtgG:Test1234!
-$2b$12$caKYT/A9UtrOdvi/SdbvHevNDFhDncGgrnekPBQVK0Ey3NFQDbRvu:камчатка2026
-$2b$12$YsL38J/l.X6gLiG0J6c5UuD/VpRGal773ZAisiRLKK3ll2bn99KLm:admin
-$2b$12$Dm9Z8a5iXoyYLNY3pKqfsu4adzIE2rjwDpeFL81kEiRdvCsZZrZg.:12345678

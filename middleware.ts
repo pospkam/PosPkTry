@@ -58,9 +58,6 @@ const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/planner/tours-for-day':  ['GET'],  // marketplace tours per activity
   '/api/planner/validate':       ['POST'], // AI route sequence validation
   '/api/planner/companion':      ['POST'], // AI trip companion chat
-  '/api/mig057': ['GET'],             // migration 057: transportation column
-  '/api/mig058': ['GET'],             // migration 058: user_trips table
-  '/api/mig059': ['GET'],             // migration 059: ai_actions_log table
   '/api/support/knowledge-base': ['GET'], // База знаний (публичная)
   '/api/faq': ['GET'],              // FAQ (публичная)
   '/api/photos': ['GET'],            // загруженные фото из /tmp (Timeweb production)
@@ -72,14 +69,10 @@ const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/apply-op-tours-cols': ['GET'], // operator_tours колонки + marketplace view (migration 056)
   '/api/link-fishingkam-tours': ['GET'], // линкует operator_tours kamchatskaya-rybalka → agent_route_knowledge
   '/api/setup-rafting-tour': ['POST'], // create rafting tour (temporary)
-  '/api/exec-migration-060': ['GET'], // execute migration 060
-  '/api/mig063': ['GET'],             // migration 063: agent_experiments + agent_approvals
-  '/api/mig064': ['GET'],             // migration 064: agent_memory
   '/api/hub/marketplace/tours': ['GET'], // публичный каталог туров маршрутплейса
   '/api/channels/avito/feed':  ['GET'], // Avito Autoload XML feed — публичный
   '/api/widget': ['POST', 'GET', 'OPTIONS'],    // Partner widget API — CORS-enabled
   '/api/health': ['GET'],              // health checks — monitoring/infra
-  '/api/mig082': ['GET'],             // migration 082: widget_partners
   '/api/setup-fishingkam-widget': ['GET'], // one-time widget setup for fishingkam
 };
 
