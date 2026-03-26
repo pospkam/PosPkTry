@@ -38,8 +38,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log('[CEO Campaign] Starting execution...');
-
     // Create campaign record
     const campaignResult = await pool.query(
       `INSERT INTO sales_campaigns (status, batch_size, sent_count, started_at)
@@ -56,7 +54,7 @@ export async function POST(req: NextRequest) {
       const messageText = generateMessage({
         name: operator.name,
         tours_count: operator.tours_count,
-        category: operator.category as any
+        category: operator.category,
       });
 
       // Log to outreach table
@@ -73,7 +71,6 @@ export async function POST(req: NextRequest) {
         message: messageText
       });
 
-      console.log(`[CEO Campaign] Logged: ${operator.name} (@${operator.telegram_handle.slice(1)})`);
     }
 
     // Update campaign sent count
@@ -81,8 +78,6 @@ export async function POST(req: NextRequest) {
       `UPDATE sales_campaigns SET sent_count = $1 WHERE id = $2`,
       [OPERATORS_TO_CONTACT.length, campaignId]
     );
-
-    console.log(`[CEO Campaign] Campaign #${campaignId} ready: ${OPERATORS_TO_CONTACT.length} operators`);
 
     return NextResponse.json({
       success: true,
@@ -99,7 +94,6 @@ export async function POST(req: NextRequest) {
       }))
     });
   } catch (err) {
-    console.error('[CEO Campaign]', err);
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Campaign execution failed' },
       { status: 500 }

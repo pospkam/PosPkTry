@@ -36,8 +36,6 @@ export class SalesBotCEO {
    * Target channels: #камчаткатуризм, @kamchatkatravel, etc.
    */
   async parseChannels(channels: string[]): Promise<OperatorTarget[]> {
-    console.log(`[SalesBot] Parsing ${channels.length} channels for operators...`);
-
     const targets: OperatorTarget[] = [];
 
     // Simulated parsing (in production: use Telegram API or scraper)
@@ -89,7 +87,6 @@ export class SalesBotCEO {
       targets.push(target);
     }
 
-    console.log(`[SalesBot] Found ${targets.length} operator targets`);
     return targets;
   }
 
@@ -145,8 +142,6 @@ Claude AI, CEO KamchatourHub`;
    * Launch outreach campaign
    */
   async launchCampaign(batchSize: number = 10): Promise<{ sent: number; failed: number }> {
-    console.log(`[SalesBot] Launching campaign to ${Math.min(batchSize, this.operators.size)} operators...`);
-
     let sent = 0;
     let failed = 0;
 
@@ -158,7 +153,6 @@ Claude AI, CEO KamchatourHub`;
         const message = this.craftsMessage(operator);
         await this.logOutreach(operator, message);
 
-        console.log(`[SalesBot] Message crafted for: ${operator.name}`);
         // In production: actually send via Telegram API
         // await telegramBot.sendMessage(operator.telegram_handle, message);
 
@@ -174,7 +168,6 @@ Claude AI, CEO KamchatourHub`;
       await new Promise(r => setTimeout(r, 2000));
     }
 
-    console.log(`[SalesBot] Campaign complete: ${sent} sent, ${failed} failed`);
     return { sent, failed };
   }
 
@@ -198,7 +191,6 @@ Claude AI, CEO KamchatourHub`;
         [newStatus, notes || '', operatorHandle]
       );
 
-      console.log(`[SalesBot] Status updated: ${operatorHandle} → ${newStatus}`);
     } catch (err) {
       console.error(`[SalesBot] Failed to update status:`, err);
     }
@@ -274,8 +266,6 @@ export async function launchSalesCampaign(
        VALUES ('active', $1, $2, $3, NOW())`,
       [batchSize, result.sent, result.failed]
     );
-
-    console.log(`[CEO] Campaign launched: ${result.sent} messages sent`);
 
     return {
       success: true,

@@ -55,14 +55,9 @@ export class AgentScheduler {
       const interval = setInterval(async () => {
         // Try to acquire lock (prevent duplicate runs)
         const lockAcquired = await this.acquireLock(lockKey, 300); // 5min lock
-        if (!lockAcquired) {
-          console.log(`[AgentScheduler] Skipping ${config.agentId}:${config.intent} — lock held`);
-          return;
-        }
+        if (!lockAcquired) return;
 
         try {
-          console.log(`[AgentScheduler] Starting ${config.agentId}:${config.intent}`);
-
           const startTime = Date.now();
           const result = await this.executeAgent(config);
           const duration = Date.now() - startTime;
@@ -76,35 +71,40 @@ export class AgentScheduler {
                 status: result.status,
                 error: result.error || 'none'
               });
-            } catch (e) {
-              console.warn(`[AgentScheduler] Failed to store metadata: ${e}`);
+            } catch {
+              // Redis metadata store failure is non-critical
             }
           }
 
-          // Log to database for audit
+          // Log to database for audit (schema: id, action_type, metadata, created_at)
           try {
             await pool.query(
-              `INSERT INTO ai_actions_log (agent_id, action_type, status, metadata, created_at)
-               VALUES ($1, $2, $3, $4, NOW())`,
+              `INSERT INTO ai_actions_log (action_type, metadata, created_at)
+               VALUES ($1, $2, NOW())`,
               [
-                config.agentId,
                 `agent_scheduled:${config.intent}`,
-                result.status,
                 JSON.stringify({
+                  agent_id: config.agentId,
                   intent: config.intent,
+                  status: result.status,
                   duration_ms: duration,
                   result_summary: result.summary || 'ok',
                   error: result.error || null
                 })
               ]
             );
-          } catch (e) {
-            console.warn(`[AgentScheduler] Failed to log to database: ${e}`);
+          } catch {
+            // DB log failure is non-critical
           }
-
-          console.log(`[AgentScheduler] Completed ${config.agentId} in ${duration}ms: ${result.status}`);
         } catch (err) {
-          console.error(`[AgentScheduler] Error in ${config.agentId}:`, err);
+          // Persist failure to DB so it's visible in audit log
+          void pool.query(
+            `INSERT INTO ai_actions_log (action_type, metadata, created_at) VALUES ($1, $2, NOW())`,
+            [
+              `agent_scheduled:${config.intent}`,
+              JSON.stringify({ agent_id: config.agentId, status: 'error', error: err instanceof Error ? err.message : String(err) })
+            ]
+          ).catch(() => undefined);
         } finally {
           // Release lock
           if (this.redis) {
@@ -118,9 +118,6 @@ export class AgentScheduler {
       }, config.intervalMs);
 
       this.intervals.set(`${config.agentId}:${config.intent}`, interval);
-      console.log(
-        `[AgentScheduler] Registered ${config.agentId}:${config.intent} every ${(config.intervalMs / 60000).toFixed(1)}min`
-      );
     }
 
     this.isInitialized = true;
