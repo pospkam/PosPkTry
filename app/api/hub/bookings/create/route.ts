@@ -6,8 +6,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { transaction } from '@/lib/database';
 import { z } from 'zod';
+import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
+
+const bookingCreateLimiter = createRateLimiter({ windowMs: 60_000, max: 5 }); // 5/мин per IP
 
 const BookingSchema = z.object({
   tour_id: z.number().positive(),
@@ -20,6 +23,14 @@ const BookingSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req.headers);
+  if (!bookingCreateLimiter.check(ip)) {
+    return NextResponse.json(
+      { error: 'Слишком много запросов. Попробуйте через минуту.' },
+      { status: 429 }
+    );
+  }
+
   try {
     const body = await req.json();
     const data = BookingSchema.parse(body);

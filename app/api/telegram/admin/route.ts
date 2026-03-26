@@ -25,6 +25,9 @@ import { pool } from '@/lib/db-pool';
 import { callAnthropic, callMiMo } from '@/lib/ai/providers';
 import { postKuzmichRoute, postKuzmichTip } from '@/lib/notifications/telegram-channel';
 import type { ChatMessage } from '@/lib/ai/prompts';
+import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
+
+const adminGetLimiter = createRateLimiter({ windowMs: 60_000, max: 5 });
 
 export const dynamic = 'force-dynamic';
 
@@ -255,6 +258,11 @@ interface TgUpdate {
 // ── GET: Тестирование команд ─────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
+  const ip = getClientIp(request.headers);
+  if (!adminGetLimiter.check(ip)) {
+    return NextResponse.json({ error: 'Слишком много запросов' }, { status: 429 });
+  }
+
   try {
     const { searchParams } = request.nextUrl;
     const command = searchParams.get('command')?.toLowerCase() ?? '';
