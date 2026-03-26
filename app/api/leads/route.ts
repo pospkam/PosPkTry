@@ -5,6 +5,9 @@ import { telegramService } from '@/lib/notifications/telegram';
 import { notifyAdminNewLead } from '@/lib/notifications/telegram-channel';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { notifyOperatorNewLead } from '@/lib/notifications/lead-notify';
+import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
+
+const leadLimiter = createRateLimiter({ windowMs: 60_000, max: 5 }); // 5 заявок/мин с одного IP
 
 const LeadSchema = z.object({
   name:        z.string().min(2, 'Укажите имя').max(120),
@@ -60,6 +63,15 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req.headers);
+  const allowed = leadLimiter.check(ip);
+  if (!allowed) {
+    return NextResponse.json(
+      { success: false, error: 'Слишком много запросов. Попробуйте через минуту.' },
+      { status: 429 }
+    );
+  }
+
   let body: unknown;
   try {
     body = await req.json();
