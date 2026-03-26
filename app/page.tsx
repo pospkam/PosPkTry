@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import dynamic from 'next/dynamic'
+import { unstable_cache } from 'next/cache'
 import { pool } from '@/lib/db-pool'
 import { Header } from '@/components/layout/Header'
 import { HeroCompact } from '@/components/homepage/HeroCompact'
@@ -63,29 +64,33 @@ export const metadata: Metadata = {
   },
 }
 
-// Server-side: ecosystem stats for EcosystemPulse
-async function getEcosystemStats() {
-  try {
-    const [chats, routes, agents] = await Promise.all([
-      pool.query<{ count: string }>(
-        `SELECT COUNT(*)::text AS count FROM chat_sessions WHERE updated_at > NOW() - INTERVAL '24 hours'`
-      ),
-      pool.query<{ count: string }>(
-        `SELECT COUNT(*)::text AS count FROM agent_route_knowledge WHERE is_visible = true`
-      ),
-      pool.query<{ count: string }>(
-        `SELECT COUNT(DISTINCT metadata->>'agent_id')::text AS count FROM ai_actions_log WHERE created_at > NOW() - INTERVAL '1 hour'`
-      ),
-    ]);
-    return {
-      chatsToday: parseInt(chats.rows[0]?.count ?? '0', 10),
-      activeRoutes: parseInt(routes.rows[0]?.count ?? '0', 10),
-      activeAgents: parseInt(agents.rows[0]?.count ?? '0', 10),
-    };
-  } catch {
-    return { chatsToday: 0, activeRoutes: 0, activeAgents: 0 };
-  }
-}
+// Server-side: ecosystem stats cached 5 min — не бьём БД на каждый хит
+const getEcosystemStats = unstable_cache(
+  async () => {
+    try {
+      const [chats, routes, agents] = await Promise.all([
+        pool.query<{ count: string }>(
+          `SELECT COUNT(*)::text AS count FROM chat_sessions WHERE updated_at > NOW() - INTERVAL '24 hours'`
+        ),
+        pool.query<{ count: string }>(
+          `SELECT COUNT(*)::text AS count FROM agent_route_knowledge WHERE is_visible = true`
+        ),
+        pool.query<{ count: string }>(
+          `SELECT COUNT(DISTINCT metadata->>'agent_id')::text AS count FROM ai_actions_log WHERE created_at > NOW() - INTERVAL '1 hour'`
+        ),
+      ]);
+      return {
+        chatsToday: parseInt(chats.rows[0]?.count ?? '0', 10),
+        activeRoutes: parseInt(routes.rows[0]?.count ?? '0', 10),
+        activeAgents: parseInt(agents.rows[0]?.count ?? '0', 10),
+      };
+    } catch {
+      return { chatsToday: 0, activeRoutes: 0, activeAgents: 0 };
+    }
+  },
+  ['ecosystem-stats'],
+  { revalidate: 300 } // 5 минут
+);
 
 function SectionSkeleton() {
   return <div className="py-20 px-5"><div className="max-w-6xl mx-auto h-64 bg-[var(--bg-hover)] rounded-lg ds-skeleton" /></div>;

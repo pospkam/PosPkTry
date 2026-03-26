@@ -5,10 +5,11 @@ const nextConfig = {
   poweredByHeader: false,
   compress: true,
 
-  // Лимит тела запроса для API routes (загрузка фото) — Next.js 15: top-level
-  serverBodySizeLimit: '60mb',
-
-  experimental: {},
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '60mb',
+    },
+  },
 
   // ONNX Runtime (used by @huggingface/transformers) has native Node.js addons
   // that cannot be bundled by webpack — must be resolved at runtime.
