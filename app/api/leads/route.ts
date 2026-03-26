@@ -7,6 +7,7 @@ import { requireRole } from '@/lib/auth/middleware';
 import type { JWTPayload } from '@/lib/auth/jwt';
 import { notifyOperatorNewLead } from '@/lib/notifications/lead-notify';
 import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
+import { leadProcessor } from '@/lib/services/lead-processor.service';
 
 const leadLimiter = createRateLimiter({ windowMs: 60_000, max: 5 }); // 5 заявок/мин с одного IP
 
@@ -172,9 +173,71 @@ export async function POST(req: NextRequest) {
     routeTitle: route_title,
   }).catch(() => undefined);
 
+  // AI обработка — fire-and-forget, не блокирует ответ туристу
+  void autoProcessLead(leadId, name);
+
   return NextResponse.json({ success: true, id: leadId }, { status: 201 });
 }
 
 function escHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// ── Авто-обработка лида: AI квалифицирует + подбирает туры + уведомляет ──────
+async function autoProcessLead(leadId: string, leadName: string): Promise<void> {
+  try {
+    const proposal = await leadProcessor.process(leadId);
+
+    // Уведомить admin в TG с AI-результатом
+    const token = process.env.TELEGRAM_BOT_TOKEN;
+    const chatId = process.env.TELEGRAM_CHAT_ID;
+    if (!token || !chatId) return;
+
+    const scoreBar = '█'.repeat(Math.round(proposal.ai_score / 10)) + '░'.repeat(10 - Math.round(proposal.ai_score / 10));
+    const urgencyLabel: Record<string, string> = { high: 'СРОЧНО', medium: 'Стандарт', low: 'Низкий приоритет' };
+
+    const lines = [
+      `AI обработал лид: <b>${escHtml(leadName)}</b>`,
+      ``,
+      `<b>${escHtml(proposal.headline)}</b>`,
+      ``,
+      `Скор: <code>${scoreBar}</code> ${proposal.ai_score}/100`,
+      `Приоритет: ${urgencyLabel[proposal.intent.urgency] ?? proposal.intent.urgency}`,
+      proposal.intent.activity_types.length > 0
+        ? `Активности: ${proposal.intent.activity_types.join(', ')}`
+        : '',
+      proposal.intent.group_size > 1 ? `Группа: ${proposal.intent.group_size} чел.` : '',
+      proposal.intent.budget_rub ? `Бюджет: ${proposal.intent.budget_rub.toLocaleString('ru-RU')} руб` : '',
+      proposal.intent.desired_dates ? `Даты: ${proposal.intent.desired_dates}` : '',
+      ``,
+      proposal.primary_tour
+        ? `Рекомендован тур: <b>${escHtml(proposal.primary_tour.title)}</b> — ${proposal.primary_tour.price.toLocaleString('ru-RU')} руб/чел`
+        : 'Подходящих туров не найдено',
+      ``,
+      `<i>${escHtml(proposal.intent.qualification_notes)}</i>`,
+      ``,
+      `<a href="https://tourhab.ru/hub/admin/leads">Открыть лиды →</a>  <code>${leadId}</code>`,
+    ].filter(Boolean);
+
+    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: lines.join('\n'),
+        parse_mode: 'HTML',
+        disable_web_page_preview: true,
+        reply_markup: {
+          inline_keyboard: [[
+            { text: 'Связался', callback_data: `lead_contacted:${leadId}` },
+            { text: 'Квалифицирован', callback_data: `lead_qualified:${leadId}` },
+            { text: 'Конвертирован', callback_data: `lead_converted:${leadId}` },
+          ]],
+        },
+      }),
+    }).catch(() => {});
+
+  } catch {
+    // Тихая ошибка — не влияет на туриста
+  }
 }
