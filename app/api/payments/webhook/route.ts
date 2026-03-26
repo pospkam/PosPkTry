@@ -62,9 +62,8 @@ export async function POST(request: NextRequest) {
  * Обработка успешного платежа
  */
 async function handleSuccessfulPayment(webhook: CloudPaymentsWebhook) {
-  try {
-    const paymentId = webhook.InvoiceId;
-    const transactionId = webhook.TransactionId;
+  const paymentId = webhook.InvoiceId;
+  const transactionId = webhook.TransactionId;
 
     // Обновляем статус платежа
     const updatePaymentQuery = `
@@ -227,14 +226,9 @@ async function handleSuccessfulPayment(webhook: CloudPaymentsWebhook) {
           });
         }
       }
-    } catch (_emailError) {
+    } catch {
       // Не прерываем выполнение при ошибке email
     }
-
-
-  } catch (error) {
-    throw error;
-  }
 }
 
 /**
@@ -316,8 +310,7 @@ async function createCommissionRecord(
  * Обработка неуспешного платежа
  */
 async function handleFailedPayment(webhook: CloudPaymentsWebhook) {
-  try {
-    const paymentId = webhook.InvoiceId;
+  const paymentId = webhook.InvoiceId;
 
     // Обновляем статус платежа
     const updateQuery = `
@@ -374,22 +367,16 @@ async function handleFailedPayment(webhook: CloudPaymentsWebhook) {
           });
         }
       }
-    } catch (_emailError) {
+    } catch {
       // Не прерываем выполнение при ошибке email
     }
-
-
-  } catch (error) {
-    throw error;
-  }
 }
 
 /**
  * Обработка платежа в ожидании
  */
 async function handlePendingPayment(webhook: CloudPaymentsWebhook) {
-  try {
-    const paymentId = webhook.InvoiceId;
+  const paymentId = webhook.InvoiceId;
 
     // Обновляем статус
     const updateQuery = `
@@ -407,11 +394,4 @@ async function handlePendingPayment(webhook: CloudPaymentsWebhook) {
       JSON.stringify(webhook),
       paymentId
     ]);
-
-
-  } catch (error) {
-    throw error;
-  }
 }
-
-

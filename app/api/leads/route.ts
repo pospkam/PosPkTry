@@ -86,9 +86,7 @@ export async function POST(req: NextRequest) {
       [name, phone, comment ?? null, route_id ?? null, route_title ?? null, source_url ?? null, source_data ? JSON.stringify(source_data) : null]
     );
     leadId = res.rows[0].id;
-  } catch (err) {
-    if (process.env.NODE_ENV !== 'production') {
-    }
+  } catch {
     return NextResponse.json({ success: false, error: 'Ошибка сервера. Попробуйте позже.' }, { status: 500 });
   }
 
