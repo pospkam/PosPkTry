@@ -38,11 +38,10 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  // Full diagnostic mode: requires CRON_SECRET or fallback debug key
+  // Full diagnostic mode: requires CRON_SECRET
   const secret = request.nextUrl.searchParams.get('secret');
   const cronSecret = process.env.CRON_SECRET;
-  const validSecret = (cronSecret && secret === cronSecret) || secret === 'kamchatka-debug-2026';
-  if (!validSecret) {
+  if (!cronSecret || secret !== cronSecret) {
     return NextResponse.json({ error: 'Forbidden. Pass ?secret=CRON_SECRET' }, { status: 403 });
   }
 
