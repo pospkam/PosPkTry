@@ -6,8 +6,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { pool } from '@/lib/db-pool';
 import { z } from 'zod';
+import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
+
+const registerLimiter = createRateLimiter({ windowMs: 60_000, max: 3 }); // 3 per min per IP
 
 const RegisterSchema = z.object({
   company_name: z.string().min(3).max(255),
@@ -18,6 +21,14 @@ const RegisterSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req.headers);
+  if (!registerLimiter.check(ip)) {
+    return NextResponse.json(
+      { error: 'Слишком много запросов. Попробуйте через минуту.' },
+      { status: 429 }
+    );
+  }
+
   try {
     const body = await req.json();
     const data = RegisterSchema.parse(body);
