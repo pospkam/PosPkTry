@@ -110,8 +110,28 @@ function ChatSkeleton() {
 export default async function Page() {
   const stats = await getEcosystemStats();
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'TravelAgency',
+    name: 'Kamchatour Hub',
+    url: 'https://tourhab.ru',
+    description: 'Туристическая платформа Камчатки с туром рыболовство, вулканы и природные чудеса',
+    telephone: '+7 (4152) 29-99-99',
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: 'Петропавловск-Камчатский',
+      addressCountry: 'RU',
+    },
+    areaServed: 'Камчатский край',
+    sameAs: ['https://tourhab.ru'],
+  };
+
   return (
     <div className="bg-[var(--bg-primary)] text-[var(--text-primary)] min-h-[100dvh]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Header />
       <main>
         <HeroCompact />
