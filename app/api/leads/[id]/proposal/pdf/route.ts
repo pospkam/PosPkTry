@@ -43,7 +43,8 @@ export async function GET(
     proposal,
   });
 
-  const filename = `proposal-${rows[0].name.replace(/\s+/g, '-')}-${Date.now()}.pdf`;
+  const safeName = rows[0].name.replace(/[^\w\u0400-\u04FF -]/g, '').replace(/\s+/g, '-').slice(0, 50);
+  const filename = `proposal-${safeName}-${Date.now()}.pdf`;
 
   return new NextResponse(pdfBytes, {
     status: 200,

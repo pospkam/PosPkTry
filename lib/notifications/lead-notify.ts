@@ -38,16 +38,16 @@ export async function notifyOperatorProposal(proposal: LeadProposalData): Promis
   const chatId = process.env.TELEGRAM_CHAT_ID ?? '';
   const baseUrl = process.env.NEXTAUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? 'https://tourhab.ru';
 
-  const scoreEmoji = proposal.ai_score >= 80 ? '🔥' : proposal.ai_score >= 50 ? '⚡' : '';
+  const scoreTag = proposal.ai_score >= 80 ? ' [HOT]' : proposal.ai_score >= 50 ? ' [OK]' : '';
   const toursText = proposal.primary_tour
-    ? `<b>${esc(proposal.primary_tour.title)}</b> — ${proposal.primary_tour.price.toLocaleString('ru-RU')} ₽/чел`
+    ? `<b>${esc(proposal.primary_tour.title)}</b> — ${proposal.primary_tour.price.toLocaleString('ru-RU')} руб/чел`
     : 'Туры подобраны вручную';
 
   const text = [
-    `<b>AI обработал лид ${scoreEmoji}</b>`,
+    `<b>AI обработал лид${scoreTag}</b>`,
     '',
     `<b>Заголовок:</b> ${esc(proposal.headline)}`,
-    `<b>AI-оценка:</b> ${proposal.ai_score}/100`,
+    `<b>AI-оценка:</b> ${proposal.ai_score} / 100`,
     `<b>Тур:</b> ${toursText}`,
     proposal.price_from
       ? `<b>Бюджет:</b> от ${proposal.price_from.toLocaleString('ru-RU')} ₽`
