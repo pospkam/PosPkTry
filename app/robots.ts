@@ -2,40 +2,42 @@ import { MetadataRoute } from 'next';
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://tourhab.ru';
 
+const DISALLOW = [
+  '/api/',
+  '/hub/',
+  '/auth/',
+  '/admin/',
+  '/profile/',
+  '/_next/',
+];
+
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
         userAgent: '*',
-        allow: '/',
-        disallow: [
-          '/api/',
-          '/hub/',
-          '/admin/',
-          '/profile/',
-          '/_next/',
-          '/auth/callback',
+        allow: [
+          '/',
+          '/routes',
+          '/routes/',
+          '/map',
+          '/operators',
+          '/operators/',
+          '/safety',
+          '/eco',
+          '/search',
         ],
+        disallow: DISALLOW,
       },
       {
         userAgent: 'Googlebot',
-        allow: '/',
-        disallow: [
-          '/api/',
-          '/hub/',
-          '/admin/',
-          '/profile/',
-        ],
+        allow: ['/'],
+        disallow: DISALLOW,
       },
       {
         userAgent: 'Yandexbot',
-        allow: '/',
-        disallow: [
-          '/api/',
-          '/hub/',
-          '/admin/',
-          '/profile/',
-        ],
+        allow: ['/'],
+        disallow: DISALLOW,
       },
     ],
     sitemap: `${BASE_URL}/sitemap.xml`,
