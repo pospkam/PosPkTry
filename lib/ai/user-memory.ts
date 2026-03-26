@@ -186,11 +186,18 @@ export function buildMemoryContext(mem: UserMemory): string {
 }
 
 // ── Reverse bridge: Agent insights for tourist chat system prompt ──
+let _agentInsightsCache: { data: string; ts: number } | null = null;
+const AGENT_INSIGHTS_TTL = 3 * 60 * 1000; // 3 minutes
+
 /**
  * Reads active alerts from agent memory (eco zone alerts, rescue weather alerts)
  * and formats them for injection into Kuzmich's system prompt.
+ * Cached for 3 minutes to avoid redundant DB queries on every chat message.
  */
 export async function buildAgentInsightsForTourist(): Promise<string> {
+  if (_agentInsightsCache && Date.now() - _agentInsightsCache.ts < AGENT_INSIGHTS_TTL) {
+    return _agentInsightsCache.data;
+  }
   try {
     const [ecoAlerts, rescueAlerts] = await Promise.all([
       agentMemory.recall('eco', 'zone_alert', 3),
@@ -207,9 +214,13 @@ export async function buildAgentInsightsForTourist(): Promise<string> {
       parts.push(`[Безопасность]: ${val.area ?? 'район'} — ${val.message ?? JSON.stringify(val)}`);
     }
 
-    if (parts.length === 0) return '';
-    return `\n\n[ПЛАТФОРМЕННЫЕ ПРЕДУПРЕЖДЕНИЯ]\n${parts.join('\n')}\nУчитывай эти предупреждения при рекомендациях. Если зона перегружена или опасна — предупреди туриста.`;
+    const result = parts.length === 0
+      ? ''
+      : `\n\n[ПЛАТФОРМЕННЫЕ ПРЕДУПРЕЖДЕНИЯ]\n${parts.join('\n')}\nУчитывай эти предупреждения при рекомендациях. Если зона перегружена или опасна — предупреди туриста.`;
+    _agentInsightsCache = { data: result, ts: Date.now() };
+    return result;
   } catch {
+    _agentInsightsCache = { data: '', ts: Date.now() };
     return '';
   }
 }

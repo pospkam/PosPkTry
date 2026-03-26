@@ -100,7 +100,7 @@ export async function callOpenrouter(messages: ChatMessage[]): Promise<string | 
 export async function callOpenRouterModel(
   messages: ChatMessage[],
   modelId: string,
-  timeoutMs = 30_000,
+  timeoutMs = 15_000,
 ): Promise<{ text: string; model_used: string } | null> {
   const apiKey = getOpenRouterKey();
   if (!apiKey) return null;
