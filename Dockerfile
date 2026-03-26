@@ -32,6 +32,8 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
+# Увеличиваем heap Node.js — при 256 маршрутах дефолтных 512MB не хватает
+ENV NODE_OPTIONS="--max-old-space-size=3072"
 
 # --mount=type=cache: .next/cache переживает между сборками.
 # Webpack/Turbopack переиспользует кеш → инкрементальный билд вместо full rebuild.

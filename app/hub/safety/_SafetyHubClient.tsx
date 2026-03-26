@@ -1,12 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { MapPin, Truck, AlertTriangle, Thermometer, Wind, Droplets, Activity, Phone, RefreshCw, Bot, Send } from 'lucide-react';
-
-interface ChatMessage {
-  role: 'user' | 'assistant';
-  content: string;
-}
+import { MapPin, Truck, AlertTriangle, Thermometer, Wind, Droplets, Activity, Phone, RefreshCw, MountainSnow, TriangleAlert } from 'lucide-react';
 
 interface WeatherData {
   tempC: string;
@@ -14,6 +9,7 @@ interface WeatherData {
   desc: string;
   humidity: string;
   windKmph: string;
+  updatedAt?: string;
 }
 
 interface SeismicEvent {
@@ -34,6 +30,29 @@ const EMERGENCY_CONTACTS = [
   { name: 'ПАСС Камчатки (поиск и спасение)', number: '8 (4152) 41-03-03' },
   { name: 'Дежурный КГКУ ЭКОСПАС', number: '8 (4152) 42-40-27' },
 ];
+
+// Avalanche zones — Kamchatka
+const AVALANCHE_ZONES = [
+  { name: 'Авачинский вулкан', risk: 3, note: 'Северные и западные склоны, выше 1200 м' },
+  { name: 'Корякский вулкан', risk: 4, note: 'Все склоны, особенно NW экспозиция' },
+  { name: 'Вилючинский перевал', risk: 3, note: 'Лавинные кулуары активны' },
+  { name: 'Мутновский р-н', risk: 2, note: 'Умеренная опасность' },
+  { name: 'Козельский вулкан', risk: 3, note: 'Снежные карнизы на гребнях' },
+  { name: 'Красная сопка (горнолыжн.)', risk: 2, note: 'Подготовленные трассы — низкий риск' },
+];
+
+const DANGER_LEVEL = {
+  1: { label: 'Незначительная', color: 'var(--success)', bg: 'color-mix(in srgb, var(--success) 10%, transparent)', desc: 'Снежный покров устойчив. Лавины возможны только при больших дополнительных нагрузках.' },
+  2: { label: 'Умеренная', color: '#8DB000', bg: 'color-mix(in srgb, #8DB000 10%, transparent)', desc: 'На крутых склонах снег умеренно устойчив. Самопроизвольный сход маловероятен.' },
+  3: { label: 'Значительная', color: 'var(--warning)', bg: 'color-mix(in srgb, var(--warning) 10%, transparent)', desc: 'На крутых склонах снег неустойчив. Возможен самопроизвольный сход. Осторожность обязательна.' },
+  4: { label: 'Высокая', color: 'var(--accent)', bg: 'color-mix(in srgb, var(--accent) 12%, transparent)', desc: 'Снег неустойчив на большинстве крутых склонов. Множественные самопроизвольные лавины.' },
+  5: { label: 'Очень высокая', color: 'var(--danger)', bg: 'color-mix(in srgb, var(--danger) 10%, transparent)', desc: 'Снег крайне неустойчив. Катастрофические лавины возможны на пологих склонах.' },
+} as const;
+
+function riskLevel(r: number): typeof DANGER_LEVEL[1 | 2 | 3 | 4 | 5] {
+  const clamped = Math.max(1, Math.min(5, r)) as 1 | 2 | 3 | 4 | 5;
+  return DANGER_LEVEL[clamped];
+}
 
 function magColor(mag: number): string {
   if (mag >= 5.5) return 'var(--danger)';
@@ -64,12 +83,6 @@ export default function SafetyHubClient() {
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [weatherError, setWeatherError] = useState<string | null>(null);
 
-  // Rescue chat
-  const [rescueMessages, setRescueMessages] = useState<ChatMessage[]>([]);
-  const [rescueInput, setRescueInput] = useState('');
-  const [rescueSending, setRescueSending] = useState(false);
-  const rescueChatRef = React.useRef<HTMLDivElement>(null);
-
   // Seismic
   const [seismic, setSeismic] = useState<SeismicEvent[]>([]);
   const [seismicLoading, setSeismicLoading] = useState(false);
@@ -93,18 +106,11 @@ export default function SafetyHubClient() {
   const fetchWeather = useCallback(() => {
     setWeatherLoading(true);
     setWeatherError(null);
-    fetch('https://wttr.in/Petropavlovsk-Kamchatsky?format=j1')
+    fetch('/api/safety/weather')
       .then((r) => r.json())
-      .then((d) => {
-        const cur = d.current_condition?.[0];
-        if (!cur) { setWeatherError('Нет данных от сервера погоды'); return; }
-        setWeather({
-          tempC: cur.temp_C,
-          feelsLikeC: cur.FeelsLikeC,
-          desc: cur.lang_ru?.[0]?.value || cur.weatherDesc?.[0]?.value || '—',
-          humidity: cur.humidity,
-          windKmph: cur.windspeedKmph,
-        });
+      .then((d: WeatherData & { error?: string }) => {
+        if (d.error) { setWeatherError(d.error); return; }
+        setWeather(d);
       })
       .catch(() => setWeatherError('Не удалось загрузить прогноз погоды'))
       .finally(() => setWeatherLoading(false));
@@ -113,28 +119,14 @@ export default function SafetyHubClient() {
   const fetchSeismic = useCallback(() => {
     setSeismicLoading(true);
     setSeismicError(null);
-    const url =
-      'https://earthquake.usgs.gov/fdsnws/event/1/query' +
-      '?format=geojson&minlatitude=50&maxlatitude=63&minlongitude=155&maxlongitude=165' +
-      '&minmagnitude=2.5&limit=10&orderby=time';
-    fetch(url)
+    fetch('/api/safety/seismic')
       .then((r) => r.json())
-      .then((d) => {
-        const events: SeismicEvent[] = (d.features || []).map((f: {
-          id: string;
-          properties: { mag: number; place: string; time: number };
-          geometry: { coordinates: [number, number, number] };
-        }) => ({
-          id: f.id,
-          magnitude: f.properties.mag,
-          place: f.properties.place,
-          time: f.properties.time,
-          depth: f.geometry.coordinates[2],
-        }));
-        setSeismic(events);
+      .then((d: { events?: SeismicEvent[]; error?: string; updatedAt?: string }) => {
+        if (d.error) { setSeismicError(d.error); return; }
+        setSeismic(d.events || []);
         setSeismicLastUpdate(new Date());
       })
-      .catch(() => setSeismicError('Не удалось загрузить данные USGS Earthquake'))
+      .catch(() => setSeismicError('Не удалось загрузить данные сейсмики'))
       .finally(() => setSeismicLoading(false));
   }, []);
 
@@ -145,45 +137,6 @@ export default function SafetyHubClient() {
   useEffect(() => {
     if (activeTab === 'seismic' && seismic.length === 0 && !seismicLoading) fetchSeismic();
   }, [activeTab, seismic.length, seismicLoading, fetchSeismic]);
-
-  const handleRescueChat = useCallback(async () => {
-    const text = rescueInput.trim();
-    if (!text || rescueSending) return;
-    const userMsg: ChatMessage = { role: 'user', content: text };
-    setRescueMessages((prev) => [...prev, userMsg]);
-    setRescueInput('');
-    setRescueSending(true);
-    try {
-      const res = await fetch('/api/safety/rescue-chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: text,
-          history: rescueMessages.slice(-10),
-        }),
-      });
-      const data = await res.json() as { reply?: string; error?: string };
-      const assistantMsg: ChatMessage = {
-        role: 'assistant',
-        content: data.reply || data.error || 'Нет ответа',
-      };
-      setRescueMessages((prev) => [...prev, assistantMsg]);
-    } catch {
-      setRescueMessages((prev) => [
-        ...prev,
-        { role: 'assistant', content: 'Ошибка соединения. При угрозе жизни звоните 112.' },
-      ]);
-    } finally {
-      setRescueSending(false);
-    }
-  }, [rescueInput, rescueSending, rescueMessages]);
-
-  // Auto-scroll rescue chat
-  React.useEffect(() => {
-    if (rescueChatRef.current) {
-      rescueChatRef.current.scrollTop = rescueChatRef.current.scrollHeight;
-    }
-  }, [rescueMessages]);
 
   const handleSOS = useCallback(async () => {
     setSosStatus('locating');
@@ -239,9 +192,9 @@ export default function SafetyHubClient() {
         {[
           { id: 'sos', label: 'SOS' },
           { id: 'emergency', label: 'МЧС' },
+          { id: 'avalanche', label: 'Лавины' },
           { id: 'seismic', label: 'Сейсмика' },
           { id: 'weather', label: 'Погода' },
-          { id: 'ai', label: 'AI Спасатель' },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -260,7 +213,6 @@ export default function SafetyHubClient() {
       {/* ── SOS ── */}
       {activeTab === 'sos' && (
         <div className="space-y-5">
-          {/* Send SOS */}
           <div
             className="border rounded-lg p-6 text-center"
             style={{
@@ -324,7 +276,6 @@ export default function SafetyHubClient() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-4">
-            {/* Emergency numbers */}
             <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5">
               <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-4">Экстренные номера</h3>
               <div className="space-y-2">
@@ -342,7 +293,6 @@ export default function SafetyHubClient() {
               </div>
             </div>
 
-            {/* Location */}
             <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5">
               <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-4">Ваша локация</h3>
               {coordsLoading && (
@@ -409,7 +359,7 @@ export default function SafetyHubClient() {
                 <li>Зарегистрируйтесь у оператора или гида</li>
                 <li>Сообщите маршрут и ожидаемое время возвращения</li>
                 <li>Возьмите заряженный телефон, аптечку, запас воды</li>
-                <li>Проверьте прогноз погоды на <span className="text-[var(--ocean)]">pogoda.ksc.ru</span></li>
+                <li>Проверьте прогноз погоды на pogoda.ksc.ru</li>
               </ul>
             </div>
           </div>
@@ -427,6 +377,122 @@ export default function SafetyHubClient() {
             <p className="text-sm text-[var(--text-secondary)] mt-1">
               Актуальный статус вулканов: KVERT (kscnet.ru/ivs/kvert)
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* ── Лавины ── */}
+      {activeTab === 'avalanche' && (
+        <div className="space-y-4">
+          {/* Overall level */}
+          <div
+            className="border rounded-lg p-5"
+            style={{
+              borderColor: 'color-mix(in srgb, var(--warning) 40%, transparent)',
+              background: DANGER_LEVEL[3].bg,
+            }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <MountainSnow className="w-5 h-5" style={{ color: DANGER_LEVEL[3].color }} />
+                <h2 className="text-sm font-semibold text-[var(--text-primary)]">Лавинная опасность — Камчатка</h2>
+              </div>
+              <div
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
+                style={{ background: DANGER_LEVEL[3].color }}
+              >
+                <span className="text-white font-bold text-lg leading-none">3</span>
+                <span className="text-white text-xs font-medium">/ 5</span>
+              </div>
+            </div>
+            <p className="text-sm font-semibold mb-1" style={{ color: DANGER_LEVEL[3].color }}>
+              {DANGER_LEVEL[3].label}
+            </p>
+            <p className="text-sm text-[var(--text-secondary)]">{DANGER_LEVEL[3].desc}</p>
+            <p className="text-xs text-[var(--text-muted)] mt-3">
+              Март — апрель: пик лавинной активности. Интенсивное весеннее снеготаяние + циклонические осадки.
+            </p>
+          </div>
+
+          {/* Danger scale */}
+          <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5">
+            <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">Шкала лавинной опасности</h3>
+            <div className="space-y-2">
+              {([1, 2, 3, 4, 5] as const).map((level) => {
+                const d = DANGER_LEVEL[level];
+                const isActive = level === 3;
+                return (
+                  <div
+                    key={level}
+                    className="flex items-center gap-3 p-2 rounded-md text-sm"
+                    style={isActive ? { background: d.bg } : {}}
+                  >
+                    <div
+                      className="w-7 h-7 rounded flex items-center justify-center font-bold text-xs text-white flex-shrink-0"
+                      style={{ background: d.color }}
+                    >
+                      {level}
+                    </div>
+                    <div>
+                      <span
+                        className={`font-medium ${isActive ? '' : 'text-[var(--text-secondary)]'}`}
+                        style={isActive ? { color: d.color } : {}}
+                      >
+                        {d.label}
+                      </span>
+                      {isActive && (
+                        <span className="ml-2 text-xs text-[var(--text-muted)]">— текущий уровень</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Zones */}
+          <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5">
+            <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">Зоны риска</h3>
+            <div className="space-y-2">
+              {AVALANCHE_ZONES.map((zone) => {
+                const d = riskLevel(zone.risk);
+                return (
+                  <div key={zone.name} className="flex items-start justify-between gap-3 py-2 border-b border-[var(--border)] last:border-0">
+                    <div>
+                      <p className="text-sm font-medium text-[var(--text-primary)]">{zone.name}</p>
+                      <p className="text-xs text-[var(--text-muted)] mt-0.5">{zone.note}</p>
+                    </div>
+                    <div
+                      className="flex-shrink-0 w-7 h-7 rounded flex items-center justify-center font-bold text-xs text-white"
+                      style={{ background: d.color }}
+                      title={d.label}
+                    >
+                      {zone.risk}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Warning + source */}
+          <div
+            className="flex items-start gap-3 border rounded-lg p-4"
+            style={{
+              borderColor: 'color-mix(in srgb, var(--warning) 40%, transparent)',
+              background: 'color-mix(in srgb, var(--warning) 8%, transparent)',
+            }}
+          >
+            <TriangleAlert className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--warning)' }} />
+            <div className="text-sm">
+              <p className="font-medium" style={{ color: 'var(--warning)' }}>Туристам и гидам</p>
+              <p className="text-[var(--text-secondary)] mt-1">
+                При движении в горной местности в зимне-весенний период: избегайте подветренных склонов крутизной 30–45°, карнизов и кулуаров.
+              </p>
+              <p className="text-xs text-[var(--text-muted)] mt-2">
+                Официальный прогноз лавинной опасности: avalanche.ru
+              </p>
+            </div>
           </div>
         </div>
       )}
@@ -498,106 +564,6 @@ export default function SafetyHubClient() {
               )}
             </>
           )}
-        </div>
-      )}
-
-      {/* ── AI Спасатель ── */}
-      {activeTab === 'ai' && (
-        <div className="flex flex-col" style={{ height: '60vh', minHeight: 420 }}>
-          {/* Header */}
-          <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4 mb-3 flex items-center gap-3">
-            <div
-              className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
-              style={{ background: 'color-mix(in srgb, var(--danger) 15%, transparent)' }}
-            >
-              <Bot className="w-5 h-5" style={{ color: 'var(--danger)' }} />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-[var(--text-primary)]">AI Спасатель</p>
-              <p className="text-xs text-[var(--text-muted)]">Консультации по безопасности · При угрозе жизни звоните 112</p>
-            </div>
-          </div>
-
-          {/* Messages */}
-          <div
-            ref={rescueChatRef}
-            className="flex-1 overflow-y-auto space-y-3 pr-1"
-          >
-            {rescueMessages.length === 0 && (
-              <div className="text-center py-10 text-[var(--text-muted)]">
-                <Bot className="w-10 h-10 mx-auto mb-3 opacity-40" />
-                <p className="text-sm">Задайте вопрос о безопасности на Камчатке</p>
-                <div className="mt-4 flex flex-col gap-2 items-center">
-                  {[
-                    'Что делать при встрече с медведем?',
-                    'Как действовать при землетрясении?',
-                    'Что взять с собой в горы?',
-                  ].map((q) => (
-                    <button
-                      key={q}
-                      onClick={() => setRescueInput(q)}
-                      className="text-xs px-3 py-1.5 border border-[var(--border)] rounded-full text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card)] transition-colors"
-                    >
-                      {q}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-            {rescueMessages.map((msg, i) => (
-              <div
-                key={i}
-                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[85%] rounded-lg px-4 py-2.5 text-sm ${
-                    msg.role === 'user'
-                      ? 'text-white rounded-br-none'
-                      : 'bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-primary)] rounded-bl-none'
-                  }`}
-                  style={msg.role === 'user' ? { background: 'var(--accent)' } : {}}
-                >
-                  <p className="whitespace-pre-wrap">{msg.content}</p>
-                </div>
-              </div>
-            ))}
-            {rescueSending && (
-              <div className="flex justify-start">
-                <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg rounded-bl-none px-4 py-2.5">
-                  <div className="flex gap-1">
-                    {[0, 1, 2].map((i) => (
-                      <span
-                        key={i}
-                        className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)] animate-bounce"
-                        style={{ animationDelay: `${i * 150}ms` }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Input */}
-          <div className="mt-3 flex gap-2">
-            <input
-              type="text"
-              value={rescueInput}
-              onChange={(e) => setRescueInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void handleRescueChat(); } }}
-              placeholder="Спросите AI Спасателя..."
-              className="ds-input flex-1 text-sm"
-              disabled={rescueSending}
-            />
-            <button
-              onClick={() => void handleRescueChat()}
-              disabled={rescueSending || !rescueInput.trim()}
-              className="px-4 py-2 rounded-lg font-medium text-sm text-white disabled:opacity-40 transition-opacity hover:opacity-90"
-              style={{ background: 'var(--accent)' }}
-            >
-              <Send className="w-4 h-4" />
-            </button>
-          </div>
         </div>
       )}
 
