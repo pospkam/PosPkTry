@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { pool } from '@/lib/db-pool';
-import { requireAdmin } from '@/lib/auth/middleware';
+import { requireAdmin, requireOperator } from '@/lib/auth/middleware';
 
 const PatchSchema = z.object({
   status: z.enum([
@@ -22,8 +22,8 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const authError = await requireAdmin(request);
-  if (authError) return authError;
+  const authError = await requireOperator(request);
+  if (authError instanceof NextResponse) return authError;
 
   const { id } = await params;
 
@@ -66,8 +66,8 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const authError = await requireAdmin(request);
-  if (authError) return authError;
+  const authError = await requireOperator(request);
+  if (authError instanceof NextResponse) return authError;
 
   const { id } = await params;
 

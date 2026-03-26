@@ -4,18 +4,18 @@
  * Запускает AI Lead Processor для указанного лида:
  * квалификация → подбор туров → генерация предложения → сохранение в БД.
  *
- * Auth: admin
+ * Auth: requireOperator (admin + operator)
  */
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/auth/middleware';
+import { requireOperator } from '@/lib/auth/middleware';
 import { leadProcessor } from '@/lib/services/lead-processor.service';
 
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const authError = await requireAdmin(req);
-  if (authError) return authError;
+  const authError = await requireOperator(req);
+  if (authError instanceof NextResponse) return authError;
 
   const { id } = await params;
 
