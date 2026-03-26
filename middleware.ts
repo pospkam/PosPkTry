@@ -30,6 +30,7 @@ type AuthRole = 'tourist' | 'operator' | 'guide' | 'transfer_operator' | 'transf
 
 const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/auth': 'ALL',
+  '/api/admin': 'ALL',  // All admin endpoints have internal auth/CRON_SECRET checks
   '/api/weather': 'ALL',
   '/api/tours': ['GET'],
   '/api/routes': ['GET'],          // публичный каталог маршрутов
@@ -57,8 +58,6 @@ const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/planner/tours-for-day':  ['GET'],  // marketplace tours per activity
   '/api/planner/validate':       ['POST'], // AI route sequence validation
   '/api/planner/companion':      ['POST'], // AI trip companion chat
-  '/api/admin/leads/list':       ['GET'],  // protected by CRON_SECRET or admin JWT inside handler
-  '/api/admin/leads/process-batch': ['POST'], // protected by CRON_SECRET or admin JWT inside handler
   '/api/mig057': ['GET'],             // migration 057: transportation column
   '/api/mig058': ['GET'],             // migration 058: user_trips table
   '/api/mig059': ['GET'],             // migration 059: ai_actions_log table
