@@ -3,8 +3,6 @@
  * Отладка: проверить распознает ли middleware этот путь как public
  */
 
-import { NextUrl } from 'next/server';
-
 const PUBLIC_API_ROUTES: Record<string, string[] | 'ALL'> = {
   '/api/auth': 'ALL',
   '/api/admin': 'ALL',

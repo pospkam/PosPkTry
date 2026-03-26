@@ -517,3 +517,8 @@ ${toursText}
 }
 
 export const leadProcessor = new LeadProcessorService();
+
+/** Convenience wrapper for batch routes — fetches lead from DB by ID */
+export async function processSingleLead(leadId: string, _data?: unknown): Promise<void> {
+  await leadProcessor.process(leadId);
+}

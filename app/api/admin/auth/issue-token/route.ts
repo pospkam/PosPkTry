@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import * as jwt from 'jsonwebtoken';
+import { SignJWT } from 'jose';
 import { z } from 'zod';
 
 const TokenSchema = z.object({
@@ -50,13 +50,14 @@ export async function POST(req: NextRequest) {
       userId: 'admin-maintenance',
       email: 'system@tourhab.ru',
       role: 'admin',
-      iat: Math.floor(Date.now() / 1000),
     };
 
-    const token = jwt.sign(payload, jwtSecret, {
-      algorithm: 'HS256',
-      expiresIn: parsed.data.expiresIn,
-    });
+    const secret = new TextEncoder().encode(jwtSecret);
+    const token = await new SignJWT(payload)
+      .setProtectedHeader({ alg: 'HS256' })
+      .setIssuedAt()
+      .setExpirationTime(Math.floor(Date.now() / 1000) + parsed.data.expiresIn)
+      .sign(secret);
 
     return NextResponse.json({
       success: true,

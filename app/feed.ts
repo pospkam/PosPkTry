@@ -1,6 +1,4 @@
-import { MetadataRoute } from 'next';
-
-export default function feed(): MetadataRoute.Feed {
+export default function feed(): Record<string, string> {
   const baseUrl = 'https://tourhab.ru';
 
   return {
