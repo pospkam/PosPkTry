@@ -16,8 +16,11 @@ import { getModelForAgent } from '@/lib/ai/agent-models';
 import type { ChatMessage } from '@/lib/ai/prompts';
 import { parseInterestsFromText } from '@/lib/services/routes-recommender';
 import { recordTouristDemand } from '@/lib/ai/tourist-demand-aggregator';
+import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
+
+const chatLimiter = createRateLimiter({ windowMs: 60_000, max: 20 });
 
 const BodySchema = z.object({
   message: z.string().min(1).max(500),
@@ -124,6 +127,11 @@ function keywordParse(message: string) {
 }
 
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req.headers);
+  if (!chatLimiter.check(ip)) {
+    return NextResponse.json({ success: false, error: 'Слишком много запросов. Попробуйте через минуту.' }, { status: 429 });
+  }
+
   let body: unknown;
   try { body = await req.json(); } catch {
     return NextResponse.json({ success: false, error: 'Некорректный JSON' }, { status: 400 });

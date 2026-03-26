@@ -11,8 +11,11 @@ import { z } from 'zod';
 import { callAIWithModelDirect } from '@/lib/ai/providers';
 import { getModelForAgent } from '@/lib/ai/agent-models';
 import type { ChatMessage } from '@/lib/ai/prompts';
+import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
+
+const companionLimiter = createRateLimiter({ windowMs: 60_000, max: 20 });
 
 const BodySchema = z.object({
   message: z.string().min(1).max(500),
@@ -33,6 +36,11 @@ const COMPANION_SYSTEM = `Ты -- персональный помощник пу
 - Если маршрут содержит проблемы (не в сезон, опасно для детей) -- предупреди`;
 
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req.headers);
+  if (!companionLimiter.check(ip)) {
+    return NextResponse.json({ success: false, error: 'Слишком много запросов. Попробуйте через минуту.' }, { status: 429 });
+  }
+
   let body: unknown;
   try { body = await req.json(); } catch {
     return NextResponse.json({ success: false, error: 'Некорректный JSON' }, { status: 400 });
