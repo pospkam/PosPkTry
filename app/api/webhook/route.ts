@@ -25,20 +25,31 @@ export async function POST(request: NextRequest) {
     const signature = request.headers.get('x-hub-signature-256');
     const body = await request.text();
 
-    // Verify GitHub signature
-    const secret = process.env.WEBHOOK_SECRET || '';
-    if (secret && signature) {
-      const expectedSignature = 'sha256=' + crypto
-        .createHmac('sha256', secret)
-        .update(body)
-        .digest('hex');
-
-      if (signature !== expectedSignature) {
-        return NextResponse.json(
-          { error: 'Invalid signature' },
-          { status: 401 }
-        );
-      }
+    // Verify GitHub signature — required, WEBHOOK_SECRET must be configured
+    const secret = process.env.WEBHOOK_SECRET;
+    if (!secret) {
+      return NextResponse.json(
+        { error: 'WEBHOOK_SECRET not configured' },
+        { status: 500 }
+      );
+    }
+    if (!signature) {
+      return NextResponse.json(
+        { error: 'Missing signature' },
+        { status: 401 }
+      );
+    }
+    const expectedSignature = 'sha256=' + crypto
+      .createHmac('sha256', secret)
+      .update(body)
+      .digest('hex');
+    const sigBuf = Buffer.from(signature);
+    const expBuf = Buffer.from(expectedSignature);
+    if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+      return NextResponse.json(
+        { error: 'Invalid signature' },
+        { status: 401 }
+      );
     }
 
     let payload;
