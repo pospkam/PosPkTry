@@ -1,9 +1,11 @@
 /**
  * GET /api/admin/leads/list?status=new&limit=10
  * Просмотр лидов для админов и операторов
+ * Защита: requireAdmin ИЛИ x-cron-secret
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/auth/middleware';
 import { query } from '@/lib/database';
 import { z } from 'zod';
 
@@ -16,6 +18,17 @@ const QuerySchema = z.object({
 });
 
 export async function GET(req: NextRequest) {
+  // Проверка CRON_SECRET или admin JWT
+  const cronSecret = process.env.CRON_SECRET;
+  const headerSecret = req.headers.get('x-cron-secret');
+
+  const isValidCron = cronSecret && headerSecret === cronSecret && headerSecret.length > 8;
+
+  if (!isValidCron) {
+    const auth = await requireAdmin(req);
+    if (auth instanceof NextResponse) return auth;
+  }
+
   const parsed = QuerySchema.safeParse(Object.fromEntries(req.nextUrl.searchParams));
   if (!parsed.success) {
     return NextResponse.json({ error: 'Invalid query' }, { status: 400 });
