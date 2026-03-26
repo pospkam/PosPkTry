@@ -270,13 +270,15 @@ export class LeadProcessorService {
     let budgetFilter = '';
     if (intent.budget_rub) {
       params.push(Math.round(Number(intent.budget_rub) * 1.2));
-      budgetFilter = `AND price_per_person <= $${params.length}`;
+      budgetFilter = `AND base_price <= $${params.length}`;
     }
 
     const { rows } = await pool.query<TourRow>(
-      `SELECT id::text, title, price_per_person AS price, duration_days, activity_type, description
-       FROM tours
-       WHERE is_active = true
+      `SELECT id::text, title, base_price AS price,
+              CEIL(COALESCE(duration_hours, 8) / 8.0)::int AS duration_days,
+              activity_type, description
+       FROM operator_tours
+       WHERE is_active = true AND deleted_at IS NULL
          ${activityFilter}
          ${budgetFilter}
        ORDER BY RANDOM()
@@ -287,8 +289,10 @@ export class LeadProcessorService {
     if (rows.length === 0) {
       // Fallback — любые активные туры
       const { rows: fallback } = await pool.query<TourRow>(
-        `SELECT id::text, title, price_per_person AS price, duration_days, activity_type, description
-         FROM tours WHERE is_active = true ORDER BY RANDOM() LIMIT 5`
+        `SELECT id::text, title, base_price AS price,
+                CEIL(COALESCE(duration_hours, 8) / 8.0)::int AS duration_days,
+                activity_type, description
+         FROM operator_tours WHERE is_active = true AND deleted_at IS NULL ORDER BY RANDOM() LIMIT 5`
       );
       return this.rankTours(fallback, intent).slice(0, 3);
     }
@@ -457,13 +461,13 @@ ${toursText}
          l.ai_score,
          l.ai_intent,
          t.title      AS tour_title,
-         t.price_per_person AS tour_price,
-         t.duration_days    AS tour_duration_days,
+         t.base_price AS tour_price,
+         CEIL(COALESCE(t.duration_hours, 8) / 8.0)::int AS tour_duration_days,
          t.activity_type    AS tour_activity_type,
          t.description      AS tour_description
        FROM lead_proposals lp
        JOIN leads l ON l.id = lp.lead_id
-       LEFT JOIN tours t ON t.id = lp.primary_tour_id
+       LEFT JOIN operator_tours t ON t.id = lp.primary_tour_id
        WHERE lp.id = $1`,
       [proposalId]
     );
