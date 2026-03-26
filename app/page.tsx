@@ -18,6 +18,10 @@ const TrustSection = dynamic(
   () => import('@/components/homepage/TrustSection').then(m => ({ default: m.TrustSection })),
   { loading: () => <SectionSkeleton /> }
 );
+const OperatorPromo = dynamic(
+  () => import('@/components/homepage/OperatorPromo').then(m => ({ default: m.OperatorPromo })),
+  { loading: () => <SectionSkeleton /> }
+);
 const HomeBottomNav = dynamic(
   () => import('@/components/homepage/HomeBottomNav').then(m => ({ default: m.HomeBottomNav }))
 );
@@ -110,6 +114,7 @@ export default async function Page() {
         <EcosystemPulse stats={stats} />
         <FeaturedDirections />
         <TrustSection />
+        <OperatorPromo />
       </main>
       <Footer />
       <HomeBottomNav />

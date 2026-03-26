@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { clsx } from 'clsx';
-import { Home, Mountain, Calendar, CalendarDays, DollarSign, Users, FileText, Settings, User, Link2, LucideIcon } from 'lucide-react';
+import { Home, Mountain, Calendar, CalendarDays, DollarSign, Users, FileText, Settings, User, Link2, Brain, LucideIcon } from 'lucide-react';
 
 interface NavItem {
   name: string;
@@ -15,6 +15,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { name: 'Dashboard', path: '/hub/operator', icon: Home },
   { name: 'Мои туры', path: '/hub/operator/tours', icon: Mountain },
+  { name: 'Лиды', path: '/hub/operator/leads', icon: Brain },
   { name: 'Бронирования', path: '/hub/operator/bookings', icon: Calendar },
   { name: 'Календарь', path: '/hub/operator/calendar', icon: CalendarDays },
   { name: 'Финансы', path: '/hub/operator/finance', icon: DollarSign },
