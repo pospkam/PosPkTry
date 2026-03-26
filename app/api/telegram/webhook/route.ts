@@ -1090,6 +1090,64 @@ export async function POST(request: NextRequest) {
 
     const uuidPattern = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 
+    // ── Admin quick-action кнопки (из дайджеста) ──────────────────────────
+    if (data.startsWith('admin:') && isAdmin(senderChatId)) {
+      await telegramService.answerCallback(cq.id);
+      const action = data.slice('admin:'.length);
+
+      if (action === 'leads') {
+        const leadsText = await getLastLeads();
+        await sendHTML(callbackChatId, leadsText);
+      } else if (action === 'stats') {
+        const statsText = await getStats();
+        await sendHTML(callbackChatId, statsText);
+      } else if (action === 'bookings') {
+        try {
+          const r = await query<{
+            id: string; tour_title: string | null;
+            guest_name: string; guest_phone: string;
+            booking_date: string; booking_status: string;
+          }>(
+            `SELECT ob.id::text, ot.title as tour_title, ob.guest_name, ob.guest_phone,
+                    ob.booking_date::text, ob.booking_status
+             FROM operator_bookings ob
+             LEFT JOIN operator_tours ot ON ot.id = ob.tour_id
+             ORDER BY ob.created_at DESC LIMIT 8`
+          );
+          if (!r.rows.length) {
+            await sendHTML(callbackChatId, 'Бронирований пока нет.');
+          } else {
+            const lines = ['<b>Последние бронирования:</b>', ''];
+            r.rows.forEach((b, i) => {
+              const date = b.booking_date ? new Date(b.booking_date).toLocaleDateString('ru-RU') : '—';
+              lines.push(`${i + 1}. <b>${esc(b.guest_name)}</b>  <code>${esc(b.guest_phone)}</code>  [${b.booking_status}]`);
+              if (b.tour_title) lines.push(`   ${esc(b.tour_title)}  ${date}`);
+            });
+            await sendHTML(callbackChatId, lines.join('\n'));
+          }
+        } catch {
+          await sendHTML(callbackChatId, 'Не удалось загрузить бронирования.');
+        }
+      } else if (action === 'help') {
+        await sendHTML(callbackChatId, [
+          '<b>Команды Кузьмича (admin):</b>',
+          '',
+          '/stats — статистика платформы',
+          '/leads — последние заявки',
+          '/digest — AI-дайджест сейчас',
+          '/agent &lt;текст&gt; — PlatformAgent',
+          '/approve_&lt;id&gt; — одобрить инициативу',
+          '/reject_&lt;id&gt; — отклонить инициативу',
+          '/post sezon | operator &lt;slug&gt; | route &lt;id&gt;',
+          '/diag — диагностика env',
+          '',
+          'Или просто напиши запрос — Кузьмич поймёт.',
+          'Примеры: "покажи лиды за сегодня", "сколько пользователей"',
+        ].join('\n'));
+      }
+      return NextResponse.json({ ok: true });
+    }
+
     // ── Кнопки статуса лида (только admin) ────────────────────────────────
     const LEAD_STATUSES: Record<string, string> = {
       'lead_contacted': 'contacted',

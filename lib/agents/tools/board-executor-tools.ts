@@ -207,14 +207,26 @@ export async function applySchemaFix(
   }
 }
 
+// Per-key cooldown to suppress repeated alerts (e.g. Infra probing AI every hour)
+const _alertCooldowns = new Map<string, number>();
+const ALERT_COOLDOWN_MS = 6 * 60 * 60 * 1000; // 6 hours
+
 /**
  * Отправляет Telegram-уведомление администратору о действии агента.
+ * Повторные алерты с тем же agentName+action подавляются на 6 часов.
  */
 export async function sendBoardAlert(
   agentName: string,
   action: string,
   details: string
 ): Promise<ToolResult> {
+  const cooldownKey = `${agentName}:${action}`;
+  const lastSent = _alertCooldowns.get(cooldownKey) ?? 0;
+  if (Date.now() - lastSent < ALERT_COOLDOWN_MS) {
+    return { success: true, message: 'Дублирующий алерт подавлен (кулдаун 6ч)' };
+  }
+  _alertCooldowns.set(cooldownKey, Date.now());
+
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_FISHING_CHAT_ID;
 
