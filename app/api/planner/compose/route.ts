@@ -5,6 +5,9 @@ import { callAIWithModelDirect } from '@/lib/ai/providers';
 import { getModelForAgent } from '@/lib/ai/agent-models';
 import { getSystemPrompt } from '@/lib/ai/prompts';
 import type { ChatMessage } from '@/lib/ai/prompts';
+import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
+
+const plannerLimiter = createRateLimiter({ windowMs: 60_000, max: 10 });
 
 const PlannerSchema = z.object({
   message: z.string().min(10).max(500),
@@ -12,6 +15,14 @@ const PlannerSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request.headers);
+  if (!plannerLimiter.check(ip)) {
+    return NextResponse.json(
+      { error: 'Слишком много запросов. Попробуйте через минуту.' },
+      { status: 429 }
+    );
+  }
+
   try {
     const body = await request.json();
     const { message, budget } = PlannerSchema.parse(body);

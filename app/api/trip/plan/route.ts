@@ -14,9 +14,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { query } from '@/lib/database';
 import { config } from '@/lib/config';
+import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // 60 секунд для сложных запросов
+
+const tripPlanLimiter = createRateLimiter({ windowMs: 60_000, max: 5 }); // 5/мин — тяжёлый AI запрос
 
 // Типы
 interface TripRequest {
@@ -115,6 +118,14 @@ interface TripPlan {
  * AUTH: Public — trip planning for visitors before booking
  */
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request.headers);
+  if (!tripPlanLimiter.check(ip)) {
+    return NextResponse.json(
+      { success: false, error: 'Слишком много запросов. Попробуйте через минуту.' },
+      { status: 429 }
+    );
+  }
+
   try {
     let body: unknown;
     try {
