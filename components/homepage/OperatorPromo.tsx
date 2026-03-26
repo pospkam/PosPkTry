@@ -54,7 +54,7 @@ export function OperatorPromo() {
               <div className="w-12 h-12 rounded-lg bg-[var(--success)]/10 flex items-center justify-center">
                 <BarChart3 className="w-6 h-6 text-[var(--success)]" />
               </div>
-              <h3 className="font-semibold text-[var(--text-primary)]">PDF + Telegram 🚀</h3>
+              <h3 className="font-semibold text-[var(--text-primary)]">PDF + Telegram</h3>
             </div>
             <p className="text-sm text-[var(--text-secondary)]">
               Генерирует красивое PDF-предложение и отправляет ссылку оператору в Telegram
@@ -70,10 +70,10 @@ export function OperatorPromo() {
             </h3>
             <ul className="space-y-4">
               {[
-                '70–75% лидов окончательно обработаны без участия человека',
-                'На 80% сокращается время на анализ и подбор',
-                '100% лидов получают ответ за 5–10 минут',
-                'Конверсия лидов выше на 15–20% (быстрота ответа)',
+                'Каждый лид квалифицируется AI — извлекаются бюджет, даты, активности',
+                'Система автоматически подбирает туры с доступными слотами',
+                'Первый ответ клиенту формируется в течение минуты, не часа',
+                'Оператор видит готовое предложение в Telegram — одно нажатие',
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-[var(--success)] flex-shrink-0 mt-0.5" />
@@ -103,7 +103,7 @@ export function OperatorPromo() {
         <div className="text-center">
           <div className="mb-8 inline-block">
             <p className="text-sm text-[var(--text-muted)] mb-2">
-              ✨ Первые 3 месяца бесплатно
+              Первые 3 месяца бесплатно
             </p>
             <h3 className="text-2xl font-bold text-[var(--text-primary)]">
               Попробуйте AI Lead Processor сейчас
