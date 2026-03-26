@@ -267,9 +267,11 @@ export class LeadProcessorService {
       params.push(keywordFilter.length > 0 ? keywordFilter : ['%%']);
     }
 
-    const budgetFilter = intent.budget_rub
-      ? `AND price_per_person <= ${intent.budget_rub * 1.2}`
-      : '';
+    let budgetFilter = '';
+    if (intent.budget_rub) {
+      params.push(Math.round(Number(intent.budget_rub) * 1.2));
+      budgetFilter = `AND price_per_person <= $${params.length}`;
+    }
 
     const { rows } = await pool.query<TourRow>(
       `SELECT id::text, title, price_per_person AS price, duration_days, activity_type, description
