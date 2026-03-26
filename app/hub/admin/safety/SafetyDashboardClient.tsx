@@ -256,10 +256,9 @@ function RescueBriefing() {
             Запрашиваю брифинг у AI Спасателя...
           </div>
         ) : (
-          <div
-            className="text-[var(--text-primary)] text-sm leading-relaxed whitespace-pre-line"
-            dangerouslySetInnerHTML={{ __html: (text || 'Данные отсутствуют.').replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '').replace(/on\w+\s*=/gi, '') }}
-          />
+          <div className="text-[var(--text-primary)] text-sm leading-relaxed whitespace-pre-line">
+            {text || 'Данные отсутствуют.'}
+          </div>
         )}
         {lastUpdated && !loading && (
           <p className="text-xs text-[var(--text-muted)] mt-4">

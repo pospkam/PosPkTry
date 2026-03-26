@@ -157,10 +157,9 @@ export function AIAssistClient() {
               <span className="text-xs text-[var(--text-muted)] ml-auto">{result.duration_ms}ms</span>
             </div>
 
-            <div
-              className="text-sm text-[var(--text-primary)] leading-relaxed whitespace-pre-wrap"
-              dangerouslySetInnerHTML={{ __html: result.response.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>') }}
-            />
+            <div className="text-sm text-[var(--text-primary)] leading-relaxed whitespace-pre-wrap">
+              {result.response}
+            </div>
 
             {result.data && Object.keys(result.data).length > 0 && (
               <div className="mt-4">

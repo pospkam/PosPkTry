@@ -254,7 +254,7 @@ function ActivityTab({
                 <span className="flex items-center gap-0.5"><Clock className="w-3 h-3" /> {dispatchRes.duration_ms}ms</span>
               </div>
             )}
-            <div dangerouslySetInnerHTML={{ __html: dispatchRes.response.replace(/\n/g, '<br/>') }} />
+            <div className="whitespace-pre-wrap">{dispatchRes.response}</div>
           </div>
         )}
       </div>
