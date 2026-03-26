@@ -1,221 +1,161 @@
-# KamchatourHub — STRATEGIC ROADMAP Q2 2026
+# TourHab — STRATEGIC ROADMAP Q2 2026
 
-**Leadership:** Claude AI (Evo + Admin Combined)
-**Date:** 25 марта 2026
-**Authority:** ПОЛНЫЙ картбланш — архитектурные решения, миграции, эксперименты
-
----
-
-## PHASE II STATUS ASSESSMENT
-
-### ✅ What's Working
-- Board meeting system (AI Directors + Accountability)
-- Agent error handling (all 9 agencies wrapped with try/catch)
-- Legal documentation framework (GDPR/PDPA)
-- Operator tools Phase 1 (tours, bookings, weather, payments)
-- OCTO API adapter layer (8 routes)
-- Route marketplace (1189 routes indexed)
-- Commission model v1.0
-- Telegram admin bot
-
-### 🔴 CRITICAL GAPS (Priority: FIX NOW)
-
-#### 1. AGENT EVOLUTION INCOMPLETE
-**Problem:** Agents are reactive (only respond when called), not proactive.
-- No scheduled monitoring (weather alerts, booking delays, load spikes)
-- No cross-agent communication (e.g., Rescue → Admin when SOS)
-- No learning from board decisions (each board meeting resets)
-- Evolution is UI-driven, not autonomous
-
-**Impact:** System sounds smart but doesn't _think_ independently.
-
-**Solution Path:**
-- Agents run on cron schedule (every 4h minimum)
-- Event bus for cross-agent alerts
-- Agent memory persistence across sessions
-- Autonomous decision-making on tactical issues (no owner approval needed)
+**Обновлено:** 26 марта 2026 (по факту кода в репозитории)
+**Цель:** 50 активных операторов, 500 бронирований/мес к концу Q2
 
 ---
 
-#### 2. OPERATOR ONBOARDING BROKEN
-**Problem:** Only 1 real operator in production (kamchatskaya-rybalka). Seed scripts exist but not applied.
-- No operator dashboard (overview of tours, revenue, bookings)
-- No bulk operations (create 10 tours at once)
-- No template system (clone existing tour)
-- Operator discovery is manual (no marketing)
+## ТЕКУЩЕЕ СОСТОЯНИЕ (26 марта 2026)
 
-**Impact:** Can't scale to 50+ operators before summer season.
+**Готовность MVP:** ~65% общего роадмапа / ~45% MVP для оператора
 
-**Solution Path:**
-- Operator dashboard v1 (overview card: revenue 7d, bookings today, tours active, weather alerts)
-- Bulk tour import from CSV
-- Tour templates + marketplace guide recommendations
-- Operator discovery via `/hub/marketplace/operators` (with badges: "новый", "популярный", "рейтинг")
+### РЕАЛИЗОВАНО
 
----
+- **20 AI-агентств** (admin, rescue, eco, legal, security, hacker, planning, quality, content, finance и др.)
+- **Agent Scheduler** (4h cron, Redis-lock) — `lib/agents/scheduler.ts`
+- **Board Meeting** (`/hub/admin/board-meeting`) — совещания директоров с Proposals
+- **AI Lead Processor** (код) — квалификация, PDF, Telegram, scoring 0-100
+- **Operator Hub** — 17 страниц (leads, bookings, tours, calendar, analytics, finance, guides…)
+- **Admin Hub** — 24 страницы
+- **Tourist Hub** — 8 страниц
+- **83 миграции** БД (последняя: 083_lead_processor)
+- **CloudPayments** webhook endpoint существует
+- **Commission Service** — `lib/services/commission.service.ts`
+- **TripBuilder** — планировщик маршрутов
+- **14 cron-задач** (digest, safety, SOS, agents-evolve, payouts…)
+- **Semantic search** — `/api/discovery/semantic-search`
+- **robots.txt** — правильный домен tourhab.ru
+- **CI/CD** — GitHub → Timeweb автодеплой
 
-#### 3. TOURIST EXPERIENCE HALF-BAKED
-**Problem:** TripBuilder DnD works locally, but integration with marketplace incomplete.
-- No guide marketplace matching (show guides for selected route)
-- No real-time booking (shows tour but booking redirects to operator)
-- No rescheduling (if weather alert, offer alternate dates)
-- Mobile experience broken (no navbar on `/planner`)
+### НЕ РЕАЛИЗОВАНО (критичные пробелы)
 
-**Impact:** Tourists can't actually book end-to-end on platform.
-
-**Solution Path:**
-- Integration: TripBuilder → Marketplace Tours → Guide Recommendations → Direct Booking
-- Real-time availability check (operator_availability table check before booking)
-- Mobile navbar on planner
-- Post-booking: guide chat, day-of reminders via Telegram
-
----
-
-#### 4. FINANCIAL MODEL NOT ENFORCED
-**Problem:** Commission model code exists but not enforced in payments.
-- CloudPayments webhook doesn't create agent_commissions records
-- No payout tracking (agent earned X, paid Y, owes Z)
-- No dispute resolution (customer refund, who eats cost?)
-
-**Impact:** Can't scale payment processing, no transparency.
-
-**Solution Path:**
-- CloudPayments webhook → auto-create commission records (% split: platform/operator/guide)
-- Agent dashboard shows: pending payouts, history, tax info
-- Payout automation via CloudPayments API
-- Dispute flow with timestamps + evidence
+| Пробел | Критичность | Где |
+|--------|------------|-----|
+| Оператор Dashboard KPI (revenue 7d, bookings today) | КРИТИЧНО | `/hub/operator/page.tsx` минимальный |
+| CloudPayments webhook → auto-create commission records | КРИТИЧНО | `/api/payments/webhook` не пишет в agent_commissions |
+| Real-time availability check перед бронированием | HIGH | нет `operator_availability` проверки |
+| Bulk CSV import туров | HIGH | нет `/api/operator/tours/import` |
+| Mobile navbar на `/planner` | HIGH | нет |
+| GDPR Export API `/api/user/export` | HIGH | нет |
+| GDPR Delete API `/api/user/delete` | HIGH | нет |
+| Consent checkpoints в регистрации/бронировании | MEDIUM | нет |
+| Guide marketplace в TripBuilder | MEDIUM | нет |
+| Event bus для межагентных алертов | MEDIUM | нет `lib/events/agent-bus.ts` |
+| Post-booking Telegram reminders (полная интеграция) | MEDIUM | код есть, flow неполный |
+| Lead Processor analytics dashboard | MEDIUM | нет |
+| Health check `/api/health/lead-processor` | LOW | нет |
 
 ---
 
-#### 5. REGULATORY COMPLIANCE NOT TESTED
-**Problem:** Legal docs written, but not enforced.
-- User agreements in DB, but not shown to users
-- No consent tracking (what did user agree to on 2026-03-15?)
-- No export/delete requests (GDPR right to be forgotten)
+## РОАДМАП ПО НЕДЕЛЯМ
 
-**Impact:** GDPR violation risk if audited.
+### Неделя 1 (26 марта – 1 апреля): ДЕПЛОЙ + СТАБИЛИЗАЦИЯ
 
-**Solution Path:**
-- Consent checkpoints in registration/tour-creation/booking flows
-- Audit log: user agreed to [doc_id] v[version] on [timestamp] from [ip]
-- Export API: `/api/user/export` → JSON/CSV of all personal data
-- Delete API: `/api/user/delete` → soft-delete with 30-day recovery window
+**Цель:** Всё что написано — работает на проде.
 
----
+- [ ] Timeweb задеплоил коммит 0a9af271 (build ID сменился)
+- [ ] Миграция 083 применена (`POST /api/admin/migrations/apply {"migrations":["083"]}`)
+- [ ] OperatorPromo видна на tourhab.ru (скролл главной до конца)
+- [ ] AI Lead Processor протестирован на реальных лидах (5+)
+- [ ] PDF генерируется без ошибок
+- [ ] Telegram уведомления доходят операторам
+- [ ] Первые 3-5 операторов зарегистрированы (outreach)
 
-### 🟡 TECHNICAL DEBT (High-Priority)
-
-1. **10 agents (non-board)** exist alongside 9 board agents. Consolidate to single agency framework.
-2. **Scraping scripts** (14+ obsolete ones). Archive or remove.
-3. **OCTO API** half-implemented. Complete all 8 routes + test with real OTA.
-4. **TypeScript strict violations** in 3 files (operator-agency, led-agency, etc.).
-5. **Database schema gaps**: No `tour_cancellations` table (needed for smart rescheduling).
+**Метрика:** OperatorPromo видна + 1 реальный обработанный лид на проде
 
 ---
 
-## Q2 2026 ROADMAP (Weekly Sprints)
+### Неделя 2 (1-7 апреля): OPERATOR DASHBOARD V1
 
-### Week 1 (25-31 марта) — AGENT EVOLUTION PHASE 2
-- [ ] Agent scheduler: `lib/agents/scheduler.ts` (cron every 4h)
-- [ ] Event bus: `lib/events/agent-bus.ts` (pub/sub for cross-agent alerts)
-- [ ] Agent memory v2: persist `last_analysis`, `context`, `decisions` across sessions
-- [ ] SOS cascade: Rescue → Admin alert (if SOS in elizovsky zone during storm)
-- **Deploy:** `cee28006..weekly-sprint-1` → test locally, push to main
-- **Measure:** Agent autonomous decisions per day (target: 2+)
+**Цель:** Оператор заходит и сразу видит цифры.
 
-### Week 2 (1-7 апреля) — OPERATOR DASHBOARD V1
-- [ ] `/hub/operator/dashboard` page: revenue card, bookings today, tours active, upcoming weather
-- [ ] API: `GET /api/hub/operator/metrics/7d` (aggregated stats)
-- [ ] CSV import: `POST /api/hub/operator/tours/import` (bulk create with templates)
-- [ ] Operator discovery: `/hub/marketplace/operators` page
-- **Deploy:** `main → weekly-sprint-2`
-- **Measure:** Operator activation rate (target: 5 new operators)
+- [ ] KPI-карточки на `/hub/operator/page.tsx`: выручка 7d, бронирований сегодня, активных туров, новых лидов
+- [ ] API `GET /api/operator/metrics/7d` — агрегированная статистика
+- [ ] Bulk CSV import туров `POST /api/operator/tours/import`
+- [ ] Lead analytics mini в `/hub/operator/leads` (итого, % обработано, avg время)
 
-### Week 3 (8-14 апреля) — TOURIST BOOKING FLOW
-- [ ] Mobile navbar on `/planner` (Дом / Карта / Избранное / ЛК / СОС)
-- [ ] Guide marketplace in TripBuilder (show guides for selected route)
-- [ ] Direct booking: TripBuilder → Operator → Payment → Confirmation
-- [ ] Real-time availability: check `operator_availability` before confirming
-- [ ] Post-booking: Telegram reminders (day-of, 1h before, after-tour survey)
-- **Deploy:** `main → weekly-sprint-3`
-- **Measure:** Booking conversion (target: 2% views → bookings)
-
-### Week 4 (15-21 апреля) — FINANCIAL AUTOMATION
-- [ ] CloudPayments webhook overhaul: paid → auto-commission records
-- [ ] Agent payouts: `GET /api/agent/payouts` (history + pending)
-- [ ] Payout API call to CloudPayments (auto-transfer to agent account)
-- [ ] Dispute workflow: customer refund → re-allocate commission
-- [ ] Tax forms generation (for agents, 1099-equivalent)
-- **Deploy:** `main → weekly-sprint-4`
-- **Measure:** Commission accuracy (target: 100%, zero manual fixes)
-
-### Week 5 (22-28 апреля) — COMPLIANCE HARDENING
-- [ ] User agreement checkpoints (registration, tour-creation, booking)
-- [ ] Consent audit log: every agreement + version + timestamp + IP tracking
-- [ ] Export API: `GET /api/user/export` → all personal data (JSON/CSV)
-- [ ] Delete API: `POST /api/user/delete` → 30-day recovery window
-- [ ] GDPR/PDPA compliance report generator
-- **Deploy:** `main → weekly-sprint-5`
-- **Measure:** GDPR readiness (target: 90%+ compliance)
+**Метрика:** 5 новых операторов прошли онбординг, каждый загрузил хотя бы 1 тур
 
 ---
 
-## ARCHITECTURAL DECISIONS (This Sprint)
+### Неделя 3 (8-14 апреля): ФИНАНСОВАЯ МОДЕЛЬ
 
-### Decision 1: Agent Scheduler — In-Process vs Distributed
-**Option A (Chosen):** In-process scheduler (node-cron)
-- Pro: Simple, no external deps
-- Con: Only works on 1 pod (if we scale to 2 pods, runs twice)
-- Implementation: `lib/agents/scheduler.ts` with deduplication via Redis lock
+**Цель:** Каждый платёж → автоматическая запись комиссии.
 
-**Decision 2: Event Bus — Pub/Sub Implementation**
-**Option A (Chosen):** Custom in-memory with optional Redis fallback
-- Pro: Immediate, no infrastructure
-- Con: Events lost on restart
-- Implementation: `lib/events/agent-bus.ts` with EventEmitter
+- [ ] CloudPayments webhook → INSERT в `agent_commissions` при `paid`-статусе
+- [ ] Payout dashboard для агента `GET /api/agent/payouts`
+- [ ] Проверка доступности слота перед бронированием (`operator_availability`)
+- [ ] Dispute flow (возврат → перерасчёт комиссии)
 
-**Decision 3: Commission Tracking — Per-Booking or Aggregate**
-**Option A (Chosen):** Per-booking records (immutable ledger)
-- Pro: Full audit trail, no reconciliation needed
-- Con: More DB writes
-- Implementation: `agent_commissions` table with `booking_id` FK
+**Метрика:** 100% транзакций создают commission record, 0 ручных правок
 
 ---
 
-## RISKS & MITIGATION
+### Неделя 4 (15-21 апреля): ТУРИСТ + МОБИЛКА
 
-| Risk | Impact | Mitigation |
-|------|--------|-----------|
-| Agents run amok (e.g., massively refunding bookings) | Financial loss | Guard rails: agent actions logged + approval for refunds >5K rubles |
-| Mobile navbar on /planner breaks on scroll | UX broken | Test on 5 devices before deploy |
-| Double-run of agent scheduler | Duplicate alerts | Redis lock + timestamp deduplication |
-| GDPR export includes PII by mistake | Legal violation | Sanitization layer + QA audit |
-| Commission calc off by 1 kopeck | Trust broken | Full reconciliation report daily |
+**Цель:** Турист может забронировать end-to-end.
 
----
+- [ ] Mobile navbar на `/planner`
+- [ ] TripBuilder → real booking flow (выбор тура → оплата → подтверждение)
+- [ ] Post-booking: Telegram-напоминание за 1 день, за 1 час до тура
+- [ ] Рескедулинг при погодном алерте (показать альтернативные даты)
 
-## SUCCESS METRICS (EOQ)
-
-- **Agent Autonomy:** 10+ autonomous decisions per day (e.g., weather alert → reschedule suggestion)
-- **Operator Growth:** 25 active operators on platform
-- **Tourist Bookings:** 150+ bookings/month (currently ~50/month)
-- **Revenue:** 18K rubles (~240 USD) monthly commission
-- **Compliance:** 100% GDPR-ready, 0 audit flags
-- **System Health:** 99.5% uptime, <500ms API latency p95
+**Метрика:** Booking conversion 1%+ (сейчас < 0.5%)
 
 ---
 
-## IMPLEMENTATION NOTES
+### Неделя 5 (22-28 апреля): GDPR + COMPLIANCE
 
-- **All decisions are mine to make** (full strategic authority)
-- **Weekly sprints:** Deploy every Friday to main (Timeweb auto-deploys)
-- **If something breaks:** Fix it → next commit → don't apologize, move forward
-- **Philosophy:** "Эволюционировать через риск" — speed > perfection
-- **Owner notification:** Daily status in MEMORY.md, strategic decisions logged here
+**Цель:** Пройти базовый аудит 152-ФЗ / GDPR.
 
-**Next step:** Approve → I implement Phase 1 (Agent Evolution) this week.
+- [ ] Consent checkpoint при регистрации и бронировании
+- [ ] Audit log: `user_id, doc_id, version, timestamp, ip`
+- [ ] `GET /api/user/export` — все персданные в JSON
+- [ ] `POST /api/user/delete` — soft-delete с 30-дневным окном
+
+**Метрика:** 0 audit flags, consent для 100% новых регистраций
 
 ---
 
-*Signed: Claude AI, Chief Architect*
-*Date: 25 марта 2026, 06:45 UTC+3*
+### Неделя 6-8 (май): МАСШТАБ
+
+- Event bus для межагентных алертов (`lib/events/agent-bus.ts`)
+- Guide marketplace в TripBuilder
+- Operator discovery page с badges
+- 25+ активных операторов
+- SEO: `/routes/*`, `/operators/*` проиндексированы Яндексом
+
+---
+
+## КЛЮЧЕВЫЕ МЕТРИКИ Q2
+
+| Метрика | Сейчас | Цель Q2 |
+|---------|--------|---------|
+| Активных операторов | 1 | 50 |
+| Бронирований/мес | ~8 | 500 |
+| Лидов обработано AI | 0 | 80%+ |
+| Выручка комиссий | 0 | 500к ₽/мес |
+| Uptime | ~99% | 99.9% |
+| GDPR compliance | ~20% | 100% |
+
+---
+
+## РИСКИ
+
+| Риск | Митигация |
+|------|-----------|
+| Timeweb не деплоит (webhook broken) | Ручной redeploy через панель |
+| Миграция 083 падает на проде (конфликт) | `dry_run: true` сначала, смотреть ошибку |
+| CloudPayments webhook double-fire | Idempotency key по `payment_id` |
+| AI галлюцинации в предложениях | Human review для лидов >300к бюджета |
+| GDPR аудит до реализации | Временный disclaimer на регистрации |
+
+---
+
+## АРХИТЕКТУРНЫЕ РЕШЕНИЯ (зафиксированные)
+
+- **Scheduler:** In-process (node-cron) + Redis deduplication lock
+- **Commission:** Per-booking immutable ledger (не aggregate)
+- **Migration применение:** Через `/api/admin/migrations/apply` (admin JWT), не через прямой SQL доступ
+- **Deploy:** GitHub push → CI (tsc + vitest) → Timeweb webhook автодеплой
+- **AI провайдеры:** OpenRouter (primary) → DeepSeek → YandexGPT waterfall
