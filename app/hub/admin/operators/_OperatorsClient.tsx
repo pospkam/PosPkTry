@@ -5,7 +5,7 @@ import { Protected } from '@/components/auth/Protected';
 import {
   Building2, Search, Loader2, CheckCircle2, XCircle,
   Clock, Phone, Mail, Calendar, ChevronDown, ChevronUp,
-  Send, Pencil, Check
+  Send, Pencil, Check, Globe, Copy,
 } from 'lucide-react';
 
 type ProfileStatus = 'pending' | 'approved' | 'rejected';
@@ -30,6 +30,9 @@ interface OperatorRow {
   application_status: string | null;
   reviewed_at: string | null;
   telegram_chat_id: string | null;
+  slug: string | null;
+  widget_enabled: boolean;
+  widget_domains: string[];
 }
 
 const TAB_LABELS: Record<string, string> = {
@@ -109,6 +112,12 @@ function OperatorCard({
   const [tgValue, setTgValue] = useState(op.telegram_chat_id ?? '');
   const [tgSaving, setTgSaving] = useState(false);
 
+  const [widgetEnabled, setWidgetEnabled] = useState(op.widget_enabled ?? false);
+  const [widgetDomains, setWidgetDomains] = useState((op.widget_domains ?? []).join('\n'));
+  const [widgetEditing, setWidgetEditing] = useState(false);
+  const [widgetSaving, setWidgetSaving] = useState(false);
+  const [widgetCopied, setWidgetCopied] = useState(false);
+
   async function saveTelegram() {
     setTgSaving(true);
     try {
@@ -121,6 +130,39 @@ function OperatorCard({
     } finally {
       setTgSaving(false);
     }
+  }
+
+  async function toggleWidget() {
+    const next = !widgetEnabled;
+    setWidgetEnabled(next);
+    await fetch(`/api/admin/operators/${op.id}/widget`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ widget_enabled: next }),
+    });
+  }
+
+  async function saveWidgetDomains() {
+    setWidgetSaving(true);
+    try {
+      const domains = widgetDomains.split('\n').map(d => d.trim()).filter(Boolean);
+      await fetch(`/api/admin/operators/${op.id}/widget`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ widget_domains: domains }),
+      });
+      setWidgetEditing(false);
+    } finally {
+      setWidgetSaving(false);
+    }
+  }
+
+  function copyEmbed() {
+    if (!op.slug) return;
+    const code = `<script src="https://tourhab.ru/api/widget/lead.js?partner=${op.slug}" defer></script>`;
+    navigator.clipboard.writeText(code).catch(() => {});
+    setWidgetCopied(true);
+    setTimeout(() => setWidgetCopied(false), 2000);
   }
 
   return (
@@ -223,6 +265,95 @@ function OperatorCard({
               </div>
             )}
           </div>
+
+          {/* Widget management */}
+          {op.slug && (
+            <div className="mt-3 border-t border-[var(--border)] pt-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-1.5 text-sm font-medium text-[var(--text-secondary)]">
+                  <Globe className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+                  Виджет для партнёрского сайта
+                </div>
+                <button
+                  onClick={toggleWidget}
+                  className={`px-3 py-1 text-xs rounded-full font-medium transition-colors ${
+                    widgetEnabled
+                      ? 'bg-[var(--success)]/15 text-[var(--success)]'
+                      : 'bg-[var(--bg-primary)] text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
+                  }`}
+                >
+                  {widgetEnabled ? 'Включён' : 'Выключен'}
+                </button>
+              </div>
+
+              {widgetEnabled && (
+                <>
+                  {/* Embed code */}
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <code className="flex-1 text-[10px] bg-[var(--bg-primary)] border border-[var(--border)] rounded px-2 py-1 text-[var(--text-secondary)] truncate select-all">
+                      {`<script src="https://tourhab.ru/api/widget/lead.js?partner=${op.slug}" defer></script>`}
+                    </code>
+                    <button
+                      onClick={copyEmbed}
+                      className="p-1.5 text-[var(--text-muted)] hover:text-[var(--accent)] rounded transition-colors shrink-0"
+                      title="Скопировать код"
+                    >
+                      {widgetCopied ? <Check className="w-3.5 h-3.5 text-[var(--success)]" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+
+                  {/* Allowed domains */}
+                  <div className="text-xs text-[var(--text-muted)] mb-1 flex items-center justify-between">
+                    <span>Разрешённые домены:</span>
+                    {!widgetEditing && (
+                      <button
+                        onClick={() => setWidgetEditing(true)}
+                        className="text-[var(--accent)] hover:opacity-75 transition-opacity"
+                      >
+                        Изменить
+                      </button>
+                    )}
+                  </div>
+                  {widgetEditing ? (
+                    <div>
+                      <textarea
+                        value={widgetDomains}
+                        onChange={e => setWidgetDomains(e.target.value)}
+                        placeholder="example.com&#10;www.partner.ru"
+                        rows={3}
+                        className="w-full text-xs px-2 py-1.5 bg-[var(--bg-primary)] border border-[var(--accent)] rounded text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none resize-none"
+                      />
+                      <div className="flex gap-1.5 mt-1">
+                        <button
+                          onClick={saveWidgetDomains}
+                          disabled={widgetSaving}
+                          className="flex items-center gap-1 px-2 py-1 text-xs bg-[var(--accent)] text-white rounded hover:opacity-90 transition-opacity disabled:opacity-50"
+                        >
+                          {widgetSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+                          Сохранить
+                        </button>
+                        <button
+                          onClick={() => setWidgetEditing(false)}
+                          className="px-2 py-1 text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
+                        >
+                          Отмена
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-xs text-[var(--text-secondary)]">
+                      {widgetDomains.trim()
+                        ? widgetDomains.split('\n').filter(Boolean).map((d, i) => (
+                            <span key={i} className="inline-block bg-[var(--bg-primary)] border border-[var(--border)] rounded px-1.5 py-0.5 mr-1 mb-1">{d.trim()}</span>
+                          ))
+                        : <span className="text-[var(--text-muted)] italic">Домены не указаны — виджет не будет работать</span>
+                      }
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
 
           {/* Actions */}
           {op.profile_status === 'pending' && (

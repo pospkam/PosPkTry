@@ -52,7 +52,10 @@ export async function GET(request: NextRequest) {
       oa.inn,
       oa.status         AS application_status,
       oa.review_comment AS application_review_comment,
-      oa.reviewed_at
+      oa.reviewed_at,
+      p.slug,
+      p.widget_enabled,
+      p.widget_domains
     FROM partners p
     JOIN users u ON u.id = p.user_id
     LEFT JOIN operator_applications oa ON oa.partner_id = p.id

@@ -53,13 +53,14 @@ function computeQuickScore(
 }
 
 const LeadSchema = z.object({
-  name:        z.string().min(2, 'Укажите имя').max(120),
-  phone:       z.string().min(7, 'Укажите телефон').max(30),
-  comment:     z.string().max(1000).optional(),
-  route_id:    z.string().uuid().optional(),
-  route_title: z.string().max(255).optional(),
-  source_url:  z.string().max(500).optional(),
-  source_data: z.record(z.unknown()).optional(),
+  name:         z.string().min(2, 'Укажите имя').max(120),
+  phone:        z.string().min(7, 'Укажите телефон').max(30),
+  comment:      z.string().max(1000).optional(),
+  route_id:     z.string().uuid().optional(),
+  route_title:  z.string().max(255).optional(),
+  source_url:   z.string().max(500).optional(),
+  source_data:  z.record(z.unknown()).optional(),
+  partner_slug: z.string().max(100).optional(), // widget embed: resolve to operator_id
 });
 
 const ListSchema = z.object({
@@ -155,7 +156,17 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { name, phone, comment, route_id, route_title, source_url, source_data } = parse.data;
+  const { name, phone, comment, route_id, route_title, source_url, source_data, partner_slug } = parse.data;
+
+  // Если пришёл partner_slug — резолвим operator_id
+  let operatorId: string | null = null;
+  if (partner_slug) {
+    const pRes = await pool.query<{ id: string }>(
+      `SELECT id FROM partners WHERE slug = $1 AND widget_enabled = true LIMIT 1`,
+      [partner_slug]
+    );
+    operatorId = pRes.rows[0]?.id ?? null;
+  }
 
   // Дубль: тот же телефон + тот же комментарий за последние 24ч
   const dupCheck = await pool.query<{ id: string }>(
@@ -175,14 +186,15 @@ export async function POST(req: NextRequest) {
   let leadId: string;
   try {
     const res = await pool.query<{ id: string }>(
-      `INSERT INTO leads (name, phone, comment, route_id, route_title, source_url, source_data, ai_score, processed_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      `INSERT INTO leads (name, phone, comment, route_id, route_title, source_url, source_data, ai_score, processed_at, operator_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING id`,
       [
         name, phone, comment ?? null, route_id ?? null, route_title ?? null,
         source_url ?? null, source_data ? JSON.stringify(source_data) : null,
         quickScore,
         isLowQuality ? new Date() : null,   // низкое качество — сразу закрываем для cron
+        operatorId,
       ]
     );
     leadId = res.rows[0].id;
