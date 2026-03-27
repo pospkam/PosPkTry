@@ -2,16 +2,16 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { MapPin, Heart, Sparkles, House } from 'lucide-react';
+import { Compass, Heart, Sparkles, House } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 
 const FO = "var(--font-outfit,'Outfit',system-ui,sans-serif)";
 
 const NAV_ITEMS = [
-  { icon: House,  label: undefined,    href: '/'        },
-  { icon: MapPin, label: 'Карта',      href: '/map'     },
-  { icon: Sparkles, label: 'Кузьмич',  href: '/ai-assistant' },
-  { icon: Heart,  label: undefined,    href: '/profile' },
+  { icon: House,    label: undefined,   href: '/'                  },
+  { icon: Compass,  label: 'Туры',      href: '/marketplace/tours' },
+  { icon: Sparkles, label: 'Кузьмич',   href: '/ai-assistant'      },
+  { icon: Heart,    label: undefined,   href: '/profile'           },
 ];
 
 export function HomeBottomNav() {

@@ -66,6 +66,13 @@ export function FeaturedDirections() {
             Все направления
             <ArrowRight className="w-4 h-4" />
           </Link>
+          <Link
+            href="/marketplace/tours"
+            className="hidden md:inline-flex items-center gap-1.5 text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors border border-[var(--border)] rounded-lg px-4 py-1.5"
+          >
+            Туры с ценами
+            <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
 
         {/* Grid */}
@@ -95,13 +102,20 @@ export function FeaturedDirections() {
           ))}
         </div>
 
-        {/* Mobile link */}
-        <div className="mt-8 text-center md:hidden">
+        {/* Mobile links */}
+        <div className="mt-8 flex items-center justify-center gap-6 md:hidden">
           <Link
             href="/routes"
             className="inline-flex items-center gap-1.5 text-sm text-[var(--accent)] font-medium"
           >
             Все направления
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+          <Link
+            href="/marketplace/tours"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--text-secondary)]"
+          >
+            Туры с ценами
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>

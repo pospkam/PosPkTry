@@ -49,6 +49,41 @@ export function Header() {
         <Logo size={24} />
       </Link>
 
+      {/* Center nav — desktop only */}
+      <nav style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '4px',
+        position: 'absolute',
+        left: '50%',
+        transform: 'translateX(-50%)',
+      }} className="hidden md:flex">
+        {[
+          { href: '/marketplace/tours', label: 'Туры' },
+          { href: '/routes',            label: 'Маршруты' },
+          { href: '/map',               label: 'Карта' },
+          { href: '/operators',         label: 'Операторы' },
+        ].map(item => (
+          <Link
+            key={item.href}
+            href={item.href}
+            style={{
+              padding: '6px 14px',
+              borderRadius: '20px',
+              fontFamily: FO,
+              fontSize: '14px',
+              fontWeight: 500,
+              color: 'var(--text-secondary)',
+              textDecoration: 'none',
+              transition: 'color 0.2s, background 0.2s',
+            }}
+            className="hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]"
+          >
+            {item.label}
+          </Link>
+        ))}
+      </nav>
+
       {/* Right side */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         {/* Theme toggle */}
