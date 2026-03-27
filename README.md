@@ -7,6 +7,7 @@ AI-помощник Кузьмич подбирает маршрут за мин
 [![Build](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/pospkam/PosPkTry)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/)
+[![License](https://img.shields.io/badge/license-Proprietary-red)](./LICENSE)
 
 **Продакшен:** [tourhab.ru](https://tourhab.ru)
 
@@ -412,3 +413,11 @@ TS-ошибок:             0
 - Стили: только CSS-переменные, glassmorphism запрещён
 - Маршруты: только через `v_kamchatka_routes_api`, не `SELECT * FROM kamchatka_routes`
 - Миграции: не менять существующие, добавлять новые (текущая последняя: `083_`)
+
+---
+
+## Лицензия
+
+© 2026 ООО "ПОС-СЕРВИС" — Все права защищены.
+Использование, копирование или распространение без письменного разрешения запрещено.
+Подробнее: [LICENSE](./LICENSE)
