@@ -57,8 +57,17 @@ interface RoutePoint {
   lat: number;
   lng: number;
   description: string;
+  volcanoStatus?: string | null;
   geometry?: MapMarkerGeometry | null;
 }
+
+const VOLCANO_STATUS_COLOR: Record<string, string> = {
+  erupting:          'red',
+  active:            'orange',
+  potentially_active: 'yellow',
+  dormant:           'gray',
+  unknown:           'gray',
+};
 
 export default function MapPageClient() {
   const { isDark, toggleTheme } = useTheme();
@@ -77,12 +86,13 @@ export default function MapPageClient() {
           .filter((r: { lat: number | null; lng: number | null }) => r.lat != null && r.lng != null)
           .map((r: { id: string; title: string; locationType: string | null; lat: number; lng: number; description: string; geometry?: MapMarkerGeometry | null }) => ({
             id:           r.id,
-            title:        r.title,
-            locationType: r.locationType ?? 'other',
-            lat:          r.lat,
-            lng:          r.lng,
-            description:  r.description ?? '',
-            geometry:     r.geometry ?? null,
+            title:         r.title,
+            locationType:  r.locationType ?? 'other',
+            lat:           r.lat,
+            lng:           r.lng,
+            description:   r.description ?? '',
+            volcanoStatus: r.volcanoStatus ?? null,
+            geometry:      r.geometry ?? null,
           }));
         setAllRoutes(points);
       } catch {
@@ -103,11 +113,14 @@ export default function MapPageClient() {
 
   const mapMarkers = filtered.map(r => {
     const cfg = LOCATION_TYPE_CONFIG[r.locationType ?? 'other'] ?? LOCATION_TYPE_CONFIG.other;
+    const color = r.locationType === 'volcano' && r.volcanoStatus
+      ? (VOLCANO_STATUS_COLOR[r.volcanoStatus] ?? cfg.color)
+      : cfg.color;
     return {
       coords:      [r.lat, r.lng] as [number, number],
       title:       r.title,
       description: r.description.slice(0, 120),
-      color:       cfg.color,
+      color,
       href:        `/routes/${r.id}`,
       type:        MarkerType.TOUR,
       category:    r.locationType ?? 'other',

@@ -107,12 +107,13 @@ export async function GET(request: NextRequest) {
            lng,
            source_url,
            source_name,
-           payload->'price_from'    AS price_from,
-           payload->'season'        AS season,
-           payload->'difficulty'    AS difficulty,
-           payload->'duration_days' AS duration_days,
-           payload->'best_months'   AS best_months,
-           payload->'geometry'      AS geometry,
+           payload->'price_from'      AS price_from,
+           payload->'season'          AS season,
+           payload->'difficulty'      AS difficulty,
+           payload->'duration_days'   AS duration_days,
+           payload->'best_months'     AS best_months,
+           payload->'geometry'        AS geometry,
+           payload->>'volcano_status' AS volcano_status,
            created_at
          FROM agent_route_knowledge
          ${where}
@@ -147,7 +148,8 @@ export async function GET(request: NextRequest) {
         difficulty:   (r.difficulty as string | null) ?? null,
         durationDays: r.duration_days != null ? Number(r.duration_days) : null,
         bestMonths:   (r.best_months as number[] | null) ?? null,
-        geometry:     (r.geometry as { type: string; coordinates: [number, number][]; color?: string; weight?: number } | null) ?? null,
+        geometry:      (r.geometry as { type: string; coordinates: [number, number][]; color?: string; weight?: number } | null) ?? null,
+        volcanoStatus: (r.volcano_status as string | null) ?? null,
       })),
       meta: {
         total,
