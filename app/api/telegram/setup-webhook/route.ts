@@ -16,21 +16,27 @@ export async function POST(request: NextRequest) {
   const adminOrResponse = await requireAdmin(request);
   if (adminOrResponse instanceof NextResponse) return adminOrResponse;
 
-  const botToken = process.env.TELEGRAM_BOT_TOKEN;
-  if (!botToken) {
-    return NextResponse.json({ success: false, error: 'TELEGRAM_BOT_TOKEN не задан' }, { status: 500 });
-  }
-
-  let body: { appUrl?: string } = {};
+  let body: { appUrl?: string; bot?: 'main' | 'admin' } = {};
   try {
     body = await request.json();
   } catch { /* тело необязательно */ }
+
+  const isAdmin = body.bot === 'admin';
+  const botToken = isAdmin
+    ? process.env.TELEGRAM_ADMIN_BOT_TOKEN
+    : process.env.TELEGRAM_BOT_TOKEN;
+
+  if (!botToken) {
+    const varName = isAdmin ? 'TELEGRAM_ADMIN_BOT_TOKEN' : 'TELEGRAM_BOT_TOKEN';
+    return NextResponse.json({ success: false, error: `${varName} не задан` }, { status: 500 });
+  }
 
   const appUrl = body.appUrl
     || process.env.NEXT_PUBLIC_APP_URL
     || 'https://tourhab.ru';
 
-  const webhookUrl = `${appUrl}/api/telegram/webhook`;
+  const webhookPath = isAdmin ? '/api/telegram/admin' : '/api/telegram/webhook';
+  const webhookUrl = `${appUrl}${webhookPath}`;
   const secret = process.env.TELEGRAM_WEBHOOK_SECRET ?? '';
 
   const res = await fetch(
@@ -57,23 +63,26 @@ export async function POST(request: NextRequest) {
     }, { status: 400 });
   }
 
-  // Регистрируем команды в меню бота
-  await fetch(`https://api.telegram.org/bot${botToken}/setMyCommands`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      commands: [
-        { command: 'start',  description: 'Познакомиться с Кузьмичем' },
-        { command: 'route',  description: 'Случайный маршрут из каталога' },
-        { command: 'sezon',  description: 'Совет на текущий сезон' },
-        { command: 'help',   description: 'Список команд' },
-      ],
-    }),
-  });
+  // Регистрируем команды только для основного бота
+  if (!isAdmin) {
+    await fetch(`https://api.telegram.org/bot${botToken}/setMyCommands`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        commands: [
+          { command: 'start',  description: 'Познакомиться с Кузьмичем' },
+          { command: 'route',  description: 'Случайный маршрут из каталога' },
+          { command: 'sezon',  description: 'Совет на текущий сезон' },
+          { command: 'help',   description: 'Список команд' },
+        ],
+      }),
+    });
+  }
 
   return NextResponse.json({
     success: true,
     webhookUrl,
-    message: data.description || 'Webhook установлен, команды зарегистрированы',
+    bot: isAdmin ? 'admin' : 'main',
+    message: data.description || 'Webhook установлен',
   });
 }

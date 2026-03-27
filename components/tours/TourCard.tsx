@@ -72,7 +72,7 @@ function formatPrice(price: number, currency: string): string {
 export function TourCard({ tour, href }: TourCardProps) {
   const diff = DIFFICULTY_LABELS[tour.difficulty] ?? DIFFICULTY_LABELS.medium;
   const categoryLabel = CATEGORY_LABELS[tour.category] ?? tour.category;
-  const link = href ?? `/tours/${tour.id}`;
+  const link = href ?? `/marketplace/tours/${tour.id}`;
   const hasImage = tour.images.length > 0;
 
   return (
@@ -88,12 +88,14 @@ export function TourCard({ tour, href }: TourCardProps) {
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
         ) : (
-          <div className="w-full h-full bg-[var(--bg-card)] flex items-center justify-center">
+          <div className="w-full h-full bg-[var(--bg-hover)] flex items-center justify-center">
             <Mountain className="w-16 h-16 text-[var(--text-muted)]" />
           </div>
         )}
-        {/* Градиентный overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+        {/* Градиентный overlay — только при наличии фото */}
+        {hasImage && (
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+        )}
 
         {/* Badges overlay */}
         <div className="absolute top-3 left-3 flex gap-2">
@@ -152,7 +154,7 @@ export function TourCard({ tour, href }: TourCardProps) {
 
         {/* Включено (первые 2 пункта) */}
         {tour.included.length > 0 && (
-          <div className="mb-4 p-3 bg-[var(--bg-card)] rounded-lg">
+          <div className="mb-4 p-3 bg-[var(--bg-hover)] rounded-lg">
             <p className="text-xs text-[var(--text-muted)] mb-1">Включено:</p>
             <p className="text-sm text-[var(--text-secondary)] line-clamp-1">
               {tour.included.slice(0, 2).join(' • ')}
@@ -180,7 +182,7 @@ export function TourCard({ tour, href }: TourCardProps) {
           <Link href={link} className="ds-btn ds-btn-secondary flex-1 text-center text-sm">
             Подробнее
           </Link>
-          <Link href={`${link}?tab=booking`} className="ds-btn ds-btn-primary flex-1 text-center text-sm">
+          <Link href={`${link}#booking`} className="ds-btn ds-btn-primary flex-1 text-center text-sm">
             Забронировать
           </Link>
         </div>

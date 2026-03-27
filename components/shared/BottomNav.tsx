@@ -13,7 +13,7 @@ const NAV_ITEMS: {
   { icon: Map, label: 'Карта', href: '/map' },
   { icon: Heart, label: 'Избранное', href: '/hub/tourist/wishlist' },
   { icon: User, label: 'ЛК', href: '/profile' },
-  { icon: AlertTriangle, label: 'СОС', href: '/safety', sos: true },
+  { icon: AlertTriangle, label: 'СОС', href: '/hub/safety', sos: true },
 ];
 
 interface BottomNavProps {

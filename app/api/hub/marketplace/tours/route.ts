@@ -29,6 +29,7 @@ export async function GET(req: NextRequest) {
         ot.location,
         ot.tour_image,
         ot.max_participants,
+        ot.duration_hours,
         p.name as operator_name,
         p.id as operator_id,
         COUNT(ob.id)::INT as bookings_count

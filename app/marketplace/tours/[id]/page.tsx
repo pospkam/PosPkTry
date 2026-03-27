@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { pool } from '@/lib/db-pool';
 import TourDetailClient from './_TourDetailClient';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600;
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://tourhab.ru';
 
@@ -25,13 +25,14 @@ async function getTour(id: number) {
   try {
     const { rows } = await pool.query<{
       id: number; title: string; description: string | null;
-      base_price: string; activity_type: string; location: string | null;
-      tour_image: string | null; max_participants: number;
-      duration_hours: number | null; operator_name: string;
+      base_price: string; activity_type: string; location_type: string;
+      location: string | null; tour_image: string | null;
+      max_participants: number; duration_hours: number | null;
+      operator_name: string;
     }>(`
       SELECT ot.id, ot.title, ot.description, ot.base_price,
-             ot.activity_type, ot.location, ot.tour_image,
-             ot.max_participants, ot.duration_hours,
+             ot.activity_type, ot.location_type, ot.location,
+             ot.tour_image, ot.max_participants, ot.duration_hours,
              p.name AS operator_name
       FROM operator_tours ot
       JOIN partners p ON ot.partner_id = p.id
@@ -116,7 +117,7 @@ export default async function TourDetailPage({ params }: Props) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
       )}
-      <TourDetailClient />
+      <TourDetailClient initialTour={tour} />
     </>
   );
 }

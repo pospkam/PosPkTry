@@ -11,6 +11,8 @@ function SOSButton({ className = '' }: { className?: string }) {
   const [sosStatus, setSosStatus] = useState<SosStatus>('idle');
   const [coords, setCoords] = useState<{ lat: number; lng: number; accuracy: number } | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [touristName, setTouristName] = useState('');
+  const [touristPhone, setTouristPhone] = useState('');
 
   const handleSendCoords = useCallback(async () => {
     if (sosStatus === 'sending' || sosStatus === 'sent') return;
@@ -46,9 +48,11 @@ function SOSButton({ className = '' }: { className?: string }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          lat: position?.coords.latitude ?? null,
-          lng: position?.coords.longitude ?? null,
-          accuracy: position?.coords.accuracy ?? null,
+          lat:           position?.coords.latitude  ?? null,
+          lng:           position?.coords.longitude ?? null,
+          accuracy:      position?.coords.accuracy  ?? null,
+          tourist_name:  touristName.trim() || undefined,
+          tourist_phone: touristPhone.trim() || undefined,
         }),
       });
 
@@ -63,7 +67,7 @@ function SOSButton({ className = '' }: { className?: string }) {
       setErrorMsg('Ошибка отправки. Звоните 112 напрямую.');
       setSosStatus('error');
     }
-  }, [sosStatus]);
+  }, [sosStatus, touristName, touristPhone]);
 
   const coordsLabel = coords
     ? `${coords.lat.toFixed(5)}° N, ${coords.lng.toFixed(5)}° E (±${Math.round(coords.accuracy)} м)`
@@ -109,6 +113,38 @@ function SOSButton({ className = '' }: { className?: string }) {
                 <MapPin size={16} className="inline mr-2" aria-hidden="true" />
                 {coordsLabel}
               </p>
+
+              {/* Данные туриста */}
+              <div className="grid grid-cols-2 gap-3 mb-5">
+                <div>
+                  <label className="flex items-center gap-1 text-xs text-[var(--text-muted)] mb-1">
+                    <User size={12} />
+                    Ваше имя
+                  </label>
+                  <input
+                    type="text"
+                    value={touristName}
+                    onChange={e => setTouristName(e.target.value)}
+                    placeholder="Иван Иванов"
+                    className="ds-input w-full text-sm"
+                    disabled={sosStatus === 'sending' || sosStatus === 'sent'}
+                  />
+                </div>
+                <div>
+                  <label className="flex items-center gap-1 text-xs text-[var(--text-muted)] mb-1">
+                    <Phone size={12} />
+                    Телефон
+                  </label>
+                  <input
+                    type="tel"
+                    value={touristPhone}
+                    onChange={e => setTouristPhone(e.target.value)}
+                    placeholder="+7 900 000 00 00"
+                    className="ds-input w-full text-sm"
+                    disabled={sosStatus === 'sending' || sosStatus === 'sent'}
+                  />
+                </div>
+              </div>
 
               <div className="space-y-3 mb-8">
                 <motion.a

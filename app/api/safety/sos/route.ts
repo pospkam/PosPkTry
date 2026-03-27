@@ -10,12 +10,16 @@ const rateLimitMap = new Map<string, number>();
 const RATE_LIMIT_MS = 10 * 60 * 1000;
 
 const SOSSchema = z.object({
-  latitude: z.number().min(-90, 'Неверная широта').max(90, 'Неверная широта').optional(),
-  longitude: z.number().min(-180, 'Неверная долгота').max(180, 'Неверная долгота').optional(),
-  message: z.string().max(500, 'Максимальная длина сообщения: 500 символов').optional(),
+  latitude:      z.number().min(-90).max(90).optional(),
+  longitude:     z.number().min(-180).max(180).optional(),
+  lat:           z.number().min(-90).max(90).optional(),
+  lng:           z.number().min(-180).max(180).optional(),
+  accuracy:      z.number().optional(),
+  message:       z.string().max(500).optional(),
   emergency_type: z.string().optional(),
-  accuracy: z.number().optional(),
-  sessionId: z.string().optional(),
+  sessionId:     z.string().optional(),
+  tourist_name:  z.string().max(120).optional(),
+  tourist_phone: z.string().max(30).optional(),
 });
 
 function isRateLimited(key: string): boolean {
@@ -76,18 +80,24 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { latitude, longitude, accuracy, message, emergency_type, sessionId } = validationResult.data;
+  const { latitude, longitude, lat, lng, accuracy, message, emergency_type, sessionId, tourist_name, tourist_phone } = validationResult.data;
 
-  // Логируем в БД (не блокируем ответ при ошибке БД)
+  // Принимаем оба соглашения: latitude/longitude и lat/lng
+  const finalLat = latitude ?? lat;
+  const finalLng = longitude ?? lng;
+
+  // Логируем в БД
   try {
     await query(
-      `INSERT INTO sos_events (user_id, session_id, lat, lng, accuracy, ip_address, user_agent, message, emergency_type)
-       VALUES ($1, $2, $3, $4, $5, $6::inet, $7, $8, $9)`,
-      [userId, sessionId, latitude, longitude, accuracy, ip, userAgent, message ?? null, emergency_type ?? null]
+      `INSERT INTO sos_events
+         (user_id, session_id, lat, lng, accuracy, ip_address, user_agent,
+          message, emergency_type, tourist_name, tourist_phone)
+       VALUES ($1,$2,$3,$4,$5,$6::inet,$7,$8,$9,$10,$11)`,
+      [userId, sessionId, finalLat, finalLng, accuracy, ip, userAgent,
+       message ?? null, emergency_type ?? null, tourist_name ?? null, tourist_phone ?? null]
     );
     setRateLimit(rateLimitKey);
   } catch {
-    // Даже при ошибке БД — сохраняем rate limit и возвращаем success
     setRateLimit(rateLimitKey);
   }
 
@@ -95,12 +105,18 @@ export async function POST(request: NextRequest) {
   const botToken = process.env.TELEGRAM_ADMIN_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_ADMIN_CHAT_ID;
   if (botToken && chatId) {
-    const loc = latitude && longitude ? `${latitude.toFixed(4)}, ${longitude.toFixed(4)}` : 'нет координат';
+    const loc = finalLat && finalLng
+      ? `${finalLat.toFixed(5)}, ${finalLng.toFixed(5)}`
+      : 'нет координат';
     const text = [
-      'SOS! Экстренный сигнал',
-      `Тип: ${emergency_type ?? 'не указан'}`,
+      '<b>SOS! ЭКСТРЕННЫЙ СИГНАЛ</b>',
+      '',
+      tourist_name  ? `Имя: ${tourist_name}`   : 'Имя: не указано',
+      tourist_phone ? `Тел: ${tourist_phone}`   : 'Тел: не указан',
+      '',
       `Координаты: ${loc}`,
-      message ? `Сообщение: ${message}` : '',
+      `Тип: ${emergency_type ?? 'не указан'}`,
+      message       ? `Сообщение: ${message}`   : '',
       `IP: ${ip}`,
     ].filter(Boolean).join('\n');
 

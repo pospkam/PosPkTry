@@ -22,10 +22,11 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { pool } from '@/lib/db-pool';
-import { callAnthropic, callMiMo } from '@/lib/ai/providers';
+import { callAIWaterfall, callOpenrouter } from '@/lib/ai/providers';
 import { postKuzmichRoute, postKuzmichTip } from '@/lib/notifications/telegram-channel';
 import type { ChatMessage } from '@/lib/ai/prompts';
 import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
+import { PlatformAgent } from '@/lib/agents';
 
 const adminGetLimiter = createRateLimiter({ windowMs: 60_000, max: 5 });
 
@@ -119,10 +120,7 @@ async function checkHealth(): Promise<string> {
     } catch { return false; }
   };
 
-  const [mimoOk, anthropicOk] = await Promise.all([
-    probe(callMiMo),
-    probe(callAnthropic),
-  ]);
+  const orOk = await probe(callOpenrouter);
 
   // DB checks
   const issues: string[] = [];
@@ -144,7 +142,7 @@ async function checkHealth(): Promise<string> {
   } catch { /* skip */ }
 
   return [
-    `AI: MiMo=${mimoOk ? 'OK' : 'X'} | Anthropic=${anthropicOk ? 'OK' : 'X'}`,
+    `AI: OpenRouter=${orOk ? 'OK' : 'X'}`,
     `БД: ${issues.length === 0 ? 'OK' : issues.join('; ')}`,
     `Сайт: https://tourhab.ru`,
   ].join('\n');
@@ -170,8 +168,8 @@ async function runDigest(): Promise<string> {
     },
   ];
 
-  const answer = await callAnthropic(messages);
-  return answer ?? 'Claude временно недоступен';
+  const answer = await callAIWaterfall(messages);
+  return answer ?? 'AI временно недоступен';
 }
 
 // ── Command handlers ──────────────────────────────────────────────────────────
@@ -186,11 +184,12 @@ async function handleCommand(cmd: string, chatId: number): Promise<void> {
         '/health — AI + БД',
         '/stats — цифры платформы',
         '/leads — последние лиды',
-        '/digest — анализ Claude',
+        '/digest — анализ AI',
+        '/agents — команда AI',
         '/kuzmich — пост маршрута',
         '/tip — совет Кузьмича',
         '',
-        'Любой вопрос — Claude ответит с данными платформы',
+        'Любой текст — уходит в Команду AI и возвращается с ответом нужного агента',
       ].join('\n'));
       break;
 
@@ -220,6 +219,28 @@ async function handleCommand(cmd: string, chatId: number): Promise<void> {
       }
       break;
 
+    case '/agents':
+      await reply(chatId, [
+        '<b>Команда AI</b>',
+        '',
+        'Просто пиши — нужный агент ответит автоматически.',
+        '',
+        'Примеры:',
+        '"проверь договор с оператором" → Legal',
+        '"аномалии в доступах" → Security',
+        '"как поднять конверсию" → Hacker',
+        '"погодные риски на маршрутах" → Rescue',
+        '"нагрузка на природу" → Eco',
+        '"аудит описаний туров" → Content',
+        '"прогноз бронирований на лето" → Planning',
+        '"отзывы с рейтингом ниже 3" → Quality',
+        '"оптимизация платформы" → Evo',
+        '"последние лиды" → Leads',
+        '',
+        'Не подошло — отвечает Admin AI с данными платформы.',
+      ].join('\n'));
+      break;
+
     case '/tip':
       await reply(chatId, 'Публикую совет...');
       {
@@ -233,20 +254,60 @@ async function handleCommand(cmd: string, chatId: number): Promise<void> {
   }
 }
 
-// ── Free text → Claude ────────────────────────────────────────────────────────
+// ── Agent name labels ─────────────────────────────────────────────────────────
+
+const AGENT_LABELS: Record<string, string> = {
+  admin: 'Admin',
+  legal: 'Legal',
+  sec: 'Security',
+  hack: 'Hacker',
+  rescue: 'Rescue',
+  eco: 'Eco',
+  evo: 'Evo',
+  content: 'Content',
+  mkt: 'Marketing',
+  plan: 'Planning',
+  qa: 'Quality',
+  lead: 'Leads',
+  op: 'Operator',
+  tourist: 'Tourist',
+  guide: 'Guide',
+  transfer: 'Transfer',
+};
+
+function agentLabel(intent: string): string {
+  const prefix = intent.split('_')[0] ?? '';
+  return AGENT_LABELS[prefix] ? `[${AGENT_LABELS[prefix]}]` : '[AI]';
+}
+
+// ── Free text → PlatformAgent ─────────────────────────────────────────────────
 
 async function handleFreeText(text: string, chatId: number): Promise<void> {
-  const stats = await getStats();
-  const messages: ChatMessage[] = [
-    {
-      role: 'system',
-      content: `Ты AI-директор платформы TourHab (Камчатка). Отвечаешь владельцу кратко и по делу.
-Данные платформы прямо сейчас:\n${stats}`,
-    },
-    { role: 'user', content: text },
-  ];
-  const answer = (await callAnthropic(messages)) ?? (await callMiMo(messages)) ?? 'AI недоступен';
-  await reply(chatId, answer);
+  const ownerId = parseInt(process.env.TELEGRAM_OWNER_ID ?? '833478813', 10);
+
+  try {
+    const result = await PlatformAgent.dispatch({
+      message: text,
+      userId: ownerId,
+      role: 'admin',
+    });
+
+    const label = agentLabel(result.intent);
+    const header = result.intent !== 'unknown' ? `${label}\n\n` : '';
+    await reply(chatId, header + result.response);
+  } catch {
+    // fallback — простой AI ответ со статистикой
+    const stats = await getStats();
+    const messages: ChatMessage[] = [
+      {
+        role: 'system',
+        content: `Ты AI-директор платформы TourHab (Камчатка). Отвечаешь владельцу кратко и по делу.\nДанные платформы:\n${stats}`,
+      },
+      { role: 'user', content: text },
+    ];
+    const answer = await callAIWaterfall(messages);
+    await reply(chatId, answer);
+  }
 }
 
 // ── Webhook ───────────────────────────────────────────────────────────────────

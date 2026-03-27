@@ -1,7 +1,31 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { MapPin, Truck, AlertTriangle, Thermometer, Wind, Droplets, Activity, Phone, RefreshCw, MountainSnow, TriangleAlert } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { MapPin, Truck, AlertTriangle, Thermometer, Wind, Droplets, Activity, Phone, RefreshCw, MountainSnow, TriangleAlert, User, Send, Bot } from 'lucide-react';
+
+interface RescueMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  streaming?: boolean;
+}
+
+// Локальные протоколы — работают без сети
+const LOCAL_PROTOCOLS: [RegExp, string][] = [
+  [/медвед|bear/i,        '1. Не беги\n2. Говори громко и спокойно\n3. Стань визуально больше (руки вверх)\n4. Медленно отступай, не поворачивайся спиной\n5. Атака — упади, притворись мёртвым, защити шею\n\nПозвоните: 112'],
+  [/заблуд|потеря|lost/i, '1. СТОП — экономь силы\n2. Оставайся на месте\n3. 3 свистка подряд = сигнал бедствия\n4. На возвышенность для связи\n5. Ищи ручей — выведет к людям\n\nПозвоните: 112'],
+  [/трав|кров|перелом|injury|wound/i, '1. Остановите кровь — прямое давление тканью\n2. Жгут выше раны если не останавливается (запишите время!)\n3. Перелом: иммобилизуйте подручным, не выравнивайте кость\n4. Позвоночник: НЕ двигать\n\nПозвоните: 112'],
+  [/холод|замёрз|гипотерм|cold|freez/i, '1. Снять мокрое, укрыться от ветра\n2. Горячее сладкое питьё (не алкоголь!)\n3. В горизонтальное положение\n4. Тепло тела рядом — не давай заснуть\n\nПозвоните: 112'],
+  [/земл|тряс|quake/i,   '1. Внутри: стол/проём, голову защитить\n2. Снаружи: от зданий/деревьев/ЛЭП, лечь\n3. После: проверить газ, не входить в повреждённые здания\n4. Цунами-угроза: немедленно на возвышение\n\nПозвоните: 112'],
+  [/вулкан|пепел|volcano|ash/i, '1. Уйти перпендикулярно ветру\n2. Защитить дыхание: влажная ткань или респиратор\n3. Пирокластический поток: лечь в яму/канаву, закрыть тело\n\nПозвоните: 112'],
+  [/связ|сигнал|signal|offline/i, '1. Подними телефон на возвышенность\n2. Зеркало или фольга → на вертолёт/самолёт\n3. 3 дымных костра в треугольнике = сигнал помощи\n4. Оставайся на месте — так найдут быстрее\n\nПозвоните: 112'],
+];
+
+function getLocalProtocol(text: string): string | null {
+  for (const [pattern, response] of LOCAL_PROTOCOLS) {
+    if (pattern.test(text)) return response;
+  }
+  return null;
+}
 
 interface WeatherData {
   tempC: string;
@@ -77,6 +101,8 @@ export default function SafetyHubClient() {
   const [sosError, setSosError] = useState<string | null>(null);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [coordsLoading, setCoordsLoading] = useState(false);
+  const [touristName, setTouristName] = useState('');
+  const [touristPhone, setTouristPhone] = useState('');
 
   // Weather
   const [weather, setWeather] = useState<WeatherData | null>(null);
@@ -89,9 +115,31 @@ export default function SafetyHubClient() {
   const [seismicError, setSeismicError] = useState<string | null>(null);
   const [seismicLastUpdate, setSeismicLastUpdate] = useState<Date | null>(null);
 
+  // Rescue chat
+  const RESCUE_GREETING: RescueMessage = {
+    role: 'assistant',
+    content: 'Я здесь. Опишите ситуацию — где вы находитесь и что произошло? Я помогу шаг за шагом.\n\nЕсли есть угроза жизни — сначала позвоните 112.',
+  };
+  const [rescueMessages, setRescueMessages] = useState<RescueMessage[]>([RESCUE_GREETING]);
+  const [rescueInput, setRescueInput] = useState('');
+  const [rescueLoading, setRescueLoading] = useState(false);
+  const rescueChatRef = useRef<HTMLDivElement>(null);
+
   // Тихий трекинг визита для Rescue агента
   useEffect(() => {
     fetch('/api/safety/visit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tab: 'sos' }) }).catch(() => {});
+  }, []);
+
+  // Pre-fill имени из профиля если авторизован
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then(r => r.ok ? r.json() : null)
+      .then((data: { success?: boolean; user?: { name?: string } } | null) => {
+        if (data?.success && data.user?.name) {
+          setTouristName(data.user.name);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   // Passive geolocation on mount
@@ -169,7 +217,13 @@ export default function SafetyHubClient() {
       const res = await fetch('/api/safety/sos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ latitude, longitude, emergency_type: 'general' }),
+        body: JSON.stringify({
+          latitude,
+          longitude,
+          emergency_type: 'general',
+          tourist_name:  touristName.trim() || undefined,
+          tourist_phone: touristPhone.trim() || undefined,
+        }),
       });
       if (res.ok) {
         setSosStatus('sent');
@@ -184,6 +238,116 @@ export default function SafetyHubClient() {
     }
   }, [coords]);
 
+  const handleRescueSend = useCallback(async () => {
+    const text = rescueInput.trim();
+    if (!text || rescueLoading) return;
+
+    const userMsg: RescueMessage = { role: 'user', content: text };
+    setRescueMessages(prev => [...prev, userMsg]);
+    setRescueInput('');
+    setRescueLoading(true);
+
+    setTimeout(() => {
+      rescueChatRef.current?.scrollTo({ top: rescueChatRef.current.scrollHeight, behavior: 'smooth' });
+    }, 50);
+
+    // Оффлайн-режим: локальный протокол без сети
+    const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
+    if (!isOnline) {
+      const local = getLocalProtocol(text)
+        ?? 'Нет связи. Позвоните: 112 | 8 (4152) 41-03-03 (ПАСС Камчатки)\n\n3 свистка подряд = сигнал бедствия.';
+      setRescueMessages(prev => [...prev, { role: 'assistant', content: local }]);
+      setRescueLoading(false);
+      return;
+    }
+
+    try {
+      const history = rescueMessages.filter((_, i) => i > 0).slice(-6);
+      const res = await fetch('/api/safety/rescue-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: text,
+          history,
+          stream: true,
+          tourist_name:  touristName.trim() || undefined,
+          tourist_phone: touristPhone.trim() || undefined,
+          lat: coords?.lat,
+          lng: coords?.lng,
+        }),
+        signal: AbortSignal.timeout(25_000),
+      });
+
+      const contentType = res.headers.get('content-type') ?? '';
+
+      // ── STREAMING ──────────────────────────────────────────────
+      if (contentType.includes('text/event-stream') && res.body) {
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let accumulated = '';
+        // Подготавливаем слот для ответа
+        setRescueMessages(prev => [...prev, { role: 'assistant', content: '', streaming: true }]);
+
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value, { stream: true });
+          for (const line of chunk.split('\n')) {
+            if (!line.startsWith('data: ')) continue;
+            const raw = line.slice(6).trim();
+            if (raw === '[DONE]') break;
+            try {
+              const delta = (JSON.parse(raw) as { choices?: { delta?: { content?: string } }[] })
+                ?.choices?.[0]?.delta?.content ?? '';
+              accumulated += delta;
+              setRescueMessages(prev => {
+                const updated = [...prev];
+                const last = updated[updated.length - 1];
+                if (last?.streaming) {
+                  updated[updated.length - 1] = { role: 'assistant', content: accumulated, streaming: true };
+                }
+                return updated;
+              });
+              if (delta) {
+                rescueChatRef.current?.scrollTo({ top: rescueChatRef.current.scrollHeight, behavior: 'smooth' });
+              }
+            } catch { /* skip malformed chunk */ }
+          }
+        }
+
+        // Финализируем — убираем флаг streaming
+        setRescueMessages(prev => {
+          const updated = [...prev];
+          const last = updated[updated.length - 1];
+          if (last?.streaming) {
+            updated[updated.length - 1] = { role: 'assistant', content: accumulated || 'Нет ответа.' };
+          }
+          return updated;
+        });
+
+      // ── NON-STREAMING FALLBACK ─────────────────────────────────
+      } else {
+        const data = await res.json() as { reply?: string; error?: string };
+        setRescueMessages(prev => [...prev, {
+          role: 'assistant',
+          content: data.reply ?? data.error ?? 'Нет ответа. При угрозе — 112.',
+        }]);
+      }
+
+    } catch {
+      // Таймаут или сетевая ошибка — показываем локальный протокол
+      const local = getLocalProtocol(text)
+        ?? 'Нет связи. Позвоните: 112 | 8 (4152) 41-03-03 (ПАСС Камчатки)';
+      setRescueMessages(prev => [...prev, { role: 'assistant', content: local }]);
+    } finally {
+      setRescueLoading(false);
+      setTimeout(() => {
+        rescueChatRef.current?.scrollTo({ top: rescueChatRef.current.scrollHeight, behavior: 'smooth' });
+      }, 100);
+    }
+  }, [rescueInput, rescueLoading, rescueMessages, touristName, touristPhone, coords]);
+
   return (
     <div className="p-5 lg:p-6 space-y-5">
       {/* Header */}
@@ -195,7 +359,8 @@ export default function SafetyHubClient() {
       {/* Tabs */}
       <div className="flex gap-1 overflow-x-auto">
         {[
-          { id: 'sos', label: 'SOS' },
+          { id: 'sos',     label: 'SOS' },
+          { id: 'rescue',  label: 'AI Спасатель' },
           { id: 'emergency', label: 'МЧС' },
           { id: 'avalanche', label: 'Лавины' },
           { id: 'seismic', label: 'Сейсмика' },
@@ -232,6 +397,38 @@ export default function SafetyHubClient() {
             <p className="text-sm text-[var(--text-muted)] mb-4">
               Нажмите кнопку — сигнал будет отправлен с вашими координатами
             </p>
+
+            {/* Данные туриста — чтобы знать КТО */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5 text-left">
+              <div>
+                <label className="flex items-center gap-1 text-xs text-[var(--text-muted)] mb-1">
+                  <User className="w-3 h-3" />
+                  Ваше имя
+                </label>
+                <input
+                  type="text"
+                  value={touristName}
+                  onChange={e => setTouristName(e.target.value)}
+                  placeholder="Иван Иванов"
+                  className="ds-input w-full text-sm"
+                  disabled={sosStatus === 'sending' || sosStatus === 'sent'}
+                />
+              </div>
+              <div>
+                <label className="flex items-center gap-1 text-xs text-[var(--text-muted)] mb-1">
+                  <Phone className="w-3 h-3" />
+                  Телефон
+                </label>
+                <input
+                  type="tel"
+                  value={touristPhone}
+                  onChange={e => setTouristPhone(e.target.value)}
+                  placeholder="+7 900 000 00 00"
+                  className="ds-input w-full text-sm"
+                  disabled={sosStatus === 'sending' || sosStatus === 'sent'}
+                />
+              </div>
+            </div>
 
             {sosStatus === 'idle' && (
               <button
@@ -324,6 +521,112 @@ export default function SafetyHubClient() {
                   <p className="text-xs mt-1">SOS будет отправлен без координат</p>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── AI Спасатель ── */}
+      {activeTab === 'rescue' && (
+        <div className="space-y-4">
+
+          {/* Стрип-предупреждение */}
+          <div className="flex items-center gap-3 px-4 py-3 rounded-lg border"
+            style={{ borderColor: 'color-mix(in srgb, var(--warning) 40%, transparent)', background: 'color-mix(in srgb, var(--warning) 8%, transparent)' }}>
+            <AlertTriangle className="w-4 h-4 shrink-0" style={{ color: 'var(--warning)' }} />
+            <p className="text-xs" style={{ color: 'var(--warning)' }}>
+              AI Спасатель — поддержка и инструкции. При реальной угрозе жизни звоните <strong>112</strong> или <strong>8 (4152) 41-03-03</strong>
+            </p>
+          </div>
+
+          {/* Чат */}
+          <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg flex flex-col" style={{ height: '520px' }}>
+
+            {/* Заголовок чата */}
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-[var(--border)]">
+              <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+                style={{ background: 'color-mix(in srgb, var(--danger) 15%, transparent)' }}>
+                <Bot className="w-5 h-5" style={{ color: 'var(--danger)' }} />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-[var(--text-primary)]">AI Спасатель</p>
+                <p className="text-xs text-[var(--text-muted)]">Обучен стандартам МЧС России · Камчатка</p>
+              </div>
+            </div>
+
+            {/* Сообщения */}
+            <div ref={rescueChatRef} className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+              {rescueMessages.map((msg, i) => (
+                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  {msg.role === 'assistant' && (
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mr-2 mt-0.5"
+                      style={{ background: 'color-mix(in srgb, var(--danger) 15%, transparent)' }}>
+                      <Bot className="w-4 h-4" style={{ color: 'var(--danger)' }} />
+                    </div>
+                  )}
+                  <div
+                    className="max-w-[80%] px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap"
+                    style={msg.role === 'assistant'
+                      ? { background: 'var(--bg-hover)', color: 'var(--text-primary)', borderRadius: '4px 16px 16px 16px' }
+                      : { background: 'var(--danger)', color: '#fff', borderRadius: '16px 4px 16px 16px' }
+                    }
+                  >
+                    {msg.content}
+                  </div>
+                </div>
+              ))}
+              {rescueLoading && (
+                <div className="flex justify-start">
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mr-2"
+                    style={{ background: 'color-mix(in srgb, var(--danger) 15%, transparent)' }}>
+                    <Bot className="w-4 h-4" style={{ color: 'var(--danger)' }} />
+                  </div>
+                  <div className="px-4 py-3 rounded-2xl text-sm" style={{ background: 'var(--bg-hover)', borderRadius: '4px 16px 16px 16px' }}>
+                    <span className="flex gap-1 items-center text-[var(--text-muted)]">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)] animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)] animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)] animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Ввод */}
+            <div className="px-4 py-3 border-t border-[var(--border)]">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={rescueInput}
+                  onChange={e => setRescueInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void handleRescueSend(); } }}
+                  placeholder="Опишите ситуацию..."
+                  className="ds-input flex-1 text-sm"
+                  disabled={rescueLoading}
+                />
+                <button
+                  onClick={() => void handleRescueSend()}
+                  disabled={rescueLoading || !rescueInput.trim()}
+                  className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-opacity disabled:opacity-40"
+                  style={{ background: 'var(--danger)' }}
+                  aria-label="Отправить"
+                >
+                  <Send className="w-4 h-4 text-white" />
+                </button>
+              </div>
+
+              {/* Быстрые подсказки */}
+              <div className="flex gap-2 mt-2 flex-wrap">
+                {['Встретил медведя', 'Заблудился', 'Травма', 'Непогода застала'].map(hint => (
+                  <button
+                    key={hint}
+                    onClick={() => setRescueInput(hint)}
+                    className="text-xs px-2.5 py-1 rounded-full border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-[var(--danger)] transition-colors"
+                  >
+                    {hint}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
