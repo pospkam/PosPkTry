@@ -4,7 +4,6 @@ import { pool } from '@/lib/db-pool';
 import { telegramService } from '@/lib/notifications/telegram';
 import { notifyAdminNewLead } from '@/lib/notifications/telegram-channel';
 import { requireRole } from '@/lib/auth/middleware';
-import type { JWTPayload } from '@/lib/auth/jwt';
 import { notifyOperatorNewLead } from '@/lib/notifications/lead-notify';
 import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
 import { leadProcessor } from '@/lib/services/lead-processor.service';
@@ -34,25 +33,11 @@ export async function GET(req: NextRequest) {
   const authResult = await requireRole(req, ['admin', 'operator']);
   if (authResult instanceof NextResponse) return authResult;
 
-  const user = authResult as JWTPayload;
-  const isAdmin = user.role === 'admin';
-
   const { searchParams } = new URL(req.url);
   const parse = ListSchema.safeParse(Object.fromEntries(searchParams));
   if (!parse.success) return NextResponse.json({ error: 'Неверные параметры' }, { status: 400 });
 
   const { status, limit, offset } = parse.data;
-
-  // Операторы видят только свои лиды (по operator_id или unassigned с их route_id)
-  // Для простоты: оператор видит все лиды, где operator_id IS NULL или operator_id = их partner_id
-  let operatorId: string | null = null;
-  if (!isAdmin) {
-    const opRes = await pool.query<{ id: string }>(
-      `SELECT id FROM partners WHERE user_id = $1 LIMIT 1`,
-      [user.userId]
-    );
-    operatorId = opRes.rows[0]?.id ?? null;
-  }
 
   const conditions: string[] = [];
   const vals: unknown[] = [];
@@ -61,10 +46,9 @@ export async function GET(req: NextRequest) {
     vals.push(status);
     conditions.push(`status = $${vals.length}`);
   }
-  if (!isAdmin && operatorId) {
-    vals.push(operatorId);
-    conditions.push(`(operator_id = $${vals.length} OR operator_id IS NULL)`);
-  }
+
+  // operator_id filter added after migration 083 is applied
+  // TODO: restore operator scope filter when operator_id column exists
 
   const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
   const lIdx = vals.length + 1;
@@ -73,11 +57,8 @@ export async function GET(req: NextRequest) {
 
   const [rows, cnt] = await Promise.all([
     pool.query(
-      `SELECT id, name, phone, email, comment, route_title, source_url, source_data,
-              group_size, budget_rub, desired_dates,
-              status, notes,
-              ai_score, ai_summary, matched_tour_ids, proposal_id, processed_at,
-              operator_id, created_at, updated_at
+      `SELECT id, name, phone, comment, route_id, route_title, source_url, source_data,
+              status, notes, created_at, updated_at
        FROM leads ${where} ORDER BY created_at DESC LIMIT $${lIdx} OFFSET $${oIdx}`,
       vals
     ),

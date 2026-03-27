@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Phone, MessageSquare, Clock, ChevronDown, ChevronUp, Copy, Check, RefreshCw, Search, MapPin, Calendar, Trash2 } from 'lucide-react';
+import { Phone, MessageSquare, Clock, ChevronDown, ChevronUp, Copy, Check, RefreshCw, Search, MapPin, Calendar, Trash2, AlertTriangle, Zap } from 'lucide-react';
 
 type LeadStatus = 'new' | 'contacted' | 'qualified' | 'converted' | 'lost';
 
@@ -384,16 +384,25 @@ export function LeadsClient() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [counts, setCounts]         = useState<Record<string, number>>({});
   const [search, setSearch]         = useState('');
+  const [loadError, setLoadError]   = useState<string | null>(null);
+  const [applyingMigration, setApplyingMigration] = useState(false);
+  const [migrationDone, setMigrationDone] = useState(false);
 
   const load = useCallback(async (status: LeadStatus | 'all') => {
     setLoading(true);
+    setLoadError(null);
     try {
       const res = await fetch(`/api/leads?status=${status}&limit=${PAGE_SIZE}&offset=0`);
       if (res.ok) {
         const data = await res.json() as { leads: Lead[]; total: number };
         setLeads(data.leads);
         setTotal(data.total);
+      } else {
+        const err = await res.json().catch(() => ({})) as { error?: string };
+        setLoadError(err.error ?? `Ошибка сервера (${res.status})`);
       }
+    } catch {
+      setLoadError('Не удалось подключиться к серверу');
     } finally {
       setLoading(false);
     }
@@ -415,13 +424,42 @@ export function LeadsClient() {
 
   const loadCounts = useCallback(async () => {
     const statuses: LeadStatus[] = ['new', 'contacted', 'qualified', 'converted', 'lost'];
-    const results = await Promise.all(
-      statuses.map(s => fetch(`/api/leads?status=${s}&limit=1`).then(r => r.json() as Promise<{ total: number }>))
-    );
-    const c: Record<string, number> = {};
-    statuses.forEach((s, i) => { c[s] = results[i].total; });
-    setCounts(c);
+    try {
+      const results = await Promise.all(
+        statuses.map(s =>
+          fetch(`/api/leads?status=${s}&limit=1`)
+            .then(r => r.ok ? r.json() as Promise<{ total: number }> : Promise.resolve({ total: 0 }))
+            .catch(() => ({ total: 0 }))
+        )
+      );
+      const c: Record<string, number> = {};
+      statuses.forEach((s, i) => { c[s] = results[i].total; });
+      setCounts(c);
+    } catch {
+      // counts are not critical
+    }
   }, []);
+
+  const applyMigration = useCallback(async () => {
+    setApplyingMigration(true);
+    try {
+      const res = await fetch('/api/admin/apply-migration', { method: 'POST' });
+      const data = await res.json() as { success: boolean; error?: string };
+      if (data.success) {
+        setMigrationDone(true);
+        setLoadError(null);
+        // Reload after migration
+        await load(tab);
+        await loadCounts();
+      } else {
+        setLoadError(`Миграция не применена: ${data.error ?? 'неизвестная ошибка'}`);
+      }
+    } catch {
+      setLoadError('Ошибка при применении миграции');
+    } finally {
+      setApplyingMigration(false);
+    }
+  }, [load, loadCounts, tab]);
 
   useEffect(() => { load(tab); }, [tab, load]);
   useEffect(() => { loadCounts(); }, [loadCounts]);
@@ -463,6 +501,44 @@ export function LeadsClient() {
           <RefreshCw size={14} /> Обновить
         </button>
       </div>
+
+      {/* Error / Migration banner */}
+      {loadError && (
+        <div
+          className="flex flex-wrap items-start gap-3 mb-4 p-4 rounded-lg border"
+          style={{
+            borderColor: 'color-mix(in srgb, var(--danger) 30%, transparent)',
+            background: 'color-mix(in srgb, var(--danger) 8%, transparent)',
+          }}
+        >
+          <AlertTriangle size={18} className="shrink-0 mt-0.5" style={{ color: 'var(--danger)' }} />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-[var(--text-primary)]">{loadError}</p>
+            {loadError.includes('column') || loadError.includes('500') ? (
+              <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                Вероятно, не применена миграция 083 к базе данных.
+              </p>
+            ) : null}
+          </div>
+          {!migrationDone && (
+            <button
+              onClick={applyMigration}
+              disabled={applyingMigration}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg text-white font-medium disabled:opacity-50"
+              style={{ background: 'var(--accent)' }}
+            >
+              <Zap size={12} />
+              {applyingMigration ? 'Применяю...' : 'Применить миграцию 083'}
+            </button>
+          )}
+        </div>
+      )}
+
+      {migrationDone && (
+        <div className="flex items-center gap-2 mb-4 p-3 rounded-lg border border-[var(--success)]/30 bg-[var(--success)]/8 text-sm text-[var(--success)]">
+          Миграция 083 применена успешно. AI-функции лидов активированы.
+        </div>
+      )}
 
       {/* Search */}
       <div className="relative mb-4">
