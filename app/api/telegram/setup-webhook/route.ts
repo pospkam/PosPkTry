@@ -13,8 +13,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth/middleware';
 
 export async function POST(request: NextRequest) {
-  const adminOrResponse = await requireAdmin(request);
-  if (adminOrResponse instanceof NextResponse) return adminOrResponse;
+  const cronSecret = request.headers.get('x-cron-secret');
+  const isValidCron = cronSecret && cronSecret === process.env.CRON_SECRET;
+
+  if (!isValidCron) {
+    const adminOrResponse = await requireAdmin(request);
+    if (adminOrResponse instanceof NextResponse) return adminOrResponse;
+  }
 
   let body: { appUrl?: string; bot?: 'main' | 'admin' | 'kuzmich' } = {};
   try {
