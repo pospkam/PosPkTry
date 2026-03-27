@@ -50,6 +50,21 @@ async function getTour(id: number) {
   }
 }
 
+async function getReviews(tourId: number) {
+  try {
+    const { rows } = await pool.query(`
+      SELECT id, author_name, author_city, rating, comment, trip_date
+      FROM operator_tour_reviews
+      WHERE tour_id = $1
+      ORDER BY created_at DESC
+      LIMIT 6
+    `, [tourId]);
+    return rows;
+  } catch {
+    return [];
+  }
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const tour = await getTour(parseInt(id));
@@ -76,7 +91,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function TourDetailPage({ params }: Props) {
   const { id } = await params;
-  const tour = await getTour(parseInt(id));
+  const tourId = parseInt(id);
+  const [tour, reviews] = await Promise.all([getTour(tourId), getReviews(tourId)]);
 
   const structuredData = tour ? {
     '@context': 'https://schema.org',
@@ -138,7 +154,7 @@ export default async function TourDetailPage({ params }: Props) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
       )}
-      <TourDetailClient tour={tour} />
+      <TourDetailClient tour={tour} reviews={reviews} />
     </>
   );
 }

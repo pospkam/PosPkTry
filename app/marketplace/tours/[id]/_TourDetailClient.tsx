@@ -238,9 +238,35 @@ function Lightbox({ images, alt, startIdx, onClose }: {
   );
 }
 
+/* ─── Review types ─── */
+
+interface TourReview {
+  id: number;
+  author_name: string;
+  author_city: string | null;
+  rating: number;
+  comment: string;
+  trip_date: string | null;
+}
+
+/* ─── Star display ─── */
+
+function Stars({ rating }: { rating: number }) {
+  return (
+    <span className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map(i => (
+        <Star
+          key={i}
+          className={`w-4 h-4 ${i <= rating ? 'text-[var(--warning)] fill-[var(--warning)]' : 'text-[var(--text-muted)]'}`}
+        />
+      ))}
+    </span>
+  );
+}
+
 /* ─── Main Component ─── */
 
-export default function TourDetailClient({ tour }: { tour: TourFull | null }) {
+export default function TourDetailClient({ tour, reviews = [] }: { tour: TourFull | null; reviews?: TourReview[] }) {
   if (!tour) {
     return (
       <div className="ds-page text-center py-24">
@@ -472,6 +498,48 @@ export default function TourDetailClient({ tour }: { tour: TourFull | null }) {
               ))}
             </div>
           </div>
+
+          {/* Reviews */}
+          {reviews.length > 0 && (
+            <>
+              <hr className="border-[var(--border)]" />
+              <div>
+                <h2 className="ds-h2 mb-6 flex items-center gap-2">
+                  <Star className="w-5 h-5 text-[var(--warning)] fill-[var(--warning)]" />
+                  Отзывы гостей
+                  <span className="text-sm font-normal text-[var(--text-muted)]">({reviews.length})</span>
+                </h2>
+                <div className="space-y-5">
+                  {reviews.map(r => (
+                    <div key={r.id} className="pb-5 border-b border-[var(--border)] last:border-0 last:pb-0">
+                      <div className="flex items-start justify-between gap-4 mb-2">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-[var(--accent)]/15 flex items-center justify-center shrink-0">
+                            <span className="text-sm font-bold text-[var(--accent)]">
+                              {r.author_name.charAt(0)}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-[var(--text-primary)]">{r.author_name}</p>
+                            {r.author_city && (
+                              <p className="text-xs text-[var(--text-muted)]">{r.author_city}</p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <Stars rating={r.rating} />
+                          {r.trip_date && (
+                            <p className="text-xs text-[var(--text-muted)] mt-1">{r.trip_date}</p>
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{r.comment}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
 
           {/* AI Kuzmich CTA */}
           <Link
