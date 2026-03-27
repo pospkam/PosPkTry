@@ -59,7 +59,7 @@ export function Header() {
         transform: 'translateX(-50%)',
       }} className="hidden md:flex">
         {[
-          { href: '/marketplace/tours', label: 'Туры' },
+          { href: '/marketplace', label: 'Туры' },
           { href: '/routes',            label: 'Маршруты' },
           { href: '/map',               label: 'Карта' },
           { href: '/operators',         label: 'Операторы' },

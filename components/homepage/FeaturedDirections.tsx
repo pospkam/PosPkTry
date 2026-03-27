@@ -67,7 +67,7 @@ export function FeaturedDirections() {
             <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
-            href="/marketplace/tours"
+            href="/marketplace"
             className="hidden md:inline-flex items-center gap-1.5 text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors border border-[var(--border)] rounded-lg px-4 py-1.5"
           >
             Туры с ценами
@@ -112,7 +112,7 @@ export function FeaturedDirections() {
             <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
-            href="/marketplace/tours"
+            href="/marketplace"
             className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--text-secondary)]"
           >
             Туры с ценами

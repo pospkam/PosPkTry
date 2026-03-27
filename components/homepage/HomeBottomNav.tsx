@@ -9,7 +9,7 @@ const FO = "var(--font-outfit,'Outfit',system-ui,sans-serif)";
 
 const NAV_ITEMS = [
   { icon: House,    label: undefined,   href: '/'                  },
-  { icon: Compass,  label: 'Туры',      href: '/marketplace/tours' },
+  { icon: Compass,  label: 'Туры',      href: '/marketplace' },
   { icon: Sparkles, label: 'Кузьмич',   href: '/ai-assistant'      },
   { icon: Heart,    label: undefined,   href: '/profile'           },
 ];
