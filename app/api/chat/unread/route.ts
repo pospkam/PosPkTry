@@ -1,4 +1,3 @@
-import { safeMsg } from '@/lib/errors/sanitize';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/middleware';
 import { chatService } from '@/lib/services/chat.service';
@@ -26,7 +25,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     return NextResponse.json(
-      { success: false, error: 'Ошибка загрузки непрочитанных', details: safeMsg(error) },
+      { success: false, error: 'Ошибка загрузки непрочитанных', details: error instanceof Error ? error.message : 'Unknown' },
       { status: 500 }
     );
   }

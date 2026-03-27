@@ -1,4 +1,3 @@
-import { safeMsg } from '@/lib/errors/sanitize';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/middleware';
 import { chatService } from '@/lib/services/chat.service';
@@ -30,7 +29,7 @@ export async function POST(
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json(
-      { success: false, error: 'Ошибка отметки прочтения', details: safeMsg(error) },
+      { success: false, error: 'Ошибка отметки прочтения', details: error instanceof Error ? error.message : 'Unknown' },
       { status: 500 }
     );
   }

@@ -1,4 +1,3 @@
-import { safeMsg } from '@/lib/errors/sanitize';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/middleware';
 import { chatService } from '@/lib/services/chat.service';
@@ -30,7 +29,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     return NextResponse.json(
-      { success: false, error: 'Ошибка загрузки бесед', details: safeMsg(error) },
+      { success: false, error: 'Ошибка загрузки бесед', details: error instanceof Error ? error.message : 'Unknown' },
       { status: 500 }
     );
   }
@@ -99,7 +98,7 @@ export async function POST(request: NextRequest) {
     }, { status: created ? 201 : 200 });
   } catch (error) {
     return NextResponse.json(
-      { success: false, error: 'Ошибка создания беседы', details: safeMsg(error) },
+      { success: false, error: 'Ошибка создания беседы', details: error instanceof Error ? error.message : 'Unknown' },
       { status: 500 }
     );
   }
