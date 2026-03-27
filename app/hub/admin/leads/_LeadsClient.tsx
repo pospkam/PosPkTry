@@ -32,8 +32,31 @@ interface Lead {
   source_data: LeadSourceData | null;
   status: LeadStatus;
   notes: string | null;
+  ai_score: number | null;
+  ai_summary: string | null;
   created_at: string;
   updated_at: string;
+}
+
+function ScoreBadge({ score }: { score: number | null }) {
+  if (score === null) return null;
+  const color =
+    score >= 70 ? 'var(--success)' :
+    score >= 40 ? 'var(--warning)' :
+                  'var(--text-muted)';
+  const label =
+    score >= 70 ? 'Горячий' :
+    score >= 40 ? 'Тёплый'  :
+                  'Холодный';
+  return (
+    <span
+      className="text-xs px-2 py-0.5 rounded-full font-medium border"
+      style={{ color, borderColor: color, background: `color-mix(in srgb, ${color} 10%, transparent)` }}
+      title={`AI Score: ${score}/100`}
+    >
+      {score} · {label}
+    </span>
+  );
 }
 
 const STATUS_META: Record<LeadStatus, { label: string; color: string }> = {
@@ -251,6 +274,7 @@ function LeadCard({ lead, onUpdate, onDelete }: { lead: Lead; onUpdate: (id: str
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-semibold text-[var(--text-primary)]">{lead.name}</span>
             <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${sm.color}`}>{sm.label}</span>
+            <ScoreBadge score={lead.ai_score} />
             {sourceLabel && (
               <span className="text-xs text-[var(--text-muted)]">{sourceLabel}</span>
             )}
@@ -311,6 +335,14 @@ function LeadCard({ lead, onUpdate, onDelete }: { lead: Lead; onUpdate: (id: str
       {/* Expanded */}
       {open && (
         <div className="border-t border-[var(--border)] p-4 space-y-4">
+          {/* AI Summary */}
+          {lead.ai_summary && (
+            <div className="text-xs rounded-lg px-3 py-2" style={{ background: 'color-mix(in srgb, var(--ocean) 8%, transparent)', color: 'var(--ocean)' }}>
+              <Zap size={12} className="inline mr-1" />
+              {lead.ai_summary}
+            </div>
+          )}
+
           {/* Source data */}
           {lead.source_data && <SourceDataBlock sd={lead.source_data} />}
 
@@ -387,6 +419,7 @@ export function LeadsClient() {
   const [loadError, setLoadError]   = useState<string | null>(null);
   const [applyingMigration, setApplyingMigration] = useState(false);
   const [migrationDone, setMigrationDone] = useState(false);
+  const [scoringLeads, setScoringLeads] = useState(false);
 
   const load = useCallback(async (status: LeadStatus | 'all') => {
     setLoading(true);
@@ -461,6 +494,16 @@ export function LeadsClient() {
     }
   }, [load, loadCounts, tab]);
 
+  const scoreLeads = useCallback(async () => {
+    setScoringLeads(true);
+    try {
+      await fetch('/api/admin/leads/quickscore', { method: 'POST' });
+      await load(tab);
+    } finally {
+      setScoringLeads(false);
+    }
+  }, [load, tab]);
+
   useEffect(() => { load(tab); }, [tab, load]);
   useEffect(() => { loadCounts(); }, [loadCounts]);
 
@@ -494,12 +537,22 @@ export function LeadsClient() {
             <p className="text-sm text-[var(--accent)] font-medium mt-1">{newCount} новых заявок</p>
           )}
         </div>
-        <button
-          onClick={() => { load(tab); loadCounts(); }}
-          className="ds-btn ds-btn-secondary flex items-center gap-1 text-sm"
-        >
-          <RefreshCw size={14} /> Обновить
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={scoreLeads}
+            disabled={scoringLeads || loading}
+            className="ds-btn ds-btn-secondary flex items-center gap-1 text-sm"
+            title="Быстрый скоринг без AI"
+          >
+            <Zap size={14} /> {scoringLeads ? 'Оцениваю...' : 'Оценить лиды'}
+          </button>
+          <button
+            onClick={() => { load(tab); loadCounts(); }}
+            className="ds-btn ds-btn-secondary flex items-center gap-1 text-sm"
+          >
+            <RefreshCw size={14} /> Обновить
+          </button>
+        </div>
       </div>
 
       {/* Error / Migration banner */}
