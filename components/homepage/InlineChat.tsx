@@ -72,7 +72,7 @@ export default function InlineChat() {
   }, [messages]);
 
   return (
-    <section className="py-16 md:py-20 px-5 bg-[var(--bg-primary)]">
+    <section id="chat" className="py-16 md:py-20 px-5 bg-[var(--bg-primary)]">
       <div className="max-w-2xl mx-auto">
         {/* Section header */}
         <div className="text-center mb-8">

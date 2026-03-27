@@ -1,10 +1,7 @@
 import type { Metadata } from 'next'
 import dynamic from 'next/dynamic'
-import { unstable_cache } from 'next/cache'
-import { pool } from '@/lib/db-pool'
 import { Header } from '@/components/layout/Header'
 import { HeroCompact } from '@/components/homepage/HeroCompact'
-import EcosystemPulse from '@/components/homepage/EcosystemPulse'
 import { Footer } from '@/components/layout/Footer'
 
 // Lazy-loaded client sections (below fold)
@@ -23,17 +20,10 @@ const LeadCTASection = dynamic(
   () => import('@/components/homepage/LeadCTASection').then(m => ({ default: m.LeadCTASection })),
   { loading: () => <SectionSkeleton /> }
 );
-const OperatorPromo = dynamic(
-  () => import('@/components/homepage/OperatorPromo').then(m => ({ default: m.OperatorPromo })),
-  { loading: () => <SectionSkeleton /> }
-);
 const HomeBottomNav = dynamic(
   () => import('@/components/homepage/HomeBottomNav').then(m => ({ default: m.HomeBottomNav }))
 );
 const SOSButton = dynamic(() => import('@/components/shared/SOSButton'));
-const AssistantButton = dynamic(
-  () => import('@/components/shared/AssistantButton').then(m => ({ default: m.AssistantButton }))
-);
 
 export const metadata: Metadata = {
   title: 'Kamchatour Hub — Туры на Камчатку | Рыбалка, вулканы, экология',
@@ -68,33 +58,8 @@ export const metadata: Metadata = {
   },
 }
 
-// Server-side: ecosystem stats cached 5 min — не бьём БД на каждый хит
-const getEcosystemStats = unstable_cache(
-  async () => {
-    try {
-      const [chats, routes, agents] = await Promise.all([
-        pool.query<{ count: string }>(
-          `SELECT COUNT(*)::text AS count FROM chat_sessions WHERE updated_at > NOW() - INTERVAL '24 hours'`
-        ),
-        pool.query<{ count: string }>(
-          `SELECT COUNT(*)::text AS count FROM agent_route_knowledge WHERE is_visible = true`
-        ),
-        pool.query<{ count: string }>(
-          `SELECT COUNT(DISTINCT metadata->>'agent_id')::text AS count FROM ai_actions_log WHERE created_at > NOW() - INTERVAL '1 hour'`
-        ),
-      ]);
-      return {
-        chatsToday: parseInt(chats.rows[0]?.count ?? '0', 10),
-        activeRoutes: parseInt(routes.rows[0]?.count ?? '0', 10),
-        activeAgents: parseInt(agents.rows[0]?.count ?? '0', 10),
-      };
-    } catch {
-      return { chatsToday: 0, activeRoutes: 0, activeAgents: 0 };
-    }
-  },
-  ['ecosystem-stats'],
-  { revalidate: 300 } // 5 минут
-);
+// Server-side: ecosystem stats cached 5 min (kept for future use when traffic grows)
+// const getEcosystemStats = unstable_cache(...)
 
 function SectionSkeleton() {
   return <div className="py-20 px-5"><div className="max-w-6xl mx-auto h-64 bg-[var(--bg-hover)] rounded-lg ds-skeleton" /></div>;
@@ -112,8 +77,6 @@ function ChatSkeleton() {
 }
 
 export default async function Page() {
-  const stats = await getEcosystemStats();
-
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'TravelAgency',
@@ -140,16 +103,13 @@ export default async function Page() {
       <main>
         <HeroCompact />
         <InlineChat />
-        <EcosystemPulse stats={stats} />
         <FeaturedDirections />
         <LeadCTASection />
         <TrustSection />
-        <OperatorPromo />
       </main>
       <Footer />
       <HomeBottomNav />
       <SOSButton />
-      <AssistantButton pageContext={{ type: 'home' }} />
     </div>
   );
 }

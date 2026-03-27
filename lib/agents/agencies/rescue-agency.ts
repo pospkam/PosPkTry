@@ -67,7 +67,7 @@ export class RescueAgency {
       } catch { /* tool failure is non-blocking */ }
     }
 
-    const [recent, stats, visits] = await Promise.all([
+    const [recent, stats] = await Promise.all([
       pool.query<SosEventRow>(`
         SELECT
           id,
@@ -96,17 +96,9 @@ export class RescueAgency {
         FROM sos_events
         WHERE created_at >= NOW() - INTERVAL '30 days'
       `),
-      pool.query<{ today: string; week: string }>(`
-        SELECT
-          COUNT(*) FILTER (WHERE created_at >= CURRENT_DATE)::text        AS today,
-          COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days')::text AS week
-        FROM ai_actions_log
-        WHERE action_type = 'safety_hub_visit'
-      `),
     ]);
 
     const s = stats.rows[0];
-    const v = visits.rows[0];
     const activeEvents = recent.rows.filter(r => !['resolved', 'false_alarm'].includes(r.status));
 
     const lines: string[] = [
@@ -116,9 +108,6 @@ export class RescueAgency {
       `Активных: ${s.active}`,
       `Разрешено: ${s.resolved}`,
       `Среднее время реагирования: ${s.avg_resolve_min} мин.`,
-      '',
-      '<b>Хаб безопасности — визиты:</b>',
-      `Сегодня: ${v?.today ?? '0'} чел.   За 7 дней: ${v?.week ?? '0'} чел.`,
     ];
 
     if (activeEvents.length > 0) {

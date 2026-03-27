@@ -1,7 +1,6 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
 import { Bot, Shield, Leaf, Users, ArrowRight, ChevronDown } from 'lucide-react';
 
 const HERO_LIGHT = '/images/hero/hero-light.jpeg';
@@ -90,13 +89,13 @@ export function HeroCompact() {
             <Bot className="w-4 h-4" />
             Спросить Кузьмича
           </a>
-          <Link
-            href="/contact"
+          <a
+            href="#lead"
             className="inline-flex items-center gap-2 px-5 py-3 rounded-lg text-sm font-medium text-white border border-white/30 hover:bg-white/10 transition-colors"
           >
             Оставить заявку
             <ArrowRight className="w-4 h-4" />
-          </Link>
+          </a>
         </div>
       </div>
 

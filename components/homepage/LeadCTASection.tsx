@@ -34,7 +34,7 @@ export function LeadCTASection() {
   };
 
   return (
-    <section className="py-20 px-5" style={{ background: 'var(--bg-primary)' }}>
+    <section id="lead" className="py-20 px-5" style={{ background: 'var(--bg-primary)' }}>
       <div className="max-w-6xl mx-auto">
         <div
           className="rounded-2xl overflow-hidden"
