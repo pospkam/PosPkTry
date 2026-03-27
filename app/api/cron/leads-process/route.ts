@@ -24,12 +24,13 @@ export async function GET(request: NextRequest) {
   if (!cronSecret) return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 500 });
   if (!timingSafeCompare(secret, cronSecret)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  // Лиды 'new' старше 2 минут и без processed_at
+  // Лиды 'new' старше 2 минут, без processed_at, с достаточным качеством
   const { rows } = await pool.query<{ id: string; name: string }>(
     `SELECT id, name FROM leads
      WHERE status = 'new'
        AND created_at < NOW() - INTERVAL '2 minutes'
        AND processed_at IS NULL
+       AND (ai_score IS NULL OR ai_score >= 30)
      ORDER BY created_at ASC
      LIMIT 10`
   );

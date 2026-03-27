@@ -170,18 +170,29 @@ export async function POST(req: NextRequest) {
   }
 
   const quickScore = computeQuickScore(name, phone, comment, source_data);
+  const isLowQuality = quickScore < 30;
 
   let leadId: string;
   try {
     const res = await pool.query<{ id: string }>(
-      `INSERT INTO leads (name, phone, comment, route_id, route_title, source_url, source_data, ai_score)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      `INSERT INTO leads (name, phone, comment, route_id, route_title, source_url, source_data, ai_score, processed_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING id`,
-      [name, phone, comment ?? null, route_id ?? null, route_title ?? null, source_url ?? null, source_data ? JSON.stringify(source_data) : null, quickScore]
+      [
+        name, phone, comment ?? null, route_id ?? null, route_title ?? null,
+        source_url ?? null, source_data ? JSON.stringify(source_data) : null,
+        quickScore,
+        isLowQuality ? new Date() : null,   // низкое качество — сразу закрываем для cron
+      ]
     );
     leadId = res.rows[0].id;
   } catch {
     return NextResponse.json({ success: false, error: 'Ошибка сервера. Попробуйте позже.' }, { status: 500 });
+  }
+
+  // Низкое качество — не тратим AI и не шлём уведомления
+  if (isLowQuality) {
+    return NextResponse.json({ success: true, id: leadId }, { status: 201 });
   }
 
   // Telegram — LEADS_CHAT_ID (старый канал)
