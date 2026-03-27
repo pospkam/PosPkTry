@@ -82,7 +82,7 @@ export function HeroCompact() {
         {/* CTAs */}
         <div className="flex flex-wrap items-center gap-3">
           <a
-            href="#chat"
+            href="/kuzmich"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm text-white transition-opacity hover:opacity-90 active:scale-95"
             style={{ background: 'var(--accent)' }}
           >
@@ -90,7 +90,7 @@ export function HeroCompact() {
             Спросить Кузьмича
           </a>
           <a
-            href="#lead"
+            href="/request"
             className="inline-flex items-center gap-2 px-5 py-3 rounded-lg text-sm font-medium text-white border border-white/30 hover:bg-white/10 transition-colors"
           >
             Оставить заявку
