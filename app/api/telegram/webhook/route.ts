@@ -1215,10 +1215,10 @@ export async function POST(request: NextRequest) {
             guest_name: string; guest_phone: string;
             booking_date: string; booking_status: string;
           }>(
-            `SELECT ob.id::text, ot.title as tour_title, ob.guest_name, ob.guest_phone,
+            `SELECT ob.id::text, ot.title as tour_title, ob.tourist_name as guest_name, ob.tourist_phone as guest_phone,
                     ob.booking_date::text, ob.booking_status
              FROM operator_bookings ob
-             LEFT JOIN operator_tours ot ON ot.id = ob.tour_id
+             LEFT JOIN operator_tours ot ON ot.id = ob.operator_tour_id
              ORDER BY ob.created_at DESC LIMIT 8`
           );
           if (!r.rows.length) {

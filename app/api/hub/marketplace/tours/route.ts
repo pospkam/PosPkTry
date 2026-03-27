@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
         COUNT(ob.id)::INT as bookings_count
       FROM operator_tours ot
       JOIN partners p ON ot.operator_id = p.id
-      LEFT JOIN operator_bookings ob ON ob.tour_id = ot.id
+      LEFT JOIN operator_bookings ob ON ob.operator_tour_id = ot.id
       WHERE ot.deleted_at IS NULL AND ot.is_active = true AND ot.is_published = true
     `;
 
