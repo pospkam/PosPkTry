@@ -79,8 +79,9 @@ export async function GET(req: NextRequest) {
     res.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
     return res;
   } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
     return NextResponse.json(
-      { error: 'Failed to fetch tours' },
+      { error: 'Failed to fetch tours', detail: message },
       { status: 500 }
     );
   }
