@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { MapPin, Truck, AlertTriangle, Thermometer, Wind, Droplets, Activity, Phone, RefreshCw, MountainSnow, TriangleAlert, User, Send, Bot } from 'lucide-react';
+import { MapPin, Truck, AlertTriangle, Thermometer, Wind, Droplets, Activity, Phone, RefreshCw, MountainSnow, TriangleAlert, User, Send, Bot, Flame } from 'lucide-react';
 
 interface RescueMessage {
   role: 'user' | 'assistant';
@@ -42,6 +42,17 @@ interface SeismicEvent {
   place: string;
   time: number;
   depth: number;
+}
+
+interface VolcanicEvent {
+  id: string;
+  title: string;
+  description: string | null;
+  severity: number;
+  affected_zones: string[];
+  created_at: string;
+  expires_at: string | null;
+  source_url: string | null;
 }
 
 type SosStatus = 'idle' | 'locating' | 'sending' | 'sent' | 'error';
@@ -114,6 +125,12 @@ export default function SafetyHubClient() {
   const [seismicLoading, setSeismicLoading] = useState(false);
   const [seismicError, setSeismicError] = useState<string | null>(null);
   const [seismicLastUpdate, setSeismicLastUpdate] = useState<Date | null>(null);
+
+  // Volcanic
+  const [volcanic, setVolcanic] = useState<VolcanicEvent[]>([]);
+  const [volcanicLoading, setVolcanicLoading] = useState(false);
+  const [volcanicError, setVolcanicError] = useState<string | null>(null);
+  const [volcanicLastUpdate, setVolcanicLastUpdate] = useState<Date | null>(null);
 
   // Rescue chat
   const RESCUE_GREETING: RescueMessage = {
@@ -190,6 +207,24 @@ export default function SafetyHubClient() {
   useEffect(() => {
     if (activeTab === 'seismic' && seismic.length === 0 && !seismicLoading) fetchSeismic();
   }, [activeTab, seismic.length, seismicLoading, fetchSeismic]);
+
+  const fetchVolcanic = useCallback(() => {
+    setVolcanicLoading(true);
+    setVolcanicError(null);
+    fetch('/api/safety/volcanic')
+      .then((r) => r.json())
+      .then((d: { events?: VolcanicEvent[]; error?: string }) => {
+        if (d.error && !d.events?.length) { setVolcanicError(d.error); return; }
+        setVolcanic(d.events || []);
+        setVolcanicLastUpdate(new Date());
+      })
+      .catch(() => setVolcanicError('Не удалось загрузить данные о вулканах'))
+      .finally(() => setVolcanicLoading(false));
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'volcanic' && volcanic.length === 0 && !volcanicLoading) fetchVolcanic();
+  }, [activeTab, volcanic.length, volcanicLoading, fetchVolcanic]);
 
   const handleSOS = useCallback(async () => {
     setSosStatus('locating');
@@ -359,12 +394,13 @@ export default function SafetyHubClient() {
       {/* Tabs */}
       <div className="flex gap-1 overflow-x-auto">
         {[
-          { id: 'sos',     label: 'SOS' },
-          { id: 'rescue',  label: 'AI Спасатель' },
+          { id: 'sos',      label: 'SOS' },
+          { id: 'rescue',   label: 'AI Спасатель' },
           { id: 'emergency', label: 'МЧС' },
+          { id: 'volcanic', label: 'Вулканы' },
           { id: 'avalanche', label: 'Лавины' },
-          { id: 'seismic', label: 'Сейсмика' },
-          { id: 'weather', label: 'Погода' },
+          { id: 'seismic',  label: 'Сейсмика' },
+          { id: 'weather',  label: 'Погода' },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -686,6 +722,119 @@ export default function SafetyHubClient() {
               Актуальный статус вулканов: KVERT (kscnet.ru/ivs/kvert)
             </p>
           </div>
+        </div>
+      )}
+
+      {/* ── Вулканы ── */}
+      {activeTab === 'volcanic' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-[var(--text-primary)]">
+              Вулканическая активность — Камчатка
+            </h2>
+            <button
+              onClick={fetchVolcanic}
+              disabled={volcanicLoading}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-[var(--border)] rounded text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3 h-3 ${volcanicLoading ? 'animate-spin' : ''}`} />
+              Обновить
+            </button>
+          </div>
+
+          {volcanicLoading && (
+            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-8 text-center">
+              <Flame className="w-8 h-8 mx-auto mb-2 text-[var(--text-muted)] animate-pulse" />
+              <p className="text-sm text-[var(--text-muted)]">Загрузка данных КБГС РАН...</p>
+            </div>
+          )}
+
+          {volcanicError && (
+            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6 text-center">
+              <p className="text-sm text-[var(--text-muted)]">{volcanicError}</p>
+            </div>
+          )}
+
+          {!volcanicLoading && !volcanicError && volcanic.length === 0 && (
+            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-6 text-center">
+              <Flame className="w-8 h-8 mx-auto mb-3 text-[var(--text-muted)]" />
+              <p className="text-sm text-[var(--text-muted)]">Извержений за последние 7 дней не зафиксировано</p>
+            </div>
+          )}
+
+          {!volcanicLoading && volcanic.length > 0 && (
+            <div className="space-y-3">
+              {volcanic.map((ev) => {
+                const color = ev.severity >= 2
+                  ? 'var(--danger)'
+                  : ev.severity === 1
+                    ? 'var(--warning)'
+                    : 'var(--success)';
+                const bg = ev.severity >= 2
+                  ? 'color-mix(in srgb, var(--danger) 8%, transparent)'
+                  : ev.severity === 1
+                    ? 'color-mix(in srgb, var(--warning) 8%, transparent)'
+                    : 'color-mix(in srgb, var(--success) 8%, transparent)';
+                const label = ev.severity >= 2 ? 'Высокая' : ev.severity === 1 ? 'Умеренная' : 'Низкая';
+                const dateStr = new Date(ev.created_at).toLocaleString('ru-RU', {
+                  day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+                });
+                return (
+                  <div
+                    key={ev.id}
+                    className="border rounded-lg p-4"
+                    style={{ borderColor: `color-mix(in srgb, ${color} 30%, transparent)`, background: bg }}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div
+                        className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center"
+                        style={{ background: `color-mix(in srgb, ${color} 20%, transparent)` }}
+                      >
+                        <Flame className="w-4 h-4" style={{ color }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-sm font-semibold text-[var(--text-primary)]">{ev.title}</p>
+                          <span
+                            className="text-xs px-2 py-0.5 rounded-full font-medium"
+                            style={{ color, background: `color-mix(in srgb, ${color} 15%, transparent)` }}
+                          >
+                            {label}
+                          </span>
+                        </div>
+                        {ev.description && (
+                          <p className="text-xs text-[var(--text-secondary)] mt-1 leading-relaxed">{ev.description}</p>
+                        )}
+                        <div className="flex items-center gap-3 mt-2 flex-wrap">
+                          <span className="text-xs text-[var(--text-muted)]">{dateStr}</span>
+                          {ev.affected_zones?.length > 0 && (
+                            <span className="text-xs text-[var(--text-muted)]">
+                              Зоны: {ev.affected_zones.join(', ')}
+                            </span>
+                          )}
+                          {ev.source_url && (
+                            <a
+                              href={ev.source_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-[var(--ocean)] hover:underline"
+                            >
+                              Источник
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              {volcanicLastUpdate && (
+                <p className="text-xs text-[var(--text-muted)] text-right">
+                  Источник: КБГС РАН · {volcanicLastUpdate.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              )}
+            </div>
+          )}
         </div>
       )}
 
