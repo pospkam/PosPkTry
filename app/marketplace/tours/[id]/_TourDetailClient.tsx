@@ -4,46 +4,35 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
-  MapPin, Clock, CheckCircle2, XCircle, Tag, Sparkles,
-  ChevronRight, ChevronLeft, Users, Backpack, Shield,
-  Calendar, Mountain, Star,
+  MapPin, Clock, CheckCircle2, XCircle, Sparkles,
+  ChevronRight, Users, Backpack, Shield, X,
+  Calendar, Mountain, Star, Share2, Heart,
 } from 'lucide-react';
 import BookingFormClient from '@/components/marketplace/BookingFormClient';
 
 /* ─── Labels ─── */
 
 const ACTIVITY_LABELS: Record<string, string> = {
-  trekking:   'Треккинг',
-  fishing:    'Рыбалка',
-  thermal:    'Термальные источники',
-  helicopter: 'Вертолётные туры',
-  boat_trip:  'Морские туры',
-  bears:      'Наблюдение за медведями',
-  rafting:    'Сплав',
-  snowmobile: 'Снегоходные туры',
+  trekking: 'Треккинг', fishing: 'Рыбалка', thermal: 'Термальные источники',
+  helicopter: 'Вертолётные туры', boat_trip: 'Морские туры',
+  bears: 'Наблюдение за медведями', rafting: 'Сплав', snowmobile: 'Снегоходные туры',
 };
 
 const LOCATION_LABELS: Record<string, string> = {
-  mountain:   'Горы',
-  volcano:    'Вулканы',
-  hot_spring: 'Горячие источники',
-  lake:       'Озёра',
-  sea:        'Море',
-  river:      'Реки',
-  forest:     'Тайга',
-  coast:      'Побережье',
+  mountain: 'Горы', volcano: 'Вулканы', hot_spring: 'Горячие источники',
+  lake: 'Озёра', sea: 'Море', river: 'Реки', forest: 'Тайга', coast: 'Побережье',
 };
 
-const DIFFICULTY_MAP: Record<string, { label: string; cls: string }> = {
-  easy:   { label: 'Лёгкий', cls: 'bg-[var(--success)]/20 text-[var(--success)]' },
-  medium: { label: 'Средний', cls: 'bg-[var(--warning)]/20 text-[var(--warning)]' },
-  hard:   { label: 'Сложный', cls: 'bg-[var(--danger)]/20 text-[var(--danger)]' },
+const DIFFICULTY_MAP: Record<string, { label: string; color: string }> = {
+  easy:   { label: 'Легкий', color: 'var(--success)' },
+  medium: { label: 'Средний', color: 'var(--warning)' },
+  hard:   { label: 'Сложный', color: 'var(--danger)' },
 };
 
 const PRICE_UNIT_LABELS: Record<string, string> = {
   per_person: 'за человека',
   per_tour: 'за группу',
-  per_day_per_person: 'за человека / день',
+  per_day_per_person: 'за чел./день',
 };
 
 /* ─── Types ─── */
@@ -103,53 +92,142 @@ function formatDuration(tour: TourFull): string | null {
 function formatSeason(start: string | null, end: string | null): string | null {
   if (!start || !end) return null;
   const months = ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
-  const s = new Date(start).getMonth();
-  const e = new Date(end).getMonth();
-  return `${months[s]} — ${months[e]}`;
+  return `${months[new Date(start).getMonth()]} — ${months[new Date(end).getMonth()]}`;
 }
 
-/* ─── Photo Gallery ─── */
+function formatPrice(p: number): string {
+  return new Intl.NumberFormat('ru-RU').format(p) + ' ₽';
+}
+
+/* ─── Photo Gallery (Tripster-style grid) ─── */
 
 function PhotoGallery({ images, alt }: { images: string[]; alt: string }) {
-  const [idx, setIdx] = useState(0);
+  const [lightbox, setLightbox] = useState<number | null>(null);
+
   if (images.length === 0) return null;
 
   return (
-    <div className="relative w-full aspect-[16/9] sm:aspect-[2/1] rounded-lg overflow-hidden bg-[var(--bg-hover)]">
-      <Image
-        src={images[idx]}
-        alt={`${alt} — фото ${idx + 1}`}
-        fill
-        priority={idx === 0}
-        className="object-cover transition-opacity duration-300"
-        sizes="(max-width: 768px) 100vw, 900px"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+    <>
+      {/* Grid: 1 large + up to 4 small */}
+      <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-2 rounded-lg overflow-hidden h-[280px] sm:h-[360px] md:h-[420px]">
+        {/* Main image */}
+        <button
+          onClick={() => setLightbox(0)}
+          className="relative md:col-span-2 md:row-span-2 overflow-hidden group cursor-pointer"
+        >
+          <Image
+            src={images[0]}
+            alt={`${alt} — фото 1`}
+            fill
+            priority
+            className="object-cover group-hover:scale-105 transition-transform duration-500"
+            sizes="(max-width: 768px) 100vw, 50vw"
+          />
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+        </button>
+
+        {/* Thumbnails */}
+        {images.slice(1, 5).map((src, i) => (
+          <button
+            key={i}
+            onClick={() => setLightbox(i + 1)}
+            className="relative hidden md:block overflow-hidden group cursor-pointer"
+          >
+            <Image
+              src={src}
+              alt={`${alt} — фото ${i + 2}`}
+              fill
+              className="object-cover group-hover:scale-105 transition-transform duration-500"
+              sizes="25vw"
+            />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+            {i === 3 && images.length > 5 && (
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                <span className="text-white font-semibold text-lg">+{images.length - 5}</span>
+              </div>
+            )}
+          </button>
+        ))}
+
+        {/* Mobile: photo count badge */}
+        {images.length > 1 && (
+          <button
+            onClick={() => setLightbox(0)}
+            className="md:hidden absolute bottom-3 right-3 bg-black/60 text-white text-xs font-medium px-3 py-1.5 rounded-full"
+          >
+            1 / {images.length}
+          </button>
+        )}
+      </div>
+
+      {/* Lightbox */}
+      {lightbox !== null && (
+        <Lightbox
+          images={images}
+          alt={alt}
+          startIdx={lightbox}
+          onClose={() => setLightbox(null)}
+        />
+      )}
+    </>
+  );
+}
+
+/* ─── Fullscreen Lightbox ─── */
+
+function Lightbox({ images, alt, startIdx, onClose }: {
+  images: string[];
+  alt: string;
+  startIdx: number;
+  onClose: () => void;
+}) {
+  const [idx, setIdx] = useState(startIdx);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
+      onClick={onClose}
+    >
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors z-10"
+        aria-label="Закрыть"
+      >
+        <X className="w-5 h-5" />
+      </button>
+
+      <div className="relative w-full h-full flex items-center justify-center p-4 sm:p-12" onClick={e => e.stopPropagation()}>
+        <Image
+          src={images[idx]}
+          alt={`${alt} — фото ${idx + 1}`}
+          fill
+          className="object-contain"
+          sizes="100vw"
+        />
+      </div>
 
       {images.length > 1 && (
         <>
           <button
-            onClick={() => setIdx(i => (i - 1 + images.length) % images.length)}
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/40 flex items-center justify-center text-white/80 hover:bg-black/60 transition-colors"
-            aria-label="Предыдущее фото"
+            onClick={e => { e.stopPropagation(); setIdx(i => (i - 1 + images.length) % images.length); }}
+            className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+            aria-label="Назад"
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronRight className="w-6 h-6 rotate-180" />
           </button>
           <button
-            onClick={() => setIdx(i => (i + 1) % images.length)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/40 flex items-center justify-center text-white/80 hover:bg-black/60 transition-colors"
-            aria-label="Следующее фото"
+            onClick={e => { e.stopPropagation(); setIdx(i => (i + 1) % images.length); }}
+            className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+            aria-label="Далее"
           >
-            <ChevronRight className="w-5 h-5" />
+            <ChevronRight className="w-6 h-6" />
           </button>
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-1.5">
             {images.map((_, i) => (
               <button
                 key={i}
-                onClick={() => setIdx(i)}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  i === idx ? 'bg-white w-4' : 'bg-white/50'
-                }`}
+                onClick={e => { e.stopPropagation(); setIdx(i); }}
+                className={`w-2 h-2 rounded-full transition-all ${i === idx ? 'bg-white w-5' : 'bg-white/40'}`}
                 aria-label={`Фото ${i + 1}`}
               />
             ))}
@@ -157,30 +235,6 @@ function PhotoGallery({ images, alt }: { images: string[]; alt: string }) {
         </>
       )}
     </div>
-  );
-}
-
-/* ─── Feature List ─── */
-
-function FeatureList({
-  items,
-  icon,
-  iconCls,
-}: {
-  items: string[];
-  icon: 'check' | 'x';
-  iconCls: string;
-}) {
-  const Icon = icon === 'check' ? CheckCircle2 : XCircle;
-  return (
-    <ul className="space-y-2">
-      {items.map(item => (
-        <li key={item} className="flex items-start gap-2 text-sm text-[var(--text-secondary)]">
-          <Icon className={`w-4 h-4 flex-shrink-0 mt-0.5 ${iconCls}`} />
-          <span>{item}</span>
-        </li>
-      ))}
-    </ul>
   );
 }
 
@@ -209,8 +263,7 @@ export default function TourDetailClient({ tour }: { tour: TourFull | null }) {
   const rating = tour.rating ? Number(tour.rating) : 0;
 
   const allPhotos = [
-    ...(tour.tour_image ? [tour.tour_image] : []),
-    ...(tour.photos ?? []),
+    ...(tour.photos?.length ? tour.photos : tour.tour_image ? [tour.tour_image] : []),
   ];
 
   const included = Array.isArray(tour.included) ? tour.included : [];
@@ -219,228 +272,330 @@ export default function TourDetailClient({ tour }: { tour: TourFull | null }) {
 
   return (
     <div className="ds-page pb-20">
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm text-[var(--text-muted)] mb-6">
-        <Link href="/" className="hover:text-[var(--text-primary)] transition-colors">Главная</Link>
-        <span>/</span>
-        <Link href="/marketplace" className="hover:text-[var(--text-primary)] transition-colors">Туры</Link>
-        <span>/</span>
-        <span className="text-[var(--text-secondary)] truncate max-w-[200px]">{tour.title}</span>
+      {/* ─── Breadcrumb ─── */}
+      <nav className="flex items-center gap-1.5 text-sm text-[var(--text-muted)] mb-5 overflow-x-auto">
+        <Link href="/" className="hover:text-[var(--ocean)] transition-colors whitespace-nowrap">Главная</Link>
+        <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+        <Link href="/marketplace" className="hover:text-[var(--ocean)] transition-colors whitespace-nowrap">Туры</Link>
+        <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+        <Link
+          href={`/marketplace?activity_type=${tour.activity_type}`}
+          className="hover:text-[var(--ocean)] transition-colors whitespace-nowrap"
+        >
+          {activityLabel}
+        </Link>
+        <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+        <span className="text-[var(--text-secondary)] truncate">{tour.title}</span>
       </nav>
 
-      {/* ─── Hero: Gallery + Title ─── */}
-      <div className="mb-8">
+      {/* ─── Photo Gallery ─── */}
+      <div className="mb-8 relative">
         {allPhotos.length > 0 ? (
           <PhotoGallery images={allPhotos} alt={tour.title} />
         ) : (
-          <div className="w-full aspect-[16/9] sm:aspect-[2/1] rounded-lg bg-[var(--bg-hover)] flex items-center justify-center">
+          <div className="w-full h-[280px] sm:h-[360px] md:h-[420px] rounded-lg bg-[var(--bg-hover)] flex items-center justify-center">
             <MapPin className="w-16 h-16 text-[var(--text-muted)]" />
           </div>
         )}
       </div>
 
-      {/* ─── Title + Badges ─── */}
-      <div className="mb-6">
-        <div className="flex flex-wrap items-center gap-2 mb-3">
-          <span className="text-xs font-semibold uppercase tracking-wider bg-[var(--accent)] text-[#0D1117] px-3 py-1 rounded-full">
-            {activityLabel}
-          </span>
-          {diffBadge && (
-            <span className={`text-xs font-semibold px-3 py-1 rounded-full ${diffBadge.cls}`}>
-              {diffBadge.label}
-            </span>
-          )}
-          {seasonLabel && (
-            <span className="text-xs font-medium px-3 py-1 rounded-full border border-[var(--border)] text-[var(--text-secondary)]">
-              <Calendar className="w-3 h-3 inline mr-1" />
-              {seasonLabel}
-            </span>
-          )}
-          {tour.weather_dependent && (
-            <span className="text-xs font-medium px-3 py-1 rounded-full border border-[var(--warning)]/30 text-[var(--warning)]">
-              Зависит от погоды
-            </span>
-          )}
-        </div>
+      {/* ─── Two-column layout: Content + Sidebar ─── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
 
-        <h1
-          className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[var(--text-primary)] leading-tight mb-2"
-          style={{ fontFamily: 'var(--font-playfair)' }}
-        >
-          {tour.title}
-        </h1>
+        {/* ═══ Left Column: Content (8/12) ═══ */}
+        <div className="lg:col-span-8 space-y-8">
 
-        <div className="flex items-center gap-4 text-sm text-[var(--text-secondary)]">
-          <span>{tour.operator_name}</span>
-          {rating > 0 && (
-            <span className="flex items-center gap-1">
-              <Star className="w-4 h-4 text-[var(--warning)] fill-[var(--warning)]" />
-              {rating.toFixed(1)}
-              {tour.review_count ? ` (${tour.review_count})` : ''}
-            </span>
-          )}
-          <span className="flex items-center gap-1">
-            <MapPin className="w-4 h-4" />
-            {tour.location_name ?? locationLabel}
-          </span>
-        </div>
-      </div>
-
-      {/* ─── Price Block ─── */}
-      <div className="flex items-baseline gap-3 mb-8 pb-6 border-b border-[var(--border)]">
-        <span className="text-xs text-[var(--text-muted)]">от</span>
-        {priceOld && priceOld > price && (
-          <span className="text-lg text-[var(--text-muted)] line-through">
-            {priceOld.toLocaleString('ru-RU')} ₽
-          </span>
-        )}
-        <span className="text-3xl font-bold text-[var(--accent)]">
-          {price.toLocaleString('ru-RU')} ₽
-        </span>
-        <span className="text-sm text-[var(--text-muted)]">{priceLabel}</span>
-      </div>
-
-      {/* ─── Main Grid: Content + Booking Sidebar ─── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-        {/* Left: Content */}
-        <div className="lg:col-span-2 space-y-8">
-
-          {/* Quick Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {durationLabel && (
-              <div className="ds-card p-4 text-center">
-                <Clock className="w-5 h-5 text-[var(--ocean)] mx-auto mb-2" />
-                <p className="text-xs text-[var(--text-muted)] mb-1">Длительность</p>
-                <p className="text-sm font-bold text-[var(--text-primary)]">{durationLabel}</p>
-              </div>
-            )}
-            <div className="ds-card p-4 text-center">
-              <Users className="w-5 h-5 text-[var(--ocean)] mx-auto mb-2" />
-              <p className="text-xs text-[var(--text-muted)] mb-1">Группа</p>
-              <p className="text-sm font-bold text-[var(--text-primary)]">
-                {tour.min_participants && tour.min_participants !== tour.max_participants
-                  ? `${tour.min_participants}–${tour.max_participants}`
-                  : `до ${tour.max_participants}`
-                } чел.
-              </p>
-            </div>
-            <div className="ds-card p-4 text-center">
-              <Mountain className="w-5 h-5 text-[var(--ocean)] mx-auto mb-2" />
-              <p className="text-xs text-[var(--text-muted)] mb-1">Локация</p>
-              <p className="text-sm font-bold text-[var(--text-primary)]">{locationLabel}</p>
-            </div>
-            <div className="ds-card p-4 text-center">
-              <Tag className="w-5 h-5 text-[var(--ocean)] mx-auto mb-2" />
-              <p className="text-xs text-[var(--text-muted)] mb-1">Тип</p>
-              <p className="text-sm font-bold text-[var(--text-primary)]">{activityLabel}</p>
-            </div>
-          </div>
-
-          {/* Description */}
+          {/* Title block */}
           <div>
-            <h2 className="ds-h2 mb-4">Описание</h2>
-            <p className="text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap">
-              {tour.description || 'Описание уточняется у оператора.'}
-            </p>
+            <h1
+              className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[var(--text-primary)] leading-tight mb-3"
+              style={{ fontFamily: 'var(--font-playfair)' }}
+            >
+              {tour.title}
+            </h1>
+
+            {/* Meta row */}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-[var(--text-secondary)]">
+              {rating > 0 && (
+                <span className="flex items-center gap-1 font-medium">
+                  <Star className="w-4 h-4 text-[var(--warning)] fill-[var(--warning)]" />
+                  {rating.toFixed(1)}
+                  {tour.review_count ? (
+                    <span className="text-[var(--text-muted)]">({tour.review_count} отзывов)</span>
+                  ) : null}
+                </span>
+              )}
+              {durationLabel && (
+                <span className="flex items-center gap-1">
+                  <Clock className="w-4 h-4" />
+                  {durationLabel}
+                </span>
+              )}
+              <span className="flex items-center gap-1">
+                <Users className="w-4 h-4" />
+                до {tour.max_participants} чел.
+              </span>
+              <span className="flex items-center gap-1">
+                <MapPin className="w-4 h-4" />
+                {tour.location_name ?? locationLabel}
+              </span>
+            </div>
+
+            {/* Tags */}
+            <div className="flex flex-wrap items-center gap-2 mt-4">
+              <span className="text-xs font-semibold uppercase tracking-wider bg-[var(--accent)]/15 text-[var(--accent)] px-3 py-1 rounded-full">
+                {activityLabel}
+              </span>
+              {diffBadge && (
+                <span
+                  className="text-xs font-semibold px-3 py-1 rounded-full"
+                  style={{ background: `color-mix(in srgb, ${diffBadge.color} 15%, transparent)`, color: diffBadge.color }}
+                >
+                  {diffBadge.label}
+                </span>
+              )}
+              {seasonLabel && (
+                <span className="text-xs font-medium px-3 py-1 rounded-full border border-[var(--border)] text-[var(--text-secondary)]">
+                  <Calendar className="w-3 h-3 inline mr-1 -mt-0.5" />
+                  {seasonLabel}
+                </span>
+              )}
+              {tour.weather_dependent && (
+                <span className="text-xs font-medium px-3 py-1 rounded-full border border-[var(--warning)]/40 text-[var(--warning)]">
+                  Зависит от погоды
+                </span>
+              )}
+            </div>
           </div>
 
-          {/* Included / Not Included */}
-          {(included.length > 0 || notIncluded.length > 0) && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {included.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3 flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-[var(--success)]" />
-                    Включено в стоимость
-                  </h3>
-                  <FeatureList items={included} icon="check" iconCls="text-[var(--success)]" />
-                </div>
-              )}
-              {notIncluded.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3 flex items-center gap-2">
-                    <XCircle className="w-4 h-4 text-[var(--text-muted)]" />
-                    Не включено
-                  </h3>
-                  <FeatureList items={notIncluded} icon="x" iconCls="text-[var(--text-muted)]" />
-                </div>
-              )}
+          {/* Separator */}
+          <hr className="border-[var(--border)]" />
+
+          {/* Operator line */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-[var(--accent)]/15 flex items-center justify-center">
+              <span className="text-sm font-bold text-[var(--accent)]">
+                {tour.operator_name.charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-[var(--text-primary)]">
+                {tour.operator_name}
+              </p>
+              <p className="text-xs text-[var(--text-muted)]">Проведёт для вас тур</p>
+            </div>
+          </div>
+
+          {/* Separator */}
+          <hr className="border-[var(--border)]" />
+
+          {/* Short description (hook) */}
+          {tour.short_description && (
+            <p className="text-lg text-[var(--text-primary)] leading-relaxed font-medium">
+              {tour.short_description}
+            </p>
+          )}
+
+          {/* Full description */}
+          {tour.description && (
+            <div>
+              <h2 className="ds-h2 mb-3">О туре</h2>
+              <div className="text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap">
+                {tour.description}
+              </div>
             </div>
           )}
 
-          {/* What to Bring */}
-          {whatToBring.length > 0 && (
+          {/* Separator */}
+          <hr className="border-[var(--border)]" />
+
+          {/* Included / Not Included — Tripster-style checklist */}
+          {(included.length > 0 || notIncluded.length > 0) && (
             <div>
-              <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3 flex items-center gap-2">
-                <Backpack className="w-4 h-4 text-[var(--ocean)]" />
-                Что взять с собой
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {whatToBring.map(item => (
-                  <span
-                    key={item}
-                    className="text-xs px-3 py-1.5 rounded-full border border-[var(--border)] text-[var(--text-secondary)] bg-[var(--bg-hover)]"
-                  >
-                    {item}
-                  </span>
+              <h2 className="ds-h2 mb-5">Что включено</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
+                {included.map(item => (
+                  <div key={item} className="flex items-start gap-2.5">
+                    <CheckCircle2 className="w-5 h-5 text-[var(--success)] shrink-0 mt-0.5" />
+                    <span className="text-sm text-[var(--text-primary)]">{item}</span>
+                  </div>
+                ))}
+                {notIncluded.map(item => (
+                  <div key={item} className="flex items-start gap-2.5">
+                    <XCircle className="w-5 h-5 text-[var(--text-muted)] shrink-0 mt-0.5" />
+                    <span className="text-sm text-[var(--text-muted)]">{item}</span>
+                  </div>
                 ))}
               </div>
             </div>
           )}
 
+          {/* What to Bring */}
+          {whatToBring.length > 0 && (
+            <>
+              <hr className="border-[var(--border)]" />
+              <div>
+                <h2 className="ds-h2 mb-4 flex items-center gap-2">
+                  <Backpack className="w-5 h-5 text-[var(--ocean)]" />
+                  Что взять с собой
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {whatToBring.map(item => (
+                    <div key={item} className="flex items-center gap-2.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[var(--ocean)] shrink-0" />
+                      <span className="text-sm text-[var(--text-secondary)]">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
           {/* Important Info */}
-          <div className="bg-[var(--bg-hover)] rounded-lg p-6">
-            <h3 className="font-semibold text-[var(--text-primary)] mb-3 text-sm flex items-center gap-2">
-              <Shield className="w-4 h-4 text-[var(--success)]" />
+          <hr className="border-[var(--border)]" />
+          <div>
+            <h2 className="ds-h2 mb-4 flex items-center gap-2">
+              <Shield className="w-5 h-5 text-[var(--success)]" />
               Важная информация
-            </h3>
-            <ul className="space-y-2">
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
-                'Оператор свяжется с вами в течение часа после бронирования',
-                'Все туры включены в страховку безопасности',
-                'Возврат средств возможен за 48 часов до даты тура',
-                `Участники: ${tour.min_participants ?? 1}–${tour.max_participants} человек`,
+                { text: 'Бесплатная отмена за 48 часов', icon: true },
+                { text: 'Подтверждение от оператора за 2 часа', icon: true },
+                { text: 'Туры под страховкой безопасности', icon: true },
+                { text: `Группа: ${tour.min_participants ?? 1}–${tour.max_participants} чел.`, icon: true },
               ].map(item => (
-                <li key={item} className="flex items-start gap-2 text-sm text-[var(--text-secondary)]">
-                  <CheckCircle2 className="w-4 h-4 text-[var(--success)] flex-shrink-0 mt-0.5" />
-                  <span>{item}</span>
-                </li>
+                <div key={item.text} className="flex items-start gap-2.5">
+                  <CheckCircle2 className="w-5 h-5 text-[var(--success)] shrink-0 mt-0.5" />
+                  <span className="text-sm text-[var(--text-secondary)]">{item.text}</span>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
+
+          {/* AI Kuzmich CTA */}
+          <Link
+            href={`/planner?hint=${encodeURIComponent(tour.activity_type)}`}
+            className="flex items-center gap-4 p-5 rounded-lg border border-[var(--accent)]/30 bg-[var(--accent)]/5 hover:bg-[var(--accent)]/10 transition-colors"
+          >
+            <div className="w-11 h-11 rounded-full bg-[var(--accent)]/15 flex items-center justify-center shrink-0">
+              <Sparkles className="w-5 h-5 text-[var(--accent)]" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-[var(--text-primary)] text-sm">Собрать свой тур</p>
+              <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                Расскажите о поездке — подберём программу под вас
+              </p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-[var(--accent)] shrink-0" />
+          </Link>
         </div>
 
-        {/* Right: Booking Sidebar */}
-        <div className="space-y-4">
-          <div id="booking" className="sticky top-20">
-            <BookingFormClient
-              tourId={tour.id}
-              basePrice={price}
-              maxParticipants={tour.max_participants}
-              tourTitle={tour.title}
-            />
+        {/* ═══ Right Column: Sticky Booking Sidebar (4/12) ═══ */}
+        <div className="lg:col-span-4">
+          <div className="sticky top-20 space-y-4">
+
+            {/* Price card */}
+            <div className="ds-card p-6">
+              <div className="flex items-baseline gap-2 mb-1">
+                {priceOld && priceOld > price && (
+                  <span className="text-base text-[var(--text-muted)] line-through">
+                    {formatPrice(priceOld)}
+                  </span>
+                )}
+                <span className="text-3xl font-bold text-[var(--text-primary)]">
+                  {formatPrice(price)}
+                </span>
+              </div>
+              <p className="text-sm text-[var(--text-muted)] mb-5">{priceLabel}</p>
+
+              <a
+                href="#booking-form"
+                className="ds-btn ds-btn-primary w-full text-center py-3 text-base font-semibold"
+              >
+                Забронировать
+              </a>
+
+              {/* Quick trust signals */}
+              <div className="mt-4 pt-4 border-t border-[var(--border)] space-y-2">
+                <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
+                  <Shield className="w-3.5 h-3.5 text-[var(--success)]" />
+                  Бесплатная отмена за 48 ч
+                </div>
+                <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[var(--success)]" />
+                  Мгновенное подтверждение
+                </div>
+              </div>
+            </div>
+
+            {/* Quick stats */}
+            <div className="ds-card p-4 space-y-3">
+              {durationLabel && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-[var(--text-muted)] flex items-center gap-2">
+                    <Clock className="w-4 h-4" /> Длительность
+                  </span>
+                  <span className="font-medium text-[var(--text-primary)]">{durationLabel}</span>
+                </div>
+              )}
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-[var(--text-muted)] flex items-center gap-2">
+                  <Users className="w-4 h-4" /> Группа
+                </span>
+                <span className="font-medium text-[var(--text-primary)]">
+                  {tour.min_participants && tour.min_participants !== tour.max_participants
+                    ? `${tour.min_participants}–${tour.max_participants}`
+                    : `до ${tour.max_participants}`
+                  } чел.
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-[var(--text-muted)] flex items-center gap-2">
+                  <Mountain className="w-4 h-4" /> Локация
+                </span>
+                <span className="font-medium text-[var(--text-primary)]">
+                  {tour.location_name ?? locationLabel}
+                </span>
+              </div>
+              {seasonLabel && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-[var(--text-muted)] flex items-center gap-2">
+                    <Calendar className="w-4 h-4" /> Сезон
+                  </span>
+                  <span className="font-medium text-[var(--text-primary)]">{seasonLabel}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Share / Favorite mini-bar */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  if (typeof navigator !== 'undefined' && navigator.share) {
+                    navigator.share({ title: tour.title, url: window.location.href });
+                  }
+                }}
+                className="flex-1 ds-card flex items-center justify-center gap-2 py-2.5 text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors cursor-pointer"
+              >
+                <Share2 className="w-4 h-4" /> Поделиться
+              </button>
+              <button className="flex-1 ds-card flex items-center justify-center gap-2 py-2.5 text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors cursor-pointer">
+                <Heart className="w-4 h-4" /> В избранное
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* AI Kuzmich CTA */}
-      <div className="mt-10">
-        <Link
-          href={`/planner?hint=${encodeURIComponent(tour.activity_type)}`}
-          className="flex items-center gap-4 p-5 rounded-lg border border-[var(--accent)]/30 bg-[var(--accent)]/5 hover:bg-[var(--accent)]/10 transition-colors"
-        >
-          <div className="w-11 h-11 rounded-full bg-[var(--accent)]/15 flex items-center justify-center shrink-0">
-            <Sparkles className="w-5 h-5 text-[var(--accent)]" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-[var(--text-primary)] text-sm">Собрать свой тур с Кузьмичом</p>
-            <p className="text-xs text-[var(--text-muted)] mt-0.5">
-              Хотите комбо из нескольких активностей? Расскажите о поездке — подберём программу под вас
-            </p>
-          </div>
-          <ChevronRight className="w-4 h-4 text-[var(--accent)] shrink-0" />
-        </Link>
+      {/* ─── Booking Form (full width, below content) ─── */}
+      <div id="booking-form" className="mt-12 max-w-xl mx-auto lg:mx-0">
+        <BookingFormClient
+          tourId={tour.id}
+          basePrice={price}
+          maxParticipants={tour.max_participants}
+          tourTitle={tour.title}
+        />
       </div>
     </div>
   );
