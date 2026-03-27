@@ -20,7 +20,14 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const migFile = path.join(process.cwd(), 'migrations', '083_lead_processor.sql');
+    const body = await req.json().catch(() => ({})) as { migration?: string };
+    // Allow specifying migration file (basename only, no path traversal)
+    const migName = body.migration?.replace(/[^a-zA-Z0-9_\-.]/g, '') || '083_lead_processor.sql';
+    // Search in both migrations/ and lib/database/migrations/
+    let migFile = path.join(process.cwd(), 'migrations', migName);
+    if (!fs.existsSync(migFile)) {
+      migFile = path.join(process.cwd(), 'lib', 'database', 'migrations', migName);
+    }
     const sql = fs.readFileSync(migFile, 'utf-8');
 
     // Split on semicolons and run each statement (skip empty)
