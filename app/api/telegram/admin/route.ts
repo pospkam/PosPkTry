@@ -30,6 +30,37 @@ import { PlatformAgent } from '@/lib/agents';
 
 const adminGetLimiter = createRateLimiter({ windowMs: 60_000, max: 5 });
 
+// ── Conversation history ──────────────────────────────────────────────────────
+
+async function getAdminHistory(chatId: number): Promise<ChatMessage[]> {
+  try {
+    const { rows } = await pool.query<{ role: string; content: string }>(
+      `SELECT role, content
+       FROM tg_conversations
+       WHERE chat_id = $1 AND mode = 'admin'
+       ORDER BY created_at DESC
+       LIMIT 16`,
+      [chatId],
+    );
+    return rows.reverse() as ChatMessage[];
+  } catch {
+    return [];
+  }
+}
+
+async function saveAdminMessage(
+  chatId: number,
+  role: 'user' | 'assistant',
+  content: string,
+): Promise<void> {
+  try {
+    await pool.query(
+      `INSERT INTO tg_conversations (chat_id, mode, role, content) VALUES ($1, 'admin', $2, $3)`,
+      [chatId, role, content],
+    );
+  } catch { /* таблица ещё не создана — не блокируем */ }
+}
+
 export const dynamic = 'force-dynamic';
 
 // ── Telegram helper ───────────────────────────────────────────────────────────
@@ -280,10 +311,12 @@ function agentLabel(intent: string): string {
   return AGENT_LABELS[prefix] ? `[${AGENT_LABELS[prefix]}]` : '[AI]';
 }
 
-// ── Free text → PlatformAgent ─────────────────────────────────────────────────
+// ── Free text → PlatformAgent + conversation history ─────────────────────────
 
 async function handleFreeText(text: string, chatId: number): Promise<void> {
   const ownerId = parseInt(process.env.TELEGRAM_OWNER_ID ?? '833478813', 10);
+
+  await saveAdminMessage(chatId, 'user', text);
 
   try {
     const result = await PlatformAgent.dispatch({
@@ -294,18 +327,21 @@ async function handleFreeText(text: string, chatId: number): Promise<void> {
 
     const label = agentLabel(result.intent);
     const header = result.intent !== 'unknown' ? `${label}\n\n` : '';
-    await reply(chatId, header + result.response);
+    const response = header + result.response;
+    await saveAdminMessage(chatId, 'assistant', result.response);
+    await reply(chatId, response);
   } catch {
-    // fallback — простой AI ответ со статистикой
-    const stats = await getStats();
+    // fallback — AI ответ со статистикой и историей разговора
+    const [stats, history] = await Promise.all([getStats(), getAdminHistory(chatId)]);
     const messages: ChatMessage[] = [
       {
         role: 'system',
         content: `Ты AI-директор платформы TourHab (Камчатка). Отвечаешь владельцу кратко и по делу.\nДанные платформы:\n${stats}`,
       },
-      { role: 'user', content: text },
+      ...history,
     ];
     const answer = await callAIWaterfall(messages);
+    await saveAdminMessage(chatId, 'assistant', answer);
     await reply(chatId, answer);
   }
 }
