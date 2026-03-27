@@ -89,6 +89,11 @@ export default function SafetyHubClient() {
   const [seismicError, setSeismicError] = useState<string | null>(null);
   const [seismicLastUpdate, setSeismicLastUpdate] = useState<Date | null>(null);
 
+  // Тихий трекинг визита для Rescue агента
+  useEffect(() => {
+    fetch('/api/safety/visit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tab: 'sos' }) }).catch(() => {});
+  }, []);
+
   // Passive geolocation on mount
   useEffect(() => {
     if (typeof navigator === 'undefined' || !navigator.geolocation) return;
