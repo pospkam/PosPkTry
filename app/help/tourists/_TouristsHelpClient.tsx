@@ -291,7 +291,7 @@ export default function TouristsHelpClient() {
           </h2>
           <p className="mb-5 opacity-90">1189 маршрутов. Вулканы, медведи, термальные источники, сплавы.</p>
           <Link
-            href="/routes"
+            href="/marketplace"
             className="inline-flex items-center gap-2 bg-white text-[var(--ocean)] px-6 py-3 rounded-lg font-semibold hover:bg-opacity-90 transition-colors"
           >
             Смотреть все туры <ArrowRight size={18} />
