@@ -31,11 +31,11 @@ async function getTour(id: number) {
       operator_name: string;
     }>(`
       SELECT ot.id, ot.title, ot.description, ot.base_price,
-             ot.activity_type, ot.location_type, ot.location,
+             ot.activity_type, ot.location_type, ot.location_name AS location,
              ot.tour_image, ot.max_participants, ot.duration_hours,
              p.name AS operator_name
       FROM operator_tours ot
-      JOIN partners p ON ot.partner_id = p.id
+      JOIN partners p ON ot.operator_id = p.id
       WHERE ot.id = $1
         AND ot.is_active = true
         AND ot.deleted_at IS NULL

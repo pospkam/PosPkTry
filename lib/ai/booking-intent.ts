@@ -83,11 +83,11 @@ export async function findRelevantTours(
          ot.base_price,
          ot.activity_type,
          ot.location_type,
-         ot.location,
+         ot.location_name,
          ot.tour_image,
          p.name AS operator_name
        FROM operator_tours ot
-       JOIN partners p ON ot.partner_id = p.id
+       JOIN partners p ON ot.operator_id = p.id
        WHERE ot.deleted_at IS NULL AND ot.is_active = TRUE
        ${actFilter}
        ORDER BY ot.created_at DESC
@@ -102,10 +102,10 @@ export async function findRelevantTours(
            ot.id, ot.title,
            LEFT(ot.description, 120) AS description,
            ot.base_price, ot.activity_type,
-           ot.location_type, ot.location, ot.tour_image,
+           ot.location_type, ot.location_name, ot.tour_image,
            p.name AS operator_name
          FROM operator_tours ot
-         JOIN partners p ON ot.partner_id = p.id
+         JOIN partners p ON ot.operator_id = p.id
          WHERE ot.deleted_at IS NULL AND ot.is_active = TRUE
            AND ot.title ILIKE $1
          ORDER BY ot.created_at DESC

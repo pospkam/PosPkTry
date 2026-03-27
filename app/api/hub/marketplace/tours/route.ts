@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
         ot.base_price,
         ot.activity_type,
         ot.location_type,
-        ot.location,
+        ot.location_name,
         ot.tour_image,
         ot.max_participants,
         ot.duration_hours,
@@ -34,9 +34,9 @@ export async function GET(req: NextRequest) {
         p.id as operator_id,
         COUNT(ob.id)::INT as bookings_count
       FROM operator_tours ot
-      JOIN partners p ON ot.partner_id = p.id
+      JOIN partners p ON ot.operator_id = p.id
       LEFT JOIN operator_bookings ob ON ob.tour_id = ot.id
-      WHERE ot.deleted_at IS NULL AND ot.is_active = true
+      WHERE ot.deleted_at IS NULL AND ot.is_active = true AND ot.is_published = true
     `;
 
     const params: unknown[] = [];

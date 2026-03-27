@@ -27,7 +27,7 @@ async function getTopTours() {
       SELECT ot.id, ot.title, ot.description, ot.base_price,
              ot.activity_type, ot.tour_image, p.name AS operator_name
       FROM operator_tours ot
-      JOIN partners p ON ot.partner_id = p.id
+      JOIN partners p ON ot.operator_id = p.id
       WHERE ot.is_active = true
         AND ot.is_published = true
         AND ot.deleted_at IS NULL

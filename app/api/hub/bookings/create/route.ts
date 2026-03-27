@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     const result = await transaction(async (client) => {
       // Lock tour row to prevent race condition
       const tourResult = await client.query(
-        `SELECT partner_id, base_price FROM operator_tours
+        `SELECT operator_id, base_price FROM operator_tours
          WHERE id = $1 AND deleted_at IS NULL FOR UPDATE`,
         [data.tour_id]
       );
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
         throw Object.assign(new Error('Тур не найден'), { code: 'NOT_FOUND' });
       }
 
-      const { partner_id, base_price } = tourResult.rows[0] as { partner_id: number; base_price: number };
+      const { operator_id, base_price } = tourResult.rows[0] as { operator_id: string; base_price: number };
       const total_price = base_price * data.participants_count;
 
       const bookingResult = await client.query(
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
         RETURNING id`,
         [
           data.tour_id,
-          partner_id,
+          operator_id,
           data.tourist_name,
           data.tourist_email,
           data.tourist_phone,
