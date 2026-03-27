@@ -25,7 +25,7 @@ ALTER TABLE leads
   ADD COLUMN IF NOT EXISTS ai_summary      TEXT,
   ADD COLUMN IF NOT EXISTS ai_intent       JSONB DEFAULT '{}',
   ADD COLUMN IF NOT EXISTS matched_tour_ids TEXT[] DEFAULT '{}',
-  ADD COLUMN IF NOT EXISTS operator_id     INTEGER REFERENCES operators(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS operator_id     UUID REFERENCES partners(id) ON DELETE SET NULL,
   ADD COLUMN IF NOT EXISTS processed_at    TIMESTAMP,
   ADD COLUMN IF NOT EXISTS email           VARCHAR(255),
   ADD COLUMN IF NOT EXISTS telegram_chat_id VARCHAR(50),
@@ -53,7 +53,7 @@ ALTER TABLE leads ADD CONSTRAINT leads_status_check
 CREATE TABLE IF NOT EXISTS lead_proposals (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   lead_id         UUID NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
-  operator_id     INTEGER REFERENCES operators(id) ON DELETE SET NULL,
+  operator_id     UUID REFERENCES partners(id) ON DELETE SET NULL,
 
   -- Подобранные туры (первый — главный)
   primary_tour_id UUID REFERENCES tours(id) ON DELETE SET NULL,
