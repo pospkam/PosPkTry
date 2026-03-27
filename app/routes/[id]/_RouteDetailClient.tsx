@@ -19,6 +19,7 @@ import RouteCard, { type RouteItem } from '@/components/routes/RouteCard';
 import { useSourceTracker } from '@/hooks/useSourceTracker';
 import { AssistantButton } from '@/components/shared/AssistantButton';
 import { MarkerType } from '@/components/shared/LeafletMap';
+import DescriptionWithFishLinks from '@/components/shared/DescriptionWithFishLinks';
 
 const LeafletMap = dynamic(() => import('@/components/shared/LeafletMap'), { ssr: false });
 
@@ -532,13 +533,13 @@ export default function RouteDetailClient({ id }: { id: string }) {
             {/* Описание */}
             {descParagraphs.length > 0 && (
               <section>
-                <div className={`text-[var(--text-secondary)] leading-relaxed space-y-3 text-sm md:text-base overflow-hidden transition-all duration-300 ${
-                  isLongDesc && !descExpanded ? 'max-h-28' : 'max-h-none'
-                }`}
+                <DescriptionWithFishLinks
+                  paragraphs={descParagraphs}
+                  className={`text-[var(--text-secondary)] leading-relaxed space-y-3 text-sm md:text-base overflow-hidden transition-all duration-300 ${
+                    isLongDesc && !descExpanded ? 'max-h-28' : 'max-h-none'
+                  }`}
                   style={isLongDesc && !descExpanded ? { maskImage: 'linear-gradient(to bottom, black 60%, transparent 100%)' } : undefined}
-                >
-                  {descParagraphs.map((p, i) => <p key={i}>{p}</p>)}
-                </div>
+                />
                 {isLongDesc && (
                   <button
                     type="button"

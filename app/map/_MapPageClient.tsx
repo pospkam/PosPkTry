@@ -84,7 +84,7 @@ export default function MapPageClient() {
         if (!data.success) return;
         const points: RoutePoint[] = (data.data ?? [])
           .filter((r: { lat: number | null; lng: number | null }) => r.lat != null && r.lng != null)
-          .map((r: { id: string; title: string; locationType: string | null; lat: number; lng: number; description: string; geometry?: MapMarkerGeometry | null }) => ({
+          .map((r: { id: string; title: string; locationType: string | null; lat: number; lng: number; description: string; volcanoStatus?: string | null; geometry?: MapMarkerGeometry | null }) => ({
             id:           r.id,
             title:         r.title,
             locationType:  r.locationType ?? 'other',
