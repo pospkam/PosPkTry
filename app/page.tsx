@@ -19,6 +19,10 @@ const TrustSection = dynamic(
   () => import('@/components/homepage/TrustSection').then(m => ({ default: m.TrustSection })),
   { loading: () => <SectionSkeleton /> }
 );
+const LeadCTASection = dynamic(
+  () => import('@/components/homepage/LeadCTASection').then(m => ({ default: m.LeadCTASection })),
+  { loading: () => <SectionSkeleton /> }
+);
 const OperatorPromo = dynamic(
   () => import('@/components/homepage/OperatorPromo').then(m => ({ default: m.OperatorPromo })),
   { loading: () => <SectionSkeleton /> }
@@ -138,6 +142,7 @@ export default async function Page() {
         <InlineChat />
         <EcosystemPulse stats={stats} />
         <FeaturedDirections />
+        <LeadCTASection />
         <TrustSection />
         <OperatorPromo />
       </main>

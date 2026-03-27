@@ -91,10 +91,10 @@ export function HeroCompact() {
             Спросить Кузьмича
           </a>
           <Link
-            href="/hub"
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-lg text-sm font-medium text-white/80 border border-white/20 hover:bg-white/10 transition-colors"
+            href="/contact"
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-lg text-sm font-medium text-white border border-white/30 hover:bg-white/10 transition-colors"
           >
-            Войти в платформу
+            Оставить заявку
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
