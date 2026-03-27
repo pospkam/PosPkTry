@@ -16,7 +16,7 @@ const UpdateSchema = z.object({
   description: z.string().max(2000).optional(),
   short_description: z.string().max(500).optional(),
   location_type: z.enum(['volcano', 'hot_spring', 'bay', 'lake', 'mountain', 'river', 'geyser', 'other']).optional(),
-  activity_type: z.enum(['trekking', 'thermal', 'boat_trip', 'rafting', 'fishing', 'helicopter', 'jeep', 'other']).optional(),
+  activity_type: z.enum(['trekking', 'thermal', 'boat_trip', 'rafting', 'fishing', 'bears', 'helicopter', 'jeep', 'other']).optional(),
   location_name: z.string().min(3).max(255).optional(),
   latitude: z.number().min(-90).max(90).optional(),
   longitude: z.number().min(-180).max(180).optional(),
@@ -42,6 +42,7 @@ const UpdateSchema = z.object({
   not_included: z.array(z.string().max(200)).max(30).optional(),
   what_to_bring: z.array(z.string().max(200)).max(30).optional(),
   tour_image: z.string().max(500).nullable().optional(),
+  photos: z.array(z.string().max(500)).max(20).optional(),
   agent_route_id: z.string().uuid().nullable().optional(),
   notes: z.string().max(1000).nullable().optional(),
   tags: z.array(z.string().max(100)).max(20).optional(),
@@ -59,7 +60,7 @@ const ALLOWED_FIELDS = [
   'min_visibility_m', 'max_wind_kmh', 'max_precipitation_mm',
   'is_active', 'is_published',
   'included', 'not_included', 'what_to_bring',
-  'tour_image', 'agent_route_id', 'notes',
+  'photos', 'tour_image', 'agent_route_id', 'notes',
 ] as const;
 
 export async function GET(
@@ -135,14 +136,8 @@ export async function PATCH(
   for (const key of ALLOWED_FIELDS) {
     if (key in rest && (rest as Record<string, unknown>)[key] !== undefined) {
       const val = (rest as Record<string, unknown>)[key];
-      // JSON-поля
-      if (['included', 'not_included', 'what_to_bring'].includes(key)) {
-        fields.push(`${key} = $${idx++}`);
-        values.push(JSON.stringify(val));
-      } else {
-        fields.push(`${key} = $${idx++}`);
-        values.push(val);
-      }
+      fields.push(`${key} = $${idx++}`);
+      values.push(val);
     }
   }
 

@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   Search, Filter, Edit2, Trash2, Eye, EyeOff, CheckCircle, XCircle,
   ChevronLeft, ChevronRight, X, Save, MapPin, Clock, Users, DollarSign,
-  Mountain, Thermometer, Fish, Wind, Anchor, Footprints
+  Mountain, Thermometer, Fish, Wind, Anchor, Footprints, Plus, Images
 } from 'lucide-react';
 
 // ─────────────────────────────────────────────
@@ -43,6 +43,7 @@ interface OperatorTour {
   included: string[] | null;
   not_included: string[] | null;
   what_to_bring: string[] | null;
+  photos: string[] | null;
   tour_image: string | null;
   agent_route_id: string | null;
   notes: string | null;
@@ -60,7 +61,8 @@ const LOCATION_TYPE_LABELS: Record<string, string> = {
 };
 const ACTIVITY_TYPE_LABELS: Record<string, string> = {
   trekking: 'Трекинг', thermal: 'Термальный', boat_trip: 'Морская прогулка',
-  rafting: 'Сплав', fishing: 'Рыбалка', helicopter: 'Вертолёт', jeep: 'Джип-тур', other: 'Другое',
+  rafting: 'Сплав', fishing: 'Рыбалка', bears: 'Медведи',
+  helicopter: 'Вертолёт', jeep: 'Джип-тур', other: 'Другое',
 };
 const PRICE_UNIT_LABELS: Record<string, string> = {
   per_tour: 'за тур', per_person: 'за чел.', per_day_per_person: 'за день/чел.',
@@ -131,6 +133,8 @@ function EditModal({ tour, onClose, onSave }: {
     notes: tour.notes || '',
     tags: (tour.tags || []).join(', '),
   });
+  const [photos, setPhotos] = useState<string[]>(tour.photos || []);
+  const [newPhotoUrl, setNewPhotoUrl] = useState('');
 
   function set<K extends keyof typeof form>(key: K, val: (typeof form)[K]) {
     setForm(f => ({ ...f, [key]: val }));
@@ -173,6 +177,7 @@ function EditModal({ tour, onClose, onSave }: {
         included: parseLines(form.included),
         not_included: parseLines(form.not_included),
         what_to_bring: parseLines(form.what_to_bring),
+        photos: photos,
         notes: form.notes || null,
         tags: parseTags(form.tags),
       };
@@ -409,6 +414,87 @@ function EditModal({ tour, onClose, onSave }: {
                 <textarea className={inputCls + ' min-h-[50px] resize-y font-mono'} value={form.what_to_bring} onChange={e => set('what_to_bring', e.target.value)} placeholder="Удобная обувь&#10;Дождевик" />
               </div>
             </div>
+          </div>
+
+          {/* Фотографии */}
+          <div className={sectionCls}>
+            <p className={headingCls}>Фотографии ({photos.length})</p>
+            {photos.length > 0 && (
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                {photos.map((photo, idx) => (
+                  <div key={idx} className="relative group">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={photo}
+                      alt={`Фото ${idx + 1}`}
+                      className="w-full h-20 object-cover rounded border border-[var(--border)]"
+                      onError={e => { (e.target as HTMLImageElement).style.opacity = '0.3'; }}
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded flex items-center justify-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setPhotos(p => p.filter((_, i) => i !== idx))}
+                        className="p-1 bg-[var(--danger)] rounded text-white hover:bg-[var(--danger)]/80"
+                        title="Удалить фото"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                      {idx > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setPhotos(p => { const a = [...p]; [a[idx-1], a[idx]] = [a[idx], a[idx-1]]; return a; })}
+                          className="p-1 bg-[var(--bg-card)] rounded text-[var(--text-primary)] hover:bg-[var(--bg-hover)] text-[10px] font-bold"
+                          title="Переместить влево"
+                        >←</button>
+                      )}
+                      {idx < photos.length - 1 && (
+                        <button
+                          type="button"
+                          onClick={() => setPhotos(p => { const a = [...p]; [a[idx], a[idx+1]] = [a[idx+1], a[idx]]; return a; })}
+                          className="p-1 bg-[var(--bg-card)] rounded text-[var(--text-primary)] hover:bg-[var(--bg-hover)] text-[10px] font-bold"
+                          title="Переместить вправо"
+                        >→</button>
+                      )}
+                    </div>
+                    <span className="absolute bottom-0.5 left-1 text-[9px] text-white/80 bg-black/50 px-1 rounded">{idx + 1}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {photos.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-4 border border-dashed border-[var(--border)] rounded mb-3 text-[var(--text-muted)]">
+                <Images className="w-5 h-5 mb-1" />
+                <p className="text-[10px]">Нет фотографий</p>
+              </div>
+            )}
+            <div className="flex gap-2">
+              <input
+                className={inputCls + ' flex-1'}
+                value={newPhotoUrl}
+                onChange={e => setNewPhotoUrl(e.target.value)}
+                placeholder="/images/fishingkam/photo.jpg"
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && newPhotoUrl.trim()) {
+                    e.preventDefault();
+                    setPhotos(p => [...p, newPhotoUrl.trim()]);
+                    setNewPhotoUrl('');
+                  }
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  if (newPhotoUrl.trim()) {
+                    setPhotos(p => [...p, newPhotoUrl.trim()]);
+                    setNewPhotoUrl('');
+                  }
+                }}
+                className="flex items-center gap-1 px-3 py-1.5 text-xs bg-[var(--accent)] text-white rounded hover:bg-[var(--accent)]/90 transition-colors whitespace-nowrap"
+              >
+                <Plus className="w-3.5 h-3.5" /> Добавить
+              </button>
+            </div>
+            <p className="text-[9px] text-[var(--text-muted)] mt-1">Первое фото — главное. Hover на фото → кнопки удаления и перестановки.</p>
           </div>
 
           {/* Теги */}

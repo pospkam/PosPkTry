@@ -78,16 +78,25 @@ export async function PATCH(
     let idx = 1;
 
     const allowed = [
-      'title', 'description', 'location_type', 'activity_type', 'location_name',
-      'latitude', 'longitude', 'base_price', 'max_participants', 'min_participants',
-      'duration_hours', 'season_start', 'season_end', 'weather_dependent',
+      'title', 'short_description', 'description',
+      'location_type', 'activity_type', 'location_name',
+      'latitude', 'longitude',
+      'base_price', 'price_old', 'price_unit',
+      'max_participants', 'min_participants',
+      'duration_hours', 'duration_type', 'multi_day_count',
+      'season_start', 'season_end', 'seasonal_only',
+      'difficulty', 'weather_dependent',
       'min_visibility_m', 'max_wind_kmh', 'max_precipitation_mm',
+      'is_active', 'is_published',
+      'included', 'not_included', 'what_to_bring',
+      'photos', 'tour_image',
     ] as const;
 
     for (const key of allowed) {
-      if (key in input && input[key] !== undefined) {
+      const rec = input as Record<string, unknown>;
+      if (key in rec && rec[key] !== undefined) {
         fields.push(`${key} = $${idx++}`);
-        values.push(input[key]);
+        values.push(rec[key]);
       }
     }
 
