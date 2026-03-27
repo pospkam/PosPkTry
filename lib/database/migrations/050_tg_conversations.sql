@@ -1,8 +1,3 @@
--- Migration 050: Telegram conversation history
--- Stores per-chat message history for admin and tourist bots.
--- mode: 'admin' — владелец через admin-бот
---        'tourist' — турист через Kuzmich-бот
-
 CREATE TABLE IF NOT EXISTS tg_conversations (
   id         BIGSERIAL    PRIMARY KEY,
   chat_id    BIGINT       NOT NULL,
