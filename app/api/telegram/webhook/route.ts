@@ -50,8 +50,18 @@ import { sendWelcomeMessage } from '@/lib/telegram/welcome';
 import { notifyTouristBookingConfirmed, notifyTouristBookingCancelled } from '@/lib/telegram/booking-notify';
 import { createTicket, getUserOpenTickets, addTicketMessage } from '@/lib/support/ticket.service';
 import { categorizeSupport, CATEGORY_LABELS, RESIDENT_INTRO } from '@/lib/support/categorize';
+import { leadProcessor } from '@/lib/services/lead-processor.service';
 
 export const dynamic = 'force-dynamic';
+
+// Пользователи в процессе оформления заявки через /start lead
+const pendingLeadFlow = new Map<string, { firstName: string; startedAt: number }>();
+setInterval(() => {
+  const cutoff = Date.now() - 30 * 60 * 1000;
+  for (const [k, v] of pendingLeadFlow) {
+    if (v.startedAt < cutoff) pendingLeadFlow.delete(k);
+  }
+}, 5 * 60 * 1000);
 
 const KUZMICH_CHAT_SYSTEM =
   KUZMICH_PROMPT +
@@ -430,8 +440,8 @@ async function createLeadFromBot(
       : 'Заявка с Telegram бота';
 
     const res = await pool.query(
-      `INSERT INTO leads (name, phone, comment, source_url, source_data)
-       VALUES ($1, $2, $3, $4, $5::jsonb) RETURNING id`,
+      `INSERT INTO leads (name, phone, comment, source_url, source_data, telegram_chat_id)
+       VALUES ($1, $2, $3, $4, $5::jsonb, $6) RETURNING id`,
       [
         'Турист',
         phone,
@@ -445,6 +455,7 @@ async function createLeadFromBot(
           chat_id: chatId,
           timestamp: new Date().toISOString(),
         }),
+        chatId,
       ]
     );
     const leadId = res.rows[0]?.id as string;
@@ -530,6 +541,66 @@ async function createLeadFromBot(
   }
 }
 
+// ── Создание лида из Telegram /start lead flow ────────────────────────────────
+async function createLeadFromTelegramFlow(
+  chatId: string,
+  firstName: string,
+  telegramUserId: number,
+  telegramUsername: string | null,
+  message: string,
+): Promise<void> {
+  try {
+    const res = await pool.query<{ id: string }>(
+      `INSERT INTO leads (name, phone, comment, source_url, source_data, telegram_chat_id)
+       VALUES ($1, $2, $3, $4, $5::jsonb, $6) RETURNING id`,
+      [
+        firstName,
+        telegramUsername ? `@${telegramUsername}` : `tg:${telegramUserId}`,
+        message,
+        'https://t.me/KuzmichKam_bot',
+        JSON.stringify({
+          source: 'telegram_lead_flow',
+          telegram_user_id: telegramUserId,
+          telegram_username: telegramUsername,
+          chat_id: chatId,
+        }),
+        chatId,
+      ]
+    );
+    const leadId = res.rows[0]?.id as string;
+    if (!leadId) return;
+
+    // AI обработка — после завершения отвечаем туристу в ТГ
+    try {
+      const proposal = await leadProcessor.process(leadId);
+      const lines = [
+        `<b>${esc(proposal.headline)}</b>`,
+        '',
+        proposal.intent.activity_types.length > 0
+          ? `Направление: ${proposal.intent.activity_types.join(', ')}`
+          : '',
+        proposal.intent.group_size > 1 ? `Группа: ${proposal.intent.group_size} чел.` : '',
+        proposal.intent.budget_rub ? `Бюджет: ~${(proposal.intent.budget_rub / 1000).toFixed(0)}к руб` : '',
+        proposal.intent.desired_dates ? `Даты: ${esc(proposal.intent.desired_dates)}` : '',
+        '',
+        proposal.primary_tour
+          ? `<b>Рекомендую:</b> ${esc(proposal.primary_tour.title)} — от ${proposal.primary_tour.price.toLocaleString('ru-RU')} руб/чел`
+          : '',
+        '',
+        `<i>${esc(proposal.intent.qualification_notes)}</i>`,
+        '',
+        'Менеджер свяжется с вами в ближайшее время для уточнения деталей.',
+      ].filter(Boolean).join('\n');
+
+      await sendHTML(chatId, lines);
+    } catch {
+      // AI не отработал — уже отправили "принято", достаточно
+    }
+  } catch {
+    // Тихая ошибка
+  }
+}
+
 // ── Основной обработчик ───────────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
@@ -605,6 +676,25 @@ export async function POST(request: NextRequest) {
           isNewUser: false,
         });
 
+        return NextResponse.json({ ok: true });
+      }
+
+      // /start lead — турист хочет оставить заявку
+      if (arg === 'lead') {
+        const firstName = update.message?.from?.first_name ?? 'Путешественник';
+        pendingLeadFlow.set(chatId, { firstName, startedAt: Date.now() });
+        await sendHTML(chatId, [
+          `<b>Привет, ${firstName}! Я — Кузьмич.</b>`,
+          '',
+          'Расскажите о своей поездке — подберу лучший тур:',
+          '',
+          '• Что хотите (вулканы, медведи, рыбалка, термалки...)',
+          '• Примерные даты или сезон',
+          '• Сколько человек',
+          '• Примерный бюджет на всех',
+          '',
+          '<i>Пришлю персональное предложение прямо сюда через 1–2 минуты.</i>',
+        ].join('\n'));
         return NextResponse.json({ ok: true });
       }
 
@@ -990,6 +1080,23 @@ export async function POST(request: NextRequest) {
 
     // Любой обычный текст → проверяю телефон или AI Кузьмич
     if (!text.startsWith('/')) {
+      // Пользователь в процессе оформления заявки через /start lead
+      const pendingLead = pendingLeadFlow.get(chatId);
+      if (pendingLead) {
+        pendingLeadFlow.delete(chatId);
+        await sendHTML(chatId, [
+          '✅ <b>Заявка принята!</b>',
+          '',
+          'Анализирую запрос, подбираю туры.',
+          'Пришлю предложение прямо сюда через 1–2 минуты.',
+        ].join('\n'));
+        void createLeadFromTelegramFlow(
+          chatId, pendingLead.firstName, fromId,
+          update.message?.from?.username ?? null, text
+        );
+        return NextResponse.json({ ok: true });
+      }
+
       // Check if text looks like phone number
       const phoneMatch = text.match(/[\d+\-() ]{7,}/);
       if (phoneMatch) {

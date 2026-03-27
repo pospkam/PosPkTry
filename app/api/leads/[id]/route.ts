@@ -89,8 +89,8 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const authError = await requireAdmin(request);
-  if (authError) return authError;
+  const authResult = await requireAdmin(request);
+  if (authResult instanceof NextResponse) return authResult;
 
   const { id } = await params;
 
