@@ -13,7 +13,7 @@ import { ChatWidget } from '@/components/chat/ChatWidget';
 
 const SIDEBAR_ITEMS = [
   { href: '/hub/admin', label: 'Обзор', icon: Shield },
-  { href: '/hub/admin/board-meeting', label: 'Совет директоров', icon: Building2 },
+  { href: '/hub/admin/board-meeting', label: 'Команда AI', icon: Building2 },
   { href: '/hub/admin/leads', label: 'CRM — Лиды', icon: ClipboardList },
   { href: '/hub/admin/bookings', label: 'Бронирования', icon: Calendar },
   { href: '/hub/admin/users', label: 'Пользователи', icon: Users },

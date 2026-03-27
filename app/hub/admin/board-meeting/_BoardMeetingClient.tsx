@@ -721,7 +721,7 @@ export default function BoardMeetingClient() {
           <Users size={20} className="text-[var(--bg-primary)]" />
         </div>
         <div className="flex-1">
-          <h1 className="ds-h1">Совет директоров</h1>
+          <h1 className="ds-h1">Команда AI</h1>
           <p className="text-sm text-[var(--text-muted)]">4 раунда: отчёты — реакции — консенсус — инициативы</p>
         </div>
         {computeFund && computeFund.total_rub > 0 && (

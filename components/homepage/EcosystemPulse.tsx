@@ -15,7 +15,7 @@ const PLATFORM_PILLARS = [
   },
   {
     icon: Users,
-    label: 'Совет директоров',
+    label: 'Команда AI',
     desc: '10 AI-агентов в системе',
     color: 'var(--ocean)',
   },

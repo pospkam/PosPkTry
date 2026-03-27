@@ -20,7 +20,7 @@ const navItems: NavItem[] = [
   { name: 'Отзывы', path: '/hub/admin/content/reviews', icon: MessageCircle },
   { name: 'Финансы', path: '/hub/admin/finance', icon: Banknote },
   { name: 'Настройки', path: '/hub/admin/settings', icon: Settings },
-  { name: 'Совет', path: '/hub/admin/board-meeting', icon: UsersRound },
+  { name: 'AI Команда', path: '/hub/admin/board-meeting', icon: UsersRound },
 ];
 
 export function AdminNav() {

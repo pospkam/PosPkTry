@@ -238,7 +238,7 @@ export async function sendBoardAlert(
   }
 
   const text = [
-    '<b>Совет директоров — действие агента</b>',
+    '<b>Команда AI — действие агента</b>',
     '',
     `Агент: ${agentName}`,
     `Действие: ${action}`,
