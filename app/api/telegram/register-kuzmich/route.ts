@@ -12,9 +12,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const token = process.env.TELEGRAM_KUZMICH_BOT_TOKEN;
+  let body: { token?: string } = {};
+  try { body = await request.clone().json(); } catch { /* нет тела */ }
+
+  const token = process.env.TELEGRAM_KUZMICH_BOT_TOKEN || body.token;
   if (!token) {
-    return NextResponse.json({ error: 'TELEGRAM_KUZMICH_BOT_TOKEN не задан' }, { status: 500 });
+    return NextResponse.json({ error: 'TELEGRAM_KUZMICH_BOT_TOKEN не задан', hint: 'Передай {"token":"..."}' }, { status: 500 });
   }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tourhab.ru';
