@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Sun, Moon, UserCircle, ShoppingCart } from 'lucide-react';
+import { Sun, Moon, UserCircle, ShoppingCart, Home } from 'lucide-react';
 import { useScrollY } from '@/hooks/useScrollY';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useCart } from '@/contexts/CartContext';
@@ -60,6 +60,7 @@ export function Header() {
       }} className="hidden md:flex">
         {[
           { href: '/marketplace', label: 'Туры' },
+          { href: '/hub/fishing', label: 'Рыбалка' },
           { href: '/routes',            label: 'Маршруты' },
           { href: '/map',               label: 'Карта' },
           { href: '/operators',         label: 'Операторы' },
@@ -86,6 +87,27 @@ export function Header() {
 
       {/* Right side */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        {/* Home — mobile only */}
+        <Link
+          href="/"
+          aria-label="Домой"
+          className="md:hidden"
+          style={{
+            width: '34px',
+            height: '34px',
+            borderRadius: '50%',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'var(--text-muted)',
+            textDecoration: 'none',
+          }}
+        >
+          <Home size={18} />
+        </Link>
+
         {/* Theme toggle */}
         <button
           onClick={toggleTheme}

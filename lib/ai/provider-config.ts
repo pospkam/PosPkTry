@@ -8,7 +8,7 @@
 export function getOpenRouterKey(): string | null {
   return process.env.OR_API_KEY
     || process.env.OPENROUTER_API_KEY
-    || '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';
+    || null;
 }
 
 export function getDeepSeekKey(): string | null {

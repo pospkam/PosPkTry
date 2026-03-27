@@ -10,36 +10,42 @@ const DIRECTIONS = [
     title: 'Вулканы',
     desc: 'Восхождения и облёты',
     slug: 'volcano',
+    href: '/marketplace?activity_type=trekking',
     image: '/images/categories/vulkany.jpg',
   },
   {
     title: 'Медведи',
     desc: 'Наблюдение в дикой природе',
     slug: 'bears',
+    href: '/marketplace?activity_type=bears',
     image: '/images/categories/medvedi.jpg',
   },
   {
     title: 'Рыбалка',
     desc: 'Чавыча, нерка, кижуч',
     slug: 'fishing',
+    href: '/hub/fishing',
     image: '/images/categories/rybalka.jpg',
   },
   {
     title: 'Термальные',
     desc: 'Горячие источники',
     slug: 'thermal',
+    href: '/marketplace?activity_type=thermal',
     image: '/images/categories/termy.jpg',
   },
   {
     title: 'Океан',
     desc: 'Морские прогулки и сёрфинг',
     slug: 'sea',
+    href: '/marketplace?activity_type=boat_trip',
     image: '/images/categories/morskie.jpg',
   },
   {
     title: 'Вертолёты',
     desc: 'Долина гейзеров и кальдера',
     slug: 'helicopter',
+    href: '/marketplace?activity_type=helicopter',
     image: '/images/categories/vertolety.jpg',
   },
 ];
@@ -80,7 +86,7 @@ export function FeaturedDirections() {
           {DIRECTIONS.map((dir, i) => (
             <Reveal key={dir.slug} delay={i > 0 && i <= 4 ? (i as 1 | 2 | 3 | 4) : undefined}>
               <Link
-                href={`/routes?category=${dir.slug}`}
+                href={dir.href}
                 className="group relative block aspect-[4/3] rounded-lg overflow-hidden"
               >
                 <Image

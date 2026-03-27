@@ -3,6 +3,8 @@ import Image from 'next/image';
 import { Send } from 'lucide-react';
 
 const PLATFORM = [
+  { label: 'Туры', href: '/marketplace' },
+  { label: 'Камчатская рыбалка', href: '/hub/fishing' },
   { label: 'Маршруты', href: '/routes' },
   { label: 'Карта Камчатки', href: '/map' },
   { label: 'Партнёры', href: '/operators' },
