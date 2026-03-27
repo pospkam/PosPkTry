@@ -23,17 +23,21 @@ interface Props {
 
 async function getTour(id: number) {
   try {
-    const { rows } = await pool.query<{
-      id: number; title: string; description: string | null;
-      base_price: string; activity_type: string; location_type: string;
-      location: string | null; tour_image: string | null;
-      max_participants: number; duration_hours: number | null;
-      operator_name: string;
-    }>(`
-      SELECT ot.id, ot.title, ot.description, ot.base_price,
-             ot.activity_type, ot.location_type, ot.location_name AS location,
-             ot.tour_image, ot.max_participants, ot.duration_hours,
-             p.name AS operator_name
+    const { rows } = await pool.query(`
+      SELECT
+        ot.id, ot.title, ot.description, ot.short_description,
+        ot.base_price, ot.price_old, ot.price_unit,
+        ot.activity_type, ot.location_type,
+        ot.location_name, ot.latitude, ot.longitude,
+        ot.tour_image, ot.photos,
+        ot.max_participants, ot.min_participants,
+        ot.duration_hours, ot.duration_type, ot.multi_day_count,
+        ot.difficulty,
+        ot.included, ot.not_included, ot.what_to_bring,
+        ot.season_start, ot.season_end, ot.seasonal_only,
+        ot.weather_dependent,
+        ot.rating, ot.review_count,
+        p.name AS operator_name, p.id AS operator_id
       FROM operator_tours ot
       JOIN partners p ON ot.operator_id = p.id
       WHERE ot.id = $1
@@ -52,16 +56,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!tour) return { title: 'Тур не найден | Туры Камчатки' };
 
   const activityLabel = ACTIVITY_LABELS[tour.activity_type] ?? tour.activity_type;
-  const description = tour.description?.slice(0, 160) ??
+  const desc = tour.short_description ?? tour.description?.slice(0, 160) ??
     `${activityLabel} на Камчатке. Бронирование онлайн.`;
+
+  const images = tour.tour_image ? [{ url: tour.tour_image }] : [];
 
   return {
     title: `${tour.title} | Туры Камчатки`,
-    description,
+    description: desc,
     openGraph: {
       title: tour.title,
-      description,
-      images: tour.tour_image ? [{ url: tour.tour_image }] : [],
+      description: desc,
+      images,
       type: 'website',
       url: `${SITE}/marketplace/tours/${tour.id}`,
     },
@@ -79,8 +85,8 @@ export default async function TourDetailPage({ params }: Props) {
     name: tour.title,
     description: tour.description ?? undefined,
     touristType: ACTIVITY_LABELS[tour.activity_type] ?? tour.activity_type,
-    ...(tour.tour_image ? { image: [tour.tour_image] } : {}),
-    ...(tour.duration_hours ? { duration: `PT${Math.round(tour.duration_hours)}H` } : {}),
+    ...(tour.tour_image ? { image: [tour.tour_image, ...(tour.photos ?? [])] } : {}),
+    ...(tour.duration_hours ? { duration: `PT${Math.round(Number(tour.duration_hours))}H` } : {}),
     provider: {
       '@type': 'TouristInformationCenter',
       name: tour.operator_name,
@@ -97,15 +103,30 @@ export default async function TourDetailPage({ params }: Props) {
         name: tour.operator_name,
       },
     },
+    ...(tour.rating && Number(tour.rating) > 0 ? {
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: Number(tour.rating),
+        reviewCount: tour.review_count ?? 0,
+        bestRating: 5,
+      },
+    } : {}),
     location: {
       '@type': 'Place',
-      name: tour.location ?? 'Камчатка',
+      name: tour.location_name ?? 'Камчатка',
       address: {
         '@type': 'PostalAddress',
-        addressLocality: tour.location ?? 'Камчатка',
+        addressLocality: tour.location_name ?? 'Камчатка',
         addressRegion: 'Камчатский край',
         addressCountry: 'RU',
       },
+      ...(tour.latitude && tour.longitude ? {
+        geo: {
+          '@type': 'GeoCoordinates',
+          latitude: Number(tour.latitude),
+          longitude: Number(tour.longitude),
+        },
+      } : {}),
     },
   } : null;
 
@@ -117,7 +138,7 @@ export default async function TourDetailPage({ params }: Props) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
       )}
-      <TourDetailClient initialTour={tour} />
+      <TourDetailClient tour={tour} />
     </>
   );
 }

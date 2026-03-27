@@ -49,6 +49,12 @@ const ACTIVITY_LABELS: Record<string, string> = {
   snowmobile: 'Снегоход',
 };
 
+const PRICE_UNIT_SHORT: Record<string, string> = {
+  per_person: '/ чел.',
+  per_tour: '/ группа',
+  per_day_per_person: '/ чел. / день',
+};
+
 const LOCATION_LABELS: Record<string, string> = {
   mountain:   'Горы',
   volcano:    'Вулканы',
@@ -243,6 +249,11 @@ function TourCard({
               <span className="font-bold text-[#fff] text-base">
                 {basePrice.toLocaleString('ru-RU')} ₽
               </span>
+              {tour.price_unit && (
+                <span className="text-[10px] text-[#fff]/50 ml-1">
+                  {PRICE_UNIT_SHORT[tour.price_unit] ?? ''}
+                </span>
+              )}
             </span>
           </div>
         </div>
