@@ -43,7 +43,23 @@ export const CreateTourSchema = z.object({
   tags: z.array(z.string().max(100)).max(20).optional(),
 });
 
-export const UpdateTourSchema = CreateTourSchema.partial();
+// Partial + nullable for fields that can be cleared to NULL via PATCH
+export const UpdateTourSchema = CreateTourSchema.partial().extend({
+  description:       z.string().max(2000).nullable().optional(),
+  short_description: z.string().max(500).nullable().optional(),
+  price_old:         z.number().positive().nullable().optional(),
+  min_participants:  z.number().positive().nullable().optional(),
+  duration_hours:    z.number().positive().nullable().optional(),
+  duration_type:     z.enum(['day', 'multi_day']).nullable().optional(),
+  multi_day_count:   z.number().positive().nullable().optional(),
+  season_start:      z.string().date().nullable().optional(),
+  season_end:        z.string().date().nullable().optional(),
+  difficulty:        z.enum(['easy', 'medium', 'hard', 'expert']).nullable().optional(),
+  tour_image:        z.string().max(500).nullable().optional(),
+  agent_route_id:    z.string().uuid().nullable().optional(),
+  latitude:          z.number().min(-90).max(90).nullable().optional(),
+  longitude:         z.number().min(-180).max(180).nullable().optional(),
+});
 
 export const AddAvailabilitySchema = z.object({
   dates: z.array(

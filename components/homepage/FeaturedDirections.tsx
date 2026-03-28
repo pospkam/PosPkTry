@@ -21,13 +21,6 @@ const DIRECTIONS = [
     image: '/images/categories/medvedi.jpg',
   },
   {
-    title: 'Рыбалка',
-    desc: 'Чавыча, нерка, кижуч',
-    slug: 'fishing',
-    href: '/hub/fishing',
-    image: '/images/categories/rybalka.jpg',
-  },
-  {
     title: 'Термальные',
     desc: 'Горячие источники',
     slug: 'thermal',
@@ -36,17 +29,10 @@ const DIRECTIONS = [
   },
   {
     title: 'Океан',
-    desc: 'Морские прогулки и сёрфинг',
+    desc: 'Касатки, морские прогулки',
     slug: 'sea',
     href: '/marketplace?activity_type=boat_trip',
     image: '/images/categories/morskie.jpg',
-  },
-  {
-    title: 'Вертолёты',
-    desc: 'Долина гейзеров и кальдера',
-    slug: 'helicopter',
-    href: '/marketplace?activity_type=helicopter',
-    image: '/images/categories/vertolety.jpg',
   },
 ];
 
@@ -82,7 +68,7 @@ export function FeaturedDirections() {
         </div>
 
         {/* Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {DIRECTIONS.map((dir, i) => (
             <Reveal key={dir.slug} delay={i > 0 && i <= 4 ? (i as 1 | 2 | 3 | 4) : undefined}>
               <Link
