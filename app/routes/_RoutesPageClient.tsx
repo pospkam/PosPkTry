@@ -126,7 +126,7 @@ export default function RoutesPageClient() {
     diff: string, price_min?: number, price_max?: number,
   ) => {
     setLoading(true);
-    const params = new URLSearchParams({ page: String(pg), limit: String(LIMIT), sort: srt });
+    const params = new URLSearchParams({ page: String(pg), limit: String(LIMIT), sort: srt, kind: 'place' });
     if (q)             params.set('q', q);
     if (act)           params.set('activity_type', act);
     if (diff)          params.set('difficulty', diff);
@@ -146,7 +146,7 @@ export default function RoutesPageClient() {
   // ── Fetch map pins ───────────────────────────────────────────
   const fetchMapRoutes = useCallback(async () => {
     setMapLoading(true);
-    const params = new URLSearchParams({ limit: '500', hasCoords: 'true' });
+    const params = new URLSearchParams({ limit: '500', hasCoords: 'true', kind: 'place' });
     if (activityType) params.set('activity_type', activityType);
     if (query)        params.set('q', query);
     if (difficulty)   params.set('difficulty', difficulty);
@@ -207,9 +207,9 @@ export default function RoutesPageClient() {
 
         {/* ── Hero header ───────────────────────────────────── */}
         <div className="mb-8">
-          <h1 className="ds-h1 mb-1">Маршруты Камчатки</h1>
+          <h1 className="ds-h1 mb-1">Места Камчатки</h1>
           <p className="text-[var(--text-secondary)] text-sm md:text-base">
-            {meta.total.toLocaleString('ru-RU')} маршрутов и достопримечательностей
+            {meta.total.toLocaleString('ru-RU')} природных мест и достопримечательностей
           </p>
         </div>
 
