@@ -1,16 +1,16 @@
 'use client';
 
 import Image from 'next/image';
-import { Bot, Shield, Leaf, Users, ArrowRight, ChevronDown } from 'lucide-react';
+import { Fish, Shield, Leaf, Mountain, ArrowRight, ChevronDown } from 'lucide-react';
 
 const HERO_LIGHT = '/images/hero/hero-light.jpeg';
 const HERO_DARK  = '/images/hero/hero-dark.jpeg';
 
 const PILLS = [
-  { icon: Bot,    label: 'AI-оператор Кузьмич' },
-  { icon: Users,  label: '10 AI агентов' },
-  { icon: Shield, label: 'SAR Rescue 24/7' },
-  { icon: Leaf,   label: 'Eco-мониторинг' },
+  { icon: Mountain, label: 'Вулканы и треккинг' },
+  { icon: Fish,     label: 'Рыбалка на лосося' },
+  { icon: Shield,   label: 'Безопасность 24/7' },
+  { icon: Leaf,     label: 'Eco-маршруты' },
 ];
 
 export function HeroCompact() {
@@ -40,9 +40,9 @@ export function HeroCompact() {
       <div className="relative z-10 w-full max-w-6xl mx-auto px-5 pb-16 md:pb-20">
 
         {/* Status chip */}
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/20 bg-white/8 backdrop-blur-sm text-white/75 text-xs font-medium mb-7">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/20 text-white/75 text-xs font-medium mb-7" style={{ background: 'rgba(0,0,0,0.35)' }}>
           <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--success)' }} />
-          AI-платформа туризма Камчатки
+          Туризм на Камчатке
         </div>
 
         {/* Headline */}
@@ -53,7 +53,7 @@ export function HeroCompact() {
           Камчатка.
           <br />
           <span style={{ color: 'var(--accent)', textShadow: '0 4px 32px rgba(212,74,12,0.45)' }}>
-            Умная.
+            Живая.
           </span>
         </h1>
 
@@ -61,8 +61,8 @@ export function HeroCompact() {
           className="text-white/70 text-base md:text-lg max-w-xl mb-8 leading-relaxed font-light"
           style={{ textShadow: '0 2px 16px rgba(0,0,0,0.6)' }}
         >
-          Первая платформа с AI-оператором, советом из 10 агентов,
-          поисково-спасательным AI и eco-мониторингом.
+          Вулканы, медведи, лосось. Уникальные маршруты
+          с проверенными гидами — от треккинга до вертолётных туров.
         </p>
 
         {/* Capability pills */}
@@ -82,19 +82,19 @@ export function HeroCompact() {
         {/* CTAs */}
         <div className="flex flex-wrap items-center gap-3">
           <a
-            href="/kuzmich"
+            href="/marketplace"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm text-white transition-opacity hover:opacity-90 active:scale-95"
             style={{ background: 'var(--accent)' }}
           >
-            <Bot className="w-4 h-4" />
-            Спросить Кузьмича
+            Смотреть туры
+            <ArrowRight className="w-4 h-4" />
           </a>
           <a
-            href="/request"
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-lg text-sm font-medium text-white border border-white/30 hover:bg-white/10 transition-colors"
+            href="/map"
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-lg text-sm font-medium text-white border border-white/30 transition-colors"
+            style={{ background: 'rgba(0,0,0,0.25)' }}
           >
-            Оставить заявку
-            <ArrowRight className="w-4 h-4" />
+            Карта мест
           </a>
         </div>
       </div>
