@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Sun, Moon, User } from 'lucide-react';
+import { Sun, Moon, User, X, ArrowRight, MapPin } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import dynamic from 'next/dynamic';
 import Logo from '@/components/shared/Logo';
@@ -81,6 +81,9 @@ export default function MapPageClient() {
   const [activeFilter, setActiveFilter] = useState('all');
   const [allRoutes, setAllRoutes] = useState<RoutePoint[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selectedRoute = selectedId ? allRoutes.find(r => r.id === selectedId) ?? null : null;
+  const handleMarkerClick = useCallback((id: string) => setSelectedId(id), []);
 
   useEffect(() => {
     const load = async () => {
@@ -133,9 +136,10 @@ export default function MapPageClient() {
       ? 'purple'
       : baseColor;
     return {
+      id:          r.id,
       coords:      [r.lat, r.lng] as [number, number],
       title:       r.title,
-      description: r.description.slice(0, 120),
+      description: r.description.slice(0, 100),
       color,
       href:        `/routes/${r.id}`,
       type:        MarkerType.TOUR,
@@ -202,6 +206,7 @@ export default function MapPageClient() {
             markers={mapMarkers}
             height="calc(100vh - 180px)"
             attribution={false}
+            onMarkerClick={handleMarkerClick}
           />
 
           {/* Счётчик */}
@@ -215,6 +220,56 @@ export default function MapPageClient() {
           </div>
         </div>
       </div>
+
+      {/* ── Панель маршрута ─────────────────────────────────────────────── */}
+      {selectedRoute && (
+        <div
+          className="fixed bottom-0 left-0 right-0 md:bottom-4 md:right-4 md:left-auto md:w-96 z-50
+            bg-[var(--bg-card)] border border-[var(--border)] md:rounded-xl shadow-2xl
+            animate-in slide-in-from-bottom duration-200"
+        >
+          <div className="p-4">
+            {/* Шапка */}
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <MapPin className="w-3.5 h-3.5 flex-shrink-0 text-[var(--accent)]" />
+                  <span className="text-xs text-[var(--text-muted)] uppercase tracking-wide">
+                    {LOCATION_TYPE_CONFIG[selectedRoute.locationType ?? 'other']?.label ?? 'Маршрут'}
+                  </span>
+                </div>
+                <h3 className="font-semibold text-[var(--text-primary)] leading-snug"
+                    style={{ fontFamily: 'var(--font-playfair)' }}>
+                  {selectedRoute.title}
+                </h3>
+              </div>
+              <button
+                onClick={() => setSelectedId(null)}
+                className="flex-shrink-0 p-1 rounded-lg hover:bg-[var(--bg-hover)] text-[var(--text-muted)] transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Описание */}
+            {selectedRoute.description && (
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed line-clamp-4 mb-4">
+                {selectedRoute.description.split('\n')[0]}
+              </p>
+            )}
+
+            {/* Кнопка */}
+            <Link
+              href={`/routes/${selectedRoute.id}`}
+              className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-lg
+                bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
+            >
+              Открыть маршрут
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+      )}
 
       <BottomNav activePath="/map" />
       <AssistantButton pageContext={{ type: 'map' }} />
