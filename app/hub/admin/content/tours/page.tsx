@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Search, Filter, Edit2, Trash2, Eye, EyeOff, CheckCircle, XCircle,
   ChevronLeft, ChevronRight, X, Save, MapPin, Clock, Users, DollarSign,
-  Mountain, Thermometer, Fish, Wind, Anchor, Footprints, Plus, Images
+  Mountain, Thermometer, Fish, Wind, Anchor, Footprints, Plus, Images,
+  Upload, Loader2,
 } from 'lucide-react';
 
 // ─────────────────────────────────────────────
@@ -98,6 +99,26 @@ function EditModal({ tour, onClose, onSave }: {
 }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  async function handleFileUpload(file: File) {
+    setUploading(true);
+    setError(null);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/upload/tour-photo', { method: 'POST', body: fd });
+      const data = await res.json() as { ok?: boolean; url?: string; error?: string };
+      if (!res.ok || !data.ok || !data.url) throw new Error(data.error ?? 'Ошибка загрузки');
+      setPhotos(prev => [...prev, data.url!]);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Не удалось загрузить фото');
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  }
 
   // Форм-стейт
   const [form, setForm] = useState({
@@ -467,12 +488,32 @@ function EditModal({ tour, onClose, onSave }: {
                 <p className="text-[10px]">Нет фотографий</p>
               </div>
             )}
+            {/* Upload from file */}
+            <div className="mb-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={e => { const f = e.target.files?.[0]; if (f) handleFileUpload(f); }}
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-[var(--accent)] text-[var(--accent)] rounded hover:bg-[var(--accent)]/10 transition-colors disabled:opacity-50"
+              >
+                {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                {uploading ? 'Загружается...' : 'Загрузить с устройства'}
+              </button>
+            </div>
+            {/* Or add by URL */}
             <div className="flex gap-2">
               <input
                 className={inputCls + ' flex-1'}
                 value={newPhotoUrl}
                 onChange={e => setNewPhotoUrl(e.target.value)}
-                placeholder="/images/fishingkam/photo.jpg"
+                placeholder="https://... или /images/tours/photo.jpg"
                 onKeyDown={e => {
                   if (e.key === 'Enter' && newPhotoUrl.trim()) {
                     e.preventDefault();
@@ -489,12 +530,12 @@ function EditModal({ tour, onClose, onSave }: {
                     setNewPhotoUrl('');
                   }
                 }}
-                className="flex items-center gap-1 px-3 py-1.5 text-xs bg-[var(--accent)] text-white rounded hover:bg-[var(--accent)]/90 transition-colors whitespace-nowrap"
+                className="flex items-center gap-1 px-3 py-1.5 text-xs bg-[var(--bg-hover)] text-[var(--text-primary)] border border-[var(--border)] rounded hover:bg-[var(--border)] transition-colors whitespace-nowrap"
               >
-                <Plus className="w-3.5 h-3.5" /> Добавить
+                <Plus className="w-3.5 h-3.5" /> По URL
               </button>
             </div>
-            <p className="text-[9px] text-[var(--text-muted)] mt-1">Первое фото — главное. Hover на фото → кнопки удаления и перестановки.</p>
+            <p className="text-[9px] text-[var(--text-muted)] mt-1">Первое фото — главное. Hover на фото → удалить или поменять порядок.</p>
           </div>
 
           {/* Теги */}

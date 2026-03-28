@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
   Save, X, Plus, Images, ArrowLeft,
-  MapPin, Clock, Users, DollarSign, Mountain,
+  MapPin, Clock, Users, DollarSign, Mountain, Upload, Loader2,
 } from 'lucide-react';
 
 // ─── Типы ───────────────────────────────────────────────────────────────────
@@ -99,6 +99,28 @@ export default function EditTourClient() {
   });
   const [photos, setPhotos] = useState<string[]>([]);
   const [newPhotoUrl, setNewPhotoUrl] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  async function handleFileUpload(file: File) {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/upload/tour-photo', { method: 'POST', body: fd });
+      const data = await res.json() as { ok?: boolean; url?: string; error?: string };
+      if (!res.ok || !data.ok || !data.url) {
+        throw new Error(data.error ?? 'Ошибка загрузки');
+      }
+      setPhotos(prev => [...prev, data.url!]);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Не удалось загрузить фото');
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  }
 
   useEffect(() => {
     async function load() {
@@ -352,12 +374,32 @@ export default function EditTourClient() {
             <p className="text-xs">Нет фотографий</p>
           </div>
         )}
+        {/* Upload from file */}
+        <div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={e => { const f = e.target.files?.[0]; if (f) handleFileUpload(f); }}
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="flex items-center gap-2 px-4 py-2 text-sm border border-[var(--accent)] text-[var(--accent)] rounded-lg hover:bg-[var(--accent)]/10 transition-colors disabled:opacity-50"
+          >
+            {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+            {uploading ? 'Загружается...' : 'Загрузить фото с устройства'}
+          </button>
+        </div>
+        {/* Or add by URL */}
         <div className="flex gap-2">
           <input
             className={inp + ' flex-1'}
             value={newPhotoUrl}
             onChange={e => setNewPhotoUrl(e.target.value)}
-            placeholder="/images/fishingkam/photo.jpg"
+            placeholder="https://... или /images/tours/photo.jpg"
             onKeyDown={e => {
               if (e.key === 'Enter' && newPhotoUrl.trim()) {
                 e.preventDefault();
@@ -373,11 +415,11 @@ export default function EditTourClient() {
                 setNewPhotoUrl('');
               }
             }}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm bg-[var(--accent)] text-white rounded-lg hover:bg-[var(--accent)]/90 transition-colors whitespace-nowrap">
-            <Plus className="w-4 h-4" /> Добавить
+            className="flex items-center gap-1.5 px-4 py-2 text-sm bg-[var(--bg-hover)] text-[var(--text-primary)] rounded-lg hover:bg-[var(--border)] transition-colors whitespace-nowrap border border-[var(--border)]">
+            <Plus className="w-4 h-4" /> По URL
           </button>
         </div>
-        <p className="text-[10px] text-[var(--text-muted)]">Первое фото — главное на карточке. Hover → удалить или поменять порядок. Нажмите Enter после ввода пути.</p>
+        <p className="text-[10px] text-[var(--text-muted)]">Первое фото — главное на карточке. Hover → удалить или поменять порядок.</p>
       </section>
 
       {/* Категории */}
