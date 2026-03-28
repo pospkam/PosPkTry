@@ -1,16 +1,16 @@
 'use client';
 
 import Image from 'next/image';
-import { Fish, Shield, Leaf, Mountain, ArrowRight, ChevronDown } from 'lucide-react';
+import { Bot, Shield, Fish, Mountain, ArrowRight, ChevronDown } from 'lucide-react';
 
 const HERO_LIGHT = '/images/hero/hero-light.jpeg';
 const HERO_DARK  = '/images/hero/hero-dark.jpeg';
 
 const PILLS = [
+  { icon: Bot,      label: 'Личный помощник' },
   { icon: Mountain, label: 'Вулканы и треккинг' },
   { icon: Fish,     label: 'Рыбалка на лосося' },
   { icon: Shield,   label: 'Безопасность 24/7' },
-  { icon: Leaf,     label: 'Eco-маршруты' },
 ];
 
 export function HeroCompact() {
@@ -90,11 +90,12 @@ export function HeroCompact() {
             <ArrowRight className="w-4 h-4" />
           </a>
           <a
-            href="/map"
+            href="/kuzmich"
             className="inline-flex items-center gap-2 px-5 py-3 rounded-lg text-sm font-medium text-white border border-white/30 transition-colors"
             style={{ background: 'rgba(0,0,0,0.25)' }}
           >
-            Карта мест
+            <Bot className="w-4 h-4" />
+            Спросить помощника
           </a>
         </div>
       </div>
