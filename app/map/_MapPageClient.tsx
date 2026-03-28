@@ -88,7 +88,7 @@ export default function MapPageClient() {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch('/api/routes?hasCoords=true&limit=900&sort=title');
+        const res = await fetch('/api/routes?hasCoords=true&limit=900&sort=title&category=geo');
         if (!res.ok) return;
         const data = await res.json();
         if (!data.success) return;
@@ -224,9 +224,9 @@ export default function MapPageClient() {
       {/* ── Панель маршрута ─────────────────────────────────────────────── */}
       {selectedRoute && (
         <div
-          className="fixed bottom-0 left-0 right-0 md:bottom-4 md:right-4 md:left-auto md:w-96 z-50
-            bg-[var(--bg-card)] border border-[var(--border)] md:rounded-xl shadow-2xl
-            animate-in slide-in-from-bottom duration-200"
+          className="fixed bottom-[5.5rem] left-2 right-2 rounded-xl md:bottom-4 md:right-4 md:left-auto md:w-96 z-[110]
+            bg-[var(--bg-card)] border border-[var(--border)] shadow-2xl"
+          style={{ animation: 'slideUp 0.2s ease-out' }}
         >
           <div className="p-4">
             {/* Шапка */}
