@@ -35,29 +35,32 @@ const LOCATION_TYPE_CONFIG: Record<string, { label: string; color: string }> = {
 };
 
 // Основные фильтры для UI (без мусорных типов)
+// id начинающийся с 'activity:' — фильтр по activity_type
 const LOCATION_FILTERS = [
-  { id: 'all',        label: 'Все' },
-  { id: 'volcano',    label: 'Вулканы' },
-  { id: 'hot_spring', label: 'Источники' },
-  { id: 'bay',        label: 'Океан' },
-  { id: 'lake',       label: 'Озёра' },
-  { id: 'mountain',   label: 'Горы' },
-  { id: 'river',      label: 'Реки' },
-  { id: 'geyser',     label: 'Гейзеры' },
-  { id: 'waterfall',  label: 'Водопады' },
-  { id: 'viewpoint',  label: 'Смотровые' },
-  { id: 'rock',       label: 'Скалы' },
-  { id: 'island',     label: 'Острова' },
-  { id: 'beach',      label: 'Пляжи' },
-  { id: 'forest',     label: 'Леса и парки' },
-  { id: 'museum',     label: 'Музеи' },
-  { id: 'historical', label: 'История' },
+  { id: 'all',                  label: 'Все' },
+  { id: 'activity:esoteric',    label: 'Места силы' },
+  { id: 'volcano',              label: 'Вулканы' },
+  { id: 'hot_spring',           label: 'Источники' },
+  { id: 'bay',                  label: 'Океан' },
+  { id: 'lake',                 label: 'Озёра' },
+  { id: 'mountain',             label: 'Горы' },
+  { id: 'river',                label: 'Реки' },
+  { id: 'geyser',               label: 'Гейзеры' },
+  { id: 'waterfall',            label: 'Водопады' },
+  { id: 'viewpoint',            label: 'Смотровые' },
+  { id: 'rock',                 label: 'Скалы' },
+  { id: 'island',               label: 'Острова' },
+  { id: 'beach',                label: 'Пляжи' },
+  { id: 'forest',               label: 'Леса и парки' },
+  { id: 'museum',               label: 'Музеи' },
+  { id: 'historical',           label: 'История' },
 ];
 
 interface RoutePoint {
   id: string;
   title: string;
   locationType: string | null;
+  activityType: string | null;
   lat: number;
   lng: number;
   description: string;
@@ -88,10 +91,11 @@ export default function MapPageClient() {
         if (!data.success) return;
         const points: RoutePoint[] = (data.data ?? [])
           .filter((r: { lat: number | null; lng: number | null }) => r.lat != null && r.lng != null)
-          .map((r: { id: string; title: string; locationType: string | null; lat: number; lng: number; description: string; volcanoStatus?: string | null; geometry?: MapMarkerGeometry | null }) => ({
+          .map((r: { id: string; title: string; locationType: string | null; activityType: string | null; lat: number; lng: number; description: string; volcanoStatus?: string | null; geometry?: MapMarkerGeometry | null }) => ({
             id:           r.id,
             title:         r.title,
             locationType:  r.locationType ?? 'other',
+            activityType:  r.activityType ?? null,
             lat:           r.lat,
             lng:           r.lng,
             description:   r.description ?? '',
@@ -110,16 +114,24 @@ export default function MapPageClient() {
 
   const filtered = activeFilter === 'all'
     ? allRoutes
-    : allRoutes.filter(r => r.locationType === activeFilter);
+    : activeFilter.startsWith('activity:')
+      ? allRoutes.filter(r => r.activityType === activeFilter.slice(9))
+      : allRoutes.filter(r => r.locationType === activeFilter);
 
-  const countFor = (id: string) =>
-    id === 'all' ? allRoutes.length : allRoutes.filter(r => r.locationType === id).length;
+  const countFor = (id: string) => {
+    if (id === 'all') return allRoutes.length;
+    if (id.startsWith('activity:')) return allRoutes.filter(r => r.activityType === id.slice(9)).length;
+    return allRoutes.filter(r => r.locationType === id).length;
+  };
 
   const mapMarkers = filtered.map(r => {
     const cfg = LOCATION_TYPE_CONFIG[r.locationType ?? 'other'] ?? LOCATION_TYPE_CONFIG.other;
-    const color = r.locationType === 'volcano' && r.volcanoStatus
+    const baseColor = r.locationType === 'volcano' && r.volcanoStatus
       ? (VOLCANO_STATUS_COLOR[r.volcanoStatus] ?? cfg.color)
       : cfg.color;
+    const color = (activeFilter === 'activity:esoteric' && r.activityType === 'esoteric')
+      ? 'purple'
+      : baseColor;
     return {
       coords:      [r.lat, r.lng] as [number, number],
       title:       r.title,
