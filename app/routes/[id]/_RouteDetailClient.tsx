@@ -130,6 +130,7 @@ interface RouteDetail {
   altitude: number | null; groupSizeMax: number | null; dangerLevel: string | null;
   equipment: string[] | null; kuzmichReview: string | null;
   photos: string[] | null; offers: Offer[];
+  hasAiImage: boolean;
 }
 
 // ── Карточка оффера ───────────────────────────────────────────────────────────
@@ -408,8 +409,17 @@ export default function RouteDetailClient({ id }: { id: string }) {
     ? Math.max(...allOffers.map(o => o.effectivePrice ?? o.priceBase ?? 0).filter(p => p > 0))
     : 500000;
   const photos = [...new Set(route.photos ?? [])];
+  const aiImageUrl = `/api/images/route/${route.id}`;
   const fallbackHero = LOCATION_TYPE_IMAGES[route.locationType ?? 'other'] ?? '/images/hero/hero-dark.jpg';
-  const heroImage = photos[galleryIdx] ?? photos[0] ?? fallbackHero;
+  const heroImage = photos[galleryIdx] ?? photos[0] ?? (route.hasAiImage ? aiImageUrl : fallbackHero);
+  const isAiHero = !photos.length && route.hasAiImage;
+
+  // Trigger async AI image generation on first visit if no image yet
+  useEffect(() => {
+    if (!photos.length && !route.hasAiImage) {
+      fetch(aiImageUrl).catch(() => undefined);
+    }
+  }, [route.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const minPrice = allOffers.length > 0
     ? Math.min(...allOffers.map(o => o.effectivePrice ?? o.priceBase ?? 0).filter(p => p > 0))
     : (route.priceFrom ?? 0);
@@ -425,6 +435,11 @@ export default function RouteDetailClient({ id }: { id: string }) {
       <div className="relative w-full overflow-hidden" style={{ height: '52vh', minHeight: 320, maxHeight: 520 }}>
         <div className="absolute inset-0 pt-16">
           <Image src={heroImage} alt={route.title} fill className="object-cover" priority sizes="100vw" />
+          {isAiHero && (
+            <div className="absolute bottom-3 right-3 bg-black/50 text-white text-xs px-2 py-0.5 rounded flex items-center gap-1">
+              <span>AI</span><span className="opacity-70">· временное фото</span>
+            </div>
+          )}
         </div>
 
         {/* Навигация */}

@@ -21,11 +21,13 @@ export async function GET(
   try {
     const result = await query(
       `SELECT
-         id, route_dedupe_key, route_id, category, location_type, activity_type,
-         title, description, lat, lng, source_url, source_name, payload, created_at,
-         kuzmich_review
-       FROM agent_route_knowledge
-       WHERE id = $1 AND is_visible = TRUE`,
+         ark.id, ark.route_dedupe_key, ark.route_id, ark.category, ark.location_type, ark.activity_type,
+         ark.title, ark.description, ark.lat, ark.lng, ark.source_url, ark.source_name, ark.payload, ark.created_at,
+         ark.kuzmich_review,
+         (ari.route_id IS NOT NULL) AS has_ai_image
+       FROM agent_route_knowledge ark
+       LEFT JOIN ai_route_images ari ON ari.route_id = ark.id
+       WHERE ark.id = $1 AND ark.is_visible = TRUE`,
       [id]
     );
 
@@ -137,6 +139,7 @@ export async function GET(
         equipment:   (payload.required_equipment as string[] | null) ?? null,
         photos:      (payload.photos as string[] | null) ?? null,
         kuzmichReview: (r.kuzmich_review as string | null) ?? null,
+        hasAiImage:  Boolean(r.has_ai_image),
         createdAt:   r.created_at as string,
         offers,
       },

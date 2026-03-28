@@ -96,26 +96,28 @@ export async function GET(request: NextRequest) {
     const [dataResult, countResult] = await Promise.all([
       query(
         `SELECT
-           id,
-           route_dedupe_key,
-           category,
-           location_type,
-           activity_type,
-           title,
-           description,
-           lat,
-           lng,
-           source_url,
-           source_name,
-           payload->'price_from'      AS price_from,
-           payload->'season'          AS season,
-           payload->'difficulty'      AS difficulty,
-           payload->'duration_days'   AS duration_days,
-           payload->'best_months'     AS best_months,
-           payload->'geometry'        AS geometry,
-           payload->>'volcano_status' AS volcano_status,
-           created_at
-         FROM agent_route_knowledge
+           ark.id,
+           ark.route_dedupe_key,
+           ark.category,
+           ark.location_type,
+           ark.activity_type,
+           ark.title,
+           ark.description,
+           ark.lat,
+           ark.lng,
+           ark.source_url,
+           ark.source_name,
+           ark.payload->'price_from'      AS price_from,
+           ark.payload->'season'          AS season,
+           ark.payload->'difficulty'      AS difficulty,
+           ark.payload->'duration_days'   AS duration_days,
+           ark.payload->'best_months'     AS best_months,
+           ark.payload->'geometry'        AS geometry,
+           ark.payload->>'volcano_status' AS volcano_status,
+           ark.created_at,
+           (ari.route_id IS NOT NULL) AS has_ai_image
+         FROM agent_route_knowledge ark
+         LEFT JOIN ai_route_images ari ON ari.route_id = ark.id
          ${where}
          ORDER BY ${orderBy}
          LIMIT $${idx} OFFSET $${idx + 1}`,
@@ -150,6 +152,7 @@ export async function GET(request: NextRequest) {
         bestMonths:   (r.best_months as number[] | null) ?? null,
         geometry:      (r.geometry as { type: string; coordinates: [number, number][]; color?: string; weight?: number } | null) ?? null,
         volcanoStatus: (r.volcano_status as string | null) ?? null,
+        hasAiImage:   Boolean(r.has_ai_image),
       })),
       meta: {
         total,
