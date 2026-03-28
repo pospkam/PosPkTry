@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { Sun, Moon, User, X, ArrowRight, MapPin } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -115,19 +115,21 @@ export default function MapPageClient() {
     load();
   }, []);
 
-  const filtered = activeFilter === 'all'
-    ? allRoutes
-    : activeFilter.startsWith('activity:')
-      ? allRoutes.filter(r => r.activityType === activeFilter.slice(9))
-      : allRoutes.filter(r => r.locationType === activeFilter);
+  const filtered = useMemo(() =>
+    activeFilter === 'all'
+      ? allRoutes
+      : activeFilter.startsWith('activity:')
+        ? allRoutes.filter(r => r.activityType === activeFilter.slice(9))
+        : allRoutes.filter(r => r.locationType === activeFilter),
+  [allRoutes, activeFilter]);
 
-  const countFor = (id: string) => {
+  const countFor = useCallback((id: string) => {
     if (id === 'all') return allRoutes.length;
     if (id.startsWith('activity:')) return allRoutes.filter(r => r.activityType === id.slice(9)).length;
     return allRoutes.filter(r => r.locationType === id).length;
-  };
+  }, [allRoutes]);
 
-  const mapMarkers = filtered.map(r => {
+  const mapMarkers = useMemo(() => filtered.map(r => {
     const cfg = LOCATION_TYPE_CONFIG[r.locationType ?? 'other'] ?? LOCATION_TYPE_CONFIG.other;
     const baseColor = r.locationType === 'volcano' && r.volcanoStatus
       ? (VOLCANO_STATUS_COLOR[r.volcanoStatus] ?? cfg.color)
@@ -139,14 +141,14 @@ export default function MapPageClient() {
       id:          r.id,
       coords:      [r.lat, r.lng] as [number, number],
       title:       r.title,
-      description: r.description.slice(0, 100),
+      description: r.description.split('\n')[0].slice(0, 120),
       color,
       href:        `/routes/${r.id}`,
       type:        MarkerType.TOUR,
       category:    r.locationType ?? 'other',
       geometry:    r.geometry ?? undefined,
     };
-  });
+  }), [filtered, activeFilter]);
 
   return (
     <div className="min-h-screen pb-24 md:pb-0">
