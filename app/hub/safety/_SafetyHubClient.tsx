@@ -159,7 +159,7 @@ export default function SafetyHubClient() {
       .catch(() => {});
   }, []);
 
-  // Passive geolocation on mount
+  // Passive geolocation on mount — enableHighAccuracy=true forces GPS over IP-based fallback
   useEffect(() => {
     if (typeof navigator === 'undefined' || !navigator.geolocation) return;
     setCoordsLoading(true);
@@ -169,7 +169,7 @@ export default function SafetyHubClient() {
         setCoordsLoading(false);
       },
       () => setCoordsLoading(false),
-      { timeout: 8000, maximumAge: 60000 }
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
     );
   }, []);
 
@@ -236,7 +236,11 @@ export default function SafetyHubClient() {
     if (!latitude && typeof navigator !== 'undefined' && navigator.geolocation) {
       try {
         const pos = await new Promise<GeolocationPosition>((res, rej) =>
-          navigator.geolocation.getCurrentPosition(res, rej, { timeout: 8000 })
+          navigator.geolocation.getCurrentPosition(res, rej, {
+            enableHighAccuracy: true,
+            timeout: 12000,
+            maximumAge: 0,
+          })
         );
         latitude = pos.coords.latitude;
         longitude = pos.coords.longitude;
@@ -539,17 +543,44 @@ export default function SafetyHubClient() {
                   <span>Определение координат...</span>
                 </div>
               )}
-              {!coordsLoading && coords && (
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 text-sm">
-                    <MapPin className="w-4 h-4 text-[var(--ocean)]" />
-                    <span className="font-mono text-[var(--text-primary)]">
-                      {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}
-                    </span>
+              {!coordsLoading && coords && (() => {
+                // Kamchatka bounding box: 50–62°N, 155–170°E
+                const inKamchatka = coords.lat >= 50 && coords.lat <= 62 && coords.lng >= 155 && coords.lng <= 170;
+                return (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm">
+                      <MapPin className="w-4 h-4 text-[var(--ocean)]" />
+                      <span className="font-mono text-[var(--text-primary)]">
+                        {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}
+                      </span>
+                      <button
+                        onClick={() => {
+                          setCoords(null);
+                          setCoordsLoading(true);
+                          navigator.geolocation.getCurrentPosition(
+                            (p) => { setCoords({ lat: p.coords.latitude, lng: p.coords.longitude }); setCoordsLoading(false); },
+                            () => setCoordsLoading(false),
+                            { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+                          );
+                        }}
+                        className="ml-auto text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
+                        title="Обновить координаты"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    {!inKamchatka && (
+                      <p className="text-xs text-[var(--warning)] flex items-center gap-1">
+                        <AlertTriangle className="w-3 h-3 flex-shrink-0" />
+                        Координаты не соответствуют Камчатке. Разрешите точную геолокацию в браузере.
+                      </p>
+                    )}
+                    {inKamchatka && (
+                      <p className="text-xs text-[var(--text-muted)]">Координаты будут отправлены вместе с SOS</p>
+                    )}
                   </div>
-                  <p className="text-xs text-[var(--text-muted)]">Координаты будут отправлены вместе с SOS</p>
-                </div>
-              )}
+                );
+              })()}
               {!coordsLoading && !coords && (
                 <div className="text-center text-[var(--text-muted)] py-4">
                   <MapPin className="w-8 h-8 mx-auto mb-2 text-[var(--text-muted)]" />
