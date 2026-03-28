@@ -3,12 +3,15 @@ import { MetadataRoute } from 'next';
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
+      // Общие правила: всё открыто кроме внутренних хабов и API
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/hub/', '/api/', '/.next/'],
+        disallow: ['/hub/', '/api/', '/.next/', '/auth/'],
         crawlDelay: 1,
       },
+
+      // Поисковые системы — без ограничений
       {
         userAgent: 'Googlebot',
         allow: '/',
@@ -19,12 +22,101 @@ export default function robots(): MetadataRoute.Robots {
         allow: '/',
         disallow: ['/hub/', '/api/'],
       },
+
+      // OpenAI (ChatGPT, GPT-4o browsing, SearchGPT)
       {
-        userAgent: 'Baiduspider',
+        userAgent: 'GPTBot',
+        allow: '/',
+        disallow: ['/hub/', '/api/'],
+      },
+      {
+        userAgent: 'ChatGPT-User',
+        allow: '/',
+        disallow: ['/hub/', '/api/'],
+      },
+      {
+        userAgent: 'OAI-SearchBot',
+        allow: '/',
+        disallow: ['/hub/', '/api/'],
+      },
+
+      // Anthropic Claude
+      {
+        userAgent: 'ClaudeBot',
+        allow: '/',
+        disallow: ['/hub/', '/api/'],
+      },
+      {
+        userAgent: 'Claude-Web',
+        allow: '/',
+        disallow: ['/hub/', '/api/'],
+      },
+      {
+        userAgent: 'anthropic-ai',
+        allow: '/',
+        disallow: ['/hub/', '/api/'],
+      },
+
+      // Perplexity AI
+      {
+        userAgent: 'PerplexityBot',
+        allow: '/',
+        disallow: ['/hub/', '/api/'],
+      },
+
+      // Microsoft Copilot / Bing
+      {
+        userAgent: 'Bingbot',
+        allow: '/',
+        disallow: ['/hub/', '/api/'],
+      },
+
+      // Google Gemini
+      {
+        userAgent: 'Google-Extended',
+        allow: '/',
+        disallow: ['/hub/', '/api/'],
+      },
+      {
+        userAgent: 'Googlebot-News',
+        allow: '/',
+        disallow: ['/hub/', '/api/'],
+      },
+
+      // Apple Siri / Apple Intelligence
+      {
+        userAgent: 'Applebot',
+        allow: '/',
+        disallow: ['/hub/', '/api/'],
+      },
+      {
+        userAgent: 'Applebot-Extended',
+        allow: '/',
+        disallow: ['/hub/', '/api/'],
+      },
+
+      // Meta AI
+      {
+        userAgent: 'meta-externalagent',
+        allow: '/',
+        disallow: ['/hub/', '/api/'],
+      },
+
+      // You.com
+      {
+        userAgent: 'YouBot',
+        allow: '/',
+        disallow: ['/hub/', '/api/'],
+      },
+
+      // Cohere
+      {
+        userAgent: 'cohere-ai',
         allow: '/',
         disallow: ['/hub/', '/api/'],
       },
     ],
     sitemap: 'https://tourhab.ru/sitemap.xml',
+    host: 'https://tourhab.ru',
   };
 }

@@ -20,21 +20,37 @@ const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://tourhab.ru';
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
-    default: 'Kamchatour — Туры на Камчатку | Рыбалка, Вулканы, Природа',
-    template: '%s | Kamchatour',
+    default: 'TourHab — Туры на Камчатку | Вулканы, Рыбалка, Горячие источники, Места силы',
+    template: '%s | TourHab Камчатка',
   },
-  description: 'Туры на Камчатку: рыбалка на лосося, восхождения на вулканы, горячие источники, дикая природа. Бронирование онлайн, проверенные гиды.',
+  description: 'Туристическая платформа Камчатки: туры, маршруты, карта достопримечательностей. Вулканы, горячие источники, Долина гейзеров, рыбалка на лосося, места силы ительменов. Бронирование онлайн.',
   keywords: [
     'туры на Камчатку',
     'рыбалка Камчатка',
     'вулканы Камчатки',
+    'Долина гейзеров',
+    'горячие источники Камчатка',
+    'Ключевская сопка',
+    'Мутновский вулкан',
+    'Курильское озеро',
+    'Кальдера Узон',
     'отдых на Камчатке',
     'экскурсии Камчатка',
-    'горячие источники',
-    'чавыча',
-    'кижуч',
-    'нерка',
+    'Халактырский пляж',
+    'медведи Камчатка',
+    'чавыча рыбалка',
+    'кижуч нерка',
     'Петропавловск-Камчатский',
+    'места силы Камчатка',
+    'ительмены шаман',
+    'Ксудач кальдера',
+    'природные парки Камчатки',
+    'Кроноцкий заповедник',
+    'ЮНЕСКО вулканы',
+    'экотуризм Камчатка',
+    'helicopter tour Kamchatka',
+    'Kamchatka volcano tour',
+    'Kamchatka travel',
   ],
   authors: [{ name: 'Kamchatour' }],
   creator: 'Kamchatour',
@@ -101,36 +117,64 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "TouristInformationCenter",
-              "name": "Kamchatour Hub",
-              "description": "Туристическая платформа Камчатки для туристов, операторов, гидов.",
-              "url": "https://tourhab.ru",
-              "logo": "https://tourhab.ru/logo-kamchatka.svg",
-              "address": {
-                "@type": "PostalAddress",
-                "addressCountry": "RU",
-                "addressRegion": "Камчатский край"
-              },
-              "telephone": "+7 (914) 782-22-22",
-              "sameAs": [
-                "https://t.me/kamchatourhub",
-                "https://vk.com/kamchatourhub"
-              ],
-              "touristInformationOptions": [
-                "tourBooking",
-                "guideServices",
-                "safetyInformation"
-              ],
-              "hasTour": [
-                {
-                  "@type": "Offer",
-                  "name": "Рыбалка на Камчатке",
-                  "url": "/tours?category=fishing"
+            __html: JSON.stringify([
+              {
+                "@context": "https://schema.org",
+                "@type": "WebSite",
+                "name": "TourHab — Туры на Камчатку",
+                "url": "https://tourhab.ru",
+                "description": "Туристическая платформа Камчатки: туры, маршруты, карта достопримечательностей. Вулканы, горячие источники, Долина гейзеров, рыбалка, места силы ительменов.",
+                "inLanguage": "ru",
+                "potentialAction": {
+                  "@type": "SearchAction",
+                  "target": {
+                    "@type": "EntryPoint",
+                    "urlTemplate": "https://tourhab.ru/routes?q={search_term_string}"
+                  },
+                  "query-input": "required name=search_term_string"
                 }
-              ]
-            })
+              },
+              {
+                "@context": "https://schema.org",
+                "@type": "TouristInformationCenter",
+                "name": "TourHab",
+                "description": "Маркетплейс туров и путеводитель по Камчатке.",
+                "url": "https://tourhab.ru",
+                "logo": "https://tourhab.ru/logo-kamchatka.svg",
+                "address": {
+                  "@type": "PostalAddress",
+                  "addressCountry": "RU",
+                  "addressRegion": "Камчатский край",
+                  "addressLocality": "Петропавловск-Камчатский"
+                },
+                "geo": {
+                  "@type": "GeoCoordinates",
+                  "latitude": 53.0444,
+                  "longitude": 158.6483
+                },
+                "telephone": "+7 (914) 782-22-22",
+                "sameAs": [
+                  "https://t.me/kamchatourhub",
+                  "https://vk.com/kamchatourhub"
+                ]
+              },
+              {
+                "@context": "https://schema.org",
+                "@type": "ItemList",
+                "name": "Топ достопримечательностей Камчатки",
+                "description": "Главные природные и исторические объекты Камчатки",
+                "itemListElement": [
+                  { "@type": "ListItem", "position": 1, "name": "Долина гейзеров", "url": "https://tourhab.ru/routes/796c18b3-e199-4ac6-bbd6-de50d560ff40" },
+                  { "@type": "ListItem", "position": 2, "name": "Ключевская сопка", "url": "https://tourhab.ru/routes/54b106de-d81a-42af-9a41-32ee49604309" },
+                  { "@type": "ListItem", "position": 3, "name": "Кальдера Узон", "url": "https://tourhab.ru/routes/a6330106-13d5-40f0-9c77-d252daf5b95f" },
+                  { "@type": "ListItem", "position": 4, "name": "Курильское озеро — медведи", "url": "https://tourhab.ru/routes/8ef745b1-7de3-4899-9431-809f9c8521de" },
+                  { "@type": "ListItem", "position": 5, "name": "Халактырский пляж", "url": "https://tourhab.ru/routes/49a1d46a-704b-4307-bb6a-fea5988ec4f8" },
+                  { "@type": "ListItem", "position": 6, "name": "Вулкан Горелый", "url": "https://tourhab.ru/routes/430e1a7a-a1c2-4c5a-a8fd-866817f096ac" },
+                  { "@type": "ListItem", "position": 7, "name": "Вулкан Мутновский", "url": "https://tourhab.ru/routes/acb8f5d3-9b44-48ec-9a81-1c8c71e451b9" },
+                  { "@type": "ListItem", "position": 8, "name": "Плоский Толбачик", "url": "https://tourhab.ru/routes/fd0e39dc-36cc-4fa4-9be9-f0640b039fba" }
+                ]
+              }
+            ])
           }}
         />
         <YandexMetrika />
