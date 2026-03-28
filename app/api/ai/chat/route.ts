@@ -86,11 +86,18 @@ async function saveSession(
 }
 
 // ── POST handler ──────────────────────────────────────────────────
+const ChatMessageSchema = z.object({
+  role: z.enum(['user', 'assistant']),
+  content: z.string(),
+});
+
 const AiChatSchema = z.object({
   message: z.string().min(1, 'Сообщение обязательно'),
   sessionId: z.string().optional(),
   role: z.string().default('tourist'),
   userId: z.string().nullable().default(null),
+  // Client-side history fallback (used when DB session is unavailable)
+  history: z.array(ChatMessageSchema).max(20).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -112,7 +119,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { message, sessionId, role = 'tourist' } = parsed.data;
+    const { message, sessionId, role = 'tourist', history: clientHistory } = parsed.data;
 
     if (!message?.trim()) {
       return NextResponse.json({ success: false, error: 'Сообщение не может быть пустым' }, { status: 400 });
@@ -125,10 +132,12 @@ export async function POST(request: NextRequest) {
     const validRoles: ChatRole[] = ['tourist', 'operator', 'guide', 'admin', 'agent', 'transfer'];
     const safeRole: ChatRole = validRoles.includes(role as ChatRole) ? (role as ChatRole) : 'tourist';
 
-    // Load session
+    // Load session from DB; fall back to client-provided history if DB has nothing
     const session = sessionId ? await loadSession(sessionId) : null;
     const currentCount = session?.user_message_count ?? 0;
-    const history: ChatMessage[] = session?.messages ?? [];
+    const history: ChatMessage[] = (session?.messages?.length ? session.messages : null)
+      ?? (clientHistory as ChatMessage[] | undefined)
+      ?? [];
     const isNewSession = !session; // первое сообщение = новая сессия
 
     // Check limit for anonymous users

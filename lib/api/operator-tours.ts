@@ -245,12 +245,19 @@ export async function getAvailability(tourId: bigint, fromDate: string, toDate: 
   return result.rows;
 }
 
-export async function softDeleteTour(tourId: bigint, operatorId: string): Promise<boolean> {
-  const result = await query(
-    `UPDATE operator_tours SET deleted_at = NOW()
-     WHERE id = $1 AND operator_id = $2 AND deleted_at IS NULL
-     RETURNING id`,
-    [tourId, operatorId]
-  );
+export async function softDeleteTour(tourId: bigint, operatorId: string | null | undefined): Promise<boolean> {
+  const result = operatorId
+    ? await query(
+        `UPDATE operator_tours SET deleted_at = NOW()
+         WHERE id = $1 AND operator_id = $2 AND deleted_at IS NULL
+         RETURNING id`,
+        [tourId, operatorId]
+      )
+    : await query(
+        `UPDATE operator_tours SET deleted_at = NOW()
+         WHERE id = $1 AND deleted_at IS NULL
+         RETURNING id`,
+        [tourId]
+      );
   return (result.rows.length ?? 0) > 0;
 }

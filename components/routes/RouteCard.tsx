@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import Link from 'next/link';
-import { Heart, Flame, Thermometer, Anchor, Mountain, Leaf, Fish, Snowflake, Plane, Car, Wind, Footprints, PawPrint, MapPin, Waves, Droplets } from 'lucide-react';
+import { Heart, Flame, Thermometer, Anchor, Mountain, Leaf, Fish, Snowflake, Plane, Car, Wind, Footprints, PawPrint, MapPin, Waves, Droplets, Landmark, TreePine, Globe } from 'lucide-react';
 
 export interface RouteItem {
   id: string;
@@ -36,6 +36,11 @@ const CATEGORY_META: Record<string, { label: string; icon: React.ElementType; ac
   rivers:               { label: 'Реки',                icon: Waves,       accent: 'var(--ocean)' },
   lakes:                { label: 'Озёра',               icon: Droplets,    accent: 'var(--ocean)' },
   medvedi:              { label: 'Медведи',             icon: PawPrint,    accent: 'var(--warning)' },
+  historical:           { label: 'История',             icon: Landmark,    accent: 'var(--text-secondary)' },
+  monument:             { label: 'Памятник',            icon: Landmark,    accent: 'var(--text-secondary)' },
+  nature_reserve:       { label: 'Заповедник',          icon: TreePine,    accent: 'var(--success)' },
+  'дикая_природа':      { label: 'Дикая природа',       icon: PawPrint,    accent: 'var(--success)' },
+  geo:                  { label: 'Геология',            icon: Globe,       accent: 'var(--ocean)' },
 };
 
 const CARD_IMAGES: Record<string, string> = {
@@ -53,6 +58,11 @@ const CARD_IMAGES: Record<string, string> = {
   rivers:               '/images/bento/khalaktyr.jpg',
   lakes:                '/images/gallery/bay-sunset.jpg',
   medvedi:              '/images/gallery/road-winter.jpg',
+  historical:           '/images/gallery/stela.jpg',
+  monument:             '/images/gallery/stela.jpg',
+  nature_reserve:       '/images/gallery/camp-sunset.jpg',
+  'дикая_природа':      '/images/gallery/road-winter.jpg',
+  geo:                  '/images/bento/mutnovsky.jpg',
 };
 
 function pluralTours(n: number) {
@@ -99,28 +109,16 @@ export default function RouteCard({ route }: { route: RouteItem }) {
     <article className="group">
       {/* ── Фото ─────────────────────────────────────────────────────────────── */}
       <Link href={`/routes/${route.id}`} className="block relative overflow-hidden rounded-lg" style={{ aspectRatio: '3/4' }}>
-        {route.category === 'rybalka' ? (
-          <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={image}
-              alt={route.title}
-              loading="lazy"
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-            {/* Градиент */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
-          </>
-        ) : (
-          <>
-            <div
-              className="w-full h-full flex items-center justify-center bg-[var(--bg-hover)] transition-colors duration-200 group-hover:bg-[var(--border)]"
-            >
-              <Icon className="w-10 h-10 opacity-30" style={{ color: meta.accent }} />
-            </div>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
-          </>
-        )}
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={image}
+            alt={route.title}
+            loading="lazy"
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
+        </>
 
         {/* Категория — левый верх */}
         <span

@@ -33,13 +33,15 @@ export async function GET(
     const authOrResponse = await requireOperator(request);
     if (authOrResponse instanceof NextResponse) return authOrResponse;
 
-    const operator_id = await getOperatorId(authOrResponse.userId);
-    if (!operator_id) {
+    const isAdmin = authOrResponse.role === 'admin';
+
+    const operator_id = isAdmin ? null : await getOperatorId(authOrResponse.userId);
+    if (!isAdmin && !operator_id) {
       return NextResponse.json({ error: 'Not an operator' }, { status: 403 });
     }
 
     const tour = await getTourById(tourId);
-    if (!tour || tour.operator_id !== operator_id) {
+    if (!tour || (!isAdmin && tour.operator_id !== operator_id)) {
       return NextResponse.json({ error: 'Tour not found' }, { status: 404 });
     }
 
@@ -59,13 +61,15 @@ export async function PATCH(
     const authOrResponse = await requireOperator(request);
     if (authOrResponse instanceof NextResponse) return authOrResponse;
 
-    const operator_id = await getOperatorId(authOrResponse.userId);
-    if (!operator_id) {
+    const isAdmin = authOrResponse.role === 'admin';
+
+    const operator_id = isAdmin ? null : await getOperatorId(authOrResponse.userId);
+    if (!isAdmin && !operator_id) {
       return NextResponse.json({ error: 'Not an operator' }, { status: 403 });
     }
 
     const tour = await getTourById(tourId);
-    if (!tour || tour.operator_id !== operator_id) {
+    if (!tour || (!isAdmin && tour.operator_id !== operator_id)) {
       return NextResponse.json({ error: 'Tour not found' }, { status: 404 });
     }
 
@@ -142,12 +146,14 @@ export async function DELETE(
     const authOrResponse = await requireOperator(request);
     if (authOrResponse instanceof NextResponse) return authOrResponse;
 
-    const operator_id = await getOperatorId(authOrResponse.userId);
-    if (!operator_id) {
+    const isAdmin = authOrResponse.role === 'admin';
+
+    const operator_id = isAdmin ? null : await getOperatorId(authOrResponse.userId);
+    if (!isAdmin && !operator_id) {
       return NextResponse.json({ error: 'Not an operator' }, { status: 403 });
     }
 
-    const deleted = await softDeleteTour(tourId, operator_id);
+    const deleted = await softDeleteTour(tourId, isAdmin ? undefined : operator_id);
     if (!deleted) {
       return NextResponse.json({ error: 'Tour not found' }, { status: 404 });
     }

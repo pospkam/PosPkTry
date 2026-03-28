@@ -170,6 +170,7 @@ export function AssistantButton({ pageContext }: { pageContext?: PageContext }) 
           message: text,
           sessionId: sessionId || undefined,
           role: 'tourist',
+          history: messages.slice(-10).map(m => ({ role: m.role, content: m.content })),
         }),
       });
 

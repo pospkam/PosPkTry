@@ -53,7 +53,12 @@ export default function KuzmichClient() {
       const res = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text.trim(), sessionId, role: 'tourist' }),
+        body: JSON.stringify({
+          message: text.trim(),
+          sessionId,
+          role: 'tourist',
+          history: messages.slice(-10).map(m => ({ role: m.role, content: m.content })),
+        }),
       });
       const data = await res.json();
       setMessages(prev => [...prev, {
