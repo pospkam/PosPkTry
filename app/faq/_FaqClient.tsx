@@ -16,15 +16,26 @@ interface FaqCategory {
   count: string;
 }
 
-export default function FaqClient() {
-  const [items, setItems] = useState<FaqItem[]>([]);
-  const [categories, setCategories] = useState<FaqCategory[]>([]);
-  const [loading, setLoading] = useState(true);
+interface Props {
+  initialItems?: FaqItem[];
+}
+
+export default function FaqClient({ initialItems = [] }: Props) {
+  const [items, setItems] = useState<FaqItem[]>(initialItems);
+  const [categories, setCategories] = useState<FaqCategory[]>(() => {
+    const map: Record<string, number> = {};
+    for (const item of initialItems) {
+      if (item.category) map[item.category] = (map[item.category] ?? 0) + 1;
+    }
+    return Object.entries(map).map(([category, count]) => ({ category, count: String(count) }));
+  });
+  const [loading, setLoading] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [openId, setOpenId] = useState<string | null>(null);
 
   const fetchFaq = useCallback(async () => {
+    if (!activeCategory && !search) return; // используем initialItems
     setLoading(true);
     try {
       const params = new URLSearchParams();
@@ -34,7 +45,6 @@ export default function FaqClient() {
       const json = await res.json();
       if (json.success) {
         setItems(json.data.items);
-        if (!activeCategory && !search) setCategories(json.data.categories);
       }
     } catch { /* ignore */ }
     setLoading(false);
