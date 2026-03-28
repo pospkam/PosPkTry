@@ -77,17 +77,16 @@ function routeSeed(routeId: string): number {
 }
 
 // ──────────────────────────────────────────────────────────────
-// Pollinations.ai URL builder
+// Lorem Picsum URL builder (free, deterministic, no API key)
 // ──────────────────────────────────────────────────────────────
 
 export function buildPollinationsUrl(
-  prompt: string,
+  _prompt: string,
   seed: number,
   width = 1280,
   height = 720,
 ): string {
-  const encoded = encodeURIComponent(prompt);
-  return `https://image.pollinations.ai/prompt/${encoded}?width=${width}&height=${height}&model=flux-schnell&nologo=true&seed=${seed}&enhance=true`;
+  return `https://picsum.photos/seed/${seed}/${width}/${height}`;
 }
 
 // ──────────────────────────────────────────────────────────────
