@@ -12,6 +12,7 @@ export const dynamic = 'force-dynamic';
 
 const QuerySchema = z.object({
   q:             z.string().max(200).optional(),
+  kind:          z.enum(['place', 'route', 'tour']).optional(),
   category:      z.string().max(60).optional(),
   location_type: z.string().max(60).optional(),
   activity_type: z.string().max(60).optional(),
@@ -32,7 +33,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: false, error: 'Неверные параметры запроса' }, { status: 400 });
   }
 
-  const { q, category, location_type, activity_type, page, limit, hasCoords, sort, difficulty, price_min, price_max } = parsed.data;
+  const { q, kind, category, location_type, activity_type, page, limit, hasCoords, sort, difficulty, price_min, price_max } = parsed.data;
   const offset = (page - 1) * limit;
 
   const conditions: string[] = ['is_visible = TRUE'];
@@ -42,6 +43,11 @@ export async function GET(request: NextRequest) {
   if (q) {
     conditions.push(`search_text ILIKE $${idx}`);
     params.push(`%${q}%`);
+    idx++;
+  }
+  if (kind) {
+    conditions.push(`kind = $${idx}`);
+    params.push(kind);
     idx++;
   }
   if (category) {
@@ -98,6 +104,7 @@ export async function GET(request: NextRequest) {
         `SELECT
            ark.id,
            ark.route_dedupe_key,
+           ark.kind,
            ark.category,
            ark.location_type,
            ark.activity_type,
@@ -136,6 +143,7 @@ export async function GET(request: NextRequest) {
       data: dataResult.rows.map(r => ({
         id:           r.id as string,
         slug:         r.route_dedupe_key as string,
+        kind:         (r.kind as string) ?? 'place',
         category:     r.category as string,
         locationType: (r.location_type as string | null) ?? null,
         activityType: (r.activity_type as string | null) ?? null,

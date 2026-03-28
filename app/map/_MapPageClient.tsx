@@ -88,7 +88,7 @@ export default function MapPageClient() {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch('/api/routes?hasCoords=true&limit=900&sort=title&category=geo');
+        const res = await fetch('/api/routes?hasCoords=true&limit=1500&sort=title&kind=place');
         if (!res.ok) return;
         const data = await res.json();
         if (!data.success) return;
