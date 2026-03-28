@@ -26,9 +26,10 @@ const LeafletMap = dynamic(() => import('@/components/shared/LeafletMap'), { ssr
 const LOCATION_TYPE_LABELS: Record<string, string> = {
   volcano: 'Вулкан', geyser: 'Гейзерное поле', hot_spring: 'Термальный источник',
   lake: 'Озеро', mountain: 'Горный массив', river: 'Река', bay: 'Бухта',
-  cape: 'Мыс', island: 'Остров', glacier: 'Ледник', forest: 'Лес',
+  cape: 'Мыс', island: 'Остров', glacier: 'Ледник', forest: 'Лес и природный парк',
   beach: 'Пляж', waterfall: 'Водопад', rock: 'Скала',
-  viewpoint: 'Смотровая площадка', settlement: 'Населённый пункт', other: 'Маршрут',
+  viewpoint: 'Смотровая площадка', settlement: 'Населённый пункт',
+  museum: 'Музей', historical: 'Историческое место', other: 'Маршрут',
 };
 
 const ACTIVITY_TYPE_LABELS: Record<string, string> = {
@@ -53,6 +54,8 @@ const LOCATION_TYPE_IMAGES: Record<string, string> = {
   lake:       '/images/gallery/bay-sunset.jpg',
   river:      '/images/activities/fishing.jpg',
   viewpoint:  '/images/partners/kamchatintour/seo3.jpg',
+  museum:     '/images/partners/kamchatintour/about1.jpg',
+  historical: '/images/gallery/stela.jpg',
   other:      '/images/hero/hero-dark.jpg',
 };
 

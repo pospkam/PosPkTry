@@ -14,22 +14,24 @@ const LeafletMap = dynamic(() => import('@/components/shared/LeafletMap'), { ssr
 
 // ГДЕ — типы локаций с цветами и иконками на карте
 const LOCATION_TYPE_CONFIG: Record<string, { label: string; color: string }> = {
-  volcano:    { label: 'Вулканы',    color: 'orange' },
-  geyser:     { label: 'Гейзеры',    color: 'green' },
-  hot_spring: { label: 'Источники',  color: 'red' },
-  lake:       { label: 'Озёра',      color: 'lightBlue' },
-  mountain:   { label: 'Горы',       color: 'darkBlue' },
-  river:      { label: 'Реки',       color: 'teal' },
-  bay:        { label: 'Океан',      color: 'darkCyan' },
-  waterfall:  { label: 'Водопады',   color: 'blue' },
-  cape:       { label: 'Мысы',       color: 'gray' },
-  island:     { label: 'Острова',    color: 'purple' },
-  rock:       { label: 'Скалы',      color: 'brown' },
-  forest:     { label: 'Леса',       color: 'darkGreen' },
-  beach:      { label: 'Пляжи',      color: 'orange' },
-  viewpoint:  { label: 'Смотровые',  color: 'cyan' },
-  settlement: { label: 'Сёла',       color: 'gray' },
-  other:      { label: 'Прочее',     color: 'gray' },
+  volcano:      { label: 'Вулканы',       color: 'orange' },
+  geyser:       { label: 'Гейзеры',       color: 'green' },
+  hot_spring:   { label: 'Источники',     color: 'red' },
+  lake:         { label: 'Озёра',         color: 'lightBlue' },
+  mountain:     { label: 'Горы',          color: 'darkBlue' },
+  river:        { label: 'Реки',          color: 'teal' },
+  bay:          { label: 'Океан',         color: 'darkCyan' },
+  waterfall:    { label: 'Водопады',      color: 'blue' },
+  cape:         { label: 'Мысы',          color: 'gray' },
+  island:       { label: 'Острова',       color: 'purple' },
+  rock:         { label: 'Скалы',         color: 'brown' },
+  forest:       { label: 'Леса и парки',  color: 'darkGreen' },
+  beach:        { label: 'Пляжи',         color: 'orange' },
+  viewpoint:    { label: 'Смотровые',     color: 'cyan' },
+  settlement:   { label: 'Сёла',          color: 'gray' },
+  museum:       { label: 'Музеи',         color: 'purple' },
+  historical:   { label: 'История',       color: 'brown' },
+  other:        { label: 'Прочее',        color: 'gray' },
 };
 
 // Основные фильтры для UI (без мусорных типов)
@@ -47,7 +49,9 @@ const LOCATION_FILTERS = [
   { id: 'rock',       label: 'Скалы' },
   { id: 'island',     label: 'Острова' },
   { id: 'beach',      label: 'Пляжи' },
-  { id: 'forest',     label: 'Леса' },
+  { id: 'forest',     label: 'Леса и парки' },
+  { id: 'museum',     label: 'Музеи' },
+  { id: 'historical', label: 'История' },
 ];
 
 interface RoutePoint {

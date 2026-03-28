@@ -44,6 +44,8 @@ const LOCATION_COLORS: Record<string, string> = {
   forest:     'darkGreen',
   beach:      'orange',
   viewpoint:  'cyan',
+  museum:     'purple',
+  historical: 'brown',
   other:      'gray',
 };
 
