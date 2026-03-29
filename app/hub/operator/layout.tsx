@@ -3,7 +3,7 @@
 import { ReactNode } from 'react';
 import {
   BarChart3, Map, Calendar, CalendarDays, Users, CreditCard,
-  Settings, Bell, FileText, ArrowLeftRight, HelpCircle, CheckCircle, Inbox,
+  Settings, Bell, FileText, ArrowLeftRight, HelpCircle, CheckCircle, Inbox, User,
 } from 'lucide-react';
 import { HubLayout } from '@/components/layout/HubLayout';
 import { ChatWidget } from '@/components/chat/ChatWidget';
@@ -24,6 +24,7 @@ const SIDEBAR_ITEMS = [
   { href: '/hub/operator/notifications', label: 'Уведомления', icon: Bell },
   { href: '/hub/operator/integrations', label: 'Интеграции', icon: Settings },
   { href: '/hub/operator/help', label: 'Справка', icon: HelpCircle },
+  { href: '/hub/operator/profile', label: 'Профиль', icon: User },
 ];
 
 export default function OperatorHubLayout({ children }: { children: ReactNode }) {
