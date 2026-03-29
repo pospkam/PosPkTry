@@ -47,34 +47,29 @@ export async function POST(req: NextRequest) {
         throw Object.assign(new Error('Тур не найден'), { code: 'NOT_FOUND' });
       }
 
-      const { operator_id, base_price } = tourResult.rows[0] as { operator_id: string; base_price: number };
+      const { base_price } = tourResult.rows[0] as { base_price: number };
       const total_price = base_price * data.participants_count;
 
       const bookingResult = await client.query(
         `INSERT INTO operator_bookings (
-          tour_id, partner_id, tourist_name, tourist_email, tourist_phone,
-          participants_count, booking_date, special_requests, status, created_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'new', NOW())
+          operator_tour_id, tour_id, tourist_name, tourist_email, tourist_phone,
+          participants, booking_date, special_requests, booking_status,
+          base_total_price, final_price, created_via
+        ) VALUES ($1, $1, $2, $3, $4, $5, $6, $7, 'new', $8, $8, 'website')
         RETURNING id`,
         [
           data.tour_id,
-          operator_id,
           data.tourist_name,
           data.tourist_email,
           data.tourist_phone,
           data.participants_count,
           data.booking_date,
           data.special_requests ?? '',
+          total_price,
         ]
       );
 
       const bookingId = (bookingResult.rows[0] as { id: number }).id;
-
-      await client.query(
-        `INSERT INTO tour_payments (booking_id, amount_kopecks, payment_status, created_at)
-         VALUES ($1, $2, 'pending', NOW())`,
-        [bookingId, total_price * 100]
-      );
 
       return { bookingId, total_price };
     });

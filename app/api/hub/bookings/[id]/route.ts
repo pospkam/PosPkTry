@@ -22,7 +22,7 @@ export async function GET(
     id: number;
     tour_title: string;
     booking_date: string;
-    participants_count: number;
+    participants: number;
     tourist_name: string;
     tourist_email: string;
     booking_status: string;
@@ -35,7 +35,7 @@ export async function GET(
        b.id,
        t.title            AS tour_title,
        b.booking_date,
-       b.participants_count,
+       b.participants,
        b.tourist_name,
        b.tourist_email,
        b.booking_status,
@@ -44,8 +44,8 @@ export async function GET(
        p.contacts->>'phone'    AS operator_phone,
        p.contacts->>'telegram' AS operator_telegram
      FROM operator_bookings b
-     JOIN operator_tours   t ON t.id = b.tour_id
-     JOIN partners         p ON p.id = b.partner_id
+     JOIN operator_tours   t ON t.id = COALESCE(b.operator_tour_id, b.tour_id)
+     JOIN partners         p ON p.id = t.operator_id
      WHERE b.id = $1`,
     [id]
   );
@@ -61,11 +61,11 @@ export async function GET(
       id: row.id,
       tour_title: row.tour_title,
       booking_date: row.booking_date,
-      participants_count: row.participants_count,
+      participants_count: row.participants,
       tourist_name: row.tourist_name,
       tourist_email: row.tourist_email,
       status: row.booking_status,
-      total_price: row.base_price * row.participants_count,
+      total_price: row.base_price * row.participants,
       operator_name: row.operator_name,
       operator_phone: row.operator_phone,
       operator_telegram: row.operator_telegram,
