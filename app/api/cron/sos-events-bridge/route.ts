@@ -38,6 +38,14 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    // Авто-архивация SOS старше 24ч со статусом 'sent' (без ответа)
+    const { rowCount: archived } = await pool.query(
+      `UPDATE sos_events
+       SET status = 'archived', notes = COALESCE(notes || ' | ', '') || 'Авто-архивирован: нет ответа 24ч'
+       WHERE status = 'sent'
+         AND created_at < NOW() - INTERVAL '24 hours'`
+    );
+
     // Check for SOS events in last 35 minutes (runs every 30 min, 5 min overlap)
     const { rows } = await pool.query<SosEventRow>(
       `SELECT id::text, lat::text, lng::text, status, notes, created_at
@@ -61,7 +69,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: { sosEventsProcessed: emittedCount },
+      data: { sosEventsProcessed: emittedCount, staleArchived: archived ?? 0 },
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Неизвестная ошибка';

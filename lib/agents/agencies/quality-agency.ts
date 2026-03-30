@@ -180,7 +180,7 @@ export class QualityAgency {
       LEFT JOIN operator_tours ot ON ot.operator_id = p.id AND ot.deleted_at IS NULL
       LEFT JOIN operator_bookings ob ON ob.operator_tour_id = ot.id AND ob.deleted_at IS NULL
       LEFT JOIN tour_availability ta ON ta.operator_tour_id = ot.id
-      WHERE p.is_active = true
+      WHERE p.is_public = true
       GROUP BY p.id, p.name
       ORDER BY bookings_30d DESC NULLS LAST
     `);
