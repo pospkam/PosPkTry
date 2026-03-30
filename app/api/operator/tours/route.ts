@@ -113,6 +113,9 @@ export async function GET(request: NextRequest) {
         t.created_at,
         t.updated_at,
         t.route_id,
+        COALESCE(t.includes, '{}')   AS includes,
+        COALESCE(t.excludes, '{}')   AS excludes,
+        COALESCE(t.itinerary, '[]')  AS itinerary,
         kr.title     AS route_title,
         kr.category  AS route_category,
         kr.lat       AS route_lat,
@@ -147,9 +150,9 @@ export async function GET(request: NextRequest) {
       currency: row.currency,
       isActive: row.is_active,
       images: row.images || [],
-      includes: [], // TODO: Получить из БД
-      excludes: [], // TODO: Получить из БД
-      itinerary: [], // TODO: Получить из БД
+      includes: row.includes ?? [],
+      excludes: row.excludes ?? [],
+      itinerary: row.itinerary ?? [],
       schedule: {
         startDate: new Date(),
         endDate: undefined,

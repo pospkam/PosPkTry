@@ -804,6 +804,9 @@ export interface OpTourListRow {
   bookings_count: string;
   total_revenue: string;
   images: string[] | null;
+  includes: string[] | null;
+  excludes: string[] | null;
+  itinerary: unknown[] | null;
 }
 
 export interface OpTourCreateRow {

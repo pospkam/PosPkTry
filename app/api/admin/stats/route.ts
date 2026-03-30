@@ -156,7 +156,7 @@ async function getTopOperators(): Promise<{ id: string; name: string; revenue: n
     FROM partners p
     LEFT JOIN tours t ON p.id = t.operator_id
     LEFT JOIN bookings b ON t.id = b.tour_id AND b.payment_status = 'paid'
-    WHERE p.type = 'operator'
+    WHERE p.category = 'operator'
     GROUP BY p.id, p.name
     ORDER BY revenue DESC
     LIMIT 5

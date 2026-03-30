@@ -124,18 +124,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(response);
 
     } catch (dbError) {
-
-      // Fallback к тестовому подтверждению
-      const mockResponse: TransferConfirmationResponse = {
-        success: true,
-        data: {
-          bookingId: bookingId,
-          newStatus: action === 'confirm' ? 'confirmed' : 'cancelled',
-          message: `Бронирование успешно ${action === 'confirm' ? 'подтверждено' : 'отклонено'}`
-        }
-      };
-
-      return NextResponse.json(mockResponse);
+      const msg = dbError instanceof Error ? dbError.message : 'Ошибка БД';
+      return NextResponse.json({
+        success: false,
+        error: `Ошибка при обработке бронирования: ${msg}`
+      }, { status: 503 });
     }
 
   } catch (error) {
@@ -146,25 +139,11 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Функция для отправки уведомлений о подтверждении (заглушка)
 async function sendConfirmationNotifications(
-  booking: Record<string, unknown>, 
-  action: string, 
+  booking: Record<string, unknown>,
+  action: string,
   message?: string
 ): Promise<void> {
-  try {
-    // Здесь будет реальная отправка уведомлений
-
-    // В реальном приложении здесь будет:
-    // - Отправка SMS с подтверждением/отклонением
-    // - Отправка email с деталями
-    // - Push-уведомление в мобильное приложение
-    // - Уведомление в Telegram бот
-
-    if (action === 'confirm') {
-      // Отправляем детали поездки
-    }
-
-  } catch (error) {
-  }
+  // TODO: реализовать через lib/notifications/telegram-channel.ts
+  void booking; void action; void message;
 }

@@ -157,7 +157,7 @@ export class LegalAgency {
           COUNT(*) FILTER (WHERE os.cancellation_policy IS NULL
                              OR length(os.cancellation_policy) < 10)::text AS no_cancellation,
           (SELECT COUNT(*)::text FROM partners
-            WHERE type = 'operator' AND deleted_at IS NULL
+            WHERE category = 'operator'
               AND (contacts IS NULL OR contacts->>'phone' IS NULL))  AS operators_without_contacts
         FROM operator_tours ot
         JOIN partners p ON p.id = ot.operator_id
@@ -175,7 +175,7 @@ export class LegalAgency {
           ) AS issue
         FROM partners p
         LEFT JOIN operator_settings os ON os.user_id = p.user_id
-        WHERE p.type = 'operator' AND p.deleted_at IS NULL
+        WHERE p.category = 'operator'
           AND (
             p.contacts IS NULL OR p.contacts->>'phone' IS NULL OR p.is_public = false OR
             os.cancellation_policy IS NULL
