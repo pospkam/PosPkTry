@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { approvalRequired } from '@/lib/agents/safeguards/approval-required';
 import { pool } from '@/lib/db-pool';
+import { executeInitiative, AUTO_EXECUTE_TYPES, type ExecutionTask } from '@/lib/agents/execution/initiative-executor';
 
 export const dynamic = 'force-dynamic';
 
@@ -76,7 +77,30 @@ export async function POST(req: NextRequest) {
 
   if (parsed.data.action === 'approve') {
     await approvalRequired.approve(parsed.data.approval_id, reviewerId, parsed.data.notes);
-    // Execution triggered manually by owner via POST /api/agents/execute/[approvalId]
+
+    // Авто-исполнение для безопасных типов (archive_sos, send_notification)
+    const row = await pool.query<{
+      action_type: string; description: string; context: Record<string, unknown>;
+      executor_agent_id: string | null; due_date: string | null;
+    }>(
+      `SELECT action_type, description, context, executor_agent_id, due_date::text
+       FROM agent_approvals WHERE id = $1`,
+      [parsed.data.approval_id]
+    ).catch(() => null);
+
+    if (row?.rows[0] && AUTO_EXECUTE_TYPES.has(row.rows[0].action_type)) {
+      const r = row.rows[0];
+      const task: ExecutionTask = {
+        approval_id:       parsed.data.approval_id,
+        executor_agent_id: r.executor_agent_id ?? 'system',
+        action_type:       r.action_type,
+        description:       r.description ?? '',
+        context:           r.context ?? {},
+        due_date:          r.due_date ?? '',
+      };
+      // Запускаем в фоне — не блокируем ответ
+      executeInitiative(task).catch(() => null);
+    }
 
   } else {
     await approvalRequired.reject(parsed.data.approval_id, reviewerId, parsed.data.notes);

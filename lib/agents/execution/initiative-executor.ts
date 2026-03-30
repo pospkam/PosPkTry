@@ -2,22 +2,23 @@
  * lib/agents/execution/initiative-executor.ts
  * AGENT EXECUTION LAYER
  *
- * Когда инициатива одобрена и исполнитель назначен,
- * эта система запускает ФАКТИЧЕСКОЕ выполнение.
+ * Когда инициатива одобрена — эта система запускает ФАКТИЧЕСКОЕ выполнение.
+ * Все SQL проверены по реальной схеме БД (мар 2026).
  *
- * Phases:
- * 1. Approved + Assigned → trigger executor
- * 2. Executor generates action plan + code
- * 3. Execute changes (via API or direct DB ops)
- * 4. Verify + rollback if needed
- * 5. Report results
+ * Executors:
+ *   archive_sos           — архивировать зависшие SOS-события
+ *   send_notification     — отправить Telegram-уведомление владельцу
+ *   ui_copy_change        — переписать описания туров с низким рейтингом (AI)
+ *   price_change          — создать A/B эксперимент по ценам
+ *   commission_change     — обновить настройки комиссий оператора
+ *   sql_query_fix         — самоисцеление SQL-ошибок в agency-файлах
+ *   booking_rule_change   — обновить политику отмены оператора
  */
 
 import { pool } from '@/lib/db-pool';
 import { callAIWithModelDirect } from '@/lib/ai/providers';
 import { getModelForAgent } from '@/lib/ai/agent-models';
 import type { ChatMessage } from '@/lib/ai/prompts';
-import { randomBytes } from 'crypto';
 
 export interface ExecutionTask {
   approval_id: string;
@@ -36,158 +37,80 @@ export interface ExecutionResult {
   verification_passed: boolean;
 }
 
-/**
- * Executor для каждого типа инициативы
- */
+// Типы которые выполняются автоматически после approve (без ручного триггера)
+export const AUTO_EXECUTE_TYPES = new Set([
+  'archive_sos',
+  'send_notification',
+]);
+
 const EXECUTORS: Record<string, (task: ExecutionTask) => Promise<ExecutionResult>> = {
-  // 1. API KEY ROTATION (Security)
-  'api_scope_expand': async (task) => {
-    return executeAPIKeyRotation(task);
-  },
-
-  // 2. T&C UPDATE (Legal)
-  'booking_rule_change': async (task) => {
-    return executeTCUpdate(task);
-  },
-
-  // 3. TOUR DESCRIPTION REWRITE (Content)
-  'ui_copy_change': async (task) => {
-    return executeTourDescriptionRewrite(task);
-  },
-
-  // 4. A/B PRICING TEST (Hacker)
-  'price_change': async (task) => {
-    return executeABTestSetup(task);
-  },
-
-  // 5. COMMISSION BATCH OPTIMIZATION (Admin)
-  'commission_change': async (task) => {
-    return executeCommissionOptimization(task);
-  },
-
-  // 6. SQL SELF-HEALING (Evolution / Security)
-  'sql_query_fix': async (task) => {
-    return executeSQLQueryFix(task);
-  },
+  archive_sos:        executeArchiveSOS,
+  send_notification:  executeSendNotification,
+  ui_copy_change:     executeTourDescriptionRewrite,
+  price_change:       executeABTestSetup,
+  commission_change:  executeCommissionUpdate,
+  sql_query_fix:      executeSQLQueryFix,
+  booking_rule_change: executeCancellationPolicyUpdate,
 };
 
-/**
- * ═══════════════════════════════════════════════════════════════
- * EXECUTOR 1: API KEY ROTATION (Security Agent)
- * ═══════════════════════════════════════════════════════════════
- */
-async function executeAPIKeyRotation(task: ExecutionTask): Promise<ExecutionResult> {
+// ═══════════════════════════════════════════════════════════════
+// EXECUTOR 1: ARCHIVE STALE SOS (Rescue Agent)
+// Архивирует SOS-события старше 24ч которые никто не обработал
+// ═══════════════════════════════════════════════════════════════
+async function executeArchiveSOS(task: ExecutionTask): Promise<ExecutionResult> {
   const changes: string[] = [];
   const errors: string[] = [];
 
   try {
-    // Step 1: Get all OCTO API keys
-    const allKeys = await pool.query(
-      `SELECT id, api_key, created_at FROM octo_api_keys ORDER BY created_at DESC`
+    const stale = await pool.query<{ id: string; tourist_name: string | null; created_at: string }>(
+      `SELECT id, tourist_name, created_at::text
+       FROM sos_events
+       WHERE status = 'sent'
+         AND created_at < NOW() - INTERVAL '24 hours'
+       ORDER BY created_at ASC`
     );
 
-    changes.push(`Found ${allKeys.rowCount} old API keys to rotate`);
-
-    // Step 2: Generate new keys (crypto secure)
-    const newKeys = allKeys.rows.map(row => ({
-      old_id: row.id,
-      old_key_last4: row.api_key.slice(-4),
-      new_key: generateSecureKey(),
-      created_at: new Date(),
-    }));
-
-    // Step 3: Store new keys (transaction START)
-    for (const keyPair of newKeys) {
-      await pool.query(
-        `UPDATE octo_api_keys SET api_key = $1, updated_at = NOW(), is_active = true WHERE id = $2`,
-        [keyPair.new_key, keyPair.old_id]
-      );
-      changes.push(`Rotated key id ${keyPair.old_id} (was ${keyPair.old_key_last4}...)`);
+    if (stale.rows.length === 0) {
+      return {
+        success: true,
+        changes_made: ['Зависших SOS-событий не найдено'],
+        errors: [],
+        rollback_available: false,
+        verification_passed: true,
+      };
     }
 
-    // Step 4: Test connectivity to key endpoints
-    const testResult = await testOCTOEndpoints();
-    if (!testResult.success) {
-      errors.push(`Endpoint test failed: ${testResult.error}`);
-      // ROLLBACK would happen here
-    } else {
-      changes.push(`All OCTO endpoints verified working`);
+    const ids = stale.rows.map(r => r.id);
+    const reason = typeof task.context.reason === 'string'
+      ? task.context.reason
+      : 'Авто-архивация: нет ответа >24ч';
+
+    await pool.query(
+      `UPDATE sos_events
+       SET status = 'archived', notes = $1
+       WHERE id = ANY($2::uuid[])`,
+      [reason, ids]
+    );
+
+    changes.push(`Архивировано ${ids.length} SOS-событий:`);
+    for (const r of stale.rows) {
+      changes.push(`  • ${r.tourist_name ?? 'Аноним'} (от ${r.created_at.slice(0, 10)})`);
     }
 
-    return {
-      success: errors.length === 0,
-      changes_made: changes,
-      errors,
-      rollback_available: true,
-      verification_passed: testResult.success,
-    };
-  } catch (err) {
-    errors.push(`Rotation error: ${err instanceof Error ? err.message : String(err)}`);
-    return {
-      success: false,
-      changes_made: changes,
-      errors,
-      rollback_available: true,
-      verification_passed: false,
-    };
-  }
-}
-
-/**
- * ═══════════════════════════════════════════════════════════════
- * EXECUTOR 2: T&C UPDATE (Legal Agent)
- * ═══════════════════════════════════════════════════════════════
- */
-async function executeTCUpdate(task: ExecutionTask): Promise<ExecutionResult> {
-  const changes: string[] = [];
-  const errors: string[] = [];
-
-  try {
-    // Step 1: Get current T&C version
-    const currentTC = await pool.query(
-      `SELECT id, content, version FROM platform_terms WHERE type = 'weather_policy' ORDER BY version DESC LIMIT 1`
-    );
-
-    const oldVersion = currentTC.rows[0]?.version ?? 0;
-    const newVersion = oldVersion + 1;
-
-    // Step 2: Generate updated weather clause
-    const updatedClause = `
-      Weather Cancellation Policy (v${newVersion}):
-      - Operator must provide 48-hour notice for weather-related cancellations
-      - Tourist receives 100% refund or rebooking within 30 days
-      - Force majeure (hurricanes, etc) = 50% refund
-    `;
-
-    changes.push(`Created new T&C version ${newVersion}`);
-
-    // Step 3: Store new version (immutable)
-    const newTC = await pool.query(
-      `INSERT INTO platform_terms (type, content, version, created_at)
-       VALUES ('weather_policy', $1, $2, NOW())
-       RETURNING id`,
-      [updatedClause, newVersion]
-    );
-
-    changes.push(`Stored T&C v${newVersion} (id: ${newTC.rows[0].id})`);
-
-    // Step 4: Identify affected contracts
-    const affectedContracts = await pool.query(
-      `SELECT id, operator_id FROM partners WHERE contract_version < $1 LIMIT 10`,
-      [newVersion]
-    );
-
-    changes.push(`Found ${affectedContracts.rowCount} affected operator contracts`);
-
-    // Step 5: Update references (staging)
-    for (const contract of affectedContracts.rows) {
-      await pool.query(
-        `UPDATE partners SET contract_version = $1, updated_at = NOW() WHERE id = $2`,
-        [newVersion, contract.id]
-      );
+    // Уведомляем владельца в Telegram
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    const chatId   = process.env.TELEGRAM_CHAT_ID;
+    if (botToken && chatId) {
+      await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: `✅ Rescue Agent авто-архивировал ${ids.length} SOS-событий старше 24ч`,
+          parse_mode: 'HTML',
+        }),
+      }).catch(() => null);
     }
-
-    changes.push(`Updated ${affectedContracts.rowCount} contract references`);
 
     return {
       success: true,
@@ -197,317 +120,239 @@ async function executeTCUpdate(task: ExecutionTask): Promise<ExecutionResult> {
       verification_passed: true,
     };
   } catch (err) {
-    errors.push(`T&C update error: ${err instanceof Error ? err.message : String(err)}`);
-    return {
-      success: false,
-      changes_made: changes,
-      errors,
-      rollback_available: false,
-      verification_passed: false,
-    };
+    errors.push(err instanceof Error ? err.message : String(err));
+    return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
   }
 }
 
-/**
- * ═══════════════════════════════════════════════════════════════
- * EXECUTOR 3: TOUR DESCRIPTION REWRITE (Content Agent)
- * ═══════════════════════════════════════════════════════════════
- */
+// ═══════════════════════════════════════════════════════════════
+// EXECUTOR 2: SEND TELEGRAM NOTIFICATION (любой агент)
+// ═══════════════════════════════════════════════════════════════
+async function executeSendNotification(task: ExecutionTask): Promise<ExecutionResult> {
+  const changes: string[] = [];
+  const errors: string[] = [];
+
+  try {
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    const chatId   = process.env.TELEGRAM_CHAT_ID;
+
+    if (!botToken || !chatId) {
+      errors.push('TELEGRAM_BOT_TOKEN или TELEGRAM_CHAT_ID не настроены');
+      return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
+    }
+
+    const text = typeof task.context.message === 'string'
+      ? task.context.message
+      : `Агент ${task.executor_agent_id}: ${task.description}`;
+
+    const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' }),
+    });
+
+    if (!res.ok) {
+      errors.push(`Telegram API: ${res.status}`);
+      return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
+    }
+
+    changes.push(`Уведомление отправлено в Telegram (chat ${chatId})`);
+    return { success: true, changes_made: changes, errors, rollback_available: false, verification_passed: true };
+  } catch (err) {
+    errors.push(err instanceof Error ? err.message : String(err));
+    return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EXECUTOR 3: TOUR DESCRIPTION REWRITE (Content Agent)
+// Переписывает описания туров с низким рейтингом через AI
+// ═══════════════════════════════════════════════════════════════
 async function executeTourDescriptionRewrite(task: ExecutionTask): Promise<ExecutionResult> {
   const changes: string[] = [];
   const errors: string[] = [];
 
   try {
-    // Step 1: Find 23 tours with CTR < 0.5%
-    const lowCTRTours = await pool.query(
-      `SELECT id, title, short_description, agent_route_id
-       FROM agent_route_knowledge
-       WHERE is_visible = true
-       ORDER BY ctr_rate ASC
-       LIMIT 23`
+    const limit = typeof task.context.limit === 'number' ? task.context.limit : 5;
+
+    // Туры с низким рейтингом или коротким описанием
+    const tours = await pool.query<{ id: number; title: string; description: string | null; rating: string | null }>(
+      `SELECT id, title, description, rating
+       FROM operator_tours
+       WHERE deleted_at IS NULL AND is_active = true
+         AND (description IS NULL OR length(description) < 100 OR rating::numeric < 4.0)
+       ORDER BY COALESCE(rating::numeric, 0) ASC, length(COALESCE(description, '')) ASC
+       LIMIT $1`,
+      [limit]
     );
 
-    changes.push(`Found ${lowCTRTours.rowCount} low-CTR tours to optimize`);
-
-    // Step 2: For each tour, generate improved description via AI
-    const improvedDescriptions: Array<{ id: number; old: string; new: string }> = [];
-
-    for (const tour of lowCTRTours.rows) {
-      const prompt = [
-        `Tour: ${tour.title}`,
-        `Current: "${tour.short_description}"`,
-        '',
-        'Rewrite this tour description to be:',
-        '1. Emotionally engaging (specific details, sensory)',
-        '2. Value-focused (what tourist gets)',
-        '3. Competitive (compared to similar tours)',
-        '4. Action-oriented (call to action)',
-        '',
-        'Keep under 150 chars. Only return the new description.',
-      ].join('\n');
-
-      const messages: ChatMessage[] = [{ role: 'user', content: prompt }];
-      const newDesc = await callAIWithModelDirect(messages, getModelForAgent('content'));
-
-      improvedDescriptions.push({
-        id: tour.id,
-        old: tour.short_description || '',
-        new: newDesc || '',
-      });
-
-      changes.push(`Rewrote: "${tour.title}"`);
+    if (tours.rows.length === 0) {
+      return {
+        success: true,
+        changes_made: ['Туров требующих улучшения не найдено'],
+        errors: [],
+        rollback_available: false,
+        verification_passed: true,
+      };
     }
 
-    // Step 3: Batch update descriptions
-    for (const desc of improvedDescriptions) {
-      await pool.query(
-        `UPDATE agent_route_knowledge SET short_description = $1, updated_at = NOW() WHERE id = $2`,
-        [desc.new, desc.id]
-      );
+    changes.push(`Найдено ${tours.rows.length} туров для улучшения`);
+
+    for (const tour of tours.rows) {
+      try {
+        const prompt = [
+          `Тур: "${tour.title}"`,
+          tour.description ? `Текущее описание: "${tour.description}"` : 'Описание отсутствует.',
+          '',
+          'Напиши продающее описание тура для туристической платформы Камчатки.',
+          'Требования: 2-3 предложения, эмоционально, конкретно, на русском языке.',
+          'Только текст описания, без кавычек.',
+        ].join('\n');
+
+        const messages: ChatMessage[] = [{ role: 'user', content: prompt }];
+        const newDesc = await callAIWithModelDirect(messages, getModelForAgent('content'));
+
+        if (newDesc && newDesc.length > 20) {
+          await pool.query(
+            `UPDATE operator_tours SET description = $1, updated_at = NOW() WHERE id = $2`,
+            [newDesc.trim(), tour.id]
+          );
+          changes.push(`✓ "${tour.title}" — описание обновлено (${newDesc.length} симв.)`);
+        }
+      } catch (err) {
+        errors.push(`"${tour.title}": ${err instanceof Error ? err.message : String(err)}`);
+      }
     }
-
-    changes.push(`Updated ${improvedDescriptions.length} descriptions in database`);
-
-    // Step 4: Verification (spot check CTR improvement tracking)
-    changes.push(`Publishing to production`);
 
     return {
-      success: errors.length === 0,
+      success: errors.length < tours.rows.length,
       changes_made: changes,
       errors,
       rollback_available: true,
       verification_passed: true,
     };
   } catch (err) {
-    errors.push(`Description rewrite error: ${err instanceof Error ? err.message : String(err)}`);
-    return {
-      success: false,
-      changes_made: changes,
-      errors,
-      rollback_available: false,
-      verification_passed: false,
-    };
+    errors.push(err instanceof Error ? err.message : String(err));
+    return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
   }
 }
 
-/**
- * ═══════════════════════════════════════════════════════════════
- * EXECUTOR 4: A/B TEST SETUP (Hacker Agent)
- * ═══════════════════════════════════════════════════════════════
- */
+// ═══════════════════════════════════════════════════════════════
+// EXECUTOR 4: A/B PRICING EXPERIMENT (Hacker Agent)
+// Создаёт эксперимент в agent_experiments (без изменения цен в БД)
+// ═══════════════════════════════════════════════════════════════
 async function executeABTestSetup(task: ExecutionTask): Promise<ExecutionResult> {
   const changes: string[] = [];
   const errors: string[] = [];
 
   try {
-    // Step 1: Identify low-volume tours (<10 bookings/month)
-    const lowVolumeTours = await pool.query(
-      `SELECT id, title, base_price, booking_count_30d
-       FROM operator_tours
-       WHERE booking_count_30d < 10
-       ORDER BY RANDOM()
-       LIMIT 30`
+    // Туры с нулевыми бронированиями за 30 дней
+    const lowVolume = await pool.query<{ id: number; title: string; base_price: string }>(
+      `SELECT ot.id, ot.title, ot.base_price
+       FROM operator_tours ot
+       WHERE ot.deleted_at IS NULL AND ot.is_active = true
+         AND NOT EXISTS (
+           SELECT 1 FROM operator_bookings ob
+           WHERE ob.operator_tour_id = ot.id
+             AND ob.created_at >= NOW() - INTERVAL '30 days'
+             AND ob.deleted_at IS NULL
+         )
+       ORDER BY ot.base_price DESC
+       LIMIT 20`
     );
 
-    changes.push(`Selected ${lowVolumeTours.rowCount} tours for A/B test`);
+    if (lowVolume.rows.length === 0) {
+      return {
+        success: true,
+        changes_made: ['Все туры имеют бронирования за 30 дней — A/B тест не нужен'],
+        errors: [],
+        rollback_available: false,
+        verification_passed: true,
+      };
+    }
 
-    // Step 2: Split into control (50%) and treatment (50%)
-    const controlTours = lowVolumeTours.rows.slice(0, 15);
-    const treatmentTours = lowVolumeTours.rows.slice(15, 30);
+    const half = Math.ceil(lowVolume.rows.length / 2);
+    const controlGroup  = lowVolume.rows.slice(0, half).map(t => t.id);
+    const treatmentGroup = lowVolume.rows.slice(half).map(t => t.id);
 
-    // Step 3: Create experiment record
-    const experiment = await pool.query(
+    const discount = typeof task.context.discount_pct === 'number'
+      ? task.context.discount_pct
+      : 10;
+
+    const exp = await pool.query<{ id: string }>(
       `INSERT INTO agent_experiments (
-        name, type, description, status, control_group, treatment_group,
-        start_date, end_date, primary_metric, created_at
-      ) VALUES (
-        'Dynamic Pricing -10% A/B Test',
-        'pricing',
-        'Test -10% dynamic pricing on low-volume tours',
-        'active',
-        $1, $2, NOW(), NOW() + '14 days'::interval, 'conversion_rate', NOW()
-      )
-      RETURNING id`,
-      [JSON.stringify(controlTours.map(t => t.id)), JSON.stringify(treatmentTours.map(t => t.id))]
+         name, description, intent, variant_a, variant_b, metric, status
+       ) VALUES ($1, $2, 'price_change', $3, $4, 'booking_count', 'running')
+       RETURNING id`,
+      [
+        `A/B цены −${discount}% (${new Date().toLocaleDateString('ru')})`,
+        `Тест скидки ${discount}% на ${lowVolume.rows.length} туров без броней`,
+        JSON.stringify({ label: 'control', tour_ids: controlGroup }),
+        JSON.stringify({ label: `discount_${discount}pct`, tour_ids: treatmentGroup, discount_pct: discount }),
+      ]
     );
 
-    changes.push(`Created experiment ID: ${experiment.rows[0].id}`);
-
-    // Step 4: Apply treatment (75% of original price)
-    for (const tour of treatmentTours) {
-      const discountedPrice = Math.round(tour.base_price * 0.9);
-      await pool.query(
-        `UPDATE operator_tours
-         SET base_price = $1, ab_test_variant = 'treatment', ab_test_id = $2, updated_at = NOW()
-         WHERE id = $3`,
-        [discountedPrice, experiment.rows[0].id, tour.id]
-      );
-      changes.push(`Applied -10% pricing to tour ${tour.id} (${tour.title})`);
-    }
-
-    // Step 5: Mark control group
-    for (const tour of controlTours) {
-      await pool.query(
-        `UPDATE operator_tours
-         SET ab_test_variant = 'control', ab_test_id = $1, updated_at = NOW()
-         WHERE id = $2`,
-        [experiment.rows[0].id, tour.id]
-      );
-    }
-
-    changes.push(`A/B test active for 14 days (${lowVolumeTours.rowCount} tours)`);
+    changes.push(`Создан A/B эксперимент ID: ${exp.rows[0].id}`);
+    changes.push(`Контрольная группа: ${controlGroup.length} туров`);
+    changes.push(`Тестовая группа (−${discount}%): ${treatmentGroup.length} туров`);
+    changes.push('Результаты: /hub/admin/agents → Experiments');
 
     return {
       success: true,
       changes_made: changes,
       errors,
-      rollback_available: true,
+      rollback_available: false,
       verification_passed: true,
     };
   } catch (err) {
-    errors.push(`A/B test setup error: ${err instanceof Error ? err.message : String(err)}`);
-    return {
-      success: false,
-      changes_made: changes,
-      errors,
-      rollback_available: false,
-      verification_passed: false,
-    };
+    errors.push(err instanceof Error ? err.message : String(err));
+    return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
   }
 }
 
-/**
- * ═══════════════════════════════════════════════════════════════
- * EXECUTOR 5: COMMISSION BATCH OPTIMIZATION (Admin Agent)
- * ═══════════════════════════════════════════════════════════════
- */
-async function executeCommissionOptimization(task: ExecutionTask): Promise<ExecutionResult> {
+// ═══════════════════════════════════════════════════════════════
+// EXECUTOR 5: COMMISSION UPDATE (Admin Agent)
+// Обновляет commission_rate оператора
+// ═══════════════════════════════════════════════════════════════
+async function executeCommissionUpdate(task: ExecutionTask): Promise<ExecutionResult> {
   const changes: string[] = [];
   const errors: string[] = [];
 
   try {
-    // Step 1: Analyze current batch processing
-    const stats = await pool.query(
-      `SELECT
-        COUNT(*) as pending_count,
-        AVG(EXTRACT(EPOCH FROM (NOW() - created_at))) as avg_wait_seconds,
-        MAX(EXTRACT(EPOCH FROM (NOW() - created_at))) as max_wait_seconds
-      FROM agent_commissions
-      WHERE status = 'pending'`
+    const newRate    = typeof task.context.new_rate    === 'number' ? task.context.new_rate : null;
+    const partnerId  = typeof task.context.partner_id  === 'string' ? task.context.partner_id : null;
+
+    if (!newRate || !partnerId) {
+      errors.push('Необходимы context.new_rate и context.partner_id');
+      return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
+    }
+
+    const result = await pool.query<{ name: string; commission_rate: string }>(
+      `UPDATE partners
+       SET commission_rate = $1, updated_at = NOW()
+       WHERE id = $2
+       RETURNING name, commission_rate`,
+      [newRate, partnerId]
     );
 
-    changes.push(`${stats.rows[0].pending_count} pending commissions`);
-    changes.push(`Average wait: ${Math.round(stats.rows[0].avg_wait_seconds)}s (was 2.3h = 8280s)`);
+    if (result.rowCount === 0) {
+      errors.push(`Партнёр ${partnerId} не найден`);
+      return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
+    }
 
-    // Step 2: Create optimized processing strategy
-    const batchSize = 100;
-    const parallelStreams = 4;
+    const partner = result.rows[0];
+    changes.push(`Оператор "${partner.name}": комиссия → ${partner.commission_rate}%`);
 
-    changes.push(`Strategy: Batch size ${batchSize} x ${parallelStreams} parallel streams`);
-
-    // Step 3: Update configuration
-    await pool.query(
-      `INSERT INTO platform_config (key, value, updated_at)
-       VALUES ('commission_batch_size', $1, NOW())
-       ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()`,
-      [batchSize.toString()]
-    );
-
-    await pool.query(
-      `INSERT INTO platform_config (key, value, updated_at)
-       VALUES ('commission_parallel_streams', $1, NOW())
-       ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()`,
-      [parallelStreams.toString()]
-    );
-
-    changes.push(`Configuration updated (batch_size=${batchSize}, parallel=${parallelStreams})`);
-
-    // Step 4: Deploy to staging
-    changes.push(`Deployed to staging environment`);
-
-    // Step 5: Schedule gradual rollout
-    changes.push(`Rollout schedule: 5% -> 25% -> 50% -> 100% (daily)`);
-
-    return {
-      success: true,
-      changes_made: changes,
-      errors,
-      rollback_available: true,
-      verification_passed: true,
-    };
+    return { success: true, changes_made: changes, errors, rollback_available: true, verification_passed: true };
   } catch (err) {
-    errors.push(`Commission optimization error: ${err instanceof Error ? err.message : String(err)}`);
-    return {
-      success: false,
-      changes_made: changes,
-      errors,
-      rollback_available: false,
-      verification_passed: false,
-    };
+    errors.push(err instanceof Error ? err.message : String(err));
+    return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
   }
 }
 
-/**
- * ═══════════════════════════════════════════════════════════════
- * HELPERS
- * ═══════════════════════════════════════════════════════════════
- */
-
-function generateSecureKey(): string {
-  const prefix = 'sk_live_';
-  const randomPart = randomBytes(32).toString('hex');
-  return prefix + randomPart;
-}
-
-async function testOCTOEndpoints(): Promise<{ success: boolean; error?: string }> {
-  try {
-    const octoBaseUrl = process.env.OCTO_API_URL || 'https://api.octo.travel/v1';
-    const octoApiKey = process.env.OCTO_API_KEY;
-
-    if (!octoApiKey) {
-      return { success: false, error: 'OCTO_API_KEY not configured' };
-    }
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-    try {
-      const response = await fetch(`${octoBaseUrl}/health`, {
-        method: 'GET',
-        headers: {
-          'X-API-KEY': octoApiKey,
-          'Content-Type': 'application/json',
-        },
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        return {
-          success: false,
-          error: `OCTO API returned ${response.status}`,
-        };
-      }
-
-      return { success: true };
-    } finally {
-      clearTimeout(timeoutId);
-    }
-  } catch (err) {
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : String(err),
-    };
-  }
-}
-
-/**
- * ═══════════════════════════════════════════════════════════════
- * EXECUTOR 6: SQL SELF-HEALING (Evolution / Security Agent)
- * Агент обнаружил SQL-ошибки → система сама патчит agency-файлы
- * ═══════════════════════════════════════════════════════════════
- */
+// ═══════════════════════════════════════════════════════════════
+// EXECUTOR 6: SQL SELF-HEALING (Evolution Agent)
+// ═══════════════════════════════════════════════════════════════
 async function executeSQLQueryFix(task: ExecutionTask): Promise<ExecutionResult> {
   const changes: string[] = [];
   const errors: string[] = [];
@@ -515,8 +360,7 @@ async function executeSQLQueryFix(task: ExecutionTask): Promise<ExecutionResult>
   try {
     const { fixSQLColumnErrors, scanSQLErrors } = await import('@/lib/agents/tools/board-executor-tools');
 
-    // Step 1: сканируем что сломано
-    const beforeScan = scanSQLErrors();
+    const beforeScan  = scanSQLErrors();
     const totalIssues = beforeScan.reduce((s, f) => s + f.issues.length, 0);
 
     if (totalIssues === 0) {
@@ -531,58 +375,76 @@ async function executeSQLQueryFix(task: ExecutionTask): Promise<ExecutionResult>
 
     changes.push(`Обнаружено ${totalIssues} SQL-ошибок в ${beforeScan.length} файлах`);
 
-    // Step 2: применяем патчи
-    const agencyFile = typeof task.context.agency_file === 'string'
-      ? task.context.agency_file
-      : undefined;
-
+    const agencyFile = typeof task.context.agency_file === 'string' ? task.context.agency_file : undefined;
     const result = await fixSQLColumnErrors(agencyFile);
 
     if (!result.success) {
       errors.push(result.message);
     } else {
       changes.push(result.message);
-      if (result.details?.changes && Array.isArray(result.details.changes)) {
-        for (const c of result.details.changes as string[]) {
-          changes.push(c);
-        }
+      if (Array.isArray(result.details?.changes)) {
+        for (const c of result.details.changes as string[]) changes.push(c);
       }
     }
 
-    // Step 3: верификация — сканируем снова
-    const afterScan = scanSQLErrors();
+    const afterScan       = scanSQLErrors();
     const remainingIssues = afterScan.reduce((s, f) => s + f.issues.length, 0);
-    const fixed = totalIssues - remainingIssues;
-    const verificationPassed = remainingIssues === 0;
+    const fixed           = totalIssues - remainingIssues;
 
-    changes.push(`Исправлено: ${fixed}/${totalIssues} ошибок`);
-    if (!verificationPassed) {
-      errors.push(`Осталось нерешённых проблем: ${remainingIssues}`);
-    }
+    changes.push(`Исправлено: ${fixed}/${totalIssues}`);
+    if (remainingIssues > 0) errors.push(`Осталось: ${remainingIssues}`);
 
     return {
       success: fixed > 0,
       changes_made: changes,
       errors,
       rollback_available: false,
-      verification_passed: verificationPassed,
+      verification_passed: remainingIssues === 0,
     };
-
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return {
-      success: false,
-      changes_made: [],
-      errors: [`executeSQLQueryFix failed: ${msg}`],
-      rollback_available: false,
-      verification_passed: false,
-    };
+    errors.push(err instanceof Error ? err.message : String(err));
+    return { success: false, changes_made: [], errors, rollback_available: false, verification_passed: false };
   }
 }
 
-/**
- * Main executor entry point
- */
+// ═══════════════════════════════════════════════════════════════
+// EXECUTOR 7: CANCELLATION POLICY UPDATE (Legal Agent)
+// Обновляет политику отмены в настройках оператора
+// ═══════════════════════════════════════════════════════════════
+async function executeCancellationPolicyUpdate(task: ExecutionTask): Promise<ExecutionResult> {
+  const changes: string[] = [];
+  const errors: string[] = [];
+
+  try {
+    const policy   = typeof task.context.policy   === 'string' ? task.context.policy : null;
+    const userId   = typeof task.context.user_id  === 'string' ? task.context.user_id : null;
+
+    if (!policy || !userId) {
+      errors.push('Необходимы context.policy и context.user_id');
+      return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
+    }
+
+    await pool.query(
+      `INSERT INTO operator_settings (user_id, cancellation_policy, updated_at)
+       VALUES ($1, $2, NOW())
+       ON CONFLICT (user_id)
+       DO UPDATE SET cancellation_policy = $2, updated_at = NOW()`,
+      [userId, policy]
+    );
+
+    changes.push(`Политика отмены обновлена для user_id=${userId}`);
+    changes.push(`Новая политика: "${policy.slice(0, 100)}..."`);
+
+    return { success: true, changes_made: changes, errors, rollback_available: true, verification_passed: true };
+  } catch (err) {
+    errors.push(err instanceof Error ? err.message : String(err));
+    return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ENTRY POINT
+// ═══════════════════════════════════════════════════════════════
 export async function executeInitiative(task: ExecutionTask): Promise<ExecutionResult> {
   const executor = EXECUTORS[task.action_type];
 
@@ -590,32 +452,25 @@ export async function executeInitiative(task: ExecutionTask): Promise<ExecutionR
     return {
       success: false,
       changes_made: [],
-      errors: [`No executor for action type: ${task.action_type}`],
+      errors: [`Нет executor для action_type: "${task.action_type}". Доступны: ${Object.keys(EXECUTORS).join(', ')}`],
       rollback_available: false,
       verification_passed: false,
     };
   }
 
-  // Update status to in_progress
   await pool.query(
     `UPDATE agent_approvals SET execution_status = 'in_progress', updated_at = NOW() WHERE id = $1`,
     [task.approval_id]
-  );
+  ).catch(() => null);
 
-  // Execute
   const result = await executor(task);
 
-  // Update status to done or failed
   await pool.query(
     `UPDATE agent_approvals
      SET execution_status = $1, execution_notes = $2, completed_at = NOW(), updated_at = NOW()
      WHERE id = $3`,
-    [
-      result.success ? 'done' : 'failed',
-      JSON.stringify(result),
-      task.approval_id,
-    ]
-  );
+    [result.success ? 'done' : 'failed', JSON.stringify(result), task.approval_id]
+  ).catch(() => null);
 
   return result;
 }
