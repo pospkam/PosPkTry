@@ -19,6 +19,7 @@ import { pool } from '@/lib/db-pool';
 import { callAIWithModelDirect } from '@/lib/ai/providers';
 import { getModelForAgent } from '@/lib/ai/agent-models';
 import type { ChatMessage } from '@/lib/ai/prompts';
+import { executeCodeChange } from './handlers/code-change-executor';
 
 export interface ExecutionTask {
   approval_id: string;
@@ -50,13 +51,14 @@ export const AUTO_EXECUTE_TYPES = new Set([
 ]);
 
 const EXECUTORS: Record<string, (task: ExecutionTask) => Promise<ExecutionResult>> = {
-  archive_sos:        executeArchiveSOS,
-  send_notification:  executeSendNotification,
-  ui_copy_change:     executeTourDescriptionRewrite,
-  price_change:       executeABTestSetup,
-  commission_change:  executeCommissionUpdate,
-  sql_query_fix:      executeSQLQueryFix,
+  archive_sos:         executeArchiveSOS,
+  send_notification:   executeSendNotification,
+  ui_copy_change:      executeTourDescriptionRewrite,
+  price_change:        executeABTestSetup,
+  commission_change:   executeCommissionUpdate,
+  sql_query_fix:       executeSQLQueryFix,
   booking_rule_change: executeCancellationPolicyUpdate,
+  code_change:         executeCodeChange,
 };
 
 // ═══════════════════════════════════════════════════════════════
