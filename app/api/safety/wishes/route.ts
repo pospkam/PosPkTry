@@ -3,6 +3,31 @@ import { requireAdmin } from '@/lib/auth/middleware';
 import { pool } from '@/lib/db-pool';
 import { z } from 'zod';
 
+async function notifyArtemWish(message: string, category: string, priority: string): Promise<void> {
+  const token  = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+  if (!token || !chatId) return;
+  const PRIORITY_EMOJI: Record<string, string> = { high: '🔴', medium: '🟡', low: '🟢' };
+  const CATEGORY_LABEL: Record<string, string> = {
+    bug: 'Баг', feature: 'Предложение', safety: 'Безопасность', general: 'Общее',
+  };
+  const text = [
+    `<b>МЧС / Артём — новая рекомендация</b>`,
+    ``,
+    `${PRIORITY_EMOJI[priority] ?? '⚪'} <b>${CATEGORY_LABEL[category] ?? category}</b>`,
+    `${message.slice(0, 400)}${message.length > 400 ? '...' : ''}`,
+    ``,
+    `<a href="https://tourhab.ru/hub/admin/safety">Открыть дашборд</a>`,
+  ].join('\n');
+  try {
+    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML', disable_web_page_preview: true }),
+    });
+  } catch { /* silent fail */ }
+}
+
 export const dynamic = 'force-dynamic';
 
 const WishSchema = z.object({
@@ -66,6 +91,9 @@ export async function POST(req: NextRequest) {
      RETURNING id, created_at`,
     [stakeholder, message, category, priority, authResult.userId]
   );
+
+  // Уведомить владельца платформы
+  void notifyArtemWish(message, category, priority);
 
   return NextResponse.json({ success: true, wish: rows[0] });
 }

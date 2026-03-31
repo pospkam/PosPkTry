@@ -48,9 +48,9 @@ export async function GET(req: NextRequest) {
       role:   user.role,
     });
 
-    // Редирект в зависимости от роли
+    // Редирект в зависимости от роли и email
     const redirect = user.role === 'admin'
-      ? '/hub/admin/artem'
+      ? (user.email === 'artem@mchs-kamchatka.ru' ? '/hub/admin/artem' : '/hub/admin')
       : '/hub/tourist';
 
     const res = NextResponse.redirect(new URL(redirect, req.url));
