@@ -8,7 +8,6 @@
 
 import { pool } from '@/lib/db-pool';
 import { callAIWithModel } from '@/lib/ai/providers';
-import { approvalRequired } from '@/lib/agents/safeguards/approval-required';
 import type { AgentContext } from '../context-hub';
 import type { ChatMessage } from '@/lib/ai/prompts';
 
@@ -201,26 +200,6 @@ export class EcoAgency {
 
     if (zoneBookingContext) {
       lines.push('', `Дополнительный контекст: ${zoneBookingContext}`);
-    }
-
-    // Submit notification proposal for overloaded high-risk zones (>50 bookings/30d)
-    const overloadedZones = highRisk.filter(z => parseInt(z.booking_count, 10) > 50);
-    if (overloadedZones.length > 0) {
-      const existingProposal = await pool.query(
-        `SELECT id FROM agent_approvals WHERE action_type = 'send_notification' AND status = 'pending' AND description LIKE '%зон%' LIMIT 1`
-      ).catch(() => ({ rows: [] }));
-      if (existingProposal.rows.length === 0) {
-        approvalRequired.request({
-          type: 'send_notification',
-          description: `Перегруженные природные зоны: ${overloadedZones.map(z => `${z.zone} (${z.booking_count} броней)`).join(', ')} — уведомить операторов об ограничениях`,
-          context: {
-            zones: overloadedZones.map(z => ({ zone: z.zone, bookings: z.booking_count, risk: z.risk_level })),
-            message: `⚠️ Экологическая нагрузка в зонах превышает допустимый уровень. Пожалуйста, ограничьте количество бронирований.`,
-          },
-          requested_by: 'eco',
-          expires_hours: 48,
-        }).catch(() => null);
-      }
     }
 
     return { response: lines.join('\n'), data: { zones: rows, high_risk_zones: highRisk } };

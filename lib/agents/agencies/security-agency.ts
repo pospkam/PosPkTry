@@ -9,7 +9,6 @@
 
 import { pool } from '@/lib/db-pool';
 import { callAIWithModel } from '@/lib/ai/providers';
-import { approvalRequired } from '@/lib/agents/safeguards/approval-required';
 import type { AgentContext } from '../context-hub';
 import type { ChatMessage } from '@/lib/ai/prompts';
 
@@ -153,26 +152,6 @@ export class SecurityAgency {
       try {
         await this.tools.sendSecurityAlert(`Threat level: ${threatLevel}, failed ops: ${failOps}`);
       } catch { /* tool failure is non-blocking */ }
-    }
-
-    // Submit notification proposal when threat level is HIGH
-    if (threatLevel === 'ВЫСОКИЙ') {
-      const existingProposal = await pool.query(
-        `SELECT id FROM agent_approvals WHERE action_type = 'send_notification' AND status = 'pending' AND description LIKE '%угроз%' LIMIT 1`
-      ).catch(() => ({ rows: [] }));
-      if (existingProposal.rows.length === 0) {
-        approvalRequired.request({
-          type: 'send_notification',
-          description: `Уровень угроз ВЫСОКИЙ: ${failOps} ошибок агентов за 24ч — требуется уведомление администратора`,
-          context: {
-            threat_level: threatLevel,
-            failed_ops: failOps,
-            top_errors: failedOps.rows.slice(0, 3).map(e => ({ agent: e.agent_name, error: e.error_message?.substring(0, 100) })),
-          },
-          requested_by: 'security',
-          expires_hours: 12,
-        }).catch(() => null);
-      }
     }
 
     return {

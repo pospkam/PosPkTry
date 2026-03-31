@@ -41,7 +41,6 @@ import {
   getSummaryOfViolations,
 } from '@/lib/agents/validation/director-standards';
 import { buildRichAgentContext } from '@/lib/agents/evolution/agent-context-v2';
-import { executeInitiative, AUTO_EXECUTE_TYPES, type ExecutionTask } from '@/lib/agents/execution/initiative-executor';
 
 export const dynamic     = 'force-dynamic';
 export const maxDuration = 300;
@@ -103,8 +102,7 @@ const MEETING_AGENTS = [
   { id: 'finance',   name: 'AI Финдиректор',  role: 'CFO / Финансовый директор',     intent: 'finance_report', color: '#6366F1' },
   { id: 'infra',     name: 'AI DevOps',       role: 'SRE / Инфраструктура',          intent: 'infra_health',   color: '#14B8A6' },
   { id: 'vibe_coder', name: 'AI Разработчик', role: 'Vibe Coder / Самомодификация',  intent: 'code_analysis',  color: '#F97316' },
-  { id: 'planning',      name: 'AI Плановик',    role: 'Стратегический плановик',        intent: 'plan_forecast',      color: '#3B82F6' },
-  { id: 'intelligence',  name: 'AI Разведчик',   role: 'Аналитик конкурентного рынка',   intent: 'market_intelligence', color: '#0EA5E9' },
+  { id: 'planning',   name: 'AI Плановик',  role: 'Стратегический плановик',        intent: 'plan_forecast',  color: '#3B82F6' },
 ] as const;
 
 // ── Proposal config per agent ───────────────────────────────────────────────────────────
@@ -142,7 +140,7 @@ const PROPOSAL_CONFIGS: Record<string, ProposalConfig> = {
   },
   hacker: {
     persona:       'Ты директор по росту (growth hacker) туристической платформы. Предложение = А/В тест результат или метрика из базы. Покажи рост %, когда это произойдёт, какие ресурсы нужны.',
-    allowed_types: ['price_change', 'ui_copy_change', 'ab_scale_winner'],
+    allowed_types: ['price_change', 'ui_copy_change'],
     domain: 'growth',
   },
   rescue: {
@@ -167,7 +165,7 @@ const PROPOSAL_CONFIGS: Record<string, ProposalConfig> = {
   },
   evo: {
     persona:       'Ты архитектор AI-системы туристической платформы — следишь за её эволюцией. Интегрируй решения других директоров, проверь противоречия. Если consensus не работает вместе — флаг "CONFLICT". Показывай полный результат, не обрезай.',
-    allowed_types: ['prompt_optimize', 'schedule_suggest', 'sql_query_fix', 'ab_scale_winner'],
+    allowed_types: ['prompt_optimize', 'schedule_suggest', 'sql_query_fix'],
     domain: 'architecture',
   },
   finance: {
@@ -182,13 +180,8 @@ const PROPOSAL_CONFIGS: Record<string, ProposalConfig> = {
   },
   vibe_coder: {
     persona:       'Ты senior TypeScript разработчик этой платформы. Анализируй реальный код и данные об ошибках. Предлагай ОДНО изменение с файлом, строками и обоснованием из данных. Не рефакторь ради рефакторинга.',
-    allowed_types: ['code_change', 'sql_query_fix', 'new_page_create'],
+    allowed_types: ['code_change', 'sql_query_fix'],
     domain: 'codebase',
-  },
-  intelligence: {
-    persona:       'Ты AI-разведчик конкурентного рынка туристической платформы Камчатки. Анализируй реальные данные о конкурентах и трендах. Предлагай конкретные изменения в экосистеме: новые форматы туров, ценовые стратегии, технологические фичи. Каждое предложение — с данными.',
-    allowed_types: ['ecosystem_proposal', 'operator_outreach', 'new_page_create'],
-    domain: 'market_intelligence',
   },
 };
 
@@ -250,22 +243,6 @@ const EXECUTOR_SKILL_MAP: Record<string, ExecutorEntry> = {
     id: 'vibe_coder', name: 'AI Разработчик', color: '#F97316',
     reason: 'Изменения кода — зона Vibe Coder разработчика',
   },
-  ecosystem_proposal: {
-    id: 'intelligence', name: 'AI Разведчик', color: '#0EA5E9',
-    reason: 'Предложения по экосистеме — зона аналитика конкурентного рынка',
-  },
-  ab_scale_winner: {
-    id: 'hacker', name: 'AI Хакер', color: 'var(--success)',
-    reason: 'Масштабирование A/B результатов — зона директора по росту',
-  },
-  operator_outreach: {
-    id: 'intelligence', name: 'AI Разведчик', color: '#0EA5E9',
-    reason: 'Поиск операторов — зона аналитика конкурентного рынка',
-  },
-  new_page_create: {
-    id: 'vibe_coder', name: 'AI Разработчик', color: '#F97316',
-    reason: 'Создание новых страниц — зона Vibe Coder разработчика',
-  },
 };
 
 // ── Agent runner ───────────────────────────────────────────────────────────────────────
@@ -284,8 +261,7 @@ const AGENCY_LOADERS: Record<string, () => Promise<{ run(intent: string, ctx: Ag
   finance_report:  async () => { const { FinanceAgency } = await import('@/lib/agents/agencies/finance-agency'); return new FinanceAgency(); },
   infra_health:    async () => { const { InfraAgency } = await import('@/lib/agents/agencies/infra-agency'); return new InfraAgency(); },
   code_analysis:   async () => { const { VibeCoderAgency } = await import('@/lib/agents/agencies/vibe-coder-agency'); return new VibeCoderAgency(); },
-  plan_forecast:        async () => { const { PlanningAgency }     = await import('@/lib/agents/agencies/planning-agency');     return new PlanningAgency(); },
-  market_intelligence:  async () => { const { IntelligenceAgency } = await import('@/lib/agents/agencies/intelligence-agency'); return new IntelligenceAgency(); },
+  plan_forecast:   async () => { const { PlanningAgency } = await import('@/lib/agents/agencies/planning-agency'); return new PlanningAgency(); },
 };
 
 async function runAgent(
@@ -479,44 +455,6 @@ async function generateProposal(
     ).catch(() => null);
   }
 
-  // Авто-исполнение безопасных инициатив (needs_approval=false) без ожидания ревью
-  if (!approval.needs_approval && AUTO_EXECUTE_TYPES.has(actionType)) {
-    const safeCtx = {
-      from_agent:       agent.id,
-      full_description: parsed.description,
-      meeting_id:       meetingId,
-      priority,
-      confidence,
-    };
-    const { rows: safeRows } = await pool.query<{ id: string }>(
-      `INSERT INTO agent_approvals
-         (action_type, description, context, requested_by, status,
-          executor_agent_id, executor_name, execution_status, expires_at)
-       VALUES ($1, $2, $3, $4, 'approved', $5, $6, 'assigned', NOW() + INTERVAL '48 hours')
-       RETURNING id`,
-      [
-        actionType,
-        parsed.title.substring(0, 255),
-        JSON.stringify(safeCtx),
-        `agent_${agent.id}`,
-        executorEntry.id,
-        executorEntry.name,
-      ]
-    ).catch(() => ({ rows: [] as { id: string }[] }));
-
-    if (safeRows[0]?.id) {
-      const task: ExecutionTask = {
-        approval_id:       safeRows[0].id,
-        executor_agent_id: executorEntry.id,
-        action_type:       actionType,
-        description:       parsed.title.substring(0, 255),
-        context:           safeCtx,
-        due_date:          '',
-      };
-      executeInitiative(task).catch(() => null);
-    }
-  }
-
   return {
     from_id:         agent.id,
     from_name:       agent.name,
@@ -591,16 +529,8 @@ async function extractVote(
 // ── POST — SSE стриминг ─────────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
-  // Cron bypass — allows scheduled calls without admin JWT
-  let callerUserId = '0';
-  const cronHeader = req.headers.get('x-cron-secret');
-  if (cronHeader && process.env.CRON_SECRET && cronHeader === process.env.CRON_SECRET) {
-    callerUserId = '1'; // system admin
-  } else {
-    const authResult = await requireAdmin(req);
-    if (authResult instanceof NextResponse) return authResult;
-    callerUserId = authResult.userId;
-  }
+  const authResult = await requireAdmin(req);
+  if (authResult instanceof NextResponse) return authResult;
 
   let topic: string | null = null;
   try {
@@ -620,7 +550,7 @@ export async function POST(req: NextRequest) {
     const sesRes = await pool.query<{ id: string }>(
       `INSERT INTO board_meeting_sessions (topic, initiated_by, status)
        VALUES ($1, $2, 'running') RETURNING id`,
-      [topic, parseInt(callerUserId, 10)]
+      [topic, parseInt(authResult.userId, 10)]
     );
     sessionDbId = sesRes.rows[0]?.id ?? null;
   } catch { /* таблица может не существовать на старом проде */ }
@@ -634,7 +564,7 @@ export async function POST(req: NextRequest) {
       try {
         const contextHub = new ContextHub();
         const context    = await contextHub.build(
-          parseInt(callerUserId, 10),
+          parseInt(authResult.userId, 10),
           'admin',
           'board-meeting'
         );
@@ -828,7 +758,7 @@ export async function POST(req: NextRequest) {
                 decision:        meetingId,
                 result:          'success',
                 duration_ms,
-                user_id:         parseInt(callerUserId, 10),
+                user_id:         parseInt(authResult.userId, 10),
                 agents_count:    agents.length,
                 ok:              okCount,
                 reactions_count: reactions.length,

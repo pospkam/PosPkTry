@@ -3,6 +3,7 @@ import dynamic from 'next/dynamic'
 import { Header } from '@/components/layout/Header'
 import { HeroCompact } from '@/components/homepage/HeroCompact'
 import { Footer } from '@/components/layout/Footer'
+import { AffiliateFlightBanner } from '@/components/affiliate/AffiliateFlightBanner'
 
 // Lazy-loaded client sections (below fold)
 const InlineChat = dynamic(() => import('@/components/homepage/InlineChat'), {
@@ -104,6 +105,7 @@ export default async function Page() {
         <HeroCompact />
         <InlineChat />
         <FeaturedDirections />
+        <AffiliateFlightBanner />
         <LeadCTASection />
         <TrustSection />
       </main>
