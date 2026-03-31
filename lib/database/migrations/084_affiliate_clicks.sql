@@ -4,15 +4,16 @@
 
 CREATE TABLE IF NOT EXISTS affiliate_clicks (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  partner VARCHAR(50) NOT NULL,           -- 'aviasales', 'hotellook', 'tripster', etc
-  source VARCHAR(100) NOT NULL,            -- 'homepage', 'route-detail', 'operator-page'
+  partner VARCHAR(50) NOT NULL,
+  source VARCHAR(100) NOT NULL,
   sub_id VARCHAR(100),
   referrer VARCHAR(500),
-  ip_addr VARCHAR(45),                     -- IPv4 or IPv6
+  ip_addr VARCHAR(45),
   clicked_at TIMESTAMPTZ DEFAULT NOW(),
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  INDEX idx_partner_date (partner, clicked_at),
-  INDEX idx_source_date (source, clicked_at)
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-COMMENT ON TABLE affiliate_clicks IS 'Tracks affiliate link clicks for revenue analytics and optimization';
+CREATE INDEX IF NOT EXISTS idx_affiliate_clicks_partner ON affiliate_clicks(partner, clicked_at);
+CREATE INDEX IF NOT EXISTS idx_affiliate_clicks_source ON affiliate_clicks(source, clicked_at);
+
+COMMENT ON TABLE affiliate_clicks IS 'Tracks affiliate link clicks for revenue analytics';
