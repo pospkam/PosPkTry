@@ -6,15 +6,19 @@ import { Heart, Flame, Thermometer, Anchor, Mountain, Leaf, Fish, Snowflake, Pla
 
 export interface RouteItem {
   id: string;
+  kind?: 'place' | 'tour' | 'route';
   category: string;
+  locationType?: string | null;
+  activityType?: string | null;
   title: string;
   description: string;
   lat: number | null;
   lng: number | null;
+  sourceUrl?: string | null;
+  sourceName?: string | null;
   priceFrom: number | null;
   difficulty: string | null;
   durationDays: number | null;
-  sourceName: string | null;
   bestMonths?: number[] | null;
   offerCount?: number;
   topOperatorName?: string;
@@ -73,12 +77,25 @@ function pluralTours(n: number) {
   return 'туров';
 }
 
+import PlaceCard from './PlaceCard';
+import RoutePathCard from './RoutePathCard';
+import TourCard from './TourCard';
+
 export default function RouteCard({ route }: { route: RouteItem }) {
+  if (route.kind === 'place') return <PlaceCard route={route} />;
+  if (route.kind === 'route') return <RoutePathCard route={route} />;
+  if (route.kind === 'tour')  return <TourCard route={route} />;
+  // fallback
+  return <LegacyCard route={route} />;
+}
+
+function LegacyCard({ route }: { route: RouteItem }) {
   const meta = CATEGORY_META[route.category] ?? { label: route.category, icon: MapPin, accent: 'var(--accent)' };
   const Icon = meta.icon;
   const image = CARD_IMAGES[route.category] ?? '/images/bento/mutnovsky.jpg';
   const displayPrice = route.minOfferPrice ?? route.priceFrom;
   const hasOffers = (route.offerCount ?? 0) > 0;
+  const isTourOrRoute = route.kind === 'tour' || route.kind === 'route';
 
   const currentMonth = new Date().getMonth() + 1;
   const isInSeason = route.bestMonths?.includes(currentMonth) ?? false;
@@ -174,13 +191,19 @@ export default function RouteCard({ route }: { route: RouteItem }) {
         </h3>
 
         <div className="flex items-center justify-between">
-          {hasOffers ? (
+          {isTourOrRoute ? (
+            <span className="text-xs text-[var(--text-secondary)] flex items-center gap-1">
+              {route.durationDays != null && <>{route.durationDays} {route.durationDays === 1 ? 'день' : route.durationDays < 5 ? 'дня' : 'дней'}</>}
+              {route.durationDays != null && route.difficulty && <span className="mx-1">·</span>}
+              {route.difficulty && <>{route.difficulty === 'easy' ? 'Легко' : route.difficulty === 'medium' ? 'Средне' : 'Сложно'}</>}
+            </span>
+          ) : hasOffers ? (
             <span className="text-xs text-[var(--success)] font-medium">
               {route.offerCount} {pluralTours(route.offerCount ?? 0)}
             </span>
           ) : (
             <span className="text-xs text-[var(--text-muted)]">
-              {route.topOperatorName ?? 'Без туров'}
+              {route.topOperatorName ?? 'Место'}
             </span>
           )}
           {route.lat != null && (
