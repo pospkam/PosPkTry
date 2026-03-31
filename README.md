@@ -410,13 +410,14 @@ TS-ошибок:             0
 ```
 
 **Последние изменения (март 2026):**
-- **TP Drive** — AI-монетизация всего сайта через TravelPayouts Drive (ID 513488); автозамена ссылок, превью, таргетированные офферы (`components/shared/TravelPayoutsDrive.tsx`)
-- Аффилиат монетизация: `affiliate_clicks` + `affiliate_payouts` таблицы, TravelPayouts webhook
+- **Модель "Лид-консьерж"** — турист оставляет заявку → AI квалифицирует → менеджер находит тур и договаривается с оператором за %
+- **StickyLeadButton** — FAB-кнопка "Хочу тур" на всех страницах (кроме /hub/*); открывает форму с полем "мечта" (`components/shared/StickyLeadButton.tsx`)
+- **LeadCTASection** — добавлено поле "Расскажите о мечте" → +40/100 баллов в AI-скоринге лида
+- **TP Drive** — AI-монетизация через TravelPayouts Drive (ID 513488); автозамена ссылок, превью, таргетированные офферы
+- Аффилиат: `affiliate_clicks` + `affiliate_payouts` таблицы, TravelPayouts webhook (`085_affiliate_payouts.sql`)
 - Operator Dashboard: блок "Доходы за 30 дней" (`OperatorEarningsCard`)
-- Infra probe fix: `probeAIProviders` теперь читает `OR_API_KEY` (primary); Anthropic — `softCheck=true` (гео-блок из РФ не роняет probe)
+- Infra probe fix: `probeAIProviders` читает `OR_API_KEY`; Anthropic — `softCheck=true` (гео-блок из РФ ≠ failure)
 - Fix конверсии: `TourPaymentModal` показывает лид-форму для гостей (было: auth-стена → 0 лидов)
-- AI Спасатель — SSE-чат с МЧС-протоколами, офлайн-режим
-- SOS-кнопка теперь собирает имя и телефон туриста
 - Admin Telegram-бот понимает свободный текст через PlatformAgent
 
 ### Юр. лицо
