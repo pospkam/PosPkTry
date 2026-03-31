@@ -25,6 +25,9 @@ const ACTION_CATEGORIES: Record<string, ActionCategory> = {
   ui_copy_change:      'safe',
   pattern_report:      'safe',
   code_change:         'safe',  // ЭКСПЕРИМЕНТ: AI создаёт PR без одобрения
+  ab_scale_winner:     'safe',
+  operator_outreach:   'safe',
+  new_page_create:     'safe',
 
   // Need review — требует одобрения admin
   booking_rule_change: 'review',

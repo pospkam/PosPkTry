@@ -19,7 +19,9 @@ import { pool } from '@/lib/db-pool';
 import { callAIWithModelDirect } from '@/lib/ai/providers';
 import { getModelForAgent } from '@/lib/ai/agent-models';
 import type { ChatMessage } from '@/lib/ai/prompts';
-import { executeCodeChange } from './handlers/code-change-executor';
+import { executeCodeChange, executeNewPageCreate } from './handlers/code-change-executor';
+import { executeABScaleWinner } from './handlers/ab-scale-executor';
+import { executeOperatorOutreach } from './handlers/operator-outreach-executor';
 
 export interface ExecutionTask {
   approval_id: string;
@@ -49,6 +51,9 @@ export const AUTO_EXECUTE_TYPES = new Set([
   'sql_query_fix',       // evo: самоисцеление SQL-ошибок
   'booking_rule_change', // legal: обновить политику отмены оператора
   'code_change',         // vibe_coder: ЭКСПЕРИМЕНТ — AI создаёт GitHub PR без одобрения
+  'ab_scale_winner',     // hacker: применить победителя A/B теста
+  'operator_outreach',   // intelligence: найти операторов и отправить приглашения
+  'new_page_create',     // vibe_coder/intelligence: создать новую страницу через GitHub PR
 ]);
 
 const EXECUTORS: Record<string, (task: ExecutionTask) => Promise<ExecutionResult>> = {
@@ -60,6 +65,9 @@ const EXECUTORS: Record<string, (task: ExecutionTask) => Promise<ExecutionResult
   sql_query_fix:       executeSQLQueryFix,
   booking_rule_change: executeCancellationPolicyUpdate,
   code_change:         executeCodeChange,
+  ab_scale_winner:     executeABScaleWinner,
+  operator_outreach:   executeOperatorOutreach,
+  new_page_create:     executeNewPageCreate,
 };
 
 // ═══════════════════════════════════════════════════════════════

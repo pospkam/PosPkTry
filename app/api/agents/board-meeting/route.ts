@@ -142,7 +142,7 @@ const PROPOSAL_CONFIGS: Record<string, ProposalConfig> = {
   },
   hacker: {
     persona:       'Ты директор по росту (growth hacker) туристической платформы. Предложение = А/В тест результат или метрика из базы. Покажи рост %, когда это произойдёт, какие ресурсы нужны.',
-    allowed_types: ['price_change', 'ui_copy_change'],
+    allowed_types: ['price_change', 'ui_copy_change', 'ab_scale_winner'],
     domain: 'growth',
   },
   rescue: {
@@ -167,7 +167,7 @@ const PROPOSAL_CONFIGS: Record<string, ProposalConfig> = {
   },
   evo: {
     persona:       'Ты архитектор AI-системы туристической платформы — следишь за её эволюцией. Интегрируй решения других директоров, проверь противоречия. Если consensus не работает вместе — флаг "CONFLICT". Показывай полный результат, не обрезай.',
-    allowed_types: ['prompt_optimize', 'schedule_suggest', 'sql_query_fix'],
+    allowed_types: ['prompt_optimize', 'schedule_suggest', 'sql_query_fix', 'ab_scale_winner'],
     domain: 'architecture',
   },
   finance: {
@@ -182,12 +182,12 @@ const PROPOSAL_CONFIGS: Record<string, ProposalConfig> = {
   },
   vibe_coder: {
     persona:       'Ты senior TypeScript разработчик этой платформы. Анализируй реальный код и данные об ошибках. Предлагай ОДНО изменение с файлом, строками и обоснованием из данных. Не рефакторь ради рефакторинга.',
-    allowed_types: ['code_change', 'sql_query_fix'],
+    allowed_types: ['code_change', 'sql_query_fix', 'new_page_create'],
     domain: 'codebase',
   },
   intelligence: {
     persona:       'Ты AI-разведчик конкурентного рынка туристической платформы Камчатки. Анализируй реальные данные о конкурентах и трендах. Предлагай конкретные изменения в экосистеме: новые форматы туров, ценовые стратегии, технологические фичи. Каждое предложение — с данными.',
-    allowed_types: ['ecosystem_proposal'],
+    allowed_types: ['ecosystem_proposal', 'operator_outreach', 'new_page_create'],
     domain: 'market_intelligence',
   },
 };
@@ -253,6 +253,18 @@ const EXECUTOR_SKILL_MAP: Record<string, ExecutorEntry> = {
   ecosystem_proposal: {
     id: 'intelligence', name: 'AI Разведчик', color: '#0EA5E9',
     reason: 'Предложения по экосистеме — зона аналитика конкурентного рынка',
+  },
+  ab_scale_winner: {
+    id: 'hacker', name: 'AI Хакер', color: 'var(--success)',
+    reason: 'Масштабирование A/B результатов — зона директора по росту',
+  },
+  operator_outreach: {
+    id: 'intelligence', name: 'AI Разведчик', color: '#0EA5E9',
+    reason: 'Поиск операторов — зона аналитика конкурентного рынка',
+  },
+  new_page_create: {
+    id: 'vibe_coder', name: 'AI Разработчик', color: '#F97316',
+    reason: 'Создание новых страниц — зона Vibe Coder разработчика',
   },
 };
 
