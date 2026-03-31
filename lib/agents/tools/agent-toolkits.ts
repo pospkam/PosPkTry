@@ -276,10 +276,13 @@ function buildFinanceToolkit(agentId: string): AgentToolkit {
 function buildInfraToolkit(agentId: string): AgentToolkit {
   return {
     probeAIProviders: withAudit(agentId, 'probeAIProviders', async () => {
-      const providers = [
+      // OR_API_KEY — primary name; OPENROUTER_API_KEY — legacy alias
+      const orEnvKey = process.env.OR_API_KEY ? 'OR_API_KEY' : 'OPENROUTER_API_KEY';
+      const providers: Array<{ name: string; url: string; envKey: string; softCheck?: boolean }> = [
         { name: 'Timeweb', url: 'https://api.timeweb.cloud/v2/ai', envKey: 'TIMEWEB_TOKEN' },
-        { name: 'OpenRouter', url: 'https://openrouter.ai/api/v1/models', envKey: 'OPENROUTER_API_KEY' },
-        { name: 'Anthropic', url: 'https://api.anthropic.com/v1/messages', envKey: 'ANTHROPIC_API_KEY' },
+        { name: 'OpenRouter', url: 'https://openrouter.ai/api/v1/models', envKey: orEnvKey },
+        // Anthropic geo-blocked from Russia — soft check: unreachable ≠ critical failure
+        { name: 'Anthropic', url: 'https://api.anthropic.com/v1/messages', envKey: 'ANTHROPIC_API_KEY', softCheck: true },
       ];
       const results: Record<string, string> = {};
       await Promise.allSettled(providers.map(async (p) => {
@@ -294,10 +297,11 @@ function buildInfraToolkit(agentId: string): AgentToolkit {
           clearTimeout(timer);
           results[p.name] = resp.ok || resp.status === 401 || resp.status === 405 ? 'reachable' : `status_${resp.status}`;
         } catch {
-          results[p.name] = 'unreachable';
+          results[p.name] = p.softCheck ? 'geo_blocked' : 'unreachable';
         }
       }));
-      const allReachable = Object.values(results).every(v => v === 'reachable' || v === 'no_key');
+      const OK = new Set(['reachable', 'no_key', 'geo_blocked']);
+      const allReachable = Object.values(results).every(v => OK.has(v));
       return {
         success: allReachable,
         message: allReachable ? 'All providers healthy' : 'Some providers unhealthy',

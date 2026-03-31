@@ -7,6 +7,7 @@ import { TopToursTable } from '@/components/operator/Dashboard/TopToursTable';
 import { SimpleChart } from '@/components/admin/Dashboard/SimpleChart';
 import { LoadingSpinner, EmptyState } from '@/components/admin/shared';
 import { MchsRegistrationPanel } from '@/components/operator/Dashboard/MchsRegistrationPanel';
+import { OperatorEarningsCard } from '@/components/operator/OperatorEarningsCard';
 import { OperatorDashboardData, OperatorBooking } from '@/types/operator';
 import { AlertTriangle, BarChart3, Mountain, Calendar, Users, RefreshCw } from 'lucide-react';
 
@@ -82,6 +83,12 @@ export default function OperatorDashboardClient() {
         <div className="space-y-5">
           <OperatorMetricsGrid metrics={data.metrics} />
           <MchsRegistrationPanel />
+
+          {/* Доходы и партнёрская монетизация */}
+          <div>
+            <p className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] mb-3">Доходы за 30 дней</p>
+            <OperatorEarningsCard />
+          </div>
 
           {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
