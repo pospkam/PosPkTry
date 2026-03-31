@@ -38,9 +38,15 @@ export interface ExecutionResult {
 }
 
 // Типы которые выполняются автоматически после approve (без ручного триггера)
+// safe  — не требуют одобрения, исполняются сразу при создании совещанием
+// review — требуют approve, но после клика исполняются без лишнего шага
 export const AUTO_EXECUTE_TYPES = new Set([
-  'archive_sos',
-  'send_notification',
+  'archive_sos',         // rescue: архивировать зависшие SOS
+  'send_notification',   // любой: Telegram-уведомление
+  'ui_copy_change',      // content: переписать описания туров (AI)
+  'price_change',        // hacker: создать A/B эксперимент (только запись, цены не меняет)
+  'sql_query_fix',       // evo: самоисцеление SQL-ошибок
+  'booking_rule_change', // legal: обновить политику отмены оператора
 ]);
 
 const EXECUTORS: Record<string, (task: ExecutionTask) => Promise<ExecutionResult>> = {

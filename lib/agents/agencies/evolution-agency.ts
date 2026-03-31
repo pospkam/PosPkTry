@@ -14,6 +14,7 @@
 
 import { pool } from '@/lib/db-pool';
 import { callAIWithModel } from '@/lib/ai/providers';
+import { approvalRequired } from '@/lib/agents/safeguards/approval-required';
 import type { AgentContext } from '../context-hub';
 import type { ChatMessage } from '@/lib/ai/prompts';
 import { PatternRecognition }  from '../learning/pattern-recognition';
@@ -208,6 +209,27 @@ export class EvolutionAgency {
     );
 
     if (aiEvolution) lines.push('', '<b>Эволюционные рекомендации:</b>', aiEvolution);
+
+    // Submit fix proposal when critical patterns detected
+    if (critical.length > 0) {
+      const existingProposal = await pool.query(
+        `SELECT id FROM agent_approvals WHERE action_type = 'sql_query_fix' AND status = 'pending' LIMIT 1`
+      ).catch(() => ({ rows: [] }));
+      if (existingProposal.rows.length === 0) {
+        approvalRequired.request({
+          type: 'sql_query_fix',
+          description: `${critical.length} критичных паттернов в агентной системе: ${critical.map(p => p.description).slice(0, 2).join('; ')}`,
+          context: {
+            critical_count: critical.length,
+            warning_count: warnings.length,
+            patterns: critical.slice(0, 3).map(p => ({ intent: p.intent, description: p.description })),
+            satisfaction: feedbackSummary.overall_satisfaction,
+          },
+          requested_by: 'evo',
+          expires_hours: 48,
+        }).catch(() => null);
+      }
+    }
 
     // Store analysis results as memory
     await agentMemory.remember({

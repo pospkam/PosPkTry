@@ -41,6 +41,7 @@ import {
   getSummaryOfViolations,
 } from '@/lib/agents/validation/director-standards';
 import { buildRichAgentContext } from '@/lib/agents/evolution/agent-context-v2';
+import { executeInitiative, AUTO_EXECUTE_TYPES, type ExecutionTask } from '@/lib/agents/execution/initiative-executor';
 
 export const dynamic     = 'force-dynamic';
 export const maxDuration = 300;
@@ -453,6 +454,44 @@ async function generateProposal(
        WHERE id = $1`,
       [approval.id, executorEntry.id, executorEntry.name]
     ).catch(() => null);
+  }
+
+  // Авто-исполнение безопасных инициатив (needs_approval=false) без ожидания ревью
+  if (!approval.needs_approval && AUTO_EXECUTE_TYPES.has(actionType)) {
+    const safeCtx = {
+      from_agent:       agent.id,
+      full_description: parsed.description,
+      meeting_id:       meetingId,
+      priority,
+      confidence,
+    };
+    const { rows: safeRows } = await pool.query<{ id: string }>(
+      `INSERT INTO agent_approvals
+         (action_type, description, context, requested_by, status,
+          executor_agent_id, executor_name, execution_status, expires_at)
+       VALUES ($1, $2, $3, $4, 'approved', $5, $6, 'assigned', NOW() + INTERVAL '48 hours')
+       RETURNING id`,
+      [
+        actionType,
+        parsed.title.substring(0, 255),
+        JSON.stringify(safeCtx),
+        `agent_${agent.id}`,
+        executorEntry.id,
+        executorEntry.name,
+      ]
+    ).catch(() => ({ rows: [] as { id: string }[] }));
+
+    if (safeRows[0]?.id) {
+      const task: ExecutionTask = {
+        approval_id:       safeRows[0].id,
+        executor_agent_id: executorEntry.id,
+        action_type:       actionType,
+        description:       parsed.title.substring(0, 255),
+        context:           safeCtx,
+        due_date:          '',
+      };
+      executeInitiative(task).catch(() => null);
+    }
   }
 
   return {

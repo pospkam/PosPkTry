@@ -9,6 +9,7 @@
 
 import { pool } from '@/lib/db-pool';
 import { callAIWithModel } from '@/lib/ai/providers';
+import { approvalRequired } from '@/lib/agents/safeguards/approval-required';
 import type { AgentContext } from '../context-hub';
 import type { ChatMessage } from '@/lib/ai/prompts';
 
@@ -129,6 +130,23 @@ export class RescueAgency {
 
     if (incidentContext) {
       lines.push('', incidentContext);
+    }
+
+    // Submit archive proposal for SOS events stuck in 'sent' status for >24h
+    const staleEvents = recent.rows.filter(r => r.status === 'sent' && r.age_minutes > 1440);
+    if (staleEvents.length > 0) {
+      const existingProposal = await pool.query(
+        `SELECT id FROM agent_approvals WHERE action_type = 'archive_sos' AND status = 'pending' LIMIT 1`
+      ).catch(() => ({ rows: [] }));
+      if (existingProposal.rows.length === 0) {
+        approvalRequired.request({
+          type: 'archive_sos',
+          description: `${staleEvents.length} SOS-событий зависли >24ч без ответа (статус: sent)`,
+          context: { stale_ids: staleEvents.map(e => e.id), count: staleEvents.length },
+          requested_by: 'rescue',
+          expires_hours: 24,
+        }).catch(() => null);
+      }
     }
 
     return { response: lines.join('\n'), data: { stats: s, active_events: activeEvents } };

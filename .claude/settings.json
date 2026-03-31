@@ -45,7 +45,31 @@
       "Bash(grep -B5 -A15 \"def.*cancellation\\\\|created_via\" /workspaces/PosPkTry/migrations/*.sql)",
       "Read(//workspaceså/PosPkTry/lib/octo/**)",
       "Bash(find /workspaces/PosPkTry -maxdepth 3 -name 0*.sql)",
-      "Bash(ls /workspaces/PosPkTry/app/api/octo/bookings/[uuid]/)"
+      "Bash(ls /workspaces/PosPkTry/app/api/octo/bookings/[uuid]/)",
+      "Bash(find /workspaces/PosPkTry/app -name *map* -type f)",
+      "Bash(find /workspaces/PosPkTry/components -name *map* -type f)",
+      "Bash(grep -A 20 \"LOCATION_TYPES\\\\|LOCATION_TYPE_LABELS\" /workspaces/PosPkTry/app/hub/operator/tours/[id]/_EditTourClient.tsx)",
+      "Bash(grep -r faq /workspaces/PosPkTry/app/api/ --include=*.ts -l)",
+      "Bash(grep -n \"LOCATION_TYPE_IMAGES\\\\|image\\\\|photo\\\\|img\\\\|banner\" /workspaces/PosPkTry/app/routes/[id]/_RouteDetailClient.tsx)",
+      "Bash(/workspaces/PosPkTry/migrations/107_ai_route_images.sql:*)",
+      "Bash(psql \"postgresql://gen_user:b%3E%3DPHE1g40PUL%23@8ad609fcbfd2ad0bd069be47.twc1.net:5432/default_db?sslmode=no-verify\" -c \"SELECT id, email, role FROM users WHERE role=''admin'' LIMIT 3\")",
+      "Bash(BATCH=5 node --env-file=.env.local scripts/gen-images.mjs)",
+      "Bash(URL=\"https://image.pollinations.ai/prompt/dramatic%20aerial%20view%20of%20active%20Kamchatka%20volcano?width=512&height=512&model=flux-schnell&nologo=true&seed=12345\")",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\nContent-Type: %{content_type}\\\\nSize: %{size_download}\\\\n\" \"$URL\")",
+      "Bash(curl -sL -o /tmp/test.jpg -w \"HTTP %{http_code}\\\\nContent-Type: %{content_type}\\\\nSize: %{size_download}\\\\n\" \"https://image.pollinations.ai/prompt/Kamchatka%20volcano%20landscape?width=512&height=512&model=flux&nologo=true&seed=12345\")",
+      "Bash(curl -sL \"https://image.pollinations.ai/prompt/Kamchatka%20volcano?width=512&height=512&model=flux&seed=12345\")",
+      "Bash(curl -sL -o /tmp/test-picsum.jpg -w \"HTTP %{http_code} Size: %{size_download}\\\\n\" \"https://picsum.photos/seed/12345/1280/720\")",
+      "Bash(psql \"$DATABASE_URL\" -c \"UPDATE agent_route_knowledge SET lat = 55.9241110, lng = 158.7166290 WHERE id = ''8afb971c-04a7-4249-88c2-2dea757fa1cb''\")",
+      "Bash(node --env-file=.env.local -e \":*)",
+      "Bash(node --env-file=.env.local scripts/apply-migration.mjs migrations/108_fix_zero_coordinates.sql)",
+      "Bash(curl -s \"https://openrouter.ai/api/v1/auth/key\" -H \"Authorization: Bearer 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\")",
+      "Bash(node --env-file=.env.local scripts/apply-migration.mjs migrations/111_springs_descriptions.sql)",
+      "Bash(BATCH=25 node --env-file=.env.local scripts/gen-images.mjs)",
+      "Bash(ls /workspaces/PosPkTry/public/images/hero/*.jpeg)",
+      "Bash(ls /workspaces/PosPkTry/public/images/hero/*.jpg)",
+      "Bash(grep -E \"\\\\.\\(ts|js\\)$\")",
+      "Bash(grep -n \"INSERT INTO ai_actions_log\\\\|emitEvent\\\\|action_type.*agent\" /workspaces/PosPkTry/lib/agents/agencies/*.ts)",
+      "Bash(find /workspaces/PosPkTry -type f -name \"*.ts\" -exec grep -l \"emitEvent\\\\|AGENT_EVENTS\" {})"
     ]
   }
 }

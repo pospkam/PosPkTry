@@ -9,6 +9,7 @@
 
 import { pool } from '@/lib/db-pool';
 import { callAIWithModel } from '@/lib/ai/providers';
+import { approvalRequired } from '@/lib/agents/safeguards/approval-required';
 import type { AgentContext } from '../context-hub';
 import type { ChatMessage } from '@/lib/ai/prompts';
 
@@ -225,6 +226,27 @@ export class LegalAgency {
       lines.push('', 'Операторы с нарушениями:');
       for (const op of operatorIssues.rows) {
         if (op.issue) lines.push(`• ${op.name} — ${op.issue}`);
+      }
+    }
+
+    // Submit booking_rule_change proposal when operators lack cancellation policy
+    const noCancellation = parseInt(s.no_cancellation, 10);
+    if (noCancellation > 0) {
+      const existingProposal = await pool.query(
+        `SELECT id FROM agent_approvals WHERE action_type = 'booking_rule_change' AND status = 'pending' LIMIT 1`
+      ).catch(() => ({ rows: [] }));
+      if (existingProposal.rows.length === 0) {
+        approvalRequired.request({
+          type: 'booking_rule_change',
+          description: `${noCancellation} операторов не имеют политики отмены бронирования — требуется принудительное обновление`,
+          context: {
+            affected_operators: noCancellation,
+            operator_ids: operatorIssues.rows.map(o => o.id),
+            compliance_score: complianceScore,
+          },
+          requested_by: 'legal',
+          expires_hours: 72,
+        }).catch(() => null);
       }
     }
 

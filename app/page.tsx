@@ -5,12 +5,19 @@ import { HeroCompact } from '@/components/homepage/HeroCompact'
 import { Footer } from '@/components/layout/Footer'
 
 // Lazy-loaded client sections (below fold)
+const InlineChat = dynamic(() => import('@/components/homepage/InlineChat'), {
+  loading: () => <ChatSkeleton />,
+});
 const FeaturedDirections = dynamic(
   () => import('@/components/homepage/FeaturedDirections').then(m => ({ default: m.FeaturedDirections })),
   { loading: () => <SectionSkeleton /> }
 );
 const TrustSection = dynamic(
   () => import('@/components/homepage/TrustSection').then(m => ({ default: m.TrustSection })),
+  { loading: () => <SectionSkeleton /> }
+);
+const LeadCTASection = dynamic(
+  () => import('@/components/homepage/LeadCTASection').then(m => ({ default: m.LeadCTASection })),
   { loading: () => <SectionSkeleton /> }
 );
 const HomeBottomNav = dynamic(
@@ -58,6 +65,17 @@ function SectionSkeleton() {
   return <div className="py-20 px-5"><div className="max-w-6xl mx-auto h-64 bg-[var(--bg-hover)] rounded-lg ds-skeleton" /></div>;
 }
 
+function ChatSkeleton() {
+  return (
+    <section className="py-16 px-5">
+      <div className="max-w-2xl mx-auto">
+        <div className="h-8 w-48 mx-auto bg-[var(--bg-hover)] rounded ds-skeleton mb-4" />
+        <div className="h-16 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg ds-skeleton" />
+      </div>
+    </section>
+  );
+}
+
 export default async function Page() {
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -84,7 +102,9 @@ export default async function Page() {
       <Header />
       <main>
         <HeroCompact />
+        <InlineChat />
         <FeaturedDirections />
+        <LeadCTASection />
         <TrustSection />
       </main>
       <Footer />

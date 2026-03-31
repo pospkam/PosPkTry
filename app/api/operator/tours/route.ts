@@ -152,7 +152,7 @@ export async function GET(request: NextRequest) {
       images: row.images || [],
       includes: row.includes ?? [],
       excludes: row.excludes ?? [],
-      itinerary: row.itinerary ?? [],
+      itinerary: (row.itinerary ?? []) as OperatorTour['itinerary'],
       schedule: {
         startDate: new Date(),
         endDate: undefined,
