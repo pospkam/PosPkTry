@@ -410,9 +410,11 @@ TS-ошибок:             0
 ```
 
 **Последние изменения (март 2026):**
+- **TP Drive** — AI-монетизация всего сайта через TravelPayouts Drive (ID 513488); автозамена ссылок, превью, таргетированные офферы (`components/shared/TravelPayoutsDrive.tsx`)
 - Аффилиат монетизация: `affiliate_clicks` + `affiliate_payouts` таблицы, TravelPayouts webhook
 - Operator Dashboard: блок "Доходы за 30 дней" (`OperatorEarningsCard`)
-- Infra probe fix: `probeAIProviders` теперь читает `OR_API_KEY` (primary); Anthropic — softCheck (гео-блок из РФ не роняет probe)
+- Infra probe fix: `probeAIProviders` теперь читает `OR_API_KEY` (primary); Anthropic — `softCheck=true` (гео-блок из РФ не роняет probe)
+- Fix конверсии: `TourPaymentModal` показывает лид-форму для гостей (было: auth-стена → 0 лидов)
 - AI Спасатель — SSE-чат с МЧС-протоколами, офлайн-режим
 - SOS-кнопка теперь собирает имя и телефон туриста
 - Admin Telegram-бот понимает свободный текст через PlatformAgent
