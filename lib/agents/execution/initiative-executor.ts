@@ -48,6 +48,7 @@ export const AUTO_EXECUTE_TYPES = new Set([
   'price_change',        // hacker: создать A/B эксперимент (только запись, цены не меняет)
   'sql_query_fix',       // evo: самоисцеление SQL-ошибок
   'booking_rule_change', // legal: обновить политику отмены оператора
+  'code_change',         // vibe_coder: ЭКСПЕРИМЕНТ — AI создаёт GitHub PR без одобрения
 ]);
 
 const EXECUTORS: Record<string, (task: ExecutionTask) => Promise<ExecutionResult>> = {
