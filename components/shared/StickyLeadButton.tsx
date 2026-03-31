@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { MessageSquarePlus, X, User, Phone, Sparkles, Send, CheckCircle } from 'lucide-react';
+import { trackLeadEvent, LEAD_EVENTS } from '@/lib/analytics/lead-tracking';
 
 type State = 'idle' | 'phone' | 'details' | 'sending' | 'done' | 'error';
 
@@ -19,18 +20,27 @@ export default function StickyLeadButton() {
   const [comment, setComment] = useState('');
   const [state, setState]     = useState<State>('phone');
 
+  // Отслеживаем переход на stage 'details'
+  useEffect(() => {
+    if (state === 'details') {
+      trackLeadEvent({ ...LEAD_EVENTS.OPEN_LEAD_FORM_DETAILS, source: 'sticky_button' });
+    }
+  }, [state]);
+
   // Не показываем в хабах (дашборды операторов, админов и т.д.)
   if (pathname?.startsWith('/hub')) return null;
 
   async function submitPhone(e: React.FormEvent) {
     e.preventDefault();
     if (!phone.trim()) return;
+    trackLeadEvent({ ...LEAD_EVENTS.LEAD_FORM_PHONE_FILLED, source: 'sticky_button' });
     setState('details');
   }
 
   async function submitAll(e: React.FormEvent) {
     e.preventDefault();
     setState('sending');
+    trackLeadEvent({ ...LEAD_EVENTS.SUBMIT_LEAD, source: 'sticky_button' });
     try {
       const res = await fetch('/api/leads', {
         method: 'POST',
@@ -43,8 +53,15 @@ export default function StickyLeadButton() {
           source_data: { source: 'sticky_cta' },
         }),
       });
-      setState(res.ok ? 'done' : 'error');
+      if (res.ok) {
+        trackLeadEvent({ ...LEAD_EVENTS.LEAD_SUCCESS, source: 'sticky_button' });
+        setState('done');
+      } else {
+        trackLeadEvent({ ...LEAD_EVENTS.LEAD_ERROR, source: 'sticky_button' });
+        setState('error');
+      }
     } catch {
+      trackLeadEvent({ ...LEAD_EVENTS.LEAD_ERROR, source: 'sticky_button' });
       setState('error');
     }
   }
@@ -153,7 +170,13 @@ export default function StickyLeadButton() {
 
       {/* FAB button */}
       <button
-        onClick={() => setOpen(v => !v)}
+        onClick={() => {
+          setOpen(v => !v);
+          if (!open) {
+            trackLeadEvent({ ...LEAD_EVENTS.CLICK_LEAD_BUTTON, source: 'sticky_button' });
+            trackLeadEvent({ ...LEAD_EVENTS.OPEN_LEAD_FORM_PHONE, source: 'sticky_button' });
+          }
+        }}
         className={`fixed bottom-4 right-4 z-50 flex items-center justify-center gap-2 px-5 py-4 rounded-full shadow-2xl text-sm font-bold text-white transition-all hover:scale-110 active:scale-95 ${!open ? 'lead-button-pulse' : ''}`}
         style={{ background: 'var(--accent)' }}
         aria-label="Оставить заявку на тур"

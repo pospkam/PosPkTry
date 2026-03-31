@@ -1,6 +1,7 @@
 'use client';
 
 import { ExternalLink, Plane, Hotel, Shield, Car, Map } from 'lucide-react';
+import { trackLeadEvent, LEAD_EVENTS } from '@/lib/analytics/lead-tracking';
 
 const MARKER = '402896'; // TravelPayouts partner marker (tourhab.ru)
 
@@ -81,6 +82,11 @@ export default function RouteAffiliateBlock({ activityType }: Props) {
             href={s.url}
             target="_blank"
             rel="noopener noreferrer sponsored"
+            onClick={() => trackLeadEvent({
+              ...LEAD_EVENTS.CLICK_AFFILIATE_LINK,
+              event_label: s.label,
+              route_id: activityType || undefined,
+            })}
             className="group flex flex-col gap-1.5 p-3 rounded-lg border transition-all hover:shadow-sm hover:-translate-y-0.5"
             style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}
           >
