@@ -106,6 +106,7 @@ import './globals.css'
 import React from 'react'
 import { Providers } from '@/components/Providers'
 import YandexMetrika from '@/components/shared/YandexMetrika'
+import TravelPayoutsDrive from '@/components/shared/TravelPayoutsDrive'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -178,6 +179,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
         <YandexMetrika />
+        <TravelPayoutsDrive />
       </body>
     </html>
   )
