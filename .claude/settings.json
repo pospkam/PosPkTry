@@ -70,7 +70,8 @@
       "Bash(grep -E \"\\\\.\\(ts|js\\)$\")",
       "Bash(grep -n \"INSERT INTO ai_actions_log\\\\|emitEvent\\\\|action_type.*agent\" /workspaces/PosPkTry/lib/agents/agencies/*.ts)",
       "Bash(find /workspaces/PosPkTry -type f -name \"*.ts\" -exec grep -l \"emitEvent\\\\|AGENT_EVENTS\" {})",
-      "Bash(cat /workspaces/PosPkTry/app/api/cron/*/route.ts)"
+      "Bash(cat /workspaces/PosPkTry/app/api/cron/*/route.ts)",
+      "Bash(wc -l /workspaces/PosPkTry/app/hub/operator/*/_*.tsx)"
     ]
   }
 }

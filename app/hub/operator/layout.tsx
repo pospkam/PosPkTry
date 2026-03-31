@@ -4,6 +4,7 @@ import { ReactNode } from 'react';
 import {
   BarChart3, Map, Calendar, CalendarDays, Users, CreditCard,
   Settings, Bell, FileText, ArrowLeftRight, HelpCircle, CheckCircle, Inbox, User,
+  Download,
 } from 'lucide-react';
 import { HubLayout } from '@/components/layout/HubLayout';
 import { ChatWidget } from '@/components/chat/ChatWidget';
@@ -20,7 +21,7 @@ const SIDEBAR_ITEMS = [
   { href: '/hub/operator/calendar', label: 'Календарь', icon: CalendarDays },
   { href: '/hub/operator/analytics', label: 'Аналитика', icon: BarChart3 },
   { href: '/hub/operator/transfers', label: 'Трансферы', icon: ArrowLeftRight },
-  { href: '/hub/operator/reports', label: 'Отчёты', icon: FileText },
+  { href: '/hub/operator/reports', label: 'Отчёты', icon: Download },
   { href: '/hub/operator/notifications', label: 'Уведомления', icon: Bell },
   { href: '/hub/operator/integrations', label: 'Интеграции', icon: Settings },
   { href: '/hub/operator/help', label: 'Справка', icon: HelpCircle },
