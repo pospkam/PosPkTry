@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { MessageSquarePlus, X, User, Phone, Sparkles, Send, CheckCircle } from 'lucide-react';
 
-type State = 'idle' | 'sending' | 'done' | 'error';
+type State = 'idle' | 'phone' | 'details' | 'sending' | 'done' | 'error';
 
 /**
  * Глобальная sticky-кнопка "Хочу тур" — видна на всех страницах.
@@ -17,12 +17,18 @@ export default function StickyLeadButton() {
   const [name, setName]       = useState('');
   const [phone, setPhone]     = useState('');
   const [comment, setComment] = useState('');
-  const [state, setState]     = useState<State>('idle');
+  const [state, setState]     = useState<State>('phone');
 
   // Не показываем в хабах (дашборды операторов, админов и т.д.)
   if (pathname?.startsWith('/hub')) return null;
 
-  async function submit(e: React.FormEvent) {
+  async function submitPhone(e: React.FormEvent) {
+    e.preventDefault();
+    if (!phone.trim()) return;
+    setState('details');
+  }
+
+  async function submitAll(e: React.FormEvent) {
     e.preventDefault();
     setState('sending');
     try {
@@ -45,15 +51,26 @@ export default function StickyLeadButton() {
 
   function reset() {
     setOpen(false);
-    setTimeout(() => { setName(''); setPhone(''); setComment(''); setState('idle'); }, 300);
+    setTimeout(() => { setName(''); setPhone(''); setComment(''); setState('phone'); }, 300);
   }
 
   return (
     <>
+      <style>{`
+        @keyframes pulse-ring {
+          0% { box-shadow: 0 0 0 0 rgba(212, 74, 12, 0.7); }
+          50% { box-shadow: 0 0 0 10px rgba(212, 74, 12, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(212, 74, 12, 0); }
+        }
+        .lead-button-pulse {
+          animation: pulse-ring 2s infinite;
+        }
+      `}</style>
+
       {/* Popover form */}
       {open && (
         <div
-          className="fixed bottom-20 right-4 z-50 w-80 rounded-xl shadow-2xl border overflow-hidden"
+          className="fixed bottom-24 right-4 z-50 w-80 rounded-xl shadow-2xl border overflow-hidden"
           style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}
         >
           {/* Header */}
@@ -75,21 +92,33 @@ export default function StickyLeadButton() {
                 <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Менеджер перезвонит скоро.</p>
                 <button onClick={reset} className="text-xs underline" style={{ color: 'var(--text-muted)' }}>Закрыть</button>
               </div>
+            ) : state === 'phone' ? (
+              <form onSubmit={submitPhone} className="space-y-3">
+                <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Ваш номер телефона</p>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+                  <input
+                    type="tel" value={phone} onChange={e => setPhone(e.target.value)}
+                    placeholder="+7 900 000 00 00" autoFocus required
+                    className="ds-input w-full pl-8 pr-3 py-2 text-sm"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={!phone.trim()}
+                  className="ds-btn ds-btn-primary w-full text-sm py-2.5 disabled:opacity-50"
+                >
+                  Далее
+                </button>
+              </form>
             ) : (
-              <form onSubmit={submit} className="space-y-2.5">
+              <form onSubmit={submitAll} className="space-y-2.5">
+                <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Осталось чуть-чуть</p>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: 'var(--text-muted)' }} />
                   <input
                     type="text" value={name} onChange={e => setName(e.target.value)}
-                    placeholder="Ваше имя" required
-                    className="ds-input w-full pl-8 pr-3 py-2 text-sm"
-                  />
-                </div>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: 'var(--text-muted)' }} />
-                  <input
-                    type="tel" value={phone} onChange={e => setPhone(e.target.value)}
-                    placeholder="+7 900 000 00 00" required
+                    placeholder="Ваше имя" autoFocus required
                     className="ds-input w-full pl-8 pr-3 py-2 text-sm"
                   />
                 </div>
@@ -107,7 +136,7 @@ export default function StickyLeadButton() {
                 )}
                 <button
                   type="submit"
-                  disabled={state === 'sending' || !name.trim() || !phone.trim()}
+                  disabled={state === 'sending' || !name.trim()}
                   className="ds-btn ds-btn-primary w-full flex items-center justify-center gap-2 text-sm py-2.5 disabled:opacity-50"
                 >
                   <Send className="w-3.5 h-3.5" />
@@ -125,11 +154,11 @@ export default function StickyLeadButton() {
       {/* FAB button */}
       <button
         onClick={() => setOpen(v => !v)}
-        className="fixed bottom-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-full shadow-lg text-sm font-semibold text-white transition-all hover:scale-105 active:scale-95"
+        className={`fixed bottom-4 right-4 z-50 flex items-center justify-center gap-2 px-5 py-4 rounded-full shadow-2xl text-sm font-bold text-white transition-all hover:scale-110 active:scale-95 ${!open ? 'lead-button-pulse' : ''}`}
         style={{ background: 'var(--accent)' }}
         aria-label="Оставить заявку на тур"
       >
-        <MessageSquarePlus className="w-4 h-4" />
+        <MessageSquarePlus className="w-5 h-5" />
         <span className="hidden sm:inline">Хочу тур</span>
       </button>
     </>
