@@ -92,10 +92,20 @@ interface Experiment {
   name: string;
   description: string | null;
   intent: string | null;
+  variant_a: Record<string, unknown>;
+  variant_b: Record<string, unknown>;
   status: 'running' | 'paused' | 'completed';
   winner: 'a' | 'b' | 'tie' | null;
   metric: string;
   created_at: string;
+}
+
+interface SDKSession {
+  variant: string;
+  count: number;
+  avg_duration_ms: number;
+  avg_tool_calls: number;
+  success_rate: number;
 }
 
 interface ExperimentsResponse { success: boolean; data: Experiment[] }
@@ -471,6 +481,9 @@ function ExperimentsTab() {
   const [error, setError]  = useState('');
   const [expanded, setEx]  = useState<string | null>(null);
   const [completing, setCompleting] = useState<string | null>(null);
+  const [sessions, setSessions] = useState<Record<string, SDKSession[]>>({});
+  const [triggering, setTriggering] = useState<string | null>(null);
+  const [triggerResult, setTriggerResult] = useState<Record<string, string>>({});
 
   const load = useCallback(() => {
     setLoad(true);
@@ -482,6 +495,33 @@ function ExperimentsTab() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  const loadSessions = useCallback(async (experimentId: string) => {
+    try {
+      const r = await fetch(`/api/agents/experiments/sessions?experiment_id=${experimentId}`);
+      const j = await r.json() as { success: boolean; data: SDKSession[] };
+      if (j.success) setSessions(prev => ({ ...prev, [experimentId]: j.data }));
+    } catch { /* non-critical */ }
+  }, []);
+
+  const triggerSDK = useCallback(async (intent: string, expId: string) => {
+    setTriggering(expId);
+    try {
+      const agentId = intent.startsWith('evo') ? 'evo' : intent.startsWith('rescue') ? 'rescue' : 'hacker';
+      const r = await fetch('/api/agents/dispatch', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ agentId, intent, forceSDK: true }),
+      });
+      const j = await r.json() as { success: boolean; response?: string };
+      setTriggerResult(prev => ({ ...prev, [expId]: j.success ? 'SDK запущен' : 'Ошибка' }));
+      if (j.success) loadSessions(expId);
+    } catch {
+      setTriggerResult(prev => ({ ...prev, [expId]: 'Ошибка запроса' }));
+    } finally {
+      setTriggering(null);
+    }
+  }, [loadSessions]);
 
   async function complete(id: string, winner: 'a' | 'b' | 'tie') {
     setCompleting(id);
@@ -496,7 +536,7 @@ function ExperimentsTab() {
 
   if (loading) return (
     <div className="space-y-3">
-      {[1, 2].map(i => <div key={i} className="h-16 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg animate-pulse" />)}
+      {[1, 2, 3].map(i => <div key={i} className="h-16 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg animate-pulse" />)}
     </div>
   );
 
@@ -507,67 +547,125 @@ function ExperimentsTab() {
   );
 
   return (
-    <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden">
-      <SectionHeader label={`Эксперименты A/B (${data?.length ?? 0})`} />
-      {(!data || data.length === 0) && <EmptyState text="Нет экспериментов" />}
-      {data && data.length > 0 && (
-        <div className="divide-y divide-[var(--border)]">
-          {data.map(exp => {
-            const isEx = expanded === exp.id;
-            return (
-              <div key={exp.id}>
-                <button
-                  onClick={() => setEx(isEx ? null : exp.id)}
-                  className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[var(--bg-hover)] transition-colors text-left"
-                >
-                  {isEx
-                    ? <ChevronDown  className="w-3 h-3 text-[var(--text-muted)] shrink-0" />
-                    : <ChevronRight className="w-3 h-3 text-[var(--text-muted)] shrink-0" />}
-                  <span className="text-xs font-semibold text-[var(--text-primary)] flex-1 truncate">{exp.name}</span>
-                  {exp.intent && (
-                    <span className="text-[10px] font-mono text-[var(--ocean)] shrink-0">{exp.intent}</span>
-                  )}
-                  <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded shrink-0 ${
-                    exp.status === 'running'  ? 'bg-green-100 dark:bg-green-900/30 text-[var(--success)]'
-                    : exp.status === 'paused' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-[var(--warning)]'
-                    : 'bg-[var(--bg-hover)] text-[var(--text-muted)]'
-                  }`}>{STATUS_LABELS[exp.status] ?? exp.status}</span>
-                  {exp.winner && (
-                    <span className="text-[10px] font-mono text-[var(--accent)] shrink-0">
-                      победитель: {exp.winner}
-                    </span>
-                  )}
-                </button>
-                {isEx && (
-                  <div className="px-10 pb-4 pt-1 space-y-3">
-                    {exp.description && (
-                      <p className="text-xs text-[var(--text-secondary)]">{exp.description}</p>
+    <div className="space-y-3">
+      {/* Шапка */}
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-[var(--text-secondary)]">
+          A/B эксперименты: classic-агент (A) vs SDK agentic loop (B). Чётная минута → SDK, нечётная → classic.
+        </p>
+        <span className="text-[10px] font-mono text-[var(--text-muted)] bg-[var(--bg-hover)] px-2 py-0.5 rounded">
+          {data?.length ?? 0} экспериментов
+        </span>
+      </div>
+
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden">
+        {(!data || data.length === 0) && <EmptyState text="Нет экспериментов" />}
+        {data && data.length > 0 && (
+          <div className="divide-y divide-[var(--border)]">
+            {data.map(exp => {
+              const isEx = expanded === exp.id;
+              const expSessions = sessions[exp.id];
+              const classicSess = expSessions?.find(s => s.variant === 'classic');
+              const sdkSess     = expSessions?.find(s => s.variant === 'sdk');
+              return (
+                <div key={exp.id}>
+                  <button
+                    onClick={() => {
+                      setEx(isEx ? null : exp.id);
+                      if (!isEx && !expSessions) loadSessions(exp.id);
+                    }}
+                    className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[var(--bg-hover)] transition-colors text-left"
+                  >
+                    {isEx
+                      ? <ChevronDown  className="w-3 h-3 text-[var(--text-muted)] shrink-0" />
+                      : <ChevronRight className="w-3 h-3 text-[var(--text-muted)] shrink-0" />}
+                    <span className="text-xs font-semibold text-[var(--text-primary)] flex-1 truncate">{exp.name}</span>
+                    {exp.intent && (
+                      <span className="text-[10px] font-mono text-[var(--ocean)] shrink-0">{exp.intent}</span>
                     )}
-                    <p className="text-[11px] text-[var(--text-muted)]">
-                      Метрика: <span className="font-mono">{exp.metric}</span>
-                      {' | '}Создан: <span className="font-mono">{fmtDate(exp.created_at)}</span>
-                    </p>
-                    {exp.status === 'running' && (
-                      <div className="flex flex-wrap gap-2">
-                        {(['a', 'b', 'tie'] as const).map(w => (
-                          <button
-                            key={w}
-                            onClick={() => complete(exp.id, w)}
-                            disabled={completing === exp.id}
-                            className="px-3 py-1.5 text-xs bg-[var(--bg-hover)] border border-[var(--border)] rounded-md hover:bg-[var(--accent)] hover:text-white hover:border-transparent transition-colors disabled:opacity-50"
-                          >
-                            Победитель: {w}
-                          </button>
+                    <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded shrink-0 ${
+                      exp.status === 'running'  ? 'bg-green-100 dark:bg-green-900/30 text-[var(--success)]'
+                      : exp.status === 'paused' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-[var(--warning)]'
+                      : 'bg-[var(--bg-hover)] text-[var(--text-muted)]'
+                    }`}>{STATUS_LABELS[exp.status] ?? exp.status}</span>
+                    {exp.winner && (
+                      <span className="text-[10px] font-mono text-[var(--accent)] shrink-0">
+                        победитель: {exp.winner}
+                      </span>
+                    )}
+                  </button>
+                  {isEx && (
+                    <div className="px-10 pb-4 pt-2 space-y-3">
+                      {exp.description && (
+                        <p className="text-xs text-[var(--text-secondary)]">{exp.description}</p>
+                      )}
+                      <p className="text-[11px] text-[var(--text-muted)]">
+                        Метрика: <span className="font-mono">{exp.metric}</span>
+                        {' | '}Создан: <span className="font-mono">{fmtDate(exp.created_at)}</span>
+                      </p>
+
+                      {/* A/B варианты */}
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          { label: 'A — Classic', desc: String(exp.variant_a?.description ?? ''), sessions: classicSess },
+                          { label: 'B — SDK',     desc: String(exp.variant_b?.description ?? ''), sessions: sdkSess },
+                        ].map(v => (
+                          <div key={v.label} className="bg-[var(--bg-hover)] rounded-md p-2.5 space-y-1">
+                            <p className="text-[10px] font-semibold text-[var(--text-primary)]">{v.label}</p>
+                            <p className="text-[10px] text-[var(--text-secondary)]">{v.desc}</p>
+                            {v.sessions ? (
+                              <div className="text-[10px] text-[var(--text-muted)] font-mono space-y-0.5">
+                                <p>запусков: {v.sessions.count}</p>
+                                <p>успех: {Math.round(v.sessions.success_rate * 100)}%</p>
+                                {v.sessions.avg_tool_calls > 0 && (
+                                  <p>tool calls: {v.sessions.avg_tool_calls.toFixed(1)} avg</p>
+                                )}
+                                <p>время: {Math.round(v.sessions.avg_duration_ms / 1000)}с avg</p>
+                              </div>
+                            ) : (
+                              <p className="text-[10px] text-[var(--text-muted)]">нет данных</p>
+                            )}
+                          </div>
                         ))}
                       </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
+
+                      {/* Кнопки */}
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        {exp.status === 'running' && exp.intent && (
+                          <button
+                            onClick={() => triggerSDK(exp.intent!, exp.id)}
+                            disabled={triggering === exp.id}
+                            className="px-3 py-1.5 text-xs font-medium bg-[var(--ocean)] text-white rounded-md hover:opacity-90 transition-opacity disabled:opacity-50"
+                          >
+                            {triggering === exp.id ? 'Запускаю...' : 'Запустить SDK →'}
+                          </button>
+                        )}
+                        {triggerResult[exp.id] && (
+                          <span className="text-[10px] text-[var(--success)] self-center">{triggerResult[exp.id]}</span>
+                        )}
+                        {exp.status === 'running' && (
+                          <>
+                            {(['a', 'b', 'tie'] as const).map(w => (
+                              <button
+                                key={w}
+                                onClick={() => complete(exp.id, w)}
+                                disabled={completing === exp.id}
+                                className="px-3 py-1.5 text-xs bg-[var(--bg-hover)] border border-[var(--border)] rounded-md hover:bg-[var(--accent)] hover:text-white hover:border-transparent transition-colors disabled:opacity-50"
+                              >
+                                Победитель: {w}
+                              </button>
+                            ))}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

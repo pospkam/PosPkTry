@@ -293,12 +293,20 @@ class PlatformAgentClass {
       case 'hack_growth':
       case 'hack_funnel':
       case 'hack_automate': {
+        if (intent === 'hack_growth') {
+          const sdkResult = await trySDKVariant('hacker', intent);
+          if (sdkResult) return sdkResult;
+        }
         const { HackerAgency } = await import('./agencies/hacker-agency');
         return new HackerAgency().run(intent, context);
       }
       case 'rescue_sos_stats':
       case 'rescue_weather_risk':
       case 'rescue_protocols': {
+        if (intent === 'rescue_weather_risk') {
+          const sdkResult = await trySDKVariant('rescue', intent);
+          if (sdkResult) return sdkResult;
+        }
         const { RescueAgency } = await import('./agencies/rescue-agency');
         return new RescueAgency().run(intent, context);
       }
@@ -310,6 +318,10 @@ class PlatformAgentClass {
       case 'evo_optimize':
       case 'evo_experiments':
       case 'evo_adapt': {
+        if (intent === 'evo_optimize') {
+          const sdkResult = await trySDKVariant('evo', intent);
+          if (sdkResult) return sdkResult;
+        }
         const { EvolutionAgency } = await import('./agencies/evolution-agency');
         return new EvolutionAgency().run(intent, context);
       }
@@ -393,3 +405,48 @@ class PlatformAgentClass {
 }
 
 export const PlatformAgent = new PlatformAgentClass();
+
+// ── SDK A/B Router ─────────────────────────────────────────────────────────────
+// Детерминированный 50/50 split: чётная минута → SDK, нечётная → classic.
+// Если таблица ещё не создана — тихо возвращаем null (fallback на classic).
+
+const SDK_EXPERIMENT_INTENTS: Record<string, string> = {
+  evo_optimize:      'evo_optimize',
+  rescue_weather_risk: 'rescue_weather_risk',
+  hack_growth:       'hack_growth',
+};
+
+async function trySDKVariant(
+  agentId: 'evo' | 'rescue' | 'hacker',
+  intent:  string
+): Promise<{ response: string; data?: Record<string, unknown> } | null> {
+  // 50/50 split по минуте
+  const useSDK = new Date().getMinutes() % 2 === 0;
+  if (!useSDK) return null;
+
+  try {
+    // Найти ID эксперимента
+    const { pool } = await import('@/lib/db-pool');
+    const { rows } = await pool.query<{ id: string }>(
+      `SELECT id FROM agent_experiments WHERE intent = $1 AND status = 'running' LIMIT 1`,
+      [SDK_EXPERIMENT_INTENTS[intent]]
+    );
+    const experimentId = rows[0]?.id;
+
+    if (agentId === 'evo') {
+      const { runEvoSDKAgent } = await import('./sdk/evo-sdk-agent');
+      return await runEvoSDKAgent(experimentId);
+    }
+    if (agentId === 'rescue') {
+      const { runRescueSDKAgent } = await import('./sdk/rescue-sdk-agent');
+      return await runRescueSDKAgent(experimentId);
+    }
+    if (agentId === 'hacker') {
+      const { runHackerSDKAgent } = await import('./sdk/hacker-sdk-agent');
+      return await runHackerSDKAgent(experimentId);
+    }
+  } catch {
+    // Таблица не создана или SDK упал — тихий fallback на classic
+  }
+  return null;
+}
