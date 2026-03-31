@@ -36,7 +36,7 @@ AI-помощник Кузьмич подбирает маршрут за мин
 | Frontend | Next.js 15 App Router, React 19, TypeScript strict, Tailwind CSS |
 | Backend | Next.js API Routes, PostgreSQL (pg pool, прямой SQL) |
 | Auth | JWT (jose) + bcrypt, 6 ролей |
-| AI Providers | DeepSeek (primary) → MiniMax 2.5 → OpenRouter → YandexGPT → MiMo → Gemini → Anthropic → xAI |
+| AI Providers | OpenRouter (primary, OR_API_KEY) → DeepSeek → MiniMax 2.5 → YandexGPT → MiMo → Gemini → Anthropic → xAI |
 | Agent Layer | 13 AI-директоров + 7 рабочих агентов (`lib/agents/`) |
 | Maps | Yandex Maps API 2.1 |
 | Telegram | @KuzmichKam_bot (tourist) + admin bot |
@@ -127,7 +127,7 @@ hooks/
 ### Waterfall провайдеров
 
 ```
-DeepSeek ($19) → MiniMax 2.5 → OpenRouter (4 sub-models)
+OpenRouter (OR_API_KEY, primary) → DeepSeek → MiniMax 2.5
     → YandexGPT → MiMo → Gemini → Anthropic → xAI
 ```
 
@@ -244,6 +244,17 @@ DeepSeek ($19) → MiniMax 2.5 → OpenRouter (4 sub-models)
 - AI-баннер Кузьмича на странице каталога → `/planner`
 - Страница тура: hero-фото h-[420px] с бейджем актив��ости и заголовком на фото, блок Кузьмича внизу
 
+### Аффилиат монетизация
+
+- 8 партнёрских сервисов: Aviasales, Hotellook, RentalCars, Kiwitaxi, Travelata, Cherehapa, Tripster, WeGoTrip
+- `affiliate_clicks` — трекинг кликов по партнёрским ссылкам с attribution (tour_id, user_id, utm)
+- `affiliate_payouts` — учёт выплат от партнёров (reconciliation по `tp_click_id`)
+- Webhook: `POST /api/webhooks/travelpayouts` — приём payout-уведомлений от TravelPayouts
+- Operator Dashboard: карточка "Доходы за 30 дней" — бронирования + аффилиат в одном блоке
+- API: `GET /api/hub/operator/earnings` — статистика доходов для оператора
+
+---
+
 ### Telegram-бот
 - @KuzmichKam_bot: AI-диалог, маршруты, погода, операторы
 - Admin-бот: понимает свободный текст → роутит в PlatformAgent (10 директоров)
@@ -290,6 +301,9 @@ SMTP_PORT=465
 SMTP_USER=...
 SMTP_PASS=...
 
+# === Аффилиат (опционально) ===
+TRAVELPAYOUTS_WEBHOOK_TOKEN=...  # TravelPayouts payout webhook
+
 # === Платежи (опционально) ===
 CLOUDPAYMENTS_API_SECRET=...
 NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID=...
@@ -329,15 +343,19 @@ lead_activity_log        -- Журнал действий по лидам
 
 -- Аналитика
 page_views               -- Собственная аналитика
+
+-- Аффилиат монетизация
+affiliate_clicks         -- Клики по партнёрским ссылкам (084)
+affiliate_payouts        -- Выплаты от партнёров (TravelPayouts и др.) (085)
 ```
 
 ### Миграции
 
 Миграции: `lib/database/migrations/` + `migrations/`.
-Последняя: **`050_sos_events_identity.sql`** — добавляет `tourist_name`, `tourist_phone`, `message`, `emergency_type` в `sos_events`.
+Последняя: **`085_affiliate_payouts.sql`** — таблица выплат от партнёров (TravelPayouts).
 
 ```bash
-psql $DATABASE_URL < lib/database/migrations/050_sos_events_identity.sql
+psql $DATABASE_URL < lib/database/migrations/085_affiliate_payouts.sql
 ```
 
 ---
@@ -383,8 +401,8 @@ npx vitest run        # Тесты зелёные
 ```
 Страниц:              94
 API endpoints:       390+
-Компонентов:         110
-Миграций:            050+
+Компонентов:         120+
+Миграций:            085+
 Маршрутов в БД:    1 189
 AI-провайдеров:        8  (waterfall)
 AI-директоров:        13  (Board of Directors)
@@ -392,11 +410,12 @@ TS-ошибок:             0
 ```
 
 **Последние изменения (март 2026):**
+- Аффилиат монетизация: `affiliate_clicks` + `affiliate_payouts` таблицы, TravelPayouts webhook
+- Operator Dashboard: блок "Доходы за 30 дней" (`OperatorEarningsCard`)
+- Infra probe fix: `probeAIProviders` теперь читает `OR_API_KEY` (primary); Anthropic — softCheck (гео-блок из РФ не роняет probe)
 - AI Спасатель — SSE-чат с МЧС-протоколами, офлайн-режим
 - SOS-кнопка теперь собирает имя и телефон туриста
-- Карточки туров: aspect-ratio фото, цена на фото, блок Кузьмича
 - Admin Telegram-бот понимает свободный текст через PlatformAgent
-- `/safety` → редирект на `/hub/safety`
 
 ### Юр. лицо
 ООО "ПОС-СЕРВИС", ИНН 4101147649, ОГРН 1114101005952
@@ -412,7 +431,7 @@ TS-ошибок:             0
 - Pool: `import { pool } from '@/lib/db-pool'` (named export)
 - Стили: только CSS-переменные, glassmorphism запрещён
 - Маршруты: только через `v_kamchatka_routes_api`, не `SELECT * FROM kamchatka_routes`
-- Миграции: не менять существующие, добавлять новые (текущая последняя: `083_`)
+- Миграции: не менять существующие, добавлять новые (текущая последняя: `085_`)
 
 ---
 
