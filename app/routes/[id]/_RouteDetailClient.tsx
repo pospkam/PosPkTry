@@ -20,6 +20,7 @@ import { useSourceTracker } from '@/hooks/useSourceTracker';
 import { AssistantButton } from '@/components/shared/AssistantButton';
 import { MarkerType } from '@/components/shared/LeafletMap';
 import DescriptionWithFishLinks from '@/components/shared/DescriptionWithFishLinks';
+import RouteAffiliateBlock from '@/components/routes/RouteAffiliateBlock';
 
 const LeafletMap = dynamic(() => import('@/components/shared/LeafletMap'), { ssr: false });
 
@@ -914,6 +915,9 @@ export default function RouteDetailClient({ id }: { id: string }) {
             Найти билеты
           </a>
         </div>
+
+        {/* ── Партнёрские сервисы (TravelPayouts) ───────────────────────────── */}
+        <RouteAffiliateBlock activityType={route.activityType} />
 
         {/* ── Похожие ───────────────────────────────────────────────────────── */}
         {relatedRoutes.length > 0 && (
