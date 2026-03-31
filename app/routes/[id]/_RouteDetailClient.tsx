@@ -22,6 +22,9 @@ import { MarkerType } from '@/components/shared/LeafletMap';
 import DescriptionWithFishLinks from '@/components/shared/DescriptionWithFishLinks';
 import RouteAffiliateBlock from '@/components/routes/RouteAffiliateBlock';
 import InsuranceBlock from '@/components/routes/InsuranceBlock';
+import FlightsBlock from '@/components/routes/FlightsBlock';
+import HotelsBlock from '@/components/routes/HotelsBlock';
+import TransfersBlock from '@/components/routes/TransfersBlock';
 
 const LeafletMap = dynamic(() => import('@/components/shared/LeafletMap'), { ssr: false });
 
@@ -919,6 +922,15 @@ export default function RouteDetailClient({ id }: { id: string }) {
 
         {/* ── Партнёрские сервисы (TravelPayouts) ───────────────────────────── */}
         <RouteAffiliateBlock activityType={route.activityType} />
+
+        {/* ── Авиабилеты до Камчатки (Aviasales) ────────────────────────────── */}
+        <FlightsBlock />
+
+        {/* ── Отели в Петропавловске (Hotellook) ──────────────────────────────── */}
+        <HotelsBlock nights={3} />
+
+        {/* ── Трансферы и логистика (Kiwitaxi) ───────────────────────────────── */}
+        <TransfersBlock activity_type={route.activityType ?? undefined} />
 
         {/* ── Рекомендация страховки ────────────────────────────────────────── */}
         {route.activityType && (
