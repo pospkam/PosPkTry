@@ -45,6 +45,10 @@ export default function LeadModal({ open, onClose, routeId, routeTitle, sourceUr
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
+    if (!pdConsent) {
+      setError('Необходимо согласие на обработку персональных данных');
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch('/api/leads', {
@@ -222,7 +226,7 @@ export default function LeadModal({ open, onClose, routeId, routeTitle, sourceUr
 
                 <button
                   type="submit"
-                  disabled={loading || !name.trim() || !phone.trim() || !pdConsent}
+                  disabled={loading || !name.trim() || !phone.trim()}
                   className="ds-btn ds-btn-primary w-full flex items-center justify-center gap-2"
                 >
                   {loading && <Loader2 className="w-4 h-4 animate-spin" />}

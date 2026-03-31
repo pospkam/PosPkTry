@@ -5,7 +5,7 @@ import Script from 'next/script';
 import Link from 'next/link';
 import {
   X, Calendar, Users, CreditCard, CheckCircle,
-  Loader2, AlertTriangle, LogIn, Phone,
+  Loader2, AlertTriangle, Phone, User,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -84,6 +84,14 @@ export default function TourPaymentModal({
   const [transactionId, setTransactionId] = useState<number | null>(null);
   const [payError, setPayError]         = useState('');
 
+  // Guest lead (unauthenticated flow)
+  const [guestName, setGuestName]       = useState('');
+  const [guestPhone, setGuestPhone]     = useState('');
+  const [guestConsent, setGuestConsent] = useState(false);
+  const [guestDone, setGuestDone]       = useState(false);
+  const [guestLoading, setGuestLoading] = useState(false);
+  const [guestError, setGuestError]     = useState('');
+
   const dateInputRef = useRef<HTMLInputElement>(null);
 
   // Reset on open
@@ -97,6 +105,12 @@ export default function TourPaymentModal({
       setPaymentData(null);
       setTransactionId(null);
       setPayError('');
+      setGuestName('');
+      setGuestPhone('');
+      setGuestConsent(false);
+      setGuestDone(false);
+      setGuestLoading(false);
+      setGuestError('');
       if (user) setTimeout(() => dateInputRef.current?.focus(), 60);
     }
   }, [open, user, minGroupSize, nextDeparture]);
@@ -115,6 +129,34 @@ export default function TourPaymentModal({
   const maxP   = maxGroupSize ?? 20;
   const price  = priceBase;
   const total  = price != null ? price * participants : null;
+
+  // ── Guest lead submit (unauthenticated) ─────────────────────────────────────
+
+  async function handleGuestLead(e: React.FormEvent) {
+    e.preventDefault();
+    setGuestError('');
+    setGuestLoading(true);
+    try {
+      const res = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name:        guestName.trim(),
+          phone:       guestPhone.trim(),
+          comment:     `Интерес к туру: ${tourName} (оператор: ${operatorName})`,
+          route_title: tourName,
+          source_data: { source: 'booking_modal_guest' },
+        }),
+      });
+      const json: { success: boolean; error?: string } = await res.json();
+      if (json.success) setGuestDone(true);
+      else setGuestError(json.error ?? 'Ошибка. Попробуйте ещё раз.');
+    } catch {
+      setGuestError('Нет связи. Проверьте интернет.');
+    } finally {
+      setGuestLoading(false);
+    }
+  }
 
   // ── Step: form ──────────────────────────────────────────────────────────────
 
@@ -231,20 +273,96 @@ export default function TourPaymentModal({
               <p className="text-xs text-[var(--text-secondary)]">{operatorName}</p>
             </div>
 
-            {/* ── Не авторизован ── */}
+            {/* ── Не авторизован → лид-форма ── */}
             {!authLoading && !user && (
-              <div className="py-6 text-center space-y-4">
-                <LogIn className="w-10 h-10 mx-auto text-[var(--text-muted)]" />
-                <p className="text-sm text-[var(--text-secondary)]">
-                  Для бронирования необходима авторизация
-                </p>
-                <Link
-                  href={`/auth/login?from=${encodeURIComponent('/routes')}`}
-                  className="ds-btn ds-btn-primary px-6 py-2.5 text-sm font-semibold"
-                >
-                  Войти
-                </Link>
-              </div>
+              guestDone ? (
+                <div className="py-6 text-center space-y-3">
+                  <CheckCircle className="w-10 h-10 mx-auto text-[var(--success)]" />
+                  <p className="text-base font-semibold text-[var(--text-primary)]">Заявка принята!</p>
+                  <p className="text-sm text-[var(--text-secondary)]">
+                    Мы свяжемся с вами и оформим бронирование.
+                  </p>
+                  <button type="button" onClick={onClose} className="ds-btn ds-btn-primary mt-2">Закрыть</button>
+                </div>
+              ) : (
+                <form onSubmit={handleGuestLead} className="space-y-3">
+                  <p className="text-sm text-[var(--text-secondary)]">
+                    Оставьте контакт — мы оформим бронирование и пришлём детали.
+                  </p>
+
+                  <div>
+                    <label className="ds-label mb-1">Имя <span className="text-[var(--accent)]">*</span></label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--text-muted)] pointer-events-none" />
+                      <input
+                        type="text"
+                        className="ds-input pl-8 w-full"
+                        placeholder="Ваше имя"
+                        value={guestName}
+                        onChange={e => setGuestName(e.target.value)}
+                        required
+                        maxLength={120}
+                        autoComplete="name"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="ds-label mb-1">Телефон <span className="text-[var(--accent)]">*</span></label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--text-muted)] pointer-events-none" />
+                      <input
+                        type="tel"
+                        className="ds-input pl-8 w-full"
+                        placeholder="+7 (900) 000-00-00"
+                        value={guestPhone}
+                        onChange={e => setGuestPhone(e.target.value)}
+                        required
+                        maxLength={30}
+                        autoComplete="tel"
+                      />
+                    </div>
+                  </div>
+
+                  <label className="flex items-start gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={guestConsent}
+                      onChange={e => setGuestConsent(e.target.checked)}
+                      className="mt-0.5 w-4 h-4 rounded border-[var(--border)] accent-[var(--accent)] shrink-0 cursor-pointer"
+                    />
+                    <span className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+                      Согласен(на) на{' '}
+                      <a href="/legal/privacy" target="_blank" className="text-[var(--ocean)] hover:underline">
+                        обработку персональных данных
+                      </a>
+                    </span>
+                  </label>
+
+                  {guestError && (
+                    <p className="text-xs text-[var(--danger)] bg-[var(--danger)]/10 px-3 py-2 rounded">{guestError}</p>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={guestLoading || !guestName.trim() || !guestPhone.trim() || !guestConsent}
+                    className="ds-btn ds-btn-primary w-full flex items-center justify-center gap-2"
+                  >
+                    {guestLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {guestLoading ? 'Отправляем…' : 'Оставить заявку'}
+                  </button>
+
+                  <p className="text-center text-[11px] text-[var(--text-muted)]">
+                    Уже есть аккаунт?{' '}
+                    <Link
+                      href={`/auth/login?from=${encodeURIComponent(typeof window !== 'undefined' ? window.location.pathname : '/routes')}`}
+                      className="text-[var(--ocean)] hover:underline"
+                    >
+                      Войти и бронировать онлайн
+                    </Link>
+                  </p>
+                </form>
+              )
             )}
 
             {/* ── Загрузка авторизации ── */}
