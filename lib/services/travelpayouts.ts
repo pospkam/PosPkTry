@@ -173,29 +173,38 @@ export async function toAffiliateLinks(
 
 /** Standard entry points for Kamchatka tourists */
 export const KAMCHATKA_URLS = {
-  /** Aviasales: search flights to Petropavlovsk-Kamchatsky (PKC) */
+  // Авиабилеты
   flights_to_pkc: 'https://www.aviasales.ru/search/–PKC1',
-  /** Hotellook: hotels in Petropavlovsk-Kamchatsky */
-  hotels_pkc: 'https://hotellook.com/search?destination=Petropavlovsk-Kamchatsky&adults=2',
-  /** Aviasales: calendar of cheap fares to PKC */
   cheap_calendar: 'https://www.aviasales.ru/calendar/–PKC',
+
+  // Проживание
+  hotels_pkc: 'https://hotellook.com/search?destination=Petropavlovsk-Kamchatsky&adults=2',
+  ostrovok_hotels: 'https://www.ostrovok.ru/search/?location=Petropavlovsk-Kamchatsky',
+
+  // Экскурсии и активности
+  tripster_excursions: 'https://experience.tripster.ru',
+  sputnik8_tours: 'https://www.sputnik8.com/ru/tours?location=Petropavlovsk-Kamchatsky',
+
+  // Трансферы
+  kiwitaxi_airport: 'https://www.kiwitaxi.ru/airport/petropavlovsk-kamchatskij',
+
+  // Прокат авто
+  getrentacar_pkc: 'https://www.getrentacar.com/ru-ru/locations/98-petropavlovsk-kamchatsky',
+
+  // Страховка путешественника
+  cherehapa_insurance: 'https://www.cherehapa.ru',
+
+  // Аудиоэкскурсии
+  wegotrip_audio: 'https://www.wegotripapp.com/ru/kamchatka',
 } as const;
 
 /**
  * Get all Kamchatka affiliate links at once.
  * Call once at page render (server component) and pass to client.
  */
-export async function getKamchatkaAffiliateLinks(): Promise<{
-  flights: string;
-  hotels: string;
-  cheap: string;
-}> {
+export async function getKamchatkaAffiliateLinks(): Promise<Record<string, string>> {
   const map = await toAffiliateLinks(Object.values(KAMCHATKA_URLS), 'kamchatour_page');
-  return {
-    flights: map[KAMCHATKA_URLS.flights_to_pkc],
-    hotels:  map[KAMCHATKA_URLS.hotels_pkc],
-    cheap:   map[KAMCHATKA_URLS.cheap_calendar],
-  };
+  return map;
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────

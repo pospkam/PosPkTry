@@ -1,11 +1,94 @@
 /**
  * AffiliateFlightBanner — server component.
  * Fetches affiliate links server-side (API token never exposed to client).
- * Renders a flight + hotel CTA section for the homepage.
+ * Renders 8+ CTA cards for travel services (flights, hotels, tours, transfers, insurance, etc).
  */
 
-import { Plane, Hotel, TrendingDown } from 'lucide-react';
-import { getKamchatkaAffiliateLinks } from '@/lib/services/travelpayouts';
+import { Plane, Hotel, TrendingDown, MapPin, Car, Shield, Volume2, Building2 } from 'lucide-react';
+import { getKamchatkaAffiliateLinks, KAMCHATKA_URLS } from '@/lib/services/travelpayouts';
+
+const CARD_CONFIG = [
+  {
+    key: 'flights_to_pkc' as const,
+    icon: Plane,
+    title: 'Авиабилеты в Петропавловск',
+    subtitle: 'Aviasales · 750+ авиакомпаний',
+    color: 'ocean',
+    btnStyle: 'ds-btn-primary',
+  },
+  {
+    key: 'hotels_pkc' as const,
+    icon: Hotel,
+    title: 'Отели на Камчатке',
+    subtitle: 'Hotellook · 2 млн вариантов',
+    color: 'success',
+    btnStyle: 'ds-btn-secondary',
+  },
+  {
+    key: 'cheap_calendar' as const,
+    icon: TrendingDown,
+    title: 'Календарь низких цен',
+    subtitle: 'Aviasales · лучший месяц',
+    color: 'warning',
+    btnStyle: 'ds-btn-secondary',
+  },
+  {
+    key: 'tripster_excursions' as const,
+    icon: MapPin,
+    title: 'Экскурсии от местных',
+    subtitle: 'Tripster · 22k туров',
+    color: 'accent',
+    btnStyle: 'ds-btn-secondary',
+  },
+  {
+    key: 'kiwitaxi_airport' as const,
+    icon: Car,
+    title: 'Трансфер из аэропорта',
+    subtitle: 'Kiwitaxi · 150+ стран',
+    color: 'ocean',
+    btnStyle: 'ds-btn-secondary',
+  },
+  {
+    key: 'cherehapa_insurance' as const,
+    icon: Shield,
+    title: 'Страховка путешественника',
+    subtitle: 'Cherehapa · до 30% комиссия',
+    color: 'danger',
+    btnStyle: 'ds-btn-secondary',
+  },
+  {
+    key: 'getrentacar_pkc' as const,
+    icon: Car,
+    title: 'Прокат автомобилей',
+    subtitle: 'GetRentaCar · 10% комиссия',
+    color: 'ocean',
+    btnStyle: 'ds-btn-secondary',
+  },
+  {
+    key: 'wegotrip_audio' as const,
+    icon: Volume2,
+    title: 'Аудиоэкскурсии',
+    subtitle: 'WeGoTrip · билеты в музеи',
+    color: 'success',
+    btnStyle: 'ds-btn-secondary',
+  },
+] as const;
+
+const colorMap: Record<string, string> = {
+  ocean: 'text-[var(--ocean)]',
+  success: 'text-[var(--success)]',
+  warning: 'text-[var(--warning)]',
+  accent: 'text-[var(--accent)]',
+  danger: 'text-[var(--danger)]',
+};
+
+const bgColorMap: Record<string, string> = {
+  ocean: 'bg-[var(--ocean)]/10',
+  success: 'bg-[var(--success)]/10',
+  warning: 'bg-[var(--warning)]/10',
+  accent: 'bg-[var(--accent)]/10',
+  danger: 'bg-[var(--danger)]/10',
+};
 
 export async function AffiliateFlightBanner() {
   const links = await getKamchatkaAffiliateLinks();
@@ -17,98 +100,53 @@ export async function AffiliateFlightBanner() {
         {/* Heading */}
         <div className="mb-8">
           <p className="text-xs font-medium uppercase tracking-widest text-[var(--text-muted)] mb-2">
-            Добраться до Камчатки
+            Полная туристическая подготовка
           </p>
           <h2 className="font-playfair text-3xl md:text-4xl font-bold text-[var(--text-primary)]">
-            Билеты и отели — <span className="text-[var(--accent)]">лучшие цены</span>
+            Всё для путешествия на <span className="text-[var(--accent)]">Камчатку</span>
           </h2>
           <p className="text-[var(--text-secondary)] mt-2 text-base">
-            Петропавловск-Камчатский (PKC) · Сравниваем 750+ авиакомпаний и 2 млн отелей
+            Билеты, отели, экскурсии, трансферы, страховка — всё в одном месте
           </p>
         </div>
 
-        {/* Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* Grid Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {CARD_CONFIG.map((card) => {
+            const Icon = card.icon;
+            const href = links[card.key] || (KAMCHATKA_URLS[card.key] as string);
 
-          {/* Flights */}
-          <a
-            href={links.flights}
-            target="_blank"
-            rel="noopener noreferrer sponsored"
-            className="group ds-card rounded-xl p-6 flex flex-col gap-4 hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 border border-[var(--border)]"
-          >
-            <div className="w-10 h-10 rounded-lg bg-[var(--ocean)]/10 flex items-center justify-center">
-              <Plane className="w-5 h-5 text-[var(--ocean)]" />
-            </div>
-            <div>
-              <div className="font-semibold text-[var(--text-primary)] mb-1">
-                Авиабилеты в Петропавловск
-              </div>
-              <div className="text-sm text-[var(--text-muted)]">
-                Прямые и с пересадками · Aviasales
-              </div>
-            </div>
-            <div className="mt-auto">
-              <span className="ds-btn ds-btn-primary text-sm w-full text-center block">
-                Найти билеты
-              </span>
-            </div>
-          </a>
-
-          {/* Hotels */}
-          <a
-            href={links.hotels}
-            target="_blank"
-            rel="noopener noreferrer sponsored"
-            className="group ds-card rounded-xl p-6 flex flex-col gap-4 hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 border border-[var(--border)]"
-          >
-            <div className="w-10 h-10 rounded-lg bg-[var(--success)]/10 flex items-center justify-center">
-              <Hotel className="w-5 h-5 text-[var(--success)]" />
-            </div>
-            <div>
-              <div className="font-semibold text-[var(--text-primary)] mb-1">
-                Отели на Камчатке
-              </div>
-              <div className="text-sm text-[var(--text-muted)]">
-                2 млн вариантов · Hotellook
-              </div>
-            </div>
-            <div className="mt-auto">
-              <span className="ds-btn ds-btn-secondary text-sm w-full text-center block">
-                Найти отель
-              </span>
-            </div>
-          </a>
-
-          {/* Cheap calendar */}
-          <a
-            href={links.cheap}
-            target="_blank"
-            rel="noopener noreferrer sponsored"
-            className="group ds-card rounded-xl p-6 flex flex-col gap-4 hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 border border-[var(--border)]"
-          >
-            <div className="w-10 h-10 rounded-lg bg-[var(--warning)]/10 flex items-center justify-center">
-              <TrendingDown className="w-5 h-5 text-[var(--warning)]" />
-            </div>
-            <div>
-              <div className="font-semibold text-[var(--text-primary)] mb-1">
-                Календарь низких цен
-              </div>
-              <div className="text-sm text-[var(--text-muted)]">
-                Лучший месяц для поездки
-              </div>
-            </div>
-            <div className="mt-auto">
-              <span className="ds-btn ds-btn-secondary text-sm w-full text-center block">
-                Смотреть цены
-              </span>
-            </div>
-          </a>
-
+            return (
+              <a
+                key={card.key}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer sponsored"
+                className="ds-card rounded-lg p-4 flex flex-col gap-3 hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 border border-[var(--border)]"
+              >
+                <div className={`w-8 h-8 rounded-md ${bgColorMap[card.color]} flex items-center justify-center flex-shrink-0`}>
+                  <Icon className={`w-4 h-4 ${colorMap[card.color]}`} />
+                </div>
+                <div>
+                  <div className="font-medium text-sm text-[var(--text-primary)] leading-snug">
+                    {card.title}
+                  </div>
+                  <div className="text-xs text-[var(--text-muted)] mt-0.5">
+                    {card.subtitle}
+                  </div>
+                </div>
+                <div className="mt-auto pt-2">
+                  <span className={`${card.btnStyle} text-xs w-full text-center block px-2 py-1.5`}>
+                    Перейти
+                  </span>
+                </div>
+              </a>
+            );
+          })}
         </div>
 
-        <p className="text-xs text-[var(--text-muted)] mt-4 text-right">
-          Партнёрские ссылки · Цены обновляются в реальном времени
+        <p className="text-xs text-[var(--text-muted)] mt-4">
+          Партнёрские ссылки · Мы получаем комиссию, для вас цены не меняются
         </p>
       </div>
     </section>
