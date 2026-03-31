@@ -100,6 +100,15 @@ const DOMAIN_CONFIGS: Record<string, DomainConfig> = {
       'https://rata-news.ru/feed/',
     ],
   },
+  intelligence: {
+    query:  'туризм Камчатка конкуренты агрегаторы новые туры тренды рынок 2026',
+    filter: 'Новые предложения туристических платформ России и Камчатки: фичи, форматы туров, ценовые стратегии, технологические инновации.',
+    rss:    [
+      'https://www.tourprom.ru/news/rss/',
+      'https://rata-news.ru/feed/',
+      'https://ator.ru/rss.xml',
+    ],
+  },
 };
 
 // ── RSS parser (без npm-зависимостей) ─────────────────────────────────────────

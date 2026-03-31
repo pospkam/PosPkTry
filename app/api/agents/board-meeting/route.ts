@@ -103,7 +103,8 @@ const MEETING_AGENTS = [
   { id: 'finance',   name: 'AI Финдиректор',  role: 'CFO / Финансовый директор',     intent: 'finance_report', color: '#6366F1' },
   { id: 'infra',     name: 'AI DevOps',       role: 'SRE / Инфраструктура',          intent: 'infra_health',   color: '#14B8A6' },
   { id: 'vibe_coder', name: 'AI Разработчик', role: 'Vibe Coder / Самомодификация',  intent: 'code_analysis',  color: '#F97316' },
-  { id: 'planning',   name: 'AI Плановик',  role: 'Стратегический плановик',        intent: 'plan_forecast',  color: '#3B82F6' },
+  { id: 'planning',      name: 'AI Плановик',    role: 'Стратегический плановик',        intent: 'plan_forecast',      color: '#3B82F6' },
+  { id: 'intelligence',  name: 'AI Разведчик',   role: 'Аналитик конкурентного рынка',   intent: 'market_intelligence', color: '#0EA5E9' },
 ] as const;
 
 // ── Proposal config per agent ───────────────────────────────────────────────────────────
@@ -184,6 +185,11 @@ const PROPOSAL_CONFIGS: Record<string, ProposalConfig> = {
     allowed_types: ['code_change', 'sql_query_fix'],
     domain: 'codebase',
   },
+  intelligence: {
+    persona:       'Ты AI-разведчик конкурентного рынка туристической платформы Камчатки. Анализируй реальные данные о конкурентах и трендах. Предлагай конкретные изменения в экосистеме: новые форматы туров, ценовые стратегии, технологические фичи. Каждое предложение — с данными.',
+    allowed_types: ['ecosystem_proposal'],
+    domain: 'market_intelligence',
+  },
 };
 
 // ── Матрица компетенций: action_type → лучший исполнитель ───────────────────────────────
@@ -244,6 +250,10 @@ const EXECUTOR_SKILL_MAP: Record<string, ExecutorEntry> = {
     id: 'vibe_coder', name: 'AI Разработчик', color: '#F97316',
     reason: 'Изменения кода — зона Vibe Coder разработчика',
   },
+  ecosystem_proposal: {
+    id: 'intelligence', name: 'AI Разведчик', color: '#0EA5E9',
+    reason: 'Предложения по экосистеме — зона аналитика конкурентного рынка',
+  },
 };
 
 // ── Agent runner ───────────────────────────────────────────────────────────────────────
@@ -262,7 +272,8 @@ const AGENCY_LOADERS: Record<string, () => Promise<{ run(intent: string, ctx: Ag
   finance_report:  async () => { const { FinanceAgency } = await import('@/lib/agents/agencies/finance-agency'); return new FinanceAgency(); },
   infra_health:    async () => { const { InfraAgency } = await import('@/lib/agents/agencies/infra-agency'); return new InfraAgency(); },
   code_analysis:   async () => { const { VibeCoderAgency } = await import('@/lib/agents/agencies/vibe-coder-agency'); return new VibeCoderAgency(); },
-  plan_forecast:   async () => { const { PlanningAgency } = await import('@/lib/agents/agencies/planning-agency'); return new PlanningAgency(); },
+  plan_forecast:        async () => { const { PlanningAgency }     = await import('@/lib/agents/agencies/planning-agency');     return new PlanningAgency(); },
+  market_intelligence:  async () => { const { IntelligenceAgency } = await import('@/lib/agents/agencies/intelligence-agency'); return new IntelligenceAgency(); },
 };
 
 async function runAgent(
@@ -568,8 +579,16 @@ async function extractVote(
 // ── POST — SSE стриминг ─────────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
-  const authResult = await requireAdmin(req);
-  if (authResult instanceof NextResponse) return authResult;
+  // Cron bypass — allows scheduled calls without admin JWT
+  let callerUserId = '0';
+  const cronHeader = req.headers.get('x-cron-secret');
+  if (cronHeader && process.env.CRON_SECRET && cronHeader === process.env.CRON_SECRET) {
+    callerUserId = '1'; // system admin
+  } else {
+    const authResult = await requireAdmin(req);
+    if (authResult instanceof NextResponse) return authResult;
+    callerUserId = authResult.userId;
+  }
 
   let topic: string | null = null;
   try {
@@ -589,7 +608,7 @@ export async function POST(req: NextRequest) {
     const sesRes = await pool.query<{ id: string }>(
       `INSERT INTO board_meeting_sessions (topic, initiated_by, status)
        VALUES ($1, $2, 'running') RETURNING id`,
-      [topic, parseInt(authResult.userId, 10)]
+      [topic, parseInt(callerUserId, 10)]
     );
     sessionDbId = sesRes.rows[0]?.id ?? null;
   } catch { /* таблица может не существовать на старом проде */ }
@@ -603,7 +622,7 @@ export async function POST(req: NextRequest) {
       try {
         const contextHub = new ContextHub();
         const context    = await contextHub.build(
-          parseInt(authResult.userId, 10),
+          parseInt(callerUserId, 10),
           'admin',
           'board-meeting'
         );
@@ -797,7 +816,7 @@ export async function POST(req: NextRequest) {
                 decision:        meetingId,
                 result:          'success',
                 duration_ms,
-                user_id:         parseInt(authResult.userId, 10),
+                user_id:         parseInt(callerUserId, 10),
                 agents_count:    agents.length,
                 ok:              okCount,
                 reactions_count: reactions.length,

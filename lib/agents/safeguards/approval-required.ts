@@ -32,6 +32,7 @@ const ACTION_CATEGORIES: Record<string, ActionCategory> = {
   api_scope_expand:    'review',
   commission_change:   'review',
   tour_auto_cancel:    'review',
+  ecosystem_proposal:  'review',
 
   // Forbidden — никогда не выполняется агентом
   data_delete:         'forbidden',
