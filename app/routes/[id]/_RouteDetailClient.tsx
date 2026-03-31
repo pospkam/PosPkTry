@@ -21,6 +21,7 @@ import { AssistantButton } from '@/components/shared/AssistantButton';
 import { MarkerType } from '@/components/shared/LeafletMap';
 import DescriptionWithFishLinks from '@/components/shared/DescriptionWithFishLinks';
 import RouteAffiliateBlock from '@/components/routes/RouteAffiliateBlock';
+import InsuranceBlock from '@/components/routes/InsuranceBlock';
 
 const LeafletMap = dynamic(() => import('@/components/shared/LeafletMap'), { ssr: false });
 
@@ -918,6 +919,14 @@ export default function RouteDetailClient({ id }: { id: string }) {
 
         {/* ── Партнёрские сервисы (TravelPayouts) ───────────────────────────── */}
         <RouteAffiliateBlock activityType={route.activityType} />
+
+        {/* ── Рекомендация страховки ────────────────────────────────────────── */}
+        {route.activityType && (
+          <InsuranceBlock
+            activityTypes={route.activityType ? [route.activityType] : []}
+            routeTitle={route.title}
+          />
+        )}
 
         {/* ── Похожие ───────────────────────────────────────────────────────── */}
         {relatedRoutes.length > 0 && (
