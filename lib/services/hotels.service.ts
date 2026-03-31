@@ -1,13 +1,6 @@
 /**
  * Hotels Service — подбор отелей в Петропавловске и близлежащих районах
- * Integrates Hotellook API
- *
- * Main areas:
- * - Petropavlovsk city center
- * - Northern Kamchatka (for northern tours)
- * - Coastal areas
- *
- * Docs: https://support.travelpayouts.com/hc/ru/sections/200989057
+ * Ostrovok.ru — основной российский сервис бронирования (работает в РФ)
  */
 
 export interface Hotel {
@@ -28,9 +21,10 @@ export interface HotelRecommendation {
   tips: string;
 }
 
-const HOTELLOOK_MARKER = '402896';
+const OSTROVOK_MARKER = '402896';
+const OSTROVOK_BASE = `https://ostrovok.ru/hotel/russia/petropavlovsk_kamchatsky/?marker=${OSTROVOK_MARKER}`;
 
-// Кэшированные полулярные отели в Петропавловске
+// Кэшированные популярные отели в Петропавловске
 const HOTELS_CACHE: Hotel[] = [
   {
     id: 'aviator-pkc',
@@ -40,7 +34,7 @@ const HOTELS_CACHE: Hotel[] = [
     nights: 1,
     stars: 3,
     amenities: ['Wi-Fi', 'Ресторан', 'Трансфер', 'Завтрак'],
-    link: `https://hotellook.com/?marker=${HOTELLOOK_MARKER}`,
+    link: OSTROVOK_BASE,
   },
   {
     id: 'petropavlovsk-hotel',
@@ -50,7 +44,7 @@ const HOTELS_CACHE: Hotel[] = [
     nights: 1,
     stars: 3,
     amenities: ['Wi-Fi', 'Ресторан', 'Конференц-зал'],
-    link: `https://hotellook.com/?marker=${HOTELLOOK_MARKER}`,
+    link: OSTROVOK_BASE,
   },
   {
     id: 'kamchatka-hotel',
@@ -60,7 +54,7 @@ const HOTELS_CACHE: Hotel[] = [
     nights: 1,
     stars: 2,
     amenities: ['Wi-Fi', 'Завтрак'],
-    link: `https://hotellook.com/?marker=${HOTELLOOK_MARKER}`,
+    link: OSTROVOK_BASE,
   },
   {
     id: 'lux-hotel',
@@ -70,7 +64,7 @@ const HOTELS_CACHE: Hotel[] = [
     nights: 1,
     stars: 4,
     amenities: ['Wi-Fi', 'Спа', 'Ресторан', 'Трансфер', 'Завтрак включен'],
-    link: `https://hotellook.com/?marker=${HOTELLOOK_MARKER}`,
+    link: OSTROVOK_BASE,
   },
 ];
 

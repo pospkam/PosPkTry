@@ -1,35 +1,59 @@
 'use client';
 
-import { ExternalLink, Plane, Hotel, Shield, Car, Map } from 'lucide-react';
+import { ExternalLink, Plane, Hotel, Shield, Car, Map, Home, Compass, Navigation } from 'lucide-react';
 import { trackLeadEvent, LEAD_EVENTS } from '@/lib/analytics/lead-tracking';
 
-const MARKER = '402896'; // TravelPayouts partner marker (tourhab.ru)
+const MARKER = '402896';
+// Яндекс Путешествия — отдельная партнёрка (partner.yandex.ru), не TP.
+// clid подставить после регистрации в Яндекс.Партнёр.
+const YANDEX_CLID = process.env.NEXT_PUBLIC_YANDEX_TRAVEL_CLID ?? '';
 
 interface Service {
+  key: string;
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   desc: string;
   url: string;
   color: string;
-  activities?: string[]; // показывать только для этих типов; undefined = всегда
+  activities?: string[];
 }
 
+// 8 сервисов, все работают в РФ. Порядок = приоритет для туриста на Камчатке.
 const SERVICES: Service[] = [
   {
+    key: 'aviasales',
     icon: Plane,
     label: 'Авиабилеты на Камчатку',
-    desc: 'Aviasales — лучшие цены',
+    desc: 'Aviasales — лучшие цены на рейсы до PKC',
     url: `https://www.aviasales.ru/search/MOW0000PKC1?marker=${MARKER}`,
     color: 'var(--ocean)',
   },
   {
-    icon: Hotel,
-    label: 'Отели в Петропавловске',
-    desc: 'Hotellook — 500+ вариантов',
-    url: `https://hotellook.com/?marker=${MARKER}`,
+    key: 'yandex_travel',
+    icon: Navigation,
+    label: 'Яндекс Путешествия',
+    desc: 'Отели, билеты, туры — всё в одном',
+    url: `https://travel.yandex.ru/hotels/petropavlovsk-kamchatsky/${YANDEX_CLID ? `?clid=${YANDEX_CLID}` : ''}`,
     color: 'var(--accent)',
   },
   {
+    key: 'ostrovok',
+    icon: Hotel,
+    label: 'Отели в Петропавловске',
+    desc: 'Ostrovok — российский сервис бронирования',
+    url: `https://ostrovok.ru/hotel/russia/petropavlovsk_kamchatsky/?marker=${MARKER}`,
+    color: 'var(--ocean)',
+  },
+  {
+    key: 'sutochno',
+    icon: Home,
+    label: 'Квартиры посуточно',
+    desc: 'Sutochno — жильё на 7-14 дней поездки',
+    url: `https://sutochno.ru/petropavlovsk-kamchatskiy?marker=${MARKER}`,
+    color: 'var(--success)',
+  },
+  {
+    key: 'cherehapa',
     icon: Shield,
     label: 'Страховка для путешествия',
     desc: 'Cherehapa — обязательна для экстрима',
@@ -38,32 +62,59 @@ const SERVICES: Service[] = [
     activities: ['trekking', 'helicopter', 'bear_watching', 'fishing', 'snowmobile', 'diving', 'surf', 'ski'],
   },
   {
-    icon: Car,
-    label: 'Трансфер из аэропорта',
-    desc: 'Kiwitaxi — надёжно и заранее',
-    url: `https://kiwitaxi.ru/PKC?aff_id=${MARKER}`,
-    color: 'var(--success)',
-  },
-  {
+    key: 'tripster',
     icon: Map,
     label: 'Экскурсии на Камчатке',
-    desc: 'Tripster — авторские туры',
+    desc: 'Tripster — авторские туры от местных',
     url: `https://tripster.ru/kamchatka/?partner=${MARKER}`,
     color: 'var(--ocean)',
-    activities: ['cultural', 'photo', 'sightseeing', 'eco', 'other'],
+  },
+  {
+    key: 'sputnik8',
+    icon: Compass,
+    label: 'Туры и активности',
+    desc: 'Sputnik8 — групповые и индивидуальные',
+    url: `https://www.sputnik8.com/ru/petropavlovsk-kamchatsky?marker=${MARKER}`,
+    color: 'var(--accent)',
+  },
+  {
+    key: 'kiwitaxi',
+    icon: Car,
+    label: 'Трансфер из аэропорта',
+    desc: 'Kiwitaxi — бронирование заранее',
+    url: `https://kiwitaxi.ru/PKC?aff_id=${MARKER}`,
+    color: 'var(--text-muted)',
+    activities: ['helicopter', 'fishing', 'bear_watching', 'trekking', 'snowmobile'],
   },
 ];
 
 interface Props {
   activityType?: string | null;
+  routeId?: string;
 }
 
-/**
- * Блок партнёрских предложений на странице маршрута.
- * Контекстно показывает релевантные сервисы из TravelPayouts (69 партнёров).
- * Marker: 402896 (tourhab.ru)
- */
-export default function RouteAffiliateBlock({ activityType }: Props) {
+function trackClick(service: Service, routeId?: string) {
+  // Yandex Metrika + GA
+  trackLeadEvent({
+    ...LEAD_EVENTS.CLICK_AFFILIATE_LINK,
+    event_label: service.label,
+    route_id: routeId,
+  });
+
+  // DB tracking (fire-and-forget)
+  fetch('/api/analytics/affiliate-clicks', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      partner: service.key,
+      source: routeId ? `route_${routeId}` : 'route_detail',
+      subId: routeId,
+      referrer: typeof window !== 'undefined' ? window.location.href : null,
+    }),
+  }).catch(() => {/* fire-and-forget */});
+}
+
+export default function RouteAffiliateBlock({ activityType, routeId }: Props) {
   const visible = SERVICES.filter(s =>
     !s.activities || s.activities.includes(activityType ?? '')
   );
@@ -78,15 +129,11 @@ export default function RouteAffiliateBlock({ activityType }: Props) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
         {visible.map(s => (
           <a
-            key={s.label}
+            key={s.key}
             href={s.url}
             target="_blank"
             rel="noopener noreferrer sponsored"
-            onClick={() => trackLeadEvent({
-              ...LEAD_EVENTS.CLICK_AFFILIATE_LINK,
-              event_label: s.label,
-              route_id: activityType || undefined,
-            })}
+            onClick={() => trackClick(s, routeId)}
             className="group flex flex-col gap-1.5 p-3 rounded-lg border transition-all hover:shadow-sm hover:-translate-y-0.5"
             style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}
           >

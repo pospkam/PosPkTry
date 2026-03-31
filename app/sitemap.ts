@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next';
 import { pool } from '@/lib/db-pool';
+import { CATEGORY_SLUGS } from '@/lib/routes/category-meta';
 
 const BASE = 'https://tourhab.ru';
 
@@ -30,12 +31,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/routes`,            lastModified: new Date(), changeFrequency: 'daily',   priority: 0.9 },
     { url: `${BASE}/map`,               lastModified: new Date(), changeFrequency: 'daily',   priority: 0.85 },
     { url: `${BASE}/safety`,            lastModified: new Date(), changeFrequency: 'daily',   priority: 0.9 },
-    { url: `${BASE}/auth/signin`,       lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.6 },
-    { url: `${BASE}/auth/signup`,       lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.6 },
-    { url: `${BASE}/hub/tourist`,       lastModified: new Date(), changeFrequency: 'daily',   priority: 0.5 },
-    { url: `${BASE}/hub/operator/leads`,lastModified: new Date(), changeFrequency: 'daily',   priority: 0.6 },
-    { url: `${BASE}/hub/safety`,        lastModified: new Date(), changeFrequency: 'hourly',  priority: 0.8 },
+    { url: `${BASE}/faq`,               lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.7 },
+    { url: `${BASE}/marketplace`,       lastModified: new Date(), changeFrequency: 'daily',   priority: 0.85 },
+    { url: `${BASE}/auth/signin`,       lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.4 },
+    { url: `${BASE}/auth/signup`,       lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.4 },
   ];
+
+  // Категории маршрутов (14 страниц с высоким SEO-приоритетом)
+  const categoryPages: MetadataRoute.Sitemap = CATEGORY_SLUGS.map(slug => ({
+    url: `${BASE}/routes/${slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.85,
+  }));
 
   // Динамические страницы: все видимые маршруты
   let routePages: MetadataRoute.Sitemap = [];
@@ -62,5 +70,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Если БД недоступна при сборке — sitemap без динамических страниц
   }
 
-  return [...staticPages, ...routePages];
+  // Маркетплейс-туры
+  let marketplacePages: MetadataRoute.Sitemap = [];
+  try {
+    const { rows } = await pool.query<{ id: string; updated_at: Date }>(
+      `SELECT id, updated_at FROM operator_tours
+       WHERE deleted_at IS NULL AND is_visible = true
+       ORDER BY updated_at DESC LIMIT 500`
+    );
+    marketplacePages = rows.map(row => ({
+      url: `${BASE}/marketplace/tours/${row.id}`,
+      lastModified: row.updated_at,
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
+    }));
+  } catch {
+    // fallback
+  }
+
+  return [...staticPages, ...categoryPages, ...routePages, ...marketplacePages];
 }

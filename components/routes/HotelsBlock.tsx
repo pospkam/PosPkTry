@@ -76,7 +76,7 @@ export default function HotelsBlock({ nights = 3, budget_per_night_rub }: Props)
               color: 'white',
             }}
           >
-            Забронировать на Hotellook
+            Забронировать на Ostrovok
             <ExternalLink className="w-4 h-4" />
           </a>
         </div>

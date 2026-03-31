@@ -96,6 +96,9 @@ export const metadata: Metadata = {
   verification: {
     google: process.env.GOOGLE_SITE_VERIFICATION,
     yandex: process.env.YANDEX_VERIFICATION,
+    other: {
+      'travelpayouts-verification': '2aafzv6xt87m06rb',
+    },
   },
   alternates: {
     canonical: BASE_URL,

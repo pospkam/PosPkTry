@@ -12,7 +12,8 @@ interface Props {
 async function getRoute(id: string) {
   try {
     const result = await query(
-      `SELECT id, category, title, description, lat, lng, source_url, payload
+      `SELECT id, category, title, description, lat, lng, source_url, payload,
+              location_type, activity_type
        FROM agent_route_knowledge WHERE id = $1 AND is_visible = TRUE`,
       [id]
     );
@@ -28,6 +29,13 @@ async function getRoute(id: string) {
       lng: r.lng != null ? parseFloat(r.lng as string) : null,
       sourceUrl: (r.source_url as string | null) ?? null,
       priceFrom: payload.price_from != null ? Number(payload.price_from) : null,
+      durationDays: payload.duration_days != null ? Number(payload.duration_days) : null,
+      season: (payload.season as string | null) ?? null,
+      difficulty: (payload.difficulty as string | null) ?? null,
+      bestMonths: Array.isArray(payload.best_months) ? payload.best_months as string[] : null,
+      photos: Array.isArray(payload.photos) ? payload.photos as string[] : null,
+      locationType: (r.location_type as string | null) ?? null,
+      activityType: (r.activity_type as string | null) ?? null,
     };
   } catch {
     return null;
@@ -67,9 +75,24 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ? route.description.replace(/<[^>]+>/g, '').slice(0, 180)
     : `Туристический маршрут на Камчатке: ${route.title}. Категория: ${route.category}.`;
 
+  const keywords = [
+    route.title,
+    route.category,
+    route.activityType,
+    route.locationType,
+    'Камчатка',
+    'тур',
+    'маршрут',
+  ].filter(Boolean) as string[];
+
+  const images = route.photos?.length
+    ? route.photos.slice(0, 1).map(url => ({ url, width: 1200, height: 630, alt: route.title }))
+    : [];
+
   return {
     title,
     description: desc,
+    keywords,
     alternates: { canonical: `https://tourhab.ru/routes/${id}` },
     openGraph: {
       title,
@@ -78,6 +101,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: 'TourHab',
       locale: 'ru_RU',
       type: 'article',
+      ...(images.length > 0 ? { images } : {}),
     },
   };
 }
@@ -120,22 +144,32 @@ export default async function RouteOrCategoryPage({ params }: Props) {
   const route = await getRoute(id);
   if (!route) notFound();
 
+  const cleanDesc = route.description
+    ? route.description.replace(/<[^>]+>/g, '').slice(0, 500)
+    : undefined;
+
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'TouristAttraction',
+    '@type': 'TouristTrip',
     name: route.title,
-    description: route.description
-      ? route.description.replace(/<[^>]+>/g, '').slice(0, 500)
-      : undefined,
+    description: cleanDesc,
     url: `https://tourhab.ru/routes/${id}`,
-    touristType: route.category,
+    touristType: route.activityType ?? route.category,
+    ...(route.photos?.length ? { image: route.photos[0] } : {}),
+    ...(route.durationDays ? {
+      itinerary: {
+        '@type': 'ItemList',
+        numberOfItems: route.durationDays,
+        description: `${route.durationDays} дней`,
+      },
+    } : {}),
     ...(route.lat != null && route.lng != null ? {
       geo: {
         '@type': 'GeoCoordinates',
         latitude: route.lat,
         longitude: route.lng,
       },
-      containedInPlace: {
+      contentLocation: {
         '@type': 'Place',
         name: 'Камчатский край',
         address: {
@@ -153,6 +187,21 @@ export default async function RouteOrCategoryPage({ params }: Props) {
         availability: 'https://schema.org/InStock',
       },
     } : {}),
+    provider: {
+      '@type': 'TravelAgency',
+      name: 'TourHab',
+      url: 'https://tourhab.ru',
+    },
+  };
+
+  const breadcrumbLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Главная', item: 'https://tourhab.ru' },
+      { '@type': 'ListItem', position: 2, name: 'Маршруты', item: 'https://tourhab.ru/routes' },
+      { '@type': 'ListItem', position: 3, name: route.title, item: `https://tourhab.ru/routes/${id}` },
+    ],
   };
 
   return (
@@ -160,6 +209,10 @@ export default async function RouteOrCategoryPage({ params }: Props) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
       />
       <RouteDetailClient id={id} />
     </>

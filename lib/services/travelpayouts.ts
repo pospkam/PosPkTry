@@ -178,24 +178,18 @@ export const KAMCHATKA_URLS = {
   cheap_calendar: 'https://www.aviasales.ru/calendar/–PKC',
 
   // Проживание
-  hotels_pkc: 'https://hotellook.com/search?destination=Petropavlovsk-Kamchatsky&adults=2',
-  ostrovok_hotels: 'https://www.ostrovok.ru/search/?location=Petropavlovsk-Kamchatsky',
+  ostrovok_hotels: 'https://ostrovok.ru/hotel/russia/petropavlovsk_kamchatsky/',
+  sutochno_apts: 'https://sutochno.ru/petropavlovsk-kamchatskiy',
 
   // Экскурсии и активности
   tripster_excursions: 'https://experience.tripster.ru',
-  sputnik8_tours: 'https://www.sputnik8.com/ru/tours?location=Petropavlovsk-Kamchatsky',
+  sputnik8_tours: 'https://www.sputnik8.com/ru/petropavlovsk-kamchatsky',
 
   // Трансферы
   kiwitaxi_airport: 'https://www.kiwitaxi.ru/airport/petropavlovsk-kamchatskij',
 
-  // Прокат авто
-  getrentacar_pkc: 'https://www.getrentacar.com/ru-ru/locations/98-petropavlovsk-kamchatsky',
-
   // Страховка путешественника
   cherehapa_insurance: 'https://www.cherehapa.ru',
-
-  // Аудиоэкскурсии
-  wegotrip_audio: 'https://www.wegotripapp.com/ru/kamchatka',
 } as const;
 
 /**
