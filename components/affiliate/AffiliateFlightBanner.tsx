@@ -8,16 +8,31 @@ import { Plane, Hotel, TrendingDown, MapPin, Car, Shield, Home, Compass } from '
 import { getKamchatkaAffiliateLinks, KAMCHATKA_URLS } from '@/lib/services/travelpayouts';
 import { AffiliateCard } from './AffiliateCard';
 
+const colorClass: Record<string, string> = {
+  ocean: 'text-[var(--ocean)]',
+  success: 'text-[var(--success)]',
+  warning: 'text-[var(--warning)]',
+  accent: 'text-[var(--accent)]',
+  danger: 'text-[var(--danger)]',
+};
+const bgClass: Record<string, string> = {
+  ocean: 'bg-[var(--ocean)]/10',
+  success: 'bg-[var(--success)]/10',
+  warning: 'bg-[var(--warning)]/10',
+  accent: 'bg-[var(--accent)]/10',
+  danger: 'bg-[var(--danger)]/10',
+};
+
 // Только сервисы работающие в РФ
 const CARD_CONFIG = [
-  { key: 'flights_to_pkc', icon: Plane, title: 'Авиабилеты в Петропавловск', subtitle: 'Aviasales', color: 'ocean', btnStyle: 'ds-btn-primary' },
-  { key: 'ostrovok_hotels', icon: Hotel, title: 'Отели на Камчатке', subtitle: 'Ostrovok', color: 'success', btnStyle: 'ds-btn-secondary' },
-  { key: 'sutochno_apts', icon: Home, title: 'Квартиры посуточно', subtitle: 'Sutochno', color: 'accent', btnStyle: 'ds-btn-secondary' },
-  { key: 'cheap_calendar', icon: TrendingDown, title: 'Календарь низких цен', subtitle: 'Aviasales', color: 'warning', btnStyle: 'ds-btn-secondary' },
-  { key: 'tripster_excursions', icon: MapPin, title: 'Экскурсии от местных', subtitle: 'Tripster', color: 'accent', btnStyle: 'ds-btn-secondary' },
-  { key: 'sputnik8_tours', icon: Compass, title: 'Туры и активности', subtitle: 'Sputnik8', color: 'ocean', btnStyle: 'ds-btn-secondary' },
-  { key: 'cherehapa_insurance', icon: Shield, title: 'Страховка путешественника', subtitle: 'Cherehapa', color: 'danger', btnStyle: 'ds-btn-secondary' },
-  { key: 'kiwitaxi_airport', icon: Car, title: 'Трансфер из аэропорта', subtitle: 'Kiwitaxi', color: 'ocean', btnStyle: 'ds-btn-secondary' },
+  { key: 'flights_to_pkc', Icon: Plane, title: 'Авиабилеты в Петропавловск', subtitle: 'Aviasales', color: 'ocean', btnStyle: 'ds-btn-primary' },
+  { key: 'ostrovok_hotels', Icon: Hotel, title: 'Отели на Камчатке', subtitle: 'Ostrovok', color: 'success', btnStyle: 'ds-btn-secondary' },
+  { key: 'sutochno_apts', Icon: Home, title: 'Квартиры посуточно', subtitle: 'Sutochno', color: 'accent', btnStyle: 'ds-btn-secondary' },
+  { key: 'cheap_calendar', Icon: TrendingDown, title: 'Календарь низких цен', subtitle: 'Aviasales', color: 'warning', btnStyle: 'ds-btn-secondary' },
+  { key: 'tripster_excursions', Icon: MapPin, title: 'Экскурсии от местных', subtitle: 'Tripster', color: 'accent', btnStyle: 'ds-btn-secondary' },
+  { key: 'sputnik8_tours', Icon: Compass, title: 'Туры и активности', subtitle: 'Sputnik8', color: 'ocean', btnStyle: 'ds-btn-secondary' },
+  { key: 'cherehapa_insurance', Icon: Shield, title: 'Страховка путешественника', subtitle: 'Cherehapa', color: 'danger', btnStyle: 'ds-btn-secondary' },
+  { key: 'kiwitaxi_airport', Icon: Car, title: 'Трансфер из аэропорта', subtitle: 'Kiwitaxi', color: 'ocean', btnStyle: 'ds-btn-secondary' },
 ] as const;
 
 export async function AffiliateFlightBanner() {
@@ -45,14 +60,15 @@ export async function AffiliateFlightBanner() {
           {CARD_CONFIG.map((card) => {
             const baseUrl = KAMCHATKA_URLS[card.key as keyof typeof KAMCHATKA_URLS] as string | undefined;
             const href = (baseUrl ? links[baseUrl] : undefined) || baseUrl || '#';
+            const { Icon } = card;
             return (
               <AffiliateCard
                 key={card.key}
                 partnerKey={card.key}
-                icon={card.icon}
+                iconNode={<Icon className={`w-4 h-4 ${colorClass[card.color]}`} />}
+                iconBg={bgClass[card.color]}
                 title={card.title}
                 subtitle={card.subtitle}
-                color={card.color}
                 btnStyle={card.btnStyle}
                 href={href}
               />

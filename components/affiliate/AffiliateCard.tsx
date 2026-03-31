@@ -5,40 +5,24 @@
 
 'use client';
 
-import { LucideIcon } from 'lucide-react';
-
-const colorMap: Record<string, string> = {
-  ocean: 'text-[var(--ocean)]',
-  success: 'text-[var(--success)]',
-  warning: 'text-[var(--warning)]',
-  accent: 'text-[var(--accent)]',
-  danger: 'text-[var(--danger)]',
-};
-
-const bgColorMap: Record<string, string> = {
-  ocean: 'bg-[var(--ocean)]/10',
-  success: 'bg-[var(--success)]/10',
-  warning: 'bg-[var(--warning)]/10',
-  accent: 'bg-[var(--accent)]/10',
-  danger: 'bg-[var(--danger)]/10',
-};
+import { type ReactNode } from 'react';
 
 interface AffiliateCardProps {
   partnerKey: string;
-  icon: LucideIcon;
+  iconNode: ReactNode;
+  iconBg: string;
   title: string;
   subtitle: string;
-  color: string;
   btnStyle: string;
   href: string;
 }
 
 export function AffiliateCard({
   partnerKey,
-  icon: Icon,
+  iconNode,
+  iconBg,
   title,
   subtitle,
-  color,
   btnStyle,
   href,
 }: AffiliateCardProps) {
@@ -66,8 +50,8 @@ export function AffiliateCard({
       rel="noopener noreferrer sponsored"
       className="ds-card rounded-lg p-4 flex flex-col gap-3 hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 border border-[var(--border)]"
     >
-      <div className={`w-8 h-8 rounded-md ${bgColorMap[color]} flex items-center justify-center flex-shrink-0`}>
-        <Icon className={`w-4 h-4 ${colorMap[color]}`} />
+      <div className={`w-8 h-8 rounded-md ${iconBg} flex items-center justify-center flex-shrink-0`}>
+        {iconNode}
       </div>
       <div>
         <div className="font-medium text-sm text-[var(--text-primary)] leading-snug">
