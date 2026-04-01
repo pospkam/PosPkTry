@@ -2,7 +2,7 @@
 
 AI-помощник Кузьмич подбирает маршрут за минуту. Турист описывает мечту — система комбинирует базовые туры в персональный план. Каталог работает как страховка для тех, кто предпочитает выбирать руками.
 
-Внутри — 13 AI-директоров (Board of Directors), которые управляют платформой: от безопасности и экологии до роста и финансов. Собственник имеет финальное слово через систему одобрений.
+Внутри — 10 AI-директоров (Board of Directors), которые управляют платформой: от безопасности и экологии до роста и финансов. Собственник имеет финальное слово через систему одобрений.
 
 [![Build](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/pospkam/PosPkTry)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)](https://www.typescriptlang.org/)
@@ -37,7 +37,7 @@ AI-помощник Кузьмич подбирает маршрут за мин
 | Backend | Next.js API Routes, PostgreSQL (pg pool, прямой SQL) |
 | Auth | JWT (jose) + bcrypt, 6 ролей |
 | AI Providers | OpenRouter (primary, OR_API_KEY) → DeepSeek → MiniMax 2.5 → YandexGPT → MiMo → Gemini → Anthropic → xAI |
-| Agent Layer | 13 AI-директоров + 7 рабочих агентов (`lib/agents/`) |
+| Agent Layer | 10 AI-директоров + 7 рабочих агентов (`lib/agents/`) |
 | Maps | Yandex Maps API 2.1 |
 | Telegram | @KuzmichKam_bot (tourist) + admin bot |
 | Storage | Timeweb S3 (`s3.twcstorage.ru`) |
@@ -63,6 +63,11 @@ npm run dev              # Dev-сервер (порт 3000)
 npm run build            # Production-сборка
 npx tsc --noEmit         # TypeScript (0 ошибок)
 npx vitest run           # Тесты
+
+# Скрипты (Node.js)
+node scripts/migrate.js                      # Накатить миграции
+node scripts/seed-prod.js                    # Сид-данные (операторы + туры)
+node scripts/outreach-operator.js [handle]   # Telegram outreach оператору
 ```
 
 ---
@@ -74,32 +79,40 @@ app/
   page.tsx                       # Главная (Hero + AI Section + Directions + Trust)
   ai-assistant/                  # AI-чат с Кузьмичом
   routes/                        # Каталог маршрутов
-    [id]/                        # Детальная: описание + AI-отзыв + офферы
+    [id]/                        # Детальная: описание + AI-отзыв + офферы +
+                                 # InsuranceBlock / FlightsBlock / HotelsBlock / TransfersBlock
   operators/                     # Каталог операторов
     [slug]/                      # Профиль оператора
   map/                           # Интерактивная карта (Yandex Maps)
   hub/                           # Личные кабинеты (8 хабов)
     tourist/ operator/ guide/ admin/ agent/
     transfer/ transfer-operator/ fishing/
-  api/                           # 390+ API endpoints
+  api/                           # 400+ API endpoints
     ai/                          # AI chat, waterfall, debug
-    agents/                      # Board meeting, dispatch, approvals
+    agents/                      # Board meeting, dispatch, approvals, intelligence
+    cron/                        # Digest, intelligence monitoring (каждые 6ч)
     planner/compose/             # AI composition engine
     reference-tours/             # Базовые туры для AI
     routes/ bookings/ tours/     # Каталог, бронирования
+    tours-feed/                  # Channel manager export (JSON + XML)
     telegram/                    # Webhook бота
+    webhooks/travelpayouts/      # Payout уведомления от TravelPayouts
+    analytics/affiliate-clicks/  # Трекинг аффилиат-кликов
 
 components/
   homepage/                      # HeroSection, AISection, FeaturedDirections,
                                  # TrustSection, HomeBottomNav, Reveal
   routes/                        # RouteCard, LeadModal, BookingModal
-  shared/                        # SOSButton, AssistantButton, LeafletMap
+                                 # InsuranceBlock, FlightsBlock, HotelsBlock, TransfersBlock
+  affiliate/                     # AffiliateFlightBanner, AffiliateCard
+  operator/                      # OperatorEarningsCard
+  shared/                        # SOSButton, AssistantButton, LeafletMap, StickyLeadButton
   layout/                        # Header, Footer
 
 lib/
   agents/                        # AI Agent Framework
-    agencies/                    # 20 agency-классов (13 директоров + 7 рабочих)
-    tools/agent-toolkits.ts      # Инструменты для всех 13 директоров
+    agencies/                    # 17 agency-классов (10 директоров + 7 рабочих)
+    tools/agent-toolkits.ts      # Инструменты для всех директоров
     evolution/                   # Knowledge base, context builder
     learning/                    # Feedback loop, A/B experiments
     execution/                   # Initiative executor
@@ -110,14 +123,21 @@ lib/
     provider-config.ts           # Ключи и конфигурация
     embeddings.ts                # Smart search
   services/                      # Доменные сервисы
+    travelpayouts.ts             # Affiliate links (8 партнёров, 6h cache)
+    intelligence-monitor.ts      # Мониторинг AI/Travel/конкурентов (RSS + Tavily)
+    insurance.service.ts         # Подбор страховки по типу активности
+    flights.service.ts           # Рейсы из MOW/LED/VVO/OVB
+    hotels.service.ts            # Отели Петропавловска
+    transfers.service.ts         # Трансферы аэропорт → город → тур
   bookings/booking.service.ts    # Бронирования
   auth/                          # JWT middleware
   db-pool.ts                     # PostgreSQL pool ({ pool })
   types/db-rows.ts               # Интерфейсы строк БД
 
-hooks/
-  useSourceTracker.ts            # UTM/referrer attribution
-  useInterestTracker.ts          # Профиль интересов
+scripts/
+  migrate.js                     # Накатить SQL-миграции (Node.js pg)
+  seed-prod.js                   # Сид-данные для продакшена
+  outreach-operator.js           # Telegram outreach для операторов
 ```
 
 ---
@@ -144,7 +164,7 @@ OpenRouter (OR_API_KEY, primary) → DeepSeek → MiniMax 2.5
     → бронирование из чата
 ```
 
-### 13 AI-директоров (Board of Directors)
+### 10 AI-директоров (Board of Directors)
 
 | Агент | Роль | Частота |
 |-------|------|---------|
@@ -156,14 +176,20 @@ OpenRouter (OR_API_KEY, primary) → DeepSeek → MiniMax 2.5
 | Eco | Эколог | 1ч |
 | Content | Контент-аудитор | 8ч |
 | Quality | Качество сервиса | 12ч |
-| Evo | Архитектор/эволюция | 24ч |
-| Finance | CFO | 6ч |
-| Infra | SRE / DevOps | 1ч |
-| VibeCoder | Качество кода | 24ч |
 | Planning | Стратег/прогнозы | 12ч |
+| Evo | Архитектор/эволюция | 24ч |
 
 Совещание: `/hub/admin/board-meeting` (4 раунда: отчёты → реакции → голосование → инициативы).
 Подробности: `AGENTS.md`
+
+### Intelligence Monitor (Evo)
+
+Агент `evo` каждые 6 часов мониторит:
+- **AI & Tech** — Habr, Google AI Blog, HuggingFace, OpenAI, Anthropic RSS
+- **Travel Industry** — rata-news, tourprom, ator, atorus
+- **Конкуренты** — kamgov RSS + Tavily/Brave поиск
+
+Результат сохраняется в `agent_memory` (TTL 7 дней). Критические находки → Telegram.
 
 ---
 
@@ -209,9 +235,42 @@ OpenRouter (OR_API_KEY, primary) → DeepSeek → MiniMax 2.5
 - AI-отзывы Кузьмича (101+ маршрутов)
 - Фильтрация, поиск, пагинация
 
+### Route Enrichment (страница тура)
+
+Каждая страница тура обогащена блоками для полной туристической подготовки:
+
+| Блок | Сервис | Описание |
+|------|--------|----------|
+| InsuranceBlock | Cherehapa | Подбор страховки по типу активности (Basic/Silver/Gold) |
+| FlightsBlock | Aviasales | Рейсы из MOW/LED/VVO/OVB в PKC с примерными ценами |
+| HotelsBlock | Hotellook | Топ-4 отеля Петропавловска с ценами и рейтингом |
+| TransfersBlock | Kiwitaxi | Трансферы аэропорт → город → тур |
+
+### Channel Manager (Tour Export Feed)
+
+Операторы регистрируются один раз на TourHub → туры автоматически попадают в другие системы.
+
+```
+GET /api/tours-feed              # JSON, все туры
+GET /api/tours-feed?format=xml   # XML для Sputnik8/GetYourGuide
+GET /api/tours-feed?operator=fishingkam  # Фильтр по оператору
+```
+
+### Аффилиат монетизация
+
+- **8 партнёрских сервисов:** Aviasales, Ostrovok, Sutochno, Kiwitaxi, Tripster, Sputnik8, Cherehapa, WeGoTrip
+- **Server-side генерация ссылок** — API-ключ TravelPayouts никогда не попадает на клиент
+- **In-memory кэш** — 6ч TTL, не более 100 req/min к TravelPayouts API
+- **`affiliate_clicks`** — трекинг кликов с attribution (partner, source, tour_id, referrer)
+- **`affiliate_payouts`** — reconciliation выплат от партнёров (по `tp_click_id`)
+- **Webhook:** `POST /api/webhooks/travelpayouts` — payout-уведомления
+- **Operator Dashboard:** карточка "Доходы за 30 дней" — бронирования + аффилиат
+- **API:** `GET /api/hub/operator/earnings` — доходная статистика оператора
+
 ### Бронирования
 - Стейт-машина (10 статусов)
 - Защита от double-booking (`FOR UPDATE` lock)
+- Гости могут оставить лид-заявку без регистрации (TourPaymentModal)
 - Правила возврата: оператор 100%, турист >48ч 100%, 24-48ч 50%, <24ч 0%
 
 **Booking статусы:**
@@ -237,23 +296,6 @@ OpenRouter (OR_API_KEY, primary) → DeepSeek → MiniMax 2.5
 - Координаты GPS автоматически
 - Telegram-уведомление включает имя + телефон туриста
 - Migration 050: `sos_events` получила `tourist_name`, `tourist_phone`, `message`, `emergency_type`
-
-### Каталог туров (Marketplace)
-- Карточки: пропорция `aspect-[4/3]`, цена поверх фото (белый текст на градиенте)
-- Длительность тура рядом с локацией (иконка Clock)
-- AI-баннер Кузьмича на странице каталога → `/planner`
-- Страница тура: hero-фото h-[420px] с бейджем актив��ости и заголовком на фото, блок Кузьмича внизу
-
-### Аффилиат монетизация
-
-- 8 партнёрских сервисов: Aviasales, Hotellook, RentalCars, Kiwitaxi, Travelata, Cherehapa, Tripster, WeGoTrip
-- `affiliate_clicks` — трекинг кликов по партнёрским ссылкам с attribution (tour_id, user_id, utm)
-- `affiliate_payouts` — учёт выплат от партнёров (reconciliation по `tp_click_id`)
-- Webhook: `POST /api/webhooks/travelpayouts` — приём payout-уведомлений от TravelPayouts
-- Operator Dashboard: карточка "Доходы за 30 дней" — бронирования + аффилиат в одном блоке
-- API: `GET /api/hub/operator/earnings` — статистика доходов для оператора
-
----
 
 ### Telegram-бот
 - @KuzmichKam_bot: AI-диалог, маршруты, погода, операторы
@@ -301,8 +343,11 @@ SMTP_PORT=465
 SMTP_USER=...
 SMTP_PASS=...
 
-# === Аффилиат (опционально) ===
-TRAVELPAYOUTS_WEBHOOK_TOKEN=...  # TravelPayouts payout webhook
+# === Аффилиат ===
+TRAVELPAYOUTS_MARKER=402896
+TRAVELPAYOUTS_TRS=513488
+TRAVELPAYOUTS_API_TOKEN=...      # Генерация affiliate ссылок
+TRAVELPAYOUTS_WEBHOOK_TOKEN=...  # Верификация payout webhook
 
 # === Платежи (опционально) ===
 CLOUDPAYMENTS_API_SECRET=...
@@ -324,6 +369,7 @@ composite_bookings       -- Составные бронирования от AI 
 
 -- Knowledge base
 agent_route_knowledge    -- 1189 маршрутов, kuzmich_review, location/activity types
+agent_memory             -- Память агентов (intel_*, TTL 7 дней)
 
 -- Marketplace
 v_route_marketplace      -- VIEW: маршрут + тур + оператор + цена + дата
@@ -352,10 +398,10 @@ affiliate_payouts        -- Выплаты от партнёров (TravelPayout
 ### Миграции
 
 Миграции: `lib/database/migrations/` + `migrations/`.
-Последняя: **`085_affiliate_payouts.sql`** — таблица выплат от партнёров (TravelPayouts).
+Последняя: **`085_affiliate_payouts.sql`**
 
 ```bash
-psql $DATABASE_URL < lib/database/migrations/085_affiliate_payouts.sql
+node scripts/migrate.js   # Накатить все новые миграции
 ```
 
 ---
@@ -396,29 +442,27 @@ npx vitest run        # Тесты зелёные
 
 ---
 
-## Текущее состояние (март 2026)
+## Текущее состояние (апрель 2026)
 
 ```
-Страниц:              94
-API endpoints:       390+
-Компонентов:         120+
-Миграций:            085+
-Маршрутов в БД:    1 189
-AI-провайдеров:        8  (waterfall)
-AI-директоров:        13  (Board of Directors)
-TS-ошибок:             0
+Страниц:              94+
+API endpoints:        400+
+Компонентов:          120+
+Миграций:             085
+Маршрутов в БД:     1 189
+AI-провайдеров:         8  (waterfall)
+AI-директоров:         10  (Board of Directors)
+TS-ошибок:              0
 ```
 
-**Последние изменения (март 2026):**
-- **Модель "Лид-консьерж"** — турист оставляет заявку → AI квалифицирует → менеджер находит тур и договаривается с оператором за %
-- **StickyLeadButton** — FAB-кнопка "Хочу тур" на всех страницах (кроме /hub/*); открывает форму с полем "мечта" (`components/shared/StickyLeadButton.tsx`)
-- **LeadCTASection** — добавлено поле "Расскажите о мечте" → +40/100 баллов в AI-скоринге лида
-- **TP Drive** — AI-монетизация через TravelPayouts Drive (ID 513488); автозамена ссылок, превью, таргетированные офферы
-- Аффилиат: `affiliate_clicks` + `affiliate_payouts` таблицы, TravelPayouts webhook (`085_affiliate_payouts.sql`)
-- Operator Dashboard: блок "Доходы за 30 дней" (`OperatorEarningsCard`)
-- Infra probe fix: `probeAIProviders` читает `OR_API_KEY`; Anthropic — `softCheck=true` (гео-блок из РФ ≠ failure)
-- Fix конверсии: `TourPaymentModal` показывает лид-форму для гостей (было: auth-стена → 0 лидов)
-- Admin Telegram-бот понимает свободный текст через PlatformAgent
+**Последние изменения:**
+- **Route Enrichment** — каждый тур обогащён блоками Insurance / Flights / Hotels / Transfers (фазы 1+2)
+- **Channel Manager** — `/api/tours-feed` (JSON+XML) для синдикации туров на Tripster/Sputnik8
+- **Intelligence Monitor** — агент `evo` мониторит AI-тренды, travel-индустрию, конкурентов каждые 6ч
+- **Аффилиат монетизация** — 8 партнёров, click tracking, payout reconciliation, operator earnings
+- **Operator Outreach** — `scripts/outreach-operator.js` для Telegram-приглашений операторов
+- **Fix конверсии** — `TourPaymentModal` показывает лид-форму для гостей (было: auth-стена → 0 лидов)
+- **Модель "Лид-консьерж"** — AI квалифицирует → менеджер подбирает тур → PDF предложение
 
 ### Юр. лицо
 ООО "ПОС-СЕРВИС", ИНН 4101147649, ОГРН 1114101005952
