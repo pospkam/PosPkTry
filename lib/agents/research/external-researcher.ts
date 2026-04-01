@@ -87,9 +87,12 @@ const DOMAIN_CONFIGS: Record<string, DomainConfig> = {
     ],
   },
   evo: {
-    query:  'AI туризм платформа автоматизация агенты технологии 2026',
-    filter: 'Новые AI-инструменты для туристических платформ: рекомендации, чат-боты, автоматизация бронирований.',
+    query:  'AI agents travel platform automation LLM open-source 2026',
+    filter: 'Новые AI-инструменты для туристических платформ: LLM модели (дешёвые/быстрые), AI-агенты, автоматизация бронирований, RAG, мультимодальность. Также: DeepSeek, Claude, GPT, Gemini, open-source модели.',
     rss:    [
+      'https://habr.com/ru/rss/hub/artificial_intelligence/all/?fl=ru',
+      'https://blog.google/technology/ai/rss/',
+      'https://huggingface.co/blog/feed.xml',
       'https://www.tourprom.ru/news/rss/',
     ],
   },

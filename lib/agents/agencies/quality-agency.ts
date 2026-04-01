@@ -79,8 +79,8 @@ export class QualityAgency {
         WHERE created_at >= NOW() - INTERVAL '30 days'
       `),
       pool.query<ReviewRow>(`
-        SELECT rating, reviewer_name, comment, created_at, tour_id
-        FROM reviews
+        SELECT rating, author_name AS reviewer_name, comment, created_at, tour_id
+        FROM operator_tour_reviews
         ORDER BY created_at DESC
         LIMIT 8
       `),

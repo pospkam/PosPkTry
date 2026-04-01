@@ -71,7 +71,26 @@
       "Bash(grep -n \"INSERT INTO ai_actions_log\\\\|emitEvent\\\\|action_type.*agent\" /workspaces/PosPkTry/lib/agents/agencies/*.ts)",
       "Bash(find /workspaces/PosPkTry -type f -name \"*.ts\" -exec grep -l \"emitEvent\\\\|AGENT_EVENTS\" {})",
       "Bash(cat /workspaces/PosPkTry/app/api/cron/*/route.ts)",
-      "Bash(wc -l /workspaces/PosPkTry/app/hub/operator/*/_*.tsx)"
+      "Bash(wc -l /workspaces/PosPkTry/app/hub/operator/*/_*.tsx)",
+      "Bash(grep -r \"CREATE TABLE kamchatka_routes\\\\|description\\\\|location_type\\\\|location_name\" /workspaces/PosPkTry/migrations/001*.sql)",
+      "Bash(ls /workspaces/PosPkTry/migrations/001*)",
+      "Bash(env)",
+      "Bash(grep -n \"location_type\\\\|location_name\" /workspaces/PosPkTry/app/routes/[id]/_RouteDetailClient.tsx)",
+      "Bash(node -e \"const {Pool}=require\\(''pg''\\); const fs=require\\(''fs''\\); const sql=fs.readFileSync\\(''/workspaces/PosPkTry/migrations/118_enrich_short_descriptions.sql'',''utf8''\\); const pool=new Pool\\({connectionString:''postgresql://gen_user:b%3E%3DPHE1g40PUL%23@8ad609fcbfd2ad0bd069be47.twc1.net:5432/default_db?sslmode=no-verify''}\\); pool.query\\(sql\\).then\\(r=>{console.log\\(''OK, rows affected:'',r.rowCount\\);pool.end\\(\\)}\\).catch\\(e=>{console.error\\(e.message\\);pool.end\\(\\)}\\);\")",
+      "WebFetch(domain:yandex.ru)",
+      "WebFetch(domain:yandex.com)",
+      "Bash(curl -s -I \"https://travel.yandex.ru/tours/\" -H \"User-Agent: Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36\" --max-time 10)",
+      "Bash(curl -s -L \"https://travel.yandex.ru/tours/\" -H \"User-Agent: Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/120.0.0.0 Safari/537.36\" -H \"Accept-Language: ru-RU,ru;q=0.9\" --max-time 15)",
+      "Bash(curl -s -L \"https://travel.yandex.ru/tours/\" -H \"User-Agent: Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36\" -H \"Accept-Language: ru-RU,ru;q=0.9\" --max-time 15)",
+      "Bash(curl -s \"https://travel.yandex.ru/api/tours/search?geo=10619&pageSize=20\" -H \"User-Agent: Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36\" -H \"Accept: application/json\" -H \"Accept-Language: ru-RU,ru;q=0.9\" --max-time 10)",
+      "Bash(curl -s \"https://travel.yastatic.net/s3/travel/static/client/386/client_ru.0c057ee7.js\" --max-time 30)",
+      "WebFetch(domain:travel.yandex.ru)",
+      "Bash(curl -s -L \"https://travel.yandex.ru/tours/\" -H \"User-Agent: Mozilla/5.0 \\(X11; Linux x86_64\\) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36\" -H \"Accept-Language: ru-RU,ru;q=0.9\" --max-time 20)",
+      "Bash(python3:*)",
+      "WebFetch(domain:affiliates.yandex.ru)",
+      "Bash(grep -l \"query\\\\|SELECT\\\\|INSERT\" /workspaces/PosPkTry/app/api/operator/*.ts /workspaces/PosPkTry/app/api/operator/*/*.ts)",
+      "Bash(grep -l \"query\\\\|SELECT\\\\|INSERT\" /workspacesPkTry/app/api/hub/operator/*.ts /workspaces/PosPkTry/app/api/hub/operator/*/*.ts)",
+      "Read(//workspacesPkTry/lib/database/migrations/**)"
     ]
   }
 }

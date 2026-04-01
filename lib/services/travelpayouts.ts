@@ -174,8 +174,8 @@ export async function toAffiliateLinks(
 /** Standard entry points for Kamchatka tourists */
 export const KAMCHATKA_URLS = {
   // Авиабилеты
-  flights_to_pkc: 'https://www.aviasales.ru/search/–PKC1',
-  cheap_calendar: 'https://www.aviasales.ru/calendar/–PKC',
+  flights_to_pkc: 'https://avito.tpk.lu/OtGbiCh3?erid=2VtzqvJmcJA',
+  cheap_calendar: 'https://www.aviasales.ru/search/MOW0000PKC1?marker=402896',
 
   // Проживание
   ostrovok_hotels: 'https://ostrovok.ru/hotel/russia/petropavlovsk_kamchatsky/',

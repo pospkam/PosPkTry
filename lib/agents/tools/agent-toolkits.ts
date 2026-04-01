@@ -222,7 +222,7 @@ function buildEcoToolkit(agentId: string): AgentToolkit {
           COUNT(DISTINCT ob.id)::text AS booking_count,
           COALESCE(SUM(ob.participants), 0)::text AS tourist_count
         FROM operator_tours ot
-        JOIN agent_route_knowledge ark ON ot.route_id = ark.id
+        JOIN agent_route_knowledge ark ON ot.agent_route_id = ark.id
         LEFT JOIN operator_bookings ob ON ob.operator_tour_id = ot.id
           AND ob.deleted_at IS NULL
           AND ob.created_at >= NOW() - INTERVAL '30 days'
@@ -295,7 +295,8 @@ function buildInfraToolkit(agentId: string): AgentToolkit {
           const timer = setTimeout(() => ctrl.abort(), 5000);
           const resp = await fetch(p.url, { method: 'HEAD', signal: ctrl.signal });
           clearTimeout(timer);
-          results[p.name] = resp.ok || resp.status === 401 || resp.status === 405 ? 'reachable' : `status_${resp.status}`;
+          const reachableStatuses = new Set([200, 401, 403, 405, 422]);
+          results[p.name] = resp.ok || reachableStatuses.has(resp.status) ? 'reachable' : `status_${resp.status}`;
         } catch {
           results[p.name] = p.softCheck ? 'geo_blocked' : 'unreachable';
         }
@@ -392,12 +393,11 @@ function buildQualityToolkit(agentId: string): AgentToolkit {
         id: string; rating: number; text: string; tour_title: string;
         operator_name: string; created_at: string;
       }>(
-        `SELECT r.id, r.rating, LEFT(r.text, 200) AS text,
-          ot.title AS tour_title, p.company_name AS operator_name,
+        `SELECT r.id::text, r.rating, LEFT(r.comment, 200) AS text,
+          ot.title AS tour_title, p.name AS operator_name,
           r.created_at::text
-        FROM reviews r
-        JOIN operator_bookings ob ON r.booking_id = ob.id
-        JOIN operator_tours ot ON ob.operator_tour_id = ot.id
+        FROM operator_tour_reviews r
+        JOIN operator_tours ot ON r.tour_id = ot.id
         JOIN partners p ON ot.operator_id = p.id
         WHERE r.rating <= 2 AND r.created_at >= NOW() - INTERVAL '1 day' * $1
         ORDER BY r.created_at DESC LIMIT 20`,
@@ -435,7 +435,7 @@ function buildContentToolkit(agentId: string): AgentToolkit {
             THEN ROUND(COUNT(ob.id)::numeric / COUNT(pv.id) * 100, 2)::text
             ELSE '0' END AS ctr_pct
         FROM operator_tours ot
-        LEFT JOIN page_views pv ON pv.page_path = '/tours/' || ot.id::text
+        LEFT JOIN page_views pv ON pv.path = '/tours/' || ot.id::text
           AND pv.created_at >= NOW() - INTERVAL '30 days'
         LEFT JOIN operator_bookings ob ON ob.operator_tour_id = ot.id
           AND ob.deleted_at IS NULL

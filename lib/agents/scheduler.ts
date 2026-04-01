@@ -245,31 +245,33 @@ export class AgentScheduler {
   }
 }
 
-// Production configuration (simple intervals instead of cron)
+// Production configuration — intervals scaled to actual platform activity.
+// At pre-revenue stage (~1400 views/week, 0 leads), high-frequency monitoring wastes resources.
+// Increase frequencies when metrics cross thresholds (e.g., 10+ leads/day → restore 30min rescue).
 export const DEFAULT_AGENT_SCHEDULE: ScheduledAgentConfig[] = [
-  // Admin: digest every 4h
+  // Admin: digest every 12h (twice daily is enough at current scale)
   {
     agentId: 'admin',
     intent: 'admin_digest',
-    intervalMs: 4 * 60 * 60 * 1000, // 4h
+    intervalMs: 12 * 60 * 60 * 1000,
     timeout: 60000,
     enabled: true
   },
 
-  // Rescue: monitor SOS every 30 minutes (CRITICAL)
+  // Rescue: monitor SOS every 4h (no incidents at current scale; restore 30min when live bookings exist)
   {
     agentId: 'rescue',
     intent: 'rescue_monitor',
-    intervalMs: 30 * 60 * 1000, // 30min
+    intervalMs: 4 * 60 * 60 * 1000,
     timeout: 30000,
     enabled: true
   },
 
-  // Hacker: growth analysis every 6h
+  // Hacker: growth analysis every 24h (no growth data to analyze more often)
   {
     agentId: 'hacker',
     intent: 'hack_growth',
-    intervalMs: 6 * 60 * 60 * 1000, // 6h
+    intervalMs: 24 * 60 * 60 * 1000,
     timeout: 45000,
     enabled: true
   },
@@ -278,34 +280,34 @@ export const DEFAULT_AGENT_SCHEDULE: ScheduledAgentConfig[] = [
   {
     agentId: 'evo',
     intent: 'evo_optimize',
-    intervalMs: 24 * 60 * 60 * 1000, // 24h
+    intervalMs: 24 * 60 * 60 * 1000,
     timeout: 120000,
     enabled: true
   },
 
-  // Quality: review trends every 12h
+  // Quality: review trends every 24h (no reviews/ratings coming in)
   {
     agentId: 'quality',
     intent: 'quality_review',
-    intervalMs: 12 * 60 * 60 * 1000, // 12h
+    intervalMs: 24 * 60 * 60 * 1000,
     timeout: 45000,
     enabled: true
   },
 
-  // Eco: monitor platform load every 1h
+  // Eco: monitor platform load every 12h (near-zero load)
   {
     agentId: 'eco',
     intent: 'eco_monitor',
-    intervalMs: 60 * 60 * 1000, // 1h
+    intervalMs: 12 * 60 * 60 * 1000,
     timeout: 30000,
     enabled: true
   },
 
-  // Security: audit every 2h
+  // Security: audit every 12h (no auth events to audit more often)
   {
     agentId: 'security',
     intent: 'sec_report',
-    intervalMs: 2 * 60 * 60 * 1000, // 2h
+    intervalMs: 12 * 60 * 60 * 1000,
     timeout: 45000,
     enabled: true
   },
@@ -314,43 +316,43 @@ export const DEFAULT_AGENT_SCHEDULE: ScheduledAgentConfig[] = [
   {
     agentId: 'legal',
     intent: 'legal_risks',
-    intervalMs: 24 * 60 * 60 * 1000, // 24h
+    intervalMs: 24 * 60 * 60 * 1000,
     timeout: 30000,
     enabled: true
   },
 
-  // Content: audit every 8h
+  // Content: audit every 24h (no new content being added)
   {
     agentId: 'content',
     intent: 'content_audit',
-    intervalMs: 8 * 60 * 60 * 1000, // 8h
+    intervalMs: 24 * 60 * 60 * 1000,
     timeout: 45000,
     enabled: true
   },
 
-  // Planning: forecast every 12h
+  // Planning: forecast every 24h
   {
     agentId: 'planning',
     intent: 'plan_forecast',
-    intervalMs: 12 * 60 * 60 * 1000, // 12h
+    intervalMs: 24 * 60 * 60 * 1000,
     timeout: 45000,
     enabled: true
   },
 
-  // Finance: revenue check every 6h
+  // Finance: revenue check every 24h (0 revenue)
   {
     agentId: 'finance',
     intent: 'finance_report',
-    intervalMs: 6 * 60 * 60 * 1000, // 6h
+    intervalMs: 24 * 60 * 60 * 1000,
     timeout: 45000,
     enabled: true
   },
 
-  // Infra: health check every 1h
+  // Infra: health check every 6h (was 1h, generating false alerts)
   {
     agentId: 'infra',
     intent: 'infra_health',
-    intervalMs: 60 * 60 * 1000, // 1h
+    intervalMs: 6 * 60 * 60 * 1000,
     timeout: 30000,
     enabled: true
   },
@@ -359,7 +361,7 @@ export const DEFAULT_AGENT_SCHEDULE: ScheduledAgentConfig[] = [
   {
     agentId: 'vibe_coder',
     intent: 'code_analysis',
-    intervalMs: 24 * 60 * 60 * 1000, // 24h
+    intervalMs: 24 * 60 * 60 * 1000,
     timeout: 60000,
     enabled: true
   },

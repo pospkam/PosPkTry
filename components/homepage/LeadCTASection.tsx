@@ -1,17 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { Phone, User, Send, CheckCircle, MessageCircle, Sparkles } from 'lucide-react';
+import { Phone, User, Send, CheckCircle, MessageCircle } from 'lucide-react';
 
 const BOT_URL = 'https://t.me/KuzmichKam_bot?start=lead';
 
 type State = 'idle' | 'sending' | 'done' | 'error';
 
 export function LeadCTASection() {
-  const [name, setName]     = useState('');
-  const [phone, setPhone]   = useState('');
-  const [comment, setComment] = useState('');
-  const [state, setState]   = useState<State>('idle');
+  const [name, setName]   = useState('');
+  const [phone, setPhone] = useState('');
+  const [state, setState] = useState<State>('idle');
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +23,6 @@ export function LeadCTASection() {
         body: JSON.stringify({
           name: name.trim(),
           phone: phone.trim(),
-          comment: comment.trim() || undefined,
           source_url: typeof window !== 'undefined' ? window.location.href : '/',
           source_data: { source: 'homepage_cta' },
         }),
@@ -129,17 +127,6 @@ export function LeadCTASection() {
                       placeholder="+7 900 000 00 00"
                       required
                       className="w-full pl-9 pr-4 py-3 rounded-lg text-sm text-white placeholder-white/30 border outline-none focus:ring-1 transition-all"
-                      style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)' }}
-                    />
-                  </div>
-                  <div className="relative">
-                    <Sparkles className="absolute left-3 top-3.5 w-4 h-4 text-white/30" />
-                    <textarea
-                      value={comment}
-                      onChange={e => setComment(e.target.value)}
-                      placeholder="Расскажите о мечте: вулканы, рыбалка, 5 дней, группа 4 человека..."
-                      rows={3}
-                      className="w-full pl-9 pr-4 py-3 rounded-lg text-sm text-white placeholder-white/30 border outline-none focus:ring-1 transition-all resize-none"
                       style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)' }}
                     />
                   </div>

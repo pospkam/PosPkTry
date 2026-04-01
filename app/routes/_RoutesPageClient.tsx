@@ -91,11 +91,20 @@ interface MapRoute {
 type SortValue = 'title' | 'recent' | 'price_asc' | 'price_desc' | 'recommended';
 type DifficultyValue = '' | 'easy' | 'medium' | 'hard';
 
+type KindValue = 'place' | 'tour' | 'route';
+
+const KIND_TABS: { value: KindValue; label: string; desc: string }[] = [
+  { value: 'place', label: 'Места',    desc: 'природных мест и достопримечательностей' },
+  { value: 'tour',  label: 'Туры',     desc: 'туров с ценами и датами' },
+  { value: 'route', label: 'Маршруты', desc: 'пеших и автомобильных маршрутов' },
+];
+
 export default function RoutesPageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const [view, setView] = useState<'grid' | 'map'>('grid');
+  const [kind, setKind] = useState<KindValue>((searchParams.get('kind') as KindValue) || 'place');
   const [query, setQuery] = useState(searchParams.get('q') ?? '');
   const [activityType, setActivityType] = useState(searchParams.get('activity_type') ?? '');
   const [sort, setSort] = useState<SortValue>('recommended');
@@ -123,10 +132,10 @@ export default function RoutesPageClient() {
   // ── Fetch grid data ──────────────────────────────────────────
   const fetchRoutes = useCallback(async (
     q: string, act: string, pg: number, srt: string,
-    diff: string, price_min?: number, price_max?: number,
+    diff: string, k: KindValue, price_min?: number, price_max?: number,
   ) => {
     setLoading(true);
-    const params = new URLSearchParams({ page: String(pg), limit: String(LIMIT), sort: srt, kind: 'place' });
+    const params = new URLSearchParams({ page: String(pg), limit: String(LIMIT), sort: srt, kind: k });
     if (q)             params.set('q', q);
     if (act)           params.set('activity_type', act);
     if (diff)          params.set('difficulty', diff);
@@ -146,7 +155,7 @@ export default function RoutesPageClient() {
   // ── Fetch map pins ───────────────────────────────────────────
   const fetchMapRoutes = useCallback(async () => {
     setMapLoading(true);
-    const params = new URLSearchParams({ limit: '500', hasCoords: 'true', kind: 'place' });
+    const params = new URLSearchParams({ limit: '500', hasCoords: 'true', kind });
     if (activityType) params.set('activity_type', activityType);
     if (query)        params.set('q', query);
     if (difficulty)   params.set('difficulty', difficulty);
@@ -162,16 +171,16 @@ export default function RoutesPageClient() {
       }
     } catch { /* silent */ }
     setMapLoading(false);
-  }, [activityType, query, difficulty]);
+  }, [activityType, query, difficulty, kind]);
 
   // ── Trigger fetch ────────────────────────────────────────────
   useEffect(() => {
     const { price_min, price_max } = getPriceParams();
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      fetchRoutes(query, activityType, page, sort, difficulty, price_min, price_max);
+      fetchRoutes(query, activityType, page, sort, difficulty, kind, price_min, price_max);
     }, query ? 300 : 0);
-  }, [query, activityType, page, sort, difficulty, priceRange, fetchRoutes, getPriceParams]);
+  }, [query, activityType, page, sort, difficulty, priceRange, kind, fetchRoutes, getPriceParams]);
 
   useEffect(() => {
     if (view === 'map') fetchMapRoutes();
@@ -180,15 +189,17 @@ export default function RoutesPageClient() {
   // ── Sync URL ─────────────────────────────────────────────────
   useEffect(() => {
     const p = new URLSearchParams();
+    if (kind !== 'place') p.set('kind', kind);
     if (query)        p.set('q', query);
     if (activityType) p.set('activity_type', activityType);
     if (page > 1)     p.set('page', String(page));
     router.replace(`/routes${p.size ? '?' + p : ''}`, { scroll: false });
-  }, [query, activityType, page, router]);
+  }, [query, activityType, page, kind, router]);
 
   const resetFilters = () => { setDifficulty(''); setPriceRange(''); setPage(1); };
   const handleActivityChange = (act: string) => { setActivityType(act); setPage(1); };
   const handleSearch = (val: string) => { setQuery(val); setPage(1); };
+  const handleKindChange = (k: KindValue) => { setKind(k); setPage(1); setActivityType(''); resetFilters(); };
 
   const mapMarkers = mapRoutes.map(r => ({
     coords:      [r.lat, r.lng] as [number, number],
@@ -206,11 +217,28 @@ export default function RoutesPageClient() {
       <div className="ds-page pt-20 pb-10">
 
         {/* ── Hero header ───────────────────────────────────── */}
-        <div className="mb-8">
-          <h1 className="ds-h1 mb-1">Места Камчатки</h1>
+        <div className="mb-6">
+          <h1 className="ds-h1 mb-1">Камчатка</h1>
           <p className="text-[var(--text-secondary)] text-sm md:text-base">
-            {meta.total.toLocaleString('ru-RU')} природных мест и достопримечательностей
+            {meta.total.toLocaleString('ru-RU')} {KIND_TABS.find(t => t.value === kind)?.desc}
           </p>
+        </div>
+
+        {/* ── Kind tabs: Места / Туры / Маршруты ─────────────── */}
+        <div className="flex gap-1 mb-5 border-b border-[var(--border)]">
+          {KIND_TABS.map(tab => (
+            <button
+              key={tab.value}
+              onClick={() => handleKindChange(tab.value)}
+              className={`px-4 py-2.5 text-sm font-semibold transition-all duration-150 border-b-2 -mb-px ${
+                kind === tab.value
+                  ? 'border-[var(--accent)] text-[var(--accent)]'
+                  : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
         {/* ── Search + controls ─────────────────────────────── */}

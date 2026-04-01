@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { pool } from '@/lib/db-pool';
+import { hashPassword } from '@/lib/auth/password';
 
 export const dynamic = 'force-dynamic';
 
@@ -539,6 +540,38 @@ export async function GET(req: NextRequest) {
       operatorId = existing.rows[0].id as string;
     }
 
+    // 1b. Создаём или находим пользователя-оператора
+    const OPERATOR_EMAIL = 'mestechko41@mail.ru';
+    const existingUser = await client.query(
+      `SELECT id FROM users WHERE email = $1 LIMIT 1`,
+      [OPERATOR_EMAIL]
+    );
+
+    let userId: string;
+    if (existingUser.rows.length > 0) {
+      userId = existingUser.rows[0].id as string;
+    } else {
+      const pwHash = await hashPassword('1234567890');
+      const newUser = await client.query(
+        `INSERT INTO users (email, name, role, password_hash, preferences)
+         VALUES ($1, $2, 'operator', $3, $4::jsonb)
+         RETURNING id`,
+        [
+          OPERATOR_EMAIL,
+          'Местечко Камчатка',
+          pwHash,
+          JSON.stringify({ force_password_change: true }),
+        ]
+      );
+      userId = newUser.rows[0].id as string;
+    }
+
+    // Привязываем партнёра к пользователю
+    await client.query(
+      `UPDATE partners SET user_id = $1 WHERE id = $2`,
+      [userId, operatorId]
+    );
+
     // 2. Вставляем туры
     let inserted = 0;
     const insertedTitles: string[] = [];
@@ -613,6 +646,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       success: true,
       operator_id: operatorId,
+      user_id: userId,
       inserted,
       tours: insertedTitles,
     });

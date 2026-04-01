@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { pool } from '@/lib/db-pool';
 import { callAIWithModelDirect } from '@/lib/ai/providers';
 import { timingSafeCompare } from '@/lib/security/timing-safe';
+import { getLatestIntelligence } from '@/lib/services/intelligence-monitor.service';
 import type { ChatMessage } from '@/lib/ai/prompts';
 
 export const dynamic = 'force-dynamic';
@@ -337,6 +338,16 @@ export async function GET(request: NextRequest) {
 
   const msg = lines.join('\n');
 
+  // ── Intelligence summary (from latest cron run) ──────────────────────────
+  let intelMsg = '';
+  try {
+    const intel = await getLatestIntelligence();
+    if (intel && !intel.includes('no recent data')) {
+      // Trim to fit Telegram limits (separate message if needed)
+      intelMsg = `<b>Intelligence:</b>\n${intel.substring(0, 1500)}`;
+    }
+  } catch { /* non-critical */ }
+
   // ── Inline keyboard (быстрые действия) ────────────────────────────────────
   const replyMarkup = {
     inline_keyboard: [
@@ -352,6 +363,11 @@ export async function GET(request: NextRequest) {
   };
 
   await tgSend(msg, replyMarkup);
+
+  // Send intelligence as a follow-up if available
+  if (intelMsg) {
+    await tgSend(intelMsg);
+  }
 
   // Логируем
   try {

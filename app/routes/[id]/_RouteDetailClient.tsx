@@ -907,11 +907,11 @@ export default function RouteDetailClient({ id }: { id: string }) {
             </div>
             <div>
               <div className="text-sm font-semibold text-[var(--text-primary)]">Лететь на Камчатку</div>
-              <div className="text-xs text-[var(--text-muted)]">Aviasales · Петропавловск-Камчатский (PKC)</div>
+              <div className="text-xs text-[var(--text-muted)]">Авито · Петропавловск-Камчатский (PKC)</div>
             </div>
           </div>
           <a
-            href={`https://www.aviasales.ru/search/–PKC1?marker=402896`}
+            href="https://avito.tpk.lu/OtGbiCh3?erid=2VtzqvJmcJA"
             target="_blank"
             rel="noopener noreferrer sponsored"
             className="ds-btn ds-btn-primary text-sm px-5 py-2 flex-shrink-0"
@@ -921,7 +921,7 @@ export default function RouteDetailClient({ id }: { id: string }) {
         </div>
 
         {/* ── Партнёрские сервисы (TravelPayouts) ───────────────────────────── */}
-        <RouteAffiliateBlock activityType={route.activityType} />
+        <RouteAffiliateBlock activityType={route.activityType} routeId={route.id} />
 
         {/* ── Авиабилеты до Камчатки (Aviasales) ────────────────────────────── */}
         <FlightsBlock />

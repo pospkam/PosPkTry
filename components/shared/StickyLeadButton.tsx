@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { MessageSquarePlus, X, User, Phone, Sparkles, Send, CheckCircle } from 'lucide-react';
 import { trackLeadEvent, LEAD_EVENTS } from '@/lib/analytics/lead-tracking';
 
-type State = 'idle' | 'phone' | 'details' | 'sending' | 'done' | 'error';
+type State = 'idle' | 'form' | 'sending' | 'done' | 'error';
 
 /**
  * Глобальная sticky-кнопка "Хочу тур" — видна на всех страницах.
@@ -18,26 +18,19 @@ export default function StickyLeadButton() {
   const [name, setName]       = useState('');
   const [phone, setPhone]     = useState('');
   const [comment, setComment] = useState('');
-  const [state, setState]     = useState<State>('phone');
+  const [state, setState]     = useState<State>('form');
 
-  // Отслеживаем переход на stage 'details'
+  // Отслеживаем открытие формы
   useEffect(() => {
-    if (state === 'details') {
-      trackLeadEvent({ ...LEAD_EVENTS.OPEN_LEAD_FORM_DETAILS, source: 'sticky_button' });
+    if (open) {
+      trackLeadEvent({ ...LEAD_EVENTS.OPEN_LEAD_FORM_PHONE, source: 'sticky_button' });
     }
-  }, [state]);
+  }, [open]);
 
   // Не показываем в хабах (дашборды операторов, админов и т.д.)
   if (pathname?.startsWith('/hub')) return null;
 
-  async function submitPhone(e: React.FormEvent) {
-    e.preventDefault();
-    if (!phone.trim()) return;
-    trackLeadEvent({ ...LEAD_EVENTS.LEAD_FORM_PHONE_FILLED, source: 'sticky_button' });
-    setState('details');
-  }
-
-  async function submitAll(e: React.FormEvent) {
+  async function submitLead(e: React.FormEvent) {
     e.preventDefault();
     setState('sending');
     trackLeadEvent({ ...LEAD_EVENTS.SUBMIT_LEAD, source: 'sticky_button' });
@@ -46,7 +39,7 @@ export default function StickyLeadButton() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: name.trim(),
+          name: name.trim() || 'Turист',
           phone: phone.trim(),
           comment: comment.trim() || undefined,
           source_url: typeof window !== 'undefined' ? window.location.href : '/',
@@ -68,7 +61,7 @@ export default function StickyLeadButton() {
 
   function reset() {
     setOpen(false);
-    setTimeout(() => { setName(''); setPhone(''); setComment(''); setState('phone'); }, 300);
+    setTimeout(() => { setName(''); setPhone(''); setComment(''); setState('form'); }, 300);
   }
 
   return (
@@ -109,9 +102,8 @@ export default function StickyLeadButton() {
                 <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Менеджер перезвонит скоро.</p>
                 <button onClick={reset} className="text-xs underline" style={{ color: 'var(--text-muted)' }}>Закрыть</button>
               </div>
-            ) : state === 'phone' ? (
-              <form onSubmit={submitPhone} className="space-y-3">
-                <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Ваш номер телефона</p>
+            ) : (
+              <form onSubmit={submitLead} className="space-y-2.5">
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-muted)' }} />
                   <input
@@ -120,22 +112,11 @@ export default function StickyLeadButton() {
                     className="ds-input w-full pl-8 pr-3 py-2 text-sm"
                   />
                 </div>
-                <button
-                  type="submit"
-                  disabled={!phone.trim()}
-                  className="ds-btn ds-btn-primary w-full text-sm py-2.5 disabled:opacity-50"
-                >
-                  Далее
-                </button>
-              </form>
-            ) : (
-              <form onSubmit={submitAll} className="space-y-2.5">
-                <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Осталось чуть-чуть</p>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: 'var(--text-muted)' }} />
                   <input
                     type="text" value={name} onChange={e => setName(e.target.value)}
-                    placeholder="Ваше имя" autoFocus required
+                    placeholder="Ваше имя (необязательно)"
                     className="ds-input w-full pl-8 pr-3 py-2 text-sm"
                   />
                 </div>
@@ -143,7 +124,7 @@ export default function StickyLeadButton() {
                   <Sparkles className="absolute left-3 top-3 w-3.5 h-3.5" style={{ color: 'var(--text-muted)' }} />
                   <textarea
                     value={comment} onChange={e => setComment(e.target.value)}
-                    placeholder="Что хотите? Вулканы, рыбалка, даты, группа..."
+                    placeholder="Что хотите? Вулканы, рыбалка, даты..."
                     rows={2}
                     className="ds-input w-full pl-8 pr-3 py-2 text-sm resize-none"
                   />
@@ -153,7 +134,7 @@ export default function StickyLeadButton() {
                 )}
                 <button
                   type="submit"
-                  disabled={state === 'sending' || !name.trim()}
+                  disabled={state === 'sending' || !phone.trim()}
                   className="ds-btn ds-btn-primary w-full flex items-center justify-center gap-2 text-sm py-2.5 disabled:opacity-50"
                 >
                   <Send className="w-3.5 h-3.5" />
@@ -174,7 +155,6 @@ export default function StickyLeadButton() {
           setOpen(v => !v);
           if (!open) {
             trackLeadEvent({ ...LEAD_EVENTS.CLICK_LEAD_BUTTON, source: 'sticky_button' });
-            trackLeadEvent({ ...LEAD_EVENTS.OPEN_LEAD_FORM_PHONE, source: 'sticky_button' });
           }
         }}
         className={`fixed bottom-4 right-4 z-50 flex items-center justify-center gap-2 px-5 py-4 rounded-full shadow-2xl text-sm font-bold text-white transition-all hover:scale-110 active:scale-95 ${!open ? 'lead-button-pulse' : ''}`}
