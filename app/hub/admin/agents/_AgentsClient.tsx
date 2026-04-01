@@ -9,6 +9,7 @@ import {
   Shield, Scale, Lock, Binoculars, Leaf, FileSearch, Star,
   Cpu, BarChart3, Megaphone, CalendarDays, GitMerge, Network,
   Loader2, ExternalLink, UserCheck, Target, Terminal, X,
+  Wrench, Copy, Check as CheckIcon,
 } from 'lucide-react';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -114,6 +115,7 @@ interface Approval {
   id: string;
   action_type: string;
   description: string | null;
+  context: Record<string, unknown> | null;
   topic: string | null;
   status: 'pending' | 'approved' | 'rejected' | 'expired';
   executor_agent_id: string | null;
@@ -836,6 +838,56 @@ function ExecStatusBadge({ status }: { status: string | null }) {
   );
 }
 
+// ── Brief Modal ───────────────────────────────────────────────────────────────
+
+function BriefModal({ brief, onClose }: { brief: string; onClose: () => void }) {
+  const [copied, setCopied] = useState(false);
+
+  function copyBrief() {
+    void navigator.clipboard.writeText(brief).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[var(--border)]">
+          <div className="flex items-center gap-2">
+            <Wrench className="w-4 h-4 text-[var(--accent)]" />
+            <span className="text-sm font-semibold text-[var(--text-primary)]">ТЗ для реализации</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={copyBrief}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-[var(--accent)] text-white rounded-lg hover:opacity-90 transition-opacity"
+            >
+              {copied
+                ? <><CheckIcon className="w-3 h-3" />Скопировано</>
+                : <><Copy className="w-3 h-3" />Скопировать для Claude Code</>
+              }
+            </button>
+            <button onClick={onClose} className="p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+        <div className="overflow-y-auto flex-1 p-5">
+          <pre className="text-xs text-[var(--text-primary)] font-mono whitespace-pre-wrap leading-relaxed">{brief}</pre>
+        </div>
+        <div className="px-5 py-3 border-t border-[var(--border)] bg-[var(--bg-primary)] rounded-b-xl">
+          <p className="text-[10px] text-[var(--text-muted)]">
+            Скопируй ТЗ и вставь в новый чат Claude Code — он реализует задачу и задеплоит изменения.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Approvals Tab ─────────────────────────────────────────────────────────────
+
 function ApprovalsTab() {
   const [data,     setData]    = useState<Approval[] | null>(null);
   const [loading,  setLoad]    = useState(true);
@@ -844,6 +896,8 @@ function ApprovalsTab() {
   const [assigning, setAssigning] = useState<string | null>(null);
   const [section,  setSection] = useState<'pending' | 'tracking'>('pending');
   const [openLogId, setOpenLogId] = useState<string | null>(null);
+  const [briefLoading, setBriefLoading] = useState<string | null>(null);
+  const [briefModal,   setBriefModal]   = useState<string | null>(null);
 
   const load = useCallback(() => {
     setLoad(true);
@@ -893,6 +947,23 @@ function ApprovalsTab() {
     });
     load();
     setAssigning(null);
+  }
+
+  async function generateBrief(approval_id: string) {
+    setBriefLoading(approval_id);
+    try {
+      const res = await fetch('/api/agents/approvals/brief', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ approval_id }),
+      });
+      const j = await res.json() as { success: boolean; brief?: string; error?: string };
+      if (j.success && j.brief) {
+        setBriefModal(j.brief);
+      }
+    } finally {
+      setBriefLoading(null);
+    }
   }
 
   if (loading) return (
@@ -1015,12 +1086,25 @@ function ApprovalsTab() {
                       )}
                       <span className="text-[9px] text-[var(--text-muted)] font-mono">{fmtDate(ap.created_at)}</span>
                     </div>
-                    {/* Log open button */}
-                    <button onClick={() => setOpenLogId(ap.id)}
-                      className="shrink-0 flex items-center gap-1 text-[10px] text-[var(--ocean)] hover:text-[var(--accent)] transition-colors">
-                      <Terminal className="w-3 h-3" />
-                      Лог
-                    </button>
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        onClick={() => void generateBrief(ap.id)}
+                        disabled={briefLoading === ap.id}
+                        className="flex items-center gap-1 text-[10px] px-2 py-1 bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20 rounded-md hover:bg-[var(--accent)]/20 transition-colors disabled:opacity-50"
+                      >
+                        {briefLoading === ap.id
+                          ? <Loader2 className="w-3 h-3 animate-spin" />
+                          : <Wrench className="w-3 h-3" />
+                        }
+                        Реализовать
+                      </button>
+                      <button onClick={() => setOpenLogId(ap.id)}
+                        className="flex items-center gap-1 text-[10px] text-[var(--ocean)] hover:text-[var(--accent)] transition-colors">
+                        <Terminal className="w-3 h-3" />
+                        Лог
+                      </button>
+                    </div>
                   </div>
 
                   {/* Executor assignment */}
@@ -1075,6 +1159,11 @@ function ApprovalsTab() {
           approvalId={openLogId}
           onClose={() => { setOpenLogId(null); load(); }}
         />
+      )}
+
+      {/* Brief Modal */}
+      {briefModal && (
+        <BriefModal brief={briefModal} onClose={() => setBriefModal(null)} />
       )}
     </div>
   );
