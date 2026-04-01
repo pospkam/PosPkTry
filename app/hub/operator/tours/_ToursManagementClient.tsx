@@ -1,276 +1,124 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import Image from 'next/image';
 import {
-  DataTable,
-  Pagination,
-  SearchBar,
-  StatusBadge,
-  LoadingSpinner,
-  EmptyState,
-  Column
-} from '@/components/admin/shared';
-import { OperatorTour } from '@/types/operator';
-import { useAuth } from '@/contexts/AuthContext';
-import toast from 'react-hot-toast';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Users, Plus, Star, Mountain, Upload } from 'lucide-react';
+  Plus, Upload, Mountain, Star, Users, Clock,
+  Eye, EyeOff, Trash2, Edit2, RefreshCw, ChevronLeft, ChevronRight,
+} from 'lucide-react';
 
-const SELECT = 'px-3.5 py-2.5 text-sm bg-[var(--bg-primary)] border border-[var(--border)] rounded-md text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] transition-colors';
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface Tour {
+  id: string;
+  title: string;
+  activity_type: string | null;
+  location_name: string | null;
+  base_price: string | null;
+  max_participants: number | null;
+  duration_hours: number | null;
+  difficulty: string | null;
+  is_active: boolean;
+  is_published: boolean;
+  tour_image: string | null;
+  photos: string[] | null;
+  rating: string | null;
+  review_count: number;
+  total_bookings: string;
+  total_revenue: string;
+  created_at: string;
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const RUB = (v: string | number | null) =>
+  v == null ? '—' : Number(v).toLocaleString('ru-RU') + ' ₽';
+
+const DIFFICULTY: Record<string, string> = {
+  easy: 'Лёгкий', medium: 'Средний', hard: 'Сложный',
+  extreme: 'Экстрим', beginner: 'Новичок',
+};
+
+const LIMIT = 20;
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function ToursManagementClient() {
-  const { user } = useAuth();
-  const router = useRouter();
-  const [tours, setTours] = useState<OperatorTour[]>([]);
+  const [tours, setTours]     = useState<Tour[]>([]);
+  const [total, setTotal]     = useState(0);
+  const [page, setPage]       = useState(1);
   const [loading, setLoading] = useState(true);
-  const [totalPages, setTotalPages] = useState(1);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [categoryFilter, setCategoryFilter] = useState('');
+  const [toggling, setToggling] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
-  const operatorId = user?.id;
+  const totalPages = Math.max(1, Math.ceil(total / LIMIT));
 
-  useEffect(() => {
-    fetchTours();
-  }, [currentPage, search, statusFilter, categoryFilter]);
-
-  const fetchTours = async () => {
+  const load = useCallback(async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-
       const params = new URLSearchParams({
-        ...(operatorId ? { operatorId } : {}),
-        page: currentPage.toString(),
-        limit: '20'
+        limit: String(LIMIT),
+        offset: String((page - 1) * LIMIT),
       });
-
-      if (search) params.append('search', search);
-      if (statusFilter !== 'all') params.append('status', statusFilter);
-      if (categoryFilter) params.append('category', categoryFilter);
-
-      const response = await fetch(`/api/operator/tours?${params}`);
-      const result = await response.json();
-
-      if (result.success) {
-        setTours(result.data.data);
-        setTotalPages(result.data.pagination.totalPages);
+      const res = await fetch(`/api/hub/operator/tours?${params}`);
+      const data = await res.json() as { success: boolean; data: Tour[]; pagination: { total: number } };
+      if (data.success) {
+        setTours(data.data);
+        setTotal(data.pagination.total);
       }
-    } catch (error) {
-    } finally {
-      setLoading(false);
-    }
-  };
+    } catch { /* non-fatal */ }
+    finally { setLoading(false); }
+  }, [page]);
 
-  const handleToggleActive = async (tourId: string, currentStatus: boolean) => {
+  useEffect(() => { void load(); }, [load]);
+
+  async function handleToggleActive(id: string, current: boolean) {
+    setToggling(id);
     try {
-      const response = await fetch(`/api/operator/tours/${tourId}?operatorId=${operatorId}`, {
-        method: 'PUT',
+      await fetch(`/api/hub/operator/tours/${id}`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isActive: !currentStatus })
+        body: JSON.stringify({ is_active: !current }),
       });
+      await load();
+    } finally { setToggling(null); }
+  }
 
-      if (response.ok) {
-        fetchTours();
-      }
-    } catch (error) {
-    }
-  };
-
-  const handleDelete = async (tourId: string) => {
-    if (!confirm('Вы уверены, что хотите удалить этот тур? Это действие нельзя отменить.')) {
-      return;
-    }
-
+  async function handleDelete(id: string, title: string) {
+    if (!confirm(`Удалить тур «${title}»? Это действие нельзя отменить.`)) return;
+    setDeleting(id);
     try {
-      const response = await fetch(`/api/operator/tours/${tourId}?operatorId=${operatorId}`, {
-        method: 'DELETE'
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        fetchTours();
-      } else {
-        toast.error(result.message || 'Ошибка при удалении тура');
-      }
-    } catch (error) {
-      toast.error('Ошибка при удалении тура');
-    }
-  };
-
-  const formatCurrency = (value: number, currency: string) => {
-    return new Intl.NumberFormat('ru-RU', {
-      style: 'currency',
-      currency: currency || 'RUB',
-      minimumFractionDigits: 0
-    }).format(value);
-  };
-
-  const getDifficultyLabel = (difficulty: string) => {
-    const labels: Record<string, string> = {
-      easy: 'Легко',
-      medium: 'Средне',
-      hard: 'Сложно'
-    };
-    return labels[difficulty] || difficulty;
-  };
-
-  const columns: Column<OperatorTour>[] = [
-    {
-      key: 'name',
-      title: 'Название',
-      sortable: true,
-      render: (tour) => (
-        <div className="flex items-center">
-          {tour.images && tour.images.length > 0 ? (
-            <Image
-              src={tour.images[0]}
-              alt={tour.name}
-              width={48}
-              height={48}
-              className="w-12 h-12 rounded-lg mr-3 object-cover"
-            />
-          ) : (
-            <div className="w-12 h-12 rounded-lg mr-3 bg-[var(--bg-hover)] flex items-center justify-center">
-              <Mountain className="w-5 h-5 text-[var(--text-muted)]" />
-            </div>
-          )}
-          <div>
-            <Link
-              href={`/hub/operator/tours/${tour.id}`}
-              className="font-semibold text-[var(--text-primary)] hover:text-[var(--accent)] transition-colors"
-            >
-              {tour.name}
-            </Link>
-            <p className="text-xs text-[var(--text-muted)]">{tour.category}</p>
-          </div>
-        </div>
-      )
-    },
-    {
-      key: 'difficulty',
-      title: 'Сложность',
-      render: (tour) => (
-        <span className="px-2 py-1 bg-[var(--bg-hover)] border border-[var(--border)] rounded text-xs text-[var(--text-secondary)]">
-          {getDifficultyLabel(tour.difficulty)}
-        </span>
-      )
-    },
-    {
-      key: 'duration',
-      title: 'Длит.',
-      render: (tour) => (
-        <span className="text-[var(--text-secondary)]">{tour.duration}ч</span>
-      )
-    },
-    {
-      key: 'maxGroupSize',
-      title: 'Макс. группа',
-      render: (tour) => (
-        <span className="text-[var(--text-secondary)]">
-          <Users className="w-5 h-5 mr-1 inline" />
-          {tour.maxGroupSize}
-        </span>
-      )
-    },
-    {
-      key: 'price',
-      title: 'Цена',
-      sortable: true,
-      render: (tour) => (
-        <span className="font-semibold text-[var(--text-primary)]">
-          {formatCurrency(tour.price, tour.currency)}
-        </span>
-      )
-    },
-    {
-      key: 'bookingsCount',
-      title: 'Брони',
-      sortable: true,
-      render: (tour) => (
-        <div className="text-center">
-          <div className="font-semibold text-[var(--text-primary)]">{tour.bookingsCount}</div>
-          <div className="text-xs text-[var(--text-muted)]">
-            {formatCurrency(tour.totalRevenue, tour.currency)}
-          </div>
-        </div>
-      )
-    },
-    {
-      key: 'rating',
-      title: 'Рейтинг',
-      render: (tour) => (
-        <div className="text-sm text-[var(--text-secondary)]">
-          <Star
-            className="w-4 h-4 inline"
-            style={{ color: 'var(--warning)', fill: 'var(--warning)' }}
-          />{' '}
-          {tour.rating.toFixed(1)}
-          <span className="text-[var(--text-muted)] text-xs"> ({tour.reviewCount})</span>
-        </div>
-      )
-    },
-    {
-      key: 'isActive',
-      title: 'Статус',
-      render: (tour) => (
-        <StatusBadge status={tour.isActive ? 'active' : 'inactive'} />
-      )
-    },
-    {
-      key: 'actions',
-      title: 'Действия',
-      render: (tour) => (
-        <div className="flex space-x-2">
-          <Link
-            href={`/hub/operator/tours/${tour.id}`}
-            className="px-3 py-1 border border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] rounded-md text-xs font-medium transition-colors"
-          >
-            Изменить
-          </Link>
-          <button
-            onClick={() => handleToggleActive(tour.id, tour.isActive)}
-            className="px-3 py-1 rounded-md text-xs font-medium transition-colors"
-            style={{ color: 'var(--warning)', border: '1px solid var(--warning)' }}
-          >
-            {tour.isActive ? 'Скрыть' : 'Показать'}
-          </button>
-          <button
-            onClick={() => handleDelete(tour.id)}
-            className="px-3 py-1 rounded-md text-xs font-medium transition-colors"
-            style={{ color: 'var(--danger)', border: '1px solid var(--danger)' }}
-          >
-            Удалить
-          </button>
-        </div>
-      )
-    }
-  ];
+      await fetch(`/api/hub/operator/tours/${id}`, { method: 'DELETE' });
+      await load();
+    } finally { setDeleting(null); }
+  }
 
   return (
     <div className="p-5 lg:p-6 space-y-5">
+
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-bold text-[var(--text-primary)]">Мои туры</h1>
-          <p className="text-sm text-[var(--text-muted)] mt-0.5">
-            Управление вашими турами и экскурсиями
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Мои туры</h1>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
+            Всего: {total}
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <button onClick={load} className="ds-btn flex items-center gap-1.5 text-sm" disabled={loading}>
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          </button>
           <Link
             href="/hub/operator/tours/import"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-secondary)] text-sm font-medium rounded-md hover:bg-[var(--bg-hover)] transition-colors"
+            className="ds-btn flex items-center gap-1.5 text-sm"
           >
             <Upload className="w-4 h-4" />
             Импорт CSV
           </Link>
           <Link
             href="/hub/operator/tours/new"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--accent)] text-[var(--bg-card)] text-sm font-semibold rounded-md hover:opacity-90 transition-opacity"
+            className="ds-btn ds-btn-primary flex items-center gap-1.5 text-sm"
           >
             <Plus className="w-4 h-4" />
             Создать тур
@@ -278,91 +126,183 @@ export default function ToursManagementClient() {
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col md:flex-row gap-3">
-        <div className="flex-1">
-          <SearchBar
-            placeholder="Поиск по названию или описанию..."
-            onSearch={(query) => {
-              setSearch(query);
-              setCurrentPage(1);
-            }}
-          />
-        </div>
-        <select
-          value={categoryFilter}
-          onChange={(e) => {
-            setCategoryFilter(e.target.value);
-            setCurrentPage(1);
-          }}
-          className={SELECT}
-        >
-          <option value="">Все категории</option>
-          <option value="vulkani">Вулканы</option>
-          <option value="geyzery">Гейзеры</option>
-          <option value="rybalka">Рыбалка</option>
-          <option value="termalnye_istochniki">Термы</option>
-          <option value="medvedi">Медведи</option>
-          <option value="morskie_progulki">Морские</option>
-          <option value="vertoletnye_tury">Вертолёты</option>
-          <option value="trekking">Треккинг</option>
-          <option value="snegohod">Снегоходы</option>
-          <option value="dzhip">Джипы</option>
-          <option value="ozera">Озёра</option>
-          <option value="gory">Горы</option>
-          <option value="reki">Реки</option>
-          <option value="eko">Эко</option>
-          <option value="kombo">Комбо</option>
-        </select>
-        <select
-          value={statusFilter}
-          onChange={(e) => {
-            setStatusFilter(e.target.value);
-            setCurrentPage(1);
-          }}
-          className={SELECT}
-        >
-          <option value="all">Все статусы</option>
-          <option value="active">Активные</option>
-          <option value="inactive">Неактивные</option>
-        </select>
-      </div>
-
-      {/* Content */}
+      {/* List */}
       {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <LoadingSpinner size="lg" message="Загрузка туров..." />
+        <div className="flex justify-center py-16">
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-[var(--border)] border-t-[var(--accent)]" />
         </div>
       ) : tours.length === 0 ? (
-        <EmptyState
-          icon={Mountain}
-          title="Туры не найдены"
-          description={
-            search || categoryFilter || statusFilter !== 'all'
-              ? 'Попробуйте изменить фильтры'
-              : 'Создайте свой первый тур'
-          }
-          action={
-            !search && !categoryFilter && statusFilter === 'all'
-              ? {
-                  label: 'Создать тур',
-                  onClick: () => router.push('/hub/operator/tours/new')
-                }
-              : undefined
-          }
-        />
+        <div className="ds-card p-12 text-center">
+          <Mountain className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+          <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>Туров пока нет</p>
+          <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
+            Создайте первый тур или импортируйте из CSV
+          </p>
+          <Link href="/hub/operator/tours/new" className="ds-btn ds-btn-primary text-sm inline-flex items-center gap-1.5">
+            <Plus className="w-4 h-4" />
+            Создать тур
+          </Link>
+        </div>
       ) : (
-        <div className="space-y-4">
-          <DataTable
-            columns={columns}
-            data={tours}
-          />
+        <div className="space-y-3">
+          {tours.map(tour => {
+            const img = tour.tour_image ?? tour.photos?.[0] ?? null;
+            const isToggling = toggling === tour.id;
+            const isDeleting = deleting === tour.id;
+            return (
+              <div
+                key={tour.id}
+                className="ds-card p-4 flex gap-4 items-start"
+                style={!tour.is_active ? { opacity: 0.65 } : {}}
+              >
+                {/* Thumbnail */}
+                <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-[var(--bg-hover)] flex items-center justify-center">
+                  {img ? (
+                    <Image src={img} alt={tour.title} width={64} height={64} className="w-full h-full object-cover" />
+                  ) : (
+                    <Mountain className="w-6 h-6" style={{ color: 'var(--text-muted)' }} />
+                  )}
+                </div>
 
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2 flex-wrap">
+                    <div className="min-w-0">
+                      <Link
+                        href={`/hub/operator/tours/${tour.id}`}
+                        className="font-semibold text-sm hover:underline"
+                        style={{ color: 'var(--text-primary)' }}
+                      >
+                        {tour.title}
+                      </Link>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {tour.activity_type && (
+                          <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'var(--bg-hover)', color: 'var(--text-secondary)' }}>
+                            {tour.activity_type}
+                          </span>
+                        )}
+                        {tour.difficulty && (
+                          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                            {DIFFICULTY[tour.difficulty] ?? tour.difficulty}
+                          </span>
+                        )}
+                        {tour.location_name && (
+                          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                            {tour.location_name}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Status badge */}
+                    <span
+                      className="text-xs px-2 py-0.5 rounded-full font-medium shrink-0"
+                      style={tour.is_active ? {
+                        background: 'var(--success)/12', color: 'var(--success)',
+                      } : {
+                        background: 'var(--text-muted)/12', color: 'var(--text-muted)',
+                      }}
+                    >
+                      {tour.is_active ? 'Активен' : 'Скрыт'}
+                    </span>
+                  </div>
+
+                  {/* Stats row */}
+                  <div className="flex flex-wrap gap-4 mt-2.5 text-xs" style={{ color: 'var(--text-secondary)' }}>
+                    <span className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+                      {RUB(tour.base_price)}
+                    </span>
+                    {tour.duration_hours && (
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {tour.duration_hours}ч
+                      </span>
+                    )}
+                    {tour.max_participants && (
+                      <span className="flex items-center gap-1">
+                        <Users className="w-3 h-3" />
+                        до {tour.max_participants}
+                      </span>
+                    )}
+                    {Number(tour.rating) > 0 && (
+                      <span className="flex items-center gap-1">
+                        <Star className="w-3 h-3" style={{ color: 'var(--warning)', fill: 'var(--warning)' }} />
+                        {Number(tour.rating).toFixed(1)}
+                        <span style={{ color: 'var(--text-muted)' }}>({tour.review_count})</span>
+                      </span>
+                    )}
+                    <span style={{ color: 'var(--text-muted)' }}>
+                      {tour.total_bookings} броней · {RUB(tour.total_revenue)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <Link
+                    href={`/hub/operator/tours/${tour.id}`}
+                    className="p-2 rounded-lg hover:bg-[var(--bg-hover)] transition-colors"
+                    title="Редактировать"
+                  >
+                    <Edit2 className="w-4 h-4" style={{ color: 'var(--text-secondary)' }} />
+                  </Link>
+                  <button
+                    onClick={() => handleToggleActive(tour.id, tour.is_active)}
+                    disabled={isToggling}
+                    className="p-2 rounded-lg hover:bg-[var(--bg-hover)] transition-colors"
+                    title={tour.is_active ? 'Скрыть' : 'Показать'}
+                  >
+                    {isToggling ? (
+                      <div className="w-4 h-4 border border-[var(--border)] border-t-[var(--accent)] rounded-full animate-spin" />
+                    ) : tour.is_active ? (
+                      <EyeOff className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+                    ) : (
+                      <Eye className="w-4 h-4" style={{ color: 'var(--success)' }} />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => handleDelete(tour.id, tour.title)}
+                    disabled={isDeleting}
+                    className="p-2 rounded-lg hover:bg-[var(--danger)]/10 transition-colors"
+                    title="Удалить"
+                  >
+                    {isDeleting ? (
+                      <div className="w-4 h-4 border border-[var(--danger)]/30 border-t-[var(--danger)] rounded-full animate-spin" />
+                    ) : (
+                      <Trash2 className="w-4 h-4" style={{ color: 'var(--danger)' }} />
+                    )}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+            Страница {page} из {totalPages}
+          </p>
+          <div className="flex gap-1">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="p-2 rounded-lg border transition-colors hover:bg-[var(--bg-hover)] disabled:opacity-40"
+              style={{ borderColor: 'var(--border)' }}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="p-2 rounded-lg border transition-colors hover:bg-[var(--bg-hover)] disabled:opacity-40"
+              style={{ borderColor: 'var(--border)' }}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       )}
     </div>
