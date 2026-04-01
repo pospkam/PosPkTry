@@ -31,10 +31,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/routes`,            lastModified: new Date(), changeFrequency: 'daily',   priority: 0.9 },
     { url: `${BASE}/map`,               lastModified: new Date(), changeFrequency: 'daily',   priority: 0.85 },
     { url: `${BASE}/safety`,            lastModified: new Date(), changeFrequency: 'daily',   priority: 0.9 },
+    { url: `${BASE}/planner`,           lastModified: new Date(), changeFrequency: 'daily',   priority: 0.8 },
     { url: `${BASE}/faq`,               lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.7 },
+    { url: `${BASE}/help`,              lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.65 },
+    { url: `${BASE}/contact`,           lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.7 },
     { url: `${BASE}/marketplace`,       lastModified: new Date(), changeFrequency: 'daily',   priority: 0.85 },
-    { url: `${BASE}/auth/signin`,       lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.4 },
-    { url: `${BASE}/auth/signup`,       lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.4 },
+    { url: `${BASE}/operators`,         lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.7 },
+    { url: `${BASE}/for-operators`,     lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.65 },
+    { url: `${BASE}/legal/privacy`,     lastModified: new Date(), changeFrequency: 'monthly', priority: 0.4 },
+    { url: `${BASE}/legal/terms`,       lastModified: new Date(), changeFrequency: 'monthly', priority: 0.4 },
+    { url: `${BASE}/legal/offer`,       lastModified: new Date(), changeFrequency: 'monthly', priority: 0.4 },
+    { url: `${BASE}/legal/commission`,  lastModified: new Date(), changeFrequency: 'monthly', priority: 0.3 },
   ];
 
   // Категории маршрутов (14 страниц с высоким SEO-приоритетом)

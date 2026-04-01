@@ -117,6 +117,6 @@ export default function robots(): MetadataRoute.Robots {
       },
     ],
     sitemap: 'https://tourhab.ru/sitemap.xml',
-    host: 'https://tourhab.ru',
+    host: 'tourhab.ru',
   };
 }

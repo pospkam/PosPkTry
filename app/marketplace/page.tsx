@@ -9,11 +9,26 @@ const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://tourhab.ru';
 export const metadata: Metadata = {
   title: 'Туры Камчатки — бронирование онлайн',
   description: 'Каталог туров по Камчатке: рыбалка, треккинг, термальные источники, вертолётные туры. Проверенные операторы, бронирование онлайн.',
+  keywords: [
+    'туры Камчатка',
+    'бронирование туров Камчатка',
+    'рыболовные туры Камчатка',
+    'восхождение на вулканы Камчатка',
+    'термальные источники тур',
+  ],
+  alternates: {
+    canonical: `${SITE}/marketplace`,
+  },
   openGraph: {
     title: 'Туры Камчатки',
     description: 'Каталог туров по Камчатке от проверенных операторов',
     type: 'website',
     url: `${SITE}/marketplace`,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Туры Камчатки — бронирование онлайн',
+    description: 'Проверенные операторы и актуальные туры по Камчатке в одном каталоге.',
   },
 };
 
