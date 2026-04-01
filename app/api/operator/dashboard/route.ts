@@ -14,7 +14,6 @@ import {
 
 export const dynamic = 'force-dynamic';
 
-// TourStats extended with id (dashboard query uses tour_id as the identifier)
 interface DashboardTourStats {
   id: string;
   tourId: string;
@@ -28,258 +27,216 @@ interface DashboardTourStats {
 
 /**
  * GET /api/operator/dashboard
- * Получение данных Dashboard для оператора
  */
 export async function GET(request: NextRequest) {
   try {
-    // Проверяем аутентификацию и роль
     const userOrResponse = await requireOperator(request);
-    if (userOrResponse instanceof NextResponse) {
-      return userOrResponse;
+    if (userOrResponse instanceof NextResponse) return userOrResponse;
+
+    const partnerId = await getOperatorPartnerId(userOrResponse.userId);
+    if (!partnerId) {
+      return NextResponse.json({
+        success: false,
+        error: 'Партнёрский профиль оператора не найден'
+      } as ApiResponse<null>, { status: 404 });
     }
 
-      const partnerId = await getOperatorPartnerId(userOrResponse.userId);
-      if (!partnerId) {
-        return NextResponse.json({
-          success: false,
-          error: 'Партнёрский профиль оператора не найден'
-        } as ApiResponse<null>, { status: 404 });
-      }
     const { searchParams } = new URL(request.url);
     const period = parseInt(searchParams.get('period') || '30');
-
-    // Дата начала периода
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - period);
 
-    // 1. МЕТРИКИ
-    const metricsQuery = `
+    // 1. МЕТРИКИ — из operator_tours + operator_bookings
+    const metricsResult = await query<OpDashboardMetricsRow>(`
       WITH tour_stats AS (
         SELECT
-          COUNT(DISTINCT t.id) as total_tours,
-          COUNT(DISTINCT CASE WHEN t.is_active THEN t.id END) as active_tours
-        FROM tours t
-        WHERE t.operator_id = $1
+          COUNT(DISTINCT t.id)                                      AS total_tours,
+          COUNT(DISTINCT CASE WHEN t.is_active THEN t.id END)       AS active_tours,
+          COALESCE(AVG(t.rating) FILTER (WHERE t.rating > 0), 0)    AS avg_rating,
+          COALESCE(SUM(t.review_count), 0)                          AS total_reviews
+        FROM operator_tours t
+        WHERE t.operator_id = $1 AND t.deleted_at IS NULL
       ),
       booking_stats AS (
         SELECT
-          COUNT(*) as total_bookings,
-          COUNT(CASE WHEN b.status = 'pending' THEN 1 END) as pending_bookings,
-          COUNT(CASE WHEN b.status = 'confirmed' THEN 1 END) as confirmed_bookings,
-          COUNT(CASE WHEN b.status = 'completed' THEN 1 END) as completed_bookings,
-          COUNT(CASE WHEN b.status = 'cancelled' THEN 1 END) as cancelled_bookings,
-          COALESCE(SUM(b.total_price), 0) as total_revenue,
-          COALESCE(SUM(CASE WHEN b.created_at >= $2 THEN b.total_price ELSE 0 END), 0) as monthly_revenue
-        FROM bookings b
-        JOIN tours t ON b.tour_id = t.id
-        WHERE t.operator_id = $1
-      ),
-      review_stats AS (
-        SELECT
-          COALESCE(AVG(r.rating), 0) as avg_rating,
-          COUNT(*) as total_reviews
-        FROM reviews r
-        JOIN tours t ON r.tour_id = t.id
-        WHERE t.operator_id = $1
+          COUNT(*)                                                                            AS total_bookings,
+          COUNT(*) FILTER (WHERE b.booking_status = 'new')                                  AS pending_bookings,
+          COUNT(*) FILTER (WHERE b.booking_status = 'confirmed')                            AS confirmed_bookings,
+          COUNT(*) FILTER (WHERE b.booking_status = 'completed')                            AS completed_bookings,
+          COUNT(*) FILTER (WHERE b.booking_status = 'cancelled')                            AS cancelled_bookings,
+          COALESCE(SUM(b.final_price) FILTER (WHERE b.booking_status != 'cancelled'), 0)   AS total_revenue,
+          COALESCE(SUM(b.final_price) FILTER (WHERE b.created_at >= $2 AND b.booking_status != 'cancelled'), 0) AS monthly_revenue
+        FROM operator_bookings b
+        JOIN operator_tours t ON b.operator_tour_id = t.id
+        WHERE t.operator_id = $1 AND b.deleted_at IS NULL
       )
-      SELECT
-        ts.total_tours,
-        ts.active_tours,
-        bs.total_bookings,
-        bs.pending_bookings,
-        bs.confirmed_bookings,
-        bs.completed_bookings,
-        bs.cancelled_bookings,
-        bs.total_revenue,
-        bs.monthly_revenue,
-        rs.avg_rating,
-        rs.total_reviews
-      FROM tour_stats ts, booking_stats bs, review_stats rs
-    `;
+      SELECT ts.*, bs.*
+      FROM tour_stats ts, booking_stats bs
+    `, [partnerId, startDate]);
 
-      const metricsResult = await query<OpDashboardMetricsRow>(metricsQuery, [partnerId, startDate]);
-    const metricsRow = metricsResult.rows[0];
-
+    const row = metricsResult.rows[0];
     const metrics: OperatorMetrics = {
-      totalTours: parseInt(metricsRow.total_tours) || 0,
-      activeTours: parseInt(metricsRow.active_tours) || 0,
-      totalBookings: parseInt(metricsRow.total_bookings) || 0,
-      pendingBookings: parseInt(metricsRow.pending_bookings) || 0,
-      confirmedBookings: parseInt(metricsRow.confirmed_bookings) || 0,
-      completedBookings: parseInt(metricsRow.completed_bookings) || 0,
-      cancelledBookings: parseInt(metricsRow.cancelled_bookings) || 0,
-      totalRevenue: parseFloat(metricsRow.total_revenue) || 0,
-      monthlyRevenue: parseFloat(metricsRow.monthly_revenue) || 0,
-      averageRating: parseFloat(metricsRow.avg_rating) || 0,
-      totalReviews: parseInt(metricsRow.total_reviews) || 0
+      totalTours:        parseInt(String(row?.total_tours))        || 0,
+      activeTours:       parseInt(String(row?.active_tours))       || 0,
+      totalBookings:     parseInt(String(row?.total_bookings))     || 0,
+      pendingBookings:   parseInt(String(row?.pending_bookings))   || 0,
+      confirmedBookings: parseInt(String(row?.confirmed_bookings)) || 0,
+      completedBookings: parseInt(String(row?.completed_bookings)) || 0,
+      cancelledBookings: parseInt(String(row?.cancelled_bookings)) || 0,
+      totalRevenue:      parseFloat(String(row?.total_revenue))    || 0,
+      monthlyRevenue:    parseFloat(String(row?.monthly_revenue))  || 0,
+      averageRating:     parseFloat(String(row?.avg_rating))       || 0,
+      totalReviews:      parseInt(String(row?.total_reviews))      || 0,
     };
 
     // 2. ПОСЛЕДНИЕ БРОНИРОВАНИЯ
-    const recentBookingsQuery = `
+    const bookingsResult = await query<OpDashboardBookingRow>(`
       SELECT
         b.id,
-        b.tour_id,
-        t.name as tour_name,
-        b.user_id,
-        u.name as user_name,
-        u.email as user_email,
-        b.start_date as date,
-        b.guests_count,
-        b.total_price,
-        b.status,
+        b.operator_tour_id         AS tour_id,
+        t.title                    AS tour_name,
+        NULL::uuid                 AS user_id,
+        b.tourist_name             AS user_name,
+        b.tourist_email            AS user_email,
+        b.booking_date             AS date,
+        b.participants             AS guests_count,
+        b.final_price              AS total_price,
+        b.booking_status           AS status,
         b.payment_status,
         b.created_at,
         b.updated_at
-      FROM bookings b
-      JOIN tours t ON b.tour_id = t.id
-      JOIN users u ON b.user_id = u.id
-      WHERE t.operator_id = $1
+      FROM operator_bookings b
+      JOIN operator_tours t ON b.operator_tour_id = t.id
+      WHERE t.operator_id = $1 AND b.deleted_at IS NULL
       ORDER BY b.created_at DESC
       LIMIT 10
-    `;
+    `, [partnerId]);
 
-      const bookingsResult = await query<OpDashboardBookingRow>(recentBookingsQuery, [partnerId]);
-    const recentBookings: OperatorBooking[] = bookingsResult.rows.map(row => ({
-      id: row.id,
-      tourId: row.tour_id,
-      tourName: row.tour_name,
-      userId: row.user_id,
-      userName: row.user_name,
-      userEmail: row.user_email,
-      date: new Date(String(row.date)),
-      guestsCount: parseInt(row.guests_count) || 1,
-      totalPrice: parseFloat(row.total_price),
-      status: row.status as OperatorBooking['status'],
-      paymentStatus: row.payment_status as OperatorBooking['paymentStatus'],
-      createdAt: new Date(String(row.created_at)),
-      updatedAt: new Date(String(row.updated_at))
+    const recentBookings: OperatorBooking[] = bookingsResult.rows.map(r => ({
+      id:            String(r.id),
+      tourId:        String(r.tour_id),
+      tourName:      String(r.tour_name   ?? ''),
+      userId:        String(r.user_id     ?? ''),
+      userName:      String(r.user_name   ?? 'Гость'),
+      userEmail:     String(r.user_email  ?? ''),
+      date:          new Date(String(r.date)),
+      guestsCount:   parseInt(String(r.guests_count)) || 1,
+      totalPrice:    parseFloat(String(r.total_price)) || 0,
+      status:        (r.status as OperatorBooking['status']) ?? 'new',
+      paymentStatus: (r.payment_status as OperatorBooking['paymentStatus']) ?? 'pending',
+      createdAt:     new Date(String(r.created_at)),
+      updatedAt:     new Date(String(r.updated_at)),
     }));
 
     // 3. ТОП ТУРЫ
-    const topToursQuery = `
+    const topToursResult = await query<OpDashboardTopTourRow>(`
       SELECT
-        t.id as tour_id,
-        t.name as tour_name,
-        COUNT(b.id) as bookings_count,
-        COALESCE(SUM(b.total_price), 0) as revenue,
-        COALESCE(AVG(r.rating), 0) as avg_rating,
-        COUNT(DISTINCT r.id) as review_count,
+        t.id::text                                                      AS tour_id,
+        t.title                                                         AS tour_name,
+        COUNT(b.id)                                                     AS bookings_count,
+        COALESCE(SUM(b.final_price) FILTER (WHERE b.booking_status != 'cancelled'), 0) AS revenue,
+        COALESCE(t.rating, 0)                                           AS avg_rating,
+        COALESCE(t.review_count, 0)                                     AS review_count,
         ROUND(
-          COUNT(CASE WHEN b.status = 'completed' THEN 1 END)::numeric /
-          NULLIF(COUNT(b.id), 0) * 100,
-          2
-        ) as completion_rate
-      FROM tours t
-      LEFT JOIN bookings b ON t.id = b.tour_id
-      LEFT JOIN reviews r ON t.id = r.tour_id
-      WHERE t.operator_id = $1
-      GROUP BY t.id, t.name
+          COUNT(b.id) FILTER (WHERE b.booking_status = 'completed')::numeric /
+          NULLIF(COUNT(b.id), 0) * 100, 2
+        )                                                               AS completion_rate
+      FROM operator_tours t
+      LEFT JOIN operator_bookings b ON t.id = b.operator_tour_id AND b.deleted_at IS NULL
+      WHERE t.operator_id = $1 AND t.deleted_at IS NULL
+      GROUP BY t.id, t.title, t.rating, t.review_count
       ORDER BY bookings_count DESC, revenue DESC
       LIMIT 5
-    `;
+    `, [partnerId]);
 
-      const topToursResult = await query<OpDashboardTopTourRow>(topToursQuery, [partnerId]);
-    const topTours: DashboardTourStats[] = topToursResult.rows.map(row => ({
-      id: row.tour_id,
-      tourId: row.tour_id,
-      tourName: row.tour_name,
-      bookingsCount: parseInt(row.bookings_count) || 0,
-      revenue: parseFloat(row.revenue) || 0,
-      averageRating: parseFloat(row.avg_rating) || 0,
-      reviewCount: parseInt(row.review_count) || 0,
-      completionRate: parseFloat(row.completion_rate ?? '0') || 0
+    const topTours: DashboardTourStats[] = topToursResult.rows.map(r => ({
+      id:             String(r.tour_id),
+      tourId:         String(r.tour_id),
+      tourName:       String(r.tour_name),
+      bookingsCount:  parseInt(String(r.bookings_count)) || 0,
+      revenue:        parseFloat(String(r.revenue))      || 0,
+      averageRating:  parseFloat(String(r.avg_rating))   || 0,
+      reviewCount:    parseInt(String(r.review_count))   || 0,
+      completionRate: parseFloat(String(r.completion_rate ?? '0')) || 0,
     }));
 
-    // 4. ГРАФИК ВЫРУЧКИ (по дням за период)
-    const revenueChartQuery = `
+    // 4. ГРАФИК ВЫРУЧКИ
+    const revenueChartResult = await query<OpDashboardChartRow>(`
       SELECT
-        DATE(b.created_at) as date,
-        COALESCE(SUM(b.total_price), 0) as value
-      FROM bookings b
-      JOIN tours t ON b.tour_id = t.id
+        DATE(b.created_at)                                                         AS date,
+        COALESCE(SUM(b.final_price) FILTER (WHERE b.booking_status != 'cancelled'), 0) AS value
+      FROM operator_bookings b
+      JOIN operator_tours t ON b.operator_tour_id = t.id
       WHERE t.operator_id = $1
         AND b.created_at >= $2
-        AND b.status IN ('confirmed', 'completed')
+        AND b.deleted_at IS NULL
       GROUP BY DATE(b.created_at)
       ORDER BY date ASC
-    `;
+    `, [partnerId, startDate]);
 
-      const revenueChartResult = await query<OpDashboardChartRow>(revenueChartQuery, [partnerId, startDate]);
-    const revenueChart: ChartDataPoint[] = revenueChartResult.rows.map(row => ({
-      date: new Date(String(row.date)).toISOString().split('T')[0],
-      value: parseFloat(row.value) || 0,
-      label: ''
+    const revenueChart: ChartDataPoint[] = revenueChartResult.rows.map(r => ({
+      date:  new Date(String(r.date)).toISOString().split('T')[0],
+      value: parseFloat(String(r.value)) || 0,
+      label: '',
     }));
 
-    // 5. ГРАФИК БРОНИРОВАНИЙ (по дням за период)
-    const bookingsChartQuery = `
+    // 5. ГРАФИК БРОНИРОВАНИЙ
+    const bookingsChartResult = await query<OpDashboardChartRow>(`
       SELECT
-        DATE(b.created_at) as date,
-        COUNT(*) as value
-      FROM bookings b
-      JOIN tours t ON b.tour_id = t.id
+        DATE(b.created_at) AS date,
+        COUNT(*)           AS value
+      FROM operator_bookings b
+      JOIN operator_tours t ON b.operator_tour_id = t.id
       WHERE t.operator_id = $1
         AND b.created_at >= $2
+        AND b.deleted_at IS NULL
       GROUP BY DATE(b.created_at)
       ORDER BY date ASC
-    `;
+    `, [partnerId, startDate]);
 
-      const bookingsChartResult = await query<OpDashboardChartRow>(bookingsChartQuery, [partnerId, startDate]);
-    const bookingsChart: ChartDataPoint[] = bookingsChartResult.rows.map(row => ({
-      date: new Date(String(row.date)).toISOString().split('T')[0],
-      value: parseInt(row.value) || 0,
-      label: ''
+    const bookingsChart: ChartDataPoint[] = bookingsChartResult.rows.map(r => ({
+      date:  new Date(String(r.date)).toISOString().split('T')[0],
+      value: parseInt(String(r.value)) || 0,
+      label: '',
     }));
 
-    // 6. ПРЕДСТОЯЩИЕ ТУРЫ
-    const upcomingToursQuery = `
+    // 6. ПРЕДСТОЯЩИЕ ТУРЫ (через availability slots)
+    const upcomingResult = await query<OpDashboardUpcomingTourRow>(`
       SELECT
-        t.id as tour_id,
-        t.name as tour_name,
-        b.start_date as date,
-        COUNT(b.id) as bookings_count,
-        t.max_group_size as capacity
-      FROM tours t
-      JOIN bookings b ON t.id = b.tour_id
+        t.id::text          AS tour_id,
+        t.title             AS tour_name,
+        a.date              AS date,
+        a.booked_slots      AS bookings_count,
+        a.available_slots   AS capacity
+      FROM tour_availability a
+      JOIN operator_tours t ON a.operator_tour_id = t.id
       WHERE t.operator_id = $1
-        AND b.start_date >= NOW()
-        AND b.status IN ('confirmed', 'pending')
-      GROUP BY t.id, t.name, b.start_date, t.max_group_size
-      ORDER BY b.start_date ASC
+        AND a.date >= CURRENT_DATE
+        AND a.is_cancelled = FALSE
+        AND a.deleted_at IS NULL
+      ORDER BY a.date ASC
       LIMIT 5
-    `;
+    `, [partnerId]);
 
-      const upcomingToursResult = await query<OpDashboardUpcomingTourRow>(upcomingToursQuery, [partnerId]);
-    const upcomingTours: { tourId: string; tourName: string; date: Date; bookingsCount: number; capacity: number }[] =
-      upcomingToursResult.rows.map(row => ({
-        tourId: row.tour_id,
-        tourName: row.tour_name,
-        date: new Date(String(row.date)),
-        bookingsCount: parseInt(row.bookings_count) || 0,
-        capacity: parseInt(String(row.capacity)) || 0
-      }));
+    const upcomingTours = upcomingResult.rows.map(r => ({
+      tourId:        String(r.tour_id),
+      tourName:      String(r.tour_name),
+      date:          new Date(String(r.date)),
+      bookingsCount: parseInt(String(r.bookings_count)) || 0,
+      capacity:      parseInt(String(r.capacity))       || 0,
+    }));
 
-    // Формируем ответ
     const dashboardData: OperatorDashboardData = {
       metrics,
       recentBookings,
       topTours,
       revenueChart,
       bookingsChart,
-      upcomingTours
+      upcomingTours,
     };
 
-    return NextResponse.json({
-      success: true,
-      data: dashboardData
-    } as ApiResponse<OperatorDashboardData>);
-
-  } catch (error) {
-    return NextResponse.json({
-      success: false,
-      error: 'Failed to fetch dashboard data',
-      message: error instanceof Error ? error.message : 'Unknown error'
-    } as ApiResponse<null>, { status: 500 });
+    return NextResponse.json({ success: true, data: dashboardData } as ApiResponse<OperatorDashboardData>);
+  } catch {
+    return NextResponse.json({ success: false, error: 'Ошибка загрузки дашборда' } as ApiResponse<null>, { status: 500 });
   }
 }
-
