@@ -86,6 +86,22 @@ export async function POST(request: NextRequest) {
     
     const user = result.rows[0];
 
+    // Если роль — оператор, сразу создаём запись в partners
+    if (userRole === 'operator') {
+      const slug = name.toLowerCase()
+        .replace(/[^a-zа-я0-9]/gi, '-')
+        .replace(/-+/g, '-')
+        .slice(0, 40) + '-' + (user.id as string).slice(0, 8);
+      await client.query(
+        `INSERT INTO partners
+           (user_id, name, category, contact, commission_rate,
+            profile_status, onboarding_completed, is_public, slug, created_at, updated_at)
+         VALUES ($1, $2, 'tour_operator', '{}'::jsonb, 0.15, 'draft', false, false, $3, NOW(), NOW())
+         ON CONFLICT DO NOTHING`,
+        [user.id, name, slug]
+      );
+    }
+
     // Handle referral code
     if (referralCode) {
       const referrerResult = await client.query(
