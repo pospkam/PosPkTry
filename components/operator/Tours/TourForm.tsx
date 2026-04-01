@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { X, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, AlertCircle, Upload, Loader2 } from 'lucide-react';
 import { TourFormData } from '@/types/operator';
 
 interface KamchatkaRoute {
@@ -48,10 +48,13 @@ function validate(data: TourFormData): FieldErrors {
 }
 
 export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: TourFormProps) {
-  const [loading, setLoading]   = useState(false);
-  const [routes, setRoutes]     = useState<KamchatkaRoute[]>([]);
-  const [errors, setErrors]     = useState<FieldErrors>({});
+  const [loading, setLoading]       = useState(false);
+  const [routes, setRoutes]         = useState<KamchatkaRoute[]>([]);
+  const [errors, setErrors]         = useState<FieldErrors>({});
   const [submitError, setSubmitError] = useState('');
+  const [uploading, setUploading]   = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState<TourFormData>({
     name:          initialData?.name          ?? '',
@@ -75,11 +78,11 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
   const [newExclude, setNewExclude] = useState('');
 
   useEffect(() => {
-    fetch(`/api/kamchatka-routes?category=${formData.category}&limit=100`)
+    fetch(`/api/kamchatka-routes?limit=200`)
       .then(r => r.json())
       .then(j => { if (j.success) setRoutes(j.data ?? []); })
       .catch(() => setRoutes([]));
-  }, [formData.category]);
+  }, []);
 
   function handleChange<K extends keyof TourFormData>(field: K, value: TourFormData[K]) {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -102,6 +105,26 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
 
   function removeExclude(i: number) {
     handleChange('excludes', (formData.excludes as string[]).filter((_, idx) => idx !== i));
+  }
+
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setUploadError('');
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+      const res = await fetch('/api/hub/operator/upload', { method: 'POST', body: fd });
+      const json = await res.json() as { success: boolean; url?: string; error?: string };
+      if (!json.success || !json.url) throw new Error(json.error ?? 'Ошибка загрузки');
+      handleChange('tourImage', json.url);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Ошибка загрузки');
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -326,18 +349,48 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
       {/* Главное фото */}
       <section className="ds-card p-6 space-y-3">
         <h2 className="ds-h2">Главное фото</h2>
-        <p className="text-xs text-[var(--text-muted)]">Путь из public/, например: /images/fishingkam/photo.jpg</p>
-        <input
-          type="text"
-          value={formData.tourImage ?? ''}
-          onChange={e => handleChange('tourImage', e.target.value)}
-          placeholder="/images/..."
-          className="ds-input w-full"
-        />
-        {formData.tourImage && (
-          <div className="relative h-40 rounded-lg overflow-hidden border border-[var(--border)]">
+
+        {formData.tourImage ? (
+          <div className="relative h-48 rounded-lg overflow-hidden border border-[var(--border)]">
             <img src={formData.tourImage} alt="Превью" className="w-full h-full object-cover" />
+            <button
+              type="button"
+              onClick={() => handleChange('tourImage', '')}
+              className="absolute top-2 right-2 p-1 rounded-full bg-black/50 text-white hover:bg-black/70"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
+        ) : (
+          <label className={`flex flex-col items-center justify-center h-48 rounded-lg border-2 border-dashed cursor-pointer transition-colors
+            ${uploading ? 'border-[var(--accent)] bg-[var(--accent)]/5' : 'border-[var(--border)] hover:border-[var(--accent)] hover:bg-[var(--accent)]/5'}`}>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={handleImageUpload}
+              disabled={uploading}
+            />
+            {uploading ? (
+              <>
+                <Loader2 className="w-8 h-8 text-[var(--accent)] animate-spin mb-2" />
+                <span className="text-sm text-[var(--text-muted)]">Загружаю...</span>
+              </>
+            ) : (
+              <>
+                <Upload className="w-8 h-8 text-[var(--text-muted)] mb-2" />
+                <span className="text-sm text-[var(--text-primary)] font-medium">Нажми чтобы загрузить фото</span>
+                <span className="text-xs text-[var(--text-muted)] mt-1">JPEG, PNG, WebP — до 5 MB</span>
+              </>
+            )}
+          </label>
+        )}
+
+        {uploadError && (
+          <p className="text-sm text-[var(--danger)] flex items-center gap-1">
+            <AlertCircle className="w-4 h-4" />{uploadError}
+          </p>
         )}
       </section>
 

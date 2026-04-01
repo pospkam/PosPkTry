@@ -108,7 +108,7 @@ export async function PUT(
   if (price_from !== undefined) payloadPatch.price_from = price_from;
 
   if (Object.keys(payloadPatch).length > 0) {
-    setClauses.push(`payload = payload || $${idx++}::jsonb`);
+    setClauses.push(`payload = COALESCE(payload, '{}'::jsonb) || $${idx++}::jsonb`);
     params.push(JSON.stringify(payloadPatch));
   }
 
