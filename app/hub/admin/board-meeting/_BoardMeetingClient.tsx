@@ -50,6 +50,20 @@ interface ObserverReport {
   color: string;
 }
 
+interface DebateArgument {
+  agent_id: string; agent_name: string; color: string;
+  side: 'pro' | 'con'; argument: string;
+}
+
+interface DebateResult {
+  proposal_title: string;
+  approval_id:    string | null;
+  pro:            DebateArgument[];
+  con:            DebateArgument[];
+  verdict:        'proceed' | 'revise' | 'reject';
+  synthesis:      string;
+}
+
 type StreamEvent =
   | { type: 'meeting_start';  meeting_id: string; started_at: string }
   | { type: 'signals_start' }
@@ -66,6 +80,10 @@ type StreamEvent =
   | { type: 'consensus_done'; consensus: string }
   | { type: 'round4_start' }
   | { type: 'proposal';       proposal: AgentProposal }
+  | { type: 'round5_start' }
+  | { type: 'debate_start';   approval_id: string | null; title: string }
+  | { type: 'debate_done';    debate: DebateResult }
+  | { type: 'round5_done';    count: number }
   | { type: 'done';           meeting_id: string; started_at: string; consensus: string; duration_ms: number }
   | { type: 'error';          message: string };
 
@@ -115,6 +133,7 @@ const STAGES = [
   { label: 'Раунд 2', hint: 'Реакции'    },
   { label: 'Раунд 3', hint: 'Консенсус'  },
   { label: 'Раунд 4', hint: 'Инициативы' },
+  { label: 'Раунд 5', hint: 'Дебаты'     },
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -309,6 +328,80 @@ function ReactionBubble({ reaction, index }: { reaction: AgentReaction; index: n
           {reaction.content}
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── DebateCard ────────────────────────────────────────────────────────────────
+
+const VERDICT_CONFIG = {
+  proceed: { label: 'Рекомендую одобрить', color: 'var(--success)', icon: ThumbsUp  },
+  revise:  { label: 'Одобрить с поправками', color: 'var(--warning)', icon: Lightbulb },
+  reject:  { label: 'Рекомендую отклонить', color: 'var(--danger)',  icon: ThumbsDown },
+} as const;
+
+function DebateCard({ debate }: { debate: DebateResult }) {
+  const [open, setOpen] = useState(false);
+  const vc = VERDICT_CONFIG[debate.verdict];
+
+  return (
+    <div className="mt-1 rounded-lg border-l-2 overflow-hidden" style={{ borderColor: vc.color, background: 'var(--bg-card)' }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center gap-2 px-4 py-2.5 text-left hover:bg-[var(--bg-hover)] transition-colors"
+      >
+        <Swords size={13} className="shrink-0" style={{ color: 'var(--text-muted)' }} />
+        <span className="text-xs font-medium text-[var(--text-secondary)] flex-1">Дебаты совета</span>
+        <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: `${vc.color}20`, color: vc.color }}>
+          {vc.label}
+        </span>
+        {open ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+      </button>
+
+      {open && (
+        <div className="px-4 pb-4 space-y-3">
+          {/* PRO side */}
+          <div>
+            <div className="flex items-center gap-1.5 mb-2">
+              <ThumbsUp size={11} style={{ color: 'var(--success)' }} />
+              <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--success)' }}>За</span>
+            </div>
+            <div className="space-y-1.5">
+              {debate.pro.map((arg, i) => (
+                <div key={i} className="flex items-start gap-2">
+                  <span className="text-xs font-medium shrink-0 mt-0.5" style={{ color: arg.color }}>{arg.agent_name.replace('AI ', '')}</span>
+                  <span className="text-xs text-[var(--text-secondary)]">{arg.argument}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* CON side */}
+          <div>
+            <div className="flex items-center gap-1.5 mb-2">
+              <ThumbsDown size={11} style={{ color: 'var(--danger)' }} />
+              <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--danger)' }}>Против</span>
+            </div>
+            <div className="space-y-1.5">
+              {debate.con.map((arg, i) => (
+                <div key={i} className="flex items-start gap-2">
+                  <span className="text-xs font-medium shrink-0 mt-0.5" style={{ color: arg.color }}>{arg.agent_name.replace('AI ', '')}</span>
+                  <span className="text-xs text-[var(--text-secondary)]">{arg.argument}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Evo synthesis */}
+          <div className="rounded-lg p-3" style={{ background: `${vc.color}10`, border: `1px solid ${vc.color}30` }}>
+            <div className="flex items-center gap-1.5 mb-1">
+              <vc.icon size={11} style={{ color: vc.color }} />
+              <span className="text-xs font-semibold" style={{ color: vc.color }}>Вердикт Evo</span>
+            </div>
+            <p className="text-xs text-[var(--text-primary)]">{debate.synthesis}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -544,6 +637,8 @@ export default function BoardMeetingClient() {
   const [observersLoading, setObserversLoading] = useState(false);
   const [consensus,      setConsensus]      = useState('');
   const [proposals,      setProposals]      = useState<AgentProposal[]>([]);
+  const [debates,        setDebates]        = useState<DebateResult[]>([]);
+  const [debatingIds,    setDebatingIds]    = useState<Set<string>>(new Set());
   const [durationMs,     setDurationMs]     = useState(0);
   const [stage,          setStage]          = useState(-1);
   const [signalsLoading, setSignalsLoading] = useState(false);
@@ -559,7 +654,7 @@ export default function BoardMeetingClient() {
   const [computeFund,        setComputeFund]        = useState<{ total_rub: number; estimated_meetings: number } | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  const isDone    = stage === 4;
+  const isDone    = stage === 5;
   const isRunning = stage >= 0 && !isDone;
 
   // Load accountability data once on mount
@@ -597,7 +692,7 @@ export default function BoardMeetingClient() {
     abortRef.current = ctrl;
 
     setAgents([]); setPendingAgent(null); setReactions([]);
-    setConsensus(''); setProposals([]); setDurationMs(0);
+    setConsensus(''); setProposals([]); setDebates([]); setDebatingIds(new Set()); setDurationMs(0);
     setMeetingId(''); setStartedAt(''); setError(null);
     setSaved(false); setDecision(''); setStage(0);
     setSignalsLoading(false); setSignalsCount(0); setVotes([]);
@@ -687,7 +782,11 @@ export default function BoardMeetingClient() {
             case 'consensus_done': setConsensus(event.consensus); break;
             case 'round4_start':   setStage(3); break;
             case 'proposal':       setProposals(prev => [...prev, event.proposal]); break;
-            case 'done':           setConsensus(c => c || event.consensus); setDurationMs(event.duration_ms); setStage(4); setPendingAgent(null); break;
+            case 'round5_start':   setStage(4); break;
+            case 'debate_start':   setDebatingIds(prev => { const s = new Set(prev); s.add(event.approval_id ?? event.title); return s; }); break;
+            case 'debate_done':    setDebates(prev => [...prev, event.debate]); setDebatingIds(prev => { const s = new Set(prev); s.delete(event.debate.approval_id ?? event.debate.proposal_title); return s; }); break;
+            case 'round5_done':    break;
+            case 'done':           setConsensus(c => c || event.consensus); setDurationMs(event.duration_ms); setStage(5); setPendingAgent(null); break;
             case 'error':          setError(event.message); setStage(-1); break;
           }
         }
@@ -1076,7 +1175,22 @@ export default function BoardMeetingClient() {
                 </div>
               )}
               <div className="space-y-3">
-                {proposals.map((p, i) => <ProposalCard key={`${p.from_id}-${i}`} proposal={p} />)}
+                {proposals.map((p, i) => {
+                  const debate = debates.find(d => d.approval_id === p.approval_id || d.proposal_title === p.title);
+                  const debating = debatingIds.has(p.approval_id ?? p.title);
+                  return (
+                    <div key={`${p.from_id}-${i}`}>
+                      <ProposalCard proposal={p} />
+                      {debating && (
+                        <div className="mt-2 ds-card p-3 flex items-center gap-2 border-l-2" style={{ borderColor: 'var(--accent)' }}>
+                          <Loader2 size={13} className="animate-spin shrink-0" style={{ color: 'var(--accent)' }} />
+                          <span className="text-xs text-[var(--text-muted)]">Идут дебаты по этой инициативе...</span>
+                        </div>
+                      )}
+                      {debate && <DebateCard debate={debate} />}
+                    </div>
+                  );
+                })}
               </div>
               {isDone && proposals.length === 0 && (
                 <div className="ds-card p-4 text-center">

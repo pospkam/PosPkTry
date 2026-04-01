@@ -9,6 +9,7 @@ import {
 import { HubLayout } from '@/components/layout/HubLayout';
 import { ChatWidget } from '@/components/chat/ChatWidget';
 import { OperatorTelegramBanner } from '@/components/operator/TelegramConnectBanner';
+import { ForcePasswordChangeBanner } from '@/components/operator/ForcePasswordChangeBanner';
 
 const SIDEBAR_ITEMS = [
   { href: '/hub/operator', label: 'Обзор', icon: BarChart3 },
@@ -32,6 +33,7 @@ const SIDEBAR_ITEMS = [
 export default function OperatorHubLayout({ children }: { children: ReactNode }) {
   return (
     <HubLayout sidebarItems={SIDEBAR_ITEMS} sidebarTitle="Кабинет оператора" requiredRole={['operator', 'admin']}>
+      <ForcePasswordChangeBanner />
       <OperatorTelegramBanner />
       {children}
       <ChatWidget />

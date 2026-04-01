@@ -473,6 +473,162 @@ async function generateProposal(
   };
 }
 
+// ── Debate sides matrix: action_type → which agents argue PRO and CON ──────────────────
+
+interface DebateSide {
+  pro: string[]; // agent ids
+  con: string[]; // agent ids
+}
+
+const DEBATE_SIDES: Record<string, DebateSide> = {
+  booking_rule_change: { pro: ['admin', 'legal'],   con: ['hacker', 'eco']       },
+  commission_change:   { pro: ['finance', 'admin'],  con: ['hacker', 'quality']   },
+  bulk_notify:         { pro: ['admin', 'content'],  con: ['security', 'legal']   },
+  price_change:        { pro: ['hacker', 'planning'],con: ['legal', 'eco']        },
+  ui_copy_change:      { pro: ['content', 'hacker'], con: ['quality', 'security'] },
+  prompt_optimize:     { pro: ['evo', 'vibe_coder'], con: ['security', 'legal']   },
+  api_scope_expand:    { pro: ['vibe_coder','hacker'],con: ['security','legal']   },
+  schedule_suggest:    { pro: ['rescue','planning'],  con: ['eco', 'quality']      },
+  tour_auto_cancel:    { pro: ['quality', 'rescue'],  con: ['hacker', 'admin']     },
+  sql_query_fix:       { pro: ['evo', 'infra'],       con: ['security', 'legal']   },
+  code_change:         { pro: ['vibe_coder', 'evo'],  con: ['security', 'quality'] },
+};
+
+export interface DebateArgument {
+  agent_id:   string;
+  agent_name: string;
+  color:      string;
+  side:       'pro' | 'con';
+  argument:   string;
+}
+
+export interface DebateResult {
+  proposal_title: string;
+  approval_id:    string | null;
+  pro:            DebateArgument[];
+  con:            DebateArgument[];
+  verdict:        'proceed' | 'revise' | 'reject';
+  synthesis:      string;
+}
+
+async function debateProposal(
+  proposal:    AgentProposal,
+  agents:      AgentReport[],
+): Promise<DebateResult> {
+  const sides = DEBATE_SIDES[proposal.action_type] ?? {
+    pro: ['admin', 'hacker'],
+    con: ['legal', 'security'],
+  };
+
+  // Exclude the proposing agent from opposition (they're already pro)
+  const proIds = Array.from(new Set([proposal.from_id, ...sides.pro])).slice(0, 3);
+  const conIds = sides.con.filter(id => !proIds.includes(id)).slice(0, 2);
+
+  const agentMap = new Map(agents.map(a => [a.id, a]));
+  const agentDefs = new Map(MEETING_AGENTS.map(a => [a.id, a]));
+
+  const generateArg = async (agentId: string, side: 'pro' | 'con'): Promise<DebateArgument | null> => {
+    const agentDef = agentDefs.get(agentId);
+    if (!agentDef) return null;
+    const agentReport = agentMap.get(agentId);
+    const reportSnippet = agentReport
+      ? agentReport.report.replace(/<[^>]+>/g, '').substring(0, 200)
+      : 'нет данных';
+
+    const stance = side === 'pro'
+      ? 'Ты ПОДДЕРЖИВАЕШЬ это предложение. Найди 1 конкретный аргумент ЗА — с данными или логикой.'
+      : 'Ты ПРОТИВ этого предложения. Найди 1 конкретный риск или слабое место — с данными или логикой.';
+
+    const prompt = `Ты ${agentDef.name} (${agentDef.role}).
+На совещании обсуждается инициатива: "${proposal.title}"
+Описание: "${proposal.description}"
+Твои данные из отчёта: "${reportSnippet}"
+
+${stance}
+
+Ответь ОДНИМ предложением (max 120 символов). Только аргумент, без вступлений.`;
+
+    const text = await callAIFast([{ role: 'user', content: prompt }]).catch(() => null);
+    if (!text) return null;
+
+    return {
+      agent_id:   agentId,
+      agent_name: agentDef.name,
+      color:      agentDef.color,
+      side,
+      argument:   text.trim().substring(0, 200),
+    };
+  };
+
+  // Run all arguments in parallel
+  const [proResults, conResults] = await Promise.all([
+    Promise.allSettled(proIds.map(id => generateArg(id, 'pro'))),
+    Promise.allSettled(conIds.map(id => generateArg(id, 'con'))),
+  ]);
+
+  const pro = proResults
+    .map(r => r.status === 'fulfilled' ? r.value : null)
+    .filter((a): a is DebateArgument => a !== null);
+
+  const con = conResults
+    .map(r => r.status === 'fulfilled' ? r.value : null)
+    .filter((a): a is DebateArgument => a !== null);
+
+  // Evo synthesizes the debate
+  const proText = pro.map(a => `[${a.agent_name}]: ${a.argument}`).join('\n');
+  const conText = con.map(a => `[${a.agent_name}]: ${a.argument}`).join('\n');
+
+  const synthesisPrompt = `Ты Evo — архитектор платформы. Подведи итог дебатов по инициативе.
+
+Инициатива: "${proposal.title}"
+Описание: "${proposal.description}"
+
+АРГУМЕНТЫ ЗА:
+${proText || '(нет)'}
+
+АРГУМЕНТЫ ПРОТИВ:
+${conText || '(нет)'}
+
+Дай вердикт для директора. Ответь строго JSON:
+{"verdict":"proceed"|"revise"|"reject","synthesis":"1-2 предложения что делать директору"}
+
+- proceed = рекомендую одобрить
+- revise = одобрить с поправками (укажи какими)
+- reject = отклонить (укажи почему)`;
+
+  const synthText = await callAIFast([{ role: 'user', content: synthesisPrompt }]).catch(() => null);
+  let verdict: 'proceed' | 'revise' | 'reject' = 'revise';
+  let synthesis = 'Недостаточно данных для однозначного вердикта.';
+
+  if (synthText) {
+    const match = synthText.match(/\{[\s\S]*?\}/);
+    if (match) {
+      try {
+        const parsed = JSON.parse(match[0]) as { verdict?: string; synthesis?: string };
+        if (['proceed', 'revise', 'reject'].includes(parsed.verdict ?? '')) {
+          verdict = parsed.verdict as 'proceed' | 'revise' | 'reject';
+        }
+        if (parsed.synthesis) synthesis = parsed.synthesis.substring(0, 300);
+      } catch { /* keep defaults */ }
+    }
+  }
+
+  // Persist debate context to approval record
+  if (proposal.approval_id) {
+    pool.query(
+      `UPDATE agent_approvals
+       SET context = context || $2
+       WHERE id = $1`,
+      [
+        proposal.approval_id,
+        JSON.stringify({ debate: { pro: pro.map(a => a.argument), con: con.map(a => a.argument), verdict, synthesis } }),
+      ]
+    ).catch(() => null);
+  }
+
+  return { proposal_title: proposal.title, approval_id: proposal.approval_id, pro, con, verdict, synthesis };
+}
+
 // ── Vote extractor (only when topic is set) ─────────────────────────────────────────────
 
 async function extractVote(
@@ -733,10 +889,32 @@ export async function POST(req: NextRequest) {
               return generateProposal(agent, cfg, consensus, meetingId, topic);
             })
         );
+        const proposals: AgentProposal[] = [];
         for (const res of proposalResults) {
           if (res.status === 'fulfilled' && res.value) {
             send(controller, { type: 'proposal', proposal: res.value });
+            proposals.push(res.value);
           }
+        }
+
+        // ── Round 5: Adversarial Debate ─────────────────────────────────────
+        if (proposals.length > 0) {
+          send(controller, { type: 'round5_start' });
+
+          const debateResults = await Promise.allSettled(
+            proposals.map(async (proposal) => {
+              send(controller, { type: 'debate_start', approval_id: proposal.approval_id, title: proposal.title });
+              const result = await debateProposal(proposal, agents);
+              send(controller, { type: 'debate_done', debate: result });
+              return result;
+            })
+          );
+
+          const debates = debateResults
+            .map(r => r.status === 'fulfilled' ? r.value : null)
+            .filter((d): d is DebateResult => d !== null);
+
+          send(controller, { type: 'round5_done', count: debates.length });
         }
 
         const duration_ms = Date.now() - meetingStart;
