@@ -104,21 +104,21 @@ export async function PATCH(
     const result = await query(
       `UPDATE operator_bookings SET ${sets.join(', ')}
        WHERE id = $${idx}
-       RETURNING id, booking_status, updated_at, customer_email, total_price`,
+       RETURNING id, booking_status, updated_at, tourist_email, final_price`,
       values
     );
 
     // Earn loyalty points when booking is completed
     if (input.booking_status === 'completed' && result.rows[0]) {
-      const row = result.rows[0] as { customer_email?: string; total_price?: string };
-      if (row.customer_email && row.total_price) {
+      const row = result.rows[0] as { tourist_email?: string; final_price?: string };
+      if (row.tourist_email && row.final_price) {
         const userResult = await query<{ id: string }>(
           'SELECT id FROM users WHERE email = $1',
-          [row.customer_email]
+          [row.tourist_email]
         );
         if (userResult.rows[0]) {
           const uid = userResult.rows[0].id;
-          const price = parseFloat(row.total_price);
+          const price = parseFloat(row.final_price);
           await query('UPDATE users SET total_spent = COALESCE(total_spent, 0) + $1 WHERE id = $2', [price, uid]);
           loyaltySystem.earnPoints(uid, params.id, price, 'booking').catch(() => {});
           loyaltySystem.earnActivityPoints(uid, 'first_booking', params.id).catch(() => {});

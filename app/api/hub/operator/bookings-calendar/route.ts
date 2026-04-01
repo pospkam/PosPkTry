@@ -75,7 +75,7 @@ export async function GET(req: NextRequest) {
        t.title AS tour_title,
        t.id::text AS tour_id
      FROM tour_availability ta
-     JOIN operator_tours t ON ta.tour_id = t.id
+     JOIN operator_tours t ON ta.operator_tour_id = t.id
      WHERE t.operator_id = $1
        AND ta.date >= $2
        AND ta.date <= $3
