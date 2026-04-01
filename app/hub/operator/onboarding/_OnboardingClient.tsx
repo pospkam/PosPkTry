@@ -252,7 +252,14 @@ function Step2Payout({ onFinish }: { onFinish: () => void }) {
 
       <div className="flex gap-3">
         <button
-          onClick={onFinish}
+          onClick={async () => {
+            await fetch('/api/hub/operator/profile', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ complete_onboarding: true }),
+            }).catch(() => {});
+            onFinish();
+          }}
           className="flex-1 py-3 border border-[var(--border)] text-[var(--text-secondary)] rounded-lg text-sm hover:text-[var(--text-primary)] transition-colors"
         >
           Пропустить

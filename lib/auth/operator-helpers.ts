@@ -75,12 +75,13 @@ export async function getGuidePartnerId(userId: string): Promise<string | null> 
 export async function getTransferPartnerId(userId: string): Promise<string | null> {
   try {
     const result = await query(
-      `SELECT id FROM partners 
-       WHERE user_id = $1 AND category = 'transfer'
+      `SELECT id FROM partners
+       WHERE user_id = $1
+       ORDER BY CASE WHEN category = 'transfer' THEN 0 ELSE 1 END
        LIMIT 1`,
       [userId]
     );
-    
+
     return (result.rows[0]?.id as string | undefined) ?? null;
   } catch (error) {
     return null;

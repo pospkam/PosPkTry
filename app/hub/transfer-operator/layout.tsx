@@ -12,7 +12,7 @@ const SIDEBAR_ITEMS = [
 
 export default function TransferOperatorLayout({ children }: { children: ReactNode }) {
   return (
-    <HubLayout sidebarItems={SIDEBAR_ITEMS} sidebarTitle="Трансфер-оператор" requiredRole={['transfer_operator', 'transfer']}>
+    <HubLayout sidebarItems={SIDEBAR_ITEMS} sidebarTitle="Трансфер-оператор" requiredRole={['transfer_operator', 'transfer', 'operator']}>
       {children}
     </HubLayout>
   );

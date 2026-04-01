@@ -87,6 +87,6 @@ export async function requireAgent(request: NextRequest): Promise<JWTPayload | N
  * Проверить, что пользователь - транспортный оператор
  */
 export async function requireTransferOperator(request: NextRequest): Promise<JWTPayload | NextResponse> {
-  return requireRole(request, ['transfer_operator', 'transfer', 'admin']);
+  return requireRole(request, ['transfer_operator', 'transfer', 'admin', 'operator']);
 }
 
