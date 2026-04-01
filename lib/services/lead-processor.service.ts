@@ -38,6 +38,15 @@ export interface MatchedTour {
   match_reason: string;
 }
 
+export interface AdversarialVerdict {
+  bullSignals: string[];
+  bearRisks: string[];
+  conversionProb: number;
+  recommendedAction: 'call_immediately' | 'send_proposal' | 'nurture' | 'skip';
+  callStrategy: string;
+  urgency: 'hot' | 'warm' | 'cold';
+}
+
 export interface LeadProposalData {
   lead_id: string;
   proposal_id: string;
@@ -52,6 +61,7 @@ export interface LeadProposalData {
   ai_score: number;
   intent: LeadIntent;
   generation_ms: number;
+  adversarial?: AdversarialVerdict;
 }
 
 interface LeadRow {
@@ -124,11 +134,14 @@ export class LeadProcessorService {
       // 4. Подбираем туры
       const tours = await this.matchTours(intent, lead.route_title ?? null);
 
-      // 5. Генерируем предложение
-      const proposal = await this.generateProposal(lead, intent, tours);
+      // 4.5. Adversarial analysis: Bull + Bear параллельно → Arbiter
+      const verdict = await this.runAdversarialAnalysis(lead, intent, tours);
 
-      // 6. Считаем AI-score
-      const aiScore = this.computeScore(intent, tours);
+      // 5. Генерируем предложение (с учётом возражений Bear-агента)
+      const proposal = await this.generateProposal(lead, intent, tours, verdict);
+
+      // 6. Считаем AI-score (на основе verdict.conversionProb)
+      const aiScore = this.computeScore(intent, tours, verdict);
 
       // 7. Сохраняем в БД
       const proposalId = await this.saveProposal({
@@ -142,6 +155,7 @@ export class LeadProcessorService {
         priceTo: tours[tours.length - 1]?.price ?? null,
         durationDays: intent.duration_days ?? tours[0]?.duration_days ?? null,
         generationMs: Date.now() - start,
+        verdict,
       });
 
       // 8. Обновляем лид
@@ -186,6 +200,7 @@ export class LeadProcessorService {
         ai_score:     aiScore,
         intent,
         generation_ms: Date.now() - start,
+        adversarial:  verdict,
       };
     } catch (err) {
       // При ошибке — снимаем статус
@@ -340,16 +355,113 @@ export class LeadProcessorService {
     return reasons.join(', ');
   }
 
-  private async generateProposal(
+  // ── Adversarial Analysis ──────────────────────────────────────────────────
+
+  /**
+   * Запускает Bull + Bear агентов параллельно, затем Arbiter синтезирует вердикт.
+   */
+  private async runAdversarialAnalysis(
     lead: LeadRow,
     intent: LeadIntent,
     tours: MatchedTour[]
+  ): Promise<AdversarialVerdict> {
+    const context = `
+Лид: ${lead.name}, ${lead.comment ?? 'нет комментария'}
+Группа: ${intent.group_size} чел. | Бюджет: ${intent.budget_rub ? intent.budget_rub.toLocaleString('ru-RU') + ' ₽' : 'не указан'}
+Активности: ${intent.activity_types.join(', ') || 'не указаны'}
+Даты: ${intent.desired_dates ?? 'не указаны'}
+Туры: ${tours.map(t => `"${t.title}" ${t.price.toLocaleString('ru-RU')} ₽`).join(', ') || 'нет подходящих'}
+    `.trim();
+
+    const bullPrompt = `Ты — Bull-агент. Твоя задача: найти все сигналы, которые говорят о том, что этот турист КУПИТ тур.
+${context}
+Верни ТОЛЬКО JSON: { "signals": ["...", "...", "..."] }
+3-5 конкретных сигналов. Будь честным аналитиком, не фантазируй.`;
+
+    const bearPrompt = `Ты — Bear-агент. Твоя задача: найти все причины, по которым этот турист НЕ КУПИТ тур.
+${context}
+Верни ТОЛЬКО JSON: { "risks": ["...", "...", "..."] }
+3-5 реальных рисков и возражений. Будь честным, не сгущай краски.`;
+
+    const [bullRaw, bearRaw] = await Promise.all([
+      callAIFast([
+        { role: 'system', content: 'Отвечай только валидным JSON.' },
+        { role: 'user', content: bullPrompt },
+      ]).catch(() => '{"signals":[]}'),
+      callAIFast([
+        { role: 'system', content: 'Отвечай только валидным JSON.' },
+        { role: 'user', content: bearPrompt },
+      ]).catch(() => '{"risks":[]}'),
+    ]);
+
+    const bull = safeJSON<{ signals: string[] }>(bullRaw, { signals: [] });
+    const bear = safeJSON<{ risks: string[] }>(bearRaw, { risks: [] });
+
+    const arbiterPrompt = `Ты — Arbiter-агент. Выслушал Bull и Bear по одному лиду. Вынеси итоговый вердикт.
+
+Bull нашёл:
+${bull.signals.map((s, i) => `${i + 1}. ${s}`).join('\n') || 'нет сигналов'}
+
+Bear нашёл:
+${bear.risks.map((r, i) => `${i + 1}. ${r}`).join('\n') || 'нет рисков'}
+
+${context}
+
+Верни ТОЛЬКО JSON:
+{
+  "conversion_prob": <0-100, реальная вероятность конверсии>,
+  "recommended_action": "call_immediately"|"send_proposal"|"nurture"|"skip",
+  "call_strategy": "<одно предложение: с чего начать разговор, чтобы закрыть главное возражение>",
+  "urgency": "hot"|"warm"|"cold"
+}`;
+
+    const arbiterRaw = await callAIFast([
+      { role: 'system', content: 'Отвечай только валидным JSON.' },
+      { role: 'user', content: arbiterPrompt },
+    ]).catch(() => '{}');
+
+    const arbiter = safeJSON<{
+      conversion_prob: number;
+      recommended_action: string;
+      call_strategy: string;
+      urgency: string;
+    }>(arbiterRaw, {
+      conversion_prob: 50,
+      recommended_action: 'send_proposal',
+      call_strategy: 'Уточните детали поездки и предложите лучший тур.',
+      urgency: 'warm',
+    });
+
+    return {
+      bullSignals:        bull.signals.slice(0, 5),
+      bearRisks:          bear.risks.slice(0, 5),
+      conversionProb:     Math.max(0, Math.min(100, arbiter.conversion_prob ?? 50)),
+      recommendedAction:  (['call_immediately', 'send_proposal', 'nurture', 'skip'] as const)
+                            .includes(arbiter.recommended_action as 'call_immediately')
+                            ? arbiter.recommended_action as AdversarialVerdict['recommendedAction']
+                            : 'send_proposal',
+      callStrategy:       arbiter.call_strategy ?? '',
+      urgency:            (['hot', 'warm', 'cold'] as const).includes(arbiter.urgency as 'hot')
+                            ? arbiter.urgency as AdversarialVerdict['urgency']
+                            : 'warm',
+    };
+  }
+
+  private async generateProposal(
+    lead: LeadRow,
+    intent: LeadIntent,
+    tours: MatchedTour[],
+    verdict: AdversarialVerdict
   ): Promise<{ headline: string; summary: string; highlights: string[] }> {
     const toursText = tours.length > 0
       ? tours.map((t, i) =>
           `${i + 1}. "${t.title}" — ${t.price.toLocaleString('ru-RU')} ₽/чел, ${t.duration_days} дн. (${t.activity_type})`
         ).join('\n')
       : 'Туры подбираются индивидуально';
+
+    const bearContext = verdict.bearRisks.length > 0
+      ? `\nГлавные возражения клиента (нейтрализуй их в тексте):\n${verdict.bearRisks.slice(0, 3).map((r, i) => `${i + 1}. ${r}`).join('\n')}`
+      : '';
 
     const prompt = `Ты — менеджер туристической платформы TourHab на Камчатке.
 Составь персональное коммерческое предложение для клиента.
@@ -361,6 +473,7 @@ export class LeadProcessorService {
 Интересы: ${intent.interests.join(', ') || 'не указаны'}
 Бюджет: ${intent.budget_rub ? intent.budget_rub.toLocaleString('ru-RU') + ' ₽' : 'не указан'}
 Даты: ${intent.desired_dates ?? 'гибкие'}
+${bearContext}
 
 Подобранные туры:
 ${toursText}
@@ -368,7 +481,7 @@ ${toursText}
 Верни ТОЛЬКО JSON:
 {
   "headline": "<цепляющий заголовок до 80 символов>",
-  "summary": "<персональное приветствие + описание предложения, 150-200 слов, по-русски>",
+  "summary": "<персональное приветствие + описание предложения, 150-200 слов, по-русски. Ненавязчиво сними возражения.>",
   "highlights": ["<ключевая фишка 1>", "<ключевая фишка 2>", "<ключевая фишка 3>", "<ключевая фишка 4>"]
 }`;
 
@@ -389,8 +502,19 @@ ${toursText}
     });
   }
 
-  private computeScore(intent: LeadIntent, tours: MatchedTour[]): number {
-    let score = 50; // базовый
+  private computeScore(intent: LeadIntent, tours: MatchedTour[], verdict?: AdversarialVerdict): number {
+    // Если есть вердикт Arbiter — он первичен (70%), эвристика — вторична (30%)
+    if (verdict) {
+      let heuristic = 30;
+      if (intent.activity_types.length > 0) heuristic += 5;
+      if (intent.budget_rub) heuristic += 5;
+      if (intent.desired_dates) heuristic += 5;
+      if (intent.urgency === 'high') heuristic += 5;
+      if (tours.length > 0) heuristic += 5;
+      heuristic = Math.min(25, heuristic - 30); // нормируем добавку
+      return Math.min(100, Math.round(verdict.conversionProb * 0.7 + (50 + heuristic) * 0.3));
+    }
+    let score = 50;
     if (intent.activity_types.length > 0) score += 15;
     if (intent.budget_rub) score += 10;
     if (intent.group_size > 1) score += 5;
@@ -411,12 +535,15 @@ ${toursText}
     priceTo: number | null;
     durationDays: number | null;
     generationMs: number;
+    verdict?: AdversarialVerdict;
   }): Promise<string> {
     const { rows } = await pool.query<{ id: string }>(
       `INSERT INTO lead_proposals
          (lead_id, primary_tour_id, alt_tour_ids, headline, summary, highlights,
-          price_from, price_to, duration_days, generation_ms)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+          price_from, price_to, duration_days, generation_ms,
+          bull_signals, bear_risks, conversion_prob,
+          recommended_action, call_strategy, verdict_urgency)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
        RETURNING id`,
       [
         data.leadId,
@@ -429,6 +556,12 @@ ${toursText}
         data.priceTo,
         data.durationDays,
         data.generationMs,
+        JSON.stringify(data.verdict?.bullSignals ?? []),
+        JSON.stringify(data.verdict?.bearRisks ?? []),
+        data.verdict?.conversionProb ?? null,
+        data.verdict?.recommendedAction ?? null,
+        data.verdict?.callStrategy ?? null,
+        data.verdict?.urgency ?? null,
       ]
     );
     return rows[0].id;
