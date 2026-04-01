@@ -2,514 +2,580 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import {
-  ChevronLeft, ChevronRight, CloudLightning, RefreshCw,
-  Plus, X, CheckCircle, AlertTriangle, XCircle, Cloud,
+  ChevronLeft, ChevronRight, RefreshCw, Check, X,
+  Phone, Mail, Users, CalendarDays, CloudLightning,
+  AlertCircle, CheckCircle2, Clock, Ban,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface TourOption {
+interface Booking {
   id: string;
-  title: string;
-  weather_dependent: boolean;
+  tour_title: string;
+  tourist_name: string | null;
+  tourist_phone: string | null;
+  tourist_email: string | null;
+  participants: number;
+  final_price: string | null;
+  payment_status: string;
+  booking_status: 'new' | 'confirmed' | 'cancelled' | 'completed' | 'no_show';
+  special_requests: string | null;
+  created_at: string;
 }
 
-interface SlotData {
-  id: string;
-  date: string; // YYYY-MM-DD
+interface AvailSlot {
+  tour_id: string;
+  tour_title: string;
   available_slots: number;
   booked_slots: number;
-  base_price_override: number | null;
-  weather_status: 'unknown' | 'ok' | 'alert' | 'cancelled';
+  weather_status: string;
   is_cancelled: boolean;
-  cancellation_reason: string | null;
 }
 
-interface WeatherCheck {
-  weather_status: 'ok' | 'alert';
-  tour_title: string;
-  issues: string[];
-  weather: {
-    wind_speed_kmh: number;
-    precipitation_mm: number;
-    temperature_c: number;
-    visibility_m: number;
-  };
-  thresholds: {
-    max_wind_kmh: number;
-    max_precipitation_mm: number;
-    min_visibility_m: number;
+interface DaySummary {
+  date: string;
+  bookings: Booking[];
+  avail: AvailSlot[];
+  newCount: number;
+  confirmedCount: number;
+}
+
+interface CalendarData {
+  bookings_by_date: Record<string, Booking[]>;
+  availability_by_date: Record<string, AvailSlot[]>;
+  summary: {
+    total: number;
+    new: number;
+    confirmed: number;
+    completed: number;
+    cancelled: number;
+    revenue: number;
   };
 }
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+const MONTHS_RU = [
+  'Январь','Февраль','Март','Апрель','Май','Июнь',
+  'Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь',
+];
+
+const STATUS_META: Record<string, { label: string; color: string; Icon: typeof Check }> = {
+  new:       { label: 'Новая',       color: 'var(--warning)', Icon: Clock       },
+  confirmed: { label: 'Подтверждена', color: 'var(--success)', Icon: CheckCircle2 },
+  cancelled: { label: 'Отменена',    color: 'var(--danger)',  Icon: Ban         },
+  completed: { label: 'Завершена',   color: 'var(--ocean)',   Icon: CheckCircle2 },
+  no_show:   { label: 'Не явился',   color: 'var(--text-muted)', Icon: X        },
+};
+
+const PAY_LABEL: Record<string, string> = {
+  pending: 'Ожидает оплаты', paid: 'Оплачено',
+  failed: 'Ошибка оплаты', refunded: 'Возврат',
+};
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function toISO(d: Date) {
-  return d.toISOString().split('T')[0];
+const RUB = (v: string | number | null) =>
+  v == null ? '—' : Number(v).toLocaleString('ru-RU') + ' ₽';
+
+function toISO(y: number, m: number, d: number) {
+  return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 }
 
-function addMonths(d: Date, n: number) {
-  const r = new Date(d);
-  r.setMonth(r.getMonth() + n);
-  r.setDate(1);
-  return r;
-}
+// ─── Day Cell ─────────────────────────────────────────────────────────────────
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
-function WeatherDot({ status }: { status: SlotData['weather_status'] }) {
-  const cls: Record<string, string> = {
-    ok:        'bg-[var(--success)]',
-    alert:     'bg-[var(--warning)]',
-    cancelled: 'bg-[var(--danger)]',
-    unknown:   'bg-[var(--text-muted)]',
-  };
-  return <span className={`inline-block w-1.5 h-1.5 rounded-full ${cls[status] ?? cls.unknown}`} />;
-}
-
-function SlotCell({
-  date,
-  slot,
-  selected,
-  isToday,
-  isPast,
-  onClick,
+function DayCell({
+  day, year, month, data, selected, isToday, isPast, onClick,
 }: {
-  date: Date;
-  slot: SlotData | null;
+  day: number;
+  year: number;
+  month: number;
+  data: CalendarData | null;
   selected: boolean;
   isToday: boolean;
   isPast: boolean;
   onClick: () => void;
 }) {
-  const freeSlots = slot ? slot.available_slots - slot.booked_slots : null;
-  const full = slot ? freeSlots === 0 : false;
-  const low  = slot ? (freeSlots !== null && freeSlots > 0 && freeSlots < 3) : false;
+  const iso = toISO(year, month, day);
+  const bookings = data?.bookings_by_date[iso] ?? [];
+  const avail    = data?.availability_by_date[iso] ?? [];
+  const newCount = bookings.filter(b => b.booking_status === 'new').length;
+  const confCount = bookings.filter(b => b.booking_status === 'confirmed').length;
+  const totalSlots    = avail.reduce((s, a) => s + a.available_slots, 0);
+  const bookedSlots   = avail.reduce((s, a) => s + a.booked_slots, 0);
+  const hasBookings   = bookings.length > 0;
+  const weatherAlert  = avail.some(a => a.weather_status === 'alert');
+  const isCancelled   = avail.some(a => a.is_cancelled);
 
   return (
     <button
       onClick={onClick}
-      disabled={isPast}
+      disabled={isPast && !hasBookings}
       className={[
-        'aspect-square rounded-md border p-1.5 text-left transition-all min-h-[54px]',
-        'flex flex-col justify-between',
-        isPast    ? 'opacity-40 cursor-default border-[var(--border)] bg-[var(--bg-hover)]'
-                  : 'cursor-pointer hover:border-[var(--accent)] hover:bg-[var(--bg-hover)]',
-        isToday   ? 'border-[var(--accent)] border-2 bg-[var(--bg-primary)]'
-                  : 'border-[var(--border)] bg-[var(--bg-primary)]',
-        selected  ? 'ring-2 ring-[var(--accent)] ring-offset-1' : '',
-        slot?.is_cancelled ? 'bg-[var(--danger)]/5' : '',
+        'relative flex flex-col items-start p-1.5 sm:p-2 rounded-lg border transition-all text-left w-full min-h-[60px] sm:min-h-[72px]',
+        selected        ? 'border-[var(--accent)] bg-[var(--accent)]/8 shadow-sm' : '',
+        isToday && !selected ? 'border-[var(--ocean)]/40 bg-[var(--ocean)]/5' : '',
+        !selected && !isToday ? 'border-[var(--border)] hover:border-[var(--accent)]/40 hover:bg-[var(--bg-hover)]' : '',
+        isPast && !hasBookings ? 'opacity-35 cursor-default' : 'cursor-pointer',
       ].filter(Boolean).join(' ')}
     >
+      {/* Day number */}
       <span className={[
-        'text-xs font-semibold leading-none',
-        isToday  ? 'text-[var(--accent)]' : 'text-[var(--text-primary)]',
-      ].join(' ')}>
-        {date.getDate()}
+        'text-xs font-semibold leading-none mb-1',
+        isToday ? 'text-[var(--ocean)]' : 'text-[var(--text-secondary)]',
+        selected ? 'text-[var(--accent)]' : '',
+      ].filter(Boolean).join(' ')}>
+        {day}
       </span>
 
-      {slot && (
-        <div className="space-y-0.5">
-          <div className="flex items-center gap-1">
-            <WeatherDot status={slot.weather_status} />
-            <span className={[
-              'text-[10px] leading-none font-medium',
-              full ? 'text-[var(--danger)]'
-                   : low ? 'text-[var(--warning)]'
-                          : 'text-[var(--success)]',
-            ].join(' ')}>
-              {slot.booked_slots}/{slot.available_slots}
-            </span>
-          </div>
-          {slot.is_cancelled && (
-            <span className="text-[9px] text-[var(--danger)] leading-none">отмена</span>
-          )}
-        </div>
+      {/* Booking badges */}
+      <div className="flex flex-wrap gap-0.5 w-full">
+        {newCount > 0 && (
+          <span
+            className="text-[10px] font-bold px-1 py-0.5 rounded"
+            style={{ background: 'var(--warning)', color: '#fff' }}
+          >
+            {newCount} new
+          </span>
+        )}
+        {confCount > 0 && (
+          <span
+            className="text-[10px] font-bold px-1 py-0.5 rounded"
+            style={{ background: 'var(--success)', color: '#fff' }}
+          >
+            {confCount}
+          </span>
+        )}
+      </div>
+
+      {/* Slot availability */}
+      {totalSlots > 0 && (
+        <span className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
+          {bookedSlots}/{totalSlots}
+        </span>
       )}
+
+      {/* Weather / cancelled icons */}
+      <div className="absolute top-1 right-1 flex gap-0.5">
+        {weatherAlert  && <CloudLightning className="w-2.5 h-2.5" style={{ color: 'var(--warning)' }} />}
+        {isCancelled   && <X className="w-2.5 h-2.5" style={{ color: 'var(--danger)' }} />}
+      </div>
     </button>
   );
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
+// ─── Booking Card ─────────────────────────────────────────────────────────────
 
-export default function CalendarPageClient() {
-  const [tours, setTours]           = useState<TourOption[]>([]);
-  const [tourId, setTourId]         = useState<string>('');
-  const [month, setMonth]           = useState(() => { const d = new Date(); d.setDate(1); return d; });
-  const [slots, setSlots]           = useState<SlotData[]>([]);
-  const [loading, setLoading]       = useState(false);
-  const [toursLoading, setToursLoading] = useState(true);
-
-  // Selection for bulk add
-  const [selected, setSelected]     = useState<Set<string>>(new Set());
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [addSlots, setAddSlots]     = useState('8');
-  const [addPrice, setAddPrice]     = useState('');
-  const [saving, setSaving]         = useState(false);
-
-  // Weather check
-  const [weather, setWeather]       = useState<WeatherCheck | null>(null);
-  const [weatherLoading, setWeatherLoading] = useState(false);
-
-  // ── Load tours ──────────────────────────────────────────────────────────────
-  useEffect(() => {
-    fetch('/api/hub/operator/tours?limit=100')
-      .then(r => r.json())
-      .then(d => {
-        if (d.success) {
-          setTours(d.data);
-          if (d.data.length > 0) setTourId(String(d.data[0].id));
-        }
-      })
-      .catch(() => undefined)
-      .finally(() => setToursLoading(false));
-  }, []);
-
-  // ── Load availability ───────────────────────────────────────────────────────
-  const loadSlots = useCallback(async () => {
-    if (!tourId) return;
-    setLoading(true);
-    setSelected(new Set());
-
-    const from = toISO(month);
-    const end  = new Date(month.getFullYear(), month.getMonth() + 1, 0);
-    const to   = toISO(end);
-
-    try {
-      const r = await fetch(`/api/hub/operator/tours/${tourId}/availability?from=${from}&to=${to}`);
-      const d = await r.json();
-      if (d.success) setSlots(d.data);
-    } catch {
-      // non-fatal
-    } finally {
-      setLoading(false);
-    }
-  }, [tourId, month]);
-
-  useEffect(() => { loadSlots(); }, [loadSlots]);
-
-  // ── Weather check ───────────────────────────────────────────────────────────
-  const checkWeather = async () => {
-    if (!tourId) return;
-    setWeatherLoading(true);
-    setWeather(null);
-    try {
-      const r = await fetch(`/api/hub/operator/weather?tour_id=${tourId}`);
-      const d = await r.json();
-      if (d.success) setWeather(d);
-    } catch {
-      // non-fatal
-    } finally {
-      setWeatherLoading(false);
-    }
-  };
-
-  // ── Calendar grid ───────────────────────────────────────────────────────────
-  const slotMap = new Map(slots.map(s => [s.date, s]));
-
-  const days: (Date | null)[] = [];
-  const firstDay  = new Date(month.getFullYear(), month.getMonth(), 1);
-  const lastDay   = new Date(month.getFullYear(), month.getMonth() + 1, 0);
-  const startDow  = firstDay.getDay(); // 0=Sun
-  const leadBlanks = startDow === 0 ? 6 : startDow - 1; // Mo-first grid
-  for (let i = 0; i < leadBlanks; i++) days.push(null);
-  for (let i = 1; i <= lastDay.getDate(); i++) days.push(new Date(month.getFullYear(), month.getMonth(), i));
-
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-
-  const toggleDate = (d: Date) => {
-    const key = toISO(d);
-    if (d < today) return;
-    setSelected(prev => {
-      const n = new Set(prev);
-      n.has(key) ? n.delete(key) : n.add(key);
-      return n;
-    });
-    if (!showAddForm && selected.size === 0) setShowAddForm(true);
-  };
-
-  // ── Add availability ────────────────────────────────────────────────────────
-  const handleAddAvailability = async () => {
-    if (selected.size === 0 || !tourId) return;
-    setSaving(true);
-    try {
-      const dates = Array.from(selected).map(date => ({
-        date,
-        available_slots: parseInt(addSlots) || 8,
-        ...(addPrice ? { price_override: parseFloat(addPrice) } : {}),
-      }));
-
-      const r = await fetch(`/api/hub/operator/tours/${tourId}/availability`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dates }),
-      });
-
-      if (r.ok) {
-        setSelected(new Set());
-        setShowAddForm(false);
-        setAddPrice('');
-        await loadSlots();
-      }
-    } catch {
-      // non-fatal
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // ── Render ──────────────────────────────────────────────────────────────────
-  const INPUT = 'px-3 py-2 text-sm bg-[var(--bg-primary)] border border-[var(--border)] rounded-md text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]';
-
-  const currentTour = tours.find(t => String(t.id) === tourId);
+function BookingCard({
+  booking, onStatusChange, updating,
+}: {
+  booking: Booking;
+  onStatusChange: (id: string, status: string) => void;
+  updating: string | null;
+}) {
+  const meta = STATUS_META[booking.booking_status] ?? STATUS_META.new;
+  const StIcon = meta.Icon;
+  const isUpdating = updating === booking.id;
 
   return (
-    <div className="p-5 lg:p-6 space-y-5">
-
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Календарь доступности</h1>
-          <p className="text-[var(--text-muted)] mt-0.5 text-sm">Управляйте датами и местами</p>
+    <div className="ds-card p-4 space-y-3">
+      {/* Tour + status */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
+            {booking.tour_title}
+          </p>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
+            {booking.tourist_name ?? 'Имя не указано'} · {booking.participants} чел
+          </p>
         </div>
-
-        {/* Tour selector */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {toursLoading ? (
-            <span className="text-sm text-[var(--text-muted)]">Загрузка туров...</span>
-          ) : tours.length === 0 ? (
-            <span className="text-sm text-[var(--text-muted)]">Нет туров</span>
-          ) : (
-            <select
-              value={tourId}
-              onChange={e => { setTourId(e.target.value); setWeather(null); }}
-              className={INPUT + ' min-w-[200px]'}
-            >
-              {tours.map(t => (
-                <option key={t.id} value={t.id}>{t.title}</option>
-              ))}
-            </select>
-          )}
-
-          {currentTour?.weather_dependent && (
-            <button
-              onClick={checkWeather}
-              disabled={weatherLoading || !tourId}
-              className="ds-btn ds-btn-secondary flex items-center gap-1.5 text-sm"
-            >
-              {weatherLoading ? (
-                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <CloudLightning className="w-3.5 h-3.5" />
-              )}
-              Погода
-            </button>
-          )}
+        <div className="flex items-center gap-1 shrink-0">
+          <StIcon className="w-3.5 h-3.5" style={{ color: meta.color }} />
+          <span className="text-[11px] font-medium" style={{ color: meta.color }}>{meta.label}</span>
         </div>
       </div>
 
-      {/* Weather panel */}
-      {weather && (
-        <div className={[
-          'rounded-lg border p-4 text-sm',
-          weather.weather_status === 'ok'
-            ? 'border-[var(--success)] bg-[var(--success)]/5'
-            : 'border-[var(--warning)] bg-[var(--warning)]/5',
-        ].join(' ')}>
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-2 font-semibold text-[var(--text-primary)]">
-              {weather.weather_status === 'ok' ? (
-                <CheckCircle className="w-4 h-4 text-[var(--success)]" />
+      {/* Contact */}
+      <div className="space-y-1">
+        {booking.tourist_phone && (
+          <a
+            href={`tel:${booking.tourist_phone}`}
+            className="flex items-center gap-1.5 text-xs hover:underline"
+            style={{ color: 'var(--ocean)' }}
+          >
+            <Phone className="w-3 h-3" />
+            {booking.tourist_phone}
+          </a>
+        )}
+        {booking.tourist_email && (
+          <a
+            href={`mailto:${booking.tourist_email}`}
+            className="flex items-center gap-1.5 text-xs hover:underline"
+            style={{ color: 'var(--ocean)' }}
+          >
+            <Mail className="w-3 h-3" />
+            {booking.tourist_email}
+          </a>
+        )}
+      </div>
+
+      {/* Price + payment */}
+      <div className="flex items-center justify-between text-xs">
+        <span style={{ color: 'var(--text-primary)' }}>{RUB(booking.final_price)}</span>
+        <span style={{ color: booking.payment_status === 'paid' ? 'var(--success)' : 'var(--warning)' }}>
+          {PAY_LABEL[booking.payment_status] ?? booking.payment_status}
+        </span>
+      </div>
+
+      {/* Special requests */}
+      {booking.special_requests && (
+        <p className="text-xs p-2 rounded" style={{ background: 'var(--bg-hover)', color: 'var(--text-secondary)' }}>
+          {booking.special_requests}
+        </p>
+      )}
+
+      {/* Actions */}
+      {(booking.booking_status === 'new' || booking.booking_status === 'confirmed') && (
+        <div className="flex gap-2">
+          {booking.booking_status === 'new' && (
+            <button
+              onClick={() => onStatusChange(booking.id, 'confirmed')}
+              disabled={isUpdating}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-colors"
+              style={{ background: 'var(--success)', color: '#fff' }}
+            >
+              {isUpdating ? (
+                <div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
-                <AlertTriangle className="w-4 h-4 text-[var(--warning)]" />
+                <Check className="w-3.5 h-3.5" />
               )}
-              {weather.weather_status === 'ok' ? 'Погода в норме' : 'Погодный алерт'}
-            </div>
-            <button onClick={() => setWeather(null)}>
-              <X className="w-4 h-4 text-[var(--text-muted)]" />
+              Подтвердить
             </button>
-          </div>
-          <div className="mt-2 flex gap-4 text-[var(--text-secondary)] flex-wrap">
-            <span>Ветер: {weather.weather.wind_speed_kmh} км/ч (лим: {weather.thresholds.max_wind_kmh})</span>
-            <span>Осадки: {weather.weather.precipitation_mm} мм (лим: {weather.thresholds.max_precipitation_mm})</span>
-            <span>Видимость: {(weather.weather.visibility_m / 1000).toFixed(1)} км</span>
-            <span>Темп: {weather.weather.temperature_c}°C</span>
-          </div>
-          {weather.issues.length > 0 && (
-            <ul className="mt-2 space-y-0.5">
-              {weather.issues.map((issue, i) => (
-                <li key={i} className="text-[var(--warning)] flex items-center gap-1.5">
-                  <XCircle className="w-3.5 h-3.5 flex-shrink-0" />
-                  {issue}
-                </li>
-              ))}
-            </ul>
+          )}
+          <button
+            onClick={() => onStatusChange(booking.id, 'cancelled')}
+            disabled={isUpdating}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold border transition-colors hover:bg-[var(--danger)]/10"
+            style={{ borderColor: 'var(--danger)', color: 'var(--danger)' }}
+          >
+            {booking.booking_status === 'new' ? <><X className="w-3.5 h-3.5" />Отклонить</> : <><X className="w-3.5 h-3.5" />Отменить</>}
+          </button>
+          {booking.booking_status === 'confirmed' && (
+            <button
+              onClick={() => onStatusChange(booking.id, 'completed')}
+              disabled={isUpdating}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-colors"
+              style={{ background: 'var(--ocean)', color: '#fff' }}
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              Завершить
+            </button>
           )}
         </div>
       )}
+    </div>
+  );
+}
 
-      {/* Calendar */}
-      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden">
+// ─── Main Component ───────────────────────────────────────────────────────────
 
-        {/* Month nav */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]">
-          <button
-            onClick={() => setMonth(m => addMonths(m, -1))}
-            className="p-1.5 rounded-md hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] transition-colors"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <span className="font-semibold text-[var(--text-primary)] capitalize">
-            {month.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' })}
-          </span>
-          <button
-            onClick={() => setMonth(m => addMonths(m, 1))}
-            className="p-1.5 rounded-md hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] transition-colors"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
+export default function CalendarPageClient() {
+  const now   = new Date();
+  const [year, setYear]     = useState(now.getFullYear());
+  const [month, setMonth]   = useState(now.getMonth() + 1);
+  const [data, setData]     = useState<CalendarData | null>(null);
+  const [loading, setLoading]   = useState(true);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [updating, setUpdating] = useState<string | null>(null);
+
+  // ── Load data ──────────────────────────────────────────────────────────────
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const m = `${year}-${String(month).padStart(2,'0')}`;
+      const res = await fetch(`/api/hub/operator/bookings-calendar?month=${m}`);
+      if (res.ok) {
+        const json = await res.json() as CalendarData & { success: boolean };
+        if (json.success) setData(json);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [year, month]);
+
+  useEffect(() => { void load(); }, [load]);
+
+  // ── Navigate months ────────────────────────────────────────────────────────
+  function prevMonth() {
+    if (month === 1) { setYear(y => y - 1); setMonth(12); }
+    else setMonth(m => m - 1);
+    setSelectedDate(null);
+  }
+  function nextMonth() {
+    if (month === 12) { setYear(y => y + 1); setMonth(1); }
+    else setMonth(m => m + 1);
+    setSelectedDate(null);
+  }
+
+  // ── Update booking status ──────────────────────────────────────────────────
+  async function handleStatusChange(id: string, status: string) {
+    setUpdating(id);
+    try {
+      await fetch(`/api/hub/operator/bookings/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ booking_status: status }),
+      });
+      await load();
+    } finally {
+      setUpdating(null);
+    }
+  }
+
+  // ── Calendar grid ──────────────────────────────────────────────────────────
+  const firstDay = new Date(year, month - 1, 1).getDay(); // 0=Sun
+  const startOffset = (firstDay === 0 ? 6 : firstDay - 1); // Mon=0
+  const daysInMonth = new Date(year, month, 0).getDate();
+
+  const cells: (number | null)[] = [
+    ...Array(startOffset).fill(null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+  ];
+  // Pad to full weeks
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  const todayISO = toISO(now.getFullYear(), now.getMonth() + 1, now.getDate());
+
+  // Selected date summary
+  const selectedDay: DaySummary | null = selectedDate
+    ? {
+        date: selectedDate,
+        bookings: data?.bookings_by_date[selectedDate] ?? [],
+        avail:    data?.availability_by_date[selectedDate] ?? [],
+        newCount: (data?.bookings_by_date[selectedDate] ?? []).filter(b => b.booking_status === 'new').length,
+        confirmedCount: (data?.bookings_by_date[selectedDate] ?? []).filter(b => b.booking_status === 'confirmed').length,
+      }
+    : null;
+
+  const summary = data?.summary;
+
+  return (
+    <div className="p-4 lg:p-6 space-y-4">
+
+      {/* Header */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Календарь</h1>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
+            Бронирования и доступность туров
+          </p>
         </div>
+        <button
+          onClick={load}
+          className="ds-btn flex items-center gap-1.5 text-sm"
+          disabled={loading}
+        >
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          Обновить
+        </button>
+      </div>
 
-        <div className="p-4">
-          {/* Day labels */}
-          <div className="grid grid-cols-7 gap-1.5 mb-1.5">
-            {['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].map(d => (
-              <div key={d} className="text-center text-[9px] uppercase tracking-widest text-[var(--text-muted)] py-1">{d}</div>
+      {/* Summary stats */}
+      {summary && (
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+          {[
+            { label: 'Всего',       value: summary.total,     color: 'var(--text-primary)' },
+            { label: 'Новых',       value: summary.new,       color: 'var(--warning)'      },
+            { label: 'Подтверждено',value: summary.confirmed, color: 'var(--success)'      },
+            { label: 'Завершено',   value: summary.completed, color: 'var(--ocean)'        },
+            { label: 'Выручка',     value: RUB(summary.revenue), color: 'var(--accent)', isText: true },
+          ].map(s => (
+            <div key={s.label} className="ds-card p-3 text-center">
+              <div className="font-bold text-lg" style={{ color: s.color }}>{s.value}</div>
+              <div className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Inbox alert — new bookings need confirmation */}
+      {summary && summary.new > 0 && (
+        <div
+          className="flex items-center gap-3 px-4 py-3 rounded-lg border"
+          style={{ borderColor: 'var(--warning)', background: 'var(--warning)/8' }}
+        >
+          <AlertCircle className="w-5 h-5 shrink-0" style={{ color: 'var(--warning)' }} />
+          <div className="flex-1 text-sm">
+            <span className="font-semibold" style={{ color: 'var(--warning)' }}>
+              {summary.new} {summary.new === 1 ? 'новая бронь требует' : 'новых бронирований требуют'} подтверждения
+            </span>
+            <span style={{ color: 'var(--text-secondary)' }}>
+              {' '}— нажмите на дату чтобы подтвердить
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Main layout: Calendar | Detail */}
+      <div className="flex gap-4 items-start">
+
+        {/* ── Calendar ─────────────────────────────────────────────────────── */}
+        <div className="flex-1 min-w-0">
+          {/* Month navigation */}
+          <div className="flex items-center justify-between mb-3">
+            <button
+              onClick={prevMonth}
+              className="p-1.5 rounded-lg hover:bg-[var(--bg-hover)] transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4" style={{ color: 'var(--text-secondary)' }} />
+            </button>
+            <h2 className="font-semibold text-base" style={{ color: 'var(--text-primary)' }}>
+              {MONTHS_RU[month - 1]} {year}
+            </h2>
+            <button
+              onClick={nextMonth}
+              className="p-1.5 rounded-lg hover:bg-[var(--bg-hover)] transition-colors"
+            >
+              <ChevronRight className="w-4 h-4" style={{ color: 'var(--text-secondary)' }} />
+            </button>
+          </div>
+
+          {/* Weekday headers */}
+          <div className="grid grid-cols-7 gap-1 mb-1">
+            {WEEKDAYS.map(w => (
+              <div key={w} className="text-center text-[10px] font-semibold py-1" style={{ color: 'var(--text-muted)' }}>
+                {w}
+              </div>
             ))}
           </div>
 
-          {/* Grid */}
+          {/* Day cells */}
           {loading ? (
-            <div className="grid grid-cols-7 gap-1.5">
-              {Array.from({ length: 35 }).map((_, i) => (
-                <div key={i} className="aspect-square rounded-md bg-[var(--bg-hover)] animate-pulse" />
-              ))}
+            <div className="flex justify-center items-center h-48">
+              <div className="animate-spin rounded-full h-6 w-6 border-2 border-[var(--border)] border-t-[var(--accent)]" />
             </div>
           ) : (
-            <div className="grid grid-cols-7 gap-1.5">
-              {days.map((date, i) => {
-                if (!date) return <div key={`b-${i}`} className="aspect-square" />;
-                const key  = toISO(date);
-                const slot = slotMap.get(key) ?? null;
-                const isPast = date < today;
-                const isToday = date.toDateString() === today.toDateString();
+            <div className="grid grid-cols-7 gap-1">
+              {cells.map((day, i) => {
+                if (!day) return <div key={`empty-${i}`} />;
+                const iso   = toISO(year, month, day);
+                const isPast = iso < todayISO;
                 return (
-                  <SlotCell
-                    key={key}
-                    date={date}
-                    slot={slot}
-                    selected={selected.has(key)}
-                    isToday={isToday}
+                  <DayCell
+                    key={iso}
+                    day={day}
+                    year={year}
+                    month={month}
+                    data={data}
+                    selected={selectedDate === iso}
+                    isToday={iso === todayISO}
                     isPast={isPast}
-                    onClick={() => toggleDate(date)}
+                    onClick={() => setSelectedDate(prev => prev === iso ? null : iso)}
                   />
                 );
               })}
             </div>
           )}
-        </div>
 
-        {/* Legend */}
-        <div className="px-4 pb-3 flex items-center gap-4 text-[10px] text-[var(--text-muted)] flex-wrap">
-          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[var(--success)]" />Норма</span>
-          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[var(--warning)]" />Погодный алерт</span>
-          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[var(--danger)]" />Отменено</span>
-          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[var(--text-muted)]" />Неизвестно</span>
-          <span className="ml-auto text-[var(--text-muted)]">Нажмите на дату чтобы выбрать</span>
-        </div>
-      </div>
-
-      {/* Add availability form (appears when dates selected) */}
-      {(selected.size > 0 || showAddForm) && !loading && (
-        <div className="bg-[var(--bg-card)] border border-[var(--accent)] rounded-lg p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Plus className="w-4 h-4 text-[var(--accent)]" />
-              <span className="font-semibold text-sm text-[var(--text-primary)]">
-                Добавить доступность
-                {selected.size > 0 && (
-                  <span className="ml-1.5 text-[var(--accent)]">({selected.size} {selected.size === 1 ? 'день' : 'дней'})</span>
-                )}
-              </span>
-            </div>
-            <button
-              onClick={() => { setShowAddForm(false); setSelected(new Set()); }}
-              className="text-[var(--text-muted)] hover:text-[var(--text-primary)]"
-            >
-              <X className="w-4 h-4" />
-            </button>
+          {/* Legend */}
+          <div className="flex flex-wrap gap-3 mt-3 text-xs" style={{ color: 'var(--text-muted)' }}>
+            <span className="flex items-center gap-1">
+              <span className="w-2.5 h-2.5 rounded" style={{ background: 'var(--warning)' }} />
+              Новые (ждут подтверждения)
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-2.5 h-2.5 rounded" style={{ background: 'var(--success)' }} />
+              Подтверждены
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="text-xs">0/8</span> Слоты: занято/всего
+            </span>
           </div>
+        </div>
 
-          {selected.size === 0 ? (
-            <p className="text-sm text-[var(--text-muted)]">Выберите даты на календаре выше</p>
-          ) : (
-            <>
-              {/* Selected dates */}
-              <div className="flex flex-wrap gap-1.5">
-                {Array.from(selected).sort().map(d => (
-                  <span key={d} className="flex items-center gap-1 text-xs bg-[var(--accent)]/10 text-[var(--accent)] px-2 py-0.5 rounded-full">
-                    {new Date(d + 'T00:00').toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}
-                    <button onClick={() => {
-                      setSelected(prev => { const n = new Set(prev); n.delete(d); return n; });
-                    }}>
-                      <X className="w-2.5 h-2.5" />
-                    </button>
-                  </span>
+        {/* ── Detail panel ─────────────────────────────────────────────────── */}
+        {selectedDay && (
+          <div className="w-80 shrink-0 space-y-3">
+            {/* Date header */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CalendarDays className="w-4 h-4" style={{ color: 'var(--accent)' }} />
+                <span className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+                  {new Date(selectedDay.date + 'T12:00:00').toLocaleDateString('ru-RU', {
+                    day: 'numeric', month: 'long', weekday: 'long',
+                  })}
+                </span>
+              </div>
+              <button onClick={() => setSelectedDate(null)}>
+                <X className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+              </button>
+            </div>
+
+            {/* Availability summary */}
+            {selectedDay.avail.length > 0 && (
+              <div className="ds-card p-3 space-y-1.5">
+                <p className="text-xs font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>
+                  Доступность слотов
+                </p>
+                {selectedDay.avail.map((a, i) => (
+                  <div key={i} className="flex items-center justify-between text-xs">
+                    <span className="truncate" style={{ color: 'var(--text-primary)' }}>{a.tour_title}</span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <Users className="w-3 h-3" style={{ color: 'var(--text-muted)' }} />
+                      <span style={{ color: a.booked_slots >= a.available_slots ? 'var(--danger)' : 'var(--success)' }}>
+                        {a.booked_slots}/{a.available_slots}
+                      </span>
+                      {a.weather_status === 'alert' && (
+                        <CloudLightning className="w-3 h-3" style={{ color: 'var(--warning)' }} />
+                      )}
+                    </div>
+                  </div>
                 ))}
               </div>
+            )}
 
-              {/* Form fields */}
-              <div className="flex gap-3 flex-wrap">
-                <div className="space-y-1">
-                  <label className="text-xs text-[var(--text-muted)]">Мест</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="200"
-                    value={addSlots}
-                    onChange={e => setAddSlots(e.target.value)}
-                    className={INPUT + ' w-24'}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs text-[var(--text-muted)]">Цена (необязательно)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    placeholder="Стандартная"
-                    value={addPrice}
-                    onChange={e => setAddPrice(e.target.value)}
-                    className={INPUT + ' w-40'}
-                  />
-                </div>
-                <div className="flex items-end">
-                  <button
-                    onClick={handleAddAvailability}
-                    disabled={saving}
-                    className="ds-btn ds-btn-primary flex items-center gap-1.5 text-sm"
-                  >
-                    {saving ? (
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <Cloud className="w-3.5 h-3.5" />
-                    )}
-                    {saving ? 'Сохраняем...' : 'Сохранить'}
-                  </button>
-                </div>
+            {/* Bookings list */}
+            {selectedDay.bookings.length === 0 ? (
+              <div className="ds-card p-6 text-center">
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                  Нет бронирований на этот день
+                </p>
               </div>
-            </>
-          )}
-        </div>
-      )}
+            ) : (
+              <div className="space-y-2">
+                <p className="text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>
+                  Бронирования ({selectedDay.bookings.length})
+                  {selectedDay.newCount > 0 && (
+                    <span className="ml-1.5 px-1.5 py-0.5 rounded text-white text-[10px]"
+                      style={{ background: 'var(--warning)' }}>
+                      {selectedDay.newCount} новых
+                    </span>
+                  )}
+                </p>
+                {selectedDay.bookings.map(booking => (
+                  <BookingCard
+                    key={booking.id}
+                    booking={booking}
+                    onStatusChange={handleStatusChange}
+                    updating={updating}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
-      {/* Empty state */}
-      {!loading && !toursLoading && tourId && slots.length === 0 && selected.size === 0 && (
-        <div className="text-center py-12 text-[var(--text-muted)]">
-          <Cloud className="w-10 h-10 mx-auto mb-3 opacity-30" />
-          <p className="text-sm">Нет доступных дат в этом месяце</p>
-          <p className="text-xs mt-1">Нажмите на дату в календаре чтобы добавить</p>
-        </div>
-      )}
+        {/* Empty state when nothing selected */}
+        {!selectedDay && !loading && (
+          <div className="w-64 shrink-0 ds-card p-6 text-center flex flex-col items-center gap-3">
+            <CalendarDays className="w-8 h-8" style={{ color: 'var(--text-muted)' }} />
+            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+              Нажмите на дату чтобы увидеть бронирования и слоты
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
