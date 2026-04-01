@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
   Save, X, Plus, Images, ArrowLeft,
   MapPin, Clock, Users, DollarSign, Mountain, Upload, Loader2,
+  CalendarDays,
 } from 'lucide-react';
 
 // ─── Типы ───────────────────────────────────────────────────────────────────
@@ -102,6 +103,43 @@ export default function EditTourClient() {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Availability
+  interface AvailSlot { id: string; date: string; available_slots: number; booked_slots: number; base_price_override: number | null }
+  const [avail, setAvail] = useState<AvailSlot[]>([]);
+  const [availLoading, setAvailLoading] = useState(false);
+  const [newDate, setNewDate] = useState('');
+  const [newSlots, setNewSlots] = useState('8');
+  const [addingSlot, setAddingSlot] = useState(false);
+
+  const loadAvail = useCallback(async () => {
+    setAvailLoading(true);
+    try {
+      const res = await fetch(`/api/hub/operator/tours/${tourId}/availability?from=${new Date().toISOString().slice(0,10)}&to=${new Date(Date.now()+365*86400000).toISOString().slice(0,10)}`);
+      const json = await res.json() as { success: boolean; data: AvailSlot[] };
+      if (json.success) setAvail(json.data);
+    } catch { /* ignore */ }
+    finally { setAvailLoading(false); }
+  }, [tourId]);
+
+  async function addAvailSlot() {
+    if (!newDate || !newSlots) return;
+    setAddingSlot(true);
+    try {
+      const res = await fetch(`/api/hub/operator/tours/${tourId}/availability`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dates: [{ date: newDate, available_slots: parseInt(newSlots, 10) }] }),
+      });
+      const json = await res.json() as { success?: boolean; error?: string };
+      if (!res.ok) throw new Error(json.error ?? 'Ошибка');
+      setNewDate('');
+      setNewSlots('8');
+      await loadAvail();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Ошибка добавления даты');
+    } finally { setAddingSlot(false); }
+  }
+
   async function handleFileUpload(file: File) {
     if (!file) return;
     setUploading(true);
@@ -121,6 +159,8 @@ export default function EditTourClient() {
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   }
+
+  useEffect(() => { void loadAvail(); }, [loadAvail]);
 
   useEffect(() => {
     async function load() {
@@ -554,6 +594,99 @@ export default function EditTourClient() {
           <textarea className={inp + ' min-h-[60px] resize-y font-mono text-xs'} value={form.what_to_bring}
             onChange={e => setF('what_to_bring', e.target.value)} placeholder={'Удобная обувь\nДождевик'} />
         </div>
+      </section>
+
+      {/* Расписание / доступность */}
+      <section className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-5 space-y-4">
+        <div className="flex items-center justify-between">
+          <p className={heading} style={{ marginBottom: 0 }}>
+            <CalendarDays className="w-3.5 h-3.5 inline mr-1.5" />
+            Расписание (ближайшие даты туров)
+          </p>
+          <button type="button" onClick={loadAvail} disabled={availLoading}
+            className="text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
+            {availLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Обновить'}
+          </button>
+        </div>
+
+        {/* Add new date */}
+        <div className="flex gap-2 items-end">
+          <div className="flex-1">
+            <label className={lbl}>Дата</label>
+            <input
+              type="date"
+              className={inp}
+              value={newDate}
+              min={new Date().toISOString().slice(0,10)}
+              onChange={e => setNewDate(e.target.value)}
+            />
+          </div>
+          <div className="w-28">
+            <label className={lbl}>Мест</label>
+            <input
+              type="number"
+              min="1"
+              max="999"
+              className={inp}
+              value={newSlots}
+              onChange={e => setNewSlots(e.target.value)}
+            />
+          </div>
+          <button
+            type="button"
+            onClick={addAvailSlot}
+            disabled={addingSlot || !newDate || !newSlots}
+            className="flex items-center gap-1.5 px-4 py-2 text-sm bg-[var(--accent)] text-white rounded-lg font-medium hover:bg-[var(--accent)]/90 transition-colors disabled:opacity-40 whitespace-nowrap"
+          >
+            {addingSlot ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+            Добавить
+          </button>
+        </div>
+
+        {/* Existing slots */}
+        {availLoading ? (
+          <div className="flex justify-center py-4">
+            <Loader2 className="w-5 h-5 animate-spin" style={{ color: 'var(--text-muted)' }} />
+          </div>
+        ) : avail.length === 0 ? (
+          <p className="text-xs text-center py-4" style={{ color: 'var(--text-muted)' }}>
+            Дат пока нет. Добавьте первую дату выше — туристы смогут бронировать конкретные числа.
+          </p>
+        ) : (
+          <div className="space-y-1.5 max-h-64 overflow-y-auto">
+            {avail.map(slot => {
+              const d = new Date(slot.date + 'T12:00:00');
+              const dateStr = d.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'short' });
+              const pct = slot.available_slots > 0 ? Math.round((slot.booked_slots / slot.available_slots) * 100) : 0;
+              const isFull = slot.booked_slots >= slot.available_slots;
+              return (
+                <div key={slot.id} className="flex items-center gap-3 px-3 py-2 rounded-lg border border-[var(--border)] hover:border-[var(--accent)]/30 transition-colors">
+                  <CalendarDays className="w-3.5 h-3.5 shrink-0" style={{ color: 'var(--text-muted)' }} />
+                  <span className="text-sm font-medium w-36 shrink-0" style={{ color: 'var(--text-primary)' }}>{dateStr}</span>
+                  <div className="flex-1 flex items-center gap-2">
+                    <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--bg-hover)' }}>
+                      <div className="h-full rounded-full transition-all" style={{
+                        width: `${pct}%`,
+                        background: isFull ? 'var(--danger)' : pct > 70 ? 'var(--warning)' : 'var(--success)',
+                      }} />
+                    </div>
+                    <span className="text-xs whitespace-nowrap" style={{ color: isFull ? 'var(--danger)' : 'var(--text-muted)' }}>
+                      {slot.booked_slots}/{slot.available_slots} мест
+                    </span>
+                  </div>
+                  {slot.base_price_override && (
+                    <span className="text-xs font-medium shrink-0" style={{ color: 'var(--accent)' }}>
+                      {Number(slot.base_price_override).toLocaleString('ru-RU')} ₽
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+        <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+          Туристы видят только даты с свободными местами. Занятые даты скрыты автоматически.
+        </p>
       </section>
 
       {/* Кнопка внизу */}
