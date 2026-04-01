@@ -87,13 +87,13 @@ const DOMAIN_CONFIGS: Record<string, DomainConfig> = {
     ],
   },
   evo: {
-    query:  'AI agents travel platform automation LLM open-source 2026',
-    filter: 'Новые AI-инструменты для туристических платформ: LLM модели (дешёвые/быстрые), AI-агенты, автоматизация бронирований, RAG, мультимодальность. Также: DeepSeek, Claude, GPT, Gemini, open-source модели.',
+    query:  'new AI model release multimodal LLM 2026 Qwen Gemini Claude GPT DeepSeek',
+    filter: 'Новые AI-модели и инструменты: релизы LLM (Qwen, Gemini, GPT, Claude, DeepSeek), мультимодальность, AI-агенты, автоматизация. Что можно применить в туристической платформе: дешевле/быстрее/умнее.',
     rss:    [
       'https://habr.com/ru/rss/hub/artificial_intelligence/all/?fl=ru',
-      'https://blog.google/technology/ai/rss/',
       'https://huggingface.co/blog/feed.xml',
-      'https://www.tourprom.ru/news/rss/',
+      'https://openai.com/blog/rss/',
+      'https://www.anthropic.com/rss.xml',
     ],
   },
   security: {

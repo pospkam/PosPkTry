@@ -569,13 +569,15 @@ export async function POST(req: NextRequest) {
           'board-meeting'
         );
 
-        const [directorDecisions, evoInsights] = await Promise.all([
+        const [directorDecisions, evoInsights, intelSignals] = await Promise.all([
           agentMemory.recall('director', 'decision', 3),
           agentMemory.recall('evo', 'insight', 5),
+          agentMemory.recall('evo', 'intelligence', 8),
         ]);
         context.memories = [
           ...directorDecisions.map(m => ({ key: m.key, value: m.value, confidence: m.confidence })),
           ...evoInsights.map(m => ({ key: m.key, value: m.value, confidence: m.confidence })),
+          ...intelSignals.map(m => ({ key: m.key, value: m.value, confidence: m.confidence })),
         ];
 
         if (topic) {
