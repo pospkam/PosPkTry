@@ -1,0 +1,37 @@
+name: Cron — Lead AI Processing
+
+# Runs every 30 minutes — triggers /api/cron/leads-process
+# Catches up any leads that weren't auto-processed on submit
+
+on:
+  schedule:
+    - cron: '7,37 * * * *'   # :07 and :37 every hour (avoid :00/:30 spikes)
+  workflow_dispatch:          # manual trigger from GitHub Actions UI
+
+jobs:
+  process-leads:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Trigger leads processing
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "CRON_SECRET not set in GitHub secrets — skipping"
+            exit 0
+          fi
+
+          HTTP=$(curl -s -o /tmp/leads_resp.json -w "%{http_code}" \
+            --max-time 120 \
+            "https://tourhab.ru/api/cron/leads-process?secret=$CRON_SECRET")
+
+          echo "HTTP: $HTTP"
+          cat /tmp/leads_resp.json 2>/dev/null || true
+
+          if [ "$HTTP" = "200" ]; then
+            echo "Leads processing OK"
+          else
+            echo "Unexpected HTTP $HTTP"
+            exit 1
+          fi
