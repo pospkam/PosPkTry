@@ -36,8 +36,8 @@ AI-помощник Кузьмич подбирает маршрут за мин
 | Frontend | Next.js 15 App Router, React 19, TypeScript strict, Tailwind CSS |
 | Backend | Next.js API Routes, PostgreSQL (pg pool, прямой SQL) |
 | Auth | JWT (jose) + bcrypt, 6 ролей |
-| AI Providers | OpenRouter (primary, OR_API_KEY) → DeepSeek → MiniMax 2.5 → YandexGPT → MiMo → Gemini → Anthropic → xAI |
-| Agent Layer | 10 AI-директоров + 7 рабочих агентов (`lib/agents/`) |
+| AI Providers | DeepSeek (Tier 1) → Gemini → MiMo → OpenRouter → YandexGPT → MiniMax → Anthropic |
+| Agent Layer | 13 AI-директоров + 7 рабочих агентов (`lib/agents/`) |
 | Maps | Yandex Maps API 2.1 |
 | Telegram | @KuzmichKam_bot (tourist) + admin bot |
 | Storage | Timeweb S3 (`s3.twcstorage.ru`) |
@@ -147,11 +147,12 @@ scripts/
 ### Waterfall провайдеров
 
 ```
-OpenRouter (OR_API_KEY, primary) → DeepSeek → MiniMax 2.5
-    → YandexGPT → MiMo → Gemini → Anthropic → xAI
+Tier 1 (race): DeepSeek → Gemini → MiMo
+Tier 2 (race): OpenRouter → YandexGPT → MiniMax
+Tier 3 (sequential): Anthropic
 ```
 
-Каждый провайдер пробуется по очереди. Первый успешный ответ возвращается.
+Tier 1 гонка — первый ответ побеждает. xAI исключён (гео-блок RU).
 Файл: `lib/ai/providers.ts`
 
 ### AI Composition (planner)
@@ -164,22 +165,33 @@ OpenRouter (OR_API_KEY, primary) → DeepSeek → MiniMax 2.5
     → бронирование из чата
 ```
 
-### 10 AI-директоров (Board of Directors)
+### 13 AI-директоров (Board of Directors)
 
-| Агент | Роль | Частота |
-|-------|------|---------|
-| Admin | Операционный директор | 4ч |
-| Legal | Юрисконсульт | 24ч |
-| Security | Безопасность | 2ч |
-| Hacker | Директор по росту | 6ч |
-| Rescue | SAR / Спасатель | 30 мин |
-| Eco | Эколог | 1ч |
-| Content | Контент-аудитор | 8ч |
-| Quality | Качество сервиса | 12ч |
-| Planning | Стратег/прогнозы | 12ч |
-| Evo | Архитектор/эволюция | 24ч |
+| Агент | Роль | Модель |
+|-------|------|--------|
+| Admin | Операционный директор | claude-sonnet-4-6 |
+| Legal | Юрисконсульт | gpt-4o-mini |
+| Security | Безопасность | mistral-large |
+| Hacker | Директор по росту | deepseek-chat-v3 |
+| Rescue | SAR / Спасатель | llama-4-maverick |
+| Eco | Эколог | gemini-2.0-flash |
+| Content | Контент-аудитор | qwen-2.5-72b |
+| Quality | Качество сервиса | gpt-4o |
+| Planning | Стратег/прогнозы | claude-haiku-4-5 |
+| Evo | Архитектор/эволюция | mistral-medium-3 |
+| Finance | CFO | deepseek-chat-v3 |
+| Infra | DevOps / SRE | llama-4-scout |
+| Vibe Coder | Разработчик | qwen-2.5-coder-32b |
 
-Совещание: `/hub/admin/board-meeting` (4 раунда: отчёты → реакции → голосование → инициативы).
+Все модели через OpenRouter (единый `OR_API_KEY`).
+
+Совещание: `/hub/admin/board-meeting` — **5 раундов:**
+1. Отчёты агентов (параллельно)
+2. External Observers (DeepSeek + Gemini — независимый взгляд) + AgentMesh реакции
+3. Консенсус фасилитатора (claude-sonnet-4-6)
+4. Инициативы → `agent_approvals`
+5. Adversarial debate (PRO vs CON по каждой инициативе)
+
 Подробности: `AGENTS.md`
 
 ### Intelligence Monitor (Evo)
@@ -398,7 +410,7 @@ affiliate_payouts        -- Выплаты от партнёров (TravelPayout
 ### Миграции
 
 Миграции: `lib/database/migrations/` + `migrations/`.
-Последняя: **`085_affiliate_payouts.sql`**
+Последняя: **`123_close_sos_e8a57907.sql`**
 
 ```bash
 node scripts/migrate.js   # Накатить все новые миграции
@@ -448,21 +460,23 @@ npx vitest run        # Тесты зелёные
 Страниц:              94+
 API endpoints:        400+
 Компонентов:          120+
-Миграций:             085
+Миграций:             123
 Маршрутов в БД:     1 189
-AI-провайдеров:         8  (waterfall)
-AI-директоров:         10  (Board of Directors)
+AI-провайдеров:         7  (waterfall, без xAI гео-блока)
+AI-директоров:         13  (Board of Directors)
 TS-ошибок:              0
 ```
 
 **Последние изменения:**
-- **Route Enrichment** — каждый тур обогащён блоками Insurance / Flights / Hotels / Transfers (фазы 1+2)
-- **Channel Manager** — `/api/tours-feed` (JSON+XML) для синдикации туров на Tripster/Sputnik8
+- **AI Waterfall** — xAI убран (гео-блок RU), DeepSeek — Tier 1 primary
+- **Board of Directors** — 13 директоров (добавлены Finance, Infra, Vibe Coder), 5 раундов совещания с adversarial debate
+- **Planning агент** — теперь генерирует инициативы в Round 4
+- **Lead Follow-up** — автоматические Telegram follow-up Day+1/2/5 после заявки
+- **Guide Tours Hub** — хаб гидов + UI очереди outreach для admin
+- **Route Enrichment** — каждый тур обогащён блоками Insurance / Flights / Hotels / Transfers
 - **Intelligence Monitor** — агент `evo` мониторит AI-тренды, travel-индустрию, конкурентов каждые 6ч
 - **Аффилиат монетизация** — 8 партнёров, click tracking, payout reconciliation, operator earnings
-- **Operator Outreach** — `scripts/outreach-operator.js` для Telegram-приглашений операторов
 - **Fix конверсии** — `TourPaymentModal` показывает лид-форму для гостей (было: auth-стена → 0 лидов)
-- **Модель "Лид-консьерж"** — AI квалифицирует → менеджер подбирает тур → PDF предложение
 
 ### Юр. лицо
 ООО "ПОС-СЕРВИС", ИНН 4101147649, ОГРН 1114101005952
@@ -478,7 +492,7 @@ TS-ошибок:              0
 - Pool: `import { pool } from '@/lib/db-pool'` (named export)
 - Стили: только CSS-переменные, glassmorphism запрещён
 - Маршруты: только через `v_kamchatka_routes_api`, не `SELECT * FROM kamchatka_routes`
-- Миграции: не менять существующие, добавлять новые (текущая последняя: `085_`)
+- Миграции: не менять существующие, добавлять новые (текущая последняя: `123_`)
 
 ---
 
