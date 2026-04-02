@@ -9,7 +9,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { pool } from '@/lib/db-pool';
-import { callAnthropic, callOpenrouter, callMiMo, callXai } from '@/lib/ai/providers';
+import { callAnthropic, callOpenrouter, callMiMo, callDeepSeek } from '@/lib/ai/providers';
 import type { ChatMessage } from '@/lib/ai/prompts';
 
 export const dynamic = 'force-dynamic';
@@ -167,18 +167,18 @@ export async function GET(request: NextRequest) {
   const issues: HealthIssue[] = [];
 
   // AI-провайдеры (параллельно)
-  const [mimoOk, openrouterOk, anthropicOk, xaiOk] = await Promise.all([
+  const [mimoOk, openrouterOk, anthropicOk, deepseekOk] = await Promise.all([
     probeAI(callMiMo),
     probeAI(callOpenrouter),
     probeAI(callAnthropic),
-    probeAI(callXai),
+    probeAI(callDeepSeek),
   ]);
 
-  const anyOk = mimoOk || openrouterOk || anthropicOk || xaiOk;
+  const anyOk = mimoOk || openrouterOk || anthropicOk || deepseekOk;
   if (!anyOk) {
-    issues.push({ level: 'crit', text: 'Все AI-провайдеры недоступны (MiMo + OpenRouter + Anthropic + xAI)' });
+    issues.push({ level: 'crit', text: 'Все AI-провайдеры недоступны (MiMo + OpenRouter + Anthropic + DeepSeek)' });
   } else {
-    if (!xaiOk) issues.push({ level: 'warn', text: 'xAI (Grok) недоступен' });
+    if (!deepseekOk) issues.push({ level: 'warn', text: 'DeepSeek недоступен' });
     if (!openrouterOk) issues.push({ level: 'warn', text: 'OpenRouter недоступен' });
     if (!mimoOk) issues.push({ level: 'warn', text: 'MiMo недоступен (нет XIAOMI_API_KEY или ошибка)' });
     if (!anthropicOk) issues.push({ level: 'warn', text: 'Anthropic недоступен' });
@@ -210,7 +210,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     ok: issues.filter(i => i.level === 'crit').length === 0,
     ms: Date.now() - started,
-    ai: { mimo: mimoOk, openrouter: openrouterOk, anthropic: anthropicOk },
+    ai: { mimo: mimoOk, openrouter: openrouterOk, anthropic: anthropicOk, deepseek: deepseekOk },
     issues,
   });
 }

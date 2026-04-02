@@ -182,6 +182,11 @@ const PROPOSAL_CONFIGS: Record<string, ProposalConfig> = {
     allowed_types: ['code_change', 'sql_query_fix'],
     domain: 'codebase',
   },
+  planning: {
+    persona:       'Ты стратегический плановик туристической платформы Камчатки. Анализируй прогнозы бронирований, сезонность, дефицит туров. Каждое предложение — конкретные цифры: пиковые даты, % заполняемости, ожидаемый спрос.',
+    allowed_types: ['schedule_suggest', 'booking_rule_change'],
+    domain: 'planning',
+  },
 };
 
 // ── Матрица компетенций: action_type → лучший исполнитель ───────────────────────────────

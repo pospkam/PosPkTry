@@ -721,11 +721,10 @@ async function raceProviders(calls: Promise<string | null>[]): Promise<string | 
 // ── Waterfall: race tiers for speed ─────────────────────────
 // Tier 1: fastest (DeepSeek + Gemini + MiMo) — race
 // Tier 2: mid-tier (OpenRouter + Yandex + MiniMax) — race
-// Tier 3: expensive/geo-blocked (Anthropic, xAI) — sequential fallback
+// Tier 3: geo-blocked (Anthropic) — sequential fallback
 export async function callAIWaterfall(messages: ChatMessage[]): Promise<string> {
-  // Tier 1: race fastest providers (xAI first — confirmed working)
+  // Tier 1: race fastest providers (DeepSeek first — no geo-block)
   const tier1 = await raceProviders([
-    callXai(messages),
     callDeepSeek(messages),
     callGeminiDirect(messages),
     callMiMo(messages),
@@ -743,20 +742,18 @@ export async function callAIWaterfall(messages: ChatMessage[]): Promise<string> 
   // Tier 3: sequential fallback (rarely reached)
   const anthropic = await callAnthropic(messages);
   if (anthropic) return anthropic;
-  const xai = await callXai(messages);
-  if (xai) return xai;
 
   return 'Извините, сервис временно недоступен. Попробуйте позже.';
 }
 
 // ── Fast Waterfall — race cheap providers ────────────────────
 // Для структурированных задач (JSON, бинарные ответы, голосование).
-// Races MiMo + DeepSeek-via-OR + Gemini simultaneously.
+// Races DeepSeek + MiMo + Gemini simultaneously.
 export async function callAIFast(messages: ChatMessage[]): Promise<string> {
   const apiKey = getOpenRouterKey();
 
   const calls: Promise<string | null>[] = [
-    callXai(messages),
+    callDeepSeek(messages),
     callMiMo(messages),
     callGeminiDirect(messages),
   ];
