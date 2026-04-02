@@ -7,7 +7,7 @@ red()  { echo -e "\033[31m$*\033[0m"; }
 warn() { echo -e "\033[33m$*\033[0m"; }
 
 # Только изменённые .ts / .tsx файлы
-CHANGED=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts|tsx)$')
+CHANGED=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts|tsx)$' || true)
 [ -z "$CHANGED" ] && exit 0
 
 check() {
@@ -17,7 +17,7 @@ check() {
   matches=$(echo "$CHANGED" | xargs grep -n --include="*.ts" --include="*.tsx" -E "$pattern" 2>/dev/null \
     | grep -v "node_modules" \
     | grep -v "// allow:" \
-    | grep -v "providers\.ts")
+    | grep -v "providers\.ts" || true)
   if [ -n "$matches" ]; then
     red "ЗАПРЕЩЕНО: $message"
     echo "$matches" | head -5
