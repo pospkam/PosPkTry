@@ -10,7 +10,7 @@
  * Called between Round 1 (reports) and Round 2 (reactions).
  */
 
-import { callDeepSeek, callGemini } from '@/lib/ai/providers';
+import { callAIWaterfall } from '@/lib/ai/providers';
 import type { ChatMessage } from '@/lib/ai/prompts';
 
 // ── Types ─────────────────────────────────────────────────────
@@ -109,21 +109,15 @@ async function runObserver(
   ];
 
   try {
-    let response: string | null = null;
+    const response = await callAIWaterfall(messages);
 
-    if (observer.provider === 'deepseek') {
-      response = await callDeepSeek(messages);
-    } else if (observer.provider === 'gemini') {
-      response = await callGemini(messages);
-    }
-
-    if (!response) {
+    if (!response || response.startsWith('Извините, сервис')) {
       return {
         id:          observer.id,
         name:        observer.name,
         role:        observer.role,
         provider:    observer.provider,
-        report:      `${observer.name} недоступен (API ключ не настроен или сервис не отвечает).`,
+        report:      `${observer.name} временно недоступен.`,
         duration_ms: Date.now() - start,
         status:      'unavailable',
         color:       observer.color,

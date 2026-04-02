@@ -4,7 +4,7 @@
 
 CREATE TABLE IF NOT EXISTS user_ai_memory (
   id                   BIGSERIAL PRIMARY KEY,
-  user_id              BIGINT NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+  user_id              UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
   preferred_activities TEXT[]    DEFAULT '{}',
   preferred_locations  TEXT[]    DEFAULT '{}',
   travel_style         TEXT,

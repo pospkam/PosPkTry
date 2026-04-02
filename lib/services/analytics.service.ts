@@ -6,9 +6,9 @@ export const dashboardService = {
     try {
       const result = await pool.query(`
         SELECT
-          (SELECT COUNT(*)::int FROM bookings WHERE status != 'cancelled') AS bookings,
-          (SELECT COALESCE(SUM(total_price), 0)::numeric FROM bookings WHERE payment_status = 'paid') AS revenue,
-          (SELECT COUNT(*)::int FROM tours WHERE is_active = TRUE) AS tours,
+          (SELECT COUNT(*)::int FROM operator_bookings WHERE booking_status != 'cancelled') AS bookings,
+          (SELECT COALESCE(SUM(final_price), 0)::numeric FROM operator_bookings WHERE payment_status = 'paid') AS revenue,
+          (SELECT COUNT(*)::int FROM operator_tours WHERE is_active = TRUE) AS tours,
           (SELECT COUNT(*)::int FROM users WHERE deleted_at IS NULL) AS users
       `);
       const row = result.rows[0] ?? {};
