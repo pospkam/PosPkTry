@@ -3,17 +3,35 @@
 /**
  * Evolution Loop Runner
  * Запускает автономный цикл: Board Meeting → Инициативы → Исполнение
+ *
+ * Использование:
+ *   DRY_RUN=true node scripts/evolution-runner.js   # Тестовый режим
+ *   node scripts/evolution-runner.js                # Production режим
  */
 
-const PROD_URL = 'https://tourhab.ru';
-const CRON_SECRET = '93cb1fbc1f67bcab036693ef0802ed86b35edc62a938b02333ecd8819655d28f';
+const PROD_URL = process.env.TOURHAB_URL || 'https://tourhab.ru';
+const CRON_SECRET = process.env.CRON_SECRET || '93cb1fbc1f67bcab036693ef0802ed86b35edc62a938b02333ecd8819655d28f';
+const DRY_RUN = process.env.DRY_RUN === 'true';
 
 async function log(stage, msg, data = {}) {
-  console.log(`[${new Date().toISOString()}] ${stage}: ${msg}`, data);
+  const entry = {
+    timestamp: new Date().toISOString(),
+    stage,
+    message: msg,
+    dryRun: DRY_RUN,
+    ...data,
+  };
+  console.log(JSON.stringify(entry));
 }
 
 async function triggerBoardMeeting() {
   log('EVOLUTION', '🎯 Триггер Board Meeting...');
+
+  if (DRY_RUN) {
+    log('EVOLUTION', '(DRY_RUN: пропускаем реальный триггер)');
+    return true;
+  }
+
   try {
     const res = await fetch(`${PROD_URL}/api/cron/board-meeting?secret=${CRON_SECRET}`);
     const data = await res.json();
@@ -30,21 +48,24 @@ async function triggerBoardMeeting() {
 async function waitForBoardMeeting() {
   log('EVOLUTION', '⏳ Жду результатов совещания...');
 
+  if (DRY_RUN) {
+    log('EVOLUTION', '(DRY_RUN: пропускаем ожидание)');
+    return true;
+  }
+
   for (let i = 0; i < 60; i++) {
     try {
-      const res = await fetch(`${PROD_URL}/api/agents/board-meeting/debug`);
+      const res = await fetch(`${PROD_URL}/api/cron/evolution-loop/status`);
       const data = await res.json();
 
-      if (data.stats && data.stats.buffer_size > 0) {
-        const events = data.stats.events_by_type;
-        log('EVOLUTION', `Прогресс: ${data.stats.buffer_size} событий`, events);
-
-        // Проверяем завершён ли
-        if (events.done) {
-          log('EVOLUTION', '✅ Совещание завершено');
-          return true;
-        }
+      if (data.last_board_meeting) {
+        log('EVOLUTION', '✅ Совещание завершено', {
+          meeting: data.last_board_meeting,
+        });
+        return true;
       }
+
+      log('EVOLUTION', `⏳ Попытка ${i + 1}/60...`);
     } catch (e) {
       // ignore
     }
@@ -57,7 +78,7 @@ async function waitForBoardMeeting() {
 }
 
 async function main() {
-  log('EVOLUTION', '🌀 EVOLUTION LOOP STARTED');
+  log('EVOLUTION', `🌀 EVOLUTION LOOP STARTED [${DRY_RUN ? 'DRY_RUN' : 'PRODUCTION'}]`);
 
   const triggered = await triggerBoardMeeting();
   if (!triggered) {
