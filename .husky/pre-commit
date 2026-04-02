@@ -1,0 +1,81 @@
+#!/bin/bash
+# TourHab pre-commit guard — ловит запрещённые паттерны до попадания в репо
+
+ERRORS=0
+
+red()  { echo -e "\033[31m$*\033[0m"; }
+warn() { echo -e "\033[33m$*\033[0m"; }
+
+# Только изменённые .ts / .tsx файлы
+CHANGED=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts|tsx)$')
+[ -z "$CHANGED" ] && exit 0
+
+check() {
+  local pattern="$1"
+  local message="$2"
+  local matches
+  matches=$(echo "$CHANGED" | xargs grep -n --include="*.ts" --include="*.tsx" -E "$pattern" 2>/dev/null \
+    | grep -v "node_modules" \
+    | grep -v "// allow:" \
+    | grep -v "providers\.ts")
+  if [ -n "$matches" ]; then
+    red "ЗАПРЕЩЕНО: $message"
+    echo "$matches" | head -5
+    ERRORS=$((ERRORS + 1))
+  fi
+}
+
+# ── SQL: старые таблицы ────────────────────────────────────────
+check \
+  "FROM\s+bookings\b" \
+  "FROM bookings → используй operator_bookings (поле booking_status, не status)"
+
+check \
+  "FROM\s+tours\b" \
+  "FROM tours → используй operator_tours (или v_kamchatka_routes_api для публичных маршрутов)"
+
+check \
+  "SELECT \* FROM kamchatka_routes\b" \
+  "SELECT * FROM kamchatka_routes → используй v_kamchatka_routes_api"
+
+# ── SQL: конкатенация строк вместо параметров ─────────────────
+check \
+  "query\s*\(\s*\`[^']*\\\$\{" \
+  "Подозрение на SQL-инъекцию: используй параметры \$1,\$2 вместо \${} в query()"
+
+# ── AI: прямой вызов мёртвых провайдеров ─────────────────────
+check \
+  "await callDeepSeek\b" \
+  "callDeepSeek() → ключ просрочен, используй callAIWaterfall() или callAIFast()"
+
+check \
+  "await callMiMo\b" \
+  "callMiMo() → ключ просрочен, используй callAIWaterfall() или callAIFast()"
+
+check \
+  "await callOpenrouter\b" \
+  "callOpenrouter() → ключ просрочен, используй callAIWaterfall() или callAIFast()"
+
+# ── Импорты ───────────────────────────────────────────────────
+check \
+  "import pool from" \
+  "import pool from → используй: import { pool } from '@/lib/db-pool'"
+
+# ── Запрещённый стиль ─────────────────────────────────────────
+check \
+  "bg-white/10|backdrop-blur-|text-cyber-cyan|text-premium-gold|bg-premium-" \
+  "Запрещённые CSS классы (glassmorphism/legacy tokens)"
+
+check \
+  "console\.log\b" \
+  "console.log в продакшн-коде — удали или замени на структурированный лог"
+
+# ── Итог ──────────────────────────────────────────────────────
+if [ "$ERRORS" -gt 0 ]; then
+  red ""
+  red "Коммит заблокирован: $ERRORS нарушений стандартов."
+  red "Исправь ошибки. Чтобы обойти (с обоснованием): git commit --no-verify"
+  exit 1
+fi
+
+exit 0
