@@ -177,20 +177,51 @@ export function buildMetricsForObservers(context: { platformStats?: Record<strin
 }
 
 /**
- * Run all external observers in parallel.
+ * Run all external observers in parallel (DeepSeek + Gemini + Scout-Innovator).
  * Returns reports from each observer.
  */
 export async function runExternalObservers(
   agentReportsSummary: string,
   platformMetrics: string,
 ): Promise<ObserverReport[]> {
-  const results = await Promise.allSettled(
-    OBSERVERS.map(obs => runObserver(obs, agentReportsSummary, platformMetrics))
-  );
+  const start = Date.now();
 
-  return results
+  // Scout-Innovator — читает накопленные разведданные, предлагает эволюцию
+  const scoutPromise: Promise<ObserverReport> = (async () => {
+    try {
+      const { ScoutInnovatorAgency } = await import('@/lib/agents/agencies/scout-innovator-agency');
+      const scout = new ScoutInnovatorAgency();
+      const brief = await scout.briefForBoardMeeting();
+      return {
+        id:          'observer_scout',
+        name:        'Scout-Innovator',
+        role:        'Разведчик-Новатор (AI-эволюция + отрасль)',
+        provider:    'deepseek' as const,
+        report:      brief,
+        duration_ms: Date.now() - start,
+        status:      (brief && !brief.startsWith('Нет данных')) ? 'ok' as const : 'unavailable' as const,
+        color:       '#7C3AED',
+      };
+    } catch {
+      return {
+        id: 'observer_scout', name: 'Scout-Innovator',
+        role: 'Разведчик-Новатор', provider: 'deepseek' as const,
+        report: 'Scout-Innovator временно недоступен.',
+        duration_ms: Date.now() - start, status: 'unavailable' as const, color: '#7C3AED',
+      };
+    }
+  })();
+
+  const [observerResults, scoutResult] = await Promise.all([
+    Promise.allSettled(OBSERVERS.map(obs => runObserver(obs, agentReportsSummary, platformMetrics))),
+    scoutPromise,
+  ]);
+
+  const observerReports = observerResults
     .map(r => r.status === 'fulfilled' ? r.value : null)
     .filter((r): r is ObserverReport => r !== null);
+
+  return [...observerReports, scoutResult];
 }
 
 /**
