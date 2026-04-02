@@ -90,16 +90,19 @@ type StreamEvent =
 // ── Config ────────────────────────────────────────────────────────────────────
 
 const AGENT_CONFIG: Record<string, { icon: LucideIcon; color: string; label: string }> = {
-  admin:    { icon: Shield,     color: 'var(--accent)',  label: 'Администратор' },
-  legal:    { icon: Scale,      color: '#8B5CF6',        label: 'Юрист'         },
-  security: { icon: Lock,       color: 'var(--danger)',  label: 'Безопасность'  },
-  hacker:   { icon: TrendingUp, color: 'var(--success)', label: 'Хакер'         },
-  rescue:   { icon: Binoculars, color: 'var(--warning)', label: 'Спасатель'     },
-  eco:      { icon: Leaf,       color: '#10B981',        label: 'Эколог'        },
-  content:  { icon: FileSearch, color: 'var(--ocean)',   label: 'Аудитор'       },
-  quality:  { icon: Star,       color: '#F59E0B',        label: 'Качество'      },
-  planning: { icon: CalendarDays, color: '#6366F1',      label: 'Планировщик'   },
-  evo:      { icon: Cpu,        color: '#EC4899',        label: 'Эволюция'      },
+  admin:      { icon: Shield,       color: 'var(--accent)',  label: 'Администратор' },
+  legal:      { icon: Scale,        color: '#8B5CF6',        label: 'Юрист'         },
+  security:   { icon: Lock,         color: 'var(--danger)',  label: 'Безопасность'  },
+  hacker:     { icon: TrendingUp,   color: 'var(--success)', label: 'Хакер'         },
+  rescue:     { icon: Binoculars,   color: 'var(--warning)', label: 'Спасатель'     },
+  eco:        { icon: Leaf,         color: '#10B981',        label: 'Эколог'        },
+  content:    { icon: FileSearch,   color: 'var(--ocean)',   label: 'Аудитор'       },
+  quality:    { icon: Star,         color: '#F59E0B',        label: 'Качество'      },
+  planning:   { icon: CalendarDays, color: '#6366F1',        label: 'Планировщик'   },
+  evo:        { icon: Cpu,          color: '#EC4899',        label: 'Эволюция'      },
+  finance:    { icon: Wallet,       color: '#059669',        label: 'Финансы'       },
+  infra:      { icon: Globe,        color: '#7C3AED',        label: 'Инфраструктура'},
+  vibe_coder: { icon: Zap,          color: '#F97316',        label: 'VibeCoder'     },
 };
 
 const TONE_CONFIG: Record<ReactionTone, { icon: LucideIcon; label: string; color: string }> = {
@@ -821,7 +824,7 @@ export default function BoardMeetingClient() {
         </div>
         <div className="flex-1">
           <h1 className="ds-h1">Команда AI</h1>
-          <p className="text-sm text-[var(--text-muted)]">4 раунда: отчёты — реакции — консенсус — инициативы</p>
+          <p className="text-sm text-[var(--text-muted)]">5 раундов: отчёты — реакции — консенсус — инициативы — дебаты</p>
         </div>
         {computeFund && computeFund.total_rub > 0 && (
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
@@ -843,7 +846,7 @@ export default function BoardMeetingClient() {
                 ? 'color-mix(in srgb, var(--danger) 10%, transparent)'
                 : 'color-mix(in srgb, var(--success) 10%, transparent)',
               color: orBalance.low ? 'var(--danger)' : 'var(--success)',
-              border: `1px solid ${orBalance.low ? 'var(--danger)' : 'var(--success)'}30`,
+              border: `1px solid color-mix(in srgb, ${orBalance.low ? 'var(--danger)' : 'var(--success)'} 30%, transparent)`,
             }}>
             <Wallet size={13} />
             ${orBalance.remaining != null ? orBalance.remaining.toFixed(2) : '~'}

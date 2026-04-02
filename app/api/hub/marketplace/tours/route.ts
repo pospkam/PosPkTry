@@ -62,7 +62,14 @@ export async function GET(req: NextRequest) {
         ot.season_end,
         p.name as operator_name,
         p.id as operator_id,
-        COUNT(ob.id)::INT as bookings_count`;
+        COUNT(ob.id)::INT as bookings_count,
+        EXISTS (
+          SELECT 1 FROM tour_availability ta
+          WHERE ta.operator_tour_id = ot.id
+            AND ta.date >= CURRENT_DATE
+            AND ta.deleted_at IS NULL
+            AND (ta.available_slots - COALESCE(ta.booked_slots, 0)) > 0
+        ) as has_availability`;
 
     const from = `
       FROM operator_tours ot
@@ -73,13 +80,6 @@ export async function GET(req: NextRequest) {
       'ot.deleted_at IS NULL',
       'ot.is_active = true',
       'ot.is_published = true',
-      `EXISTS (
-        SELECT 1 FROM tour_availability ta
-        WHERE ta.operator_tour_id = ot.id
-          AND ta.date >= CURRENT_DATE
-          AND ta.deleted_at IS NULL
-          AND (ta.available_slots - COALESCE(ta.booked_slots, 0)) > 0
-      )`,
     ];
     const params: unknown[] = [];
     let idx = 1;
@@ -124,7 +124,7 @@ export async function GET(req: NextRequest) {
       sort === 'price_asc'  ? 'ot.base_price ASC, ot.title ASC' :
       sort === 'price_desc' ? 'ot.base_price DESC, ot.title ASC' :
       sort === 'recent'     ? 'ot.created_at DESC' :
-      /* recommended */       'ot.created_at DESC';
+      /* recommended */       'has_availability DESC, ot.created_at DESC';
 
     const dataQuery = `
       SELECT ${selectFields} ${from} ${where}
