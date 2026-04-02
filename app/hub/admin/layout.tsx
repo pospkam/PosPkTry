@@ -4,7 +4,7 @@ import { ReactNode } from 'react';
 import {
   Shield, Users, Calendar, CalendarDays, FileText, MessageSquareText,
   Briefcase, UserCheck, BarChart3, DollarSign,
-  Activity, Bell, Settings, Brain, Tag, Award, ClipboardList, Plug, TrendingUp, Zap,
+  Activity, Bell, Settings, Brain, Tag, Award, ClipboardList, Plug, TrendingUp, Zap, Send,
   Building2, HardHat, AlertTriangle, Share2,
 } from 'lucide-react';
 import { HubLayout } from '@/components/layout/HubLayout';
@@ -21,6 +21,7 @@ const SIDEBAR_ITEMS = [
   { href: '/hub/admin/content/reviews', label: 'Отзывы', icon: MessageSquareText },
   { href: '/hub/admin/content/partners', label: 'Партнёры', icon: Briefcase },
   { href: '/hub/admin/operators', label: 'Операторы', icon: UserCheck },
+  { href: '/hub/admin/outreach',  label: 'Аутрич',    icon: Send     },
   { href: '/hub/admin/guide-certifications', label: 'Сертификаты гидов', icon: Award },
   { href: '/hub/admin/analytics', label: 'Аналитика', icon: BarChart3 },
   { href: '/hub/admin/calendar', label: 'Календарь', icon: CalendarDays },
