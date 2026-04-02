@@ -63,7 +63,7 @@
     "audit:one": "tsx scripts/research/marketplace-audit.ts",
     "ai:skills:check": "bash scripts/ai/agent-skills-check.sh",
     "ai:skills:apply": "npx autoskills -y -a claude-code",
-    "prepare": "husky"
+    "prepare": "husky || true"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.927.0",
