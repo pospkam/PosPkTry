@@ -1,0 +1,54 @@
+name: Cron — Scout-Innovator (daily)
+
+# Runs once per day at 06:00 UTC:
+# 1. /api/cron/intelligence — собирает AI/travel сигналы
+# 2. /api/cron/scout       — синтезирует → эволюционные предложения
+
+on:
+  schedule:
+    - cron: '0 6 * * *'   # 06:00 UTC = 15:00 KMT (рабочий день)
+  workflow_dispatch:        # ручной запуск из GitHub Actions UI
+
+jobs:
+  scout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Run intelligence monitor (сбор сигналов)
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "CRON_SECRET not set — skipping"
+            exit 0
+          fi
+
+          HTTP=$(curl -s -o /tmp/intel_resp.json -w "%{http_code}" \
+            --max-time 120 \
+            "https://tourhab.ru/api/cron/intelligence?secret=$CRON_SECRET")
+
+          echo "Intelligence HTTP: $HTTP"
+          cat /tmp/intel_resp.json 2>/dev/null || true
+
+      - name: Run Scout-Innovator (синтез → предложения)
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then exit 0; fi
+
+          # Даём intelligence-monitor время завершиться
+          sleep 10
+
+          HTTP=$(curl -s -o /tmp/scout_resp.json -w "%{http_code}" \
+            --max-time 120 \
+            "https://tourhab.ru/api/cron/scout?secret=$CRON_SECRET")
+
+          echo "Scout HTTP: $HTTP"
+          cat /tmp/scout_resp.json 2>/dev/null || true
+
+          if [ "$HTTP" = "200" ]; then
+            echo "Scout-Innovator OK"
+          else
+            echo "Unexpected HTTP $HTTP"
+            exit 1
+          fi
