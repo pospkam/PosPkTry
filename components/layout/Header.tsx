@@ -2,13 +2,30 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Sun, Moon, UserCircle, ShoppingCart, Home } from 'lucide-react';
+import { Sun, Moon, UserCircle, ShoppingCart } from 'lucide-react';
 import { useScrollY } from '@/hooks/useScrollY';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useCart } from '@/contexts/CartContext';
 import Logo from '@/components/shared/Logo';
 
 const FO = "var(--font-outfit,'Outfit',system-ui,sans-serif)";
+
+/* Shared style for 32px round icon buttons */
+const iconBtn: React.CSSProperties = {
+  width: '32px',
+  height: '32px',
+  borderRadius: '50%',
+  border: 'none',
+  background: 'transparent',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  cursor: 'pointer',
+  color: 'var(--text-secondary)',
+  textDecoration: 'none',
+  transition: 'color 0.2s, background 0.2s',
+  flexShrink: 0,
+};
 
 export function Header() {
   const scrollY = useScrollY();
@@ -27,7 +44,7 @@ export function Header() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '12px 16px',
+        padding: '10px 12px',
         fontFamily: FO,
         transition: 'background 0.3s, box-shadow 0.3s',
         background: scrolled ? 'var(--bg-card)' : 'transparent',
@@ -85,46 +102,14 @@ export function Header() {
         ))}
       </nav>
 
-      {/* Right side */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        {/* Home — mobile only */}
-        <Link
-          href="/"
-          aria-label="Домой"
-          className="md:hidden"
-          style={{
-            width: '34px',
-            height: '34px',
-            borderRadius: '50%',
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'var(--text-muted)',
-            textDecoration: 'none',
-          }}
-        >
-          <Home size={18} />
-        </Link>
-
+      {/* Right side — 3 compact icon buttons */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
         {/* Theme toggle */}
         <button
           onClick={toggleTheme}
-          aria-label={isDark ? 'Включить светлую тему' : 'Включить тёмную тему'}
-          style={{
-            width: '34px',
-            height: '34px',
-            borderRadius: '50%',
-            border: 'none',
-            background: 'transparent',
-            color: 'var(--text-primary)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            transition: 'opacity 0.2s',
-          }}
+          aria-label={isDark ? 'Светлая тема' : 'Тёмная тема'}
+          style={iconBtn}
+          className="hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]"
         >
           {isDark ? <Sun size={18} /> : <Moon size={18} />}
         </button>
@@ -133,59 +118,39 @@ export function Header() {
         <Link
           href="/hub/tourist/cart"
           aria-label="Корзина"
-          style={{
-            position: 'relative',
-            width: '34px',
-            height: '34px',
-            borderRadius: '50%',
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'var(--text-muted)',
-            textDecoration: 'none',
-          }}
+          style={{ ...iconBtn, position: 'relative' }}
+          className="hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]"
         >
           <ShoppingCart size={18} />
           {count > 0 && (
             <span style={{
               position: 'absolute',
-              top: '-4px',
-              right: '-4px',
-              minWidth: '16px',
-              height: '16px',
-              borderRadius: '8px',
+              top: '0px',
+              right: '0px',
+              minWidth: '14px',
+              height: '14px',
+              borderRadius: '7px',
               background: 'var(--accent)',
               color: '#fff',
-              fontSize: '10px',
+              fontSize: '9px',
               fontWeight: 700,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              padding: '0 3px',
+              padding: '0 2px',
+              lineHeight: 1,
             }}>
               {count}
             </span>
           )}
         </Link>
 
-        {/* User / ЛК */}
+        {/* Profile */}
         <Link
           href="/profile"
           aria-label="Личный кабинет"
-          style={{
-            width: '34px',
-            height: '34px',
-            borderRadius: '50%',
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'var(--text-muted)',
-            textDecoration: 'none',
-          }}
+          style={iconBtn}
+          className="hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]"
         >
           <UserCircle size={18} />
         </Link>
