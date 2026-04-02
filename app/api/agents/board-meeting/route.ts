@@ -40,6 +40,7 @@ import {
   getSummaryOfViolations,
 } from '@/lib/agents/validation/director-standards';
 import { buildRichAgentContext } from '@/lib/agents/evolution/agent-context-v2';
+import { sendDebugEvent } from '@/app/api/agents/board-meeting/debug/route';
 
 export const dynamic     = 'force-dynamic';
 export const maxDuration = 300;
@@ -718,6 +719,9 @@ export async function POST(req: NextRequest) {
 
   const send = (controller: ReadableStreamDefaultController, data: unknown) => {
     controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+    // Логируем в debug буфер
+    const msg = data as Record<string, unknown>;
+    sendDebugEvent(msg.type as string || 'unknown', msg);
   };
 
   const stream = new ReadableStream({
@@ -730,16 +734,22 @@ export async function POST(req: NextRequest) {
           'board-meeting'
         );
 
-        const [directorDecisions, evoInsights, intelSignals] = await Promise.all([
+        const memoryStart = Date.now();
+        const memoryRecalls = await Promise.allSettled([
           agentMemory.recall('director', 'decision', 3),
           agentMemory.recall('evo', 'insight', 5),
           agentMemory.recall('evo', 'intelligence', 8),
         ]);
+        const directorDecisions = memoryRecalls[0]?.status === 'fulfilled' ? memoryRecalls[0].value : [];
+        const evoInsights = memoryRecalls[1]?.status === 'fulfilled' ? memoryRecalls[1].value : [];
+        const intelSignals = memoryRecalls[2]?.status === 'fulfilled' ? memoryRecalls[2].value : [];
+
         context.memories = [
           ...directorDecisions.map(m => ({ key: m.key, value: m.value, confidence: m.confidence })),
           ...evoInsights.map(m => ({ key: m.key, value: m.value, confidence: m.confidence })),
           ...intelSignals.map(m => ({ key: m.key, value: m.value, confidence: m.confidence })),
         ];
+        send(controller, { type: 'debug', stage: 'memory_recalls', duration_ms: Date.now() - memoryStart, counts: { director: directorDecisions.length, evo: evoInsights.length, intel: intelSignals.length } });
 
         if (topic) {
           context.topic = topic;
@@ -829,6 +839,8 @@ export async function POST(req: NextRequest) {
           send(controller, { type: 'agent_done', agent: report });
         }
 
+        send(controller, { type: 'debug', stage: 'agents_done', total: agents.length, ok: agents.filter(a => a.status === 'ok').length, errors: agents.filter(a => a.status === 'error').map(a => a.id) });
+
         // ── Vote extraction (only when topic is set) ────────────────────────────
         if (topic) {
           const voteResults = await Promise.allSettled(
@@ -852,7 +864,10 @@ export async function POST(req: NextRequest) {
           send(controller, { type: 'observers_start' });
           const reportsSummary = summarizeReportsForObservers(agents);
           const metrics = buildMetricsForObservers(context as unknown as Record<string, unknown>);
+          const observerStart = Date.now();
           observerReports = await runExternalObservers(reportsSummary, metrics);
+          const observerDuration = Date.now() - observerStart;
+          send(controller, { type: 'debug', stage: 'observers_done', duration_ms: observerDuration, total: observerReports.length, ok: observerReports.filter(o => o.status === 'ok').length });
           for (const obs of observerReports) {
             send(controller, { type: 'observer_done', observer: obs });
           }
@@ -879,13 +894,17 @@ export async function POST(req: NextRequest) {
             okObservers.map(o => `[${o.name}]: ${o.report.substring(0, 500)}`).join('\n');
         }
 
+        const consensusStart = Date.now();
         const consensus   = await mesh.runConsensus(agents, reactions, observerInsights, CONSENSUS_MODEL);
+        const consensusDuration = Date.now() - consensusStart;
+        send(controller, { type: 'debug', stage: 'consensus_done', duration_ms: consensusDuration, model: CONSENSUS_MODEL });
         send(controller, { type: 'consensus_done', consensus });
 
         send(controller, { type: 'round4_start' });
         const successfulAgents = agents.filter(a => a.status === 'ok');
 
         // Run all proposals in parallel (instead of sequential)
+        const proposalStart = Date.now();
         const proposalResults = await Promise.allSettled(
           successfulAgents
             .filter(a => !!PROPOSAL_CONFIGS[a.id])
@@ -894,18 +913,24 @@ export async function POST(req: NextRequest) {
               return generateProposal(agent, cfg, consensus, meetingId, topic);
             })
         );
+        const proposalDuration = Date.now() - proposalStart;
         const proposals: AgentProposal[] = [];
+        let proposalErrors = 0;
         for (const res of proposalResults) {
           if (res.status === 'fulfilled' && res.value) {
             send(controller, { type: 'proposal', proposal: res.value });
             proposals.push(res.value);
+          } else if (res.status === 'rejected') {
+            proposalErrors++;
           }
         }
+        send(controller, { type: 'debug', stage: 'proposals_done', duration_ms: proposalDuration, total: proposalResults.length, generated: proposals.length, errors: proposalErrors });
 
         // ── Round 5: Adversarial Debate ─────────────────────────────────────
         if (proposals.length > 0) {
           send(controller, { type: 'round5_start' });
 
+          const debateStart = Date.now();
           const debateResults = await Promise.allSettled(
             proposals.map(async (proposal) => {
               send(controller, { type: 'debate_start', approval_id: proposal.approval_id, title: proposal.title });
@@ -914,11 +939,13 @@ export async function POST(req: NextRequest) {
               return result;
             })
           );
+          const debateDuration = Date.now() - debateStart;
 
           const debates = debateResults
             .map(r => r.status === 'fulfilled' ? r.value : null)
             .filter((d): d is DebateResult => d !== null);
 
+          send(controller, { type: 'debug', stage: 'debates_done', duration_ms: debateDuration, total: debateResults.length, completed: debates.length });
           send(controller, { type: 'round5_done', count: debates.length });
         }
 
@@ -931,6 +958,8 @@ export async function POST(req: NextRequest) {
           synthesis:  consensus,
           duration_ms,
         });
+
+        send(controller, { type: 'debug', stage: 'final_stats', duration_ms, agents_total: agents.length, agents_ok: agents.filter(a => a.status === 'ok').length, observers_total: observerReports.length, observers_ok: observerReports.filter(o => o.status === 'ok').length, proposals: proposals.length });
 
         const okCount = agents.filter(a => a.status === 'ok').length;
         try {
