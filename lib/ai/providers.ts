@@ -723,8 +723,9 @@ async function raceProviders(calls: Promise<string | null>[]): Promise<string | 
 // Tier 2: mid-tier (OpenRouter + Yandex + MiniMax) — race
 // Tier 3: expensive/geo-blocked (Anthropic, xAI) — sequential fallback
 export async function callAIWaterfall(messages: ChatMessage[]): Promise<string> {
-  // Tier 1: race fastest providers
+  // Tier 1: race fastest providers (xAI first — confirmed working)
   const tier1 = await raceProviders([
+    callXai(messages),
     callDeepSeek(messages),
     callGeminiDirect(messages),
     callMiMo(messages),
@@ -755,6 +756,7 @@ export async function callAIFast(messages: ChatMessage[]): Promise<string> {
   const apiKey = getOpenRouterKey();
 
   const calls: Promise<string | null>[] = [
+    callXai(messages),
     callMiMo(messages),
     callGeminiDirect(messages),
   ];
