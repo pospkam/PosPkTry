@@ -269,6 +269,8 @@ const AGENCY_LOADERS: Record<string, () => Promise<{ run(intent: string, ctx: Ag
   plan_forecast:   async () => { const { PlanningAgency } = await import('@/lib/agents/agencies/planning-agency'); return new PlanningAgency(); },
 };
 
+const AGENT_TIMEOUT_MS = 25_000;
+
 async function runAgent(
   intent: string,
   context: AgentContext
@@ -280,7 +282,12 @@ async function runAgent(
       return { response: 'Агент не найден.', duration_ms: Date.now() - start };
     }
     const agency = await loader();
-    const r = await agency.run(intent, context);
+    const r = await Promise.race([
+      agency.run(intent, context),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error(`Таймаут агента ${intent} (${AGENT_TIMEOUT_MS}ms)`)), AGENT_TIMEOUT_MS)
+      ),
+    ]);
     return { response: r.response, duration_ms: Date.now() - start };
   } catch (err) {
     return {

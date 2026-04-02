@@ -157,6 +157,7 @@ export class AgentMesh {
     agents: AgentReport[],
     modelMap?: Record<string, string>,
   ): Promise<AgentReaction[]> {
+    const REACTION_TIMEOUT_MS = 15_000;
     const tasks = agents
       .filter(a => a.status === 'ok')
       .map(async (agent): Promise<AgentReaction | null> => {
@@ -168,7 +169,12 @@ export class AgentMesh {
           const prompt = buildReactionPrompt(agent, agents, cfg.persona);
           const messages: ChatMessage[] = [{ role: 'user', content: prompt }];
           const agentModel = modelMap?.[agent.id] ?? null;
-          const { text } = await callAIWithModel(messages, agentModel);
+          const { text } = await Promise.race([
+            callAIWithModel(messages, agentModel),
+            new Promise<never>((_, reject) =>
+              setTimeout(() => reject(new Error(`Reaction timeout ${agent.id}`)), REACTION_TIMEOUT_MS)
+            ),
+          ]);
 
           if (!text || text.trim().toUpperCase() === 'NULL' || text.trim() === '') {
             return null;
@@ -235,8 +241,14 @@ export class AgentMesh {
         `\nФормат: маркированный список. Деловой стиль. Без воды.`,
     }];
 
+    const CONSENSUS_TIMEOUT_MS = 30_000;
     try {
-      const { text } = await callAIWithModel(messages, consensusModel);
+      const { text } = await Promise.race([
+        callAIWithModel(messages, consensusModel),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Consensus timeout')), CONSENSUS_TIMEOUT_MS)
+        ),
+      ]);
       return text || 'AI-синтез недоступен.';
     } catch {
       return 'AI-синтез временно недоступен.';

@@ -73,6 +73,13 @@ export async function GET(req: NextRequest) {
       'ot.deleted_at IS NULL',
       'ot.is_active = true',
       'ot.is_published = true',
+      `EXISTS (
+        SELECT 1 FROM tour_availability ta
+        WHERE ta.operator_tour_id = ot.id
+          AND ta.date >= CURRENT_DATE
+          AND ta.deleted_at IS NULL
+          AND (ta.available_slots - COALESCE(ta.booked_slots, 0)) > 0
+      )`,
     ];
     const params: unknown[] = [];
     let idx = 1;
