@@ -6,6 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/auth/middleware';
 
 // Глобальный буфер последнего совещания (макс 1000 событий)
 interface DebugEvent {
@@ -32,6 +33,9 @@ export function sendDebugEvent(type: string, data: Record<string, unknown>) {
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
+  const authResult = await requireAdmin(req);
+  if (authResult instanceof NextResponse) return authResult;
+
   const format = req.nextUrl.searchParams.get('format') ?? 'json';
 
   if (format === 'stream') {

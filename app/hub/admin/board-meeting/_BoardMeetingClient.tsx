@@ -221,7 +221,7 @@ function AgentCard({
       <div className="ds-card overflow-hidden opacity-75">
         <div className="flex items-center gap-3 p-4">
           <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-            style={{ background: `${cfg.color}15`, border: `1px solid ${cfg.color}30` }}>
+            style={{ background: `color-mix(in srgb, ${cfg.color} 15%, transparent)`, border: `1px solid color-mix(in srgb, ${cfg.color} 30%, transparent)` }}>
             <Icon size={16} style={{ color: cfg.color }} />
           </div>
           <div className="flex-1 min-w-0">
@@ -242,7 +242,7 @@ function AgentCard({
       <button type="button" onClick={() => setExpanded(e => !e)}
         className="w-full flex items-center gap-3 p-4 hover:bg-[var(--bg-hover)] transition-colors">
         <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-          style={{ background: `${cfg.color}20`, border: `1px solid ${cfg.color}40` }}>
+          style={{ background: `color-mix(in srgb, ${cfg.color} 20%, transparent)`, border: `1px solid color-mix(in srgb, ${cfg.color} 40%, transparent)` }}>
           <Icon size={16} style={{ color: cfg.color }} />
         </div>
         <div className="flex-1 text-left min-w-0">
@@ -260,7 +260,7 @@ function AgentCard({
             : <span className="flex items-center gap-1 text-xs text-[var(--danger)] font-medium"><AlertCircle size={12} />Ошибка</span>}
           {agent.has_signals && (
             <span className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full font-medium"
-              style={{ background: 'var(--ocean)15', color: 'var(--ocean)', border: '1px solid var(--ocean)30' }}>
+              style={{ background: 'color-mix(in srgb, var(--ocean) 15%, transparent)', color: 'var(--ocean)', border: '1px solid color-mix(in srgb, var(--ocean) 30%, transparent)' }}>
               <Globe size={9} />Внешний сигнал
             </span>
           )}
@@ -610,7 +610,7 @@ function VotingSummary({ votes, topic }: { votes: AgentVote[]; topic: string }) 
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-bold text-xs text-[var(--text-primary)]">{v.agent_name}</span>
                     <span className="flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded"
-                      style={{ background: `${cfg.color}15`, color: cfg.color }}>
+                      style={{ background: `color-mix(in srgb, ${cfg.color} 15%, transparent)`, color: cfg.color }}>
                       <Icon size={9} />{cfg.label}
                     </span>
                     <span className="text-[10px] text-[var(--text-muted)] ml-auto">{v.confidence}% уверен</span>
@@ -929,7 +929,7 @@ export default function BoardMeetingClient() {
 
           <div className="ds-card p-8 text-center mb-6">
           <div className="w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-4"
-            style={{ background: 'var(--accent)20' }}>
+            style={{ background: 'color-mix(in srgb, var(--accent) 20%, transparent)' }}>
             <PlayCircle size={32} style={{ color: 'var(--accent)' }} />
           </div>
           <h2 className="ds-h2 mb-1">Открыть совещание</h2>
@@ -941,7 +941,7 @@ export default function BoardMeetingClient() {
               const Icon = cfg.icon;
               return (
                 <div key={id} className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
-                  style={{ background: `${cfg.color}15`, color: cfg.color, border: `1px solid ${cfg.color}30` }}>
+                  style={{ background: `color-mix(in srgb, ${cfg.color} 15%, transparent)`, color: cfg.color, border: `1px solid color-mix(in srgb, ${cfg.color} 30%, transparent)` }}>
                   <Icon size={11} />{cfg.label}
                 </div>
               );
@@ -1058,7 +1058,7 @@ export default function BoardMeetingClient() {
                 <div className="flex justify-center gap-2 mt-4 flex-wrap">
                   {['Новости туризма', 'Законодательство', 'Тренды рынка', 'Безопасность', 'Экология'].map(t => (
                     <span key={t} className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full"
-                      style={{ background: 'var(--ocean)10', color: 'var(--ocean)', border: '1px solid var(--ocean)20' }}>
+                      style={{ background: 'color-mix(in srgb, var(--ocean) 10%, transparent)', color: 'var(--ocean)', border: '1px solid color-mix(in srgb, var(--ocean) 20%, transparent)' }}>
                       <Globe size={9} />{t}
                     </span>
                   ))}
