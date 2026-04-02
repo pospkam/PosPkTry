@@ -119,6 +119,9 @@ Glassmorphism      → запрещён
 - Изменение схемы БД без SQL-миграции
 - `SELECT * FROM kamchatka_routes` — только через `v_kamchatka_routes_api`
 - `import pool from` — только `import { pool } from '@/lib/db-pool'`
+- `FROM bookings` — только `FROM operator_bookings` (колонка `booking_status`, не `status`)
+- `FROM tours` — только `FROM operator_tours` (или `v_kamchatka_routes_api` для публичных маршрутов)
+- `await callDeepSeek()` / `await callMiMo()` / `await callOpenrouter()` напрямую — только через `callAIWaterfall()` или `callAIFast()`; прямые вызовы — только в `lib/ai/providers.ts` и health-probe файлах
 
 **Структура файлов:**
 ```
