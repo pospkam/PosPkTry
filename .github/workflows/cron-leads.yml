@@ -1,7 +1,8 @@
-name: Cron — Lead AI Processing
+name: Cron — Lead AI Processing + Follow-ups
 
-# Runs every 30 minutes — triggers /api/cron/leads-process
-# Catches up any leads that weren't auto-processed on submit
+# Runs every 30 minutes:
+# 1. /api/cron/leads-process — AI-обработка новых лидов
+# 2. /api/cron/followups    — follow-up напоминания Day+1/2/5
 
 on:
   schedule:
@@ -35,3 +36,16 @@ jobs:
             echo "Unexpected HTTP $HTTP"
             exit 1
           fi
+
+      - name: Trigger follow-up reminders
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then exit 0; fi
+
+          HTTP=$(curl -s -o /tmp/followups_resp.json -w "%{http_code}" \
+            --max-time 60 \
+            "https://tourhab.ru/api/cron/followups?secret=$CRON_SECRET")
+
+          echo "Follow-ups HTTP: $HTTP"
+          cat /tmp/followups_resp.json 2>/dev/null || true

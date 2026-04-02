@@ -314,7 +314,37 @@ async function autoProcessLead(leadId: string, leadName: string): Promise<void> 
       }),
     }).catch(() => {});
 
+    // Планируем follow-up напоминания (fire-and-forget)
+    void scheduleFollowups(leadId, leadName, proposal.ai_score);
+
   } catch {
     // Тихая ошибка — не влияет на туриста
+  }
+}
+
+// ── Follow-up расписание: Day+1, Day+2, Day+5 ────────────────────────────────
+async function scheduleFollowups(
+  leadId: string,
+  leadName: string,
+  aiScore: number,
+): Promise<void> {
+  const urgencyDays = aiScore >= 70 ? [1, 2, 4] : [1, 3, 7]; // горячие лиды — чаще
+  const types = ['day1', 'day2', 'day5'] as const;
+
+  const messages = [
+    `Первый follow-up: ${leadName} оставил заявку вчера. Скор ${aiScore}/100. Позвоните сегодня.`,
+    `Второй follow-up: ${leadName} ждёт уже ${urgencyDays[1]} дня. Не упустите клиента.`,
+    `Последний шанс: ${leadName} — заявка без ответа ${urgencyDays[2]} дней. Закройте или отметьте как отказ.`,
+  ];
+
+  const now = new Date();
+  for (let i = 0; i < 3; i++) {
+    const scheduledAt = new Date(now.getTime() + urgencyDays[i] * 24 * 60 * 60 * 1000);
+    await pool.query(
+      `INSERT INTO lead_followups (lead_id, followup_type, scheduled_at, message_text)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT DO NOTHING`,
+      [leadId, types[i], scheduledAt.toISOString(), messages[i]]
+    ).catch(() => {});
   }
 }
