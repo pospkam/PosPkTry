@@ -86,8 +86,9 @@ export async function waitForBoardMeetingCompletion(
       );
 
       if (result.rows.length > 0) {
-        logEvent('board_meeting_completed', result.rows[0]);
-        return result.rows[0];
+        const row = result.rows[0];
+        logEvent('board_meeting_completed', row as unknown as Record<string, unknown>);
+        return row;
       }
     } catch (e) {
       // Table might not exist yet
