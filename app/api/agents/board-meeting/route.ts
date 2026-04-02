@@ -527,8 +527,9 @@ async function debateProposal(
   const agentMap = new Map(agents.map(a => [a.id, a]));
   const agentDefs = new Map(MEETING_AGENTS.map(a => [a.id, a]));
 
+  type AgentId = typeof MEETING_AGENTS[number]['id'];
   const generateArg = async (agentId: string, side: 'pro' | 'con'): Promise<DebateArgument | null> => {
-    const agentDef = agentDefs.get(agentId);
+    const agentDef = agentDefs.get(agentId as AgentId);
     if (!agentDef) return null;
     const agentReport = agentMap.get(agentId);
     const reportSnippet = agentReport

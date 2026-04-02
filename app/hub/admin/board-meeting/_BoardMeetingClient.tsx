@@ -334,7 +334,7 @@ function ReactionBubble({ reaction, index }: { reaction: AgentReaction; index: n
 
 // ── DebateCard ────────────────────────────────────────────────────────────────
 
-const VERDICT_CONFIG = {
+const DEBATE_VERDICT_CONFIG = {
   proceed: { label: 'Рекомендую одобрить', color: 'var(--success)', icon: ThumbsUp  },
   revise:  { label: 'Одобрить с поправками', color: 'var(--warning)', icon: Lightbulb },
   reject:  { label: 'Рекомендую отклонить', color: 'var(--danger)',  icon: ThumbsDown },
@@ -342,7 +342,7 @@ const VERDICT_CONFIG = {
 
 function DebateCard({ debate }: { debate: DebateResult }) {
   const [open, setOpen] = useState(false);
-  const vc = VERDICT_CONFIG[debate.verdict];
+  const vc = DEBATE_VERDICT_CONFIG[debate.verdict];
 
   return (
     <div className="mt-1 rounded-lg border-l-2 overflow-hidden" style={{ borderColor: vc.color, background: 'var(--bg-card)' }}>
