@@ -425,6 +425,106 @@ export async function runIntelligenceCycle(): Promise<IntelligenceReport> {
   };
 }
 
+// ── Manual Signal Injection ──────────────────────────────────────────────────
+
+export interface ManualIntelResult {
+  ok: boolean;
+  domain: string;
+  summary: string;
+  urgency: string;
+  action_items: string[];
+  key: string;
+}
+
+/**
+ * Inject manual intelligence signal (news, article, insights) into agent_memory.
+ * Scout reads it on the next run and generates evolution proposals.
+ *
+ * @param content - raw text of the signal (news article, analysis, etc.)
+ * @param topic   - label for the signal (e.g. "Anthropic April 2026")
+ * @param domain  - domain classification (default: 'ai_tech')
+ */
+export async function injectManualIntel(
+  content: string,
+  topic: string,
+  domain: 'ai_tech' | 'travel_industry' | 'competitors' = 'ai_tech',
+): Promise<ManualIntelResult> {
+  const domainConfig = INTELLIGENCE_DOMAINS[domain];
+
+  const messages: ChatMessage[] = [
+    {
+      role: 'system',
+      content: `Ты аналитик разведки туристической AI-платформы TourHab (Камчатка, Россия).
+Платформа: Next.js 15, 13 AI-агентов (совет директоров), 260+ маршрутов, Scout-Innovator эволюция.
+Стек AI: DeepSeek, Gemini, Claude, GPT, MCP-интеграции, OpenRouter.
+
+Из входящего текста выдели ACTIONABLE intelligence для нашей платформы.
+Фокус: что конкретно можно применить / скопировать / адаптировать прямо сейчас.
+
+Формат ответа (строго JSON):
+{
+  "summary": "2-3 предложения: главное что применимо к TourHab",
+  "urgency": "critical | notable | informational",
+  "action_items": ["глагол + конкретное действие 1", "глагол + конкретное действие 2"]
+}
+
+Правила:
+- "critical" = нужно реагировать / мигрировать / адаптировать срочно (deprecation, прорыв)
+- "notable" = важный тренд или возможность, стоит включить в следующий Board Meeting
+- "informational" = контекст для совета директоров
+- action_items максимум 3, применимы именно к нашей платформе
+- Отвечай ТОЛЬКО JSON, без markdown-обёртки`,
+    },
+    {
+      role: 'user',
+      content: `Тема: ${topic}\nДомен: ${domainConfig?.label ?? domain}\n\nКонтент:\n${content.substring(0, 6000)}`,
+    },
+  ];
+
+  const text = await callAIWithModelDirect(messages, 'fast').catch(() => null);
+
+  let summary = `Ручной сигнал: ${topic}`;
+  let urgency: IntelligenceFinding['urgency'] = 'notable';
+  let actionItems: string[] = [];
+
+  if (text) {
+    try {
+      const jsonStr = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+      const parsed = JSON.parse(jsonStr) as { summary?: string; urgency?: string; action_items?: string[] };
+      if (parsed.summary) summary = parsed.summary;
+      if (['critical', 'notable', 'informational'].includes(parsed.urgency ?? '')) {
+        urgency = parsed.urgency as IntelligenceFinding['urgency'];
+      }
+      if (Array.isArray(parsed.action_items)) {
+        actionItems = parsed.action_items.slice(0, 3);
+      }
+    } catch { /* keep defaults */ }
+  }
+
+  const dateKey = new Date().toISOString().slice(0, 13).replace('T', '_');
+  const key = `intel_manual_${domain}_${dateKey}`;
+
+  await agentMemory.remember({
+    agent_id: 'evo',
+    memory_type: 'intelligence',
+    key,
+    value: {
+      domain,
+      summary,
+      urgency,
+      action_items: actionItems,
+      signal_count: 1,
+      source_topic: topic,
+      injected_manually: true,
+    },
+    confidence: urgency === 'critical' ? 0.95 : urgency === 'notable' ? 0.85 : 0.7,
+    source: 'manual_injection',
+    expires_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days
+  });
+
+  return { ok: true, domain, summary, urgency, action_items: actionItems, key };
+}
+
 /**
  * Get latest intelligence for Board of Directors context.
  * Reads from agent_memory (last 24h).

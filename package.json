@@ -61,6 +61,8 @@
     "audit:all": "tsx scripts/research/marketplace-audit.ts --headless",
     "audit:watch": "tsx scripts/research/marketplace-audit.ts",
     "audit:one": "tsx scripts/research/marketplace-audit.ts",
+    "ai:skills:check": "bash scripts/ai/agent-skills-check.sh",
+    "ai:skills:apply": "npx autoskills -y -a claude-code",
     "prepare": "husky"
   },
   "dependencies": {

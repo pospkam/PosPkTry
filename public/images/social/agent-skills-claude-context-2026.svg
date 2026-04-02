@@ -1,0 +1,75 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Agent Skills + CLAUDE.md — Контекст-инжиниринг</title>
+  <desc id="desc">Постер для соцсетей о внедрении Agent Skills и CLAUDE.md в проект TourHab.</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F5F0EB"/>
+      <stop offset="0.55" stop-color="#EFE6DC"/>
+      <stop offset="1" stop-color="#E6D9CC"/>
+    </linearGradient>
+    <linearGradient id="lava" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#D44A0C"/>
+      <stop offset="1" stop-color="#B73A03"/>
+    </linearGradient>
+    <linearGradient id="ocean" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2568B0"/>
+      <stop offset="1" stop-color="#0D4E8C"/>
+    </linearGradient>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#1A1714" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <circle cx="1050" cy="110" r="170" fill="#FFFFFF" fill-opacity="0.38"/>
+  <circle cx="1100" cy="170" r="110" fill="#FFFFFF" fill-opacity="0.30"/>
+
+  <path d="M0 630L210 360L360 520L515 300L700 630H0Z" fill="#C8B4A1" fill-opacity="0.45"/>
+  <path d="M420 630L620 280L860 630H420Z" fill="#AF9B89" fill-opacity="0.38"/>
+  <path d="M820 630L980 370L1200 630H820Z" fill="#988673" fill-opacity="0.34"/>
+
+  <g filter="url(#softShadow)">
+    <rect x="56" y="56" width="1088" height="518" rx="28" fill="#FFFFFF" fill-opacity="0.78"/>
+  </g>
+
+  <rect x="84" y="88" width="250" height="36" rx="18" fill="url(#lava)"/>
+  <text x="209" y="112" text-anchor="middle" font-family="Outfit, Arial, sans-serif" font-size="17" font-weight="700" letter-spacing="0.04em" fill="#FFFFFF">TOURHAB / EVOLUTION</text>
+
+  <text x="84" y="186" font-family="Playfair Display, Georgia, serif" font-size="58" font-weight="700" fill="#1A1714">AGENT SKILLS + CLAUDE.md</text>
+  <text x="84" y="242" font-family="Outfit, Arial, sans-serif" font-size="32" font-weight="600" fill="#1A1714">Контекст-инжиниринг в один клик</text>
+
+  <text x="84" y="302" font-family="Outfit, Arial, sans-serif" font-size="24" font-weight="700" fill="#D44A0C">3 инструмента для реального ускорения</text>
+
+  <g font-family="Outfit, Arial, sans-serif" fill="#1A1714">
+    <rect x="84" y="334" width="22" height="22" rx="6" fill="url(#ocean)"/>
+    <text x="117" y="350" font-size="22" font-weight="600">autoskills: автоподбор Agent Skills под стек</text>
+
+    <rect x="84" y="376" width="22" height="22" rx="6" fill="url(#ocean)"/>
+    <text x="117" y="392" font-size="22" font-weight="600">docs-to-skills: документация в исполняемые навыки</text>
+
+    <rect x="84" y="418" width="22" height="22" rx="6" fill="url(#ocean)"/>
+    <text x="117" y="434" font-size="22" font-weight="600">CLAUDE.md: меньше воды, больше фокуса</text>
+  </g>
+
+  <rect x="84" y="466" width="690" height="70" rx="14" fill="#F5F0EB"/>
+  <text x="104" y="507" font-family="Outfit, Arial, sans-serif" font-size="24" font-weight="700" fill="#1A1714">Меньше рутины. Больше продуктовых итераций.</text>
+
+  <g>
+    <rect x="828" y="144" width="286" height="356" rx="22" fill="#1A1714"/>
+    <text x="853" y="190" font-family="Outfit, Arial, sans-serif" font-size="20" font-weight="700" fill="#F5F0EB">Quick Start</text>
+    <text x="853" y="226" font-family="monospace" font-size="16" fill="#F0F6FC">$ npx autoskills</text>
+    <text x="853" y="258" font-family="monospace" font-size="16" fill="#F0F6FC">$ npx docs-to-skills</text>
+    <text x="853" y="290" font-family="monospace" font-size="16" fill="#F0F6FC">$ curl -O .../CLAUDE.md</text>
+
+    <rect x="853" y="330" width="236" height="2" fill="#30363D"/>
+
+    <text x="853" y="372" font-family="Outfit, Arial, sans-serif" font-size="18" font-weight="600" fill="#E8734A">Фокус:</text>
+    <text x="853" y="401" font-family="Outfit, Arial, sans-serif" font-size="16" fill="#F0F6FC">Только лучшее в проект</text>
+    <text x="853" y="430" font-family="Outfit, Arial, sans-serif" font-size="16" fill="#F0F6FC">Без лишнего контекста</text>
+    <text x="853" y="459" font-family="Outfit, Arial, sans-serif" font-size="16" fill="#F0F6FC">Скорость + качество</text>
+  </g>
+
+  <text x="84" y="586" font-family="Outfit, Arial, sans-serif" font-size="18" font-weight="600" fill="#6B6560">tourhab.ru</text>
+</svg>

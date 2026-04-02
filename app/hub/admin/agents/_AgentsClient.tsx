@@ -9,7 +9,7 @@ import {
   Shield, Scale, Lock, Binoculars, Leaf, FileSearch, Star,
   Cpu, BarChart3, Megaphone, CalendarDays, GitMerge, Network,
   Loader2, ExternalLink, UserCheck, Target, Terminal, X,
-  Wrench, Copy, Check as CheckIcon,
+  Wrench, Copy, Check as CheckIcon, Telescope, Send,
 } from 'lucide-react';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -48,6 +48,18 @@ interface DispatchResponse {
   intent: string;
   response: string;
   duration_ms: number;
+}
+
+interface BoardMeetingStatus {
+  created_at: string;
+  intent: string;
+  agents_ok: string | null;
+  duration_ms: string | null;
+  result: string | null;
+}
+
+interface EvolutionLoopStatusResponse {
+  last_board_meeting?: BoardMeetingStatus | null;
 }
 
 interface SystemPattern {
@@ -130,7 +142,7 @@ interface Approval {
 
 interface ApprovalsResponse { success: boolean; data: Approval[]; total: number }
 
-type Tab = 'activity' | 'insights' | 'experiments' | 'approvals' | 'registry' | 'mesh';
+type Tab = 'activity' | 'insights' | 'experiments' | 'approvals' | 'registry' | 'mesh' | 'intelligence';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -1533,6 +1545,176 @@ function MeshTab() {
   );
 }
 
+// ── Intelligence Tab ────────────────────────────────────────────────────────
+
+interface IntelFinding {
+  domain: string;
+  summary: string;
+  urgency: 'critical' | 'notable' | 'informational';
+  action_items: string[];
+  updated_at: string;
+}
+
+function IntelligenceTab() {
+  const [findings, setFindings] = useState<IntelFinding[]>([]);
+  const [loadingFindings, setLoadingFindings] = useState(true);
+  const [content, setContent]   = useState('');
+  const [topic, setTopic]       = useState('');
+  const [domain, setDomain]     = useState<'ai_tech' | 'travel_industry' | 'competitors'>('ai_tech');
+  const [injecting, setInjecting] = useState(false);
+  const [injectResult, setInjectResult] = useState<{ ok: boolean; summary: string; urgency: string; action_items: string[] } | null>(null);
+  const [injectError, setInjectError] = useState('');
+
+  useEffect(() => {
+    fetch('/api/agents/intelligence')
+      .then(r => r.json())
+      .then((d: { findings?: IntelFinding[] }) => {
+        setFindings(d.findings ?? []);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingFindings(false));
+  }, []);
+
+  async function handleInject() {
+    if (!content.trim() || !topic.trim()) return;
+    setInjecting(true);
+    setInjectResult(null);
+    setInjectError('');
+    try {
+      const res = await fetch('/api/agents/intelligence', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content, topic, domain }),
+      });
+      const data = await res.json() as { ok?: boolean; summary?: string; urgency?: string; action_items?: string[]; error?: string };
+      if (!res.ok || !data.ok) {
+        setInjectError(data.error ?? 'Ошибка инъекции');
+      } else {
+        setInjectResult({ ok: true, summary: data.summary ?? '', urgency: data.urgency ?? '', action_items: data.action_items ?? [] });
+        setContent('');
+        setTopic('');
+      }
+    } catch {
+      setInjectError('Сетевая ошибка');
+    } finally {
+      setInjecting(false);
+    }
+  }
+
+  const urgencyColor = (u: string) => {
+    if (u === 'critical') return 'text-[var(--danger)]';
+    if (u === 'notable')  return 'text-[var(--warning)]';
+    return 'text-[var(--text-muted)]';
+  };
+
+  const urgencyLabel = (u: string) => {
+    if (u === 'critical') return 'критично';
+    if (u === 'notable')  return 'важно';
+    return 'инфо';
+  };
+
+  return (
+    <div className="p-4 space-y-6">
+
+      {/* Inject panel */}
+      <div className="ds-card p-4 space-y-3">
+        <p className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-2">
+          <Send className="w-4 h-4 text-[var(--accent)]" />
+          Добавить сигнал в эволюцию
+        </p>
+        <p className="text-xs text-[var(--text-muted)]">
+          Вставь статью, инсайт или новость. Scout подхватит на следующем прогоне (06:00 UTC) и сгенерирует предложения для платформы.
+        </p>
+
+        <input
+          type="text"
+          placeholder="Тема (напр. Anthropic апрель 2026 — Claude Code)"
+          value={topic}
+          onChange={e => setTopic(e.target.value)}
+          className="ds-input text-sm w-full"
+        />
+
+        <select
+          value={domain}
+          onChange={e => setDomain(e.target.value as typeof domain)}
+          className="ds-input text-sm w-full"
+        >
+          <option value="ai_tech">AI &amp; Технологии</option>
+          <option value="travel_industry">Туристическая отрасль</option>
+          <option value="competitors">Конкуренты</option>
+        </select>
+
+        <textarea
+          rows={7}
+          placeholder="Вставь текст статьи / новости / инсайта..."
+          value={content}
+          onChange={e => setContent(e.target.value)}
+          className="ds-input text-xs w-full resize-y font-mono"
+        />
+
+        <button
+          onClick={handleInject}
+          disabled={injecting || !content.trim() || !topic.trim()}
+          className="ds-btn ds-btn-primary flex items-center gap-2 disabled:opacity-50"
+        >
+          {injecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+          {injecting ? 'Анализирую...' : 'Отправить в эволюцию'}
+        </button>
+
+        {injectError && (
+          <p className="text-xs text-[var(--danger)] flex items-center gap-1">
+            <XCircle className="w-3.5 h-3.5" /> {injectError}
+          </p>
+        )}
+
+        {injectResult && (
+          <div className="rounded-lg bg-[var(--bg-hover)] p-3 space-y-1.5">
+            <p className={`text-xs font-semibold flex items-center gap-1.5 ${urgencyColor(injectResult.urgency)}`}>
+              <CheckCircle className="w-3.5 h-3.5" />
+              Сигнал сохранён — {urgencyLabel(injectResult.urgency)}
+            </p>
+            <p className="text-xs text-[var(--text-secondary)]">{injectResult.summary}</p>
+            {injectResult.action_items.length > 0 && (
+              <ul className="text-xs text-[var(--text-muted)] space-y-0.5 ml-3">
+                {injectResult.action_items.map((a, i) => <li key={i}>→ {a}</li>)}
+              </ul>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Existing findings */}
+      <div className="space-y-2">
+        <p className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-2">
+          <Telescope className="w-4 h-4 text-[var(--ocean)]" />
+          Текущие разведданные ({findings.length})
+        </p>
+        {loadingFindings && <p className="text-xs text-[var(--text-muted)]">Загрузка...</p>}
+        {!loadingFindings && findings.length === 0 && (
+          <p className="text-xs text-[var(--text-muted)]">Разведданных нет. Запустите intelligence cron или добавьте сигнал выше.</p>
+        )}
+        <div className="space-y-2">
+          {findings.map((f, i) => (
+            <div key={i} className="ds-card p-3 space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">{f.domain}</span>
+                <span className={`text-[10px] font-semibold ${urgencyColor(f.urgency)}`}>{urgencyLabel(f.urgency)}</span>
+              </div>
+              <p className="text-xs text-[var(--text-secondary)]">{f.summary}</p>
+              {f.action_items?.length > 0 && (
+                <ul className="text-[10px] text-[var(--text-muted)] ml-2 space-y-0.5">
+                  {f.action_items.map((a, j) => <li key={j}>→ {a}</li>)}
+                </ul>
+              )}
+              <p className="text-[9px] text-[var(--text-muted)]">{fmtDate(f.updated_at)}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main Component ─────────────────────────────────────────────────────────────
 
 const TABS: { id: Tab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
@@ -1542,6 +1724,7 @@ const TABS: { id: Tab; label: string; icon: React.ComponentType<{ className?: st
   { id: 'insights',    label: 'Аналитика',    icon: TrendingUp   },
   { id: 'experiments', label: 'Эксперименты', icon: FlaskConical },
   { id: 'approvals',   label: 'Одобрения',    icon: ShieldCheck  },
+  { id: 'intelligence', label: 'Разведка',     icon: Telescope    },
 ];
 
 export default function AgentsClient() {
@@ -1555,6 +1738,8 @@ export default function AgentsClient() {
   const [message,     setMessage]     = useState('');
   const [dispatching, setDispatching] = useState(false);
   const [dispatchRes, setDispatchRes] = useState<DispatchResponse | null>(null);
+  const [lastBoardMeeting, setLastBoardMeeting] = useState<BoardMeetingStatus | null>(null);
+  const [boardLoading, setBoardLoading] = useState(true);
 
   const fetchActivity = useCallback(async (h = hours) => {
     setLoading(true);
@@ -1599,6 +1784,15 @@ export default function AgentsClient() {
       .then(r => r.json() as Promise<ApprovalsResponse>)
       .then(j => { if (j.success) setPendingCount(j.total); })
       .catch(() => null);
+  }, []);
+
+  useEffect(() => {
+    setBoardLoading(true);
+    fetch('/api/cron/evolution-loop/status')
+      .then(r => r.json() as Promise<EvolutionLoopStatusResponse>)
+      .then(j => setLastBoardMeeting(j.last_board_meeting ?? null))
+      .catch(() => setLastBoardMeeting(null))
+      .finally(() => setBoardLoading(false));
   }, []);
 
   return (
@@ -1658,6 +1852,43 @@ export default function AgentsClient() {
         })}
       </div>
 
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-3">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-[var(--text-primary)]">
+            <GitMerge className="w-3.5 h-3.5 text-[var(--accent)]" />
+            Последнее заседание совета
+          </div>
+          <a href="/hub/admin/board-meeting" className="text-[10px] text-[var(--ocean)] hover:underline">
+            Открыть
+          </a>
+        </div>
+
+        {boardLoading ? (
+          <div className="mt-2 flex items-center gap-1.5 text-[10px] text-[var(--text-muted)]">
+            <Loader2 className="w-3 h-3 animate-spin" /> Загрузка
+          </div>
+        ) : lastBoardMeeting ? (
+          <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2 text-[10px]">
+            <div className="bg-[var(--bg-hover)] rounded px-2 py-1.5">
+              <div className="text-[var(--text-muted)]">Когда</div>
+              <div className="text-[var(--text-primary)] font-medium">{fmtDate(lastBoardMeeting.created_at)}</div>
+            </div>
+            <div className="bg-[var(--bg-hover)] rounded px-2 py-1.5">
+              <div className="text-[var(--text-muted)]">Статус</div>
+              <div className="text-[var(--success)] font-medium">проведено</div>
+            </div>
+            <div className="bg-[var(--bg-hover)] rounded px-2 py-1.5">
+              <div className="text-[var(--text-muted)]">Длительность</div>
+              <div className="text-[var(--text-primary)] font-medium">
+                {lastBoardMeeting.duration_ms ? `${(Number(lastBoardMeeting.duration_ms) / 1000).toFixed(1)}с` : '—'}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-2 text-[10px] text-[var(--text-muted)]">Записей о заседаниях за период не найдено.</div>
+        )}
+      </div>
+
       {tab === 'registry' && <RegistryTab hours={hours} />}
       {tab === 'mesh'     && <MeshTab />}
       {tab === 'activity' && (
@@ -1670,9 +1901,10 @@ export default function AgentsClient() {
           handleDispatch={handleDispatch}
         />
       )}
-      {tab === 'insights'    && <InsightsTab hours={hours} />}
-      {tab === 'experiments' && <ExperimentsTab />}
-      {tab === 'approvals'   && <ApprovalsTab />}
+      {tab === 'insights'      && <InsightsTab hours={hours} />}
+      {tab === 'experiments'   && <ExperimentsTab />}
+      {tab === 'approvals'     && <ApprovalsTab />}
+      {tab === 'intelligence'  && <IntelligenceTab />}
 
     </div>
   );

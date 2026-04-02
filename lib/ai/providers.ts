@@ -58,9 +58,27 @@ const OR_MODELS = [
   { id: 'anthropic/claude-haiku-4-5',        timeout: 25_000 },
 ];
 
+// If OpenRouter returns auth errors (401/403), avoid repeated slow failures.
+// We temporarily disable OR for a short cooldown and let waterfall use other providers.
+const OPENROUTER_AUTH_COOLDOWN_MS = 10 * 60 * 1000;
+let openRouterDisabledUntil = 0;
+
+function isOpenRouterTemporarilyDisabled(): boolean {
+  return Date.now() < openRouterDisabledUntil;
+}
+
+function markOpenRouterAuthFailure(): void {
+  openRouterDisabledUntil = Date.now() + OPENROUTER_AUTH_COOLDOWN_MS;
+}
+
+function clearOpenRouterFailure(): void {
+  openRouterDisabledUntil = 0;
+}
+
 export async function callOpenrouter(messages: ChatMessage[]): Promise<string | null> {
   const apiKey = getOpenRouterKey();
   if (!apiKey) return null;
+  if (isOpenRouterTemporarilyDisabled()) return null;
 
   const payload = messages.map(({ role, content }) => ({ role, content }));
 
@@ -83,7 +101,15 @@ export async function callOpenrouter(messages: ChatMessage[]): Promise<string | 
         signal: AbortSignal.timeout(timeout),
       });
 
-      if (!res.ok) continue; // next model
+      if (!res.ok) {
+        if (res.status === 401 || res.status === 403) {
+          markOpenRouterAuthFailure();
+          return null;
+        }
+        continue; // next model
+      }
+
+      clearOpenRouterFailure();
       const data = await res.json();
       const text: string | undefined = data?.choices?.[0]?.message?.content;
       if (text?.trim()) return text;
@@ -104,6 +130,7 @@ export async function callOpenRouterModel(
 ): Promise<{ text: string; model_used: string } | null> {
   const apiKey = getOpenRouterKey();
   if (!apiKey) return null;
+  if (isOpenRouterTemporarilyDisabled()) return null;
 
   const payload = messages.map(({ role, content }) => ({ role, content }));
 
@@ -125,7 +152,14 @@ export async function callOpenRouterModel(
       signal: AbortSignal.timeout(timeoutMs),
     });
 
-    if (!res.ok) return null;
+    if (!res.ok) {
+      if (res.status === 401 || res.status === 403) {
+        markOpenRouterAuthFailure();
+      }
+      return null;
+    }
+
+    clearOpenRouterFailure();
     const data = await res.json() as { choices?: Array<{ message?: { content?: string } }> };
     const text = data?.choices?.[0]?.message?.content;
     if (!text?.trim()) return null;
@@ -759,7 +793,7 @@ export async function callAIFast(messages: ChatMessage[]): Promise<string> {
   ];
 
   // DeepSeek via OpenRouter (inline to avoid extra function)
-  if (apiKey) {
+  if (apiKey && !isOpenRouterTemporarilyDisabled()) {
     const payload = messages.map(({ role, content }) => ({ role, content }));
     calls.push(
       fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -778,7 +812,16 @@ export async function callAIFast(messages: ChatMessage[]): Promise<string> {
         }),
         signal: AbortSignal.timeout(12_000),
       })
-        .then(res => res.ok ? res.json() : null)
+        .then(async (res) => {
+          if (!res.ok) {
+            if (res.status === 401 || res.status === 403) {
+              markOpenRouterAuthFailure();
+            }
+            return null;
+          }
+          clearOpenRouterFailure();
+          return res.json();
+        })
         .then(data => (data?.choices?.[0]?.message?.content as string) ?? null)
         .catch(() => null)
     );

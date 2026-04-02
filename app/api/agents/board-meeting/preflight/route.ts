@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { preflightProviders } from '@/lib/ai/providers';
 import { getComputeFundStats } from '@/lib/compute-fund';
+import { getOpenRouterKey } from '@/lib/ai/provider-config';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,8 +41,8 @@ export async function GET(req: NextRequest) {
 
 /** Test each OpenRouter model with a real prompt (not just 'ok') */
 async function runDeepTest() {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) return { error: 'OPENROUTER_API_KEY not set' };
+  const apiKey = getOpenRouterKey();
+  if (!apiKey) return { error: 'OpenRouter key not set (OR_API_KEY or OPENROUTER_API_KEY)' };
 
   const models = [
     'openai/gpt-4o-mini',
@@ -102,7 +103,9 @@ async function runDeepTest() {
 
   // Also test env vars presence
   const envCheck = {
+    OR_API_KEY: !!process.env.OR_API_KEY,
     OPENROUTER_API_KEY: !!process.env.OPENROUTER_API_KEY,
+    OPENROUTER_ANY_KEY: !!getOpenRouterKey(),
     XIAOMI_API_KEY: !!process.env.XIAOMI_API_KEY,
     YANDEX_API_KEY: !!process.env.YANDEX_API_KEY,
     DEEPSEEK_API_KEY: !!process.env.DEEPSEEK_API_KEY,
