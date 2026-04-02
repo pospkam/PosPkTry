@@ -1,8 +1,9 @@
 /**
- * OperatorVerdictAgency — Bull/Bear протокол оценки операторов.
+ * OperatorVerdictAgency — симметричная оценка операторов для пользы проекта.
  *
- * Аналог AI-фонда: 5 «быков» vs 5 «медведей» спорят по каждому оператору.
- * Данные: только последние 30 дней (старое = уже в цене).
+ * 5 сторонников vs 5 скептиков спорят по каждому оператору.
+ * Цель: выявить кого продвигать, кому помочь, кого предупредить — без предвзятости.
+ * Данные: только последние 30 дней (актуальная картина).
  * Вердикт: promote / hold / warn / suspend.
  *
  * READ ONLY — не пишет в БД, только анализирует.
@@ -27,9 +28,9 @@ export interface OperatorMetrics {
 
 export type Verdict = 'promote' | 'hold' | 'warn' | 'suspend';
 
-export interface BullBearArgument {
+export interface VerdictArgument {
   role: string;
-  side: 'bull' | 'bear';
+  side: 'pro' | 'con';
   argument: string;
 }
 
@@ -37,29 +38,29 @@ export interface OperatorVerdictResult {
   operator_id: string;
   operator_name: string;
   metrics: OperatorMetrics;
-  arguments: BullBearArgument[];
-  bull_score: number;
-  bear_score: number;
+  arguments: VerdictArgument[];
+  pro_score: number;
+  con_score: number;
   verdict: Verdict;
   reasoning: string;
 }
 
-// ── Bull/Bear роли ──────────────────────────────────────────────────────────
+// ── Роли сторонников и скептиков (на пользу проекта) ──────────────────────
 
-const BULL_ROLES = [
-  { role: 'Аналитик роста', focus: 'динамика бронирований, потенциал масштабирования' },
+const PRO_ROLES = [
+  { role: 'Аналитик роста', focus: 'динамика бронирований, вклад в развитие платформы' },
   { role: 'Голос туриста', focus: 'клиентский опыт, доступность туров, удобство' },
-  { role: 'Финансовый оптимист', focus: 'вклад в выручку платформы, средний чек' },
-  { role: 'Стратег платформы', focus: 'уникальность предложения, заполнение ниш' },
-  { role: 'Оптимист потенциала', focus: 'тренд роста, сезонные перспективы' },
+  { role: 'Финансовый аналитик', focus: 'вклад в выручку платформы, средний чек' },
+  { role: 'Стратег платформы', focus: 'уникальность предложения, заполнение ниш каталога' },
+  { role: 'Аналитик перспектив', focus: 'сезонный потенциал, возможности для улучшения' },
 ];
 
-const BEAR_ROLES = [
-  { role: 'Инспектор рисков', focus: 'риски для платформы, красные флаги' },
-  { role: 'Аудитор качества', focus: 'стандарты сервиса, жалобы, отмены' },
+const CON_ROLES = [
+  { role: 'Инспектор рисков', focus: 'риски для репутации платформы, красные флаги' },
+  { role: 'Аудитор качества', focus: 'стандарты сервиса, отмены, несоответствия' },
   { role: 'Аналитик ёмкости', focus: 'реальная доступность туров, незаполненные слоты' },
-  { role: 'Финансовый скептик', focus: 'реальный вклад vs занимаемое место на платформе' },
-  { role: 'Защитник туриста', focus: 'интересы клиентов, риск плохого опыта' },
+  { role: 'Аналитик эффективности', focus: 'реальный вклад vs занимаемое место на платформе' },
+  { role: 'Защитник туриста', focus: 'интересы клиентов, риск негативного опыта' },
 ];
 
 // ── SQL: метрики оператора за 30 дней ──────────────────────────────────────
@@ -152,10 +153,10 @@ function formatMetrics(m: OperatorMetrics): string {
 
 async function generateArgument(
   role: { role: string; focus: string },
-  side: 'bull' | 'bear',
+  side: 'pro' | 'con',
   metrics: OperatorMetrics,
-): Promise<BullBearArgument> {
-  const stance = side === 'bull'
+): Promise<VerdictArgument> {
+  const stance = side === 'pro'
     ? 'Ты ОПТИМИСТ. Найди 1 сильный аргумент ПОЧЕМУ этого оператора стоит продвигать.'
     : 'Ты СКЕПТИК. Найди 1 конкретный риск или слабое место этого оператора.';
 
@@ -186,24 +187,25 @@ ${stance}
 
 async function generateVerdict(
   metrics: OperatorMetrics,
-  args: BullBearArgument[],
-): Promise<{ verdict: Verdict; bull_score: number; bear_score: number; reasoning: string }> {
-  const bullArgs = args.filter(a => a.side === 'bull').map(a => `[${a.role}]: ${a.argument}`).join('\n');
-  const bearArgs = args.filter(a => a.side === 'bear').map(a => `[${a.role}]: ${a.argument}`).join('\n');
+  args: VerdictArgument[],
+): Promise<{ verdict: Verdict; pro_score: number; con_score: number; reasoning: string }> {
+  const proArgs = args.filter(a => a.side === 'pro').map(a => `[${a.role}]: ${a.argument}`).join('\n');
+  const conArgs = args.filter(a => a.side === 'con').map(a => `[${a.role}]: ${a.argument}`).join('\n');
 
   const prompt = `Ты арбитр оценки операторов туристической платформы Камчатки.
+Твоя цель: вынести вердикт, который принесёт наибольшую пользу платформе и туристам.
 
 ОПЕРАТОР: ${metrics.operator_name}
 МЕТРИКИ (30 дней): ${formatMetrics(metrics)}
 
-БЫКИ (за продвижение):
-${bullArgs}
+СТОРОННИКИ (аргументы за):
+${proArgs}
 
-МЕДВЕДИ (против):
-${bearArgs}
+СКЕПТИКИ (аргументы против):
+${conArgs}
 
 На основе данных и аргументов вынеси вердикт. Ответь строго JSON:
-{"verdict":"promote"|"hold"|"warn"|"suspend","bull_score":0-100,"bear_score":0-100,"reasoning":"1 предложение на русском"}
+{"verdict":"promote"|"hold"|"warn"|"suspend","pro_score":0-100,"con_score":0-100,"reasoning":"1 предложение на русском"}
 
 Критерии:
 - promote: сильный оператор, заслуживает больше видимости
@@ -215,19 +217,19 @@ ${bearArgs}
   const text = await callAIFast(messages).catch(() => null);
 
   if (!text) {
-    return { verdict: 'hold', bull_score: 50, bear_score: 50, reasoning: 'Нет данных для вердикта.' };
+    return { verdict: 'hold', pro_score: 50, con_score: 50, reasoning: 'Нет данных для вердикта.' };
   }
 
   const match = text.match(/\{[\s\S]*?\}/);
   if (!match) {
-    return { verdict: 'hold', bull_score: 50, bear_score: 50, reasoning: text.trim().substring(0, 200) };
+    return { verdict: 'hold', pro_score: 50, con_score: 50, reasoning: text.trim().substring(0, 200) };
   }
 
   try {
     const parsed = JSON.parse(match[0]) as {
       verdict?: string;
-      bull_score?: number;
-      bear_score?: number;
+      pro_score?: number;
+      con_score?: number;
       reasoning?: string;
     };
 
@@ -238,12 +240,12 @@ ${bearArgs}
 
     return {
       verdict,
-      bull_score: typeof parsed.bull_score === 'number' ? Math.max(0, Math.min(100, parsed.bull_score)) : 50,
-      bear_score: typeof parsed.bear_score === 'number' ? Math.max(0, Math.min(100, parsed.bear_score)) : 50,
+      pro_score: typeof parsed.pro_score === 'number' ? Math.max(0, Math.min(100, parsed.pro_score)) : 50,
+      con_score: typeof parsed.con_score === 'number' ? Math.max(0, Math.min(100, parsed.con_score)) : 50,
       reasoning:  typeof parsed.reasoning === 'string' ? parsed.reasoning.substring(0, 300) : '',
     };
   } catch {
-    return { verdict: 'hold', bull_score: 50, bear_score: 50, reasoning: text.substring(0, 200) };
+    return { verdict: 'hold', pro_score: 50, con_score: 50, reasoning: text.substring(0, 200) };
   }
 }
 
@@ -251,7 +253,7 @@ ${bearArgs}
 
 export class OperatorVerdictAgency {
   /**
-   * Запустить Bull/Bear анализ для одного оператора или топ-N по активности.
+   * Запустить симметричный анализ оператора(ов) для пользы проекта.
    * @param operatorId — UUID оператора. Если не указан — анализирует топ-5 по активности.
    */
   async run(operatorId?: string): Promise<OperatorVerdictResult[]> {
@@ -272,26 +274,26 @@ export class OperatorVerdictAgency {
   }
 
   private async analyzeOne(metrics: OperatorMetrics): Promise<OperatorVerdictResult> {
-    // 5 быков + 5 медведей параллельно
-    const [bullResults, bearResults] = await Promise.all([
-      Promise.allSettled(BULL_ROLES.map(role => generateArgument(role, 'bull', metrics))),
-      Promise.allSettled(BEAR_ROLES.map(role => generateArgument(role, 'bear', metrics))),
+    // 5 сторонников + 5 скептиков параллельно
+    const [proResults, conResults] = await Promise.all([
+      Promise.allSettled(PRO_ROLES.map(role => generateArgument(role, 'pro', metrics))),
+      Promise.allSettled(CON_ROLES.map(role => generateArgument(role, 'con', metrics))),
     ]);
 
-    const args: BullBearArgument[] = [
-      ...bullResults.map(r => r.status === 'fulfilled' ? r.value : null),
-      ...bearResults.map(r => r.status === 'fulfilled' ? r.value : null),
-    ].filter((a): a is BullBearArgument => a !== null);
+    const args: VerdictArgument[] = [
+      ...proResults.map(r => r.status === 'fulfilled' ? r.value : null),
+      ...conResults.map(r => r.status === 'fulfilled' ? r.value : null),
+    ].filter((a): a is VerdictArgument => a !== null);
 
-    const { verdict, bull_score, bear_score, reasoning } = await generateVerdict(metrics, args);
+    const { verdict, pro_score, con_score, reasoning } = await generateVerdict(metrics, args);
 
     return {
       operator_id:   metrics.operator_id,
       operator_name: metrics.operator_name,
       metrics,
       arguments: args,
-      bull_score,
-      bear_score,
+      pro_score,
+      con_score,
       verdict,
       reasoning,
     };
