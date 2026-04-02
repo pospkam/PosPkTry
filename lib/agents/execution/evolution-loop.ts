@@ -25,6 +25,7 @@ interface BoardMeetingResult {
 }
 
 interface AgentInitiative {
+  id?: string;
   from_id: string;
   from_name: string;
   action_type: string;
@@ -106,6 +107,7 @@ export async function fetchInitiatives(): Promise<AgentInitiative[]> {
   try {
     const result = await pool.query<AgentInitiative>(
       `SELECT
+         id,
          context->>'from_agent' as from_id,
          COALESCE(context->>'from_name', 'Unknown') as from_name,
          type as action_type,
@@ -164,7 +166,7 @@ export async function executeInitiative(
   init: AgentInitiative,
   analysis: string
 ): Promise<boolean> {
-  logEvent('executing_initiative', { title: init.title });
+  logEvent('executing_initiative', { title: init.title, type: init.action_type });
 
   // Parse AI analysis
   let parsed;
@@ -183,26 +185,32 @@ export async function executeInitiative(
     return false;
   }
 
-  // TODO: Execute based on action_type
-  // For now, just log that we would execute
-  logEvent('initiative_would_execute', {
+  // Import executor dynamically to avoid circular deps
+  const { executeInitiativeWithCode } = await import('@/lib/agents/execution/vibe-coder-executor');
+
+  // Execute based on action_type
+  const result = await executeInitiativeWithCode(analysis, {
     title: init.title,
-    files: parsed.files_to_change,
+    from_name: init.from_name,
+    action_type: init.action_type,
+    approval_id: init.id || 'unknown',
   });
 
-  // Update status
-  try {
-    await pool.query(
-      `UPDATE agent_approvals
-       SET execution_status = 'in_progress'
-       WHERE context->>'from_agent' = $1`,
-      [init.from_id]
-    ).catch(() => null);
-  } catch (e) {
-    logEvent('status_update_error', { error: String(e) });
+  if (result.success) {
+    logEvent('initiative_executed', {
+      title: init.title,
+      commit: result.commit_hash,
+      pr: result.pr_url,
+      files: result.files_changed,
+    });
+  } else {
+    logEvent('initiative_execution_failed', {
+      title: init.title,
+      error: result.error,
+    });
   }
 
-  return true;
+  return result.success;
 }
 
 export async function startEvolutionLoop() {
