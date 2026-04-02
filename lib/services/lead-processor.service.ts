@@ -600,7 +600,7 @@ ${toursText}
          t.description      AS tour_description
        FROM lead_proposals lp
        JOIN leads l ON l.id = lp.lead_id
-       LEFT JOIN operator_tours t ON t.id = lp.primary_tour_id
+       LEFT JOIN operator_tours t ON t.id::text = lp.primary_tour_id
        WHERE lp.id = $1`,
       [proposalId]
     );
