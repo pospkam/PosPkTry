@@ -753,21 +753,21 @@ async function raceProviders(calls: Promise<string | null>[]): Promise<string | 
 }
 
 // ── Waterfall: race tiers for speed ─────────────────────────
-// Tier 1: fastest (DeepSeek + Gemini + MiMo) — race
-// Tier 2: mid-tier (OpenRouter + Yandex + MiniMax) — race
-// Tier 3: geo-blocked (Anthropic) — sequential fallback
+// Tier 1: OpenRouter + DeepSeek + Gemini + MiMo — race (кто быстрее)
+// Tier 2: Yandex + MiniMax — fallback
+// Tier 3: Anthropic — sequential fallback
 export async function callAIWaterfall(messages: ChatMessage[]): Promise<string> {
-  // Tier 1: race fastest providers (DeepSeek first — no geo-block)
+  // Tier 1: race all primary providers simultaneously
   const tier1 = await raceProviders([
+    callOpenrouter(messages),
     callDeepSeek(messages),
     callGeminiDirect(messages),
     callMiMo(messages),
   ]);
   if (tier1) return tier1;
 
-  // Tier 2: race mid-tier
+  // Tier 2: race mid-tier fallbacks
   const tier2 = await raceProviders([
-    callOpenrouter(messages),
     callYandexGPT(messages),
     callMiniMax(messages),
   ]);
