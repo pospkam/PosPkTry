@@ -19,11 +19,10 @@ import { requireAdmin } from '@/lib/auth/middleware';
 import { ContextHub } from '@/lib/agents/context-hub';
 import type { AgentContext } from '@/lib/agents/context-hub';
 import { AgentMesh } from '@/lib/agents/mesh/agent-mesh';
-import type { AgentReaction } from '@/lib/agents/mesh/agent-mesh';
 import { pool } from '@/lib/db-pool';
 import { agentMemory } from '@/lib/agents/memory/agent-memory';
 import { approvalRequired } from '@/lib/agents/safeguards/approval-required';
-import { callAIWaterfall, callAIFast } from '@/lib/ai/providers';
+import { callAIFast } from '@/lib/ai/providers';
 import type { ChatMessage } from '@/lib/ai/prompts';
 import { getModelForAgent, getModelDisplayName, CONSENSUS_MODEL } from '@/lib/ai/agent-models';
 import { externalResearcher } from '@/lib/agents/research/external-researcher';
@@ -707,7 +706,7 @@ export async function POST(req: NextRequest) {
     const sesRes = await pool.query<{ id: string }>(
       `INSERT INTO board_meeting_sessions (topic, initiated_by, status)
        VALUES ($1, $2, 'running') RETURNING id`,
-      [topic, parseInt(authResult.userId, 10)]
+      [topic, authResult.userId]
     );
     sessionDbId = sesRes.rows[0]?.id ?? null;
   } catch { /* таблица может не существовать на старом проде */ }
