@@ -9,7 +9,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { pool } from '@/lib/db-pool';
-import { callAnthropic, callOpenrouter, callMiMo } from '@/lib/ai/providers';
+import { callAnthropic, callOpenrouter, callMiMo, callXai } from '@/lib/ai/providers';
 import type { ChatMessage } from '@/lib/ai/prompts';
 
 export const dynamic = 'force-dynamic';
@@ -167,18 +167,20 @@ export async function GET(request: NextRequest) {
   const issues: HealthIssue[] = [];
 
   // AI-провайдеры (параллельно)
-  const [mimoOk, openrouterOk, anthropicOk] = await Promise.all([
+  const [mimoOk, openrouterOk, anthropicOk, xaiOk] = await Promise.all([
     probeAI(callMiMo),
     probeAI(callOpenrouter),
     probeAI(callAnthropic),
+    probeAI(callXai),
   ]);
 
-  const anyOk = mimoOk || openrouterOk || anthropicOk;
+  const anyOk = mimoOk || openrouterOk || anthropicOk || xaiOk;
   if (!anyOk) {
-    issues.push({ level: 'crit', text: 'Все AI-провайдеры недоступны (MiMo + OpenRouter + Anthropic)' });
+    issues.push({ level: 'crit', text: 'Все AI-провайдеры недоступны (MiMo + OpenRouter + Anthropic + xAI)' });
   } else {
-    if (!mimoOk) issues.push({ level: 'warn', text: 'MiMo недоступен (нет XIAOMI_API_KEY или ошибка)' });
+    if (!xaiOk) issues.push({ level: 'warn', text: 'xAI (Grok) недоступен' });
     if (!openrouterOk) issues.push({ level: 'warn', text: 'OpenRouter недоступен' });
+    if (!mimoOk) issues.push({ level: 'warn', text: 'MiMo недоступен (нет XIAOMI_API_KEY или ошибка)' });
     if (!anthropicOk) issues.push({ level: 'warn', text: 'Anthropic недоступен' });
   }
 

@@ -71,19 +71,19 @@ export async function GET(request: NextRequest) {
 
   const res = await query<ReminderRow>(`
     SELECT
-      b.id                    AS booking_id,
-      u.id                    AS user_id,
-      u.telegram_id::text     AS telegram_id,
-      u.name                  AS user_name,
-      t.title                 AS tour_title,
-      b.tour_date::text       AS tour_date,
+      b.id                                    AS booking_id,
+      u.id                                    AS user_id,
+      u.telegram_id::text                     AS telegram_id,
+      COALESCE(b.tourist_name, u.name)        AS user_name,
+      t.title                                 AS tour_title,
+      b.booking_date::text                    AS tour_date,
       b.participants,
-      t.meeting_point
-    FROM bookings b
-    JOIN users  u ON u.id = b.user_id
-    JOIN tours  t ON t.id = b.tour_id
-    WHERE b.tour_date = $1
-      AND b.status    = 'confirmed'
+      NULL::text                              AS meeting_point
+    FROM operator_bookings b
+    JOIN operator_tours t ON t.id = b.operator_tour_id
+    LEFT JOIN users u ON u.email = b.tourist_email
+    WHERE b.booking_date = $1
+      AND b.booking_status = 'confirmed'
       AND u.telegram_id IS NOT NULL
   `, [dateStr]);
 
