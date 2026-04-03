@@ -44,7 +44,7 @@ export function Header() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '10px 12px',
+        padding: 'calc(env(safe-area-inset-top, 0px) + 10px) 12px 10px',
         fontFamily: FO,
         transition: 'background 0.3s, box-shadow 0.3s',
         background: scrolled ? 'var(--bg-card)' : 'transparent',

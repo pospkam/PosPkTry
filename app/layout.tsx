@@ -1,4 +1,4 @@
-import { Metadata } from 'next';
+import { Metadata, Viewport } from 'next';
 import { Inter, Playfair_Display } from 'next/font/google';
 
 const playfairDisplay = Playfair_Display({
@@ -16,6 +16,12 @@ const inter = Inter({
 });
 
 const BASE_URL = 'https://tourhab.ru';
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
