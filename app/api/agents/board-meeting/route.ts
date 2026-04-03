@@ -1006,9 +1006,10 @@ export async function POST(req: NextRequest) {
           if (sessionDbId) {
             await pool.query(
               `UPDATE board_meeting_sessions
-               SET status='completed', completed_at=NOW(), consensus=$2
+               SET status='completed', completed_at=NOW(), consensus=$2,
+                   proposals_count=$3, approved_count=0
                WHERE id=$1`,
-              [sessionDbId, consensus.substring(0, 2000)]
+              [sessionDbId, consensus.substring(0, 2000), proposals.length]
             ).catch(() => null);
           }
         } catch { /* non-critical */ }
