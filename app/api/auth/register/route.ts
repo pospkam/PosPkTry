@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
         `INSERT INTO partners
            (user_id, name, category, contact, commission_rate,
             profile_status, onboarding_completed, is_public, slug, created_at, updated_at)
-         VALUES ($1, $2, 'tour_operator', '{}'::jsonb, 0.15, 'draft', false, false, $3, NOW(), NOW())
+         VALUES ($1, $2, 'operator', '{}'::jsonb, 0.15, 'none', false, false, $3, NOW(), NOW())
          ON CONFLICT DO NOTHING`,
         [user.id, name, slug]
       );

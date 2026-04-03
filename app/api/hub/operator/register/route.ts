@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
       `INSERT INTO partners (
         name, category, contact, contacts, is_public,
         commission_rate, profile_status, onboarding_completed, slug, created_at, updated_at
-      ) VALUES ($1, 'tour_operator', $2::jsonb, $3::jsonb, false, 0.15, 'draft', false, $4, NOW(), NOW())
+      ) VALUES ($1, 'operator', $2::jsonb, $3::jsonb, false, 0.15, 'none', false, $4, NOW(), NOW())
       RETURNING id`,
       [
         data.company_name,
