@@ -2,7 +2,7 @@
 
 AI-помощник Кузьмич подбирает маршрут за минуту. Турист описывает мечту — система комбинирует базовые туры в персональный план. Каталог работает как страховка для тех, кто предпочитает выбирать руками.
 
-Внутри — 10 AI-директоров (Board of Directors), которые управляют платформой: от безопасности и экологии до роста и финансов. Собственник имеет финальное слово через систему одобрений.
+Внутри — 13 AI-директоров (Board of Directors), которые управляют платформой: от безопасности и экологии до роста и финансов. Каждый директор работает по редактируемой .md-программе (Karpathy autoresearch pattern). Собственник имеет финальное слово через систему одобрений.
 
 [![Build](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/pospkam/PosPkTry)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)](https://www.typescriptlang.org/)
@@ -106,12 +106,14 @@ components/
                                  # InsuranceBlock, FlightsBlock, HotelsBlock, TransfersBlock
   affiliate/                     # AffiliateFlightBanner, AffiliateCard
   operator/                      # OperatorEarningsCard
-  shared/                        # SOSButton, AssistantButton, LeafletMap, StickyLeadButton
+  shared/                        # SOSButton, AssistantButton, LeafletMap, StickyLeadButton, MicrosoftClarity
   layout/                        # Header, Footer
 
 lib/
   agents/                        # AI Agent Framework
-    agencies/                    # 17 agency-классов (10 директоров + 7 рабочих)
+    agencies/                    # 20 agency-классов (13 директоров + 7 рабочих)
+    programs/                    # 13 .md-программ директоров + TypeScript лоадер
+    mesh/                        # AgentMesh: anonymous cross-review, SCORE:1-5
     tools/agent-toolkits.ts      # Инструменты для всех директоров
     evolution/                   # Knowledge base, context builder
     learning/                    # Feedback loop, A/B experiments
@@ -119,9 +121,10 @@ lib/
     scheduler.ts                 # Автономное расписание агентов
     platform-agent.ts            # Intent dispatcher
   ai/
-    providers.ts                 # AI waterfall (8 провайдеров)
+    providers.ts                 # AI waterfall (8 провайдеров, prompt caching)
     provider-config.ts           # Ключи и конфигурация
-    embeddings.ts                # Smart search
+    embeddings.ts                # Semantic search (MiniLM cosine)
+    rag-context.ts               # Hybrid RAG: fulltext + semantic + RRF reranking
   services/                      # Доменные сервисы
     travelpayouts.ts             # Affiliate links (8 партнёров, 6h cache)
     intelligence-monitor.ts      # Мониторинг AI/Travel/конкурентов (RSS + Tavily)
@@ -153,6 +156,7 @@ Tier 3 (sequential): Anthropic
 ```
 
 Tier 1 гонка — первый ответ побеждает. xAI исключён (гео-блок RU).
+Anthropic: prompt caching (`cache_control: ephemeral`) — экономия ~90% токенов на повторных system prompts.
 Файл: `lib/ai/providers.ts`
 
 ### AI Composition (planner)
@@ -186,11 +190,13 @@ Tier 1 гонка — первый ответ побеждает. xAI исклю
 Все модели через OpenRouter (единый `OR_API_KEY`).
 
 Совещание: `/hub/admin/board-meeting` — **5 раундов:**
-1. Отчёты агентов (параллельно)
-2. External Observers (DeepSeek + Gemini — независимый взгляд) + AgentMesh реакции
+1. Отчёты агентов (параллельно) + institutional memory pre-read
+2. External Observers (DeepSeek + Gemini + Scout-Innovator) + AgentMesh (анонимный cross-review с числовым скором SCORE:1-5)
 3. Консенсус фасилитатора (claude-sonnet-4-6)
-4. Инициативы → `agent_approvals`
+4. Инициативы → `agent_approvals` (персона обогащена .md-программами)
 5. Adversarial debate (PRO vs CON по каждой инициативе)
+
+**Agent Programs:** 13 редактируемых .md-файлов в `lib/agents/programs/` — роль, зона компетенции, правила, cross-review интересы. Загрузчик: `lib/agents/programs/index.ts`.
 
 Подробности: `AGENTS.md`
 
@@ -348,6 +354,7 @@ NEXT_PUBLIC_TELEGRAM_BOT_USERNAME=...
 
 # === Analytics ===
 NEXT_PUBLIC_YANDEX_METRIKA_ID=...
+NEXT_PUBLIC_CLARITY_ID=...       # Microsoft Clarity (heatmaps, session recordings)
 
 # === Email (SMTP Yandex) ===
 SMTP_HOST=smtp.yandex.ru
@@ -468,15 +475,20 @@ TS-ошибок:              0
 ```
 
 **Последние изменения:**
-- **AI Waterfall** — xAI убран (гео-блок RU), DeepSeek — Tier 1 primary
+- **Agent .md Programs** — 13 экстернализированных программ директоров (`lib/agents/programs/*.md`), редактируемые без пересборки
+- **Anonymous Cross-Review** — AgentMesh: анонимные метки ("Подразделение A/B/C"), числовой скор SCORE:1-5
+- **Hybrid RAG + RRF** — fulltext (tsvector) + semantic (MiniLM cosine) объединяются Reciprocal Rank Fusion
+- **Anthropic Prompt Caching** — `cache_control: ephemeral` на system prompts, экономия ~90% повторных токенов
+- **Microsoft Clarity** — heatmaps + session recordings (`NEXT_PUBLIC_CLARITY_ID`)
+- **DNS Prefetch** — preconnect для mc.yandex.ru, clarity.ms, emrldco.com (50-150ms быстрее)
+- **LocalBusiness Schema** — schema.org LocalBusiness с geo, телефоном, часами работы
+- **Institutional Memory** — агенты читают свои прошлые observations перед совещанием, пишут новые после
+- **GPT-4.1** — Quality агент обновлён с gpt-4o на gpt-4.1
 - **Board of Directors** — 13 директоров (добавлены Finance, Infra, Vibe Coder), 5 раундов совещания с adversarial debate
-- **Planning агент** — теперь генерирует инициативы в Round 4
 - **Lead Follow-up** — автоматические Telegram follow-up Day+1/2/5 после заявки
-- **Guide Tours Hub** — хаб гидов + UI очереди outreach для admin
 - **Route Enrichment** — каждый тур обогащён блоками Insurance / Flights / Hotels / Transfers
 - **Intelligence Monitor** — агент `evo` мониторит AI-тренды, travel-индустрию, конкурентов каждые 6ч
 - **Аффилиат монетизация** — 8 партнёров, click tracking, payout reconciliation, operator earnings
-- **Fix конверсии** — `TourPaymentModal` показывает лид-форму для гостей (было: auth-стена → 0 лидов)
 
 ### Юр. лицо
 ООО "ПОС-СЕРВИС", ИНН 4101147649, ОГРН 1114101005952

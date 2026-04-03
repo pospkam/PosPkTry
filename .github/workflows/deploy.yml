@@ -23,7 +23,7 @@ jobs:
         env:
           TIMEWEB_TOKEN: ${{ secrets.TIMEWEB_TOKEN }}
         run: |
-          APP_ID="159529"
+          APP_ID="175269"
           TOKEN="$TIMEWEB_TOKEN"
 
           if [ -z "$TOKEN" ]; then
@@ -89,7 +89,7 @@ jobs:
         env:
           TIMEWEB_TOKEN: ${{ secrets.TIMEWEB_TOKEN }}
         run: |
-          APP_ID="159529"
+          APP_ID="175269"
           TOKEN="$TIMEWEB_TOKEN"
 
           if [ -z "$TOKEN" ]; then
@@ -112,4 +112,4 @@ jobs:
             echo "Could not check status (HTTP $HTTP) — deploy still runs via webhook"
           fi
 
-          echo "Site: https://pospkam-pospktry-c1f3.twc1.net"
+          echo "Site: https://tourhab.ru"

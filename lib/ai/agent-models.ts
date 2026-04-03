@@ -23,7 +23,7 @@ export const AGENT_MODEL_MAP: Record<AgentId, string> = {
   rescue:     'meta-llama/llama-4-maverick',
   eco:        'google/gemini-2.0-flash-001',
   content:    'qwen/qwen-2.5-72b-instruct',
-  quality:    'openai/gpt-4o',
+  quality:    'openai/gpt-4.1',
   planning:   'anthropic/claude-haiku-4-5',
   evo:        'mistralai/mistral-medium-3',
   finance:    'deepseek/deepseek-chat-v3-0324',

@@ -116,11 +116,19 @@ import React from 'react'
 import { Providers } from '@/components/Providers'
 import YandexMetrika from '@/components/shared/YandexMetrika'
 import TravelPayoutsDrive from '@/components/shared/TravelPayoutsDrive'
+import MicrosoftClarity from '@/components/shared/MicrosoftClarity'
 import StickyLeadButton from '@/components/shared/StickyLeadButton'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ru" suppressHydrationWarning>
+      <head>
+        <link rel="dns-prefetch" href="//mc.yandex.ru" />
+        <link rel="dns-prefetch" href="//www.clarity.ms" />
+        <link rel="dns-prefetch" href="//emrldco.com" />
+        <link rel="preconnect" href="https://mc.yandex.ru" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://www.clarity.ms" crossOrigin="anonymous" />
+      </head>
       <body className={`min-h-screen transition-colors duration-300 ${inter.className} ${playfairDisplay.variable} ${inter.variable}`}>
         <Providers>
           {children}
@@ -171,6 +179,39 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               },
               {
                 "@context": "https://schema.org",
+                "@type": "LocalBusiness",
+                "@id": "https://tourhab.ru/#localbusiness",
+                "name": "TourHab",
+                "description": "Туристическая платформа Камчатки: туры, маршруты, бронирование, карта достопримечательностей.",
+                "url": "https://tourhab.ru",
+                "logo": "https://tourhab.ru/logo-kamchatka.svg",
+                "telephone": "+7 (914) 782-22-22",
+                "email": "info@tourhab.ru",
+                "address": {
+                  "@type": "PostalAddress",
+                  "addressCountry": "RU",
+                  "addressRegion": "Камчатский край",
+                  "addressLocality": "Петропавловск-Камчатский"
+                },
+                "geo": {
+                  "@type": "GeoCoordinates",
+                  "latitude": 53.0444,
+                  "longitude": 158.6483
+                },
+                "priceRange": "$$",
+                "openingHoursSpecification": {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
+                  "opens": "00:00",
+                  "closes": "23:59"
+                },
+                "sameAs": [
+                  "https://t.me/kamchatourhub",
+                  "https://vk.com/kamchatourhub"
+                ]
+              },
+              {
+                "@context": "https://schema.org",
                 "@type": "ItemList",
                 "name": "Топ достопримечательностей Камчатки",
                 "description": "Главные природные и исторические объекты Камчатки",
@@ -189,6 +230,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
         <YandexMetrika />
+        <MicrosoftClarity />
         <TravelPayoutsDrive />
         <StickyLeadButton />
       </body>

@@ -26,6 +26,8 @@ export interface AgentReaction {
   tone:        ReactionTone;
   color:       string;
   duration_ms: number;
+  /** Числовая оценка качества чужих отчётов (1-5), если агент её дал */
+  score?:      number;
 }
 
 interface AgentReport {
@@ -124,26 +126,38 @@ function detectTone(text: string): ReactionTone {
   return 'question';
 }
 
+/** Анонимные метки для отчётов — убирает bias «я согласен с Admin потому что он главный» */
+const ANON_LABELS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
 function buildReactionPrompt(
   agent:       { id: string; name: string; role: string },
   allReports:  AgentReport[],
   persona:     string
 ): string {
+  // Анонимизация: заменяем имена/роли на нейтральные метки (Karpathy llm-council pattern)
   const others = allReports
     .filter(r => r.id !== agent.id && r.status === 'ok')
-    .map(r => `[${r.name} — ${r.role}]:\n${r.report.replace(/<[^>]+>/g, '').substring(0, 1000)}...`)
+    .map((r, i) => `[Подразделение ${ANON_LABELS[i % ANON_LABELS.length]}]:\n${r.report.replace(/<[^>]+>/g, '').substring(0, 1000)}...`)
     .join('\n\n');
 
   return (
     `${persona}\n\n` +
-    `На оперативном совещании другие подразделения представили следующие отчёты:\n\n` +
+    `На оперативном совещании другие подразделения (анонимизированы) представили следующие отчёты:\n\n` +
     `${others}\n\n` +
     `Ответь одним из двух вариантов:\n` +
     `1) Если тебе НЕЧЕГО добавить или все отчёты не касаются твоей сферы — ответь ровно: NULL\n` +
     `2) Если у тебя есть ВАЖНАЯ реакция (предупреждение, поддержка позиции, конфликт интересов, ` +
-    `уточняющий вопрос) — дай 1–2 конкретных предложения. Укажи, на чей отчёт реагируешь. ` +
-    `Не повторяй что уже сказал в своём отчёте. Стиль: деловой, конкретный.`
+    `уточняющий вопрос) — дай 1-2 конкретных предложения. Укажи букву подразделения. ` +
+    `Не повторяй что уже сказал в своём отчёте. Стиль: деловой, конкретный.\n\n` +
+    `В конце ответа обязательно поставь общую оценку качества отчётов: SCORE:<число от 1 до 5> ` +
+    `(1=критично плохо, 3=нормально, 5=отлично). Оценивай полноту данных и практичность.`
   );
+}
+
+/** Извлекает числовой score из текста реакции (SCORE:N) */
+function extractScore(text: string): number | undefined {
+  const m = text.match(/SCORE:\s*([1-5])/i);
+  return m ? parseInt(m[1], 10) : undefined;
 }
 
 // ── AgentMesh ──────────────────────────────────────────────────────────────────
@@ -180,14 +194,16 @@ export class AgentMesh {
             return null;
           }
 
+          const cleanText = text.trim().replace(/SCORE:\s*[1-5]/i, '').trim();
           return {
             from_id:     agent.id,
             from_name:   agent.name,
             from_role:   agent.role,
-            content:     text.trim(),
+            content:     cleanText,
             tone:        detectTone(text),
             color:       cfg.color,
             duration_ms: Date.now() - start,
+            score:       extractScore(text),
           };
         } catch {
           return null;

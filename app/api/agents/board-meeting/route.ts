@@ -19,10 +19,11 @@ import { requireAdmin } from '@/lib/auth/middleware';
 import { ContextHub } from '@/lib/agents/context-hub';
 import type { AgentContext } from '@/lib/agents/context-hub';
 import { AgentMesh } from '@/lib/agents/mesh/agent-mesh';
+import type { AgentReaction } from '@/lib/agents/mesh/agent-mesh';
 import { pool } from '@/lib/db-pool';
 import { agentMemory } from '@/lib/agents/memory/agent-memory';
 import { approvalRequired } from '@/lib/agents/safeguards/approval-required';
-import { callAIFast } from '@/lib/ai/providers';
+import { callAIWaterfall, callAIFast } from '@/lib/ai/providers';
 import type { ChatMessage } from '@/lib/ai/prompts';
 import { getModelForAgent, getModelDisplayName, CONSENSUS_MODEL } from '@/lib/ai/agent-models';
 import { externalResearcher } from '@/lib/agents/research/external-researcher';
@@ -40,7 +41,7 @@ import {
   getSummaryOfViolations,
 } from '@/lib/agents/validation/director-standards';
 import { buildRichAgentContext } from '@/lib/agents/evolution/agent-context-v2';
-import { sendDebugEvent } from '@/app/api/agents/board-meeting/debug/route';
+import { buildEnhancedPersona } from '@/lib/agents/programs';
 
 export const dynamic     = 'force-dynamic';
 export const maxDuration = 300;
@@ -183,11 +184,6 @@ const PROPOSAL_CONFIGS: Record<string, ProposalConfig> = {
     allowed_types: ['code_change', 'sql_query_fix'],
     domain: 'codebase',
   },
-  planning: {
-    persona:       'Ты стратегический плановик туристической платформы Камчатки. Анализируй прогнозы бронирований, сезонность, дефицит туров. Каждое предложение — конкретные цифры: пиковые даты, % заполняемости, ожидаемый спрос.',
-    allowed_types: ['schedule_suggest', 'booking_rule_change'],
-    domain: 'planning',
-  },
 };
 
 // ── Матрица компетенций: action_type → лучший исполнитель ───────────────────────────────
@@ -269,8 +265,6 @@ const AGENCY_LOADERS: Record<string, () => Promise<{ run(intent: string, ctx: Ag
   plan_forecast:   async () => { const { PlanningAgency } = await import('@/lib/agents/agencies/planning-agency'); return new PlanningAgency(); },
 };
 
-const AGENT_TIMEOUT_MS = 25_000;
-
 async function runAgent(
   intent: string,
   context: AgentContext
@@ -282,12 +276,7 @@ async function runAgent(
       return { response: 'Агент не найден.', duration_ms: Date.now() - start };
     }
     const agency = await loader();
-    const r = await Promise.race([
-      agency.run(intent, context),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error(`Таймаут агента ${intent} (${AGENT_TIMEOUT_MS}ms)`)), AGENT_TIMEOUT_MS)
-      ),
-    ]);
+    const r = await agency.run(intent, context);
     return { response: r.response, duration_ms: Date.now() - start };
   } catch (err) {
     return {
@@ -485,163 +474,6 @@ async function generateProposal(
   };
 }
 
-// ── Debate sides matrix: action_type → which agents argue PRO and CON ──────────────────
-
-interface DebateSide {
-  pro: string[]; // agent ids
-  con: string[]; // agent ids
-}
-
-const DEBATE_SIDES: Record<string, DebateSide> = {
-  booking_rule_change: { pro: ['admin', 'legal'],   con: ['hacker', 'eco']       },
-  commission_change:   { pro: ['finance', 'admin'],  con: ['hacker', 'quality']   },
-  bulk_notify:         { pro: ['admin', 'content'],  con: ['security', 'legal']   },
-  price_change:        { pro: ['hacker', 'planning'],con: ['legal', 'eco']        },
-  ui_copy_change:      { pro: ['content', 'hacker'], con: ['quality', 'security'] },
-  prompt_optimize:     { pro: ['evo', 'vibe_coder'], con: ['security', 'legal']   },
-  api_scope_expand:    { pro: ['vibe_coder','hacker'],con: ['security','legal']   },
-  schedule_suggest:    { pro: ['rescue','planning'],  con: ['eco', 'quality']      },
-  tour_auto_cancel:    { pro: ['quality', 'rescue'],  con: ['hacker', 'admin']     },
-  sql_query_fix:       { pro: ['evo', 'infra'],       con: ['security', 'legal']   },
-  code_change:         { pro: ['vibe_coder', 'evo'],  con: ['security', 'quality'] },
-};
-
-export interface DebateArgument {
-  agent_id:   string;
-  agent_name: string;
-  color:      string;
-  side:       'pro' | 'con';
-  argument:   string;
-}
-
-export interface DebateResult {
-  proposal_title: string;
-  approval_id:    string | null;
-  pro:            DebateArgument[];
-  con:            DebateArgument[];
-  verdict:        'proceed' | 'revise' | 'reject';
-  synthesis:      string;
-}
-
-async function debateProposal(
-  proposal:    AgentProposal,
-  agents:      AgentReport[],
-): Promise<DebateResult> {
-  const sides = DEBATE_SIDES[proposal.action_type] ?? {
-    pro: ['admin', 'hacker'],
-    con: ['legal', 'security'],
-  };
-
-  // Exclude the proposing agent from opposition (they're already pro)
-  const proIds = Array.from(new Set([proposal.from_id, ...sides.pro])).slice(0, 3);
-  const conIds = sides.con.filter(id => !proIds.includes(id)).slice(0, 2);
-
-  const agentMap = new Map(agents.map(a => [a.id, a]));
-  const agentDefs = new Map(MEETING_AGENTS.map(a => [a.id, a]));
-
-  type AgentId = typeof MEETING_AGENTS[number]['id'];
-  const generateArg = async (agentId: string, side: 'pro' | 'con'): Promise<DebateArgument | null> => {
-    const agentDef = agentDefs.get(agentId as AgentId);
-    if (!agentDef) return null;
-    const agentReport = agentMap.get(agentId);
-    const reportSnippet = agentReport
-      ? agentReport.report.replace(/<[^>]+>/g, '').substring(0, 200)
-      : 'нет данных';
-
-    const stance = side === 'pro'
-      ? 'Ты ПОДДЕРЖИВАЕШЬ это предложение. Найди 1 конкретный аргумент ЗА — с данными или логикой.'
-      : 'Ты ПРОТИВ этого предложения. Найди 1 конкретный риск или слабое место — с данными или логикой.';
-
-    const prompt = `Ты ${agentDef.name} (${agentDef.role}).
-На совещании обсуждается инициатива: "${proposal.title}"
-Описание: "${proposal.description}"
-Твои данные из отчёта: "${reportSnippet}"
-
-${stance}
-
-Ответь ОДНИМ предложением (max 120 символов). Только аргумент, без вступлений.`;
-
-    const text = await callAIFast([{ role: 'user', content: prompt }]).catch(() => null);
-    if (!text) return null;
-
-    return {
-      agent_id:   agentId,
-      agent_name: agentDef.name,
-      color:      agentDef.color,
-      side,
-      argument:   text.trim().substring(0, 200),
-    };
-  };
-
-  // Run all arguments in parallel
-  const [proResults, conResults] = await Promise.all([
-    Promise.allSettled(proIds.map(id => generateArg(id, 'pro'))),
-    Promise.allSettled(conIds.map(id => generateArg(id, 'con'))),
-  ]);
-
-  const pro = proResults
-    .map(r => r.status === 'fulfilled' ? r.value : null)
-    .filter((a): a is DebateArgument => a !== null);
-
-  const con = conResults
-    .map(r => r.status === 'fulfilled' ? r.value : null)
-    .filter((a): a is DebateArgument => a !== null);
-
-  // Evo synthesizes the debate
-  const proText = pro.map(a => `[${a.agent_name}]: ${a.argument}`).join('\n');
-  const conText = con.map(a => `[${a.agent_name}]: ${a.argument}`).join('\n');
-
-  const synthesisPrompt = `Ты Evo — архитектор платформы. Подведи итог дебатов по инициативе.
-
-Инициатива: "${proposal.title}"
-Описание: "${proposal.description}"
-
-АРГУМЕНТЫ ЗА:
-${proText || '(нет)'}
-
-АРГУМЕНТЫ ПРОТИВ:
-${conText || '(нет)'}
-
-Дай вердикт для директора. Ответь строго JSON:
-{"verdict":"proceed"|"revise"|"reject","synthesis":"1-2 предложения что делать директору"}
-
-- proceed = рекомендую одобрить
-- revise = одобрить с поправками (укажи какими)
-- reject = отклонить (укажи почему)`;
-
-  const synthText = await callAIFast([{ role: 'user', content: synthesisPrompt }]).catch(() => null);
-  let verdict: 'proceed' | 'revise' | 'reject' = 'revise';
-  let synthesis = 'Недостаточно данных для однозначного вердикта.';
-
-  if (synthText) {
-    const match = synthText.match(/\{[\s\S]*?\}/);
-    if (match) {
-      try {
-        const parsed = JSON.parse(match[0]) as { verdict?: string; synthesis?: string };
-        if (['proceed', 'revise', 'reject'].includes(parsed.verdict ?? '')) {
-          verdict = parsed.verdict as 'proceed' | 'revise' | 'reject';
-        }
-        if (parsed.synthesis) synthesis = parsed.synthesis.substring(0, 300);
-      } catch { /* keep defaults */ }
-    }
-  }
-
-  // Persist debate context to approval record
-  if (proposal.approval_id) {
-    pool.query(
-      `UPDATE agent_approvals
-       SET context = context || $2
-       WHERE id = $1`,
-      [
-        proposal.approval_id,
-        JSON.stringify({ debate: { pro: pro.map(a => a.argument), con: con.map(a => a.argument), verdict, synthesis } }),
-      ]
-    ).catch(() => null);
-  }
-
-  return { proposal_title: proposal.title, approval_id: proposal.approval_id, pro, con, verdict, synthesis };
-}
-
 // ── Vote extractor (only when topic is set) ─────────────────────────────────────────────
 
 async function extractVote(
@@ -719,16 +551,13 @@ export async function POST(req: NextRequest) {
     const sesRes = await pool.query<{ id: string }>(
       `INSERT INTO board_meeting_sessions (topic, initiated_by, status)
        VALUES ($1, $2, 'running') RETURNING id`,
-      [topic, authResult.userId]
+      [topic, parseInt(authResult.userId, 10)]
     );
     sessionDbId = sesRes.rows[0]?.id ?? null;
   } catch { /* таблица может не существовать на старом проде */ }
 
   const send = (controller: ReadableStreamDefaultController, data: unknown) => {
     controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
-    // Логируем в debug буфер
-    const msg = data as Record<string, unknown>;
-    sendDebugEvent(msg.type as string || 'unknown', msg);
   };
 
   const stream = new ReadableStream({
@@ -741,22 +570,14 @@ export async function POST(req: NextRequest) {
           'board-meeting'
         );
 
-        const memoryStart = Date.now();
-        const memoryRecalls = await Promise.allSettled([
+        const [directorDecisions, evoInsights] = await Promise.all([
           agentMemory.recall('director', 'decision', 3),
           agentMemory.recall('evo', 'insight', 5),
-          agentMemory.recall('evo', 'intelligence', 8),
         ]);
-        const directorDecisions = memoryRecalls[0]?.status === 'fulfilled' ? memoryRecalls[0].value : [];
-        const evoInsights = memoryRecalls[1]?.status === 'fulfilled' ? memoryRecalls[1].value : [];
-        const intelSignals = memoryRecalls[2]?.status === 'fulfilled' ? memoryRecalls[2].value : [];
-
         context.memories = [
           ...directorDecisions.map(m => ({ key: m.key, value: m.value, confidence: m.confidence })),
           ...evoInsights.map(m => ({ key: m.key, value: m.value, confidence: m.confidence })),
-          ...intelSignals.map(m => ({ key: m.key, value: m.value, confidence: m.confidence })),
         ];
-        send(controller, { type: 'debug', stage: 'memory_recalls', duration_ms: Date.now() - memoryStart, counts: { director: directorDecisions.length, evo: evoInsights.length, intel: intelSignals.length } });
 
         if (topic) {
           context.topic = topic;
@@ -803,6 +624,16 @@ export async function POST(req: NextRequest) {
             agentContext.tools = getToolkitForAgent(agentDef.id);
             // Inject per-agent AI model
             agentContext.preferredModel = getModelForAgent(agentDef.id);
+            // Load agent's own institutional memory (permanent observations, no TTL)
+            const ownMemory = await agentMemory.recall(agentDef.id, 'observation', 3);
+            if (ownMemory.length > 0) {
+              const memSummary = ownMemory.map(m => {
+                const v = m.value as { summary?: string; date?: string };
+                return `[${v.date ?? m.updated_at.slice(0, 10)}] ${v.summary ?? JSON.stringify(m.value).slice(0, 200)}`;
+              }).join('\n');
+              agentContext.richBriefing = (agentContext.richBriefing ?? '') +
+                `\n\n=== ТВОЯ ИНСТИТУЦИОНАЛЬНАЯ ПАМЯТЬ (наблюдения прошлых заседаний) ===\n${memSummary}`;
+            }
             return { agentDef, result: await runAgent(agentDef.intent, agentContext) };
           })
         );
@@ -846,7 +677,25 @@ export async function POST(req: NextRequest) {
           send(controller, { type: 'agent_done', agent: report });
         }
 
-        send(controller, { type: 'debug', stage: 'agents_done', total: agents.length, ok: agents.filter(a => a.status === 'ok').length, errors: agents.filter(a => a.status === 'error').map(a => a.id) });
+        // ── Post-write: save each agent's key observation (institutional memory, no TTL) ──
+        try {
+          await Promise.allSettled(
+            agents.filter(a => a.status === 'ok').map(a =>
+              agentMemory.remember({
+                agent_id:    a.id,
+                memory_type: 'observation',
+                key:         `obs_${meetingId}`,
+                value: {
+                  summary: a.report.substring(0, 500),
+                  date:    new Date().toISOString().slice(0, 10),
+                  topic:   topic ?? null,
+                },
+                source: 'board_meeting',
+                // no expires_at → permanent institutional memory
+              })
+            )
+          );
+        } catch { /* non-critical */ }
 
         // ── Vote extraction (only when topic is set) ────────────────────────────
         if (topic) {
@@ -871,10 +720,7 @@ export async function POST(req: NextRequest) {
           send(controller, { type: 'observers_start' });
           const reportsSummary = summarizeReportsForObservers(agents);
           const metrics = buildMetricsForObservers(context as unknown as Record<string, unknown>);
-          const observerStart = Date.now();
           observerReports = await runExternalObservers(reportsSummary, metrics);
-          const observerDuration = Date.now() - observerStart;
-          send(controller, { type: 'debug', stage: 'observers_done', duration_ms: observerDuration, total: observerReports.length, ok: observerReports.filter(o => o.status === 'ok').length });
           for (const obs of observerReports) {
             send(controller, { type: 'observer_done', observer: obs });
           }
@@ -901,59 +747,28 @@ export async function POST(req: NextRequest) {
             okObservers.map(o => `[${o.name}]: ${o.report.substring(0, 500)}`).join('\n');
         }
 
-        const consensusStart = Date.now();
         const consensus   = await mesh.runConsensus(agents, reactions, observerInsights, CONSENSUS_MODEL);
-        const consensusDuration = Date.now() - consensusStart;
-        send(controller, { type: 'debug', stage: 'consensus_done', duration_ms: consensusDuration, model: CONSENSUS_MODEL });
         send(controller, { type: 'consensus_done', consensus });
 
         send(controller, { type: 'round4_start' });
         const successfulAgents = agents.filter(a => a.status === 'ok');
 
         // Run all proposals in parallel (instead of sequential)
-        const proposalStart = Date.now();
         const proposalResults = await Promise.allSettled(
           successfulAgents
             .filter(a => !!PROPOSAL_CONFIGS[a.id])
             .map(async (agent) => {
               const cfg = PROPOSAL_CONFIGS[agent.id];
-              return generateProposal(agent, cfg, consensus, meetingId, topic);
+              const enhancedCfg = { ...cfg, persona: buildEnhancedPersona(agent.id, cfg.persona) };
+              return generateProposal(agent, enhancedCfg, consensus, meetingId, topic);
             })
         );
-        const proposalDuration = Date.now() - proposalStart;
-        const proposals: AgentProposal[] = [];
-        let proposalErrors = 0;
+        let proposalsCount = 0;
         for (const res of proposalResults) {
           if (res.status === 'fulfilled' && res.value) {
+            proposalsCount++;
             send(controller, { type: 'proposal', proposal: res.value });
-            proposals.push(res.value);
-          } else if (res.status === 'rejected') {
-            proposalErrors++;
           }
-        }
-        send(controller, { type: 'debug', stage: 'proposals_done', duration_ms: proposalDuration, total: proposalResults.length, generated: proposals.length, errors: proposalErrors });
-
-        // ── Round 5: Adversarial Debate ─────────────────────────────────────
-        if (proposals.length > 0) {
-          send(controller, { type: 'round5_start' });
-
-          const debateStart = Date.now();
-          const debateResults = await Promise.allSettled(
-            proposals.map(async (proposal) => {
-              send(controller, { type: 'debate_start', approval_id: proposal.approval_id, title: proposal.title });
-              const result = await debateProposal(proposal, agents);
-              send(controller, { type: 'debate_done', debate: result });
-              return result;
-            })
-          );
-          const debateDuration = Date.now() - debateStart;
-
-          const debates = debateResults
-            .map(r => r.status === 'fulfilled' ? r.value : null)
-            .filter((d): d is DebateResult => d !== null);
-
-          send(controller, { type: 'debug', stage: 'debates_done', duration_ms: debateDuration, total: debateResults.length, completed: debates.length });
-          send(controller, { type: 'round5_done', count: debates.length });
         }
 
         const duration_ms = Date.now() - meetingStart;
@@ -964,9 +779,8 @@ export async function POST(req: NextRequest) {
           consensus,
           synthesis:  consensus,
           duration_ms,
+          proposals_count: proposalsCount,
         });
-
-        send(controller, { type: 'debug', stage: 'final_stats', duration_ms, agents_total: agents.length, agents_ok: agents.filter(a => a.status === 'ok').length, observers_total: observerReports.length, observers_ok: observerReports.filter(o => o.status === 'ok').length, proposals: proposals.length });
 
         const okCount = agents.filter(a => a.status === 'ok').length;
         try {
@@ -983,6 +797,7 @@ export async function POST(req: NextRequest) {
                 agents_count:    agents.length,
                 ok:              okCount,
                 reactions_count: reactions.length,
+                proposals_count: proposalsCount,
                 observers_count: observerReports.length,
                 observers_ok:    observerReports.filter(o => o.status === 'ok').length,
               }),
@@ -1006,10 +821,9 @@ export async function POST(req: NextRequest) {
           if (sessionDbId) {
             await pool.query(
               `UPDATE board_meeting_sessions
-               SET status='completed', completed_at=NOW(), consensus=$2,
-                   proposals_count=$3, approved_count=0
+               SET status='completed', completed_at=NOW(), consensus=$2
                WHERE id=$1`,
-              [sessionDbId, consensus.substring(0, 2000), proposals.length]
+              [sessionDbId, consensus.substring(0, 2000)]
             ).catch(() => null);
           }
         } catch { /* non-critical */ }

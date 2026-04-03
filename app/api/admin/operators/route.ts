@@ -29,7 +29,8 @@ export async function GET(request: NextRequest) {
   if (!parsed.success) return NextResponse.json({ error: 'Неверные параметры' }, { status: 400 });
 
   const { status, limit, offset } = parsed.data;
-  const whereStatus = status === 'all' ? '' : `AND p.profile_status = '${status}'`;
+  const hasStatusFilter = status !== 'all';
+  const params: (string | number)[] = hasStatusFilter ? [status, limit, offset] : [limit, offset];
 
   const rows = await query(`
     SELECT
@@ -60,18 +61,18 @@ export async function GET(request: NextRequest) {
     JOIN users u ON u.id = p.user_id
     LEFT JOIN operator_applications oa ON oa.partner_id = p.id
     WHERE u.role = 'operator'
-      ${whereStatus}
+      ${hasStatusFilter ? 'AND p.profile_status = $1' : ''}
     ORDER BY p.applied_at DESC NULLS LAST, p.created_at DESC
-    LIMIT $1 OFFSET $2
-  `, [limit, offset]);
+    LIMIT $${hasStatusFilter ? 2 : 1} OFFSET $${hasStatusFilter ? 3 : 2}
+  `, params);
 
   const countRow = await query(`
     SELECT COUNT(*) AS total
     FROM partners p
     JOIN users u ON u.id = p.user_id
     WHERE u.role = 'operator'
-      ${whereStatus}
-  `);
+      ${hasStatusFilter ? 'AND p.profile_status = $1' : ''}
+  `, hasStatusFilter ? [status] : []);
 
   return NextResponse.json({
     success: true,

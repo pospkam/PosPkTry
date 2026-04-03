@@ -281,12 +281,19 @@ export async function callAnthropic(messages: ChatMessage[]): Promise<string | n
         'Content-Type': 'application/json',
         'x-api-key': apiKey,
         'anthropic-version': '2023-06-01',
+        'anthropic-beta': 'prompt-caching-2024-07-31',
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 800,
         temperature: 0.4,
-        ...(systemMsg ? { system: systemMsg.content } : {}),
+        ...(systemMsg ? {
+          system: [{
+            type: 'text',
+            text: systemMsg.content,
+            cache_control: { type: 'ephemeral' },
+          }],
+        } : {}),
         messages: anthropicMessages,
       }),
       signal: AbortSignal.timeout(15_000),
