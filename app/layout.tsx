@@ -15,7 +15,7 @@ const inter = Inter({
   variable: '--font-outfit', // переменная сохранена для обратной совместимости
 });
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://tourhab.ru';
+const BASE_URL = 'https://tourhab.ru';
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
@@ -69,7 +69,7 @@ export const metadata: Metadata = {
     description: 'Туры на Камчатку: рыбалка, вулканы, горячие источники. Бронирование онлайн.',
     images: [
       {
-        url: '/og-image.jpg',
+        url: '/images/hero/hero-light.jpeg',
         width: 1200,
         height: 630,
         alt: 'Kamchatour — Туры на Камчатку',
@@ -80,7 +80,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Kamchatour — Туры на Камчатку',
     description: 'Туры на Камчатку: рыбалка, вулканы, горячие источники. Бронирование онлайн.',
-    images: ['/og-image.jpg'],
+    images: ['/images/hero/hero-light.jpeg'],
   },
   robots: {
     index: true,
