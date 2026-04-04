@@ -41,10 +41,36 @@ export const AGENT_MODEL_MAP: Record<AgentId, string> = {
 export const CONSENSUS_MODEL = 'anthropic/claude-sonnet-4-6';
 
 /**
+ * Cheaper models for background/cron tasks where quality is less critical.
+ * Used by cron jobs, scheduled reports, and non-interactive agent work.
+ */
+export const CRON_MODEL_MAP: Partial<Record<AgentId, string>> = {
+  admin:    'openai/gpt-4o-mini',
+  legal:    'qwen/qwen3.6-plus:free',
+  security: 'qwen/qwen3.6-plus:free',
+  hacker:   'qwen/qwen3.6-plus:free',
+  rescue:   'meta-llama/llama-4-scout',        // rescue keeps fast model even in cron
+  eco:      'google/gemini-2.0-flash-lite-001',
+  content:  'qwen/qwen3.6-plus:free',
+  quality:  'openai/gpt-4o-mini',
+  planning: 'qwen/qwen3.6-plus:free',
+  evo:      'qwen/qwen3-coder-next',
+  finance:  'qwen/qwen3.6-plus:free',
+  infra:    'qwen/qwen3.6-plus:free',
+  vibe_coder: 'qwen/qwen3-coder-next',
+};
+
+/**
  * Get the preferred OpenRouter model for an agent.
+ * @param agentId - agent identifier
+ * @param isCron - if true, returns cheaper cron model when available
  * Returns null if agent ID is unknown (fallback to waterfall).
  */
-export function getModelForAgent(agentId: string): string | null {
+export function getModelForAgent(agentId: string, isCron = false): string | null {
+  if (isCron) {
+    const cronModel = (CRON_MODEL_MAP as Record<string, string>)[agentId];
+    if (cronModel) return cronModel;
+  }
   return (AGENT_MODEL_MAP as Record<string, string>)[agentId] ?? null;
 }
 

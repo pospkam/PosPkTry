@@ -128,6 +128,8 @@ export interface OpenRouterModelOptions {
   maxTokens?: number;
   temperature?: number;
   jsonMode?: boolean;
+  /** JSON Schema for structured outputs (supported by GPT-4.1, Gemini 2.5, etc.) */
+  jsonSchema?: { name: string; strict?: boolean; schema: Record<string, unknown> };
 }
 
 export async function callOpenRouterModel(
@@ -138,7 +140,7 @@ export async function callOpenRouterModel(
   const opts: OpenRouterModelOptions = typeof timeoutOrOpts === 'number'
     ? { timeoutMs: timeoutOrOpts }
     : timeoutOrOpts;
-  const { timeoutMs = 15_000, maxTokens = 800, temperature = 0.4, jsonMode = false } = opts;
+  const { timeoutMs = 15_000, maxTokens = 800, temperature = 0.4, jsonMode = false, jsonSchema } = opts;
 
   const apiKey = getOpenRouterKey();
   if (!apiKey) return null;
@@ -153,7 +155,9 @@ export async function callOpenRouterModel(
       max_tokens: maxTokens,
       messages: payload,
     };
-    if (jsonMode) {
+    if (jsonSchema) {
+      body.response_format = { type: 'json_schema', json_schema: jsonSchema };
+    } else if (jsonMode) {
       body.response_format = { type: 'json_object' };
     }
 
@@ -190,9 +194,10 @@ export async function callOpenRouterModel(
 export async function callAIWithModel(
   messages: ChatMessage[],
   preferredModel?: string | null,
+  opts?: OpenRouterModelOptions,
 ): Promise<{ text: string; model_used: string }> {
   if (preferredModel) {
-    const result = await callOpenRouterModel(messages, preferredModel);
+    const result = await callOpenRouterModel(messages, preferredModel, opts ?? 15_000);
     if (result) return result;
   }
   const text = await callAIWaterfall(messages);
