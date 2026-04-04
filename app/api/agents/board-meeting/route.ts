@@ -612,6 +612,63 @@ async function generateDebateArgument(
   };
 }
 
+async function createFallbackProposal(meetingId: string): Promise<AgentProposal | null> {
+  const adminDef = MEETING_AGENTS.find(a => a.id === 'admin');
+  const executorEntry = EXECUTOR_SKILL_MAP.sql_query_fix;
+
+  try {
+    const title = 'Fallback: диагностировать блокировку инициатив';
+    const description =
+      'Совещание завершилось без инициатив. Запустить диагностику причин отклонений и сформировать 1 исполнимую инициативу в течение 24ч.';
+
+    const approval = await approvalRequired.request({
+      type: 'sql_query_fix',
+      description: title,
+      context: {
+        from_agent: 'admin',
+        meeting_id: meetingId,
+        priority: 'high',
+        confidence: 'high',
+        domain: 'governance',
+        fallback: true,
+        full_description: description,
+      },
+      requested_by: 'agent_admin',
+      expires_hours: 48,
+    });
+
+    if (approval.id) {
+      await pool.query(
+        `UPDATE agent_approvals
+         SET executor_agent_id = $2,
+             executor_name     = $3,
+             execution_status  = 'assigned'
+         WHERE id = $1`,
+        [approval.id, executorEntry.id, executorEntry.name],
+      ).catch(() => null);
+    }
+
+    return {
+      from_id: 'admin',
+      from_name: adminDef?.name ?? 'AI Администратор',
+      from_role: adminDef?.role ?? 'Операционный директор',
+      action_type: 'sql_query_fix',
+      title,
+      description,
+      priority: 'high',
+      color: adminDef?.color ?? 'var(--accent)',
+      needs_approval: approval.needs_approval,
+      approval_id: approval.id ?? null,
+      executor_id: executorEntry.id,
+      executor_name: executorEntry.name,
+      executor_color: executorEntry.color,
+      executor_reason: 'Fallback-задача для разрыва цикла пустых заседаний',
+    };
+  } catch {
+    return null;
+  }
+}
+
 // ── POST — SSE стриминг ─────────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
@@ -902,6 +959,15 @@ export async function POST(req: NextRequest) {
             proposalsCount++;
             finalProposals.push(res.value);
             send(controller, { type: 'proposal', proposal: res.value });
+          }
+        }
+
+        if (proposalsCount === 0) {
+          const fallbackProposal = await createFallbackProposal(meetingId);
+          if (fallbackProposal) {
+            proposalsCount = 1;
+            finalProposals.push(fallbackProposal);
+            send(controller, { type: 'proposal_fallback', proposal: fallbackProposal });
           }
         }
 
