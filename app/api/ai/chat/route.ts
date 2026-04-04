@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getSystemPrompt, buildMessageHistory, ChatRole, ChatMessage } from '@/lib/ai/prompts';
 import { query } from '@/lib/database';
+import { pool } from '@/lib/db-pool';
 import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
 import { callAIWithModelDirect } from '@/lib/ai/providers';
 import { getModelForAgent } from '@/lib/ai/agent-models';
@@ -29,6 +30,7 @@ import { buildRAGContext } from '@/lib/ai/rag-context';
 import { recordTouristDemand } from '@/lib/ai/tourist-demand-aggregator';
 import { runSDKAgent } from '@/lib/agents/sdk/sdk-runner';
 import { getTouristTools } from '@/lib/agents/sdk/tourist-tools';
+import { getOperatorTools } from '@/lib/agents/sdk/operator-tools';
 
 export const dynamic = 'force-dynamic';
 
@@ -188,6 +190,32 @@ export async function POST(request: NextRequest) {
         });
         if (agentResult.intent !== 'unknown') answer = agentResult.response;
       } catch { /* fall through to raw AI */ }
+    }
+
+    // Agentic Operator: authenticated operators → SDK tool calling for tour/booking management
+    if (!answer && safeRole === 'operator' && isAuthenticated && userId) {
+      try {
+        const partnerRes = await pool.query<{ id: string }>(
+          `SELECT id::text FROM partners WHERE user_id = $1 LIMIT 1`, [userId],
+        );
+        const partnerId = partnerRes.rows[0]?.id;
+        if (partnerId) {
+          const opTools = getOperatorTools(partnerId);
+          const sdkResult = await runSDKAgent({
+            agentId: 'operator',
+            intent: 'operator_management',
+            systemPrompt: systemPrompt + `\n\nТы — AI-ассистент оператора туров на Камчатке. ` +
+              `Используй инструменты для просмотра туров, бронирований, выручки. ` +
+              `При запросе изменения цены или публикации — выполняй через инструменты. ` +
+              `Отвечай кратко, с цифрами. Не придумывай данных.`,
+            userMessage: message.trim(),
+            tools: opTools,
+            model: getModelForAgent('kuzmich') ?? 'openai/gpt-4o-mini',
+            maxIterations: 4,
+          });
+          if (sdkResult.response) answer = sdkResult.response;
+        }
+      } catch { /* fall through to PlatformAgent / simple AI */ }
     }
 
     // Agentic Booking: authenticated tourists with booking/tour intent → SDK tool calling

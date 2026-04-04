@@ -532,6 +532,45 @@ export async function callGeminiDirect(messages: ChatMessage[]): Promise<string 
   } catch { return null; }
 }
 
+// ── Gemini Vision (image analysis) ────────────────────────────
+export async function callGeminiVision(
+  imageBase64: string,
+  mimeType: string,
+  prompt: string,
+): Promise<string | null> {
+  const apiKey = getGeminiKey();
+  if (!apiKey) return null;
+
+  try {
+    const body = {
+      contents: [{
+        role: 'user',
+        parts: [
+          { inlineData: { mimeType, data: imageBase64 } },
+          { text: prompt },
+        ],
+      }],
+      systemInstruction: {
+        parts: [{ text: 'Ты — эксперт по природе и достопримечательностям Камчатки. Отвечай на русском, кратко и точно. Определяй вулканы, животных, растения, локации.' }],
+      },
+    };
+
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(30_000),
+      },
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    const text: string | undefined = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    return text?.trim() || null;
+  } catch { return null; }
+}
+
 // ── Preflight: быстрая проверка доступности провайдеров ──────
 // Минимальный запрос к каждому провайдеру, параллельно, 5s timeout
 export interface ProviderStatus {
