@@ -10,6 +10,7 @@ import { requireAdmin } from '@/lib/auth/middleware';
 import { approvalRequired } from '@/lib/agents/safeguards/approval-required';
 import { pool } from '@/lib/db-pool';
 import { executeInitiative, AUTO_EXECUTE_TYPES, type ExecutionTask } from '@/lib/agents/execution/initiative-executor';
+import { deriveExecutionVisibility } from '@/lib/agents/execution/execution-visibility';
 
 export const dynamic = 'force-dynamic';
 
@@ -56,7 +57,19 @@ export async function GET(req: NextRequest) {
     queryParams
   );
 
-  return NextResponse.json({ success: true, data: rows.rows, total: rows.rowCount ?? 0 });
+  const enhanced = rows.rows.map((row) => ({
+    ...row,
+    ...deriveExecutionVisibility({
+      action_type: row.action_type,
+      execution_status: row.execution_status,
+      executor_name: row.executor_name,
+      executor_agent_id: row.executor_agent_id,
+      execution_notes: row.execution_notes,
+      requested_by: row.requested_by,
+    }),
+  }));
+
+  return NextResponse.json({ success: true, data: enhanced, total: rows.rowCount ?? 0 });
 }
 
 export async function POST(req: NextRequest) {

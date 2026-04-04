@@ -134,6 +134,14 @@ interface Approval {
   executor_name: string | null;
   execution_status: 'pending' | 'assigned' | 'in_progress' | 'done' | 'failed' | null;
   execution_notes: string | null;
+  execution_progress_pct: number;
+  execution_method: string;
+  execution_tool: string;
+  executed_by: string | null;
+  changes_count: number;
+  errors_count: number;
+  verification_passed: boolean | null;
+  last_error: string | null;
   due_date: string | null;
   requested_by: string | null;
   expires_at: string | null;
@@ -850,6 +858,31 @@ function ExecStatusBadge({ status }: { status: string | null }) {
   );
 }
 
+function ExecProgressBar({ pct, status }: { pct: number; status: string | null }) {
+  const color = status === 'done'
+    ? 'var(--success)'
+    : status === 'failed'
+      ? 'var(--danger)'
+      : status === 'in_progress'
+        ? 'var(--warning)'
+        : 'var(--ocean)';
+
+  return (
+    <div className="mt-1.5">
+      <div className="flex items-center justify-between text-[10px] text-[var(--text-muted)] mb-1">
+        <span>Прогресс</span>
+        <span className="font-mono">{pct}%</span>
+      </div>
+      <div className="h-1.5 rounded-full bg-[var(--bg-hover)] overflow-hidden border border-[var(--border)]">
+        <div
+          className="h-full transition-all"
+          style={{ width: `${Math.max(0, Math.min(100, pct))}%`, background: color }}
+        />
+      </div>
+    </div>
+  );
+}
+
 // ── Brief Modal ───────────────────────────────────────────────────────────────
 
 function BriefModal({ brief, onClose }: { brief: string; onClose: () => void }) {
@@ -1092,6 +1125,34 @@ function ApprovalsTab() {
                           <UserCheck className="w-3 h-3" />
                           Исполнитель: <span className="font-medium">{ap.executor_name}</span>
                         </div>
+                      )}
+                      {ap.executed_by && (
+                        <div className="text-[10px] text-[var(--text-muted)] mt-0.5">
+                          Кто исполняет: <span className="font-medium text-[var(--text-secondary)]">{ap.executed_by}</span>
+                        </div>
+                      )}
+                      <ExecProgressBar pct={ap.execution_progress_pct ?? 0} status={ap.execution_status} />
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 text-[10px]">
+                        <div className="rounded border border-[var(--border)] bg-[var(--bg-hover)] px-2 py-1.5">
+                          <div className="text-[var(--text-muted)]">Способ</div>
+                          <div className="text-[var(--text-primary)]">{ap.execution_method || '—'}</div>
+                        </div>
+                        <div className="rounded border border-[var(--border)] bg-[var(--bg-hover)] px-2 py-1.5">
+                          <div className="text-[var(--text-muted)]">Инструмент</div>
+                          <div className="text-[var(--text-primary)]">{ap.execution_tool || '—'}</div>
+                        </div>
+                      </div>
+                      {(ap.changes_count > 0 || ap.errors_count > 0 || ap.verification_passed !== null) && (
+                        <div className="flex flex-wrap items-center gap-2 mt-2 text-[10px] text-[var(--text-muted)]">
+                          <span>Изменений: <b className="text-[var(--text-secondary)]">{ap.changes_count ?? 0}</b></span>
+                          <span>Ошибок: <b className="text-[var(--text-secondary)]">{ap.errors_count ?? 0}</b></span>
+                          <span>
+                            Верификация: <b className="text-[var(--text-secondary)]">{ap.verification_passed === null ? '—' : ap.verification_passed ? 'ok' : 'fail'}</b>
+                          </span>
+                        </div>
+                      )}
+                      {ap.last_error && (
+                        <p className="text-[10px] text-[var(--danger)] mt-1">Последняя ошибка: {ap.last_error}</p>
                       )}
                       {ap.execution_notes && (
                         <p className="text-[10px] text-[var(--text-muted)] italic mt-0.5">{ap.execution_notes}</p>
