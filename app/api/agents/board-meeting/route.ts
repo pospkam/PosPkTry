@@ -88,6 +88,14 @@ export interface AgentProposal {
   executor_reason: string;
 }
 
+export interface DebateArgument {
+  agent_id:   string;
+  agent_name: string;
+  stance:     'support' | 'oppose';
+  argument:   string;
+  color:      string;
+}
+
 // ── Agent registry ───────────────────────────────────────────────────────────────────
 
 const MEETING_AGENTS = [
@@ -527,6 +535,51 @@ async function extractVote(
   };
 }
 
+async function generateDebateArgument(
+  agent: AgentReport,
+  proposal: AgentProposal,
+  stance: 'support' | 'oppose',
+): Promise<DebateArgument | null> {
+  const agentDef = MEETING_AGENTS.find(a => a.id === agent.id);
+  const stanceText = stance === 'support' ? 'поддерживаешь' : 'критикуешь';
+
+  const prompt = [
+    `Ты ${agent.name} (${agent.role}).`,
+    `Инициатива: "${proposal.title}"`,
+    `Тип: ${proposal.action_type}`,
+    `Описание: ${proposal.description}`,
+    `Твоя позиция: ты ${stanceText} эту инициативу.`,
+    '',
+    'Ответь строго JSON (без markdown, без пояснений):',
+    '{"argument":"одно конкретное предложение до 220 символов"}',
+    '',
+    'Правила:',
+    '- только факты и риски/польза по делу, без воды',
+    '- 1 аргумент, 1 предложение',
+    '- не повторяй формулировку инициативы слово в слово',
+  ].join('\n');
+
+  const text = await callAIFast([{ role: 'user', content: prompt }]).catch(() => null);
+  if (!text) return null;
+
+  const match = text.match(/\{[\s\S]*?\}/);
+  if (!match) return null;
+
+  let parsed: { argument?: string };
+  try { parsed = JSON.parse(match[0]); } catch { return null; }
+
+  const argument = typeof parsed.argument === 'string' ? parsed.argument.trim() : '';
+  if (!argument) return null;
+
+  return {
+    agent_id: agent.id,
+    agent_name: agent.name,
+    stance,
+    argument: argument.substring(0, 220),
+    color: agentDef?.color ?? 'var(--accent)',
+  };
+}
+
 // ── POST — SSE стриминг ─────────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
@@ -634,6 +687,29 @@ export async function POST(req: NextRequest) {
               agentContext.richBriefing = (agentContext.richBriefing ?? '') +
                 `\n\n=== ТВОЯ ИНСТИТУЦИОНАЛЬНАЯ ПАМЯТЬ (наблюдения прошлых заседаний) ===\n${memSummary}`;
             }
+            // Load past proposal outcomes for this agent (approved/rejected/executed)
+            try {
+              const { rows: pastProposals } = await pool.query<{
+                title: string; status: string; execution_status: string | null;
+                created_at: string;
+              }>(
+                `SELECT title, status, execution_status, created_at::text
+                 FROM agent_approvals
+                 WHERE requested_by = $1
+                 ORDER BY created_at DESC LIMIT 5`,
+                [`agent_${agentDef.id}`],
+              );
+              if (pastProposals.length > 0) {
+                const outcomeLines = pastProposals.map(p => {
+                  const exec = p.execution_status ? ` [${p.execution_status}]` : '';
+                  return `- "${p.title}" → ${p.status}${exec} (${p.created_at.slice(0, 10)})`;
+                });
+                agentContext.richBriefing = (agentContext.richBriefing ?? '') +
+                  `\n\n=== ТВОИ ПРОШЛЫЕ ИНИЦИАТИВЫ (результаты) ===\n` +
+                  `${outcomeLines.join('\n')}\n` +
+                  `Учитывай: не повторяй отклонённые предложения. Развивай одобренные.`;
+              }
+            } catch { /* non-critical */ }
             return { agentDef, result: await runAgent(agentDef.intent, agentContext) };
           })
         );
@@ -737,6 +813,30 @@ export async function POST(req: NextRequest) {
         const reactions = await mesh.runReactions(agents, agentModelMap);
         send(controller, { type: 'reactions_done', reactions });
 
+        // ── Save AgentMesh scores to memory (quality tracking) ────────────
+        try {
+          const scoredReactions = reactions.filter(r => r.score != null);
+          if (scoredReactions.length > 0) {
+            const avgScore = scoredReactions.reduce((s, r) => s + (r.score ?? 0), 0) / scoredReactions.length;
+            await agentMemory.remember({
+              agent_id:    'evo',
+              memory_type: 'observation',
+              key:         `mesh_quality_${meetingId}`,
+              value: {
+                meeting_id: meetingId,
+                date: new Date().toISOString().slice(0, 10),
+                avg_score: Math.round(avgScore * 10) / 10,
+                individual_scores: scoredReactions.map(r => ({
+                  from: r.from_id, score: r.score, tone: r.tone,
+                })),
+                agents_reacted: scoredReactions.length,
+                agents_silent: agents.filter(a => a.status === 'ok').length - scoredReactions.length,
+              },
+              source: 'agent_mesh',
+            });
+          }
+        } catch { /* non-critical */ }
+
         send(controller, { type: 'round3_start' });
 
         // Inject observer insights into consensus if available
@@ -764,10 +864,47 @@ export async function POST(req: NextRequest) {
             })
         );
         let proposalsCount = 0;
+        const finalProposals: AgentProposal[] = [];
         for (const res of proposalResults) {
           if (res.status === 'fulfilled' && res.value) {
             proposalsCount++;
+            finalProposals.push(res.value);
             send(controller, { type: 'proposal', proposal: res.value });
+          }
+        }
+
+        // ── Round 5: Debates — pro/con for each proposal ──────────────────
+        if (finalProposals.length > 0) {
+          send(controller, { type: 'round5_start' });
+
+          for (const proposal of finalProposals) {
+            // Pick 2 supporters + 2 skeptics (different from proposer)
+            const others = successfulAgents.filter(a => a.id !== proposal.from_id);
+            const supporters = others.slice(0, 2);
+            const skeptics = others.slice(others.length - 2);
+
+            const debatePromises = [
+              ...supporters.map(a => generateDebateArgument(a, proposal, 'support')),
+              ...skeptics.map(a => generateDebateArgument(a, proposal, 'oppose')),
+            ];
+
+            const debateResults = await Promise.allSettled(debatePromises);
+            const arguments_: DebateArgument[] = debateResults
+              .filter((r): r is PromiseFulfilledResult<DebateArgument | null> => r.status === 'fulfilled')
+              .map(r => r.value)
+              .filter((a): a is DebateArgument => a !== null);
+
+            const supportCount = arguments_.filter(a => a.stance === 'support').length;
+            const opposeCount = arguments_.filter(a => a.stance === 'oppose').length;
+            const verdict = supportCount > opposeCount ? 'proceed' : supportCount === opposeCount ? 'revise' : 'reject';
+
+            send(controller, {
+              type: 'debate_done',
+              proposal_title: proposal.title,
+              from_id: proposal.from_id,
+              arguments: arguments_,
+              verdict,
+            });
           }
         }
 

@@ -94,7 +94,33 @@ export class ApprovalRequired {
     }
 
     if (category === 'safe') {
-      return { needs_approval: false };
+      // Safe actions are auto-approved, but still persisted so execution cron can pick them up.
+      const expiresHours = action.expires_hours ?? 24;
+      const { rows } = await pool.query<{ id: string }>(`
+        INSERT INTO agent_approvals (
+          action_type, description, context, status, requested_by, reviewed_at, review_notes, expires_at
+        )
+        VALUES ($1, $2, $3, 'approved', $4, NOW(), $5, NOW() + ($6 || ' hours')::interval)
+        RETURNING id
+      `, [
+        action.type,
+        action.description,
+        JSON.stringify(action.context),
+        action.requested_by,
+        'auto_approved_safe_action',
+        expiresHours,
+      ]);
+
+      const approvalId = rows[0]?.id;
+
+      await auditLog.write({
+        event_type: 'approval_granted',
+        actor:      action.requested_by,
+        resource:   action.type,
+        details:    { approval_id: approvalId, category: 'safe', auto: true },
+      });
+
+      return { needs_approval: false, id: approvalId };
     }
 
     // REVIEW — создать запись
