@@ -261,7 +261,7 @@ export const DEFAULT_AGENT_SCHEDULE: ScheduledAgentConfig[] = [
   // Rescue: monitor SOS every 4h (no incidents at current scale; restore 30min when live bookings exist)
   {
     agentId: 'rescue',
-    intent: 'rescue_monitor',
+    intent: 'rescue_sos_stats',
     intervalMs: 4 * 60 * 60 * 1000,
     timeout: 30000,
     enabled: true
@@ -288,7 +288,7 @@ export const DEFAULT_AGENT_SCHEDULE: ScheduledAgentConfig[] = [
   // Quality: review trends every 24h (no reviews/ratings coming in)
   {
     agentId: 'quality',
-    intent: 'quality_review',
+    intent: 'qa_operators',
     intervalMs: 24 * 60 * 60 * 1000,
     timeout: 45000,
     enabled: true
@@ -297,7 +297,7 @@ export const DEFAULT_AGENT_SCHEDULE: ScheduledAgentConfig[] = [
   // Eco: monitor platform load every 12h (near-zero load)
   {
     agentId: 'eco',
-    intent: 'eco_monitor',
+    intent: 'eco_impact',
     intervalMs: 12 * 60 * 60 * 1000,
     timeout: 30000,
     enabled: true
