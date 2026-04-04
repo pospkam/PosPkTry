@@ -22,10 +22,13 @@ import {
   extractMemoryFromMessage,
   buildMemoryContext,
   buildAgentInsightsForTourist,
+  loadTripHistory,
 } from '@/lib/ai/user-memory';
 import { detectTourIntent, findRelevantTours, type TourSuggestion } from '@/lib/ai/booking-intent';
 import { buildRAGContext } from '@/lib/ai/rag-context';
 import { recordTouristDemand } from '@/lib/ai/tourist-demand-aggregator';
+import { runSDKAgent } from '@/lib/agents/sdk/sdk-runner';
+import { getTouristTools } from '@/lib/agents/sdk/tourist-tools';
 
 export const dynamic = 'force-dynamic';
 
@@ -156,14 +159,17 @@ export async function POST(request: NextRequest) {
 
     // Долгосрочная память (только для авторизованных)
     const userId = user?.userId ? parseInt(user.userId, 10) : null;
-    const userMemory = userId ? await loadUserMemory(userId) : null;
+    const [userMemory, tripHistory] = await Promise.all([
+      userId ? loadUserMemory(userId) : Promise.resolve(null),
+      userId ? loadTripHistory(userId) : Promise.resolve([]),
+    ]);
 
     // Build AI prompt
     const userMsg: ChatMessage = { role: 'user', content: message.trim(), timestamp: Date.now() };
     history.push(userMsg);
 
     const basePrompt   = getSystemPrompt(safeRole);
-    const memContext   = userMemory ? buildMemoryContext(userMemory) : '';
+    const memContext   = userMemory ? buildMemoryContext(userMemory, tripHistory) : '';
     const [ragContext, agentInsights] = await Promise.all([
       buildRAGContext(message.trim(), safeRole),
       safeRole === 'tourist' ? buildAgentInsightsForTourist() : Promise.resolve(''),
@@ -183,6 +189,29 @@ export async function POST(request: NextRequest) {
         if (agentResult.intent !== 'unknown') answer = agentResult.response;
       } catch { /* fall through to raw AI */ }
     }
+
+    // Agentic Booking: authenticated tourists with booking/tour intent → SDK tool calling
+    if (!answer && safeRole === 'tourist' && isAuthenticated) {
+      const intentResult = detectTourIntent(message.trim());
+      if (intentResult.detected) {
+        try {
+          const tools = getTouristTools(userId);
+          const sdkResult = await runSDKAgent({
+            agentId: 'kuzmich',
+            intent: 'conversational_booking',
+            systemPrompt: systemPrompt + `\n\nТы можешь использовать инструменты для поиска туров, проверки дат и мест. ` +
+              `Когда турист спрашивает о турах — ОБЯЗАТЕЛЬНО используй search_tours. ` +
+              `Отвечай конкретно: название, цена, даты. Не придумывай данные.`,
+            userMessage: message.trim(),
+            tools,
+            model: getModelForAgent('kuzmich') ?? 'openai/gpt-4o-mini',
+            maxIterations: 4,
+          });
+          if (sdkResult.response) answer = sdkResult.response;
+        } catch { /* fall through to simple AI */ }
+      }
+    }
+
     answer ??= await callAIWithModelDirect(messagesForAI, getModelForAgent('kuzmich'));
 
     // Tour suggestions — only for tourist role (fire-and-forget fetch, non-blocking)

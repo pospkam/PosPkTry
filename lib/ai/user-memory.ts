@@ -137,7 +137,7 @@ export function extractMemoryFromMessage(text: string): Partial<UserMemory> {
 }
 
 // ── Генерация context-строки для system prompt ─────────────────
-export function buildMemoryContext(mem: UserMemory): string {
+export function buildMemoryContext(mem: UserMemory, trips?: TripRecord[]): string {
   if (mem.sessions_count === 0 && mem.messages_count === 0) return '';
 
   const parts: string[] = [];
@@ -180,9 +180,47 @@ export function buildMemoryContext(mem: UserMemory): string {
     parts.push(mem.ai_notes);
   }
 
+  // Trip history
+  if (trips && trips.length > 0) {
+    const statusLabel: Record<string, string> = {
+      completed: 'завершен', confirmed: 'подтвержден', pending: 'ожидание',
+      cancelled: 'отменен', cancelled_by_tourist: 'отменен туристом',
+    };
+    const tripLines = trips.map(t => {
+      const st = statusLabel[t.status] ?? t.status;
+      return `- ${t.title} (${t.booking_date}, ${st}, ${t.participants} чел.)`;
+    });
+    parts.push(`\nИстория поездок:\n${tripLines.join('\n')}`);
+  }
+
   if (parts.length === 0) return '';
 
   return `\n\n[ПАМЯТЬ О ПОЛЬЗОВАТЕЛЕ]\n${parts.join(' ')}\nУчитывай эти данные при ответах — адаптируй рекомендации. Не упоминай явно что "ты запомнил".`;
+}
+
+// ── Trip history loader ────────────────────────────────────────────
+export interface TripRecord {
+  title:        string;
+  booking_date: string;
+  status:       string;
+  participants: number;
+}
+
+export async function loadTripHistory(userId: number): Promise<TripRecord[]> {
+  try {
+    const result = await pool.query<TripRecord>(
+      `SELECT ot.title, ob.booking_date::text, ob.booking_status AS status, ob.participants
+       FROM operator_bookings ob
+       JOIN operator_tours ot ON ot.id = ob.operator_tour_id
+       JOIN users u ON u.email = ob.tourist_email
+       WHERE u.id = $1
+       ORDER BY ob.booking_date DESC LIMIT 10`,
+      [userId],
+    );
+    return result.rows;
+  } catch {
+    return [];
+  }
 }
 
 // ── Reverse bridge: Agent insights for tourist chat system prompt ──
