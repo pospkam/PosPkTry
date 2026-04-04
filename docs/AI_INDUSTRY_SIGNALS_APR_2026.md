@@ -122,3 +122,57 @@
 - Cost per lead: снижение на 15-25% при сохранении качества.
 - Доля AI-ассистированного трафика: положительный тренд неделя к неделе.
 - Конверсия просмотр -> лид -> бронь: стабильный рост после стабилизации ядра.
+
+---
+
+## Execution Pack (исполняемый контракт через совет)
+
+Назначение секции:
+- Превратить Top-10 инициатив в исполняемые задачи для agent_approvals.
+- Убрать "обсуждали, но не внедрили" за счет явного владельца, KPI и DoD.
+
+### Стандарт карточки инициативы
+
+Для каждой инициативы обязательно фиксируются:
+- owner_agent: кто отвечает за бизнес-результат.
+- executor_agent: кто исполняет в системе.
+- action_type: тип действия в pipeline.
+- due_date: дедлайн.
+- kpi_target: целевой показатель.
+- definition_of_done: что считается завершением.
+- rollback_condition: когда откатываем или пересобираем решение.
+
+### Маппинг Top-10 инициатив на систему исполнения
+
+| # | Инициатива | action_type | Owner | Executor | KPI target | Definition of Done | Rollback condition |
+|---|------------|-------------|-------|----------|------------|--------------------|-------------------|
+| 1 | API-key only policy | api_scope_expand | security | security | 100% prod AI вызовов через API keys | Нет production-вызовов через consumer auth; policy зафиксирована | >0 прод-инцидентов авторизации за 7 дней |
+| 2 | Budget guardrails | commission_change | finance | admin | дневной budget breach = 0 | Лимиты по дням и intent-классам активны, stop trigger работает | Ложные stop > 2 за неделю |
+| 3 | Intent-level routing | prompt_optimize | evo | evo | p95 critical intents -25% за 2 недели | Для mtg_*, tourist_recommend, lead-qualification заданы отдельные policy rules | p95 вырос >10% от baseline 3 дня подряд |
+| 4 | Graceful degradation | schedule_suggest | rescue | rescue | hard-fail < 1% | При provider timeout пользователь получает safe fallback, фоновый ретрай включен | fallback сам падает > 0.5% запросов |
+| 5 | SLO + auto alerts | bulk_notify | admin | admin | TTD инцидента < 5 минут | SLO breach автоматически создает alert и запись в лог | alert spam > 20% нерелевантных сигналов |
+| 6 | GEO-пакет top-20 маршрутов | ui_copy_change | content | content | +20% AI-цитируемости top-20 маршрутов | Для top-20 есть структурированные блоки: сезон/риски/цена/длительность/включено | CTR и заявки не растут 2 недели |
+| 7 | Explainability блок | ui_copy_change | quality | content | +15% trust сигналов (меньше уточняющих вопросов) | В рекомендациях есть блок "почему этот тур" | рост отказов после рекомендаций >10% |
+| 8 | Audit trail AI решений | sql_query_fix | infra | evo | 100% critical решений с trace | Для safety/SOS и high-risk есть audit source + route decision | пропуски audit в critical flow >0 |
+| 9 | Weekly AI P&L | commission_change | finance | admin | cost per lead -15% за квартал | Еженедельный отчет CPL/CPB публикуется автоматически | данные отчета неполные 2 недели подряд |
+| 10 | Incident playbook | schedule_suggest | infra | rescue | MTTR -30% | Runbook для provider/payment/SOS утвержден и используется в инцидентах | MTTR не улучшается 2 спринта |
+
+### Минимальный SLA процесса совета
+
+- Заседание не может завершиться без инициатив (fallback включается автоматически).
+- Любая approved инициатива должна перейти в assigned в момент создания.
+- Любая assigned инициатива должна получить первый execution event не позже 24 часов.
+- Инициатива без KPI target и DoD считается невалидной.
+
+### Еженедельный контроль исполнения (owner review)
+
+Каждый понедельник проверяются 4 метрики:
+- proposals_count (за неделю) > 0
+- execution_start_rate = assigned -> in_progress >= 90%
+- completion_rate = done / (done + failed) >= 70%
+- duplicate_skip_rate (анти-повтор) растет только при реальном спаме инициатив
+
+Если любой порог нарушен:
+- создается служебная инициатива sql_query_fix на диагностику governance-loop;
+- приоритет high;
+- due_date = +48 часов.
