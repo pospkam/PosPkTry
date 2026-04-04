@@ -940,6 +940,7 @@ function ApprovalsTab() {
   const [reviewing, setReviewing] = useState<string | null>(null);
   const [assigning, setAssigning] = useState<string | null>(null);
   const [section,  setSection] = useState<'pending' | 'tracking'>('pending');
+  const [trackingFilter, setTrackingFilter] = useState<'all' | 'problematic'>('all');
   const [openLogId, setOpenLogId] = useState<string | null>(null);
   const [briefLoading, setBriefLoading] = useState<string | null>(null);
   const [briefModal,   setBriefModal]   = useState<string | null>(null);
@@ -1025,6 +1026,14 @@ function ApprovalsTab() {
 
   const pending  = data?.filter(a => a.status === 'pending')  ?? [];
   const approved = data?.filter(a => a.status === 'approved') ?? [];
+  const isProblematic = (ap: Approval) =>
+    ap.execution_status === 'failed' ||
+    (ap.errors_count ?? 0) > 0 ||
+    ap.verification_passed === false;
+  const problematicCount = approved.filter(isProblematic).length;
+  const trackingList = trackingFilter === 'problematic'
+    ? approved.filter(isProblematic)
+    : approved;
 
   return (
     <div className="space-y-4">
@@ -1103,10 +1112,44 @@ function ApprovalsTab() {
       {/* Tracking section */}
       {section === 'tracking' && (
         <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden">
-          {approved.length === 0 && <EmptyState text="Нет одобренных инициатив" />}
           {approved.length > 0 && (
+            <div className="px-4 py-2.5 border-b border-[var(--border)] flex items-center justify-between gap-2">
+              <div className="text-[10px] text-[var(--text-muted)]">
+                Показано: <span className="font-mono text-[var(--text-secondary)]">{trackingList.length}</span> из {approved.length}
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setTrackingFilter('all')}
+                  className={`text-[10px] px-2 py-1 rounded border transition-colors ${
+                    trackingFilter === 'all'
+                      ? 'text-[var(--accent)] border-[var(--accent)] bg-[var(--accent)]/10'
+                      : 'text-[var(--text-muted)] border-[var(--border)] hover:text-[var(--text-secondary)]'
+                  }`}
+                >
+                  Все
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTrackingFilter('problematic')}
+                  className={`text-[10px] px-2 py-1 rounded border transition-colors ${
+                    trackingFilter === 'problematic'
+                      ? 'text-[var(--danger)] border-[var(--danger)] bg-[var(--danger)]/10'
+                      : 'text-[var(--text-muted)] border-[var(--border)] hover:text-[var(--text-secondary)]'
+                  }`}
+                >
+                  Проблемные ({problematicCount})
+                </button>
+              </div>
+            </div>
+          )}
+          {approved.length === 0 && <EmptyState text="Нет одобренных инициатив" />}
+          {approved.length > 0 && trackingList.length === 0 && (
+            <EmptyState text="Проблемных исполнений не найдено" />
+          )}
+          {trackingList.length > 0 && (
             <div className="divide-y divide-[var(--border)]">
-              {approved.map(ap => (
+              {trackingList.map(ap => (
                 <div key={ap.id} className="px-4 py-3 space-y-2">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
