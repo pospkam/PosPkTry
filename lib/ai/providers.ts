@@ -54,7 +54,7 @@ export async function callMiMo(messages: ChatMessage[]): Promise<string | null> 
 const OR_MODELS = [
   { id: 'openai/gpt-4o-mini',                timeout: 25_000 },
   { id: 'deepseek/deepseek-chat-v3-0324',    timeout: 25_000 },
-  { id: 'google/gemini-2.0-flash-001',       timeout: 25_000 },
+  { id: 'google/gemini-2.5-flash-lite',      timeout: 25_000 },
   { id: 'anthropic/claude-haiku-4-5',        timeout: 25_000 },
 ];
 
@@ -123,11 +123,23 @@ export async function callOpenrouter(messages: ChatMessage[]): Promise<string | 
 // ── OpenRouter: specific model ────────────────────────────────
 // Calls a single specific model via OpenRouter. Used for per-agent model assignment.
 
+export interface OpenRouterModelOptions {
+  timeoutMs?: number;
+  maxTokens?: number;
+  temperature?: number;
+  jsonMode?: boolean;
+}
+
 export async function callOpenRouterModel(
   messages: ChatMessage[],
   modelId: string,
-  timeoutMs = 15_000,
+  timeoutOrOpts: number | OpenRouterModelOptions = 15_000,
 ): Promise<{ text: string; model_used: string } | null> {
+  const opts: OpenRouterModelOptions = typeof timeoutOrOpts === 'number'
+    ? { timeoutMs: timeoutOrOpts }
+    : timeoutOrOpts;
+  const { timeoutMs = 15_000, maxTokens = 800, temperature = 0.4, jsonMode = false } = opts;
+
   const apiKey = getOpenRouterKey();
   if (!apiKey) return null;
   if (isOpenRouterTemporarilyDisabled()) return null;
@@ -135,6 +147,16 @@ export async function callOpenRouterModel(
   const payload = messages.map(({ role, content }) => ({ role, content }));
 
   try {
+    const body: Record<string, unknown> = {
+      model: modelId,
+      temperature,
+      max_tokens: maxTokens,
+      messages: payload,
+    };
+    if (jsonMode) {
+      body.response_format = { type: 'json_object' };
+    }
+
     const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -143,12 +165,7 @@ export async function callOpenRouterModel(
         'HTTP-Referer': 'https://tourhab.ru',
         'X-Title': 'TourHab Kamchatka',
       },
-      body: JSON.stringify({
-        model: modelId,
-        temperature: 0.4,
-        max_tokens: 800,
-        messages: payload,
-      }),
+      body: JSON.stringify(body),
       signal: AbortSignal.timeout(timeoutMs),
     });
 
@@ -401,7 +418,7 @@ export async function callGemini(messages: ChatMessage[]): Promise<string | null
         'X-Title': 'TourHab Kamchatka',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.0-flash-001',
+        model: 'google/gemini-2.5-flash-lite',
         temperature: 0.4,
         max_tokens: 1200,
         messages: payload,
@@ -495,7 +512,7 @@ export async function callGeminiDirect(messages: ChatMessage[]): Promise<string 
     }
 
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

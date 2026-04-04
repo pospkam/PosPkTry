@@ -16,24 +16,25 @@ export type AgentId =
  * Every model here is callable via https://openrouter.ai/api/v1/chat/completions.
  */
 export const AGENT_MODEL_MAP: Record<AgentId, string> = {
-  admin:      'anthropic/claude-sonnet-4-6',
-  legal:      'openai/gpt-4o-mini',
-  security:   'mistralai/mistral-large-2411',
-  hacker:     'deepseek/deepseek-chat-v3-0324',
-  rescue:     'meta-llama/llama-4-maverick',
-  eco:        'google/gemini-2.0-flash-001',
-  content:    'qwen/qwen-2.5-72b-instruct',
-  quality:    'openai/gpt-4.1',
-  planning:   'anthropic/claude-haiku-4-5',
-  evo:        'mistralai/mistral-medium-3',
-  finance:    'deepseek/deepseek-chat-v3-0324',
-  infra:      'meta-llama/llama-4-scout',
-  vibe_coder: 'qwen/qwen-2.5-coder-32b-instruct',
-  // Site-wide agents (not board members)
-  kuzmich:    'openai/gpt-4o-mini',
-  planner:    'openai/gpt-4o-mini',
-  operator:   'openai/gpt-4o-mini',
-  router:     'deepseek/deepseek-chat-v3-0324',
+  // Board Directors — optimized for cost/quality balance (April 2026)
+  admin:      'anthropic/claude-sonnet-4-6',          // leader needs top quality
+  legal:      'openai/gpt-4o-mini',                   // compliance, structured
+  security:   'mistralai/mistral-small-3.2-24b-instruct', // cheaper than mistral-large, strong
+  hacker:     'deepseek/deepseek-chat-v3-0324',       // growth: great reasoning, cheap
+  rescue:     'meta-llama/llama-4-maverick',          // SAR: 1M context, fast
+  eco:        'google/gemini-2.5-flash-lite',         // eco: cheap, 1M context
+  content:    'qwen/qwen3-235b-a22b-2507',            // content audit: strong, $0.07/M
+  quality:    'openai/gpt-4.1',                       // quality: best reasoning
+  planning:   'anthropic/claude-haiku-4-5',           // strategy: balanced
+  evo:        'qwen/qwen3-coder-next',                // architect: code-aware, $0.12/M
+  finance:    'deepseek/deepseek-chat-v3-0324',       // CFO: analytical, cheap
+  infra:      'meta-llama/llama-4-scout',             // SRE: fast, 300K context
+  vibe_coder: 'qwen/qwen3-coder-next',               // coder: latest Qwen coder, $0.12/M
+  // Site-wide agents (not board members) — ultra-cheap
+  kuzmich:    'openai/gpt-4o-mini',                   // Telegram persona
+  planner:    'openai/gpt-4o-mini',                   // trip planning
+  operator:   'openai/gpt-4o-mini',                   // operator chat
+  router:     'deepseek/deepseek-chat-v3-0324',       // route recommendations
 };
 
 /** Default model for consensus (Round 3 facilitator) */

@@ -23,7 +23,7 @@ jobs:
         env:
           TIMEWEB_TOKEN: ${{ secrets.TIMEWEB_TOKEN }}
         run: |
-          APP_ID="175269"
+          APP_ID="175477"
           TOKEN="$TIMEWEB_TOKEN"
 
           if [ -z "$TOKEN" ]; then
@@ -89,7 +89,7 @@ jobs:
         env:
           TIMEWEB_TOKEN: ${{ secrets.TIMEWEB_TOKEN }}
         run: |
-          APP_ID="175269"
+          APP_ID="175477"
           TOKEN="$TIMEWEB_TOKEN"
 
           if [ -z "$TOKEN" ]; then
