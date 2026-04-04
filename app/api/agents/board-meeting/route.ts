@@ -426,6 +426,38 @@ async function generateProposal(
     }
   }
 
+  // Anti-loop guard: skip near-duplicate initiatives from the same agent in recent window.
+  try {
+    const { rowCount } = await pool.query(
+      `SELECT 1
+       FROM agent_approvals
+       WHERE requested_by = $1
+         AND action_type = $2
+         AND lower(description) = lower($3)
+         AND created_at >= NOW() - INTERVAL '14 days'
+       LIMIT 1`,
+      [`agent_${agent.id}`, actionType, parsed.title.substring(0, 255)],
+    );
+
+    if ((rowCount ?? 0) > 0) {
+      await pool.query(
+        `INSERT INTO ai_actions_log (action_type, metadata) VALUES ($1, $2)`,
+        [
+          'agent_proposal_skipped_duplicate',
+          JSON.stringify({
+            agent_id: agent.id,
+            meeting_id: meetingId,
+            action_type: actionType,
+            title: parsed.title.substring(0, 255),
+          }),
+        ],
+      ).catch(() => null);
+      return null;
+    }
+  } catch {
+    // Non-critical: if dedupe check fails, continue with proposal creation.
+  }
+
   const approval = await approvalRequired.request({
     type:         actionType,
     description:  parsed.title.substring(0, 255),

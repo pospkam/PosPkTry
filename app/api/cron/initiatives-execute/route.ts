@@ -14,6 +14,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { pool } from '@/lib/db-pool';
 import { executeInitiative } from '@/lib/agents/execution/initiative-executor';
+import { agentMemory } from '@/lib/agents/memory/agent-memory';
 
 export const dynamic = 'force-dynamic';
 
@@ -90,6 +91,7 @@ export async function GET(req: NextRequest) {
 
     for (const initiative of pendingInitiatives.rows) {
       const startTime = Date.now();
+      const ctx = (initiative.context ?? {}) as { from_agent?: string; meeting_id?: string };
 
       try {
         const result = await executeInitiative({
@@ -153,6 +155,27 @@ export async function GET(req: NextRequest) {
             }),
           ]
         );
+
+        // Learning loop: write execution outcome back to proposal initiator memory.
+        if (ctx.from_agent) {
+          await agentMemory.remember({
+            agent_id: ctx.from_agent,
+            memory_type: 'insight',
+            key: `initiative_exec_${initiative.id}`,
+            value: {
+              approval_id: initiative.id,
+              meeting_id: ctx.meeting_id ?? null,
+              action_type: initiative.action_type,
+              result: result.success ? 'done' : 'failed',
+              changes_count: result.changes_made.length,
+              errors_count: result.errors.length,
+              verification_passed: result.verification_passed,
+              date: new Date().toISOString().slice(0, 10),
+            },
+            source: 'initiatives_execute_cron',
+            expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          }).catch(() => null);
+        }
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : String(err);
 
@@ -169,6 +192,24 @@ export async function GET(req: NextRequest) {
         await notifyOwner(
           `<b>ERROR executing initiative</b>\n<b>Executor:</b> ${initiative.executor_name}\n<b>Error:</b> ${errorMsg}`
         );
+
+        if (ctx.from_agent) {
+          await agentMemory.remember({
+            agent_id: ctx.from_agent,
+            memory_type: 'insight',
+            key: `initiative_exec_${initiative.id}`,
+            value: {
+              approval_id: initiative.id,
+              meeting_id: ctx.meeting_id ?? null,
+              action_type: initiative.action_type,
+              result: 'failed',
+              error: errorMsg.substring(0, 500),
+              date: new Date().toISOString().slice(0, 10),
+            },
+            source: 'initiatives_execute_cron',
+            expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          }).catch(() => null);
+        }
       }
     }
 
