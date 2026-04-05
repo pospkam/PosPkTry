@@ -54,6 +54,9 @@ export const AUTO_EXECUTE_TYPES = new Set([
   'ab_scale_winner',     // hacker: применить победителя A/B теста
   'operator_outreach',   // intelligence: найти операторов и отправить приглашения
   'new_page_create',     // vibe_coder/intelligence: создать новую страницу через GitHub PR
+  'bulk_notify',         // admin: массовые уведомления туристам по лидам
+  'schedule_suggest',    // rescue: проверить расписание туров, алерт о проблемах
+  'prompt_optimize',     // evo: AI-анализ и оптимизация промптов агентов
 ]);
 
 const EXECUTORS: Record<string, (task: ExecutionTask) => Promise<ExecutionResult>> = {
@@ -68,6 +71,9 @@ const EXECUTORS: Record<string, (task: ExecutionTask) => Promise<ExecutionResult
   ab_scale_winner:     executeABScaleWinner,
   operator_outreach:   executeOperatorOutreach,
   new_page_create:     executeNewPageCreate,
+  bulk_notify:         executeBulkNotify,
+  schedule_suggest:    executeScheduleSuggest,
+  prompt_optimize:     executePromptOptimize,
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -462,6 +468,195 @@ async function executeCancellationPolicyUpdate(task: ExecutionTask): Promise<Exe
 // ═══════════════════════════════════════════════════════════════
 // ENTRY POINT
 // ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// EXECUTOR: BULK NOTIFY (Admin Agent)
+// Шлёт Telegram-дайджест: активные лиды без ответа > 24ч
+// ═══════════════════════════════════════════════════════════════
+async function executeBulkNotify(task: ExecutionTask): Promise<ExecutionResult> {
+  const changes: string[] = [];
+  const errors: string[] = [];
+
+  try {
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    const chatId   = process.env.TELEGRAM_CHAT_ID;
+
+    if (!botToken || !chatId) {
+      errors.push('TELEGRAM_BOT_TOKEN или TELEGRAM_CHAT_ID не настроены');
+      return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
+    }
+
+    const leadsRes = await pool.query<{ cnt: string }>(
+      `SELECT COUNT(*) as cnt FROM leads
+       WHERE status IN ('new','contacted')
+         AND created_at < NOW() - INTERVAL '24 hours'`
+    );
+    const staleCount = parseInt(leadsRes.rows[0]?.cnt ?? '0', 10);
+
+    const toursRes = await pool.query<{ cnt: string }>(
+      `SELECT COUNT(*) as cnt FROM operator_tours WHERE is_active = true`
+    );
+    const activeTours = parseInt(toursRes.rows[0]?.cnt ?? '0', 10);
+
+    const text = [
+      '<b>Дайджест платформы TourHab</b>',
+      '',
+      `Лидов без ответа (&gt;24ч): <b>${staleCount}</b>`,
+      `Активных туров: <b>${activeTours}</b>`,
+      '',
+      'Источник: Execution Pack / bulk_notify',
+    ].join('\n');
+
+    const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' }),
+    });
+
+    if (!res.ok) {
+      errors.push(`Telegram API: ${res.status}`);
+      return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
+    }
+
+    changes.push(`Дайджест отправлен: ${staleCount} лидов без ответа, ${activeTours} активных туров`);
+    return { success: true, changes_made: changes, errors, rollback_available: false, verification_passed: true };
+  } catch (err) {
+    errors.push(err instanceof Error ? err.message : String(err));
+    return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EXECUTOR: SCHEDULE SUGGEST (Rescue Agent)
+// Проверяет туры без доступных слотов — шлёт алерт в Telegram
+// ═══════════════════════════════════════════════════════════════
+async function executeScheduleSuggest(task: ExecutionTask): Promise<ExecutionResult> {
+  const changes: string[] = [];
+  const errors: string[] = [];
+
+  try {
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    const chatId   = process.env.TELEGRAM_CHAT_ID;
+
+    if (!botToken || !chatId) {
+      errors.push('TELEGRAM_BOT_TOKEN или TELEGRAM_CHAT_ID не настроены');
+      return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
+    }
+
+    const toursRes = await pool.query<{ title: string; operator_id: string }>(
+      `SELECT t.title, t.operator_id
+       FROM operator_tours t
+       WHERE t.is_active = true
+         AND NOT EXISTS (
+           SELECT 1 FROM operator_bookings b
+           WHERE b.operator_tour_id = t.id
+             AND b.booking_status = 'confirmed'
+             AND b.created_at > NOW() - INTERVAL '30 days'
+         )
+       LIMIT 10`
+    );
+
+    const noBookingTours = toursRes.rows;
+
+    const text = [
+      '<b>Rescue: анализ расписания туров</b>',
+      '',
+      noBookingTours.length > 0
+        ? `Туров без броней за 30 дней: <b>${noBookingTours.length}</b>\n` +
+          noBookingTours.slice(0, 5).map(t => `  • ${t.title}`).join('\n')
+        : 'Все активные туры имеют свежие брони — ОК.',
+      '',
+      'Рекомендация: проверить наличие актуального расписания у операторов.',
+      'Источник: Execution Pack / schedule_suggest',
+    ].join('\n');
+
+    const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' }),
+    });
+
+    if (!res.ok) {
+      errors.push(`Telegram API: ${res.status}`);
+      return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
+    }
+
+    changes.push(`Алерт расписания отправлен: ${noBookingTours.length} туров без броней за 30 дней`);
+    return { success: true, changes_made: changes, errors, rollback_available: false, verification_passed: true };
+  } catch (err) {
+    errors.push(err instanceof Error ? err.message : String(err));
+    return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EXECUTOR: PROMPT OPTIMIZE (Evo Agent)
+// AI анализирует текущий waterfall + промпты, сохраняет улучшения
+// ═══════════════════════════════════════════════════════════════
+async function executePromptOptimize(task: ExecutionTask): Promise<ExecutionResult> {
+  const changes: string[] = [];
+  const errors: string[] = [];
+
+  try {
+    const model = getModelForAgent('evo');
+
+    const systemPrompt = `Ты AI-архитектор платформы TourHab (Камчатка).
+  Проанализируй типичные проблемы с latency AI-агентов и предложи 3 конкретных оптимизации промптов.
+  Формат ответа: JSON массив объектов { "agent": string, "issue": string, "fix": string }`;
+
+    const messages: ChatMessage[] = [
+      {
+        role: 'system',
+        content: systemPrompt,
+      },
+      {
+        role: 'user',
+        content: `Задача: ${task.description}
+KPI: ${task.context.kpi_target ?? 'снизить p95 latency на 25%'}
+Проанализируй и выдай 3 приоритетных оптимизации.`,
+      },
+    ];
+
+    const aiResponse = await callAIWithModelDirect(messages, model);
+
+    let optimizations: Array<{ agent: string; issue: string; fix: string }> = [];
+    try {
+      const jsonMatch = aiResponse.match(/\[[\s\S]*\]/);
+      if (jsonMatch) optimizations = JSON.parse(jsonMatch[0]);
+    } catch {
+      optimizations = [{ agent: 'evo', issue: 'parse error', fix: aiResponse.substring(0, 200) }];
+    }
+
+    const { agentMemory } = await import('@/lib/agents/memory/agent-memory');
+    for (const [index, opt] of optimizations.slice(0, 3).entries()) {
+      await agentMemory.remember({
+        agent_id: 'evo',
+        memory_type: 'insight',
+        key: `prompt_opt_${task.approval_id}_${index + 1}`,
+        value: {
+          type: 'prompt_optimization',
+          agent: opt.agent,
+          issue: opt.issue,
+          fix: opt.fix,
+          source: 'execution_pack',
+        },
+        source: 'initiative_executor',
+      });
+      changes.push(`Оптимизация для ${opt.agent}: ${opt.fix.substring(0, 80)}`);
+    }
+
+    return {
+      success: true,
+      changes_made: changes,
+      errors,
+      rollback_available: false,
+      verification_passed: changes.length > 0,
+    };
+  } catch (err) {
+    errors.push(err instanceof Error ? err.message : String(err));
+    return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
+  }
+}
+
 export async function executeInitiative(task: ExecutionTask): Promise<ExecutionResult> {
   const executor = EXECUTORS[task.action_type];
 
@@ -475,19 +670,34 @@ export async function executeInitiative(task: ExecutionTask): Promise<ExecutionR
     };
   }
 
-  await pool.query(
-    `UPDATE agent_approvals SET execution_status = 'in_progress', updated_at = NOW() WHERE id = $1`,
-    [task.approval_id]
-  ).catch(() => null);
+  try {
+    await pool.query(
+      `UPDATE agent_approvals SET execution_status = 'in_progress' WHERE id = $1`,
+      [task.approval_id]
+    );
+  } catch {
+    // Не прерываем фактическое выполнение, но финальная запись результата обязательна.
+  }
 
   const result = await executor(task);
 
-  await pool.query(
-    `UPDATE agent_approvals
-     SET execution_status = $1, execution_notes = $2, completed_at = NOW(), updated_at = NOW()
-     WHERE id = $3`,
-    [result.success ? 'done' : 'failed', JSON.stringify(result), task.approval_id]
-  ).catch(() => null);
+  try {
+    await pool.query(
+      `UPDATE agent_approvals
+       SET execution_status = $1, execution_notes = $2, completed_at = NOW()
+       WHERE id = $3`,
+      [result.success ? 'done' : 'failed', JSON.stringify(result), task.approval_id]
+    );
+  } catch (err) {
+    const dbErr = err instanceof Error ? err.message : String(err);
+    return {
+      success: false,
+      changes_made: result.changes_made,
+      errors: [...result.errors, `Не удалось сохранить результат исполнения: ${dbErr}`],
+      rollback_available: result.rollback_available,
+      verification_passed: false,
+    };
+  }
 
   return result;
 }

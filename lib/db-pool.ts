@@ -13,20 +13,25 @@ const useSSL = config.database.ssl || process.env.NODE_ENV === 'production';
 function buildPoolConfig() {
   const dbUrl = config.database.url;
 
-  // Парсим URL вручную для поддержки спецсимволов в пароле
-  const match = dbUrl.match(/^postgresql:\/\/([^:]+):(.+)@([^:\/]+):?(\d+)?\/(.+?)(\?.*)?$/);
-  if (match) {
-    return {
-      user: match[1],
-      password: match[2],
-      host: match[3],
-      port: parseInt(match[4] || '5432'),
-      database: match[5],
-      ssl: useSSL ? { rejectUnauthorized: false } : false,
-      max: 20,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 5000,
-    };
+  // Надежный парсинг URL: корректно обрабатывает URL-encoded username/password.
+  // Это критично для паролей со спецсимволами.
+  try {
+    const parsed = new URL(dbUrl);
+    if (parsed.protocol === 'postgresql:' || parsed.protocol === 'postgres:') {
+      return {
+        user: decodeURIComponent(parsed.username),
+        password: decodeURIComponent(parsed.password),
+        host: parsed.hostname,
+        port: parsed.port ? parseInt(parsed.port, 10) : 5432,
+        database: parsed.pathname.replace(/^\//, ''),
+        ssl: useSSL ? { rejectUnauthorized: false } : false,
+        max: 20,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 5000,
+      };
+    }
+  } catch {
+    // Fallback ниже на connectionString
   }
 
   // Fallback: стандартный connectionString (для URL без спецсимволов)
