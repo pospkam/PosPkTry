@@ -10,8 +10,34 @@ import { config } from '@/lib/config';
 
 const useSSL = config.database.ssl || process.env.NODE_ENV === 'production';
 
+function normalizeDatabaseUrl(raw: string): string {
+  const trimmed = raw.trim();
+  // Частая ошибка в env: значение оборачивают в кавычки
+  return trimmed.replace(/^['"]+|['"]+$/g, '');
+}
+
+function buildComponentFallback() {
+  const host = process.env.PGHOST || process.env.DB_HOST || 'localhost';
+  const port = parseInt(process.env.PGPORT || process.env.DB_PORT || '5432', 10);
+  const user = process.env.PGUSER || process.env.DB_USER || 'postgres';
+  const password = process.env.PGPASSWORD || process.env.DB_PASSWORD || '';
+  const database = process.env.PGDATABASE || process.env.DB_NAME || 'kamchatour';
+
+  return {
+    host,
+    port,
+    user,
+    password,
+    database,
+    ssl: useSSL ? { rejectUnauthorized: false } : false,
+    max: 20,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 5000,
+  };
+}
+
 function buildPoolConfig() {
-  const dbUrl = config.database.url;
+  const dbUrl = normalizeDatabaseUrl(config.database.url || '');
 
   // Надежный парсинг URL: корректно обрабатывает URL-encoded username/password.
   // Это критично для паролей со спецсимволами.
@@ -32,6 +58,11 @@ function buildPoolConfig() {
     }
   } catch {
     // Fallback ниже на connectionString
+  }
+
+  // Если URL не похож на postgres-схему, используем компонентный fallback.
+  if (!/^postgres(ql)?:\/\//i.test(dbUrl)) {
+    return buildComponentFallback();
   }
 
   // Fallback: стандартный connectionString (для URL без спецсимволов)

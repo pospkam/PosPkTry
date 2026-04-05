@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
     const safeError = sanitizeError(error);
     return NextResponse.json({
       success: false,
-      error: safeError.message,
+      error: 'Сервис авторизации временно недоступен. Повторите попытку через минуту.',
     } as ApiResponse<null>, { status: 500 });
   }
 }
