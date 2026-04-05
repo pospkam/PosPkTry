@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { query } from '@/lib/database';
+import { pool } from '@/lib/db-pool';
 import { verifyPassword } from '@/lib/auth/password';
 import { createToken } from '@/lib/auth/jwt';
 import { sanitizeError } from '@/lib/errors/sanitize';
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     const { email, password } = parsed.data;
 
     // Find user by email
-    const userResult = await query<UsersRow>(
+    const userResult = await pool.query<UsersRow>(
       `SELECT id, email, name, role, password_hash, preferences, created_at, updated_at
        FROM users
        WHERE email = $1`,
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
 
-    await query(
+    await pool.query(
       `INSERT INTO user_sessions (user_id, token, expires_at)
        VALUES ($1, $2, $3)`,
       [user.id, token, expiresAt]
