@@ -117,6 +117,8 @@ export async function POST(request: NextRequest) {
     return response;
 
   } catch (error) {
+    // Incident logging: keep minimal signal to diagnose production auth outage.
+    console.error('[auth/signin] failure', error instanceof Error ? error.message : String(error));
     const safeError = sanitizeError(error);
     return NextResponse.json({
       success: false,
