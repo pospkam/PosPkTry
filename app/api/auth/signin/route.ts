@@ -123,6 +123,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: false,
       error: 'Сервис авторизации временно недоступен. Повторите попытку через минуту.',
+      details: safeError.message,
     } as ApiResponse<null>, { status: 500 });
   }
 }
