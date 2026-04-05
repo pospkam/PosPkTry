@@ -234,12 +234,19 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<{ tours: TourResponse[]; pagination: { total: number; limit: number; offset: number; hasMore: boolean } }>);
 
   } catch (error) {
-    const errMsg = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json({
-      success: false,
-      error: 'Не удалось загрузить туры',
-      details: process.env.NODE_ENV === 'development' ? errMsg : undefined,
-    } as ApiResponse<null>, { status: 500 });
+      success: true,
+      data: {
+        tours: [],
+        pagination: {
+          total: 0,
+          limit: 0,
+          offset: 0,
+          hasMore: false,
+        },
+      },
+      degraded: true,
+    } as ApiResponse<{ tours: TourResponse[]; pagination: { total: number; limit: number; offset: number; hasMore: boolean } }>, { status: 200 });
   }
 }
 

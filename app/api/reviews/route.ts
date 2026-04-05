@@ -122,8 +122,12 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<Review[]>);
   } catch (error) {
     return NextResponse.json(
-      { success: false, error: 'Ошибка при получении отзывов' } as ApiResponse<null>,
-      { status: 500 }
+      {
+        success: true,
+        data: [],
+        degraded: true,
+      } as ApiResponse<Review[]>,
+      { status: 200 }
     );
   }
 }

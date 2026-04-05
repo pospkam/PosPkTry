@@ -170,10 +170,19 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    const msg = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { success: false, error: 'Ошибка загрузки маршрутов', details: process.env.NODE_ENV === 'development' ? msg : undefined },
-      { status: 500 }
+      {
+        success: true,
+        data: [],
+        meta: {
+          total: 0,
+          page,
+          limit,
+          pages: 0,
+        },
+        degraded: true,
+      },
+      { status: 200 }
     );
   }
 }
