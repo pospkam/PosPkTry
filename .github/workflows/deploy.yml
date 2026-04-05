@@ -58,6 +58,11 @@ jobs:
           add_env "NEXT_PUBLIC_APP_URL"  "${{ secrets.NEXT_PUBLIC_APP_URL }}"
           add_env "SMTP_HOST"            "${{ secrets.SMTP_HOST }}"
           add_env "SMTP_PORT"            "${{ secrets.SMTP_PORT }}"
+          add_env "CRON_SECRET"          "${{ secrets.CRON_SECRET }}"
+          add_env "TELEGRAM_BOT_TOKEN"   "${{ secrets.TELEGRAM_BOT_TOKEN }}"
+          add_env "TELEGRAM_CHAT_ID"     "${{ secrets.TELEGRAM_CHAT_ID }}"
+          add_env "OR_API_KEY"           "${{ secrets.OR_API_KEY }}"
+          add_env "TOURHAB_URL"          "${{ secrets.TOURHAB_URL }}"
           add_env "NODE_ENV"             "production"
 
           ENVS="$ENVS]"
