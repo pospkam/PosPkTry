@@ -53,6 +53,15 @@ interface OperatorTour {
   updated_at: string;
 }
 
+interface MolmoAuditResult {
+  verdict: 'good' | 'warn' | 'reject';
+  quality: number;
+  relevance: number;
+  safety: number;
+  reasons: string[];
+  suggestions: string[];
+}
+
 // ─────────────────────────────────────────────
 // Константы
 // ─────────────────────────────────────────────
@@ -574,6 +583,7 @@ function EditModal({ tour, onClose, onSave }: {
 // Основной компонент
 // ─────────────────────────────────────────────
 export default function ToursManagement() {
+  const molmoPilotEnabled = process.env.NEXT_PUBLIC_MOLMO_PILOT_ENABLED === 'true';
   const [tours, setTours] = useState<OperatorTour[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
@@ -587,6 +597,9 @@ export default function ToursManagement() {
 
   const [editingTour, setEditingTour] = useState<OperatorTour | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [molmoLoadingByTour, setMolmoLoadingByTour] = useState<Record<string, boolean>>({});
+  const [molmoAuditByTour, setMolmoAuditByTour] = useState<Record<string, MolmoAuditResult>>({});
+  const [molmoError, setMolmoError] = useState<string | null>(null);
 
   const fetchTours = useCallback(async () => {
     setLoading(true);
@@ -654,6 +667,60 @@ export default function ToursManagement() {
     }
   }
 
+  async function handleMolmoAudit(tour: OperatorTour) {
+    if (!molmoPilotEnabled) return;
+
+    setMolmoError(null);
+    setMolmoLoadingByTour(prev => ({ ...prev, [tour.id]: true }));
+
+    try {
+      const firstPhoto = Array.isArray(tour.photos) ? tour.photos.find(p => /^https?:\/\//.test(p)) : null;
+      const fallbackImage = (tour.tour_image && /^https?:\/\//.test(tour.tour_image)) ? tour.tour_image : firstPhoto;
+      const numericTourId = Number(tour.id);
+
+      const payload: Record<string, unknown> = {};
+      if (Number.isInteger(numericTourId) && numericTourId > 0) {
+        payload.tourId = numericTourId;
+      } else if (fallbackImage) {
+        payload.imageUrl = fallbackImage;
+      }
+
+      if (!payload.tourId && !payload.imageUrl) {
+        setMolmoError('Для этого тура нет доступного изображения (HTTP URL) для Molmo-аудита.');
+        return;
+      }
+
+      const res = await fetch('/api/agents/molmo-pilot/audit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const json: unknown = await res.json();
+      if (!res.ok || typeof json !== 'object' || json === null || !('success' in json)) {
+        const msg = (typeof json === 'object' && json !== null && 'error' in json)
+          ? String((json as { error: unknown }).error)
+          : 'Ошибка Molmo-аудита';
+        throw new Error(msg);
+      }
+
+      const result = json as { success: boolean; audit?: MolmoAuditResult };
+      if (!result.success || !result.audit) {
+        throw new Error('Molmo-аудит не вернул результат');
+      }
+
+      setMolmoAuditByTour(prev => ({ ...prev, [tour.id]: result.audit! }));
+    } catch (e) {
+      setMolmoError(e instanceof Error ? e.message : 'Ошибка Molmo-аудита');
+    } finally {
+      setMolmoLoadingByTour(prev => ({ ...prev, [tour.id]: false }));
+    }
+  }
+
+  const auditedTours = tours
+    .map(tour => ({ tour, audit: molmoAuditByTour[tour.id] }))
+    .filter(item => Boolean(item.audit));
+
   const totalPages = Math.ceil(total / limit);
   const selectCls = 'px-3 py-1.5 text-xs bg-[var(--bg-card)] border border-[var(--border)] rounded text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]';
 
@@ -694,6 +761,12 @@ export default function ToursManagement() {
       </div>
 
       {/* Таблица */}
+      {molmoError && (
+        <div className="px-3 py-2 bg-[var(--warning)]/10 border border-[var(--warning)]/30 rounded text-xs text-[var(--warning)]">
+          {molmoError}
+        </div>
+      )}
+
       {loading ? (
         <div className="flex items-center justify-center py-20">
           <div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
@@ -760,10 +833,36 @@ export default function ToursManagement() {
                         <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium w-fit ${tour.is_active ? 'bg-[var(--ocean)]/15 text-[var(--ocean)]' : 'bg-[var(--danger)]/10 text-[var(--danger)]'}`}>
                           {tour.is_active ? 'Активен' : 'Неактивен'}
                         </span>
+                        {molmoAuditByTour[tour.id] && (
+                          <span
+                            className={`px-1.5 py-0.5 rounded text-[10px] font-medium w-fit ${
+                              molmoAuditByTour[tour.id].verdict === 'good'
+                                ? 'bg-[var(--success)]/15 text-[var(--success)]'
+                                : molmoAuditByTour[tour.id].verdict === 'warn'
+                                  ? 'bg-[var(--warning)]/15 text-[var(--warning)]'
+                                  : 'bg-[var(--danger)]/10 text-[var(--danger)]'
+                            }`}
+                          >
+                            Molmo: {molmoAuditByTour[tour.id].verdict}
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="px-3 py-2.5">
                       <div className="flex items-center justify-end gap-1">
+                        {/* Molmo-аудит */}
+                        {molmoPilotEnabled && (
+                          <button
+                            onClick={() => handleMolmoAudit(tour)}
+                            disabled={Boolean(molmoLoadingByTour[tour.id])}
+                            title="Molmo-аудит фото"
+                            className="p-1.5 hover:bg-[var(--bg-hover)] rounded transition-colors disabled:opacity-40"
+                          >
+                            {molmoLoadingByTour[tour.id]
+                              ? <Loader2 className="w-3.5 h-3.5 text-[var(--accent)] animate-spin" />
+                              : <Images className="w-3.5 h-3.5 text-[var(--accent)]" />}
+                          </button>
+                        )}
                         {/* Публикация */}
                         <button
                           onClick={() => handleToggle(tour, 'is_published')}
@@ -835,6 +934,44 @@ export default function ToursManagement() {
             >
               <ChevronRight className="w-3.5 h-3.5 text-[var(--text-muted)]" />
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Результаты Molmo-пилота */}
+      {molmoPilotEnabled && auditedTours.length > 0 && (
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-3 space-y-2">
+          <div>
+            <h2 className="text-xs font-semibold text-[var(--text-primary)]">Molmo Pilot: результаты на текущей странице</h2>
+            <p className="text-[10px] text-[var(--text-muted)] mt-0.5">{auditedTours.length} туров с завершённым аудитом</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {auditedTours.map(({ tour, audit }) => (
+              <div key={tour.id} className="border border-[var(--border)] rounded p-2.5 bg-[var(--bg-primary)]">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs font-medium text-[var(--text-primary)] truncate">{tour.title}</p>
+                  <span
+                    className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                      audit!.verdict === 'good'
+                        ? 'bg-[var(--success)]/15 text-[var(--success)]'
+                        : audit!.verdict === 'warn'
+                          ? 'bg-[var(--warning)]/15 text-[var(--warning)]'
+                          : 'bg-[var(--danger)]/10 text-[var(--danger)]'
+                    }`}
+                  >
+                    {audit!.verdict}
+                  </span>
+                </div>
+                <div className="mt-1.5 grid grid-cols-3 gap-2 text-[10px] text-[var(--text-secondary)]">
+                  <span>Q: {audit!.quality}</span>
+                  <span>R: {audit!.relevance}</span>
+                  <span>S: {audit!.safety}</span>
+                </div>
+                {audit!.reasons.length > 0 && (
+                  <p className="mt-1.5 text-[10px] text-[var(--text-muted)] line-clamp-2">{audit!.reasons.join(' · ')}</p>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       )}
