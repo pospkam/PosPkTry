@@ -68,6 +68,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.927.0",
     "@huggingface/transformers": "^3.8.1",
+    "@maxhub/max-bot-api": "^0.2.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/crypto-js": "^4.2.2",
     "@types/leaflet": "^1.9.21",

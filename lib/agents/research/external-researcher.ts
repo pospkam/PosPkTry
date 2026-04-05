@@ -2,9 +2,10 @@
  * ExternalResearcher — разведка внешнего мира для агентов.
  *
  * Уровни (в порядке приоритета):
- *   1. Tavily API     — если TAVILY_API_KEY задан
- *   2. Brave Search   — если BRAVE_SEARCH_API_KEY задан
- *   3. RSS + wttr.in  — БЕСПЛАТНО, без ключей (дефолт)
+ *   1. Firecrawl API  — если FIRECRAWL_API_KEY задан (скрапинг конкурентов)
+ *   2. Tavily API     — если TAVILY_API_KEY задан
+ *   3. Brave Search   — если BRAVE_SEARCH_API_KEY задан
+ *   4. RSS + wttr.in  — БЕСПЛАТНО, без ключей (дефолт)
  *
  * RSS-источники подобраны под туристическую платформу Камчатки.
  * wttr.in — бесплатная погода для агента Спасатель.
@@ -26,6 +27,90 @@ interface DomainConfig {
   query:   string;
   filter:  string;
   rss:     string[];
+  /** URLs конкурентов/источников для Firecrawl scraping */
+  scrapeTargets?: string[];
+}
+
+// ── Firecrawl scraper (приоритет 1) ───────────────────────────────────────────
+
+const SCRAPE_TARGETS: Record<string, string[]> = {
+  hacker: [
+    'https://kamchatkaland.ru/tours',
+    'https://vulcanarium.com/tours',
+    'https://kamchatka-travel.com/tours',
+  ],
+  quality: [
+    'https://www.tripadvisor.ru/Attractions-g298488-Activities-Petropavlovsk_Kamchatsky_Kamchatka_Krai_Far_Eastern_District.html',
+  ],
+  content: [
+    'https://kamchatkaland.ru/',
+    'https://visitkamchatka.ru/',
+  ],
+  admin: [
+    'https://www.tourprom.ru/',
+  ],
+};
+
+async function scrapeFirecrawl(url: string): Promise<RawResult[]> {
+  const key = process.env.FIRECRAWL_API_KEY;
+  const baseUrl = process.env.FIRECRAWL_BASE_URL || 'https://api.firecrawl.dev';
+  if (!key) return [];
+
+  try {
+    const res = await fetch(`${baseUrl}/v1/scrape`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${key}`,
+      },
+      body: JSON.stringify({
+        url,
+        formats: ['markdown'],
+        onlyMainContent: true,
+        timeout: 15000,
+      }),
+      signal: AbortSignal.timeout(20000),
+    });
+
+    if (!res.ok) return [];
+
+    const data = await res.json() as {
+      success?: boolean;
+      data?: {
+        markdown?: string;
+        metadata?: { title?: string; sourceURL?: string };
+      };
+    };
+
+    if (!data.success || !data.data?.markdown) return [];
+
+    const md = data.data.markdown;
+    const title = data.data.metadata?.title || url;
+    const sourceUrl = data.data.metadata?.sourceURL || url;
+
+    // Разбиваем markdown на смысловые блоки (по заголовкам или абзацам)
+    const blocks = md.split(/\n#{1,3}\s+/).filter(b => b.trim().length > 50);
+    return blocks.slice(0, 5).map(block => ({
+      title,
+      url: sourceUrl,
+      snippet: block.replace(/\n+/g, ' ').trim().substring(0, 500),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+async function fetchFirecrawlForAgent(agentId: string): Promise<RawResult[]> {
+  const targets = SCRAPE_TARGETS[agentId];
+  if (!targets || !process.env.FIRECRAWL_API_KEY) return [];
+
+  const results: RawResult[] = [];
+  for (const url of targets) {
+    const items = await scrapeFirecrawl(url).catch(() => []);
+    results.push(...items);
+    if (results.length >= 8) break;
+  }
+  return results;
 }
 
 // ── RSS-источники и поисковые темы по агентам ─────────────────────────────────
@@ -224,7 +309,11 @@ async function searchBrave(query: string): Promise<RawResult[]> {
 // ── Получить результаты для домена ───────────────────────────────────────────
 
 async function fetchForDomain(agentId: string, cfg: DomainConfig): Promise<RawResult[]> {
-  // Сначала пробуем поисковые API (если настроены)
+  // Firecrawl: скрапинг реальных данных конкурентов (приоритет 1)
+  const scraped = await fetchFirecrawlForAgent(agentId).catch(() => []);
+  if (scraped.length > 0) return scraped;
+
+  // Поисковые API (если настроены)
   const premium = await searchTavily(cfg.query).catch(() => []);
   if (premium.length > 0) return premium;
 

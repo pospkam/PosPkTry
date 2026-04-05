@@ -57,6 +57,12 @@ export const AUTO_EXECUTE_TYPES = new Set([
   'bulk_notify',         // admin: массовые уведомления туристам по лидам
   'schedule_suggest',    // rescue: проверить расписание туров, алерт о проблемах
   'prompt_optimize',     // evo: AI-анализ и оптимизация промптов агентов
+  // ── New action types (июнь 2026) ──
+  'tour_suspend',        // quality: приостановить тур с плохими отзывами
+  'operator_warning',    // quality: предупреждение оператору через Telegram
+  'security_block',      // security: блокировка IP/пользователя
+  'zone_capacity',       // eco: лимиты на зоны
+  'flag_payment',        // finance: пометить подозрительный платёж
 ]);
 
 const EXECUTORS: Record<string, (task: ExecutionTask) => Promise<ExecutionResult>> = {
@@ -74,6 +80,12 @@ const EXECUTORS: Record<string, (task: ExecutionTask) => Promise<ExecutionResult
   bulk_notify:         executeBulkNotify,
   schedule_suggest:    executeScheduleSuggest,
   prompt_optimize:     executePromptOptimize,
+  // ── New action executors (июнь 2026) ──
+  tour_suspend:        executeTourSuspend,
+  operator_warning:    executeOperatorWarning,
+  security_block:      executeSecurityBlock,
+  zone_capacity:       executeZoneCapacity,
+  flag_payment:        executeFlagPayment,
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -651,6 +663,378 @@ KPI: ${task.context.kpi_target ?? 'снизить p95 latency на 25%'}
       rollback_available: false,
       verification_passed: changes.length > 0,
     };
+  } catch (err) {
+    errors.push(err instanceof Error ? err.message : String(err));
+    return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EXECUTOR: TOUR SUSPEND (Quality Agent)
+// Деактивирует тур с плохими отзывами, уведомляет оператора
+// ═══════════════════════════════════════════════════════════════
+async function executeTourSuspend(task: ExecutionTask): Promise<ExecutionResult> {
+  const changes: string[] = [];
+  const errors: string[] = [];
+
+  try {
+    const tourId = typeof task.context.tour_id === 'number' ? task.context.tour_id : null;
+    const reason = typeof task.context.reason === 'string' ? task.context.reason : 'Приостановлен по решению Quality Agent';
+
+    if (!tourId) {
+      errors.push('Необходим context.tour_id (number)');
+      return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
+    }
+
+    const tour = await pool.query<{ title: string; operator_id: string; is_active: boolean }>(
+      `SELECT title, operator_id, is_active FROM operator_tours WHERE id = $1 AND deleted_at IS NULL`,
+      [tourId]
+    );
+
+    if (tour.rows.length === 0) {
+      errors.push(`Тур ${tourId} не найден`);
+      return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
+    }
+
+    if (!tour.rows[0].is_active) {
+      return {
+        success: true,
+        changes_made: [`Тур "${tour.rows[0].title}" уже деактивирован`],
+        errors: [],
+        rollback_available: false,
+        verification_passed: true,
+      };
+    }
+
+    await pool.query(
+      `UPDATE operator_tours SET is_active = false, updated_at = NOW() WHERE id = $1`,
+      [tourId]
+    );
+
+    // Логируем в ai_actions_log
+    await pool.query(
+      `INSERT INTO ai_actions_log (action_type, agent_id, details, created_at)
+       VALUES ('tour_suspend', 'quality', $1, NOW())`,
+      [JSON.stringify({ tour_id: tourId, reason, title: tour.rows[0].title })]
+    );
+
+    changes.push(`Тур "${tour.rows[0].title}" (ID: ${tourId}) приостановлен`);
+    changes.push(`Причина: ${reason}`);
+
+    // Telegram-уведомление
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    const chatId   = process.env.TELEGRAM_CHAT_ID;
+    if (botToken && chatId) {
+      await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: `Quality Agent: тур "${tour.rows[0].title}" приостановлен.\nПричина: ${reason}`,
+          parse_mode: 'HTML',
+        }),
+      }).catch(() => null);
+    }
+
+    return { success: true, changes_made: changes, errors, rollback_available: true, verification_passed: true };
+  } catch (err) {
+    errors.push(err instanceof Error ? err.message : String(err));
+    return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EXECUTOR: OPERATOR WARNING (Quality Agent)
+// Отправляет предупреждение оператору через Telegram + запись в БД
+// ═══════════════════════════════════════════════════════════════
+async function executeOperatorWarning(task: ExecutionTask): Promise<ExecutionResult> {
+  const changes: string[] = [];
+  const errors: string[] = [];
+
+  try {
+    const operatorId = typeof task.context.operator_id === 'string' ? task.context.operator_id : null;
+    const message    = typeof task.context.message === 'string' ? task.context.message : null;
+    const severity   = typeof task.context.severity === 'string' ? task.context.severity : 'warning';
+
+    if (!operatorId || !message) {
+      errors.push('Необходимы context.operator_id и context.message');
+      return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
+    }
+
+    const operator = await pool.query<{ name: string }>(
+      `SELECT name FROM partners WHERE id = $1`,
+      [operatorId]
+    );
+
+    if (operator.rows.length === 0) {
+      errors.push(`Оператор ${operatorId} не найден`);
+      return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
+    }
+
+    // Запись предупреждения в ai_actions_log
+    await pool.query(
+      `INSERT INTO ai_actions_log (action_type, agent_id, details, created_at)
+       VALUES ('operator_warning', 'quality', $1, NOW())`,
+      [JSON.stringify({ operator_id: operatorId, operator_name: operator.rows[0].name, message, severity })]
+    );
+
+    changes.push(`Предупреждение для "${operator.rows[0].name}": ${message.slice(0, 120)}`);
+    changes.push(`Серьёзность: ${severity}`);
+
+    // Telegram-уведомление собственнику
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    const chatId   = process.env.TELEGRAM_CHAT_ID;
+    if (botToken && chatId) {
+      await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: `Quality Agent [${severity}]: оператор "${operator.rows[0].name}"\n${message}`,
+          parse_mode: 'HTML',
+        }),
+      }).catch(() => null);
+    }
+
+    return { success: true, changes_made: changes, errors, rollback_available: false, verification_passed: true };
+  } catch (err) {
+    errors.push(err instanceof Error ? err.message : String(err));
+    return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EXECUTOR: SECURITY BLOCK (Security Agent)
+// Блокирует IP или деактивирует подозрительного пользователя
+// ═══════════════════════════════════════════════════════════════
+async function executeSecurityBlock(task: ExecutionTask): Promise<ExecutionResult> {
+  const changes: string[] = [];
+  const errors: string[] = [];
+
+  try {
+    const blockType = typeof task.context.block_type === 'string' ? task.context.block_type : null;
+
+    if (blockType === 'ip') {
+      const ip       = typeof task.context.ip === 'string' ? task.context.ip : null;
+      const reason   = typeof task.context.reason === 'string' ? task.context.reason : 'Security Agent: suspicious activity';
+      const duration = typeof task.context.duration_hours === 'number' ? task.context.duration_hours : 24;
+
+      if (!ip) {
+        errors.push('Необходим context.ip для блокировки IP');
+        return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
+      }
+
+      // Validate IP format
+      const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
+      if (!ipRegex.test(ip)) {
+        errors.push(`Невалидный IP: ${ip}`);
+        return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
+      }
+
+      await pool.query(
+        `INSERT INTO security_blocks (ip, reason, blocked_by, expires_at, created_at)
+         VALUES ($1, $2, 'security_agent', NOW() + ($3 || ' hours')::interval, NOW())
+         ON CONFLICT (ip) DO UPDATE SET reason = $2, expires_at = NOW() + ($3 || ' hours')::interval`,
+        [ip, reason, String(duration)]
+      );
+
+      // Log action
+      await pool.query(
+        `INSERT INTO ai_actions_log (action_type, agent_id, details, created_at)
+         VALUES ('security_block', 'security', $1, NOW())`,
+        [JSON.stringify({ block_type: 'ip', ip, reason, duration_hours: duration })]
+      );
+
+      changes.push(`IP ${ip} заблокирован на ${duration}ч`);
+      changes.push(`Причина: ${reason}`);
+
+    } else if (blockType === 'user') {
+      const userId = typeof task.context.user_id === 'string' ? task.context.user_id : null;
+      const reason = typeof task.context.reason === 'string' ? task.context.reason : 'Security Agent: account compromise';
+
+      if (!userId) {
+        errors.push('Необходим context.user_id для блокировки пользователя');
+        return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
+      }
+
+      const user = await pool.query<{ email: string }>(
+        `SELECT email FROM users WHERE id = $1`,
+        [userId]
+      );
+
+      if (user.rows.length === 0) {
+        errors.push(`Пользователь ${userId} не найден`);
+        return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
+      }
+
+      await pool.query(
+        `UPDATE users SET is_blocked = true, blocked_reason = $2, updated_at = NOW() WHERE id = $1`,
+        [userId, reason]
+      );
+
+      await pool.query(
+        `INSERT INTO ai_actions_log (action_type, agent_id, details, created_at)
+         VALUES ('security_block', 'security', $1, NOW())`,
+        [JSON.stringify({ block_type: 'user', user_id: userId, email: user.rows[0].email, reason })]
+      );
+
+      changes.push(`Пользователь ${user.rows[0].email} заблокирован`);
+      changes.push(`Причина: ${reason}`);
+    } else {
+      errors.push('context.block_type должен быть "ip" или "user"');
+      return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
+    }
+
+    // Telegram-уведомление
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    const chatId   = process.env.TELEGRAM_CHAT_ID;
+    if (botToken && chatId) {
+      await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: `Security Agent: ${changes.join('. ')}`,
+          parse_mode: 'HTML',
+        }),
+      }).catch(() => null);
+    }
+
+    return { success: true, changes_made: changes, errors, rollback_available: true, verification_passed: true };
+  } catch (err) {
+    errors.push(err instanceof Error ? err.message : String(err));
+    return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EXECUTOR: ZONE CAPACITY (Eco Agent)
+// Устанавливает/обновляет лимит посещений на зону
+// ═══════════════════════════════════════════════════════════════
+async function executeZoneCapacity(task: ExecutionTask): Promise<ExecutionResult> {
+  const changes: string[] = [];
+  const errors: string[] = [];
+
+  try {
+    const zone     = typeof task.context.zone === 'string' ? task.context.zone : null;
+    const maxDaily = typeof task.context.max_daily_visitors === 'number' ? task.context.max_daily_visitors : null;
+    const reason   = typeof task.context.reason === 'string' ? task.context.reason : 'Eco Agent: load management';
+
+    if (!zone || !maxDaily) {
+      errors.push('Необходимы context.zone и context.max_daily_visitors');
+      return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
+    }
+
+    if (maxDaily < 1 || maxDaily > 10000) {
+      errors.push(`Невалидный лимит: ${maxDaily}. Допустимо: 1-10000`);
+      return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
+    }
+
+    await pool.query(
+      `INSERT INTO zone_capacity_limits (zone, max_daily_visitors, reason, set_by, created_at)
+       VALUES ($1, $2, $3, 'eco_agent', NOW())
+       ON CONFLICT (zone)
+       DO UPDATE SET max_daily_visitors = $2, reason = $3, updated_at = NOW()`,
+      [zone, maxDaily, reason]
+    );
+
+    await pool.query(
+      `INSERT INTO ai_actions_log (action_type, agent_id, details, created_at)
+       VALUES ('zone_capacity', 'eco', $1, NOW())`,
+      [JSON.stringify({ zone, max_daily_visitors: maxDaily, reason })]
+    );
+
+    changes.push(`Зона "${zone}": лимит ${maxDaily} посетителей/день`);
+    changes.push(`Причина: ${reason}`);
+
+    // Telegram
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    const chatId   = process.env.TELEGRAM_CHAT_ID;
+    if (botToken && chatId) {
+      await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: `Eco Agent: зона "${zone}" — лимит ${maxDaily} чел/день. ${reason}`,
+          parse_mode: 'HTML',
+        }),
+      }).catch(() => null);
+    }
+
+    return { success: true, changes_made: changes, errors, rollback_available: true, verification_passed: true };
+  } catch (err) {
+    errors.push(err instanceof Error ? err.message : String(err));
+    return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EXECUTOR: FLAG PAYMENT (Finance Agent)
+// Помечает подозрительный платёж для ручной проверки
+// ═══════════════════════════════════════════════════════════════
+async function executeFlagPayment(task: ExecutionTask): Promise<ExecutionResult> {
+  const changes: string[] = [];
+  const errors: string[] = [];
+
+  try {
+    const bookingId = typeof task.context.booking_id === 'string' ? task.context.booking_id : null;
+    const reason    = typeof task.context.reason === 'string' ? task.context.reason : 'Finance Agent: anomaly detected';
+    const flagType  = typeof task.context.flag_type === 'string' ? task.context.flag_type : 'suspicious';
+
+    if (!bookingId) {
+      errors.push('Необходим context.booking_id');
+      return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
+    }
+
+    const booking = await pool.query<{ tourist_name: string | null; final_price: string; payment_status: string }>(
+      `SELECT tourist_name, final_price, payment_status
+       FROM operator_bookings WHERE id = $1 AND deleted_at IS NULL`,
+      [bookingId]
+    );
+
+    if (booking.rows.length === 0) {
+      errors.push(`Бронирование ${bookingId} не найдено`);
+      return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };
+    }
+
+    const b = booking.rows[0];
+
+    // Ставим флаг (payment_status = 'flagged' если ещё не оплачен)
+    await pool.query(
+      `UPDATE operator_bookings
+       SET admin_notes = COALESCE(admin_notes, '') || $2,
+           updated_at = NOW()
+       WHERE id = $1`,
+      [bookingId, `\n[FLAGGED ${new Date().toISOString().slice(0, 10)}] ${flagType}: ${reason}`]
+    );
+
+    await pool.query(
+      `INSERT INTO ai_actions_log (action_type, agent_id, details, created_at)
+       VALUES ('flag_payment', 'finance', $1, NOW())`,
+      [JSON.stringify({ booking_id: bookingId, tourist: b.tourist_name, amount: b.final_price, flag_type: flagType, reason })]
+    );
+
+    changes.push(`Бронирование ${bookingId} помечено: ${flagType}`);
+    changes.push(`Турист: ${b.tourist_name ?? 'N/A'}, сумма: ${b.final_price}`);
+    changes.push(`Причина: ${reason}`);
+
+    // Telegram
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    const chatId   = process.env.TELEGRAM_CHAT_ID;
+    if (botToken && chatId) {
+      await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: `Finance Agent [${flagType}]: бронирование ${bookingId}\n${b.tourist_name ?? 'Аноним'} — ${b.final_price} руб.\n${reason}`,
+          parse_mode: 'HTML',
+        }),
+      }).catch(() => null);
+    }
+
+    return { success: true, changes_made: changes, errors, rollback_available: true, verification_passed: true };
   } catch (err) {
     errors.push(err instanceof Error ? err.message : String(err));
     return { success: false, changes_made: changes, errors, rollback_available: false, verification_passed: false };

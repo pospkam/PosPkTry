@@ -9,6 +9,7 @@ import {
   Calendar, Mountain, Star, Share2, Heart,
 } from 'lucide-react';
 import BookingFormClient from '@/components/marketplace/BookingFormClient';
+import SafetyWarnings from '@/components/safety/SafetyWarnings';
 
 /* ─── Labels ─── */
 
@@ -190,7 +191,7 @@ function Lightbox({ images, alt, startIdx, onClose }: {
     >
       <button
         onClick={onClose}
-        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors z-10"
+        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/30 flex items-center justify-center text-[var(--text-primary)] hover:bg-black/50 transition-colors z-10"
         aria-label="Закрыть"
       >
         <X className="w-5 h-5" />
@@ -210,14 +211,14 @@ function Lightbox({ images, alt, startIdx, onClose }: {
         <>
           <button
             onClick={e => { e.stopPropagation(); setIdx(i => (i - 1 + images.length) % images.length); }}
-            className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+            className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/30 flex items-center justify-center text-[var(--text-primary)] hover:bg-black/50 transition-colors"
             aria-label="Назад"
           >
             <ChevronRight className="w-6 h-6 rotate-180" />
           </button>
           <button
             onClick={e => { e.stopPropagation(); setIdx(i => (i + 1) % images.length); }}
-            className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+            className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/30 flex items-center justify-center text-[var(--text-primary)] hover:bg-black/50 transition-colors"
             aria-label="Далее"
           >
             <ChevronRight className="w-6 h-6" />
@@ -498,6 +499,10 @@ export default function TourDetailClient({ tour, reviews = [] }: { tour: TourFul
               ))}
             </div>
           </div>
+
+          {/* ── Предупреждения по безопасности маршрута ─── */}
+          <hr className="border-[var(--border)]" />
+          <SafetyWarnings tourId={tour.id} />
 
           {/* Reviews */}
           {reviews.length > 0 && (

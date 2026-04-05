@@ -25,6 +25,7 @@ import InsuranceBlock from '@/components/routes/InsuranceBlock';
 import FlightsBlock from '@/components/routes/FlightsBlock';
 import HotelsBlock from '@/components/routes/HotelsBlock';
 import TransfersBlock from '@/components/routes/TransfersBlock';
+import SafetyWarnings from '@/components/safety/SafetyWarnings';
 
 const LeafletMap = dynamic(() => import('@/components/shared/LeafletMap'), { ssr: false });
 
@@ -922,6 +923,9 @@ export default function RouteDetailClient({ id }: { id: string }) {
 
         {/* ── Партнёрские сервисы (TravelPayouts) ───────────────────────────── */}
         <RouteAffiliateBlock activityType={route.activityType} routeId={route.id} />
+
+        {/* ── Безопасность маршрута (предупреждения) ────────────────────────── */}
+        <SafetyWarnings routeId={route.id} />
 
         {/* ── Авиабилеты до Камчатки (Aviasales) ────────────────────────────── */}
         <FlightsBlock />

@@ -294,6 +294,37 @@ async function runAgent(
   }
 }
 
+/**
+ * Run agent with retry (Temporal pattern).
+ * Up to `maxRetries` attempts with exponential backoff.
+ * If all retries fail, returns the last error.
+ */
+async function runAgentWithRetry(
+  intent: string,
+  context: AgentContext,
+  maxRetries = 2,
+): Promise<{ response: string; duration_ms: number; retries: number }> {
+  let lastResult = { response: '', duration_ms: 0 };
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    lastResult = await runAgent(intent, context);
+
+    // Success — no error prefix
+    if (!lastResult.response.startsWith('Ошибка:')) {
+      return { ...lastResult, retries: attempt };
+    }
+
+    // Last attempt — don't wait
+    if (attempt === maxRetries) break;
+
+    // Exponential backoff: 2s, 4s
+    const delayMs = 2000 * Math.pow(2, attempt);
+    await new Promise(resolve => setTimeout(resolve, delayMs));
+  }
+
+  return { ...lastResult, retries: maxRetries };
+}
+
 // ── Proposal generator (Round 4) ────────────────────────────────────────────────────────
 
 async function generateProposal(
@@ -776,6 +807,11 @@ export async function POST(req: NextRequest) {
               agentContext.richBriefing = (agentContext.richBriefing ?? '') +
                 `\n\n=== ТВОЯ ИНСТИТУЦИОНАЛЬНАЯ ПАМЯТЬ (наблюдения прошлых заседаний) ===\n${memSummary}`;
             }
+            // Inject compiled core memory (Letta tier-1: always in prompt)
+            const coreSummary = await agentMemory.compileCoreSummary(agentDef.id);
+            if (coreSummary) {
+              agentContext.richBriefing = (agentContext.richBriefing ?? '') + `\n\n${coreSummary}`;
+            }
             // Load past proposal outcomes for this agent (approved/rejected/executed)
             try {
               const { rows: pastProposals } = await pool.query<{
@@ -799,7 +835,7 @@ export async function POST(req: NextRequest) {
                   `Учитывай: не повторяй отклонённые предложения. Развивай одобренные.`;
               }
             } catch { /* non-critical */ }
-            return { agentDef, result: await runAgent(agentDef.intent, agentContext) };
+            return { agentDef, result: await runAgentWithRetry(agentDef.intent, agentContext) };
           })
         );
 
@@ -810,10 +846,12 @@ export async function POST(req: NextRequest) {
 
           let response: string;
           let durationMs: number;
+          let retries = 0;
 
           if (settled.status === 'fulfilled') {
             response = settled.value.result.response;
             durationMs = settled.value.result.duration_ms;
+            retries = settled.value.result.retries ?? 0;
           } else {
             response = `Ошибка: ${settled.reason instanceof Error ? settled.reason.message : String(settled.reason)}`;
             durationMs = 0;
@@ -976,6 +1014,8 @@ export async function POST(req: NextRequest) {
           send(controller, { type: 'round5_start' });
 
           for (const proposal of finalProposals) {
+            send(controller, { type: 'debate_start', approval_id: proposal.approval_id ?? null, title: proposal.title });
+
             // Pick 2 supporters + 2 skeptics (different from proposer)
             const others = successfulAgents.filter(a => a.id !== proposal.from_id);
             const supporters = others.slice(0, 2);
@@ -992,18 +1032,34 @@ export async function POST(req: NextRequest) {
               .map(r => r.value)
               .filter((a): a is DebateArgument => a !== null);
 
-            const supportCount = arguments_.filter(a => a.stance === 'support').length;
-            const opposeCount = arguments_.filter(a => a.stance === 'oppose').length;
-            const verdict = supportCount > opposeCount ? 'proceed' : supportCount === opposeCount ? 'revise' : 'reject';
+            const pro = arguments_.filter(a => a.stance === 'support').map(a => ({
+              agent_id: a.agent_id, agent_name: a.agent_name, color: a.color,
+              side: 'pro' as const, argument: a.argument,
+            }));
+            const con = arguments_.filter(a => a.stance === 'oppose').map(a => ({
+              agent_id: a.agent_id, agent_name: a.agent_name, color: a.color,
+              side: 'con' as const, argument: a.argument,
+            }));
+            const verdict = pro.length > con.length ? 'proceed' : pro.length === con.length ? 'revise' : 'reject';
+            const synthesis = verdict === 'proceed'
+              ? `Совет поддерживает инициативу (${pro.length} за, ${con.length} против).`
+              : verdict === 'revise'
+                ? `Мнения разделились (${pro.length} за, ${con.length} против). Рекомендуется доработка.`
+                : `Совет не поддерживает (${pro.length} за, ${con.length} против).`;
 
             send(controller, {
               type: 'debate_done',
-              proposal_title: proposal.title,
-              from_id: proposal.from_id,
-              arguments: arguments_,
-              verdict,
+              debate: {
+                proposal_title: proposal.title,
+                approval_id: proposal.approval_id ?? null,
+                pro,
+                con,
+                verdict,
+                synthesis,
+              },
             });
           }
+          send(controller, { type: 'round5_done', count: finalProposals.length });
         }
 
         const duration_ms = Date.now() - meetingStart;

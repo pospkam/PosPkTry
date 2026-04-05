@@ -186,6 +186,27 @@ function buildSecurityToolkit(agentId: string): AgentToolkit {
       );
       return { success: true, message: `${rows.length} failed action types`, details: { failures: rows } };
     }),
+    proposeSecurityBlock: withAudit(agentId, 'proposeSecurityBlock', async (blockType: unknown, target: unknown, reason: unknown) => {
+      const ctx: Record<string, unknown> = {
+        block_type: String(blockType),
+        reason: String(reason),
+      };
+      if (String(blockType) === 'ip') {
+        ctx.ip = String(target);
+        ctx.duration_hours = 24;
+      } else {
+        ctx.user_id = String(target);
+      }
+      await pool.query(
+        `INSERT INTO agent_approvals (agent_id, action_type, description, context, status)
+         VALUES ('security', 'security_block', $1, $2, 'pending')`,
+        [
+          `Блокировка ${String(blockType)} ${String(target)}: ${String(reason).slice(0, 200)}`,
+          JSON.stringify(ctx),
+        ]
+      );
+      return { success: true, message: `Инициатива security_block создана` };
+    }),
   };
 }
 
@@ -236,6 +257,17 @@ function buildEcoToolkit(agentId: string): AgentToolkit {
         details: { zoneStats: rows[0] ?? null },
       };
     }),
+    proposeZoneCapacity: withAudit(agentId, 'proposeZoneCapacity', async (zone: unknown, maxDaily: unknown, reason: unknown) => {
+      await pool.query(
+        `INSERT INTO agent_approvals (agent_id, action_type, description, context, status)
+         VALUES ('eco', 'zone_capacity', $1, $2, 'pending')`,
+        [
+          `Лимит зоны "${String(zone)}": ${String(maxDaily)} чел/день — ${String(reason).slice(0, 200)}`,
+          JSON.stringify({ zone: String(zone), max_daily_visitors: Number(maxDaily), reason: String(reason) }),
+        ]
+      );
+      return { success: true, message: `Инициатива zone_capacity создана для зоны ${String(zone)}` };
+    }),
   };
 }
 
@@ -269,6 +301,17 @@ function buildFinanceToolkit(agentId: string): AgentToolkit {
         ...(typeof details === 'object' && details !== null ? details as Record<string, unknown> : {}),
       });
       return { success: true, message: `Price anomaly emitted for tour ${String(tourId)}` };
+    }),
+    proposeFlagPayment: withAudit(agentId, 'proposeFlagPayment', async (bookingId: unknown, reason: unknown, flagType: unknown) => {
+      await pool.query(
+        `INSERT INTO agent_approvals (agent_id, action_type, description, context, status)
+         VALUES ('finance', 'flag_payment', $1, $2, 'pending')`,
+        [
+          `Пометить платёж ${String(bookingId)}: ${String(reason).slice(0, 200)}`,
+          JSON.stringify({ booking_id: String(bookingId), reason: String(reason), flag_type: String(flagType || 'suspicious') }),
+        ]
+      );
+      return { success: true, message: `Инициатива flag_payment создана` };
     }),
   };
 }
@@ -417,6 +460,28 @@ function buildQualityToolkit(agentId: string): AgentToolkit {
       return { success: true, message: 'Negative feedback event emitted' };
     }),
     sendQualityAlert: withAudit(agentId, 'sendQualityAlert', makeSendAlert(agentId, 'Quality')),
+    proposeTourSuspend: withAudit(agentId, 'proposeTourSuspend', async (tourId: unknown, reason: unknown) => {
+      await pool.query(
+        `INSERT INTO agent_approvals (agent_id, action_type, description, context, status)
+         VALUES ('quality', 'tour_suspend', $1, $2, 'pending')`,
+        [
+          `Приостановить тур ID ${String(tourId)}: ${String(reason).slice(0, 200)}`,
+          JSON.stringify({ tour_id: Number(tourId), reason: String(reason) }),
+        ]
+      );
+      return { success: true, message: `Инициатива tour_suspend создана для тура ${String(tourId)}` };
+    }),
+    proposeOperatorWarning: withAudit(agentId, 'proposeOperatorWarning', async (operatorId: unknown, message: unknown, severity: unknown) => {
+      await pool.query(
+        `INSERT INTO agent_approvals (agent_id, action_type, description, context, status)
+         VALUES ('quality', 'operator_warning', $1, $2, 'pending')`,
+        [
+          `Предупреждение оператору ${String(operatorId)}: ${String(message).slice(0, 200)}`,
+          JSON.stringify({ operator_id: String(operatorId), message: String(message), severity: String(severity || 'warning') }),
+        ]
+      );
+      return { success: true, message: `Инициатива operator_warning создана` };
+    }),
   };
 }
 
