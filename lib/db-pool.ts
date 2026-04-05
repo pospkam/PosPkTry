@@ -16,6 +16,28 @@ function normalizeDatabaseUrl(raw: string): string {
   return trimmed.replace(/^['"]+|['"]+$/g, '');
 }
 
+function sanitizeMalformedPostgresUrl(raw: string): string {
+  const normalized = normalizeDatabaseUrl(raw);
+
+  // Уже корректный DSN или не postgres-схема — возвращаем как есть.
+  if (!/^postgres(ql)?:\/\//i.test(normalized)) {
+    return normalized;
+  }
+
+  // Чиним случай, когда пароль содержит неэкранированные спецсимволы (#, @, >, и т.д.).
+  // Используем greedy-парсинг до последнего '@' перед host:port.
+  const m = normalized.match(/^(postgres(?:ql)?:\/\/)([^:/?#]+):(.+)@([^:/?#]+):(\d+)\/(.+)$/i);
+  if (!m) {
+    return normalized;
+  }
+
+  const [, scheme, username, passwordRaw, host, port, dbPart] = m;
+  const safeUser = encodeURIComponent(username);
+  const safePass = encodeURIComponent(passwordRaw);
+
+  return `${scheme}${safeUser}:${safePass}@${host}:${port}/${dbPart}`;
+}
+
 function buildComponentFallback() {
   const host = process.env.PGHOST || process.env.DB_HOST || 'localhost';
   const port = parseInt(process.env.PGPORT || process.env.DB_PORT || '5432', 10);
@@ -37,7 +59,7 @@ function buildComponentFallback() {
 }
 
 function buildPoolConfig() {
-  const dbUrl = normalizeDatabaseUrl(config.database.url || '');
+  const dbUrl = sanitizeMalformedPostgresUrl(config.database.url || '');
 
   // Надежный парсинг URL: корректно обрабатывает URL-encoded username/password.
   // Это критично для паролей со спецсимволами.
