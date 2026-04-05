@@ -79,7 +79,7 @@ export class OperatorAgency {
         t.id,
         t.title,
         t.base_price,
-        COUNT(b.id) FILTER (WHERE b.booking_status NOT IN ('cancelled') AND b.deleted_at IS NULL)::text AS bookings_count,
+        COUNT(b.id) FILTER (WHERE b.booking_booking_status NOT IN ('cancelled') AND b.deleted_at IS NULL)::text AS bookings_count,
         MIN(a.date)::text  AS next_date,
         SUM(a.available_slots) FILTER (WHERE a.is_cancelled = FALSE AND a.date >= NOW()::date)::text AS available_slots
       FROM operator_tours t
@@ -145,7 +145,7 @@ export class OperatorAgency {
       FROM operator_bookings b
       JOIN operator_tours t ON t.id = b.operator_tour_id
       WHERE t.operator_id = $1
-        AND b.booking_status NOT IN ('cancelled')
+        AND b.booking_booking_status NOT IN ('cancelled')
         AND b.deleted_at IS NULL
     `, [partnerId]);
 

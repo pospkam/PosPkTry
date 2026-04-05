@@ -264,9 +264,9 @@ export class LegalAgency {
         ob.final_price          AS amount,
         ob.created_at::text,
         CASE
-          WHEN ob.booking_status = 'cancelled' AND ob.final_price > 0
+          WHEN ob.booking_booking_status = 'cancelled' AND ob.final_price > 0
                THEN 'отмена без возврата'
-          WHEN ob.booking_status = 'confirmed' AND os.cancellation_policy IS NULL
+          WHEN ob.booking_booking_status = 'confirmed' AND os.cancellation_policy IS NULL
                THEN 'нет политики отмены'
           WHEN ob.final_price IS NULL OR ob.final_price = 0
                THEN 'нет суммы оплаты'
@@ -278,8 +278,8 @@ export class LegalAgency {
       LEFT JOIN operator_settings os ON os.user_id = p.user_id
       WHERE ob.created_at >= NOW() - INTERVAL '30 days'
         AND (
-          (ob.booking_status = 'cancelled' AND ob.final_price > 0) OR
-          (ob.booking_status = 'confirmed' AND os.cancellation_policy IS NULL) OR
+          (ob.booking_booking_status = 'cancelled' AND ob.final_price > 0) OR
+          (ob.booking_booking_status = 'confirmed' AND os.cancellation_policy IS NULL) OR
           (ob.final_price IS NULL OR ob.final_price = 0)
         )
       ORDER BY ob.created_at DESC

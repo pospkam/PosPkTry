@@ -681,13 +681,44 @@ export async function executeInitiative(task: ExecutionTask): Promise<ExecutionR
 
   const result = await executor(task);
 
+  // AUTO-RETRY: при провале сбрасываем в assigned если retry_count < 2 (Wishlist #3)
   try {
-    await pool.query(
-      `UPDATE agent_approvals
-       SET execution_status = $1, execution_notes = $2, completed_at = NOW()
-       WHERE id = $3`,
-      [result.success ? 'done' : 'failed', JSON.stringify(result), task.approval_id]
-    );
+    if (!result.success) {
+      const retryRow = await pool.query<{ retry_count: number }>(
+        `SELECT retry_count FROM agent_approvals WHERE id = $1`,
+        [task.approval_id]
+      );
+      const currentRetry = retryRow.rows[0]?.retry_count ?? 0;
+
+      if (currentRetry < 2) {
+        await pool.query(
+          `UPDATE agent_approvals
+           SET execution_status = 'assigned',
+               retry_count = retry_count + 1,
+               execution_notes = $2
+           WHERE id = $1`,
+          [task.approval_id, JSON.stringify({ ...result, retry_scheduled: true, attempt: currentRetry + 1 })]
+        );
+      } else {
+        await pool.query(
+          `UPDATE agent_approvals
+           SET execution_status = 'failed',
+               execution_notes = $2,
+               completed_at = NOW()
+           WHERE id = $1`,
+          [task.approval_id, JSON.stringify({ ...result, retry_exhausted: true, attempts: currentRetry + 1 })]
+        );
+      }
+    } else {
+      await pool.query(
+        `UPDATE agent_approvals
+         SET execution_status = 'done',
+             execution_notes = $2,
+             completed_at = NOW()
+         WHERE id = $1`,
+        [task.approval_id, JSON.stringify(result)]
+      );
+    }
   } catch (err) {
     const dbErr = err instanceof Error ? err.message : String(err);
     return {

@@ -184,7 +184,7 @@ export class SecurityAgency {
                  THEN 'аномально высокая сумма'
             WHEN ob.final_price < 100 AND ob.final_price > 0
                  THEN 'подозрительно низкая сумма'
-            WHEN ob.booking_status = 'confirmed'
+            WHEN ob.booking_booking_status = 'confirmed'
                  AND (SELECT COUNT(*) FROM operator_bookings ob2
                        WHERE ob2.operator_tour_id IN (
                          SELECT id FROM operator_tours WHERE operator_id = ot.operator_id
