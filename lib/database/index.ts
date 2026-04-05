@@ -1,17 +1,8 @@
-import { Pool } from 'pg';
-
-if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL not set');
-}
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-});
+import { pool } from '@/lib/db-pool';
 
 export const query = async <T = Record<string, unknown>>(
   text: string,
-  params?: any[]
+  params?: unknown[]
 ): Promise<{ rows: T[]; rowCount: number }> => {
   const client = await pool.connect();
   try {
