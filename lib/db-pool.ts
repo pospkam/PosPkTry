@@ -76,12 +76,15 @@ function buildPoolConfig() {
       }
     };
 
+    // dbPart может содержать query-параметры: "default_db?sslmode=require"
+    const [dbName] = dbPart.split('?');
+
     return {
       user: decodeSafe(usernameRaw),
       password: decodeSafe(passwordRaw),
       host,
       port: parseInt(portRaw, 10),
-      database: dbPart,
+      database: dbName,
       ssl: useSSL ? { rejectUnauthorized: false } : false,
       max: 20,
       idleTimeoutMillis: 30000,
