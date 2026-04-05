@@ -2,8 +2,8 @@ name: Execute Initiatives - Create PRs
 
 on:
   schedule:
-    # Every 15 minutes
-    - cron: '*/15 * * * *'
+    # Every hour (was every 15 min — reduced to avoid spam)
+    - cron: '5 * * * *'
   workflow_dispatch:
     inputs:
       initiative_id:
@@ -14,291 +14,28 @@ jobs:
   execute:
     runs-on: ubuntu-latest
     name: 🚀 Execute Approved Initiatives
-
-    env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 5
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Fetch initiatives from DB
-        id: fetch
+      - name: Execute approved initiatives via API
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
-          cat > fetch-initiatives.js << 'EOF'
-          const postgres = require('pg');
+          if [ -z "$CRON_SECRET" ]; then
+            echo "CRON_SECRET not set in GitHub secrets — skipping"
+            exit 0
+          fi
 
-          const client = new postgres.Client({
-            connectionString: process.env.DATABASE_URL,
-            ssl: { rejectUnauthorized: false }
-          });
+          HTTP=$(curl -s -o /tmp/exec_resp.json -w "%{http_code}" \
+            --max-time 240 \
+            "https://tourhab.ru/api/cron/initiatives-execute?secret=$CRON_SECRET")
 
-          async function main() {
-            await client.connect();
+          echo "HTTP: $HTTP"
+          cat /tmp/exec_resp.json 2>/dev/null || true
 
-            const result = await client.query(
-              `SELECT
-                 id,
-                 type as action_type,
-                 description as title,
-                 context->>'full_description' as description,
-                 context->>'from_name' as from_agent,
-                 COALESCE(context->>'priority', 'medium') as priority
-               FROM agent_approvals
-               WHERE execution_status = 'assigned'
-               AND created_at > NOW() - INTERVAL '1 hour'
-               ORDER BY created_at DESC
-               LIMIT 5`
-            );
-
-            console.log(JSON.stringify(result.rows, null, 2));
-            await client.end();
-          }
-
-          main().catch(err => {
-            console.error('DB Error:', err.message);
-            process.exit(1);
-          });
-          EOF
-
-          node fetch-initiatives.js > initiatives.json
-          cat initiatives.json
-          echo "initiatives=$(cat initiatives.json)" >> $GITHUB_OUTPUT
-
-      - name: Create feature branches and PRs
-        if: steps.fetch.outputs.initiatives != ''
-        run: |
-          cat > process-initiatives.js << 'EOF'
-          const fs = require('fs');
-          const { execSync } = require('child_process');
-
-          const initiatives = JSON.parse(fs.readFileSync('initiatives.json', 'utf-8'));
-
-          if (!Array.isArray(initiatives) || initiatives.length === 0) {
-            console.log('No initiatives to process');
-            process.exit(0);
-          }
-
-          const results = [];
-
-          for (const init of initiatives) {
-            try {
-              console.log(`\n📋 Processing: ${init.title}`);
-
-              const branchName = `feat/${Date.now()}-${init.title.toLowerCase().replace(/\s+/g, '-').slice(0, 30)}`;
-
-              // Create branch
-              execSync(`git checkout -b ${branchName}`, { stdio: 'inherit' });
-
-              // Create minimal change (add comment to README)
-              const readmeContent = fs.readFileSync('README.md', 'utf-8');
-              const newContent = readmeContent +
-                `\n\n## Initiative: ${init.title}\nFrom: ${init.from_agent}\nStatus: assigned (PR auto-created)\n`;
-              fs.writeFileSync('README.md', newContent);
-
-              // Commit
-              execSync('git add README.md', { stdio: 'inherit' });
-              execSync(
-                `git commit -m "initiative: ${init.title} (from ${init.from_agent})"`,
-                { stdio: 'inherit' }
-              );
-
-              // Push
-              execSync(`git push origin ${branchName}`, { stdio: 'inherit' });
-
-              // Create PR
-              const prOutput = execSync(
-                `gh pr create --title "Initiative: ${init.title}" --body "### Approved Initiative\n\nFrom: ${init.from_agent}\nType: ${init.action_type}\nPriority: ${init.priority}\n\n${init.description}\n\n**Status:** Awaiting review and merge"`,
-                { encoding: 'utf-8' }
-              ).trim();
-
-              const prUrl = prOutput.split('\n').pop();
-
-              results.push({
-                id: init.id,
-                title: init.title,
-                branch: branchName,
-                pr_url: prUrl,
-                status: 'pr_created'
-              });
-
-              console.log(`✅ PR created: ${prUrl}`);
-
-              // Back to main
-              execSync('git checkout main', { stdio: 'inherit' });
-
-            } catch (err) {
-              console.error(`❌ Failed to process ${init.title}:`, err.message);
-              results.push({
-                id: init.id,
-                title: init.title,
-                status: 'failed',
-                error: err.message
-              });
-
-              // Try to recover
-              try {
-                execSync('git checkout main', { stdio: 'inherit' });
-              } catch {}
-            }
-          }
-
-          fs.writeFileSync('pr-results.json', JSON.stringify(results, null, 2));
-          console.log('\n\n📊 Results:');
-          console.log(JSON.stringify(results, null, 2));
-          EOF
-
-          node process-initiatives.js
-
-      - name: Notify Telegram about PRs
-        if: always()
-        run: |
-          cat > notify-telegram.js << 'EOF'
-          const fs = require('fs');
-          const https = require('https');
-
-          if (!fs.existsSync('pr-results.json')) {
-            console.log('No PR results to notify');
-            process.exit(0);
-          }
-
-          const results = JSON.parse(fs.readFileSync('pr-results.json', 'utf-8'));
-
-          const succeeded = results.filter(r => r.status === 'pr_created');
-          const failed = results.filter(r => r.status === 'failed');
-
-          let message = '🤖 <b>Initiative Execution Report</b>\n\n';
-
-          if (succeeded.length > 0) {
-            message += `✅ <b>Created PRs (${succeeded.length}):</b>\n`;
-            for (const pr of succeeded) {
-              message += `• <a href="${pr.pr_url}">${pr.title}</a>\n`;
-            }
-            message += '\n';
-          }
-
-          if (failed.length > 0) {
-            message += `❌ <b>Failed (${failed.length}):</b>\n`;
-            for (const f of failed) {
-              message += `• ${f.title}\n  Error: ${f.error.slice(0, 80)}\n`;
-            }
-          }
-
-          if (succeeded.length === 0 && failed.length === 0) {
-            message += 'No initiatives to process';
-          }
-
-          message += `\n📅 Run: ${{ github.run_id }}`;
-
-          const token = process.env.TELEGRAM_BOT_TOKEN;
-          const chatId = process.env.TELEGRAM_CHAT_ID;
-
-          if (!token || !chatId) {
-            console.log('Telegram credentials not set, skipping notification');
-            process.exit(0);
-          }
-
-          const data = JSON.stringify({
-            chat_id: chatId,
-            text: message,
-            parse_mode: 'HTML',
-            disable_web_page_preview: true
-          });
-
-          const options = {
-            hostname: 'api.telegram.org',
-            path: `/bot${token}/sendMessage`,
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Content-Length': data.length
-            }
-          };
-
-          const req = https.request(options, res => {
-            let body = '';
-            res.on('data', chunk => body += chunk);
-            res.on('end', () => {
-              console.log('Telegram notification sent');
-            });
-          });
-
-          req.on('error', err => console.error('Telegram error:', err.message));
-          req.write(data);
-          req.end();
-          EOF
-
-          node notify-telegram.js
-
-      - name: Update DB status
-        if: always()
-        run: |
-          cat > update-db.js << 'EOF'
-          const postgres = require('pg');
-          const fs = require('fs');
-
-          if (!fs.existsSync('pr-results.json')) {
-            console.log('No results to update');
-            process.exit(0);
-          }
-
-          const results = JSON.parse(fs.readFileSync('pr-results.json', 'utf-8'));
-          const client = new postgres.Client({
-            connectionString: process.env.DATABASE_URL,
-            ssl: { rejectUnauthorized: false }
-          });
-
-          async function main() {
-            await client.connect();
-
-            for (const result of results) {
-              if (result.status === 'pr_created') {
-                await client.query(
-                  `UPDATE agent_approvals
-                   SET execution_status = 'pr_created',
-                       context = context || jsonb_build_object('pr_url', $2, 'executed_at', NOW())
-                   WHERE id = $1`,
-                  [result.id, result.pr_url]
-                );
-              } else if (result.status === 'failed') {
-                await client.query(
-                  `UPDATE agent_approvals
-                   SET execution_status = 'failed',
-                       context = context || jsonb_build_object('error', $2, 'failed_at', NOW())
-                   WHERE id = $1`,
-                  [result.id, result.error]
-                );
-              }
-            }
-
-            await client.end();
-            console.log('DB updated');
-          }
-
-          main().catch(err => console.error('Update error:', err.message));
-          EOF
-
-          node update-db.js
-
-      - name: Report
-        if: always()
-        run: |
-          echo "## 🚀 Execution Summary"
-          if [ -f pr-results.json ]; then
-            cat pr-results.json
+          if [ "$HTTP" = "200" ]; then
+            echo "Initiatives executed successfully"
           else
-            echo "No results"
+            echo "Unexpected HTTP $HTTP"
+            exit 1
           fi

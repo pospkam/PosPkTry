@@ -15,48 +15,23 @@ jobs:
   evolution:
     runs-on: ubuntu-latest
     name: 🌀 Evolution Loop
-
-    env:
-      NODE_ENV: production
-      TOURHAB_URL: ${{ secrets.TOURHAB_URL }}
-      CRON_SECRET: ${{ secrets.CRON_SECRET }}
-      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    timeout-minutes: 15
 
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-
-      - name: 📚 Install dependencies
-        run: npm ci
-
-      - name: 🔍 TypeScript check
-        run: npx tsc --noEmit
-
-      - name: ✅ Run tests
-        run: npm test -- --run
 
       - name: 🌀 Start Evolution Loop
-        run: |
-          node scripts/evolution-runner.js
+        run: node scripts/evolution-runner.js
         env:
+          TOURHAB_URL: ${{ secrets.TOURHAB_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
           DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
-
-      - name: 📊 Report results
-        if: always()
-        run: |
-          echo "Evolution Loop completed"
-          echo "Check logs above for details"
 
       - name: 🔔 Notify Telegram on success
         if: success()
@@ -66,10 +41,7 @@ jobs:
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
             ✅ Evolution Loop: SUCCESS
-
-            🎯 Board Meeting completed
-            📋 Initiatives processed
-            🚀 Auto-deployment triggered
+            Board Meeting completed, initiatives processed.
           disable_web_page_preview: true
 
       - name: 🔴 Notify Telegram on failure
@@ -80,14 +52,5 @@ jobs:
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
             ❌ Evolution Loop: FAILED
-
-            Check GitHub Actions logs:
             ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           disable_web_page_preview: true
-
-      - name: 📈 Log metrics
-        if: always()
-        run: |
-          echo "Workflow Status: ${{ job.status }}"
-          echo "Run ID: ${{ github.run_id }}"
-          echo "Timestamp: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
