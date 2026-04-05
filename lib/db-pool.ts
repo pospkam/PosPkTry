@@ -59,7 +59,35 @@ function buildComponentFallback() {
 }
 
 function buildPoolConfig() {
-  const dbUrl = sanitizeMalformedPostgresUrl(config.database.url || '');
+  const rawDbUrl = normalizeDatabaseUrl(config.database.url || '');
+  const dbUrl = sanitizeMalformedPostgresUrl(rawDbUrl);
+
+  // Primary path: manual parse into components (stable even for malformed URL in env).
+  const manual = rawDbUrl.match(/^(postgres(?:ql)?:\/\/)([^:/?#]+):(.+)@([^:/?#]+):(\d+)\/(.+)$/i)
+    ?? dbUrl.match(/^(postgres(?:ql)?:\/\/)([^:/?#]+):(.+)@([^:/?#]+):(\d+)\/(.+)$/i);
+
+  if (manual) {
+    const [, , usernameRaw, passwordRaw, host, portRaw, dbPart] = manual;
+    const decodeSafe = (v: string) => {
+      try {
+        return decodeURIComponent(v);
+      } catch {
+        return v;
+      }
+    };
+
+    return {
+      user: decodeSafe(usernameRaw),
+      password: decodeSafe(passwordRaw),
+      host,
+      port: parseInt(portRaw, 10),
+      database: dbPart,
+      ssl: useSSL ? { rejectUnauthorized: false } : false,
+      max: 20,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 5000,
+    };
+  }
 
   // Надежный парсинг URL: корректно обрабатывает URL-encoded username/password.
   // Это критично для паролей со спецсимволами.
