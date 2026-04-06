@@ -139,11 +139,15 @@ export async function getHistory(chatId: number, mode: string): Promise<ChatMess
   } catch { return []; }
 }
 
-export async function saveMsg(chatId: number, mode: string, role: 'user' | 'assistant', content: string) {
+export async function saveMsg(
+  chatId: number, mode: string, role: 'user' | 'assistant', content: string,
+  userId?: number | null, userName?: string | null,
+) {
   try {
     await pool.query(
-      `INSERT INTO tg_conversations (chat_id, mode, role, content) VALUES ($1,$2,$3,$4)`,
-      [chatId, mode, role, content],
+      `INSERT INTO tg_conversations (chat_id, mode, role, content, user_id, user_name, platform)
+       VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+      [chatId, mode, role, content, userId ?? null, userName ?? null, mode === 'max' ? 'max' : 'telegram'],
     );
   } catch { /* не блокируем */ }
 }
@@ -350,8 +354,10 @@ export async function aiChat(
   text: string,
   mode: string,
   reply: ReplyFn,
+  userId?: number | null,
+  userName?: string | null,
 ): Promise<void> {
-  await saveMsg(chatId, mode, 'user', text);
+  await saveMsg(chatId, mode, 'user', text, userId, userName);
   const history = await getHistory(chatId, mode);
 
   const messages: ChatMessage[] = [
@@ -362,7 +368,7 @@ export async function aiChat(
   const response = await callAIWaterfall(messages);
   const safe = response?.trim() || 'Что-то с сигналом... Попробуй ещё раз.';
 
-  await saveMsg(chatId, mode, 'assistant', safe);
+  await saveMsg(chatId, mode, 'assistant', safe, userId, userName);
   await reply(chatId, safe);
 }
 
@@ -372,12 +378,13 @@ export async function processMessage(opts: {
   chatId: number;
   text: string;
   userName: string | null;
+  userId?: number | null;
   mode: string;
   createdVia: string;
   pending: Map<number, PendingBooking>;
   reply: ReplyFn;
 }): Promise<void> {
-  const { chatId, text, userName, mode, createdVia, pending: pendingMap, reply: replyFn } = opts;
+  const { chatId, text, userName, userId, mode, createdVia, pending: pendingMap, reply: replyFn } = opts;
   const cmd = text.split(' ')[0]?.toLowerCase() ?? '';
 
   // /start
@@ -436,5 +443,5 @@ export async function processMessage(opts: {
   }
 
   // Free AI chat
-  await aiChat(chatId, text, mode, replyFn);
+  await aiChat(chatId, text, mode, replyFn, userId, userName);
 }

@@ -46,6 +46,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       chatId: msg.chat.id,
       text: msg.text.trim(),
       userName: msg.from?.first_name ?? null,
+      userId: msg.from?.id ?? null,
       mode: 'tourist',
       createdVia: 'telegram',
       pending,

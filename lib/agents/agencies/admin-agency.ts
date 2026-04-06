@@ -205,7 +205,7 @@ export class AdminAgency {
         COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days')::int    AS last_7d,
         SUM(final_price) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days') AS revenue_7d
       FROM operator_bookings
-      WHERE booking_status NOT IN ('cancelled')
+      WHERE booking_booking_status NOT IN ('cancelled')
     `);
     return rows[0] ?? { today: 0, last_7d: 0, revenue_7d: null };
   }

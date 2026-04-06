@@ -177,13 +177,13 @@ export function AssistantButton({ pageContext }: { pageContext?: PageContext }) 
       const data = await res.json() as {
         success?: boolean;
         error?: string;
-        data?: { answer?: string; limitReached?: boolean; message?: string; remainingFree?: number | null };
+        data?: { answer?: string; limitReached?: boolean; authRequired?: boolean; message?: string; remainingFree?: number | null };
       };
 
-      if (data.data?.limitReached) {
+      if (data.data?.authRequired || data.data?.limitReached) {
         setMessages(prev => [...prev, {
           role: 'assistant',
-          content: data.data?.message ?? 'Зарегистрируйтесь для продолжения.',
+          content: data.data?.message ?? 'Войдите или зарегистрируйтесь для общения с AI-помощником.',
         }]);
         setLimitReached(true);
         setRemainingFree(0);
@@ -409,7 +409,7 @@ export function AssistantButton({ pageContext }: { pageContext?: PageContext }) 
                   margin: '0 0 10px',
                 }}
               >
-                Бесплатные сообщения закончились. Зарегистрируйтесь, чтобы продолжить.
+                Войдите или зарегистрируйтесь, чтобы общаться с AI-помощником.
               </p>
               <a
                 href="/auth/login"
@@ -484,7 +484,7 @@ export function AssistantButton({ pageContext }: { pageContext?: PageContext }) 
             </button>
           </div>
           )}
-          {remainingFree != null && !limitReached && (
+          {remainingFree != null && !limitReached && remainingFree < 999 && (
             <div style={{ padding: '0 12px 6px', textAlign: 'center' }}>
               <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                 {remainingFree === 1 ? 'Осталось 1 сообщение' : `Осталось ${remainingFree} из 5`}

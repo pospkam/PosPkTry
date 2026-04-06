@@ -130,9 +130,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Сообщение не может быть пустым' }, { status: 400 });
     }
 
-    // Soft auth check (returns null for anonymous)
+    // Auth check — registration required
     const user = await getUserFromRequest(request);
-    const isAuthenticated = !!user;
+    if (!user) {
+      return NextResponse.json({
+        success: true,
+        data: {
+          authRequired: true,
+          message: 'Войдите или зарегистрируйтесь, чтобы общаться с AI-помощником Кузьмичом.',
+          registerUrl: '/auth/login',
+        },
+      });
+    }
+    const isAuthenticated = true;
 
     const validRoles: ChatRole[] = ['tourist', 'operator', 'guide', 'admin', 'agent', 'transfer'];
     const safeRole: ChatRole = validRoles.includes(role as ChatRole) ? (role as ChatRole) : 'tourist';
@@ -144,20 +154,6 @@ export async function POST(request: NextRequest) {
       ?? (clientHistory as ChatMessage[] | undefined)
       ?? [];
     const isNewSession = !session; // первое сообщение = новая сессия
-
-    // Check limit for anonymous users
-    if (!isAuthenticated && currentCount >= FREE_MESSAGE_LIMIT) {
-      return NextResponse.json({
-        success: true,
-        data: {
-          limitReached: true,
-          message: 'Вы использовали все бесплатные сообщения. Зарегистрируйтесь, чтобы продолжить общение с AI-помощником.',
-          registerUrl: '/auth/login',
-          userMessageCount: currentCount,
-          remainingFree: 0,
-        },
-      });
-    }
 
     // Долгосрочная память (только для авторизованных)
     const userId = user?.userId ? parseInt(user.userId, 10) : null;
