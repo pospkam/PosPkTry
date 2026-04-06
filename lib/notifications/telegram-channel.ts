@@ -10,6 +10,7 @@ import { query } from '@/lib/database';
 import { callAIWithModelDirect } from '@/lib/ai/providers';
 import { getModelForAgent } from '@/lib/ai/agent-models';
 import { validateRoutePost, validateTextPost, logValidationFailure } from './post-validation';
+import { maxPostToChannel } from './max-channel';
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -419,6 +420,8 @@ export async function postKuzmichRoute(): Promise<{ ok: boolean; routeId?: strin
     : await tgPost(channelId, text);
 
   if (result.ok) {
+    // Дублируем в MAX-канал
+    await maxPostToChannel(text).catch(() => {});
     try {
       await query(
         `INSERT INTO ai_actions_log (action_type, metadata) VALUES ($1, $2)`,
@@ -475,6 +478,8 @@ export async function postKuzmichTip(): Promise<{ ok: boolean; error?: string }>
   const result = await tgPost(channelId, text);
 
   if (result.ok) {
+    // Дублируем в MAX-канал
+    await maxPostToChannel(text).catch(() => {});
     try {
       await query(
         `INSERT INTO ai_actions_log (action_type, metadata) VALUES ($1, $2)`,
@@ -524,6 +529,8 @@ export async function postKuzmichPromo(): Promise<{ ok: boolean; error?: string 
   const result = await tgPost(channelId, text);
 
   if (result.ok) {
+    // Дублируем в MAX-канал
+    await maxPostToChannel(text).catch(() => {});
     try {
       await query(
         `INSERT INTO ai_actions_log (action_type, metadata) VALUES ($1, $2)`,
