@@ -79,7 +79,7 @@ export default function KuzmichClient() {
   const hasMessages = messages.length > 0;
 
   return (
-    <main className="flex-1 flex flex-col max-w-3xl w-full mx-auto px-4 pb-6 pt-6">
+    <main className="flex-1 flex flex-col max-w-3xl w-full mx-auto px-4 pb-6 pt-20">
 
       {/* Back + header */}
       <div className="flex items-center gap-4 mb-6">

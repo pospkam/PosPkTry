@@ -45,7 +45,7 @@ export default function RequestClient() {
   const inp = 'w-full px-4 py-3 rounded-lg text-sm border outline-none transition-all focus:ring-1 focus:ring-[var(--accent)] bg-[var(--bg-primary)] border-[var(--border)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]';
 
   return (
-    <main className="flex-1 flex flex-col py-12 px-5">
+    <main className="flex-1 flex flex-col pt-20 pb-12 px-5">
       <div className="max-w-5xl w-full mx-auto">
 
         {/* Back */}
