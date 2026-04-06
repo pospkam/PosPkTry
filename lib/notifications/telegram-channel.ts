@@ -9,6 +9,7 @@
 import { query } from '@/lib/database';
 import { callAIWithModelDirect } from '@/lib/ai/providers';
 import { getModelForAgent } from '@/lib/ai/agent-models';
+import { validateRoutePost, validateTextPost, logValidationFailure } from './post-validation';
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -148,6 +149,14 @@ export async function postRouteToChannel(routeId: string, photoUrl?: string): Pr
   lines.push(`<a href="${appUrl}/routes/${r.id}">Смотреть маршрут →</a>`);
 
   const text = lines.join('\n');
+
+  // Валидация перед публикацией
+  const validation = await validateRoutePost(r.id, text);
+  if (!validation.valid) {
+    await logValidationFailure('route_to_channel', validation);
+    return { ok: false, error: `Валидация: ${validation.errors.join('; ')}` };
+  }
+
   return photoUrl ? tgPostPhoto(channelId, photoUrl, text) : tgPost(channelId, text);
 }
 
@@ -304,17 +313,35 @@ const ACTIVITY_PHOTO: Record<string, string> = {
   bears:       '/images/hero/bears-kurilskoye.jpg',
 };
 
-function buildRoutePhotoUrl(r: KuzmichRouteRow): string | null {
+// Карта location_type → фото
+const LOCATION_PHOTO: Record<string, string> = {
+  volcano:     '/images/activities/volcanoes.jpg',
+  hot_spring:  '/images/activities/hotsprings.jpg',
+  lake:        '/images/hero/hero-light.jpeg',
+  mountain:    '/images/activities/volcanoes.jpg',
+  river:       '/images/activities/fishing.jpg',
+  bay:         '/images/activities/sea.jpg',
+  waterfall:   '/images/activities/rafting.jpg',
+  island:      '/images/activities/sea.jpg',
+  forest:      '/images/activities/volcanoes.jpg',
+};
+
+function buildRoutePhotoUrl(r: KuzmichRouteRow, routePhotos?: string[] | null): string | null {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tourhab.ru';
-  // 1. Яндекс Static Maps если есть координаты
-  if (r.lat && r.lng) {
-    const ll = `${r.lng},${r.lat}`;
-    return `https://static-maps.yandex.ru/1.x/?ll=${ll}&z=11&size=650,400&pt=${ll},pm2rdm&l=map`;
+  // 1. Реальные фото маршрута из БД (приоритет)
+  if (routePhotos && routePhotos.length > 0) {
+    const photo = routePhotos[0];
+    // Абсолютный URL — используем как есть, относительный — добавляем домен
+    return photo.startsWith('http') ? photo : `${appUrl}${photo}`;
   }
-  // 2. Тематическое фото по типу активности
+  // 2. Тематическое фото по типу активности (реальные фото с Камчатки)
   const actPhoto = ACTIVITY_PHOTO[r.activity_type ?? ''];
   if (actPhoto) return `${appUrl}${actPhoto}`;
-  return null;
+  // 3. Тематическое фото по типу локации
+  const locPhoto = LOCATION_PHOTO[r.location_type ?? ''];
+  if (locPhoto) return `${appUrl}${locPhoto}`;
+  // 4. Общее фото Камчатки (лучше чем карта)
+  return `${appUrl}/images/hero/hero-light.jpeg`;
 }
 
 /**
@@ -368,7 +395,25 @@ export async function postKuzmichRoute(): Promise<{ ok: boolean; routeId?: strin
 - Не начинай с "Привет" или своего имени`;
 
   const text = await callAIWithModelDirect([{ role: 'user', content: prompt }], getModelForAgent('kuzmich'));
-  const photoUrl = buildRoutePhotoUrl(r);
+
+  // Валидация перед публикацией
+  const validation = await validateRoutePost(r.id, text);
+  if (!validation.valid) {
+    await logValidationFailure('kuzmich_route', validation);
+    return { ok: false, routeId: r.id, error: `Валидация: ${validation.errors.join('; ')}` };
+  }
+
+  // Получаем фото маршрута из БД
+  let routePhotos: string[] | null = null;
+  try {
+    const photoRes = await query<{ photos: unknown }>(
+      `SELECT payload->'photos' AS photos FROM agent_route_knowledge WHERE id = $1`, [r.id]
+    );
+    const raw = photoRes.rows[0]?.photos;
+    if (Array.isArray(raw)) routePhotos = raw as string[];
+  } catch { /* ok */ }
+
+  const photoUrl = buildRoutePhotoUrl(r, routePhotos);
   const result = photoUrl
     ? await tgPostPhoto(channelId, photoUrl, text)
     : await tgPost(channelId, text);
@@ -419,6 +464,14 @@ export async function postKuzmichTip(): Promise<{ ok: boolean; error?: string }>
 - В конце можно добавить: ${appUrl}/routes`;
 
   const text = await callAIWithModelDirect([{ role: 'user', content: prompt }], getModelForAgent('kuzmich'));
+
+  // Валидация текста перед публикацией
+  const validation = validateTextPost(text);
+  if (!validation.valid) {
+    await logValidationFailure('kuzmich_tip', validation);
+    return { ok: false, error: `Валидация: ${validation.errors.join('; ')}` };
+  }
+
   const result = await tgPost(channelId, text);
 
   if (result.ok) {
@@ -460,6 +513,14 @@ export async function postKuzmichPromo(): Promise<{ ok: boolean; error?: string 
   max.ru/id4101147649_bot`;
 
   const text = await callAIWithModelDirect([{ role: 'user', content: prompt }], getModelForAgent('kuzmich'));
+
+  // Валидация промо-поста
+  const validation = validateTextPost(text);
+  if (!validation.valid) {
+    await logValidationFailure('kuzmich_promo', validation);
+    return { ok: false, error: `Валидация: ${validation.errors.join('; ')}` };
+  }
+
   const result = await tgPost(channelId, text);
 
   if (result.ok) {

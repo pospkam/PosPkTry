@@ -152,15 +152,22 @@ function applySecurityHeaders(response: NextResponse, pathname?: string): NextRe
 
   // Content Security Policy (базовый)
   if (process.env.NODE_ENV === 'production') {
+    const scriptSrc = "'self' 'unsafe-inline' https://api-maps.yandex.ru https://*.yandex.ru https://mc.yandex.ru https://unpkg.com https://emrldco.com https://www.clarity.ms";
+    const styleSrc = "'self' 'unsafe-inline' https://*.yandex.ru https://unpkg.com";
+    const imgSrc = "'self' data: https: blob:";
+    const connectSrc = "'self' https://*.yandex.ru https://*.yandex.net https://mc.yandex.ru https://mc.yandex.md wss://mc.yandex.ru https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://s3.twcstorage.ru https://emrldco.com https://www.clarity.ms";
+    const fontSrc = "'self' data: https://*.yandex.ru";
+    const workerSrc = "'self' blob:";
+
     if (pathname && pathname.startsWith('/widget/')) {
       response.headers.set(
         'Content-Security-Policy',
-        "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; frame-ancestors *;"
+        `default-src 'self'; script-src ${scriptSrc}; style-src ${styleSrc}; img-src ${imgSrc}; connect-src ${connectSrc}; font-src ${fontSrc}; worker-src ${workerSrc}; frame-ancestors *;`
       );
     } else {
       response.headers.set(
         'Content-Security-Policy',
-        "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:;"
+        `default-src 'self'; script-src ${scriptSrc}; style-src ${styleSrc}; img-src ${imgSrc}; connect-src ${connectSrc}; font-src ${fontSrc}; worker-src ${workerSrc};`
       );
     }
   }
