@@ -114,14 +114,14 @@ function PhotoGallery({ images, alt }: { images: string[]; alt: string }) {
         {/* Main image */}
         <button
           onClick={() => setLightbox(0)}
-          className="relative md:col-span-2 md:row-span-2 overflow-hidden group cursor-pointer"
+          className="relative md:col-span-2 md:row-span-2 overflow-hidden group cursor-pointer bg-[var(--bg-hover)]"
         >
           <Image
             src={images[0]}
             alt={`${alt} — фото 1`}
             fill
             priority
-            className="object-cover group-hover:scale-105 transition-transform duration-500"
+            className="object-contain group-hover:scale-105 transition-transform duration-500"
             sizes="(max-width: 768px) 100vw, 50vw"
           />
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
