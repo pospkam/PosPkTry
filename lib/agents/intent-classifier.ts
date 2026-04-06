@@ -116,6 +116,24 @@ export const INTENT_KEYWORDS: Record<AgentIntent, string[]> = {
     'туры для заполнения', 'content flag', 'кандидаты ai заполнения', 'flagged tours',
     'что заполнить',
   ],
+  // Публикация в каналы (ДОЛЖНЫ БЫТЬ ДО plan_season — иначе «сезонный пост» → Planning)
+  channel_post_route: [
+    'пост о маршруте', 'опубликуй маршрут', 'пост маршрут', 'кузьмич маршрут',
+    'напиши пост маршрут', '/kuzmich', 'kuzmich route',
+  ],
+  channel_post_tip:   [
+    'пост совет', 'опубликуй совет', 'совет кузьмича', 'совет для туристов',
+    'напиши совет', '/tip', 'kuzmich tip',
+  ],
+  channel_post_sezon: [
+    'сезонный пост', 'пост о сезоне', 'пост сезон', 'опубликуй сезон',
+    'напиши сезонный', 'сезонный в тг', 'сезонный в канал', 'sezon post',
+    '/sezon',
+  ],
+  channel_audit:      [
+    'аудит канала', 'аудит постов', 'channel audit', 'качество постов',
+    'статистика канала', 'отчёт канала', 'сколько постов',
+  ],
   // Маркетинг
   mkt_performance:   [
     'маркетинг', 'marketing', 'эффективность маркетинга', 'трафик источники',
@@ -197,6 +215,7 @@ const ADMIN_INTENTS    = new Set<AgentIntent>([
   'eco_impact', 'eco_zones',
   'evo_optimize', 'evo_experiments', 'evo_adapt',
   'content_audit', 'content_flag',
+  'channel_post_route', 'channel_post_tip', 'channel_post_sezon', 'channel_audit',
   'mkt_performance', 'mkt_content_plan',
   'plan_forecast', 'plan_season', 'plan_gaps',
   'qa_reviews', 'qa_slots', 'qa_operators',

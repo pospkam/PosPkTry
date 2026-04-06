@@ -71,6 +71,10 @@ export type AgentIntent =
   // Контент, маркетинг, планирование, качество
   | 'content_audit'
   | 'content_flag'
+  | 'channel_post_route'
+  | 'channel_post_tip'
+  | 'channel_post_sezon'
+  | 'channel_audit'
   | 'mkt_performance'
   | 'mkt_content_plan'
   | 'plan_forecast'
@@ -115,6 +119,7 @@ const VALID_INTENTS: AgentIntent[] = [
   'eco_impact', 'eco_zones',
   'evo_optimize', 'evo_experiments', 'evo_adapt',
   'content_audit', 'content_flag',
+  'channel_post_route', 'channel_post_tip', 'channel_post_sezon', 'channel_audit',
   'mkt_performance', 'mkt_content_plan',
   'plan_forecast', 'plan_season', 'plan_gaps',
   'qa_reviews', 'qa_slots', 'qa_operators',
@@ -326,9 +331,43 @@ class PlatformAgentClass {
         return new EvolutionAgency().run(intent, context);
       }
       case 'content_audit':
-      case 'content_flag': {
+      case 'content_flag':
+      case 'channel_audit': {
         const { ContentAuditorAgency } = await import('./agencies/content-auditor-agency');
-        return new ContentAuditorAgency().run(intent, context);
+        return new ContentAuditorAgency().run(
+          intent === 'channel_audit' ? 'channel_audit' : intent,
+          context
+        );
+      }
+      case 'channel_post_route': {
+        const { postKuzmichRoute } = await import('@/lib/notifications/telegram-channel');
+        const r = await postKuzmichRoute();
+        return {
+          response: r.ok
+            ? `Пост о маршруте опубликован в TG и MAX${r.routeId ? ` (${r.routeId})` : ''}.`
+            : `Content Director: публикация отклонена — ${r.error ?? 'unknown'}`,
+          data: r,
+        };
+      }
+      case 'channel_post_tip': {
+        const { postKuzmichTip } = await import('@/lib/notifications/telegram-channel');
+        const r = await postKuzmichTip();
+        return {
+          response: r.ok
+            ? `Совет Кузьмича опубликован в TG и MAX${r.score ? ` (score: ${r.score}/10)` : ''}.`
+            : `Content Director: публикация отклонена — ${r.error ?? 'unknown'}`,
+          data: r,
+        };
+      }
+      case 'channel_post_sezon': {
+        const { postSezonToChannel } = await import('@/lib/notifications/telegram-channel');
+        const r = await postSezonToChannel();
+        return {
+          response: r.ok
+            ? `Сезонный пост опубликован в TG и MAX.`
+            : `Content Director: публикация отклонена — ${r.error ?? 'unknown'}`,
+          data: r,
+        };
       }
       case 'mkt_performance':
       case 'mkt_content_plan': {
