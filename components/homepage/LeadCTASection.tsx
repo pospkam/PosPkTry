@@ -87,6 +87,18 @@ export function LeadCTASection() {
                 Написать Кузьмичу в Telegram
               </a>
 
+              {/* MAX — secondary */}
+              <a
+                href="https://max.ru/id4101147649_bot"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2.5 py-4 rounded-lg font-semibold text-sm text-white transition-opacity hover:opacity-90"
+                style={{ background: '#7C3AED' }}
+              >
+                <MessageCircle className="w-5 h-5" />
+                Написать Кузьмичу в MAX
+              </a>
+
               <div className="flex items-center gap-3">
                 <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.1)' }} />
                 <span className="text-xs text-white/30">или оставьте телефон</span>

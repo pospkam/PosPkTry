@@ -873,6 +873,31 @@ export default function RouteDetailClient({ id }: { id: string }) {
                 </div>
               )}
 
+              {/* Мессенджеры — спросить Кузьмича */}
+              <div className="space-y-2">
+                <p className="text-xs text-[var(--text-muted)] text-center">Или напишите AI-консьержу</p>
+                <div className="flex gap-2">
+                  <a
+                    href={`https://t.me/KuzmichKam_bot?start=route_${route.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90"
+                    style={{ background: '#2AABEE' }}
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" /> Telegram
+                  </a>
+                  <a
+                    href="https://max.ru/id4101147649_bot"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90"
+                    style={{ background: '#7C3AED' }}
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" /> MAX
+                  </a>
+                </div>
+              </div>
+
               {/* Карта */}
               {hasGeo && (
                 <div>

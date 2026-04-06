@@ -34,7 +34,7 @@ import { getOperatorTools } from '@/lib/agents/sdk/operator-tools';
 
 export const dynamic = 'force-dynamic';
 
-const FREE_MESSAGE_LIMIT = 5;
+const FREE_MESSAGE_LIMIT = 3;
 
 const chatRateLimiter = createRateLimiter({ windowMs: 60_000, max: 20 });
 
@@ -130,19 +130,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Сообщение не может быть пустым' }, { status: 400 });
     }
 
-    // Auth check — registration required
+    // Auth check — 3 free messages for anonymous, then require registration
     const user = await getUserFromRequest(request);
-    if (!user) {
-      return NextResponse.json({
-        success: true,
-        data: {
-          authRequired: true,
-          message: 'Войдите или зарегистрируйтесь, чтобы общаться с AI-помощником Кузьмичом.',
-          registerUrl: '/auth/login',
-        },
-      });
-    }
-    const isAuthenticated = true;
+    const isAuthenticated = !!user;
 
     const validRoles: ChatRole[] = ['tourist', 'operator', 'guide', 'admin', 'agent', 'transfer'];
     const safeRole: ChatRole = validRoles.includes(role as ChatRole) ? (role as ChatRole) : 'tourist';
@@ -153,7 +143,22 @@ export async function POST(request: NextRequest) {
     const history: ChatMessage[] = (session?.messages?.length ? session.messages : null)
       ?? (clientHistory as ChatMessage[] | undefined)
       ?? [];
-    const isNewSession = !session; // первое сообщение = новая сессия
+    const isNewSession = !session;
+
+    // Check limit for anonymous users
+    if (!isAuthenticated && currentCount >= FREE_MESSAGE_LIMIT) {
+      return NextResponse.json({
+        success: true,
+        data: {
+          limitReached: true,
+          authRequired: true,
+          message: 'Зарегистрируйтесь, чтобы продолжить общение с AI-помощником Кузьмичом. Это бесплатно!',
+          registerUrl: '/auth/login',
+          userMessageCount: currentCount,
+          remainingFree: 0,
+        },
+      });
+    }
 
     // Долгосрочная память (только для авторизованных)
     const userId = user?.userId ? parseInt(user.userId, 10) : null;

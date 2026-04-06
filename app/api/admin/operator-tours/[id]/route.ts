@@ -13,8 +13,8 @@ export const dynamic = 'force-dynamic';
 
 const UpdateSchema = z.object({
   title: z.string().min(5).max(255).optional(),
-  description: z.string().max(2000).optional(),
-  short_description: z.string().max(500).optional(),
+  description: z.string().max(2000).nullable().optional(),
+  short_description: z.string().max(500).nullable().optional(),
   location_type: z.enum(['volcano', 'hot_spring', 'bay', 'lake', 'mountain', 'river', 'geyser', 'other']).optional(),
   activity_type: z.enum(['trekking', 'thermal', 'boat_trip', 'rafting', 'fishing', 'bears', 'helicopter', 'jeep', 'other']).optional(),
   location_name: z.string().min(3).max(255).optional(),

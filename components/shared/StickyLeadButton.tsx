@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { MessageSquarePlus, X, User, Phone, Sparkles, Send, CheckCircle } from 'lucide-react';
+import { MessageSquarePlus, X, User, Phone, Sparkles, Send, CheckCircle, MessageCircle } from 'lucide-react';
 import { trackLeadEvent, LEAD_EVENTS } from '@/lib/analytics/lead-tracking';
 
 type State = 'idle' | 'form' | 'sending' | 'done' | 'error';
@@ -103,7 +103,36 @@ export default function StickyLeadButton() {
                 <button onClick={reset} className="text-xs underline" style={{ color: 'var(--text-muted)' }}>Закрыть</button>
               </div>
             ) : (
-              <form onSubmit={submitLead} className="space-y-2.5">
+              <>
+                {/* Мессенджеры */}
+                <div className="flex gap-2 mb-3">
+                  <a
+                    href="https://t.me/KuzmichKam_bot?start=lead"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90"
+                    style={{ background: '#2AABEE' }}
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" /> Telegram
+                  </a>
+                  <a
+                    href="https://max.ru/id4101147649_bot"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90"
+                    style={{ background: '#7C3AED' }}
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" /> MAX
+                  </a>
+                </div>
+
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
+                  <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>или оставьте телефон</span>
+                  <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
+                </div>
+
+                <form onSubmit={submitLead} className="space-y-2.5">
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-muted)' }} />
                   <input
@@ -144,6 +173,7 @@ export default function StickyLeadButton() {
                   Обработка персональных данных
                 </p>
               </form>
+              </>
             )}
           </div>
         </div>
