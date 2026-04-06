@@ -49,6 +49,7 @@ const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/safety/rescue-chat': ['POST'], // AI Спасатель (requires auth inside handler)
   '/api/mcp': 'ALL',
   '/api/telegram': 'ALL',          // Telegram webhook
+  '/api/max': 'ALL',               // MAX bot webhook
   '/api/operators': ['GET'],        // публичный каталог партнёров
   '/api/assistant': ['GET', 'POST'],  // «AI-помощник Камчатки» — история + чат
   '/api/loyalty/levels': ['GET'],   // уровни программы лояльности (публичный каталог)
