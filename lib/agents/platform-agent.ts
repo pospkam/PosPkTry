@@ -354,7 +354,7 @@ class PlatformAgentClass {
         const r = await postKuzmichTip();
         return {
           response: r.ok
-            ? `Совет Кузьмича опубликован в TG и MAX${r.score ? ` (score: ${r.score}/10)` : ''}.`
+            ? `Совет Кузьмича опубликован в TG и MAX.`
             : `Content Director: публикация отклонена — ${r.error ?? 'unknown'}`,
           data: r,
         };

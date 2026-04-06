@@ -755,6 +755,8 @@ a:focus-visible {
     background: var(--bg-primary);
     color: var(--text-primary);
     min-height: 100vh;
+    /* Отступ под фиксированный хедер (~52px) + запас + safe-area (notch) */
+    padding-top: calc(env(safe-area-inset-top, 0px) + 64px);
   }
 
   /* Kartochka */
