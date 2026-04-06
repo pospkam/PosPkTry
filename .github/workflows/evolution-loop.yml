@@ -2,8 +2,8 @@ name: Evolution Loop - AI Board Meeting
 
 on:
   schedule:
-    # Запуск каждый час в 0 минут (00:00, 01:00, 02:00...)
-    - cron: '0 * * * *'
+    # Запуск 1 раз в день в 21:00 UTC = 09:00 по Камчатке
+    - cron: '0 21 * * *'
   workflow_dispatch:
     inputs:
       dry_run:
