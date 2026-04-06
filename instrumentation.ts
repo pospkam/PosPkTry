@@ -23,5 +23,32 @@ export async function register(): Promise<void> {
     } catch {
       // Non-blocking: agents won't run on schedule, but app continues
     }
+
+    // ── 3. Register MAX bot webhook ───────────────────────────────────
+    const maxToken = process.env.MAX_BOT_TOKEN;
+    if (maxToken) {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://tourhab.ru';
+      const webhookUrl = `${baseUrl}/api/max/kuzmich`;
+      try {
+        // Check existing subscription first
+        const checkRes = await fetch('https://platform-api.max.ru/subscriptions', {
+          headers: { Authorization: maxToken },
+        });
+        const checkData = await checkRes.json() as { subscriptions?: Array<{ url: string }> };
+        const alreadyRegistered = checkData.subscriptions?.some((s) => s.url === webhookUrl);
+        if (!alreadyRegistered) {
+          await fetch('https://platform-api.max.ru/subscriptions', {
+            method: 'POST',
+            headers: { Authorization: maxToken, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              url: webhookUrl,
+              update_types: ['bot_started', 'message_created', 'message_callback'],
+            }),
+          });
+        }
+      } catch {
+        // Non-blocking: webhook registration is best-effort
+      }
+    }
   }
 }
