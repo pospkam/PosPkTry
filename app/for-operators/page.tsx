@@ -1,11 +1,12 @@
 import type { Metadata } from 'next'
 import { Header } from '@/components/layout/Header'
 import { OperatorPromo } from '@/components/homepage/OperatorPromo'
+import { AgentModelSection } from '@/components/homepage/AgentModelSection'
 import { Footer } from '@/components/layout/Footer'
 
 export const metadata: Metadata = {
-  title: 'Для туроператоров — Kamchatour Hub',
-  description: 'AI Lead Processor: квалификация заявок за 15 секунд, подбор туров, PDF-предложения, Telegram-уведомления.',
+  title: 'Для туроператоров Камчатки — партнёрская программа TourHab 2026',
+  description: 'Агентская модель для туроператоров Камчатки: AI-обработка заявок, автоматический подбор туров, PDF-предложения, Telegram-уведомления. Комиссия 10%. Первые 3 месяца бесплатно.',
 }
 
 export default function ForOperatorsPage() {
@@ -14,6 +15,7 @@ export default function ForOperatorsPage() {
       <Header />
       <main className="pt-16">
         <OperatorPromo />
+        <AgentModelSection />
       </main>
       <Footer />
     </div>
