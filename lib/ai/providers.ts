@@ -52,11 +52,13 @@ export async function callMiMo(messages: ChatMessage[]): Promise<string | null> 
 // Пробует несколько моделей по очереди — защита от rate limit одной модели.
 // Порядок: сначала быстрые и надёжные, timeout снижен до 12s
 const OR_MODELS = [
-  { id: 'google/gemini-2.0-flash-001',       timeout: 12_000 }, // самый быстрый ~1-2s
-  { id: 'google/gemini-2.5-flash-lite',      timeout: 12_000 }, // fast lite
-  { id: 'openai/gpt-4o-mini',                timeout: 12_000 }, // надёжный
-  { id: 'meta-llama/llama-3.3-70b-instruct', timeout: 12_000 }, // бесплатный резерв
-  { id: 'deepseek/deepseek-chat-v3-0324',    timeout: 12_000 }, // дешёвый резерв
+  { id: 'google/gemini-2.0-flash-001',                  timeout: 12_000 }, // самый быстрый ~1-2s
+  { id: 'google/gemini-2.5-flash-lite',                 timeout: 12_000 }, // fast lite
+  { id: 'qwen/qwen3-235b-a22b:free',                    timeout: 15_000 }, // Qwen3 235B MoE free
+  { id: 'nvidia/llama-3.3-nemotron-super-49b-v1:free',  timeout: 15_000 }, // NVIDIA Nemotron free
+  { id: 'openai/gpt-4o-mini',                           timeout: 12_000 }, // надёжный
+  { id: 'meta-llama/llama-3.3-70b-instruct',            timeout: 12_000 }, // бесплатный резерв
+  { id: 'deepseek/deepseek-chat-v3-0324',               timeout: 12_000 }, // дешёвый резерв
 ];
 
 // If OpenRouter returns auth errors (401/403), avoid repeated slow failures.
