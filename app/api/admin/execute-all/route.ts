@@ -40,7 +40,51 @@ export async function GET(req: NextRequest) {
   }
 
   const hours = parseInt(req.nextUrl.searchParams.get('hours') ?? '12', 10);
+  const force = req.nextUrl.searchParams.get('force') === '1';
+  const statsOnly = req.nextUrl.searchParams.get('stats') === '1';
   const log: string[] = [];
+
+  // ── STATS-ONLY MODE ───────────────────────────────────────────────────────
+  if (statsOnly) {
+    try {
+      const [meetingsRes, approvalsRes] = await Promise.all([
+        pool.query(
+          `SELECT
+             COUNT(*) FILTER (WHERE status = 'completed') AS completed,
+             COUNT(*) FILTER (WHERE status = 'running')   AS running,
+             COUNT(*) AS total,
+             MIN(started_at) AS first_at,
+             MAX(started_at) AS last_at
+           FROM board_meeting_sessions
+           WHERE started_at > NOW() - ($1 || ' hours')::interval`,
+          [hours]
+        ),
+        pool.query(
+          `SELECT status, COUNT(*) as cnt
+           FROM agent_approvals
+           GROUP BY status`
+        ),
+      ]);
+      const meetings = meetingsRes.rows[0];
+      const approvals: Record<string, number> = {};
+      for (const r of approvalsRes.rows) {
+        approvals[r.status] = parseInt(r.cnt);
+      }
+      return NextResponse.json({
+        period_hours: hours,
+        meetings: {
+          total:     parseInt(meetings.total),
+          completed: parseInt(meetings.completed),
+          running:   parseInt(meetings.running),
+          first_at:  meetings.first_at,
+          last_at:   meetings.last_at,
+        },
+        approvals,
+      });
+    } catch (err) {
+      return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });
+    }
+  }
 
   // ── STEP 1: AUTO-MIGRATE ──────────────────────────────────────────────────
   try {
@@ -79,6 +123,29 @@ export async function GET(req: NextRequest) {
     log.push(`backfill error: ${err instanceof Error ? err.message : String(err)}`);
   }
 
+  // ── STEP 2b: FORCE MODE — одобрить ВСЕ pending (owner command) ───────────
+  if (force) {
+    try {
+      const forceResult = await pool.query(`
+        UPDATE agent_approvals
+        SET status = 'approved',
+            execution_status = 'assigned',
+            reviewed_at = NOW(),
+            review_notes = 'Force-approved by owner via execute-all'
+        WHERE status = 'pending'
+          AND (expires_at IS NULL OR expires_at > NOW())
+        RETURNING id, action_type
+      `);
+      log.push(`force-approve: ${forceResult.rowCount ?? 0} pending → approved+assigned`);
+      if ((forceResult.rowCount ?? 0) > 0) {
+        const list = forceResult.rows.map((r: { id: string; action_type: string }) => r.action_type).join(', ');
+        log.push(`force-approved types: ${list}`);
+      }
+    } catch (err) {
+      log.push(`force-approve error: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+
   // ── STEP 3: LOAD INITIATIVES ──────────────────────────────────────────────
   let initiatives: Array<{
     id: string;
@@ -112,10 +179,19 @@ export async function GET(req: NextRequest) {
   }
 
   if (initiatives.length === 0) {
+    // Диагностика: покажем что вообще есть в таблице
+    let stats: Record<string, number> = {};
+    try {
+      const statsResult = await pool.query(
+        `SELECT status, COUNT(*) as cnt FROM agent_approvals GROUP BY status`
+      );
+      stats = Object.fromEntries(statsResult.rows.map((r: { status: string; cnt: string }) => [r.status, parseInt(r.cnt)]));
+    } catch { /* ignore */ }
+
     await notifyOwner(
-      `<b>Batch executor</b>\nЗа последние ${hours}ч нет инициатив для исполнения.\n${log.join('\n')}`
+      `Batch executor: за ${hours}ч нет инициатив для исполнения.\nСостояние БД: ${JSON.stringify(stats)}\nHint: добавь ?force=1 чтобы одобрить все pending`
     );
-    return NextResponse.json({ success: true, executed: 0, log });
+    return NextResponse.json({ success: true, executed: 0, log, db_stats: stats });
   }
 
   // ── STEP 4: EXECUTE ALL ───────────────────────────────────────────────────
