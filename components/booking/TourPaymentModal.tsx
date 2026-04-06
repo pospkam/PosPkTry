@@ -72,6 +72,9 @@ export default function TourPaymentModal({
   const [step, setStep]           = useState<Step>('form');
   const [scriptLoaded, setScriptLoaded] = useState(false);
 
+  // Available slots from tour_availability
+  const [availSlots, setAvailSlots] = useState<{ date: string; free_slots: number }[]>([]);
+
   // Form
   const [bookingDate, setBookingDate]       = useState('');
   const [participants, setParticipants]     = useState(minGroupSize ?? 1);
@@ -112,8 +115,14 @@ export default function TourPaymentModal({
       setGuestLoading(false);
       setGuestError('');
       if (user) setTimeout(() => dateInputRef.current?.focus(), 60);
+
+      // Загружаем реальные доступные даты
+      fetch(`/api/tours/${tourId}/slots`)
+        .then(r => r.ok ? r.json() : { slots: [] })
+        .then(data => setAvailSlots(data.slots ?? []))
+        .catch(() => setAvailSlots([]));
     }
-  }, [open, user, minGroupSize, nextDeparture]);
+  }, [open, user, minGroupSize, nextDeparture, tourId]);
 
   // Escape
   useEffect(() => {
@@ -380,6 +389,38 @@ export default function TourPaymentModal({
                   <label className="ds-label mb-1 flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5" /> Дата тура
                   </label>
+
+                  {/* Доступные слоты из tour_availability */}
+                  {availSlots.length > 0 && (
+                    <div className="mb-2 flex flex-wrap gap-1.5">
+                      {availSlots.slice(0, 8).map(s => {
+                        const d = new Date(s.date + 'T00:00:00');
+                        const label = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+                        const selected = bookingDate === s.date;
+                        const low = s.free_slots <= 3;
+                        return (
+                          <button
+                            key={s.date}
+                            type="button"
+                            onClick={() => setBookingDate(s.date)}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                              selected
+                                ? 'bg-[var(--accent)] border-[var(--accent)] text-white'
+                                : low
+                                  ? 'bg-[var(--warning)]/10 border-[var(--warning)]/40 text-[var(--warning)] hover:bg-[var(--warning)]/20'
+                                  : 'bg-[var(--bg-hover)] border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50'
+                            }`}
+                          >
+                            {label}
+                            <span className={`ml-1 text-[10px] ${selected ? 'text-white/80' : 'text-[var(--text-muted)]'}`}>
+                              {s.free_slots} м.
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
                   <input
                     ref={dateInputRef}
                     type="date"
@@ -390,6 +431,11 @@ export default function TourPaymentModal({
                     className="ds-input w-full"
                     required
                   />
+                  {availSlots.length > 0 && (
+                    <p className="text-[10px] text-[var(--text-muted)] mt-1">
+                      Выбери дату выше или введи вручную
+                    </p>
+                  )}
                 </div>
 
                 {/* Участники */}
