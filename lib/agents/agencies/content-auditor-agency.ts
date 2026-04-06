@@ -4,6 +4,11 @@
  * Анализирует качество туров в operator_tours:
  *   content_audit — полный аудит: что заполнено, что нет, приоритеты
  *   content_flag  — туры готовые к AI-заполнению (активны, цена есть, контент пуст)
+ *   channel_audit — аудит качества публикаций в каналах (TG + MAX)
+ *
+ * ОТВЕТСТВЕННОСТЬ: Content (#7) — главный ответственный за качество
+ * всех публикаций в каналы. Все посты проходят AI-ревью через
+ * publication-standards.ts перед публикацией.
  */
 
 import { pool } from '@/lib/db-pool';
@@ -45,9 +50,10 @@ export class ContentAuditorAgency {
     this.tools = context.tools ?? {};
     try {
       switch (intent) {
-        case 'content_audit': return await this.auditAll();
-        case 'content_flag':  return await this.flagForFill();
-        default:              return { response: 'ContentAuditorAgency: команда не поддерживается.' };
+        case 'content_audit':  return await this.auditAll();
+        case 'content_flag':   return await this.flagForFill();
+        case 'channel_audit':  return await this.auditChannelPosts();
+        default:               return { response: 'ContentAuditorAgency: команда не поддерживается.' };
       }
     } catch (err) {
       return {
@@ -196,5 +202,91 @@ export class ContentAuditorAgency {
     }
 
     return { response: lines.join('\n'), data: { tours: rows } };
+  }
+
+  /**
+   * Аудит качества публикаций в каналах (TG + MAX).
+   * Анализирует ai_actions_log за последние 7 дней.
+   */
+  private async auditChannelPosts(): Promise<AgencyResult> {
+    // Статистика последних постов
+    const [postStats, failedPosts, qualityStats] = await Promise.all([
+      pool.query<{ action_type: string; cnt: string }>(`
+        SELECT action_type, COUNT(*)::text AS cnt
+        FROM ai_actions_log
+        WHERE action_type IN ('kuzmich_post', 'kuzmich_tip', 'kuzmich_promo', 'post_validation_failed', 'publication_check')
+          AND created_at > NOW() - INTERVAL '7 days'
+        GROUP BY action_type
+        ORDER BY cnt DESC
+      `),
+      pool.query<{ action_type: string; metadata: Record<string, unknown>; created_at: string }>(`
+        SELECT action_type, metadata, created_at::text
+        FROM ai_actions_log
+        WHERE action_type IN ('post_validation_failed', 'publication_check')
+          AND created_at > NOW() - INTERVAL '7 days'
+          AND (metadata->>'passed')::boolean IS NOT TRUE
+        ORDER BY created_at DESC
+        LIMIT 10
+      `),
+      pool.query<{ avg_score: string; min_score: string; max_score: string; total: string }>(`
+        SELECT
+          ROUND(AVG((metadata->>'quality_score')::numeric), 1)::text AS avg_score,
+          MIN((metadata->>'quality_score')::numeric)::text AS min_score,
+          MAX((metadata->>'quality_score')::numeric)::text AS max_score,
+          COUNT(*)::text AS total
+        FROM ai_actions_log
+        WHERE action_type = 'kuzmich_post'
+          AND created_at > NOW() - INTERVAL '7 days'
+          AND metadata->>'quality_score' IS NOT NULL
+      `),
+    ]);
+
+    const lines: string[] = [
+      '<b>Аудит публикаций в каналах (7 дней)</b>',
+      '',
+      '<b>Посты по типам:</b>',
+    ];
+
+    for (const row of postStats.rows) {
+      const labels: Record<string, string> = {
+        kuzmich_post: 'Маршруты',
+        kuzmich_tip: 'Советы',
+        kuzmich_promo: 'Промо',
+        post_validation_failed: 'Отклонено (валидация)',
+        publication_check: 'Проверено стандартами',
+      };
+      lines.push(`  ${labels[row.action_type] ?? row.action_type}: ${row.cnt}`);
+    }
+
+    const qs = qualityStats.rows[0];
+    if (qs && qs.total !== '0') {
+      lines.push('');
+      lines.push('<b>Качество текстов (AI-ревью):</b>');
+      lines.push(`  Средний балл: ${qs.avg_score}/10`);
+      lines.push(`  Мин / Макс: ${qs.min_score} / ${qs.max_score}`);
+      lines.push(`  Всего с оценкой: ${qs.total}`);
+    }
+
+    if (failedPosts.rows.length > 0) {
+      lines.push('');
+      lines.push('<b>Отклонённые публикации:</b>');
+      for (const fp of failedPosts.rows.slice(0, 5)) {
+        const m = fp.metadata;
+        const errors = Array.isArray(m.errors) ? (m.errors as string[]).join(', ') : 'unknown';
+        lines.push(`  ${fp.created_at.slice(0, 16)} | ${m.post_type ?? fp.action_type} | ${errors}`);
+      }
+    }
+
+    lines.push('');
+    lines.push('<b>Стандарты:</b> AI Content Director (#7) ревьюирует каждый пост (>= 6/10). Отклонённые перегенерируются до 2 раз.');
+
+    return {
+      response: lines.join('\n'),
+      data: {
+        stats: postStats.rows,
+        quality: qs,
+        failed: failedPosts.rows,
+      },
+    };
   }
 }

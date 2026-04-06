@@ -11,6 +11,7 @@ import { callAIWithModelDirect } from '@/lib/ai/providers';
 import { getModelForAgent } from '@/lib/ai/agent-models';
 import { validateRoutePost, validateTextPost, logValidationFailure } from './post-validation';
 import { maxPostToChannel } from './max-channel';
+import { checkPublicationStandards, logPublicationResult } from './publication-standards';
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -347,10 +348,18 @@ function buildRoutePhotoUrl(r: KuzmichRouteRow, routePhotos?: string[] | null): 
 
 /**
  * Выбирает случайный маршрут, не постившийся последние 30 дней,
- * генерирует пост голосом Кузьмича и публикует в канал.
- * Логирует в ai_actions_log.
+ * генерирует пост голосом Кузьмича, проводит AI-ревью,
+ * генерирует AI-картинку и публикует в канал.
+ *
+ * Стандарты публикации:
+ *   - AI Content Director ревьюирует текст (оценка >= 6/10)
+ *   - AI-картинка генерируется через Pollinations (Flux)
+ *   - Ссылка на маршрут проверяется на доступность (HTTP 200)
+ *   - Если текст отклонён — перегенерация (до 2 попыток)
+ *
+ * Ответственный AI-директор: Content (#7)
  */
-export async function postKuzmichRoute(): Promise<{ ok: boolean; routeId?: string; error?: string }> {
+export async function postKuzmichRoute(): Promise<{ ok: boolean; routeId?: string; error?: string; score?: number }> {
   const channelId = process.env.TELEGRAM_CHANNEL_ID;
   if (!channelId) return { ok: false, error: 'TELEGRAM_CHANNEL_ID not set' };
 
@@ -381,11 +390,27 @@ export async function postKuzmichRoute(): Promise<{ ok: boolean; routeId?: strin
     ? `\nМои заметки об этом месте: "${r.kuzmich_review.slice(0, 280)}"`
     : '';
 
-  const prompt = `Ты — Кузьмич, камчадал в третьем поколении. Напиши короткий пост для Telegram-канала о конкретном месте.
+  // Валидация маршрута перед генерацией текста
+  const preCheck = await validateRoutePost(r.id, 'placeholder text for pre-check is long enough to pass basic validation rules');
+  if (!preCheck.valid) {
+    // Маршрут не прошёл базовую проверку (не виден, 404) — не тратим ресурсы
+    await logValidationFailure('kuzmich_route_precheck', preCheck);
+    return { ok: false, routeId: r.id, error: `Маршрут непригоден: ${preCheck.errors.join('; ')}` };
+  }
+
+  // Генерация текста с возможностью перегенерации (до 2 попыток)
+  let text = '';
+  let standardsResult;
+  const MAX_ATTEMPTS = 2;
+
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const attemptHint = attempt > 1 ? '\nВАЖНО: предыдущий текст был отклонён контент-директором. Напиши ДРУГОЙ текст, более конкретный и живой.' : '';
+
+    const prompt = `Ты — Кузьмич, камчадал в третьем поколении. Напиши короткий пост для Telegram-канала о конкретном месте.
 
 Место: ${r.title}
 Тип: ${locLabel || 'природный объект'}${actLabel ? ', ' + actLabel : ''}
-Описание: ${r.description?.slice(0, 300) ?? 'нет данных'}${reviewCtx}
+Описание: ${r.description?.slice(0, 300) ?? 'нет данных'}${reviewCtx}${attemptHint}
 
 Требования:
 - 70-100 слов, живой голос местного, без рекламы и пафоса
@@ -395,16 +420,40 @@ export async function postKuzmichRoute(): Promise<{ ok: boolean; routeId?: strin
 - HTML-теги Telegram: <b>жирный</b>, <i>курсив</i>
 - Не начинай с "Привет" или своего имени`;
 
-  const text = await callAIWithModelDirect([{ role: 'user', content: prompt }], getModelForAgent('kuzmich'));
+    text = await callAIWithModelDirect([{ role: 'user', content: prompt }], getModelForAgent('kuzmich'));
 
-  // Валидация перед публикацией
-  const validation = await validateRoutePost(r.id, text);
-  if (!validation.valid) {
-    await logValidationFailure('kuzmich_route', validation);
-    return { ok: false, routeId: r.id, error: `Валидация: ${validation.errors.join('; ')}` };
+    // Валидация текста
+    const validation = await validateRoutePost(r.id, text);
+    if (!validation.valid) {
+      await logValidationFailure('kuzmich_route', validation);
+      if (attempt === MAX_ATTEMPTS) {
+        return { ok: false, routeId: r.id, error: `Валидация: ${validation.errors.join('; ')}` };
+      }
+      continue;
+    }
+
+    // Проверка по стандартам публикации (AI-ревью + картинка)
+    standardsResult = await checkPublicationStandards(text, 'route', r.id, {
+      routeTitle: r.title,
+      locationType: r.location_type ?? undefined,
+    });
+
+    if (standardsResult.passed || attempt === MAX_ATTEMPTS) break;
+    // Текст не прошёл AI-ревью — перегенерируем
   }
 
-  // Получаем фото маршрута из БД
+  if (!standardsResult) {
+    return { ok: false, routeId: r.id, error: 'Не удалось пройти стандарты публикации' };
+  }
+
+  await logPublicationResult('route', standardsResult, r.id);
+
+  // Если стандарты не пройдены после всех попыток — не публикуем
+  if (!standardsResult.passed) {
+    return { ok: false, routeId: r.id, error: `Стандарты: ${standardsResult.errors.join('; ')}`, score: standardsResult.score };
+  }
+
+  // Выбор картинки: AI-сгенерированная > фото из БД > тематическое фото
   let routePhotos: string[] | null = null;
   try {
     const photoRes = await query<{ photos: unknown }>(
@@ -414,7 +463,8 @@ export async function postKuzmichRoute(): Promise<{ ok: boolean; routeId?: strin
     if (Array.isArray(raw)) routePhotos = raw as string[];
   } catch { /* ok */ }
 
-  const photoUrl = buildRoutePhotoUrl(r, routePhotos);
+  const photoUrl = standardsResult.imageUrl ?? buildRoutePhotoUrl(r, routePhotos);
+
   const result = photoUrl
     ? await tgPostPhoto(channelId, photoUrl, text)
     : await tgPost(channelId, text);
@@ -425,12 +475,18 @@ export async function postKuzmichRoute(): Promise<{ ok: boolean; routeId?: strin
     try {
       await query(
         `INSERT INTO ai_actions_log (action_type, metadata) VALUES ($1, $2)`,
-        ['kuzmich_post', JSON.stringify({ route_id: r.id, route_title: r.title })]
+        ['kuzmich_post', JSON.stringify({
+          route_id: r.id,
+          route_title: r.title,
+          quality_score: standardsResult.score,
+          has_ai_image: !!standardsResult.imageUrl,
+          warnings: standardsResult.warnings,
+        })]
       );
     } catch { /* таблица ещё не создана — не блокируем пост */ }
   }
 
-  return { ...result, routeId: r.id };
+  return { ...result, routeId: r.id, score: standardsResult.score };
 }
 
 const KUZMICH_TIP_TOPICS = [
@@ -447,17 +503,25 @@ const KUZMICH_TIP_TOPICS = [
 
 /**
  * Генерирует практичный совет от Кузьмича и публикует в канал.
+ * AI Content Director ревьюирует текст. Перегенерация при score < 6.
  */
-export async function postKuzmichTip(): Promise<{ ok: boolean; error?: string }> {
+export async function postKuzmichTip(): Promise<{ ok: boolean; error?: string; score?: number }> {
   const channelId = process.env.TELEGRAM_CHANNEL_ID;
   if (!channelId) return { ok: false, error: 'TELEGRAM_CHANNEL_ID not set' };
 
   const topic = KUZMICH_TIP_TOPICS[Math.floor(Math.random() * KUZMICH_TIP_TOPICS.length)];
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tourhab.ru';
 
-  const prompt = `Ты — Кузьмич, камчадал в третьем поколении. Напиши практичный совет для Telegram-канала.
+  let text = '';
+  let standardsResult;
+  const MAX_ATTEMPTS = 2;
 
-Тема: ${topic}
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const attemptHint = attempt > 1 ? '\nВАЖНО: предыдущий текст отклонён. Напиши ДРУГОЙ, более живой и конкретный.' : '';
+
+    const prompt = `Ты — Кузьмич, камчадал в третьем поколении. Напиши практичный совет для Telegram-канала.
+
+Тема: ${topic}${attemptHint}
 
 Требования:
 - 60-90 слов, разговорный стиль, как объясняешь знакомому
@@ -466,24 +530,39 @@ export async function postKuzmichTip(): Promise<{ ok: boolean; error?: string }>
 - HTML-теги: <b>жирный</b>, <i>курсив</i>
 - В конце можно добавить: ${appUrl}/routes`;
 
-  const text = await callAIWithModelDirect([{ role: 'user', content: prompt }], getModelForAgent('kuzmich'));
+    text = await callAIWithModelDirect([{ role: 'user', content: prompt }], getModelForAgent('kuzmich'));
 
-  // Валидация текста перед публикацией
-  const validation = validateTextPost(text);
-  if (!validation.valid) {
-    await logValidationFailure('kuzmich_tip', validation);
-    return { ok: false, error: `Валидация: ${validation.errors.join('; ')}` };
+    const validation = validateTextPost(text);
+    if (!validation.valid) {
+      await logValidationFailure('kuzmich_tip', validation);
+      if (attempt === MAX_ATTEMPTS) {
+        return { ok: false, error: `Валидация: ${validation.errors.join('; ')}` };
+      }
+      continue;
+    }
+
+    standardsResult = await checkPublicationStandards(text, 'tip');
+    if (standardsResult.passed || attempt === MAX_ATTEMPTS) break;
+  }
+
+  if (!standardsResult) {
+    return { ok: false, error: 'Не удалось пройти стандарты' };
+  }
+
+  await logPublicationResult('tip', standardsResult);
+
+  if (!standardsResult.passed) {
+    return { ok: false, error: `Стандарты: ${standardsResult.errors.join('; ')}`, score: standardsResult.score };
   }
 
   const result = await tgPost(channelId, text);
 
   if (result.ok) {
-    // Дублируем в MAX-канал
     await maxPostToChannel(text).catch(() => {});
     try {
       await query(
         `INSERT INTO ai_actions_log (action_type, metadata) VALUES ($1, $2)`,
-        ['kuzmich_tip', JSON.stringify({ topic })]
+        ['kuzmich_tip', JSON.stringify({ topic, quality_score: standardsResult.score })]
       );
     } catch { /* таблица ещё не создана */ }
   }
