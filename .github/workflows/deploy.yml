@@ -31,16 +31,16 @@ jobs:
             exit 0
           fi
 
-          # Строим JSON массив только из переменных которые реально заданы
-          ENVS="["
+          # Строим JSON объект из переменных которые реально заданы
+          ENVS_JSON="{"
           FIRST=1
 
           add_env() {
             local NAME="$1"
             local VALUE="$2"
             if [ -n "$VALUE" ]; then
-              if [ "$FIRST" = "0" ]; then ENVS="$ENVS,"; fi
-              ENVS="$ENVS{\"name\":\"$NAME\",\"value\":\"$VALUE\"}"
+              if [ "$FIRST" = "0" ]; then ENVS_JSON="$ENVS_JSON,"; fi
+              ENVS_JSON="$ENVS_JSON\"$NAME\":\"$VALUE\""
               FIRST=0
             fi
           }
@@ -50,6 +50,7 @@ jobs:
           add_env "XAI_API_KEY"          "${{ secrets.XAI_API_KEY }}"
           add_env "DEEPSEEK_API_KEY"     "${{ secrets.DEEPSEEK_API_KEY }}"
           add_env "OPENROUTER_API_KEY"   "${{ secrets.OPENROUTER_API_KEY }}"
+          add_env "OR_API_KEY"           "${{ secrets.OR_API_KEY }}"
           add_env "DATABASE_URL"         "${{ secrets.DATABASE_URL }}"
           add_env "DATABASE_SSL"         "${{ secrets.DATABASE_SSL }}"
           add_env "JWT_SECRET"           "${{ secrets.JWT_SECRET }}"
@@ -61,11 +62,11 @@ jobs:
           add_env "CRON_SECRET"          "${{ secrets.CRON_SECRET }}"
           add_env "TELEGRAM_BOT_TOKEN"   "${{ secrets.TELEGRAM_BOT_TOKEN }}"
           add_env "TELEGRAM_CHAT_ID"     "${{ secrets.TELEGRAM_CHAT_ID }}"
-          add_env "OR_API_KEY"           "${{ secrets.OR_API_KEY }}"
           add_env "TOURHAB_URL"          "${{ secrets.TOURHAB_URL }}"
+          add_env "TIMEWEB_TOKEN"        "${{ secrets.TIMEWEB_TOKEN }}"
           add_env "NODE_ENV"             "production"
 
-          ENVS="$ENVS]"
+          ENVS_JSON="$ENVS_JSON}"
 
           if [ "$FIRST" = "1" ]; then
             echo "No env vars to sync — all secrets empty"
@@ -74,20 +75,19 @@ jobs:
 
           echo "Syncing env vars to Timeweb app $APP_ID..."
 
+          # PATCH /api/v1/apps/{id} — единственный рабочий endpoint для env vars
           HTTP=$(curl -s -o /tmp/env_response.json -w "%{http_code}" \
-            -X PUT \
+            -X PATCH \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json" \
-            -d "{\"envs\":$ENVS}" \
-            "https://api.timeweb.cloud/api/v1/apps/$APP_ID/envs")
+            -d "{\"envs\":$ENVS_JSON}" \
+            "https://api.timeweb.cloud/api/v1/apps/$APP_ID")
 
           if [ "$HTTP" = "200" ] || [ "$HTTP" = "201" ] || [ "$HTTP" = "204" ]; then
             echo "✅ Env vars synced to Timeweb (HTTP $HTTP)"
           else
             echo "⚠️  Env sync returned HTTP $HTTP"
             cat /tmp/env_response.json 2>/dev/null || true
-            echo ""
-            echo "Переменные можно выставить вручную: https://timeweb.cloud/my/apps/$APP_ID/settings"
           fi
 
       - name: Check deploy status
