@@ -198,8 +198,10 @@ export class ApprovalRequired {
   }
 
   private async notifyAdmin(id: string, action: ApprovalAction): Promise<void> {
-    const chatId = process.env.TELEGRAM_CHAT_ID;
-    if (!chatId) return;
+    // Отправляем в личку владельца (TELEGRAM_OWNER_ID), а не в группу
+    const chatId = process.env.TELEGRAM_OWNER_ID ?? process.env.TELEGRAM_CHAT_ID;
+    const token  = process.env.TELEGRAM_BOT_TOKEN;
+    if (!chatId || !token) return;
 
     const shortId = id.slice(0, 8);
     const text = [
@@ -213,7 +215,11 @@ export class ApprovalRequired {
       `/reject_${shortId} — отклонить`,
     ].join('\n');
 
-    await telegramService.sendMessage({ chatId, text });
+    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' }),
+    }).catch(() => {});
   }
 }
 
