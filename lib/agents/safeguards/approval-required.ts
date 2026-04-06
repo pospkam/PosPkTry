@@ -24,10 +24,18 @@ const ACTION_CATEGORIES: Record<string, ActionCategory> = {
   schedule_suggest:    'safe',
   ui_copy_change:      'safe',
   pattern_report:      'safe',
-  code_change:         'safe',  // ЭКСПЕРИМЕНТ: AI создаёт PR без одобрения
+  code_change:         'safe',
   ab_scale_winner:     'safe',
   operator_outreach:   'safe',
   new_page_create:     'safe',
+  sql_query_fix:       'safe',
+  send_notification:   'safe',
+  archive_sos:         'safe',
+  tour_suspend:        'safe',
+  operator_warning:    'safe',
+  security_block:      'safe',
+  zone_capacity:       'safe',
+  flag_payment:        'safe',
 
   // Need review — требует одобрения admin
   booking_rule_change: 'review',
@@ -45,6 +53,37 @@ const ACTION_CATEGORIES: Record<string, ActionCategory> = {
   payment_exec:        'forbidden',
   safeguard_modify:    'forbidden',
 };
+
+// ── Матрица исполнителей (из AGENTS.md) ───────────────────────────────────────
+// Какой агент исполняет какой тип инициативы
+
+const EXECUTOR_MAP: Record<string, { agent_id: string; agent_name: string }> = {
+  booking_rule_change: { agent_id: 'admin',     agent_name: 'AI Администратор' },
+  commission_change:   { agent_id: 'admin',     agent_name: 'AI Администратор' },
+  bulk_notify:         { agent_id: 'admin',     agent_name: 'AI Администратор' },
+  archive_sos:         { agent_id: 'rescue',    agent_name: 'AI Спасатель' },
+  schedule_suggest:    { agent_id: 'rescue',    agent_name: 'AI Спасатель' },
+  zone_capacity:       { agent_id: 'eco',       agent_name: 'AI Эколог' },
+  tour_suspend:        { agent_id: 'quality',   agent_name: 'AI Качество' },
+  operator_warning:    { agent_id: 'quality',   agent_name: 'AI Качество' },
+  ui_copy_change:      { agent_id: 'content',   agent_name: 'AI Аудитор' },
+  price_change:        { agent_id: 'hacker',    agent_name: 'AI Хакер' },
+  ab_scale_winner:     { agent_id: 'hacker',    agent_name: 'AI Хакер' },
+  operator_outreach:   { agent_id: 'hacker',    agent_name: 'AI Хакер' },
+  sql_query_fix:       { agent_id: 'evo',       agent_name: 'AI Эволюция' },
+  prompt_optimize:     { agent_id: 'evo',       agent_name: 'AI Эволюция' },
+  code_change:         { agent_id: 'vibe_coder',agent_name: 'AI Разработчик' },
+  new_page_create:     { agent_id: 'vibe_coder',agent_name: 'AI Разработчик' },
+  security_block:      { agent_id: 'security',  agent_name: 'AI Безопасность' },
+  api_scope_expand:    { agent_id: 'security',  agent_name: 'AI Безопасность' },
+  flag_payment:        { agent_id: 'finance',   agent_name: 'AI Финдиректор' },
+  send_notification:   { agent_id: 'admin',     agent_name: 'AI Администратор' },
+  pattern_report:      { agent_id: 'evo',       agent_name: 'AI Эволюция' },
+};
+
+function getExecutor(actionType: string): { agent_id: string; agent_name: string } {
+  return EXECUTOR_MAP[actionType] ?? { agent_id: 'admin', agent_name: 'AI Администратор' };
+}
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -94,13 +133,16 @@ export class ApprovalRequired {
     }
 
     if (category === 'safe') {
-      // Safe actions are auto-approved, but still persisted so execution cron can pick them up.
+      // Safe actions are auto-approved and immediately assigned to executor
       const expiresHours = action.expires_hours ?? 24;
+      const executor = getExecutor(action.type);
       const { rows } = await pool.query<{ id: string }>(`
         INSERT INTO agent_approvals (
-          action_type, description, context, status, requested_by, reviewed_at, review_notes, expires_at
+          action_type, description, context, status, requested_by,
+          reviewed_at, review_notes, expires_at,
+          executor_agent_id, executor_name, execution_status
         )
-        VALUES ($1, $2, $3, 'approved', $4, NOW(), $5, NOW() + ($6 || ' hours')::interval)
+        VALUES ($1, $2, $3, 'approved', $4, NOW(), $5, NOW() + ($6 || ' hours')::interval, $7, $8, 'assigned')
         RETURNING id
       `, [
         action.type,
@@ -109,6 +151,8 @@ export class ApprovalRequired {
         action.requested_by,
         'auto_approved_safe_action',
         expiresHours,
+        executor.agent_id,
+        executor.agent_name,
       ]);
 
       const approvalId = rows[0]?.id;
@@ -117,19 +161,31 @@ export class ApprovalRequired {
         event_type: 'approval_granted',
         actor:      action.requested_by,
         resource:   action.type,
-        details:    { approval_id: approvalId, category: 'safe', auto: true },
+        details:    { approval_id: approvalId, category: 'safe', auto: true, executor: executor.agent_name },
       });
 
       return { needs_approval: false, id: approvalId };
     }
 
-    // REVIEW — создать запись
+    // REVIEW — создать запись с исполнителем (но ждёт одобрения)
     const expiresHours = action.expires_hours ?? 24;
+    const executor = getExecutor(action.type);
     const { rows } = await pool.query<{ id: string }>(`
-      INSERT INTO agent_approvals (action_type, description, context, requested_by, expires_at)
-      VALUES ($1, $2, $3, $4, NOW() + ($5 || ' hours')::interval)
+      INSERT INTO agent_approvals (
+        action_type, description, context, requested_by, expires_at,
+        executor_agent_id, executor_name
+      )
+      VALUES ($1, $2, $3, $4, NOW() + ($5 || ' hours')::interval, $6, $7)
       RETURNING id
-    `, [action.type, action.description, JSON.stringify(action.context), action.requested_by, expiresHours]);
+    `, [
+      action.type,
+      action.description,
+      JSON.stringify(action.context),
+      action.requested_by,
+      expiresHours,
+      executor.agent_id,
+      executor.agent_name,
+    ]);
 
     const approvalId = rows[0].id;
 

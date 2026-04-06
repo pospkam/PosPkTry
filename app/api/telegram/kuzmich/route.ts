@@ -63,16 +63,27 @@ async function handleApproval(cmd: string, chatId: number): Promise<void> {
 
     const initiative = rows[0];
     const newStatus = isApprove ? 'approved' : 'rejected';
-    const execStatus = isApprove ? 'assigned' : null;
 
-    await pool.query(
-      `UPDATE agent_approvals
-       SET status = $1,
-           execution_status = COALESCE($2, execution_status),
-           approved_at = NOW()
-       WHERE id = $3`,
-      [newStatus, execStatus, initiative.id]
-    );
+    if (isApprove) {
+      await pool.query(
+        `UPDATE agent_approvals
+         SET status = 'approved',
+             execution_status = 'assigned',
+             reviewed_at = NOW(),
+             review_notes = 'Approved via Telegram bot'
+         WHERE id = $1`,
+        [initiative.id]
+      );
+    } else {
+      await pool.query(
+        `UPDATE agent_approvals
+         SET status = 'rejected',
+             reviewed_at = NOW(),
+             review_notes = 'Rejected via Telegram bot'
+         WHERE id = $1`,
+        [initiative.id]
+      );
+    }
 
     const emoji = isApprove ? 'Одобрено' : 'Отклонено';
     await tgReply(
