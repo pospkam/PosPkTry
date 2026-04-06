@@ -635,8 +635,13 @@ export default function ToursManagement() {
     });
     const json: unknown = await res.json();
     if (!res.ok) {
-      const msg = (typeof json === 'object' && json !== null && 'error' in json)
+      let msg = (typeof json === 'object' && json !== null && 'error' in json)
         ? String((json as { error: unknown }).error) : 'Ошибка сервера';
+      if (typeof json === 'object' && json !== null && 'details' in json) {
+        const d = (json as { details: { fieldErrors?: Record<string, string[]> } }).details;
+        const fields = Object.entries(d.fieldErrors ?? {}).map(([k, v]) => `${k}: ${v[0]}`).join('; ');
+        if (fields) msg += ` (${fields})`;
+      }
       throw new Error(msg);
     }
     fetchTours();
