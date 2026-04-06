@@ -433,6 +433,47 @@ export async function postKuzmichTip(): Promise<{ ok: boolean; error?: string }>
   return result;
 }
 
+/**
+ * Генерирует промо-пост от Кузьмича с кросс-ссылками на все каналы.
+ */
+export async function postKuzmichPromo(): Promise<{ ok: boolean; error?: string }> {
+  const channelId = process.env.TELEGRAM_CHANNEL_ID;
+  if (!channelId) return { ok: false, error: 'TELEGRAM_CHANNEL_ID not set' };
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tourhab.ru';
+
+  const prompt = `Ты — Кузьмич, камчадал в третьем поколении. Напиши промо-пост для Telegram-канала.
+
+Тема: у тебя теперь есть три канала, где ты помогаешь туристам с Камчаткой:
+1. Сайт tourhab.ru — 131 маршрут, 13 туров, онлайн-бронирование
+2. Telegram-бот @KuzmichKam_bot — личный AI-помощник по Камчатке
+3. MAX-бот max.ru/id4101147649_bot — тот же Кузьмич, но в MAX мессенджере
+
+Требования:
+- 80-120 слов, живой голос местного, не рекламный пафос
+- Покажи ценность: подберу тур, рассчитаю бюджет, расскажу где медведи и горячие источники
+- Лёгкая ирония: мол, раньше только в тайге рассказывал, теперь вот и в интернете
+- HTML-теги: <b>жирный</b>, <i>курсив</i>
+- В конце обязательно три ссылки:
+  ${appUrl}
+  t.me/KuzmichKam_bot
+  max.ru/id4101147649_bot`;
+
+  const text = await callAIWithModelDirect([{ role: 'user', content: prompt }], getModelForAgent('kuzmich'));
+  const result = await tgPost(channelId, text);
+
+  if (result.ok) {
+    try {
+      await query(
+        `INSERT INTO ai_actions_log (action_type, metadata) VALUES ($1, $2)`,
+        ['kuzmich_promo', JSON.stringify({ channels: ['site', 'telegram', 'max'] })]
+      );
+    } catch { /* ok */ }
+  }
+
+  return result;
+}
+
 // ── Б. Оперативные уведомления (в admin-чат) ─────────────────────────────────
 
 /**

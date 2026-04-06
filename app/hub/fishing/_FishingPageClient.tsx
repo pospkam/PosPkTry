@@ -54,7 +54,7 @@ function TourCard({ tour }: { tour: FishingTour }) {
   const diff  = tour.difficulty ?? 'easy';
 
   return (
-    <Link href={`/hub/marketplace/${tour.id}`} className="group block">
+    <Link href={`/marketplace/tours/${tour.id}`} className="group block">
       <div className="ds-card overflow-hidden hover:shadow-md transition-all duration-200 h-full flex flex-col">
         {/* Фото */}
         <div className="relative h-48 bg-[var(--bg-hover)] overflow-hidden">

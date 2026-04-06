@@ -26,11 +26,12 @@ import {
   postKuzmichTip,
   postSezonToChannel,
   postFriendToChannel,
+  postKuzmichPromo,
 } from '@/lib/notifications/telegram-channel';
 
 export const dynamic = 'force-dynamic';
 
-type PostType = 'route' | 'tip' | 'sezon' | 'friend';
+type PostType = 'route' | 'tip' | 'sezon' | 'friend' | 'promo';
 
 function pickTypeByHour(): PostType {
   const h = new Date().getUTCHours();
@@ -59,13 +60,15 @@ export async function GET(request: NextRequest) {
 
   const typeParam = searchParams.get('type');
   const postType: PostType =
-    typeParam === 'route' || typeParam === 'tip' || typeParam === 'sezon' || typeParam === 'friend'
+    typeParam === 'route' || typeParam === 'tip' || typeParam === 'sezon' || typeParam === 'friend' || typeParam === 'promo'
       ? typeParam
       : pickTypeByHour();
 
   let result: { ok: boolean; error?: string; routeId?: string };
 
-  if (postType === 'friend') {
+  if (postType === 'promo') {
+    result = await postKuzmichPromo();
+  } else if (postType === 'friend') {
     const slug = searchParams.get('slug') ?? '';
     if (!slug) return NextResponse.json({ success: false, error: 'slug обязателен для type=friend' }, { status: 400 });
     result = await postFriendToChannel(slug);
