@@ -74,7 +74,7 @@ export function Header() {
         position: 'absolute',
         left: '50%',
         transform: 'translateX(-50%)',
-      }} className="hidden md:flex">
+      }} className="hidden lg:flex">
         {[
           { href: '/marketplace', label: 'Туры' },
           { href: '/hub/fishing', label: 'Рыбалка' },
