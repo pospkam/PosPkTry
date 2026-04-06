@@ -57,7 +57,7 @@ export class PlanningAgency {
         TO_CHAR(DATE_TRUNC('week', created_at), 'YYYY-MM-DD')      AS week,
         COUNT(*)::text                                              AS bookings,
         COALESCE(SUM(final_price)
-          FILTER (WHERE booking_booking_status IN ('confirmed','completed')), 0)::text AS revenue
+          FILTER (WHERE booking_status IN ('confirmed','completed')), 0)::text AS revenue
       FROM operator_bookings
       WHERE created_at >= NOW() - INTERVAL '12 weeks'
         AND deleted_at IS NULL
@@ -111,7 +111,7 @@ export class PlanningAgency {
         TO_CHAR(DATE_TRUNC('month', created_at), 'YYYY-MM')         AS month,
         COUNT(*)::text                                               AS bookings,
         COALESCE(SUM(final_price)
-          FILTER (WHERE booking_booking_status IN ('confirmed','completed')), 0)::text AS revenue
+          FILTER (WHERE booking_status IN ('confirmed','completed')), 0)::text AS revenue
       FROM operator_bookings
       WHERE deleted_at IS NULL
       GROUP BY DATE_TRUNC('month', created_at)
