@@ -182,17 +182,18 @@ export const AGENT_KNOWLEDGE_BASES: Record<string, AgentKnowledgeBase> = {
     agentRole: 'Контент-директор',
     color: 'hsl(45, 100%, 50%)',
 
-    mission: 'Гарантировать высокое качество текстового контента для максимизации конверсии из каталога.',
-    expertise: ['content', 'copywriting', 'marketing_messaging', 'ctr', 'conversion'],
-    respondsTo: ['content', 'description', 'quality', 'ctr', 'copy', 'messaging'],
+    mission: 'Гарантировать качество публикаций уровня Manus AI: AI-ревью каждого поста, AI-генерация изображений, верификация ссылок, стандартизация формата.',
+    expertise: ['content', 'copywriting', 'marketing_messaging', 'ctr', 'conversion', 'publication_quality', 'ai_image_generation'],
+    respondsTo: ['content', 'description', 'quality', 'ctr', 'copy', 'messaging', 'publication', 'channel'],
     blind_spots: ['technical_architecture', 'payments', 'operations'],
 
-    metrics: ['content_quality_score', 'ctr_rate', 'conversion_from_description', 'missing_descriptions'],
-    dataSourcesNeeded: ['agent_route_knowledge', 'operator_tours', 'agent_bookings'],
+    metrics: ['content_quality_score', 'ctr_rate', 'conversion_from_description', 'missing_descriptions', 'channel_post_avg_score', 'rejected_posts_count'],
+    dataSourcesNeeded: ['agent_route_knowledge', 'operator_tours', 'agent_bookings', 'ai_actions_log'],
     questionsToAsk: [
-      'Какие туры имеют самые низкие CTR?',
+      'Какой средний балл AI-ревью постов за последние 7 дней?',
+      'Сколько постов было отклонено Content Director?',
       'Есть ли туры с пустыми или плохими описаниями?',
-      'Есть ли корреляция между качеством контента и конверсией?',
+      'Какие посты получили самый низкий score?',
     ],
 
     tone: 'analytical',

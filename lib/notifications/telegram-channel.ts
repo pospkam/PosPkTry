@@ -13,10 +13,19 @@ import { validateRoutePost, validateTextPost, logValidationFailure } from './pos
 import { maxPostToChannel } from './max-channel';
 import { checkPublicationStandards, logPublicationResult } from './publication-standards';
 
+// ── constants ─────────────────────────────────────────────────────────────────
+
+const MAX_CHANNEL_LINK = 'https://max.ru/id4101147549_biz';
+
 // ── helpers ───────────────────────────────────────────────────────────────────
 
 function esc(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+/** Добавляет ссылку на MAX-канал к тексту TG-поста */
+function appendMaxLink(text: string): string {
+  return text + '\n\n' + `<a href="${MAX_CHANNEL_LINK}">Кузьмич в MAX</a>`;
 }
 
 async function tgPost(chatId: string, text: string): Promise<{ ok: boolean; error?: string }> {
@@ -148,7 +157,7 @@ export async function postRouteToChannel(routeId: string, photoUrl?: string): Pr
   if (meta.length) lines.push(`💰 ${meta.join('  ·  ')}`);
 
   lines.push('');
-  lines.push(`<a href="${appUrl}/routes/${r.id}">Смотреть маршрут →</a>`);
+  lines.push(`<a href="${appUrl}/routes/${r.id}">Смотреть маршрут</a>  |  <a href="${MAX_CHANNEL_LINK}">Кузьмич в MAX</a>`);
 
   const text = lines.join('\n');
 
@@ -223,11 +232,14 @@ export async function postSezonToChannel(): Promise<{ ok: boolean; error?: strin
 - HTML-теги Telegram: <b>жирный</b>, <i>курсив</i>
 - начни с эмодзи настроения месяца`;
 
-  const text = await callAIWithModelDirect([
+  const rawText = await callAIWithModelDirect([
     { role: 'user', content: prompt },
   ], getModelForAgent('kuzmich'));
+  const text = appendMaxLink(rawText);
 
-  return tgPost(channelId, text);
+  const result = await tgPost(channelId, text);
+  if (result.ok) await maxPostToChannel(text).catch(() => {});
+  return result;
 }
 
 // ── Справочник «Друзья» — внешние партнёры без страницы на сайте ─────────────
@@ -283,11 +295,14 @@ export async function postFriendToChannel(slug: string): Promise<{ ok: boolean; 
 - HTML-теги Telegram: <b>жирный</b>, <i>курсив</i>
 - Начни не с имени, а с наблюдения или ситуации`;
 
-  const text = await callAIWithModelDirect([
+  const rawText = await callAIWithModelDirect([
     { role: 'user', content: prompt },
   ], getModelForAgent('kuzmich'));
+  const text = appendMaxLink(rawText);
 
-  return tgPost(channelId, text);
+  const result = await tgPost(channelId, text);
+  if (result.ok) await maxPostToChannel(text).catch(() => {});
+  return result;
 }
 
 // ── А2. Кузьмич — AI-пост о конкретном маршруте (автономный cron) ────────────
@@ -418,9 +433,11 @@ export async function postKuzmichRoute(): Promise<{ ok: boolean; routeId?: strin
 - Лёгкая ирония над городскими туристами которые едут и не знают куда
 - В конце обязательно ссылка: ${appUrl}/routes/${r.id}
 - HTML-теги Telegram: <b>жирный</b>, <i>курсив</i>
-- Не начинай с "Привет" или своего имени`;
+- Не начинай с "Привет" или своего имени
+- НЕ добавляй ссылки на MAX или Telegram-бота, они добавятся автоматически`;
 
-    text = await callAIWithModelDirect([{ role: 'user', content: prompt }], getModelForAgent('kuzmich'));
+    let rawText = await callAIWithModelDirect([{ role: 'user', content: prompt }], getModelForAgent('kuzmich'));
+    text = appendMaxLink(rawText);
 
     // Валидация текста
     const validation = await validateRoutePost(r.id, text);
@@ -528,11 +545,13 @@ export async function postKuzmichTip(): Promise<{ ok: boolean; error?: string; s
 - Конкретный совет, никаких общих слов
 - Немного юмора или самоиронии
 - HTML-теги: <b>жирный</b>, <i>курсив</i>
-- В конце можно добавить: ${appUrl}/routes`;
+- В конце можно добавить: ${appUrl}/routes
+- НЕ добавляй ссылки на MAX или Telegram-бота, они добавятся автоматически`;
 
-    text = await callAIWithModelDirect([{ role: 'user', content: prompt }], getModelForAgent('kuzmich'));
+    const rawText = await callAIWithModelDirect([{ role: 'user', content: prompt }], getModelForAgent('kuzmich'));
+    text = appendMaxLink(rawText);
 
-    const validation = validateTextPost(text);
+    const validation = await validateTextPost(text);
     if (!validation.valid) {
       await logValidationFailure('kuzmich_tip', validation);
       if (attempt === MAX_ATTEMPTS) {
@@ -584,7 +603,7 @@ export async function postKuzmichPromo(): Promise<{ ok: boolean; error?: string 
 Тема: у тебя теперь есть три канала, где ты помогаешь туристам с Камчаткой:
 1. Сайт tourhab.ru — 131 маршрут, 13 туров, онлайн-бронирование
 2. Telegram-бот @KuzmichKam_bot — личный AI-помощник по Камчатке
-3. MAX-бот max.ru/id4101147649_bot — тот же Кузьмич, но в MAX мессенджере
+3. MAX-канал max.ru/id4101147549_biz — канал Кузьмича в MAX мессенджере
 
 Требования:
 - 80-120 слов, живой голос местного, не рекламный пафос
@@ -594,12 +613,12 @@ export async function postKuzmichPromo(): Promise<{ ok: boolean; error?: string 
 - В конце обязательно три ссылки:
   ${appUrl}
   t.me/KuzmichKam_bot
-  max.ru/id4101147649_bot`;
+  max.ru/id4101147549_biz`;
 
   const text = await callAIWithModelDirect([{ role: 'user', content: prompt }], getModelForAgent('kuzmich'));
 
   // Валидация промо-поста
-  const validation = validateTextPost(text);
+  const validation = await validateTextPost(text);
   if (!validation.valid) {
     await logValidationFailure('kuzmich_promo', validation);
     return { ok: false, error: `Валидация: ${validation.errors.join('; ')}` };

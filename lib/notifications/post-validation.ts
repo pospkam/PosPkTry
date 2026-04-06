@@ -118,6 +118,70 @@ function checkProhibitedContent(text: string): string[] {
   return errors;
 }
 
+/**
+ * Правило 6: Все ссылки в тексте поста реально доступны (HTTP HEAD).
+ * Проверяет https:// ссылки. Таймаут 5с. Недоступные → error.
+ */
+async function verifyAllLinks(text: string): Promise<{ errors: string[]; warnings: string[] }> {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  // Извлекаем все URL (из href="..." и из голого текста)
+  const urlRegex = /https?:\/\/[^\s"'<>)\]]+/gi;
+  const urls = [...new Set(text.match(urlRegex) || [])];
+
+  if (urls.length === 0) return { errors, warnings };
+
+  const results = await Promise.allSettled(
+    urls.map(async (url) => {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 5000);
+        const res = await fetch(url, {
+          method: 'HEAD',
+          signal: controller.signal,
+          redirect: 'follow',
+          headers: { 'User-Agent': 'TourHab-LinkChecker/1.0' },
+        });
+        clearTimeout(timeout);
+
+        // HEAD может возвращать 405 (Method Not Allowed) — пробуем GET
+        if (res.status === 405) {
+          const controller2 = new AbortController();
+          const timeout2 = setTimeout(() => controller2.abort(), 5000);
+          const res2 = await fetch(url, {
+            method: 'GET',
+            signal: controller2.signal,
+            redirect: 'follow',
+            headers: { 'User-Agent': 'TourHab-LinkChecker/1.0' },
+          });
+          clearTimeout(timeout2);
+          // Потребляем body чтобы не висеть
+          await res2.text().catch(() => {});
+          return { url, status: res2.status };
+        }
+
+        return { url, status: res.status };
+      } catch {
+        return { url, status: 0 };
+      }
+    })
+  );
+
+  for (const r of results) {
+    if (r.status === 'rejected') continue;
+    const { url, status } = r.value;
+    if (status === 0) {
+      // Сетевая ошибка / таймаут — warning, не блокируем
+      warnings.push(`Ссылка ${url} — не удалось проверить (таймаут/сеть)`);
+    } else if (status >= 400) {
+      errors.push(`Ссылка ${url} недоступна (HTTP ${status})`);
+    }
+  }
+
+  return { errors, warnings };
+}
+
 // ── Главная валидация ─────────────────────────────────────────────────────────
 
 /**
@@ -149,7 +213,12 @@ export async function validateRoutePost(routeId: string, text: string): Promise<
   errors.push(...checkTextQuality(text));
   errors.push(...checkProhibitedContent(text));
 
-  // 4. Маршрут имеет описание
+  // 4. Все ссылки в тексте реально доступны
+  const linkCheck = await verifyAllLinks(text);
+  errors.push(...linkCheck.errors);
+  warnings.push(...linkCheck.warnings);
+
+  // 5. Маршрут имеет описание
   if (!route!.description || route!.description.trim().length < 20) {
     warnings.push('У маршрута нет полноценного описания');
   }
@@ -166,12 +235,17 @@ export async function validateRoutePost(routeId: string, text: string): Promise<
 /**
  * Валидация текстового поста (tip, sezon, promo) — без привязки к маршруту.
  */
-export function validateTextPost(text: string): PostValidationResult {
+export async function validateTextPost(text: string): Promise<PostValidationResult> {
   const errors: string[] = [];
   const warnings: string[] = [];
 
   errors.push(...checkTextQuality(text));
   errors.push(...checkProhibitedContent(text));
+
+  // Проверяем все ссылки реально доступны
+  const linkCheck = await verifyAllLinks(text);
+  errors.push(...linkCheck.errors);
+  warnings.push(...linkCheck.warnings);
 
   // Проверяем что внутренние ссылки ведут на реальные разделы
   const links = extractInternalLinks(text);
