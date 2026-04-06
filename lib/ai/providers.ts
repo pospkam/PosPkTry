@@ -50,12 +50,13 @@ export async function callMiMo(messages: ChatMessage[]): Promise<string | null> 
 
 // ── OpenRouter ─────────────────────────────────────────────────
 // Пробует несколько моделей по очереди — защита от rate limit одной модели.
-// Порядок: GPT-4o-mini → DeepSeek V3 → Claude Haiku (через OR-прокси, без геоблока)
+// Порядок: сначала быстрые и надёжные, timeout снижен до 12s
 const OR_MODELS = [
-  { id: 'openai/gpt-4o-mini',                timeout: 25_000 },
-  { id: 'deepseek/deepseek-chat-v3-0324',    timeout: 25_000 },
-  { id: 'google/gemini-2.5-flash-lite',      timeout: 25_000 },
-  { id: 'anthropic/claude-haiku-4-5',        timeout: 25_000 },
+  { id: 'google/gemini-2.0-flash-001',       timeout: 12_000 }, // самый быстрый ~1-2s
+  { id: 'google/gemini-2.5-flash-lite',      timeout: 12_000 }, // fast lite
+  { id: 'openai/gpt-4o-mini',                timeout: 12_000 }, // надёжный
+  { id: 'meta-llama/llama-3.3-70b-instruct', timeout: 12_000 }, // бесплатный резерв
+  { id: 'deepseek/deepseek-chat-v3-0324',    timeout: 12_000 }, // дешёвый резерв
 ];
 
 // If OpenRouter returns auth errors (401/403), avoid repeated slow failures.
