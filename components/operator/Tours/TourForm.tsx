@@ -352,7 +352,7 @@ export function TourForm({ initialData, onSubmit, onCancel, isEdit = false }: To
 
         {formData.tourImage ? (
           <div className="relative h-48 rounded-lg overflow-hidden border border-[var(--border)]">
-            <img src={formData.tourImage} alt="Превью" className="w-full h-full object-cover" />
+            <img src={formData.tourImage} alt="Превью" className="w-full h-full object-contain bg-[var(--bg-hover)]" />
             <button
               type="button"
               onClick={() => handleChange('tourImage', '')}

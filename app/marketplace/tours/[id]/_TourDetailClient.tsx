@@ -138,7 +138,7 @@ function PhotoGallery({ images, alt }: { images: string[]; alt: string }) {
               src={src}
               alt={`${alt} — фото ${i + 2}`}
               fill
-              className="object-cover group-hover:scale-105 transition-transform duration-500"
+              className="object-contain bg-[var(--bg-hover)] group-hover:scale-105 transition-transform duration-500"
               sizes="25vw"
             />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />

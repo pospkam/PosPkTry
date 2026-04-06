@@ -457,7 +457,7 @@ function EditModal({ tour, onClose, onSave }: {
                     <img
                       src={photo}
                       alt={`Фото ${idx + 1}`}
-                      className="w-full h-20 object-cover rounded border border-[var(--border)]"
+                      className="w-full h-20 object-contain bg-[var(--bg-hover)] rounded border border-[var(--border)]"
                       onError={e => { (e.target as HTMLImageElement).style.opacity = '0.3'; }}
                     />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded flex items-center justify-center gap-1">
