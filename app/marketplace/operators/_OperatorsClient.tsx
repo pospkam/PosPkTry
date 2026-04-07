@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Search, Star, ShieldCheck, ChevronRight, MapPin } from 'lucide-react';
+import { Search, ShieldCheck, ChevronRight, MapPin } from 'lucide-react';
+import { OperatorRating } from '@/components/operator/OperatorRating';
 
 interface Operator {
   id: string;
@@ -64,23 +65,6 @@ export default function OperatorsPageClient() {
     const timer = setTimeout(() => void fetchOperators(), search ? 400 : 0);
     return () => clearTimeout(timer);
   }, [fetchOperators, search]);
-
-  function renderStars(rating: number) {
-    const full = Math.floor(rating);
-    return (
-      <span className="flex items-center gap-0.5">
-        {[1, 2, 3, 4, 5].map(i => (
-          <Star
-            key={i}
-            className={`w-3.5 h-3.5 ${i <= full ? 'fill-[var(--warning)] text-[var(--warning)]' : 'text-[var(--text-muted)]'}`}
-          />
-        ))}
-        <span className="ml-1 text-sm font-medium text-[var(--text-primary)]">
-          {rating > 0 ? rating.toFixed(1) : 'нет оценок'}
-        </span>
-      </span>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)]">
@@ -185,14 +169,11 @@ export default function OperatorsPageClient() {
                       {op.shortDescription}
                     </p>
                   )}
-                  <div className="flex items-center justify-between">
-                    {renderStars(op.rating)}
-                    {op.reviewCount > 0 && (
-                      <span className="text-xs text-[var(--text-muted)]">
-                        {op.reviewCount} {op.reviewCount === 1 ? 'отзыв' : op.reviewCount < 5 ? 'отзыва' : 'отзывов'}
-                      </span>
-                    )}
-                  </div>
+                  <OperatorRating
+                    rating={op.rating}
+                    reviewCount={op.reviewCount}
+                    size="sm"
+                  />
                 </div>
               </Link>
             ))}

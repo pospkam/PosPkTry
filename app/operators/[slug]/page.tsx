@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { ChevronRight, MapPin, ShieldCheck, Star } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import { OperatorRating } from '@/components/operator/OperatorRating';
 import { query } from '@/lib/database';
 import type { OperatorProfileRow } from '@/lib/types/db-rows';
 
@@ -187,12 +188,13 @@ export default async function OperatorProfilePage(
                   )}
                 </div>
 
-                <div className="flex items-center gap-3 text-sm text-[var(--text-secondary)] mb-5">
-                  <span className="inline-flex items-center gap-1.5">
-                    <Star className="w-4 h-4 text-[var(--warning)]" />
-                    {rating > 0 ? rating.toFixed(1) : 'нет оценок'}
-                  </span>
-                  <span>{reviewCount > 0 ? `${reviewCount} отзывов` : 'Пока нет отзывов'}</span>
+                <div className="mb-5">
+                  <OperatorRating
+                    rating={rating}
+                    reviewCount={reviewCount}
+                    size="lg"
+                    trend={null}
+                  />
                 </div>
 
                 {profile.short_description && (
