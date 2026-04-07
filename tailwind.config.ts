@@ -40,6 +40,15 @@ export default {
         sans: ['Outfit', '-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', '"Segoe UI"', 'sans-serif'],
         playfair: ['var(--font-playfair)', 'Playfair Display', 'Georgia', 'serif'],
       },
+      keyframes: {
+        marquee: {
+          '0%':   { transform: 'translateX(0%)' },
+          '100%': { transform: 'translateX(-50%)' },
+        },
+      },
+      animation: {
+        marquee: 'marquee 28s linear infinite',
+      },
     },
   },
   plugins: [],

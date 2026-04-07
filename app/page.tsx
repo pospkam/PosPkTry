@@ -2,16 +2,14 @@ import type { Metadata } from 'next'
 import dynamic from 'next/dynamic'
 import { Header } from '@/components/layout/Header'
 import { HeroCompact } from '@/components/homepage/HeroCompact'
+import { StatsBand } from '@/components/homepage/StatsBand'
+import { DirectionsList } from '@/components/homepage/DirectionsList'
 import { Footer } from '@/components/layout/Footer'
 
 // Lazy-loaded client sections (below fold)
 const InlineChat = dynamic(() => import('@/components/homepage/InlineChat'), {
   loading: () => <ChatSkeleton />,
 });
-const FeaturedDirections = dynamic(
-  () => import('@/components/homepage/FeaturedDirections').then(m => ({ default: m.FeaturedDirections })),
-  { loading: () => <SectionSkeleton /> }
-);
 const TrustSection = dynamic(
   () => import('@/components/homepage/TrustSection').then(m => ({ default: m.TrustSection })),
   { loading: () => <SectionSkeleton /> }
@@ -102,8 +100,9 @@ export default async function Page() {
       <Header />
       <main>
         <HeroCompact />
+        <StatsBand />
         <InlineChat />
-        <FeaturedDirections />
+        <DirectionsList />
         <LeadCTASection />
         <TrustSection />
       </main>

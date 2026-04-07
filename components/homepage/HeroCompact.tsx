@@ -1,22 +1,16 @@
 'use client';
 
 import Image from 'next/image';
-import { Bot, Shield, Leaf, Users, ArrowRight, ChevronDown } from 'lucide-react';
+import Link from 'next/link';
+import { Bot, ArrowRight } from 'lucide-react';
 
 const HERO_LIGHT = '/images/hero/hero-light.jpeg';
 const HERO_DARK  = '/images/hero/hero-dark.jpeg';
 
-const PILLS = [
-  { icon: Bot,    label: 'AI-оператор Кузьмич' },
-  { icon: Users,  label: '10 AI агентов' },
-  { icon: Shield, label: 'SAR Rescue 24/7' },
-  { icon: Leaf,   label: 'Eco-мониторинг' },
-];
-
 export function HeroCompact() {
   return (
-    <section className="relative flex items-end overflow-hidden" style={{ minHeight: '82svh' }}>
-      {/* Background */}
+    <section className="relative overflow-hidden bg-[#0D0C0B]" style={{ minHeight: '100svh' }}>
+      {/* Full-bleed background */}
       <Image
         src={HERO_LIGHT}
         alt="Камчатка"
@@ -33,75 +27,125 @@ export function HeroCompact() {
         className="object-cover object-center opacity-0 dark:opacity-100 transition-opacity duration-700"
       />
 
-      {/* Gradient — stronger at bottom where text lives */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/50 to-black/10" />
+      {/* Dark veil — top heavy */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/30 to-black/75" />
 
-      {/* Content — left-aligned, bottom anchored */}
-      <div className="relative z-10 w-full max-w-6xl mx-auto px-5 pb-16 md:pb-20">
-
-        {/* Status chip */}
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/20 bg-white/8 backdrop-blur-sm text-white/75 text-xs font-medium mb-7">
-          <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--success)' }} />
-          AI-платформа туризма Камчатки
-        </div>
-
-        {/* Headline */}
-        <h1
-          className="font-playfair font-bold text-white leading-[1.0] mb-5"
-          style={{ fontSize: 'clamp(2.8rem, 7vw, 5rem)', textShadow: '0 4px 40px rgba(0,0,0,0.5)' }}
+      {/* ── Oversized BG letter — decorative ── */}
+      <div
+        aria-hidden
+        className="absolute inset-0 flex items-center justify-center pointer-events-none select-none"
+      >
+        <span
+          className="font-playfair font-bold text-white/[0.04] leading-none"
+          style={{ fontSize: 'clamp(18rem, 40vw, 52rem)' }}
         >
-          Камчатка.
-          <br />
-          <span style={{ color: 'var(--accent)', textShadow: '0 4px 32px rgba(212,74,12,0.45)' }}>
-            Умная.
-          </span>
-        </h1>
-
-        <p
-          className="text-white/70 text-base md:text-lg max-w-xl mb-8 leading-relaxed font-light"
-          style={{ textShadow: '0 2px 16px rgba(0,0,0,0.6)' }}
-        >
-          Первая платформа с AI-оператором, советом из 10 агентов,
-          поисково-спасательным AI и eco-мониторингом.
-        </p>
-
-        {/* Capability pills */}
-        <div className="flex flex-wrap gap-2 mb-9">
-          {PILLS.map(({ icon: Icon, label }) => (
-            <span
-              key={label}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium text-white/80 border border-white/15"
-              style={{ background: 'rgba(255,255,255,0.08)' }}
-            >
-              <Icon className="w-3 h-3" />
-              {label}
-            </span>
-          ))}
-        </div>
-
-        {/* CTAs */}
-        <div className="flex flex-wrap items-center gap-3">
-          <a
-            href="#chat"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm text-white transition-opacity hover:opacity-90 active:scale-95"
-            style={{ background: 'var(--accent)' }}
-          >
-            <Bot className="w-4 h-4" />
-            Спросить Кузьмича
-          </a>
-          <a
-            href="#lead"
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-lg text-sm font-medium text-white border border-white/30 hover:bg-white/10 transition-colors"
-          >
-            Оставить заявку
-            <ArrowRight className="w-4 h-4" />
-          </a>
-        </div>
+          К
+        </span>
       </div>
 
-      {/* Scroll cue */}
-      <div className="absolute bottom-7 right-7 z-10 animate-bounce opacity-50">
-        <ChevronDown className="w-5 h-5 text-white" />
+      {/* ── Layout grid ── */}
+      <div className="relative z-10 flex flex-col h-full min-h-[100svh] max-w-7xl mx-auto px-6 md:px-10">
+
+        {/* Top bar */}
+        <div className="flex items-center justify-between pt-24 md:pt-28">
+          <span className="text-[10px] tracking-[0.25em] font-medium uppercase text-white/40">
+            Камчатка · 2026
+          </span>
+          <span className="text-[10px] tracking-[0.25em] font-medium uppercase text-white/40">
+            53°N 158°E
+          </span>
+        </div>
+
+        {/* Main editorial text block */}
+        <div className="flex-1 flex flex-col justify-center py-12">
+          {/* Category label */}
+          <div className="flex items-center gap-3 mb-8">
+            <span className="w-8 h-px bg-white/30" />
+            <span className="text-[11px] tracking-[0.3em] uppercase font-medium text-white/50">
+              AI-платформа туризма
+            </span>
+            <span className="inline-flex items-center gap-1.5 ml-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] animate-pulse" />
+              <span className="text-[10px] text-white/40 tracking-wider uppercase">Online</span>
+            </span>
+          </div>
+
+          {/* Giant headline — editorial split */}
+          <div className="mb-10">
+            <h1
+              className="font-playfair font-bold text-white leading-[0.92] tracking-tight"
+              style={{ fontSize: 'clamp(3.5rem, 9vw, 8.5rem)' }}
+            >
+              Дикая.
+            </h1>
+            <h1
+              className="font-playfair font-bold leading-[0.92] tracking-tight"
+              style={{
+                fontSize: 'clamp(3.5rem, 9vw, 8.5rem)',
+                color: 'transparent',
+                WebkitTextStroke: '1px rgba(255,255,255,0.35)',
+              }}
+            >
+              Настоящая.
+            </h1>
+            <h1
+              className="font-playfair font-bold leading-[0.92] tracking-tight"
+              style={{ fontSize: 'clamp(3.5rem, 9vw, 8.5rem)', color: 'var(--accent)' }}
+            >
+              Умная.
+            </h1>
+          </div>
+
+          {/* Sub-text + CTA in a horizontal row */}
+          <div className="flex flex-col md:flex-row md:items-end gap-8 md:gap-16">
+            <p className="text-white/55 text-sm md:text-base leading-relaxed max-w-xs font-light">
+              Первая в России туристическая платформа&nbsp;с&nbsp;AI‑оператором,
+              13-ю&nbsp;цифровыми директорами и&nbsp;SAR‑мониторингом.
+            </p>
+            <div className="flex items-center gap-4">
+              <a
+                href="#chat"
+                className="group inline-flex items-center gap-2.5 px-7 py-3.5 rounded-full font-semibold text-sm text-white transition-all hover:scale-105 active:scale-95"
+                style={{ background: 'var(--accent)', boxShadow: '0 0 32px rgba(212,74,12,0.45)' }}
+              >
+                <Bot className="w-4 h-4" />
+                Спросить Кузьмича
+                <ArrowRight className="w-4 h-4 opacity-70 group-hover:translate-x-0.5 transition-transform" />
+              </a>
+              <Link
+                href="/routes"
+                className="text-sm text-white/50 hover:text-white/90 transition-colors underline underline-offset-4"
+              >
+                Все маршруты
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom bar — minimal stats strip */}
+        <div className="flex items-center justify-between pb-10 border-t border-white/10 pt-6">
+          <div className="flex gap-8 md:gap-16">
+            {[
+              { num: '1000+', label: 'маршрутов' },
+              { num: '47',    label: 'операторов' },
+              { num: '24/7',  label: 'AI-поддержка' },
+            ].map(s => (
+              <div key={s.label}>
+                <div className="text-white font-bold text-lg md:text-xl font-playfair leading-none mb-0.5">
+                  {s.num}
+                </div>
+                <div className="text-[10px] text-white/35 tracking-wider uppercase">{s.label}</div>
+              </div>
+            ))}
+          </div>
+          <Link
+            href="#directions"
+            className="text-[11px] tracking-[0.2em] uppercase text-white/35 hover:text-white/70 transition-colors flex items-center gap-2"
+          >
+            Направления
+            <ArrowRight className="w-3 h-3" />
+          </Link>
+        </div>
       </div>
     </section>
   );
