@@ -104,6 +104,9 @@ const AiChatSchema = z.object({
   userId: z.string().nullable().default(null),
   // Client-side history fallback (used when DB session is unavailable)
   history: z.array(ChatMessageSchema).max(20).optional(),
+  // Vision: base64-encoded image from user
+  imageBase64: z.string().max(8_000_000).optional(),
+  imageMimeType: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -125,7 +128,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { message, sessionId, role = 'tourist', history: clientHistory } = parsed.data;
+    const { message, sessionId, role = 'tourist', history: clientHistory, imageBase64, imageMimeType } = parsed.data;
 
     if (!message?.trim()) {
       return NextResponse.json({ success: false, error: 'Сообщение не может быть пустым' }, { status: 400 });
@@ -168,8 +171,25 @@ export async function POST(request: NextRequest) {
       userId ? loadTripHistory(userId) : Promise.resolve([]),
     ]);
 
+    // Vision: анализ фото от пользователя (Gemini)
+    let visionDescription: string | null = null;
+    if (imageBase64 && imageMimeType && safeRole === 'tourist') {
+      try {
+        const { callGeminiVision } = await import('@/lib/ai/providers');
+        visionDescription = await callGeminiVision(
+          imageBase64,
+          imageMimeType,
+          'Опиши что на фото: место, активность, природа Камчатки. Кратко, 1-2 предложения. Если узнаёшь локацию — назови. Отвечай на русском.',
+        );
+      } catch { /* не блокируем */ }
+    }
+
     // Build AI prompt
-    const userMsg: ChatMessage = { role: 'user', content: message.trim(), timestamp: Date.now() };
+    const rawMessage = message.trim();
+    const messageWithVision = visionDescription
+      ? `[Фото пользователя: ${visionDescription}]${rawMessage ? `\n\n${rawMessage}` : ''}`
+      : rawMessage;
+    const userMsg: ChatMessage = { role: 'user', content: messageWithVision, timestamp: Date.now() };
     history.push(userMsg);
 
     const basePrompt   = getSystemPrompt(safeRole);
@@ -247,11 +267,16 @@ export async function POST(request: NextRequest) {
     // Tour suggestions — only for tourist role (fire-and-forget fetch, non-blocking)
     let tourSuggestions: TourSuggestion[] = [];
     if (safeRole === 'tourist') {
-      const intentResult = detectTourIntent(message.trim());
+      const intentResult = detectTourIntent(rawMessage);
       if (intentResult.detected) {
         tourSuggestions = await findRelevantTours(intentResult.activityType, intentResult.rawWords);
       }
     }
+
+    // Booking form: показываем inline-форму когда турист явно хочет забронировать
+    const BOOKING_TRIGGERS_CHAT = ['бронирую', 'хочу этот', 'хочу забронировать', 'записывай', 'оформи', 'беру', 'запишите'];
+    const bookingTriggered = safeRole === 'tourist' && BOOKING_TRIGGERS_CHAT.some(t => rawMessage.toLowerCase().includes(t));
+    const bookingFormTour = bookingTriggered && tourSuggestions.length > 0 ? tourSuggestions[0] : null;
 
     const assistantMsg: ChatMessage = { role: 'assistant', content: answer, timestamp: Date.now() };
     history.push(assistantMsg);
@@ -302,6 +327,8 @@ export async function POST(request: NextRequest) {
         remainingFree: remaining,
         isAuthenticated,
         ...(tourSuggestions.length > 0 ? { tours: tourSuggestions } : {}),
+        ...(visionDescription ? { visionDescription } : {}),
+        ...(bookingFormTour ? { bookingForm: { tourId: bookingFormTour.id, tourTitle: bookingFormTour.title, tourPrice: bookingFormTour.base_price, tourImage: bookingFormTour.tour_image, operatorName: bookingFormTour.operator_name } } : {}),
       },
     });
   } catch (error) {
