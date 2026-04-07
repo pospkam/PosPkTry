@@ -5,6 +5,9 @@ import { CATEGORY_PAGES } from '@/lib/routes/category-meta';
 import CategoryPage from '@/components/routes/CategoryPage';
 import { query } from '@/lib/database';
 
+// ISR: реvalidate každый час для свежести контента в Google
+export const revalidate = 3600;
+
 interface Props {
   params: Promise<{ id: string }>;
 }
@@ -75,14 +78,35 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ? route.description.replace(/<[^>]+>/g, '').slice(0, 180)
     : `Туристический маршрут на Камчатке: ${route.title}. Категория: ${route.category}.`;
 
-  const keywords = [
+  // SEO keywords: города + типы активностей + регион
+  const baseKeywords = [
     route.title,
+    `${route.title} Камчатка`,
     route.category,
+    `${route.category} Камчатка`,
     route.activityType,
     route.locationType,
+  ];
+  
+  // Добавляем релевантные поисковые фразы по категориям
+  const categoryKeywords = {
+    'вулканы': ['вулканы Камчатки', 'восхождение на вулкан', 'активные вулканы'],
+    'медведи': ['медведи Камчатки', 'сафари на медведей', 'наблюдение медведей'],
+    'рыбалка': ['рыбалка Камчатка', 'форель Камчатки', 'рыба лосось'],
+    'горячие источники': ['горячие источники', 'термальные источники', 'вулканические источники'],
+    'вертолёты': ['вертолётные туры', 'полёты на вертолёте', 'авиатуры'],
+    'море': ['морские туры', 'круизы', 'рыболовные туры'],
+  };
+  
+  const additionalKeywords = categoryKeywords[route.category as keyof typeof categoryKeywords] ?? [];
+  
+  const keywords = [
+    ...baseKeywords,
+    ...additionalKeywords,
     'Камчатка',
-    'тур',
-    'маршрут',
+    'туры Камчатки',
+    'туристические маршруты',
+    'путешествия',
   ].filter(Boolean) as string[];
 
   const images = route.photos?.length
@@ -148,30 +172,48 @@ export default async function RouteOrCategoryPage({ params }: Props) {
     ? route.description.replace(/<[^>]+>/g, '').slice(0, 500)
     : undefined;
 
+  // Enhanced JSON-LD для лучшей индексации Google
+  const durationISO = route.durationDays
+    ? route.durationDays < 1
+      ? 'PT4H' // half day
+      : `P${Math.ceil(route.durationDays)}D`
+    : undefined;
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'TouristTrip',
+    '@id': `https://tourhab.ru/routes/${id}`,
     name: route.title,
     description: cleanDesc,
     url: `https://tourhab.ru/routes/${id}`,
+    inLanguage: 'ru',
     touristType: route.activityType ?? route.category,
-    ...(route.photos?.length ? { image: route.photos[0] } : {}),
-    ...(route.durationDays ? {
-      itinerary: {
-        '@type': 'ItemList',
-        numberOfItems: route.durationDays,
-        description: `${route.durationDays} дней`,
-      },
-    } : {}),
+    // Multiple images for better indexing (up to 5)
+    ...(route.photos?.length
+      ? { image: route.photos.slice(0, 5).map(url => ({
+          '@type': 'ImageObject',
+          url,
+          name: route.title,
+        })) }
+      : {}),
+    // Duration in ISO 8601 format
+    ...(durationISO ? { duration: durationISO } : {}),
+    // Location details
     ...(route.lat != null && route.lng != null ? {
       geo: {
         '@type': 'GeoCoordinates',
         latitude: route.lat,
         longitude: route.lng,
+        address: `${route.title}, Камчатский край, Россия`,
       },
       contentLocation: {
         '@type': 'Place',
         name: 'Камчатский край',
+        geo: {
+          '@type': 'GeoCoordinates',
+          latitude: 52.9306,
+          longitude: 160.7837,
+        },
         address: {
           '@type': 'PostalAddress',
           addressRegion: 'Камчатский край',
@@ -179,18 +221,31 @@ export default async function RouteOrCategoryPage({ params }: Props) {
         },
       },
     } : {}),
+    // Pricing
     ...(route.priceFrom != null ? {
       offers: {
         '@type': 'Offer',
         price: route.priceFrom,
         priceCurrency: 'RUB',
         availability: 'https://schema.org/InStock',
+        url: `https://tourhab.ru/routes/${id}`,
       },
+    } : {}),
+    // Difficulty level
+    ...(route.difficulty ? { wheelchairAccessible: route.difficulty === 'easy' } : {}),
+    // Best months for visiting
+    ...(route.bestMonths && route.bestMonths.length > 0 ? {
+      seasonalEvent: route.bestMonths.map((m) => {
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const idx = typeof m === 'number' ? m - 1 : 0;
+        return months[Math.max(0, Math.min(11, idx))];
+      }).join(', '),
     } : {}),
     provider: {
       '@type': 'TravelAgency',
       name: 'TourHab',
       url: 'https://tourhab.ru',
+      sameAs: 'https://tourhab.ru',
     },
   };
 
