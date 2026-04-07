@@ -211,6 +211,7 @@ export async function GET(request: NextRequest) {
     ok: issues.filter(i => i.level === 'crit').length === 0,
     ms: Date.now() - started,
     ai: { mimo: mimoOk, openrouter: openrouterOk, anthropic: anthropicOk, deepseek: deepseekOk },
+    integrations: { github_token: !!process.env.GITHUB_TOKEN },
     issues,
   });
 }
