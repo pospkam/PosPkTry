@@ -7,6 +7,8 @@ import { Heart, Flame, Thermometer, Anchor, Mountain, Leaf, Fish, Snowflake, Pla
 export interface RouteItem {
   id: string;
   kind?: 'place' | 'tour' | 'route';
+  imageUrl?: string;
+  hasAiImage?: boolean;
   category: string;
   locationType?: string | null;
   activityType?: string | null;
@@ -92,7 +94,7 @@ export default function RouteCard({ route }: { route: RouteItem }) {
 function LegacyCard({ route }: { route: RouteItem }) {
   const meta = CATEGORY_META[route.category] ?? { label: route.category, icon: MapPin, accent: 'var(--accent)' };
   const Icon = meta.icon;
-  const image = CARD_IMAGES[route.category] ?? '/images/bento/mutnovsky.jpg';
+  const image = route.imageUrl ?? (route.hasAiImage ? `/api/images/route/${route.id}` : (CARD_IMAGES[route.category] ?? '/images/bento/mutnovsky.jpg'));
   const displayPrice = route.minOfferPrice ?? route.priceFrom;
   const hasOffers = (route.offerCount ?? 0) > 0;
   const isTourOrRoute = route.kind === 'tour' || route.kind === 'route';

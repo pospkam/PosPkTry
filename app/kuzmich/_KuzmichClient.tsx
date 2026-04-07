@@ -67,18 +67,38 @@ function BookingFormCard({
   const [participants, setParticipants] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [qr, setQr] = useState<{ qrCode: string; qrLink: string; amount: number; bookingId: number } | null>(null);
+  const [pollPaid, setPollPaid] = useState(false);
 
   const total = (data.tourPrice * participants).toLocaleString('ru-RU');
   const minDate = new Date();
   minDate.setDate(minDate.getDate() + 1);
   const minDateStr = minDate.toISOString().split('T')[0];
 
+  // Polling статуса оплаты каждые 3 сек
+  useEffect(() => {
+    if (!qr || pollPaid) return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/payments/tochka/qr?bookingId=${qr.bookingId}`);
+        const json = await res.json() as { paid?: boolean };
+        if (json.paid) {
+          setPollPaid(true);
+          clearInterval(interval);
+          onConfirmed(qr.bookingId, data.tourTitle);
+        }
+      } catch { /* ignore */ }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [qr, pollPaid, onConfirmed, data.tourTitle]);
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
     setSubmitting(true);
     try {
-      const res = await fetch('/api/hub/bookings/create', {
+      // 1. Создаём бронирование
+      const bookRes = await fetch('/api/hub/bookings/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -90,9 +110,24 @@ function BookingFormCard({
           booking_date: date,
         }),
       });
-      const json = await res.json() as { id?: number; error?: string };
-      if (!res.ok) throw new Error(json.error ?? 'Ошибка сервера');
-      onConfirmed(json.id!, data.tourTitle);
+      const bookJson = await bookRes.json() as { id?: number; error?: string };
+      if (!bookRes.ok) throw new Error(bookJson.error ?? 'Ошибка сервера');
+      const bookingId = bookJson.id!;
+
+      // 2. Запрашиваем СБП QR от Точки
+      const qrRes = await fetch('/api/payments/tochka/qr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingId }),
+      });
+
+      if (qrRes.ok) {
+        const qrJson = await qrRes.json() as { qrCode: string; qrLink: string; amount: number };
+        setQr({ ...qrJson, bookingId });
+      } else {
+        // Точка недоступна — бронь всё равно создана, оператор позвонит
+        onConfirmed(bookingId, data.tourTitle);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Попробуйте ещё раз');
     } finally {
@@ -120,7 +155,36 @@ function BookingFormCard({
         </div>
       )}
 
-      <form onSubmit={submit} className="p-4 space-y-3">
+      {/* QR-экран оплаты */}
+      {qr && (
+        <div className="p-4 flex flex-col items-center gap-3">
+          <p className="text-sm font-semibold text-[var(--text-primary)]">Оплатите через СБП</p>
+          <p className="text-xs text-[var(--text-muted)] text-center">
+            Откройте приложение банка → отсканируйте QR или нажмите кнопку
+          </p>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`data:image/png;base64,${qr.qrCode}`}
+            alt="СБП QR-код"
+            className="w-48 h-48 rounded-lg border border-[var(--border)]"
+          />
+          <p className="text-lg font-bold text-[var(--accent)]">
+            {qr.amount.toLocaleString('ru-RU')} ₽
+          </p>
+          <a
+            href={qr.qrLink}
+            className="ds-btn ds-btn-primary w-full text-sm py-2.5 text-center"
+          >
+            Открыть в приложении банка
+          </a>
+          <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
+            <Loader2 className="w-3 h-3 animate-spin" />
+            Ожидаем оплату...
+          </div>
+        </div>
+      )}
+
+      {!qr && <form onSubmit={submit} className="p-4 space-y-3">
         {/* Имя */}
         <div>
           <label className="ds-label mb-1 flex items-center gap-1.5">
@@ -195,9 +259,9 @@ function BookingFormCard({
           type="submit" disabled={submitting}
           className="ds-btn ds-btn-primary w-full text-sm py-2.5 disabled:opacity-50"
         >
-          {submitting ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Забронировать'}
+          {submitting ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Забронировать и перейти к оплате'}
         </button>
-      </form>
+      </form>}
     </div>
   );
 }

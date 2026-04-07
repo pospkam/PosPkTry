@@ -115,7 +115,7 @@ export async function GET(req: NextRequest) {
       SET execution_status = 'assigned',
           approved_at = COALESCE(reviewed_at, NOW())
       WHERE status = 'approved'
-        AND (execution_status IS NULL OR execution_status = '')
+        AND (execution_status IS NULL OR execution_status = '' OR execution_status = 'pending')
       RETURNING id
     `);
     log.push(`backfill: ${backfillResult.rowCount} old approved → assigned`);

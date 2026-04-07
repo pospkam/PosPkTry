@@ -46,7 +46,7 @@ function daysLabel(n: number) {
 export default function TourCard({ route }: { route: RouteItem }) {
   const meta    = CATEGORY_META[route.category] ?? { label: 'Тур', icon: Anchor, color: 'var(--accent)' };
   const Icon    = meta.icon;
-  const image   = CARD_IMAGES[route.category] ?? '/images/hero/hero-dark.jpg';
+  const image   = route.imageUrl ?? (route.hasAiImage ? `/api/images/route/${route.id}` : (CARD_IMAGES[route.category] ?? '/images/hero/hero-dark.jpg'));
   const price   = route.minOfferPrice ?? route.priceFrom;
 
   const currentMonth = new Date().getMonth() + 1;

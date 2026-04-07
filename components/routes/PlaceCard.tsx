@@ -88,7 +88,7 @@ export default function PlaceCard({ route }: { route: RouteItem }) {
   const Icon    = LOCATION_ICONS[locType] ?? MapPin;
   const color   = LOCATION_COLORS[locType] ?? 'var(--text-muted)';
   const label   = LOCATION_LABELS[locType] ?? 'Место';
-  const image   = CARD_IMAGES[route.category] ?? '/images/hero/hero-dark.jpg';
+  const image   = route.imageUrl ?? (route.hasAiImage ? `/api/images/route/${route.id}` : (CARD_IMAGES[route.category] ?? '/images/hero/hero-dark.jpg'));
 
   const currentMonth = new Date().getMonth() + 1;
   const isInSeason   = route.bestMonths?.includes(currentMonth) ?? false;

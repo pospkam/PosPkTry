@@ -10,6 +10,35 @@ import { query } from '@/lib/database';
 
 export const dynamic = 'force-dynamic';
 
+function isImageUrl(value: unknown): value is string {
+  if (typeof value !== 'string') return false;
+  const v = value.trim();
+  if (!v) return false;
+  return v.startsWith('http://') || v.startsWith('https://') || v.startsWith('/');
+}
+
+function pickPrimaryImage(payload: Record<string, unknown>): string | null {
+  const arrayCandidates = [payload.photos, payload.images, payload.gallery];
+  for (const candidate of arrayCandidates) {
+    if (Array.isArray(candidate)) {
+      const found = candidate.find(isImageUrl);
+      if (found) return found.trim();
+    }
+  }
+
+  const singleCandidates = [
+    payload.image,
+    payload.cover_image,
+    payload.hero_image,
+    payload.tour_image,
+  ];
+  for (const candidate of singleCandidates) {
+    if (isImageUrl(candidate)) return candidate.trim();
+  }
+
+  return null;
+}
+
 const QuerySchema = z.object({
   q:             z.string().max(200).optional(),
   kind:          z.enum(['place', 'route', 'tour']).optional(),
@@ -114,6 +143,7 @@ export async function GET(request: NextRequest) {
            ark.lng,
            ark.source_url,
            ark.source_name,
+           ark.payload,
            ark.payload->'price_from'      AS price_from,
            ark.payload->'season'          AS season,
            ark.payload->'difficulty'      AS difficulty,
@@ -140,28 +170,34 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: dataResult.rows.map(r => ({
-        id:           r.id as string,
-        slug:         r.route_dedupe_key as string,
-        kind:         (r.kind as string) ?? 'place',
-        category:     r.category as string,
-        locationType: (r.location_type as string | null) ?? null,
-        activityType: (r.activity_type as string | null) ?? null,
-        title:        r.title as string,
-        description:  (r.description as string | null) ?? '',
-        lat:          r.lat != null ? parseFloat(r.lat as string) : null,
-        lng:          r.lng != null ? parseFloat(r.lng as string) : null,
-        sourceUrl:    (r.source_url as string | null) ?? null,
-        sourceName:   (r.source_name as string | null) ?? null,
-        priceFrom:    r.price_from != null ? Number(r.price_from) : null,
-        season:       (r.season as string | null) ?? null,
-        difficulty:   (r.difficulty as string | null) ?? null,
-        durationDays: r.duration_days != null ? Number(r.duration_days) : null,
-        bestMonths:   (r.best_months as number[] | null) ?? null,
-        geometry:      (r.geometry as { type: string; coordinates: [number, number][]; color?: string; weight?: number } | null) ?? null,
-        volcanoStatus: (r.volcano_status as string | null) ?? null,
-        hasAiImage:   Boolean(r.has_ai_image),
-      })),
+      data: dataResult.rows.map(r => {
+        const payload = (r.payload as Record<string, unknown>) ?? {};
+        const imageUrl = pickPrimaryImage(payload);
+
+        return {
+          ...(imageUrl ? { imageUrl } : {}),
+          id:           r.id as string,
+          slug:         r.route_dedupe_key as string,
+          kind:         (r.kind as string) ?? 'place',
+          category:     r.category as string,
+          locationType: (r.location_type as string | null) ?? null,
+          activityType: (r.activity_type as string | null) ?? null,
+          title:        r.title as string,
+          description:  (r.description as string | null) ?? '',
+          lat:          r.lat != null ? parseFloat(r.lat as string) : null,
+          lng:          r.lng != null ? parseFloat(r.lng as string) : null,
+          sourceUrl:    (r.source_url as string | null) ?? null,
+          sourceName:   (r.source_name as string | null) ?? null,
+          priceFrom:    r.price_from != null ? Number(r.price_from) : null,
+          season:       (r.season as string | null) ?? null,
+          difficulty:   (r.difficulty as string | null) ?? null,
+          durationDays: r.duration_days != null ? Number(r.duration_days) : null,
+          bestMonths:   (r.best_months as number[] | null) ?? null,
+          geometry:      (r.geometry as { type: string; coordinates: [number, number][]; color?: string; weight?: number } | null) ?? null,
+          volcanoStatus: (r.volcano_status as string | null) ?? null,
+          hasAiImage:   Boolean(r.has_ai_image),
+        };
+      }),
       meta: {
         total,
         page,

@@ -90,7 +90,16 @@
       "WebFetch(domain:affiliates.yandex.ru)",
       "Bash(grep -l \"query\\\\|SELECT\\\\|INSERT\" /workspaces/PosPkTry/app/api/operator/*.ts /workspaces/PosPkTry/app/api/operator/*/*.ts)",
       "Bash(grep -l \"query\\\\|SELECT\\\\|INSERT\" /workspacesPkTry/app/api/hub/operator/*.ts /workspaces/PosPkTry/app/api/hub/operator/*/*.ts)",
-      "Read(//workspacesPkTry/lib/database/migrations/**)"
+      "Read(//workspacesPkTry/lib/database/migrations/**)",
+      "Bash(curl -s https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f/raw)",
+      "WebFetch(domain:gist.github.com)",
+      "Bash(grep -E \"\\\\.\\(sql|ts\\)$\")",
+      "Bash(ls -la /workspaces/PosPkTry/app/hub/admin/*/page.tsx)",
+      "Read(//workspacesPoPkTry/app/hub/admin/users/**)",
+      "Bash(find /workspaces/PosPkTry/app/hub/admin -name \"*.tsx\" -exec grep -l \"kuzmich\\\\|chat_sessions\\\\|user_memory\\\\|ai_chat\\\\|conversation\" {} \\\\;)",
+      "Bash(echo \"EXIT:$?\")",
+      "WebFetch(domain:enter.tochka.com)",
+      "WebFetch(domain:developers.tochka.com)"
     ]
   }
 }

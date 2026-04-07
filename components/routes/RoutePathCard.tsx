@@ -37,7 +37,7 @@ function daysLabel(n: number) {
 }
 
 export default function RoutePathCard({ route }: { route: RouteItem }) {
-  const image        = CARD_IMAGES[route.category] ?? '/images/gallery/camp-sunset.jpg';
+  const image        = route.imageUrl ?? (route.hasAiImage ? `/api/images/route/${route.id}` : (CARD_IMAGES[route.category] ?? '/images/gallery/camp-sunset.jpg'));
   const diffKey      = (route.difficulty ?? 'easy') as keyof typeof DIFFICULTY_CONFIG;
   const diff         = DIFFICULTY_CONFIG[diffKey] ?? DIFFICULTY_CONFIG.easy;
   const DiffIcon     = diff.Icon;
