@@ -118,6 +118,7 @@ import YandexMetrika from '@/components/shared/YandexMetrika'
 import TravelPayoutsDrive from '@/components/shared/TravelPayoutsDrive'
 import MicrosoftClarity from '@/components/shared/MicrosoftClarity'
 import StickyLeadButton from '@/components/shared/StickyLeadButton'
+import KuzmichWidget from '@/components/kuzmich/KuzmichWidget'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -233,6 +234,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <MicrosoftClarity />
         <TravelPayoutsDrive />
         <StickyLeadButton />
+        <KuzmichWidget />
       </body>
     </html>
   )

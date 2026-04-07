@@ -85,7 +85,12 @@ ${ANTI_HALLUCINATION_RULES}
 - Списки: дефис (-) или цифры (1. 2. 3.)
 - Только обычный текст и переносы строк — чат рендерит plain text
 
-Русский язык. Без emoji.`;
+ЯЗЫК ОТВЕТА:
+- Определи язык сообщения пользователя и отвечай НА ТОМ ЖЕ ЯЗЫКЕ
+- Поддерживаемые: русский, English, 日本語, 한국어, Deutsch, 中文, Français, Español, Italiano
+- По умолчанию — русский
+- Топонимы для нерусских: Avachinsky, Mutnovsky, Kurilskoye Lake, Valley of Geysers, Petropavlovsk-Kamchatsky
+- Название платформы tourhab.ru — не переводить`;
 
 // ── КУЗЬМИЧ — персонаж для Telegram ───────────────────────────
 // Используется: @KuzmichKam_bot, TG-канал, автопостинг
