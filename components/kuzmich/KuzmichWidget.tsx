@@ -134,7 +134,7 @@ export default function KuzmichWidget() {
   return (
     <>
       {/* Floating button */}
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
+      <div className={`fixed bottom-6 right-6 z-50 flex-col items-end gap-2 ${open ? 'hidden sm:flex' : 'flex'}`}>
         {/* Подсказка при первом посещении */}
         {!open && messages.length === 0 && pulse && (
           <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl px-3 py-2 text-xs text-[var(--text-secondary)] shadow-lg max-w-[180px] text-right animate-in fade-in slide-in-from-bottom-2">
@@ -159,7 +159,7 @@ export default function KuzmichWidget() {
 
       {/* Chat panel */}
       {open && (
-        <div className="fixed bottom-24 right-6 z-50 w-80 h-[500px] bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-3">
+        <div className="fixed bottom-0 right-0 z-50 w-full h-[92dvh] sm:bottom-24 sm:right-6 sm:w-80 sm:h-[500px] bg-[var(--bg-card)] border border-[var(--border)] rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-3">
 
           {/* Header */}
           <div className="flex items-center gap-3 px-4 py-3 border-b border-[var(--border)] bg-[var(--bg-hover)]">
@@ -178,6 +178,11 @@ export default function KuzmichWidget() {
               title="Открыть полный чат">
               <ExternalLink size={14} />
             </Link>
+            <button onClick={() => setOpen(false)}
+              className="sm:hidden p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+              aria-label="Закрыть">
+              <X size={18} />
+            </button>
           </div>
 
           {/* Messages */}
