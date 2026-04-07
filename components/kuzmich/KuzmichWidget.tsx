@@ -40,6 +40,20 @@ export default function KuzmichWidget() {
   const inputRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // Захватываем UTM/referrer один раз при монтировании
+  const utmRef = useRef<Record<string, string>>({});
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const p = new URLSearchParams(window.location.search);
+    const ref = document.referrer;
+    utmRef.current = {
+      ...(ref ? { referrerSource: ref.slice(0, 255) } : {}),
+      ...(p.get('utm_source')   ? { utmSource:   p.get('utm_source')!.slice(0, 100)   } : {}),
+      ...(p.get('utm_medium')   ? { utmMedium:   p.get('utm_medium')!.slice(0, 100)   } : {}),
+      ...(p.get('utm_campaign') ? { utmCampaign: p.get('utm_campaign')!.slice(0, 100) } : {}),
+    };
+  }, []);
+
   // Отключить pulse после первого открытия
   useEffect(() => {
     if (open) setPulse(false);
@@ -106,6 +120,7 @@ export default function KuzmichWidget() {
           role: 'tourist',
           history: messages.slice(-8).map(m => ({ role: m.role, content: m.content })),
           ...(imageBase64 ? { imageBase64, imageMimeType } : {}),
+          ...utmRef.current,
         }),
       });
       const data = await res.json() as { data?: { answer?: string; tours?: Message['tours']; limitReached?: boolean } };

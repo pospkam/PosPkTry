@@ -19,6 +19,7 @@ interface AnalyticsData {
   };
   actions: Record<string, number>;
   topActivities: Array<{ activity: string; cnt: number }>;
+  utmSources: Array<{ source: string; cnt: number }>;
 }
 
 function StatCard({
@@ -318,6 +319,33 @@ export default function AIAnalyticsClient() {
               </div>
             </div>
           </div>
+
+          {/* UTM Sources — показываем только когда есть данные */}
+          {data.utmSources.length > 0 && (
+            <div className="ds-card p-5">
+              <h2 className="ds-h2 flex items-center gap-2 mb-4">
+                <TrendingUp size={16} className="text-[var(--accent)]" />
+                Источники трафика в чат
+              </h2>
+              <div className="space-y-2">
+                {data.utmSources.map(({ source, cnt }) => {
+                  const maxCnt = data.utmSources[0]?.cnt ?? 1;
+                  return (
+                    <div key={source} className="flex items-center gap-3">
+                      <span className="text-xs text-[var(--text-secondary)] w-24 truncate shrink-0">{source}</span>
+                      <div className="flex-1 h-1.5 rounded-full bg-[var(--bg-hover)] overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-[var(--accent)] transition-all"
+                          style={{ width: `${Math.round((cnt / maxCnt) * 100)}%` }}
+                        />
+                      </div>
+                      <span className="text-xs font-semibold text-[var(--text-primary)] w-8 text-right">{cnt}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>

@@ -69,22 +69,34 @@ async function saveSession(
   messages: ChatMessage[],
   userMessageCount: number,
   isAuthenticated: boolean,
-  interestsEncrypted: string | null
+  interestsEncrypted: string | null,
+  utm?: { referrerSource?: string; utmSource?: string; utmMedium?: string; utmCampaign?: string },
 ): Promise<void> {
   if (!sessionId) return;
   const trimmed = messages.slice(-20);
   try {
     await query(
-      `INSERT INTO chat_sessions (session_id, user_id, role, messages, user_message_count, is_authenticated, interests_encrypted, updated_at)
-       VALUES ($1, $2, $3, $4::jsonb, $5, $6, $7, NOW())
+      `INSERT INTO chat_sessions
+         (session_id, user_id, role, messages, user_message_count, is_authenticated,
+          interests_encrypted, referrer_source, utm_source, utm_medium, utm_campaign, updated_at)
+       VALUES ($1, $2, $3, $4::jsonb, $5, $6, $7, $8, $9, $10, $11, NOW())
        ON CONFLICT (session_id) DO UPDATE
-         SET messages = $4::jsonb,
-             user_message_count = $5,
-             is_authenticated = $6,
-             interests_encrypted = COALESCE($7, chat_sessions.interests_encrypted),
-             updated_at = NOW(),
-             role = $3`,
-      [sessionId, userId, role, JSON.stringify(trimmed), userMessageCount, isAuthenticated, interestsEncrypted]
+         SET messages               = $4::jsonb,
+             user_message_count     = $5,
+             is_authenticated       = $6,
+             interests_encrypted    = COALESCE($7, chat_sessions.interests_encrypted),
+             referrer_source        = COALESCE(chat_sessions.referrer_source, $8),
+             utm_source             = COALESCE(chat_sessions.utm_source, $9),
+             utm_medium             = COALESCE(chat_sessions.utm_medium, $10),
+             utm_campaign           = COALESCE(chat_sessions.utm_campaign, $11),
+             updated_at             = NOW(),
+             role                   = $3`,
+      [
+        sessionId, userId, role, JSON.stringify(trimmed), userMessageCount, isAuthenticated,
+        interestsEncrypted,
+        utm?.referrerSource ?? null, utm?.utmSource ?? null,
+        utm?.utmMedium ?? null, utm?.utmCampaign ?? null,
+      ],
     );
   } catch {
     // Non-critical
@@ -107,6 +119,11 @@ const AiChatSchema = z.object({
   // Vision: base64-encoded image from user
   imageBase64: z.string().max(8_000_000).optional(),
   imageMimeType: z.string().optional(),
+  // UTM & referrer (saved only on first message)
+  referrerSource: z.string().max(255).optional(),
+  utmSource:      z.string().max(100).optional(),
+  utmMedium:      z.string().max(100).optional(),
+  utmCampaign:    z.string().max(100).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -128,7 +145,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { message, sessionId, role = 'tourist', history: clientHistory, imageBase64, imageMimeType } = parsed.data;
+    const { message, sessionId, role = 'tourist', history: clientHistory, imageBase64, imageMimeType,
+            referrerSource, utmSource, utmMedium, utmCampaign } = parsed.data;
 
     if (!message?.trim()) {
       return NextResponse.json({ success: false, error: 'Сообщение не может быть пустым' }, { status: 400 });
@@ -312,7 +330,8 @@ export async function POST(request: NextRequest) {
 
     // Save
     if (sessionId) {
-      await saveSession(sessionId, user?.userId ?? null, safeRole, history, newCount, isAuthenticated, interestsEncrypted);
+      await saveSession(sessionId, user?.userId ?? null, safeRole, history, newCount, isAuthenticated, interestsEncrypted,
+        { referrerSource, utmSource, utmMedium, utmCampaign });
     }
 
     const remaining = isAuthenticated ? null : Math.max(0, FREE_MESSAGE_LIMIT - newCount);

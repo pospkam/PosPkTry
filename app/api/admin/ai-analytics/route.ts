@@ -93,6 +93,21 @@ export async function GET(req: NextRequest) {
         `),
       ]);
 
+    // UTM breakdown (опционально — колонки появятся после migration 136)
+    const utmSources: Array<{ source: string; cnt: number }> = [];
+    try {
+      const { rows } = await pool.query<{ source: string; cnt: string }>(`
+        SELECT utm_source AS source, COUNT(*) AS cnt
+        FROM chat_sessions
+        WHERE created_at >= NOW() - INTERVAL '30 days'
+          AND utm_source IS NOT NULL
+        GROUP BY utm_source
+        ORDER BY cnt DESC
+        LIMIT 8
+      `);
+      utmSources.push(...rows.map(r => ({ source: r.source, cnt: parseInt(r.cnt, 10) })));
+    } catch { /* migration 136 not applied yet */ }
+
     const s = sessionsStats.rows[0] ?? {};
     const m = memoryStats.rows[0] ?? {};
 
@@ -125,6 +140,7 @@ export async function GET(req: NextRequest) {
         activity: r.activity,
         cnt: parseInt(r.cnt, 10),
       })),
+      utmSources,
     });
 
   } catch (err) {
