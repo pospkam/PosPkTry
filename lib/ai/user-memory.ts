@@ -236,6 +236,53 @@ export async function loadTripHistory(userId: number): Promise<TripRecord[]> {
   }
 }
 
+// ── AI-синтез заметок о пользователе (cross-chat memory) ─────────
+/**
+ * После каждого диалога вызывается fire-and-forget.
+ * AI читает последние сообщения и обновляет ai_notes —
+ * конкретные факты: даты, группу, пожелания, ограничения.
+ * Это то что теряется при смене чата и нигде больше не хранится.
+ */
+export async function synthesizeUserNotes(
+  userId: number,
+  recentMessages: Array<{ role: string; content: string }>,
+  existingNotes: string | null,
+): Promise<void> {
+  if (!userId || recentMessages.length < 2) return;
+
+  try {
+    const { callAIFast } = await import('@/lib/ai/providers');
+
+    const userTurns = recentMessages
+      .filter(m => m.role === 'user')
+      .slice(-6)
+      .map(m => m.content)
+      .join('\n');
+
+    if (userTurns.length < 20) return;
+
+    const prompt = `Ты — система памяти AI-турагента. Прочитай сообщения туриста и извлеки конкретные факты которые стоит запомнить для следующих разговоров.
+
+Сообщения туриста:
+${userTurns}
+
+${existingNotes ? `Текущие заметки (дополни, не дублируй):\n${existingNotes}\n` : ''}
+
+Напиши 1-3 предложения с конкретными фактами: даты поездки, количество человек, пожелания, ограничения, упомянутые туры. Только факты, без пересказа. Если ничего конкретного — ответь "нет".`;
+
+    const result = await callAIFast([
+      { role: 'user', content: prompt },
+    ]);
+
+    if (!result || result.trim() === 'нет' || result.trim().toLowerCase() === 'нет.') return;
+
+    const notes = result.trim().slice(0, 500);
+    await upsertUserMemory(userId, { ai_notes: notes });
+  } catch {
+    // fire-and-forget — не блокируем
+  }
+}
+
 // ── Reverse bridge: Agent insights for tourist chat system prompt ──
 let _agentInsightsCache: { data: string; ts: number } | null = null;
 const AGENT_INSIGHTS_TTL = 3 * 60 * 1000; // 3 minutes

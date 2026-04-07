@@ -24,6 +24,7 @@ import {
   buildMemoryContext,
   buildAgentInsightsForTourist,
   loadTripHistory,
+  synthesizeUserNotes,
 } from '@/lib/ai/user-memory';
 import { detectTourIntent, findRelevantTours, type TourSuggestion } from '@/lib/ai/booking-intent';
 import { buildRAGContext } from '@/lib/ai/rag-context';
@@ -263,6 +264,11 @@ export async function POST(request: NextRequest) {
     const extracted = extractMemoryFromMessage(message.trim());
     if (userId) {
       void upsertUserMemory(userId, extracted, true, isNewSession);
+    }
+
+    // Синтез заметок о пользователе (fire-and-forget, каждые 5 сообщений)
+    if (userId && safeRole === 'tourist' && newCount % 5 === 0) {
+      void synthesizeUserNotes(userId, history, userMemory?.ai_notes ?? null);
     }
 
     // Bridge tourist demand to agent system (fire-and-forget)
