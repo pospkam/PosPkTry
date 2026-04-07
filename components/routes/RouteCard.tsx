@@ -49,28 +49,6 @@ const CATEGORY_META: Record<string, { label: string; icon: React.ElementType; ac
   geo:                  { label: 'Геология',            icon: Globe,       accent: 'var(--ocean)' },
 };
 
-const CARD_IMAGES: Record<string, string> = {
-  vulkani:              '/images/bento/mutnovsky.jpg',
-  geyzery:              '/images/bento/mutnovsky.jpg',
-  termalnye_istochniki: '/images/bento/paratunka.jpg',
-  morskie_progulki:     '/images/activities/sea.jpg',
-  mountains:            '/images/gallery/stela.jpg',
-  eco:                  '/images/gallery/aurora.jpg',
-  rybalka:              '/images/activities/fishing.jpg',
-  snegohod:             '/images/activities/snowmobile.jpg',
-  vertoletnye_tury:     '/images/activities/helicopter.jpg',
-  dzhip:                '/images/activities/jeep.jpg',
-  trekking:             '/images/gallery/camp-sunset.jpg',
-  rivers:               '/images/bento/khalaktyr.jpg',
-  lakes:                '/images/gallery/bay-sunset.jpg',
-  medvedi:              '/images/gallery/road-winter.jpg',
-  historical:           '/images/gallery/stela.jpg',
-  monument:             '/images/gallery/stela.jpg',
-  nature_reserve:       '/images/gallery/camp-sunset.jpg',
-  'дикая_природа':      '/images/gallery/road-winter.jpg',
-  geo:                  '/images/bento/mutnovsky.jpg',
-};
-
 function pluralTours(n: number) {
   const mod10 = n % 10, mod100 = n % 100;
   if (mod100 >= 11 && mod100 <= 14) return 'туров';
@@ -94,7 +72,6 @@ export default function RouteCard({ route }: { route: RouteItem }) {
 function LegacyCard({ route }: { route: RouteItem }) {
   const meta = CATEGORY_META[route.category] ?? { label: route.category, icon: MapPin, accent: 'var(--accent)' };
   const Icon = meta.icon;
-  const image = route.imageUrl ?? (route.hasAiImage ? `/api/images/route/${route.id}` : (CARD_IMAGES[route.category] ?? '/images/bento/mutnovsky.jpg'));
   const displayPrice = route.minOfferPrice ?? route.priceFrom;
   const hasOffers = (route.offerCount ?? 0) > 0;
   const isTourOrRoute = route.kind === 'tour' || route.kind === 'route';
@@ -125,72 +102,50 @@ function LegacyCard({ route }: { route: RouteItem }) {
   }, [liking, liked, route.id, route.title]);
 
   return (
-    <article className="group">
-      {/* ── Фото ─────────────────────────────────────────────────────────────── */}
-      <Link href={`/routes/${route.id}`} className="block relative overflow-hidden rounded-lg" style={{ aspectRatio: '3/4' }}>
-        <>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={image}
-            alt={route.title}
-            loading="lazy"
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
-        </>
-
-        {/* Категория — левый верх */}
-        <span
-          className="absolute top-3 left-3 inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-[var(--bg-card)] text-[var(--text-primary)]"
-        >
+    <article className="group rounded-lg border border-[var(--border)] bg-[var(--bg-card)] p-3">
+      <div className="mb-2 flex items-center justify-between">
+        <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-[var(--bg-hover)] text-[var(--text-primary)]">
           <Icon className="w-3 h-3" style={{ color: meta.accent }} />
           {meta.label}
         </span>
-
-        {/* Сезон — точка */}
-        {isInSeason && (
-          <span
-            className="absolute top-3.5 left-3 translate-x-[calc(100%+1.75rem)] w-2 h-2 rounded-full bg-[var(--success)]"
-            title="Сейчас сезон"
-          />
-        )}
-
-        {/* Избранное — правый верх */}
-        <button
-          type="button"
-          onClick={handleFavorite}
-          aria-label={liked ? 'В избранном' : 'В избранное'}
-          className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200"
-          style={{
-            background: liked ? 'var(--accent)' : 'var(--bg-card)',
-            opacity: liking ? 0.5 : 1,
-          }}
-        >
-          <Heart
-            className="w-3.5 h-3.5 transition-all"
+        <div className="flex items-center gap-2">
+          {isInSeason && (
+            <span className="w-2 h-2 rounded-full bg-[var(--success)]" title="Сейчас сезон" />
+          )}
+          <button
+            type="button"
+            onClick={handleFavorite}
+            aria-label={liked ? 'В избранном' : 'В избранное'}
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200"
             style={{
-              color: liked ? 'var(--bg-card)' : 'var(--text-secondary)',
-              fill: liked ? 'var(--bg-card)' : 'none',
+              background: liked ? 'var(--accent)' : 'var(--bg-hover)',
+              opacity: liking ? 0.5 : 1,
             }}
-          />
-        </button>
+          >
+            <Heart
+              className="w-3.5 h-3.5 transition-all"
+              style={{
+                color: liked ? 'var(--bg-card)' : 'var(--text-secondary)',
+                fill: liked ? 'var(--bg-card)' : 'none',
+              }}
+            />
+          </button>
+        </div>
+      </div>
 
-        {/* Цена поверх градиента — левый низ */}
-        {displayPrice != null && displayPrice > 0 && (
-          <span className="absolute bottom-3 left-3 text-sm font-bold text-[var(--text-primary)] bg-[var(--bg-card)] px-2 py-0.5 rounded leading-none">
-            от {displayPrice.toLocaleString('ru-RU')} ₽
-          </span>
-        )}
-      </Link>
-
-      {/* ── Текст ──────────────────────────────────────────────────────────────── */}
-      <Link href={`/routes/${route.id}`} className="block mt-3 space-y-1">
+      <Link href={`/routes/${route.id}`} className="block space-y-1">
         <h3
           className="font-semibold text-[var(--text-primary)] leading-snug line-clamp-2 group-hover:text-[var(--accent)] transition-colors"
           style={{ fontFamily: 'var(--font-playfair)', fontSize: '1rem' }}
         >
           {route.title}
         </h3>
+
+        {displayPrice != null && displayPrice > 0 && (
+          <span className="inline-flex text-xs font-semibold text-[var(--text-primary)] bg-[var(--bg-hover)] px-2 py-1 rounded">
+            от {displayPrice.toLocaleString('ru-RU')} ₽
+          </span>
+        )}
 
         <div className="flex items-center justify-between">
           {isTourOrRoute ? (

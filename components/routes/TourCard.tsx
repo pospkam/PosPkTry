@@ -22,19 +22,6 @@ const CATEGORY_META: Record<string, { label: string; icon: React.ElementType; co
   eco:                  { label: 'Экскурсия',     icon: Anchor,       color: 'var(--success)' },
 };
 
-const CARD_IMAGES: Record<string, string> = {
-  vulkani:              '/images/bento/mutnovsky.jpg',
-  termalnye_istochniki: '/images/bento/paratunka.jpg',
-  morskie_progulki:     '/images/activities/sea.jpg',
-  rybalka:              '/images/activities/fishing.jpg',
-  snegohod:             '/images/activities/snowmobile.jpg',
-  vertoletnye_tury:     '/images/activities/helicopter.jpg',
-  dzhip:                '/images/activities/jeep.jpg',
-  medvedi:              '/images/gallery/road-winter.jpg',
-  splav:                '/images/bento/khalaktyr.jpg',
-  eco:                  '/images/gallery/aurora.jpg',
-};
-
 function daysLabel(n: number) {
   const m10 = n % 10, m100 = n % 100;
   if (m100 >= 11 && m100 <= 14) return `${n} дней`;
@@ -46,7 +33,6 @@ function daysLabel(n: number) {
 export default function TourCard({ route }: { route: RouteItem }) {
   const meta    = CATEGORY_META[route.category] ?? { label: 'Тур', icon: Anchor, color: 'var(--accent)' };
   const Icon    = meta.icon;
-  const image   = route.imageUrl ?? (route.hasAiImage ? `/api/images/route/${route.id}` : (CARD_IMAGES[route.category] ?? '/images/hero/hero-dark.jpg'));
   const price   = route.minOfferPrice ?? route.priceFrom;
 
   const currentMonth = new Date().getMonth() + 1;
@@ -75,59 +61,32 @@ export default function TourCard({ route }: { route: RouteItem }) {
   }, [liking, liked, route.id, route.title]);
 
   return (
-    <article className="group">
-      {/* ── Фото ── */}
-      <Link
-        href={`/routes/${route.id}`}
-        className="block relative overflow-hidden rounded-lg"
-        style={{ aspectRatio: '3/4' }}
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={image}
-          alt={route.title}
-          loading="lazy"
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
-
-        {/* Категория тура — левый верх */}
-        <span className="absolute top-3 left-3 inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-[var(--bg-card)] text-[var(--text-primary)]">
+    <article className="group rounded-lg border border-[var(--border)] bg-[var(--bg-card)] p-3">
+      <div className="mb-2 flex items-center justify-between">
+        <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-[var(--bg-hover)] text-[var(--text-primary)]">
           <Icon className="w-3 h-3" style={{ color: meta.color }} />
           {meta.label}
         </span>
+        <div className="flex items-center gap-2">
+          {isInSeason && (
+            <span className="w-2 h-2 rounded-full bg-[var(--success)]" title="Сейчас сезон" />
+          )}
+          <button
+            type="button"
+            onClick={handleFavorite}
+            aria-label={liked ? 'В избранном' : 'В избранное'}
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200"
+            style={{ background: liked ? 'var(--accent)' : 'var(--bg-hover)', opacity: liking ? 0.5 : 1 }}
+          >
+            <Heart
+              className="w-3.5 h-3.5 transition-all"
+              style={{ color: liked ? 'var(--bg-card)' : 'var(--text-secondary)', fill: liked ? 'var(--bg-card)' : 'none' }}
+            />
+          </button>
+        </div>
+      </div>
 
-        {/* Сезон */}
-        {isInSeason && (
-          <span className="absolute top-3.5 left-3 translate-x-[calc(100%+1.75rem)] w-2 h-2 rounded-full bg-[var(--success)]" title="Сейчас сезон" />
-        )}
-
-        {/* Избранное */}
-        <button
-          type="button"
-          onClick={handleFavorite}
-          aria-label={liked ? 'В избранном' : 'В избранное'}
-          className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200"
-          style={{ background: liked ? 'var(--accent)' : 'var(--bg-card)', opacity: liking ? 0.5 : 1 }}
-        >
-          <Heart
-            className="w-3.5 h-3.5 transition-all"
-            style={{ color: liked ? 'var(--bg-card)' : 'var(--text-secondary)', fill: liked ? 'var(--bg-card)' : 'none' }}
-          />
-        </button>
-
-        {/* Цена — левый низ */}
-        {price != null && price > 0 && (
-          <div className="absolute bottom-3 left-3">
-            <span className="text-sm font-bold text-[var(--text-primary)] bg-[var(--bg-card)] px-2.5 py-1 rounded leading-none">
-              от {price.toLocaleString('ru-RU')} ₽
-            </span>
-          </div>
-        )}
-      </Link>
-
-      {/* ── Текст ── */}
-      <Link href={`/routes/${route.id}`} className="block mt-3 space-y-1.5">
+      <Link href={`/routes/${route.id}`} className="block space-y-1.5">
         <h3
           className="font-semibold text-[var(--text-primary)] leading-snug line-clamp-2 group-hover:text-[var(--accent)] transition-colors"
           style={{ fontFamily: 'var(--font-playfair)', fontSize: '1rem' }}
@@ -149,6 +108,12 @@ export default function TourCard({ route }: { route: RouteItem }) {
               <span>{route.difficulty === 'easy' ? 'Легко' : route.difficulty === 'medium' ? 'Средне' : 'Сложно'}</span>
             )}
           </div>
+        )}
+
+        {price != null && price > 0 && (
+          <span className="inline-flex text-xs font-semibold text-[var(--text-primary)] bg-[var(--bg-hover)] px-2 py-1 rounded">
+            от {price.toLocaleString('ru-RU')} ₽
+          </span>
         )}
 
         {/* CTA */}
