@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import dynamic from 'next/dynamic'
 import { Header } from '@/components/layout/Header'
 import { HeroCompact } from '@/components/homepage/HeroCompact'
+import { MissionConsole } from '@/components/homepage/MissionConsole'
 import { DirectionsList } from '@/components/homepage/DirectionsList'
 import { Footer } from '@/components/layout/Footer'
 
@@ -11,10 +12,6 @@ const InlineChat = dynamic(() => import('@/components/homepage/InlineChat'), {
 });
 const TrustSection = dynamic(
   () => import('@/components/homepage/TrustSection').then(m => ({ default: m.TrustSection })),
-  { loading: () => <SectionSkeleton /> }
-);
-const LeadCTASection = dynamic(
-  () => import('@/components/homepage/LeadCTASection').then(m => ({ default: m.LeadCTASection })),
   { loading: () => <SectionSkeleton /> }
 );
 const HomeBottomNav = dynamic(
@@ -99,10 +96,10 @@ export default async function Page() {
       <Header />
       <main>
         <HeroCompact />
+        <MissionConsole />
         <DirectionsList />
         <InlineChat />
         <TrustSection />
-        <LeadCTASection />
       </main>
       <Footer />
       <HomeBottomNav />
