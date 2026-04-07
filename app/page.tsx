@@ -99,10 +99,10 @@ export default async function Page() {
       <Header />
       <main>
         <HeroCompact />
-        <InlineChat />
         <DirectionsList />
-        <LeadCTASection />
+        <InlineChat />
         <TrustSection />
+        <LeadCTASection />
       </main>
       <Footer />
       <HomeBottomNav />

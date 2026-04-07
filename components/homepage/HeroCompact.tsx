@@ -1,129 +1,116 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
-import { Bot, ArrowRight } from 'lucide-react';
+import { ArrowRight, Bot, ShieldCheck, Activity, MapPinned, Users } from 'lucide-react';
 
-const HERO_LIGHT = '/images/hero/hero-light.jpeg';
-const HERO_DARK  = '/images/hero/hero-dark.jpeg';
+const SIGNALS = [
+  { label: 'Маршрутов в базе', value: '1 000+' },
+  { label: 'Проверенных операторов', value: '47' },
+  { label: 'SAR мониторинг', value: '24 / 7' },
+  { label: 'Время AI ответа', value: '< 15 сек' },
+];
+
+const QUICK_ACTIONS = [
+  { href: '/routes', label: 'Открыть каталог маршрутов' },
+  { href: '/marketplace', label: 'Сравнить туры и цены' },
+  { href: '/map', label: 'Посмотреть карту мест' },
+  { href: '/safety', label: 'Проверить безопасность' },
+];
 
 export function HeroCompact() {
   return (
-    <section className="relative overflow-hidden bg-[#0D0C0B]" style={{ minHeight: '100svh' }}>
-      {/* Full-bleed background */}
-      <Image
-        src={HERO_LIGHT}
-        alt="Камчатка"
-        fill
-        priority
-        sizes="100vw"
-        className="object-cover object-center dark:opacity-0 transition-opacity duration-700"
-      />
-      <Image
-        src={HERO_DARK}
-        alt=""
-        aria-hidden
-        fill
-        sizes="100vw"
-        className="object-cover object-center opacity-0 dark:opacity-100 transition-opacity duration-700"
-      />
-
-      {/* Dark veil — top heavy */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/30 to-black/75" />
-
-      {/* ── Oversized BG letter — decorative ── */}
+    <section className="relative overflow-hidden border-b border-[var(--border)] bg-[var(--bg-primary)]">
       <div
         aria-hidden
-        className="absolute inset-0 flex items-center justify-center pointer-events-none select-none"
-      >
-        <span
-          className="font-playfair font-bold text-white/[0.04] leading-none"
-          style={{ fontSize: 'clamp(18rem, 40vw, 52rem)' }}
-        >
-          К
-        </span>
-      </div>
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(1200px 500px at -10% -20%, color-mix(in srgb, var(--ocean) 18%, transparent) 0%, transparent 60%), radial-gradient(900px 500px at 110% -10%, color-mix(in srgb, var(--accent) 18%, transparent) 0%, transparent 60%)',
+        }}
+      />
 
-      {/* ── Layout grid ── */}
-      <div className="relative z-10 flex flex-col h-full min-h-[100svh] max-w-7xl mx-auto px-6 md:px-10">
+      <div className="relative mx-auto grid max-w-7xl gap-8 px-5 pb-10 pt-24 md:grid-cols-[1.1fr_0.9fr] md:px-10 md:pt-28">
+        <div>
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-card)] px-3 py-1.5">
+            <Activity className="h-3.5 w-3.5 text-[var(--accent)]" />
+            <span className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-secondary)]">
+              Камчатка · 2026 · Платформа онлайн
+            </span>
+          </div>
 
-        {/* Top bar */}
-        <div className="flex items-center justify-between pt-24 md:pt-28">
-          <span className="text-[10px] tracking-[0.25em] font-medium uppercase text-white/40">
-            Камчатка · 2026
-          </span>
-          <span className="text-[10px] tracking-[0.25em] font-medium uppercase text-white/40">
-            53°N 158°E
-          </span>
+          <h1 className="mb-4 font-playfair text-4xl font-bold leading-tight text-[var(--text-primary)] md:text-6xl">
+            Платформа туризма,
+            <br />
+            а не лендинг
+          </h1>
+
+          <p className="mb-7 max-w-2xl text-sm leading-relaxed text-[var(--text-secondary)] md:text-base">
+            Единый рабочий контур: маршруты, проверенные операторы, AI-ассистент,
+            мониторинг рисков и быстрый подбор тура под ваш запрос.
+          </p>
+
+          <div className="mb-8 flex flex-wrap gap-2.5">
+            {QUICK_ACTIONS.map((action) => (
+              <Link
+                key={action.href}
+                href={action.href}
+                className="rounded-full border border-[var(--border)] bg-[var(--bg-card)] px-4 py-2 text-xs font-medium text-[var(--text-primary)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
+              >
+                {action.label}
+              </Link>
+            ))}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <a
+              href="#chat"
+              className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+            >
+              <Bot className="h-4 w-4" />
+              Спросить Кузьмича
+              <ArrowRight className="h-4 w-4" />
+            </a>
+            <Link
+              href="/routes"
+              className="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] px-5 py-3 text-sm font-semibold text-[var(--text-primary)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
+            >
+              Все маршруты
+            </Link>
+          </div>
         </div>
 
-        {/* Main editorial text block */}
-        <div className="flex-1 flex flex-col justify-center py-12">
-          {/* Category label */}
-          <div className="flex items-center gap-3 mb-8">
-            <span className="w-8 h-px bg-white/30" />
-            <span className="text-[11px] tracking-[0.3em] uppercase font-medium text-white/50">
-              AI-платформа туризма
-            </span>
-            <span className="inline-flex items-center gap-1.5 ml-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] animate-pulse" />
-              <span className="text-[10px] text-white/40 tracking-wider uppercase">Online</span>
+        <div className="grid gap-3 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] p-4 md:p-5">
+          <div className="mb-1 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-[var(--text-primary)]">Сигналы платформы</h2>
+            <span className="inline-flex items-center gap-1.5 text-[11px] text-[var(--text-muted)]">
+              <span className="h-2 w-2 rounded-full bg-[var(--success)]" /> Live
             </span>
           </div>
 
-          {/* Giant headline — editorial split */}
-          <div className="mb-10">
-            <h1
-              className="font-playfair font-bold text-white leading-[0.92] tracking-tight"
-              style={{ fontSize: 'clamp(3.5rem, 9vw, 8.5rem)' }}
-            >
-              Дикая.
-            </h1>
-            <h1
-              className="font-playfair font-bold leading-[0.92] tracking-tight"
-              style={{
-                fontSize: 'clamp(3.5rem, 9vw, 8.5rem)',
-                color: 'transparent',
-                WebkitTextStroke: '1px rgba(255,255,255,0.35)',
-              }}
-            >
-              Настоящая.
-            </h1>
-            <h1
-              className="font-playfair font-bold leading-[0.92] tracking-tight"
-              style={{ fontSize: 'clamp(3.5rem, 9vw, 8.5rem)', color: 'var(--accent)' }}
-            >
-              Умная.
-            </h1>
+          <div className="grid grid-cols-2 gap-2.5">
+            {SIGNALS.map((signal) => (
+              <div key={signal.label} className="rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] p-3">
+                <p className="mb-1 text-xl font-bold leading-none text-[var(--text-primary)] md:text-2xl">{signal.value}</p>
+                <p className="text-[11px] text-[var(--text-muted)]">{signal.label}</p>
+              </div>
+            ))}
           </div>
 
-          {/* Sub-text + CTA in a horizontal row */}
-          <div className="flex flex-col md:flex-row md:items-end gap-8 md:gap-16">
-            <p className="text-white/55 text-sm md:text-base leading-relaxed max-w-xs font-light">
-              Первая в России туристическая платформа&nbsp;с&nbsp;AI‑оператором,
-              13-ю&nbsp;цифровыми директорами и&nbsp;SAR‑мониторингом.
-            </p>
-            <div className="flex items-center gap-4">
-              <a
-                href="#chat"
-                className="group inline-flex items-center gap-2.5 px-7 py-3.5 rounded-full font-semibold text-sm text-white transition-all hover:scale-105 active:scale-95"
-                style={{ background: 'var(--accent)', boxShadow: '0 0 32px rgba(212,74,12,0.45)' }}
-              >
-                <Bot className="w-4 h-4" />
-                Спросить Кузьмича
-                <ArrowRight className="w-4 h-4 opacity-70 group-hover:translate-x-0.5 transition-transform" />
-              </a>
-              <Link
-                href="/routes"
-                className="text-sm text-white/50 hover:text-white/90 transition-colors underline underline-offset-4"
-              >
-                Все маршруты
-              </Link>
+          <div className="mt-1 grid gap-2">
+            <div className="flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] px-3 py-2 text-xs text-[var(--text-secondary)]">
+              <ShieldCheck className="h-4 w-4 text-[var(--success)]" />
+              Проверка операторов: активна
+            </div>
+            <div className="flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] px-3 py-2 text-xs text-[var(--text-secondary)]">
+              <MapPinned className="h-4 w-4 text-[var(--ocean)]" />
+              Геослои маршрутов: обновлены
+            </div>
+            <div className="flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] px-3 py-2 text-xs text-[var(--text-secondary)]">
+              <Users className="h-4 w-4 text-[var(--accent)]" />
+              Операторы в онлайне: 19
             </div>
           </div>
         </div>
-
-        <div className="pb-10" />
       </div>
     </section>
   );
