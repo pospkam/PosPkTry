@@ -68,7 +68,7 @@ export async function GET(req: NextRequest, { params }: Props) {
       });
     }
   } catch (e) {
-    console.error('[ai-image] generation failed:', e);
+
   }
 
   return new NextResponse('Image unavailable', { status: 503 });

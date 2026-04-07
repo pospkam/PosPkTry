@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { pool } from '@/lib/db-pool';
 import TourDetailClient from './_TourDetailClient';
 
@@ -92,7 +93,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function TourDetailPage({ params }: Props) {
   const { id } = await params;
   const tourId = parseInt(id);
+  if (isNaN(tourId)) notFound();
+
   const [tour, reviews] = await Promise.all([getTour(tourId), getReviews(tourId)]);
+  if (!tour) notFound();
 
   const structuredData = tour ? {
     '@context': 'https://schema.org',

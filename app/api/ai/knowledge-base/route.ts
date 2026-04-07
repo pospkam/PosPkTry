@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { config } from '@/lib/config'
 import { requireAdmin } from '@/lib/auth/middleware'
+import { pool } from '@/lib/db-pool'
 import { convertUrlToMarkdown } from '@/lib/ai/markdown-new'
 import fs from 'fs'
 import path from 'path'
@@ -112,14 +113,15 @@ async function collectProjectDocuments(): Promise<KnowledgeDocument[]> {
     const tours = await query(`
       SELECT
         id,
-        name,
+        title AS name,
         description,
-        price,
-        duration,
+        base_price AS price,
+        duration_hours AS duration,
         difficulty,
-        location,
-        category
-      FROM tours
+        location_name AS location,
+        activity_type AS category
+      FROM operator_tours
+      WHERE is_active = true AND deleted_at IS NULL
       LIMIT 50
     `)
 
@@ -272,6 +274,11 @@ export async function GET(request: NextRequest) {
   try {
     const { timeweb } = config.ai
 
+    const kbStats = await pool.query<{ count: number; last_update: string | null }>(
+      `SELECT COUNT(*)::int AS count, MAX(updated_at) AS last_update
+       FROM knowledge_base_articles WHERE is_published = true`
+    );
+
     const status = {
       agentId: process.env.TIMEWEB_AI_AGENT_ID ?? '',
       agentName: 'Timeweb AI Agent (deprecated)',
@@ -280,8 +287,8 @@ export async function GET(request: NextRequest) {
       chunkSize: timeweb.knowledgeBase.chunkSize,
       s3Bucket: process.env.S3_BUCKET,
       s3Endpoint: process.env.S3_ENDPOINT,
-      lastUpdate: null, // TODO: хранить в БД
-      documentCount: 0, // TODO: получить из БД
+      lastUpdate: kbStats.rows[0]?.last_update ?? null,
+      documentCount: kbStats.rows[0]?.count ?? 0,
     }
 
     return NextResponse.json({

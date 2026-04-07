@@ -172,7 +172,7 @@ OUTPUT ONLY VALID JSON (no other text):
       summary: composedItinerary.summary,
     });
   } catch (error) {
-    console.error('Compose error:', error);
+
     return NextResponse.json(
       { error: 'Failed to compose tour' },
       { status: 400 }

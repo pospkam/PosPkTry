@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       timestamp: new Date().toISOString()
     });
   } catch (err) {
-    console.error('[Campaign API]', err);
+
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Campaign launch failed' },
       { status: 500 }

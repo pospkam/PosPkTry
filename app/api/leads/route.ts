@@ -227,7 +227,7 @@ export async function POST(req: NextRequest) {
     lines.push('', `<code>${leadId}</code>`);
 
     telegramService.sendMessage({ chatId, text: lines.join('\n'), parseMode: 'HTML' })
-      .catch((e: unknown) => console.error('[leads] LEADS_CHAT_ID notify failed:', e));
+      .catch(() => null);
   }
 
   // Admin-чат с кнопками статусов
@@ -239,7 +239,7 @@ export async function POST(req: NextRequest) {
     routeTitle: route_title ?? null,
     sourceUrl:  source_url ?? null,
     sourceData: source_data ?? null,
-  }).catch((e: unknown) => console.error('[leads] notifyAdminNewLead failed:', e));
+  }).catch(() => null);
 
   // Уведомление оператора с ссылкой на AI-обработку
   notifyOperatorNewLead({

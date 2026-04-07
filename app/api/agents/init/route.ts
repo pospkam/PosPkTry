@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
       timestamp: new Date().toISOString()
     });
   } catch (err) {
-    console.error('[Agent Init] Error:', err);
+
     return NextResponse.json(
       {
         success: false,

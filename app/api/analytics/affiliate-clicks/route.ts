@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error('Affiliate click tracking error:', err);
+
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }
 }
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ success: true, data: result.rows });
   } catch (err) {
-    console.error('Affiliate stats error:', err);
+
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }
 }

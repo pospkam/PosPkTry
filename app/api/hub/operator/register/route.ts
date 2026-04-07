@@ -93,7 +93,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.error('[Operator Register]', err);
     return NextResponse.json(
       { error: 'Ошибка регистрации' },
       { status: 500 }

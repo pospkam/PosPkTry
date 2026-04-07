@@ -51,7 +51,7 @@ async function fetchInitiatives() {
     );
     return result.rows;
   } catch (e) {
-    console.error('Failed to fetch initiatives:', e);
+
     return [];
   }
 }
@@ -95,7 +95,7 @@ async function logEvent(action_type: string, metadata: Record<string, unknown>) 
       [action_type, JSON.stringify(metadata)]
     );
   } catch (e) {
-    console.error('Failed to log event:', e);
+
   }
 }
 

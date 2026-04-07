@@ -267,17 +267,7 @@ function Stars({ rating }: { rating: number }) {
 
 /* ─── Main Component ─── */
 
-export default function TourDetailClient({ tour, reviews = [] }: { tour: TourFull | null; reviews?: TourReview[] }) {
-  if (!tour) {
-    return (
-      <div className="ds-page text-center py-24">
-        <p className="text-[var(--text-muted)] mb-4">Тур не найден</p>
-        <Link href="/marketplace" className="text-[var(--ocean)] hover:underline">
-          Вернуться в каталог
-        </Link>
-      </div>
-    );
-  }
+export default function TourDetailClient({ tour, reviews = [] }: { tour: TourFull; reviews?: TourReview[] }) {
 
   const price = parseFloat(tour.base_price);
   const priceOld = tour.price_old ? parseFloat(tour.price_old) : null;

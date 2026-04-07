@@ -209,11 +209,43 @@ export async function GET(request: NextRequest) {
       LIMIT 5
     `;
 
-    const pendingCommissionsResult = await query<{
-      id: string; agent_id: string; agent_name: string; total_amount: string;
-      status: string; payment_method: unknown; payout_date: unknown;
-      created_at: unknown; updated_at: unknown;
-    }>(pendingCommissionsQuery, [agentId]);
+    // Отдельные позиции комиссий (нет FK на payout — присваиваем к pending выплатам)
+    const pendingCommissionItemsQuery = `
+      SELECT
+        ac.id, ac.agent_id, ac.booking_id, ac.amount::text, ac.rate::text,
+        ac.status, ac.paid_at, ac.payout_reference, ac.notes, ac.created_at, ac.updated_at
+      FROM agent_commissions ac
+      WHERE ac.agent_id = $1 AND ac.status = 'pending'
+      ORDER BY ac.created_at DESC
+      LIMIT 50
+    `;
+
+    const [pendingCommissionsResult, pendingCommissionItemsResult] = await Promise.all([
+      query<{
+        id: string; agent_id: string; agent_name: string; total_amount: string;
+        status: string; payment_method: unknown; payout_date: unknown;
+        created_at: unknown; updated_at: unknown;
+      }>(pendingCommissionsQuery, [agentId]),
+      query<{
+        id: string; agent_id: string; booking_id: string; amount: string; rate: string;
+        status: string; paid_at: unknown; payout_reference: unknown; notes: unknown;
+        created_at: unknown; updated_at: unknown;
+      }>(pendingCommissionItemsQuery, [agentId]),
+    ]);
+
+    const commissionItems = pendingCommissionItemsResult.rows.map(r => ({
+      id: r.id,
+      agentId: r.agent_id,
+      bookingId: r.booking_id,
+      amount: parseFloat(r.amount),
+      rate: parseFloat(r.rate),
+      status: r.status,
+      paidAt: r.paid_at,
+      payoutReference: r.payout_reference,
+      notes: r.notes,
+      createdAt: r.created_at,
+      updatedAt: r.updated_at,
+    }));
 
     const dashboardData: AgentDashboardData = {
       metrics: {
@@ -289,7 +321,7 @@ export async function GET(request: NextRequest) {
         agentId: row.agent_id,
         agentName: row.agent_name,
         totalAmount: parseFloat(row.total_amount),
-        commissions: [], // TODO: загрузить связанные комиссии
+        commissions: commissionItems,
         status: row.status,
         paymentMethod: row.payment_method,
         payoutDate: row.payout_date,

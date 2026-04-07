@@ -36,8 +36,7 @@ export async function GET(request: NextRequest) {
 
     const result = await query<ReferenceTour>(sql, params);
     return NextResponse.json({ tours: result.rows });
-  } catch (error) {
-    console.error('GET reference tours error:', error);
+  } catch {
     return NextResponse.json(
       { error: 'Failed to fetch tours' },
       { status: 500 }
@@ -105,7 +104,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('POST reference tour error:', error);
+
     return NextResponse.json(
       { error: 'Failed to create tour' },
       { status: 400 }
