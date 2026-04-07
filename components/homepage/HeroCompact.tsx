@@ -2,13 +2,7 @@
 
 import Link from 'next/link';
 import { ArrowRight, Bot, ShieldCheck, Activity, MapPinned, Users } from 'lucide-react';
-
-const SIGNALS = [
-  { label: 'Маршрутов в базе', value: '1 000+' },
-  { label: 'Проверенных операторов', value: '47' },
-  { label: 'SAR мониторинг', value: '24 / 7' },
-  { label: 'Время AI ответа', value: '< 15 сек' },
-];
+import { useHomeMetrics } from '@/hooks/use-home-metrics';
 
 const QUICK_ACTIONS = [
   { href: '/routes', label: 'Открыть каталог маршрутов' },
@@ -18,6 +12,15 @@ const QUICK_ACTIONS = [
 ];
 
 export function HeroCompact() {
+  const { metrics } = useHomeMetrics();
+
+  const signals = [
+    { label: 'Маршрутов в базе', value: metrics.routesTotal.toLocaleString('ru-RU') },
+    { label: 'Проверенных операторов', value: metrics.verifiedOperators.toLocaleString('ru-RU') },
+    { label: 'Активных туров', value: metrics.activeTours.toLocaleString('ru-RU') },
+    { label: 'Открытых броней', value: metrics.openBookings.toLocaleString('ru-RU') },
+  ];
+
   return (
     <section className="relative overflow-hidden border-b border-[var(--border)] bg-[var(--bg-primary)]">
       <div
@@ -88,7 +91,7 @@ export function HeroCompact() {
           </div>
 
           <div className="grid grid-cols-2 gap-2.5">
-            {SIGNALS.map((signal) => (
+            {signals.map((signal) => (
               <div key={signal.label} className="rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] p-3">
                 <p className="mb-1 text-xl font-bold leading-none text-[var(--text-primary)] md:text-2xl">{signal.value}</p>
                 <p className="text-[11px] text-[var(--text-muted)]">{signal.label}</p>
@@ -107,7 +110,7 @@ export function HeroCompact() {
             </div>
             <div className="flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] px-3 py-2 text-xs text-[var(--text-secondary)]">
               <Users className="h-4 w-4 text-[var(--accent)]" />
-              Операторы в онлайне: 19
+              Активные операторы за 14 дней: {metrics.activeOperators.toLocaleString('ru-RU')}
             </div>
           </div>
         </div>

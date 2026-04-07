@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { CalendarDays, Wallet, Users, ShieldAlert, ArrowRight } from 'lucide-react';
+import { useHomeMetrics } from '@/hooks/use-home-metrics';
 
 const DAYS_OPTIONS = [3, 5, 7, 10];
 const BUDGET_OPTIONS = [
@@ -20,6 +21,7 @@ export function MissionConsole() {
   const [days, setDays] = useState<number>(5);
   const [budget, setBudget] = useState<(typeof BUDGET_OPTIONS)[number]['key']>('mid');
   const [style, setStyle] = useState<(typeof STYLE_OPTIONS)[number]['key']>('active');
+  const { metrics, loading } = useHomeMetrics();
 
   const query = useMemo(() => {
     const budgetText = BUDGET_OPTIONS.find((b) => b.key === budget)?.label ?? '80 000 - 180 000';
@@ -38,6 +40,11 @@ export function MissionConsole() {
             <h2 className="font-playfair text-2xl md:text-3xl font-bold text-[var(--text-primary)] leading-tight">
               План за 30 секунд
             </h2>
+            <p className="mt-2 text-xs text-[var(--text-secondary)]">
+              {loading
+                ? 'Обновляем операционные метрики...'
+                : `Live: ${metrics.routesTotal.toLocaleString('ru-RU')} маршрутов, ${metrics.verifiedOperators.toLocaleString('ru-RU')} проверенных операторов`}
+            </p>
           </div>
 
           <div className="grid gap-4 md:grid-cols-3">
