@@ -1,6 +1,11 @@
 /**
  * Kuzmich Core — общая логика для Telegram и MAX ботов.
  * Booking flow, AI-чат, дата-парсер, поиск туров.
+ *
+ * v2 (апрель 2026):
+ *  - buildTourContext() — реальные туры из БД в системный промпт
+ *  - Vision описание фото прокидывается через opts.visionDescription
+ *  - Проактивное предложение бронирования после AI-ответа
  */
 
 import { pool } from '@/lib/db-pool';
@@ -16,6 +21,7 @@ export interface TourRow {
   title: string;
   base_price: number;
   duration_days: number | null;
+  category?: string | null;
 }
 
 export interface PendingBooking {
@@ -43,8 +49,64 @@ Supported: Russian, English, 日本語, 한국어, Deutsch, 中文, Français, E
 Toponyms for non-Russian: Avachinsky, Mutnovsky, Kurilskoye Lake, Valley of Geysers.
 
 When a tourist has chosen a tour and wants to book — tell them to write "book" or "I want this one".
-For prices — give ranges.
+For prices — give ranges from the tour list below.
 NEVER use * ** # _ markdown symbols.`;
+
+// ── Загрузка реальных туров из БД (контекст знаний) ─────────────────────────
+
+interface TourContextRow {
+  id: number;
+  title: string;
+  base_price: number;
+  duration_days: number | null;
+  category: string | null;
+  location_name: string | null;
+  operator_name: string | null;
+}
+
+let _tourContextCache: string = '';
+let _tourContextAt = 0;
+const CACHE_TTL_MS = 10 * 60 * 1000; // 10 мин
+
+export async function buildTourContext(): Promise<string> {
+  if (_tourContextCache && Date.now() - _tourContextAt < CACHE_TTL_MS) {
+    return _tourContextCache;
+  }
+  try {
+    const { rows } = await pool.query<TourContextRow>(`
+      SELECT ot.id, ot.title, ot.base_price, ot.duration_days, ot.category,
+             ot.location_name,
+             u.company_name AS operator_name
+      FROM operator_tours ot
+      LEFT JOIN users u ON u.id = ot.operator_id
+      WHERE ot.is_active = true AND ot.deleted_at IS NULL
+      ORDER BY ot.base_price ASC
+      LIMIT 40
+    `);
+
+    if (!rows.length) return '';
+
+    const lines = rows.map(r => {
+      const dur = r.duration_days ? `${r.duration_days} дн.` : '';
+      const price = `от ${Number(r.base_price).toLocaleString('ru-RU')} р/чел`;
+      const cat = r.category ? `[${r.category}]` : '';
+      const loc = r.location_name ? ` — ${r.location_name}` : '';
+      const op  = r.operator_name ? ` | Оператор: ${r.operator_name}` : '';
+      return `ID${r.id}: "${r.title}"${loc} ${cat} ${dur} ${price}${op}`;
+    });
+
+    _tourContextCache = [
+      'РЕАЛЬНЫЕ ТУРЫ НА ПЛАТФОРМЕ (актуальные цены, называй по имени):',
+      ...lines,
+      '',
+      'Когда турист выбрал тур — предложи забронировать прямо сейчас.',
+    ].join('\n');
+    _tourContextAt = Date.now();
+    return _tourContextCache;
+  } catch {
+    return '';
+  }
+}
 
 // ── Дата-парсер ───────────────────────────────────────────────────────────────
 
@@ -95,14 +157,16 @@ export function parseDate(text: string): string | null {
 export function extractTourKeywords(text: string): string[] {
   const t = text.toLowerCase();
   const map: Record<string, string[]> = {
-    'рыбалка': ['рыбалк', 'рыб', 'fishing', 'лосось', 'нерка'],
-    'вулкан': ['вулкан', 'volcano', 'кратер', 'авача'],
-    'медведи': ['медвед', 'bear', 'курильское'],
-    'термальные': ['термал', 'горячие источники', 'купальн', 'паратунк'],
-    'вертолет': ['вертолет', 'вертолёт', 'helicopter', 'heli'],
-    'снегоход': ['снегоход', 'снег', 'snowmobile', 'зимн'],
-    'катер': ['катер', 'море', 'лодк', 'boat'],
-    'треккинг': ['треккинг', 'поход', 'пеший', 'trekking', 'hiking'],
+    'рыбалка': ['рыбалк', 'рыб', 'fishing', 'лосось', 'нерка', 'форел'],
+    'вулкан': ['вулкан', 'volcano', 'кратер', 'авача', 'авачинск', 'мутновск'],
+    'медведи': ['медвед', 'bear', 'курильское', 'косолапый'],
+    'термальные': ['термал', 'горячие источники', 'купальн', 'паратунк', 'нарзан'],
+    'вертолет': ['вертолет', 'вертолёт', 'helicopter', 'heli', 'helo'],
+    'снегоход': ['снегоход', 'снег', 'snowmobile', 'зимн', 'лыж'],
+    'катер': ['катер', 'море', 'лодк', 'boat', 'яхт', 'бухт'],
+    'треккинг': ['треккинг', 'поход', 'пеший', 'trekking', 'hiking', 'маршрут'],
+    'дайвинг': ['дайвинг', 'diving', 'подводн'],
+    'сплав': ['сплав', 'рафтинг', 'river', 'рек'],
   };
   const found: string[] = [];
   for (const [key, triggers] of Object.entries(map)) {
@@ -117,6 +181,7 @@ const BOOKING_TRIGGERS = [
   'бронирую', 'забронируй', 'хочу этот', 'беру', 'записывай',
   'оформи', 'оформляй', 'хочу записаться', 'давай бронируем',
   'бронируем', 'возьму', 'book', 'reserve', 'хочу забронировать',
+  'забронировать', 'запишите', 'хочу на этот',
 ];
 
 export function isBookingTrigger(text: string): boolean {
@@ -128,7 +193,7 @@ const YES = ['да', 'yes', 'верно', 'подтверждаю', 'всё ве
 const NO = ['нет', 'no', 'не верно', 'отмена', 'cancel', 'стоп', 'stop', 'отменить', 'назад'];
 
 export function isYes(t: string) { return YES.some(y => t.toLowerCase().includes(y)); }
-export function isNo(t: string) { return NO.some(n => t.toLowerCase().includes(n)); }
+export function isNo(t: string)  { return NO.some(n => t.toLowerCase().includes(n)); }
 
 // ── DB helpers ────────────────────────────────────────────────────────────────
 
@@ -161,7 +226,7 @@ export async function findTour(keywords: string[]): Promise<TourRow | null> {
   try {
     const patterns = keywords.map(k => `%${k}%`);
     const { rows } = await pool.query<TourRow>(
-      `SELECT id, title, base_price, duration_days
+      `SELECT id, title, base_price, duration_days, category
        FROM operator_tours
        WHERE is_active = true AND deleted_at IS NULL
          AND (${patterns.map((_, i) => `(title ILIKE $${i + 1} OR category ILIKE $${i + 1})`).join(' OR ')})
@@ -276,7 +341,7 @@ export async function handleBookingStep(
       `Имя: <b>${b.name}</b>`,
       `Телефон: <b>${b.phone}</b>`,
       '',
-      'Все верно? Напишите <b>Да</b> для подтверждения или <b>Нет</b> для отмены.',
+      'Всё верно? Напишите <b>Да</b> для подтверждения или <b>Нет</b> для отмены.',
     ].join('\n'));
     return true;
   }
@@ -305,7 +370,7 @@ export async function handleBookingStep(
 
     const dateStr = new Date(b.date!).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
     await reply(chatId, [
-      `Бронирование создано! Номер брони: <b>#${bookingId}</b>`,
+      `Бронирование создано! Номер: <b>#${bookingId}</b>`,
       '',
       `Тур: ${b.tour.title}`,
       `Дата: ${dateStr}`,
@@ -337,7 +402,7 @@ export async function startBooking(
 
   const tour = await findTour(keywords);
   if (!tour) {
-    await reply(chatId, 'Уточни, какой тур хочешь забронировать? Напиши: рыбалка, вулканы, медведи, термальные источники...');
+    await reply(chatId, 'Уточни, какой тур хочешь забронировать?\n\nНапиши: рыбалка, вулканы, медведи, термальные источники...');
     return true;
   }
 
@@ -352,29 +417,67 @@ export async function startBooking(
   return true;
 }
 
-// ── AI Chat ───────────────────────────────────────────────────────────────────
+// ── AI Chat с знаниями из БД ──────────────────────────────────────────────────
 
-export async function aiChat(
-  chatId: number,
-  text: string,
-  mode: string,
-  reply: ReplyFn,
-  userId?: number | null,
-  userName?: string | null,
-): Promise<void> {
-  await saveMsg(chatId, mode, 'user', text, userId, userName);
+export async function aiChat(opts: {
+  chatId: number;
+  text: string;
+  mode: string;
+  reply: ReplyFn;
+  userId?: number | null;
+  userName?: string | null;
+  visionDescription?: string;          // описание фото от Gemini
+  pending: Map<number, PendingBooking>;
+}): Promise<void> {
+  const { chatId, text, mode, reply, userId, userName, visionDescription, pending } = opts;
+
+  // Сохраняем сообщение пользователя
+  const userContent = visionDescription
+    ? `[Фото: ${visionDescription}]\n${text || ''}`.trim()
+    : text;
+  await saveMsg(chatId, mode, 'user', userContent, userId, userName);
+
   const history = await getHistory(chatId, mode);
+  const tourContext = await buildTourContext();
+
+  // Строим системный промпт с реальными данными о турах
+  const systemContent = tourContext
+    ? `${KUZMICH_SYSTEM}\n\n${tourContext}`
+    : KUZMICH_SYSTEM;
+
+  // Если есть описание фото — прокидываем его первым сообщением
+  const extraUserMsg: ChatMessage[] = visionDescription
+    ? [{ role: 'user', content: `Пользователь прислал фото. Вот что на нём: ${visionDescription}` }]
+    : [];
 
   const messages: ChatMessage[] = [
-    { role: 'system', content: KUZMICH_SYSTEM },
+    { role: 'system', content: systemContent },
     ...history,
+    ...extraUserMsg,
   ];
 
   const response = await callAIWaterfall(messages);
-  const safe = response?.trim() || 'Что-то с сигналом... Попробуй ещё раз.';
+  let answer = response?.trim() || 'Что-то с сигналом... Попробуй ещё раз.';
 
-  await saveMsg(chatId, mode, 'assistant', safe, userId, userName);
-  await reply(chatId, safe);
+  // Проактивное предложение бронирования:
+  // Если в тексте есть туристический интент И бот ещё не в booking flow
+  // → дополняем ответ предложением
+  if (!pending.has(chatId) && !isBookingTrigger(text)) {
+    const keywords = extractTourKeywords(text);
+    const hasTourKeyword = keywords.length > 0 && keywords[0] !== text.slice(0, 30);
+    const alreadySuggestsBooking = answer.toLowerCase().includes('бронир') ||
+                                    answer.toLowerCase().includes('book');
+    if (hasTourKeyword && !alreadySuggestsBooking) {
+      // Проверяем что есть подходящий тур в БД
+      const tour = await findTour(keywords);
+      if (tour) {
+        answer += `\n\nЕсть интерес? Напиши <b>бронирую</b> — оформим прямо здесь.`;
+      }
+    }
+  }
+
+  await saveMsg(chatId, mode, 'assistant', answer, userId, userName);
+  await reply(chatId, answer);
 }
 
 // ── Full Message Processor ────────────────────────────────────────────────────
@@ -388,8 +491,9 @@ export async function processMessage(opts: {
   createdVia: string;
   pending: Map<number, PendingBooking>;
   reply: ReplyFn;
+  visionDescription?: string;
 }): Promise<void> {
-  const { chatId, text, userName, userId, mode, createdVia, pending: pendingMap, reply: replyFn } = opts;
+  const { chatId, text, userName, userId, mode, createdVia, pending: pendingMap, reply: replyFn, visionDescription } = opts;
   const cmd = text.split(' ')[0]?.toLowerCase() ?? '';
 
   // /start
@@ -400,6 +504,8 @@ export async function processMessage(opts: {
       '',
       'Напиши что хочешь: рыбалка, вулканы, медведи, термальные источники...',
       'Или сразу: <b>хочу рыбалку 15 июля, 2 человека</b>',
+      '',
+      'Можешь прислать фото — разберёмся что за место.',
     ].join('\n'));
     return;
   }
@@ -410,13 +516,14 @@ export async function processMessage(opts: {
       '<b>Что умею:</b>',
       '',
       'Подобрать тур под запрос',
-      '<b>Забронировать тур прямо в чате</b>',
+      '<b>Забронировать прямо в чате</b>',
       'Рассказать про Камчатку',
+      'Определить место по фото',
       '',
       '<b>Примеры:</b>',
       '"хочу рыбалку в июле на 3 дня"',
       '"медведи для двоих, бюджет 20к"',
-      '"бронируй" — начать оформление',
+      '"бронирую" — начать оформление',
       '',
       '/reset — очистить историю',
     ].join('\n'));
@@ -447,6 +554,6 @@ export async function processMessage(opts: {
     return;
   }
 
-  // Free AI chat
-  await aiChat(chatId, text, mode, replyFn, userId, userName);
+  // Free AI chat (с vision если есть)
+  await aiChat({ chatId, text, mode, reply: replyFn, userId, userName, visionDescription, pending: pendingMap });
 }
