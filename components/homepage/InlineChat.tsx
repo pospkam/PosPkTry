@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Sparkles, Send, Loader2 } from 'lucide-react';
+import { useAIStream } from '@/hooks/useAIStream';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -20,10 +21,10 @@ const QUICK_CHIPS = [
 export default function InlineChat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
   const [sessionId, setSessionId] = useState('');
   const [started, setStarted] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { stream, loading } = useAIStream();
 
   useEffect(() => {
     const storageKey = 'th_inline_session';
@@ -42,30 +43,55 @@ export default function InlineChat() {
     if (!text.trim() || loading) return;
     setStarted(true);
     const userMsg: Message = { role: 'user', content: text.trim() };
-    setMessages(prev => [...prev, userMsg]);
+    setMessages(prev => [...prev, userMsg, { role: 'assistant', content: '' }]);
     setInput('');
-    setLoading(true);
 
     try {
-      const res = await fetch('/api/ai/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text.trim(), sessionId, role: 'tourist' }),
+      await stream(text.trim(), {
+        sessionId,
+        role: 'tourist',
+        onToken: (token) => {
+          setMessages(prev => {
+            if (prev.length === 0) return prev;
+            const next = [...prev];
+            const lastIdx = next.length - 1;
+            if (next[lastIdx].role === 'assistant') {
+              next[lastIdx] = {
+                ...next[lastIdx],
+                content: next[lastIdx].content + token,
+              };
+            }
+            return next;
+          });
+        },
+        onError: () => {
+          setMessages(prev => {
+            const next = [...prev];
+            const lastIdx = next.length - 1;
+            if (lastIdx >= 0 && next[lastIdx].role === 'assistant') {
+              next[lastIdx] = {
+                role: 'assistant',
+                content: 'Нет связи. Попробуйте позже.',
+              };
+            }
+            return next;
+          });
+        },
       });
-      const data = await res.json();
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: data.data?.answer ?? 'Попробуйте ещё раз.',
-      }]);
     } catch {
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: 'Нет связи. Попробуйте позже.',
-      }]);
-    } finally {
-      setLoading(false);
+      setMessages(prev => {
+        const next = [...prev];
+        const lastIdx = next.length - 1;
+        if (lastIdx >= 0 && next[lastIdx].role === 'assistant') {
+          next[lastIdx] = {
+            role: 'assistant',
+            content: 'Нет связи. Попробуйте позже.',
+          };
+        }
+        return next;
+      });
     }
-  }, [loading, sessionId]);
+  }, [loading, sessionId, stream]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
