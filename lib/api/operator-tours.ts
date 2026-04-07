@@ -54,11 +54,13 @@ export const UpdateTourSchema = CreateTourSchema.partial().extend({
   multi_day_count:   z.number().positive().nullable().optional(),
   season_start:      z.string().date().nullable().optional(),
   season_end:        z.string().date().nullable().optional(),
-  difficulty:        z.enum(['easy', 'medium', 'hard', 'expert']).nullable().optional(),
-  tour_image:        z.string().max(500).nullable().optional(),
-  agent_route_id:    z.string().uuid().nullable().optional(),
-  latitude:          z.number().min(-90).max(90).nullable().optional(),
-  longitude:         z.number().min(-180).max(180).nullable().optional(),
+  difficulty:          z.enum(['easy', 'medium', 'hard', 'expert']).nullable().optional(),
+  tour_image:          z.string().max(500).nullable().optional(),
+  agent_route_id:      z.string().uuid().nullable().optional(),
+  latitude:            z.number().min(-90).max(90).nullable().optional(),
+  longitude:           z.number().min(-180).max(180).nullable().optional(),
+  available_slots:     z.number().int().min(0).nullable().optional(),
+  next_available_date: z.string().date().nullable().optional(),
 });
 
 export const AddAvailabilitySchema = z.object({
@@ -94,6 +96,7 @@ export async function getToursByOperator(
       t.difficulty, t.included, t.not_included, t.what_to_bring,
       t.photos, t.tour_image, t.agent_route_id,
       t.rating, t.review_count,
+      t.available_slots, t.next_available_date,
       t.weather_dependent, t.season_start, t.season_end,
       COUNT(b.id) as total_bookings,
       COALESCE(SUM(CASE WHEN b.payment_status = 'paid' THEN b.final_price ELSE 0 END), 0) as total_revenue,

@@ -6,6 +6,7 @@ import Image from 'next/image';
 import {
   Plus, Upload, Mountain, Star, Users, Clock,
   Eye, EyeOff, Trash2, Edit2, RefreshCw, ChevronLeft, ChevronRight,
+  CalendarDays, Check, X,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -28,6 +29,8 @@ interface Tour {
   total_bookings: string;
   total_revenue: string;
   created_at: string;
+  available_slots: number | null;
+  next_available_date: string | null;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -51,6 +54,10 @@ export default function ToursManagementClient() {
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [editingAvail, setEditingAvail] = useState<string | null>(null);
+  const [availSlots, setAvailSlots]   = useState('');
+  const [availDate, setAvailDate]     = useState('');
+  const [savingAvail, setSavingAvail] = useState(false);
 
   const totalPages = Math.max(1, Math.ceil(total / LIMIT));
 
@@ -92,6 +99,27 @@ export default function ToursManagementClient() {
       await fetch(`/api/hub/operator/tours/${id}`, { method: 'DELETE' });
       await load();
     } finally { setDeleting(null); }
+  }
+
+  function openAvailEditor(tour: Tour) {
+    setEditingAvail(tour.id);
+    setAvailSlots(tour.available_slots != null ? String(tour.available_slots) : '');
+    setAvailDate(tour.next_available_date ?? '');
+  }
+
+  async function saveAvailability(id: string) {
+    setSavingAvail(true);
+    try {
+      const slots = availSlots === '' ? null : parseInt(availSlots, 10);
+      const date  = availDate === '' ? null : availDate;
+      await fetch(`/api/hub/operator/tours/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ available_slots: slots, next_available_date: date }),
+      });
+      setEditingAvail(null);
+      await load();
+    } finally { setSavingAvail(false); }
   }
 
   return (
@@ -235,6 +263,70 @@ export default function ToursManagementClient() {
                       {tour.total_bookings} броней · {RUB(tour.total_revenue)}
                     </span>
                   </div>
+
+                  {/* Availability row */}
+                  {editingAvail === tour.id ? (
+                    <div className="flex items-center gap-2 mt-2.5 flex-wrap">
+                      <div className="flex items-center gap-1.5">
+                        <label className="text-xs" style={{ color: 'var(--text-muted)' }}>Мест:</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={availSlots}
+                          onChange={e => setAvailSlots(e.target.value)}
+                          placeholder="0"
+                          className="ds-input text-xs w-16 py-1 px-2"
+                        />
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <label className="text-xs" style={{ color: 'var(--text-muted)' }}>Дата:</label>
+                        <input
+                          type="date"
+                          value={availDate}
+                          onChange={e => setAvailDate(e.target.value)}
+                          className="ds-input text-xs py-1 px-2"
+                        />
+                      </div>
+                      <button
+                        onClick={() => void saveAvailability(tour.id)}
+                        disabled={savingAvail}
+                        className="p-1 rounded-md transition-colors"
+                        style={{ background: 'var(--success)', color: '#fff' }}
+                        title="Сохранить"
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => setEditingAvail(null)}
+                        className="p-1 rounded-md transition-colors hover:bg-[var(--bg-hover)]"
+                        title="Отмена"
+                      >
+                        <X className="w-3.5 h-3.5" style={{ color: 'var(--text-muted)' }} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div
+                      className="flex items-center gap-1.5 mt-2 cursor-pointer group w-fit"
+                      onClick={() => openAvailEditor(tour)}
+                      title="Нажмите чтобы обновить доступность"
+                    >
+                      <CalendarDays className="w-3.5 h-3.5 shrink-0" style={{ color: 'var(--ocean)' }} />
+                      {tour.available_slots != null || tour.next_available_date ? (
+                        <span className="text-xs" style={{ color: 'var(--ocean)' }}>
+                          {tour.available_slots != null ? `${tour.available_slots} мест` : ''}
+                          {tour.available_slots != null && tour.next_available_date ? ' · ' : ''}
+                          {tour.next_available_date
+                            ? new Date(tour.next_available_date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
+                            : ''}
+                          <span className="ml-1 opacity-0 group-hover:opacity-60 text-xs transition-opacity">изменить</span>
+                        </span>
+                      ) : (
+                        <span className="text-xs opacity-60 group-hover:opacity-100 transition-opacity" style={{ color: 'var(--text-muted)' }}>
+                          Укажите доступность для Кузьмича
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Actions */}

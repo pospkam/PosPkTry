@@ -94,6 +94,7 @@ export async function PATCH(
       'is_active', 'is_published',
       'included', 'not_included', 'what_to_bring',
       'photos', 'tour_image',
+      'available_slots', 'next_available_date',
     ] as const;
 
     for (const key of allowed) {
