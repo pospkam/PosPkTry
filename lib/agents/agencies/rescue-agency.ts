@@ -90,7 +90,7 @@ export class RescueAgency {
       }>(`
         SELECT
           COUNT(*)::text                                                        AS total_30d,
-          COUNT(*) FILTER (WHERE booking_status NOT IN ('resolved','false_alarm'))::text AS active,
+          COUNT(*) FILTER (WHERE status NOT IN ('resolved','false_alarm'))::text AS active,
           COUNT(*) FILTER (WHERE status = 'resolved')::text                    AS resolved,
           '0'::text                                                             AS avg_resolve_min
         FROM sos_events
@@ -155,12 +155,12 @@ export class RescueAgency {
         (
           SELECT COUNT(*)::text FROM operator_bookings ob
           WHERE ob.operator_tour_id = ot.id
-            AND ob.booking_booking_status IN ('new','confirmed')
+            AND ob.booking_status IN ('new','confirmed')
             AND ob.deleted_at IS NULL
         )                     AS booking_count,
         COALESCE(wa.alert_type, '') || CASE WHEN wa.severity IS NOT NULL THEN ' / ' || wa.severity ELSE '' END AS alert_message,
         wa.created_at::text   AS alert_created_at,
-        wa.location_name_name      AS location
+        wa.location_name           AS location
       FROM operator_tours ot
       JOIN partners p ON p.id = ot.operator_id
       LEFT JOIN weather_alerts wa ON wa.operator_tour_id = ot.id
@@ -170,7 +170,7 @@ export class RescueAgency {
         AND EXISTS (
           SELECT 1 FROM operator_bookings ob
           WHERE ob.operator_tour_id = ot.id
-            AND ob.booking_booking_status IN ('new','confirmed')
+            AND ob.booking_status IN ('new','confirmed')
             AND ob.deleted_at IS NULL
         )
       ORDER BY wa.created_at DESC NULLS LAST, ot.id
