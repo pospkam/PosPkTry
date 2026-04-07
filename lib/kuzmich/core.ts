@@ -36,21 +36,25 @@ export interface PendingBooking {
 
 // ── Системный промпт ──────────────────────────────────────────────────────────
 
-export const KUZMICH_SYSTEM = `You are Kuzmich — a third-generation Kamchadal, guide and assistant of TourHab platform.
+export const KUZMICH_SYSTEM = `Ты Кузьмич — камчатский агент по бронированию туров на платформе TourHab.
 
-You help tourists choose and book tours in Kamchatka directly in chat.
-You know everything about the region: volcanoes, fishing, bears, thermal springs, helicopters, snowmobiles.
+ГЛАВНАЯ ЦЕЛЬ: помочь туристу выбрать тур и оформить бронирование прямо в чате.
+Ты не просто рассказываешь про Камчатку — ты продаёшь и бронируешь туры.
 
-Style: lively, conversational, slightly ironic — but professional.
-Be concise. No advertising hype.
+Знаешь всё про регион: вулканы, рыбалку, медведей, термальные источники, вертолёты, снегоходы.
+Стиль: живой, немного с юмором — но конкретный и профессиональный. Коротко, по делу.
 
-LANGUAGE: Detect the user's language and respond in the SAME language.
-Supported: Russian, English, 日本語, 한국어, Deutsch, 中文, Français, Español.
-Toponyms for non-Russian: Avachinsky, Mutnovsky, Kurilskoye Lake, Valley of Geysers.
+ЯЗЫК: определи язык сообщения и отвечай НА ТОМ ЖЕ ЯЗЫКЕ.
+Русский / English / 日本語 / 한국어 / Deutsch / 中文 / Français / Español.
 
-When a tourist has chosen a tour and wants to book — tell them to write "book" or "I want this one".
-For prices — give ranges from the tour list below.
-NEVER use * ** # _ markdown symbols.`;
+ТАКТИКА ПРОДАЖИ:
+1. Понять что хочет турист (вид активности, даты, бюджет, группа)
+2. Назвать конкретный тур из списка ниже с ценой
+3. Спросить: "Берём? Напишите бронирую"
+4. Если пишет "бронирую" / "беру" / "хочу этот" → сразу начать форму
+
+НИКОГДА: * ** # _ символы markdown.`;
+
 
 // ── Загрузка реальных туров из БД (контекст знаний) ─────────────────────────
 
@@ -265,16 +269,78 @@ export function cleanupPending(pending: Map<number, PendingBooking>) {
   }
 }
 
+// ── Персистентное состояние бронирования (migration 137) ─────────────────────
+// Дублирует in-memory Map в БД → выживает при перезапуске контейнера
+
+export async function loadBookingFlow(
+  chatId: number,
+  mode: string,
+  pending: Map<number, PendingBooking>,
+): Promise<PendingBooking | null> {
+  // Сначала in-memory (быстро)
+  const mem = pending.get(chatId);
+  if (mem) return mem;
+
+  // Потом DB (на случай перезапуска)
+  try {
+    const { rows } = await pool.query<{ state: PendingBooking }>(
+      `SELECT state FROM tg_booking_flow WHERE chat_id = $1 AND mode = $2 LIMIT 1`,
+      [chatId, mode],
+    );
+    if (rows[0]?.state) {
+      const b = rows[0].state;
+      b.started_at = b.started_at ?? Date.now(); // backward compat
+      pending.set(chatId, b); // восстанавливаем в памяти
+      return b;
+    }
+  } catch { /* таблица ещё не создана — не критично */ }
+  return null;
+}
+
+export async function saveBookingFlow(
+  chatId: number,
+  mode: string,
+  booking: PendingBooking,
+  pending: Map<number, PendingBooking>,
+): Promise<void> {
+  pending.set(chatId, booking); // in-memory
+  try {
+    await pool.query(
+      `INSERT INTO tg_booking_flow (chat_id, mode, state, updated_at)
+       VALUES ($1, $2, $3::jsonb, NOW())
+       ON CONFLICT (chat_id, mode) DO UPDATE
+         SET state = $3::jsonb, updated_at = NOW()`,
+      [chatId, mode, JSON.stringify(booking)],
+    );
+  } catch { /* не критично */ }
+}
+
+export async function deleteBookingFlow(
+  chatId: number,
+  mode: string,
+  pending: Map<number, PendingBooking>,
+): Promise<void> {
+  pending.delete(chatId);
+  try {
+    await pool.query(
+      `DELETE FROM tg_booking_flow WHERE chat_id = $1 AND mode = $2`,
+      [chatId, mode],
+    );
+  } catch { /* не критично */ }
+}
+
 // ── Booking Step Handler ──────────────────────────────────────────────────────
 
 export async function handleBookingStep(
   chatId: number,
   text: string,
+  mode: string,
   pending: Map<number, PendingBooking>,
   reply: ReplyFn,
   createdVia: string,
 ): Promise<boolean> {
-  const b = pending.get(chatId);
+  // Загружаем из памяти ИЛИ из БД (выживает при перезапуске)
+  const b = await loadBookingFlow(chatId, mode, pending);
   if (!b) return false;
 
   const t = text.trim();
@@ -286,6 +352,7 @@ export async function handleBookingStep(
     }
     b.name = t;
     b.step = 'date';
+    await saveBookingFlow(chatId, mode, b, pending);
     await reply(chatId, `Отлично, ${b.name}! На какую дату бронируем?\n\nПример: <b>15 июля</b> или <b>2026-07-15</b>`);
     return true;
   }
@@ -303,6 +370,7 @@ export async function handleBookingStep(
     }
     b.date = date;
     b.step = 'participants';
+    await saveBookingFlow(chatId, mode, b, pending);
     await reply(chatId, 'Сколько человек едет?');
     return true;
   }
@@ -315,6 +383,7 @@ export async function handleBookingStep(
     }
     b.participants = n;
     b.step = 'phone';
+    await saveBookingFlow(chatId, mode, b, pending);
     await reply(chatId, 'Ваш номер телефона — оператор свяжется для подтверждения.\n\nПример: <b>+7 900 000-00-00</b>');
     return true;
   }
@@ -327,6 +396,7 @@ export async function handleBookingStep(
     }
     b.phone = phone;
     b.step = 'confirm';
+    await saveBookingFlow(chatId, mode, b, pending);
 
     const dateStr = new Date(b.date!).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
     const total = (b.tour.base_price * b.participants!).toLocaleString('ru-RU');
@@ -348,7 +418,7 @@ export async function handleBookingStep(
 
   if (b.step === 'confirm') {
     if (isNo(t)) {
-      pending.delete(chatId);
+      await deleteBookingFlow(chatId, mode, pending);
       await reply(chatId, 'Бронирование отменено. Если что — пиши, помогу.');
       return true;
     }
@@ -361,7 +431,7 @@ export async function handleBookingStep(
       b as Required<Omit<PendingBooking, 'step' | 'started_at'>>,
       createdVia,
     );
-    pending.delete(chatId);
+    await deleteBookingFlow(chatId, mode, pending);
 
     if (!bookingId) {
       await reply(chatId, 'Не удалось создать бронирование. Попробуйте позже или позвоните оператору напрямую.');
@@ -391,6 +461,7 @@ export async function handleBookingStep(
 export async function startBooking(
   chatId: number,
   text: string,
+  mode: string,
   history: ChatMessage[],
   pending: Map<number, PendingBooking>,
   reply: ReplyFn,
@@ -406,7 +477,8 @@ export async function startBooking(
     return true;
   }
 
-  pending.set(chatId, { tour, step: 'name', started_at: Date.now() });
+  const booking: PendingBooking = { tour, step: 'name', started_at: Date.now() };
+  await saveBookingFlow(chatId, mode, booking, pending);
 
   await reply(chatId, [
     `Бронируем <b>${tour.title}</b>`,
@@ -532,7 +604,7 @@ export async function processMessage(opts: {
 
   // /reset
   if (cmd === '/reset') {
-    pendingMap.delete(chatId);
+    await deleteBookingFlow(chatId, mode, pendingMap);
     await pool.query(
       `DELETE FROM tg_conversations WHERE chat_id = $1 AND mode = $2`,
       [chatId, mode],
@@ -541,16 +613,17 @@ export async function processMessage(opts: {
     return;
   }
 
-  // Active booking flow
-  if (pendingMap.has(chatId)) {
-    await handleBookingStep(chatId, text, pendingMap, replyFn, createdVia);
+  // Active booking flow — проверяем память И базу данных
+  const activeBooking = await loadBookingFlow(chatId, mode, pendingMap);
+  if (activeBooking) {
+    await handleBookingStep(chatId, text, mode, pendingMap, replyFn, createdVia);
     return;
   }
 
   // Booking trigger
   if (isBookingTrigger(text)) {
     const history = await getHistory(chatId, mode);
-    await startBooking(chatId, text, history, pendingMap, replyFn);
+    await startBooking(chatId, text, mode, history, pendingMap, replyFn);
     return;
   }
 
