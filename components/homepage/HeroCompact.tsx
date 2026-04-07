@@ -39,14 +39,14 @@ export function HeroCompact() {
           </div>
 
           <h1 className="mb-4 font-playfair text-4xl font-bold leading-tight text-[var(--text-primary)] md:text-6xl">
-            Платформа туризма,
+            Панель путешествия
             <br />
-            а не лендинг
+            по Камчатке
           </h1>
 
           <p className="mb-7 max-w-2xl text-sm leading-relaxed text-[var(--text-secondary)] md:text-base">
-            Единый рабочий контур: маршруты, проверенные операторы, AI-ассистент,
-            мониторинг рисков и быстрый подбор тура под ваш запрос.
+            Планирование, безопасность, подбор туров и проверенные операторы
+            в одном интерфейсе без лишнего шума.
           </p>
 
           <div className="mb-8 flex flex-wrap gap-2.5">
@@ -67,21 +67,21 @@ export function HeroCompact() {
               className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
             >
               <Bot className="h-4 w-4" />
-              Спросить Кузьмича
+              Подобрать 3 тура
               <ArrowRight className="h-4 w-4" />
             </a>
             <Link
               href="/routes"
               className="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] px-5 py-3 text-sm font-semibold text-[var(--text-primary)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
             >
-              Все маршруты
+              Каталог маршрутов
             </Link>
           </div>
         </div>
 
         <div className="grid gap-3 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] p-4 md:p-5">
           <div className="mb-1 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-[var(--text-primary)]">Сигналы платформы</h2>
+            <h2 className="text-sm font-semibold text-[var(--text-primary)]">Операционный статус</h2>
             <span className="inline-flex items-center gap-1.5 text-[11px] text-[var(--text-muted)]">
               <span className="h-2 w-2 rounded-full bg-[var(--success)]" /> Live
             </span>
@@ -99,11 +99,11 @@ export function HeroCompact() {
           <div className="mt-1 grid gap-2">
             <div className="flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] px-3 py-2 text-xs text-[var(--text-secondary)]">
               <ShieldCheck className="h-4 w-4 text-[var(--success)]" />
-              Проверка операторов: активна
+              Верификация операторов активна
             </div>
             <div className="flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] px-3 py-2 text-xs text-[var(--text-secondary)]">
               <MapPinned className="h-4 w-4 text-[var(--ocean)]" />
-              Геослои маршрутов: обновлены
+              Геоданные маршрутов обновлены
             </div>
             <div className="flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] px-3 py-2 text-xs text-[var(--text-secondary)]">
               <Users className="h-4 w-4 text-[var(--accent)]" />

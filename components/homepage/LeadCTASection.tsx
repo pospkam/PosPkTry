@@ -34,57 +34,43 @@ export function LeadCTASection() {
   };
 
   return (
-    <section id="lead" className="py-20 px-5" style={{ background: 'var(--bg-primary)' }}>
+    <section id="lead" className="py-14 px-5" style={{ background: 'var(--bg-primary)' }}>
       <div className="max-w-6xl mx-auto">
         <div
-          className="rounded-2xl overflow-hidden"
-          style={{ background: 'linear-gradient(135deg, #1A1714 0%, #2C1810 60%, #1A0F0A 100%)' }}
+          className="rounded-lg overflow-hidden border border-[var(--border)]"
+          style={{ background: 'var(--bg-card)' }}
         >
           <div className="grid md:grid-cols-2 gap-0">
             {/* Left — copy */}
-            <div className="p-10 md:p-14 flex flex-col justify-center">
+            <div className="p-8 md:p-10 flex flex-col justify-center">
               <p className="text-xs font-semibold tracking-widest uppercase mb-4" style={{ color: 'var(--accent)' }}>
-                Персональный подбор
+                Запрос менеджеру
               </p>
               <h2
-                className="font-playfair font-bold text-white leading-tight mb-5"
-                style={{ fontSize: 'clamp(1.8rem, 3.5vw, 2.8rem)' }}
+                className="font-playfair font-bold text-[var(--text-primary)] leading-tight mb-4"
+                style={{ fontSize: 'clamp(1.5rem, 3vw, 2.2rem)' }}
               >
-                Опишите мечту —<br />
-                <span style={{ color: 'var(--accent)' }}>AI подберёт тур</span>
+                Нужен звонок менеджера
+                <br />
+                <span style={{ color: 'var(--accent)' }}>по вашему маршруту</span>
               </h2>
-              <p className="text-white/60 text-sm leading-relaxed max-w-xs">
-                Кузьмич квалифицирует заявку за 15 секунд
-                и пришлёт персональное предложение.
+              <p className="text-[var(--text-secondary)] text-sm leading-relaxed max-w-sm">
+                Оставьте контакт и краткий запрос. Команда подберёт туры и свяжется в рабочее время.
               </p>
-
-              <div className="mt-8 space-y-2.5">
-                {['AI анализирует ваши интересы', 'Подбирает 3 лучших тура', 'Менеджер перезванивает в течение часа'].map((item, i) => (
-                  <div key={i} className="flex items-center gap-2.5 text-sm text-white/70">
-                    <div
-                      className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 text-white"
-                      style={{ background: 'var(--accent)' }}
-                    >
-                      {i + 1}
-                    </div>
-                    {item}
-                  </div>
-                ))}
-              </div>
             </div>
 
             {/* Right — form */}
-            <div className="p-10 md:p-14 flex flex-col justify-center gap-5" style={{ background: 'rgba(255,255,255,0.03)' }}>
+            <div className="p-8 md:p-10 flex flex-col justify-center gap-4" style={{ background: 'var(--bg-primary)' }}>
               {/* Telegram — primary */}
               <a
                 href={BOT_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2.5 py-4 rounded-lg font-semibold text-sm text-white transition-opacity hover:opacity-90"
+                className="flex items-center justify-center gap-2.5 py-3 rounded-lg font-semibold text-sm text-white transition-opacity hover:opacity-90"
                 style={{ background: '#2AABEE' }}
               >
                 <MessageCircle className="w-5 h-5" />
-                Написать Кузьмичу в Telegram
+                Telegram
               </a>
 
               {/* MAX — secondary */}
@@ -92,17 +78,17 @@ export function LeadCTASection() {
                 href="https://max.ru/id4101147649_bot"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2.5 py-4 rounded-lg font-semibold text-sm text-white transition-opacity hover:opacity-90"
+                className="flex items-center justify-center gap-2.5 py-3 rounded-lg font-semibold text-sm text-white transition-opacity hover:opacity-90"
                 style={{ background: '#7C3AED' }}
               >
                 <MessageCircle className="w-5 h-5" />
-                Написать Кузьмичу в MAX
+                MAX
               </a>
 
               <div className="flex items-center gap-3">
-                <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.1)' }} />
-                <span className="text-xs text-white/30">или оставьте телефон</span>
-                <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.1)' }} />
+                <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
+                <span className="text-xs text-[var(--text-muted)]">или телефон</span>
+                <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
               </div>
 
               {state === 'done' ? (
@@ -114,7 +100,7 @@ export function LeadCTASection() {
                     <CheckCircle className="w-7 h-7" style={{ color: 'var(--success)' }} />
                   </div>
                   <p className="text-white font-semibold mb-1">Заявка принята!</p>
-                  <p className="text-white/50 text-sm">Менеджер свяжется с вами скоро.</p>
+                  <p className="text-[var(--text-secondary)] text-sm">Менеджер свяжется с вами скоро.</p>
                 </div>
               ) : (
                 <form onSubmit={submit} className="space-y-3">
@@ -126,8 +112,8 @@ export function LeadCTASection() {
                       onChange={e => setName(e.target.value)}
                       placeholder="Ваше имя"
                       required
-                      className="w-full pl-9 pr-4 py-3 rounded-lg text-sm text-white placeholder-white/30 border outline-none focus:ring-1 transition-all"
-                      style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)' }}
+                      className="w-full pl-9 pr-4 py-3 rounded-lg text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] border outline-none focus:ring-1 transition-all"
+                      style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}
                     />
                   </div>
                   <div className="relative">
@@ -138,8 +124,8 @@ export function LeadCTASection() {
                       onChange={e => setPhone(e.target.value)}
                       placeholder="+7 900 000 00 00"
                       required
-                      className="w-full pl-9 pr-4 py-3 rounded-lg text-sm text-white placeholder-white/30 border outline-none focus:ring-1 transition-all"
-                      style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)' }}
+                      className="w-full pl-9 pr-4 py-3 rounded-lg text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] border outline-none focus:ring-1 transition-all"
+                      style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}
                     />
                   </div>
                   {state === 'error' && (

@@ -11,10 +11,7 @@ interface Message {
 
 const QUICK_CHIPS = [
   'Хочу 3 дня с рыбалкой и вулканами',
-  'Увидеть медведей, бюджет 50 тыс',
-  'Горячие источники на выходные',
-  'Треккинг для новичка',
-  'Что посмотреть за 5 дней?',
+  'Увидеть медведей, бюджет до 50 000',
   'Вертолёт на Долину гейзеров',
 ];
 
@@ -107,10 +104,10 @@ export default function InlineChat() {
             <span className="text-xs font-medium text-[var(--accent)]">Кузьмич онлайн</span>
           </div>
           <h2 className="font-playfair text-3xl sm:text-4xl font-bold text-[var(--text-primary)] mb-3">
-            Спросите что угодно
+            Быстрый подбор тура
           </h2>
           <p className="text-[var(--text-secondary)] text-sm md:text-base max-w-md mx-auto">
-            AI-помощник знает каждый маршрут. Опишите мечту — он подберёт план.
+            Опишите задачу в одном сообщении. Кузьмич вернёт короткий список вариантов.
           </p>
         </div>
 
