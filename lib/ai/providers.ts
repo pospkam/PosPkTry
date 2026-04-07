@@ -574,6 +574,42 @@ export async function callGeminiVision(
   } catch { return null; }
 }
 
+// ── Gemini Audio Transcription (голосовые сообщения Telegram) ──────────────
+// Поддерживает: audio/ogg, audio/mp3, audio/wav, audio/m4a (Telegram шлёт ogg)
+export async function callGeminiTranscribe(
+  audioBase64: string,
+  mimeType: string = 'audio/ogg',
+): Promise<string | null> {
+  const apiKey = getGeminiKey();
+  if (!apiKey) return null;
+
+  try {
+    const body = {
+      contents: [{
+        role: 'user',
+        parts: [
+          { inlineData: { mimeType, data: audioBase64 } },
+          { text: 'Транскрибируй это голосовое сообщение дословно. Только текст, без пояснений. Если не слышно — напиши "(неразборчиво)".' },
+        ],
+      }],
+    };
+
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(30_000),
+      },
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    const text: string | undefined = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    return text?.trim() || null;
+  } catch { return null; }
+}
+
 // ── Preflight: быстрая проверка доступности провайдеров ──────
 // Минимальный запрос к каждому провайдеру, параллельно, 5s timeout
 export interface ProviderStatus {

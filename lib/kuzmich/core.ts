@@ -81,6 +81,8 @@ interface TourContextRow {
   category: string | null;
   location_name: string | null;
   operator_name: string | null;
+  available_slots: number | null;
+  next_available_date: string | null;
 }
 
 let _tourContextCache: string = '';
@@ -95,6 +97,8 @@ export async function buildTourContext(): Promise<string> {
     const { rows } = await pool.query<TourContextRow>(`
       SELECT ot.id, ot.title, ot.base_price, ot.duration_days, ot.category,
              ot.location_name,
+             ot.available_slots,
+             ot.next_available_date::text,
              u.company_name AS operator_name
       FROM operator_tours ot
       LEFT JOIN users u ON u.id = ot.operator_id
@@ -106,12 +110,18 @@ export async function buildTourContext(): Promise<string> {
     if (!rows.length) return '';
 
     const lines = rows.map(r => {
-      const dur = r.duration_days ? `${r.duration_days} дн.` : '';
+      const dur   = r.duration_days ? `${r.duration_days} дн.` : '';
       const price = `от ${Number(r.base_price).toLocaleString('ru-RU')} р/чел`;
-      const cat = r.category ? `[${r.category}]` : '';
-      const loc = r.location_name ? ` — ${r.location_name}` : '';
-      const op  = r.operator_name ? ` | Оператор: ${r.operator_name}` : '';
-      return `ID${r.id}: "${r.title}"${loc} ${cat} ${dur} ${price}${op}`;
+      const cat   = r.category ? `[${r.category}]` : '';
+      const loc   = r.location_name ? ` — ${r.location_name}` : '';
+      const op    = r.operator_name ? ` | Оп: ${r.operator_name}` : '';
+      const slots = r.available_slots != null
+        ? ` | Мест: ${r.available_slots > 0 ? r.available_slots : 'нет свободных'}`
+        : '';
+      const nextDate = r.next_available_date
+        ? ` | Ближайшая дата: ${new Date(r.next_available_date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}`
+        : '';
+      return `ID${r.id}: "${r.title}"${loc} ${cat} ${dur} ${price}${op}${slots}${nextDate}`;
     });
 
     _tourContextCache = [
@@ -465,6 +475,9 @@ export async function handleBookingStep(
       '',
       `<a href="https://tourhab.ru/booking-success/${bookingId}">Открыть бронирование</a>`,
     ].join('\n'));
+    // Запрос рейтинга через 1 сек
+    await new Promise(r => setTimeout(r, 1000));
+    await reply(chatId, 'Как я сработал? Напишите 👍 или 👎');
     return true;
   }
 

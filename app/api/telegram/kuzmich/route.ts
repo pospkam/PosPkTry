@@ -1,48 +1,62 @@
 /**
  * POST /api/telegram/kuzmich
- * Публичный Telegram-бот Кузьмич — выбор тура + бронирование прямо в чате.
  *
- * Вся логика (booking flow, AI, date parsing) — в lib/kuzmich/core.ts.
- * Этот файл — только Telegram-адаптер (webhook + reply).
+ * Многофункциональный Telegram-бот Кузьмич:
+ * - Личные чаты: полный функционал (гид, бронирование, SOS, голос, фото)
+ * - Групповые чаты: парсер лидов — молчит, пока не услышит туристический запрос
+ * - Владелец: admin pipeline (PlatformAgent + approve/reject)
  *
- * Если sender == TELEGRAM_OWNER_ID → admin pipeline (PlatformAgent + approve/reject).
- *
- * v2 (апрель 2026): поддержка фото через Gemini Vision
- *
- * Env vars: TELEGRAM_KUZMICH_BOT_TOKEN, TELEGRAM_BOT_TOKEN
+ * v3 (апрель 2026):
+ *  - Голосовые сообщения → Gemini transcription
+ *  - Группы → group_listener mode
+ *  - callback_query → рейтинги 👍/👎
+ *  - Регистрация группы оператора: /register_group
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { type PendingBooking, cleanupPending, processMessage } from '@/lib/kuzmich/core';
+import { type PendingBooking, cleanupPending, processMessage, isBookingTrigger } from '@/lib/kuzmich/core';
 import { PlatformAgent } from '@/lib/agents';
 import { pool } from '@/lib/db-pool';
 
 export const dynamic = 'force-dynamic';
 
-// ── In-memory state (per-instance, TTL 30 мин) ───────────────────────────────
+// ── In-memory state ───────────────────────────────────────────────────────────
 
 const pending = new Map<number, PendingBooking>();
 setInterval(() => cleanupPending(pending), 5 * 60 * 1000);
 
-// ── Reply helper ──────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
-async function tgReply(chatId: number, text: string): Promise<void> {
-  const token = process.env.TELEGRAM_KUZMICH_BOT_TOKEN ?? process.env.TELEGRAM_BOT_TOKEN;
+function botToken() {
+  return process.env.TELEGRAM_KUZMICH_BOT_TOKEN ?? process.env.TELEGRAM_BOT_TOKEN ?? '';
+}
+
+async function tgReply(chatId: number, text: string, extra?: Record<string, unknown>): Promise<void> {
+  const token = botToken();
   if (!token) return;
   await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML', disable_web_page_preview: true }),
+    body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML', disable_web_page_preview: true, ...extra }),
   }).catch(() => {});
 }
 
-// ── Photo: скачать файл из Telegram → base64 ─────────────────────────────────
+async function tgAnswerCallback(callbackQueryId: string, text?: string): Promise<void> {
+  const token = botToken();
+  if (!token) return;
+  await fetch(`https://api.telegram.org/bot${token}/answerCallbackQuery`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ callback_query_id: callbackQueryId, text }),
+  }).catch(() => {});
+}
 
-async function downloadTgPhoto(fileId: string): Promise<{ base64: string; mimeType: string } | null> {
-  const token = process.env.TELEGRAM_KUZMICH_BOT_TOKEN ?? process.env.TELEGRAM_BOT_TOKEN;
+// ── Скачать файл из Telegram → base64 ────────────────────────────────────────
+
+async function downloadTgFile(fileId: string): Promise<{ base64: string; mimeType: string; ext: string } | null> {
+  const token = botToken();
   if (!token) return null;
   try {
-    // 1. Получаем путь к файлу
     const fileRes = await fetch(
       `https://api.telegram.org/bot${token}/getFile?file_id=${fileId}`,
       { signal: AbortSignal.timeout(8_000) },
@@ -51,7 +65,6 @@ async function downloadTgPhoto(fileId: string): Promise<{ base64: string; mimeTy
     const filePath = fileJson.result?.file_path;
     if (!filePath) return null;
 
-    // 2. Скачиваем бинарник
     const imgRes = await fetch(
       `https://api.telegram.org/file/bot${token}/${filePath}`,
       { signal: AbortSignal.timeout(15_000) },
@@ -60,19 +73,16 @@ async function downloadTgPhoto(fileId: string): Promise<{ base64: string; mimeTy
 
     const buf = await imgRes.arrayBuffer();
     const base64 = Buffer.from(buf).toString('base64');
+    const ext = filePath.split('.').pop()?.toLowerCase() ?? 'bin';
 
-    // Определяем тип по расширению (Telegram даёт jpg для фото)
-    const ext = filePath.split('.').pop()?.toLowerCase() ?? 'jpg';
     const mimeMap: Record<string, string> = {
-      jpg: 'image/jpeg', jpeg: 'image/jpeg',
-      png: 'image/png', gif: 'image/gif', webp: 'image/webp',
+      jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
+      gif: 'image/gif', webp: 'image/webp',
+      ogg: 'audio/ogg', oga: 'audio/ogg', mp3: 'audio/mp3',
+      m4a: 'audio/m4a', wav: 'audio/wav',
     };
-    const mimeType = mimeMap[ext] ?? 'image/jpeg';
-
-    return { base64, mimeType };
-  } catch {
-    return null;
-  }
+    return { base64, mimeType: mimeMap[ext] ?? 'application/octet-stream', ext };
+  } catch { return null; }
 }
 
 // ── Owner admin pipeline ──────────────────────────────────────────────────────
@@ -80,105 +90,48 @@ async function downloadTgPhoto(fileId: string): Promise<{ base64: string; mimeTy
 async function handleApproval(cmd: string, chatId: number): Promise<void> {
   const isApprove = cmd.startsWith('/approve_');
   const shortId = cmd.replace(/^\/(approve|reject)_/, '');
-
-  if (shortId.length < 7) {
-    await tgReply(chatId, 'Неверный формат команды.');
-    return;
-  }
+  if (shortId.length < 7) { await tgReply(chatId, 'Неверный формат.'); return; }
 
   try {
     const { rows } = await pool.query<{ id: string; description: string; action_type: string }>(
-      `SELECT id, description, action_type
-       FROM agent_approvals
-       WHERE id LIKE $1 AND status = 'pending'
-       LIMIT 1`,
-      [shortId + '%']
+      `SELECT id, description, action_type FROM agent_approvals WHERE id LIKE $1 AND status = 'pending' LIMIT 1`,
+      [shortId + '%'],
     );
+    if (!rows[0]) { await tgReply(chatId, `Инициатива <code>${shortId}</code> не найдена.`); return; }
+    const { id, description, action_type } = rows[0];
 
-    if (!rows[0]) {
-      await tgReply(chatId, `Инициатива <code>${shortId}</code> не найдена или уже обработана.`);
-      return;
-    }
-
-    const initiative = rows[0];
-
-    if (isApprove) {
-      await pool.query(
-        `UPDATE agent_approvals
-         SET status = 'approved', execution_status = 'assigned',
-             reviewed_at = NOW(), review_notes = 'Approved via Telegram bot'
-         WHERE id = $1`,
-        [initiative.id]
-      );
-    } else {
-      await pool.query(
-        `UPDATE agent_approvals
-         SET status = 'rejected', reviewed_at = NOW(),
-             review_notes = 'Rejected via Telegram bot'
-         WHERE id = $1`,
-        [initiative.id]
-      );
-    }
-
-    const label = isApprove ? 'Одобрено' : 'Отклонено';
-    await tgReply(
-      chatId,
-      `<b>${label}</b>\n\nТип: <code>${initiative.action_type}</code>\n${initiative.description}\n\n` +
-      (isApprove ? 'Исполнитель получит задачу в ближайший cron (до 1ч).' : 'Инициатива отклонена.')
+    await pool.query(
+      `UPDATE agent_approvals SET status = $1, execution_status = $2, reviewed_at = NOW(),
+       review_notes = $3 WHERE id = $4`,
+      [isApprove ? 'approved' : 'rejected',
+       isApprove ? 'assigned' : 'rejected',
+       `${isApprove ? 'Approved' : 'Rejected'} via Telegram bot`,
+       id],
+    );
+    await tgReply(chatId,
+      `<b>${isApprove ? 'Одобрено' : 'Отклонено'}</b>\n\nТип: <code>${action_type}</code>\n${description}`
     );
   } catch (err) {
     await tgReply(chatId, `Ошибка: ${err instanceof Error ? err.message : String(err)}`);
   }
 }
 
-async function handleOwnerCommand(cmd: string, chatId: number): Promise<void> {
-  switch (cmd) {
-    case '/help':
-    case '/start':
-      await tgReply(chatId, [
-        '<b>Кузьмич — Admin режим</b>',
-        '',
-        '/kuzmich — пост о маршруте',
-        '/tip — совет Кузьмича',
-        '/sezon — сезонный пост',
-        '',
-        '/approve_XXXXXXXX — одобрить инициативу',
-        '/reject_XXXXXXXX — отклонить',
-      ].join('\n'));
-      break;
-
-    case '/kuzmich': {
-      await tgReply(chatId, 'Публикую маршрут...');
-      const { postKuzmichRoute } = await import('@/lib/notifications/telegram-channel');
-      const r = await postKuzmichRoute();
-      await tgReply(chatId, r.ok ? `Опубликовано${r.routeId ? ` (${r.routeId})` : ''}` : `Ошибка: ${r.error ?? 'unknown'}`);
-      break;
-    }
-
-    case '/tip': {
-      await tgReply(chatId, 'Публикую совет...');
-      const { postKuzmichTip } = await import('@/lib/notifications/telegram-channel');
-      const r = await postKuzmichTip();
-      await tgReply(chatId, r.ok ? 'Совет опубликован' : `Ошибка: ${r.error ?? 'unknown'}`);
-      break;
-    }
-
-    case '/sezon': {
-      await tgReply(chatId, 'Публикую сезонный пост...');
-      const { postSezonToChannel } = await import('@/lib/notifications/telegram-channel');
-      const r = await postSezonToChannel();
-      await tgReply(chatId, r.ok ? 'Сезонный пост опубликован' : `Ошибка: ${r.error ?? 'unknown'}`);
-      break;
-    }
-
-    default:
-      await handleOwnerFreeText(cmd, chatId);
+async function handleOwnerCommand(cmd: string, text: string, chatId: number): Promise<void> {
+  if (cmd === '/help' || cmd === '/start') {
+    await tgReply(chatId, '<b>Admin режим</b>\n\n/kuzmich — пост о маршруте\n/tip — совет\n/sezon — сезонный пост\n/approve_XXX / /reject_XXX — инициативы');
+    return;
   }
-}
-
-async function handleOwnerFreeText(text: string, chatId: number): Promise<void> {
+  if (cmd === '/kuzmich' || cmd === '/tip' || cmd === '/sezon') {
+    await tgReply(chatId, 'Публикую...');
+    const mod = await import('@/lib/notifications/telegram-channel');
+    const fn = cmd === '/kuzmich' ? mod.postKuzmichRoute : cmd === '/tip' ? mod.postKuzmichTip : mod.postSezonToChannel;
+    const r = await fn();
+    await tgReply(chatId, r.ok ? 'Опубликовано' : `Ошибка: ${r.error}`);
+    return;
+  }
+  // Free text → PlatformAgent
   try {
-    const ownerId = parseInt(process.env.TELEGRAM_OWNER_ID ?? '833478813', 10);
+    const ownerId = parseInt(process.env.TELEGRAM_OWNER_ID ?? '0', 10);
     const result = await PlatformAgent.dispatch({ message: text, userId: ownerId, role: 'admin' });
     await tgReply(chatId, result.response);
   } catch (err) {
@@ -186,102 +139,273 @@ async function handleOwnerFreeText(text: string, chatId: number): Promise<void> 
   }
 }
 
-// ── POST: Webhook ─────────────────────────────────────────────────────────────
+// ── Рейтинг: сохранить в БД ───────────────────────────────────────────────────
 
-interface TgPhotoSize {
-  file_id: string;
-  width: number;
-  height: number;
-  file_size?: number;
+async function saveRating(chatId: number, mode: string, rating: 1 | 5): Promise<void> {
+  try {
+    await pool.query(
+      `INSERT INTO tg_ratings (chat_id, mode, rating) VALUES ($1, $2, $3)`,
+      [chatId, mode, rating],
+    );
+  } catch { /* не критично */ }
 }
+
+// ── Парсер лидов (групповой чат) ─────────────────────────────────────────────
+
+const GROUP_TRIGGERS = [
+  'хочу', 'хотим', 'сколько стоит', 'можно', 'есть ли', 'когда', 'как попасть',
+  'интересует', 'рыбалк', 'вулкан', 'медвед', 'термал', 'вертолет', 'снегоход',
+  'тур', 'экскурс', 'бронир', 'цена', 'стоимость',
+  'want', 'how much', 'price', 'book', 'tour', 'fishing', 'volcano',
+];
+
+function hasTouristIntent(text: string): boolean {
+  const t = text.toLowerCase();
+  return GROUP_TRIGGERS.some(tr => t.includes(tr));
+}
+
+async function processGroupMessage(opts: {
+  chatId: number;
+  fromId: number;
+  fromName: string | null;
+  text: string;
+}): Promise<void> {
+  const { chatId, fromId, fromName, text } = opts;
+
+  if (!hasTouristIntent(text)) return; // молчим
+
+  // Краткий AI-ответ в группе
+  const { buildTourContext, KUZMICH_SYSTEM } = await import('@/lib/kuzmich/core');
+  const { callAIWaterfall } = await import('@/lib/ai/providers');
+
+  const tourCtx = await buildTourContext();
+  const systemContent = `${KUZMICH_SYSTEM}\n\n${tourCtx}\n\nТы в групповом чате. Отвечай коротко (2-3 строки). Для бронирования приглашай писать в личку боту.`;
+
+  const messages = [
+    { role: 'system' as const, content: systemContent },
+    { role: 'user' as const, content: text },
+  ];
+
+  const answer = await callAIWaterfall(messages);
+  const botUsername = process.env.TELEGRAM_KUZMICH_USERNAME ?? 'tourhab_bot';
+  const reply = (answer?.trim() || 'Напишите мне в личку — подберу тур!') +
+    `\n\n<a href="https://t.me/${botUsername}">Написать Кузьмичу →</a>`;
+
+  await tgReply(chatId, reply);
+
+  // Уведомление о лиде оператору группы или платформе
+  const operatorTgId = await getGroupOperatorId(chatId);
+  const notifyId = operatorTgId ?? parseInt(process.env.TELEGRAM_OWNER_ID ?? '0', 10);
+
+  if (notifyId) {
+    const leadText = [
+      '<b>Новый лид из группы</b>',
+      `Имя: ${fromName ?? 'неизвестно'} (ID: ${fromId})`,
+      `Запрос: ${text.slice(0, 200)}`,
+      `Группа: ${chatId}`,
+    ].join('\n');
+    await tgReply(notifyId, leadText);
+  }
+}
+
+async function getGroupOperatorId(groupId: number): Promise<number | null> {
+  try {
+    const { rows } = await pool.query<{ telegram_id: string }>(
+      `SELECT u.telegram_id FROM tg_operator_groups g
+       JOIN users u ON u.id = g.operator_id
+       WHERE g.group_id = $1 LIMIT 1`,
+      [groupId],
+    );
+    if (rows[0]?.telegram_id) return parseInt(rows[0].telegram_id, 10);
+  } catch { /* таблица может ещё не существовать */ }
+  return null;
+}
+
+async function registerGroup(groupId: number, groupTitle: string | null, chatId: number): Promise<void> {
+  // Находим оператора по его Telegram ID
+  try {
+    const { rows } = await pool.query<{ id: number }>(
+      `SELECT id FROM users WHERE telegram_id = $1 LIMIT 1`,
+      [String(chatId)],
+    );
+    const operatorId = rows[0]?.id;
+    if (!operatorId) {
+      await tgReply(chatId, 'Не найден аккаунт оператора. Убедитесь что ваш Telegram привязан в профиле tourhab.ru');
+      return;
+    }
+    await pool.query(
+      `INSERT INTO tg_operator_groups (group_id, operator_id, group_title)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (group_id) DO UPDATE SET operator_id = $2, group_title = $3`,
+      [groupId, operatorId, groupTitle],
+    );
+    await tgReply(chatId, `Группа зарегистрирована. Кузьмич будет мониторить туристические запросы и присылать лиды вам.`);
+  } catch (err) {
+    await tgReply(chatId, `Ошибка регистрации: ${err instanceof Error ? err.message : String(err)}`);
+  }
+}
+
+// ── Типы Telegram Update ──────────────────────────────────────────────────────
+
+interface TgPhotoSize  { file_id: string; width: number; height: number }
+interface TgVoice      { file_id: string; duration: number; mime_type?: string }
+interface TgVideoNote  { file_id: string; duration: number }
 
 interface TgUpdate {
   message?: {
-    chat: { id: number };
-    from?: { id: number; first_name?: string };
-    text?: string;
-    caption?: string;          // подпись к фото
-    photo?: TgPhotoSize[];     // массив размеров (от маленького к большому)
+    chat:    { id: number; type: 'private' | 'group' | 'supergroup' | 'channel'; title?: string };
+    from?:   { id: number; first_name?: string; last_name?: string };
+    text?:   string;
+    caption?: string;
+    photo?:  TgPhotoSize[];
+    voice?:  TgVoice;
+    video_note?: TgVideoNote;
+  };
+  callback_query?: {
+    id:   string;
+    from: { id: number };
+    data: string;
+    message?: { chat: { id: number } };
   };
 }
+
+// ── POST: Webhook ─────────────────────────────────────────────────────────────
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const update = await request.json() as TgUpdate;
-    const msg = update.message;
-    if (!msg) return NextResponse.json({ ok: true });
 
-    const chatId = msg.chat.id;
-    const fromId = msg.from?.id ?? 0;
-    const ownerId = parseInt(process.env.TELEGRAM_OWNER_ID ?? '833478813', 10);
+    // ── callback_query: рейтинги 👍/👎 ─────────────────────────────────────
+    if (update.callback_query) {
+      const cq = update.callback_query;
+      const chatId = cq.message?.chat.id ?? cq.from.id;
 
-    // ── Владелец → admin pipeline ──────────────────────────────────────────
-    if (fromId === ownerId && msg.text) {
-      const text = msg.text.trim();
-      const cmd = text.split(' ')[0]?.toLowerCase() ?? '';
-
-      if (cmd.startsWith('/approve_') || cmd.startsWith('/reject_')) {
-        await handleApproval(cmd, chatId);
-      } else if (cmd.startsWith('/')) {
-        await handleOwnerCommand(cmd, chatId);
+      if (cq.data === 'rate_good') {
+        await saveRating(chatId, 'tourist', 5);
+        await tgAnswerCallback(cq.id, 'Спасибо!');
+        await tgReply(chatId, 'Рад помочь! Если понадоблюсь — пиши.');
+      } else if (cq.data === 'rate_bad') {
+        await saveRating(chatId, 'tourist', 1);
+        await tgAnswerCallback(cq.id, 'Принято, буду лучше');
+        await tgReply(chatId, 'Жаль. Расскажи что не так — постараюсь исправить.');
       } else {
-        await handleOwnerFreeText(text, chatId);
+        await tgAnswerCallback(cq.id);
       }
       return NextResponse.json({ ok: true });
     }
 
-    // ── Турист с фото ──────────────────────────────────────────────────────
-    if (msg.photo?.length) {
-      // Берём наибольшее фото (последнее в массиве)
-      const bestPhoto = msg.photo[msg.photo.length - 1];
-      const caption = msg.caption?.trim() ?? '';
+    const msg = update.message;
+    if (!msg) return NextResponse.json({ ok: true });
 
-      await tgReply(chatId, 'Смотрю на фото...');
+    const chatId    = msg.chat.id;
+    const fromId    = msg.from?.id ?? 0;
+    const fromName  = msg.from?.first_name ?? null;
+    const chatType  = msg.chat.type;
+    const ownerId   = parseInt(process.env.TELEGRAM_OWNER_ID ?? '0', 10);
+    const isPrivate = chatType === 'private';
+    const isGroup   = chatType === 'group' || chatType === 'supergroup';
 
-      let visionDescription: string | undefined;
+    // ── Владелец в личке → admin pipeline ─────────────────────────────────
+    if (isPrivate && fromId === ownerId && msg.text) {
+      const text = msg.text.trim();
+      const cmd  = text.split(' ')[0]?.toLowerCase() ?? '';
+      if (cmd.startsWith('/approve_') || cmd.startsWith('/reject_')) {
+        await handleApproval(cmd, chatId);
+      } else {
+        await handleOwnerCommand(cmd, text, chatId);
+      }
+      return NextResponse.json({ ok: true });
+    }
+
+    // ── ГРУППА: /register_group или парсер лидов ──────────────────────────
+    if (isGroup) {
+      const text = msg.text ?? msg.caption ?? '';
+      if (text.toLowerCase().startsWith('/register_group')) {
+        await registerGroup(chatId, msg.chat.title ?? null, fromId);
+        return NextResponse.json({ ok: true });
+      }
+      if (text) await processGroupMessage({ chatId, fromId, fromName, text });
+      return NextResponse.json({ ok: true });
+    }
+
+    // ── ЛИЧКА: турист ─────────────────────────────────────────────────────
+
+    // Определяем рейтинг из текстовых эмодзи
+    if (msg.text) {
+      const t = msg.text.trim();
+      if (t === '👍' || t.toLowerCase() === 'круто' || t.toLowerCase() === 'спасибо') {
+        await saveRating(chatId, 'tourist', 5);
+        await tgReply(chatId, 'Отлично! Пиши если что.');
+        return NextResponse.json({ ok: true });
+      }
+      if (t === '👎') {
+        await saveRating(chatId, 'tourist', 1);
+        await tgReply(chatId, 'Жаль. Что можно улучшить?');
+        return NextResponse.json({ ok: true });
+      }
+    }
+
+    // Голосовое сообщение → транскрипция → processMessage
+    if (msg.voice || msg.video_note) {
+      const fileId = msg.voice?.file_id ?? msg.video_note?.file_id ?? '';
+      await tgReply(chatId, 'Слушаю...');
+
+      let transcription: string | undefined;
       try {
-        const photoData = await downloadTgPhoto(bestPhoto.file_id);
-        if (photoData) {
-          const { callGeminiVision } = await import('@/lib/ai/providers');
-          visionDescription = await callGeminiVision(
-            photoData.base64,
-            photoData.mimeType,
-            'Опиши что на фото: место, природа, деятельность. Если это Камчатка — укажи конкретно что это (вулкан, река, море и т.д.). Кратко, 2-3 предложения.',
-          ) ?? undefined;
+        const fileData = await downloadTgFile(fileId);
+        if (fileData) {
+          const { callGeminiTranscribe } = await import('@/lib/ai/providers');
+          transcription = await callGeminiTranscribe(fileData.base64, fileData.mimeType) ?? undefined;
         }
-      } catch { /* vision не критичен */ }
+      } catch { /* не критично */ }
 
-      if (!visionDescription) {
-        visionDescription = 'Не удалось распознать фото';
+      if (!transcription) {
+        await tgReply(chatId, 'Не разобрал голосовое. Напишите текстом?');
+        return NextResponse.json({ ok: true });
       }
 
+      await tgReply(chatId, `<i>Вы сказали: ${transcription}</i>`);
       await processMessage({
-        chatId,
-        text: caption || 'Что это за место?',
-        userName: msg.from?.first_name ?? null,
-        userId: fromId || null,
-        mode: 'tourist',
-        createdVia: 'telegram',
-        pending,
-        reply: tgReply,
-        visionDescription,
+        chatId, text: transcription, userName: fromName,
+        userId: fromId, mode: 'tourist', createdVia: 'telegram_voice',
+        pending, reply: tgReply,
       });
       return NextResponse.json({ ok: true });
     }
 
-    // ── Турист → текст ─────────────────────────────────────────────────────
-    if (!msg.text) return NextResponse.json({ ok: true });
+    // Фото → Gemini Vision → processMessage
+    if (msg.photo?.length) {
+      const bestPhoto = msg.photo[msg.photo.length - 1];
+      await tgReply(chatId, 'Смотрю на фото...');
 
-    await processMessage({
-      chatId,
-      text: msg.text.trim(),
-      userName: msg.from?.first_name ?? null,
-      userId: fromId || null,
-      mode: 'tourist',
-      createdVia: 'telegram',
-      pending,
-      reply: tgReply,
-    });
+      let visionDescription: string | undefined;
+      try {
+        const photoData = await downloadTgFile(bestPhoto.file_id);
+        if (photoData) {
+          const { callGeminiVision } = await import('@/lib/ai/providers');
+          visionDescription = await callGeminiVision(
+            photoData.base64, photoData.mimeType,
+            'Опиши что на фото: место, природа, деятельность. Если это Камчатка — укажи конкретно что это. Кратко, 2-3 предложения.',
+          ) ?? undefined;
+        }
+      } catch { /* не критично */ }
+
+      await processMessage({
+        chatId, text: msg.caption?.trim() ?? 'Что это за место?',
+        userName: fromName, userId: fromId, mode: 'tourist',
+        createdVia: 'telegram', pending, reply: tgReply, visionDescription,
+      });
+      return NextResponse.json({ ok: true });
+    }
+
+    // Текст
+    if (msg.text) {
+      await processMessage({
+        chatId, text: msg.text.trim(), userName: fromName,
+        userId: fromId, mode: 'tourist', createdVia: 'telegram',
+        pending, reply: tgReply,
+      });
+    }
 
   } catch { /* Telegram требует 200 OK всегда */ }
 
