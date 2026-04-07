@@ -1,0 +1,39 @@
+name: Cron — Abandoned Booking Recovery
+
+# Runs every hour:
+# Finds bookings stuck in pending_payment:
+#   2+ h → Telegram reminder to operator
+#   24+ h → auto-cancel
+
+on:
+  schedule:
+    - cron: '23 * * * *'   # :23 every hour (avoid :00 spikes)
+  workflow_dispatch:        # manual trigger from GitHub Actions UI
+
+jobs:
+  abandoned-bookings:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Trigger abandoned booking recovery
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "CRON_SECRET not set — skipping"
+            exit 0
+          fi
+
+          HTTP=$(curl -s -o /tmp/abandoned_resp.json -w "%{http_code}" \
+            --max-time 60 \
+            "https://tourhab.ru/api/cron/abandoned-bookings?secret=$CRON_SECRET")
+
+          echo "HTTP: $HTTP"
+          cat /tmp/abandoned_resp.json 2>/dev/null || true
+
+          if [ "$HTTP" = "200" ]; then
+            echo "Abandoned booking recovery OK"
+          else
+            echo "Unexpected HTTP $HTTP"
+            exit 1
+          fi
