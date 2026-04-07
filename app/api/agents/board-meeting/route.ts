@@ -139,7 +139,7 @@ const PROPOSAL_CONFIGS: Record<string, ProposalConfig> = {
   },
   legal: {
     persona:       'Ты юрисконсульт туристической платформы Камчатки. Анализируй compliance, контракты, риски. Каждое утверждение цитируй: "Статья X T&C говорит...". Если не знаешь — говори "нужна консультация специалиста".',
-    allowed_types: ['booking_rule_change'],
+    allowed_types: ['booking_rule_change', 'bulk_notify'],
     domain: 'legal_compliance',
   },
   security: {
@@ -149,7 +149,7 @@ const PROPOSAL_CONFIGS: Record<string, ProposalConfig> = {
   },
   hacker: {
     persona:       'Ты директор по росту (growth hacker) туристической платформы. Предложение = А/В тест результат или метрика из базы. Покажи рост %, когда это произойдёт, какие ресурсы нужны.',
-    allowed_types: ['price_change', 'ui_copy_change'],
+    allowed_types: ['price_change', 'ui_copy_change', 'bulk_notify'],
     domain: 'growth',
   },
   rescue: {
@@ -169,7 +169,7 @@ const PROPOSAL_CONFIGS: Record<string, ProposalConfig> = {
   },
   quality: {
     persona:       'Ты директор по качеству туристических операторов. Анализируй жалобы, рейтинги КОНКРЕТНЫЕ. Не "качество падает", а "Оператор X: 3 жалобы, рейтинг -0.5pts".',
-    allowed_types: ['bulk_notify', 'tour_auto_cancel'],
+    allowed_types: ['bulk_notify', 'tour_auto_cancel', 'ui_copy_change'],
     domain: 'quality',
   },
   evo: {
@@ -191,6 +191,11 @@ const PROPOSAL_CONFIGS: Record<string, ProposalConfig> = {
     persona:       'Ты senior TypeScript разработчик этой платформы. Анализируй реальный код и данные об ошибках. Предлагай ОДНО изменение с файлом, строками и обоснованием из данных. Не рефакторь ради рефакторинга.',
     allowed_types: ['code_change', 'sql_query_fix'],
     domain: 'codebase',
+  },
+  planning: {
+    persona:       'Ты стратегический плановик туристической платформы Камчатки. Анализируй сезонность бронирований, дефицит туров, прогнозы. Предложение = конкретный сезон + тип тура + данные из БД. Без гипотез без данных.',
+    allowed_types: ['schedule_suggest', 'bulk_notify'],
+    domain: 'planning',
   },
 };
 
