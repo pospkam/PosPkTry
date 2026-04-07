@@ -144,6 +144,21 @@ async function sendConfirmationNotifications(
   action: string,
   message?: string
 ): Promise<void> {
-  // TODO: реализовать через lib/notifications/telegram-channel.ts
-  void booking; void action; void message;
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHANNEL_ID;
+  if (!token || !chatId) return;
+
+  const status = action === 'confirm' ? 'ПОДТВЕРЖДЕНО' : 'ОТКЛОНЕНО';
+  const lines = [
+    `[Трансфер ${status}]`,
+    `Бронирование: ${booking.id as string}`,
+    `Пассажиров: ${booking.passengers_count ?? '?'}`,
+    message ? `Причина: ${message}` : '',
+  ].filter(Boolean).join('\n');
+
+  await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: chatId, text: lines }),
+  }).catch(() => null); // уведомления — некритично
 }

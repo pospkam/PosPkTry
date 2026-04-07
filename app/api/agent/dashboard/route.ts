@@ -35,6 +35,7 @@ export async function GET(request: NextRequest) {
         COUNT(CASE WHEN b.status = 'completed' THEN 1 END) as completed_bookings,
         COUNT(CASE WHEN b.status = 'cancelled' THEN 1 END) as cancelled_bookings,
         COALESCE(SUM(b.total_price), 0) as total_revenue,
+        COALESCE(SUM(CASE WHEN b.created_at >= DATE_TRUNC('month', NOW()) THEN b.total_price END), 0) as monthly_revenue,
         COALESCE(AVG(b.total_price), 0) as avg_booking_value,
         COALESCE(SUM(b.agent_commission), 0) as total_commission,
         COALESCE(SUM(CASE WHEN b.commission_status = 'pending' THEN b.agent_commission END), 0) as pending_commission
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest) {
     const metricsResult = await query<{
       total_clients: string; active_clients: string; total_bookings: string;
       pending_bookings: string; confirmed_bookings: string; completed_bookings: string;
-      cancelled_bookings: string; total_revenue: string; avg_booking_value: string;
+      cancelled_bookings: string; total_revenue: string; monthly_revenue: string; avg_booking_value: string;
       total_commission: string; pending_commission: string;
     }>(metricsQuery, [agentId, parseInt(period)]);
     const metrics = metricsResult.rows[0];
@@ -224,7 +225,7 @@ export async function GET(request: NextRequest) {
         completedBookings: parseInt(metrics.completed_bookings),
         cancelledBookings: parseInt(metrics.cancelled_bookings),
         totalRevenue: parseFloat(metrics.total_revenue),
-        monthlyRevenue: parseFloat(metrics.total_revenue), // TODO: рассчитать за месяц
+        monthlyRevenue: parseFloat(metrics.monthly_revenue),
         totalCommission: parseFloat(metrics.total_commission),
         pendingCommission: parseFloat(metrics.pending_commission),
         averageBookingValue: parseFloat(metrics.avg_booking_value),

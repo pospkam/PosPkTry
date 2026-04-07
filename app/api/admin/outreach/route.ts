@@ -22,9 +22,7 @@ export async function GET(request: NextRequest) {
 
   const client = await pool.connect();
   try {
-    const where = status !== 'all' && ALLOWED_STATUSES.includes(status as typeof ALLOWED_STATUSES[number])
-      ? `WHERE status = '${status}'`
-      : '';
+    const filterStatus = status !== 'all' && ALLOWED_STATUSES.includes(status as typeof ALLOWED_STATUSES[number]);
 
     const [rowsResult, countResult] = await Promise.all([
       client.query(
@@ -32,12 +30,15 @@ export async function GET(request: NextRequest) {
                 source, source_url, status, outreach_text, notes,
                 contacted_at, created_at, updated_at
          FROM outreach_queue
-         ${where}
+         ${filterStatus ? 'WHERE status = $3' : ''}
          ORDER BY created_at DESC
          LIMIT $1 OFFSET $2`,
-        [limit, offset]
+        filterStatus ? [limit, offset, status] : [limit, offset]
       ),
-      client.query(`SELECT COUNT(*)::int AS total FROM outreach_queue ${where}`),
+      client.query(
+        `SELECT COUNT(*)::int AS total FROM outreach_queue ${filterStatus ? 'WHERE status = $1' : ''}`,
+        filterStatus ? [status] : []
+      ),
     ]);
 
     return NextResponse.json({
