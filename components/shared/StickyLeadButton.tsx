@@ -27,8 +27,8 @@ export default function StickyLeadButton() {
     }
   }, [open]);
 
-  // Не показываем в хабах (дашборды операторов, админов и т.д.)
-  if (pathname?.startsWith('/hub')) return null;
+  // Не показываем в хабах и на главной, где уже есть основной сценарий коммуникации
+  if (pathname?.startsWith('/hub') || pathname === '/') return null;
 
   async function submitLead(e: React.FormEvent) {
     e.preventDefault();

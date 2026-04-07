@@ -7,7 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 // Страницы где виджет не нужен
-const HIDDEN_PATHS = ['/kuzmich', '/hub/admin', '/hub/operator'];
+const HIDDEN_PATHS = ['/', '/kuzmich', '/hub/admin', '/hub/operator'];
 
 interface Message {
   role: 'user' | 'assistant';

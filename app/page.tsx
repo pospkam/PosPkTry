@@ -3,6 +3,7 @@ import dynamic from 'next/dynamic'
 import { Header } from '@/components/layout/Header'
 import { HeroCompact } from '@/components/homepage/HeroCompact'
 import { MissionConsole } from '@/components/homepage/MissionConsole'
+import { MessengerAgentsSection } from '@/components/homepage/MessengerAgentsSection'
 import { DirectionsList } from '@/components/homepage/DirectionsList'
 import { Footer } from '@/components/layout/Footer'
 
@@ -97,6 +98,7 @@ export default async function Page() {
       <main>
         <HeroCompact />
         <MissionConsole />
+        <MessengerAgentsSection />
         <DirectionsList />
         <InlineChat />
         <TrustSection />
