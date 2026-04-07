@@ -25,11 +25,11 @@ export const AGENT_MODEL_MAP: Record<AgentId, string> = {
   eco:        'google/gemini-2.5-flash-lite',             // эко: 1M context, дешёвый
   content:    'google/gemini-2.0-flash-001',              // аудит: быстрый
   quality:    'openai/gpt-4o-mini',                       // качество: надёжный
-  planning:   'deepseek/deepseek-chat-v3-0324',           // стратегия: аналитика
-  evo:        'deepseek/deepseek-chat-v3-0324',           // архитектор: аналитика
+  planning:   'anthropic/claude-sonnet-4-6',              // стратегия: максимальное качество анализа
+  evo:        'anthropic/claude-sonnet-4-6',              // архитектор: максимальное качество анализа
   finance:    'deepseek/deepseek-chat-v3-0324',           // CFO: аналитика, дешёвый
   infra:      'google/gemini-2.0-flash-001',              // SRE: быстрый
-  vibe_coder: 'deepseek/deepseek-chat-v3-0324',          // кодер: аналитика
+  vibe_coder: 'anthropic/claude-sonnet-4-6',             // кодер: максимальное качество кода
   // Site-wide agents — ultra-cheap
   kuzmich:    'google/gemini-2.0-flash-001',              // Telegram persona
   planner:    'google/gemini-2.0-flash-001',              // trip planning
@@ -53,11 +53,11 @@ export const CRON_MODEL_MAP: Partial<Record<AgentId, string>> = {
   eco:        'google/gemini-2.0-flash-001',
   content:    'google/gemini-2.0-flash-001',
   quality:    'google/gemini-2.0-flash-001',
-  planning:   'deepseek/deepseek-chat-v3-0324',
-  evo:        'deepseek/deepseek-chat-v3-0324',
+  planning:   'anthropic/claude-sonnet-4-6',
+  evo:        'anthropic/claude-sonnet-4-6',
   finance:    'deepseek/deepseek-chat-v3-0324',
   infra:      'google/gemini-2.0-flash-001',
-  vibe_coder: 'deepseek/deepseek-chat-v3-0324',
+  vibe_coder: 'anthropic/claude-sonnet-4-6',
 };
 
 /**
