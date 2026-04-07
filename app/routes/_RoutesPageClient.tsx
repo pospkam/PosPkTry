@@ -400,7 +400,7 @@ export default function RoutesPageClient() {
         {view === 'grid' && (
           <>
             {loading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 [&_img]:hidden">
                 {Array.from({ length: LIMIT }).map((_, i) => (
                   <div key={i} className="ds-skeleton rounded-lg h-44" />
                 ))}
@@ -417,7 +417,7 @@ export default function RoutesPageClient() {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 [&_img]:hidden">
                 {routes.map(route => (
                   <RouteCard key={route.id} route={route} />
                 ))}
