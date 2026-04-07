@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import dynamic from 'next/dynamic'
 import { Header } from '@/components/layout/Header'
 import { HeroCompact } from '@/components/homepage/HeroCompact'
-import { StatsBand } from '@/components/homepage/StatsBand'
 import { DirectionsList } from '@/components/homepage/DirectionsList'
 import { Footer } from '@/components/layout/Footer'
 
@@ -100,7 +99,6 @@ export default async function Page() {
       <Header />
       <main>
         <HeroCompact />
-        <StatsBand />
         <InlineChat />
         <DirectionsList />
         <LeadCTASection />

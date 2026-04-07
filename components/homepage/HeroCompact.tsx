@@ -21,7 +21,8 @@ export function HeroCompact() {
       />
       <Image
         src={HERO_DARK}
-        alt="Камчатка"
+        alt=""
+        aria-hidden
         fill
         sizes="100vw"
         className="object-cover object-center opacity-0 dark:opacity-100 transition-opacity duration-700"
@@ -122,30 +123,7 @@ export function HeroCompact() {
           </div>
         </div>
 
-        {/* Bottom bar — minimal stats strip */}
-        <div className="flex items-center justify-between pb-10 border-t border-white/10 pt-6">
-          <div className="flex gap-8 md:gap-16">
-            {[
-              { num: '1000+', label: 'маршрутов' },
-              { num: '47',    label: 'операторов' },
-              { num: '24/7',  label: 'AI-поддержка' },
-            ].map(s => (
-              <div key={s.label}>
-                <div className="text-white font-bold text-lg md:text-xl font-playfair leading-none mb-0.5">
-                  {s.num}
-                </div>
-                <div className="text-[10px] text-white/35 tracking-wider uppercase">{s.label}</div>
-              </div>
-            ))}
-          </div>
-          <Link
-            href="#directions"
-            className="text-[11px] tracking-[0.2em] uppercase text-white/35 hover:text-white/70 transition-colors flex items-center gap-2"
-          >
-            Направления
-            <ArrowRight className="w-3 h-3" />
-          </Link>
-        </div>
+        <div className="pb-10" />
       </div>
     </section>
   );
