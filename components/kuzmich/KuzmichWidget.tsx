@@ -6,8 +6,8 @@ import { Sparkles, Send, Loader2, X, MessageCircle, Camera, ExternalLink } from 
 import Link from 'next/link';
 import Image from 'next/image';
 
-// Страницы где виджет не нужен (там уже есть полноценный чат или admin)
-const HIDDEN_PATHS = ['/kuzmich', '/hub/', '/api/'];
+// Страницы где виджет не нужен
+const HIDDEN_PATHS = ['/kuzmich', '/hub/admin', '/hub/operator'];
 
 interface Message {
   role: 'user' | 'assistant';
@@ -22,10 +22,11 @@ export default function KuzmichWidget() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  // Тот же ключ что на /kuzmich — история общая
   const [sessionId] = useState(() => {
     if (typeof window === 'undefined') return `w-${Date.now()}`;
     try {
-      const k = 'th_widget_session';
+      const k = 'th_kuzmich_session';
       let s = localStorage.getItem(k) ?? '';
       if (!s) { s = crypto.randomUUID?.() ?? `w-${Date.now()}`; localStorage.setItem(k, s); }
       return s;

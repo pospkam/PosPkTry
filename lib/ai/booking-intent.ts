@@ -83,7 +83,7 @@ export async function findRelevantTours(
          ot.base_price,
          ot.activity_type,
          ot.location_type,
-         ot.location_name,
+         ot.location_name AS location,
          ot.tour_image,
          p.name AS operator_name
        FROM operator_tours ot
@@ -102,7 +102,7 @@ export async function findRelevantTours(
            ot.id, ot.title,
            LEFT(ot.description, 120) AS description,
            ot.base_price, ot.activity_type,
-           ot.location_type, ot.location_name, ot.tour_image,
+           ot.location_type, ot.location_name AS location, ot.tour_image,
            p.name AS operator_name
          FROM operator_tours ot
          JOIN partners p ON ot.operator_id = p.id
