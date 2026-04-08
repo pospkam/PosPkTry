@@ -16,7 +16,6 @@ interface BookingData {
   booking_date: string;
   participants_count: number;
   tourist_name: string;
-  tourist_email: string;
   status: string;
   payment_status: string;
   total_price: number;
@@ -80,7 +79,7 @@ export default function BookingSuccessClient() {
         amount:      booking.total_price,
         currency:    'RUB',
         invoiceId:   String(booking.id),
-        accountId:   booking.tourist_email || booking.tourist_name,
+        accountId:   booking.tourist_name,
         data:        { bookingId: booking.id, source: 'booking_success' },
       },
       {

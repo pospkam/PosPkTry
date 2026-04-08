@@ -2,6 +2,7 @@
  * GET /api/hub/bookings/[id]
  * Публичный эндпоинт для страницы подтверждения бронирования.
  * Возвращает основные данные брони по числовому ID.
+ * Персональные данные туриста (phone, email) — не возвращаются (ФЗ-152).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -24,7 +25,6 @@ export async function GET(
     booking_date: string;
     participants: number;
     tourist_name: string;
-    tourist_email: string;
     booking_status: string;
     base_price: number;
     operator_name: string;
@@ -39,7 +39,6 @@ export async function GET(
        b.booking_date,
        b.participants,
        b.tourist_name,
-       b.tourist_email,
        b.booking_status,
        b.final_price,
        b.payment_status,
@@ -70,14 +69,12 @@ export async function GET(
       booking_date: row.booking_date,
       participants_count: row.participants,
       tourist_name: row.tourist_name,
-      tourist_email: row.tourist_email,
       status: row.booking_status,
       payment_status: row.payment_status,
       total_price: finalPrice,
       operator_name: row.operator_name,
       operator_phone: row.operator_phone,
       operator_telegram: row.operator_telegram,
-      // Публичный ключ CloudPayments — безопасно передавать клиенту
       cp_public_id: process.env.CLOUDPAYMENTS_PUBLIC_ID ?? '',
     },
   });

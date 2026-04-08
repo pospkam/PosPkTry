@@ -100,13 +100,19 @@ async function handlePaid(bookingId: bigint, webhook: CloudPaymentsWebhook) {
   );
 
   // Notify operator + admin via Telegram
+  // LEFT JOIN both partners and users — operators can be in either table
   const res = await query(
-    `SELECT t.title, p.name as operator_name,
-            p.contacts->>'telegram_chat_id' as telegram_chat_id
-     FROM operator_bookings b
-     JOIN operator_tours t ON b.operator_tour_id = t.id
-     JOIN partners p ON t.operator_id = p.id
-     WHERE b.id = $1 LIMIT 1`,
+    `SELECT t.title,
+            ob.tourist_name,
+            ob.tourist_phone,
+            ob.booking_date,
+            ob.participants,
+            COALESCE(p.contacts->>'telegram_chat_id', u.telegram_id::text) AS telegram_chat_id
+     FROM operator_bookings ob
+     JOIN operator_tours t ON ob.operator_tour_id = t.id
+     LEFT JOIN partners p ON t.operator_id = p.id
+     LEFT JOIN users    u ON t.operator_id = u.id
+     WHERE ob.id = $1 LIMIT 1`,
     [bookingId]
   );
   if (res.rows.length > 0) {
@@ -115,7 +121,9 @@ async function handlePaid(bookingId: bigint, webhook: CloudPaymentsWebhook) {
       bookingId,
       row.title as string,
       webhook.Amount,
-      row.telegram_chat_id as string | undefined
+      row.telegram_chat_id as string | undefined,
+      row.tourist_name as string | undefined,
+      row.tourist_phone as string | undefined,
     ).catch(() => undefined);
   }
 }

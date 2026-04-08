@@ -506,7 +506,8 @@ const TOURS = [
 
 export async function GET(req: NextRequest) {
   const secret = new URL(req.url).searchParams.get('secret');
-  if (secret !== 'import-mestechko-2026') {
+  const expected = process.env.CRON_SECRET;
+  if (!expected || secret !== expected) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

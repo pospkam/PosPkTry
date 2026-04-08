@@ -77,15 +77,22 @@ export async function notifyBookingPaid(
   bookingId: bigint | string,
   tourTitle: string,
   amount: number,
-  operatorTelegramChatId?: string
+  operatorTelegramChatId?: string,
+  touristName?: string,
+  touristPhone?: string,
 ): Promise<void> {
-  const text = [
-    `<b>Оплата получена #${bookingId}</b>`,
+  const lines = [
+    `<b>Оплата получена — бронь #${bookingId}</b>`,
     `Тур: ${esc(tourTitle)}`,
     `Сумма: ${amount.toLocaleString('ru-RU')} ₽`,
-  ].join('\n');
+  ];
+  if (touristName)  lines.push(`Турист: ${esc(touristName)}`);
+  if (touristPhone) lines.push(`Телефон: ${esc(touristPhone)}`);
+  lines.push(`<a href="https://tourhab.ru/hub/operator/bookings/${bookingId}">Открыть бронь</a>`);
 
-  const adminChatId = process.env.TELEGRAM_CHAT_ID;
+  const text = lines.join('\n');
+
+  const adminChatId = process.env.TELEGRAM_OWNER_ID ?? process.env.TELEGRAM_CHAT_ID;
   if (adminChatId) await tgSend(adminChatId, text);
   if (operatorTelegramChatId) await tgSend(operatorTelegramChatId, text);
 }
