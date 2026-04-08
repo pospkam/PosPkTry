@@ -224,6 +224,17 @@ export const AGENT_KNOWLEDGE_BASES: Record<string, AgentKnowledgeBase> = {
 
     tone: 'analytical',
     decisionStyle: 'innovation-first',
+
+    domainKnowledge: `
+## ДАННЫЕ ДЛЯ GROWTH АНАЛИЗА
+
+**Таблицы:** operator_bookings (booking_status: pending/confirmed/completed/cancelled), operator_tours, users, agent_commissions
+**Воронка:** Визит → /routes или /marketplace/tours → TourPaymentModal → lead_submissions → operator_bookings
+**Лиды:** таблица lead_submissions (source: booking_modal_guest, route_page, kuzmich_chat)
+**Платежи:** CloudPayments (card), Точка Банк (QR). Webhook: /api/payments/webhook
+**Аффилиат:** TravelPayouts marker=402896, TRS=513488. Клики: affiliate_clicks, выплаты: affiliate_payouts
+**A/B стратегия:** agent_approvals → execution_status (assigned→in_progress→done)
+`,
   },
 
   rescue: {
@@ -247,6 +258,17 @@ export const AGENT_KNOWLEDGE_BASES: Record<string, AgentKnowledgeBase> = {
 
     tone: 'urgent',
     decisionStyle: 'risk-first',
+
+    domainKnowledge: `
+## SOS АРХИТЕКТУРА TOURHAB
+
+**SOS endpoint:** /api/safety/sos (только через staging, НЕ трогать в prod)
+**Таблицы:** sos_events (id, user_id, tour_id, lat, lng, status, created_at), weather_alerts
+**Статусы инцидентов:** open / responding / resolved / false_alarm
+**Связанные туры:** operator_tours (поле difficulty: easy/medium/hard, location_type: mountain/volcano/river)
+**Опасные активности:** helicopter, rafting, trekking на volcano — приоритет мониторинга
+**Нотификации:** Telegram бот (TELEGRAM_BOT_TOKEN) → ADMIN_TELEGRAM_CHAT при статусе 'open'
+`,
   },
 
   eco: {
@@ -270,6 +292,16 @@ export const AGENT_KNOWLEDGE_BASES: Record<string, AgentKnowledgeBase> = {
 
     tone: 'cautious',
     decisionStyle: 'risk-first',
+
+    domainKnowledge: `
+## ЭКО-ДАННЫЕ КАМЧАТКИ
+
+**Зоны из agent_route_knowledge:** northern_kamchatka (особо охраняемая), avachinsky_valley, pacific_coast, eastern_coast, central_valley
+**Таблицы:** operator_tours (zone, activity_type, group_size_max), agent_route_knowledge (unique_flora_fauna, protection_level)
+**Лимиты:** helicopter зоны — ≤8 чел/рейс, медвежьи зоны — ≤6 чел/группа
+**Сезонность:** июнь-август — пик нагрузки (80% от годового трафика)
+**Эко-скор:** поле eco_score в agent_route_knowledge (0.0-1.0), влияет на ранжирование маршрутов
+`,
   },
 
   content: {
@@ -294,6 +326,17 @@ export const AGENT_KNOWLEDGE_BASES: Record<string, AgentKnowledgeBase> = {
 
     tone: 'analytical',
     decisionStyle: 'data-first',
+
+    domainKnowledge: `
+## КОНТЕНТ СТАНДАРТЫ TOURHAB
+
+**Таблицы:** operator_tours (title, description, short_description, tour_image, photos JSONB), ai_actions_log
+**Минимальный стандарт тура:** description ≥500 символов, 3+ фото, заполнены included/not_included/what_to_bring
+**Telegram канал:** @kamchatourhab (TELEGRAM_CHANNEL_ID). Посты через /api/cron/kuzmich
+**Кузьмич:** AI-ассистент на базе Gemini + Sonnet. Отвечает за контент (маршруты, советы, партнёры)
+**Партнёры для постов:** soulful (Камчатка с душой), mestechko (Местечко Камчатка)
+**Типы постов:** route / tip / sezon / friend. Endpoint: /api/cron/kuzmich?type=X&slug=Y
+`,
   },
 
   quality: {
@@ -317,6 +360,17 @@ export const AGENT_KNOWLEDGE_BASES: Record<string, AgentKnowledgeBase> = {
 
     tone: 'analytical',
     decisionStyle: 'data-first',
+
+    domainKnowledge: `
+## КАЧЕСТВО И РЕЙТИНГИ TOURHAB
+
+**Отзывы:** таблица operator_tour_reviews (tour_id, user_id, rating 1-5, comment, created_at)
+**Операторы:** таблица partners (company_name, category='operator', rating, is_verified, is_active)
+**Health score оператора:** avg(reviews.rating) за 30д, % отменённых бронирований, скорость ответа
+**Санкции:** warning (1-е нарушение) → restriction (>3 нарушений SLA) → suspension
+**SLA операторов:** подтверждение бронирования ≤24ч, ответ клиенту ≤4ч в рабочее время
+**Медиана рейтинга Камчатки:** 4.6/5.0 (benchmark для флагов)
+`,
   },
 
   evo: {
@@ -340,6 +394,18 @@ export const AGENT_KNOWLEDGE_BASES: Record<string, AgentKnowledgeBase> = {
 
     tone: 'analytical',
     decisionStyle: 'consensus-first',
+
+    domainKnowledge: `
+## АРХИТЕКТУРА ЭВОЛЮЦИИ TOURHAB
+
+**Цикл:** intelligence-monitor (6ч) → agent_memory → Scout-Innovator → agent_approvals → owner approval → cron/initiatives-execute (1ч)
+**Таблицы:** board_meeting_sessions, agent_approvals (status: pending/approved/rejected/assigned/in_progress/done/failed), ai_actions_log
+**Деплой:** git push origin main → Timeweb автодеплой (App ID 175269). TypeScript check: npx tsc --noEmit
+**Стек:** Next.js 15 App Router, TypeScript strict, PostgreSQL прямой SQL (lib/db-pool.ts), JWT auth
+**Миграции:** /migrations/NNN_name.sql. Следующая: 050_. Миграции 001-049 не трогать.
+**Тесты:** npx vitest run (156 тестов). CI: GitHub Actions → CI workflow.
+**AI waterfall:** callAIWaterfall() / callAIFast() в lib/ai/providers.ts. НЕ вызывать провайдеры напрямую.
+`,
   },
 
   planning: {
@@ -363,6 +429,17 @@ export const AGENT_KNOWLEDGE_BASES: Record<string, AgentKnowledgeBase> = {
 
     tone: 'analytical',
     decisionStyle: 'data-first',
+
+    domainKnowledge: `
+## СЕЗОННОСТЬ И ПЛАНИРОВАНИЕ КАМЧАТКИ
+
+**Таблицы:** operator_bookings (booking_status, booking_date, tour_date), operator_tours (season_start, season_end, activity_type), tour_availability (date, available_slots, booked_slots)
+**Пиковый сезон:** июнь-август (вулканы, медведи, рыбалка). Апрель-май — горнолыжный/снегоход.
+**Мёртвый сезон:** октябрь-март (≈15% от пика). Риск оттока операторов.
+**Опережение бронирования:** вертолётные туры — 3-4 недели, треккинг — 1-2 недели, рыбалка — 2-3 недели
+**Дефицит:** helicopter и bear_watching — наиболее дефицитные. Норма заполнения ≥70%.
+**Прогноз запросов:** user_ai_memory (тип_тура, интент), agent_memory (intel_travel_*)
+`,
   },
 
   finance: {
@@ -386,6 +463,17 @@ export const AGENT_KNOWLEDGE_BASES: Record<string, AgentKnowledgeBase> = {
 
     tone: 'analytical',
     decisionStyle: 'data-first',
+
+    domainKnowledge: `
+## ФИНАНСЫ TOURHAB
+
+**Таблицы:** operator_bookings (total_price, booking_status), agent_commissions (amount, rate, status), commission_payouts (total_amount, status: pending/processing/paid/failed)
+**Комиссионные тарифы:** Старт 15% → Базовый 10% (≥100к/кв) → Партнёр 7% (≥500к/кв) → Премиум 5% (≥1.5М/кв) + 3% эквайринг
+**Платежи:** CloudPayments (card/SBP), Точка Банк QR (TOCHKA_MERCHANT_ID). Webhook: /api/payments/webhook
+**Выплаты операторам:** ≤3 рабочих дней после подтверждения услуги
+**Аффилиат доход:** affiliate_payouts (TravelPayouts marker=402896). Clicks: affiliate_clicks.
+**Рефанды:** booking_status='cancelled'. Срок возврата: 3-5 рабочих дней (CloudPayments).
+`,
   },
 
   infra: {
@@ -409,6 +497,18 @@ export const AGENT_KNOWLEDGE_BASES: Record<string, AgentKnowledgeBase> = {
 
     tone: 'operational',
     decisionStyle: 'data-first',
+
+    domainKnowledge: `
+## ИНФРАСТРУКТУРА TOURHAB
+
+**Хостинг:** Timeweb Cloud, App ID 175269, Node.js standalone. Деплой: git push → автодеплой.
+**БД:** PostgreSQL (pool из lib/db-pool.ts). Env: DATABASE_URL. НЕ использовать Prisma.
+**AI провайдеры:** OR_API_KEY (OpenRouter primary), DEEPSEEK_API_KEY, MINIMAX_API_KEY. Health: /api/admin/health
+**CRON задачи:** intelligence (6ч), board-meeting (ежедневно 21:00 UTC), initiatives-execute (1ч), kuzmich (по расписанию)
+**Критичные переменные:** HOSTNAME=0.0.0.0, PORT=3000, NODE_OPTIONS=--max-old-space-size=1536 (без них 502)
+**Логи ошибок:** ai_actions_log (provider, model, success, error_message, latency_ms, cost_usd)
+**Health check:** /api/status (публичный), /api/admin/health (admin only)
+`,
   },
 
   vibe_coder: {
@@ -432,6 +532,19 @@ export const AGENT_KNOWLEDGE_BASES: Record<string, AgentKnowledgeBase> = {
 
     tone: 'analytical',
     decisionStyle: 'data-first',
+
+    domainKnowledge: `
+## КОД TOURHAB — КРИТИЧЕСКИЕ ПРАВИЛА
+
+**Стек:** Next.js 15 App Router, TypeScript strict (no any), Tailwind CSS, PostgreSQL (прямой SQL)
+**Запрещено:** FROM bookings (→ operator_bookings), FROM tours (→ operator_tours), SELECT * на критичных таблицах
+**SQL:** только параметризованный ($1, $2). Никаких конкатенаций строк в запросах.
+**Auth:** requireAuth / requireAdmin / requireRole из lib/auth/middleware.ts. JWT в каждом защищённом route.
+**AI вызовы:** только callAIWaterfall() или callAIFast(). Прямые вызовы провайдеров — только в lib/ai/providers.ts
+**Файлы:** page.tsx = server (metadata), _*Client.tsx = client (логика, useState)
+**Валидация API:** Zod на всех входных данных. Ошибки на русском.
+**Деплой:** npx tsc --noEmit (0 ошибок), npx vitest run (зелёные), git push → автодеплой
+`,
   },
 };
 
