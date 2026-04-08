@@ -137,7 +137,7 @@ export default function OperatorRegister() {
 
         <p className="text-center text-xs text-[var(--text-muted)] mt-6">
           Зарегистрировавшись, ты согласен с{' '}
-          <Link href="/terms" className="text-[var(--ocean)] hover:underline">
+          <Link href="/legal/terms" className="text-[var(--ocean)] hover:underline">
             условиями
           </Link>
         </p>

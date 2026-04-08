@@ -279,7 +279,7 @@ export default function TouristDashboardClient() {
             <Target className="w-5 h-5 text-[var(--accent)]" />
             <h2 className="text-lg font-semibold text-[var(--text-primary)]">Рекомендуем вам</h2>
           </div>
-          <Link href="/tours" className="text-sm text-[var(--accent)] hover:underline font-medium">
+          <Link href="/marketplace" className="text-sm text-[var(--accent)] hover:underline font-medium">
             Все туры →
           </Link>
         </div>

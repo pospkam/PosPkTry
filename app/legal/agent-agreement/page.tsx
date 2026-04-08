@@ -141,7 +141,7 @@ export default function AgentAgreementPage() {
 
         <div className="mt-12 flex flex-col sm:flex-row gap-4">
           <Link
-            href="/auth/register?role=operator"
+            href="/operators/join"
             className="ds-btn ds-btn-primary text-center"
           >
             Зарегистрироваться как оператор

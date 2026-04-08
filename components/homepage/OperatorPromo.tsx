@@ -112,7 +112,7 @@ export function OperatorPromo() {
 
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
             <Link
-              href="/auth/register?role=operator"
+              href="/operators/join"
               className="ds-btn-primary flex items-center gap-2"
             >
               Зарегистрироваться как оператор

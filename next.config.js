@@ -77,11 +77,11 @@ const nextConfig = {
 
   async redirects() {
     return [
-      {
-        source: '/fishingkam',
-        destination: '/operators/kamchatskaya-rybalka',
-        permanent: true,
-      },
+      { source: '/fishingkam',         destination: '/operators/kamchatskaya-rybalka', permanent: true },
+      // Исправление мёртвых ссылок
+      { source: '/tours',         destination: '/marketplace',    permanent: true },
+      { source: '/terms',         destination: '/legal/terms',    permanent: true },
+      { source: '/auth/register', destination: '/operators/join', permanent: false },
     ];
   },
 
