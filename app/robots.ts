@@ -115,6 +115,55 @@ export default function robots(): MetadataRoute.Robots {
         allow: '/',
         disallow: ['/hub/', '/api/'],
       },
+
+      // DeepSeek AI
+      {
+        userAgent: 'DeepSeekBot',
+        allow: '/',
+        disallow: ['/hub/', '/api/'],
+      },
+
+      // ByteDance / TikTok AI
+      {
+        userAgent: 'Bytespider',
+        allow: '/',
+        disallow: ['/hub/', '/api/'],
+      },
+
+      // Amazon Alexa / Amazonbot
+      {
+        userAgent: 'Amazonbot',
+        allow: '/',
+        disallow: ['/hub/', '/api/'],
+      },
+
+      // DuckDuckGo AI (DuckAssist)
+      {
+        userAgent: 'DuckAssistBot',
+        allow: '/',
+        disallow: ['/hub/', '/api/'],
+      },
+
+      // AI2 (Allen Institute / OLMo)
+      {
+        userAgent: 'AI2Bot',
+        allow: '/',
+        disallow: ['/hub/', '/api/'],
+      },
+
+      // Mistral AI
+      {
+        userAgent: 'MistralAI-User',
+        allow: '/',
+        disallow: ['/hub/', '/api/'],
+      },
+
+      // xAI Grok
+      {
+        userAgent: 'Grok',
+        allow: '/',
+        disallow: ['/hub/', '/api/'],
+      },
     ],
     sitemap: 'https://tourhab.ru/sitemap.xml',
     host: 'tourhab.ru',

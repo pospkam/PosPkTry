@@ -36,7 +36,7 @@ AI-помощник Кузьмич подбирает маршрут за мин
 | Frontend | Next.js 15 App Router, React 19, TypeScript strict, Tailwind CSS |
 | Backend | Next.js API Routes, PostgreSQL (pg pool, прямой SQL) |
 | Auth | JWT (jose) + bcrypt, 6 ролей |
-| AI Providers | DeepSeek (Tier 1) → Gemini → MiMo → OpenRouter → YandexGPT → MiniMax → Anthropic |
+| AI Providers | DeepSeek (Tier 1) → Gemini → MiMo → GLM-Z1 → GLM-5.1 → OpenRouter → YandexGPT → MiniMax → Anthropic |
 | Agent Layer | 13 AI-директоров + 7 рабочих агентов (`lib/agents/`) |
 | Maps | Yandex Maps API 2.1 |
 | Telegram | @KuzmichKam_bot (tourist) + admin bot |
@@ -150,12 +150,13 @@ scripts/
 ### Waterfall провайдеров
 
 ```
-Tier 1 (race): DeepSeek → Gemini → MiMo
+Tier 1 (race): DeepSeek → Gemini → MiMo → GLM-Z1 (OR) → GLM-5.1 (direct)
 Tier 2 (race): OpenRouter → YandexGPT → MiniMax
 Tier 3 (sequential): Anthropic
 ```
 
 Tier 1 гонка — первый ответ побеждает. xAI исключён (гео-блок RU).
+GLM-Z1 доступен через OpenRouter (`thudm/glm-z1-32b`), GLM-5.1 — прямой API ZhipuAI (`GLM_API_KEY`).
 Anthropic: prompt caching (`cache_control: ephemeral`) — экономия ~90% токенов на повторных system prompts.
 Файл: `lib/ai/providers.ts`
 
@@ -417,7 +418,7 @@ affiliate_payouts        -- Выплаты от партнёров (TravelPayout
 ### Миграции
 
 Миграции: `lib/database/migrations/` + `migrations/`.
-Последняя: **`123_close_sos_e8a57907.sql`**
+Последняя: **`136_chat_sessions_utm.sql`**
 
 ```bash
 node scripts/migrate.js   # Накатить все новые миграции
@@ -469,12 +470,15 @@ API endpoints:        400+
 Компонентов:          120+
 Миграций:             123
 Маршрутов в БД:     1 189
-AI-провайдеров:         7  (waterfall, без xAI гео-блока)
+AI-провайдеров:         8  (waterfall, включая GLM-5.1 + GLM-Z1)
 AI-директоров:         13  (Board of Directors)
 TS-ошибок:              0
 ```
 
 **Последние изменения:**
+- **Правовые документы** — полная переработка (ООО «ПОС-СЕРВИС», комиссия 15%+3%=18%, нормативная база ФЗ)
+- **GLM 5.1** — direct API ZhipuAI (`GLM_API_KEY`) + GLM-Z1 через OpenRouter добавлены в Tier 1 waterfall
+- **PDF-импорт туров** — оператор загружает PDF, Gemini Flash извлекает поля тура (`/api/hub/operator/tours/import-pdf`)
 - **Agent .md Programs** — 13 экстернализированных программ директоров (`lib/agents/programs/*.md`), редактируемые без пересборки
 - **Anonymous Cross-Review** — AgentMesh: анонимные метки ("Подразделение A/B/C"), числовой скор SCORE:1-5
 - **Hybrid RAG + RRF** — fulltext (tsvector) + semantic (MiniLM cosine) объединяются Reciprocal Rank Fusion
