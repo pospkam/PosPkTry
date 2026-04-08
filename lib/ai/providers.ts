@@ -535,77 +535,84 @@ export async function callGeminiDirect(messages: ChatMessage[]): Promise<string 
   } catch { return null; }
 }
 
-// ── Gemini Vision (image analysis) ────────────────────────────
+// ── Gemini Vision (image analysis) via OpenRouter ─────────────
 export async function callGeminiVision(
   imageBase64: string,
   mimeType: string,
   prompt: string,
 ): Promise<string | null> {
-  const apiKey = getGeminiKey();
+  const apiKey = getOpenRouterKey();
   if (!apiKey) return null;
 
   try {
-    const body = {
-      contents: [{
-        role: 'user',
-        parts: [
-          { inlineData: { mimeType, data: imageBase64 } },
-          { text: prompt },
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://tourhab.ru',
+        'X-Title': 'TourHab Kamchatka',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.0-flash',
+        max_tokens: 600,
+        messages: [
+          {
+            role: 'system',
+            content: 'Ты — эксперт по природе и достопримечательностям Камчатки. Отвечай на русском, кратко и точно. Определяй вулканы, животных, растения, локации.',
+          },
+          {
+            role: 'user',
+            content: [
+              { type: 'image_url', image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
+              { type: 'text', text: prompt },
+            ],
+          },
         ],
-      }],
-      systemInstruction: {
-        parts: [{ text: 'Ты — эксперт по природе и достопримечательностям Камчатки. Отвечай на русском, кратко и точно. Определяй вулканы, животных, растения, локации.' }],
-      },
-    };
-
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-        signal: AbortSignal.timeout(30_000),
-      },
-    );
+      }),
+      signal: AbortSignal.timeout(30_000),
+    });
     if (!res.ok) return null;
     const data = await res.json();
-    const text: string | undefined = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    const text: string | undefined = data?.choices?.[0]?.message?.content;
     return text?.trim() || null;
   } catch { return null; }
 }
 
-// ── Gemini Audio Transcription (голосовые сообщения Telegram) ──────────────
+// ── Gemini Audio Transcription via OpenRouter ──────────────────
 // Поддерживает: audio/ogg, audio/mp3, audio/wav, audio/m4a (Telegram шлёт ogg)
 export async function callGeminiTranscribe(
   audioBase64: string,
   mimeType: string = 'audio/ogg',
 ): Promise<string | null> {
-  const apiKey = getGeminiKey();
+  const apiKey = getOpenRouterKey();
   if (!apiKey) return null;
 
   try {
-    const body = {
-      contents: [{
-        role: 'user',
-        parts: [
-          { inlineData: { mimeType, data: audioBase64 } },
-          { text: 'Транскрибируй это голосовое сообщение дословно. Только текст, без пояснений. Если не слышно — напиши "(неразборчиво)".' },
-        ],
-      }],
-    };
-
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-        signal: AbortSignal.timeout(30_000),
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://tourhab.ru',
+        'X-Title': 'TourHab Kamchatka',
       },
-    );
+      body: JSON.stringify({
+        model: 'google/gemini-2.0-flash',
+        max_tokens: 400,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image_url', image_url: { url: `data:${mimeType};base64,${audioBase64}` } },
+            { type: 'text', text: 'Транскрибируй это голосовое сообщение дословно. Только текст, без пояснений. Если не слышно — напиши "(неразборчиво)".' },
+          ],
+        }],
+      }),
+      signal: AbortSignal.timeout(30_000),
+    });
     if (!res.ok) return null;
     const data = await res.json();
-    const text: string | undefined = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    const text: string | undefined = data?.choices?.[0]?.message?.content;
     return text?.trim() || null;
   } catch { return null; }
 }
