@@ -360,7 +360,7 @@ function buildInfraToolkit(agentId: string): AgentToolkit {
           MAX(created_at)::text AS last_run,
           COUNT(*)::text AS run_count
         FROM ai_actions_log
-        WHERE action_type LIKE 'cron_%'
+        WHERE (action_type LIKE 'cron_%' OR action_type LIKE 'agent_scheduled:%')
           AND created_at >= NOW() - INTERVAL '48 hours'
         GROUP BY action_type
         ORDER BY MAX(created_at) DESC`

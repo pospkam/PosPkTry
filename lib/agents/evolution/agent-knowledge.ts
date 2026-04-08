@@ -225,7 +225,7 @@ export const AGENT_KNOWLEDGE_BASES: Record<string, AgentKnowledgeBase> = {
     mission: 'Находить и реализовывать рычаги роста через A/B тесты и data-driven оптимизацию.',
     expertise: ['growth', 'marketing', 'conversion', 'pricing', 'retention', 'experimentation'],
     respondsTo: ['growth', 'conversion', 'revenue', 'price', 'retention', 'a/b test'],
-    blind_spots: ['compliance', 'safety', 'longterm_sustainability'],
+    blind_spots: ['compliance', 'safety'],
 
     metrics: ['conversion_rate', 'average_booking_value', 'retention_rate', 'cac', 'ltv'],
     dataSourcesNeeded: ['agent_bookings', 'operator_tours', 'users', 'agent_commissions'],

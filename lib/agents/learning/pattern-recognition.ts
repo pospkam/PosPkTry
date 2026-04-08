@@ -38,6 +38,24 @@ interface MetricsRow {
 
 const SEVERITY_ORDER: Record<PatternSeverity, number> = { critical: 0, warning: 1, info: 2 };
 
+/**
+ * Порог latency зависит от типа интента:
+ * - mtg_* — целые заседания совета (13 агентов параллельно), норма 60-120с
+ * - admin_digest — дайджест, допускается до 30с
+ * - все остальные — API/агентные вызовы, цель <5с
+ */
+function getThresholdMs(intent: string): number {
+  if (intent.startsWith('mtg_'))      return 180_000; // 3 минуты
+  if (intent === 'admin_digest')      return 30_000;  // 30 секунд
+  return 5_000;
+}
+
+function getThresholdLabel(intent: string): string {
+  const ms = getThresholdMs(intent);
+  if (ms >= 60_000) return `${ms / 60_000} мин`;
+  return `${ms / 1_000}с`;
+}
+
 export class PatternRecognition {
   async analyzeIntents(hours = 24): Promise<IntentMetrics[]> {
     const { rows } = await pool.query<MetricsRow>(`
@@ -80,13 +98,16 @@ export class PatternRecognition {
     const patterns: SystemPattern[] = [];
 
     for (const m of metrics) {
-      if (m.p95_duration_ms > 5000) {
+      const thresholdMs = getThresholdMs(m.intent);
+      if (m.p95_duration_ms > thresholdMs) {
         patterns.push({
           pattern_type:   'slow_intent',
           intent:         m.intent,
-          description:    `${m.intent}: p95 = ${m.p95_duration_ms}ms (порог 5000ms)`,
-          recommendation: 'Добавь кэш или оптимизируй SQL-запрос',
-          severity:       m.p95_duration_ms > 10000 ? 'critical' : 'warning',
+          description:    `${m.intent}: p95 = ${m.p95_duration_ms}ms (порог ${getThresholdLabel(m.intent)})`,
+          recommendation: m.intent.startsWith('mtg_')
+            ? 'Норма для заседания совета — проверь только если >3 мин'
+            : 'Добавь кэш или оптимизируй SQL-запрос',
+          severity:       m.p95_duration_ms > thresholdMs * 2 ? 'critical' : 'warning',
         });
       }
 
