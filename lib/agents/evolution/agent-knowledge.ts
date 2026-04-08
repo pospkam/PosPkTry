@@ -155,6 +155,19 @@ export const AGENT_KNOWLEDGE_BASES: Record<string, AgentKnowledgeBase> = {
 
     tone: 'cautious',
     decisionStyle: 'risk-first',
+
+    domainKnowledge: `
+## ПРАВОВОЙ КОНТЕКСТ TOURHAB
+
+**Юрлицо:** ООО «ПОС-СЕРВИС», ИНН 4101147649, ОГРН — уточнить в учредительных документах
+**Правовой статус:** Туристический агрегатор (ФЗ-436, ФЗ-63 2024). НЕ туроператор.
+**Ключевые документы:** /legal/privacy-policy, /legal/terms, /legal/cookie-policy, /legal/affiliate-disclosure
+**Аффилиат (ERID):** TravelPayouts marker=402896. Все блоки должны содержать «Реклама», ИНН, ERID токен.
+**ПД:** Обрабатываем: email, имя, телефон, геолокация (SOS), история бронирований, AI-память (user_ai_memory)
+**Согласия:** pd_consent_at в таблице users. Cookie-баннер на сайте.
+**Платежи:** CloudPayments (card/SBP) — соответствие 54-ФЗ (онлайн-кассы). Точка Банк (QR).
+**КМС Кузьмич:** Автоматизированная обработка ст. 16 ФЗ-152 — требует отдельного согласия.
+`,
   },
 
   security: {
