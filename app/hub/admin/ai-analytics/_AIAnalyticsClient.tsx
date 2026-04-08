@@ -1,9 +1,24 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { MessageSquare, Users, Brain, CreditCard, RefreshCw, TrendingUp, Sparkles, BarChart2, Activity } from 'lucide-react';
+import {
+  MessageSquare, Users, Brain, CreditCard, RefreshCw,
+  TrendingUp, Sparkles, BarChart2, Activity, ThumbsUp, ThumbsDown, Globe,
+} from 'lucide-react';
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface ChannelStats {
+  uniqueChats: number;
+  totalMsgs: number;
+  userMsgs: number;
+  lastMsg: string | null;
+}
 
 interface AnalyticsData {
+  channels: Record<string, ChannelStats>;
+  tgTrend: Array<{ day: string; platform: string; chats: number; msgs: number }>;
+  ratings: { thumbsUp: number; thumbsDown: number };
   sessions: {
     total: number;
     authenticated: number;
@@ -11,7 +26,7 @@ interface AnalyticsData {
     avgMessages: number;
     totalMessages: number;
   };
-  trend: Array<{ day: string; total: number; auth: number }>;
+  webTrend: Array<{ day: string; total: number; auth: number }>;
   memory: {
     totalWithMemory: number;
     withNotes: number;
@@ -21,6 +36,8 @@ interface AnalyticsData {
   topActivities: Array<{ activity: string; cnt: number }>;
   utmSources: Array<{ source: string; cnt: number }>;
 }
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
 
 function StatCard({
   icon: Icon, label, value, sub, color = 'accent',
@@ -51,26 +68,29 @@ function StatCard({
   );
 }
 
-function TrendBar({ data }: { data: AnalyticsData['trend'] }) {
+function MiniBar({ data, keyFn, valueFn, colorFn }: {
+  data: unknown[];
+  keyFn: (d: unknown) => string;
+  valueFn: (d: unknown) => number;
+  colorFn?: (d: unknown) => string;
+}) {
   if (!data.length) return <p className="text-xs text-[var(--text-muted)]">Нет данных</p>;
-  const max = Math.max(...data.map(d => d.total), 1);
+  const max = Math.max(...data.map(d => valueFn(d)), 1);
   return (
     <div className="flex items-end gap-1 h-20 w-full">
       {data.map(d => (
-        <div key={d.day} className="flex-1 flex flex-col items-center gap-0.5 group">
+        <div key={keyFn(d)} className="flex-1 flex flex-col items-center gap-0.5 group">
           <div className="relative w-full flex flex-col justify-end" style={{ height: 64 }}>
             <div
-              className="w-full rounded-t bg-[var(--accent)]/30 group-hover:bg-[var(--accent)]/50 transition-all"
-              style={{ height: `${Math.max(2, (d.total / max) * 100)}%` }}
+              className="w-full rounded-t transition-all"
+              style={{
+                height: `${Math.max(4, (valueFn(d) / max) * 100)}%`,
+                background: colorFn ? colorFn(d) : 'var(--accent)',
+                opacity: 0.7,
+              }}
             />
-            {d.auth > 0 && (
-              <div
-                className="absolute bottom-0 w-full rounded-t bg-[var(--accent)]"
-                style={{ height: `${Math.max(2, (d.auth / max) * 100)}%` }}
-              />
-            )}
           </div>
-          <span className="text-[9px] text-[var(--text-muted)] leading-none">{d.day}</span>
+          <span className="text-[9px] text-[var(--text-muted)] leading-none">{keyFn(d)}</span>
         </div>
       ))}
     </div>
@@ -97,6 +117,57 @@ const ACTION_COLORS: Record<string, string> = {
   chat_limit_reached: 'text-[var(--text-muted)]',
 };
 
+function fmtDate(iso: string | null): string {
+  if (!iso) return 'нет';
+  return new Date(iso).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
+
+// ─── Channel card ─────────────────────────────────────────────────────────────
+
+const CHANNEL_META: Record<string, { label: string; color: string; emoji: string }> = {
+  telegram: { label: 'Telegram', color: 'var(--ocean)',   emoji: '✈' },
+  max:      { label: 'Max',      color: 'var(--accent)',  emoji: 'M' },
+  web:      { label: 'Сайт',    color: 'var(--success)', emoji: '🌐' },
+};
+
+function ChannelCard({ id, stats }: { id: string; stats: ChannelStats }) {
+  const meta = CHANNEL_META[id] ?? { label: id, color: 'var(--text-secondary)', emoji: '?' };
+  return (
+    <div className="ds-card p-5 flex flex-col gap-3">
+      <div className="flex items-center gap-2">
+        <div
+          className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold text-white shrink-0"
+          style={{ background: meta.color }}
+        >
+          {meta.emoji}
+        </div>
+        <span className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>{meta.label}</span>
+      </div>
+      <div className="grid grid-cols-3 gap-2 text-center">
+        <div>
+          <p className="text-xl font-bold" style={{ color: meta.color }}>{stats.uniqueChats.toLocaleString('ru-RU')}</p>
+          <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>чатов</p>
+        </div>
+        <div>
+          <p className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>{stats.userMsgs.toLocaleString('ru-RU')}</p>
+          <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>сообщений</p>
+        </div>
+        <div>
+          <p className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
+            {stats.uniqueChats > 0 ? (stats.userMsgs / stats.uniqueChats).toFixed(1) : '0'}
+          </p>
+          <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>сред./чат</p>
+        </div>
+      </div>
+      <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+        Последний: {fmtDate(stats.lastMsg)}
+      </p>
+    </div>
+  );
+}
+
+// ─── Main component ────────────────────────────────────────────────────────────
+
 export default function AIAnalyticsClient() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -122,12 +193,9 @@ export default function AIAnalyticsClient() {
 
   useEffect(() => { void load(); }, [load]);
 
-  const guestPct = data
-    ? Math.round((data.sessions.guests / Math.max(data.sessions.total, 1)) * 100)
-    : 0;
-
   return (
     <div className="ds-page py-8 space-y-8">
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -136,7 +204,7 @@ export default function AIAnalyticsClient() {
             Аналитика Кузьмича
           </h1>
           <p className="text-sm text-[var(--text-secondary)] mt-1">
-            Чаты, память, конверсия — последние 30 дней
+            Все каналы: Telegram, Max, Сайт — последние 30 дней
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -154,200 +222,241 @@ export default function AIAnalyticsClient() {
       </div>
 
       {error && (
-        <div className="ds-card p-4 border-[var(--danger)] text-[var(--danger)] text-sm">
+        <div className="ds-card p-4 text-sm" style={{ borderColor: 'var(--danger)', color: 'var(--danger)' }}>
           {error}
         </div>
       )}
 
       {loading && !data && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="ds-card p-5 h-24 ds-skeleton" />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="ds-card p-5 h-36 ds-skeleton" />
           ))}
         </div>
       )}
 
-      {data && (
-        <>
-          {/* Stats row */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <StatCard
-              icon={MessageSquare}
-              label="Сессий за 30 дней"
-              value={data.sessions.total.toLocaleString('ru-RU')}
-              sub={`${data.sessions.totalMessages.toLocaleString()} сообщений`}
-              color="accent"
-            />
-            <StatCard
-              icon={Users}
-              label="Авторизованных"
-              value={data.sessions.authenticated.toLocaleString('ru-RU')}
-              sub={`${guestPct}% — гости`}
-              color="ocean"
-            />
-            <StatCard
-              icon={Activity}
-              label="Сред. сообщений"
-              value={data.sessions.avgMessages.toFixed(1)}
-              sub="за одну сессию"
-              color="warning"
-            />
-            <StatCard
-              icon={Brain}
-              label="Помнит пользов."
-              value={data.memory.totalWithMemory.toLocaleString('ru-RU')}
-              sub={`${data.memory.withNotes} с AI-заметками`}
-              color="success"
-            />
-          </div>
+      {data && (() => {
+        const tg  = data.channels['telegram'] ?? { uniqueChats: 0, totalMsgs: 0, userMsgs: 0, lastMsg: null };
+        const max = data.channels['max']      ?? { uniqueChats: 0, totalMsgs: 0, userMsgs: 0, lastMsg: null };
+        const web: ChannelStats = {
+          uniqueChats: data.sessions.total,
+          totalMsgs:   data.sessions.totalMessages,
+          userMsgs:    data.sessions.totalMessages,
+          lastMsg:     null,
+        };
 
-          {/* Trend + Actions */}
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Trend */}
-            <div className="ds-card p-5">
-              <h2 className="ds-h2 flex items-center gap-2 mb-4">
-                <TrendingUp size={16} className="text-[var(--accent)]" />
-                Сессии по дням
-              </h2>
-              <div className="mb-3 flex items-center gap-4 text-xs text-[var(--text-muted)]">
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded bg-[var(--accent)]/30 inline-block" />
-                  Всего
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded bg-[var(--accent)] inline-block" />
-                  Авторизованных
-                </span>
+        // Aggregate for totals
+        const totalChats = tg.uniqueChats + max.uniqueChats + data.sessions.total;
+        const totalMsgs  = tg.userMsgs + max.userMsgs + data.sessions.totalMessages;
+        const ratingTotal = data.ratings.thumbsUp + data.ratings.thumbsDown;
+        const ratingPct   = ratingTotal > 0 ? Math.round((data.ratings.thumbsUp / ratingTotal) * 100) : null;
+
+        // Build TG trend pivot: days × platform
+        type TrendDay = { day: string; telegram: number; max: number };
+        const trendMap = new Map<string, TrendDay>();
+        for (const row of data.tgTrend) {
+          if (!trendMap.has(row.day)) trendMap.set(row.day, { day: row.day, telegram: 0, max: 0 });
+          const entry = trendMap.get(row.day)!;
+          if (row.platform === 'max') entry.max += row.msgs;
+          else entry.telegram += row.msgs;
+        }
+        const trendDays = Array.from(trendMap.values());
+
+        return (
+          <>
+            {/* Channel cards */}
+            <section className="space-y-3">
+              <h2 className="ds-h2">Каналы</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <ChannelCard id="telegram" stats={tg} />
+                <ChannelCard id="max"      stats={max} />
+                <ChannelCard id="web"      stats={web} />
               </div>
-              <TrendBar data={data.trend} />
+            </section>
+
+            {/* Summary stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <StatCard icon={MessageSquare} label="Всего чатов (30 дн.)" value={totalChats.toLocaleString('ru-RU')} sub={`${totalMsgs.toLocaleString()} сообщений`} color="accent" />
+              <StatCard icon={Users}         label="С памятью AI"         value={data.memory.totalWithMemory} sub={`${data.memory.withNotes} с заметками`} color="ocean" />
+              <StatCard icon={ThumbsUp}      label="Лайков" value={data.ratings.thumbsUp} sub={ratingPct != null ? `${ratingPct}% позитивных` : 'нет оценок'} color="success" />
+              <StatCard icon={Brain}         label="Сред. сессий/юзер" value={data.memory.avgSessions.toFixed(1)} sub="повторные визиты" color="warning" />
             </div>
 
-            {/* Actions */}
-            <div className="ds-card p-5">
-              <h2 className="ds-h2 flex items-center gap-2 mb-4">
-                <BarChart2 size={16} className="text-[var(--ocean)]" />
-                Ключевые события
-              </h2>
-              {Object.keys(ACTION_LABELS).length === 0 || Object.keys(data.actions).length === 0 ? (
-                <p className="text-xs text-[var(--text-muted)]">Нет событий за период</p>
-              ) : (
-                <div className="space-y-2.5">
-                  {Object.entries(ACTION_LABELS).map(([key, label]) => {
-                    const cnt = data.actions[key] ?? 0;
+            {/* Trend + Actions */}
+            <div className="grid md:grid-cols-2 gap-6">
+
+              {/* TG/Max trend */}
+              <div className="ds-card p-5">
+                <h2 className="ds-h2 flex items-center gap-2 mb-4">
+                  <TrendingUp size={16} className="text-[var(--accent)]" />
+                  Сообщения TG + Max по дням
+                </h2>
+                <div className="mb-3 flex items-center gap-4 text-xs text-[var(--text-muted)]">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded inline-block" style={{ background: 'var(--ocean)' }} />
+                    Telegram
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded inline-block" style={{ background: 'var(--accent)' }} />
+                    Max
+                  </span>
+                </div>
+                {trendDays.length === 0 ? (
+                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Нет данных за 14 дней</p>
+                ) : (
+                  <div className="flex items-end gap-1 h-20 w-full">
+                    {trendDays.map(d => {
+                      const total = d.telegram + d.max;
+                      const maxVal = Math.max(...trendDays.map(x => x.telegram + x.max), 1);
+                      return (
+                        <div key={d.day} className="flex-1 flex flex-col items-center gap-0.5 group">
+                          <div className="relative w-full flex flex-col justify-end overflow-hidden rounded-t" style={{ height: 64 }}>
+                            <div className="absolute bottom-0 w-full" style={{
+                              height: `${Math.max(4, (total / maxVal) * 100)}%`,
+                              background: 'var(--ocean)', opacity: 0.3,
+                            }} />
+                            <div className="absolute bottom-0 w-full" style={{
+                              height: `${Math.max(0, (d.max / maxVal) * 100)}%`,
+                              background: 'var(--accent)', opacity: 0.7,
+                            }} />
+                          </div>
+                          <span className="text-[9px] text-[var(--text-muted)] leading-none">{d.day}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="ds-card p-5">
+                <h2 className="ds-h2 flex items-center gap-2 mb-4">
+                  <BarChart2 size={16} className="text-[var(--ocean)]" />
+                  Ключевые события AI
+                </h2>
+                {Object.keys(data.actions).length === 0 ? (
+                  <p className="text-xs text-[var(--text-muted)]">Нет событий за период</p>
+                ) : (
+                  <div className="space-y-2.5">
+                    {Object.entries(ACTION_LABELS).map(([key, label]) => {
+                      const cnt = data.actions[key] ?? 0;
+                      return (
+                        <div key={key} className="flex items-center justify-between">
+                          <span className="text-sm text-[var(--text-secondary)]">{label}</span>
+                          <span className={`text-sm font-semibold ${ACTION_COLORS[key] ?? ''}`}>
+                            {cnt.toLocaleString('ru-RU')}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Ratings row */}
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Ratings */}
+              <div className="ds-card p-5">
+                <h2 className="ds-h2 flex items-center gap-2 mb-4">
+                  <Activity size={16} className="text-[var(--success)]" />
+                  Оценки в Telegram/Max
+                </h2>
+                <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-2">
+                    <ThumbsUp className="w-5 h-5 text-[var(--success)]" />
+                    <span className="text-2xl font-bold text-[var(--success)]">{data.ratings.thumbsUp}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <ThumbsDown className="w-5 h-5 text-[var(--danger)]" />
+                    <span className="text-2xl font-bold text-[var(--danger)]">{data.ratings.thumbsDown}</span>
+                  </div>
+                  {ratingPct != null && (
+                    <div className="flex-1">
+                      <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--bg-hover)' }}>
+                        <div className="h-full rounded-full" style={{ width: `${ratingPct}%`, background: 'var(--success)' }} />
+                      </div>
+                      <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{ratingPct}% положительных</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Memory */}
+              <div className="ds-card p-5">
+                <h2 className="ds-h2 flex items-center gap-2 mb-4">
+                  <Brain size={16} className="text-[var(--ocean)]" />
+                  Память пользователей
+                </h2>
+                <div className="space-y-3">
+                  <div>
+                    <div className="flex justify-between text-xs mb-1" style={{ color: 'var(--text-muted)' }}>
+                      <span>С AI-заметками</span>
+                      <span>{data.memory.withNotes} / {data.memory.totalWithMemory}</span>
+                    </div>
+                    <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--bg-hover)' }}>
+                      <div className="h-full rounded-full" style={{
+                        width: `${Math.round((data.memory.withNotes / Math.max(data.memory.totalWithMemory, 1)) * 100)}%`,
+                        background: 'var(--success)',
+                      }} />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 p-3 rounded-lg" style={{ background: 'var(--bg-hover)' }}>
+                    <CreditCard size={14} className="text-[var(--success)] shrink-0" />
+                    <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                      Оплаты через Кузьмича: <strong style={{ color: 'var(--success)' }}>{(data.actions['payment_confirmed'] ?? 0).toLocaleString('ru-RU')}</strong>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Top interests */}
+            {data.topActivities.length > 0 && (
+              <div className="ds-card p-5">
+                <h2 className="ds-h2 flex items-center gap-2 mb-4">
+                  <Sparkles size={16} className="text-[var(--warning)]" />
+                  Топ интересов пользователей
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {data.topActivities.map(({ activity, cnt }) => (
+                    <span key={activity}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border border-[var(--border)]"
+                      style={{ color: 'var(--text-secondary)' }}>
+                      {activity}
+                      <span className="font-semibold" style={{ color: 'var(--accent)' }}>{cnt}</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* UTM Sources */}
+            {data.utmSources.length > 0 && (
+              <div className="ds-card p-5">
+                <h2 className="ds-h2 flex items-center gap-2 mb-4">
+                  <Globe size={16} className="text-[var(--accent)]" />
+                  Источники трафика (UTM)
+                </h2>
+                <div className="space-y-2">
+                  {data.utmSources.map(({ source, cnt }) => {
+                    const maxCnt = data.utmSources[0]?.cnt ?? 1;
                     return (
-                      <div key={key} className="flex items-center justify-between">
-                        <span className="text-sm text-[var(--text-secondary)]">{label}</span>
-                        <span className={`text-sm font-semibold ${ACTION_COLORS[key] ?? ''}`}>
-                          {cnt.toLocaleString('ru-RU')}
-                        </span>
+                      <div key={source} className="flex items-center gap-3">
+                        <span className="text-xs w-24 truncate shrink-0" style={{ color: 'var(--text-secondary)' }}>{source}</span>
+                        <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--bg-hover)' }}>
+                          <div className="h-full rounded-full" style={{ width: `${Math.round((cnt / maxCnt) * 100)}%`, background: 'var(--accent)' }} />
+                        </div>
+                        <span className="text-xs font-semibold w-8 text-right" style={{ color: 'var(--text-primary)' }}>{cnt}</span>
                       </div>
                     );
                   })}
                 </div>
-              )}
-            </div>
-          </div>
-
-          {/* Top interests + Memory quality */}
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Top activities */}
-            <div className="ds-card p-5">
-              <h2 className="ds-h2 flex items-center gap-2 mb-4">
-                <Sparkles size={16} className="text-[var(--warning)]" />
-                Топ интересов пользователей
-              </h2>
-              {data.topActivities.length === 0 ? (
-                <p className="text-xs text-[var(--text-muted)]">Нет данных — память ещё накапливается</p>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {data.topActivities.map(({ activity, cnt }) => (
-                    <span key={activity}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border border-[var(--border)] text-[var(--text-secondary)]">
-                      {activity}
-                      <span className="text-[var(--accent)] font-semibold">{cnt}</span>
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Memory quality */}
-            <div className="ds-card p-5">
-              <h2 className="ds-h2 flex items-center gap-2 mb-4">
-                <Brain size={16} className="text-[var(--success)]" />
-                Качество памяти
-              </h2>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between text-xs text-[var(--text-muted)] mb-1.5">
-                    <span>Пользователей с заметками</span>
-                    <span>{data.memory.withNotes} / {data.memory.totalWithMemory}</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-[var(--bg-hover)] overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-[var(--success)] transition-all"
-                      style={{
-                        width: `${Math.round(
-                          (data.memory.withNotes / Math.max(data.memory.totalWithMemory, 1)) * 100,
-                        )}%`,
-                      }}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between text-xs text-[var(--text-muted)] mb-1.5">
-                    <span>Авторизованных в чате</span>
-                    <span>{data.sessions.authenticated} / {data.sessions.total}</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-[var(--bg-hover)] overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-[var(--ocean)] transition-all"
-                      style={{
-                        width: `${Math.round(
-                          (data.sessions.authenticated / Math.max(data.sessions.total, 1)) * 100,
-                        )}%`,
-                      }}
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 p-3 rounded-lg bg-[var(--bg-hover)]">
-                  <CreditCard size={14} className="text-[var(--success)] shrink-0" />
-                  <p className="text-xs text-[var(--text-secondary)]">
-                    Платежей СБП (Точка): <strong className="text-[var(--success)]">{(data.actions['payment_confirmed'] ?? 0).toLocaleString('ru-RU')}</strong>
-                  </p>
-                </div>
               </div>
-            </div>
-          </div>
-
-          {/* UTM Sources — показываем только когда есть данные */}
-          {data.utmSources.length > 0 && (
-            <div className="ds-card p-5">
-              <h2 className="ds-h2 flex items-center gap-2 mb-4">
-                <TrendingUp size={16} className="text-[var(--accent)]" />
-                Источники трафика в чат
-              </h2>
-              <div className="space-y-2">
-                {data.utmSources.map(({ source, cnt }) => {
-                  const maxCnt = data.utmSources[0]?.cnt ?? 1;
-                  return (
-                    <div key={source} className="flex items-center gap-3">
-                      <span className="text-xs text-[var(--text-secondary)] w-24 truncate shrink-0">{source}</span>
-                      <div className="flex-1 h-1.5 rounded-full bg-[var(--bg-hover)] overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-[var(--accent)] transition-all"
-                          style={{ width: `${Math.round((cnt / maxCnt) * 100)}%` }}
-                        />
-                      </div>
-                      <span className="text-xs font-semibold text-[var(--text-primary)] w-8 text-right">{cnt}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </>
-      )}
+            )}
+          </>
+        );
+      })()}
     </div>
   );
 }
