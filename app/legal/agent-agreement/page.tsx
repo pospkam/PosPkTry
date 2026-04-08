@@ -66,23 +66,36 @@ export default function AgentAgreementPage() {
           <section>
             <h2 className="text-xl font-semibold text-[var(--text-primary)] mt-8 mb-4">4. Агентское вознаграждение</h2>
             <div className="p-4 rounded-lg border border-[var(--border)] bg-[var(--bg-card)]">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="font-semibold text-[var(--text-primary)]">Комиссия Агента</p>
-                  <p className="text-2xl font-bold text-[var(--accent)]">10%</p>
-                  <p className="text-xs text-[var(--text-muted)]">от стоимости тура</p>
+              <div className="text-sm space-y-2">
+                <p className="font-semibold text-[var(--text-primary)]">Тарифная сетка комиссии Агента</p>
+                <div className="grid grid-cols-2 gap-2 text-sm mt-2">
+                  <div className="p-2 rounded bg-[var(--bg-hover)]">
+                    <p className="font-medium">Старт</p>
+                    <p className="text-xl font-bold text-[var(--accent)]">15%</p>
+                    <p className="text-xs text-[var(--text-muted)]">первые 3 месяца</p>
+                  </div>
+                  <div className="p-2 rounded bg-[var(--bg-hover)]">
+                    <p className="font-medium">Базовый</p>
+                    <p className="text-xl font-bold text-[var(--accent)]">10%</p>
+                    <p className="text-xs text-[var(--text-muted)]">оборот от 100 000 ₽/кв</p>
+                  </div>
+                  <div className="p-2 rounded bg-[var(--bg-hover)]">
+                    <p className="font-medium">Партнёр</p>
+                    <p className="text-xl font-bold text-[var(--accent)]">7%</p>
+                    <p className="text-xs text-[var(--text-muted)]">оборот от 500 000 ₽/кв</p>
+                  </div>
+                  <div className="p-2 rounded bg-[var(--bg-hover)]">
+                    <p className="font-medium">Премиум</p>
+                    <p className="text-xl font-bold text-[var(--accent)]">5%</p>
+                    <p className="text-xs text-[var(--text-muted)]">оборот от 1 500 000 ₽/кв</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-semibold text-[var(--text-primary)]">Пример</p>
-                  <p>Тур: 10 000 &#8381;</p>
-                  <p>Комиссия: 1 000 &#8381;</p>
-                  <p>Принципалу: 9 000 &#8381;</p>
-                </div>
+                <p className="text-xs text-[var(--text-muted)] mt-2">+ 3% эквайринг (итого 8–18% в зависимости от тарифа)</p>
               </div>
             </div>
             <ul className="list-disc pl-6 space-y-2 mt-4">
               <li>Комиссия удерживается из оплаты туриста при перечислении средств Принципалу</li>
-              <li>Перечисление &mdash; каждую пятницу, минимальная сумма 1 000 &#8381;</li>
+              <li>Перечисление &mdash; в течение <strong>3 рабочих дней</strong> с момента подтверждения оказания услуги, минимальная сумма 1 000 &#8381;</li>
               <li>При отмене тура туристом &mdash; комиссия не удерживается</li>
               <li>При отмене тура Принципалом &mdash; полный возврат туристу</li>
             </ul>

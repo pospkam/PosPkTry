@@ -50,7 +50,7 @@ export function Footer() {
               support@tourhab.ru
             </p>
             <a
-              href="https://t.me/kamchatka_real"
+              href="https://t.me/kamchatourhab"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 mt-3 text-xs text-[var(--ocean)] hover:underline transition-colors"
