@@ -26,6 +26,7 @@ import FlightsBlock from '@/components/routes/FlightsBlock';
 import HotelsBlock from '@/components/routes/HotelsBlock';
 import TransfersBlock from '@/components/routes/TransfersBlock';
 import SafetyWarnings from '@/components/safety/SafetyWarnings';
+import { RouteGradientPlaceholder } from '@/components/routes/RouteGradientPlaceholder';
 
 const LeafletMap = dynamic(() => import('@/components/shared/LeafletMap'), { ssr: false });
 
@@ -334,14 +335,36 @@ export default function RouteDetailClient({ id }: { id: string }) {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000000]);
   const [filterDifficulty, setFilterDifficulty] = useState<string | null>(null);
   const [filterDurationType, setFilterDurationType] = useState<string | null>(null);
+  const [fromCache, setFromCache] = useState(false);
   useSourceTracker();
+
+  const CACHE_KEY = `route_cache_${id}`;
+  const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 часа
 
   useEffect(() => {
     fetch(`/api/routes/${id}`)
       .then(r => r.json())
-      .then(j => { if (j.success) setRoute(j.data); else setNotFound(true); })
-      .catch(() => setNotFound(true))
+      .then(j => {
+        if (j.success) {
+          setRoute(j.data);
+          try { localStorage.setItem(CACHE_KEY, JSON.stringify({ data: j.data, ts: Date.now() })); } catch { /* игнорируем */ }
+        } else {
+          setNotFound(true);
+        }
+      })
+      .catch(() => {
+        // Сеть недоступна — пробуем кеш
+        try {
+          const raw = localStorage.getItem(CACHE_KEY);
+          if (raw) {
+            const { data, ts } = JSON.parse(raw) as { data: RouteDetail; ts: number };
+            if (Date.now() - ts < CACHE_TTL) { setRoute(data); setFromCache(true); return; }
+          }
+        } catch { /* игнорируем */ }
+        setNotFound(true);
+      })
       .finally(() => setLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   useEffect(() => {
@@ -422,9 +445,9 @@ export default function RouteDetailClient({ id }: { id: string }) {
     : 500000;
   const photos = [...new Set(route.photos ?? [])];
   const aiImageUrl = `/api/images/route/${route.id}`;
-  const fallbackHero = LOCATION_TYPE_IMAGES[route.locationType ?? 'other'] ?? '/images/hero/hero-dark.jpg';
-  const heroImage = photos[galleryIdx] ?? photos[0] ?? (route.hasAiImage ? aiImageUrl : fallbackHero);
+  const heroImage = photos[galleryIdx] ?? photos[0] ?? (route.hasAiImage ? aiImageUrl : null);
   const isAiHero = !photos.length && route.hasAiImage;
+  const useGradient = !photos.length && !route.hasAiImage;
 
   const minPrice = allOffers.length > 0
     ? Math.min(...allOffers.map(o => o.effectivePrice ?? o.priceBase ?? 0).filter(p => p > 0))
@@ -440,7 +463,17 @@ export default function RouteDetailClient({ id }: { id: string }) {
       {/* ── HERO ─────────────────────────────────────────────────────────────── */}
       <div className="relative w-full overflow-hidden" style={{ height: '52vh', minHeight: 320, maxHeight: 520 }}>
         <div className="absolute inset-0 pt-16">
-          <Image src={heroImage} alt={route.title} fill className="object-cover" priority sizes="100vw" />
+          {useGradient ? (
+            <RouteGradientPlaceholder
+              title={route.title}
+              activityType={route.activityType}
+              locationType={route.locationType}
+              className="w-full h-full"
+              showLabel={false}
+            />
+          ) : (
+            <Image src={heroImage!} alt={route.title} fill className="object-cover" priority sizes="100vw" />
+          )}
           {isAiHero && (
             <div className="absolute bottom-3 right-3 bg-black/50 text-white text-xs px-2 py-0.5 rounded flex items-center gap-1">
               <span>AI</span><span className="opacity-70">· временное фото</span>
@@ -483,6 +516,11 @@ export default function RouteDetailClient({ id }: { id: string }) {
             </span>
             <span className="text-[var(--text-muted)] text-xs">·</span>
             <span className="text-xs text-[var(--text-secondary)]">{actLabel}</span>
+            {fromCache && (
+              <span className="text-xs text-[var(--text-muted)] border border-[var(--border)] rounded px-1.5 py-0.5">
+                из кеша
+              </span>
+            )}
           </div>
           <h1
             className="text-3xl sm:text-4xl md:text-5xl font-bold text-[var(--text-primary)] leading-tight max-w-4xl"

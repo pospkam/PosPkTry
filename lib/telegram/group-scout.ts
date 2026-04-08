@@ -16,6 +16,7 @@
  */
 
 import { Api } from 'telegram';
+import bigInt from 'big-integer';
 import { getMTProtoClient, isMTProtoConfigured } from './mtproto-client';
 import { groupMonitor } from './group-monitor';
 import { agentMemory } from '@/lib/agents/memory/agent-memory';
@@ -95,7 +96,7 @@ async function saveRegistry(reg: ScoutRegistry): Promise<void> {
     agent_id:    'evo',
     memory_type: 'intelligence',
     key:         REGISTRY_KEY,
-    value:       reg,
+    value:       reg as unknown as Record<string, unknown>,
     confidence:  1.0,
     source:      'tg_group_scout',
     expires_at:  new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
@@ -188,8 +189,8 @@ async function joinGroup(group: ScoutedGroup): Promise<boolean> {
     const peer = group.username
       ? group.username
       : new Api.InputChannel({
-          channelId: BigInt(group.id),
-          accessHash: BigInt(group.accessHash),
+          channelId:   bigInt(group.id),
+          accessHash:  bigInt(group.accessHash),
         });
     await client.invoke(new Api.channels.JoinChannel({ channel: peer as Api.TypeInputChannel }));
     return true;
@@ -211,8 +212,8 @@ async function harvestMessages(group: ScoutedGroup): Promise<number> {
     const peer = group.username
       ? group.username
       : new Api.InputChannel({
-          channelId: BigInt(group.id),
-          accessHash: BigInt(group.accessHash),
+          channelId:  bigInt(group.id),
+          accessHash: bigInt(group.accessHash),
         });
 
     const messages = await client.getMessages(peer as Parameters<typeof client.getMessages>[0], {
