@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -268,6 +269,30 @@ function Stars({ rating }: { rating: number }) {
 /* ─── Main Component ─── */
 
 export default function TourDetailClient({ tour, reviews = [] }: { tour: TourFull; reviews?: TourReview[] }) {
+  const router = useRouter();
+  const [wishlisted, setWishlisted] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
+
+  const handleWishlist = useCallback(async () => {
+    if (wishlistLoading) return;
+    setWishlistLoading(true);
+    try {
+      const res = await fetch('/api/tourist/wishlist', {
+        method: wishlisted ? 'DELETE' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itemType: 'tour', itemId: tour.id }),
+      });
+      if (res.status === 401) {
+        router.push(`/auth/login?from=/marketplace/tours/${tour.id}`);
+        return;
+      }
+      if (res.ok) setWishlisted(w => !w);
+    } catch {
+      // silent
+    } finally {
+      setWishlistLoading(false);
+    }
+  }, [tour.id, wishlisted, wishlistLoading, router]);
 
   const price = parseFloat(tour.base_price);
   const priceOld = tour.price_old ? parseFloat(tour.price_old) : null;
@@ -643,8 +668,14 @@ export default function TourDetailClient({ tour, reviews = [] }: { tour: TourFul
               >
                 <Share2 className="w-4 h-4" /> Поделиться
               </button>
-              <button className="flex-1 ds-card flex items-center justify-center gap-2 py-2.5 text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors cursor-pointer">
-                <Heart className="w-4 h-4" /> В избранное
+              <button
+                onClick={handleWishlist}
+                disabled={wishlistLoading}
+                className="flex-1 ds-card flex items-center justify-center gap-2 py-2.5 text-sm transition-colors cursor-pointer disabled:opacity-50"
+                style={wishlisted ? { color: 'var(--danger)' } : { color: 'var(--text-secondary)' }}
+              >
+                <Heart className={`w-4 h-4 ${wishlisted ? 'fill-current' : ''}`} />
+                {wishlisted ? 'В избранном' : 'В избранное'}
               </button>
             </div>
           </div>
