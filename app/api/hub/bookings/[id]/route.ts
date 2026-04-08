@@ -30,6 +30,8 @@ export async function GET(
     operator_name: string;
     operator_phone: string | null;
     operator_telegram: string | null;
+    final_price: string;
+    payment_status: string;
   }>(
     `SELECT
        b.id,
@@ -39,13 +41,16 @@ export async function GET(
        b.tourist_name,
        b.tourist_email,
        b.booking_status,
+       b.final_price,
+       b.payment_status,
        t.base_price,
-       p.name             AS operator_name,
-       p.contacts->>'phone'    AS operator_phone,
-       p.contacts->>'telegram' AS operator_telegram
+       COALESCE(p.name, u.name, u.email) AS operator_name,
+       COALESCE(p.contacts->>'phone', u.phone)    AS operator_phone,
+       COALESCE(p.contacts->>'telegram', u.telegram_username) AS operator_telegram
      FROM operator_bookings b
      JOIN operator_tours   t ON t.id = COALESCE(b.operator_tour_id, b.tour_id)
-     JOIN partners         p ON p.id = t.operator_id
+     LEFT JOIN partners    p ON p.id = t.operator_id
+     LEFT JOIN users       u ON u.id = t.operator_id
      WHERE b.id = $1`,
     [id]
   );
@@ -55,6 +60,8 @@ export async function GET(
   }
 
   const row = r.rows[0];
+  const finalPrice = parseFloat(row.final_price ?? '0') || (row.base_price * row.participants);
+
   return NextResponse.json({
     success: true,
     data: {
@@ -65,10 +72,13 @@ export async function GET(
       tourist_name: row.tourist_name,
       tourist_email: row.tourist_email,
       status: row.booking_status,
-      total_price: row.base_price * row.participants,
+      payment_status: row.payment_status,
+      total_price: finalPrice,
       operator_name: row.operator_name,
       operator_phone: row.operator_phone,
       operator_telegram: row.operator_telegram,
+      // Публичный ключ CloudPayments — безопасно передавать клиенту
+      cp_public_id: process.env.CLOUDPAYMENTS_PUBLIC_ID ?? '',
     },
   });
 }

@@ -277,12 +277,86 @@ export async function createBooking(
          (operator_tour_id, tour_id, tourist_name, tourist_phone,
           participants, booking_date, booking_status,
           base_total_price, final_price, created_via)
-       VALUES ($1,$1,$2,$3,$4,$5,'new',$6,$6,$7)
+       VALUES ($1,$1,$2,$3,$4,$5,'pending_payment',$6,$6,$7)
        RETURNING id`,
       [b.tour.id, b.name, b.phone, b.participants, b.date, total, createdVia],
     );
-    return rows[0]?.id ?? null;
+    const bookingId = rows[0]?.id ?? null;
+
+    // Уведомить оператора в Telegram (не блокируем ответ)
+    if (bookingId) {
+      void notifyOperatorNewBooking(bookingId, b, total);
+    }
+
+    return bookingId;
   } catch { return null; }
+}
+
+async function notifyOperatorNewBooking(
+  bookingId: number,
+  b: Required<Omit<PendingBooking, 'step' | 'started_at'>>,
+  total: number,
+): Promise<void> {
+  try {
+    // Получаем telegram_id оператора
+    const { rows } = await pool.query<{ telegram_id: string | null }>(
+      `SELECT u.telegram_id
+       FROM operator_tours ot
+       JOIN users u ON u.id = ot.operator_id
+       WHERE ot.id = $1 LIMIT 1`,
+      [b.tour.id],
+    );
+    const operatorTgId = rows[0]?.telegram_id;
+
+    // Всегда уведомляем владельца платформы
+    const ownerTgId = process.env.TELEGRAM_OWNER_ID;
+    const targets = new Set<string>();
+    if (operatorTgId) targets.add(operatorTgId);
+    if (ownerTgId)    targets.add(ownerTgId);
+    if (targets.size === 0) return;
+
+    const botToken = process.env.TELEGRAM_KUZMICH_BOT_TOKEN ?? process.env.TELEGRAM_BOT_TOKEN ?? '';
+    if (!botToken) return;
+
+    const dateStr = b.date
+      ? new Date(b.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
+      : 'не указана';
+    const priceStr = total.toLocaleString('ru-RU') + ' ₽';
+    const payLink  = `https://tourhab.ru/booking-success/${bookingId}`;
+
+    const text = [
+      `<b>Новое бронирование #${bookingId}</b>`,
+      '',
+      `Тур: ${b.tour.title}`,
+      `Дата: ${dateStr}`,
+      `Человек: ${b.participants}`,
+      `Сумма: ${priceStr}`,
+      '',
+      `Турист: ${b.name}`,
+      `Телефон: ${b.phone}`,
+      '',
+      `<a href="${payLink}">Открыть бронирование</a>`,
+    ].join('\n');
+
+    const body = JSON.stringify({
+      text,
+      parse_mode: 'HTML',
+      disable_web_page_preview: true,
+      reply_markup: {
+        inline_keyboard: [[
+          { text: 'Связаться с туристом', url: `tel:${b.phone}` },
+        ]],
+      },
+    });
+
+    for (const chatId of targets) {
+      await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, ...JSON.parse(body) }),
+      }).catch(() => {});
+    }
+  } catch { /* не блокируем */ }
 }
 
 // ── Cleanup для pending Maps ──────────────────────────────────────────────────
@@ -464,16 +538,18 @@ export async function handleBookingStep(
     }
 
     const dateStr = new Date(b.date!).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+    const totalStr = (b.tour.base_price * b.participants!).toLocaleString('ru-RU');
+    const payLink  = `https://tourhab.ru/booking-success/${bookingId}`;
     await reply(chatId, [
-      `Бронирование создано! Номер: <b>#${bookingId}</b>`,
+      `Бронирование принято! Номер: <b>#${bookingId}</b>`,
       '',
       `Тур: ${b.tour.title}`,
       `Дата: ${dateStr}`,
       `Человек: ${b.participants}`,
+      `Сумма: <b>${totalStr} р.</b>`,
       '',
-      'Оператор свяжется с вами в течение 1 часа для подтверждения.',
-      '',
-      `<a href="https://tourhab.ru/booking-success/${bookingId}">Открыть бронирование</a>`,
+      `Для оплаты перейдите по ссылке:`,
+      `<a href="${payLink}">${payLink}</a>`,
     ].join('\n'));
     // Запрос рейтинга через 1 сек
     await new Promise(r => setTimeout(r, 1000));
