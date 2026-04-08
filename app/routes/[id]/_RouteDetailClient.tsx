@@ -354,6 +354,12 @@ export default function RouteDetailClient({ id }: { id: string }) {
       .catch(() => {});
   }, [route, id]);
 
+  // Must be before early returns to satisfy Rules of Hooks
+  useEffect(() => {
+    if (!route || (route.photos?.length ?? 0) > 0 || route.hasAiImage) return;
+    fetch(`/api/images/route/${route.id}`).catch(() => undefined);
+  }, [route?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (loading) {
     return (
       <>
@@ -420,12 +426,6 @@ export default function RouteDetailClient({ id }: { id: string }) {
   const heroImage = photos[galleryIdx] ?? photos[0] ?? (route.hasAiImage ? aiImageUrl : fallbackHero);
   const isAiHero = !photos.length && route.hasAiImage;
 
-  // Trigger async AI image generation on first visit if no image yet
-  useEffect(() => {
-    if (!photos.length && !route.hasAiImage) {
-      fetch(aiImageUrl).catch(() => undefined);
-    }
-  }, [route.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const minPrice = allOffers.length > 0
     ? Math.min(...allOffers.map(o => o.effectivePrice ?? o.priceBase ?? 0).filter(p => p > 0))
     : (route.priceFrom ?? 0);
