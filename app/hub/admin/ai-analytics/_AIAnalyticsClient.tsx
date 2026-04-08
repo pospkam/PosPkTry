@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import {
   MessageSquare, Users, Brain, CreditCard, RefreshCw,
   TrendingUp, Sparkles, BarChart2, Activity, ThumbsUp, ThumbsDown, Globe,
+  ChevronDown, ChevronRight, Send, User,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -35,6 +36,31 @@ interface AnalyticsData {
   actions: Record<string, number>;
   topActivities: Array<{ activity: string; cnt: number }>;
   utmSources: Array<{ source: string; cnt: number }>;
+}
+
+interface TgChat {
+  chatId: string;
+  platform: string;
+  userName: string;
+  userMsgs: number;
+  totalMsgs: number;
+  firstMsg: string;
+  lastMsg: string;
+}
+
+interface WebChat {
+  sessionId: string;
+  userId: string | null;
+  userMsgs: number;
+  authenticated: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface ChatMessage {
+  role: string;
+  content: string;
+  created_at: string;
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -162,6 +188,179 @@ function ChannelCard({ id, stats }: { id: string; stats: ChannelStats }) {
       <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
         Последний: {fmtDate(stats.lastMsg)}
       </p>
+    </div>
+  );
+}
+
+// ─── Chat conversation viewer ─────────────────────────────────────────────────
+
+function ChatRow({ chat, type }: { chat: TgChat | WebChat; type: 'tg' | 'web' }) {
+  const [open, setOpen]       = useState(false);
+  const [msgs, setMsgs]       = useState<ChatMessage[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const toggle = useCallback(async () => {
+    if (open) { setOpen(false); return; }
+    setOpen(true);
+    if (msgs.length > 0) return;
+    setLoading(true);
+    try {
+      const url = type === 'tg'
+        ? `/api/admin/ai-analytics/chats?chat_id=${(chat as TgChat).chatId}&platform=${(chat as TgChat).platform}`
+        : `/api/admin/ai-analytics/chats?chat_id=${(chat as WebChat).sessionId}`;
+      const res  = await fetch(url);
+      const json = await res.json() as { messages?: ChatMessage[] };
+      setMsgs(json.messages ?? []);
+    } finally {
+      setLoading(false);
+    }
+  }, [open, msgs.length, chat, type]);
+
+  const isTg = type === 'tg';
+  const tg   = chat as TgChat;
+  const web  = chat as WebChat;
+
+  return (
+    <div className="border border-[var(--border)] rounded-lg overflow-hidden">
+      <button
+        onClick={toggle}
+        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[var(--bg-hover)] transition-colors"
+      >
+        {open ? <ChevronDown size={14} className="shrink-0 text-[var(--text-muted)]" />
+               : <ChevronRight size={14} className="shrink-0 text-[var(--text-muted)]" />}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            {isTg && (
+              <span
+                className="text-[10px] font-semibold px-1.5 py-0.5 rounded"
+                style={{
+                  background: tg.platform === 'max' ? 'var(--accent)' : 'var(--ocean)',
+                  color: 'white',
+                }}
+              >
+                {tg.platform === 'max' ? 'Max' : 'TG'}
+              </span>
+            )}
+            {!isTg && (
+              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded"
+                style={{ background: 'var(--success)', color: 'white' }}>
+                Сайт
+              </span>
+            )}
+            <span className="text-sm font-medium text-[var(--text-primary)] truncate">
+              {isTg ? tg.userName : (web.authenticated ? `Пользователь` : 'Гость')}
+            </span>
+            {!isTg && web.userId && (
+              <span className="text-[10px] text-[var(--text-muted)] truncate">#{web.userId.slice(-6)}</span>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center gap-4 shrink-0 text-xs text-[var(--text-muted)]">
+          <span>{isTg ? tg.userMsgs : web.userMsgs} сообщ.</span>
+          <span>{fmtDate(isTg ? tg.lastMsg : web.updatedAt)}</span>
+        </div>
+      </button>
+
+      {open && (
+        <div className="border-t border-[var(--border)] px-4 py-3 max-h-96 overflow-y-auto space-y-2"
+          style={{ background: 'var(--bg-primary)' }}>
+          {loading && (
+            <p className="text-xs text-[var(--text-muted)] py-4 text-center">Загрузка...</p>
+          )}
+          {!loading && msgs.length === 0 && (
+            <p className="text-xs text-[var(--text-muted)] py-4 text-center">Нет сообщений</p>
+          )}
+          {msgs.map((m, i) => (
+            <div key={i} className={`flex gap-2 ${m.role === 'assistant' ? 'flex-row-reverse' : ''}`}>
+              <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
+                m.role === 'assistant'
+                  ? 'bg-[var(--accent)] text-white'
+                  : 'bg-[var(--bg-hover)] text-[var(--text-secondary)]'
+              }`}>
+                {m.role === 'assistant'
+                  ? <Send size={10} />
+                  : <User size={10} />}
+              </div>
+              <div className={`max-w-[80%] rounded-lg px-3 py-2 text-xs leading-relaxed ${
+                m.role === 'assistant'
+                  ? 'bg-[var(--accent)]/10 text-[var(--text-primary)]'
+                  : 'bg-[var(--bg-card)] text-[var(--text-primary)] border border-[var(--border)]'
+              }`}>
+                {m.content}
+                <p className="text-[9px] mt-1 text-[var(--text-muted)]">
+                  {new Date(m.created_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ChatsSection() {
+  const [tgChats,  setTgChats]  = useState<TgChat[]>([]);
+  const [webChats, setWebChats] = useState<WebChat[]>([]);
+  const [loaded,   setLoaded]   = useState(false);
+  const [loading,  setLoading]  = useState(false);
+  const [open,     setOpen]     = useState(false);
+
+  const load = useCallback(async () => {
+    if (loaded) { setOpen(o => !o); return; }
+    setOpen(true);
+    setLoading(true);
+    try {
+      const res  = await fetch('/api/admin/ai-analytics/chats');
+      const json = await res.json() as { tgChats: TgChat[]; webChats: WebChat[] };
+      setTgChats(json.tgChats ?? []);
+      setWebChats(json.webChats ?? []);
+      setLoaded(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [loaded]);
+
+  const total = tgChats.length + webChats.length;
+
+  return (
+    <div className="ds-card overflow-hidden">
+      <button
+        onClick={load}
+        className="w-full flex items-center justify-between px-5 py-4 hover:bg-[var(--bg-hover)] transition-colors"
+      >
+        <h2 className="ds-h2 flex items-center gap-2">
+          <MessageSquare size={16} className="text-[var(--ocean)]" />
+          Переписки
+          {loaded && <span className="text-xs font-normal text-[var(--text-muted)]">({total} чатов)</span>}
+        </h2>
+        <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
+          {!loaded && !loading && 'Нажмите чтобы загрузить'}
+          {loading && 'Загрузка...'}
+          {open ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+        </div>
+      </button>
+
+      {open && !loading && (
+        <div className="px-5 pb-5 space-y-2 border-t border-[var(--border)]">
+          {tgChats.length === 0 && webChats.length === 0 && (
+            <p className="text-xs text-[var(--text-muted)] pt-4 text-center">Нет чатов за 30 дней</p>
+          )}
+          {[...tgChats.map(c => ({ chat: c, type: 'tg' as const })),
+             ...webChats.map(c => ({ chat: c, type: 'web' as const }))
+          ]
+            .sort((a, b) => {
+              const da = a.type === 'tg' ? (a.chat as TgChat).lastMsg   : (a.chat as WebChat).updatedAt;
+              const db = b.type === 'tg' ? (b.chat as TgChat).lastMsg   : (b.chat as WebChat).updatedAt;
+              return new Date(db).getTime() - new Date(da).getTime();
+            })
+            .map(({ chat, type }) => (
+              <ChatRow key={type === 'tg' ? (chat as TgChat).chatId : (chat as WebChat).sessionId}
+                chat={chat} type={type} />
+            ))
+          }
+        </div>
+      )}
     </div>
   );
 }
@@ -430,6 +629,9 @@ export default function AIAnalyticsClient() {
                 </div>
               </div>
             )}
+
+            {/* Chats drill-down */}
+            <ChatsSection />
 
             {/* UTM Sources */}
             {data.utmSources.length > 0 && (
