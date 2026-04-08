@@ -1,17 +1,23 @@
 /**
  * GET /api/public/transparency
- * Публичные агрегированные данные об управлении платформой AI-советом.
- * Не требует авторизации. Чувствительные поля (review_notes, context) скрыты.
+ * Агрегированные данные об управлении платформой AI-советом.
+ * Доступ: только admin.
  * Cache: 5 мин.
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { pool } from '@/lib/db-pool';
+import { requireAdmin } from '@/lib/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const authOrResponse = await requireAdmin(request);
+    if (authOrResponse instanceof NextResponse) {
+      return authOrResponse;
+    }
+
     const [statsRes, decisionsRes, agentsRes] = await Promise.all([
       // Общая статистика совета
       pool.query<{
@@ -102,13 +108,13 @@ export async function GET() {
         updatedAt: new Date().toISOString(),
       },
       {
-        headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' },
+        headers: { 'Cache-Control': 'private, no-store' },
       }
     );
   } catch {
     return NextResponse.json(
       { stats: null, recentDecisions: [], activeAgents: [], updatedAt: new Date().toISOString(), degraded: true },
-      { status: 200, headers: { 'Cache-Control': 'public, s-maxage=60' } }
+      { status: 200, headers: { 'Cache-Control': 'private, no-store' } }
     );
   }
 }
