@@ -7,10 +7,6 @@ import { DirectionsList } from '@/components/homepage/DirectionsList'
 import { Footer } from '@/components/layout/Footer'
 
 // Lazy-loaded client sections (below fold)
-const BoardStatusLive = dynamic(
-  () => import('@/components/homepage/BoardStatusLive').then(m => ({ default: m.BoardStatusLive })),
-  { loading: () => <SectionSkeleton /> }
-);
 const InlineChat = dynamic(() => import('@/components/homepage/InlineChat'), {
   loading: () => <ChatSkeleton />,
 });
@@ -102,7 +98,6 @@ export default async function Page() {
         <HeroBoard />
         <MessengerAgentsSection />
         <DirectionsList />
-        <BoardStatusLive />
         <InlineChat />
         <TrustSection />
       </main>
