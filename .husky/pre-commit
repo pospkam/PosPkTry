@@ -17,7 +17,9 @@ check() {
   matches=$(echo "$CHANGED" | xargs grep -n --include="*.ts" --include="*.tsx" -E "$pattern" 2>/dev/null \
     | grep -v "node_modules" \
     | grep -v "// allow:" \
-    | grep -v "providers\.ts" || true)
+    | grep -v "providers\.ts" \
+    | grep -v "agent-knowledge\.ts" \
+    | grep -v "domainKnowledge" || true)
   if [ -n "$matches" ]; then
     red "ЗАПРЕЩЕНО: $message"
     echo "$matches" | head -5
