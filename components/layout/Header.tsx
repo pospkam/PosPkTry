@@ -116,7 +116,7 @@ export function Header() {
 
         {/* Cart */}
         <Link
-          href="/hub/tourist/cart"
+          href="/cart"
           aria-label="Корзина"
           style={{ ...iconBtn, position: 'relative' }}
           className="hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]"
