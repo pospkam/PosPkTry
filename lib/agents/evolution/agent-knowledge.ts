@@ -570,22 +570,3 @@ export function getAgentKnowledgeBase(agentId: string): AgentKnowledgeBase {
   if (!kb) throw new Error(`Unknown agent: ${agentId}`);
   return kb;
 }
-
-/**
- * Build agent briefing prompt
- * This is prepended to every agent prompt to remind them who they are
- */
-export function buildAgentBriefing(agentId: string): string {
-  const kb = getAgentKnowledgeBase(agentId);
-  return [
-    `ТЫ: ${kb.agentName} (${kb.agentRole})`,
-    `МИССИЯ: ${kb.mission}`,
-    `ТОН: ${kb.tone === 'operational' ? 'Операционный, фокусированный на метриках' : kb.tone === 'urgent' ? 'Срочный, фокусированный на рисках' : kb.tone === 'cautious' ? 'Осторожный, защитник' : 'Аналитический, объективный'}`,
-    `ЭКСПЕРТ В: ${kb.expertise.join(', ')}`,
-    `СМОТРИ НА: ${kb.metrics.join(', ')}`,
-    `НЕ АНАЛИЗИРУЙ: ${kb.blind_spots.join(', ')}`,
-    '',
-    'ОБЯЗАТЕЛЬНО ОТВЕТЬ НА ЭТИ ВОПРОСЫ:',
-    kb.questionsToAsk.map((q, i) => `  ${i + 1}. ${q}`).join('\n'),
-  ].join('\n');
-}

@@ -58,6 +58,9 @@ export async function buildRichAgentContext(
     '',
     knowledge.mission,
     '',
+    `КЕЙ-МЕТРИКИ (следи за ними): ${knowledge.metrics.join(', ')}`,
+    `ВНЕ ТВОЕЙ ЗОНЫ (не анализируй): ${knowledge.blind_spots.join(', ')}`,
+    '',
   ].join('\n');
 
   // ── Parallel data loading: collect all needed queries, fire at once ──
