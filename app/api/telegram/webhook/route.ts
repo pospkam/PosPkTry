@@ -51,6 +51,7 @@ import { notifyTouristBookingConfirmed, notifyTouristBookingCancelled } from '@/
 import { createTicket, getUserOpenTickets, addTicketMessage } from '@/lib/support/ticket.service';
 import { categorizeSupport, CATEGORY_LABELS, RESIDENT_INTRO } from '@/lib/support/categorize';
 import { leadProcessor } from '@/lib/services/lead-processor.service';
+import { groupMonitor } from '@/lib/telegram/group-monitor';
 
 export const dynamic = 'force-dynamic';
 
@@ -326,12 +327,12 @@ async function getStats(): Promise<string> {
     const [statsRes, topRes] = await Promise.all([
       query<StatsRow>(`
         SELECT
-          (SELECT COUNT(*)::text FROM bookings WHERE created_at >= CURRENT_DATE)             AS bookings_today,
-          (SELECT COUNT(*)::text FROM bookings WHERE created_at >= NOW()-INTERVAL '30 days') AS bookings_30d,
+          (SELECT COUNT(*)::text FROM operator_bookings WHERE created_at >= CURRENT_DATE)             AS bookings_today,
+          (SELECT COUNT(*)::text FROM operator_bookings WHERE created_at >= NOW()-INTERVAL '30 days') AS bookings_30d,
           (SELECT COUNT(*)::text FROM leads    WHERE created_at >= CURRENT_DATE)             AS leads_today,
           (SELECT COUNT(*)::text FROM leads    WHERE created_at >= NOW()-INTERVAL '30 days') AS leads_30d,
           (SELECT COUNT(*)::text FROM users)                                                 AS total_users,
-          (SELECT COUNT(*)::text FROM tours WHERE is_active = TRUE)                          AS active_tours,
+          (SELECT COUNT(*)::text FROM operator_tours WHERE is_active = TRUE)                          AS active_tours,
           (SELECT COUNT(*)::text FROM page_views WHERE created_at >= CURRENT_DATE)           AS views_today,
           (SELECT COUNT(*)::text FROM page_views WHERE created_at >= NOW()-INTERVAL '30 days') AS views_30d
       `),
@@ -627,6 +628,27 @@ export async function POST(request: NextRequest) {
     const text    = update.message.text.trim();
     const admin   = isAdmin(fromId);
 
+    // ── Группы и супергруппы: тихий мониторинг ─────────────────────────────
+    const chatType = (update.message.chat as { type?: string }).type ?? 'private';
+    if (chatType === 'group' || chatType === 'supergroup') {
+      const groupTitle = (update.message.chat as { title?: string }).title ?? 'Группа';
+      const fromName   = update.message.from?.first_name ?? 'Участник';
+
+      // Собираем разведку асинхронно — не блокируем ответ Telegram
+      groupMonitor.processMessage(chatId, groupTitle, fromName, text);
+
+      // Отвечаем только если прямо @упомянули бота
+      const botUser = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ?? 'KuzmichKam_bot';
+      const mentioned = text.toLowerCase().includes(`@${botUser.toLowerCase()}`);
+      if (mentioned) {
+        const cleanQ = text.replace(new RegExp(`@${botUser}`, 'gi'), '').trim();
+        const reply  = await kuzmichReply(cleanQ || 'Привет! Чем помочь?', chatId);
+        await sendHTML(chatId, reply);
+      }
+
+      return NextResponse.json({ ok: true });
+    }
+
     // /start [link_{token}] — привязка аккаунта или приветствие
     if (text.startsWith('/start')) {
       const arg = text.slice('/start'.length).trim();
@@ -781,7 +803,7 @@ export async function POST(request: NextRequest) {
     // /help
     if (text.startsWith('/help')) {
       const adminBlock = admin
-        ? '\n<b>Админ:</b>\n/stats — статистика\n/leads — последние заявки\n/digest — AI дайджест\n/agent &lt;текст&gt; — PlatformAgent\n/approve_&lt;id&gt; | /reject_&lt;id&gt; — решение по запросу агента\n/post operator &lt;slug&gt;\n/post route &lt;uuid&gt;\n/post sezon — AI-пост в канал'
+        ? '\n<b>Админ:</b>\n/stats — статистика\n/leads — последние заявки\n/groups — мониторинг групп\n/digest — AI дайджест\n/agent &lt;текст&gt; — PlatformAgent\n/approve_&lt;id&gt; | /reject_&lt;id&gt; — решение по запросу агента\n/post operator &lt;slug&gt;\n/post route &lt;uuid&gt;\n/post sezon — AI-пост в канал'
         : '';
       await sendHTML(chatId, [
         '<b>Команды Кузьмича:</b>',
@@ -874,6 +896,44 @@ export async function POST(request: NextRequest) {
       }
       const leads = await getLastLeads();
       await sendHTML(chatId, leads);
+      return NextResponse.json({ ok: true });
+    }
+
+    // /groups — мониторинг Telegram-групп (только admin)
+    if (text.startsWith('/groups')) {
+      if (!admin) {
+        await sendHTML(chatId, '<b>Нет прав.</b>');
+        return NextResponse.json({ ok: true });
+      }
+      const groups = await groupMonitor.getMonitoredGroups();
+      if (!groups.length) {
+        await sendHTML(chatId, 'Группы ещё не добавлены.\n\nДобавь бота в туристическую группу в Telegram — он начнёт собирать разведку автоматически.\n\n<i>Не забудь отключить privacy mode в BotFather: /setprivacy → Disabled</i>');
+        return NextResponse.json({ ok: true });
+      }
+      const lines = ['<b>Мониторируемые группы:</b>', ''];
+      for (const g of groups) {
+        const lastAct = new Date(g.lastActivityAt).toLocaleDateString('ru-RU');
+        lines.push(`📡 <b>${esc(g.title)}</b>`);
+        lines.push(`   Сообщений: ${g.totalMessages}  ·  Активность: ${lastAct}`);
+        lines.push(`   ID: <code>${g.id}</code>`);
+        lines.push('');
+      }
+      const recent = await groupMonitor.getRecentIntel(5);
+      if (recent.length > 0) {
+        lines.push('<b>Последние находки:</b>', '');
+        for (const r of recent) {
+          const d = new Date(r.date).toLocaleDateString('ru-RU');
+          lines.push(`📌 <b>${esc(r.group)}</b>  <i>${d}</i>  (${r.messages} сообщ.)`);
+          if (r.intel.key_insights?.length) {
+            r.intel.key_insights.slice(0, 2).forEach(i => lines.push(`   • ${esc(i)}`));
+          }
+          if (r.intel.hot_signals?.length) {
+            r.intel.hot_signals.slice(0, 1).forEach(s => lines.push(`   🔥 ${esc(s)}`));
+          }
+          lines.push('');
+        }
+      }
+      await sendHTML(chatId, lines.join('\n'));
       return NextResponse.json({ ok: true });
     }
 
