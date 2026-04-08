@@ -292,7 +292,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Booking form: показываем inline-форму когда турист явно хочет забронировать
-    const BOOKING_TRIGGERS_CHAT = ['бронирую', 'хочу этот', 'хочу забронировать', 'записывай', 'оформи', 'беру', 'запишите'];
+    const BOOKING_TRIGGERS_CHAT = ['бронь', 'бронирую', 'хочу этот', 'хочу забронировать', 'записывай', 'оформи', 'беру', 'запишите', 'возьму', 'оплачу'];
     const bookingTriggered = safeRole === 'tourist' && BOOKING_TRIGGERS_CHAT.some(t => rawMessage.toLowerCase().includes(t));
     const bookingFormTour = bookingTriggered && tourSuggestions.length > 0 ? tourSuggestions[0] : null;
 

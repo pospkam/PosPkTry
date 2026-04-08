@@ -20,17 +20,17 @@ export interface TourRow {
   id: number;
   title: string;
   base_price: number;
-  duration_days: number | null;
-  category?: string | null;
+  multi_day_count: number | null;
+  activity_type?: string | null;
 }
 
 export interface PendingBooking {
-  tour: TourRow;
+  tour?: TourRow;
   name?: string;
   phone?: string;
   participants?: number;
   date?: string; // YYYY-MM-DD
-  step: 'name' | 'date' | 'participants' | 'phone' | 'confirm';
+  step: 'tour' | 'name' | 'date' | 'participants' | 'phone' | 'confirm';
   started_at: number;
 }
 
@@ -76,8 +76,8 @@ interface TourContextRow {
   id: number;
   title: string;
   base_price: number;
-  duration_days: number | null;
-  category: string | null;
+  multi_day_count: number | null;
+  activity_type: string | null;
   location_name: string | null;
   operator_name: string | null;
   available_slots: number | null;
@@ -94,7 +94,7 @@ export async function buildTourContext(): Promise<string> {
   }
   try {
     const { rows } = await pool.query<TourContextRow>(`
-      SELECT ot.id, ot.title, ot.base_price, ot.duration_days, ot.category,
+      SELECT ot.id, ot.title, ot.base_price, ot.multi_day_count, ot.activity_type,
              ot.location_name,
              ot.available_slots,
              ot.next_available_date::text,
@@ -109,9 +109,9 @@ export async function buildTourContext(): Promise<string> {
     if (!rows.length) return '';
 
     const lines = rows.map(r => {
-      const dur   = r.duration_days ? `${r.duration_days} дн.` : '';
+      const dur   = r.multi_day_count ? `${r.multi_day_count} дн.` : '';
       const price = `от ${Number(r.base_price).toLocaleString('ru-RU')} р/чел`;
-      const cat   = r.category ? `[${r.category}]` : '';
+      const cat   = r.activity_type ? `[${r.activity_type}]` : '';
       const loc   = r.location_name ? ` — ${r.location_name}` : '';
       const op    = r.operator_name ? ` | Оп: ${r.operator_name}` : '';
       const slots = r.available_slots != null
@@ -258,10 +258,10 @@ export async function findTour(keywords: string[]): Promise<TourRow | null> {
   try {
     const patterns = keywords.map(k => `%${k}%`);
     const { rows } = await pool.query<TourRow>(
-      `SELECT id, title, base_price, duration_days, category
+      `SELECT id, title, base_price, multi_day_count, activity_type
        FROM operator_tours
        WHERE is_active = true AND deleted_at IS NULL
-         AND (${patterns.map((_, i) => `(title ILIKE $${i + 1} OR category ILIKE $${i + 1})`).join(' OR ')})
+         AND (${patterns.map((_, i) => `(title ILIKE $${i + 1} OR activity_type ILIKE $${i + 1})`).join(' OR ')})
        ORDER BY base_price ASC LIMIT 1`,
       patterns,
     );
@@ -447,6 +447,26 @@ export async function handleBookingStep(
 
   const t = text.trim();
 
+  // Шаг 'tour': ищем тур по тому что написал пользователь
+  if (b.step === 'tour') {
+    const keywords = extractTourKeywords(t);
+    const tour = await findTour(keywords.length ? keywords : [t]);
+    if (!tour) {
+      await reply(chatId, 'Не нашёл подходящий тур. Уточни: рыбалка, вулканы, медведи, термальные источники, вертолёт...');
+      return true;
+    }
+    b.tour  = tour;
+    b.step  = 'name';
+    await saveBookingFlow(chatId, mode, b, pending);
+    await reply(chatId, [
+      `Отлично! Бронируем <b>${tour.title}</b>`,
+      `Стоимость от <b>${tour.base_price.toLocaleString('ru-RU')} р.</b> с человека.`,
+      '',
+      'Как вас зовут? (полное имя для брони)',
+    ].join('\n'));
+    return true;
+  }
+
   if (b.step === 'name') {
     if (t.length < 2) {
       await reply(chatId, 'Укажите полное имя (минимум 2 символа).');
@@ -501,12 +521,12 @@ export async function handleBookingStep(
     await saveBookingFlow(chatId, mode, b, pending);
 
     const dateStr = new Date(b.date!).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
-    const total = (b.tour.base_price * b.participants!).toLocaleString('ru-RU');
+    const total = (b.tour!.base_price * b.participants!).toLocaleString('ru-RU');
 
     await reply(chatId, [
       '<b>Проверьте данные брони:</b>',
       '',
-      `Тур: <b>${b.tour.title}</b>`,
+      `Тур: <b>${b.tour!.title}</b>`,
       `Дата: <b>${dateStr}</b>`,
       `Человек: <b>${b.participants}</b>`,
       `Сумма: <b>${total} р.</b>`,
@@ -541,12 +561,12 @@ export async function handleBookingStep(
     }
 
     const dateStr = new Date(b.date!).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
-    const totalStr = (b.tour.base_price * b.participants!).toLocaleString('ru-RU');
+    const totalStr = (b.tour!.base_price * b.participants!).toLocaleString('ru-RU');
     const payLink  = `https://tourhab.ru/booking-success/${bookingId}`;
     await reply(chatId, [
       `Бронирование принято! Номер: <b>#${bookingId}</b>`,
       '',
-      `Тур: ${b.tour.title}`,
+      `Тур: ${b.tour!.title}`,
       `Дата: ${dateStr}`,
       `Человек: ${b.participants}`,
       `Сумма: <b>${totalStr} р.</b>`,
@@ -580,7 +600,9 @@ export async function startBooking(
 
   const tour = await findTour(keywords);
   if (!tour) {
-    await reply(chatId, 'Уточни, какой тур хочешь забронировать?\n\nНапиши: рыбалка, вулканы, медведи, термальные источники...');
+    const booking: PendingBooking = { step: 'tour', started_at: Date.now() };
+    await saveBookingFlow(chatId, mode, booking, pending);
+    await reply(chatId, 'Какой тур интересует?\n\nНапиши: рыбалка, вулканы, медведи, термальные источники, вертолёт...');
     return true;
   }
 
