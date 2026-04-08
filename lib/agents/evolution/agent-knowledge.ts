@@ -28,6 +28,9 @@ export interface AgentKnowledgeBase {
   // HOW should they behave?
   tone: 'analytical' | 'operational' | 'urgent' | 'cautious';
   decisionStyle: 'data-first' | 'risk-first' | 'consensus-first' | 'innovation-first';
+
+  // WHAT do they deeply know? (injected as system context on every call)
+  domainKnowledge?: string;
 }
 
 /**
@@ -59,6 +62,33 @@ export const AGENT_KNOWLEDGE_BASES: Record<string, AgentKnowledgeBase> = {
 
     tone: 'operational',
     decisionStyle: 'data-first',
+
+    domainKnowledge: `
+## ОПЕРАЦИОННЫЕ СТАНДАРТЫ TOURHAB
+
+**Платформа:** tourhab.ru — агрегатор туристических услуг Камчатки (ООО «ПОС-СЕРВИС», ИНН 4101147649)
+**Деплой:** Timeweb Cloud, App ID 175269. Автодеплой при push в main. База: PostgreSQL.
+**Масштаб:** 94 страницы, 256 API routes, 119 компонентов, 8 хабов, ~260 маршрутов в БД.
+
+**SLA операторов:**
+- Подтверждение бронирования: ≤24ч (нарушение → предупреждение, >3 раза → ограничение)
+- Ответ на сообщение клиента: ≤4ч в рабочее время
+- Выплаты партнёрам: ≤3 рабочих дней после подтверждения оказания услуги
+
+**Ключевые таблицы БД:**
+- \`operator_bookings\` (не \`bookings\`) — колонка \`booking_status\` (не \`status\`)
+- \`operator_tours\` (не \`tours\`)
+- \`partners\` — операторы, поле \`category = 'operator'\`
+
+**Комиссионная структура:** 5–15% (тарифная) + 3% эквайринг = итого 8–18%
+- Старт: 15% (первые 3 мес)
+- Базовый: 10% (оборот ≥100к/кв)
+- Партнёр: 7% (оборот ≥500к/кв)
+- Премиум: 5% (оборот ≥1.5М/кв)
+
+**Платёжные системы:** CloudPayments + Точка Банк (QR-оплата)
+**AI waterfall:** DeepSeek → Gemini → MiMo (tier 1), OpenRouter → YandexGPT (tier 2), Anthropic (tier 3)
+`,
   },
 
   legal: {
@@ -148,6 +178,29 @@ export const AGENT_KNOWLEDGE_BASES: Record<string, AgentKnowledgeBase> = {
 
     tone: 'urgent',
     decisionStyle: 'risk-first',
+
+    domainKnowledge: `
+## АРХИТЕКТУРА БЕЗОПАСНОСТИ TOURHAB
+
+**Аутентификация:** JWT (lib/auth.ts). Секрет: JWT_SECRET (env). Edge middleware: middleware.ts.
+**Уровни доступа:** tourist / operator / admin (role-based). Проверка: requireAuth / requireAdmin / requireRole.
+**Rate limiting:** в middleware.ts (Edge Runtime). Лимиты по IP.
+
+**Ключевые уязвимости для мониторинга:**
+- API /api/payments/ — CloudPayments webhook (критично, без изменений!)
+- API /api/safety/sos — SOS endpoint (только staging tests)
+- Все cron endpoints защищены CRON_SECRET header
+- SQL injection защита: только параметризованные запросы ($1, $2)
+
+**AI безопасность:** OR_API_KEY (OpenRouter), DEEPSEEK_API_KEY, GEMINI_API_KEY — ротация каждые 90 дней
+**Деплой:** Timeweb Cloud (Россия) — данные не покидают РФ. App ID: 175269.
+**Мониторинг:** ai_actions_log таблица фиксирует все AI вызовы с провайдером и cost.
+
+**Запрещённые операции без owner approval:**
+- Изменение middleware.ts
+- Изменение lib/auth.ts
+- Изменение app/api/payments/
+`,
   },
 
   hacker: {
