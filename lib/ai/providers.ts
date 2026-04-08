@@ -13,7 +13,7 @@
  */
 
 import type { ChatMessage } from '@/lib/ai/prompts';
-import { getOpenRouterKey, getMiMoKey, getDeepSeekKey, getAnthropicKey, getXaiKey, getGeminiKey, getYandexKey, getMiniMaxKey } from '@/lib/ai/provider-config';
+import { getOpenRouterKey, getMiMoKey, getDeepSeekKey, getAnthropicKey, getXaiKey, getGeminiKey, getYandexKey, getMiniMaxKey, getGLMKey } from '@/lib/ai/provider-config';
 
 // ── Xiaomi MiMo-V2-Pro ────────────────────────────────────────
 export async function callMiMo(messages: ChatMessage[]): Promise<string | null> {
@@ -54,6 +54,7 @@ export async function callMiMo(messages: ChatMessage[]): Promise<string | null> 
 const OR_MODELS = [
   { id: 'google/gemini-2.0-flash-001',                  timeout: 12_000 }, // самый быстрый ~1-2s
   { id: 'google/gemini-2.0-flash-lite',                 timeout: 12_000 }, // fast lite
+  { id: 'thudm/glm-z1-32b',                             timeout: 15_000 }, // GLM Z1 32B via OR
   { id: 'qwen/qwen3-235b-a22b:free',                    timeout: 15_000 }, // Qwen3 235B MoE free
   { id: 'nvidia/llama-3.3-nemotron-super-49b-v1:free',  timeout: 15_000 }, // NVIDIA Nemotron free
   { id: 'openai/gpt-4o-mini',                           timeout: 12_000 }, // надёжный
@@ -470,6 +471,35 @@ export async function callDeepSeek(messages: ChatMessage[]): Promise<string | nu
   } catch { return null; }
 }
 
+// ── GLM 5.1 (ZhipuAI direct API — bigmodel.cn) ────────────────
+// ZhipuAI OpenAI-compatible endpoint. Env: GLM_API_KEY
+export async function callGLM(messages: ChatMessage[]): Promise<string | null> {
+  const apiKey = getGLMKey();
+  if (!apiKey) return null;
+
+  try {
+    const payload = messages.map(({ role, content }) => ({ role, content }));
+    const res = await fetch('https://open.bigmodel.cn/api/paas/v4/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'glm-5.1',
+        temperature: 0.4,
+        max_tokens: 800,
+        messages: payload,
+      }),
+      signal: AbortSignal.timeout(20_000),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const text: string | undefined = data?.choices?.[0]?.message?.content;
+    return text?.trim() || null;
+  } catch { return null; }
+}
+
 // ── MiniMax 2.5 (direct API) ─────────────────────────────────
 export async function callMiniMax(messages: ChatMessage[]): Promise<string | null> {
   const keys = getMiniMaxKey();
@@ -609,6 +639,50 @@ export async function callGeminiTranscribe(
         }],
       }),
       signal: AbortSignal.timeout(30_000),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const text: string | undefined = data?.choices?.[0]?.message?.content;
+    return text?.trim() || null;
+  } catch { return null; }
+}
+
+// ── Gemini PDF Extraction via OpenRouter ──────────────────────
+// Принимает PDF как base64, возвращает текст с извлечёнными данными.
+// Используется для импорта туров из PDF-документов операторов.
+export async function callGeminiPDF(
+  pdfBase64: string,
+  prompt: string,
+): Promise<string | null> {
+  const apiKey = getOpenRouterKey();
+  if (!apiKey) return null;
+
+  try {
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://tourhab.ru',
+        'X-Title': 'TourHab Kamchatka',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.0-flash-001',
+        max_tokens: 2000,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'image_url',
+                image_url: { url: `data:application/pdf;base64,${pdfBase64}` },
+              },
+              { type: 'text', text: prompt },
+            ],
+          },
+        ],
+      }),
+      signal: AbortSignal.timeout(45_000),
     });
     if (!res.ok) return null;
     const data = await res.json();
@@ -877,6 +951,7 @@ export async function callAIWaterfall(messages: ChatMessage[]): Promise<string> 
     callDeepSeek(messages),
     callGeminiDirect(messages),
     callMiMo(messages),
+    callGLM(messages),
   ]);
   if (tier1) return tier1;
 

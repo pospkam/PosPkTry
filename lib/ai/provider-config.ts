@@ -45,6 +45,10 @@ export function getYandexKey(): { apiKey: string; folderId: string } | null {
   return { apiKey, folderId };
 }
 
+export function getGLMKey(): string | null {
+  return process.env.GLM_API_KEY || null;
+}
+
 export function getMolmoWebConfig(): {
   baseUrl: string;
   apiKey: string | null;

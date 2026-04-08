@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import {
   Plus, Upload, Mountain, Star, Users, Clock,
   Eye, EyeOff, Trash2, Edit2, RefreshCw, ChevronLeft, ChevronRight,
-  CalendarDays, Check, X,
+  CalendarDays, Check, X, FileText, Loader2,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -31,6 +32,27 @@ interface Tour {
   created_at: string;
   available_slots: number | null;
   next_available_date: string | null;
+}
+
+interface PdfResult {
+  title: string;
+  description: string | null;
+  short_description: string | null;
+  activity_type: string;
+  location_type: string;
+  location_name: string;
+  base_price: number | null;
+  price_unit: string;
+  max_participants: number | null;
+  min_participants: number | null;
+  duration_hours: number | null;
+  difficulty: string | null;
+  season_start: string | null;
+  season_end: string | null;
+  included: string[];
+  not_included: string[];
+  what_to_bring: string[];
+  tags: string[];
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -58,6 +80,86 @@ export default function ToursManagementClient() {
   const [availSlots, setAvailSlots]   = useState('');
   const [availDate, setAvailDate]     = useState('');
   const [savingAvail, setSavingAvail] = useState(false);
+
+  // PDF import state
+  const [pdfOpen, setPdfOpen]       = useState(false);
+  const [pdfFile, setPdfFile]       = useState<File | null>(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [pdfResult, setPdfResult]   = useState<PdfResult | null>(null);
+  const [pdfError, setPdfError]     = useState<string | null>(null);
+  const [pdfCreating, setPdfCreating] = useState(false);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
+
+  const handlePdfUpload = useCallback(async (file: File) => {
+    if (file.type !== 'application/pdf') {
+      setPdfError('Поддерживается только PDF');
+      return;
+    }
+    setPdfFile(file);
+    setPdfError(null);
+    setPdfResult(null);
+    setPdfLoading(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/hub/operator/tours/import-pdf', { method: 'POST', body: fd });
+      const data = await res.json() as { success: boolean; data?: PdfResult; error?: string };
+      if (data.success && data.data) {
+        setPdfResult(data.data);
+      } else {
+        setPdfError(data.error ?? 'Ошибка извлечения данных');
+      }
+    } catch {
+      setPdfError('Ошибка сети. Попробуйте снова.');
+    } finally {
+      setPdfLoading(false);
+    }
+  }, []);
+
+  const handlePdfCreate = useCallback(async () => {
+    if (!pdfResult) return;
+    setPdfCreating(true);
+    try {
+      const res = await fetch('/api/hub/operator/tours', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title:             pdfResult.title || 'Тур из PDF',
+          description:       pdfResult.description,
+          short_description: pdfResult.short_description,
+          activity_type:     pdfResult.activity_type || 'other',
+          location_type:     pdfResult.location_type || 'other',
+          location_name:     pdfResult.location_name || 'Камчатка',
+          latitude:          53.0,
+          longitude:         158.7,
+          base_price:        pdfResult.base_price ?? 1000,
+          price_unit:        pdfResult.price_unit || 'per_person',
+          max_participants:  pdfResult.max_participants ?? 10,
+          min_participants:  pdfResult.min_participants,
+          duration_hours:    pdfResult.duration_hours,
+          difficulty:        pdfResult.difficulty,
+          season_start:      pdfResult.season_start,
+          season_end:        pdfResult.season_end,
+          included:          pdfResult.included,
+          not_included:      pdfResult.not_included,
+          what_to_bring:     pdfResult.what_to_bring,
+          tags:              pdfResult.tags,
+        }),
+      });
+      const data = await res.json() as { success: boolean; data?: { id: string }; error?: string };
+      if (data.success && data.data?.id) {
+        setPdfOpen(false);
+        router.push(`/hub/operator/tours/${data.data.id}/edit`);
+      } else {
+        setPdfError(data.error ?? 'Ошибка создания тура');
+      }
+    } catch {
+      setPdfError('Ошибка сети');
+    } finally {
+      setPdfCreating(false);
+    }
+  }, [pdfResult, router]);
 
   const totalPages = Math.max(1, Math.ceil(total / LIMIT));
 
@@ -144,6 +246,13 @@ export default function ToursManagementClient() {
             <Upload className="w-4 h-4" />
             Импорт CSV
           </Link>
+          <button
+            onClick={() => { setPdfOpen(true); setPdfResult(null); setPdfFile(null); setPdfError(null); }}
+            className="ds-btn flex items-center gap-1.5 text-sm"
+          >
+            <FileText className="w-4 h-4" />
+            Импорт PDF
+          </button>
           <Link
             href="/hub/operator/tours/new"
             className="ds-btn ds-btn-primary flex items-center gap-1.5 text-sm"
@@ -394,6 +503,124 @@ export default function ToursManagementClient() {
             >
               <ChevronRight className="w-4 h-4" />
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ─── PDF Import Modal ─────────────────────────────────────── */}
+      {pdfOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="w-full max-w-lg ds-card rounded-xl p-6 space-y-4 max-h-[90dvh] overflow-y-auto">
+            <div className="flex items-center justify-between">
+              <h2 className="font-playfair text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
+                Импорт тура из PDF
+              </h2>
+              <button onClick={() => setPdfOpen(false)} className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Drop zone */}
+            {!pdfResult && (
+              <div
+                className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors hover:border-[var(--accent)] hover:bg-[var(--bg-hover)]"
+                style={{ borderColor: 'var(--border)' }}
+                onClick={() => pdfInputRef.current?.click()}
+                onDragOver={e => e.preventDefault()}
+                onDrop={e => {
+                  e.preventDefault();
+                  const f = e.dataTransfer.files[0];
+                  if (f) handlePdfUpload(f);
+                }}
+              >
+                <input
+                  ref={pdfInputRef}
+                  type="file"
+                  accept="application/pdf"
+                  className="hidden"
+                  onChange={e => { const f = e.target.files?.[0]; if (f) handlePdfUpload(f); }}
+                />
+                {pdfLoading ? (
+                  <div className="space-y-2">
+                    <Loader2 className="w-8 h-8 mx-auto animate-spin" style={{ color: 'var(--accent)' }} />
+                    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                      Gemini читает PDF и извлекает данные тура...
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <FileText className="w-8 h-8 mx-auto" style={{ color: 'var(--text-muted)' }} />
+                    <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                      {pdfFile ? pdfFile.name : 'Перетащите PDF или нажмите для выбора'}
+                    </p>
+                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                      Брошюра, прайс-лист или описание тура — до 8 МБ
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Error */}
+            {pdfError && (
+              <p className="text-sm px-3 py-2 rounded-lg bg-[var(--danger)]/10" style={{ color: 'var(--danger)' }}>
+                {pdfError}
+              </p>
+            )}
+
+            {/* Extracted data preview */}
+            {pdfResult && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Check className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--success)' }} />
+                  <p className="text-sm font-medium" style={{ color: 'var(--success)' }}>
+                    Данные извлечены — проверьте перед созданием
+                  </p>
+                </div>
+
+                <div className="rounded-lg p-4 space-y-2 text-sm" style={{ background: 'var(--bg-hover)' }}>
+                  <div><span style={{ color: 'var(--text-muted)' }}>Название: </span><span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{pdfResult.title || '—'}</span></div>
+                  {pdfResult.location_name && <div><span style={{ color: 'var(--text-muted)' }}>Локация: </span><span style={{ color: 'var(--text-secondary)' }}>{pdfResult.location_name}</span></div>}
+                  <div className="flex gap-4">
+                    {pdfResult.base_price && <div><span style={{ color: 'var(--text-muted)' }}>Цена: </span><span className="font-semibold" style={{ color: 'var(--accent)' }}>{pdfResult.base_price.toLocaleString('ru-RU')} ₽</span></div>}
+                    {pdfResult.duration_hours && <div><span style={{ color: 'var(--text-muted)' }}>Длит.: </span><span style={{ color: 'var(--text-secondary)' }}>{pdfResult.duration_hours} ч</span></div>}
+                    {pdfResult.max_participants && <div><span style={{ color: 'var(--text-muted)' }}>Макс. гр.: </span><span style={{ color: 'var(--text-secondary)' }}>{pdfResult.max_participants}</span></div>}
+                  </div>
+                  <div className="flex gap-2 flex-wrap">
+                    <span className="px-2 py-0.5 rounded text-xs" style={{ background: 'var(--bg-card)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>{pdfResult.activity_type}</span>
+                    <span className="px-2 py-0.5 rounded text-xs" style={{ background: 'var(--bg-card)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>{pdfResult.location_type}</span>
+                    {pdfResult.difficulty && <span className="px-2 py-0.5 rounded text-xs" style={{ background: 'var(--bg-card)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>{pdfResult.difficulty}</span>}
+                  </div>
+                  {pdfResult.included.length > 0 && (
+                    <div>
+                      <span style={{ color: 'var(--text-muted)' }}>Включено: </span>
+                      <span style={{ color: 'var(--text-secondary)' }}>{pdfResult.included.slice(0, 3).join(', ')}{pdfResult.included.length > 3 ? ` +${pdfResult.included.length - 3}` : ''}</span>
+                    </div>
+                  )}
+                </div>
+
+                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                  Тур будет создан как черновик с координатами по умолчанию. Уточните детали в редакторе.
+                </p>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { setPdfResult(null); setPdfFile(null); }}
+                    className="ds-btn ds-btn-secondary flex-1 text-sm"
+                  >
+                    Загрузить другой PDF
+                  </button>
+                  <button
+                    onClick={handlePdfCreate}
+                    disabled={pdfCreating}
+                    className="ds-btn ds-btn-primary flex-1 text-sm flex items-center justify-center gap-1.5"
+                  >
+                    {pdfCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                    Создать тур
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
