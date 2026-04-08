@@ -317,8 +317,13 @@ export function formatContextForPrompt(context: RichAgentContext): string {
     context.briefing,
     '═════════════════════════════════════════════════',
     '',
+    context.knowledge.domainKnowledge ? [
+      'БАЗА ЗНАНИЙ АГЕНТА:',
+      context.knowledge.domainKnowledge,
+      '',
+    ].join('\n') : '',
     context.trainingContent ? [
-      'ДОМЕННЫЕ ЗНАНИЯ:',
+      'ДОМЕННЫЕ ЗНАНИЯ (из памяти):',
       context.trainingContent,
       '',
     ].join('\n') : '',
