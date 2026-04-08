@@ -20,15 +20,27 @@ export async function GET(
   }
 
   try {
+    const aliases = slug === 'fishingkam'
+      ? ['fishingkam', 'kamchatskaya-rybalka']
+      : slug === 'kamchatskaya-rybalka'
+        ? ['kamchatskaya-rybalka', 'fishingkam']
+        : [slug];
+
     const result = await query<OperatorProfileRow>(
       `SELECT id, slug, name, category, description, short_description,
               hero_image, gallery, services, features, faq, season_info,
               reviews_data, contacts, location, legal_info, contact,
               rating::text, review_count::text, is_verified, created_at::text
        FROM partners
-       WHERE slug = $1 AND is_public = TRUE
+       WHERE slug = ANY($1) AND is_public = TRUE
+       ORDER BY CASE
+         WHEN slug = $2 THEN 0
+         WHEN slug = 'kamchatskaya-rybalka' THEN 1
+         WHEN slug = 'fishingkam' THEN 2
+         ELSE 3
+       END
        LIMIT 1`,
-      [slug]
+      [aliases, slug]
     );
 
     if (result.rows.length === 0) {
