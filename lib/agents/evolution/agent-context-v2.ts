@@ -340,6 +340,11 @@ export function formatContextForPrompt(context: RichAgentContext): string {
       context.previousDecisions.join('\n'),
       '',
     ].join('\n') : '',
+    context.knowledge.questionsToAsk.length > 0 ? [
+      'ОБЯЗАТЕЛЬНО ОТВЕТЬ НА ЭТИ ВОПРОСЫ В ОТЧЁТЕ:',
+      context.knowledge.questionsToAsk.map((q, i) => `${i + 1}. ${q}`).join('\n'),
+      '',
+    ].join('\n') : '',
     '═════════════════════════════════════════════════',
   ].filter(s => s.length > 0).join('\n');
 }
