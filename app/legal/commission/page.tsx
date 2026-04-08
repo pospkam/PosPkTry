@@ -153,7 +153,7 @@ export default function CommissionPage() {
           <section>
             <h2 className="text-xl font-semibold text-[var(--text-primary)] mt-8 mb-4">Контакты по финансовым вопросам</h2>
             <p className="font-mono text-sm leading-7">
-              ООО «Трей», ИНН 4100053571, ОГРН 1254100000175<br />
+              ООО «ПОС-СЕРВИС», ИНН 4101147649, ОГРН 1114101005952<br />
               683024, Камчатский край, г. Петропавловск-Камчатский<br />
               Генеральный директор: Асеев Андрей Валерьевич<br />
               Финансовые вопросы: <a href="mailto:finance@tourhab.ru" className="text-[var(--ocean)] hover:underline">finance@tourhab.ru</a><br />
