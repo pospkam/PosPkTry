@@ -1,24 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, Bot, Shield, Cpu, BarChart3, Activity } from 'lucide-react';
+import { ArrowRight, Bot, Shield, Mountain, Waves, Compass } from 'lucide-react';
 import { useHomeMetrics } from '@/hooks/use-home-metrics';
-
-const DIRECTORS = [
-  { id: 'admin',    name: 'Администратор', color: 'var(--accent)' },
-  { id: 'legal',    name: 'Юрист',         color: 'var(--ocean)' },
-  { id: 'security', name: 'Безопасность',  color: 'var(--danger)' },
-  { id: 'rescue',   name: 'Спасатель',     color: 'var(--warning)' },
-  { id: 'hacker',   name: 'Рост',          color: 'var(--accent)' },
-  { id: 'eco',      name: 'Эколог',        color: 'var(--success)' },
-  { id: 'finance',  name: 'Финансы',       color: 'var(--ocean)' },
-  { id: 'quality',  name: 'Качество',      color: 'var(--success)' },
-  { id: 'planning', name: 'Плановик',      color: 'var(--ocean)' },
-  { id: 'evo',      name: 'Эволюция',      color: 'var(--accent)' },
-  { id: 'content',  name: 'Аудит',         color: 'var(--text-muted)' },
-  { id: 'infra',    name: 'Инфраструктура', color: 'var(--ocean)' },
-  { id: 'vibe_coder', name: 'Разработчик', color: 'var(--accent)' },
-];
 
 export function HeroBoard() {
   const { metrics } = useHomeMetrics();
@@ -41,7 +25,7 @@ export function HeroBoard() {
         <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-card)] px-3 py-1.5">
           <span className="h-2 w-2 rounded-full bg-[var(--success)] animate-pulse" />
           <span className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--text-secondary)]">
-            13 AI-директоров · Совет активен
+            Камчатка · сезон 2026 открыт
           </span>
         </div>
 
@@ -50,23 +34,23 @@ export function HeroBoard() {
           {/* Left: messaging */}
           <div>
             <h1 className="mb-5 font-playfair text-5xl font-bold leading-[1.08] text-[var(--text-primary)] md:text-7xl">
-              Первая<br />
-              автономная<br />
-              <span style={{ color: 'var(--accent)' }}>платформа</span><br />
-              туризма
+              Камчатка,<br />
+              которую вы<br />
+              <span style={{ color: 'var(--accent)' }}>почувствуете</span><br />
+              по-настоящему
             </h1>
 
             <p className="mb-8 max-w-xl text-base leading-relaxed text-[var(--text-secondary)] md:text-lg">
-              TourHab управляется советом из 13 специализированных AI-директоров.
-              Они проверяют операторов, анализируют риски, принимают решения
-              и эволюционируют платформу — пока вы планируете поездку.
+              Вулканы, океан, медведи и термальные источники в одном маршруте.
+              Подберем путешествие под ваш уровень, даты и бюджет, а верифицированные
+              операторы проведут его безопасно и без лишней суеты.
             </p>
 
             <div className="mb-10 grid grid-cols-3 gap-3">
               {[
-                { icon: Shield,   label: 'Верификация операторов', val: metrics.verifiedOperators },
-                { icon: Activity, label: 'Маршрутов в базе',       val: metrics.routesTotal },
-                { icon: BarChart3,label: 'Активных туров',          val: metrics.activeTours },
+                { icon: Shield,   label: 'Проверенных операторов', val: metrics.verifiedOperators },
+                { icon: Mountain, label: 'Маршрутов по Камчатке',   val: metrics.routesTotal },
+                { icon: Waves,    label: 'Активных туров',          val: metrics.activeTours },
               ].map(({ icon: Icon, label, val }) => (
                 <div key={label} className="rounded-lg border border-[var(--border)] bg-[var(--bg-card)] p-3 text-center">
                   <Icon className="mx-auto mb-1.5 h-4 w-4 text-[var(--accent)]" />
@@ -84,51 +68,39 @@ export function HeroBoard() {
                 className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent)] px-6 py-3.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
               >
                 <Bot className="h-4 w-4" />
-                Спросить Кузьмича
+                Подобрать маршрут
                 <ArrowRight className="h-4 w-4" />
               </a>
               <Link
-                href="/transparency"
+                href="/routes"
                 className="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] px-6 py-3.5 text-sm font-semibold text-[var(--text-primary)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
               >
-                <Cpu className="h-4 w-4" />
-                Как работает совет
+                <Compass className="h-4 w-4" />
+                Смотреть туры
               </Link>
             </div>
           </div>
 
-          {/* Right: board visualization */}
+          {/* Right: trust and experience */}
           <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-5">
             <div className="mb-4 flex items-center justify-between">
-              <p className="text-sm font-semibold text-[var(--text-primary)]">Совет директоров</p>
-              <Link
-                href="/transparency"
-                className="text-[11px] text-[var(--accent)] hover:opacity-75"
-              >
-                подробнее
-              </Link>
+              <p className="text-sm font-semibold text-[var(--text-primary)]">Почему с нами спокойнее</p>
+              <span className="text-[11px] text-[var(--text-muted)]">TourHab</span>
             </div>
 
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-3">
-              {DIRECTORS.map((d) => (
+            <div className="space-y-3">
+              {[
+                'Маршрут собирается под ваш формат: активный, семейный или премиум.',
+                'Проверенные операторы и прозрачные условия без скрытых комиссий.',
+                'Поддержка до вылета, на маршруте и после возвращения.',
+              ].map((item) => (
                 <div
-                  key={d.id}
-                  className="flex flex-col items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] p-2.5 text-center"
+                  key={item}
+                  className="rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-secondary)]"
                 >
-                  <div
-                    className="flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold text-white"
-                    style={{ background: d.color }}
-                  >
-                    {d.name.slice(0, 1)}
-                  </div>
-                  <p className="text-[10px] leading-tight text-[var(--text-muted)]">{d.name}</p>
+                  {item}
                 </div>
               ))}
-            </div>
-
-            <div className="mt-4 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] px-3 py-2.5 text-[11px] text-[var(--text-secondary)]">
-              Каждые 4–24 часа совет собирается, анализирует данные и предлагает решения.
-              Финальное слово — за владельцем платформы.
             </div>
           </div>
         </div>
