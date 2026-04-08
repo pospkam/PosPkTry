@@ -173,6 +173,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   "longitude": 158.6483
                 },
                 "telephone": "+7 (914) 782-22-22",
+                "speakable": {
+                  "@type": "SpeakableSpecification",
+                  "cssSelector": ["h1", "h2", ".ds-h1", ".ds-h2", "article p:first-of-type", "[data-speakable]"]
+                },
+                "knowsAbout": [
+                  "туры на Камчатку",
+                  "вулканы Камчатки",
+                  "рыбалка на Камчатке",
+                  "Долина гейзеров",
+                  "горячие источники",
+                  "медведи Курильского озера",
+                  "Ключевская сопка",
+                  "Халактырский пляж",
+                  "экотуризм Камчатки"
+                ],
                 "sameAs": [
                   "https://t.me/kamchatourhub",
                   "https://vk.com/kamchatourhub"

@@ -104,13 +104,28 @@ export default async function TourDetailPage({ params }: Props) {
     '@id': `${SITE}/marketplace/tours/${tour.id}`,
     name: tour.title,
     description: tour.description ?? undefined,
+    inLanguage: 'ru',
     touristType: ACTIVITY_LABELS[tour.activity_type] ?? tour.activity_type,
+    keywords: [
+      tour.title,
+      ACTIVITY_LABELS[tour.activity_type] ?? tour.activity_type,
+      tour.location_name ?? 'Камчатка',
+      'туры Камчатка',
+      'Камчатский край',
+    ].filter(Boolean).join(', '),
+    // Speakable — для голосовых ответов Алисы AI
+    speakable: {
+      '@type': 'SpeakableSpecification',
+      cssSelector: ['h1', '.tour-description', 'article p:first-of-type', '[data-speakable]'],
+    },
     ...(tour.tour_image ? { image: [tour.tour_image, ...(tour.photos ?? [])] } : {}),
     ...(tour.duration_hours ? { duration: `PT${Math.round(Number(tour.duration_hours))}H` } : {}),
+    ...(tour.multi_day_count ? { duration: `P${tour.multi_day_count}D` } : {}),
     provider: {
       '@type': 'TouristInformationCenter',
       name: tour.operator_name,
       url: SITE,
+      sameAs: SITE,
     },
     offers: {
       '@type': 'Offer',
@@ -118,6 +133,10 @@ export default async function TourDetailPage({ params }: Props) {
       priceCurrency: 'RUB',
       availability: 'https://schema.org/InStock',
       url: `${SITE}/marketplace/tours/${tour.id}`,
+      ...(tour.season_start && tour.season_end ? {
+        availabilityStarts: `${new Date().getFullYear()}-${String(tour.season_start).padStart(2, '0')}-01`,
+        availabilityEnds: `${new Date().getFullYear()}-${String(tour.season_end).padStart(2, '0')}-30`,
+      } : {}),
       seller: {
         '@type': 'Organization',
         name: tour.operator_name,
@@ -129,7 +148,32 @@ export default async function TourDetailPage({ params }: Props) {
         ratingValue: Number(tour.rating),
         reviewCount: tour.review_count ?? 0,
         bestRating: 5,
+        worstRating: 1,
       },
+    } : {}),
+    // Отзывы для контекста Алисы AI
+    ...(reviews.length > 0 ? {
+      review: reviews.slice(0, 3).map((r: {
+        author_name: string;
+        author_city?: string;
+        rating: number;
+        comment: string;
+        trip_date?: string;
+      }) => ({
+        '@type': 'Review',
+        author: {
+          '@type': 'Person',
+          name: r.author_name,
+          ...(r.author_city ? { address: { '@type': 'PostalAddress', addressLocality: r.author_city } } : {}),
+        },
+        reviewRating: {
+          '@type': 'Rating',
+          ratingValue: r.rating,
+          bestRating: 5,
+        },
+        reviewBody: r.comment,
+        ...(r.trip_date ? { datePublished: r.trip_date } : {}),
+      })),
     } : {}),
     location: {
       '@type': 'Place',
@@ -146,8 +190,17 @@ export default async function TourDetailPage({ params }: Props) {
           latitude: Number(tour.latitude),
           longitude: Number(tour.longitude),
         },
+        hasMap: `https://maps.yandex.ru/?ll=${tour.longitude},${tour.latitude}&z=12`,
       } : {}),
     },
+    // Включённые услуги — для ответов Алисы на вопросы "что входит в тур"
+    ...(tour.included && Array.isArray(tour.included) && tour.included.length > 0 ? {
+      amenityFeature: (tour.included as string[]).map((item: string) => ({
+        '@type': 'LocationFeatureSpecification',
+        name: item,
+        value: true,
+      })),
+    } : {}),
   } : null;
 
   return (

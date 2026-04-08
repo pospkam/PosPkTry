@@ -172,12 +172,23 @@ export default async function RouteOrCategoryPage({ params }: Props) {
     ? route.description.replace(/<[^>]+>/g, '').slice(0, 500)
     : undefined;
 
-  // Enhanced JSON-LD для лучшей индексации Google
+  // Enhanced JSON-LD для Алисы AI и поисковых систем
   const durationISO = route.durationDays
     ? route.durationDays < 1
       ? 'PT4H' // half day
       : `P${Math.ceil(route.durationDays)}D`
     : undefined;
+
+  // Keywords для голосового поиска Алисы
+  const routeKeywords = [
+    route.title,
+    `${route.title} Камчатка`,
+    route.category,
+    route.activityType,
+    route.locationType,
+    'туры Камчатки',
+    'Камчатка',
+  ].filter(Boolean).join(', ');
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -188,6 +199,23 @@ export default async function RouteOrCategoryPage({ params }: Props) {
     url: `https://tourhab.ru/routes/${id}`,
     inLanguage: 'ru',
     touristType: route.activityType ?? route.category,
+    keywords: routeKeywords,
+    // Speakable — для голосовых ответов Алисы AI
+    speakable: {
+      '@type': 'SpeakableSpecification',
+      cssSelector: ['h1', '.route-description', 'article p:first-of-type', '[data-speakable]'],
+    },
+    // About — объект путешествия как туристическая достопримечательность
+    about: {
+      '@type': 'TouristAttraction',
+      name: route.title,
+      description: cleanDesc,
+      address: {
+        '@type': 'PostalAddress',
+        addressRegion: 'Камчатский край',
+        addressCountry: 'RU',
+      },
+    },
     // Multiple images for better indexing (up to 5)
     ...(route.photos?.length
       ? { image: route.photos.slice(0, 5).map(url => ({
@@ -206,6 +234,7 @@ export default async function RouteOrCategoryPage({ params }: Props) {
         longitude: route.lng,
         address: `${route.title}, Камчатский край, Россия`,
       },
+      hasMap: `https://maps.yandex.ru/?ll=${route.lng},${route.lat}&z=12`,
       contentLocation: {
         '@type': 'Place',
         name: 'Камчатский край',
@@ -229,11 +258,22 @@ export default async function RouteOrCategoryPage({ params }: Props) {
         priceCurrency: 'RUB',
         availability: 'https://schema.org/InStock',
         url: `https://tourhab.ru/routes/${id}`,
+        seller: {
+          '@type': 'TravelAgency',
+          name: 'TourHab',
+          url: 'https://tourhab.ru',
+        },
       },
     } : {}),
     // Difficulty level
-    ...(route.difficulty ? { wheelchairAccessible: route.difficulty === 'easy' } : {}),
-    // Best months for visiting
+    ...(route.difficulty ? {
+      accessibilityFeature: route.difficulty === 'easy'
+        ? ['lowPhysicalRequirements']
+        : route.difficulty === 'hard' || route.difficulty === 'extreme'
+          ? ['highPhysicalRequirements']
+          : ['moderatePhysicalRequirements'],
+    } : {}),
+    // Best months for visiting (availability window)
     ...(route.bestMonths && route.bestMonths.length > 0 ? {
       seasonalEvent: route.bestMonths.map((m) => {
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -245,7 +285,7 @@ export default async function RouteOrCategoryPage({ params }: Props) {
       '@type': 'TravelAgency',
       name: 'TourHab',
       url: 'https://tourhab.ru',
-      sameAs: 'https://tourhab.ru',
+      sameAs: ['https://tourhab.ru', 'https://t.me/kamchatourhub'],
     },
   };
 
