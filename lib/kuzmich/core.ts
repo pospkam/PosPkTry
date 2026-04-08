@@ -486,7 +486,7 @@ export async function handleBookingStep(
     b.participants = n;
     b.step = 'phone';
     await saveBookingFlow(chatId, mode, b, pending);
-    await reply(chatId, 'Ваш номер телефона — оператор свяжется для подтверждения.\n\nПример: <b>+7 900 000-00-00</b>');
+    await reply(chatId, 'Ваш номер телефона для связи?\n\nПример: <b>+7 900 000-00-00</b>');
     return true;
   }
 
