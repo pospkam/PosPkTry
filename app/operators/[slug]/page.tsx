@@ -96,7 +96,7 @@ function extractFeatures(items: unknown[] | null): FeatureItem[] {
 
 function extractContacts(items: unknown[] | null): ContactItem[] {
   if (!items) return [];
-  return items.flatMap(item => {
+  return items.flatMap((item): ContactItem[] => {
     if (typeof item === 'string' && item.trim()) return [{ phone: item.trim() }];
     if (item && typeof item === 'object' && !Array.isArray(item)) {
       const r = item as Record<string, unknown>;
