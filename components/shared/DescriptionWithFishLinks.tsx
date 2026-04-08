@@ -1,10 +1,8 @@
 'use client';
 
-import React, { useState, useMemo, useCallback } from 'react';
-import dynamic from 'next/dynamic';
+import React, { useMemo } from 'react';
+import Link from 'next/link';
 import { FISH_SPECIES, type FishSpecies } from '@/lib/fish-species';
-
-const FishSpeciesModal = dynamic(() => import('./FishSpeciesModal'), { ssr: false });
 
 interface TextChunk {
   text: string;
@@ -12,7 +10,6 @@ interface TextChunk {
 }
 
 function parseTextChunks(text: string): TextChunk[] {
-  // Collect all matches across all species
   const matches: { start: number; end: number; matched: string; species: FishSpecies }[] = [];
 
   for (const species of FISH_SPECIES) {
@@ -22,7 +19,6 @@ function parseTextChunks(text: string): TextChunk[] {
       while ((m = re.exec(text)) !== null) {
         const start = m.index;
         const end = m.index + m[0].length;
-        // Skip if overlaps with an already-found match
         if (!matches.some(e => e.start < end && e.end > start)) {
           matches.push({ start, end, matched: m[0], species });
         }
@@ -46,12 +42,7 @@ function parseTextChunks(text: string): TextChunk[] {
   return chunks;
 }
 
-interface ParagraphProps {
-  text: string;
-  onSpeciesClick: (s: FishSpecies) => void;
-}
-
-function ParagraphWithLinks({ text, onSpeciesClick }: ParagraphProps) {
+function ParagraphWithLinks({ text }: { text: string }) {
   const chunks = useMemo(() => parseTextChunks(text), [text]);
   const hasFish = chunks.some(c => c.species);
 
@@ -61,16 +52,15 @@ function ParagraphWithLinks({ text, onSpeciesClick }: ParagraphProps) {
     <p>
       {chunks.map((chunk, i) =>
         chunk.species ? (
-          <button
+          <Link
             key={i}
-            type="button"
-            onClick={() => onSpeciesClick(chunk.species!)}
+            href={`/fish/${chunk.species.id}`}
             className="font-medium underline decoration-dotted underline-offset-2 transition-colors hover:no-underline"
             style={{ color: chunk.species.color, textDecorationColor: `${chunk.species.color}70` }}
-            title={`Узнать о ${chunk.species.name}`}
+            title={`${chunk.species.name} — ${chunk.species.nameLatin}`}
           >
             {chunk.text}
-          </button>
+          </Link>
         ) : (
           <span key={i}>{chunk.text}</span>
         )
@@ -86,20 +76,12 @@ interface Props {
 }
 
 export default function DescriptionWithFishLinks({ paragraphs, className, style }: Props) {
-  const [activeSpecies, setActiveSpecies] = useState<FishSpecies | null>(null);
-  const handleClose = useCallback(() => setActiveSpecies(null), []);
-
   return (
-    <>
-      <div className={className} style={style}>
-        {paragraphs.map((p, i) => (
-          <ParagraphWithLinks key={i} text={p} onSpeciesClick={setActiveSpecies} />
-        ))}
-      </div>
-
-      {activeSpecies && (
-        <FishSpeciesModal species={activeSpecies} onClose={handleClose} />
-      )}
-    </>
+    <div className={className} style={style}>
+      {paragraphs.map((p, i) => (
+        <ParagraphWithLinks key={i} text={p} />
+      ))}
+    </div>
   );
 }
+

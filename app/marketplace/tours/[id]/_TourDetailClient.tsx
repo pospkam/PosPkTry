@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import BookingFormClient from '@/components/marketplace/BookingFormClient';
 import SafetyWarnings from '@/components/safety/SafetyWarnings';
+import DescriptionWithFishLinks from '@/components/shared/DescriptionWithFishLinks';
 
 /* ─── Labels ─── */
 
@@ -442,9 +443,10 @@ export default function TourDetailClient({ tour, reviews = [] }: { tour: TourFul
           {tour.description && (
             <div>
               <h2 className="ds-h2 mb-3">О туре</h2>
-              <div className="text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap">
-                {tour.description}
-              </div>
+              <DescriptionWithFishLinks
+                paragraphs={tour.description.split('\n').filter(p => p.trim())}
+                className="text-[var(--text-secondary)] leading-relaxed space-y-2"
+              />
             </div>
           )}
 
