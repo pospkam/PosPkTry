@@ -48,6 +48,19 @@ export async function POST(request: NextRequest) {
 }
 
 async function handlePaid(bookingId: bigint, webhook: CloudPaymentsWebhook) {
+  // Проверяем сумму против записи в БД (защита от подмены суммы в webhook)
+  const check = await query(
+    `SELECT final_price, payment_status FROM operator_bookings WHERE id = $1 AND deleted_at IS NULL`,
+    [bookingId]
+  );
+  if (check.rows.length === 0) throw new Error(`Booking ${bookingId} not found`);
+  const booking = check.rows[0] as { final_price: string; payment_status: string };
+  if (booking.payment_status === 'paid') return; // idempotency: уже обработано
+  const expectedAmount = parseFloat(booking.final_price);
+  if (Math.abs(expectedAmount - webhook.Amount) > 1) {
+    throw new Error(`Amount mismatch: expected ${expectedAmount}, got ${webhook.Amount}`);
+  }
+
   await query(
     `UPDATE operator_bookings
      SET payment_status = 'paid',
@@ -55,7 +68,7 @@ async function handlePaid(bookingId: bigint, webhook: CloudPaymentsWebhook) {
          payment_id = $2,
          paid_at = NOW(),
          updated_at = NOW()
-     WHERE id = $1 AND deleted_at IS NULL`,
+     WHERE id = $1 AND deleted_at IS NULL AND payment_status != 'paid'`,
     [bookingId, webhook.TransactionId.toString()]
   );
 

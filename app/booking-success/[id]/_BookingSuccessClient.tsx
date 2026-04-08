@@ -23,6 +23,7 @@ interface BookingData {
   operator_phone: string | null;
   operator_telegram: string | null;
   cp_public_id: string;
+  pdf_token: string;
 }
 
 declare global {
@@ -264,7 +265,7 @@ export default function BookingSuccessClient() {
         {booking && (
           <div className="flex gap-3 mb-3">
             <a
-              href={`/api/hub/bookings/${booking.id}/pdf?type=voucher`}
+              href={`/api/hub/bookings/${booking.id}/pdf?type=voucher&token=${booking.pdf_token}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--ocean)] hover:text-[var(--ocean)] transition-colors"
@@ -273,7 +274,7 @@ export default function BookingSuccessClient() {
               Ваучер (PDF)
             </a>
             <a
-              href={`/api/hub/bookings/${booking.id}/pdf?type=contract`}
+              href={`/api/hub/bookings/${booking.id}/pdf?type=contract&token=${booking.pdf_token}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--ocean)] hover:text-[var(--ocean)] transition-colors"

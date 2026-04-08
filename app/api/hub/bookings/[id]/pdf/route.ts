@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { pool } from '@/lib/db-pool';
 import { generateContractPDF, type ContractData } from '@/lib/pdf/contract-generator';
 import { generateVoucherPDF, type VoucherData } from '@/lib/pdf/voucher-generator';
+import { verifyPdfToken } from '@/lib/pdf/pdf-token';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,14 +16,18 @@ export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const id   = parseInt(params.id, 10);
-  const type = req.nextUrl.searchParams.get('type') ?? 'voucher';
+  const id    = parseInt(params.id, 10);
+  const type  = req.nextUrl.searchParams.get('type') ?? 'voucher';
+  const token = req.nextUrl.searchParams.get('token') ?? '';
 
   if (isNaN(id) || id <= 0) {
     return NextResponse.json({ error: 'Неверный ID' }, { status: 400 });
   }
   if (type !== 'contract' && type !== 'voucher') {
     return NextResponse.json({ error: 'type должен быть contract или voucher' }, { status: 400 });
+  }
+  if (!verifyPdfToken(id, token)) {
+    return NextResponse.json({ error: 'Доступ запрещён' }, { status: 403 });
   }
 
   try {

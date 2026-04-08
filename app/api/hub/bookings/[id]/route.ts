@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
+import { makePdfToken } from '@/lib/pdf/pdf-token';
 
 export const dynamic = 'force-dynamic';
 
@@ -76,6 +77,7 @@ export async function GET(
       operator_phone: row.operator_phone,
       operator_telegram: row.operator_telegram,
       cp_public_id: process.env.CLOUDPAYMENTS_PUBLIC_ID ?? '',
+      pdf_token: makePdfToken(row.id),
     },
   });
 }

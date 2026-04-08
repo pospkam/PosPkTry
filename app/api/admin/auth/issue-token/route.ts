@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { SignJWT } from 'jose';
+import { timingSafeEqual } from 'crypto';
 import { z } from 'zod';
 
 const TokenSchema = z.object({
@@ -35,8 +36,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   }
 
-  // Проверка спец ключа
-  if (parsed.data.secret !== adminSecret) {
+  // Проверка спец ключа (timing-safe против brute-force атаки)
+  const a = Buffer.from(adminSecret);
+  const b = Buffer.from(parsed.data.secret);
+  const valid = a.length === b.length && timingSafeEqual(a, b);
+  if (!valid) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

@@ -221,7 +221,11 @@ const ratelimit = redis
 export async function middleware(request: NextRequest) {
   // Skip rate limiting if Redis is not configured (development mode)
   if (ratelimit) {
-    const ip = request.headers.get('cf-connecting-ip')
+    // x-real-ip — устанавливается nginx (нельзя подделать снаружи)
+    // cf-connecting-ip — устанавливается Cloudflare (надёжно только за CF CDN)
+    // x-forwarded-for — берём первый IP из списка (ближайший к клиенту)
+    const ip = request.headers.get('x-real-ip')
+      || request.headers.get('cf-connecting-ip')
       || request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
       || '127.0.0.1';
     const { success } = await ratelimit.limit(ip);
