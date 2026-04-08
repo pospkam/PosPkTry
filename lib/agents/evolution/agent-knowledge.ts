@@ -67,17 +67,60 @@ export const AGENT_KNOWLEDGE_BASES: Record<string, AgentKnowledgeBase> = {
     agentRole: 'Юрисконсульт',
     color: 'hsl(240, 70%, 60%)',
 
-    mission: 'Защищать компанию от юридических рисков через compliance-анализ и контрактный надзор.',
-    expertise: ['law', 'compliance', 'contracts', 'T&C', 'liability', 'regulations'],
-    respondsTo: ['contract', 'agreement', 'legal', 'compliance', 'regulation', 'risk'],
-    blind_spots: ['marketing', 'technology', 'user_behavior'],
+    mission: 'Защищать платформу от юридических рисков: контрактный надзор, compliance ФЗ-38/152/132/2300-1, аффилиатная маркировка, защита ПД.',
+    expertise: [
+      // Российское право
+      'ФЗ-38 «О рекламе»', 'ФЗ-152 «О персональных данных»',
+      'ФЗ-132 «Об основах туристской деятельности»', 'ФЗ-2300-1 «О защите прав потребителей»',
+      'ФЗ-436 агрегаторы средств размещения 2024', 'ФЗ-63 туристический агрегатор 2024',
+      // Аффилиатное право
+      'ERID маркировка интернет-рекламы', 'ОРД отчётность', 'TravelPayouts compliance',
+      'дисклеймер «Реклама»', 'ИНН рекламодателя', 'токен erid',
+      // ПД и cookies
+      'РКН уведомление операторов ПД', 'cookie-согласие', 'утечка данных уведомление',
+      'автоматизированная обработка ст. 16 152-ФЗ', 'user_ai_memory chat_sessions',
+      // Договоры
+      'публичная оферта', 'агентский договор', 'условия комиссии',
+      'политика отмены бронирования', 'возврат средств потребителю',
+      // Страховая тематика
+      'Cherehapa ВЗР страховка аффилиат дисклеймер',
+      'страховой агент лицензирование ЦБ РФ',
+    ],
+    respondsTo: [
+      'contract', 'agreement', 'legal', 'compliance', 'regulation', 'risk',
+      'erid', 'реклама', 'маркировка', 'ркн', 'персональные данные', 'cookies',
+      'возврат', 'отмена', 'страховка', 'оферта', 'комиссия', 'дисклеймер',
+      'travelpayouts', 'cherehapa', 'агрегатор', 'туроператор',
+    ],
+    blind_spots: ['infrastructure', 'ui_design', 'seo', 'marketing_copy'],
 
-    metrics: ['contract_risky_count', 'compliance_violations', 'liability_incidents', 'dispute_count'],
-    dataSourcesNeeded: ['partners', 'agent_bookings', 'operator_tours', 'agent_route_knowledge'],
+    metrics: [
+      'contract_risky_count',        // туры без политики отмены
+      'compliance_violations',        // операторы без контактов / соглашений
+      'affiliate_disclosure_missing', // аффилиатные блоки без ERID и «Реклама»
+      'pd_rkn_registered',            // статус уведомления в РКН
+      'cookie_banner_active',         // наличие cookie-баннера
+      'liability_incidents',          // инциденты ответственности
+    ],
+    dataSourcesNeeded: [
+      'partners', 'operator_tours', 'operator_bookings', 'operator_settings',
+      'agent_route_knowledge', 'agent_memory',
+    ],
     questionsToAsk: [
-      'Есть ли туры без описания условий отмены?',
-      'Какие операторы работают без подписанного соглашения?',
-      'Есть ли непроверенные юридические риски?',
+      // Договорные
+      'Есть ли туры без описания условий отмены (нарушение ст. 10 ФЗ-132)?',
+      'Какие операторы опубликованы без указания реестрового номера туроператора?',
+      'Есть ли бронирования с отменой без возврата средств (риск ЗОЗПП)?',
+      // Аффилиатное право
+      'Все ли аффилиатные блоки содержат дисклеймер «Реклама» читаемым шрифтом ≥10px?',
+      'Какие аффилиатные ссылки не имеют ERID токена (Aviasales, Ostrovok, Kiwitaxi, Cherehapa)?',
+      'Заполнена ли форма «Advertising Law» в личном кабинете TravelPayouts (marker 402896)?',
+      // ПД
+      'Подано ли уведомление ООО «ПОС-СЕРВИС» в РКН (pd.rkn.gov.ru/operators-registry/)?',
+      'Есть ли cookie-баннер с активным согласием при первом визите?',
+      'Описана ли процедура уведомления об утечке данных (24ч РКН, 72ч пользователи)?',
+      // AI
+      'Есть ли отдельное согласие на автоматизированную обработку данных Кузьмичом (ст. 16 ФЗ-152)?',
     ],
 
     tone: 'cautious',

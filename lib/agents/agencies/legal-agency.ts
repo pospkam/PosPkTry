@@ -1,10 +1,17 @@
 /**
  * LegalAgency — AI-юрист туристической платформы.
  *
- * Анализирует правовые риски, соответствие требованиям и контрактную базу:
- *   legal_contract   — проверка договоров туров (лицензии, ответственность, условия)
- *   legal_compliance — аудит соответствия требованиям (обязательные поля, документы)
- *   legal_risks      — сводка юридических рисков в бронированиях и турах
+ * Интенты:
+ *   legal_contract        — проверка договоров туров (лицензии, ответственность, условия)
+ *   legal_compliance      — аудит соответствия требованиям (обязательные поля, документы)
+ *   legal_risks           — юридические риски в бронированиях за 30 дней
+ *   legal_affiliate_audit — маркировка рекламы: ERID, дисклеймеры, ФЗ-38
+ *   legal_platform_audit  — платформенный compliance: РКН, ПД, ФЗ-132, ФЗ-2300-1
+ *
+ * Правовая база знаний (актуально апрель 2026):
+ *   ФЗ-38 «О рекламе», ФЗ-152 «О персональных данных», ФЗ-132 «О туристской деятельности»,
+ *   ФЗ-2300-1 «О защите прав потребителей», ФЗ-63/436 агрегаторы 2024,
+ *   TravelPayouts Advertising Law (marker 402896), ERID/ОРД требования.
  */
 
 import { pool } from '@/lib/db-pool';
@@ -12,6 +19,75 @@ import { callAIWithModel } from '@/lib/ai/providers';
 import { approvalRequired } from '@/lib/agents/safeguards/approval-required';
 import type { AgentContext } from '../context-hub';
 import type { ChatMessage } from '@/lib/ai/prompts';
+
+// ─── Правовая база знаний (заполняется раз, читается при каждом вызове) ───────
+
+const LEGAL_KNOWLEDGE = `
+## ПРАВОВАЯ БАЗА ЗНАНИЙ — tourhab.ru / ООО «ПОС-СЕРВИС» (ИНН 4101147649)
+Актуально: апрель 2026. Применяй при каждом анализе.
+
+### 1. ФЗ-38 «О рекламе» — ERID и маркировка интернет-рекламы (с 01.09.2022)
+- Каждый рекламный материал в интернете обязан содержать:
+  (а) слово «Реклама» — именно это слово, читаемым шрифтом ≥10px, opacity≥0.7
+  (б) ИНН рекламодателя или его наименование
+  (в) уникальный токен ERID (erid:XXXXX)
+- Аффилиатные ссылки TravelPayouts (marker 402896) = реклама → маркировка ОБЯЗАТЕЛЬНА
+- Штраф по ст. 14.3 КоАП: юрлицо — 200 000–500 000 руб. за каждый блок без маркировки
+- Упрощённый путь: заполнить форму «Advertising Law» в личном кабинете TravelPayouts —
+  сетка берёт на себя ERID и отчётность перед ОРД
+
+### 2. Аффилиатные партнёры — обязательные дисклеймеры
+Блок                    | Рекламодатель            | ИНН           | ERID статус
+------------------------|--------------------------|---------------|------------
+RouteAffiliateBlock     | Aviasales                | 7717545832    | ✅ частично (erid= в URL)
+RouteAffiliateBlock     | Яндекс Путешествия       | 7736207543    | ✅ erid=2VtzqvJmcJA
+RouteAffiliateBlock     | Tripster                 | 7715959153    | ✅ erid= в URL
+InsuranceBlock          | Cherehapa                | 7731337242    | ❌ ОТСУТСТВУЕТ
+FlightsBlock            | Aviasales                | 7717545832    | ❌ не проверено
+HotelsBlock             | Hotellook / Ostrovok     | —             | ❌ не проверено
+TransfersBlock          | Kiwitaxi                 | —             | ❌ не проверено
+- Текущий дисклеймер в RouteAffiliateBlock: font-size 9px, opacity 0.55 → НЕЧИТАЕМ (нарушение)
+- Cherehapa дисклеймер обязан содержать: «Не является страховой консультацией. Условия уточняйте у страховщика»
+
+### 3. ФЗ-152 «О персональных данных»
+- ООО «ПОС-СЕРВИС» ОБЯЗАНО быть в реестре операторов ПД: pd.rkn.gov.ru/operators-registry/
+  Дедлайн подачи: 30.05.2025 (просрочен) → подать немедленно, штраф 100–300 тыс. руб.
+- Данные Кузьмича (chat_sessions, user_ai_memory) = профилирование → нужно ОТДЕЛЬНОЕ согласие (ст. 16)
+- Cookie-баннер с активным согласием обязателен (функциональные / аналитические / маркетинговые)
+- При инциденте (утечка): уведомить РКН в течение 24 часов, пользователей — 72 часа
+- Трансграничная передача: если Яндекс.Метрика пишет данные на зарубежные серверы → указать в политике
+
+### 4. ФЗ-132 «Об основах туристской деятельности» + ФЗ-63/436 (2024)
+- Платформа — агрегатор (не турагент, не туроператор): договор между туристом и партнёром напрямую
+- С 01.09.2025: агрегаторы НЕ вправе размещать средства размещения без классификации (реестр)
+- Партнёр-туроператор обязан: финансовое обеспечение (ст. 17.6 ФЗ-132), ГИС Электронные путёвки
+- Оферта должна явно указывать статус агрегатора (ФЗ-63)
+
+### 5. ФЗ-2300-1 «О защите прав потребителей» — агрегатор (с 2018)
+- Ст. 12 ЗОЗПП: агрегатор несёт ответственность за убытки от недостоверной информации о туре
+- Ст. 9: ИНН, ОГРН, адрес — в общедоступном месте (в футере сайта, не только в соглашении)
+- Ограничение ответственности «до суммы последнего бронирования» — недействительно по ст. 16 ЗОЗПП
+- При отказе потребителя: агрегатор обязан уведомить партнёра (ст. 12 ЗОЗПП)
+- Право жалобы в Роспотребнадзор (rospotrebnadzor.ru) и ФАС (fas.gov.ru) — должно быть в соглашении
+
+### 6. Cherehapa — страховые ссылки
+- Лицензия страхового агента НЕ требуется при аффилиатных ссылках (договор напрямую со страховщиком)
+- Но InsuranceBlock содержит рекомендацию конкретного плана → выглядит как консультация → нужен дисклеймер
+- Обязательный текст: «Реклама. ООО «Лаборатория Страхования Черехапа», ИНН 7731337242.
+  Это не страховая консультация. Условия страхования уточняйте на сайте страховщика.»
+
+### 7. Налоги и расчёты
+- Партнёры на ОСН: счета-фактуры выдаются по запросу в течение 5 рабочих дней
+- Самозанятые партнёры: чек через «Мой налог» до перечисления вознаграждения
+- Акт выполненных работ после каждой выплаты
+- Тарифная комиссия 5–15% (не фиксированная 15%) — закреплена в /legal/commission с 01.04.2026
+
+### 8. Ключевые документы платформы (актуальные редакции)
+- /legal/terms    — Пользовательское соглашение (ред. 01.04.2026)
+- /legal/privacy  — Политика конфиденциальности (ред. 01.04.2026, обновлена 08.04.2026)
+- /legal/offer    — Публичная оферта для партнёров (ред. 01.04.2026, обновлена 08.04.2026)
+- /legal/commission — Условия комиссии (ред. 01.04.2026, обновлена 08.04.2026)
+`.trim();
 
 export interface AgencyResult {
   response: string;
@@ -62,10 +138,12 @@ export class LegalAgency {
     this.tools = context.tools ?? {};
     try {
       switch (intent) {
-        case 'legal_contract':   return await this.reviewContracts();
-        case 'legal_compliance': return await this.auditCompliance();
-        case 'legal_risks':      return await this.assessRisks();
-        default:                 return { response: 'LegalAgency: команда не поддерживается.' };
+        case 'legal_contract':        return await this.reviewContracts();
+        case 'legal_compliance':      return await this.auditCompliance();
+        case 'legal_risks':           return await this.assessRisks();
+        case 'legal_affiliate_audit': return await this.auditAffiliateDisclosure();
+        case 'legal_platform_audit':  return await this.auditPlatformCompliance();
+        default:                      return { response: 'LegalAgency: команда не поддерживается.' };
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -315,10 +393,162 @@ export class LegalAgency {
     return { response: lines.join('\n'), data: { risks: rows } };
   }
 
+  /**
+   * Аудит маркировки аффилиатной рекламы (ФЗ-38, ERID, TravelPayouts).
+   * Не обращается в БД — анализирует известные нарушения на основе правовой базы.
+   */
+  private async auditAffiliateDisclosure(): Promise<AgencyResult> {
+    const affiliateIssues = [
+      { block: 'InsuranceBlock',   partner: 'Cherehapa', inn: '7731337242', erid: false, disclaimer: false },
+      { block: 'FlightsBlock',     partner: 'Aviasales', inn: '7717545832', erid: false, disclaimer: false },
+      { block: 'HotelsBlock',      partner: 'Hotellook', inn: null,         erid: false, disclaimer: false },
+      { block: 'TransfersBlock',   partner: 'Kiwitaxi',  inn: null,         erid: false, disclaimer: false },
+      { block: 'RouteAffiliateBlock', partner: 'Aviasales / Яндекс / Tripster', inn: 'частично', erid: true, disclaimer: true },
+    ];
+
+    const criticalCount = affiliateIssues.filter(i => !i.erid || !i.disclaimer).length;
+    const lines: string[] = [
+      '<b>Аудит маркировки аффилиатной рекламы (ФЗ-38)</b>',
+      '',
+      `Аффилиатных блоков проверено: ${affiliateIssues.length}`,
+      `Критических нарушений (нет ERID или дисклеймера): ${criticalCount}`,
+      `Потенциальный штраф: до ${criticalCount * 500} 000 руб. (по 500 тыс. за каждый блок)`,
+      '',
+      '<b>Статус блоков:</b>',
+    ];
+
+    for (const item of affiliateIssues) {
+      const status = item.erid && item.disclaimer ? '✅' : '❌';
+      const issues: string[] = [];
+      if (!item.erid)       issues.push('нет ERID');
+      if (!item.disclaimer) issues.push('нет дисклеймера «Реклама»');
+      if (!item.inn)        issues.push('не найден ИНН рекламодателя');
+      lines.push(`${status} ${item.block} (${item.partner})${issues.length ? ' — ' + issues.join(', ') : ' — ОК'}`);
+    }
+
+    lines.push('', '<b>Критичный статус:</b>',
+      '• RouteAffiliateBlock: дисклеймер шрифтом 9px, opacity 0.55 — нечитаем (нарушение ФЗ-38)',
+      '• InsuranceBlock: отсутствует любая маркировка — максимальный риск',
+      '',
+      '<b>Требуемые действия:</b>',
+      '1. Заполнить форму «Advertising Law» в ЛК TravelPayouts (marker 402896)',
+      '2. Получить ERID через ОРД для Cherehapa, Kiwitaxi, Hotellook',
+      '3. Увеличить дисклеймер RouteAffiliateBlock до text-xs, opacity-100',
+      '4. Добавить в InsuranceBlock: «Реклама. ООО «Черехапа», ИНН 7731337242. Не является страховой консультацией.»',
+    );
+
+    const aiComment = await this.callAI(
+      `Ты — юрист. Оцени риск: ${criticalCount} из ${affiliateIssues.length} аффилиатных блоков ` +
+      `туристической платформы Камчатки не имеют обязательной маркировки «Реклама» и ERID-токена ` +
+      `согласно ст. 18.1 ФЗ-38. Максимальный штраф: ${criticalCount * 500} 000 руб. ` +
+      `Дай оценку и приоритет устранения в 2 предложениях.`
+    );
+    if (aiComment) lines.push('', aiComment);
+
+    return {
+      response: lines.join('\n'),
+      data: { issues: affiliateIssues, critical_count: criticalCount, max_fine_rub: criticalCount * 500000 },
+    };
+  }
+
+  /**
+   * Платформенный compliance: РКН, ПД, cookie, ФЗ-132, ФЗ-2300-1, AI-профилирование.
+   */
+  private async auditPlatformCompliance(): Promise<AgencyResult> {
+    // Проверяем наличие записей в agent_memory о compliance
+    const { rows: memRows } = await pool.query<{ key: string; value: string }>(`
+      SELECT key, value::text
+      FROM agent_memory
+      WHERE key LIKE 'legal_%' OR key LIKE 'compliance_%'
+      ORDER BY updated_at DESC
+      LIMIT 10
+    `).catch(() => ({ rows: [] }));
+
+    const checklist = [
+      { item: 'Уведомление в РКН (pd.rkn.gov.ru)',            status: 'unknown',  priority: 'critical', law: 'ФЗ-152 ст. 22',    fine: '100–300 тыс. руб.' },
+      { item: 'Cookie-баннер с активным согласием',            status: 'missing',  priority: 'important', law: 'ФЗ-152 ст. 9',    fine: '30–150 тыс. руб.' },
+      { item: 'Процедура уведомления об утечке (24ч/72ч)',     status: 'missing',  priority: 'important', law: 'ФЗ-152 ст. 21',   fine: 'до 300 тыс. руб.' },
+      { item: 'Согласие на AI-профилирование (Кузьмич)',       status: 'partial',  priority: 'important', law: 'ФЗ-152 ст. 16',   fine: 'риск РКН' },
+      { item: 'Реквизиты в футере сайта (ИНН/ОГРН/адрес)',    status: 'missing',  priority: 'important', law: 'ФЗ-2300-1 ст. 9', fine: 'до 10 тыс. руб.' },
+      { item: 'Статус агрегатора прописан в оферте (ФЗ-63)',  status: 'done',     priority: 'done',      law: 'ФЗ-63 2024',      fine: '—' },
+      { item: 'Классификация средств размещения (с 09.2025)',  status: 'pending',  priority: 'warning',   law: 'ФЗ-436 2024',     fine: 'с 01.09.2025' },
+      { item: 'Ограничение ответственности (ЗОЗПП ст. 16)',    status: 'partial',  priority: 'important', law: 'ФЗ-2300-1 ст. 16',fine: 'недействительное условие' },
+      { item: 'Ссылка на реестр туроператоров партнёров',     status: 'missing',  priority: 'warning',   law: 'ФЗ-132 ст. 10',   fine: 'Роспотребнадзор' },
+      { item: 'Тарифная комиссия 5–15% в оферте',             status: 'done',     priority: 'done',      law: 'ГК РФ ст. 435',   fine: '—' },
+    ];
+
+    const critical  = checklist.filter(c => c.priority === 'critical');
+    const important = checklist.filter(c => c.priority === 'important');
+    const warnings  = checklist.filter(c => c.priority === 'warning');
+    const done      = checklist.filter(c => c.priority === 'done');
+
+    const lines: string[] = [
+      '<b>Платформенный compliance-аудит</b>',
+      '',
+      `Всего пунктов: ${checklist.length}`,
+      `Критично: ${critical.length} | Важно: ${important.length} | Предупреждения: ${warnings.length} | ОК: ${done.length}`,
+      '',
+    ];
+
+    if (critical.length > 0) {
+      lines.push('<b>Критично — устранить немедленно:</b>');
+      for (const c of critical) lines.push(`❗ ${c.item} (${c.law}) — штраф: ${c.fine}`);
+      lines.push('');
+    }
+    if (important.length > 0) {
+      lines.push('<b>Важно — устранить в течение 2 недель:</b>');
+      for (const c of important) lines.push(`⚠️ ${c.item} (${c.law}) — ${c.fine}`);
+      lines.push('');
+    }
+    if (warnings.length > 0) {
+      lines.push('<b>Предупреждения:</b>');
+      for (const c of warnings) lines.push(`ℹ️ ${c.item} (${c.law}) — ${c.fine}`);
+      lines.push('');
+    }
+    if (done.length > 0) {
+      lines.push('<b>Закрыто:</b>');
+      for (const c of done) lines.push(`✅ ${c.item}`);
+    }
+
+    if (memRows.length > 0) {
+      lines.push('', '<b>Из памяти агентов (последние записи):</b>');
+      for (const r of memRows.slice(0, 3)) lines.push(`• ${r.key}`);
+    }
+
+    // Предложение: зарегистрироваться в РКН
+    const existingRknProposal = await pool.query(
+      `SELECT id FROM agent_approvals WHERE action_type = 'legal_compliance' AND status = 'pending' LIMIT 1`
+    ).catch(() => ({ rows: [] }));
+
+    if (existingRknProposal.rows.length === 0 && critical.length > 0) {
+      approvalRequired.request({
+        type: 'legal_compliance',
+        description: 'Критично: не подано уведомление в РКН об обработке ПД. Штраф 100–300 тыс. руб. Требуется подача на pd.rkn.gov.ru/operators-registry/notification/',
+        context: { law: 'ФЗ-152 ст. 22', url: 'pd.rkn.gov.ru/operators-registry/notification/', priority: 'critical' },
+        requested_by: 'legal',
+        expires_hours: 48,
+      }).catch(() => null);
+    }
+
+    return {
+      response: lines.join('\n'),
+      data: { checklist, critical_count: critical.length, important_count: important.length },
+    };
+  }
+
   private async callAI(prompt: string): Promise<string | null> {
     try {
-      const fullPrompt = this.briefing ? `${this.briefing}\n\n${prompt}` : prompt;
-      const messages: ChatMessage[] = [{ role: 'user', content: fullPrompt }];
+      const systemPrompt = `Ты — AI-юрист туристической платформы tourhab.ru (ООО «ПОС-СЕРВИС», ИНН 4101147649).
+Ты специализируешься на российском праве в сфере e-commerce, туризма и интернет-рекламы.
+Отвечай коротко, конкретно, на русском. Только факты — без лирики.
+
+${LEGAL_KNOWLEDGE}
+${this.briefing ? '\n## Контекст платформы:\n' + this.briefing : ''}`;
+
+      const messages: ChatMessage[] = [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: prompt },
+      ];
       const { text } = await callAIWithModel(messages, this.preferredModel);
       return text;
     } catch {
