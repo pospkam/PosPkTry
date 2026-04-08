@@ -7,6 +7,7 @@ import Script from 'next/script';
 import {
   CheckCircle, Copy, Home, Calendar, Users, Phone,
   MessageSquare, Loader2, AlertCircle, CreditCard, BadgeCheck, ExternalLink,
+  FileText, Ticket,
 } from 'lucide-react';
 
 interface BookingData {
@@ -259,6 +260,30 @@ export default function BookingSuccessClient() {
             </div>
           )}
         </div>
+
+        {/* PDF Documents */}
+        {booking && (
+          <div className="flex gap-3 mb-3">
+            <a
+              href={`/api/hub/bookings/${booking.id}/pdf?type=voucher`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--ocean)] hover:text-[var(--ocean)] transition-colors"
+            >
+              <Ticket size={15} />
+              Ваучер (PDF)
+            </a>
+            <a
+              href={`/api/hub/bookings/${booking.id}/pdf?type=contract`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--ocean)] hover:text-[var(--ocean)] transition-colors"
+            >
+              <FileText size={15} />
+              Договор (PDF)
+            </a>
+          </div>
+        )}
 
         {/* CTAs */}
         <div className="flex flex-col gap-3">
