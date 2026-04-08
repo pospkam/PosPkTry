@@ -43,7 +43,7 @@ export const FISH_SPECIES: FishSpecies[] = [
     patterns: [/нерк[аыуией]/gi, /нерку/gi],
   },
   {
-    id: 'kizhuч',
+    id: 'kizuch',
     name: 'Кижуч',
     nameLatin: 'Oncorhynchus kisutch',
     color: '#2980B9',

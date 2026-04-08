@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect } from 'react';
-import { X, Fish, Calendar, Trophy, Target, MapPin, Sparkles } from 'lucide-react';
+import Link from 'next/link';
+import { X, Fish, Calendar, Trophy, Target, MapPin, Sparkles, ArrowRight } from 'lucide-react';
 import { type FishSpecies } from '@/lib/fish-species';
 
 const MONTH_SHORT = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
@@ -153,6 +154,18 @@ export default function FishSpeciesModal({ species, onClose }: Props) {
               </p>
             </div>
           </div>
+
+          {/* Ссылка на полную страницу */}
+          <Link
+            href={`/fish/${species.id}`}
+            onClick={onClose}
+            className="flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg border border-[var(--border)] hover:border-[var(--accent)]/40 hover:bg-[var(--bg-hover)] transition-all duration-150 group"
+          >
+            <span className="text-sm font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
+              Полная страница — {species.name}
+            </span>
+            <ArrowRight className="w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors flex-shrink-0" />
+          </Link>
         </div>
       </div>
     </div>
