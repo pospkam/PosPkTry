@@ -4,7 +4,7 @@ import PageShell from '@/components/shared/PageShell';
 
 export const metadata = {
   title: 'Условия комиссионного вознаграждения | Tourhab',
-  description: 'Подробные условия комиссии платформы Tourhab для партнеров',
+  description: 'Подробные условия комиссии платформы Tourhab для партнёров',
 };
 
 export default function CommissionPage() {
@@ -18,63 +18,75 @@ export default function CommissionPage() {
         </Link>
 
         <h1 className="text-3xl font-bold mb-8">Условия комиссионного вознаграждения</h1>
-        
+
         <div className="prose prose-invert max-w-none space-y-6 text-[var(--text-secondary)]">
-          <p className="text-sm text-[var(--text-muted)]">Действует с 1 января 2025 г.</p>
+          <p className="text-sm text-[var(--text-muted)]">Действует с 1 апреля 2026 г. Является неотъемлемой частью{' '}
+            <Link href="/legal/offer" className="text-[var(--ocean)] hover:underline">Публичной оферты</Link>.
+          </p>
 
           <div className="bg-[var(--accent)]/10 border border-[var(--accent)]/30 rounded-xl p-6 my-8">
-            <h2 className="text-2xl font-bold text-[var(--accent)] mb-2">Комиссия: 10%</h2>
-            <p className="text-[var(--text-secondary)]">
-              Единая ставка комиссии для всех категорий услуг и всех партнеров.
-            </p>
+            <h2 className="text-2xl font-bold text-[var(--accent)] mb-3">Итоговое удержание: 18%</h2>
+            <div className="space-y-1 text-sm">
+              <p>— Комиссия Платформы: <strong>15%</strong></p>
+              <p>— Обработка платежей (CloudPayments): <strong>3%</strong></p>
+              <p className="mt-3 text-[var(--text-primary)] font-semibold">Партнёр получает: 82% от суммы бронирования</p>
+            </div>
           </div>
 
           <section>
-            <h2 className="text-xl font-semibold text-[var(--text-primary)] mt-8 mb-4">Что включено в комиссию</h2>
+            <h2 className="text-xl font-semibold text-[var(--text-primary)] mt-8 mb-4">Что включено в комиссию Платформы (15%)</h2>
             <div className="grid md:grid-cols-2 gap-4">
               <div className="bg-[var(--bg-card)] rounded-xl p-4">
-                <h3 className="font-semibold text-[var(--text-primary)] mb-2">Размещение</h3>
-                <p className="text-sm">Публикация ваших услуг на платформе с SEO-оптимизацией</p>
+                <h3 className="font-semibold text-[var(--text-primary)] mb-2">Размещение и SEO</h3>
+                <p className="text-sm">Публикация услуг с SEO-оптимизацией в Яндекс и Google</p>
               </div>
               <div className="bg-[var(--bg-card)] rounded-xl p-4">
-                <h3 className="font-semibold text-[var(--text-primary)] mb-2">Платежи</h3>
-                <p className="text-sm">Прием онлайн-платежей от клиентов (карты, СБП)</p>
-              </div>
-              <div className="bg-[var(--bg-card)] rounded-xl p-4">
-                <h3 className="font-semibold text-[var(--text-primary)] mb-2">CRM</h3>
-                <p className="text-sm">Личный кабинет с управлением бронированиями</p>
-              </div>
-              <div className="bg-[var(--bg-card)] rounded-xl p-4">
-                <h3 className="font-semibold text-[var(--text-primary)] mb-2">Поддержка</h3>
-                <p className="text-sm">Техническая поддержка и помощь клиентам</p>
+                <h3 className="font-semibold text-[var(--text-primary)] mb-2">CRM и бронирования</h3>
+                <p className="text-sm">Личный кабинет, управление бронированиями, уведомления</p>
               </div>
               <div className="bg-[var(--bg-card)] rounded-xl p-4">
                 <h3 className="font-semibold text-[var(--text-primary)] mb-2">Маркетинг</h3>
-                <p className="text-sm">Продвижение в поисковых системах и соцсетях</p>
+                <p className="text-sm">Продвижение в социальных сетях, партнёрских каналах и рассылках</p>
+              </div>
+              <div className="bg-[var(--bg-card)] rounded-xl p-4">
+                <h3 className="font-semibold text-[var(--text-primary)] mb-2">AI-ассистент Кузьмич</h3>
+                <p className="text-sm">Интеллектуальные рекомендации туров пользователям платформы</p>
               </div>
               <div className="bg-[var(--bg-card)] rounded-xl p-4">
                 <h3 className="font-semibold text-[var(--text-primary)] mb-2">Аналитика</h3>
-                <p className="text-sm">Статистика бронирований и финансовые отчеты</p>
+                <p className="text-sm">Финансовые отчёты, статистика бронирований, сравнение с рынком</p>
+              </div>
+              <div className="bg-[var(--bg-card)] rounded-xl p-4">
+                <h3 className="font-semibold text-[var(--text-primary)] mb-2">Поддержка</h3>
+                <p className="text-sm">Техническая поддержка партнёра и сопровождение клиентов</p>
               </div>
             </div>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-[var(--text-primary)] mt-8 mb-4">Пример расчета</h2>
+            <h2 className="text-xl font-semibold text-[var(--text-primary)] mt-8 mb-4">Пример расчёта</h2>
             <div className="bg-[var(--bg-card)] rounded-xl p-6">
               <table className="w-full text-sm">
                 <tbody>
                   <tr className="border-b border-[var(--border)]">
-                    <td className="py-3">Стоимость тура</td>
+                    <td className="py-3">Стоимость тура (оплата клиентом)</td>
                     <td className="py-3 text-right font-semibold">25 000 ₽</td>
                   </tr>
                   <tr className="border-b border-[var(--border)]">
-                    <td className="py-3">Комиссия платформы (10%)</td>
-                    <td className="py-3 text-right text-red-400">- 2 500 ₽</td>
+                    <td className="py-3 text-[var(--text-muted)]">Комиссия Платформы (15%)</td>
+                    <td className="py-3 text-right" style={{ color: 'var(--danger)' }}>−3 750 ₽</td>
+                  </tr>
+                  <tr className="border-b border-[var(--border)]">
+                    <td className="py-3 text-[var(--text-muted)]">Эквайринг CloudPayments (3%)</td>
+                    <td className="py-3 text-right" style={{ color: 'var(--danger)' }}>−750 ₽</td>
+                  </tr>
+                  <tr className="border-b border-[var(--border)]">
+                    <td className="py-3 text-[var(--text-muted)]">Итого удержано (18%)</td>
+                    <td className="py-3 text-right text-sm" style={{ color: 'var(--danger)' }}>−4 500 ₽</td>
                   </tr>
                   <tr>
-                    <td className="py-3 font-semibold text-[var(--text-primary)]">Вы получаете</td>
-                    <td className="py-3 text-right font-bold text-green-400 text-lg">22 500 ₽</td>
+                    <td className="py-3 font-semibold text-[var(--text-primary)]">Партнёр получает (82%)</td>
+                    <td className="py-3 text-right font-bold text-lg" style={{ color: 'var(--success)' }}>20 500 ₽</td>
                   </tr>
                 </tbody>
               </table>
@@ -84,55 +96,68 @@ export default function CommissionPage() {
           <section>
             <h2 className="text-xl font-semibold text-[var(--text-primary)] mt-8 mb-4">Порядок выплат</h2>
             <ul className="list-disc pl-6 space-y-2">
-              <li>Выплаты производятся на расчетный счет, указанный при регистрации</li>
-              <li>Срок выплаты — 3 рабочих дня после оказания услуги</li>
-              <li>Минимальная сумма выплаты — 1 000 ₽</li>
-              <li>При сумме менее 1 000 ₽ — накопление до следующей выплаты</li>
-              <li>Выплаты производятся по будням</li>
+              <li>Выплаты производятся на расчётный счёт, указанный при регистрации</li>
+              <li>Срок выплаты — не более 3 рабочих дней после подтверждения факта оказания услуги</li>
+              <li>Минимальная сумма единовременной выплаты — 1 000 ₽; при меньшем остатке средства
+                  накапливаются до следующего цикла</li>
+              <li>Выплаты осуществляются в рабочие дни (пн–пт, кроме праздников)</li>
+              <li>После каждой выплаты Партнёру направляется акт выполненных работ на электронную почту</li>
             </ul>
           </section>
 
           <section>
             <h2 className="text-xl font-semibold text-[var(--text-primary)] mt-8 mb-4">Особые условия</h2>
-            
-            <h3 className="font-semibold text-[var(--text-primary)] mt-4 mb-2">Отмена бронирования клиентом</h3>
+
+            <h3 className="font-semibold text-[var(--text-primary)] mt-4 mb-2">Отмена по инициативе клиента</h3>
             <p>
-              При отмене бронирования клиентом возврат производится согласно вашей политике отмены. 
-              Комиссия с возвращенной суммы не удерживается.
+              Возврат производится согласно политике отмены, установленной Партнёром для конкретной услуги.
+              Комиссия Платформы с возвращённой суммы не удерживается.
             </p>
 
-            <h3 className="font-semibold text-[var(--text-primary)] mt-4 mb-2">Отмена бронирования партнером</h3>
+            <h3 className="font-semibold text-[var(--text-primary)] mt-4 mb-2">Отмена по инициативе Партнёра</h3>
             <p>
-              При отмене по вашей инициативе клиенту возвращается 100% стоимости. 
-              Комиссия в этом случае не взимается, но систематические отмены могут 
-              привести к снижению рейтинга.
+              При отмене подтверждённого бронирования по инициативе Партнёра клиенту возвращается 100%
+              стоимости. Комиссия в этом случае не взимается. Систематические отмены (более 10% бронирований
+              за квартал) влекут снижение рейтинга и могут служить основанием для ограничения функционала
+              аккаунта.
+            </p>
+
+            <h3 className="font-semibold text-[var(--text-primary)] mt-4 mb-2">Форс-мажор</h3>
+            <p>
+              При отмене тура вследствие обстоятельств непреодолимой силы (стихийные бедствия,
+              запрет прохода в зону, предписание МЧС) Партнёр обязан уведомить Платформу незамедлительно.
+              Возврат средств клиентам производится в полном объёме. Комиссия не взимается.
             </p>
 
             <h3 className="font-semibold text-[var(--text-primary)] mt-4 mb-2">Спорные ситуации</h3>
             <p>
-              При возникновении споров с клиентами решение принимается индивидуально. 
-              Платформа выступает посредником в разрешении конфликтов.
+              При претензиях клиента к качеству услуги Платформа выступает посредником. Решение принимается
+              индивидуально на основе доказательств сторон. Платформа вправе удержать спорную сумму до
+              разрешения спора, но не более 30 рабочих дней.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-[var(--text-primary)] mt-8 mb-4">Налогообложение</h2>
+            <h2 className="text-xl font-semibred text-[var(--text-primary)] mt-8 mb-4">Налогообложение</h2>
             <p>
-              Партнер самостоятельно уплачивает налоги с полученного дохода в соответствии 
-              с применяемой системой налогообложения.
+              Партнёр самостоятельно исчисляет и уплачивает налоги с полученного дохода в соответствии
+              с применяемой им системой налогообложения (ОСНО, УСН, ПСН и др.).
             </p>
             <p>
-              Платформа предоставляет акты выполненных работ и счета-фактуры (для плательщиков НДС).
+              Платформа предоставляет Партнёрам—плательщикам НДС счета-фактуры и акты выполненных работ
+              по запросу в течение 5 рабочих дней. Для ОСНО комиссия Платформы учитывается как расход
+              по агентскому вознаграждению.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-[var(--text-primary)] mt-8 mb-4">Вопросы</h2>
-            <p>
-              По вопросам комиссии и выплат обращайтесь:<br />
-              Email: finance@kamhub.ru<br />
-              ООО «ПОС-СЕРВИС» (ИНН 4101147649)<br />
-              683024, Камчатский край, г. Петропавловск-Камчатский, пр-кт 50 лет Октября, д. 17/1
+            <h2 className="text-xl font-semibold text-[var(--text-primary)] mt-8 mb-4">Контакты по финансовым вопросам</h2>
+            <p className="font-mono text-sm leading-7">
+              ООО «Трей», ИНН 4100053571, ОГРН 1254100000175<br />
+              683024, Камчатский край, г. Петропавловск-Камчатский<br />
+              Генеральный директор: Асеев Андрей Валерьевич<br />
+              Финансовые вопросы: <a href="mailto:finance@tourhab.ru" className="text-[var(--ocean)] hover:underline">finance@tourhab.ru</a><br />
+              Вопросы сотрудничества: <a href="mailto:partners@tourhab.ru" className="text-[var(--ocean)] hover:underline">partners@tourhab.ru</a>
             </p>
           </section>
         </div>

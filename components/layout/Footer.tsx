@@ -47,7 +47,7 @@ export function Footer() {
               Туристическая платформа Камчатки. Туры, трансферы, гиды — всё в одном месте.
             </p>
             <p className="text-xs text-[var(--text-muted)] mt-4">
-              support@kamhub.ru
+              support@tourhab.ru
             </p>
             <a
               href="https://t.me/kamchatka_real"
@@ -103,7 +103,7 @@ export function Footer() {
         {/* Bottom bar */}
         <div className="mt-10 pt-6 border-t border-[var(--border)] flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-[var(--text-muted)]">
-            © {new Date().getFullYear()} ООО «ПОС-СЕРВИС» (ИНН 4101147649). Все права защищены.
+            © {new Date().getFullYear()} ООО «Трей» (ИНН 4100053571). Все права защищены.
           </p>
           <p className="text-xs text-[var(--text-muted)]">
             683024, Камчатский край, г. Петропавловск-Камчатский
