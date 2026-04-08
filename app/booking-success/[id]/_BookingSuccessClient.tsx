@@ -4,7 +4,10 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Script from 'next/script';
-import { CheckCircle, Copy, Home, Calendar, Users, Phone, MessageSquare, Loader2, AlertCircle, CreditCard, BadgeCheck } from 'lucide-react';
+import {
+  CheckCircle, Copy, Home, Calendar, Users, Phone,
+  MessageSquare, Loader2, AlertCircle, CreditCard, BadgeCheck, ExternalLink,
+} from 'lucide-react';
 
 interface BookingData {
   id: number;
@@ -37,15 +40,15 @@ declare global {
 }
 
 export default function BookingSuccessClient() {
-  const params = useParams();
+  const params    = useParams();
   const bookingId = parseInt(params.id as string, 10);
 
-  const [booking, setBooking]     = useState<BookingData | null>(null);
-  const [loading, setLoading]     = useState(true);
-  const [copied, setCopied]       = useState(false);
-  const [cpReady, setCpReady]     = useState(false);
-  const [paying, setPaying]       = useState(false);
-  const [paid, setPaid]           = useState(false);
+  const [booking,  setBooking]  = useState<BookingData | null>(null);
+  const [loading,  setLoading]  = useState(true);
+  const [copied,   setCopied]   = useState(false);
+  const [cpReady,  setCpReady]  = useState(false);
+  const [paying,   setPaying]   = useState(false);
+  const [paid,     setPaid]     = useState(false);
 
   useEffect(() => {
     void (async () => {
@@ -68,7 +71,6 @@ export default function BookingSuccessClient() {
   const handlePay = useCallback(() => {
     if (!booking || !window.cp || !cpReady) return;
     setPaying(true);
-
     const widget = new window.cp.CloudPayments();
     widget.charge(
       {
@@ -88,142 +90,157 @@ export default function BookingSuccessClient() {
     );
   }, [booking, cpReady]);
 
-  const formatDate = (d: string) =>
+  const fmtDate  = (d: string) =>
     new Date(d).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
-
-  const formatPrice = (p: number) =>
+  const fmtPrice = (p: number) =>
     p.toLocaleString('ru-RU') + ' ₽';
 
-  const needsPayment = booking && !paid &&
-    booking.payment_status !== 'paid' &&
-    ['new', 'pending_payment', 'confirmed'].includes(booking.status);
+  const alreadyPaid  = paid || booking?.payment_status === 'paid';
+  const needsPayment = booking && !alreadyPaid &&
+    ['new', 'pending_payment', 'confirmed'].includes(booking.status ?? '');
+
+  // Определяем: открыто ли в Telegram WebView (блокирует попапы)
+  const isInTgWebView = typeof navigator !== 'undefined' &&
+    /Telegram/i.test(navigator.userAgent);
 
   return (
-    <div className="ds-page min-h-screen flex items-center justify-center py-12">
+    <div className="ds-page min-h-[100dvh] flex items-start justify-center py-6 sm:py-12 px-4">
       <Script
         src="https://widget.cloudpayments.ru/bundles/cloudpayments.js"
         onLoad={() => setCpReady(true)}
         strategy="afterInteractive"
       />
 
-      <div className="max-w-2xl w-full">
+      <div className="w-full max-w-lg">
 
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-block mb-6">
-            {paid
-              ? <BadgeCheck size={64} className="text-[var(--success)]" />
-              : <CheckCircle size={64} className="text-[var(--success)]" />
+        <div className="text-center mb-6">
+          <div className="inline-block mb-4">
+            {alreadyPaid
+              ? <BadgeCheck size={56} className="text-[var(--success)]" />
+              : <CheckCircle size={56} className="text-[var(--success)]" />
             }
           </div>
-          <h1 className="ds-h1 mb-2">
-            {paid ? 'Оплата прошла!' : 'Бронирование принято!'}
+          <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-1"
+            style={{ fontFamily: 'var(--font-playfair)' }}>
+            {alreadyPaid ? 'Оплата прошла!' : 'Бронирование принято'}
           </h1>
-          <p className="text-[var(--text-secondary)] text-lg">
-            {paid
+          <p className="text-sm text-[var(--text-secondary)]">
+            {alreadyPaid
               ? 'Оператор получил уведомление и свяжется с вами.'
-              : 'Оплатите тур — оператор получит уведомление автоматически.'}
+              : 'Оплатите тур — оператор будет уведомлён автоматически.'}
           </p>
         </div>
 
-        {/* Booking details card */}
-        <div className="ds-card p-8 mb-6">
+        {/* Card */}
+        <div className="ds-card p-5 sm:p-7 mb-5">
           {loading ? (
-            <div className="flex items-center justify-center py-8">
+            <div className="flex items-center justify-center py-10">
               <Loader2 className="w-6 h-6 animate-spin text-[var(--accent)]" />
             </div>
           ) : !booking ? (
             <div className="flex items-center gap-3 text-[var(--text-secondary)]">
               <AlertCircle className="w-5 h-5 shrink-0" />
-              <span className="text-sm">Не удалось загрузить детали. Номер брони: <b>#{bookingId}</b></span>
+              <span className="text-sm">Не удалось загрузить данные. Номер: <b>#{bookingId}</b></span>
             </div>
           ) : (
-            <div className="space-y-5">
+            <div className="space-y-4">
+
               {/* Booking number */}
-              <div className="flex items-center justify-between pb-5 border-b border-[var(--border)]">
+              <div className="flex items-center justify-between pb-4 border-b border-[var(--border)]">
                 <div>
-                  <p className="text-xs text-[var(--text-muted)] mb-1">Номер бронирования</p>
+                  <p className="text-[11px] text-[var(--text-muted)] mb-0.5">Номер брони</p>
                   <p className="text-2xl font-bold text-[var(--accent)]">#{booking.id}</p>
                 </div>
-                <button
-                  onClick={handleCopy}
-                  className="flex items-center gap-2 text-[var(--ocean)] hover:text-[var(--accent)] text-sm transition-colors"
-                >
-                  <Copy size={16} />
-                  {copied ? 'Скопировано' : 'Скопировать'}
+                <button onClick={handleCopy}
+                  className="flex items-center gap-1.5 text-xs text-[var(--ocean)] hover:text-[var(--accent)] transition-colors">
+                  <Copy size={14} />
+                  {copied ? 'Скопировано' : 'Копировать'}
                 </button>
               </div>
 
               {/* Tour */}
-              <div className="pb-5 border-b border-[var(--border)]">
-                <p className="text-xs text-[var(--text-muted)] mb-1">Тур</p>
-                <p className="font-semibold text-[var(--text-primary)] text-lg">{booking.tour_title}</p>
+              <div className="pb-4 border-b border-[var(--border)]">
+                <p className="text-[11px] text-[var(--text-muted)] mb-0.5">Тур</p>
+                <p className="font-semibold text-[var(--text-primary)]">{booking.tour_title}</p>
               </div>
 
               {/* Date + participants */}
-              <div className="grid grid-cols-2 gap-4 pb-5 border-b border-[var(--border)]">
-                <div className="flex items-start gap-3">
+              <div className="grid grid-cols-2 gap-3 pb-4 border-b border-[var(--border)]">
+                <div className="flex items-start gap-2">
                   <Calendar className="w-4 h-4 text-[var(--accent)] mt-0.5 shrink-0" />
                   <div>
-                    <p className="text-xs text-[var(--text-muted)] mb-1">Дата</p>
-                    <p className="text-sm font-medium text-[var(--text-primary)]">{formatDate(booking.booking_date)}</p>
+                    <p className="text-[11px] text-[var(--text-muted)]">Дата</p>
+                    <p className="text-sm font-medium text-[var(--text-primary)]">{fmtDate(booking.booking_date)}</p>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
+                <div className="flex items-start gap-2">
                   <Users className="w-4 h-4 text-[var(--accent)] mt-0.5 shrink-0" />
                   <div>
-                    <p className="text-xs text-[var(--text-muted)] mb-1">Участников</p>
+                    <p className="text-[11px] text-[var(--text-muted)]">Человек</p>
                     <p className="text-sm font-medium text-[var(--text-primary)]">{booking.participants_count}</p>
                   </div>
                 </div>
               </div>
 
               {/* Price */}
-              <div className={needsPayment ? '' : 'pb-5 border-b border-[var(--border)]'}>
-                <p className="text-xs text-[var(--text-muted)] mb-1">Сумма</p>
-                <p className="text-xl font-bold text-[var(--text-primary)]">{formatPrice(booking.total_price)}</p>
+              <div className={needsPayment ? '' : 'pb-4 border-b border-[var(--border)]'}>
+                <p className="text-[11px] text-[var(--text-muted)] mb-0.5">Сумма</p>
+                <p className="text-2xl font-bold text-[var(--text-primary)]">{fmtPrice(booking.total_price)}</p>
               </div>
 
-              {/* Payment button */}
+              {/* Pay button */}
               {needsPayment && booking.cp_public_id && (
-                <div className="pt-2">
+                <div className="pt-1 space-y-2">
+                  {/* Telegram WebView warning */}
+                  {isInTgWebView && (
+                    <a
+                      href={`https://tourhab.ru/booking-success/${booking.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] transition-colors"
+                    >
+                      <ExternalLink size={14} />
+                      Открыть в браузере для оплаты
+                    </a>
+                  )}
                   <button
                     onClick={handlePay}
                     disabled={!cpReady || paying}
-                    className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-lg font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                    className="w-full flex items-center justify-center gap-2 px-5 py-4 rounded-lg font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50 text-base"
                     style={{ background: 'var(--accent)' }}
                   >
                     {paying
                       ? <><Loader2 className="w-4 h-4 animate-spin" /> Обработка...</>
                       : !cpReady
                         ? <><Loader2 className="w-4 h-4 animate-spin" /> Загрузка...</>
-                        : <><CreditCard className="w-4 h-4" /> Оплатить {formatPrice(booking.total_price)}</>
+                        : <><CreditCard className="w-4 h-4" /> Оплатить {fmtPrice(booking.total_price)}</>
                     }
                   </button>
-                  <p className="text-[10px] text-center mt-2" style={{ color: 'var(--text-muted)' }}>
+                  <p className="text-[11px] text-center text-[var(--text-muted)]">
                     Безопасная оплата картой · CloudPayments
                   </p>
                 </div>
               )}
 
-              {/* Already paid */}
-              {(paid || booking.payment_status === 'paid') && (
+              {/* Paid badge */}
+              {alreadyPaid && (
                 <div className="flex items-center gap-2 px-4 py-3 rounded-lg"
-                  style={{ background: 'var(--success)', opacity: 0.15 }}>
-                  <BadgeCheck className="w-4 h-4 shrink-0" style={{ color: 'var(--success)' }} />
-                  <p className="text-sm font-medium" style={{ color: 'var(--success)' }}>Оплачено</p>
+                  style={{ background: 'color-mix(in srgb, var(--success) 15%, transparent)' }}>
+                  <BadgeCheck className="w-4 h-4 shrink-0 text-[var(--success)]" />
+                  <p className="text-sm font-semibold text-[var(--success)]">Оплачено</p>
                 </div>
               )}
 
-              {/* Operator contacts */}
+              {/* Operator */}
               {(booking.operator_phone || booking.operator_telegram) && (
-                <div className="pt-2 border-t border-[var(--border)]">
-                  <p className="text-xs text-[var(--text-muted)] mb-3">Оператор</p>
-                  <p className="font-medium text-[var(--text-primary)] mb-2">{booking.operator_name}</p>
+                <div className="pt-3 border-t border-[var(--border)]">
+                  <p className="text-[11px] text-[var(--text-muted)] mb-2">Оператор</p>
+                  <p className="text-sm font-medium text-[var(--text-primary)] mb-2">{booking.operator_name}</p>
                   <div className="flex flex-wrap gap-3">
                     {booking.operator_phone && (
                       <a href={`tel:${booking.operator_phone}`}
-                        className="flex items-center gap-2 text-sm text-[var(--ocean)] hover:text-[var(--accent)] transition-colors">
+                        className="flex items-center gap-1.5 text-sm text-[var(--ocean)] hover:text-[var(--accent)] transition-colors">
                         <Phone className="w-4 h-4" />
                         {booking.operator_phone}
                       </a>
@@ -231,9 +248,9 @@ export default function BookingSuccessClient() {
                     {booking.operator_telegram && (
                       <a href={`https://t.me/${booking.operator_telegram.replace('@', '')}`}
                         target="_blank" rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-sm text-[var(--ocean)] hover:text-[var(--accent)] transition-colors">
+                        className="flex items-center gap-1.5 text-sm text-[var(--ocean)] hover:text-[var(--accent)] transition-colors">
                         <MessageSquare className="w-4 h-4" />
-                        {booking.operator_telegram}
+                        Telegram
                       </a>
                     )}
                   </div>
@@ -243,18 +260,19 @@ export default function BookingSuccessClient() {
           )}
         </div>
 
-        {/* CTA */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Link href="/hub/tourist/bookings" className="flex-1">
+        {/* CTAs */}
+        <div className="flex flex-col gap-3">
+          <Link href="/hub/tourist/bookings">
             <button className="ds-btn ds-btn-primary w-full">Мои бронирования</button>
           </Link>
-          <Link href="/marketplace" className="flex-1">
+          <Link href="/marketplace">
             <button className="ds-btn ds-btn-secondary w-full flex items-center justify-center gap-2">
               <Home size={16} />
               В каталог
             </button>
           </Link>
         </div>
+
       </div>
     </div>
   );
