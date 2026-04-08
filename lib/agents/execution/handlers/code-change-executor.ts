@@ -194,6 +194,20 @@ export async function executeCodeChange(task: ExecutionTask): Promise<ExecutionR
       throw new Error('AI вернул пустой или слишком короткий файл');
     }
 
+    // ── Guard: reject markdown contamination ──────────────────────────────────
+    // AI sometimes wraps output in ```typescript ... ``` code fences which
+    // would make the file invalid TypeScript and break the build.
+    const stripped = newContent.trimStart();
+    if (stripped.startsWith('```')) {
+      throw new Error('AI обернул ответ в markdown code fence (```). Файл не был создан. Нужна повторная попытка с другим промптом.');
+    }
+    // Also reject if large portion of the original code went missing (>40% shorter)
+    if (currentContent.length > 500 && newContent.length < currentContent.length * 0.6) {
+      throw new Error(
+        `AI удалил слишком много кода: было ${currentContent.length} символов, стало ${newContent.length} (${Math.round(newContent.length / currentContent.length * 100)}%). Отклонено как деструктивное изменение.`
+      );
+    }
+
     if (newContent.trim() === currentContent.trim()) {
       return {
         success:              true,
@@ -231,9 +245,6 @@ export async function executeCodeChange(task: ExecutionTask): Promise<ExecutionR
     changes.push(`Коммит: "${commitMsg}"`);
 
     // ── Step 6: Create Pull Request ────────────────────────────────────────────
-    const owner = process.env.GITHUB_OWNER ?? 'pospkam';
-    const repo  = process.env.GITHUB_REPO  ?? 'PosPkTry';
-
     const pr = await ghPost<{ number: number; html_url: string }>('/pulls', {
       title: `[AI vibe_coder] ${fullDescription.substring(0, 72)}`,
       body:  [
