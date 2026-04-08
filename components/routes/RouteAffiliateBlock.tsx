@@ -4,9 +4,7 @@ import { ExternalLink, Plane, Hotel, Shield, Car, Map, Home, Compass, Navigation
 import { trackLeadEvent, LEAD_EVENTS } from '@/lib/analytics/lead-tracking';
 
 const MARKER = '402896';
-// Яндекс Путешествия — отдельная партнёрка (partner.yandex.ru), не TP.
-// clid подставить после регистрации в Яндекс.Партнёр.
-const YANDEX_CLID = process.env.NEXT_PUBLIC_YANDEX_TRAVEL_CLID ?? '';
+const TP_SUBID = `c263579cf498437d8ef255a43-${MARKER}`;
 
 interface Service {
   key: string;
@@ -33,7 +31,7 @@ const SERVICES: Service[] = [
     icon: Navigation,
     label: 'Яндекс Путешествия',
     desc: 'Отели, билеты, туры — всё в одном',
-    url: `https://travel.yandex.ru/hotels/petropavlovsk-kamchatsky/${YANDEX_CLID ? `?clid=${YANDEX_CLID}` : ''}`,
+    url: `https://travel.yandex.ru/hotels/petropavlovsk-kamchatsky/?affiliate_clid=4910087&affiliate_vid=${MARKER}&erid=2VtzqvFodjU&travelpayouts_uid=${TP_SUBID}&utm_campaign=tourhab.ru&utm_medium=cpa&utm_source=travelpayouts`,
     color: 'var(--accent)',
   },
   {
@@ -66,7 +64,7 @@ const SERVICES: Service[] = [
     icon: Map,
     label: 'Экскурсии на Камчатке',
     desc: 'Tripster — авторские туры от местных',
-    url: `https://tripster.ru/kamchatka/?partner=${MARKER}`,
+    url: `https://experience.tripster.ru/kamchatka/?erid=2VtzqvHHd1p&exp_partner=travelpayouts&exp_subpartner=${TP_SUBID}&partner=${MARKER}&utm_campaign=affiliates&utm_medium=link&utm_source=travelpayouts`,
     color: 'var(--ocean)',
   },
   {
@@ -82,7 +80,7 @@ const SERVICES: Service[] = [
     icon: Car,
     label: 'Трансфер из аэропорта',
     desc: 'Kiwitaxi — бронирование заранее',
-    url: `https://kiwitaxi.ru/PKC?aff_id=${MARKER}`,
+    url: `https://kiwitaxi.ru/?aff_id=${MARKER}`,
     color: 'var(--text-muted)',
     activities: ['helicopter', 'fishing', 'bear_watching', 'trekking', 'snowmobile'],
   },
@@ -154,6 +152,11 @@ export default function RouteAffiliateBlock({ activityType, routeId }: Props) {
           </a>
         ))}
       </div>
+      <p className="mt-3 text-[9px] leading-relaxed" style={{ color: 'var(--text-muted)', opacity: 0.55 }}>
+        Реклама. ООО «КЕХ еКоммерц», ИНН: 7710668349. Go Travel Un Limited, ИНН: 9909520797.
+        Flight Marketplace Admin FZE, ИНН: 9909618947. ООО «Яндекс Вертикали», ИНН: 7736207543.
+        ООО «Спутник», ИНН: 7814547081.
+      </p>
     </section>
   );
 }

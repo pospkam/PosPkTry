@@ -41,7 +41,7 @@ const TRANSFERS_DB: Transfer[] = [
     capacity: 4,
     duration_minutes: 35,
     notes: 'Зарезервируйте заранее. Водитель встретит с табличкой',
-    link: `https://kiwitaxi.ru/PKC?aff_id=${KIWITAXI_MARKER}`,
+    link: `https://kiwitaxi.ru/?aff_id=${KIWITAXI_MARKER}`,
   },
   {
     id: 'center-avacha',
@@ -52,7 +52,7 @@ const TRANSFERS_DB: Transfer[] = [
     capacity: 6,
     duration_minutes: 50,
     notes: 'Дороги грунтовые, возможна грязь. Внедорожник или внимание водителя',
-    link: `https://kiwitaxi.ru/PKC?aff_id=${KIWITAXI_MARKER}`,
+    link: `https://kiwitaxi.ru/?aff_id=${KIWITAXI_MARKER}`,
   },
   {
     id: 'center-kurils',
@@ -63,7 +63,7 @@ const TRANSFERS_DB: Transfer[] = [
     capacity: 6,
     duration_minutes: 180,
     notes: 'Длинный трансфер. Завтрак в дороге. Обязательна страховка',
-    link: `https://kiwitaxi.ru/PKC?aff_id=${KIWITAXI_MARKER}`,
+    link: `https://kiwitaxi.ru/?aff_id=${KIWITAXI_MARKER}`,
   },
   {
     id: 'center-fishing',
@@ -74,7 +74,7 @@ const TRANSFERS_DB: Transfer[] = [
     capacity: 4,
     duration_minutes: 90,
     notes: 'Специальное оборудование для рыбалки. Водитель опытен',
-    link: `https://kiwitaxi.ru/PKC?aff_id=${KIWITAXI_MARKER}`,
+    link: `https://kiwitaxi.ru/?aff_id=${KIWITAXI_MARKER}`,
   },
 ];
 
