@@ -1,13 +1,16 @@
 import type { Metadata } from 'next'
 import dynamic from 'next/dynamic'
 import { Header } from '@/components/layout/Header'
-import { HeroCompact } from '@/components/homepage/HeroCompact'
-import { MissionConsole } from '@/components/homepage/MissionConsole'
+import { HeroBoard } from '@/components/homepage/HeroBoard'
 import { MessengerAgentsSection } from '@/components/homepage/MessengerAgentsSection'
 import { DirectionsList } from '@/components/homepage/DirectionsList'
 import { Footer } from '@/components/layout/Footer'
 
 // Lazy-loaded client sections (below fold)
+const BoardStatusLive = dynamic(
+  () => import('@/components/homepage/BoardStatusLive').then(m => ({ default: m.BoardStatusLive })),
+  { loading: () => <SectionSkeleton /> }
+);
 const InlineChat = dynamic(() => import('@/components/homepage/InlineChat'), {
   loading: () => <ChatSkeleton />,
 });
@@ -96,10 +99,10 @@ export default async function Page() {
       />
       <Header />
       <main>
-        <HeroCompact />
-        <MissionConsole />
+        <HeroBoard />
         <MessengerAgentsSection />
         <DirectionsList />
+        <BoardStatusLive />
         <InlineChat />
         <TrustSection />
       </main>
