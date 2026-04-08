@@ -53,7 +53,7 @@ export async function callMiMo(messages: ChatMessage[]): Promise<string | null> 
 // Порядок: сначала быстрые и надёжные, timeout снижен до 12s
 const OR_MODELS = [
   { id: 'google/gemini-2.0-flash-001',                  timeout: 12_000 }, // самый быстрый ~1-2s
-  { id: 'google/gemini-2.5-flash-lite',                 timeout: 12_000 }, // fast lite
+  { id: 'google/gemini-2.0-flash-lite',                 timeout: 12_000 }, // fast lite
   { id: 'qwen/qwen3-235b-a22b:free',                    timeout: 15_000 }, // Qwen3 235B MoE free
   { id: 'nvidia/llama-3.3-nemotron-super-49b-v1:free',  timeout: 15_000 }, // NVIDIA Nemotron free
   { id: 'openai/gpt-4o-mini',                           timeout: 12_000 }, // надёжный
@@ -426,7 +426,7 @@ export async function callGemini(messages: ChatMessage[]): Promise<string | null
         'X-Title': 'TourHab Kamchatka',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash-lite',
+        model: 'google/gemini-2.0-flash-lite',
         temperature: 0.4,
         max_tokens: 1200,
         messages: payload,
@@ -520,7 +520,7 @@ export async function callGeminiDirect(messages: ChatMessage[]): Promise<string 
     }
 
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -559,7 +559,7 @@ export async function callGeminiVision(
     };
 
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -595,7 +595,7 @@ export async function callGeminiTranscribe(
     };
 
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
