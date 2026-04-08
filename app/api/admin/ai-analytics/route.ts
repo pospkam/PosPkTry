@@ -10,8 +10,8 @@ import { pool } from '@/lib/db-pool';
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
-  const authError = await requireAdmin(req);
-  if (authError) return authError;
+  const auth = await requireAdmin(req);
+  if (auth instanceof NextResponse) return auth;
 
   try {
     const [
