@@ -74,6 +74,7 @@ export default function BookingFormClient({ tourId, basePrice, maxParticipants =
       const id = typeof data === 'object' && data !== null && 'booking_id' in data
         ? (data as Record<string, unknown>).booking_id
         : null;
+      if (!id) throw new Error('Бронирование создано, но ID не получен. Проверьте раздел «Бронирования».');
       router.push(`/booking-success/${id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка');
@@ -220,7 +221,7 @@ export default function BookingFormClient({ tourId, basePrice, maxParticipants =
           </button>
         </div>
         <p className="text-xs text-[var(--text-muted)]">
-          Оператор свяжется с вами в течение 2 часов для подтверждения и оплаты
+          После заявки вы перейдёте на страницу оплаты — оператор получит уведомление автоматически
         </p>
       </div>
     </form>
