@@ -40,9 +40,7 @@ export async function GET(
         kr.source_url  AS route_source_url,
         p.id           AS partner_id_val,
         p.name         AS partner_name,
-        p.rating       AS partner_rating,
-        p.phone        AS partner_phone,
-        p.email        AS partner_email
+        p.rating       AS partner_rating
        FROM tours t
        LEFT JOIN kamchatka_routes kr ON t.route_id = kr.id
        LEFT JOIN partners p ON t.operator_id = p.id
@@ -176,8 +174,6 @@ export async function GET(
         id:     row.partner_id_val as string,
         name:   (row.partner_name || '') as string,
         rating: parseFloat(String(row.partner_rating || 0)),
-        phone:  (row.partner_phone || '') as string,
-        email:  (row.partner_email || '') as string,
       } : null,
     };
 
