@@ -179,8 +179,8 @@ export default function AIAnalyticsClient() {
     setError(null);
     try {
       const res = await fetch('/api/admin/ai-analytics');
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json() as AnalyticsData & { error?: string };
+      if (!res.ok) throw new Error(json.error ?? `HTTP ${res.status}`);
       if (json.error) throw new Error(json.error);
       setData(json);
       setRefreshed(new Date());
