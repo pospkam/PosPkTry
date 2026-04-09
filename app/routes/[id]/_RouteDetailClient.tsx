@@ -332,6 +332,7 @@ export default function RouteDetailClient({ id }: { id: string }) {
   const [showAllOffers, setShowAllOffers] = useState(false);
   const [descExpanded, setDescExpanded] = useState(false);
   const [sortBy, setSortBy] = useState<'price' | 'rating' | 'date' | 'slots'>('price');
+  const [calendarDate, setCalendarDate] = useState<string | null>(null);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000000]);
   const [filterDifficulty, setFilterDifficulty] = useState<string | null>(null);
   const [filterDurationType, setFilterDurationType] = useState<string | null>(null);
@@ -861,12 +862,19 @@ export default function RouteDetailClient({ id }: { id: string }) {
 
               {offers.length > 0 ? (
                 <>
-                  <AvailabilityCalendar offers={offers.map(o => ({
+                  <AvailabilityCalendar
+                    offers={offers.map(o => ({
                       tourId: o.tourId,
                       tourName: o.tourName,
                       nextDeparture: o.nextDeparture,
                       nextSlots: o.nextSlots,
-                    }))} />
+                    }))}
+                    onDateSelect={(date, tourId) => {
+                      setCalendarDate(date);
+                      const offer = offers.find(o => o.tourId === tourId) ?? offers[0];
+                      if (offer) setBookingOffer(offer);
+                    }}
+                  />
 
                   <div className="flex items-center justify-between">
                     <h2 className="text-sm font-semibold text-[var(--text-primary)] uppercase tracking-wide">
@@ -1052,14 +1060,14 @@ export default function RouteDetailClient({ id }: { id: string }) {
       {bookingOffer && (
         <TourPaymentModal
           open={bookingOffer !== null}
-          onClose={() => setBookingOffer(null)}
+          onClose={() => { setBookingOffer(null); setCalendarDate(null); }}
           tourId={bookingOffer.tourId}
           tourName={bookingOffer.tourName}
           operatorName={bookingOffer.operator.name}
           priceBase={bookingOffer.priceBase}
           minGroupSize={bookingOffer.minGroupSize}
           maxGroupSize={bookingOffer.maxGroupSize}
-          nextDeparture={bookingOffer.nextDeparture}
+          nextDeparture={calendarDate ?? bookingOffer.nextDeparture}
         />
       )}
       <AssistantButton pageContext={{ type: 'route', title: route.title, category: locLabel }} />

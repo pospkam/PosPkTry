@@ -1,84 +1,161 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/database';
-import { ApiResponse } from '@/types';
+import { pool } from '@/lib/db-pool';
 import { requireOperator } from '@/lib/auth/middleware';
-import { verifyTourOwnership } from '@/lib/auth/operator-helpers';
 import { z } from 'zod';
-
-const BlockDatesSchema = z.object({
-  tourId: z.string().min(1, 'tourId обязателен'),
-  startDate: z.string().min(1, 'startDate обязательна'),
-  endDate: z.string().min(1, 'endDate обязательна'),
-  reason: z.string().optional(),
-});
 
 export const dynamic = 'force-dynamic';
 
-/**
- * POST /api/operator/calendar/block
- * Block date range for a tour
- */
+const BlockDatesSchema = z.object({
+  tourId:    z.coerce.number().int().positive('tourId обязателен'),
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'startDate: формат YYYY-MM-DD'),
+  endDate:   z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'endDate: формат YYYY-MM-DD'),
+  reason:    z.string().max(255).optional(),
+});
+
+const UnblockDatesSchema = z.object({
+  tourId:    z.coerce.number().int().positive('tourId обязателен'),
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  endDate:   z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+});
+
+async function getOperatorId(userId: string): Promise<string | null> {
+  const { rows } = await pool.query(
+    `SELECT id FROM partners WHERE user_id = $1 LIMIT 1`,
+    [userId]
+  );
+  return rows[0]?.id ?? null;
+}
+
+function datesInRange(start: string, end: string): string[] {
+  const result: string[] = [];
+  const cur = new Date(start + 'T00:00:00Z');
+  const fin = new Date(end   + 'T00:00:00Z');
+  if (fin < cur) return result;
+  while (cur <= fin) {
+    result.push(cur.toISOString().slice(0, 10));
+    cur.setUTCDate(cur.getUTCDate() + 1);
+  }
+  return result;
+}
+
+// ─── POST /api/operator/calendar/block ────────────────────────────────────────
+// Блокирует диапазон дат для тура.
+
 export async function POST(request: NextRequest) {
+  const authOrResponse = await requireOperator(request);
+  if (authOrResponse instanceof NextResponse) return authOrResponse;
+
+  const operatorId = await getOperatorId(authOrResponse.userId);
+  if (!operatorId) {
+    return NextResponse.json({ success: false, error: 'Профиль оператора не найден' }, { status: 404 });
+  }
+
+  let body: unknown;
+  try { body = await request.json(); } catch {
+    return NextResponse.json({ success: false, error: 'Некорректный JSON' }, { status: 400 });
+  }
+
+  const parsed = BlockDatesSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { success: false, error: parsed.error.issues[0]?.message ?? 'Некорректные данные' },
+      { status: 400 }
+    );
+  }
+  const { tourId, startDate, endDate, reason } = parsed.data;
+
+  // Проверяем владение туром
+  const { rows: ownerRows } = await pool.query(
+    `SELECT 1 FROM operator_tours WHERE id = $1 AND operator_id = $2 LIMIT 1`,
+    [tourId, operatorId]
+  );
+  if (ownerRows.length === 0) {
+    return NextResponse.json({ success: false, error: 'Тур не найден или нет прав' }, { status: 404 });
+  }
+
+  const dates = datesInRange(startDate, endDate);
+  if (dates.length === 0) {
+    return NextResponse.json({ success: false, error: 'Некорректный диапазон дат' }, { status: 400 });
+  }
+  if (dates.length > 366) {
+    return NextResponse.json({ success: false, error: 'Диапазон не может превышать 366 дней' }, { status: 400 });
+  }
+
   try {
-    const operatorOrResponse = await requireOperator(request);
-    if (operatorOrResponse instanceof NextResponse) {
-      return operatorOrResponse;
-    }
-    const userId = operatorOrResponse.userId;
-
-    const body = await request.json();
-    const parsed = BlockDatesSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json({ success: false, error: parsed.error.issues[0]?.message || 'Некорректные данные' }, { status: 400 });
-    }
-    const { tourId, startDate, endDate, reason } = parsed.data;
-
-    // Verify tour ownership
-    const isOwner = await verifyTourOwnership(userId, tourId);
-    
-    if (!isOwner) {
-      return NextResponse.json({
-        success: false,
-        error: 'Тур не найден или у вас нет прав'
-      } as ApiResponse<null>, { status: 404 });
-    }
-
-    // Generate dates array
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const dates: string[] = [];
-    
-    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      dates.push(d.toISOString().split('T')[0]);
-    }
-
-    // Block each date
-    const promises = dates.map(date => 
-      query(
-        `INSERT INTO tour_availability (tour_id, date, available_spots, is_blocked, block_reason)
-         VALUES ($1, $2, 0, true, $3)
-         ON CONFLICT (tour_id, date) DO UPDATE SET
-           is_blocked = true,
-           block_reason = EXCLUDED.block_reason`,
-        [tourId, date, reason || 'Заблокировано оператором']
+    await Promise.all(
+      dates.map(date =>
+        pool.query(
+          `INSERT INTO tour_availability (operator_tour_id, date, available_slots, is_cancelled, cancellation_reason)
+           VALUES ($1, $2, 0, true, $3)
+           ON CONFLICT (operator_tour_id, date) DO UPDATE SET
+             is_cancelled        = true,
+             cancellation_reason = EXCLUDED.cancellation_reason,
+             updated_at          = NOW()`,
+          [tourId, date, reason ?? 'Заблокировано оператором']
+        )
       )
     );
 
-    await Promise.all(promises);
+    return NextResponse.json({
+      success: true,
+      data:    { blockedDates: dates.length, dates },
+      message: `Заблокировано ${dates.length} дат`,
+    });
+  } catch {
+    return NextResponse.json({ success: false, error: 'Ошибка при блокировке дат' }, { status: 500 });
+  }
+}
+
+// ─── DELETE /api/operator/calendar/block ──────────────────────────────────────
+// Снимает блокировку с диапазона дат.
+
+export async function DELETE(request: NextRequest) {
+  const authOrResponse = await requireOperator(request);
+  if (authOrResponse instanceof NextResponse) return authOrResponse;
+
+  const operatorId = await getOperatorId(authOrResponse.userId);
+  if (!operatorId) {
+    return NextResponse.json({ success: false, error: 'Профиль оператора не найден' }, { status: 404 });
+  }
+
+  let body: unknown;
+  try { body = await request.json(); } catch {
+    return NextResponse.json({ success: false, error: 'Некорректный JSON' }, { status: 400 });
+  }
+
+  const parsed = UnblockDatesSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { success: false, error: parsed.error.issues[0]?.message ?? 'Некорректные данные' },
+      { status: 400 }
+    );
+  }
+  const { tourId, startDate, endDate } = parsed.data;
+
+  const { rows: ownerRows } = await pool.query(
+    `SELECT 1 FROM operator_tours WHERE id = $1 AND operator_id = $2 LIMIT 1`,
+    [tourId, operatorId]
+  );
+  if (ownerRows.length === 0) {
+    return NextResponse.json({ success: false, error: 'Тур не найден или нет прав' }, { status: 404 });
+  }
+
+  try {
+    const { rowCount } = await pool.query(
+      `UPDATE tour_availability
+       SET is_cancelled = false, cancellation_reason = NULL, updated_at = NOW()
+       WHERE operator_tour_id = $1
+         AND date >= $2
+         AND date <= $3`,
+      [tourId, startDate, endDate]
+    );
 
     return NextResponse.json({
       success: true,
-      data: {
-        blockedDates: dates.length,
-        dates
-      },
-      message: `Заблокировано ${dates.length} дат`
-    } as ApiResponse<unknown>);
-
-  } catch (error) {
-    return NextResponse.json({
-      success: false,
-      error: 'Ошибка при блокировке дат'
-    } as ApiResponse<null>, { status: 500 });
+      data:    { unblocked: rowCount ?? 0 },
+      message: `Разблокировано ${rowCount ?? 0} дат`,
+    });
+  } catch {
+    return NextResponse.json({ success: false, error: 'Ошибка при разблокировке дат' }, { status: 500 });
   }
 }
