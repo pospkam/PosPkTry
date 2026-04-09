@@ -42,6 +42,7 @@ import {
 } from '@/lib/agents/validation/director-standards';
 import { buildRichAgentContext } from '@/lib/agents/evolution/agent-context-v2';
 import { buildEnhancedPersona } from '@/lib/agents/programs';
+import { sendBoardMeetingEmails } from '@/lib/notifications/board-meeting-email';
 
 export const dynamic     = 'force-dynamic';
 export const maxDuration = 300;
@@ -1122,6 +1123,16 @@ export async function POST(req: NextRequest) {
               [sessionDbId, consensus.substring(0, 2000)]
             ).catch(() => null);
           }
+
+          // Письма агентов — fire-and-forget, не блокируют стрим
+          sendBoardMeetingEmails({
+            agents,
+            proposals: finalProposals,
+            consensus,
+            meetingId,
+            durationMs: duration_ms,
+          }).catch(() => null);
+
         } catch { /* non-critical */ }
 
       } catch (err) {
