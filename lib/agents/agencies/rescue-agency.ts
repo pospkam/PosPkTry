@@ -131,14 +131,6 @@ export class RescueAgency {
       lines.push('', incidentContext);
     }
 
-    const aiAnalysis = await this.callAI(
-      `SOS-мониторинг Камчатки за 30 дней: всего ${s.total_30d} сигналов, активных ${s.active}, разрешено ${s.resolved}. ` +
-      `${activeEvents.length > 0 ? `Есть ${activeEvents.length} активных инцидентов!` : 'Активных инцидентов нет.'}` +
-      `${incidentContext ? ` ${incidentContext}` : ''}` +
-      `\nДай краткую оценку обстановки и рекомендации по готовности (2-3 предложения). Учти сезонность и погоду Камчатки в апреле.`
-    );
-    if (aiAnalysis) lines.push('', `<b>Рекомендации:</b>\n${aiAnalysis}`);
-
     return { response: lines.join('\n'), data: { stats: s, active_events: activeEvents } };
   }
 

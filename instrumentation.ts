@@ -16,15 +16,7 @@ export async function register(): Promise<void> {
       // Best-effort; first request will trigger lazy load
     });
 
-    // ── 2. Initialize Agent Platform ─────────────────────────────────
-    try {
-      const { initializeAgentPlatform } = await import('@/lib/agents/platform-init');
-      await initializeAgentPlatform();
-    } catch {
-      // Non-blocking: agents won't run on schedule, but app continues
-    }
-
-    // ── 3. Register MAX bot webhook ───────────────────────────────────
+    // ── 2. Register MAX bot webhook ───────────────────────────────────
     const maxToken = process.env.MAX_BOT_TOKEN;
     if (maxToken) {
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://tourhab.ru';

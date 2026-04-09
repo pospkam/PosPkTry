@@ -252,12 +252,6 @@ class PlatformAgentClass {
     originalMessage: string
   ): Promise<{ response: string; data?: Record<string, unknown> }> {
     switch (intent) {
-      case 'admin_digest':
-      case 'admin_health':
-      case 'admin_leads': {
-        const { AdminAgency } = await import('./agencies/admin-agency');
-        return new AdminAgency().run(intent, context);
-      }
       case 'op_tours_summary':
       case 'op_bookings_today':
       case 'op_revenue':
@@ -285,30 +279,6 @@ class PlatformAgentClass {
         const { TransferOperatorAgency } = await import('./agencies/transfer-operator-agency');
         return new TransferOperatorAgency().run(intent, context, originalMessage);
       }
-      case 'legal_contract':
-      case 'legal_compliance':
-      case 'legal_risks':
-      case 'legal_affiliate_audit':
-      case 'legal_platform_audit': {
-        const { LegalAgency } = await import('./agencies/legal-agency');
-        return new LegalAgency().run(intent, context);
-      }
-      case 'sec_access_audit':
-      case 'sec_anomaly':
-      case 'sec_report': {
-        const { SecurityAgency } = await import('./agencies/security-agency');
-        return new SecurityAgency().run(intent, context);
-      }
-      case 'hack_growth':
-      case 'hack_funnel':
-      case 'hack_automate': {
-        if (intent === 'hack_growth') {
-          const sdkResult = await trySDKVariant('hacker', intent);
-          if (sdkResult) return sdkResult;
-        }
-        const { HackerAgency } = await import('./agencies/hacker-agency');
-        return new HackerAgency().run(intent, context);
-      }
       case 'rescue_sos_stats':
       case 'rescue_weather_risk':
       case 'rescue_protocols': {
@@ -318,30 +288,6 @@ class PlatformAgentClass {
         }
         const { RescueAgency } = await import('./agencies/rescue-agency');
         return new RescueAgency().run(intent, context);
-      }
-      case 'eco_impact':
-      case 'eco_zones': {
-        const { EcoAgency } = await import('./agencies/eco-agency');
-        return new EcoAgency().run(intent, context);
-      }
-      case 'evo_optimize':
-      case 'evo_experiments':
-      case 'evo_adapt': {
-        if (intent === 'evo_optimize') {
-          const sdkResult = await trySDKVariant('evo', intent);
-          if (sdkResult) return sdkResult;
-        }
-        const { EvolutionAgency } = await import('./agencies/evolution-agency');
-        return new EvolutionAgency().run(intent, context);
-      }
-      case 'content_audit':
-      case 'content_flag':
-      case 'channel_audit': {
-        const { ContentAuditorAgency } = await import('./agencies/content-auditor-agency');
-        return new ContentAuditorAgency().run(
-          intent === 'channel_audit' ? 'channel_audit' : intent,
-          context
-        );
       }
       case 'channel_post_route': {
         const { postKuzmichRoute } = await import('@/lib/notifications/telegram-channel');
@@ -377,18 +323,6 @@ class PlatformAgentClass {
       case 'mkt_content_plan': {
         const { MarketingAgency } = await import('./agencies/marketing-agency');
         return new MarketingAgency().run(intent, context);
-      }
-      case 'plan_forecast':
-      case 'plan_season':
-      case 'plan_gaps': {
-        const { PlanningAgency } = await import('./agencies/planning-agency');
-        return new PlanningAgency().run(intent, context);
-      }
-      case 'qa_reviews':
-      case 'qa_slots':
-      case 'qa_operators': {
-        const { QualityAgency } = await import('./agencies/quality-agency');
-        return new QualityAgency().run(intent, context);
       }
       case 'lead_qualify':
       case 'lead_suggest': {
