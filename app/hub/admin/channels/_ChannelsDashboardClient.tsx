@@ -31,6 +31,20 @@ const CHANNELS = [
     priority: 1,
   },
   {
+    id: 'yandex',
+    name: 'Яндекс.Услуги / Яндекс.Путешествия',
+    url: 'https://uslugi.yandex.ru/partners',
+    description: 'YML-фид готов — туры в поиске Яндекса и Яндекс.Картах',
+    type: 'aggregator',
+    steps: [
+      { done: true,  text: 'YML-фид подготовлен и работает' },
+      { done: false, text: 'Яндекс.Услуги → Добавить услугу → XML-импорт → вставить URL' },
+      { done: false, text: 'Яндекс.Путешествия → partner.yandex.ru/travel → экскурсии' },
+    ],
+    feedUrl: 'https://tourhab.ru/api/channels/yandex/feed',
+    priority: 2,
+  },
+  {
     id: 'tripster',
     name: 'Tripster',
     url: 'https://experience.tripster.ru/locals/',
@@ -203,6 +217,44 @@ export function ChannelsDashboardClient({
             className="inline-flex items-center gap-1 text-[var(--ocean)] hover:underline ml-auto"
           >
             Открыть Авито <ExternalLink className="w-3 h-3" />
+          </a>
+        </div>
+      </div>
+
+      {/* Яндекс: YML фид */}
+      <div className="ds-card p-6 mb-6 border-l-4 border-[var(--warning)]">
+        <div className="flex items-start justify-between gap-4 mb-4">
+          <div>
+            <p className="font-semibold text-[var(--text-primary)] text-lg">Яндекс YML-фид</p>
+            <p className="text-sm text-[var(--text-secondary)] mt-0.5">
+              Фид готов. Зарегистрируй URL в Яндекс.Услугах — туры появятся в поиске Яндекса.
+            </p>
+          </div>
+          <span
+            className="text-xs font-semibold px-2.5 py-1 rounded-full shrink-0"
+            style={{ background: `${TYPE_COLORS.aggregator}18`, color: TYPE_COLORS.aggregator }}
+          >
+            Готово к регистрации
+          </span>
+        </div>
+        <div className="bg-[var(--bg-hover)] rounded-lg p-4 flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs text-[var(--text-muted)] mb-1">URL для регистрации в Яндексе:</p>
+            <code className="text-sm text-[var(--text-primary)] font-mono">
+              https://tourhab.ru/api/channels/yandex/feed
+            </code>
+          </div>
+          <CopyButton text="https://tourhab.ru/api/channels/yandex/feed" />
+        </div>
+        <div className="mt-3 flex items-center gap-2 text-xs text-[var(--text-muted)]">
+          <p>Путь: uslugi.yandex.ru/partners → XML-импорт → Добавить фид</p>
+          <a
+            href="https://uslugi.yandex.ru/partners"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-[var(--ocean)] hover:underline ml-auto"
+          >
+            Открыть Яндекс.Услуги <ExternalLink className="w-3 h-3" />
           </a>
         </div>
       </div>
