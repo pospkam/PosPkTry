@@ -68,7 +68,6 @@ export function Header() {
 
       {/* Center nav — desktop only */}
       <nav style={{
-        display: 'flex',
         alignItems: 'center',
         gap: '4px',
         position: 'absolute',
