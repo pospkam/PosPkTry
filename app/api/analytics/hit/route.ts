@@ -31,8 +31,8 @@ export async function POST(req: NextRequest) {
 
   const { path, referrer } = parsed.data;
 
-  // Не трекаем системные пути
-  if (path.startsWith('/api/') || path.startsWith('/_next/')) {
+  // Не трекаем системные и админские пути
+  if (path.startsWith('/api/') || path.startsWith('/_next/') || path.startsWith('/hub/admin')) {
     return NextResponse.json({ ok: true });
   }
 

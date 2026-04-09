@@ -73,7 +73,8 @@ export class HackerAgency {
       pool.query<GrowthMetricRow>(`
         SELECT
           (SELECT COUNT(*)::text FROM page_views
-            WHERE created_at >= NOW() - INTERVAL '7 days')             AS page_views_7d,
+            WHERE created_at >= NOW() - INTERVAL '7 days'
+              AND path NOT LIKE '/hub/admin/%')             AS page_views_7d,
           (SELECT COUNT(*)::text FROM leads
             WHERE created_at >= NOW() - INTERVAL '7 days')             AS leads_7d,
           (SELECT COUNT(*)::text FROM operator_bookings
@@ -95,6 +96,7 @@ export class HackerAgency {
         WITH total AS (
           SELECT COUNT(*) AS cnt FROM page_views
           WHERE created_at >= NOW() - INTERVAL '7 days'
+            AND path NOT LIKE '/hub/admin/%'
         )
         SELECT
           path,
@@ -103,6 +105,7 @@ export class HackerAgency {
         FROM page_views
         WHERE created_at >= NOW() - INTERVAL '7 days'
           AND path NOT LIKE '/api/%'
+          AND path NOT LIKE '/hub/admin/%'
         GROUP BY path
         ORDER BY COUNT(*) DESC
         LIMIT 8
@@ -170,11 +173,13 @@ export class HackerAgency {
       WITH funnel AS (
         SELECT 1 AS step, 'Просмотры страниц (7д)'    AS stage,
           (SELECT COUNT(*) FROM page_views
-            WHERE created_at >= NOW() - INTERVAL '7 days')        AS count
+            WHERE created_at >= NOW() - INTERVAL '7 days'
+              AND path NOT LIKE '/hub/admin/%')        AS count
         UNION ALL
         SELECT 2, 'Просмотры туров (7д)',
           (SELECT COUNT(*) FROM page_views
             WHERE path LIKE '/tours/%'
+              AND path NOT LIKE '/hub/admin/%'
               AND created_at >= NOW() - INTERVAL '7 days')
         UNION ALL
         SELECT 3, 'Лиды (7д)',

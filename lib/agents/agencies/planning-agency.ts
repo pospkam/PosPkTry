@@ -98,7 +98,9 @@ export class PlanningAgency {
     try {
       const { text: aiResult } = await callAIWithModel([{ role: 'user', content: fullAiPrompt }], this.preferredModel);
       if (aiResult) forecast = aiResult.trim();
-    } catch { /* silent */ }
+    } catch (err) {
+      forecast = `[AI-прогноз недоступен: ${err instanceof Error ? err.message : String(err)}]`;
+    }
 
     if (forecast) lines.push('', `Прогноз: ${forecast}`);
 

@@ -75,10 +75,12 @@ export class FinanceAgency {
             TO_CHAR(DATE_TRUNC('week', ob.created_at), 'DD.MM') AS period,
             COUNT(ob.id)::text                                   AS booking_count,
             COALESCE(SUM(ob.final_price), 0)::text               AS gross_revenue,
-            COALESCE(SUM(ob.final_price * 0.15), 0)::text        AS platform_fee_total,
+            COALESCE(SUM(ob.final_price * COALESCE(p.commission_rate, 0.15)), 0)::text AS platform_fee_total,
             COALESCE(AVG(ob.final_price), 0)::text               AS avg_booking_value,
             COUNT(DISTINCT ob.tourist_name)::text                AS paying_tourists
           FROM operator_bookings ob
+          JOIN operator_tours ot ON ot.id = ob.operator_tour_id
+          JOIN partners p ON p.id = ot.operator_id
           WHERE ob.created_at >= NOW() - INTERVAL '28 days'
             AND ob.booking_status = 'confirmed'
             AND ob.deleted_at IS NULL
@@ -93,7 +95,7 @@ export class FinanceAgency {
             COALESCE(p.name, p.company_name, 'Без имени')  AS operator_name,
             COUNT(ob.id)::text                             AS booking_count,
             COALESCE(SUM(ob.final_price), 0)::text         AS revenue,
-            COALESCE(SUM(ob.final_price * 0.15), 0)::text  AS platform_cut
+            COALESCE(SUM(ob.final_price * COALESCE(p.commission_rate, 0.15)), 0)::text  AS platform_cut
           FROM operator_bookings ob
           JOIN operator_tours ot ON ot.id = ob.operator_tour_id
           JOIN partners p        ON p.id  = ot.operator_id
@@ -138,14 +140,16 @@ export class FinanceAgency {
           refund_amount: string;
         }>(`
           SELECT
-            COUNT(*) FILTER (WHERE payment_status = 'paid')::text    AS total_bookings,
-            COALESCE(SUM(final_price) FILTER (WHERE payment_status = 'paid'), 0)::text AS total_revenue,
-            COALESCE(SUM(final_price * 0.15) FILTER (WHERE payment_status = 'paid'), 0)::text AS platform_revenue,
-            COUNT(*) FILTER (WHERE payment_status = 'refunded')::text AS refund_count,
-            COALESCE(SUM(final_price) FILTER (WHERE payment_status = 'refunded'), 0)::text AS refund_amount
-          FROM operator_bookings
-          WHERE created_at >= NOW() - INTERVAL '30 days'
-            AND deleted_at IS NULL
+            COUNT(*) FILTER (WHERE ob.payment_status = 'paid')::text    AS total_bookings,
+            COALESCE(SUM(ob.final_price) FILTER (WHERE ob.payment_status = 'paid'), 0)::text AS total_revenue,
+            COALESCE(SUM(ob.final_price * COALESCE(p.commission_rate, 0.15)) FILTER (WHERE ob.payment_status = 'paid'), 0)::text AS platform_revenue,
+            COUNT(*) FILTER (WHERE ob.payment_status = 'refunded')::text AS refund_count,
+            COALESCE(SUM(ob.final_price) FILTER (WHERE ob.payment_status = 'refunded'), 0)::text AS refund_amount
+          FROM operator_bookings ob
+          JOIN operator_tours ot ON ot.id = ob.operator_tour_id
+          JOIN partners p ON p.id = ot.operator_id
+          WHERE ob.created_at >= NOW() - INTERVAL '30 days'
+            AND ob.deleted_at IS NULL
         `),
       ]);
 
@@ -173,7 +177,7 @@ export class FinanceAgency {
         `ИТОГИ:`,
         `- Оплаченных бронирований: ${t.total_bookings}`,
         `- Валовая выручка: ${grossRev.toLocaleString('ru-RU')} руб`,
-        `- Комиссия платформы (15%): ${platformRev.toLocaleString('ru-RU')} руб`,
+        `- Комиссия платформы (5-15% по тарифу): ${platformRev.toLocaleString('ru-RU')} руб`,
         `- Средний чек: ${avgBooking.toFixed(0)} руб`,
         `- Возвраты: ${t.refund_count} на ${t.refund_amount} руб`,
         '',
@@ -263,7 +267,7 @@ export class FinanceAgency {
         lines,
         '',
         `Итого приток: ${totalInflow.toLocaleString('ru-RU')} руб`,
-        `Комиссия платформы (15%): ${(totalInflow * 0.15).toLocaleString('ru-RU')} руб`,
+        `Комиссия платформы (5-15% по тарифу): ${(totalInflow * 0.15).toLocaleString('ru-RU')} руб (макс.)`,
       ].join('\n');
 
       return { response, data: { cashflow: rows.rows, total_inflow: totalInflow } };

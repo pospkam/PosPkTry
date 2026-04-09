@@ -390,6 +390,13 @@ export class LegalAgency {
       lines.push(`• #${r.booking_id} "${r.tour_title}" (${r.operator}) — ${r.issue} [${amt}]`);
     }
 
+    const aiAnalysis = await this.callAI(
+      `Юридические риски в бронированиях за 30 дней: ${rows.length} проблем.\n` +
+      `Типы проблем: ${Object.entries(byIssue).map(([k, v]) => `${k}: ${v}`).join(', ')}.\n` +
+      `Дай оценку рисков и приоритет действий. 3-4 предложения, конкретно.`
+    );
+    if (aiAnalysis) lines.push('', `<b>AI-рекомендации:</b>\n${aiAnalysis}`);
+
     return { response: lines.join('\n'), data: { risks: rows } };
   }
 

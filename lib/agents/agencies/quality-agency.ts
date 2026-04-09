@@ -7,7 +7,9 @@
  */
 
 import { pool } from '@/lib/db-pool';
+import { callAIWithModel } from '@/lib/ai/providers';
 import type { AgentContext } from '../context-hub';
+import type { ChatMessage } from '@/lib/ai/prompts';
 
 export interface AgencyResult {
   response: string;
@@ -47,10 +49,12 @@ interface OperatorHealthRow {
 
 export class QualityAgency {
   private briefing = '';
+  private preferredModel: string | null = null;
   private tools: Record<string, (...args: unknown[]) => Promise<{ success: boolean; message: string; details?: Record<string, unknown> }>> = {};
 
   async run(intent: string, context: AgentContext): Promise<AgencyResult> {
     this.briefing = context.richBriefing ?? '';
+    this.preferredModel = context.preferredModel ?? null;
     this.tools = context.tools ?? {};
     try {
       switch (intent) {
@@ -177,7 +181,7 @@ export class QualityAgency {
           WHERE ta.date >= CURRENT_DATE AND ta.is_cancelled = false
         )::text                                                     AS slots_ahead
       FROM partners p
-      LEFT JOIN operator_tours ot ON ot.operator_id = p.id AND ot.deleted_at IS NULL
+      LEFT JOIN operator_tours ot ON ot.operator_id = p.id AND ot.deleted_at IS NULL AND ot.is_active = true
       LEFT JOIN operator_bookings ob ON ob.operator_tour_id = ot.id AND ob.deleted_at IS NULL
       LEFT JOIN tour_availability ta ON ta.operator_tour_id = ot.id
       WHERE p.is_public = true
@@ -194,6 +198,24 @@ export class QualityAgency {
       );
     }
 
+    const dataSummary = rows.map(r => `${r.operator}: ${r.tours} туров, ${r.bookings_30d} броней, слотов: ${r.slots_ahead}`).join('; ');
+    const aiAnalysis = await this.callAI(
+      `Здоровье операторов туристической платформы Камчатки:\n${dataSummary}\n\n` +
+      `Оцени состояние каждого оператора. Кто в зоне риска? Кому нужна активация? 3-4 предложения.`
+    );
+    if (aiAnalysis) lines.push('', `<b>AI-рекомендации:</b>\n${aiAnalysis}`);
+
     return { response: lines.join('\n'), data: { operators: rows } };
+  }
+
+  private async callAI(prompt: string): Promise<string | null> {
+    try {
+      const fullPrompt = this.briefing ? `${this.briefing}\n\n${prompt}` : prompt;
+      const messages: ChatMessage[] = [{ role: 'user', content: fullPrompt }];
+      const { text } = await callAIWithModel(messages, this.preferredModel);
+      return text;
+    } catch {
+      return null;
+    }
   }
 }
