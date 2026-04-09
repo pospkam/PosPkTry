@@ -38,6 +38,13 @@ export function getMiniMaxKey(): { apiKey: string; groupId: string } | null {
   return { apiKey, groupId };
 }
 
+// Meta Muse Spark — анонсирована 08.04.2026, API пока закрыт (select partners).
+// Когда откроют — выставить MUSE_SPARK_API_KEY в Timeweb и модель активируется автоматически.
+// Docs: https://about.fb.com/news/2026/04/introducing-muse-spark-meta-superintelligence-labs/
+export function getMuseSparkKey(): string | null {
+  return process.env.MUSE_SPARK_API_KEY || null;
+}
+
 export function getYandexKey(): { apiKey: string; folderId: string } | null {
   const apiKey = process.env.YANDEX_API_KEY;
   const folderId = process.env.YANDEX_FOLDER_ID;

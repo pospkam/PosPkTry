@@ -13,7 +13,7 @@
  */
 
 import type { ChatMessage } from '@/lib/ai/prompts';
-import { getOpenRouterKey, getMiMoKey, getDeepSeekKey, getAnthropicKey, getXaiKey, getGeminiKey, getYandexKey, getMiniMaxKey, getGLMKey } from '@/lib/ai/provider-config';
+import { getOpenRouterKey, getMiMoKey, getDeepSeekKey, getAnthropicKey, getXaiKey, getGeminiKey, getYandexKey, getMiniMaxKey, getGLMKey, getMuseSparkKey } from '@/lib/ai/provider-config';
 
 // ── Xiaomi MiMo-V2-Pro ────────────────────────────────────────
 export async function callMiMo(messages: ChatMessage[]): Promise<string | null> {
@@ -52,6 +52,7 @@ export async function callMiMo(messages: ChatMessage[]): Promise<string | null> 
 // Пробует несколько моделей по очереди — защита от rate limit одной модели.
 // Порядок: сначала быстрые и надёжные, timeout снижен до 12s
 const OR_MODELS = [
+  // { id: 'meta/muse-spark', timeout: 12_000 },             // TODO: активировать когда Meta выпустит через OR
   { id: 'google/gemini-2.0-flash-001',                  timeout: 12_000 }, // самый быстрый ~1-2s
   { id: 'google/gemini-2.0-flash-lite',                 timeout: 12_000 }, // fast lite
   { id: 'thudm/glm-z1-32b',                             timeout: 15_000 }, // GLM Z1 32B via OR
@@ -940,8 +941,43 @@ async function raceProviders(calls: Promise<string | null>[]): Promise<string | 
   });
 }
 
+// ── Meta Muse Spark ───────────────────────────────────────────
+// Анонсирована 08.04.2026. API пока закрыт (select partners).
+// Активируется автоматически при выставлении MUSE_SPARK_API_KEY в Timeweb.
+// Нативно мультимодальная, Contemplating mode (multi-agent reasoning).
+// Ожидаемый endpoint — meta.ai OpenAI-compatible API (уточнить при открытии).
+export async function callMuseSpark(messages: ChatMessage[]): Promise<string | null> {
+  const apiKey = getMuseSparkKey();
+  if (!apiKey) return null; // API ещё закрыт — пропускаем без ошибки
+
+  try {
+    const payload = messages.map(({ role, content }) => ({ role, content }));
+    // Endpoint уточнить когда Meta откроет публичный API
+    const res = await fetch('https://api.meta.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'muse-spark',
+        temperature: 0.4,
+        max_tokens: 800,
+        messages: payload,
+      }),
+      signal: AbortSignal.timeout(20_000),
+    });
+
+    if (!res.ok) return null;
+    const data = await res.json();
+    return (data?.choices?.[0]?.message?.content as string) ?? null;
+  } catch {
+    return null;
+  }
+}
+
 // ── Waterfall: race tiers for speed ─────────────────────────
-// Tier 1: OpenRouter + DeepSeek + Gemini + MiMo — race (кто быстрее)
+// Tier 1: OpenRouter + DeepSeek + Gemini + MiMo + MuseSpark — race (кто быстрее)
 // Tier 2: Yandex + MiniMax — fallback
 // Tier 3: Anthropic — sequential fallback
 export async function callAIWaterfall(messages: ChatMessage[]): Promise<string> {
@@ -952,6 +988,7 @@ export async function callAIWaterfall(messages: ChatMessage[]): Promise<string> 
     callGeminiDirect(messages),
     callMiMo(messages),
     callGLM(messages),
+    callMuseSpark(messages), // активируется когда Meta откроет API (MUSE_SPARK_API_KEY)
   ]);
   if (tier1) return tier1;
 

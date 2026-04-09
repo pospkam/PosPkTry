@@ -152,22 +152,25 @@
 ## AI WATERFALL (актуально)
 
 ```
-Tier 1 (гонка): DeepSeek → Gemini → MiMo
-Tier 2 (гонка): OpenRouter → YandexGPT → MiniMax
+Tier 1 (гонка): OpenRouter + DeepSeek + Gemini + MiMo + GLM + MuseSpark*
+Tier 2 (гонка): YandexGPT + MiniMax
 Tier 3 (последовательно): Anthropic
 ```
 
 xAI исключён — гео-блок на серверах Timeweb (RU).
+*MuseSpark — активируется при выставлении MUSE_SPARK_API_KEY (API пока закрыт, апрель 2026)
 
 | Провайдер | Функция | Env | Статус |
 |-----------|---------|-----|--------|
-| DeepSeek | `callDeepSeek` | `DEEPSEEK_API_KEY` | Tier 1 |
-| Gemini 2.0 Flash | `callGeminiDirect` | `GEMINI_API_KEY` | Tier 1 |
-| Xiaomi MiMo | `callMiMo` | `XIAOMI_API_KEY` | Tier 1 |
-| OpenRouter | `callOpenrouter` | `OR_API_KEY` | Tier 2, 4 модели |
-| YandexGPT | `callYandexGPT` | `YANDEX_API_KEY` + `YANDEX_FOLDER_ID` | Tier 2 |
-| MiniMax | `callMiniMax` | `MINIMAX_API_KEY` | Tier 2 |
-| Anthropic | `callAnthropic` | `ANTHROPIC_API_KEY` | Tier 3 |
+| DeepSeek | `callDeepSeek` | `DEEPSEEK_API_KEY` | Tier 1 ✅ |
+| Gemini 2.0 Flash | `callGeminiDirect` | `GEMINI_API_KEY` | Tier 1 ✅ |
+| Xiaomi MiMo | `callMiMo` | `XIAOMI_API_KEY` | Tier 1 ✅ |
+| GLM Z1 | `callGLM` | `OR_API_KEY` (via OR) | Tier 1 ✅ |
+| OpenRouter | `callOpenrouter` | `OR_API_KEY` | Tier 1 ✅ |
+| **Meta Muse Spark** | `callMuseSpark` | `MUSE_SPARK_API_KEY` | **Tier 1 ⏳ (API закрыт)** |
+| YandexGPT | `callYandexGPT` | `YANDEX_API_KEY` + `YANDEX_FOLDER_ID` | Tier 2 ✅ |
+| MiniMax | `callMiniMax` | `MINIMAX_API_KEY` | Tier 2 ✅ |
+| Anthropic | `callAnthropic` | `ANTHROPIC_API_KEY` | Tier 3 ✅ |
 
 **OR модели внутри:** GPT-4o-mini → DeepSeek V3 → Gemini 2.0 Flash → Claude Haiku 4.5
 
