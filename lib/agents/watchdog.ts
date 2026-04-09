@@ -1,0 +1,161 @@
+/**
+ * lib/agents/watchdog.ts
+ *
+ * Watchdog — реальный мониторинг платформы.
+ * Запускается каждые 30 мин через /api/cron/watchdog.
+ *
+ * Проверяет:
+ *   1. Бронирования без подтверждения > 24ч
+ *   2. Операторы без ответа > 48ч
+ *   3. Лиды без обработки > 2ч
+ *   4. SOS-сигналы без реакции > 30 мин
+ *
+ * Все алерты → Telegram (TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID).
+ */
+
+import { pool } from '@/lib/db-pool';
+
+export interface WatchdogAlert {
+  type: 'unconfirmed_booking' | 'operator_no_response' | 'unprocessed_lead' | 'sos_ignored';
+  count: number;
+  details: string;
+}
+
+export interface WatchdogResult {
+  alerts: WatchdogAlert[];
+  checked_at: string;
+  duration_ms: number;
+}
+
+async function tgSend(text: string): Promise<void> {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+  if (!token || !chatId) return;
+  try {
+    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text,
+        parse_mode: 'HTML',
+        disable_web_page_preview: true,
+      }),
+    });
+  } catch {
+    // Silent fail
+  }
+}
+
+async function checkUnconfirmedBookings(): Promise<WatchdogAlert | null> {
+  try {
+    const { rows } = await pool.query<{ count: string; oldest_hours: string }>(`
+      SELECT
+        COUNT(*)::text          AS count,
+        MAX(EXTRACT(EPOCH FROM (NOW() - created_at))/3600)::text AS oldest_hours
+      FROM operator_bookings
+      WHERE booking_status = 'pending'
+        AND created_at < NOW() - INTERVAL '24 hours'
+    `);
+    const count = parseInt(rows[0]?.count ?? '0', 10);
+    if (count === 0) return null;
+    const hours = Math.round(parseFloat(rows[0]?.oldest_hours ?? '24'));
+    return {
+      type: 'unconfirmed_booking',
+      count,
+      details: `${count} бронирований без подтверждения. Старейшее — ${hours}ч назад.`,
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function checkOperatorNoResponse(): Promise<WatchdogAlert | null> {
+  try {
+    // Операторы, у которых есть pending-бронирование > 48ч без ответа
+    const { rows } = await pool.query<{ count: string }>(`
+      SELECT COUNT(DISTINCT operator_id)::text AS count
+      FROM operator_bookings
+      WHERE booking_status = 'pending'
+        AND created_at < NOW() - INTERVAL '48 hours'
+    `);
+    const count = parseInt(rows[0]?.count ?? '0', 10);
+    if (count === 0) return null;
+    return {
+      type: 'operator_no_response',
+      count,
+      details: `${count} оператор(ов) не ответили на бронирование > 48ч.`,
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function checkUnprocessedLeads(): Promise<WatchdogAlert | null> {
+  try {
+    const { rows } = await pool.query<{ count: string }>(`
+      SELECT COUNT(*)::text AS count
+      FROM leads
+      WHERE status = 'new'
+        AND created_at < NOW() - INTERVAL '2 hours'
+    `);
+    const count = parseInt(rows[0]?.count ?? '0', 10);
+    if (count === 0) return null;
+    return {
+      type: 'unprocessed_lead',
+      count,
+      details: `${count} новых лидов ожидают обработки > 2ч.`,
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function checkIgnoredSOS(): Promise<WatchdogAlert | null> {
+  try {
+    const { rows } = await pool.query<{ count: string }>(`
+      SELECT COUNT(*)::text AS count
+      FROM sos_signals
+      WHERE status = 'active'
+        AND created_at < NOW() - INTERVAL '30 minutes'
+    `);
+    const count = parseInt(rows[0]?.count ?? '0', 10);
+    if (count === 0) return null;
+    return {
+      type: 'sos_ignored',
+      count,
+      details: `ВНИМАНИЕ: ${count} активных SOS-сигналов без реакции > 30 мин.`,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function runWatchdog(): Promise<WatchdogResult> {
+  const start = Date.now();
+
+  const [bookings, operators, leads, sos] = await Promise.all([
+    checkUnconfirmedBookings(),
+    checkOperatorNoResponse(),
+    checkUnprocessedLeads(),
+    checkIgnoredSOS(),
+  ]);
+
+  const alerts = [bookings, operators, leads, sos].filter(Boolean) as WatchdogAlert[];
+
+  if (alerts.length > 0) {
+    const lines: string[] = ['<b>Watchdog — требует внимания</b>', ''];
+    for (const a of alerts) {
+      const prefix = a.type === 'sos_ignored' ? '🚨' : '⚠️';
+      lines.push(`${prefix} ${a.details}`);
+    }
+    lines.push('', '<a href="https://tourhab.ru/hub/admin">Открыть панель</a>');
+    await tgSend(lines.join('\n'));
+  }
+
+  return {
+    alerts,
+    checked_at: new Date().toISOString(),
+    duration_ms: Date.now() - start,
+  };
+}

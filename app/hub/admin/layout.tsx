@@ -13,7 +13,7 @@ import { ChatWidget } from '@/components/chat/ChatWidget';
 
 const SIDEBAR_ITEMS = [
   { href: '/hub/admin', label: 'Обзор', icon: Shield },
-  { href: '/hub/admin/board-meeting', label: 'Команда AI', icon: Building2 },
+  { href: '/hub/admin/agents', label: 'Агенты AI', icon: Zap },
   { href: '/hub/admin/leads', label: 'CRM — Лиды', icon: ClipboardList },
   { href: '/hub/admin/bookings', label: 'Бронирования', icon: Calendar },
   { href: '/hub/admin/users', label: 'Пользователи', icon: Users },
@@ -30,7 +30,6 @@ const SIDEBAR_ITEMS = [
   { href: '/hub/admin/promo-codes', label: 'Промокоды', icon: Tag },
   { href: '/hub/admin/activity', label: 'Активность', icon: Activity },
   { href: '/hub/admin/knowledge', label: 'База знаний AI', icon: Brain },
-  { href: '/hub/admin/agents',     label: 'Агенты AI',        icon: Zap },
   { href: '/hub/admin/ai-prompts', label: 'Оптим. промптов',   icon: Sparkles },
   { href: '/hub/admin/email',         label: 'Email',        icon: Mail },
   { href: '/hub/admin/notifications', label: 'Уведомления', icon: Bell },
