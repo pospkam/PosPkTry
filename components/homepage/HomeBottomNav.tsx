@@ -19,6 +19,7 @@ export function HomeBottomNav() {
 
   return (
     <nav
+      className="lg:hidden"
       style={{
         position: 'fixed',
         bottom: '12px',
@@ -66,12 +67,6 @@ export function HomeBottomNav() {
         );
       })}
 
-      {/* hide on desktop */}
-      <style>{`
-        @media (min-width: 769px) {
-          nav[style] { display: none !important; }
-        }
-      `}</style>
     </nav>
   );
 }

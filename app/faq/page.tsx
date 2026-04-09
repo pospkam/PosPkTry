@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { query } from '@/lib/database';
+import { Header } from '@/components/layout/Header';
 import FaqClient from './_FaqClient';
 
 export const metadata: Metadata = {
@@ -82,6 +83,7 @@ export default async function FaqPage() {
           </article>
         ))}
       </div>
+      <Header />
       {/* Интерактивный клиентский компонент */}
       <FaqClient initialItems={faqs} />
     </>

@@ -54,7 +54,7 @@ export default function FaqClient({ initialItems = [] }: Props) {
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)]">
-      <div className="max-w-3xl mx-auto px-4 py-12">
+      <div className="max-w-3xl mx-auto px-4 pt-20 pb-12">
         {/* Header */}
         <div className="text-center mb-8">
           <HelpCircle className="w-8 h-8 text-[var(--accent)] mx-auto mb-3" />

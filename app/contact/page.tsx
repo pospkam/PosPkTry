@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Header } from '@/components/layout/Header';
 import ContactClient from './_ContactClient';
 
 export const metadata: Metadata = {
@@ -59,6 +60,7 @@ export default function ContactPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
       />
+      <Header />
       <ContactClient />
     </>
   );

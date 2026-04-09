@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { pool } from '@/lib/db-pool';
+import { Header } from '@/components/layout/Header';
 import MarketplaceClient from '@/components/marketplace/MarketplaceClient';
 
 export const dynamic = 'force-dynamic';
@@ -97,6 +98,7 @@ export default async function MarketplacePage() {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
       )}
+      <Header />
       <MarketplaceClient />
     </>
   );

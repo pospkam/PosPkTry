@@ -102,7 +102,7 @@ export default function ContactClient() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)]">
-      <div className="max-w-lg mx-auto px-4 py-12">
+      <div className="max-w-lg mx-auto px-4 pt-20 pb-12">
         {/* Header */}
         <div className="mb-8">
           <a href="/" className="text-sm text-[var(--ocean)] hover:underline mb-4 inline-block">
