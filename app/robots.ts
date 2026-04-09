@@ -17,8 +17,19 @@ export default function robots(): MetadataRoute.Robots {
         allow: '/',
         disallow: ['/hub/', '/api/'],
       },
+      // Яндекс — основной бот + все AI-боты (Alice, YandexGPT) содержат подстроку "Yandex"
       {
         userAgent: 'Yandex',
+        allow: '/',
+        disallow: ['/hub/', '/api/'],
+      },
+      {
+        userAgent: 'YandexBot',
+        allow: '/',
+        disallow: ['/hub/', '/api/'],
+      },
+      {
+        userAgent: 'YandexImages',
         allow: '/',
         disallow: ['/hub/', '/api/'],
       },

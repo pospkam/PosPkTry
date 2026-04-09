@@ -159,7 +159,6 @@ export async function buildRichAgentContext(
       agentMemory.get(agentId, 'demand_snapshot', 'tourist_demand_30d')
         .then(mem => {
           if (!mem) return null;
-          const demandStr = JSON.stringify(mem.value).slice(0, 500);
           return { key: 'tourist_demand', label: 'Спрос туристов (30д)', data: mem.value } as DataResult;
         }).catch(() => null)
     );
@@ -296,6 +295,13 @@ export async function buildRichAgentContext(
   if (training) {
     const val = training.value as { content?: string };
     trainingContent = val.content ?? '';
+  }
+  // Fallback: use static domain knowledge from knowledge base when DB has nothing
+  if (!trainingContent && knowledge.domainKnowledge) {
+    trainingContent = knowledge.domainKnowledge.trim();
+  } else if (knowledge.domainKnowledge) {
+    // Prepend static knowledge so it always comes first
+    trainingContent = `${knowledge.domainKnowledge.trim()}\n\n${trainingContent}`;
   }
 
   return {
