@@ -62,7 +62,7 @@ ${content}
 
 2. **ПОТЕНЦИАЛЬНЫЕ СУДЕБНЫЕ РИСКИ:**
    - Неоднозначные формулировки которые могут интерпретироваться против компании
-   - Ограничения ответственности которые могут быть опровергаты судом
+   - Ограничения ответственности которые могут быть опровергнуты судом
    - Скрытые пункты которые потребители могут не заметить
 
 3. **ЗАЩИТА КОМПАНИИ:**
@@ -178,34 +178,34 @@ ${newVersion}
 
 // Compliance score интерпретация
 export function explainComplianceScore(score: number): {
-  emoji: string;
+  status_icon: string;
   status: string;
   action: string;
 } {
   if (score >= 90) {
     return {
-      emoji: '✅',
+      status_icon: '[OK]',
       status: 'Документ полностью compliant',
       action: 'Можно публиковать'
     };
   }
   if (score >= 75) {
     return {
-      emoji: '⚠️',
+      status_icon: '[!]',
       status: 'Документ largely compliant, но есть замечания',
       action: 'Рекомендуется внести изменения'
     };
   }
   if (score >= 50) {
     return {
-      emoji: '🔴',
+      status_icon: '[!!]',
       status: 'Значительные compliance проблемы',
       action: 'Обязательно пересмотреть перед публикацией'
     };
   }
   return {
-    emoji: '❌',
+    status_icon: '[CRITICAL]',
     status: 'Критичные compliance нарушения',
-    action: 'НЕ МОЖНО ИСПОЛЬЗОВАТЬ до полной переработки'
+    action: 'НЕЛЬЗЯ ИСПОЛЬЗОВАТЬ до полной переработки'
   };
 }

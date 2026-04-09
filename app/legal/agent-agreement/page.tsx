@@ -20,7 +20,7 @@ export default function AgentAgreementPage() {
         <h1 className="text-3xl font-bold mb-2" style={{ fontFamily: 'var(--font-playfair)' }}>
           Агентский договор
         </h1>
-        <p className="text-sm text-[var(--text-muted)] mb-8">Редакция от 1 апреля 2026 г.</p>
+        <p className="text-sm text-[var(--text-muted)] mb-8">Редакция от 9 апреля 2026 г.</p>
 
         <div className="prose max-w-none space-y-6 text-[var(--text-secondary)]">
 
@@ -29,7 +29,11 @@ export default function AgentAgreementPage() {
             <p>
               ООО &laquo;ПОС-СЕРВИС&raquo; (ОГРН 1114101005952, ИНН 4101147649), действующее под брендом
               TourHab (далее &mdash; Агент), и туроператор (далее &mdash; Принципал) заключают настоящий
-              агентский договор в соответствии со ст. 1005-1011 ГК РФ.
+              агентский договор в соответствии со ст. 1005-1011 ГК РФ,
+              Федеральным законом от 24.11.1996 No 132-ФЗ &laquo;Об основах туристской деятельности
+              в Российской Федерации&raquo;, Федеральным законом от 22.05.2003 No 54-ФЗ
+              &laquo;О применении контрольно-кассовой техники&raquo; и Федеральным законом
+              от 27.07.2006 No 152-ФЗ &laquo;О персональных данных&raquo;.
             </p>
             <p>
               Агент обязуется от своего имени, но за счёт Принципала, привлекать туристов

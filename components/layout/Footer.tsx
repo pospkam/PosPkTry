@@ -18,6 +18,7 @@ const LEGAL = [
   { label: 'Политика конфиденциальности', href: '/legal/privacy' },
   { label: 'Публичная оферта', href: '/legal/offer' },
   { label: 'Условия комиссии', href: '/legal/commission' },
+  { label: 'Агентский договор', href: '/legal/agent-agreement' },
 ];
 
 export function Footer() {

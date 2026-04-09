@@ -49,6 +49,8 @@ export type AgentIntent =
   | 'legal_contract'
   | 'legal_compliance'
   | 'legal_risks'
+  | 'legal_affiliate_audit'
+  | 'legal_platform_audit'
   // AI Служба безопасности
   | 'sec_access_audit'
   | 'sec_anomaly'
@@ -285,7 +287,9 @@ class PlatformAgentClass {
       }
       case 'legal_contract':
       case 'legal_compliance':
-      case 'legal_risks': {
+      case 'legal_risks':
+      case 'legal_affiliate_audit':
+      case 'legal_platform_audit': {
         const { LegalAgency } = await import('./agencies/legal-agency');
         return new LegalAgency().run(intent, context);
       }

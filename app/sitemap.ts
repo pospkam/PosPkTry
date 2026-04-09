@@ -42,6 +42,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/legal/terms`,       lastModified: new Date(), changeFrequency: 'monthly', priority: 0.4 },
     { url: `${BASE}/legal/offer`,       lastModified: new Date(), changeFrequency: 'monthly', priority: 0.4 },
     { url: `${BASE}/legal/commission`,  lastModified: new Date(), changeFrequency: 'monthly', priority: 0.3 },
+    { url: `${BASE}/legal/agent-agreement`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.3 },
   ];
 
   // Категории маршрутов (14 страниц с высоким SEO-приоритетом)

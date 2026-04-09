@@ -46,6 +46,14 @@ export const INTENT_KEYWORDS: Record<AgentIntent, string[]> = {
     'юридические риски', 'legal risks', 'риски бронирований', 'правовые риски',
     'риски договоров', 'анализ рисков юрист',
   ],
+  legal_affiliate_audit: [
+    'аудит рекламы', 'маркировка рекламы', 'erid', 'affiliate audit',
+    'аффилиатная маркировка', 'проверь рекламу', 'фз-38 реклама',
+  ],
+  legal_platform_audit: [
+    'платформенный аудит', 'platform audit', 'аудит платформы',
+    'ркн аудит', 'compliance платформы', 'проверь платформу юрист',
+  ],
   // AI Служба безопасности
   sec_access_audit:  [
     'аудит доступа', 'подозрительная активность', 'security audit', 'проверь безопасность',
@@ -214,6 +222,7 @@ const ADMIN_INTENTS    = new Set<AgentIntent>([
   'admin_digest', 'admin_health', 'admin_leads',
   'lead_qualify', 'lead_suggest',
   'legal_contract', 'legal_compliance', 'legal_risks',
+  'legal_affiliate_audit', 'legal_platform_audit',
   'sec_access_audit', 'sec_anomaly', 'sec_report',
   'hack_growth', 'hack_funnel', 'hack_automate',
   'rescue_sos_stats', 'rescue_weather_risk',
