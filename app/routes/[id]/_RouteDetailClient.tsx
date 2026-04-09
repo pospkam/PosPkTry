@@ -971,27 +971,6 @@ export default function RouteDetailClient({ id }: { id: string }) {
           </div>
         </div>
 
-        {/* ── Авиабилеты (аффилиат) ────────────────────────────────────────── */}
-        <div className="mt-10 p-4 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-[var(--ocean)]/10 flex items-center justify-center flex-shrink-0">
-              <Plane className="w-4 h-4 text-[var(--ocean)]" />
-            </div>
-            <div>
-              <div className="text-sm font-semibold text-[var(--text-primary)]">Лететь на Камчатку</div>
-              <div className="text-xs text-[var(--text-muted)]">Авито · Петропавловск-Камчатский (PKC)</div>
-            </div>
-          </div>
-          <a
-            href="https://avito.tpk.lu/OtGbiCh3?erid=2VtzqvJmcJA"
-            target="_blank"
-            rel="noopener noreferrer sponsored"
-            className="ds-btn ds-btn-primary text-sm px-5 py-2 flex-shrink-0"
-          >
-            Найти билеты
-          </a>
-        </div>
-
         {/* ── Партнёрские сервисы (TravelPayouts) ───────────────────────────── */}
         <RouteAffiliateBlock activityType={route.activityType} routeId={route.id} />
 
