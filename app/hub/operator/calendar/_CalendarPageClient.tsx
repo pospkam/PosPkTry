@@ -5,8 +5,9 @@ import {
   ChevronLeft, ChevronRight, RefreshCw, Check, X,
   Phone, Mail, Users, CalendarDays, CloudLightning,
   AlertCircle, CheckCircle2, Clock, Ban, Download,
-  TrendingUp, TrendingDown, Zap, Minus,
+  TrendingUp, TrendingDown, Zap, Minus, FolderOpen,
 } from 'lucide-react';
+import FreeDatesPanel from './_FreeDatesPanel';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -342,6 +343,7 @@ function BookingCard({
 
 export default function CalendarPageClient() {
   const now = new Date();
+  const [tab, setTab] = useState<'bookings' | 'free-dates'>('bookings');
   const [year, setYear]   = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [data, setData]   = useState<CalendarData | null>(null);
@@ -438,7 +440,7 @@ export default function CalendarPageClient() {
         <div>
           <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Календарь</h1>
           <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
-            Бронирования · Выручка · Доступность
+            Бронирования · Выручка · Управление датами
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -448,16 +450,40 @@ export default function CalendarPageClient() {
             <Download className="w-4 h-4" />
             iCal
           </button>
-          <button onClick={load} disabled={loading}
-            className="ds-btn flex items-center gap-1.5 text-sm">
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            Обновить
-          </button>
+          {tab === 'bookings' && (
+            <button onClick={load} disabled={loading}
+              className="ds-btn flex items-center gap-1.5 text-sm">
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              Обновить
+            </button>
+          )}
         </div>
       </div>
 
-      {/* ── Сводка месяца ───────────────────────────────────────────────── */}
-      {summary && (
+      {/* ── Вкладки ─────────────────────────────────────────────────────── */}
+      <div className="flex gap-1 p-1 rounded-lg w-fit" style={{ background: 'var(--bg-hover)' }}>
+        {([
+          { key: 'bookings',   label: 'Бронирования', Icon: CalendarDays },
+          { key: 'free-dates', label: 'Свободные даты', Icon: FolderOpen  },
+        ] as const).map(t => (
+          <button key={t.key} onClick={() => setTab(t.key)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all"
+            style={{
+              background: tab === t.key ? 'var(--bg-card)' : 'transparent',
+              color:      tab === t.key ? 'var(--text-primary)' : 'var(--text-muted)',
+              boxShadow:  tab === t.key ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+            }}>
+            <t.Icon className="w-4 h-4" />
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Вкладка: Свободные даты ─────────────────────────────────────── */}
+      {tab === 'free-dates' && <FreeDatesPanel />}
+
+      {/* ── Вкладка: Бронирования ───────────────────────────────────────── */}
+      {tab === 'bookings' && summary && (
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
           {[
             { label: 'Всего',        value: summary.total,       color: 'var(--text-primary)' },
@@ -475,7 +501,7 @@ export default function CalendarPageClient() {
       )}
 
       {/* ── Insights ────────────────────────────────────────────────────── */}
-      {insights.length > 0 && (
+      {tab === 'bookings' && insights.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           {insights.map((ins, i) => {
             const Icon = ins.type === 'high' ? TrendingUp : ins.type === 'low' ? TrendingDown : Zap;
@@ -501,7 +527,7 @@ export default function CalendarPageClient() {
       )}
 
       {/* ── Алерт новых броней ──────────────────────────────────────────── */}
-      {summary && summary.new > 0 && (
+      {tab === 'bookings' && summary && summary.new > 0 && (
         <div className="flex items-center gap-3 px-4 py-3 rounded-lg border"
           style={{ borderColor: 'var(--warning)', background: 'rgba(210,153,34,0.07)' }}>
           <AlertCircle className="w-5 h-5 shrink-0" style={{ color: 'var(--warning)' }} />
@@ -515,7 +541,7 @@ export default function CalendarPageClient() {
       )}
 
       {/* ── Основной layout ─────────────────────────────────────────────── */}
-      <div className="flex gap-4 items-start">
+      {tab === 'bookings' && <div className="flex gap-4 items-start">
 
         {/* ── Календарная сетка ─────────────────────────────────────────── */}
         <div className="flex-1 min-w-0">
@@ -694,7 +720,7 @@ export default function CalendarPageClient() {
             </div>
           )
         )}
-      </div>
+      </div>}
     </div>
   );
 }
