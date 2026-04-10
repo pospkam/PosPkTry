@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import {
   MessageSquare, Users, Brain, CreditCard, RefreshCw,
   TrendingUp, Sparkles, BarChart2, Activity, ThumbsUp, ThumbsDown, Globe,
-  ChevronDown, ChevronRight, Send, User,
+  ChevronDown, ChevronRight, Send, User, Copy, Check,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -192,6 +192,31 @@ function ChannelCard({ id, stats }: { id: string; stats: ChannelStats }) {
   );
 }
 
+// ─── Copy button ──────────────────────────────────────────────────────────────
+
+function CopyButton({ value }: { value: string }) {
+  const [copied, setCopied] = useState(false);
+  const copy = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(value).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  };
+  return (
+    <button
+      onClick={copy}
+      className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded font-mono
+                 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]
+                 transition-colors border border-[var(--border)]"
+      title="Скопировать chat_id"
+    >
+      {copied ? <Check size={9} className="text-[var(--success)]" /> : <Copy size={9} />}
+      {value}
+    </button>
+  );
+}
+
 // ─── Chat conversation viewer ─────────────────────────────────────────────────
 
 function ChatRow({ chat, type }: { chat: TgChat | WebChat; type: 'tg' | 'web' }) {
@@ -250,6 +275,7 @@ function ChatRow({ chat, type }: { chat: TgChat | WebChat; type: 'tg' | 'web' })
             <span className="text-sm font-medium text-[var(--text-primary)] truncate">
               {isTg ? tg.userName : (web.authenticated ? `Пользователь` : 'Гость')}
             </span>
+            {isTg && <CopyButton value={tg.chatId} />}
             {!isTg && web.userId && (
               <span className="text-[10px] text-[var(--text-muted)] truncate">#{web.userId.slice(-6)}</span>
             )}
