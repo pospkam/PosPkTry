@@ -17,6 +17,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { type PendingBooking, cleanupPending, processMessage, isBookingTrigger } from '@/lib/kuzmich/core';
 import { PlatformAgent } from '@/lib/agents';
 import { pool } from '@/lib/db-pool';
+import { groupMonitor } from '@/lib/telegram/group-monitor';
 
 export const dynamic = 'force-dynamic';
 
@@ -306,6 +307,11 @@ interface TgUpdate {
     voice?:  TgVoice;
     video_note?: TgVideoNote;
   };
+  channel_post?: {
+    chat:    { id: number; type: string; title?: string };
+    text?:   string;
+    caption?: string;
+  };
   callback_query?: {
     id:   string;
     from: { id: number };
@@ -320,7 +326,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const update = await request.json() as TgUpdate;
 
-    // ── callback_query: рейтинги 👍/👎 ─────────────────────────────────────
+    // ── callback_query: рейтинги ─────────────────────────────────────
     if (update.callback_query) {
       const cq = update.callback_query;
       const chatId = cq.message?.chat.id ?? cq.from.id;
@@ -335,6 +341,21 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         await tgReply(chatId, 'Жаль. Расскажи что не так — постараюсь исправить.');
       } else {
         await tgAnswerCallback(cq.id);
+      }
+      return NextResponse.json({ ok: true });
+    }
+
+    // ── channel_post: мониторинг каналов ──────────────────────────────
+    if (update.channel_post) {
+      const cp = update.channel_post;
+      const text = cp.text ?? cp.caption ?? '';
+      if (text && text.length >= 10) {
+        groupMonitor.processMessage(
+          String(cp.chat.id),
+          cp.chat.title ?? 'Канал',
+          'channel',
+          text,
+        );
       }
       return NextResponse.json({ ok: true });
     }
@@ -362,13 +383,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ ok: true });
     }
 
-    // ── ГРУППА: /register_group или парсер лидов ──────────────────────────
+    // ── ГРУППА: /register_group или парсер лидов + разведка ─────────
     if (isGroup) {
       const text = msg.text ?? msg.caption ?? '';
       if (text.toLowerCase().startsWith('/register_group')) {
         await registerGroup(chatId, msg.chat.title ?? null, fromId);
         return NextResponse.json({ ok: true });
       }
+      // Intelligence: тихий мониторинг в фоне
+      if (text && text.length >= 10) {
+        groupMonitor.processMessage(String(chatId), msg.chat.title ?? 'Группа', fromName ?? 'Участник', text);
+      }
+      // Lead detection: отвечаем только при явном туристическом интересе
       if (text) await processGroupMessage({ chatId, fromId, fromName, text });
       return NextResponse.json({ ok: true });
     }

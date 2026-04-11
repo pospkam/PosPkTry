@@ -275,11 +275,12 @@ async function fetchMchsAlerts(): Promise<string> {
 
 /** Build full live context block */
 async function loadLiveContext(): Promise<string> {
-  const [weather, news, mchs, dbIntel] = await Promise.all([
+  const [weather, news, mchs, dbIntel, groupIntel] = await Promise.all([
     fetchWeather(),
     fetchKamchatkaNews(),
     fetchMchsAlerts(),
     loadDbIntel(),
+    loadGroupIntel(),
   ]);
 
   const blocks: string[] = [];
@@ -294,6 +295,10 @@ async function loadLiveContext(): Promise<string> {
 
   if (news) {
     blocks.push(`НОВОСТИ КАМЧАТКИ (свежие заголовки):\n${news}`);
+  }
+
+  if (groupIntel) {
+    blocks.push(`РАЗВЕДКА ИЗ TG-ГРУПП (мониторинг каналов):\n${groupIntel}`);
   }
 
   if (dbIntel) {
@@ -315,6 +320,38 @@ async function loadDbIntel(): Promise<string> {
     );
     if (!rows.length) return '';
     return rows.map(r => `- ${r.value.summary?.slice(0, 300) ?? ''}`).join('\n');
+  } catch { return ''; }
+}
+
+/** Load recent group/channel intelligence from agent_memory */
+async function loadGroupIntel(): Promise<string> {
+  try {
+    const { rows } = await pool.query<{
+      value: { group_title?: string; intel?: { key_insights?: string[]; hot_signals?: string[]; conditions?: string[] } };
+    }>(
+      `SELECT value FROM agent_memory
+       WHERE agent_id = 'evo' AND key LIKE 'tg_group_intel_%'
+         AND updated_at > NOW() - INTERVAL '2 days'
+       ORDER BY updated_at DESC LIMIT 5`,
+    );
+    if (!rows.length) return '';
+    const lines: string[] = [];
+    for (const r of rows) {
+      const v = r.value;
+      const intel = v.intel;
+      if (!intel) continue;
+      const group = v.group_title ?? 'Группа';
+      if (intel.hot_signals?.length) {
+        lines.push(...intel.hot_signals.map(s => `- [${group}] ${s}`));
+      }
+      if (intel.key_insights?.length) {
+        lines.push(...intel.key_insights.slice(0, 2).map(s => `- [${group}] ${s}`));
+      }
+      if (intel.conditions?.length) {
+        lines.push(...intel.conditions.slice(0, 2).map(s => `- [${group}] ${s}`));
+      }
+    }
+    return lines.slice(0, 10).join('\n');
   } catch { return ''; }
 }
 
