@@ -14,7 +14,7 @@ set -euo pipefail
 
 API="https://api.timeweb.cloud/api/v1"
 TOKEN="${TIMEWEB_API_TOKEN:?Установите TIMEWEB_API_TOKEN (Timeweb Cloud -> Настройки -> API-токены)}"
-APP_ID="${TIMEWEB_APP_ID:-175269}"
+APP_ID="${TIMEWEB_APP_ID:-175477}"
 
 auth_header="Authorization: Bearer ${TOKEN}"
 json_header="Content-Type: application/json"
