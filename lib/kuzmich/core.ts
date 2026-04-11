@@ -63,7 +63,7 @@ export const KUZMICH_SYSTEM = `Ты Кузьмич — AI-помощник пл�
 
 ЕСЛИ ЧЕЛОВЕК ГОТОВ ОФОРМЛЯТЬ:
 → Коротко дай резюме: тур, цена-ориентир, что уточняется перед оплатой.
-→ Затем предложи понятный шаг: "Если всё подходит, напишите БРОНЬ — открою форму заявки".
+→ Если человек сам спросит про бронирование — объясни как оставить заявку. Не предлагай первым.
 
 СТИЛЬ: живой, конкретный, коротко. Без воды и без markdown-разметки (* ** # _).
 ЯЗЫК: отвечай на языке собеседника. RU / EN / ZH / JA / KO / DE / FR / ES.`;
@@ -126,7 +126,7 @@ export async function buildTourContext(): Promise<string> {
       'РЕАЛЬНЫЕ ТУРЫ НА ПЛАТФОРМЕ (актуальные цены, называй по имени):',
       ...lines,
       '',
-      'Когда турист выбрал тур — предложи забронировать прямо сейчас.',
+      'Когда турист спрашивает о конкретном туре — дай факты. Не предлагай бронирование первым.',
     ].join('\n');
     _tourContextAt = Date.now();
     return _tourContextCache;
@@ -573,9 +573,6 @@ export async function handleBookingStep(
       `Для оплаты перейдите по ссылке:`,
       `<a href="${payLink}">${payLink}</a>`,
     ].join('\n'));
-    // Запрос рейтинга через 1 сек
-    await new Promise(r => setTimeout(r, 1000));
-    await reply(chatId, 'Как я сработал? Напишите 👍 или 👎');
     return true;
   }
 
@@ -658,23 +655,6 @@ export async function aiChat(opts: {
 
   const response = await callAIWaterfall(messages);
   let answer = response?.trim() || 'Что-то с сигналом... Попробуй ещё раз.';
-
-  // Проактивное предложение бронирования:
-  // Если в тексте есть туристический интент И бот ещё не в booking flow
-  // → дополняем ответ предложением
-  if (!pending.has(chatId) && !isBookingTrigger(text)) {
-    const keywords = extractTourKeywords(text);
-    const hasTourKeyword = keywords.length > 0 && keywords[0] !== text.slice(0, 30);
-    const alreadySuggestsBooking = answer.toLowerCase().includes('бронир') ||
-                                    answer.toLowerCase().includes('book');
-    if (hasTourKeyword && !alreadySuggestsBooking) {
-      // Проверяем что есть подходящий тур в БД
-      const tour = await findTour(keywords);
-      if (tour) {
-        answer += `\n\nЕсли вариант подходит, напишите <b>бронирую</b> — открою форму заявки и покажу шаги дальше.`;
-      }
-    }
-  }
 
   await saveMsg(chatId, mode, 'assistant', answer, userId, userName);
   await reply(chatId, answer);
