@@ -48,6 +48,8 @@ function cleanAIResponse(raw: string): string {
   t = t.replace(/(?<!\n)\*(?!\s)(.+?)(?<!\s)\*/g, '$1');
   // # headers → plain
   t = t.replace(/^#{1,6}\s+/gm, '');
+  // * bullet lists → dash
+  t = t.replace(/^\*\s+/gm, '- ');
   // ``` code blocks → plain
   t = t.replace(/```[\s\S]*?```/g, '');
   // Clean up multiple spaces/newlines left after stripping
@@ -204,7 +206,7 @@ async function fetchWeather(): Promise<string> {
 /** Lightweight RSS parser — extracts title + pubDate from first N items */
 function parseRssHeadlines(xml: string, limit = 5): Array<{ title: string; date: string }> {
   const items: Array<{ title: string; date: string }> = [];
-  const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
+  const itemRegex = /<item[^>]*>([\s\S]*?)<\/item>/gi;
   let match: RegExpExecArray | null;
   while ((match = itemRegex.exec(xml)) !== null && items.length < limit) {
     const block = match[1];

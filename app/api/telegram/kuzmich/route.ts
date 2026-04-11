@@ -46,7 +46,7 @@ function sanitizeForTelegram(raw: string): string {
   t = t.replace(/(?<!\n)\*(?!\s)(.+?)(?<!\s)\*/g, '<i>$1</i>');
   // Remove leftover markdown artifacts: # headers, * bullet, ``` code blocks
   t = t.replace(/^#{1,6}\s+/gm, '');
-  t = t.replace(/^[\*\-]\s{2,}/gm, '- ');
+  t = t.replace(/^[\*\-]\s+/gm, '- ');
   t = t.replace(/```[\s\S]*?```/g, '');
   // Strip emojis
   t = stripEmoji(t);
