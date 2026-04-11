@@ -39,6 +39,20 @@ GitHub Actions: `.github/workflows/cron-watchdog.yml`, `cron-editor.yml`, `cron-
 
 Endpoint: `/api/cron/danger-analysis`
 
+### Platform Agent (диспетчер)
+
+`lib/agents/platform-agent.ts` — маршрутизирует запросы к нужному agency по intent.
+
+| Agency | Файл | Интенты | Канал |
+|--------|------|---------|-------|
+| **Operator** | `agencies/operator-agency.ts` | `op_tours_summary`, `op_bookings_today`, `op_revenue`, `op_create_tour`, `op_fill_ai`, `op_add_slots` | `/hub/operator/ai-assist` |
+| **Tourist** | `agencies/tourist-agency.ts` | Рекомендации туров | Kuzmich |
+| **Guide** | `agencies/guide-agency.ts` | Гид по маршрутам | PlatformAgent |
+| **Rescue** | `agencies/rescue-agency.ts` | SOS-консультации | PlatformAgent |
+| **Lead** | `agencies/lead-agency.ts` | Обработка лидов | PlatformAgent |
+| **Marketing** | `agencies/marketing-agency.ts` | Маркетинг | PlatformAgent |
+| **Transfer** | `agencies/transfer-operator-agency.ts` | Трансферы | PlatformAgent |
+
 ---
 
 ## AGENT BRAIN (память агентов)
@@ -132,15 +146,24 @@ lib/agents/
   watchdog.ts              — Watchdog (мониторинг)
   editor.ts                — Editor (описания туров)
   scout-digest.ts          — Scout Digest (RSS дайджест)
+  platform-agent.ts        — Диспетчер intent → agency
+  intent-classifier.ts     — Классификатор интентов
+  permissions.ts           — Матрица разрешений
   memory/
     agent-memory.ts        — Оперативная память (TTL 7д)
     agent-knowledge.ts     — Постоянная память (brain, FTS)
+  agencies/
+    operator-agency.ts     — Оператор-тулза (6 интентов)
+    tourist-agency.ts      — Рекомендации для туристов
+    guide-agency.ts        — Гид по маршрутам
+    rescue-agency.ts       — SOS-консультации
+    lead-agency.ts         — Обработка лидов
+    marketing-agency.ts    — Маркетинг
+    transfer-operator-agency.ts — Трансферы
+    danger-analyst-agency.ts — Анализ опасностей
 
 lib/kuzmich/
   core.ts                  — Общий мозг Кузьмича (все каналы)
-
-lib/agents/agencies/
-  danger-analyst-agency.ts — Анализ опасностей (единственный живой agency)
 
 lib/ai/providers.ts        — AI waterfall
 lib/mcp/dev-tools/server.ts — MCP: brain_* tools
