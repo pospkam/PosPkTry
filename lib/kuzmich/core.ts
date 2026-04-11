@@ -988,11 +988,18 @@ export async function processMessage(opts: {
   }
 
   // Active booking flow — проверяем память И базу данных
-  const activeBooking = await loadBookingFlow(chatId, mode, pendingMap);
+  // Фото и голос НЕ попадают в booking flow — это контент для AI
+  const isMediaMessage = !!visionDescription || createdVia.includes('voice');
+  const activeBooking = !isMediaMessage ? await loadBookingFlow(chatId, mode, pendingMap) : null;
   if (activeBooking) {
-    const handled = await handleBookingStep(chatId, text, mode, pendingMap, replyFn, createdVia);
-    if (handled) return;
-    // handleBookingStep вернул false → flow отменён, продолжаем в AI chat
+    // Auto-expire: если booking flow старше 30 минут — удаляем
+    if (activeBooking.started_at < Date.now() - 30 * 60 * 1000) {
+      await deleteBookingFlow(chatId, mode, pendingMap);
+    } else {
+      const handled = await handleBookingStep(chatId, text, mode, pendingMap, replyFn, createdVia);
+      if (handled) return;
+    }
+    // handleBookingStep вернул false или flow expired → продолжаем в AI chat
   }
 
   // Booking trigger

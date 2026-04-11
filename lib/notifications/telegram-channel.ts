@@ -56,7 +56,7 @@ async function tgPostPhoto(chatId: string, photoUrl: string, caption: string, bo
   }
 }
 
-/** Отправка в MAX канал через MAX Bot API */
+/** Отправка в MAX канал через MAX Platform API */
 async function maxChannelPost(
   text: string,
   photoUrl?: string | null,
@@ -65,7 +65,6 @@ async function maxChannelPost(
   const channelId = process.env.MAX_CHANNEL_ID;
   if (!token || !channelId) return { ok: false, error: 'MAX_BOT_TOKEN or MAX_CHANNEL_ID not set' };
 
-  // Конвертируем HTML-теги в MAX формат (MAX тоже поддерживает HTML)
   const attachments: Array<Record<string, unknown>> = [];
   if (photoUrl) {
     attachments.push({ type: 'image', payload: { url: photoUrl } });
@@ -80,14 +79,17 @@ async function maxChannelPost(
     if (attachments.length > 0) body.attachments = attachments;
 
     const res = await fetch(
-      `https://botapi.max.ru/messages?access_token=${token}&chat_id=${channelId}`,
+      `https://platform-api.max.ru/messages?chat_id=${channelId}`,
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token,
+        },
         body: JSON.stringify(body),
       },
     );
-    const data = await res.json() as { success?: boolean; message?: Record<string, unknown>; code?: string; description?: string };
+    const data = await res.json() as { message?: Record<string, unknown>; code?: string; description?: string };
     if (data.message) return { ok: true };
     return { ok: false, error: data.description ?? data.code ?? 'unknown MAX error' };
   } catch (e) {
