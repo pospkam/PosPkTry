@@ -164,14 +164,18 @@ async function handleApproval(cmd: string, chatId: number): Promise<void> {
 
 async function handleOwnerCommand(cmd: string, text: string, chatId: number): Promise<void> {
   if (cmd === '/help' || cmd === '/start') {
-    await tgReply(chatId, '<b>Admin режим</b>\n\n/kuzmich — пост о маршруте\n/tip — совет\n/sezon — сезонный пост\n/approve_XXX / /reject_XXX — инициативы');
+    await tgReply(chatId, '<b>Admin режим</b>\n\n/kuzmich — пост о маршруте\n/tip — совет\n/sezon — сезонный пост\n/safety — пост о безопасности\n/approve_XXX / /reject_XXX — инициативы');
     return;
   }
-  if (cmd === '/kuzmich' || cmd === '/tip' || cmd === '/sezon') {
+  if (cmd === '/kuzmich' || cmd === '/tip' || cmd === '/sezon' || cmd === '/safety') {
     await tgReply(chatId, 'Публикую...');
     const mod = await import('@/lib/notifications/telegram-channel');
-    const fn = cmd === '/kuzmich' ? mod.postKuzmichRoute : cmd === '/tip' ? mod.postKuzmichTip : mod.postSezonToChannel;
-    const r = await fn();
+    const fn = cmd === '/kuzmich' ? mod.postKuzmichRoute
+      : cmd === '/tip' ? mod.postKuzmichTip
+      : cmd === '/safety' ? mod.postSafetyToChannel
+      : mod.postSezonToChannel;
+    const topic = cmd === '/safety' ? text.replace(/^\/safety\s*/i, '').trim() || undefined : undefined;
+    const r = cmd === '/safety' ? await fn(topic) : await fn();
     await tgReply(chatId, r.ok ? 'Опубликовано' : `Ошибка: ${r.error}`);
     return;
   }
