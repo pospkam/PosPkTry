@@ -45,7 +45,25 @@ async function maxReply(chatId: number, text: string): Promise<void> {
   } catch { /* не блокируем */ }
 }
 
+// ── Скачивание медиа по URL → base64 ─────────────────────────────────────────
+
+async function downloadMedia(url: string): Promise<{ base64: string; mimeType: string } | null> {
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
+    if (!res.ok) return null;
+    const ct = res.headers.get('content-type') ?? 'application/octet-stream';
+    const buf = await res.arrayBuffer();
+    return { base64: Buffer.from(buf).toString('base64'), mimeType: ct.split(';')[0].trim() };
+  } catch { return null; }
+}
+
 // ── Типы апдейтов MAX ────────────────────────────────────────────────────────
+
+interface MaxAttachment {
+  type: string;
+  payload?: { url?: string; token?: string; photo_id?: number };
+  filename?: string;
+}
 
 interface MaxUpdate {
   update_type: string;
@@ -54,7 +72,7 @@ interface MaxUpdate {
   message?: {
     sender?: { user_id: number; name: string; username?: string | null } | null;
     recipient: { chat_id: number | null; chat_type: string };
-    body: { mid: string; seq: number; text: string | null };
+    body: { mid: string; seq: number; text: string | null; attachments?: MaxAttachment[] | null };
   };
   // bot_started
   chat_id?: number;
@@ -87,25 +105,81 @@ async function handleUpdate(update: MaxUpdate): Promise<void> {
     return;
   }
 
-  // message_created → текстовое сообщение
+  // message_created → текст / фото / голос
   if (update.update_type === 'message_created' && update.message) {
     const msg = update.message;
-    const text = msg.body.text;
-    if (!text) return;
-
     const chatId = msg.recipient.chat_id;
     if (!chatId) return;
 
-    await processMessage({
-      chatId,
-      text: text.trim(),
-      userName: msg.sender?.name ?? null,
-      userId: msg.sender?.user_id ?? null,
-      mode: 'max',
-      createdVia: 'max',
-      pending,
-      reply: maxReply,
-    });
+    const text = msg.body.text?.trim() ?? '';
+    const attachments = msg.body.attachments ?? [];
+    const userName = msg.sender?.name ?? null;
+    const userId = msg.sender?.user_id ?? null;
+
+    // Фото → Gemini Vision
+    const photoAtt = attachments.find(a => a.type === 'image');
+    if (photoAtt?.payload?.url) {
+      await maxReply(chatId, 'Смотрю на фото...');
+      let visionDescription: string | undefined;
+      try {
+        const mediaData = await downloadMedia(photoAtt.payload.url);
+        if (mediaData) {
+          const { callGeminiVision } = await import('@/lib/ai/providers');
+          visionDescription = await callGeminiVision(
+            mediaData.base64, mediaData.mimeType,
+            'Опиши что на фото: место, природа, деятельность. Если это Камчатка — укажи конкретно что это. Кратко, 2-3 предложения.',
+          ) ?? undefined;
+        }
+      } catch { /* не критично */ }
+
+      await processMessage({
+        chatId, text: text || 'Что это за место?',
+        userName, userId, mode: 'max',
+        createdVia: 'max', pending, reply: maxReply, visionDescription,
+      });
+      return;
+    }
+
+    // Голос / аудио → Gemini Transcribe
+    const audioAtt = attachments.find(a => a.type === 'audio');
+    if (audioAtt?.payload?.url) {
+      await maxReply(chatId, 'Слушаю...');
+      let transcription: string | undefined;
+      try {
+        const mediaData = await downloadMedia(audioAtt.payload.url);
+        if (mediaData) {
+          const { callGeminiTranscribe } = await import('@/lib/ai/providers');
+          transcription = await callGeminiTranscribe(mediaData.base64, mediaData.mimeType) ?? undefined;
+        }
+      } catch { /* не критично */ }
+
+      if (!transcription) {
+        await maxReply(chatId, 'Не разобрал голосовое. Напишите текстом?');
+        return;
+      }
+
+      await maxReply(chatId, `<i>Вы сказали: ${transcription}</i>`);
+      await processMessage({
+        chatId, text: transcription, userName, userId,
+        mode: 'max', createdVia: 'max_voice', pending, reply: maxReply,
+      });
+      return;
+    }
+
+    // Видео → описание через Vision
+    const videoAtt = attachments.find(a => a.type === 'video');
+    if (videoAtt?.payload?.url) {
+      await maxReply(chatId, 'Видео пока не умею анализировать. Опишите словами или пришлите фото.');
+      return;
+    }
+
+    // Текст
+    if (text) {
+      await processMessage({
+        chatId, text, userName, userId,
+        mode: 'max', createdVia: 'max', pending, reply: maxReply,
+      });
+    }
     return;
   }
 
