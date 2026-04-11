@@ -31,7 +31,7 @@ const SERVICES: Service[] = [
     icon: Navigation,
     label: 'Яндекс Путешествия',
     desc: 'Отели, билеты, туры — всё в одном',
-    url: `https://travel.yandex.ru/hotels/petropavlovsk-kamchatsky/?affiliate_clid=4910087&affiliate_vid=${MARKER}&erid=2VtzqvFodjU&travelpayouts_uid=${TP_SUBID}&utm_campaign=tourhab.ru&utm_medium=cpa&utm_source=travelpayouts`,
+    url: `https://yandex.travel/hotels/petropavlovsk-kamchatsky/?clid=4910087&affiliate_vid=${MARKER}&erid=2VtzqvFodjU&travelpayouts_uid=${TP_SUBID}&utm_campaign=tourhab.ru&utm_medium=cpa&utm_source=travelpayouts`,
     color: 'var(--accent)',
   },
   {

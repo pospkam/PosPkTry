@@ -25,6 +25,7 @@ import InsuranceBlock from '@/components/routes/InsuranceBlock';
 import FlightsBlock from '@/components/routes/FlightsBlock';
 import HotelsBlock from '@/components/routes/HotelsBlock';
 import TransfersBlock from '@/components/routes/TransfersBlock';
+import YandexTravelBlock from '@/components/routes/YandexTravelBlock';
 import SafetyWarnings from '@/components/safety/SafetyWarnings';
 import { RouteGradientPlaceholder } from '@/components/routes/RouteGradientPlaceholder';
 
@@ -976,6 +977,9 @@ export default function RouteDetailClient({ id }: { id: string }) {
 
         {/* ── Безопасность маршрута (предупреждения) ────────────────────────── */}
         <SafetyWarnings routeId={route.id} />
+
+        {/* ── Яндекс Путешествия (билеты + отели + туры) ───────────────────────── */}
+        <YandexTravelBlock routeId={route.id} />
 
         {/* ── Авиабилеты до Камчатки (Aviasales) ────────────────────────────── */}
         <FlightsBlock />
