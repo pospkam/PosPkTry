@@ -97,6 +97,57 @@ async function tgAnswerCallback(callbackQueryId: string, text?: string): Promise
   }).catch(() => {});
 }
 
+// ── /start с клавиатурой быстрых тем ──────────────────────────────────────────
+
+async function sendStartMessage(chatId: number, name: string | null): Promise<void> {
+  const greeting = name ? `Привет, ${name}!` : 'Привет!';
+  const text = [
+    `${greeting} Я Кузьмич — AI-агент платформы TourHab.`,
+    '',
+    '<b>Что умею:</b>',
+    '- Подобрать тур: рыбалка, вулканы, медведи, термальные источники...',
+    '- Открыть заявку на тур прямо в чате',
+    '- Рассказать про маршруты, сезоны, снаряжение',
+    '- Предупредить об опасностях на маршруте',
+    '- Определить место по фото',
+    '',
+    'Выбери тему или пиши своими словами.',
+  ].join('\n');
+
+  await tgReply(chatId, text, {
+    reply_markup: {
+      keyboard: [
+        ['Рыбалка', 'Вулканы'],
+        ['Медведи', 'Термальные источники'],
+        ['Вертолётный тур', 'Помощь'],
+      ],
+      resize_keyboard: true,
+      one_time_keyboard: true,
+    },
+  });
+}
+
+// ── Рейтинг после AI-ответа (inline-кнопки) ───────────────────────────────────
+
+async function sendRatingKeyboard(chatId: number): Promise<void> {
+  const token = botToken();
+  if (!token) return;
+  await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      chat_id: chatId,
+      text: 'Был полезен ответ?',
+      reply_markup: {
+        inline_keyboard: [[
+          { text: 'Да', callback_data: 'rate_good' },
+          { text: 'Нет', callback_data: 'rate_bad' },
+        ]],
+      },
+    }),
+  }).catch(() => {});
+}
+
 // ── Скачать файл из Telegram → base64 ────────────────────────────────────────
 
 async function downloadTgFile(fileId: string): Promise<{ base64: string; mimeType: string; ext: string } | null> {
@@ -405,6 +456,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // ── ЛИЧКА: турист ─────────────────────────────────────────────────────
 
+    // /start — отправляем приветствие с клавиатурой быстрых тем (без processMessage)
+    if (msg.text?.trim() === '/start') {
+      await sendStartMessage(chatId, fromName);
+      return NextResponse.json({ ok: true });
+    }
+
     // Определяем рейтинг из текстовых эмодзи
     if (msg.text) {
       const t = msg.text.trim();
@@ -444,6 +501,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         chatId, text: transcription, userName: fromName,
         userId: fromId, mode: 'tourist', createdVia: 'telegram_voice',
         pending, reply: tgReply,
+        platform: 'tg', afterReply: sendRatingKeyboard,
       });
       return NextResponse.json({ ok: true });
     }
@@ -469,6 +527,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         chatId, text: msg.caption?.trim() ?? 'Что это за место?',
         userName: fromName, userId: fromId, mode: 'tourist',
         createdVia: 'telegram', pending, reply: tgReply, visionDescription,
+        platform: 'tg', afterReply: sendRatingKeyboard,
       });
       return NextResponse.json({ ok: true });
     }
@@ -479,6 +538,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         chatId, text: msg.text.trim(), userName: fromName,
         userId: fromId, mode: 'tourist', createdVia: 'telegram',
         pending, reply: tgReply,
+        platform: 'tg', afterReply: sendRatingKeyboard,
       });
     }
 

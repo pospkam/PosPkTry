@@ -114,6 +114,153 @@ let _tourContextCache: string = '';
 let _tourContextAt = 0;
 const CACHE_TTL_MS = 10 * 60 * 1000; // 10 мин
 
+// ── Bot Memory (TG / MAX — без регистрации, хранится в agent_memory) ─────────
+
+export interface BotMemory {
+  activities:     string[];
+  locations:      string[];
+  travel_style:   string | null;
+  budget_level:   string | null;
+  ai_notes:       string | null;
+  messages_count: number;
+}
+
+function botMemKey(chatId: number, platform: 'tg' | 'max'): string {
+  return `kuzmich_mem_${platform}_${chatId}`;
+}
+
+export async function loadBotMemory(chatId: number, platform: 'tg' | 'max'): Promise<BotMemory | null> {
+  try {
+    const { rows } = await pool.query<{ value: BotMemory }>(
+      `SELECT value FROM agent_memory
+       WHERE agent_id = 'kuzmich' AND memory_type = 'user_pref' AND key = $1 LIMIT 1`,
+      [botMemKey(chatId, platform)],
+    );
+    return rows[0]?.value ?? null;
+  } catch { return null; }
+}
+
+export async function saveBotMemory(
+  chatId:   number,
+  platform: 'tg' | 'max',
+  patch:    Partial<BotMemory>,
+  existing: BotMemory | null = null,
+): Promise<void> {
+  try {
+    const cur = existing ?? await loadBotMemory(chatId, platform);
+    const next: BotMemory = {
+      // Merge arrays — новые интересы добавляются к старым
+      activities:     [...new Set([...(cur?.activities ?? []), ...(patch.activities ?? [])])],
+      locations:      [...new Set([...(cur?.locations  ?? []), ...(patch.locations  ?? [])])],
+      travel_style:   patch.travel_style  !== undefined ? patch.travel_style  : (cur?.travel_style  ?? null),
+      budget_level:   patch.budget_level  !== undefined ? patch.budget_level  : (cur?.budget_level  ?? null),
+      ai_notes:       patch.ai_notes      !== undefined ? patch.ai_notes      : (cur?.ai_notes      ?? null),
+      messages_count: (cur?.messages_count ?? 0) + (patch.messages_count ?? 0),
+    };
+    await pool.query(
+      `INSERT INTO agent_memory
+         (agent_id, memory_type, key, value, memory_tier, tags, created_at, updated_at, edit_count)
+       VALUES ('kuzmich', 'user_pref', $1, $2::jsonb, 1, ARRAY['bot_memory'], NOW(), NOW(), 0)
+       ON CONFLICT (agent_id, memory_type, key) DO UPDATE
+         SET value = $2::jsonb, updated_at = NOW(),
+             edit_count = agent_memory.edit_count + 1`,
+      [botMemKey(chatId, platform), JSON.stringify(next)],
+    );
+  } catch { /* не блокируем */ }
+}
+
+export function buildBotMemoryContext(mem: BotMemory): string {
+  const parts: string[] = [];
+  if (mem.messages_count > 4) {
+    parts.push(`Уже общались (${mem.messages_count} сообщений).`);
+  }
+  if (mem.activities.length) {
+    const L: Record<string, string> = {
+      fishing: 'рыбалку', trekking: 'треккинг', volcano: 'вулканы',
+      thermal: 'термальные источники', bears: 'медведей',
+      helicopter: 'вертолётные туры', boat_trip: 'морские туры', snowmobile: 'снегоходы',
+    };
+    parts.push(`Интересуется: ${mem.activities.map(a => L[a] ?? a).join(', ')}.`);
+  }
+  if (mem.locations.length) parts.push(`Упоминаемые места: ${mem.locations.join(', ')}.`);
+  if (mem.travel_style) {
+    const S: Record<string, string> = {
+      family: 'семейный отдых', solo: 'индивидуальный', adventure: 'экстрим', comfort: 'комфорт',
+    };
+    parts.push(`Стиль: ${S[mem.travel_style] ?? mem.travel_style}.`);
+  }
+  if (mem.budget_level) {
+    const B: Record<string, string> = { budget: 'эконом', premium: 'премиум' };
+    parts.push(`Бюджет: ${B[mem.budget_level] ?? mem.budget_level}.`);
+  }
+  if (mem.ai_notes) parts.push(mem.ai_notes);
+  if (!parts.length) return '';
+  return `\n\n[ПАМЯТЬ О ПОЛЬЗОВАТЕЛЕ]\n${parts.join(' ')}\nАдаптируй рекомендации. Не упоминай явно что "помнишь".`;
+}
+
+function extractBotMemoryPatch(text: string): Partial<BotMemory> {
+  const lower = text.toLowerCase();
+  const ACTIVITY_KW: Record<string, string> = {
+    рыбал: 'fishing', рыб: 'fishing', fishing: 'fishing', лосось: 'fishing', нерка: 'fishing',
+    трекк: 'trekking', поход: 'trekking', пеший: 'trekking', hiking: 'trekking',
+    вулкан: 'volcano', volcano: 'volcano', кратер: 'volcano',
+    термал: 'thermal', паратунк: 'thermal',
+    медвед: 'bears', медведь: 'bears', bear: 'bears',
+    вертолёт: 'helicopter', вертолет: 'helicopter', helicopter: 'helicopter',
+    катер: 'boat_trip', яхт: 'boat_trip',
+    снегоход: 'snowmobile',
+  };
+  const LOCATION_KW: Record<string, string> = {
+    курильск: 'kurilskoye', мутновск: 'mutnovsky',
+    авачинск: 'avachinsky', толбачик: 'tolbachik', налычево: 'nalychevo',
+  };
+  const activities = new Set<string>();
+  const locations  = new Set<string>();
+  for (const [kw, val] of Object.entries(ACTIVITY_KW)) {
+    if (lower.includes(kw)) activities.add(val);
+  }
+  for (const [kw, val] of Object.entries(LOCATION_KW)) {
+    if (lower.includes(kw)) locations.add(val);
+  }
+  let travel_style: string | null = null;
+  if (/семь|дети|ребён|ребенок/.test(lower))       travel_style = 'family';
+  else if (/\bодин\b|\bсама?\b|solo/.test(lower))  travel_style = 'solo';
+  else if (/экстрим|adventure/.test(lower))         travel_style = 'adventure';
+  else if (/комфорт|люкс|luxury/.test(lower))       travel_style = 'comfort';
+  let budget_level: string | null = null;
+  if (/бюджет|дёшево|эконом/.test(lower))           budget_level = 'budget';
+  else if (/премиум|vip|дорог/.test(lower))         budget_level = 'premium';
+  return {
+    ...(activities.size ? { activities: [...activities] } : {}),
+    ...(locations.size  ? { locations:  [...locations]  } : {}),
+    ...(travel_style    ? { travel_style }                : {}),
+    ...(budget_level    ? { budget_level }                : {}),
+  };
+}
+
+async function synthesizeBotNotes(
+  chatId:   number,
+  platform: 'tg' | 'max',
+  messages: Array<{ role: string; content: string }>,
+  existing: string | null,
+): Promise<void> {
+  const userTurns = messages
+    .filter(m => m.role === 'user')
+    .slice(-6)
+    .map(m => m.content)
+    .join('\n');
+  if (userTurns.length < 30) return;
+  try {
+    const { callAIFast } = await import('@/lib/ai/providers');
+    const result = await callAIFast([{
+      role: 'user',
+      content: `Извлеки 1-3 конкретных факта о туристе: даты поездки, размер группы, пожелания, ограничения. Только факты, без пересказа. Если ничего конкретного — ответь "нет".${existing ? `\n\nТекущие заметки (не дублируй): ${existing}` : ''}\n\nСообщения туриста:\n${userTurns}`,
+    }]);
+    if (!result || /^нет\.?$/i.test(result.trim())) return;
+    await saveBotMemory(chatId, platform, { ai_notes: result.trim().slice(0, 400) });
+  } catch { /* fire-and-forget */ }
+}
+
 export async function buildTourContext(): Promise<string> {
   if (_tourContextCache && Date.now() - _tourContextAt < CACHE_TTL_MS) {
     return _tourContextCache;
@@ -882,10 +1029,12 @@ export async function aiChat(opts: {
   reply: ReplyFn;
   userId?: number | null;
   userName?: string | null;
-  visionDescription?: string;          // описание фото от Gemini
+  visionDescription?: string;
   pending: Map<number, PendingBooking>;
+  platform?: 'tg' | 'max';
+  afterReply?: (chatId: number) => Promise<void>;
 }): Promise<void> {
-  const { chatId, text, mode, reply, userId, userName, visionDescription, pending } = opts;
+  const { chatId, text, mode, reply, userId, userName, visionDescription, pending, platform, afterReply } = opts;
 
   // Сохраняем сообщение пользователя
   const userContent = visionDescription
@@ -893,13 +1042,17 @@ export async function aiChat(opts: {
     : text;
   await saveMsg(chatId, mode, 'user', userContent, userId, userName);
 
-  const history = await getHistory(chatId, mode);
-  const tourContext = await buildTourContext();
+  const [history, tourContext, botMemory] = await Promise.all([
+    getHistory(chatId, mode),
+    buildTourContext(),
+    platform ? loadBotMemory(chatId, platform) : Promise.resolve(null),
+  ]);
 
-  // Строим системный промпт с реальными данными о турах
+  // Строим системный промпт: туры + память о пользователе
+  const memCtx = botMemory ? buildBotMemoryContext(botMemory) : '';
   const systemContent = tourContext
-    ? `${KUZMICH_SYSTEM}\n\n${tourContext}`
-    : KUZMICH_SYSTEM;
+    ? `${KUZMICH_SYSTEM}\n\n${tourContext}${memCtx}`
+    : `${KUZMICH_SYSTEM}${memCtx}`;
 
   // Если есть описание фото — прокидываем его первым сообщением
   const extraUserMsg: ChatMessage[] = visionDescription
@@ -920,6 +1073,19 @@ export async function aiChat(opts: {
 
   await saveMsg(chatId, mode, 'assistant', answer, userId, userName);
   await reply(chatId, answer);
+
+  if (afterReply) await afterReply(chatId);
+
+  // Fire-and-forget: обновляем долгосрочную память бота
+  if (platform) {
+    const newCount = (botMemory?.messages_count ?? 0) + 1;
+    const patch    = extractBotMemoryPatch(text);
+    void saveBotMemory(chatId, platform, { ...patch, messages_count: 1 }, botMemory);
+    if (newCount % 5 === 0) {
+      const allMsgs = [...history, { role: 'assistant' as const, content: answer }];
+      void synthesizeBotNotes(chatId, platform, allMsgs, botMemory?.ai_notes ?? null);
+    }
+  }
 }
 
 // ── Full Message Processor ────────────────────────────────────────────────────
@@ -934,8 +1100,10 @@ export async function processMessage(opts: {
   pending: Map<number, PendingBooking>;
   reply: ReplyFn;
   visionDescription?: string;
+  platform?: 'tg' | 'max';
+  afterReply?: (chatId: number) => Promise<void>;
 }): Promise<void> {
-  const { chatId, text, userName, userId, mode, createdVia, pending: pendingMap, reply: replyFn, visionDescription } = opts;
+  const { chatId, text, userName, userId, mode, createdVia, pending: pendingMap, reply: replyFn, visionDescription, platform, afterReply } = opts;
   const cmd = text.split(' ')[0]?.toLowerCase() ?? '';
 
   // /start
@@ -1016,5 +1184,5 @@ export async function processMessage(opts: {
   }
 
   // Free AI chat (с vision если есть)
-  await aiChat({ chatId, text, mode, reply: replyFn, userId, userName, visionDescription, pending: pendingMap });
+  await aiChat({ chatId, text, mode, reply: replyFn, userId, userName, visionDescription, pending: pendingMap, platform, afterReply });
 }

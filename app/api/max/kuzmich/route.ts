@@ -101,6 +101,7 @@ async function handleUpdate(update: MaxUpdate): Promise<void> {
       createdVia: 'max',
       pending,
       reply: maxReply,
+      platform: 'max',
     });
     return;
   }
@@ -136,6 +137,7 @@ async function handleUpdate(update: MaxUpdate): Promise<void> {
         chatId, text: text || 'Что это за место?',
         userName, userId, mode: 'max',
         createdVia: 'max', pending, reply: maxReply, visionDescription,
+        platform: 'max',
       });
       return;
     }
@@ -162,6 +164,7 @@ async function handleUpdate(update: MaxUpdate): Promise<void> {
       await processMessage({
         chatId, text: transcription, userName, userId,
         mode: 'max', createdVia: 'max_voice', pending, reply: maxReply,
+        platform: 'max',
       });
       return;
     }
@@ -178,6 +181,7 @@ async function handleUpdate(update: MaxUpdate): Promise<void> {
       await processMessage({
         chatId, text, userName, userId,
         mode: 'max', createdVia: 'max', pending, reply: maxReply,
+        platform: 'max',
       });
     }
     return;
