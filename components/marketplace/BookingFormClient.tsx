@@ -26,7 +26,6 @@ export default function BookingFormClient({ tourId, basePrice, maxParticipants =
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [formData, setFormData] = useState({
     tourist_name: '',
     tourist_email: '',
@@ -198,19 +197,9 @@ export default function BookingFormClient({ tourId, basePrice, maxParticipants =
         </div>
       )}
 
-      <label className="flex items-start gap-2 text-xs text-[var(--text-secondary)]">
-        <input
-          type="checkbox"
-          checked={acceptedTerms}
-          onChange={e => setAcceptedTerms(e.target.checked)}
-          className="mt-0.5"
-          required
-        />
-        <span>
-          Подтверждаю, что ознакомился с условиями тура: даты, состав программы, наличие мест и точная стоимость
-          уточняются перед оплатой.
-        </span>
-      </label>
+      <p className="text-xs text-[var(--text-muted)]">
+        Отправляя заявку, вы понимаете, что даты, наличие мест и точная стоимость уточняются перед оплатой.
+      </p>
 
       {/* Итог */}
       <div className="border-t border-[var(--border)] pt-4">
@@ -225,7 +214,7 @@ export default function BookingFormClient({ tourId, basePrice, maxParticipants =
           </div>
           <button
             type="submit"
-            disabled={loading || !formData.booking_date || !acceptedTerms}
+            disabled={loading || !formData.booking_date}
             className="ds-btn ds-btn-primary flex items-center gap-2 px-6"
           >
             {loading ? (
