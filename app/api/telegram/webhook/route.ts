@@ -44,6 +44,7 @@ import {
   postFriendToChannel,
 } from '@/lib/notifications/telegram-channel';
 import { PlatformAgent } from '@/lib/agents/platform-agent';
+import { classifyIntentByKeywords } from '@/lib/agents/intent-classifier';
 import { approvalRequired } from '@/lib/agents/safeguards/approval-required';
 import { verifyConnectToken } from '@/lib/telegram/connect-token';
 import { sendWelcomeMessage } from '@/lib/telegram/welcome';
@@ -206,7 +207,7 @@ function saveHistory(tgChatId: string, messages: HistoryMessage[]): void {
     `INSERT INTO chat_sessions (session_id, role, messages, updated_at)
      VALUES ($1, 'tourist', $2::jsonb, NOW())
      ON CONFLICT (session_id) DO UPDATE SET messages = $2::jsonb, updated_at = NOW()`,
-    [`tg_${tgChatId}`, JSON.stringify(messages.slice(-30))]
+    [`tg_${tgChatId}`, JSON.stringify(messages.slice(-12))]
   ).catch(() => {});
 }
 
@@ -231,22 +232,9 @@ async function kuzmichReply(userText: string, chatId: string): Promise<string> {
   const messages: ChatMessage[] = [
     { role: 'system', content: KUZMICH_CHAT_SYSTEM },
     ...history.slice(-8),
-    { role: 'user', content: userText },
+    { role: 'user', content: routesText ? `${userText}\n\n[Подходящие туры для ответа:${routesText}]` : userText },
   ];
 
-  // If routes found, inject them into context for AI to format nicely
-  if (routesText) {
-    const withRoutes: ChatMessage[] = [
-      ...messages,
-      { role: 'assistant', content: 'Узнал ваши интересы и даты. Показываю подходящие туры.' },
-      { role: 'user', content: `Пожалуйста, покажи эти туры в красивом формате с ссылками:${routesText}` },
-    ];
-    const reply = await callAIWithModelDirect(withRoutes, getModelForAgent('kuzmich'));
-    saveHistory(chatId, [...history, { role: 'user', content: userText }, { role: 'assistant', content: reply }]);
-    return reply;
-  }
-
-  // Regular chat flow if no interests detected
   const reply = await callAIWithModelDirect(messages, getModelForAgent('kuzmich'));
   saveHistory(chatId, [...history, { role: 'user', content: userText }, { role: 'assistant', content: reply }]);
   return reply;
@@ -1227,17 +1215,17 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Admin free-form → PlatformAgent intent dispatch (с fallback на Кузьмич)
+      // Admin free-form → keyword-only intent dispatch (без AI-классификации)
       if (admin) {
-        try {
-          const agentResult = await PlatformAgent.dispatch({ message: text, role: 'admin' });
-          if (agentResult.intent !== 'unknown') {
+        const keywordIntent = classifyIntentByKeywords(text, 'admin');
+        if (keywordIntent !== 'unknown') {
+          try {
+            const agentResult = await PlatformAgent.dispatch({ message: text, role: 'admin' });
             await sendHTML(chatId, agentResult.response);
             return NextResponse.json({ ok: true });
+          } catch {
+            // на ошибке агента — уходим в kuzmichReply
           }
-          // unknown intent → fall through to kuzmichReply below
-        } catch {
-          // на ошибке агента — тоже уходим в kuzmichReply
         }
       }
 
