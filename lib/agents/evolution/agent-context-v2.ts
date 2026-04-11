@@ -17,6 +17,7 @@ import { getAgentKnowledgeBase } from './agent-knowledge';
 import type { AgentKnowledgeBase } from './agent-knowledge';
 import { getEventBus } from '@/lib/events/agent-bus';
 import { agentMemory } from '@/lib/agents/memory/agent-memory';
+import { knowledgeBase } from '@/lib/agents/memory/agent-knowledge';
 
 export interface RichAgentContext {
   // Who they are
@@ -260,11 +261,15 @@ export async function buildRichAgentContext(
 
   const trainingP = agentMemory.get(agentId, 'training', 'domain_knowledge').catch(() => null);
 
+  // Brain knowledge: search for relevant permanent knowledge pages
+  const brainP = knowledgeBase.search(knowledge.agentName, { limit: 5 }).catch(() => []);
+
   // ── Fire everything at once ──
-  const [dataResults, pastDecisions, training] = await Promise.all([
+  const [dataResults, pastDecisions, training, brainPages] = await Promise.all([
     Promise.all(fetchers),
     pastDecisionsP,
     trainingP,
+    brainP,
   ]);
 
   // Assemble metrics + data context from parallel results
@@ -302,6 +307,16 @@ export async function buildRichAgentContext(
   } else if (knowledge.domainKnowledge) {
     // Prepend static knowledge so it always comes first
     trainingContent = `${knowledge.domainKnowledge.trim()}\n\n${trainingContent}`;
+  }
+
+  // Inject brain knowledge pages into training content
+  if (brainPages.length > 0) {
+    const brainBlock = brainPages.map(p =>
+      `[${p.type}/${p.slug}] ${p.title}: ${p.compiled_truth.slice(0, 300)}`
+    ).join('\n');
+    trainingContent = trainingContent
+      ? `${trainingContent}\n\nАГЕНТНАЯ ПАМЯТЬ (brain):\n${brainBlock}`
+      : `АГЕНТНАЯ ПАМЯТЬ (brain):\n${brainBlock}`;
   }
 
   return {

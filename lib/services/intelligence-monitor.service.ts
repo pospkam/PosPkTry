@@ -18,6 +18,7 @@
 
 import { callAIWithModelDirect } from '@/lib/ai/providers';
 import { agentMemory } from '@/lib/agents/memory/agent-memory';
+import { knowledgeBase } from '@/lib/agents/memory/agent-knowledge';
 import type { ChatMessage } from '@/lib/ai/prompts';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -409,6 +410,18 @@ export async function runIntelligenceCycle(): Promise<IntelligenceReport> {
       source: 'intelligence_cron',
       expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
     });
+
+    // Write-through to permanent knowledge brain
+    const intelSlug = `intel/${f.domain}/${new Date().toISOString().slice(0, 7)}`;
+    await knowledgeBase.upsert({
+      slug: intelSlug,
+      type: 'intel',
+      title: `${f.domain} intelligence ${new Date().toISOString().slice(0, 7)}`,
+      compiled_truth: f.summary,
+      metadata: { urgency: f.urgency, signal_count: f.signals.length, action_items: f.action_items },
+      agent_id: 'evo',
+    });
+    await knowledgeBase.appendTimeline(intelSlug, `[${f.urgency}] ${f.summary.slice(0, 200)}`);
   }
 
   // Send Telegram if any critical or notable findings

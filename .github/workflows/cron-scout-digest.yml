@@ -1,0 +1,21 @@
+name: Cron — Scout Digest
+
+on:
+  schedule:
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+
+jobs:
+  scout-digest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Scout Digest — ежедневный дайджест
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then echo "CRON_SECRET not set"; exit 0; fi
+          HTTP=$(curl -s -o /tmp/out.json -w "%{http_code}" --max-time 120 \
+            "https://tourhab.ru/api/cron/scout-digest?secret=$CRON_SECRET")
+          echo "HTTP: $HTTP" && cat /tmp/out.json 2>/dev/null || true
+          [ "$HTTP" = "200" ] && echo "OK" || { echo "FAIL $HTTP"; exit 1; }

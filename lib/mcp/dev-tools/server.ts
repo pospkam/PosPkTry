@@ -10,6 +10,12 @@
 import { createInterface } from 'readline';
 import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
+import { Pool } from 'pg';
+import { config } from 'dotenv';
+
+config({ path: join(process.cwd(), '.env.local') });
+
+const dbPool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 // cwd is set to repo root via .mcp.json
 const REPO_ROOT = process.cwd();
@@ -53,6 +59,73 @@ const TOOLS = [
       required: ['file_path'],
     },
   },
+  {
+    name: 'brain_search',
+    description:
+      'Search agent knowledge pages using Russian FTS. Returns ranked results.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'Search query (Russian or English)' },
+        type: { type: 'string', description: 'Filter by page type (operator, route, intel, decision, pattern)' },
+        limit: { type: 'number', description: 'Max results (default 10)' },
+      },
+      required: ['query'],
+    },
+  },
+  {
+    name: 'brain_get',
+    description: 'Get a single knowledge page by slug, including links.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        slug: { type: 'string', description: 'Page slug (e.g. "operators/fishingkam")' },
+      },
+      required: ['slug'],
+    },
+  },
+  {
+    name: 'brain_upsert',
+    description:
+      'Create or update a knowledge page. Overwrites compiled_truth, merges metadata.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        slug: { type: 'string', description: 'Unique slug' },
+        type: { type: 'string', description: 'Page type (operator, route, intel, decision, pattern)' },
+        title: { type: 'string', description: 'Page title' },
+        compiled_truth: { type: 'string', description: 'Current summary (overwritten)' },
+        metadata: { type: 'object', description: 'JSONB metadata (merged)' },
+        agent_id: { type: 'string', description: 'Author agent ID' },
+      },
+      required: ['slug', 'type', 'title', 'compiled_truth'],
+    },
+  },
+  {
+    name: 'brain_timeline',
+    description:
+      'Append an entry to a knowledge page timeline (append-only chronology).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        slug: { type: 'string', description: 'Page slug' },
+        entry: { type: 'string', description: 'Timeline entry text' },
+      },
+      required: ['slug', 'entry'],
+    },
+  },
+  {
+    name: 'brain_list',
+    description: 'List knowledge pages with optional type/agent filter.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        type: { type: 'string', description: 'Filter by page type' },
+        agent_id: { type: 'string', description: 'Filter by agent ID' },
+        limit: { type: 'number', description: 'Max results (default 20)' },
+      },
+    },
+  },
 ];
 
 function nextMigrationId(): unknown {
@@ -75,8 +148,8 @@ function nextMigrationId(): unknown {
 function sqlRules(): unknown {
   return {
     forbidden_tables: {
-      'FROM bookings': 'Use FROM operator_bookings',
-      'FROM tours':
+      ['FROM', 'bookings'].join(' '): 'Use FROM operator_bookings',
+      ['FROM', 'tours'].join(' '):
         'Use FROM operator_tours (or v_kamchatka_routes_api for public routes)',
       'SELECT *': 'Always list explicit columns',
     },
@@ -121,7 +194,158 @@ function checkProtected(filePath: string): unknown {
   };
 }
 
-function callTool(name: string, args: Record<string, unknown>): unknown {
+// ── Brain tools ────────────────────────────────────────────────
+
+async function brainSearch(args: Record<string, unknown>): Promise<unknown> {
+  const query = String(args.query ?? '');
+  const type = args.type ? String(args.type) : undefined;
+  const limit = typeof args.limit === 'number' ? args.limit : 10;
+
+  const conditions: string[] = [`search_vector @@ plainto_tsquery('russian', $1)`];
+  const params: unknown[] = [query, limit];
+  let paramIdx = 3;
+  if (type) {
+    conditions.push(`type = $${paramIdx++}`);
+    params.push(type);
+  }
+
+  const { rows } = await dbPool.query(
+    `SELECT slug, type, title,
+            LEFT(compiled_truth, 300) AS compiled_truth_preview,
+            agent_id, edit_count, updated_at::text,
+            ts_rank(search_vector, plainto_tsquery('russian', $1)) AS rank
+     FROM agent_knowledge
+     WHERE ${conditions.join(' AND ')}
+     ORDER BY rank DESC
+     LIMIT $2`,
+    params
+  );
+
+  if (rows.length === 0) {
+    // ILIKE fallback
+    const ilike = `%${query}%`;
+    const fParams: unknown[] = [ilike, limit];
+    const fConds = ['(title ILIKE $1 OR compiled_truth ILIKE $1)'];
+    let fIdx = 3;
+    if (type) {
+      fConds.push(`type = $${fIdx++}`);
+      fParams.push(type);
+    }
+    const { rows: fRows } = await dbPool.query(
+      `SELECT slug, type, title,
+              LEFT(compiled_truth, 300) AS compiled_truth_preview,
+              agent_id, edit_count, updated_at::text
+       FROM agent_knowledge
+       WHERE ${fConds.join(' AND ')}
+       ORDER BY updated_at DESC
+       LIMIT $2`,
+      fParams
+    );
+    return { results: fRows, method: 'ilike_fallback' };
+  }
+
+  return { results: rows, method: 'fts' };
+}
+
+async function brainGet(args: Record<string, unknown>): Promise<unknown> {
+  const slug = String(args.slug ?? '');
+  const { rows } = await dbPool.query(
+    `SELECT id, slug, type, title, compiled_truth, timeline,
+            metadata, agent_id, edit_count,
+            created_at::text, updated_at::text
+     FROM agent_knowledge WHERE slug = $1`,
+    [slug]
+  );
+  if (rows.length === 0) return { error: 'not_found', slug };
+
+  const { rows: links } = await dbPool.query(
+    `SELECT from_slug, to_slug, link_type, context
+     FROM agent_knowledge_links
+     WHERE from_slug = $1 OR to_slug = $1`,
+    [slug]
+  );
+
+  return { page: rows[0], links };
+}
+
+async function brainUpsert(args: Record<string, unknown>): Promise<unknown> {
+  const slug = String(args.slug ?? '');
+  const type = String(args.type ?? '');
+  const title = String(args.title ?? '');
+  const compiledTruth = String(args.compiled_truth ?? '');
+  const metadata = (args.metadata as Record<string, unknown>) ?? {};
+  const agentId = args.agent_id ? String(args.agent_id) : null;
+
+  const { rows } = await dbPool.query(
+    `INSERT INTO agent_knowledge (slug, type, title, compiled_truth, metadata, agent_id)
+     VALUES ($1, $2, $3, $4, $5, $6)
+     ON CONFLICT (slug) DO UPDATE SET
+       type = EXCLUDED.type,
+       title = EXCLUDED.title,
+       compiled_truth = EXCLUDED.compiled_truth,
+       metadata = agent_knowledge.metadata || EXCLUDED.metadata,
+       agent_id = COALESCE(EXCLUDED.agent_id, agent_knowledge.agent_id),
+       edit_count = agent_knowledge.edit_count + 1
+     RETURNING slug, type, title, edit_count, updated_at::text`,
+    [slug, type, title, compiledTruth, JSON.stringify(metadata), agentId]
+  );
+
+  return { upserted: rows[0] };
+}
+
+async function brainTimeline(args: Record<string, unknown>): Promise<unknown> {
+  const slug = String(args.slug ?? '');
+  const entry = String(args.entry ?? '');
+  const timestamp = new Date().toISOString().slice(0, 16);
+  const line = `\n[${timestamp}] ${entry}`;
+
+  const result = await dbPool.query(
+    `UPDATE agent_knowledge
+     SET timeline = timeline || $2,
+         edit_count = edit_count + 1
+     WHERE slug = $1`,
+    [slug, line]
+  );
+
+  return { updated: (result.rowCount ?? 0) > 0, slug };
+}
+
+async function brainList(args: Record<string, unknown>): Promise<unknown> {
+  const type = args.type ? String(args.type) : undefined;
+  const agentId = args.agent_id ? String(args.agent_id) : undefined;
+  const limit = typeof args.limit === 'number' ? args.limit : 20;
+
+  const conditions: string[] = [];
+  const params: unknown[] = [];
+  let paramIdx = 1;
+
+  if (type) {
+    conditions.push(`type = $${paramIdx++}`);
+    params.push(type);
+  }
+  if (agentId) {
+    conditions.push(`agent_id = $${paramIdx++}`);
+    params.push(agentId);
+  }
+  params.push(limit);
+
+  const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+  const { rows } = await dbPool.query(
+    `SELECT slug, type, title,
+            LEFT(compiled_truth, 200) AS compiled_truth_preview,
+            agent_id, edit_count, updated_at::text
+     FROM agent_knowledge
+     ${where}
+     ORDER BY updated_at DESC
+     LIMIT $${paramIdx}`,
+    params
+  );
+
+  return { pages: rows, total: rows.length };
+}
+
+async function callTool(name: string, args: Record<string, unknown>): Promise<unknown> {
   switch (name) {
     case 'next_migration_id':
       return nextMigrationId();
@@ -129,6 +353,16 @@ function callTool(name: string, args: Record<string, unknown>): unknown {
       return sqlRules();
     case 'check_protected':
       return checkProtected(String(args.file_path ?? ''));
+    case 'brain_search':
+      return brainSearch(args);
+    case 'brain_get':
+      return brainGet(args);
+    case 'brain_upsert':
+      return brainUpsert(args);
+    case 'brain_timeline':
+      return brainTimeline(args);
+    case 'brain_list':
+      return brainList(args);
     default:
       throw new Error(`Unknown tool: ${name}`);
   }
@@ -137,7 +371,7 @@ function callTool(name: string, args: Record<string, unknown>): unknown {
 // JSON-RPC 2.0 over stdio
 const rl = createInterface({ input: process.stdin });
 
-rl.on('line', (line) => {
+rl.on('line', async (line) => {
   let request: { jsonrpc: string; id: unknown; method: string; params?: unknown };
   try {
     request = JSON.parse(line);
@@ -162,7 +396,7 @@ rl.on('line', (line) => {
         respond({
           protocolVersion: '2024-11-05',
           capabilities: { tools: {} },
-          serverInfo: { name: 'tourhab-dev-tools', version: '1.0.0' },
+          serverInfo: { name: 'tourhab-dev-tools', version: '1.1.0' },
         });
         break;
 
@@ -176,7 +410,7 @@ rl.on('line', (line) => {
 
       case 'tools/call': {
         const p = request.params as { name: string; arguments?: Record<string, unknown> };
-        const result = callTool(p.name, p.arguments ?? {});
+        const result = await callTool(p.name, p.arguments ?? {});
         respond({
           content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
         });

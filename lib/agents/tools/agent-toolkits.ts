@@ -20,6 +20,7 @@ import { pool } from '@/lib/db-pool';
 import { sendBoardAlert, runDiagnosticQuery, type ToolResult } from './board-executor-tools';
 import { emitEvent } from '@/lib/events/emit';
 import { agentMemory } from '@/lib/agents/memory/agent-memory';
+import { knowledgeBase } from '@/lib/agents/memory/agent-knowledge';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -117,6 +118,54 @@ function makeRememberForKuzmich(agentId: string): AgentToolFn {
         source: `${agentId}_tool`,
       });
       return { success: true, message: `Zone warning saved: ${String(key)}` };
+    } catch (err) {
+      return { success: false, message: err instanceof Error ? err.message : String(err) };
+    }
+  };
+}
+
+function makeBrainSearch(agentId: string): AgentToolFn {
+  return async (query: unknown, type?: unknown, limit?: unknown) => {
+    try {
+      const pages = await knowledgeBase.search(
+        String(query),
+        {
+          type: typeof type === 'string' ? type : undefined,
+          limit: typeof limit === 'number' ? limit : 10,
+        }
+      );
+      return {
+        success: true,
+        message: `${pages.length} knowledge pages found`,
+        details: { pages: pages.map(p => ({
+          slug: p.slug, type: p.type, title: p.title,
+          compiled_truth: p.compiled_truth.slice(0, 300),
+          updated_at: p.updated_at,
+        })) },
+      };
+    } catch (err) {
+      return { success: false, message: err instanceof Error ? err.message : String(err) };
+    }
+  };
+}
+
+function makeBrainWrite(agentId: string): AgentToolFn {
+  return async (slug: unknown, type: unknown, title: unknown, compiledTruth: unknown, metadata?: unknown) => {
+    try {
+      const page = await knowledgeBase.upsert({
+        slug: String(slug),
+        type: String(type),
+        title: String(title),
+        compiled_truth: String(compiledTruth),
+        metadata: typeof metadata === 'object' && metadata !== null ? metadata as Record<string, unknown> : {},
+        agent_id: agentId,
+      });
+      if (!page) return { success: false, message: 'Upsert returned null' };
+      return {
+        success: true,
+        message: `Knowledge page "${page.slug}" saved (edit #${page.edit_count})`,
+        details: { slug: page.slug, edit_count: page.edit_count },
+      };
     } catch (err) {
       return { success: false, message: err instanceof Error ? err.message : String(err) };
     }
@@ -675,5 +724,9 @@ const TOOLKIT_BUILDERS: Record<string, (agentId: string) => AgentToolkit> = {
  */
 export function getToolkitForAgent(agentId: string): AgentToolkit {
   const builder = TOOLKIT_BUILDERS[agentId];
-  return builder ? builder(agentId) : {};
+  const toolkit = builder ? builder(agentId) : {};
+  // All agents get brain access
+  toolkit.brainSearch = withAudit(agentId, 'brainSearch', makeBrainSearch(agentId));
+  toolkit.brainWrite = withAudit(agentId, 'brainWrite', makeBrainWrite(agentId));
+  return toolkit;
 }
