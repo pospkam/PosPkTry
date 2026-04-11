@@ -401,22 +401,24 @@ export function parseDate(text: string): string | null {
 
 // ── Ключевые слова туров ──────────────────────────────────────────────────────
 
+const TOUR_KEYWORDS_MAP: Record<string, string[]> = {
+  'рыбалка': ['рыбалк', 'рыб', 'fishing', 'лосось', 'нерка', 'форел'],
+  'вулкан': ['вулкан', 'volcano', 'кратер', 'авача', 'авачинск', 'мутновск'],
+  'медведи': ['медвед', 'bear', 'курильское', 'косолапый'],
+  'термальные': ['термал', 'горячие источники', 'купальн', 'паратунк', 'нарзан'],
+  'вертолет': ['вертолет', 'вертолёт', 'helicopter', 'heli', 'helo'],
+  'снегоход': ['снегоход', 'снег', 'snowmobile', 'зимн', 'лыж'],
+  'катер': ['катер', 'море', 'лодк', 'boat', 'яхт', 'бухт'],
+  'треккинг': ['треккинг', 'поход', 'пеший', 'trekking', 'hiking', 'маршрут'],
+  'дайвинг': ['дайвинг', 'diving', 'подводн'],
+  'сплав': ['сплав', 'рафтинг', 'river', 'рек'],
+};
+const TOUR_KEYWORD_KEYS = Object.keys(TOUR_KEYWORDS_MAP);
+
 export function extractTourKeywords(text: string): string[] {
   const t = text.toLowerCase();
-  const map: Record<string, string[]> = {
-    'рыбалка': ['рыбалк', 'рыб', 'fishing', 'лосось', 'нерка', 'форел'],
-    'вулкан': ['вулкан', 'volcano', 'кратер', 'авача', 'авачинск', 'мутновск'],
-    'медведи': ['медвед', 'bear', 'курильское', 'косолапый'],
-    'термальные': ['термал', 'горячие источники', 'купальн', 'паратунк', 'нарзан'],
-    'вертолет': ['вертолет', 'вертолёт', 'helicopter', 'heli', 'helo'],
-    'снегоход': ['снегоход', 'снег', 'snowmobile', 'зимн', 'лыж'],
-    'катер': ['катер', 'море', 'лодк', 'boat', 'яхт', 'бухт'],
-    'треккинг': ['треккинг', 'поход', 'пеший', 'trekking', 'hiking', 'маршрут'],
-    'дайвинг': ['дайвинг', 'diving', 'подводн'],
-    'сплав': ['сплав', 'рафтинг', 'river', 'рек'],
-  };
   const found: string[] = [];
-  for (const [key, triggers] of Object.entries(map)) {
+  for (const [key, triggers] of Object.entries(TOUR_KEYWORDS_MAP)) {
     if (triggers.some(tr => t.includes(tr))) found.push(key);
   }
   return found.length ? found : [text.slice(0, 30)];
@@ -430,8 +432,8 @@ const BOOKING_TRIGGERS = [
   'хочу записаться', 'хочу на этот', 'хочу этот', 'запишите', 'записывай',
   'оформи', 'оформляй', 'давай бронируем',
   // короткие / разговорные
-  'бронь', 'бронируй', 'запиши', 'записать', 'беру', 'возьму',
-  'оплатим', 'оплачу', 'хочу поехать', 'едем', 'хочу тур',
+  'бронь', 'бронируй', 'запиши меня', 'записать меня', 'хочу тур',
+  'оплатим', 'оплачу',
   'book', 'reserve',
 ];
 
@@ -666,19 +668,43 @@ export async function handleBookingStep(
 
   const t = text.trim();
 
+  // Выход из booking flow по ключевым словам
+  if (isNo(t) || /^\//.test(t)) {
+    await deleteBookingFlow(chatId, mode, pending);
+    await reply(chatId, 'Бронирование отменено. Чем могу помочь?');
+    return true;
+  }
+
   // Шаг 'tour': ищем тур по тому что написал пользователь
   if (b.step === 'tour') {
     const keywords = extractTourKeywords(t);
-    const tour = await findTour(keywords.length ? keywords : [t]);
+    // Если нет реальных ключевых слов — выходим из flow в AI
+    const hasTourKeywords = TOUR_KEYWORD_KEYS.some(key => {
+      const triggers = TOUR_KEYWORDS_MAP[key];
+      return triggers.some(tr => t.toLowerCase().includes(tr));
+    });
+    if (!hasTourKeywords) {
+      await deleteBookingFlow(chatId, mode, pending);
+      return false; // → processMessage отдаст в aiChat
+    }
+    // Вопросы, советы, опасные темы — не бронируем, отдаём в AI
+    const lowerT = t.toLowerCase();
+    const isQuestion = lowerT.includes('?') || /^(что|как|зачем|почему|когда|можно ли|а если)\b/.test(lowerT);
+    const isDangerous = /(спрыгн|упа[дс]|погиб|умер|опасн|безопасн|риск|страшн|жерло|лавин|шторм)/i.test(t);
+    if (isQuestion || isDangerous) {
+      await deleteBookingFlow(chatId, mode, pending);
+      return false; // → AI ответит про безопасность
+    }
+    const tour = await findTour(keywords);
     if (!tour) {
-      await reply(chatId, 'Не нашёл подходящий тур. Уточни: рыбалка, вулканы, медведи, термальные источники, вертолёт...');
+      await reply(chatId, 'Не нашёл подходящий тур по этому запросу. Уточни: рыбалка, вулканы, медведи, термальные источники, вертолёт...');
       return true;
     }
     b.tour  = tour;
     b.step  = 'name';
     await saveBookingFlow(chatId, mode, b, pending);
     await reply(chatId, [
-      `Отлично! Бронируем <b>${tour.title}</b>`,
+      `Бронируем <b>${tour.title}</b>`,
       `Стоимость от <b>${tour.base_price.toLocaleString('ru-RU')} р.</b> с человека.`,
       '',
       'Как вас зовут? (полное имя для брони)',
@@ -687,8 +713,15 @@ export async function handleBookingStep(
   }
 
   if (b.step === 'name') {
-    if (t.length < 2) {
-      await reply(chatId, 'Укажите полное имя (минимум 2 символа).');
+    // Имя: 2-40 символов, только буквы/пробелы/дефис, без цифр и спецсимволов
+    // Вопросы, команды и длинные фразы — это не имя
+    if (t.length < 2 || t.length > 40 || /[?!0-9]/.test(t) || !/^[\p{L}\s\-'.]+$/u.test(t)) {
+      // Если это выглядит как вопрос или обычное сообщение — выходим в AI
+      if (t.includes('?') || t.length > 40 || /\s{2,}/.test(t) || t.split(/\s+/).length > 5) {
+        await deleteBookingFlow(chatId, mode, pending);
+        return false; // → processMessage отдаст в aiChat
+      }
+      await reply(chatId, 'Укажите имя и фамилию (только буквы). Или напишите "отмена" для выхода.');
       return true;
     }
     b.name = t;
@@ -957,8 +990,9 @@ export async function processMessage(opts: {
   // Active booking flow — проверяем память И базу данных
   const activeBooking = await loadBookingFlow(chatId, mode, pendingMap);
   if (activeBooking) {
-    await handleBookingStep(chatId, text, mode, pendingMap, replyFn, createdVia);
-    return;
+    const handled = await handleBookingStep(chatId, text, mode, pendingMap, replyFn, createdVia);
+    if (handled) return;
+    // handleBookingStep вернул false → flow отменён, продолжаем в AI chat
   }
 
   // Booking trigger
