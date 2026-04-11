@@ -6,7 +6,7 @@ import { Footer } from '@/components/layout/Footer'
 
 export const metadata: Metadata = {
   title: 'Для туроператоров Камчатки — партнёрская программа TourHab 2026',
-  description: 'Агентская модель для туроператоров Камчатки: AI-обработка заявок, автоматический подбор туров, PDF-предложения, Telegram-уведомления. Комиссия 10%. Первые 3 месяца бесплатно.',
+  description: 'Кузьмич и operator tools для туроператоров Камчатки: AI-приём обращений, квалификация лидов, подбор туров, PDF-предложения и Telegram-уведомления. Комиссия 10%. Первые 3 месяца бесплатно.',
 }
 
 export default function ForOperatorsPage() {

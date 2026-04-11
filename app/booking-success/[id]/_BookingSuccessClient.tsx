@@ -124,12 +124,12 @@ export default function BookingSuccessClient() {
           </div>
           <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-1"
             style={{ fontFamily: 'var(--font-playfair)' }}>
-            {alreadyPaid ? 'Оплата прошла!' : 'Бронирование принято'}
+            {alreadyPaid ? 'Оплата получена' : 'Заявка создана'}
           </h1>
           <p className="text-sm text-[var(--text-secondary)]">
             {alreadyPaid
-              ? 'Оператор получил уведомление и свяжется с вами.'
-              : 'Оплатите тур — оператор будет уведомлён автоматически.'}
+              ? 'Оператор получил уведомление об оплате и подтвердит дальнейшие детали поездки.'
+              : 'Проверьте данные заявки и переходите к оплате, если всё подходит.'}
           </p>
         </div>
 
@@ -215,9 +215,12 @@ export default function BookingSuccessClient() {
                       ? <><Loader2 className="w-4 h-4 animate-spin" /> Обработка...</>
                       : !cpReady
                         ? <><Loader2 className="w-4 h-4 animate-spin" /> Загрузка...</>
-                        : <><CreditCard className="w-4 h-4" /> Оплатить {fmtPrice(booking.total_price)}</>
+                        : <><CreditCard className="w-4 h-4" /> Перейти к оплате {fmtPrice(booking.total_price)}</>
                     }
                   </button>
+                  <p className="text-[11px] text-center text-[var(--text-muted)]">
+                    Перед оплатой убедитесь, что дата, количество участников и условия тура вам подходят.
+                  </p>
                   <p className="text-[11px] text-center text-[var(--text-muted)]">
                     Безопасная оплата картой · CloudPayments
                   </p>
@@ -229,7 +232,7 @@ export default function BookingSuccessClient() {
                 <div className="flex items-center gap-2 px-4 py-3 rounded-lg"
                   style={{ background: 'color-mix(in srgb, var(--success) 15%, transparent)' }}>
                   <BadgeCheck className="w-4 h-4 shrink-0 text-[var(--success)]" />
-                  <p className="text-sm font-semibold text-[var(--success)]">Оплачено</p>
+                  <p className="text-sm font-semibold text-[var(--success)]">Оплата подтверждена</p>
                 </div>
               )}
 
@@ -255,6 +258,9 @@ export default function BookingSuccessClient() {
                       </a>
                     )}
                   </div>
+                  <p className="text-[11px] text-[var(--text-muted)] mt-2">
+                    По этим контактам можно уточнить программу, экипировку и другие детали до выезда.
+                  </p>
                 </div>
               )}
             </div>

@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
       success:    true,
       booking_id: result.bookingId,
       total_price: result.total_price,
-      message:    'Бронирование создано. Ожидается оплата.',
+      message:    'Заявка создана. Перед оплатой проверьте детали и условия тура.',
     });
 
   } catch (err) {

@@ -20,12 +20,12 @@ const HomeBottomNav = dynamic(
 const SOSButton = dynamic(() => import('@/components/shared/SOSButton'));
 
 export const metadata: Metadata = {
-  title: 'Туры на Камчатку 2026 — бронирование онлайн | TourHab',
-  description: 'Туры на Камчатку: рыбалка на лосося, восхождения на вулканы, горячие источники, медведи. Бронируйте у проверенных операторов онлайн.',
+  title: 'TourHab — помощник и планировщик путешествия по Камчатке',
+  description: 'TourHab помогает спланировать честное и безопасное путешествие по Камчатке: маршруты, советы, Кузьмич, проверенные операторы и реальные туры без обманов.',
   keywords: 'туры Камчатка, рыбалка Камчатка, вулканы, горячие источники, гиды Камчатка, безопасный туризм',
   openGraph: {
-    title: 'Туры на Камчатку 2026 — бронирование онлайн | TourHab',
-    description: 'Рыбалка на лосося, восхождения на вулканы, термальные источники, медведи. Бронируйте у местных операторов онлайн.',
+    title: 'TourHab — помощник и планировщик путешествия по Камчатке',
+    description: 'Помогаем выбрать маршрут, оценить риски и выйти на реальный тур у проверенного оператора без серых схем и пустых обещаний.',
     images: [
       {
         url: '/images/hero/hero-light.jpeg',
@@ -73,10 +73,10 @@ function ChatSkeleton() {
 export default async function Page() {
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'TravelAgency',
+    '@type': 'TouristInformationCenter',
     name: 'Kamchatour Hub',
     url: 'https://tourhab.ru',
-    description: 'Туристическая платформа Камчатки с туром рыболовство, вулканы и природные чудеса',
+    description: 'Сервис планирования путешествий по Камчатке: маршруты, безопасность, AI-помощник и выход на реальные туры проверенных операторов',
     telephone: '+7 (4152) 29-99-99',
     address: {
       '@type': 'PostalAddress',

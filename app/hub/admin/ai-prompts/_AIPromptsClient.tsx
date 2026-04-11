@@ -83,8 +83,8 @@ export default function AIPromptsClient() {
         <div className="flex items-center gap-3">
           <Brain className="text-[var(--accent)]" size={28} />
           <div>
-            <h1 className="ds-h1">AI-промпты агентов</h1>
-            <p className="text-[var(--text-secondary)] text-sm">Просмотр и тестирование системных промптов</p>
+            <h1 className="ds-h1">AI-промпты системы</h1>
+            <p className="text-[var(--text-secondary)] text-sm">Просмотр и тестирование системных инструкций для Кузьмича и внутренних AI-модулей</p>
           </div>
         </div>
 

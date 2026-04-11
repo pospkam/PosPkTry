@@ -7,11 +7,11 @@ import TransparencyClient from './_TransparencyClient';
 export const metadata: Metadata = {
   title: 'Transparency Hub (Admin) — TourHab',
   description:
-    'Внутренний отчёт для администратора: решения совета, инициативы и исполнение.',
+    'Внутренний отчёт для администратора: AI-инициативы, статусы review и факт исполнения.',
   openGraph: {
     title: 'Transparency Hub (Admin)',
     description:
-      'Внутренний отчёт управления платформой для администратора.',
+      'Внутренний отчёт управления AI-контуром платформы для администратора.',
     type: 'website',
   },
 };

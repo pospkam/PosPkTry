@@ -8,8 +8,8 @@ export const dynamic = 'force-dynamic';
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://tourhab.ru';
 
 export const metadata: Metadata = {
-  title: 'Туры Камчатки — бронирование онлайн',
-  description: 'Каталог туров по Камчатке: рыбалка, треккинг, термальные источники, вертолётные туры. Проверенные операторы, бронирование онлайн.',
+  title: 'Реальные туры по Камчатке от операторов',
+  description: 'Честный каталог реальных туров по Камчатке от проверенных операторов. Сначала выбор и проверка деталей, потом заявка или бронирование.',
   keywords: [
     'туры Камчатка',
     'бронирование туров Камчатка',
@@ -21,15 +21,15 @@ export const metadata: Metadata = {
     canonical: `${SITE}/marketplace`,
   },
   openGraph: {
-    title: 'Туры Камчатки',
-    description: 'Каталог туров по Камчатке от проверенных операторов',
+    title: 'Реальные туры по Камчатке',
+    description: 'Проверенные операторы, реальные предложения и честные условия без серых схем.',
     type: 'website',
     url: `${SITE}/marketplace`,
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Туры Камчатки — бронирование онлайн',
-    description: 'Проверенные операторы и актуальные туры по Камчатке в одном каталоге.',
+    title: 'Реальные туры по Камчатке',
+    description: 'Каталог реальных туров от операторов Камчатки с прозрачными условиями.',
   },
 };
 
@@ -62,8 +62,8 @@ export default async function MarketplacePage() {
   const structuredData = tours.length > 0 ? {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
-    name: 'Туры по Камчатке',
-    description: 'Каталог туров по Камчатке от проверенных операторов',
+    name: 'Реальные туры по Камчатке',
+    description: 'Каталог реальных туров по Камчатке от проверенных операторов',
     url: `${SITE}/marketplace`,
     numberOfItems: tours.length,
     itemListElement: tours.map((t, i) => ({

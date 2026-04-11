@@ -26,10 +26,10 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
-    default: 'Туры на Камчатку 2026 — рыбалка, вулканы, горячие источники | TourHab',
+    default: 'TourHab — помощник и планировщик путешествия по Камчатке',
     template: '%s | TourHab Камчатка',
   },
-  description: 'Туры на Камчатку 2026: рыбалка на лосося, восхождения на вулканы, горячие источники, Долина гейзеров, медведи Курильского озера. Бронирование онлайн у проверенных операторов.',
+  description: 'TourHab помогает честно и безопасно спланировать поездку по Камчатке: маршруты, карта, AI-помощник Кузьмич, поддержка и реальные туры от проверенных операторов.',
   keywords: [
     'туры на Камчатку',
     'рыбалка Камчатка',
@@ -71,8 +71,8 @@ export const metadata: Metadata = {
     locale: 'ru_RU',
     url: BASE_URL,
     siteName: 'Kamchatour',
-    title: 'Kamchatour — Туры на Камчатку',
-    description: 'Туры на Камчатку: рыбалка, вулканы, горячие источники. Бронирование онлайн.',
+    title: 'TourHab — помощник по Камчатке',
+    description: 'Помощник, планировщик и безопасный проводник к реальным турам по Камчатке.',
     images: [
       {
         url: '/images/hero/hero-light.jpeg',
@@ -84,8 +84,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Kamchatour — Туры на Камчатку',
-    description: 'Туры на Камчатку: рыбалка, вулканы, горячие источники. Бронирование онлайн.',
+    title: 'TourHab — помощник по Камчатке',
+    description: 'Помогаем спланировать маршрут и выйти на реальный тур без обманов и серых схем.',
     images: ['/images/hero/hero-light.jpeg'],
   },
   robots: {
@@ -141,9 +141,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               {
                 "@context": "https://schema.org",
                 "@type": "WebSite",
-                "name": "TourHab — Туры на Камчатку",
+                "name": "TourHab — помощник по Камчатке",
                 "url": "https://tourhab.ru",
-                "description": "Туристическая платформа Камчатки: туры, маршруты, карта достопримечательностей. Вулканы, горячие источники, Долина гейзеров, рыбалка, места силы ительменов.",
+                "description": "Сервис планирования путешествий по Камчатке: маршруты, карта, безопасность, AI-помощник и реальные туры от проверенных операторов.",
                 "inLanguage": "ru",
                 "potentialAction": {
                   "@type": "SearchAction",
@@ -158,7 +158,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 "@context": "https://schema.org",
                 "@type": "TouristInformationCenter",
                 "name": "TourHab",
-                "description": "Маркетплейс туров и путеводитель по Камчатке.",
+                "description": "Помощник, планировщик и путеводитель по Камчатке с доступом к реальным турам проверенных операторов.",
                 "url": "https://tourhab.ru",
                 "logo": "https://tourhab.ru/logo-kamchatka.svg",
                 "address": {
@@ -198,7 +198,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 "@type": "LocalBusiness",
                 "@id": "https://tourhab.ru/#localbusiness",
                 "name": "TourHab",
-                "description": "Туристическая платформа Камчатки: туры, маршруты, бронирование, карта достопримечательностей.",
+                "description": "Туристический сервис Камчатки: маршруты, планирование поездки, поддержка и честные предложения реальных туров.",
                 "url": "https://tourhab.ru",
                 "logo": "https://tourhab.ru/logo-kamchatka.svg",
                 "telephone": "+7 (914) 782-22-22",

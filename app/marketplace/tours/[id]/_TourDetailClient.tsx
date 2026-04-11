@@ -425,7 +425,7 @@ export default function TourDetailClient({ tour, reviews = [] }: { tour: TourFul
               <p className="text-sm font-medium text-[var(--text-primary)]">
                 {tour.operator_name}
               </p>
-              <p className="text-xs text-[var(--text-muted)]">Проведёт для вас тур</p>
+              <p className="text-xs text-[var(--text-muted)]">Реальный оператор, который проводит этот тур</p>
             </div>
           </div>
 
@@ -504,9 +504,9 @@ export default function TourDetailClient({ tour, reviews = [] }: { tour: TourFul
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
-                { text: 'Бесплатная отмена за 48 часов', icon: true },
-                { text: 'Подтверждение от оператора за 2 часа', icon: true },
-                { text: 'Туры под страховкой безопасности', icon: true },
+                { text: 'Условия и детали подтверждаются оператором до оплаты', icon: true },
+                { text: 'Статус заявки обычно подтверждается оператором в течение 2 часов', icon: true },
+                { text: 'Маршрут проходит через контур безопасности платформы', icon: true },
                 { text: `Группа: ${tour.min_participants ?? 1}–${tour.max_participants} чел.`, icon: true },
               ].map(item => (
                 <div key={item.text} className="flex items-start gap-2.5">
@@ -574,7 +574,7 @@ export default function TourDetailClient({ tour, reviews = [] }: { tour: TourFul
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-[var(--text-primary)] text-sm">Собрать свой тур</p>
               <p className="text-xs text-[var(--text-muted)] mt-0.5">
-                Расскажите о поездке — подберём программу под вас
+                Если этот вариант не подходит, Кузьмич поможет честно подобрать другой
               </p>
             </div>
             <ChevronRight className="w-4 h-4 text-[var(--accent)] shrink-0" />
@@ -599,22 +599,28 @@ export default function TourDetailClient({ tour, reviews = [] }: { tour: TourFul
               </div>
               <p className="text-sm text-[var(--text-muted)] mb-5">{priceLabel}</p>
 
+              <div className="mb-5 rounded-lg border border-[var(--border)] bg-[var(--bg-hover)] p-3">
+                <p className="text-xs leading-relaxed text-[var(--text-secondary)]">
+                  Это реальное предложение оператора. Перед оплатой можно уточнить состав программы, даты, погоду и все условия участия.
+                </p>
+              </div>
+
               <a
                 href="#booking-form"
                 className="ds-btn ds-btn-primary w-full text-center py-3 text-base font-semibold"
               >
-                Забронировать
+                Оставить заявку
               </a>
 
               {/* Quick trust signals */}
               <div className="mt-4 pt-4 border-t border-[var(--border)] space-y-2">
                 <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
                   <Shield className="w-3.5 h-3.5 text-[var(--success)]" />
-                  Бесплатная отмена за 48 ч
+                  Без скрытых условий и серых комиссий
                 </div>
                 <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
                   <CheckCircle2 className="w-3.5 h-3.5 text-[var(--success)]" />
-                  Мгновенное подтверждение
+                  Сначала уточнение деталей, потом подтверждение
                 </div>
               </div>
             </div>

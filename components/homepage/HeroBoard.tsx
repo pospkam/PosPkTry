@@ -42,15 +42,15 @@ export function HeroBoard() {
 
             <p className="mb-8 max-w-xl text-base leading-relaxed text-[var(--text-secondary)] md:text-lg">
               Вулканы, океан, медведи и термальные источники в одном маршруте.
-              Подберем путешествие под ваш уровень, даты и бюджет, а верифицированные
-              операторы проведут его безопасно и без лишней суеты.
+              Поможем понять, куда ехать, что реально подходит по датам, уровню и бюджету,
+              а если нужен тур, сведем только с проверенным оператором без обманов и серых обещаний.
             </p>
 
             <div className="mb-10 grid grid-cols-3 gap-3">
               {[
                 { icon: Shield,   label: 'Проверенных операторов', val: metrics.verifiedOperators },
                 { icon: Mountain, label: 'Маршрутов по Камчатке',   val: metrics.routesTotal },
-                { icon: Waves,    label: 'Активных туров',          val: metrics.activeTours },
+                { icon: Waves,    label: 'Реальных туров',          val: metrics.activeTours },
               ].map(({ icon: Icon, label, val }) => (
                 <div key={label} className="rounded-lg border border-[var(--border)] bg-[var(--bg-card)] p-3 text-center">
                   <Icon className="mx-auto mb-1.5 h-4 w-4 text-[var(--accent)]" />
@@ -90,9 +90,9 @@ export function HeroBoard() {
 
             <div className="space-y-3">
               {[
-                'Маршрут собирается под ваш формат: активный, семейный или премиум.',
-                'Проверенные операторы и прозрачные условия без скрытых комиссий.',
-                'Поддержка до вылета, на маршруте и после возвращения.',
+                'Сначала помогаем разобраться с маршрутом и рисками, а не навязываем продажу.',
+                'Если рекомендуем тур, то только реальный и у проверенного оператора с прозрачными условиями.',
+                'Поддержка доступна до вылета, на маршруте и после возвращения.',
               ].map((item) => (
                 <div
                   key={item}

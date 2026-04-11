@@ -71,10 +71,28 @@ export default function AgentsClient() {
   return (
     <div className="ds-page max-w-3xl mx-auto py-8">
       <div className="mb-8">
-        <h1 className="ds-h1 mb-1">AI-агенты</h1>
+        <h1 className="ds-h1 mb-1">AI и автоматизации</h1>
         <p className="text-[var(--text-secondary)] text-sm">
-          3 рабочих агента. Каждый делает конкретную работу и отправляет результат в Telegram.
+          Кузьмич остаётся основным AI-интерфейсом продукта. Ниже фоновые автоматизации, которые поддерживают лиды,
+          контент и операционный контроль.
         </p>
+      </div>
+
+      <div className="mb-6 ds-card p-5">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">Основной AI-продукт</p>
+            <h2 className="mt-2 text-lg font-semibold text-[var(--text-primary)]">Кузьмич</h2>
+            <p className="mt-2 text-sm text-[var(--text-secondary)]">
+              Внешний AI-консьерж для туриста и точка входа для лидов. Его задача: ответить, подобрать маршрут,
+              собрать контакт и передать человека в операционный контур.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <a href="/kuzmich" className="ds-btn ds-btn-secondary text-sm">Открыть Кузьмича</a>
+            <a href="/hub/admin/ai-analytics" className="ds-btn ds-btn-secondary text-sm">AI-аналитика</a>
+          </div>
+        </div>
       </div>
 
       <div className="space-y-4">
@@ -139,20 +157,24 @@ export default function AgentsClient() {
       <div className="mt-8 ds-card p-4">
         <div className="flex items-center gap-2 mb-2">
           <Clock className="w-4 h-4 text-[var(--text-muted)]" />
-          <span className="text-sm font-medium text-[var(--text-primary)]">Другие рабочие агенты</span>
+          <span className="text-sm font-medium text-[var(--text-primary)]">Операторские инструменты и смежные контуры</span>
         </div>
         <p className="text-xs text-[var(--text-secondary)]">
           Кузьмич —{' '}
           <a href="/kuzmich" className="text-[var(--ocean)] hover:underline">
             /kuzmich
           </a>{' '}
-          · Danger —{' '}
-          <a href="/hub/admin/rescue" className="text-[var(--ocean)] hover:underline">
-            /hub/admin/rescue
-          </a>{' '}
           · Лиды —{' '}
           <a href="/hub/admin/leads" className="text-[var(--ocean)] hover:underline">
             /hub/admin/leads
+          </a>{' '}
+          · AI assist оператора —{' '}
+          <a href="/hub/operator/ai-assist" className="text-[var(--ocean)] hover:underline">
+            /hub/operator/ai-assist
+          </a>{' '}
+          · Safety —{' '}
+          <a href="/hub/admin/safety" className="text-[var(--ocean)] hover:underline">
+            /hub/admin/safety
           </a>
         </p>
       </div>

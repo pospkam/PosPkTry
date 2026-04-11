@@ -67,7 +67,7 @@ const CHECKLIST_ITEMS = [
   { id: 'mobile',   label: 'Мобильная навигация (pill)',  href: '/'                         },
   { id: 'tourist',  label: 'ЛК туриста',                  href: '/hub/tourist'              },
   { id: 'safety',   label: 'Дашборд безопасности',        href: '/hub/admin/safety'         },
-  { id: 'board',    label: 'Совет AI агентов',            href: '/hub/admin/board-meeting'  },
+  { id: 'board',    label: 'Контур решений и инициатив',  href: '/hub/admin/board-meeting'  },
 ];
 
 type CheckStatus = 'unchecked' | 'ok' | 'bug';

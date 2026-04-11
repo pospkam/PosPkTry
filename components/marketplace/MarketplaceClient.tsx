@@ -462,7 +462,7 @@ export default function MarketplaceClient() {
       <div className="mb-6">
         <h1 className="ds-h1 mb-1">Туры Камчатки</h1>
         <p className="text-sm text-[var(--text-secondary)] mb-4">
-          Проверенные операторы, реальные маршруты
+          Реальные предложения операторов. Сначала выберите подходящий формат, потом отправляйте заявку.
         </p>
         {/* AI banner */}
         <Link
@@ -474,14 +474,14 @@ export default function MarketplaceClient() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-[var(--text-primary)]">Не знаете что выбрать?</p>
-            <p className="text-xs text-[var(--text-muted)]">Кузьмич подберёт тур под ваши даты, бюджет и интересы</p>
+            <p className="text-xs text-[var(--text-muted)]">Кузьмич поможет понять, что вам реально подходит по датам, бюджету и нагрузке</p>
           </div>
           <ChevronRight className="w-4 h-4 text-[var(--accent)] shrink-0" />
         </Link>
       </div>
 
       {/* ─── Tier 1: Search + Sort + Filters Toggle ─── */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+          Оставить заявку
         {/* Search */}
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
@@ -647,7 +647,7 @@ export default function MarketplaceClient() {
       ) : tours.length === 0 ? (
         <div className="text-center py-16">
           <p className="ds-h2 mb-2">Туры не найдены</p>
-          <p className="text-sm text-[var(--text-muted)] mb-4">Попробуйте изменить фильтры</p>
+          <p className="text-sm text-[var(--text-muted)] mb-4">Попробуйте изменить фильтры или сначала пройти подбор через Кузьмича</p>
           {(activeFiltersCount > 0 || activityFilter || searchTerm) && (
             <button
               onClick={() => { resetFilters(); setActivityFilter(''); setSearchTerm(''); }}

@@ -506,10 +506,14 @@ export default function TourPaymentModal({
                     <><Loader2 className="w-4 h-4 animate-spin" /> Загрузка…</>
                   ) : (
                     <><CreditCard className="w-4 h-4" />
-                      {total != null ? `Оплатить ${fmtPrice(total)} ₽` : 'Перейти к оплате'}
+                      {total != null ? `Перейти к оплате ${fmtPrice(total)} ₽` : 'Перейти к оплате'}
                     </>
                   )}
                 </button>
+
+                <p className="text-center text-[10px] text-[var(--text-muted)]">
+                  Перед оплатой проверьте дату, участников и условия участия в туре.
+                </p>
 
                 <p className="text-center text-[10px] text-[var(--text-muted)]">
                   Безопасная оплата через CloudPayments
@@ -539,7 +543,7 @@ export default function TourPaymentModal({
                 <div className="space-y-1">
                   <p className="font-semibold text-[var(--text-primary)]">Оплата прошла</p>
                   <p className="text-sm text-[var(--text-secondary)]">
-                    Бронирование подтверждено. Оператор получит уведомление.
+                    Оплата зафиксирована. Оператор получил уведомление и продолжит подтверждение деталей поездки.
                   </p>
                   {transactionId && (
                     <p className="text-xs text-[var(--text-muted)]">

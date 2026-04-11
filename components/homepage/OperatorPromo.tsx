@@ -16,7 +16,7 @@ export function OperatorPromo() {
             {'Обработка заявок за 2 клика вместо 30 минут'}
           </h2>
           <p className="text-lg text-[var(--text-secondary)] max-w-2xl mx-auto">
-            AI Lead Processor квалифицирует лидов, подбирает туры, генерирует PDF-предложение и отправляет уведомление в Telegram. Ваш сотрудник только утверждает.
+            Кузьмич принимает обращение 24/7, система квалифицирует лид, подбирает туры, готовит PDF-предложение и черновик ответа. Менеджер подтверждает и закрывает сделку.
           </p>
         </div>
 
@@ -28,10 +28,10 @@ export function OperatorPromo() {
               <div className="w-12 h-12 rounded-lg bg-[var(--accent)]/10 flex items-center justify-center">
                 <Brain className="w-6 h-6 text-[var(--accent)]" />
               </div>
-              <h3 className="font-semibold text-[var(--text-primary)]">AI Квалификация</h3>
+              <h3 className="font-semibold text-[var(--text-primary)]">Кузьмич 24/7</h3>
             </div>
             <p className="text-sm text-[var(--text-secondary)]">
-              DeepSeek извлекает бюджет, даты, активности из любого текста (WhatsApp, почта, форма)
+              Принимает первый диалог, собирает бюджет, даты и интересы туриста из чата, формы или мессенджера
             </p>
           </div>
 
@@ -41,10 +41,10 @@ export function OperatorPromo() {
               <div className="w-12 h-12 rounded-lg bg-[var(--ocean)]/10 flex items-center justify-center">
                 <Zap className="w-6 h-6 text-[var(--ocean)]" />
               </div>
-              <h3 className="font-semibold text-[var(--text-primary)]">Умный матч туров</h3>
+              <h3 className="font-semibold text-[var(--text-primary)]">Подбор и черновик</h3>
             </div>
             <p className="text-sm text-[var(--text-secondary)]">
-              Подбирает 1–3 подходящих тура автоматом с учётом доступности слотов
+              Подбирает 1-3 релевантных тура и готовит черновик ответа менеджеру с учётом контекста лида
             </p>
           </div>
 
@@ -57,7 +57,7 @@ export function OperatorPromo() {
               <h3 className="font-semibold text-[var(--text-primary)]">PDF + Telegram</h3>
             </div>
             <p className="text-sm text-[var(--text-secondary)]">
-              Генерирует красивое PDF-предложение и отправляет ссылку оператору в Telegram
+              Генерирует предложение и отправляет менеджеру ссылку в Telegram, чтобы не терять темп обработки
             </p>
           </div>
         </div>
@@ -70,10 +70,10 @@ export function OperatorPromo() {
             </h3>
             <ul className="space-y-4">
               {[
-                'Каждый лид квалифицируется AI — извлекаются бюджет, даты, активности',
+                'Каждый лид получает первый осмысленный ответ без ожидания менеджера',
                 'Система автоматически подбирает туры с доступными слотами',
-                'Первый ответ клиенту формируется в течение минуты, не часа',
-                'Оператор видит готовое предложение в Telegram — одно нажатие',
+                'Менеджер видит уже квалифицированный лид, а не сырой входящий текст',
+                'Предложение и уведомление приходят в Telegram без ручной сборки PDF',
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-[var(--success)] flex-shrink-0 mt-0.5" />
@@ -89,11 +89,11 @@ export function OperatorPromo() {
                 Как это работает
               </p>
               <ol className="text-sm text-[var(--text-secondary)] space-y-2">
-                <li><span className="font-semibold">1.</span> Лид приходит через чат или форму</li>
-                <li><span className="font-semibold">2.</span> AI анализирует и ищет подходящие туры</li>
-                <li><span className="font-semibold">3.</span> Генерирует PDF (название, фото, программа, цена)</li>
+                <li><span className="font-semibold">1.</span> Турист пишет Кузьмичу или оставляет заявку</li>
+                <li><span className="font-semibold">2.</span> Система извлекает контекст и ищет подходящие туры</li>
+                <li><span className="font-semibold">3.</span> Готовит PDF и черновик ответа для менеджера</li>
                 <li><span className="font-semibold">4.</span> Вам приходит уведомление в Telegram</li>
-                <li><span className="font-semibold">5.</span> Один клик — и лид отмечен, предложение отправлено</li>
+                <li><span className="font-semibold">5.</span> Менеджер подтверждает и продолжает диалог без ручного старта с нуля</li>
               </ol>
             </div>
           </div>
@@ -106,7 +106,7 @@ export function OperatorPromo() {
               Первые 3 месяца бесплатно
             </p>
             <h3 className="text-2xl font-bold text-[var(--text-primary)]">
-              Попробуйте AI Lead Processor сейчас
+              Попробуйте Кузьмича и operator tools сейчас
             </h3>
           </div>
 

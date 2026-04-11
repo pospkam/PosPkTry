@@ -82,7 +82,7 @@ export default function OperatorHelpClient() {
       title: 'Бронирования',
       desc: 'Все входящие заявки и их статусы',
       tips: [
-        'Уведомление в Telegram приходит мгновенно',
+        'Уведомление в Telegram приходит автоматически после создания заявки',
         'Подтвердите или отклоните в течение 24 часов',
         'В карточке — контакт туриста для связи',
         'Статус «Выполнено» запускает выплату',
@@ -179,7 +179,7 @@ export default function OperatorHelpClient() {
             <p className="font-semibold text-[var(--text-primary)] mb-1">Важно знать</p>
             <ul className="space-y-1 text-[var(--text-secondary)]">
               <li>Подтверждайте бронирования в течение 24 часов — иначе автоотмена</li>
-              <li>Укажите Telegram chat_id в профиле для мгновенных уведомлений</li>
+              <li>Укажите Telegram chat_id в профиле для оперативных уведомлений</li>
               <li>Заполните реквизиты в разделе Финансы до первой выплаты</li>
             </ul>
           </div>

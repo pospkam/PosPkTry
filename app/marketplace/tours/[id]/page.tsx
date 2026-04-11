@@ -73,12 +73,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const activityLabel = ACTIVITY_LABELS[tour.activity_type] ?? tour.activity_type;
   const desc = tour.short_description ?? tour.description?.slice(0, 160) ??
-    `${activityLabel} на Камчатке. Бронирование онлайн.`;
+    `${activityLabel} на Камчатке. Реальный тур от проверенного оператора с уточнением деталей перед бронированием.`;
 
   const images = tour.tour_image ? [{ url: tour.tour_image }] : [];
 
   return {
-    title: `${tour.title} | Туры Камчатки`,
+    title: `${tour.title} | Реальные туры Камчатки`,
     description: desc,
     openGraph: {
       title: tour.title,
@@ -110,7 +110,7 @@ export default async function TourDetailPage({ params }: Props) {
       tour.title,
       ACTIVITY_LABELS[tour.activity_type] ?? tour.activity_type,
       tour.location_name ?? 'Камчатка',
-      'туры Камчатка',
+      'реальные туры Камчатка',
       'Камчатский край',
     ].filter(Boolean).join(', '),
     // Speakable — для голосовых ответов Алисы AI

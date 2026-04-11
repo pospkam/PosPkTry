@@ -118,7 +118,7 @@ export default function OutreachClient() {
               Аутрич-очередь
             </h1>
             <p className="text-[var(--text-secondary)] text-sm mt-1">
-              Операторы найденные Intelligence-агентом — {total} записей
+              Операторы, найденные контуром ресерча и аутрича, - {total} записей
             </p>
           </div>
           <button

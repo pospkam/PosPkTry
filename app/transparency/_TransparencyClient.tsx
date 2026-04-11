@@ -125,22 +125,22 @@ export default function TransparencyClient() {
               <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-card)] px-3 py-1.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-[var(--success)] animate-pulse" />
                 <span className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--text-secondary)]">
-                  Autonomously Operated · Responsibly Governed
+                  AI-Assisted · Owner-Controlled
                 </span>
               </div>
               <h1 className="font-playfair text-4xl font-bold text-[var(--text-primary)] md:text-5xl">
                 Transparency Hub
               </h1>
               <p className="mt-3 max-w-xl text-[var(--text-secondary)]">
-                13 AI-директоров управляют платформой TourHab в реальном времени.
-                Все принятые и отклонённые решения публичны. Финальное слово — всегда за владельцем.
+                Кузьмич, внутренние AI-модули и фоновые автоматизации помогают платформе работать быстрее.
+                Здесь публично видно, какие инициативы предлагались, что было одобрено и что реально исполнено.
               </p>
             </div>
             <Link
               href="/hub/admin/board-meeting"
               className="hidden shrink-0 items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] px-4 py-2.5 text-sm font-medium text-[var(--text-primary)] hover:border-[var(--accent)] md:flex"
             >
-              Запустить совещание
+              Открыть контур решений
               <ArrowUpRight className="h-4 w-4" />
             </Link>
           </div>
@@ -173,18 +173,18 @@ export default function TransparencyClient() {
             {[
               {
                 icon: Users,
-                title: '13 директоров',
-                desc: 'Каждый отвечает за свою зону: безопасность, юридика, рост, качество, экология, финансы, разработка и другие.',
+                title: 'Клиентский и внутренний AI',
+                desc: 'Кузьмич работает на фронте с туристом, а внутренние роли и модули помогают с аналитикой, безопасностью и инициативами.',
               },
               {
                 icon: Shield,
-                title: 'Принцип надзора',
-                desc: 'Агенты предлагают инициативы, но не исполняют их самостоятельно. Каждое решение проходит через одобрение владельца.',
+                title: 'Ручной контроль решений',
+                desc: 'AI может предложить инициативу или автоматизацию, но исполнение проходит через владельца и административный контур.',
               },
               {
                 icon: Cpu,
-                title: '5 раундов совещания',
-                desc: 'Отчёты → внешние наблюдатели → консенсус (Claude Sonnet) → инициативы → дебаты сторонников и скептиков.',
+                title: 'История инициатив',
+                desc: 'Мы показываем не обещания про магическую автономию, а конкретные инициативы, статусы и факт исполнения.',
               },
             ].map(({ icon: Icon, title, desc }) => (
               <div key={title} className="flex gap-4">
@@ -203,7 +203,7 @@ export default function TransparencyClient() {
         {/* ── Directors roster ────────────────────────────── */}
         <div className="mt-10">
           <h2 className="mb-5 font-playfair text-2xl font-bold text-[var(--text-primary)]">
-            Состав совета директоров
+            AI-роли и активные модули
           </h2>
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
             {Object.entries(AGENT_META).map(([id, meta]) => {
@@ -255,7 +255,7 @@ export default function TransparencyClient() {
           )}
           {!loading && decisions.length === 0 && (
             <div className="rounded-lg border border-[var(--border)] bg-[var(--bg-card)] py-12 text-center text-sm text-[var(--text-muted)]">
-              Решения совета появятся здесь после первого совещания.
+              Решения и инициативы появятся здесь после первых записей в контуре управления.
             </div>
           )}
           {!loading && decisions.length > 0 && (

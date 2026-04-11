@@ -2,8 +2,8 @@ import { Metadata } from 'next';
 import BookingSuccessClient from './_BookingSuccessClient';
 
 export const metadata: Metadata = {
-  title: 'Бронирование подтверждено | Туры Камчатки',
-  description: 'Ваше бронирование тура успешно создано'
+  title: 'Заявка на тур создана | TourHab',
+  description: 'Проверьте детали заявки, при необходимости уточните условия и затем перейдите к оплате.'
 };
 
 export default function BookingSuccessPage() {

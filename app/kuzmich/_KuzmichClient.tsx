@@ -253,13 +253,17 @@ function BookingFormCard({
           <span className="font-semibold text-[var(--text-primary)]">{total} р.</span>
         </div>
 
+        <p className="text-[11px] leading-relaxed text-[var(--text-muted)]">
+          Перед оплатой проверьте даты, состав программы и условия участия. Если что-то не подходит, заявку можно скорректировать.
+        </p>
+
         {error && <p className="text-xs text-[var(--danger)]">{error}</p>}
 
         <button
           type="submit" disabled={submitting}
           className="ds-btn ds-btn-primary w-full text-sm py-2.5 disabled:opacity-50"
         >
-          {submitting ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Забронировать и перейти к оплате'}
+          {submitting ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Оставить заявку и перейти к оплате'}
         </button>
       </form>}
     </div>
@@ -423,7 +427,7 @@ export default function KuzmichClient() {
     }));
     setMessages(prev => [...prev, {
       role: 'assistant',
-      content: `Бронирование создано! Номер #${bookingId}.\n\nОператор свяжется с тобой в течение часа для подтверждения.`,
+      content: `Заявка создана. Номер #${bookingId}.\n\nПроверьте детали тура на странице бронирования перед оплатой. Оператор получит уведомление автоматически.`,
     }]);
   }
 
@@ -457,8 +461,7 @@ export default function KuzmichClient() {
             Спросите что угодно
           </h1>
           <p className="text-[var(--text-secondary)] text-sm md:text-base max-w-md mx-auto">
-            AI-оператор знает каждый маршрут Камчатки.
-            Опишите мечту — Кузьмич подберёт план и туры.
+            Кузьмич помогает спланировать поездку по-честному: маршрут, риски, сезон и реальные туры.
           </p>
         </div>
       )}

@@ -12,7 +12,7 @@ interface SmtpStatus {
   config?: { host: string; port: string; secure: string; user: string; from: string };
 }
 
-// 2 реальных ящика + 10 алиасов агентов
+// 2 реальных ящика + 10 служебных алиасов для внутренних ролей
 const SYSTEM_MAILBOXES = [
   {
     address: 'noreply@tourhab.ru',
@@ -40,8 +40,8 @@ const AGENT_MAILBOXES = [
     agent: 'Admin',
     label: 'Операционный директор',
     color: '#6366F1',
-    when: 'Итоги заседания совета директоров, сводные отчёты платформы, критические инциденты.',
-    action: 'Читать после каждого board-meeting. Содержит executive summary и список одобренных инициатив.',
+    when: 'Сводные отчёты платформы, критические инциденты и решения по внутренним инициативам.',
+    action: 'Читать после каждого цикла review. Содержит summary и список одобренных изменений.',
   },
   {
     address: 'legal@tourhab.ru',
@@ -300,16 +300,16 @@ export default function EmailAdminClient() {
         </div>
       </div>
 
-      {/* Агенты совета директоров */}
+      {/* Служебные алиасы внутренних ролей */}
       <div className="ds-card p-4 space-y-3">
         <div className="flex items-center gap-2">
           <Mail className="w-4 h-4 text-[var(--text-muted)]" />
-          <span className="text-sm font-semibold text-[var(--text-primary)]">Агенты совета директоров</span>
+          <span className="text-sm font-semibold text-[var(--text-primary)]">Внутренние роли и алиасы</span>
           <span className="text-[10px] text-[var(--text-muted)] bg-[var(--bg-hover)] px-1.5 py-0.5 rounded-full">10 алиасов → noreply</span>
         </div>
         <p className="text-xs text-[var(--text-secondary)]">
           Все 10 ящиков — <strong>алиасы-переадресации</strong> на <code className="text-[var(--ocean)]">noreply@tourhab.ru</code>.
-          Создавать отдельно не нужно. Настройте в Timeweb → Почта → Алиасы.
+          Это служебный слой для внутренних уведомлений и разнесения ролей. Создавать отдельные SMTP-ящики не нужно.
         </p>
         <div className="divide-y divide-[var(--border)]">
           {AGENT_MAILBOXES.map(mb => {
@@ -361,8 +361,8 @@ export default function EmailAdminClient() {
           {[
             'Создайте ящик noreply@tourhab.ru (пароль Gr96Ww32) — это SMTP_USER',
             'Создайте ящик support@tourhab.ru — настройте переадресацию на ваш личный email',
-            'Для каждого агента: Почта → Алиасы → добавьте admin@, legal@, security@... → переадресовать на noreply@',
-            'Т.е. когда агент шлёт с sos@tourhab.ru — письмо фактически идёт через noreply SMTP',
+            'Для каждой внутренней роли: Почта → Алиасы → добавьте admin@, legal@, security@ и другие → переадресовать на noreply@',
+            'То есть письмо с sos@tourhab.ru фактически уходит через общий SMTP noreply@tourhab.ru',
           ].map((step, i) => (
             <li key={i} className="flex gap-2">
               <span className="shrink-0 w-4 h-4 rounded-full bg-[var(--bg-hover)] text-[var(--text-muted)] text-[10px] font-bold flex items-center justify-center">

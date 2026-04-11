@@ -147,7 +147,7 @@ export function TourBookingForm({
   };
 
   const handlePaymentSuccess = async (_transactionId: number) => {
-    toast.success('Оплата прошла успешно! Бронирование подтверждено.');
+    toast.success('Оплата прошла успешно. Оператор получил уведомление и подтвердит детали поездки.');
     router.push('/hub/tourist/bookings');
   };
 

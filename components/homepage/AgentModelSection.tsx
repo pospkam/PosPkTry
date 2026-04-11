@@ -10,24 +10,24 @@ export function AgentModelSection() {
         {/* Header */}
         <div className="mb-16 text-center">
           <div className="inline-block mb-4 px-4 py-2 rounded-full bg-[var(--ocean)]/10">
-            <span className="text-[var(--ocean)] text-sm font-semibold">АГЕНТСКАЯ МОДЕЛЬ</span>
+            <span className="text-[var(--ocean)] text-sm font-semibold">ОПЕРАЦИОННАЯ МОДЕЛЬ</span>
           </div>
           <h2 className="ds-h1 mb-4">
-            Мы приводим туристов — вы исполняете туры
+            Мы приводим и доводим лиды, вы закрываете туры
           </h2>
           <p className="text-lg text-[var(--text-secondary)] max-w-2xl mx-auto">
-            TourHab работает как агент: привлекаем клиентов через AI-ботов, сайт и мессенджеры.
-            Вы концентрируетесь на том, что делаете лучше всего — проводите туры.
+            TourHab даёт Кузьмича как входную точку для туриста, operator tools для менеджера и автоматизации фона.
+            Вы концентрируетесь на подтверждении, исполнении и качестве тура.
           </p>
         </div>
 
         {/* How it works */}
         <div className="grid md:grid-cols-4 gap-6 mb-16">
           {[
-            { step: '01', title: 'Подключение', desc: 'Регистрация на платформе, загрузка туров, подписание агентского договора', icon: FileText },
-            { step: '02', title: 'Привлечение', desc: 'AI-боты Кузьмич (Telegram, MAX) и сайт tourhab.ru приводят туристов к вашим турам', icon: TrendingUp },
-            { step: '03', title: 'Обработка', desc: 'AI Lead Processor квалифицирует заявки, подбирает туры, генерирует PDF-предложения', icon: Clock },
-            { step: '04', title: 'Исполнение', desc: 'Вы подтверждаете бронь, проводите тур. Мы перечисляем оплату за вычетом 10%', icon: Handshake },
+            { step: '01', title: 'Подключение', desc: 'Регистрация, загрузка туров, настройка расписания и подписание агентского договора', icon: FileText },
+            { step: '02', title: 'Приём обращения', desc: 'Кузьмич принимает первый диалог 24/7 через сайт, Telegram и MAX и собирает контекст лида', icon: TrendingUp },
+            { step: '03', title: 'Операторский контур', desc: 'Система квалифицирует заявку, подбирает туры и готовит материалы для менеджера', icon: Clock },
+            { step: '04', title: 'Подтверждение', desc: 'Вы утверждаете бронь, связываетесь с туристом и проводите тур. Выплата идёт за вычетом 10%', icon: Handshake },
           ].map(({ step, title, desc, icon: Icon }) => (
             <div key={step} className="relative p-6 rounded-lg bg-[var(--bg-primary)] border border-[var(--border)]">
               <span className="text-4xl font-bold text-[var(--accent)]/20 absolute top-4 right-4">{step}</span>
@@ -68,11 +68,11 @@ export function AgentModelSection() {
             </h3>
             <ul className="space-y-3">
               {[
-                'AI обрабатывает заявку за 15 секунд — 24/7',
-                '3 канала: сайт + Telegram + MAX',
-                'PDF-предложение генерируется автоматически',
+                'Кузьмич отвечает 24/7 и не теряет первый контакт',
+                '3 канала входа: сайт + Telegram + MAX',
+                'Менеджер получает квалифицированный лид и готовые материалы',
                 'Платите только за результат — 10% с продажи',
-                'Дашборд с аналитикой: конверсии, выручка, рейтинг',
+                'Есть дашборд по лидам, выручке и качеству обработки',
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-3 text-sm text-[var(--text-secondary)]">
                   <Shield className="w-4 h-4 text-[var(--success)] flex-shrink-0 mt-0.5" />
@@ -104,8 +104,8 @@ export function AgentModelSection() {
             Начните получать клиентов уже сегодня
           </h3>
           <p className="text-[var(--text-secondary)] mb-8 max-w-xl mx-auto">
-            Регистрация за 5 минут. Первые 3 месяца AI-обработка лидов бесплатно.
-            Агентский договор — прозрачные условия.
+            Регистрация за 5 минут. Первые 3 месяца Кузьмич и operator tools доступны бесплатно.
+            Агентский договор остаётся прозрачной юридической рамкой.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
             <Link
