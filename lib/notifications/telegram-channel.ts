@@ -16,8 +16,8 @@ function esc(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-async function tgPost(chatId: string, text: string): Promise<{ ok: boolean; error?: string }> {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
+async function tgPost(chatId: string, text: string, botToken?: string): Promise<{ ok: boolean; error?: string }> {
+  const token = botToken ?? process.env.TELEGRAM_BOT_TOKEN;
   if (!token || !chatId) return { ok: false, error: 'not configured' };
   try {
     const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
@@ -33,8 +33,8 @@ async function tgPost(chatId: string, text: string): Promise<{ ok: boolean; erro
 }
 
 // sendPhoto — caption до 1024 символов
-async function tgPostPhoto(chatId: string, photoUrl: string, caption: string): Promise<{ ok: boolean; error?: string }> {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
+async function tgPostPhoto(chatId: string, photoUrl: string, caption: string, botToken?: string): Promise<{ ok: boolean; error?: string }> {
+  const token = botToken ?? process.env.TELEGRAM_BOT_TOKEN;
   if (!token || !chatId) return { ok: false, error: 'not configured' };
   try {
     const res = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
@@ -49,11 +49,69 @@ async function tgPostPhoto(chatId: string, photoUrl: string, caption: string): P
     });
     const data = await res.json() as { ok: boolean; description?: string };
     // Если фото по URL недоступно — fallback на текстовый пост
-    if (!data.ok) return tgPost(chatId, caption);
+    if (!data.ok) return tgPost(chatId, caption, token);
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : 'fetch error' };
   }
+}
+
+/** Отправка в MAX канал через MAX Bot API */
+async function maxChannelPost(
+  text: string,
+  photoUrl?: string | null,
+): Promise<{ ok: boolean; error?: string }> {
+  const token = process.env.MAX_BOT_TOKEN;
+  const channelId = process.env.MAX_CHANNEL_ID;
+  if (!token || !channelId) return { ok: false, error: 'MAX_BOT_TOKEN or MAX_CHANNEL_ID not set' };
+
+  // Конвертируем HTML-теги в MAX формат (MAX тоже поддерживает HTML)
+  const attachments: Array<Record<string, unknown>> = [];
+  if (photoUrl) {
+    attachments.push({ type: 'image', payload: { url: photoUrl } });
+  }
+
+  try {
+    const body: Record<string, unknown> = {
+      text,
+      format: 'html',
+      notify: true,
+    };
+    if (attachments.length > 0) body.attachments = attachments;
+
+    const res = await fetch(
+      `https://botapi.max.ru/messages?access_token=${token}&chat_id=${channelId}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      },
+    );
+    const data = await res.json() as { success?: boolean; message?: Record<string, unknown>; code?: string; description?: string };
+    if (data.message) return { ok: true };
+    return { ok: false, error: data.description ?? data.code ?? 'unknown MAX error' };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'MAX fetch error' };
+  }
+}
+
+/** Публикация в основной TG-канал + MAX канал */
+async function postToAllChannels(
+  mainChannelId: string,
+  text: string,
+  photoUrl?: string | null,
+): Promise<{ ok: boolean; error?: string }> {
+  // 1. Основной TG-канал через основного бота
+  const mainResult = photoUrl
+    ? await tgPostPhoto(mainChannelId, photoUrl, text)
+    : await tgPost(mainChannelId, text);
+
+  // 2. MAX канал через MAX бота (fire-and-forget)
+  maxChannelPost(text, photoUrl).then(r => {
+    if (!r.ok) console.error('[postToAllChannels] MAX channel error:', r.error);
+  }).catch(() => {});
+
+  return mainResult;
 }
 
 const LOCATION_LABELS: Record<string, string> = {
@@ -148,7 +206,7 @@ export async function postRouteToChannel(routeId: string, photoUrl?: string): Pr
   lines.push(`<a href="${appUrl}/routes/${r.id}">Смотреть маршрут →</a>`);
 
   const text = lines.join('\n');
-  return photoUrl ? tgPostPhoto(channelId, photoUrl, text) : tgPost(channelId, text);
+  return postToAllChannels(channelId, text, photoUrl);
 }
 
 interface PartnerRow {
@@ -190,7 +248,7 @@ export async function postOperatorToChannel(slug: string, photoUrl?: string): Pr
 
   const text = lines.join('\n');
   const photo = photoUrl ?? p.hero_image ?? undefined;
-  return photo ? tgPostPhoto(channelId, photo, text) : tgPost(channelId, text);
+  return postToAllChannels(channelId, text, photo);
 }
 
 /**
@@ -216,7 +274,7 @@ export async function postSezonToChannel(): Promise<{ ok: boolean; error?: strin
     { role: 'user', content: prompt },
   ], getModelForAgent('kuzmich'));
 
-  return tgPost(channelId, text);
+  return postToAllChannels(channelId, text);
 }
 
 // ── Справочник «Друзья» — внешние партнёры без страницы на сайте ─────────────
@@ -276,7 +334,7 @@ export async function postFriendToChannel(slug: string): Promise<{ ok: boolean; 
     { role: 'user', content: prompt },
   ], getModelForAgent('kuzmich'));
 
-  return tgPost(channelId, text);
+  return postToAllChannels(channelId, text);
 }
 
 // ── А2. Кузьмич — AI-пост о конкретном маршруте (автономный cron) ────────────
@@ -369,9 +427,7 @@ export async function postKuzmichRoute(): Promise<{ ok: boolean; routeId?: strin
 
   const text = await callAIWithModelDirect([{ role: 'user', content: prompt }], getModelForAgent('kuzmich'));
   const photoUrl = buildRoutePhotoUrl(r);
-  const result = photoUrl
-    ? await tgPostPhoto(channelId, photoUrl, text)
-    : await tgPost(channelId, text);
+  const result = await postToAllChannels(channelId, text, photoUrl);
 
   if (result.ok) {
     try {
@@ -419,7 +475,7 @@ export async function postKuzmichTip(): Promise<{ ok: boolean; error?: string }>
 - В конце можно добавить: ${appUrl}/routes`;
 
   const text = await callAIWithModelDirect([{ role: 'user', content: prompt }], getModelForAgent('kuzmich'));
-  const result = await tgPost(channelId, text);
+  const result = await postToAllChannels(channelId, text);
 
   if (result.ok) {
     try {
@@ -428,6 +484,98 @@ export async function postKuzmichTip(): Promise<{ ok: boolean; error?: string }>
         ['kuzmich_tip', JSON.stringify({ topic })]
       );
     } catch { /* таблица ещё не создана */ }
+  }
+
+  return result;
+}
+
+// ── Safety/News post ─────────────────────────────────────────────────────────
+
+/** Parse RSS headlines (lightweight) */
+function parseRssItems(xml: string, limit = 8): Array<{ title: string; text: string; date: string }> {
+  const items: Array<{ title: string; text: string; date: string }> = [];
+  const re = /<item[^>]*>([\s\S]*?)<\/item>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(xml)) !== null && items.length < limit) {
+    const block = m[1];
+    const titleM = block.match(/<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>/);
+    const descM = block.match(/<description>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/description>/);
+    const fullM = block.match(/<yandex:full-text>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/yandex:full-text>/);
+    const dateM = block.match(/<pubDate>(.*?)<\/pubDate>/);
+    if (titleM?.[1]) {
+      const body = fullM?.[1]?.replace(/<[^>]+>/g, '').slice(0, 600) ?? descM?.[1] ?? '';
+      items.push({ title: titleM[1].trim(), text: body.trim(), date: dateM?.[1] ?? '' });
+    }
+  }
+  return items;
+}
+
+/**
+ * Fetches latest Kamchatka news, finds safety-relevant stories,
+ * generates AI post + image, publishes to channel.
+ */
+export async function postSafetyToChannel(topic?: string): Promise<{ ok: boolean; error?: string }> {
+  const channelId = process.env.TELEGRAM_CHANNEL_ID;
+  if (!channelId) return { ok: false, error: 'TELEGRAM_CHANNEL_ID not set' };
+
+  // 1. Fetch Kamchatka news
+  let newsItems: Array<{ title: string; text: string; date: string }> = [];
+  try {
+    const res = await fetch('https://kamchatka.aif.ru/rss/all.php', { signal: AbortSignal.timeout(10000) });
+    if (res.ok) {
+      const xml = await res.text();
+      newsItems = parseRssItems(xml, 15);
+    }
+  } catch { /* feed unavailable */ }
+
+  // Filter for safety/tourism relevant news
+  const safetyKeywords = ['турист', 'безопасн', 'спасат', 'мчс', 'погиб', 'пострад', 'поиск', 'эвакуац', 'вулкан', 'извержен', 'медвед', 'шторм', 'лавин'];
+  const safetyNews = newsItems.filter(n => {
+    const lower = (n.title + ' ' + n.text).toLowerCase();
+    return safetyKeywords.some(kw => lower.includes(kw));
+  });
+
+  const relevantNews = safetyNews.length > 0 ? safetyNews : newsItems.slice(0, 3);
+  const newsContext = relevantNews.map(n => `${n.title}: ${n.text.slice(0, 300)}`).join('\n\n');
+
+  // 2. Generate post via AI
+  const userTopic = topic ? `\nТема от админа: ${topic}\n` : '';
+  const postPrompt = `Ты — Кузьмич, AI-агент платформы TourHab. Напиши пост для Telegram-канала о безопасности туристов на Камчатке.
+${userTopic}
+АКТУАЛЬНЫЕ НОВОСТИ:
+${newsContext || 'Нет свежих новостей — напиши общий пост о безопасности.'}
+
+ТРЕБОВАНИЯ:
+- 100-150 слов
+- Заголовок жирным (<b>текст</b>)
+- Факты из новостей, без выдумок
+- Практичные советы (3-5 пунктов, через дефис)
+- Экстренные номера: 112, МЧС Камчатки 8-415-2-11-05-05
+- В конце ссылка: <a href="https://tourhab.ru/routes">Безопасные туры с проверенными операторами</a>
+- HTML-теги для Telegram: <b> <i> <a>
+- Без markdown (* ** #)
+- Без эмодзи
+- Спокойный серьёзный тон — Кузьмич предупреждает, не пугает`;
+
+  const postText = await callAIWithModelDirect([{ role: 'user', content: postPrompt }], getModelForAgent('kuzmich'));
+
+  // 3. Generate image
+  const imagePrompt = safetyNews.length > 0 && safetyNews[0].title.toLowerCase().includes('перевал')
+    ? 'dramatic winter mountain pass in Kamchatka Russia, blizzard snow storm, dangerous weather, rescue helicopter, dark stormy sky, photorealistic, cinematic, 8K, no people, no text, no watermarks'
+    : 'Kamchatka wilderness safety concept, volcanic mountain landscape, dramatic weather, moody atmosphere, trail markers, photorealistic, cinematic, 8K, no people, no text, no watermarks';
+  const seed = Math.floor(Math.random() * 9999999);
+  const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(imagePrompt)}?width=1280&height=720&seed=${seed}&nologo=true`;
+
+  // 4. Publish to all channels
+  const result = await postToAllChannels(channelId, postText, imageUrl);
+
+  if (result.ok) {
+    try {
+      await query(
+        `INSERT INTO ai_actions_log (action_type, metadata) VALUES ($1, $2)`,
+        ['kuzmich_safety_post', JSON.stringify({ topic: topic ?? 'auto', news_count: relevantNews.length })]
+      );
+    } catch { /* not critical */ }
   }
 
   return result;
