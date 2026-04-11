@@ -152,7 +152,13 @@ export async function buildTourContext(): Promise<string> {
     // Load live context: weather + news + MChS alerts
     const liveBlock = await loadLiveContext();
 
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Kamchatka' });
+    const timeStr = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kamchatka' });
+
     _tourContextCache = [
+      `СЕГОДНЯ: ${dateStr}, ${timeStr} (Камчатка, UTC+12)`,
+      '',
       'РЕАЛЬНЫЕ ТУРЫ НА ПЛАТФОРМЕ (актуальные цены, называй по имени):',
       ...lines,
       '',
