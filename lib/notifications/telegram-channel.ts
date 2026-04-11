@@ -95,19 +95,32 @@ async function maxChannelPost(
   }
 }
 
-/** Публикация в основной TG-канал + MAX канал */
+/** Публикация в основной TG-канал + MAX канал с кросс-ссылками */
 async function postToAllChannels(
   mainChannelId: string,
   text: string,
   photoUrl?: string | null,
 ): Promise<{ ok: boolean; error?: string }> {
-  // 1. Основной TG-канал через основного бота
-  const mainResult = photoUrl
-    ? await tgPostPhoto(mainChannelId, photoUrl, text)
-    : await tgPost(mainChannelId, text);
+  const tgLink = process.env.TELEGRAM_CHANNEL_LINK ?? '';
+  const maxLink = process.env.MAX_CHANNEL_LINK ?? '';
 
-  // 2. MAX канал через MAX бота (fire-and-forget)
-  maxChannelPost(text, photoUrl).then(r => {
+  // Текст для TG → добавляем ссылку на MAX
+  const tgText = maxLink
+    ? text + `\n\n<a href="${maxLink}">Мы в MAX</a>`
+    : text;
+
+  // Текст для MAX → добавляем ссылку на TG
+  const maxText = tgLink
+    ? text + `\n\n<a href="${tgLink}">Мы в Telegram</a>`
+    : text;
+
+  // 1. Основной TG-канал
+  const mainResult = photoUrl
+    ? await tgPostPhoto(mainChannelId, photoUrl, tgText)
+    : await tgPost(mainChannelId, tgText);
+
+  // 2. MAX канал (fire-and-forget)
+  maxChannelPost(maxText, photoUrl).then(r => {
     if (!r.ok) console.error('[postToAllChannels] MAX channel error:', r.error);
   }).catch(() => {});
 
