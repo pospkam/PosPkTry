@@ -8,7 +8,6 @@ import { requireAdmin } from '@/lib/auth/middleware';
 import { callAIFast } from '@/lib/ai/providers';
 import { z } from 'zod';
 import { KUZMICH_SYSTEM } from '@/lib/kuzmich/core';
-import { ROLE_SYSTEM_PROMPTS } from '@/lib/ai/role-assistants';
 import type { ChatMessage } from '@/lib/ai/prompts';
 
 export const dynamic = 'force-dynamic';
@@ -22,11 +21,7 @@ function buildRegistry() {
     entries.push({ id, label, source, preview: content.slice(0, 200).replace(/\n/g, ' '), charCount: content.length });
   };
 
-  add('kuzmich', 'Кузьмич — Telegram/Web-чат', 'lib/kuzmich/core.ts', KUZMICH_SYSTEM);
-
-  for (const [role, prompt] of Object.entries(ROLE_SYSTEM_PROMPTS)) {
-    add(`role_${role}`, `Роль: ${role}`, 'lib/ai/role-assistants.ts', prompt);
-  }
+  add('kuzmich', 'Kuzmich — Telegram/Web-chat', 'lib/kuzmich/core.ts', KUZMICH_SYSTEM);
 
   return entries;
 }
@@ -107,9 +102,5 @@ export async function POST(request: NextRequest) {
 
 function getFullPrompt(promptId: string): string {
   if (promptId === 'kuzmich') return KUZMICH_SYSTEM;
-  if (promptId.startsWith('role_')) {
-    const role = promptId.replace('role_', '') as keyof typeof ROLE_SYSTEM_PROMPTS;
-    return ROLE_SYSTEM_PROMPTS[role] ?? '';
-  }
   return '';
 }
