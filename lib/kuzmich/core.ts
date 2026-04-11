@@ -36,6 +36,26 @@ export interface PendingBooking {
 
 // ── Системный промпт ──────────────────────────────────────────────────────────
 
+/** Strip emoji + markdown leftovers from AI response */
+function cleanAIResponse(raw: string): string {
+  let t = raw;
+  // Strip emoji codepoints
+  t = t.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '');
+  // **bold** → bold (strip markdown bold)
+  t = t.replace(/\*\*(.+?)\*\*/g, '$1');
+  t = t.replace(/__(.+?)__/g, '$1');
+  // *italic* → italic
+  t = t.replace(/(?<!\n)\*(?!\s)(.+?)(?<!\s)\*/g, '$1');
+  // # headers → plain
+  t = t.replace(/^#{1,6}\s+/gm, '');
+  // ``` code blocks → plain
+  t = t.replace(/```[\s\S]*?```/g, '');
+  // Clean up multiple spaces/newlines left after stripping
+  t = t.replace(/[ \t]{2,}/g, ' ');
+  t = t.replace(/\n{3,}/g, '\n\n');
+  return t.trim();
+}
+
 export const KUZMICH_SYSTEM = `Ты Кузьмич — AI-помощник платформы TourHab по туризму на Камчатке.
 Ты помогаешь человеку честно спланировать поездку и безопасно выйти на реальный тур.
 
@@ -55,17 +75,21 @@ export const KUZMICH_SYSTEM = `Ты Кузьмич — AI-помощник пл�
   Экстренно: SOS tourhab.ru, телефон 112, МЧС 8-415-2-11-05-05.
 
 ЖЁСТКИЕ ПРАВИЛА:
+- НИКАКИХ ЭМОДЗИ. Ни одного. Никогда. Это техническое ограничение.
 - Не придумывай туры, цены, факты, места и доступность.
+- НОВОСТИ И СОБЫТИЯ: ты НЕ знаешь текущих новостей, если они не указаны в блоке "АКТУАЛЬНЫЕ НОВОСТИ" ниже. Если спрашивают про конкретное событие, которого нет в твоих данных — прямо скажи "у меня нет подтверждённой информации об этом". НИКОГДА не выдумывай события, ЧП, аварии или факты.
 - Если данных недостаточно — прямо скажи это и предложи безопасный следующий шаг.
 - Не дави на бронирование и не обещай гарантии, которых у тебя нет.
+- Не предлагай бронирование первым. Только если человек сам спросит.
 - Не говори, что уже "связался" или "договорился" с оператором, если это не сделано системой.
 - Не обещай "мгновенное подтверждение" или "100% наличие мест".
+- Не используй восклицательные знаки через каждое предложение.
 
 ЕСЛИ ЧЕЛОВЕК ГОТОВ ОФОРМЛЯТЬ:
-→ Коротко дай резюме: тур, цена-ориентир, что уточняется перед оплатой.
-→ Если человек сам спросит про бронирование — объясни как оставить заявку. Не предлагай первым.
+-> Коротко дай резюме: тур, цена-ориентир, что уточняется перед оплатой.
+-> Если человек сам спросит про бронирование — объясни как оставить заявку.
 
-СТИЛЬ: живой, конкретный, коротко. Без воды и без markdown-разметки (* ** # _).
+СТИЛЬ: спокойный, конкретный, коротко. Как опытный камчадал разговаривает с гостем — без суеты и без продаж. Без markdown-разметки (* ** # _).
 ЯЗЫК: отвечай на языке собеседника. RU / EN / ZH / JA / KO / DE / FR / ES.`;
 
 
@@ -122,17 +146,173 @@ export async function buildTourContext(): Promise<string> {
       return `ID${r.id}: "${r.title}"${loc} ${cat} ${dur} ${price}${op}${slots}${nextDate}`;
     });
 
+    // Load live context: weather + news + MChS alerts
+    const liveBlock = await loadLiveContext();
+
     _tourContextCache = [
       'РЕАЛЬНЫЕ ТУРЫ НА ПЛАТФОРМЕ (актуальные цены, называй по имени):',
       ...lines,
       '',
       'Когда турист спрашивает о конкретном туре — дай факты. Не предлагай бронирование первым.',
-    ].join('\n');
+      liveBlock,
+    ].filter(Boolean).join('\n');
     _tourContextAt = Date.now();
     return _tourContextCache;
   } catch {
     return '';
   }
+}
+
+// ── Live Context: weather, news, MChS ────────────────────────────────────────
+
+interface LiveCache { text: string; at: number }
+const _weatherCache: LiveCache = { text: '', at: 0 };
+const _newsCache: LiveCache = { text: '', at: 0 };
+const _mchsCache: LiveCache = { text: '', at: 0 };
+
+const WEATHER_TTL = 30 * 60 * 1000; // 30 min
+const NEWS_TTL = 60 * 60 * 1000;    // 1 hour
+
+/** Fetch weather for Petropavlovsk-Kamchatsky */
+async function fetchWeather(): Promise<string> {
+  if (_weatherCache.text && Date.now() - _weatherCache.at < WEATHER_TTL) return _weatherCache.text;
+  try {
+    const res = await fetch(
+      'https://wttr.in/Petropavlovsk-Kamchatsky?format=j1&lang=ru',
+      { signal: AbortSignal.timeout(6000) },
+    );
+    if (!res.ok) return '';
+    const data = await res.json() as {
+      current_condition: Array<{
+        temp_C: string; FeelsLikeC: string; humidity: string;
+        windspeedKmph: string; weatherDesc: Array<{ value: string }>;
+        lang_ru?: Array<{ value: string }>;
+      }>;
+    };
+    const c = data.current_condition[0];
+    if (!c) return '';
+    const desc = c.lang_ru?.[0]?.value ?? c.weatherDesc[0]?.value ?? '';
+    const sign = (n: number) => n > 0 ? `+${n}` : String(n);
+    const t = parseInt(c.temp_C);
+    const f = parseInt(c.FeelsLikeC);
+    _weatherCache.text = `Петропавловск-Камчатский: ${sign(t)}C (ощущается ${sign(f)}C), ${desc}, ветер ${c.windspeedKmph} км/ч, влажность ${c.humidity}%`;
+    _weatherCache.at = Date.now();
+    return _weatherCache.text;
+  } catch { return ''; }
+}
+
+/** Lightweight RSS parser — extracts title + pubDate from first N items */
+function parseRssHeadlines(xml: string, limit = 5): Array<{ title: string; date: string }> {
+  const items: Array<{ title: string; date: string }> = [];
+  const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
+  let match: RegExpExecArray | null;
+  while ((match = itemRegex.exec(xml)) !== null && items.length < limit) {
+    const block = match[1];
+    const titleMatch = block.match(/<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>/);
+    const dateMatch = block.match(/<pubDate>(.*?)<\/pubDate>/);
+    if (titleMatch?.[1]) {
+      const rawDate = dateMatch?.[1] ?? '';
+      const d = rawDate ? new Date(rawDate) : null;
+      const fmtDate = d && !isNaN(d.getTime())
+        ? d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
+        : '';
+      items.push({ title: titleMatch[1].trim(), date: fmtDate });
+    }
+  }
+  return items;
+}
+
+/** Fetch Kamchatka news headlines from RSS */
+async function fetchKamchatkaNews(): Promise<string> {
+  if (_newsCache.text && Date.now() - _newsCache.at < NEWS_TTL) return _newsCache.text;
+  const feeds = [
+    'https://kamchatka.aif.ru/rss/all.php',
+    'https://www.kamgov.ru/news/rss',
+  ];
+  const headlines: Array<{ title: string; date: string }> = [];
+  for (const url of feeds) {
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+      if (!res.ok) continue;
+      const xml = await res.text();
+      headlines.push(...parseRssHeadlines(xml, 4));
+    } catch { /* feed unavailable */ }
+    if (headlines.length >= 6) break;
+  }
+  if (!headlines.length) { _newsCache.text = ''; _newsCache.at = Date.now(); return ''; }
+  const lines = headlines.slice(0, 6).map(h => `- ${h.date ? h.date + ': ' : ''}${h.title}`);
+  _newsCache.text = lines.join('\n');
+  _newsCache.at = Date.now();
+  return _newsCache.text;
+}
+
+/** Fetch MChS Kamchatka alerts (may be geo-blocked outside Russia) */
+async function fetchMchsAlerts(): Promise<string> {
+  if (_mchsCache.text && Date.now() - _mchsCache.at < NEWS_TTL) return _mchsCache.text;
+  const feeds = [
+    'https://41.mchs.gov.ru/deyatelnost/press-centr/novosti/rss',
+    'https://www.mchs.gov.ru/rss',
+  ];
+  const items: Array<{ title: string; date: string }> = [];
+  for (const url of feeds) {
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+      if (!res.ok) continue;
+      const xml = await res.text();
+      items.push(...parseRssHeadlines(xml, 4));
+      if (items.length >= 4) break;
+    } catch { /* feed unavailable, likely geo-blocked */ }
+  }
+  if (!items.length) { _mchsCache.text = ''; _mchsCache.at = Date.now(); return ''; }
+  const lines = items.slice(0, 5).map(h => `- ${h.date ? h.date + ': ' : ''}${h.title}`);
+  _mchsCache.text = lines.join('\n');
+  _mchsCache.at = Date.now();
+  return _mchsCache.text;
+}
+
+/** Build full live context block */
+async function loadLiveContext(): Promise<string> {
+  const [weather, news, mchs, dbIntel] = await Promise.all([
+    fetchWeather(),
+    fetchKamchatkaNews(),
+    fetchMchsAlerts(),
+    loadDbIntel(),
+  ]);
+
+  const blocks: string[] = [];
+
+  if (weather) {
+    blocks.push(`ПОГОДА СЕЙЧАС:\n${weather}`);
+  }
+
+  if (mchs) {
+    blocks.push(`МЧС КАМЧАТКА (последние сообщения):\n${mchs}`);
+  }
+
+  if (news) {
+    blocks.push(`НОВОСТИ КАМЧАТКИ (свежие заголовки):\n${news}`);
+  }
+
+  if (dbIntel) {
+    blocks.push(`АНАЛИТИКА (из мониторинга):\n${dbIntel}`);
+  }
+
+  if (!blocks.length) return '';
+  return '\n' + blocks.join('\n\n');
+}
+
+/** Load recent travel/safety intel from agent_memory */
+async function loadDbIntel(): Promise<string> {
+  try {
+    const { rows } = await pool.query<{ key: string; value: { summary: string; domain: string } }>(
+      `SELECT key, value FROM agent_memory
+       WHERE (key LIKE 'intel_travel%' OR key LIKE 'intel_competitors%')
+         AND updated_at > NOW() - INTERVAL '3 days'
+       ORDER BY updated_at DESC LIMIT 3`,
+    );
+    if (!rows.length) return '';
+    return rows.map(r => `- ${r.value.summary?.slice(0, 300) ?? ''}`).join('\n');
+  } catch { return ''; }
 }
 
 // ── Дата-парсер ───────────────────────────────────────────────────────────────
@@ -655,6 +835,9 @@ export async function aiChat(opts: {
 
   const response = await callAIWaterfall(messages);
   let answer = response?.trim() || 'Что-то с сигналом... Попробуй ещё раз.';
+
+  // Post-process: strip emoji (hard rule) + clean markdown leftovers
+  answer = cleanAIResponse(answer);
 
   await saveMsg(chatId, mode, 'assistant', answer, userId, userName);
   await reply(chatId, answer);

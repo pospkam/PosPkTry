@@ -31,14 +31,59 @@ function botToken() {
   return process.env.TELEGRAM_KUZMICH_BOT_TOKEN ?? process.env.TELEGRAM_BOT_TOKEN ?? '';
 }
 
+/** Strip emoji codepoints (emoticons, symbols, flags, etc.) */
+function stripEmoji(s: string): string {
+  return s.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '').replace(/\s{2,}/g, ' ');
+}
+
+/** Convert leftover markdown to Telegram-safe HTML, strip unsupported syntax */
+function sanitizeForTelegram(raw: string): string {
+  let t = raw;
+  // **bold** or __bold__ → <b>bold</b>
+  t = t.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+  t = t.replace(/__(.+?)__/g, '<b>$1</b>');
+  // *italic* → <i>italic</i> (but not bullet-list asterisks)
+  t = t.replace(/(?<!\n)\*(?!\s)(.+?)(?<!\s)\*/g, '<i>$1</i>');
+  // Remove leftover markdown artifacts: # headers, * bullet, ``` code blocks
+  t = t.replace(/^#{1,6}\s+/gm, '');
+  t = t.replace(/^[\*\-]\s{2,}/gm, '- ');
+  t = t.replace(/```[\s\S]*?```/g, '');
+  // Strip emojis
+  t = stripEmoji(t);
+  return t.trim();
+}
+
 async function tgReply(chatId: number, text: string, extra?: Record<string, unknown>): Promise<void> {
   const token = botToken();
   if (!token) return;
-  await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML', disable_web_page_preview: true, ...extra }),
-  }).catch(() => {});
+  const clean = sanitizeForTelegram(text);
+  const url = `https://api.telegram.org/bot${token}/sendMessage`;
+  const base = { chat_id: chatId, disable_web_page_preview: true, ...extra };
+
+  // Attempt 1: HTML
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...base, text: clean, parse_mode: 'HTML' }),
+    });
+    const json = await res.json() as { ok: boolean; description?: string };
+    if (json.ok) return;
+
+    // Attempt 2: plain text fallback (strip all HTML tags)
+    const plain = clean.replace(/<[^>]+>/g, '');
+    const res2 = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...base, text: plain }),
+    });
+    const json2 = await res2.json() as { ok: boolean; description?: string };
+    if (!json2.ok) {
+      console.error('[tgReply] fallback failed:', json2.description);
+    }
+  } catch (err) {
+    console.error('[tgReply] network error:', err instanceof Error ? err.message : err);
+  }
 }
 
 async function tgAnswerCallback(callbackQueryId: string, text?: string): Promise<void> {
