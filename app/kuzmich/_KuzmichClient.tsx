@@ -7,6 +7,8 @@ import {
   Sparkles, Send, Loader2, ArrowLeft, Bot, ArrowRight,
   Camera, X, MapPin, Users, Calendar, Phone, User, Mail,
   CheckCircle, ExternalLink,
+  Fish, Mountain, Droplets, Waves, Backpack, Binoculars, Thermometer, Map,
+  type LucideIcon,
 } from 'lucide-react';
 
 // ── Типы ──────────────────────────────────────────────────────────
@@ -40,15 +42,15 @@ interface Message {
 
 // ── Быстрые чипы ──────────────────────────────────────────────────
 
-const CHIPS = [
-  'Хочу 3 дня: рыбалка + вулкан',
-  'Увидеть медведей, бюджет 50 тыс',
-  'Горячие источники на выходные',
-  'Треккинг для новичка',
-  'Что посмотреть за 5 дней?',
-  'Вертолёт на Долину гейзеров',
-  'Рыбалка на чавычу в июле',
-  'Семейный тур с детьми',
+const CHIPS: { icon: LucideIcon; text: string }[] = [
+  { icon: Fish,        text: 'Хочу 3 дня: рыбалка + вулкан' },
+  { icon: Binoculars,  text: 'Увидеть медведей, бюджет 50 тыс' },
+  { icon: Thermometer, text: 'Горячие источники на выходные' },
+  { icon: Backpack,    text: 'Треккинг для новичка' },
+  { icon: Map,         text: 'Что посмотреть за 5 дней?' },
+  { icon: Droplets,    text: 'Вертолёт на Долину гейзеров' },
+  { icon: Fish,        text: 'Рыбалка на чавычу в июле' },
+  { icon: Users,       text: 'Семейный тур с детьми' },
 ];
 
 // ── BookingFormCard ────────────────────────────────────────────────
@@ -561,9 +563,10 @@ export default function KuzmichClient() {
             <p className="text-xs text-[var(--text-muted)] mb-3 text-center">Быстрые запросы:</p>
             <div className="flex flex-wrap justify-center gap-2">
               {CHIPS.map(chip => (
-                <button key={chip} type="button" onClick={() => send(chip)}
-                  className="text-xs text-[var(--text-secondary)] border border-[var(--border)] rounded-full px-4 py-2 hover:border-[var(--accent)] hover:text-[var(--accent)] transition-all">
-                  {chip}
+                <button key={chip.text} type="button" onClick={() => send(chip.text)}
+                  className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)] border border-[var(--border)] rounded-full px-4 py-2 hover:border-[var(--accent)] hover:text-[var(--accent)] transition-all">
+                  <chip.icon size={13} />
+                  {chip.text}
                 </button>
               ))}
             </div>

@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
-import { Sparkles, Send, Loader2, X, MessageCircle, Camera, ExternalLink } from 'lucide-react';
+import { Sparkles, Send, Loader2, X, MessageCircle, Camera, ExternalLink, Fish, Mountain, Droplets, Waves } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -223,11 +223,17 @@ export default function KuzmichWidget() {
                   Привет! Я Кузьмич — знаю каждый маршрут Камчатки.
                   Спросите про туры, цены, сезон.
                 </p>
-                <div className="flex flex-wrap justify-center gap-1.5 mt-4">
-                  {['Рыбалка в июле', 'Вулканы для новичка', 'Медведи'].map(chip => (
-                    <button key={chip} onClick={() => send(chip)}
-                      className="text-xs px-3 py-1.5 rounded-full border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-all">
-                      {chip}
+                <div className="flex flex-wrap justify-center gap-2 mt-4">
+                  {([
+                    { icon: Fish,     label: 'Рыбалка',  query: 'Хочу порыбачить на Камчатке' },
+                    { icon: Mountain, label: 'Вулканы',  query: 'Туры на вулканы Камчатки' },
+                    { icon: Droplets, label: 'Гейзеры',  query: 'Долина гейзеров и термальные источники' },
+                    { icon: Waves,    label: 'Океан',    query: 'Туры к океану на Камчатке' },
+                  ] as { icon: React.ElementType; label: string; query: string }[]).map(chip => (
+                    <button key={chip.label} onClick={() => send(chip.query)}
+                      className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-all">
+                      <chip.icon size={12} />
+                      {chip.label}
                     </button>
                   ))}
                 </div>
