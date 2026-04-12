@@ -681,17 +681,22 @@ export async function findTour(keywords: string[]): Promise<TourRow | null> {
 export async function createBooking(
   b: Required<Omit<PendingBooking, 'step' | 'started_at'>>,
   createdVia: string,
+  tgChatId?: number,
+  platform?: 'tg' | 'max',
 ): Promise<number | null> {
   try {
     const total = b.tour.base_price * b.participants;
+    const meta = (tgChatId != null)
+      ? JSON.stringify({ tg_chat_id: tgChatId, platform: platform ?? 'tg' })
+      : null;
     const { rows } = await pool.query<{ id: number }>(
       `INSERT INTO operator_bookings
          (operator_tour_id, tour_id, tourist_name, tourist_phone,
           participants, booking_date, booking_status,
-          base_total_price, final_price, created_via)
-       VALUES ($1,$1,$2,$3,$4,$5,'pending_payment',$6,$6,$7)
+          base_total_price, final_price, created_via, metadata)
+       VALUES ($1,$1,$2,$3,$4,$5,'pending_payment',$6,$6,$7,$8::jsonb)
        RETURNING id`,
-      [b.tour.id, b.name, b.phone, b.participants, b.date, total, createdVia],
+      [b.tour.id, b.name, b.phone, b.participants, b.date, total, createdVia, meta],
     );
     const bookingId = rows[0]?.id ?? null;
 
@@ -992,6 +997,8 @@ export async function handleBookingStep(
     const bookingId = await createBooking(
       b as Required<Omit<PendingBooking, 'step' | 'started_at'>>,
       createdVia,
+      chatId,
+      createdVia.includes('max') ? 'max' : 'tg',
     );
     await deleteBookingFlow(chatId, mode, pending);
 
