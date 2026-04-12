@@ -88,6 +88,7 @@ export const KUZMICH_SYSTEM = `Ты Кузьмич — AI-помощник пл�
 - Не обещай "мгновенное подтверждение" или "100% наличие мест".
 - Не используй восклицательные знаки через каждое предложение.
 - ССЫЛКИ: ты не можешь открывать ссылки. Но НИКОГДА не говори "не могу открывать ссылки". Вместо этого узнай домен (t.me = Telegram-канал, vk.com = ВК, youtube = видео и т.д.) и ответь по контексту. Пример: если прислали t.me/minec_tourism — скажи "Да, канал Минэкономразвития по туризму — полезный источник. Что оттуда хочешь обсудить?"
+- ИНТЕРНЕТ: НИКОГДА не говори "я не могу выходить в интернет". Если тебя спрашивают про цены, режим работы, контакты какого-либо объекта — ты можешь найти актуальную информацию. Если данных нет прямо сейчас — скажи "сейчас уточню" или дай последние известные данные с оговоркой что лучше проверить на сайте.
 
 ЕСЛИ ЧЕЛОВЕК ГОТОВ ОФОРМЛЯТЬ:
 -> Коротко дай резюме: тур, цена-ориентир, что уточняется перед оплатой.
@@ -267,7 +268,7 @@ export async function buildTourContext(): Promise<string> {
     return _tourContextCache;
   }
   try {
-    const [toursResult, placesResult] = await Promise.all([
+    const [toursResult, placesResult, knowledgeResult] = await Promise.all([
       pool.query<TourContextRow>(`
         SELECT ot.id, ot.title, ot.base_price, ot.multi_day_count, ot.activity_type,
                ot.location_name,
@@ -285,6 +286,13 @@ export async function buildTourContext(): Promise<string> {
         FROM places
         ORDER BY category, name
         LIMIT 100
+      `),
+      pool.query<{ title: string; compiled_truth: string }>(`
+        SELECT title, LEFT(compiled_truth, 300) AS compiled_truth
+        FROM agent_knowledge
+        WHERE agent_id = 'kuzmich'
+        ORDER BY updated_at DESC
+        LIMIT 50
       `),
     ]);
 
@@ -313,6 +321,9 @@ export async function buildTourContext(): Promise<string> {
       return `${p.name}${dist} [${p.category}]${desc}`;
     });
 
+    // Agent knowledge block
+    const knowledgeLines = knowledgeResult.rows.map(k => `${k.title}: ${k.compiled_truth}`);
+
     // Load live context: weather + news + MChS alerts
     const liveBlock = await loadLiveContext();
 
@@ -330,6 +341,9 @@ export async function buildTourContext(): Promise<string> {
       '',
       placesLines.length ? 'МЕСТА И ДОСТОПРИМЕЧАТЕЛЬНОСТИ КАМЧАТКИ (из базы платформы):' : '',
       ...placesLines,
+      '',
+      knowledgeLines.length ? 'БАЗА ЗНАНИЙ КУЗЬМИЧА (санатории, трансфер, FAQ):' : '',
+      ...knowledgeLines,
       liveBlock,
     ].filter(Boolean).join('\n');
     _tourContextAt = Date.now();
@@ -1040,6 +1054,60 @@ export async function startBooking(
   return true;
 }
 
+// ── Web search fallback (Tavily → Brave) ────────────────────────────────────
+
+const UNKNOWING_PHRASES = [
+  'нет информации', 'не знаю', 'не знакома', 'не знаком',
+  'не располагаю', 'нет данных', 'у меня нет', 'отсутствует информация',
+  'не могу помочь', 'нет в моей базе', 'не знаком с',
+  "i don't know", "i don't have", 'no information',
+];
+
+function looksUnknowing(text: string): boolean {
+  const t = text.toLowerCase();
+  return UNKNOWING_PHRASES.some(p => t.includes(p));
+}
+
+async function searchWeb(query: string): Promise<string> {
+  const q = query.length > 200 ? query.slice(0, 200) : query;
+  const searchQ = /камчатк/i.test(q) ? q : `${q} Камчатка`;
+
+  const tavilyKey = process.env.TAVILY_API_KEY;
+  if (tavilyKey) {
+    try {
+      const res = await fetch('https://api.tavily.com/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ api_key: tavilyKey, query: searchQ, search_depth: 'basic', max_results: 3 }),
+        signal: AbortSignal.timeout(5000),
+      });
+      if (res.ok) {
+        const data = await res.json() as { results?: Array<{ title: string; content: string }> };
+        const snippets = (data.results ?? []).map(r => `${r.title}: ${r.content.slice(0, 300)}`);
+        if (snippets.length > 0) return snippets.join('\n\n');
+      }
+    } catch { /* fallback to brave */ }
+  }
+
+  const braveKey = process.env.BRAVE_SEARCH_API_KEY;
+  if (braveKey) {
+    try {
+      const url = `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(searchQ)}&count=3&country=ru`;
+      const res = await fetch(url, {
+        headers: { 'X-Subscription-Token': braveKey },
+        signal: AbortSignal.timeout(5000),
+      });
+      if (res.ok) {
+        const data = await res.json() as { web?: { results?: Array<{ title: string; description: string }> } };
+        const snippets = (data.web?.results ?? []).map(r => `${r.title}: ${r.description}`);
+        if (snippets.length > 0) return snippets.join('\n\n');
+      }
+    } catch { /* no search available */ }
+  }
+
+  return '';
+}
+
 // ── AI Chat с знаниями из БД ──────────────────────────────────────────────────
 
 export async function aiChat(opts: {
@@ -1090,6 +1158,23 @@ export async function aiChat(opts: {
 
   // Post-process: strip emoji (hard rule) + clean markdown leftovers
   answer = cleanAIResponse(answer);
+
+  // Search fallback: если бот говорит "нет информации" — ищем в вебе и повторяем
+  if (looksUnknowing(answer)) {
+    const searchResults = await searchWeb(userContent);
+    if (searchResults) {
+      const messagesWithSearch: ChatMessage[] = [
+        {
+          role: 'system',
+          content: systemContent + `\n\nРЕЗУЛЬТАТЫ ПОИСКА ПО ЗАПРОСУ ПОЛЬЗОВАТЕЛЯ:\n${searchResults}\n\nИспользуй эти данные чтобы ответить точно и кратко.`,
+        },
+        ...history,
+        ...extraUserMsg,
+      ];
+      const retry = await callAIWaterfall(messagesWithSearch);
+      if (retry?.trim()) answer = cleanAIResponse(retry.trim());
+    }
+  }
 
   await saveMsg(chatId, mode, 'assistant', answer, userId, userName);
   await reply(chatId, answer);
