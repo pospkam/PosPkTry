@@ -195,6 +195,83 @@ export async function callOpenRouterModel(
   }
 }
 
+// ── OpenRouter: Function calling (tools) ──────────────────────
+
+export interface ToolDefinition {
+  type: 'function';
+  function: { name: string; description: string; parameters: Record<string, unknown> };
+}
+
+export interface ToolCall {
+  id: string;
+  type: 'function';
+  function: { name: string; arguments: string };
+}
+
+export interface ToolsCallResult {
+  content: string | null;
+  tool_calls: ToolCall[] | null;
+}
+
+type ToolMsg =
+  | { role: 'system' | 'user'; content: string }
+  | { role: 'assistant'; content: string | null; tool_calls?: ToolCall[] }
+  | { role: 'tool'; content: string; tool_call_id: string };
+
+export async function callOpenRouterWithTools(
+  messages: ToolMsg[],
+  tools: ToolDefinition[],
+  modelId = 'openai/gpt-4o-mini',
+  timeoutMs = 20_000,
+): Promise<ToolsCallResult | null> {
+  const apiKey = getOpenRouterKey();
+  if (!apiKey || isOpenRouterTemporarilyDisabled()) return null;
+
+  try {
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+        'HTTP-Referer': 'https://tourhab.ru',
+        'X-Title': 'TourHab Kamchatka',
+      },
+      body: JSON.stringify({
+        model: modelId,
+        temperature: 0.3,
+        max_tokens: 1000,
+        messages,
+        tools,
+        tool_choice: 'auto',
+      }),
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+
+    if (!res.ok) {
+      if (res.status === 401 || res.status === 403) markOpenRouterAuthFailure();
+      return null;
+    }
+
+    clearOpenRouterFailure();
+    const data = await res.json() as {
+      choices?: Array<{
+        finish_reason?: string;
+        message?: { content?: string | null; tool_calls?: ToolCall[] };
+      }>;
+    };
+
+    const msg = data?.choices?.[0]?.message;
+    if (!msg) return null;
+
+    return {
+      content: msg.content ?? null,
+      tool_calls: msg.tool_calls?.length ? msg.tool_calls : null,
+    };
+  } catch {
+    return null;
+  }
+}
+
 // Call AI with a preferred model. Falls back to full waterfall if preferred model fails.
 export async function callAIWithModel(
   messages: ChatMessage[],

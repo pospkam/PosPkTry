@@ -9,8 +9,9 @@
  */
 
 import { pool } from '@/lib/db-pool';
-import { callAIWaterfall } from '@/lib/ai/providers';
+import { callAIWaterfall, callOpenRouterWithTools } from '@/lib/ai/providers';
 import type { ChatMessage } from '@/lib/ai/prompts';
+import type { ToolDefinition, ToolCall } from '@/lib/ai/providers';
 
 // ── Типы ──────────────────────────────────────────────────────────────────────
 
@@ -1110,6 +1111,151 @@ async function searchWeb(query: string): Promise<string> {
 
 // ── AI Chat с знаниями из БД ──────────────────────────────────────────────────
 
+// ── Level 1: Preemptive search triggers ─────────────────────────────────────
+
+const PREEMPTIVE_PATTERNS = [
+  /цен[аыу]/i, /стоимост/i, /сколько стоит/i, /почём/i,
+  /телефон/i, /контакт/i, /позвонить/i,
+  /режим работ/i, /часы работ/i, /когда открыт/i, /закрыт/i,
+  /адрес/i, /как добраться/i, /как попасть/i, /как доехать/i,
+  /забронировать/i, /билет/i,
+];
+
+function needsPreemptiveSearch(text: string): boolean {
+  return PREEMPTIVE_PATTERNS.some(p => p.test(text));
+}
+
+async function saveSearchResultToKB(query: string, result: string): Promise<void> {
+  const slug = `auto_${query.toLowerCase()
+    .replace(/[^a-zа-яё0-9]/gi, '_')
+    .replace(/_+/g, '_')
+    .slice(0, 50)}_${Date.now() % 100000}`;
+  await pool.query(
+    `INSERT INTO agent_knowledge(slug,type,title,compiled_truth,agent_id,edit_count,created_at,updated_at)
+     VALUES($1,'search_result',$2,$3,'kuzmich',0,NOW(),NOW())
+     ON CONFLICT(slug) DO NOTHING`,
+    [slug, query.slice(0, 100), `${result.slice(0, 500)}\n[Веб-поиск, ${new Date().toLocaleDateString('ru-RU')}]`],
+  ).catch(() => {});
+}
+
+// ── Level 2: Tool use ────────────────────────────────────────────────────────
+
+const KUZMICH_TOOLS: ToolDefinition[] = [
+  {
+    type: 'function',
+    function: {
+      name: 'search_kamchatka',
+      description: 'Поиск актуальной информации о Камчатке: цены, адреса, телефоны, расписание, отзывы. Используй ВСЕГДА когда не знаешь точных цифр или деталей.',
+      parameters: { type: 'object', properties: { query: { type: 'string', description: 'Поисковый запрос' } }, required: ['query'] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_tours',
+      description: 'Получить активные туры из платформы TourHab с ценами и датами. Используй когда турист спрашивает о конкретных турах или программах.',
+      parameters: { type: 'object', properties: { activity_type: { type: 'string', description: 'Фильтр по типу: рыбалка, вулканы, медведи, гейзеры, трекинг и т.д.' } }, required: [] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_place_info',
+      description: 'Найти информацию о конкретном месте, санатории, достопримечательности, базе отдыха Камчатки из базы данных.',
+      parameters: { type: 'object', properties: { name: { type: 'string', description: 'Название объекта' } }, required: ['name'] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_weather',
+      description: 'Получить текущую погоду в Петропавловске-Камчатском.',
+      parameters: { type: 'object', properties: {}, required: [] },
+    },
+  },
+];
+
+type ToolMsg =
+  | { role: 'system' | 'user'; content: string }
+  | { role: 'assistant'; content: string | null; tool_calls?: ToolCall[] }
+  | { role: 'tool'; content: string; tool_call_id: string };
+
+async function executeTool(name: string, args: Record<string, string>): Promise<string> {
+  try {
+    if (name === 'search_kamchatka') {
+      const result = await searchWeb(args.query ?? '');
+      return result || 'Поиск не дал результатов.';
+    }
+    if (name === 'get_tours') {
+      const ctx = await buildTourContext();
+      return ctx || 'Туры не найдены.';
+    }
+    if (name === 'get_place_info') {
+      const placeName = args.name ?? '';
+      const [pr, kr] = await Promise.all([
+        pool.query<{ name: string; description: string | null; category: string; district: string | null }>(
+          `SELECT name, description, category, district FROM places WHERE name ILIKE $1 LIMIT 3`,
+          [`%${placeName}%`],
+        ),
+        pool.query<{ title: string; compiled_truth: string }>(
+          `SELECT title, compiled_truth FROM agent_knowledge WHERE agent_id='kuzmich' AND (title ILIKE $1 OR compiled_truth ILIKE $1) LIMIT 3`,
+          [`%${placeName}%`],
+        ),
+      ]);
+      const lines = [
+        ...pr.rows.map(p => `${p.name} [${p.category}]${p.district ? ` (${p.district})` : ''}${p.description ? ': ' + p.description : ''}`),
+        ...kr.rows.map(k => `${k.title}: ${k.compiled_truth}`),
+      ];
+      if (lines.length > 0) return lines.join('\n\n');
+      return await searchWeb(placeName) || `Информация о "${placeName}" не найдена в базе.`;
+    }
+    if (name === 'get_weather') {
+      return (await fetchWeather()) || 'Погода временно недоступна.';
+    }
+    return 'Неизвестный инструмент.';
+  } catch {
+    return 'Ошибка при выполнении запроса.';
+  }
+}
+
+async function aiChatAgentLoop(
+  userText: string,
+  systemContent: string,
+  history: ChatMessage[],
+  extraUserMsg: ChatMessage[],
+): Promise<string | null> {
+  const msgs: ToolMsg[] = [
+    { role: 'system', content: systemContent },
+    ...history.map(m => ({ role: m.role as 'system' | 'user' | 'assistant', content: m.content } as ToolMsg)),
+    ...extraUserMsg.map(m => ({ role: m.role as 'system' | 'user' | 'assistant', content: m.content } as ToolMsg)),
+  ];
+
+  for (let turn = 0; turn < 4; turn++) {
+    const result = await callOpenRouterWithTools(msgs, KUZMICH_TOOLS);
+    if (!result) return null;
+
+    if (!result.tool_calls?.length) {
+      return result.content; // final answer
+    }
+
+    msgs.push({ role: 'assistant', content: result.content, tool_calls: result.tool_calls });
+
+    for (const tc of result.tool_calls) {
+      let args: Record<string, string> = {};
+      try { args = JSON.parse(tc.function.arguments) as Record<string, string>; } catch { /* empty args */ }
+      const toolResult = await executeTool(tc.function.name, args);
+      msgs.push({ role: 'tool', content: toolResult, tool_call_id: tc.id });
+
+      // Auto-save search results to KB for future use
+      if (tc.function.name === 'search_kamchatka' && toolResult !== 'Поиск не дал результатов.') {
+        void saveSearchResultToKB(args.query ?? userText, toolResult);
+      }
+    }
+  }
+
+  return null; // max turns exceeded
+}
+
 export async function aiChat(opts: {
   chatId: number;
   text: string;
@@ -1153,26 +1299,42 @@ export async function aiChat(opts: {
     ...extraUserMsg,
   ];
 
-  const response = await callAIWaterfall(messages);
-  let answer = response?.trim() || 'Что-то с сигналом... Попробуй ещё раз.';
+  // ── Level 2: Agent loop with tools (primary path) ────────────────────────
+  let answer = await aiChatAgentLoop(userContent, systemContent, history, extraUserMsg)
+    .then(r => (r?.trim() ? cleanAIResponse(r.trim()) : ''))
+    .catch(() => '');
 
-  // Post-process: strip emoji (hard rule) + clean markdown leftovers
-  answer = cleanAIResponse(answer);
+  // ── Fallback: waterfall without tools ───────────────────────────────────
+  if (!answer) {
+    // Level 1: preemptive search for price/contact/schedule queries
+    let enrichedSystem = systemContent;
+    if (needsPreemptiveSearch(userContent)) {
+      const preSearch = await searchWeb(userContent);
+      if (preSearch) enrichedSystem += `\n\nАКТУАЛЬНЫЕ ДАННЫЕ ИЗ ПОИСКА:\n${preSearch}`;
+    }
 
-  // Search fallback: если бот говорит "нет информации" — ищем в вебе и повторяем
-  if (looksUnknowing(answer)) {
-    const searchResults = await searchWeb(userContent);
-    if (searchResults) {
-      const messagesWithSearch: ChatMessage[] = [
-        {
-          role: 'system',
-          content: systemContent + `\n\nРЕЗУЛЬТАТЫ ПОИСКА ПО ЗАПРОСУ ПОЛЬЗОВАТЕЛЯ:\n${searchResults}\n\nИспользуй эти данные чтобы ответить точно и кратко.`,
-        },
-        ...history,
-        ...extraUserMsg,
-      ];
-      const retry = await callAIWaterfall(messagesWithSearch);
-      if (retry?.trim()) answer = cleanAIResponse(retry.trim());
+    const fallbackMessages: ChatMessage[] = [
+      { role: 'system', content: enrichedSystem },
+      ...history,
+      ...extraUserMsg,
+    ];
+
+    const response = await callAIWaterfall(fallbackMessages);
+    answer = response?.trim() ? cleanAIResponse(response.trim()) : 'Что-то с сигналом... Попробуй ещё раз.';
+
+    // Level 1: reactive fallback if waterfall still doesn't know
+    if (looksUnknowing(answer)) {
+      const searchResults = await searchWeb(userContent);
+      if (searchResults) {
+        void saveSearchResultToKB(userContent, searchResults);
+        const retryMessages: ChatMessage[] = [
+          { role: 'system', content: systemContent + `\n\nРЕЗУЛЬТАТЫ ПОИСКА:\n${searchResults}\n\nОтветь на основе этих данных кратко и точно.` },
+          ...history,
+          ...extraUserMsg,
+        ];
+        const retry = await callAIWaterfall(retryMessages);
+        if (retry?.trim()) answer = cleanAIResponse(retry.trim());
+      }
     }
   }
 
