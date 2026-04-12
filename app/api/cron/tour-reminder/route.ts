@@ -26,7 +26,7 @@ interface BookingRow {
   tour_title: string;
   activity_type: string | null;
   location_name: string | null;
-  difficulty_level: string | null;
+  difficulty: string | null;
   tg_chat_id: number;
   platform: string;
 }
@@ -121,7 +121,7 @@ export async function GET(request: NextRequest) {
   const { rows: bookings } = await pool.query<BookingRow>(`
     SELECT ob.id, ob.tourist_name, ob.booking_date::text, ob.participants,
            ot.title AS tour_title, ot.activity_type, ot.location_name,
-           ot.difficulty_level,
+           ot.difficulty,
            (ob.metadata->>'tg_chat_id')::bigint AS tg_chat_id,
            ob.metadata->>'platform' AS platform
     FROM operator_bookings ob
@@ -147,7 +147,7 @@ export async function GET(request: NextRequest) {
       day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Kamchatka',
     });
     const loc = b.location_name ?? 'Камчатка';
-    const diff = b.difficulty_level ?? '';
+    const diff = b.difficulty ?? '';
 
     const prompt = `Ты Кузьмич — AI-гид по Камчатке. Напиши короткое дружеское напоминание туристу перед туром завтра.
 
