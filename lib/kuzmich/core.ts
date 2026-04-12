@@ -78,7 +78,8 @@ export const KUZMICH_SYSTEM = `Ты Кузьмич — AI-помощник пл�
 
 ЖЁСТКИЕ ПРАВИЛА:
 - НИКАКИХ ЭМОДЗИ. Ни одного. Никогда. Это техническое ограничение.
-- Не придумывай туры, цены, факты, места и доступность.
+- Не придумывай туры НА НАШЕЙ ПЛАТФОРМЕ, их цены и доступность — только то, что есть в данных ниже.
+- Реальные места, объекты и достопримечательности Камчатки (санатории, базы, маршруты, горячие источники) — используй свои знания. Можешь рассказывать о Санатории Светлячок, Паратунке, Малкинских источниках и любых других реальных камчатских объектах.
 - НОВОСТИ И СОБЫТИЯ: ты НЕ знаешь текущих новостей, если они не указаны в блоке "АКТУАЛЬНЫЕ НОВОСТИ" ниже. Если спрашивают про конкретное событие, которого нет в твоих данных — прямо скажи "у меня нет подтверждённой информации об этом". НИКОГДА не выдумывай события, ЧП, аварии или факты.
 - Если данных недостаточно — прямо скажи это и предложи безопасный следующий шаг.
 - Не дави на бронирование и не обещай гарантии, которых у тебя нет.
@@ -266,19 +267,28 @@ export async function buildTourContext(): Promise<string> {
     return _tourContextCache;
   }
   try {
-    const { rows } = await pool.query<TourContextRow>(`
-      SELECT ot.id, ot.title, ot.base_price, ot.multi_day_count, ot.activity_type,
-             ot.location_name,
-             ot.available_slots,
-             ot.next_available_date::text,
-             u.company_name AS operator_name
-      FROM operator_tours ot
-      LEFT JOIN users u ON u.id = ot.operator_id
-      WHERE ot.is_active = true AND ot.deleted_at IS NULL
-      ORDER BY ot.base_price ASC
-      LIMIT 40
-    `);
+    const [toursResult, placesResult] = await Promise.all([
+      pool.query<TourContextRow>(`
+        SELECT ot.id, ot.title, ot.base_price, ot.multi_day_count, ot.activity_type,
+               ot.location_name,
+               ot.available_slots,
+               ot.next_available_date::text,
+               u.company_name AS operator_name
+        FROM operator_tours ot
+        LEFT JOIN users u ON u.id = ot.operator_id
+        WHERE ot.is_active = true AND ot.deleted_at IS NULL
+        ORDER BY ot.base_price ASC
+        LIMIT 40
+      `),
+      pool.query<{ name: string; category: string; district: string | null; description: string | null }>(`
+        SELECT name, category, district, LEFT(description, 120) AS description
+        FROM places
+        ORDER BY category, name
+        LIMIT 100
+      `),
+    ]);
 
+    const { rows } = toursResult;
     if (!rows.length) return '';
 
     const lines = rows.map(r => {
@@ -296,6 +306,13 @@ export async function buildTourContext(): Promise<string> {
       return `ID${r.id}: "${r.title}"${loc} ${cat} ${dur} ${price}${op}${slots}${nextDate}`;
     });
 
+    // Places block
+    const placesLines = placesResult.rows.map(p => {
+      const dist = p.district ? ` (${p.district})` : '';
+      const desc = p.description ? ` — ${p.description}` : '';
+      return `${p.name}${dist} [${p.category}]${desc}`;
+    });
+
     // Load live context: weather + news + MChS alerts
     const liveBlock = await loadLiveContext();
 
@@ -310,6 +327,9 @@ export async function buildTourContext(): Promise<string> {
       ...lines,
       '',
       'Когда турист спрашивает о конкретном туре — дай факты. Не предлагай бронирование первым.',
+      '',
+      placesLines.length ? 'МЕСТА И ДОСТОПРИМЕЧАТЕЛЬНОСТИ КАМЧАТКИ (из базы платформы):' : '',
+      ...placesLines,
       liveBlock,
     ].filter(Boolean).join('\n');
     _tourContextAt = Date.now();
