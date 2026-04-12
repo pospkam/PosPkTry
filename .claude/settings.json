@@ -27,6 +27,13 @@
             "command": "result=$(cd /workspaces/PosPkTry && npx tsc --noEmit 2>&1); if echo \"$result\" | grep -q 'error TS'; then errcount=$(echo \"$result\" | grep -c 'error TS'); printf '{\"continue\": false, \"stopReason\": \"TypeScript: %s ошиб(ок). Исправь — npx tsc --noEmit\"}' \"$errcount\"; exit 2; fi",
             "statusMessage": "TypeScript проверка перед коммитом...",
             "timeout": 60
+          },
+          {
+            "type": "command",
+            "if": "Bash(git commit*)",
+            "command": "bash /workspaces/PosPkTry/.claude/hooks/db-schema-check.sh",
+            "statusMessage": "DB schema проверка...",
+            "timeout": 10
           }
         ]
       }
