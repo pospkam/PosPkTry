@@ -299,7 +299,7 @@ ${config.ai_filter}
   ];
 
   try {
-    const text = await callAIWithModelDirect(messages, 'fast');
+    const text = await callAIWithModelDirect(messages, 'google/gemini-2.0-flash-001');
     if (!text) return null;
 
     // Extract JSON from response (handle potential markdown wrapping)
@@ -494,7 +494,7 @@ export async function injectManualIntel(
     },
   ];
 
-  const text = await callAIWithModelDirect(messages, 'fast').catch(() => null);
+  const text = await callAIWithModelDirect(messages, 'google/gemini-2.0-flash-001').catch(() => null);
 
   let summary = `Ручной сигнал: ${topic}`;
   let urgency: IntelligenceFinding['urgency'] = 'notable';

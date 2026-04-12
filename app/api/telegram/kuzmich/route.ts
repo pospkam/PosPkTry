@@ -127,27 +127,6 @@ async function sendStartMessage(chatId: number, name: string | null): Promise<vo
   });
 }
 
-// ── Рейтинг после AI-ответа (inline-кнопки) ───────────────────────────────────
-
-async function sendRatingKeyboard(chatId: number): Promise<void> {
-  const token = botToken();
-  if (!token) return;
-  await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      chat_id: chatId,
-      text: 'Был полезен ответ?',
-      reply_markup: {
-        inline_keyboard: [[
-          { text: 'Да', callback_data: 'rate_good' },
-          { text: 'Нет', callback_data: 'rate_bad' },
-        ]],
-      },
-    }),
-  }).catch(() => {});
-}
-
 /** Heuristic: answer looks like a concrete tour description (recommends something specific) */
 function hasTourRecommendation(answer: string): boolean {
   const t = answer.toLowerCase();
@@ -175,7 +154,6 @@ async function sendBookingInlineButton(chatId: number): Promise<void> {
 }
 
 async function afterAiReply(chatId: number, answer?: string): Promise<void> {
-  await sendRatingKeyboard(chatId);
   if (answer && hasTourRecommendation(answer)) {
     await sendBookingInlineButton(chatId);
   }

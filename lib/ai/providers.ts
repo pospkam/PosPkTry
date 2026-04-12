@@ -657,7 +657,7 @@ export async function callGeminiVision(
         'X-Title': 'TourHab Kamchatka',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.0-flash',
+        model: 'google/gemini-2.0-flash-001',
         max_tokens: 600,
         messages: [
           {
@@ -701,7 +701,7 @@ export async function callGeminiTranscribe(
         'X-Title': 'TourHab Kamchatka',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.0-flash',
+        model: 'google/gemini-2.0-flash-001',
         max_tokens: 400,
         messages: [{
           role: 'user',
