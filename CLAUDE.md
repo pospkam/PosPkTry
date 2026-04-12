@@ -12,7 +12,7 @@
 | Frontend | Next.js 15 App Router, TypeScript strict, Tailwind CSS |
 | Database | PostgreSQL — прямой SQL (`lib/database.ts`, `lib/db-pool.ts`), без Prisma |
 | Auth | JWT — `lib/auth.ts`, middleware — `lib/auth/middleware.ts` |
-| Deploy | Timeweb Cloud → `tourhab.ru` (App ID: 175269) |
+| Deploy | Timeweb Cloud → `tourhab.ru` (App ID: 175477) |
 | CI/CD | GitHub → автодеплой при push в `main` |
 
 **Масштаб:** 94 стр / 256 API routes / 119 компонентов / 8 хабов / 260 маршрутов БД
