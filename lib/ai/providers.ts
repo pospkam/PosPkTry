@@ -52,20 +52,15 @@ export async function callMiMo(messages: ChatMessage[]): Promise<string | null> 
 // Пробует несколько моделей по очереди — защита от rate limit одной модели.
 // Порядок: сначала быстрые и надёжные, timeout снижен до 12s
 const OR_MODELS = [
-  // { id: 'meta/muse-spark', timeout: 12_000 },             // TODO: активировать когда Meta выпустит через OR
   { id: 'google/gemini-2.0-flash-001',                  timeout: 12_000 }, // самый быстрый ~1-2s
-  { id: 'google/gemini-2.0-flash-lite',                 timeout: 12_000 }, // fast lite
-  { id: 'thudm/glm-z1-32b',                             timeout: 15_000 }, // GLM Z1 32B via OR
-  { id: 'qwen/qwen3-235b-a22b:free',                    timeout: 15_000 }, // Qwen3 235B MoE free
-  { id: 'nvidia/llama-3.3-nemotron-super-49b-v1:free',  timeout: 15_000 }, // NVIDIA Nemotron free
   { id: 'openai/gpt-4o-mini',                           timeout: 12_000 }, // надёжный
-  { id: 'meta-llama/llama-3.3-70b-instruct',            timeout: 12_000 }, // бесплатный резерв
   { id: 'deepseek/deepseek-chat-v3-0324',               timeout: 12_000 }, // дешёвый резерв
+  { id: 'meta-llama/llama-3.3-70b-instruct',            timeout: 12_000 }, // бесплатный резерв
 ];
 
-// If OpenRouter returns auth errors (401/403), avoid repeated slow failures.
-// We temporarily disable OR for a short cooldown and let waterfall use other providers.
-const OPENROUTER_AUTH_COOLDOWN_MS = 10 * 60 * 1000;
+// If OpenRouter returns auth errors (401), avoid repeated slow failures.
+// Only 401 triggers cooldown (bad key). 403 may be model-specific (geo-block, access).
+const OPENROUTER_AUTH_COOLDOWN_MS = 5 * 60 * 1000;
 let openRouterDisabledUntil = 0;
 
 function isOpenRouterTemporarilyDisabled(): boolean {
@@ -107,7 +102,7 @@ export async function callOpenrouter(messages: ChatMessage[]): Promise<string | 
       });
 
       if (!res.ok) {
-        if (res.status === 401 || res.status === 403) {
+        if (res.status === 401) {
           markOpenRouterAuthFailure();
           return null;
         }
@@ -179,7 +174,7 @@ export async function callOpenRouterModel(
     });
 
     if (!res.ok) {
-      if (res.status === 401 || res.status === 403) {
+      if (res.status === 401) {
         markOpenRouterAuthFailure();
       }
       return null;
@@ -248,7 +243,7 @@ export async function callOpenRouterWithTools(
     });
 
     if (!res.ok) {
-      if (res.status === 401 || res.status === 403) markOpenRouterAuthFailure();
+      if (res.status === 401) markOpenRouterAuthFailure();
       return null;
     }
 
@@ -1117,7 +1112,7 @@ export async function callAIFast(messages: ChatMessage[]): Promise<string> {
       })
         .then(async (res) => {
           if (!res.ok) {
-            if (res.status === 401 || res.status === 403) {
+            if (res.status === 401) {
               markOpenRouterAuthFailure();
             }
             return null;
