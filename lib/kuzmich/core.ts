@@ -1273,7 +1273,7 @@ export async function aiChat(opts: {
   visionDescription?: string;
   pending: Map<number, PendingBooking>;
   platform?: 'tg' | 'max';
-  afterReply?: (chatId: number) => Promise<void>;
+  afterReply?: (chatId: number, answer?: string) => Promise<void>;
 }): Promise<void> {
   const { chatId, text, mode, reply, userId, userName, visionDescription, pending, platform, afterReply } = opts;
 
@@ -1348,7 +1348,7 @@ export async function aiChat(opts: {
   await saveMsg(chatId, mode, 'assistant', answer, userId, userName);
   await reply(chatId, answer);
 
-  if (afterReply) await afterReply(chatId);
+  if (afterReply) await afterReply(chatId, answer);
 
   // Fire-and-forget: обновляем долгосрочную память бота
   if (platform) {
@@ -1375,7 +1375,7 @@ export async function processMessage(opts: {
   reply: ReplyFn;
   visionDescription?: string;
   platform?: 'tg' | 'max';
-  afterReply?: (chatId: number) => Promise<void>;
+  afterReply?: (chatId: number, answer?: string) => Promise<void>;
 }): Promise<void> {
   const { chatId, text, userName, userId, mode, createdVia, pending: pendingMap, reply: replyFn, visionDescription, platform, afterReply } = opts;
   const cmd = text.split(' ')[0]?.toLowerCase() ?? '';

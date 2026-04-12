@@ -148,6 +148,39 @@ async function sendRatingKeyboard(chatId: number): Promise<void> {
   }).catch(() => {});
 }
 
+/** Heuristic: answer looks like a concrete tour description (recommends something specific) */
+function hasTourRecommendation(answer: string): boolean {
+  const t = answer.toLowerCase();
+  const hasTourWord = /\bтур\b|маршрут|рыбалк|вулкан|медвед|термал|гейзер|восхожден|экскурс/.test(t);
+  const hasDetail = /\d+[\s\u00a0]*(р|руб|₽|ч\b|час|дн|день|дней|км|чел)/.test(t) || t.includes('стоимость') || t.includes('цена') || t.includes('от ') || t.includes('забронир');
+  return hasTourWord && hasDetail && answer.length > 120;
+}
+
+async function sendBookingInlineButton(chatId: number): Promise<void> {
+  const token = botToken();
+  if (!token) return;
+  await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      chat_id: chatId,
+      text: 'Хотите оформить заявку на тур?',
+      reply_markup: {
+        inline_keyboard: [[
+          { text: 'Хочу забронировать', callback_data: 'book_now' },
+        ]],
+      },
+    }),
+  }).catch(() => {});
+}
+
+async function afterAiReply(chatId: number, answer?: string): Promise<void> {
+  await sendRatingKeyboard(chatId);
+  if (answer && hasTourRecommendation(answer)) {
+    await sendBookingInlineButton(chatId);
+  }
+}
+
 // ── Скачать файл из Telegram → base64 ────────────────────────────────────────
 
 async function downloadTgFile(fileId: string): Promise<{ base64: string; mimeType: string; ext: string } | null> {
@@ -394,6 +427,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         await saveRating(chatId, 'tourist', 1);
         await tgAnswerCallback(cq.id, 'Принято, буду лучше');
         await tgReply(chatId, 'Жаль. Расскажи что не так — постараюсь исправить.');
+      } else if (cq.data === 'book_now') {
+        await tgAnswerCallback(cq.id);
+        await processMessage({
+          chatId, text: 'Хочу забронировать тур',
+          userName: null, userId: cq.from.id,
+          mode: 'tourist', createdVia: 'telegram_inline',
+          pending, reply: tgReply, platform: 'tg',
+        });
       } else {
         await tgAnswerCallback(cq.id);
       }
@@ -501,7 +542,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         chatId, text: transcription, userName: fromName,
         userId: fromId, mode: 'tourist', createdVia: 'telegram_voice',
         pending, reply: tgReply,
-        platform: 'tg', afterReply: sendRatingKeyboard,
+        platform: 'tg', afterReply: afterAiReply,
       });
       return NextResponse.json({ ok: true });
     }
@@ -527,7 +568,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         chatId, text: msg.caption?.trim() ?? 'Что это за место?',
         userName: fromName, userId: fromId, mode: 'tourist',
         createdVia: 'telegram', pending, reply: tgReply, visionDescription,
-        platform: 'tg', afterReply: sendRatingKeyboard,
+        platform: 'tg', afterReply: afterAiReply,
       });
       return NextResponse.json({ ok: true });
     }
@@ -538,7 +579,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         chatId, text: msg.text.trim(), userName: fromName,
         userId: fromId, mode: 'tourist', createdVia: 'telegram',
         pending, reply: tgReply,
-        platform: 'tg', afterReply: sendRatingKeyboard,
+        platform: 'tg', afterReply: afterAiReply,
       });
     }
 
