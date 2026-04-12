@@ -35,6 +35,7 @@ export default function KuzmichWidget() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [pulse, setPulse] = useState(true);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
 
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -53,6 +54,20 @@ export default function KuzmichWidget() {
       ...(p.get('utm_campaign') ? { utmCampaign: p.get('utm_campaign')!.slice(0, 100) } : {}),
     };
   }, []);
+
+  // Загружаем историю из БД при первом открытии виджета
+  useEffect(() => {
+    if (!open || historyLoaded || !sessionId) return;
+    setHistoryLoaded(true);
+    fetch(`/api/ai/chat?sessionId=${encodeURIComponent(sessionId)}`)
+      .then(r => r.json())
+      .then(d => {
+        const msgs: { role: string; content: string }[] = d?.data?.messages ?? [];
+        const visible = msgs.filter(m => m.role === 'user' || m.role === 'assistant');
+        if (visible.length > 0) setMessages(visible as Message[]);
+      })
+      .catch(() => {});
+  }, [open, historyLoaded, sessionId]);
 
   // Отключить pulse после первого открытия
   useEffect(() => {

@@ -334,6 +334,16 @@ export default function KuzmichClient() {
       try { localStorage.setItem(key, sid); } catch { /* ok */ }
     }
     setSessionId(sid);
+
+    // Загружаем историю из БД
+    fetch(`/api/ai/chat?sessionId=${encodeURIComponent(sid)}`)
+      .then(r => r.json())
+      .then(d => {
+        const msgs: { role: string; content: string }[] = d?.data?.messages ?? [];
+        const visible = msgs.filter(m => m.role === 'user' || m.role === 'assistant');
+        if (visible.length > 0) setMessages(visible as Message[]);
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
