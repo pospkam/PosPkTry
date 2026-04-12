@@ -137,10 +137,10 @@ export default function TransparencyClient() {
               </p>
             </div>
             <Link
-              href="/hub/admin/board-meeting"
+              href="/hub/admin/agents"
               className="hidden shrink-0 items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] px-4 py-2.5 text-sm font-medium text-[var(--text-primary)] hover:border-[var(--accent)] md:flex"
             >
-              Открыть контур решений
+              Открыть агентов
               <ArrowUpRight className="h-4 w-4" />
             </Link>
           </div>
