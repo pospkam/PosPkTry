@@ -103,10 +103,10 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({
-      success:    true,
-      booking_id: result.bookingId,
+      id:          result.bookingId,
+      booking_id:  result.bookingId,
       total_price: result.total_price,
-      message:    'Заявка создана. Перед оплатой проверьте детали и условия тура.',
+      message:     'Заявка создана. Перед оплатой проверьте детали и условия тура.',
     });
 
   } catch (err) {
