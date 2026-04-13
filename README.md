@@ -1,106 +1,141 @@
-# TourHab — честный AI-помощник по Камчатке
+# TourHab -- AI-powered tourism platform for Kamchatka
 
-TourHab строится как инструмент, которому доверяют:
-- помогает спланировать поездку,
-- предупреждает о рисках,
-- показывает только реальные предложения,
-- ведет к прозрачной заявке и оплате без серых обещаний.
+**[tourhab.ru](https://tourhab.ru)** | Solo-dev full-stack project
 
-Продакшен: https://tourhab.ru
+Tourism platform connecting travelers with verified local operators across Kamchatka peninsula. AI-first approach: from trip planning to booking to safety alerts.
 
-## Продуктовая позиция
+---
 
-Мы не витрина ради витрины и не театр из "умных агентов".
-Ядро продукта:
-1. Кузьмич — AI-помощник туриста.
-2. Planner и маршрутный контур — подбор под сезон, бюджет, нагрузку, цели.
-3. Безопасность — предупреждения, SOS, контекст маршрута.
-4. Реальные туры от проверенных операторов — с подтверждением деталей перед оплатой.
+## What it does
 
-## Принципы доверия
+- **Kuzmich AI** -- multi-channel assistant (Telegram, web widget, full-page chat). Understands photos (vision), voice messages (transcription), recommends tours, handles bookings inline
+- **260+ routes** -- hiking, volcanoes, fishing, bear watching, helicopter tours, rafting, thermal springs, diving, snowmobiles
+- **Inline booking** -- tourist describes what they want in natural language, AI matches the tour, collects details, creates booking, notifies operator
+- **Operator dashboards** -- booking management, earnings, tour editor, calendar
+- **Safety system** -- SOS button, route danger warnings, MChS integration
+- **AI agents** -- Watchdog (stale bookings alerts), Editor (tour description enrichment), Scout Digest (industry news aggregation)
 
-1. Не обещаем то, что не контролируем.
-2. Не говорим "мгновенно" и "гарантировано", если это зависит от оператора, погоды или внешних систем.
-3. Не придумываем цены, места, доступность, факты по маршруту.
-4. Сначала ясность и проверка условий, потом оплата.
-5. Если данных нет, говорим прямо: "нужно уточнение".
+## Architecture
 
-## Что уже закреплено в коде
+```
+Next.js 15 App Router + TypeScript strict
+PostgreSQL (raw SQL, no ORM)
+JWT auth + role-based middleware
+AI waterfall (OpenRouter -> DeepSeek -> Gemini -> MiniMax -> Anthropic)
+Telegram Bot API (Kuzmich + operator notifications)
+Timeweb Cloud deploy (auto-deploy on push)
+```
 
-- Коммуникация смещена с "маркетплейс-витрины" на "честный помощник".
-- Booking flow: сначала заявка и проверка деталей, затем оплата.
-- Кузьмич: недавящий тон, без переобещаний, с прозрачным следующим шагом.
-- Админ-контур: "AI и автоматизации" вместо завышенного мультиагентного нарратива.
+### Scale
 
-## Технологии
+| Metric | Count |
+|--------|-------|
+| TypeScript files | 1,700+ |
+| API routes | 445 |
+| UI components | 143 |
+| SQL migrations | 115 |
+| Lines of code | 365k+ |
+| Tour routes in DB | 260+ |
 
-- Next.js 15 (App Router)
-- TypeScript (strict)
-- Tailwind CSS + дизайн-токены
-- PostgreSQL (прямой SQL)
-- JWT auth
-- AI waterfall провайдеров (через единый слой в lib/ai/providers.ts)
-- Telegram интеграции (Кузьмич, уведомления)
+### Key modules
 
-## Быстрый старт
+```
+app/
+  kuzmich/              -- AI chat (full-page)
+  marketplace/          -- Tour catalog
+  routes/[id]/          -- Tour detail + affiliate blocks
+  hub/admin/            -- Platform admin (analytics, operators, content)
+  hub/operator/         -- Operator dashboard (bookings, tours, earnings)
+  hub/tourist/          -- Tourist profile (bookings, favorites)
+  hub/safety/           -- Safety center
+  api/telegram/kuzmich/ -- Telegram webhook
+  api/ai/               -- AI endpoints (chat, stream, vision)
+  api/payments/         -- Payment processing
+
+lib/
+  kuzmich/core.ts       -- Kuzmich brain (agent loop, tools, booking flow)
+  ai/providers.ts       -- AI provider waterfall (6 providers, auto-failover)
+  agents/               -- Background agents (watchdog, editor, scout)
+  services/             -- Domain services (insurance, flights, hotels, transfers)
+
+components/
+  homepage/             -- Landing (Hero, BentoGrid, LiveFeed, Marquee)
+  kuzmich/              -- Chat widget + inline booking
+  marketplace/          -- Catalog, filters, cards
+  routes/               -- Affiliate blocks (flights, hotels, insurance)
+```
+
+## Design system
+
+Warm, earthy, premium. No glassmorphism, no cyberpunk.
+
+- **Fonts**: Playfair Display (headings) + Outfit (body)
+- **Palette**: CSS custom properties with full dark mode support
+- **Accent**: `#D44A0C` (volcanic orange)
+- **Components**: `ds-card`, `ds-btn`, `ds-input`, `ds-badge`, `ds-skeleton`
+- **Icons**: lucide-react only
+
+## AI stack
+
+Kuzmich uses a multi-level architecture:
+
+1. **Tool-use agent loop** -- 4 tools (search tours, get place info, get weather, search Kamchatka knowledge base). Up to 4 tool calls per turn
+2. **Waterfall fallback** -- if agent loop fails, falls back to simple completion with tour context
+3. **Vision** -- photo recognition via Gemini (through OpenRouter)
+4. **Voice** -- transcription via Gemini, then standard processing
+5. **Memory** -- per-user notes synthesized every 5 messages, stored in DB
+6. **Booking detection** -- NLU triggers inline booking flow with context-aware tour matching
+
+## Local development
 
 ```bash
 git clone https://github.com/pospkam/PosPkTry.git
 cd PosPkTry
 npm install
-cp .env.example .env.local
+cp .env.example .env.local  # fill in DATABASE_URL, OR_API_KEY, etc.
 npm run dev
 ```
 
-## Основные команды
+### Required env vars
+
+```
+DATABASE_URL          -- PostgreSQL connection string
+OR_API_KEY            -- OpenRouter API key (primary AI provider)
+DEEPSEEK_API_KEY      -- DeepSeek fallback
+JWT_SECRET            -- Auth signing key
+TELEGRAM_BOT_TOKEN    -- Kuzmich bot token
+```
+
+### Commands
 
 ```bash
-npm run dev
-npm run build
-npx tsc --noEmit
-npm test
-npm run lint
+npm run dev           # Dev server
+npm run build         # Production build
+npx tsc --noEmit      # Type check
+npm test              # Tests
 ```
 
-## Ключевые директории
+## Tech stack
 
-```text
-app/
-  page.tsx                          # Главная
-  kuzmich/                          # Веб-чат Кузьмича
-  marketplace/                      # Реальные туры операторов
-  booking-success/                  # Заявка/оплата/дальнейшие шаги
-  hub/                              # Кабинеты (tourist/operator/admin/...)
-  api/                              # API
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 15 (App Router) |
+| Language | TypeScript (strict mode) |
+| Styling | Tailwind CSS + design tokens |
+| Database | PostgreSQL (parameterized SQL) |
+| Auth | JWT + role middleware |
+| AI | OpenRouter, DeepSeek, Gemini, MiniMax, Anthropic |
+| Payments | Tochka Bank QR |
+| Bot | Telegram Bot API |
+| Deploy | Timeweb Cloud |
+| CI/CD | GitHub auto-deploy |
 
-components/
-  homepage/                         # Главные блоки
-  marketplace/                      # Каталог и форма заявки
-  booking/                          # Модалки и формы оплаты
-  safety/                           # Предупреждения безопасности
+## Status
 
-lib/
-  kuzmich/core.ts                   # Системная логика Кузьмича
-  ai/providers.ts                   # AI waterfall
-  services/                         # Доменные сервисы
-  agents/                           # Автоматизации и внутренние модули
-```
+Production. Solo project, actively developed.
 
-## Правила для изменений
+**Live**: [tourhab.ru](https://tourhab.ru)
 
-Перед merge проверяем:
-1. Тексты и UX не обещают невозможного.
-2. В flow нет давления "плати сейчас", если детали не подтверждены.
-3. Сообщения API/UI согласованы: "заявка" -> "уточнение" -> "оплата".
-4. Новые AI-фразы не содержат выдуманных фактов.
-5. Безопасность и legal-границы не нарушены.
+---
 
-## Минимальный quality gate
-
-```bash
-npx tsc --noEmit
-npm test
-npm run lint
-```
-
-Если после изменения product-copy и flow эти проверки не пройдены, PR не готов.
+Built for Kamchatka. Where volcanoes meet the ocean.
