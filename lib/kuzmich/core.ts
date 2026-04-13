@@ -666,12 +666,20 @@ export async function saveMsg(
 export async function findTour(keywords: string[]): Promise<TourRow | null> {
   try {
     const patterns = keywords.map(k => `%${k}%`);
+    const matchClauses = patterns.map((_, i) =>
+      `(CASE WHEN title ILIKE $${i + 1} THEN 1 ELSE 0 END + CASE WHEN activity_type ILIKE $${i + 1} THEN 1 ELSE 0 END)`
+    );
+    const relevanceExpr = matchClauses.join(' + ');
+    const whereClause = patterns.map((_, i) =>
+      `(title ILIKE $${i + 1} OR activity_type ILIKE $${i + 1})`
+    ).join(' OR ');
+
     const { rows } = await pool.query<TourRow>(
       `SELECT id, title, base_price, multi_day_count, activity_type
        FROM operator_tours
        WHERE is_active = true AND deleted_at IS NULL
-         AND (${patterns.map((_, i) => `(title ILIKE $${i + 1} OR activity_type ILIKE $${i + 1})`).join(' OR ')})
-       ORDER BY base_price ASC LIMIT 1`,
+         AND (${whereClause})
+       ORDER BY (${relevanceExpr}) DESC, base_price ASC LIMIT 1`,
       patterns,
     );
     return rows[0] ?? null;
@@ -1037,12 +1045,21 @@ export async function startBooking(
   pending: Map<number, PendingBooking>,
   reply: ReplyFn,
 ): Promise<boolean> {
-  const lastUserMsg = history.filter(m => m.role === 'user').slice(-3).map(m => m.content).join(' ');
-  const lastAiMsg = history.filter(m => m.role === 'assistant').slice(-1)[0]?.content ?? '';
-  const context = `${text} ${lastUserMsg} ${lastAiMsg}`;
-  const keywords = extractTourKeywords(context);
+  const userMsgs = history.filter(m => m.role === 'user');
 
-  const tour = await findTour(keywords);
+  // 1) Narrow: последнее сообщение пользователя (до триггера бронирования)
+  const lastRealMsg = userMsgs[userMsgs.length - 1]?.content ?? '';
+  const narrowKeywords = extractTourKeywords(lastRealMsg);
+  let tour = narrowKeywords.length ? await findTour(narrowKeywords) : null;
+
+  // 2) Fallback: расширяем на последние 3 user + последний AI
+  if (!tour) {
+    const lastUserMsg = userMsgs.slice(-3).map(m => m.content).join(' ');
+    const lastAiMsg = history.filter(m => m.role === 'assistant').slice(-1)[0]?.content ?? '';
+    const context = `${text} ${lastUserMsg} ${lastAiMsg}`;
+    const keywords = extractTourKeywords(context);
+    tour = await findTour(keywords);
+  }
   if (!tour) {
     const booking: PendingBooking = { step: 'tour', started_at: Date.now() };
     await saveBookingFlow(chatId, mode, booking, pending);
