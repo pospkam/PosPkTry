@@ -699,10 +699,10 @@ export async function createBooking(
       : null;
     const { rows } = await pool.query<{ id: number }>(
       `INSERT INTO operator_bookings
-         (operator_tour_id, tour_id, tourist_name, tourist_phone,
+         (operator_tour_id, tourist_name, tourist_phone,
           participants, booking_date, booking_status,
           base_total_price, final_price, created_via, metadata)
-       VALUES ($1,$1,$2,$3,$4,$5,'pending_payment',$6,$6,$7,$8::jsonb)
+       VALUES ($1,$2,$3,$4,$5,'pending_payment',$6,$6,$7,$8::jsonb)
        RETURNING id`,
       [b.tour.id, b.name, b.phone, b.participants, b.date, total, createdVia, meta],
     );
