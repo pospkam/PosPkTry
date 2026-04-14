@@ -41,15 +41,30 @@ const RSS_SOURCES = [
   { url: 'https://www.kamgov.ru/rss', label: 'Kamgov' },
 ];
 
+async function fetchRssWithRetry(url: string, options: RequestInit, maxAttempts = 3): Promise<Response> {
+  let lastErr: unknown;
+  for (let i = 0; i < maxAttempts; i++) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
+      const res = await fetch(url, { ...options, signal: controller.signal });
+      clearTimeout(timeout);
+      return res;
+    } catch (err) {
+      lastErr = err;
+      if (i < maxAttempts - 1) {
+        await new Promise(r => setTimeout(r, 1000 * Math.pow(2, i)));
+      }
+    }
+  }
+  throw lastErr;
+}
+
 async function fetchRss(url: string, label: string): Promise<RssItem[]> {
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
-    const res = await fetch(url, {
-      signal: controller.signal,
+    const res = await fetchRssWithRetry(url, {
       headers: { 'User-Agent': 'TourHab/1.0 (Scout Digest)' },
     });
-    clearTimeout(timeout);
     const xml = await res.text();
     const items: RssItem[] = [];
     const itemRegex = /<item[^>]*>([\s\S]*?)<\/item>/gi;
@@ -169,7 +184,7 @@ export async function runScoutDigest(): Promise<DigestResult> {
       value: { slug, signals: allItems.length, sources: RSS_SOURCES.map(s => s.label) },
       confidence: 0.8,
       source: 'scout_digest_cron',
-      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
     });
   } catch {
     // Non-critical

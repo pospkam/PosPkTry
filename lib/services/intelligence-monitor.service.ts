@@ -148,11 +148,25 @@ function parseAtomEntries(xml: string, limit = 8): Array<{ title: string; url: s
   return items;
 }
 
+async function fetchWithRetry(url: string, options: RequestInit, maxAttempts = 3): Promise<Response> {
+  let lastErr: unknown;
+  for (let i = 0; i < maxAttempts; i++) {
+    try {
+      return await fetch(url, { ...options, signal: AbortSignal.timeout(8000) });
+    } catch (err) {
+      lastErr = err;
+      if (i < maxAttempts - 1) {
+        await new Promise(r => setTimeout(r, 1000 * Math.pow(2, i)));
+      }
+    }
+  }
+  throw lastErr;
+}
+
 async function fetchFeed(url: string): Promise<Array<{ title: string; url: string; snippet: string }>> {
   try {
-    const res = await fetch(url, {
+    const res = await fetchWithRetry(url, {
       headers: { 'User-Agent': 'TourHab-Intelligence/1.0' },
-      signal: AbortSignal.timeout(8000),
     });
     if (!res.ok) return [];
     const xml = await res.text();
@@ -412,7 +426,7 @@ export async function runIntelligenceCycle(): Promise<IntelligenceReport> {
       },
       confidence: f.urgency === 'critical' ? 0.95 : f.urgency === 'notable' ? 0.8 : 0.6,
       source: 'intelligence_cron',
-      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+      expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
     });
 
     // Write-through to permanent knowledge brain
@@ -536,7 +550,7 @@ export async function injectManualIntel(
     },
     confidence: urgency === 'critical' ? 0.95 : urgency === 'notable' ? 0.85 : 0.7,
     source: 'manual_injection',
-    expires_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days
+    expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
   });
 
   return { ok: true, domain, summary, urgency, action_items: actionItems, key };
