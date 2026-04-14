@@ -36,6 +36,40 @@ export async function findOperatorByChatId(chatId: number): Promise<OperatorCont
   } catch { return null; }
 }
 
+/**
+ * Привязать chat_id к оператору по email.
+ * Используется при команде /partner EMAIL.
+ * Возвращает имя оператора если успешно, null если email не найден.
+ */
+export async function registerOperatorChatId(
+  chatId: number,
+  email: string,
+): Promise<string | null> {
+  try {
+    const { rows } = await pool.query<{ id: number; name: string; telegram_chat_id: string | null }>(
+      `SELECT id, COALESCE(company_name, name) AS name, telegram_chat_id
+       FROM partners
+       WHERE LOWER(contact->>'email') = LOWER($1) AND status != 'blocked'
+       LIMIT 1`,
+      [email.trim()],
+    );
+    if (!rows[0]) return null;
+
+    // Уже привязан к этому же chat_id — OK
+    if (rows[0].telegram_chat_id === String(chatId)) return rows[0].name;
+
+    // Привязываем
+    await pool.query(
+      `UPDATE partners SET telegram_chat_id = $1, updated_at = NOW() WHERE id = $2`,
+      [String(chatId), rows[0].id],
+    );
+    return rows[0].name;
+  } catch (err) {
+    console.error('[operator-chat] registerOperatorChatId failed:', err instanceof Error ? err.message : err);
+    return null;
+  }
+}
+
 /** Загрузить бизнес-контекст оператора для системного промпта. */
 async function buildOperatorContext(partnerId: number, partnerName: string): Promise<string> {
   const now = new Date();

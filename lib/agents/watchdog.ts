@@ -14,6 +14,7 @@
  */
 
 import { pool } from '@/lib/db-pool';
+import { knowledgeBase } from '@/lib/agents/memory/agent-knowledge';
 
 export interface WatchdogAlert {
   type: 'unconfirmed_booking' | 'operator_no_response' | 'unprocessed_lead' | 'sos_ignored';
@@ -72,19 +73,37 @@ async function checkUnconfirmedBookings(): Promise<WatchdogAlert | null> {
 
 async function checkOperatorNoResponse(): Promise<WatchdogAlert | null> {
   try {
-    // Операторы, у которых есть pending-бронирование > 48ч без ответа
-    const { rows } = await pool.query<{ count: string }>(`
-      SELECT COUNT(DISTINCT operator_id)::text AS count
-      FROM operator_bookings
-      WHERE booking_status = 'pending'
-        AND created_at < NOW() - INTERVAL '48 hours'
-    `);
-    const count = parseInt(rows[0]?.count ?? '0', 10);
-    if (count === 0) return null;
+    const { rows } = await pool.query<{ operator_id: string; partner_slug: string | null; count: string }>(
+      `SELECT ob.operator_id::text,
+              p.slug AS partner_slug,
+              COUNT(*)::text AS count
+       FROM operator_bookings ob
+       LEFT JOIN partners p ON p.user_id = ob.operator_id
+       WHERE ob.booking_status = 'pending'
+         AND ob.created_at < NOW() - INTERVAL '48 hours'
+       GROUP BY ob.operator_id, p.slug`,
+    );
+    if (rows.length === 0) return null;
+
+    // Пишем паттерн в Brain для каждого медленного оператора
+    const dateStr = new Date().toISOString().slice(0, 10);
+    for (const row of rows) {
+      const slug = `patterns/operators/${row.partner_slug ?? row.operator_id}`;
+      const entry = `${dateStr}: ${row.count} бронирований без ответа >48ч`;
+      knowledgeBase.upsert({
+        slug,
+        type: 'pattern',
+        title: `Паттерн оператора: ${row.partner_slug ?? row.operator_id}`,
+        compiled_truth: entry,
+        metadata: { last_checked: dateStr, pending_count: Number(row.count) },
+        agent_id: 'watchdog',
+      }).then(() => knowledgeBase.appendTimeline(slug, entry)).catch(() => {});
+    }
+
     return {
       type: 'operator_no_response',
-      count,
-      details: `${count} оператор(ов) не ответили на бронирование > 48ч.`,
+      count: rows.length,
+      details: `${rows.length} оператор(ов) не ответили на бронирование > 48ч.`,
     };
   } catch {
     return null;

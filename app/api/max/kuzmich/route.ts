@@ -12,6 +12,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Bot, type Api } from '@maxhub/max-bot-api';
 import { type PendingBooking, cleanupPending, processMessage } from '@/lib/kuzmich/core';
+import { registerOperatorChatId } from '@/lib/kuzmich/operator-chat';
 
 export const dynamic = 'force-dynamic';
 
@@ -173,6 +174,22 @@ async function handleUpdate(update: MaxUpdate): Promise<void> {
     const videoAtt = attachments.find(a => a.type === 'video');
     if (videoAtt?.payload?.url) {
       await maxReply(chatId, 'Видео пока не умею анализировать. Опишите словами или пришлите фото.');
+      return;
+    }
+
+    // /partner EMAIL — регистрация оператора
+    if (text.toLowerCase().startsWith('/partner ')) {
+      const email = text.slice('/partner '.length).trim();
+      if (email.includes('@')) {
+        const name = await registerOperatorChatId(chatId, email);
+        if (name) {
+          await maxReply(chatId, `Привет, ${name}! Ты подключён как оператор.\n\nТеперь могу отвечать на вопросы о бронированиях, турах и статистике. Пиши.`);
+        } else {
+          await maxReply(chatId, 'Email не найден в системе. Проверь адрес или напиши на tourhab.ru.');
+        }
+      } else {
+        await maxReply(chatId, 'Формат: /partner email@example.com');
+      }
       return;
     }
 
