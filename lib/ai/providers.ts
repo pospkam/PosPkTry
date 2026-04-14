@@ -684,6 +684,14 @@ export async function callGeminiVision(
 
 // ── Gemini Audio Transcription via OpenRouter ──────────────────
 // Поддерживает: audio/ogg, audio/mp3, audio/wav, audio/m4a (Telegram шлёт ogg)
+// Фразы-признаки того что модель не смогла обработать аудио (не реальная транскрипция)
+const TRANSCRIBE_FAIL_PATTERNS = [
+  /не могу обработать/i, /cannot process/i, /unable to process/i,
+  /audio file/i, /аудиофайл/i, /не поддерживает/i, /не поддерживаю/i,
+  /i can't/i, /i cannot/i, /no audio/i, /нет аудио/i,
+  /audio content/i, /audio data/i,
+];
+
 export async function callGeminiTranscribe(
   audioBase64: string,
   mimeType: string = 'audio/ogg',
@@ -706,8 +714,9 @@ export async function callGeminiTranscribe(
         messages: [{
           role: 'user',
           content: [
+            // Gemini принимает аудио через image_url с audio MIME-type
             { type: 'image_url', image_url: { url: `data:${mimeType};base64,${audioBase64}` } },
-            { type: 'text', text: 'Транскрибируй это голосовое сообщение дословно. Только текст, без пояснений. Если не слышно — напиши "(неразборчиво)".' },
+            { type: 'text', text: 'Это голосовое сообщение на русском языке. Транскрибируй дословно. Только текст без пояснений. Если неразборчиво — "(неразборчиво)".' },
           ],
         }],
       }),
@@ -716,7 +725,10 @@ export async function callGeminiTranscribe(
     if (!res.ok) return null;
     const data = await res.json();
     const text: string | undefined = data?.choices?.[0]?.message?.content;
-    return text?.trim() || null;
+    if (!text?.trim()) return null;
+    // Если модель вернула отказ обработать аудио — не показываем мусор пользователю
+    if (TRANSCRIBE_FAIL_PATTERNS.some(p => p.test(text))) return null;
+    return text.trim();
   } catch { return null; }
 }
 
