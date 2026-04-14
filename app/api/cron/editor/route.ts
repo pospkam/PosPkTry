@@ -1,5 +1,6 @@
 import { runEditor } from '@/lib/agents/editor';
 import { timingSafeCompare } from '@/lib/security/timing-safe';
+import { logAgentRun } from '@/lib/agents/run-logger';
 
 /**
  * GET /api/cron/editor
@@ -19,10 +20,26 @@ export async function GET(req: Request) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const started_at = new Date();
   try {
     const result = await runEditor();
+    void logAgentRun({
+      agent_id: 'editor',
+      status: 'success',
+      started_at,
+      duration_ms: Date.now() - started_at.getTime(),
+      metadata: result as unknown as Record<string, unknown>,
+    });
     return Response.json({ success: true, ...result });
   } catch (err) {
+    void logAgentRun({
+      agent_id: 'editor',
+      status: 'failed',
+      started_at,
+      duration_ms: Date.now() - started_at.getTime(),
+      errors_count: 1,
+      error_msg: err instanceof Error ? err.message : String(err),
+    });
     return Response.json(
       { error: err instanceof Error ? err.message : 'Unknown error' },
       { status: 500 },

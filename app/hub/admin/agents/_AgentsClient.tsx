@@ -1,152 +1,237 @@
 'use client';
 
-import { useState } from 'react';
-import { RefreshCw, Eye, CheckCircle, AlertTriangle, Clock } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { RefreshCw, CheckCircle, AlertTriangle, Clock, Play, Bot, Zap } from 'lucide-react';
 
 interface AgentDef {
   id: string;
   name: string;
   description: string;
   schedule: string;
-  endpoint: string;
 }
 
 const AGENTS: AgentDef[] = [
   {
     id: 'watchdog',
     name: 'Watchdog',
-    description: 'Мониторинг: бронирования без подтверждения, операторы без ответа, необработанные лиды, SOS-сигналы.',
+    description: 'Мониторинг: бронирования без подтверждения, операторы без ответа, лиды, SOS.',
     schedule: 'каждые 30 мин',
-    endpoint: '/api/cron/watchdog',
   },
   {
     id: 'editor',
     name: 'Editor',
-    description: 'AI-редактор описаний туров: находит туры с короткими описаниями и переписывает через AI.',
+    description: 'AI-редактор: находит туры с короткими описаниями → переписывает через AI.',
     schedule: 'раз в сутки (02:00 UTC)',
-    endpoint: '/api/cron/editor',
+  },
+  {
+    id: 'scout-digest',
+    name: 'Scout Digest',
+    description: 'Дайджест: RSS AI/тревел/Камчатка → AI-синтез → Telegram.',
+    schedule: 'раз в сутки (07:00 UTC)',
+  },
+  {
+    id: 'intelligence',
+    name: 'Intelligence Monitor',
+    description: 'Сбор AI/тревел/конкурент сигналов из RSS и поиска → в Brain.',
+    schedule: 'каждые 6 часов',
   },
   {
     id: 'scout',
-    name: 'Scout Digest',
-    description: 'Ежедневный дайджест: RSS-мониторинг AI/тревел/Камчатка → синтез → Telegram.',
-    schedule: 'раз в сутки (07:00 UTC)',
-    endpoint: '/api/cron/scout-digest',
+    name: 'Scout-Innovator',
+    description: 'Читает Brain → платформу → 2-3 конкретных предложения → Telegram.',
+    schedule: 'раз в сутки (06:00 UTC)',
   },
 ];
 
-interface RunState {
+interface RunSummary {
+  agent_id: string;
+  status: string;
+  started_at: string;
+}
+
+interface RunRow {
+  id: string;
+  agent_id: string;
+  status: string;
+  started_at: string;
+  duration_ms: number | null;
+  items_processed: number | null;
+  errors_count: number;
+  error_msg: string | null;
+}
+
+interface TriggerState {
   loading: boolean;
   result: Record<string, unknown> | null;
   error: string | null;
 }
 
+function StatusDot({ status }: { status?: string }) {
+  if (!status) return <span className="w-2 h-2 rounded-full bg-[var(--text-muted)] inline-block" />;
+  if (status === 'success') return <span className="w-2 h-2 rounded-full bg-[var(--success)] inline-block" />;
+  if (status === 'partial') return <span className="w-2 h-2 rounded-full bg-[var(--warning)] inline-block" />;
+  return <span className="w-2 h-2 rounded-full bg-[var(--danger)] inline-block" />;
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const cls =
+    status === 'success'
+      ? 'text-[var(--success)] bg-[color-mix(in_srgb,var(--success)_10%,transparent)]'
+      : status === 'partial'
+      ? 'text-[var(--warning)] bg-[color-mix(in_srgb,var(--warning)_10%,transparent)]'
+      : 'text-[var(--danger)] bg-[color-mix(in_srgb,var(--danger)_10%,transparent)]';
+  return (
+    <span className={`text-xs font-medium px-2 py-0.5 rounded ${cls}`}>
+      {status === 'success' ? 'OK' : status === 'partial' ? 'частично' : 'ошибка'}
+    </span>
+  );
+}
+
+function formatDuration(ms: number | null) {
+  if (!ms) return '—';
+  if (ms < 1000) return `${ms}мс`;
+  return `${(ms / 1000).toFixed(1)}с`;
+}
+
+function formatTime(iso: string) {
+  const d = new Date(iso);
+  return d.toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+
 export default function AgentsClient() {
-  const [runs, setRuns] = useState<Record<string, RunState>>({});
+  const [summary, setSummary] = useState<Record<string, RunSummary>>({});
+  const [runs, setRuns] = useState<RunRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [triggers, setTriggers] = useState<Record<string, TriggerState>>({});
 
-  async function triggerAgent(agent: AgentDef) {
-    setRuns(prev => ({
-      ...prev,
-      [agent.id]: { loading: true, result: null, error: null },
-    }));
-
+  const loadHistory = useCallback(async () => {
     try {
-      const secret = prompt('CRON_SECRET:');
-      if (!secret) {
-        setRuns(prev => ({ ...prev, [agent.id]: { loading: false, result: null, error: 'Отменено' } }));
-        return;
-      }
-      const res = await fetch(`${agent.endpoint}?secret=${encodeURIComponent(secret)}`);
-      const data = await res.json();
-      if (!res.ok) throw new Error((data as { error?: string }).error ?? res.statusText);
-      setRuns(prev => ({ ...prev, [agent.id]: { loading: false, result: data as Record<string, unknown>, error: null } }));
+      const res = await fetch('/api/admin/agents/runs?limit=30');
+      if (!res.ok) return;
+      const data = await res.json() as { runs: RunRow[]; summary: RunSummary[] };
+      setRuns(data.runs);
+      const map: Record<string, RunSummary> = {};
+      for (const s of data.summary) map[s.agent_id] = s;
+      setSummary(map);
+    } catch {
+      // silent
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadHistory();
+    const interval = setInterval(() => void loadHistory(), 30_000);
+    return () => clearInterval(interval);
+  }, [loadHistory]);
+
+  async function triggerAgent(agentId: string) {
+    setTriggers(prev => ({ ...prev, [agentId]: { loading: true, result: null, error: null } }));
+    try {
+      const res = await fetch('/api/admin/agents/trigger', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ agent_id: agentId }),
+      });
+      const data = await res.json() as { ok: boolean; result?: Record<string, unknown>; error?: string };
+      if (!data.ok) throw new Error(data.error ?? 'Ошибка');
+      setTriggers(prev => ({ ...prev, [agentId]: { loading: false, result: data.result ?? {}, error: null } }));
+      void loadHistory();
     } catch (err) {
-      setRuns(prev => ({
+      setTriggers(prev => ({
         ...prev,
-        [agent.id]: { loading: false, result: null, error: err instanceof Error ? err.message : 'Ошибка' },
+        [agentId]: { loading: false, result: null, error: err instanceof Error ? err.message : 'Ошибка' },
       }));
     }
   }
 
   return (
-    <div className="ds-page max-w-3xl mx-auto py-8">
-      <div className="mb-8">
+    <div className="ds-page max-w-4xl mx-auto py-8 space-y-8">
+      {/* Header */}
+      <div>
         <h1 className="ds-h1 mb-1">AI и автоматизации</h1>
         <p className="text-[var(--text-secondary)] text-sm">
-          Кузьмич остаётся основным AI-интерфейсом продукта. Ниже фоновые автоматизации, которые поддерживают лиды,
-          контент и операционный контроль.
+          Фоновые агенты: мониторинг, контент, разведка. Статус обновляется каждые 30 секунд.
         </p>
       </div>
 
-      <div className="mb-6 ds-card p-5">
-        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">Основной AI-продукт</p>
-            <h2 className="mt-2 text-lg font-semibold text-[var(--text-primary)]">Кузьмич</h2>
-            <p className="mt-2 text-sm text-[var(--text-secondary)]">
-              Внешний AI-консьерж для туриста и точка входа для лидов. Его задача: ответить, подобрать маршрут,
-              собрать контакт и передать человека в операционный контур.
-            </p>
+      {/* Kuzmich card */}
+      <div className="ds-card p-5">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-3">
+            <Bot className="w-6 h-6 text-[var(--accent)] flex-shrink-0" />
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]">Основной AI</p>
+              <h2 className="font-semibold text-[var(--text-primary)]">Кузьмич</h2>
+              <p className="text-sm text-[var(--text-secondary)] mt-0.5">
+                AI-консьерж для туристов и операторов. Telegram, web, виджет.
+              </p>
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <a href="/kuzmich" className="ds-btn ds-btn-secondary text-sm">Открыть Кузьмича</a>
-            <a href="/hub/admin/ai-analytics" className="ds-btn ds-btn-secondary text-sm">AI-аналитика</a>
+          <div className="flex gap-2">
+            <a href="/kuzmich" className="ds-btn ds-btn-secondary text-sm">Открыть</a>
+            <a href="/hub/admin/ai-analytics" className="ds-btn ds-btn-secondary text-sm">Аналитика</a>
           </div>
         </div>
       </div>
 
-      <div className="space-y-4">
+      {/* Agent cards */}
+      <div className="space-y-3">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)] flex items-center gap-2">
+          <Zap className="w-3.5 h-3.5" />
+          Фоновые агенты
+        </h2>
         {AGENTS.map(agent => {
-          const run = runs[agent.id];
+          const last = summary[agent.id];
+          const trig = triggers[agent.id];
           return (
-            <div key={agent.id} className="ds-card p-5">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-semibold text-[var(--text-primary)]">{agent.name}</span>
-                    <span className="text-xs text-[var(--text-muted)] bg-[var(--bg-hover)] px-2 py-0.5 rounded">
-                      {agent.schedule}
-                    </span>
+            <div key={agent.id} className="ds-card p-4">
+              <div className="flex items-start gap-4 justify-between">
+                <div className="flex items-start gap-3 flex-1 min-w-0">
+                  <div className="mt-1.5">
+                    <StatusDot status={last?.status} />
                   </div>
-                  <p className="text-sm text-[var(--text-secondary)] mb-3">{agent.description}</p>
-
-                  {run?.result && (
-                    <div className="text-xs bg-[var(--bg-hover)] rounded p-3 font-mono text-[var(--text-secondary)] mb-2">
-                      {Object.entries(run.result).map(([k, v]) => (
-                        <div key={k}>
-                          {k}:{' '}
-                          <span className="text-[var(--text-primary)]">{String(v)}</span>
-                        </div>
-                      ))}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-0.5">
+                      <span className="font-medium text-[var(--text-primary)]">{agent.name}</span>
+                      <span className="text-xs text-[var(--text-muted)] bg-[var(--bg-hover)] px-2 py-0.5 rounded">
+                        {agent.schedule}
+                      </span>
+                      {last && <StatusBadge status={last.status} />}
                     </div>
-                  )}
-
-                  {run?.error && (
-                    <div className="flex items-center gap-1.5 text-xs text-[var(--danger)]">
-                      <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
-                      {run.error}
-                    </div>
-                  )}
-
-                  {run?.result?.success === true && !run?.error && (
-                    <div className="flex items-center gap-1.5 text-xs text-[var(--success)]">
-                      <CheckCircle className="w-3.5 h-3.5 flex-shrink-0" />
-                      Выполнено
-                    </div>
-                  )}
+                    <p className="text-sm text-[var(--text-secondary)]">{agent.description}</p>
+                    {last && (
+                      <p className="text-xs text-[var(--text-muted)] mt-1">
+                        Последний запуск: {formatTime(last.started_at)}
+                      </p>
+                    )}
+                    {trig?.result && (
+                      <div className="mt-2 text-xs bg-[var(--bg-hover)] rounded p-2 font-mono text-[var(--text-secondary)]">
+                        {Object.entries(trig.result).map(([k, v]) => (
+                          <div key={k}>{k}: <span className="text-[var(--text-primary)]">{String(v)}</span></div>
+                        ))}
+                      </div>
+                    )}
+                    {trig?.error && (
+                      <div className="flex items-center gap-1.5 text-xs text-[var(--danger)] mt-1.5">
+                        <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+                        {trig.error}
+                      </div>
+                    )}
+                  </div>
                 </div>
-
                 <button
-                  onClick={() => triggerAgent(agent)}
-                  disabled={run?.loading}
+                  onClick={() => void triggerAgent(agent.id)}
+                  disabled={trig?.loading}
                   className="ds-btn ds-btn-secondary text-sm flex items-center gap-1.5 flex-shrink-0"
                 >
-                  {run?.loading ? (
-                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  {trig?.loading ? (
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                   ) : (
-                    <Eye className="w-4 h-4" />
+                    <Play className="w-3.5 h-3.5" />
                   )}
-                  {run?.loading ? 'Запуск...' : 'Запустить'}
+                  {trig?.loading ? 'Запуск...' : 'Запустить'}
                 </button>
               </div>
             </div>
@@ -154,29 +239,81 @@ export default function AgentsClient() {
         })}
       </div>
 
-      <div className="mt-8 ds-card p-4">
-        <div className="flex items-center gap-2 mb-2">
-          <Clock className="w-4 h-4 text-[var(--text-muted)]" />
-          <span className="text-sm font-medium text-[var(--text-primary)]">Операторские инструменты и смежные контуры</span>
+      {/* Run history */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)] flex items-center gap-2">
+            <Clock className="w-3.5 h-3.5" />
+            История запусков
+          </h2>
+          <button
+            onClick={() => void loadHistory()}
+            className="text-xs text-[var(--text-muted)] flex items-center gap-1 hover:text-[var(--text-primary)] transition-colors"
+          >
+            <RefreshCw className="w-3 h-3" />
+            Обновить
+          </button>
         </div>
-        <p className="text-xs text-[var(--text-secondary)]">
-          Кузьмич —{' '}
-          <a href="/kuzmich" className="text-[var(--ocean)] hover:underline">
-            /kuzmich
-          </a>{' '}
-          · Лиды —{' '}
-          <a href="/hub/admin/leads" className="text-[var(--ocean)] hover:underline">
-            /hub/admin/leads
-          </a>{' '}
-          · AI assist оператора —{' '}
-          <a href="/hub/operator/ai-assist" className="text-[var(--ocean)] hover:underline">
-            /hub/operator/ai-assist
-          </a>{' '}
-          · Safety —{' '}
-          <a href="/hub/admin/safety" className="text-[var(--ocean)] hover:underline">
-            /hub/admin/safety
-          </a>
-        </p>
+
+        {loading ? (
+          <div className="ds-card p-8 text-center text-sm text-[var(--text-muted)]">
+            Загрузка...
+          </div>
+        ) : runs.length === 0 ? (
+          <div className="ds-card p-8 text-center text-sm text-[var(--text-muted)]">
+            История пуста — запусков ещё не было.
+            <br />
+            <span className="text-xs">Миграция 143 должна быть применена в БД.</span>
+          </div>
+        ) : (
+          <div className="ds-card overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-[var(--border)] text-xs text-[var(--text-muted)]">
+                  <th className="text-left px-4 py-2.5 font-medium">Агент</th>
+                  <th className="text-left px-4 py-2.5 font-medium">Статус</th>
+                  <th className="text-left px-4 py-2.5 font-medium">Время</th>
+                  <th className="text-left px-4 py-2.5 font-medium">Длит.</th>
+                  <th className="text-left px-4 py-2.5 font-medium">Записей</th>
+                  <th className="text-left px-4 py-2.5 font-medium">Ошибка</th>
+                </tr>
+              </thead>
+              <tbody>
+                {runs.map(run => (
+                  <tr key={run.id} className="border-b border-[var(--border)] last:border-0 hover:bg-[var(--bg-hover)]">
+                    <td className="px-4 py-2.5 font-medium text-[var(--text-primary)]">{run.agent_id}</td>
+                    <td className="px-4 py-2.5">
+                      <div className="flex items-center gap-1.5">
+                        {run.status === 'success' ? (
+                          <CheckCircle className="w-3.5 h-3.5 text-[var(--success)]" />
+                        ) : run.status === 'partial' ? (
+                          <AlertTriangle className="w-3.5 h-3.5 text-[var(--warning)]" />
+                        ) : (
+                          <AlertTriangle className="w-3.5 h-3.5 text-[var(--danger)]" />
+                        )}
+                        <StatusBadge status={run.status} />
+                      </div>
+                    </td>
+                    <td className="px-4 py-2.5 text-[var(--text-secondary)] text-xs">{formatTime(run.started_at)}</td>
+                    <td className="px-4 py-2.5 text-[var(--text-secondary)] text-xs">{formatDuration(run.duration_ms)}</td>
+                    <td className="px-4 py-2.5 text-[var(--text-secondary)] text-xs">
+                      {run.items_processed ?? '—'}
+                    </td>
+                    <td className="px-4 py-2.5 text-xs">
+                      {run.error_msg ? (
+                        <span className="text-[var(--danger)] truncate max-w-[200px] block" title={run.error_msg}>
+                          {run.error_msg.slice(0, 60)}{run.error_msg.length > 60 ? '…' : ''}
+                        </span>
+                      ) : (
+                        <span className="text-[var(--text-muted)]">—</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

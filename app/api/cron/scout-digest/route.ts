@@ -1,5 +1,6 @@
 import { runScoutDigest } from '@/lib/agents/scout-digest';
 import { timingSafeCompare } from '@/lib/security/timing-safe';
+import { logAgentRun } from '@/lib/agents/run-logger';
 
 /**
  * GET /api/cron/scout-digest
@@ -18,10 +19,26 @@ export async function GET(req: Request) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const started_at = new Date();
   try {
     const result = await runScoutDigest();
+    void logAgentRun({
+      agent_id: 'scout-digest',
+      status: result.digest_sent ? 'success' : 'partial',
+      started_at,
+      duration_ms: result.duration_ms,
+      items_processed: result.signals_found,
+    });
     return Response.json({ success: true, ...result });
   } catch (err) {
+    void logAgentRun({
+      agent_id: 'scout-digest',
+      status: 'failed',
+      started_at,
+      duration_ms: Date.now() - started_at.getTime(),
+      errors_count: 1,
+      error_msg: err instanceof Error ? err.message : String(err),
+    });
     return Response.json(
       { error: err instanceof Error ? err.message : 'Unknown error' },
       { status: 500 },
