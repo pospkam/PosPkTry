@@ -15,6 +15,7 @@
 
 import { callAIFast } from '@/lib/ai/providers';
 import { agentMemory } from '@/lib/agents/memory/agent-memory';
+import { knowledgeBase } from '@/lib/agents/memory/agent-knowledge';
 import type { ChatMessage } from '@/lib/ai/prompts';
 
 export interface DigestResult {
@@ -148,14 +149,24 @@ export async function runScoutDigest(): Promise<DigestResult> {
 
   const sent = await tgSend(digest);
 
-  // Store in memory
+  // Store permanently in knowledge brain
   try {
     const dateKey = new Date().toISOString().slice(0, 10);
+    const slug = `intel/scout/${dateKey}`;
+    await knowledgeBase.upsert({
+      slug,
+      type: 'intel',
+      title: `Scout Digest ${dateKey}`,
+      compiled_truth: digest,
+      metadata: { signals: allItems.length, sources: RSS_SOURCES.map(s => s.label), sent_to_tg: sent },
+      agent_id: 'scout',
+    });
+    // Also keep short-term memory for agents that scan recent intel
     await agentMemory.remember({
       agent_id: 'evo',
       memory_type: 'intelligence',
       key: `scout_digest_${dateKey}`,
-      value: { digest, signals: allItems.length, sources: RSS_SOURCES.map(s => s.label) },
+      value: { slug, signals: allItems.length, sources: RSS_SOURCES.map(s => s.label) },
       confidence: 0.8,
       source: 'scout_digest_cron',
       expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
