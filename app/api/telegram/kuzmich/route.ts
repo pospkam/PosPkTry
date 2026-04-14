@@ -15,6 +15,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { type PendingBooking, cleanupPending, processMessage, isBookingTrigger } from '@/lib/kuzmich/core';
+import { findOperatorByChatId, processOperatorMessage } from '@/lib/kuzmich/operator-chat';
 import { PlatformAgent } from '@/lib/agents';
 import { pool } from '@/lib/db-pool';
 import { groupMonitor } from '@/lib/telegram/group-monitor';
@@ -470,6 +471,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       }
       // Lead detection: отвечаем только при явном туристическом интересе
       if (text) await processGroupMessage({ chatId, fromId, fromName, text });
+      return NextResponse.json({ ok: true });
+    }
+
+    // ── ЛИЧКА: оператор? ─────────────────────────────────────────────────
+    // Проверяем до туристского flow: если chatId есть в partners.telegram_chat_id
+    const operator = isPrivate ? await findOperatorByChatId(chatId) : null;
+    if (operator && msg.text) {
+      const text = msg.text.trim();
+      if (text === '/start') {
+        await tgReply(chatId, `Привет, ${operator.partnerName}! Я твой AI-помощник.\n\nМогу ответить на вопросы о бронированиях, турах, статистике — или помочь составить ответ туристу. Пиши.`);
+      } else {
+        await processOperatorMessage({ chatId, text, fromName, operator, reply: tgReply });
+      }
       return NextResponse.json({ ok: true });
     }
 
