@@ -12,6 +12,7 @@ import { pool } from '@/lib/db-pool';
 import { callAIWaterfall, callOpenRouterWithTools } from '@/lib/ai/providers';
 import type { ChatMessage } from '@/lib/ai/prompts';
 import type { ToolDefinition, ToolCall } from '@/lib/ai/providers';
+import { knowledgeBase } from '@/lib/agents/memory/agent-knowledge';
 
 // ── Типы ──────────────────────────────────────────────────────────────────────
 
@@ -711,10 +712,40 @@ export async function createBooking(
     // Уведомить оператора в Telegram (не блокируем ответ)
     if (bookingId) {
       void notifyOperatorNewBooking(bookingId, b, total);
+      // Записываем паттерн бронирования в Brain (feedback loop)
+      void recordBookingPatternInBrain(bookingId, b, total, platform);
     }
 
     return bookingId;
   } catch { return null; }
+}
+
+async function recordBookingPatternInBrain(
+  bookingId: number,
+  b: Required<Omit<PendingBooking, 'step' | 'started_at'>>,
+  total: number,
+  platform?: 'tg' | 'max',
+): Promise<void> {
+  try {
+    const slug = `patterns/kuzmich/tour-${b.tour.id}`;
+    const dateStr = b.date
+      ? new Date(b.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
+      : 'дата не указана';
+
+    // Гарантируем что страница паттерна существует
+    await knowledgeBase.upsert({
+      slug,
+      type: 'pattern',
+      title: `Booking pattern: ${b.tour.title}`,
+      compiled_truth: `Тур "${b.tour.title}" бронируется через Kuzmich. Цена: ${b.tour.base_price} ₽/чел.`,
+      metadata: { tour_id: b.tour.id, base_price: b.tour.base_price },
+      agent_id: 'kuzmich',
+    });
+
+    // Добавляем запись о конкретном бронировании
+    const entry = `booking #${bookingId}: ${b.participants} чел, ${dateStr}, ${total.toLocaleString('ru-RU')} ₽, канал=${platform ?? 'web'}`;
+    await knowledgeBase.appendTimeline(slug, entry);
+  } catch { /* fire-and-forget, не блокируем бронирование */ }
 }
 
 async function notifyOperatorNewBooking(
