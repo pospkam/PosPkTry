@@ -249,18 +249,18 @@ async function synthesizeBotNotes(
 ): Promise<void> {
   const userTurns = messages
     .filter(m => m.role === 'user')
-    .slice(-6)
+    .slice(-12)
     .map(m => m.content)
     .join('\n');
-  if (userTurns.length < 30) return;
+  if (userTurns.length < 20) return;
   try {
     const { callAIFast } = await import('@/lib/ai/providers');
     const result = await callAIFast([{
       role: 'user',
-      content: `Извлеки 1-3 конкретных факта о туристе: даты поездки, размер группы, пожелания, ограничения. Только факты, без пересказа. Если ничего конкретного — ответь "нет".${existing ? `\n\nТекущие заметки (не дублируй): ${existing}` : ''}\n\nСообщения туриста:\n${userTurns}`,
+      content: `Извлеки конкретные факты о туристе: даты поездки, размер группы, пожелания, ограничения, бюджет. Только факты одной строкой через точку с запятой. Если пользователь исправил что-то — используй НОВОЕ значение. Если ничего конкретного — ответь "нет".${existing ? `\n\nТекущие заметки (обнови если изменилось, иначе сохрани): ${existing}` : ''}\n\nСообщения туриста:\n${userTurns}`,
     }]);
     if (!result || /^нет\.?$/i.test(result.trim())) return;
-    await saveBotMemory(chatId, platform, { ai_notes: result.trim().slice(0, 400) });
+    await saveBotMemory(chatId, platform, { ai_notes: result.trim().slice(0, 800) });
   } catch { /* fire-and-forget */ }
 }
 
@@ -1372,7 +1372,8 @@ export async function aiChat(opts: {
     const newCount = (botMemory?.messages_count ?? 0) + 1;
     const patch    = extractBotMemoryPatch(text);
     void saveBotMemory(chatId, platform, { ...patch, messages_count: 1 }, botMemory);
-    if (newCount % 5 === 0) {
+    // Синтез каждые 2 сообщения (было 5) — факты не теряются если пользователь ушёл раньше
+    if (newCount % 2 === 0 && newCount > 0) {
       const allMsgs = [...history, { role: 'assistant' as const, content: answer }];
       void synthesizeBotNotes(chatId, platform, allMsgs, botMemory?.ai_notes ?? null);
     }
