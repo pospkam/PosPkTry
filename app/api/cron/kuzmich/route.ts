@@ -27,6 +27,7 @@ import {
   postSezonToChannel,
   postFriendToChannel,
 } from '@/lib/notifications/telegram-channel';
+import { timingSafeCompare } from '@/lib/security/timing-safe';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,7 +54,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  if (secret !== cronSecret) {
+  if (!timingSafeCompare(secret, cronSecret)) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
 

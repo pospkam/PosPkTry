@@ -162,7 +162,8 @@ async function fetchFeed(url: string): Promise<Array<{ title: string; url: strin
       return parseAtomEntries(xml);
     }
     return parseRssItems(xml);
-  } catch {
+  } catch (err) {
+    console.error(`[intelligence] fetchFeed failed for ${url}:`, err instanceof Error ? err.message : err);
     return [];
   }
 }
@@ -193,7 +194,8 @@ async function searchTavily(query: string): Promise<RawSignal[]> {
       snippet: r.content.substring(0, 400),
       source: 'tavily',
     }));
-  } catch {
+  } catch (err) {
+    console.error('[intelligence] searchTavily failed:', err instanceof Error ? err.message : err);
     return [];
   }
 }
@@ -215,7 +217,8 @@ async function searchBrave(query: string): Promise<RawSignal[]> {
       snippet: r.description ?? '',
       source: 'brave',
     }));
-  } catch {
+  } catch (err) {
+    console.error('[intelligence] searchBrave failed:', err instanceof Error ? err.message : err);
     return [];
   }
 }
@@ -325,7 +328,8 @@ ${config.ai_filter}
         ? parsed.action_items.slice(0, 3)
         : [],
     };
-  } catch {
+  } catch (err) {
+    console.error('[intelligence] AI analysis failed:', err instanceof Error ? err.message : err);
     return null;
   }
 }

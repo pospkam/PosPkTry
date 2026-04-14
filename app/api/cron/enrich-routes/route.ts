@@ -9,6 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { timingSafeCompare } from '@/lib/security/timing-safe';
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://tourhab.ru';
 
@@ -16,7 +17,10 @@ export async function GET(request: NextRequest) {
   const secret = request.headers.get('authorization')?.replace('Bearer ', '');
   const cronSecret = process.env.CRON_SECRET;
 
-  if (!cronSecret || secret !== cronSecret) {
+  if (!cronSecret) {
+    return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 500 });
+  }
+  if (!timingSafeCompare(secret, cronSecret)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

@@ -105,8 +105,9 @@ export class AgentMemory {
           ).catch(() => {});
         }
       }
-    } catch {
-      // Memory writes are non-critical — never break the main flow
+    } catch (err) {
+      console.error('[agent-memory] remember() failed:', err instanceof Error ? err.message : err);
+      // Non-critical: don't break the main flow
     }
   }
 
@@ -128,7 +129,8 @@ export class AgentMemory {
         [agentId, memoryType ?? null, limit]
       );
       return rows;
-    } catch {
+    } catch (err) {
+      console.error('[agent-memory] recall() failed:', err instanceof Error ? err.message : err);
       return [];
     }
   }

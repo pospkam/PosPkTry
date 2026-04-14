@@ -1,4 +1,5 @@
 import { runScoutDigest } from '@/lib/agents/scout-digest';
+import { timingSafeCompare } from '@/lib/security/timing-safe';
 
 /**
  * GET /api/cron/scout-digest
@@ -13,7 +14,7 @@ export async function GET(req: Request) {
   if (!cronSecret) {
     return Response.json({ error: 'CRON_SECRET not configured' }, { status: 500 });
   }
-  if (secret !== cronSecret) {
+  if (!timingSafeCompare(secret, cronSecret)) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

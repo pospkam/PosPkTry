@@ -1,4 +1,5 @@
 import { runDangerAnalysis } from '@/lib/agents/agencies/danger-analyst-agency';
+import { timingSafeCompare } from '@/lib/security/timing-safe';
 
 /**
  * GET /api/cron/danger-analysis
@@ -14,7 +15,7 @@ export async function GET(req: Request) {
   if (!cronSecret) {
     return Response.json({ error: 'CRON_SECRET not configured' }, { status: 500 });
   }
-  if (secret !== cronSecret) {
+  if (!timingSafeCompare(secret, cronSecret)) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
