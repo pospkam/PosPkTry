@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
   Rss, Plus, Trash2, RefreshCw, AlertTriangle, Check, X,
-  Play, Clock, Activity, Zap, CheckCircle, XCircle,
+  Play, Clock, Activity, Zap, CheckCircle, XCircle, Send,
 } from 'lucide-react';
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -99,6 +99,7 @@ function DashboardTab() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
+  const [publishing, setPublishing] = useState(false);
   const [runResult, setRunResult] = useState<string>('');
 
   const loadStats = useCallback(async () => {
@@ -138,6 +139,32 @@ function DashboardTab() {
     setRunning(false);
   };
 
+  const publishAINews = async () => {
+    setPublishing(true);
+    setRunResult('');
+    try {
+      const res = await fetch('/api/admin/intelligence-sources/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'publish_ai_news' }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        const count = data.published?.length ?? 0;
+        setRunResult(
+          count > 0
+            ? `OK: ${count} AI-пост(ов) опубликовано в канал`
+            : `Нет notable/critical AI-новостей для публикации (${data.ai_findings} findings)`
+        );
+      } else {
+        setRunResult(`Ошибка: ${data.error}`);
+      }
+    } catch {
+      setRunResult('Сетевая ошибка');
+    }
+    setPublishing(false);
+  };
+
   if (loading) {
     return <div className="ds-card p-8 text-center text-[var(--text-muted)]">Загрузка...</div>;
   }
@@ -154,14 +181,22 @@ function DashboardTab() {
         <StatCard label="С ошибками" value={stats.sources.errored} danger={stats.sources.errored > 0} />
         <StatCard label="В памяти" value={stats.memory.total} />
         <StatCard label="За 24ч" value={stats.memory.last_24h} />
-        <div className="ds-card p-4 flex flex-col justify-center">
+        <div className="ds-card p-4 flex flex-col gap-2 justify-center">
           <button
             onClick={triggerCycle}
-            disabled={running}
+            disabled={running || publishing}
             className="ds-btn-primary w-full justify-center"
           >
             {running ? <Clock className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
             {running ? 'Запуск...' : 'Запустить'}
+          </button>
+          <button
+            onClick={publishAINews}
+            disabled={publishing || running}
+            className="ds-btn-secondary w-full justify-center text-xs"
+          >
+            {publishing ? <Clock className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+            {publishing ? 'Публикация...' : 'AI-дайджест'}
           </button>
         </div>
       </div>

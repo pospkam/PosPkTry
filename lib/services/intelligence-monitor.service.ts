@@ -20,6 +20,7 @@ import { callAIWithModelDirect } from '@/lib/ai/providers';
 import { agentMemory } from '@/lib/agents/memory/agent-memory';
 import { knowledgeBase } from '@/lib/agents/memory/agent-knowledge';
 import { pool } from '@/lib/db-pool';
+import { postAINewsToChannel } from '@/lib/notifications/telegram-channel';
 import type { ChatMessage } from '@/lib/ai/prompts';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -31,7 +32,7 @@ interface RawSignal {
   source:  string;
 }
 
-interface IntelligenceFinding {
+export interface IntelligenceFinding {
   domain:     'ai_tech' | 'travel_industry' | 'competitors';
   summary:    string;
   signals:    RawSignal[];
@@ -516,6 +517,14 @@ export async function runIntelligenceCycle(): Promise<IntelligenceReport> {
   const important = findings.filter(f => f.urgency === 'critical' || f.urgency === 'notable');
   if (important.length > 0) {
     await sendTelegramAlert(important);
+  }
+
+  // Publish AI news to public AI channel
+  const aiFindings = findings.filter(f => f.domain === 'ai_tech' && (f.urgency === 'critical' || f.urgency === 'notable'));
+  for (const f of aiFindings) {
+    await postAINewsToChannel(f).catch(err => {
+      console.error('[intelligence] AI news publish failed:', err instanceof Error ? err.message : err);
+    });
   }
 
   return {

@@ -67,6 +67,29 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    if (body.action === 'publish_ai_news') {
+      const { runIntelligenceCycle } = await import('@/lib/services/intelligence-monitor.service');
+      const { postAINewsToChannel } = await import('@/lib/notifications/telegram-channel');
+
+      const report = await runIntelligenceCycle();
+      const aiFindings = report.domains.filter(
+        d => d.domain === 'ai_tech' && (d.urgency === 'critical' || d.urgency === 'notable')
+      );
+
+      const published: Array<{ urgency: string; summary: string; ok: boolean; error?: string }> = [];
+      for (const f of aiFindings) {
+        const result = await postAINewsToChannel(f);
+        published.push({ urgency: f.urgency, summary: f.summary.slice(0, 100), ...result });
+      }
+
+      return NextResponse.json({
+        success: true,
+        total_findings: report.domains.length,
+        ai_findings: aiFindings.length,
+        published,
+      });
+    }
+
     return NextResponse.json({ success: false, error: 'Unknown action' }, { status: 400 });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

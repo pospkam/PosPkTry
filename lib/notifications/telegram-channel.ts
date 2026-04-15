@@ -504,6 +504,86 @@ export async function postKuzmichTip(): Promise<{ ok: boolean; error?: string }>
   return result;
 }
 
+// ── AI News channel post ─────────────────────────────────────────────────────
+
+import type { IntelligenceFinding } from '@/lib/services/intelligence-monitor.service';
+import { buildPollinationsUrl } from '@/lib/services/ai-image-generator';
+
+/**
+ * Publishes an AI/tech intelligence finding to the public AI news channel.
+ * Generates an engaging post via AI + a Pollinations.ai image.
+ * Only called for ai_tech domain, notable/critical urgency.
+ */
+export async function postAINewsToChannel(finding: IntelligenceFinding): Promise<{ ok: boolean; error?: string }> {
+  const channelId = process.env.TELEGRAM_AI_CHANNEL_ID;
+  if (!channelId) return { ok: false, error: 'TELEGRAM_AI_CHANNEL_ID not set' };
+
+  // 1. Build context from signals (top 3 with source links)
+  const signalCtx = finding.signals
+    .slice(0, 5)
+    .map((s, i) => `[${i + 1}] ${s.title} (${s.source})\n${s.snippet.slice(0, 200)}`)
+    .join('\n\n');
+
+  // 2. AI generates engaging Telegram post
+  const postPrompt = `Ты — редактор AI-канала. Напиши пост для публичного Telegram-канала про AI и заработок на технологиях.
+
+ИСХОДНЫЕ ДАННЫЕ:
+Анализ: ${finding.summary}
+Действия: ${finding.action_items.join('; ')}
+
+ИСТОЧНИКИ:
+${signalCtx}
+
+ТРЕБОВАНИЯ:
+- 80-150 слов, живой стиль, без канцелярита
+- Заголовок жирным (<b>текст</b>)
+- 2-3 ключевых факта из источников
+- Практический вывод: что это значит для бизнеса и разработчиков
+- В конце хэштеги: #AI + 2-3 релевантных (#LLM #OpenAI #DeepSeek и т.д.)
+- HTML-теги для Telegram: <b> <i> <a href="url">текст</a>
+- Без markdown (* ** # \`\`\`), без эмодзи
+- Пиши на русском`;
+
+  let postText: string;
+  try {
+    postText = await callAIWithModelDirect(
+      [{ role: 'user', content: postPrompt }],
+      'google/gemini-2.0-flash-001',
+    );
+  } catch {
+    // Fallback: use raw summary
+    postText = `<b>AI Intelligence</b>\n\n${esc(finding.summary)}`;
+    if (finding.action_items.length > 0) {
+      postText += '\n\n' + finding.action_items.map(a => `- ${esc(a)}`).join('\n');
+    }
+  }
+
+  // 3. Generate image
+  const imagePromptText = `futuristic AI technology concept, neural network visualization, glowing blue and purple data streams, abstract digital brain, ${finding.summary.slice(0, 60)}, dark background, cinematic, 8K, no text, no watermarks`;
+  const seed = Math.floor(Math.random() * 9_999_999);
+  const imageUrl = buildPollinationsUrl(imagePromptText, seed, 1280, 720);
+
+  // 4. Publish to AI channel (photo + caption)
+  const result = await tgPostPhoto(channelId, imageUrl, postText);
+
+  // 5. Log action
+  if (result.ok) {
+    try {
+      await query(
+        `INSERT INTO ai_actions_log (action_type, metadata) VALUES ($1, $2)`,
+        ['ai_news_post', JSON.stringify({
+          domain: finding.domain,
+          urgency: finding.urgency,
+          summary: finding.summary.slice(0, 200),
+          signals_count: finding.signals.length,
+        })],
+      );
+    } catch { /* not critical */ }
+  }
+
+  return result;
+}
+
 // ── Safety/News post ─────────────────────────────────────────────────────────
 
 /** Parse RSS headlines (lightweight) */
