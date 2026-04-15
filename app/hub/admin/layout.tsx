@@ -5,7 +5,7 @@ import {
   Shield, Users, Calendar, CalendarDays, FileText, MessageSquareText,
   Briefcase, UserCheck, BarChart3, DollarSign,
   Activity, Bell, Settings, Brain, Tag, Award, ClipboardList, Plug, TrendingUp, Zap, Send,
-  Building2, HardHat, AlertTriangle, Share2, Sparkles, Mail,
+  Building2, HardHat, AlertTriangle, Share2, Sparkles, Mail, Radar,
 } from 'lucide-react';
 import { HubLayout } from '@/components/layout/HubLayout';
 import { AiAssistant } from '@/components/admin/AiAssistant';
@@ -30,6 +30,7 @@ const SIDEBAR_ITEMS = [
   { href: '/hub/admin/promo-codes', label: 'Промокоды', icon: Tag },
   { href: '/hub/admin/activity', label: 'Активность', icon: Activity },
   { href: '/hub/admin/knowledge', label: 'База знаний AI', icon: Brain },
+  { href: '/hub/admin/intelligence', label: 'Разведка', icon: Radar },
   { href: '/hub/admin/ai-prompts', label: 'Оптим. промптов',   icon: Sparkles },
   { href: '/hub/admin/email',         label: 'Email',        icon: Mail },
   { href: '/hub/admin/notifications', label: 'Уведомления', icon: Bell },

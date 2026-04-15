@@ -1,7 +1,7 @@
 # ПЛАН: Fix Intelligence System — UPDATED 2026-04-15
 
 **Date:** 2026-04-15  
-**Status:** 🟡 50% DONE — осталось 4 задачи  
+**Status:** 75% DONE — осталась 1 задача (Task 4: Observability)  
 **Audited:** код проверен, дубликаты убраны  
 
 ---

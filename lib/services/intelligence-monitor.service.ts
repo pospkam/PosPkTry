@@ -19,6 +19,7 @@
 import { callAIWithModelDirect } from '@/lib/ai/providers';
 import { agentMemory } from '@/lib/agents/memory/agent-memory';
 import { knowledgeBase } from '@/lib/agents/memory/agent-knowledge';
+import { pool } from '@/lib/db-pool';
 import type { ChatMessage } from '@/lib/ai/prompts';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -54,7 +55,9 @@ interface DomainSource {
   ai_filter: string;
 }
 
-const INTELLIGENCE_DOMAINS: Record<string, DomainSource> = {
+// ── Hardcoded fallback (used when intelligence_sources table doesn't exist yet) ─
+
+const FALLBACK_DOMAINS: Record<string, DomainSource> = {
   ai_tech: {
     label: 'AI & Technology',
     rss: [
@@ -71,7 +74,6 @@ AI-агенты для бизнеса, автоматизация клиентс
 инструменты для стартапов (Claude, GPT, DeepSeek, Gemini, open-source).
 Игнорируй: чисто академические статьи, computer vision без применения к travel, робототехнику.`,
   },
-
   travel_industry: {
     label: 'Travel Industry',
     rss: [
@@ -89,7 +91,6 @@ AI-агенты для бизнеса, автоматизация клиентс
 - Новые платформы/агрегаторы на российском рынке
 Игнорируй: выездной туризм, пляжный отдых Турция/Египет, круизы.`,
   },
-
   competitors: {
     label: 'Competitors & Market',
     rss: [
@@ -105,6 +106,68 @@ AI-агенты для бизнеса, автоматизация клиентс
 Игнорируй: общие новости Камчатского края не связанные с туризмом.`,
   },
 };
+
+// ── Load sources from DB (fallback to hardcoded) ────────────────────────────
+
+async function loadDomainsFromDB(): Promise<Record<string, DomainSource>> {
+  try {
+    const { rows } = await pool.query<{
+      url: string; source_type: string; domain: string;
+      label: string; search_query: string | null; ai_filter: string | null;
+    }>(
+      `SELECT url, source_type, domain, label, search_query, ai_filter
+       FROM intelligence_sources WHERE active = true ORDER BY domain, created_at`
+    );
+
+    if (rows.length === 0) return FALLBACK_DOMAINS;
+
+    const domains: Record<string, DomainSource> = {};
+
+    for (const row of rows) {
+      if (!domains[row.domain]) {
+        domains[row.domain] = { label: '', rss: [], search_query: '', ai_filter: '' };
+      }
+      const d = domains[row.domain];
+
+      if (row.source_type === 'rss') {
+        d.rss.push(row.url);
+        if (!d.label) d.label = row.domain.replace('_', ' ');
+      } else if (row.source_type.startsWith('search_')) {
+        if (row.search_query) d.search_query = row.search_query;
+        if (row.ai_filter) d.ai_filter = row.ai_filter;
+        if (row.label) d.label = row.label;
+      }
+    }
+
+    return domains;
+  } catch (err) {
+    console.error('[intelligence] loadDomainsFromDB failed, using fallback:', err instanceof Error ? err.message : err);
+    return FALLBACK_DOMAINS;
+  }
+}
+
+// Track fetch results per-source for DB update
+async function updateSourceStatus(url: string, error: string | null): Promise<void> {
+  try {
+    if (error) {
+      await pool.query(
+        `UPDATE intelligence_sources
+         SET last_error = $1, fetch_error_count = fetch_error_count + 1, updated_at = NOW()
+         WHERE url = $2`,
+        [error.substring(0, 500), url]
+      );
+    } else {
+      await pool.query(
+        `UPDATE intelligence_sources
+         SET last_fetched_at = NOW(), last_error = NULL, fetch_error_count = 0, updated_at = NOW()
+         WHERE url = $1`,
+        [url]
+      );
+    }
+  } catch {
+    // non-critical — don't break the cycle
+  }
+}
 
 // ── RSS Parser (reuses pattern from ExternalResearcher) ──────────────────────
 
@@ -253,9 +316,13 @@ async function gatherDomain(domainKey: string, config: DomainSource): Promise<Ra
 
   // 2. Always fetch RSS (free, complementary data)
   const rssPromises = config.rss.map(url =>
-    fetchFeed(url).then(items =>
-      items.map(item => ({ ...item, source: new URL(url).hostname }))
-    ).catch(() => [] as RawSignal[])
+    fetchFeed(url).then(items => {
+      updateSourceStatus(url, null);
+      return items.map(item => ({ ...item, source: new URL(url).hostname }));
+    }).catch((err) => {
+      updateSourceStatus(url, err instanceof Error ? err.message : String(err));
+      return [] as RawSignal[];
+    })
   );
   const rssResults = await Promise.allSettled(rssPromises);
 
@@ -392,8 +459,11 @@ export async function runIntelligenceCycle(): Promise<IntelligenceReport> {
   const findings: IntelligenceFinding[] = [];
   let rawCount = 0;
 
+  // Load domains from DB (falls back to hardcoded if table doesn't exist)
+  const intelligenceDomains = await loadDomainsFromDB();
+
   // Gather all domains in parallel
-  const domainEntries = Object.entries(INTELLIGENCE_DOMAINS);
+  const domainEntries = Object.entries(intelligenceDomains);
   const gatherResults = await Promise.allSettled(
     domainEntries.map(async ([key, config]) => {
       const signals = await gatherDomain(key, config);
@@ -480,7 +550,7 @@ export async function injectManualIntel(
   topic: string,
   domain: 'ai_tech' | 'travel_industry' | 'competitors' = 'ai_tech',
 ): Promise<ManualIntelResult> {
-  const domainConfig = INTELLIGENCE_DOMAINS[domain];
+  const domainConfig = FALLBACK_DOMAINS[domain];
 
   const messages: ChatMessage[] = [
     {
