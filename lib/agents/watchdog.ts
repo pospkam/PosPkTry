@@ -71,23 +71,59 @@ async function checkUnconfirmedBookings(): Promise<WatchdogAlert | null> {
   }
 }
 
+async function notifyOperatorDirectly(
+  chatId: string,
+  partnerName: string,
+  count: number,
+  oldest: string,
+): Promise<void> {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token || !chatId) return;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tourhab.ru';
+  const text = [
+    `<b>Привет, ${partnerName}!</b>`,
+    '',
+    `У тебя ${count} ${count === 1 ? 'бронирование ожидает' : 'бронирований ожидают'} ответа уже больше 48 часов.`,
+    `Самое раннее — ${oldest}.`,
+    '',
+    `Посмотри и подтверди или отклони: <a href="${appUrl}/hub/operator/bookings">Мои бронирования</a>`,
+  ].join('\n');
+  try {
+    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML', disable_web_page_preview: true }),
+    });
+  } catch { /* не блокируем */ }
+}
+
 async function checkOperatorNoResponse(): Promise<WatchdogAlert | null> {
   try {
-    const { rows } = await pool.query<{ operator_id: string; partner_slug: string | null; count: string }>(
+    const { rows } = await pool.query<{
+      operator_id: string;
+      partner_slug: string | null;
+      partner_name: string | null;
+      telegram_chat_id: string | null;
+      count: string;
+      oldest: string;
+    }>(
       `SELECT ob.operator_id::text,
               p.slug AS partner_slug,
-              COUNT(*)::text AS count
+              COALESCE(p.company_name, p.name) AS partner_name,
+              p.telegram_chat_id,
+              COUNT(*)::text AS count,
+              MIN(ob.created_at)::date::text AS oldest
        FROM operator_bookings ob
        LEFT JOIN partners p ON p.user_id = ob.operator_id
        WHERE ob.booking_status = 'pending'
          AND ob.created_at < NOW() - INTERVAL '48 hours'
-       GROUP BY ob.operator_id, p.slug`,
+       GROUP BY ob.operator_id, p.slug, p.company_name, p.name, p.telegram_chat_id`,
     );
     if (rows.length === 0) return null;
 
-    // Пишем паттерн в Brain для каждого медленного оператора
     const dateStr = new Date().toISOString().slice(0, 10);
     for (const row of rows) {
+      // Пишем паттерн в Brain
       const slug = `patterns/operators/${row.partner_slug ?? row.operator_id}`;
       const entry = `${dateStr}: ${row.count} бронирований без ответа >48ч`;
       knowledgeBase.upsert({
@@ -98,12 +134,23 @@ async function checkOperatorNoResponse(): Promise<WatchdogAlert | null> {
         metadata: { last_checked: dateStr, pending_count: Number(row.count) },
         agent_id: 'watchdog',
       }).then(() => knowledgeBase.appendTimeline(slug, entry)).catch(() => {});
+
+      // Пишем оператору напрямую если зарегистрирован
+      if (row.telegram_chat_id && row.partner_name) {
+        notifyOperatorDirectly(
+          row.telegram_chat_id,
+          row.partner_name,
+          parseInt(row.count, 10),
+          row.oldest,
+        ).catch(() => {});
+      }
     }
 
+    const notified = rows.filter(r => r.telegram_chat_id).length;
     return {
       type: 'operator_no_response',
       count: rows.length,
-      details: `${rows.length} оператор(ов) не ответили на бронирование > 48ч.`,
+      details: `${rows.length} оператор(ов) не ответили на бронирование > 48ч.${notified > 0 ? ` Уведомлено напрямую: ${notified}.` : ' Операторы не подключены к боту.'}`,
     };
   } catch {
     return null;
