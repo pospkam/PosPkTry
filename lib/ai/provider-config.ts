@@ -56,6 +56,13 @@ export function getGLMKey(): string | null {
   return process.env.GLM_API_KEY || null;
 }
 
+// NVIDIA NIM — бесплатный OpenAI-compatible API (100+ моделей: DeepSeek R1, Llama 3.3 и др.)
+// Получить ключ: https://build.nvidia.com → Free tier → API Key
+// Env: NVIDIA_API_KEY
+export function getNvidiaKey(): string | null {
+  return process.env.NVIDIA_API_KEY || null;
+}
+
 export function getMolmoWebConfig(): {
   baseUrl: string;
   apiKey: string | null;

@@ -13,7 +13,7 @@
  */
 
 import type { ChatMessage } from '@/lib/ai/prompts';
-import { getOpenRouterKey, getMiMoKey, getDeepSeekKey, getAnthropicKey, getXaiKey, getGeminiKey, getYandexKey, getMiniMaxKey, getGLMKey, getMuseSparkKey } from '@/lib/ai/provider-config';
+import { getOpenRouterKey, getMiMoKey, getDeepSeekKey, getAnthropicKey, getXaiKey, getGeminiKey, getYandexKey, getMiniMaxKey, getGLMKey, getMuseSparkKey, getNvidiaKey } from '@/lib/ai/provider-config';
 
 // ── Xiaomi MiMo-V2-Pro ────────────────────────────────────────
 export async function callMiMo(messages: ChatMessage[]): Promise<string | null> {
@@ -573,6 +573,37 @@ export async function callGLM(messages: ChatMessage[]): Promise<string | null> {
   } catch { return null; }
 }
 
+// ── NVIDIA NIM (OpenAI-compatible, 100+ моделей бесплатно) ────
+// Docs: https://build.nvidia.com — Free tier, OpenAI API format
+// Модель: meta/llama-3.3-70b-instruct (сильная, быстрая, бесплатно)
+// Env: NVIDIA_API_KEY
+export async function callNvidia(messages: ChatMessage[]): Promise<string | null> {
+  const apiKey = getNvidiaKey();
+  if (!apiKey) return null;
+
+  try {
+    const payload = messages.map(({ role, content }) => ({ role, content }));
+    const res = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'meta/llama-3.3-70b-instruct',
+        temperature: 0.4,
+        max_tokens: 800,
+        messages: payload,
+      }),
+      signal: AbortSignal.timeout(20_000),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const text: string | undefined = data?.choices?.[0]?.message?.content;
+    return text?.trim() || null;
+  } catch { return null; }
+}
+
 // ── MiniMax 2.5 (direct API) ─────────────────────────────────
 export async function callMiniMax(messages: ChatMessage[]): Promise<string | null> {
   const keys = getMiniMaxKey();
@@ -1072,6 +1103,7 @@ export async function callAIWaterfall(messages: ChatMessage[]): Promise<string> 
     callGeminiDirect(messages),
     callMiMo(messages),
     callGLM(messages),
+    callNvidia(messages),    // NVIDIA NIM: Llama 3.3-70B бесплатно (NVIDIA_API_KEY)
     callMuseSpark(messages), // активируется когда Meta откроет API (MUSE_SPARK_API_KEY)
   ]);
   if (tier1) return tier1;
