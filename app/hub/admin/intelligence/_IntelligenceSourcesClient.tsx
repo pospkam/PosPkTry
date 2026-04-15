@@ -1,7 +1,12 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { Rss, Plus, Trash2, RefreshCw, AlertTriangle, Check, X } from 'lucide-react';
+import {
+  Rss, Plus, Trash2, RefreshCw, AlertTriangle, Check, X,
+  Play, Clock, Activity, Zap, CheckCircle, XCircle,
+} from 'lucide-react';
+
+// ── Types ───────────────────────────────────────────────────────────────────
 
 interface Source {
   id: string;
@@ -19,6 +24,24 @@ interface Source {
   updated_at: string;
 }
 
+interface RunRow {
+  id: string;
+  status: string;
+  started_at: string;
+  duration_ms: number | null;
+  items_processed: number | null;
+  items_created: number | null;
+  errors_count: number;
+  error_msg: string | null;
+}
+
+interface Stats {
+  sources: { total: number; active: number; errored: number };
+  memory: { total: number; last_24h: number };
+  domains: Array<{ domain: string; source_count: string; last_fetch: string | null }>;
+  runs: RunRow[];
+}
+
 const DOMAIN_LABELS: Record<string, string> = {
   ai_tech: 'AI & Tech',
   travel_industry: 'Travel',
@@ -31,7 +54,255 @@ const DOMAIN_COLORS: Record<string, string> = {
   competitors: 'ds-badge bg-amber-50 text-amber-700 ring-1 ring-amber-200',
 };
 
+type Tab = 'dashboard' | 'sources';
+
+// ── Main Component ──────────────────────────────────────────────────────────
+
 export default function IntelligenceSourcesClient() {
+  const [tab, setTab] = useState<Tab>('dashboard');
+
+  return (
+    <div className="ds-page space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="ds-h1">Разведка</h1>
+          <p className="text-[var(--text-secondary)] text-sm mt-1">
+            Intelligence Monitor — источники, история, тесты
+          </p>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-2 border-b border-[var(--border)] pb-2">
+        <button
+          onClick={() => setTab('dashboard')}
+          className={`ds-btn ${tab === 'dashboard' ? 'ds-btn-primary' : 'ds-btn-secondary'}`}
+        >
+          <Activity className="w-4 h-4" /> Дашборд
+        </button>
+        <button
+          onClick={() => setTab('sources')}
+          className={`ds-btn ${tab === 'sources' ? 'ds-btn-primary' : 'ds-btn-secondary'}`}
+        >
+          <Rss className="w-4 h-4" /> Источники
+        </button>
+      </div>
+
+      {tab === 'dashboard' ? <DashboardTab /> : <SourcesTab />}
+    </div>
+  );
+}
+
+// ── Dashboard Tab ───────────────────────────────────────────────────────────
+
+function DashboardTab() {
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [running, setRunning] = useState(false);
+  const [runResult, setRunResult] = useState<string>('');
+
+  const loadStats = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/intelligence-sources/stats');
+      const data = await res.json();
+      if (data.success) setStats(data);
+    } catch { /* ignore */ }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { loadStats(); }, [loadStats]);
+
+  const triggerCycle = async () => {
+    setRunning(true);
+    setRunResult('');
+    try {
+      const res = await fetch('/api/admin/intelligence-sources/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'run_cycle' }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        const r = data.report;
+        setRunResult(
+          `OK: ${r.raw_signals} сигналов, ${r.findings} findings, ${r.duration_ms}ms`
+        );
+        loadStats();
+      } else {
+        setRunResult(`Ошибка: ${data.error}`);
+      }
+    } catch {
+      setRunResult('Сетевая ошибка');
+    }
+    setRunning(false);
+  };
+
+  if (loading) {
+    return <div className="ds-card p-8 text-center text-[var(--text-muted)]">Загрузка...</div>;
+  }
+
+  if (!stats) {
+    return <div className="ds-card p-8 text-center text-[var(--danger)]">Ошибка загрузки статистики</div>;
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Stats grid */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <StatCard label="Источников" value={stats.sources.active} suffix={`/ ${stats.sources.total}`} />
+        <StatCard label="С ошибками" value={stats.sources.errored} danger={stats.sources.errored > 0} />
+        <StatCard label="В памяти" value={stats.memory.total} />
+        <StatCard label="За 24ч" value={stats.memory.last_24h} />
+        <div className="ds-card p-4 flex flex-col justify-center">
+          <button
+            onClick={triggerCycle}
+            disabled={running}
+            className="ds-btn-primary w-full justify-center"
+          >
+            {running ? <Clock className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+            {running ? 'Запуск...' : 'Запустить'}
+          </button>
+        </div>
+      </div>
+
+      {runResult && (
+        <div className={`ds-card p-3 text-sm ${runResult.startsWith('OK') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-[var(--danger)]'}`}>
+          {runResult}
+        </div>
+      )}
+
+      {/* Domain breakdown */}
+      <div className="ds-card p-4">
+        <h3 className="font-semibold mb-3">Домены</h3>
+        <div className="space-y-2">
+          {stats.domains.map(d => (
+            <div key={d.domain} className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-2">
+                <span className={DOMAIN_COLORS[d.domain] ?? ''}>{DOMAIN_LABELS[d.domain] ?? d.domain}</span>
+                <span className="text-[var(--text-muted)]">{d.source_count} RSS</span>
+              </div>
+              <span className="text-xs text-[var(--text-muted)]">
+                {d.last_fetch ? `Последний: ${new Date(d.last_fetch).toLocaleString('ru-RU')}` : 'Ещё не запускался'}
+              </span>
+            </div>
+          ))}
+          {stats.domains.length === 0 && (
+            <p className="text-sm text-[var(--text-muted)]">Нет активных доменов. Примените миграцию 144.</p>
+          )}
+        </div>
+      </div>
+
+      {/* Run history */}
+      <div className="ds-card p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-semibold">История запусков</h3>
+          <button onClick={loadStats} className="ds-btn-secondary text-xs">
+            <RefreshCw className="w-3 h-3" />
+          </button>
+        </div>
+        {stats.runs.length === 0 ? (
+          <p className="text-sm text-[var(--text-muted)]">Нет данных о запусках.</p>
+        ) : (
+          <div className="space-y-2">
+            {stats.runs.map(run => (
+              <div key={run.id} className="flex items-center justify-between text-sm py-2 border-b border-[var(--border)] last:border-0">
+                <div className="flex items-center gap-2">
+                  {run.status === 'success' ? (
+                    <CheckCircle className="w-4 h-4 text-[var(--success)]" />
+                  ) : run.status === 'failed' ? (
+                    <XCircle className="w-4 h-4 text-[var(--danger)]" />
+                  ) : (
+                    <AlertTriangle className="w-4 h-4 text-[var(--warning)]" />
+                  )}
+                  <span>{new Date(run.started_at).toLocaleString('ru-RU')}</span>
+                </div>
+                <div className="flex items-center gap-3 text-xs text-[var(--text-muted)]">
+                  {run.items_processed != null && <span>{run.items_processed} сигн.</span>}
+                  {run.items_created != null && <span>{run.items_created} findings</span>}
+                  {run.duration_ms != null && <span>{(run.duration_ms / 1000).toFixed(1)}s</span>}
+                  {run.errors_count > 0 && (
+                    <span className="text-[var(--danger)]">{run.errors_count} err</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* RSS test */}
+      <RssTestCard />
+    </div>
+  );
+}
+
+function StatCard({ label, value, suffix, danger }: {
+  label: string; value: number; suffix?: string; danger?: boolean;
+}) {
+  return (
+    <div className="ds-card p-4">
+      <div className={`text-2xl font-bold ${danger ? 'text-[var(--danger)]' : ''}`}>
+        {value}{suffix && <span className="text-sm font-normal text-[var(--text-muted)]"> {suffix}</span>}
+      </div>
+      <div className="text-xs text-[var(--text-muted)]">{label}</div>
+    </div>
+  );
+}
+
+function RssTestCard() {
+  const [url, setUrl] = useState('');
+  const [testing, setTesting] = useState(false);
+  const [result, setResult] = useState<string>('');
+
+  const testRss = async () => {
+    if (!url) return;
+    setTesting(true);
+    setResult('');
+    try {
+      const res = await fetch('/api/admin/intelligence-sources/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'test_rss', url }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setResult(`OK: ${data.format}, ${data.items_found} items, ${data.content_length} bytes`);
+      } else {
+        setResult(`Ошибка: ${data.error}`);
+      }
+    } catch {
+      setResult('Сетевая ошибка');
+    }
+    setTesting(false);
+  };
+
+  return (
+    <div className="ds-card p-4">
+      <h3 className="font-semibold mb-3">Тест RSS-фида</h3>
+      <div className="flex gap-2">
+        <input
+          className="ds-input flex-1"
+          value={url}
+          onChange={e => setUrl(e.target.value)}
+          placeholder="https://example.com/rss.xml"
+        />
+        <button onClick={testRss} disabled={testing || !url} className="ds-btn-secondary">
+          <Zap className="w-4 h-4" /> {testing ? '...' : 'Тест'}
+        </button>
+      </div>
+      {result && (
+        <p className={`mt-2 text-sm ${result.startsWith('OK') ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
+          {result}
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ── Sources Tab ─────────────────────────────────────────────────────────────
+
+function SourcesTab() {
   const [sources, setSources] = useState<Source[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -74,22 +345,29 @@ export default function IntelligenceSourcesClient() {
     loadSources();
   };
 
-  const rssSources = sources.filter(s => s.source_type === 'rss');
-  const searchSources = sources.filter(s => s.source_type.startsWith('search_'));
-  const errorSources = sources.filter(s => s.fetch_error_count > 0);
-
   return (
-    <div className="ds-page space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="ds-h1">Источники разведки</h1>
-          <p className="text-[var(--text-secondary)] text-sm mt-1">
-            RSS-фиды и поисковые запросы для Intelligence Monitor
-          </p>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setFilterDomain('')}
+            className={`ds-btn ${!filterDomain ? 'ds-btn-primary' : 'ds-btn-secondary'}`}
+          >
+            Все
+          </button>
+          {Object.entries(DOMAIN_LABELS).map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setFilterDomain(key)}
+              className={`ds-btn ${filterDomain === key ? 'ds-btn-primary' : 'ds-btn-secondary'}`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex gap-2">
           <button onClick={loadSources} className="ds-btn-secondary">
-            <RefreshCw className="w-4 h-4" /> Обновить
+            <RefreshCw className="w-4 h-4" />
           </button>
           <button onClick={() => setShowAdd(true)} className="ds-btn-primary">
             <Plus className="w-4 h-4" /> Добавить
@@ -97,49 +375,8 @@ export default function IntelligenceSourcesClient() {
         </div>
       </div>
 
-      {/* Stats row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="ds-card p-4">
-          <div className="text-2xl font-bold">{rssSources.length}</div>
-          <div className="text-xs text-[var(--text-muted)]">RSS-фидов</div>
-        </div>
-        <div className="ds-card p-4">
-          <div className="text-2xl font-bold">{searchSources.length}</div>
-          <div className="text-xs text-[var(--text-muted)]">Поисковых запросов</div>
-        </div>
-        <div className="ds-card p-4">
-          <div className="text-2xl font-bold">{sources.filter(s => s.active).length}</div>
-          <div className="text-xs text-[var(--text-muted)]">Активных</div>
-        </div>
-        <div className="ds-card p-4">
-          <div className="text-2xl font-bold text-[var(--danger)]">{errorSources.length}</div>
-          <div className="text-xs text-[var(--text-muted)]">С ошибками</div>
-        </div>
-      </div>
-
-      {/* Domain filter */}
-      <div className="flex gap-2">
-        <button
-          onClick={() => setFilterDomain('')}
-          className={`ds-btn ${!filterDomain ? 'ds-btn-primary' : 'ds-btn-secondary'}`}
-        >
-          Все
-        </button>
-        {Object.entries(DOMAIN_LABELS).map(([key, label]) => (
-          <button
-            key={key}
-            onClick={() => setFilterDomain(key)}
-            className={`ds-btn ${filterDomain === key ? 'ds-btn-primary' : 'ds-btn-secondary'}`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
       {error && (
-        <div className="ds-card p-4 border-[var(--danger)] bg-red-50 text-[var(--danger)]">
-          {error}
-        </div>
+        <div className="ds-card p-4 border-[var(--danger)] bg-red-50 text-[var(--danger)]">{error}</div>
       )}
 
       {loading ? (
@@ -150,9 +387,9 @@ export default function IntelligenceSourcesClient() {
             <div key={s.id} className={`ds-card p-4 ${!s.active ? 'opacity-50' : ''}`}>
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <Rss className="w-4 h-4 text-[var(--accent)] shrink-0" />
-                    <span className="font-medium truncate">{s.label}</span>
+                    <span className="font-medium">{s.label}</span>
                     <span className={DOMAIN_COLORS[s.domain] ?? 'ds-badge'}>
                       {DOMAIN_LABELS[s.domain] ?? s.domain}
                     </span>
@@ -166,7 +403,7 @@ export default function IntelligenceSourcesClient() {
                   <div className="text-xs text-[var(--text-muted)] truncate">{s.url}</div>
                   {s.last_fetched_at && (
                     <div className="text-xs text-[var(--text-secondary)] mt-1">
-                      Последний запрос: {new Date(s.last_fetched_at).toLocaleString('ru-RU')}
+                      Последний: {new Date(s.last_fetched_at).toLocaleString('ru-RU')}
                     </div>
                   )}
                   {s.last_error && (
@@ -203,11 +440,12 @@ export default function IntelligenceSourcesClient() {
         </div>
       )}
 
-      {/* Add modal */}
       {showAdd && <AddSourceModal onClose={() => setShowAdd(false)} onAdded={loadSources} />}
     </div>
   );
 }
+
+// ── Add Modal ───────────────────────────────────────────────────────────────
 
 function AddSourceModal({ onClose, onAdded }: { onClose: () => void; onAdded: () => void }) {
   const [url, setUrl] = useState('');
@@ -271,11 +509,7 @@ function AddSourceModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="ds-label">Домен</label>
-            <select
-              className="ds-input"
-              value={domain}
-              onChange={e => setDomain(e.target.value)}
-            >
+            <select className="ds-input" value={domain} onChange={e => setDomain(e.target.value)}>
               <option value="ai_tech">AI & Tech</option>
               <option value="travel_industry">Travel</option>
               <option value="competitors">Конкуренты</option>
@@ -283,11 +517,7 @@ function AddSourceModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
           </div>
           <div>
             <label className="ds-label">Тип</label>
-            <select
-              className="ds-input"
-              value={sourceType}
-              onChange={e => setSourceType(e.target.value)}
-            >
+            <select className="ds-input" value={sourceType} onChange={e => setSourceType(e.target.value)}>
               <option value="rss">RSS</option>
               <option value="search_tavily">Tavily Search</option>
               <option value="search_brave">Brave Search</option>
@@ -298,9 +528,7 @@ function AddSourceModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
         {error && <p className="text-sm text-[var(--danger)]">{error}</p>}
 
         <div className="flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="ds-btn-secondary">
-            Отмена
-          </button>
+          <button type="button" onClick={onClose} className="ds-btn-secondary">Отмена</button>
           <button type="submit" disabled={saving} className="ds-btn-primary">
             {saving ? 'Сохранение...' : 'Добавить'}
           </button>
