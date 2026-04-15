@@ -10,14 +10,16 @@ import {
   postKuzmichTip,
   postSezonToChannel,
   postSafetyToChannel,
+  postAINewsToChannel,
 } from '@/lib/notifications/telegram-channel';
+import type { IntelligenceFinding } from '@/lib/services/intelligence-monitor.service';
 import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
 const Schema = z.object({
-  type: z.enum(['kuzmich_route', 'tip', 'sezon', 'safety']),
+  type: z.enum(['kuzmich_route', 'tip', 'sezon', 'safety', 'ai_news']),
   topic: z.string().optional(),
 });
 
@@ -36,11 +38,29 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     let result: { ok: boolean; error?: string; routeId?: string };
 
-    switch (type) {
-      case 'kuzmich_route': result = await postKuzmichRoute(); break;
-      case 'tip':           result = await postKuzmichTip();   break;
-      case 'sezon':         result = await postSezonToChannel(); break;
-      case 'safety':        result = await postSafetyToChannel(topic); break;
+    if (type === 'ai_news') {
+      // Тестовый AI-finding для проверки канала
+      const testFinding: IntelligenceFinding = {
+        domain: 'ai_tech',
+        summary: topic || 'Тест публикации AI-новостей: проверка работы канала и форматирования постов.',
+        signals: [{
+          title: 'Тестовый сигнал',
+          source: 'tourhab.ru',
+          url: 'https://tourhab.ru',
+          snippet: 'Это тестовая публикация для проверки канала AI-новостей.',
+        }],
+        urgency: 'notable',
+        action_items: ['Проверить оформление поста', 'Убедиться что фото загружается'],
+      };
+      result = await postAINewsToChannel(testFinding);
+    } else {
+      switch (type) {
+        case 'kuzmich_route': result = await postKuzmichRoute(); break;
+        case 'tip':           result = await postKuzmichTip();   break;
+        case 'sezon':         result = await postSezonToChannel(); break;
+        case 'safety':        result = await postSafetyToChannel(topic); break;
+        default:              result = { ok: false, error: 'Unknown type' };
+      }
     }
 
     return NextResponse.json(result);
@@ -54,21 +74,18 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   const auth = await requireAdmin(req);
   if (auth instanceof NextResponse) return auth;
 
-  const channelId = process.env.TELEGRAM_CHANNEL_ID;
-  const maxChannelId = process.env.MAX_CHANNEL_ID;
-  const tgLink = process.env.TELEGRAM_CHANNEL_LINK;
-  const maxLink = process.env.MAX_CHANNEL_LINK;
-
   return NextResponse.json({
-    telegram: {
-      configured: !!channelId,
-      channel_id: channelId ? '✓ задан' : null,
-      channel_link: tgLink ?? null,
+    tourhab_channel: {
+      configured: !!process.env.TELEGRAM_CHANNEL_ID,
+      link: process.env.TELEGRAM_CHANNEL_LINK ?? null,
     },
-    max: {
-      configured: !!maxChannelId,
-      channel_id: maxChannelId ? '✓ задан' : null,
-      channel_link: maxLink ?? null,
+    ai_news_channel: {
+      configured: !!process.env.TELEGRAM_AI_CHANNEL_ID,
+      link: process.env.TELEGRAM_AI_CHANNEL_LINK ?? null,
+    },
+    max_channel: {
+      configured: !!process.env.MAX_CHANNEL_ID,
+      link: process.env.MAX_CHANNEL_LINK ?? null,
     },
   });
 }

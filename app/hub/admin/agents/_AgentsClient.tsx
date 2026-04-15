@@ -328,6 +328,7 @@ function ChannelPostsSection() {
     { id: 'kuzmich_route', label: 'Маршрут', desc: 'АИ выбирает маршрут → генерирует описание → публикует в TG + MAX' },
     { id: 'tip', label: 'Совет Кузьмича', desc: 'Полезный совет туристам о Камчатке → TG + MAX' },
     { id: 'sezon', label: 'Сезонный пост', desc: 'Актуальное время года → TG + MAX' },
+    { id: 'ai_news', label: 'AI-новость', desc: 'Тестовый пост → TELEGRAM_AI_CHANNEL_ID' },
   ] as const;
 
   const [states, setStates] = useState<Record<string, { loading: boolean; ok?: boolean; error?: string }>>({});
