@@ -1,10 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import {
   Package, Calendar, DollarSign, BarChart3, Globe, Bell,
   TrendingUp, Users, ExternalLink, CheckCircle, AlertTriangle,
-  ArrowRight, Zap, BookOpen, MessageSquare,
+  ArrowRight, Zap, BookOpen, MessageSquare, Bot, Copy,
 } from 'lucide-react';
 
 interface SectionCard {
@@ -44,6 +45,25 @@ function SectionHelp({ href, icon: Icon, color, title, desc, tips }: SectionCard
         Перейти в раздел <ArrowRight size={14} />
       </Link>
     </div>
+  );
+}
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  function handleCopy() {
+    void navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+  return (
+    <button
+      onClick={handleCopy}
+      className="inline-flex items-center gap-1 text-xs text-[var(--ocean)] hover:underline ml-2 cursor-pointer"
+    >
+      <Copy size={11} />
+      {copied ? 'Скопировано' : 'Копировать'}
+    </button>
   );
 }
 
@@ -179,7 +199,7 @@ export default function OperatorHelpClient() {
             <p className="font-semibold text-[var(--text-primary)] mb-1">Важно знать</p>
             <ul className="space-y-1 text-[var(--text-secondary)]">
               <li>Подтверждайте бронирования в течение 24 часов — иначе автоотмена</li>
-              <li>Укажите Telegram chat_id в профиле для оперативных уведомлений</li>
+              <li>Подключите Кузьмича в Telegram или MAX — уведомления приходят автоматически</li>
               <li>Заполните реквизиты в разделе Финансы до первой выплаты</li>
             </ul>
           </div>
@@ -199,13 +219,88 @@ export default function OperatorHelpClient() {
             'Укажите реквизиты для выплат в разделе Финансы',
             'Создайте первый тур в разделе Туры',
             'Откройте даты в Календаре',
-            'Добавьте telegram_chat_id для уведомлений',
+            'Подключите Кузьмича: /partner email в Telegram или MAX',
           ].map((item, i) => (
             <div key={i} className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
               <div className="w-5 h-5 rounded border border-[var(--border)] flex-shrink-0" />
               {item}
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Кузьмич — AI помощник */}
+      <div className="ds-card p-5 mb-8">
+        <div className="flex items-center gap-2 mb-4">
+          <Bot size={18} className="text-[var(--accent)]" />
+          <h2 className="font-semibold text-[var(--text-primary)]">Кузьмич — ваш AI помощник в мессенджере</h2>
+        </div>
+        <p className="text-sm text-[var(--text-secondary)] mb-4">
+          Кузьмич знает ваши туры, бронирования и статистику. Пишите ему напрямую в Telegram или MAX —
+          отвечает на вопросы о бизнесе, помогает составить ответ туристу, показывает сводку за неделю.
+        </p>
+
+        <div className="space-y-4">
+          {/* Шаг 1 */}
+          <div className="flex gap-3">
+            <div className="w-6 h-6 rounded-full bg-[color-mix(in_srgb,var(--accent)_15%,transparent)] text-[var(--accent)] text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">1</div>
+            <div>
+              <p className="text-sm font-medium text-[var(--text-primary)] mb-1">Откройте бот в Telegram или MAX</p>
+              <div className="flex flex-wrap gap-2">
+                <a
+                  href="https://t.me/KuzmichKam_bot"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded bg-[color-mix(in_srgb,var(--ocean)_10%,transparent)] text-[var(--ocean)] hover:bg-[color-mix(in_srgb,var(--ocean)_20%,transparent)] transition-colors"
+                >
+                  <ExternalLink size={11} /> Telegram @KuzmichKam_bot
+                </a>
+              </div>
+              <p className="text-xs text-[var(--text-muted)] mt-1">В MAX мессенджере найдите Кузьмич по нику KuzmichKam_bot</p>
+            </div>
+          </div>
+
+          {/* Шаг 2 */}
+          <div className="flex gap-3">
+            <div className="w-6 h-6 rounded-full bg-[color-mix(in_srgb,var(--accent)_15%,transparent)] text-[var(--accent)] text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">2</div>
+            <div>
+              <p className="text-sm font-medium text-[var(--text-primary)] mb-1">Зарегистрируйтесь как оператор</p>
+              <p className="text-sm text-[var(--text-secondary)] mb-2">
+                Отправьте боту команду с вашим email от аккаунта на TourHab:
+              </p>
+              <div className="bg-[var(--bg-hover)] rounded-md px-3 py-2 font-mono text-sm text-[var(--text-primary)] flex items-center justify-between">
+                <span>/partner ваш@email.com</span>
+                <CopyButton text="/partner ваш@email.com" />
+              </div>
+              <p className="text-xs text-[var(--text-muted)] mt-1.5">
+                Например: <code className="bg-[var(--bg-hover)] px-1 rounded">/partner ivan@fishingkam.ru</code>
+                <CopyButton text="/partner ivan@fishingkam.ru" />
+              </p>
+            </div>
+          </div>
+
+          {/* Шаг 3 */}
+          <div className="flex gap-3">
+            <div className="w-6 h-6 rounded-full bg-[color-mix(in_srgb,var(--success)_15%,transparent)] text-[var(--success)] text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
+              <CheckCircle size={14} />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-[var(--text-primary)] mb-1">Готово — задавайте вопросы</p>
+              <div className="grid sm:grid-cols-2 gap-1.5 mt-2">
+                {[
+                  'Сколько бронирований на этой неделе?',
+                  'Есть ли свободные места на 20 июля?',
+                  'Какие туры сейчас активны?',
+                  'Помоги написать ответ туристу',
+                ].map((q) => (
+                  <div key={q} className="flex items-center gap-2 text-xs text-[var(--text-secondary)] bg-[var(--bg-hover)] rounded px-2.5 py-1.5">
+                    <MessageSquare size={11} className="flex-shrink-0 text-[var(--text-muted)]" />
+                    {q}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
