@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { RefreshCw, CheckCircle, AlertTriangle, Clock, Play, Bot, Zap } from 'lucide-react';
+import { RefreshCw, CheckCircle, AlertTriangle, Clock, Play, Bot, Zap, Send, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 interface AgentDef {
   id: string;
@@ -315,6 +315,81 @@ export default function AgentsClient() {
           </div>
         )}
       </div>
+
+      {/* Channel posts */}
+      <ChannelPostsSection />
+
+    </div>
+  );
+}
+
+function ChannelPostsSection() {
+  const POSTS = [
+    { id: 'kuzmich_route', label: 'Маршрут', desc: 'АИ выбирает маршрут → генерирует описание → публикует в TG + MAX' },
+    { id: 'tip', label: 'Совет Кузьмича', desc: 'Полезный совет туристам о Камчатке → TG + MAX' },
+    { id: 'sezon', label: 'Сезонный пост', desc: 'Актуальное время года → TG + MAX' },
+  ] as const;
+
+  const [states, setStates] = useState<Record<string, { loading: boolean; ok?: boolean; error?: string }>>({});
+
+  async function trigger(id: string) {
+    setStates(p => ({ ...p, [id]: { loading: true } }));
+    try {
+      const res = await fetch('/api/admin/channels/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: id }),
+      });
+      const data = await res.json() as { ok: boolean; error?: string };
+      setStates(p => ({ ...p, [id]: { loading: false, ok: data.ok, error: data.error } }));
+    } catch (err) {
+      setStates(p => ({ ...p, [id]: { loading: false, ok: false, error: err instanceof Error ? err.message : 'Ошибка' } }));
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)] flex items-center gap-2">
+        <Send className="w-3.5 h-3.5" />
+        Публикации в каналы
+      </h2>
+      {POSTS.map(p => {
+        const s = states[p.id];
+        return (
+          <div key={p.id} className="ds-card p-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-[var(--text-primary)] text-sm">{p.label}</p>
+                <p className="text-xs text-[var(--text-secondary)] mt-0.5">{p.desc}</p>
+                {s?.ok === true && (
+                  <p className="text-xs text-[var(--success)] flex items-center gap-1 mt-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    Опубликовано
+                  </p>
+                )}
+                {s?.error && (
+                  <p className="text-xs text-[var(--danger)] flex items-center gap-1 mt-1">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    {s.error}
+                  </p>
+                )}
+              </div>
+              <button
+                onClick={() => void trigger(p.id)}
+                disabled={s?.loading}
+                className="ds-btn ds-btn-secondary text-sm flex items-center gap-1.5 flex-shrink-0"
+              >
+                {s?.loading ? (
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Send className="w-3.5 h-3.5" />
+                )}
+                {s?.loading ? 'Публикую...' : 'Опубликовать'}
+              </button>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
