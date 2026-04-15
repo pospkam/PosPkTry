@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Bot, type Api } from '@maxhub/max-bot-api';
 import { type PendingBooking, cleanupPending, processMessage } from '@/lib/kuzmich/core';
 import { registerOperatorChatId } from '@/lib/kuzmich/operator-chat';
+import { pool } from '@/lib/db-pool';
 
 type ButtonIntent = 'default' | 'positive' | 'negative';
 type MaxButton =
@@ -106,6 +107,42 @@ const BOOKING_BUTTONS: MaxButton[][] = [
   ],
 ];
 
+// ── Кнопка «Перезвоните мне» ─────────────────────────────────────────────────
+
+const CONTACT_REQUEST_BUTTONS: MaxButton[][] = [
+  [{ type: 'request_contact', text: 'Поделиться номером' }],
+  [{ type: 'callback', text: 'Напишу сам', payload: 'skip_contact' }],
+];
+
+// Парсинг телефона из VCF-строки (формат: TEL:+7... или TEL;TYPE=...:+7...)
+function parsePhoneFromVcf(vcf: string): string | null {
+  const match = vcf.match(/^TEL[^:]*:(.+)$/m);
+  if (!match) return null;
+  return match[1].trim().replace(/\s+/g, '');
+}
+
+// Создать лид из MAX-контакта
+async function createLeadFromContact(
+  chatId: number,
+  phone: string,
+  name: string,
+  comment: string,
+): Promise<void> {
+  try {
+    await pool.query(
+      `INSERT INTO leads (name, phone, comment, source_url, source_data, status)
+       VALUES ($1, $2, $3, $4, $5::jsonb, 'new')`,
+      [
+        name || 'Турист',
+        phone,
+        comment,
+        'https://max.ru',
+        JSON.stringify({ source: 'max_bot', max_chat_id: chatId, timestamp: new Date().toISOString() }),
+      ],
+    );
+  } catch { /* не блокируем */ }
+}
+
 // ── Скачивание медиа по URL → base64 ─────────────────────────────────────────
 
 async function downloadMedia(url: string): Promise<{ base64: string; mimeType: string } | null> {
@@ -122,7 +159,14 @@ async function downloadMedia(url: string): Promise<{ base64: string; mimeType: s
 
 interface MaxAttachment {
   type: string;
-  payload?: { url?: string; token?: string; photo_id?: number };
+  payload?: {
+    url?: string;
+    token?: string;
+    photo_id?: number;
+    // contact
+    vcf_info?: string | null;
+    tam_info?: { user_id?: number; name?: string } | null;
+  };
   filename?: string;
 }
 
@@ -247,6 +291,26 @@ async function handleUpdate(update: MaxUpdate): Promise<void> {
       return;
     }
 
+    // Контакт → создаём лид
+    const contactAtt = attachments.find(a => a.type === 'contact');
+    if (contactAtt) {
+      const vcf = contactAtt.payload?.vcf_info ?? '';
+      const phone = parsePhoneFromVcf(vcf)
+        ?? contactAtt.payload?.tam_info?.user_id?.toString()
+        ?? null;
+      const contactName = contactAtt.payload?.tam_info?.name ?? userName ?? 'Турист';
+
+      if (phone) {
+        await createLeadFromContact(chatId, phone, contactName, 'Заявка из MAX бота');
+        await maxReply(chatId,
+          `Отлично, ${contactName}! Номер получен.\n\nОператор свяжется с вами в течение <b>1-2 часов</b> по номеру <b>${phone}</b>.`,
+        );
+      } else {
+        await maxReply(chatId, 'Не удалось получить номер. Напишите его текстом, пожалуйста.');
+      }
+      return;
+    }
+
     // Регистрация оператора: /partner EMAIL или партнер EMAIL
     const lc = text.toLowerCase();
     const partnerPrefix = lc.startsWith('/partner ') ? '/partner '
@@ -328,6 +392,16 @@ async function handleUpdate(update: MaxUpdate): Promise<void> {
 
     // Кнопка "Оформить заявку"
     if (payload === 'book_now') {
+      await maxReplyWithButtons(
+        callbackChatId,
+        'Поделитесь номером телефона — оператор свяжется в течение <b>1-2 часов</b>.',
+        CONTACT_REQUEST_BUTTONS,
+      );
+      return;
+    }
+
+    // Пропустить → заявка через чат
+    if (payload === 'skip_contact') {
       await processMessage({
         chatId: callbackChatId,
         text: 'Хочу оформить заявку на тур',
