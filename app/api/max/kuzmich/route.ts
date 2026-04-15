@@ -14,6 +14,12 @@ import { Bot, type Api } from '@maxhub/max-bot-api';
 import { type PendingBooking, cleanupPending, processMessage } from '@/lib/kuzmich/core';
 import { registerOperatorChatId } from '@/lib/kuzmich/operator-chat';
 
+type ButtonIntent = 'default' | 'positive' | 'negative';
+type MaxButton =
+  | { type: 'callback'; text: string; payload: string; intent?: ButtonIntent }
+  | { type: 'link'; text: string; url: string }
+  | { type: 'request_contact'; text: string };
+
 export const dynamic = 'force-dynamic';
 
 // ── In-memory state ───────────────────────────────────────────────────────────
@@ -45,6 +51,60 @@ async function maxReply(chatId: number, text: string): Promise<void> {
     await api.sendMessageToChat(chatId, text, { format: 'html' });
   } catch { /* не блокируем */ }
 }
+
+async function maxReplyWithButtons(chatId: number, text: string, buttons: MaxButton[][]): Promise<void> {
+  const api = getApi();
+  if (!api) return;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (api.sendMessageToChat as any)(chatId, text, {
+      format: 'html',
+      attachments: [{ type: 'inline_keyboard', payload: { buttons } }],
+    });
+  } catch { /* не блокируем */ }
+}
+
+// ── Стартовое меню ────────────────────────────────────────────────────────────
+
+const START_MENU: MaxButton[][] = [
+  [
+    { type: 'callback', text: 'Рыбалка', payload: 'topic_fishing' },
+    { type: 'callback', text: 'Вулканы', payload: 'topic_volcanoes' },
+  ],
+  [
+    { type: 'callback', text: 'Медведи', payload: 'topic_bears' },
+    { type: 'callback', text: 'Источники', payload: 'topic_springs' },
+  ],
+  [
+    { type: 'callback', text: 'Подобрать тур', payload: 'topic_tour', intent: 'positive' },
+    { type: 'callback', text: 'Цены', payload: 'topic_prices' },
+  ],
+];
+
+const TOPIC_TEXTS: Record<string, string> = {
+  topic_fishing: 'Рыбалка на Камчатке',
+  topic_volcanoes: 'Вулканы Камчатки',
+  topic_bears: 'Медведи Камчатки',
+  topic_springs: 'Термальные источники',
+  topic_tour: 'Подобрать тур на Камчатку',
+  topic_prices: 'Цены на туры на Камчатку',
+};
+
+// Обнаружение рекомендации тура в ответе бота
+function hasTourRecommendation(text: string): boolean {
+  const lower = text.toLowerCase();
+  return lower.includes('тур') || lower.includes('маршрут') || lower.includes('программа') || lower.includes('экскурс');
+}
+
+const BOOKING_BUTTONS: MaxButton[][] = [
+  [
+    { type: 'callback', text: 'Оформить заявку', payload: 'book_now', intent: 'positive' },
+    { type: 'callback', text: 'Другой вариант', payload: 'other_tour' },
+  ],
+  [
+    { type: 'link', text: 'Все туры на сайте', url: 'https://tourhab.ru/routes' },
+  ],
+];
 
 // ── Скачивание медиа по URL → base64 ─────────────────────────────────────────
 
@@ -86,6 +146,8 @@ interface MaxUpdate {
     payload?: string;
     user: { user_id: number; name: string };
   };
+  // сообщение с кнопками (приходит в message_callback)
+  // message уже есть выше для message_created, переиспользуем структуру
 }
 
 // ── Обработка одного апдейта ──────────────────────────────────────────────────
@@ -93,6 +155,11 @@ interface MaxUpdate {
 async function handleUpdate(update: MaxUpdate): Promise<void> {
   // bot_started → /start
   if (update.update_type === 'bot_started' && update.chat_id) {
+    let capturedStart = '';
+    const capturingStart = async (id: number, text: string) => {
+      capturedStart = text;
+      await maxReply(id, text);
+    };
     await processMessage({
       chatId: update.chat_id,
       text: '/start',
@@ -101,9 +168,12 @@ async function handleUpdate(update: MaxUpdate): Promise<void> {
       mode: 'max',
       createdVia: 'max',
       pending,
-      reply: maxReply,
+      reply: capturingStart,
       platform: 'max',
     });
+    if (capturedStart) {
+      await maxReplyWithButtons(update.chat_id, 'Выберите тему или задайте вопрос:', START_MENU);
+    }
     return;
   }
 
@@ -201,22 +271,78 @@ async function handleUpdate(update: MaxUpdate): Promise<void> {
 
     // Текст
     if (text) {
+      let capturedReply = '';
+      const capturingReply = async (id: number, msg: string) => {
+        capturedReply = msg;
+        await maxReply(id, msg);
+      };
       await processMessage({
         chatId, text, userName, userId,
-        mode: 'max', createdVia: 'max', pending, reply: maxReply,
+        mode: 'max', createdVia: 'max', pending, reply: capturingReply,
         platform: 'max',
       });
+      if (capturedReply && hasTourRecommendation(capturedReply)) {
+        await maxReplyWithButtons(chatId, 'Хотите оформить заявку?', BOOKING_BUTTONS);
+      }
     }
     return;
   }
 
-  // message_callback → нажатие inline-кнопки (будущее расширение)
+  // message_callback → нажатие inline-кнопки
   if (update.update_type === 'message_callback' && update.callback) {
     const api = getApi();
     if (!api) return;
+
+    const payload = update.callback.payload ?? '';
+    // В callback-апдейте chat_id берётся из message.recipient.chat_id
+    const callbackChatId: number | null | undefined = update.message?.recipient.chat_id;
+
+    // Подтверждаем получение
     await api.answerOnCallback(update.callback.callback_id, {
-      notification: 'Принято!',
+      notification: '',
     }).catch(() => {});
+
+    if (!callbackChatId) return;
+
+    const userName = update.callback.user.name;
+    const userId = update.callback.user.user_id;
+
+    // Топик-кнопки → шлём как обычный запрос
+    if (payload in TOPIC_TEXTS) {
+      const topicText = TOPIC_TEXTS[payload];
+      let capturedReply = '';
+      const capturingReply = async (id: number, msg: string) => {
+        capturedReply = msg;
+        await maxReply(id, msg);
+      };
+      await processMessage({
+        chatId: callbackChatId, text: topicText, userName, userId,
+        mode: 'max', createdVia: 'max', pending, reply: capturingReply,
+        platform: 'max',
+      });
+      if (capturedReply && hasTourRecommendation(capturedReply)) {
+        await maxReplyWithButtons(callbackChatId, 'Хотите оформить заявку?', BOOKING_BUTTONS);
+      }
+      return;
+    }
+
+    // Кнопка "Оформить заявку"
+    if (payload === 'book_now') {
+      await processMessage({
+        chatId: callbackChatId,
+        text: 'Хочу оформить заявку на тур',
+        userName, userId,
+        mode: 'max', createdVia: 'max', pending, reply: maxReply,
+        platform: 'max',
+      });
+      return;
+    }
+
+    // Кнопка "Другой вариант"
+    if (payload === 'other_tour') {
+      await maxReplyWithButtons(callbackChatId, 'Хорошо! Выберите тему, и я подберу что-то ещё:', START_MENU);
+      return;
+    }
   }
 }
 
