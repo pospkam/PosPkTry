@@ -61,6 +61,38 @@ export async function maxPostToChannel(text: string): Promise<{ ok: boolean; err
 }
 
 /**
+ * Отправить пост с фото (по URL) в MAX-канал.
+ * photoUrl — прямая ссылка на изображение (в т.ч. Telegram file URL).
+ * caption  — подпись под фото (может быть пустой).
+ */
+export async function maxPostPhotoToChannel(
+  photoUrl: string,
+  caption: string,
+): Promise<{ ok: boolean; error?: string; skipped?: boolean }> {
+  const channelId = process.env.MAX_CHANNEL_ID;
+  if (!channelId) return { ok: false, skipped: true, error: 'MAX_CHANNEL_ID not set' };
+
+  const api = getApi();
+  if (!api) return { ok: false, skipped: true, error: 'MAX_BOT_TOKEN not set' };
+
+  const chatId = parseInt(channelId, 10);
+  if (isNaN(chatId)) return { ok: false, error: 'MAX_CHANNEL_ID is not a valid number' };
+
+  try {
+    const attachment: import('@maxhub/max-bot-api').ImageAttachment =
+      new (await import('@maxhub/max-bot-api')).ImageAttachment({ url: photoUrl });
+
+    await api.sendMessageToChat(chatId, caption, {
+      attachments: [attachment.toJson()],
+      format: 'html',
+    });
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'MAX API error' };
+  }
+}
+
+/**
  * Утилита: найти все чаты бота (для определения channel_id).
  * Вызывать вручную из /api/max/setup для поиска канала.
  */
