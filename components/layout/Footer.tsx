@@ -50,15 +50,26 @@ export function Footer() {
             <p className="text-xs text-[var(--text-muted)] mt-4">
               support@tourhab.ru
             </p>
-            <a
-              href="https://t.me/kamchatourhab"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 mt-3 text-xs text-[var(--ocean)] hover:underline transition-colors"
-            >
-              <Send className="w-3.5 h-3.5" />
-              Telegram-канал
-            </a>
+<div className="flex flex-col gap-2 mt-3">
+              <a
+                href="https://t.me/kamchatourhub"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs text-[var(--ocean)] hover:underline transition-colors"
+              >
+                <Send className="w-3.5 h-3.5" />
+                Telegram-канал
+              </a>
+              <a
+                href="https://max.ru/id4101147649_biz"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs text-[var(--ocean)] hover:underline transition-colors"
+              >
+                <Send className="w-3.5 h-3.5" />
+                Канал в MAX
+              </a>
+            </div>
           </div>
 
           {/* Platform links */}
