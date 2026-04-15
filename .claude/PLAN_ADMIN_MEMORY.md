@@ -1,263 +1,176 @@
-# ПЛАН: Fix Intelligence System — Critical Bugs First
+# ПЛАН: Fix Intelligence System — UPDATED 2026-04-15
 
-**Date:** 2026-04-14  
-**Status:** 🔴 CRITICAL ISSUES FOUND  
-**Scope:** 3-4 дня (fixes + observability)  
-
----
-
-## 🔴 РЕАЛЬНАЯ БОЛЕЗНЬ (не UI, а потеря данных)
-
-### Critical Issues Found:
-
-| # | Issue | Impact | Fix Time |
-|---|-------|--------|----------|
-| 1 | Scout endpoint MISSING | Scout-Innovator never runs | 30 min |
-| 2 | Silent DB errors | All memories get lost | 20 min |
-| 3 | Timing attacks on cron | CRON_SECRET can be hacked | 45 min |
-| 4 | RSS errors gluedin | Periodic data loss | 30 min |
-| 5 | No retry logic | Network hiccup = lost signals | 1 hour |
-| 6 | AI errors silent | Findings disappear | 20 min |
-| 7 | Hardcoded RSS URLs | Brittle to changes | 1 hour |
-| 8 | TTL deletes needed data | Intelligence expires in 7 days | 30 min |
+**Date:** 2026-04-15  
+**Status:** 🟡 50% DONE — осталось 4 задачи  
+**Audited:** код проверен, дубликаты убраны  
 
 ---
 
-## 🎯 ПЕРЕСТРОЕННЫЙ ПЛАН
+## ✅ УЖЕ ИСПРАВЛЕНО (не трогать)
 
-### **Phase 1: FIX CRITICAL BUGS (1 день)**
-
-#### 1.1 Create Missing Scout Endpoint
-- **File:** `/app/api/cron/scout/route.ts` (NEW)
-- **What:** Endpoint that workflow calls at 06:00 UTC
-- **Calls:** Scout-Innovator agent (generate evolutionary proposals)
-- **Stores:** results in `agent_knowledge` (permanent) + `agent_memory` (7d TTL)
-
-#### 1.2 Fix Silent Database Errors
-- **File:** `/lib/agents/memory/agent-memory.ts` (lines 108-110, 157-160, etc)
-- **Problem:** `catch { }` blocks silence DB errors
-- **Fix:**
-  ```typescript
-  } catch (err) {
-    console.error('[agent-memory] DB error:', err);
-    throw err;  // or return false + check caller
-  }
-  ```
-- **Impact:** Now we'll see when memories fail to save
-
-#### 1.3 Fix Timing Attack Vulnerabilities (18 endpoints)
-- **Files:** All `/app/api/cron/*.ts` endpoints
-- **Problem:** Use `secret !== cronSecret` (vulnerable to timing attacks)
-- **Fix:** Use `timingSafeCompare(secret, cronSecret)` in ALL cron endpoints
-- **Endpoints to fix:**
-  - `/app/api/cron/scout-digest/route.ts`
-  - `/app/api/cron/watchdog/route.ts`
-  - `/app/api/cron/editor/route.ts`
-  - `/app/api/cron/intelligence/route.ts` (already correct)
-  - And 14 others...
+| # | Issue | Commit/Status |
+|---|-------|---------------|
+| 1 | Scout endpoint missing | ✅ `/api/cron/scout/route.ts` exists |
+| 2 | RSS fetch errors not logged | ✅ `fetchFeed` logs errors |
+| 3 | No retry logic | ✅ `fetchWithRetry()` with exponential backoff |
+| 4 | AI analysis errors silent | ✅ `console.error` added |
+| 5 | TTL 7 days deletes intel | ✅ Changed to 30 days |
+| 6 | `remember()` silent errors | ✅ Logs errors now |
 
 ---
 
-### **Phase 2: IMPROVE RELIABILITY (1 день)**
+## ❌ ОСТАЛОСЬ СДЕЛАТЬ
 
-#### 2.1 Add Logging to RSS Fetch
-- **File:** `/lib/services/intelligence-monitor.service.ts` (lines 165-167, 196-198, 218-220)
-- **Problem:** `catch { return []; }` — no visibility
-- **Fix:**
-  ```typescript
-  } catch (err) {
-    console.error(`[intelligence] Failed to fetch ${url}:`, err.message);
-    return [];
-  }
-  ```
+### Task 1: 🔴 CRITICAL — Fix Timing Attacks (10 endpoints)
 
-#### 2.2 Add Retry Logic (3x with backoff)
-- **File:** `/lib/services/intelligence-monitor.service.ts` (line 155)
-- **Problem:** Single 8-second timeout → data loss on network hiccups
-- **Fix:**
-  ```typescript
-  async function fetchWithRetry(url, maxAttempts = 3) {
-    for (let i = 0; i < maxAttempts; i++) {
-      try {
-        return await fetch(url, { signal: AbortSignal.timeout(8000) });
-      } catch (err) {
-        if (i === maxAttempts - 1) throw err;
-        await new Promise(r => setTimeout(r, 1000 * Math.pow(2, i))); // backoff
-      }
-    }
-  }
-  ```
+**Problem:** 10 cron endpoints use `secret !== cronSecret` (vulnerable to timing attacks)  
+**13 endpoints already fixed** (use `timingSafeCompare`)
 
-#### 2.3 Fix AI Analysis Error Handling
-- **Files:** 
-  - `/lib/services/intelligence-monitor.service.ts` (lines 328-330)
-  - `/lib/agents/scout-digest.ts` (lines 142-144)
-- **Problem:** AI fails → `return null` → no findings
-- **Fix:**
-  ```typescript
-  } catch (err) {
-    console.error('[intelligence] AI analysis failed:', err.message);
-    return {
-      summary: 'AI analysis unavailable',
-      urgency: 'informational',
-      confidence: 0.3
-    };
-  }
-  ```
-
----
-
-### **Phase 3: FIX CONFIGURATION (0.5 дня)**
-
-#### 3.1 Move RSS URLs to Database
-- **Table:** `intelligence_sources` (NEW)
-  ```sql
-  CREATE TABLE intelligence_sources (
-    id UUID PRIMARY KEY,
-    url TEXT NOT NULL UNIQUE,
-    category VARCHAR(50),           -- 'rss', 'api_tavily', 'api_brave'
-    domain VARCHAR(50),             -- 'ai_tech', 'travel', 'competitors'
-    active BOOLEAN DEFAULT true,
-    last_fetched_at TIMESTAMPTZ,
-    fetch_error_count INT DEFAULT 0,
-    last_error TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-  );
-  ```
-- **Seed:** Move hardcoded URLs from code → table
-- **Update:** Intelligence Monitor reads from table (not hardcoded)
-
-#### 3.2 Fix TTL Strategy
-- **File:** `/lib/agents/memory/agent-memory.ts` (line 180)
-- **Problem:** Intelligence expires in 7 days (gets deleted)
-- **Fix:**
-  - Intelligence: 30 days TTL (or no TTL for critical)
-  - Temporary signals: 7 days TTL
-  - Use `memory_tier` to distinguish (core = no ttl, archival/recall = ttl)
-
----
-
-### **Phase 4: OBSERVABILITY (1 день)**
-
-#### 4.1 Cron Execution History
-- **Table:** `agent_run_history` (NEW)
-  ```sql
-  CREATE TABLE agent_run_history (
-    id UUID PRIMARY KEY,
-    agent_id VARCHAR(50),
-    run_started_at TIMESTAMPTZ,
-    run_ended_at TIMESTAMPTZ,
-    status VARCHAR(20),             -- 'success', 'partial', 'failed'
-    items_processed INT,
-    items_created INT,
-    errors_count INT,
-    error_msg TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-  );
-  ```
-- **Updated by:** Each cron endpoint logs its run
-
-#### 4.2 Admin Pages for Debugging
-- **Pages:**
-  - `/hub/admin/memory/intelligence` — Dashboard (show last 30 runs, error trends)
-  - `/hub/admin/memory/sources` — Manage RSS sources (add/remove/test)
-  - `/hub/admin/memory/history` — View cron execution history + errors
-  - `/api/admin/test/fetch/:source_id` — Test single RSS source right now
-
-#### 4.3 Manual Testing Endpoints
-- **Endpoints:**
-  - `GET /api/admin/test/intelligence` → Run Intelligence Monitor NOW (not cron)
-  - `GET /api/admin/test/scout-digest` → Run Scout Digest NOW
-  - `GET /api/admin/test/rss?url=...` → Test single RSS URL
-  - `POST /api/admin/memory/inject` → Manual signal injection (for testing)
-
----
-
-## 💾 Database Changes
-
-**New Tables:**
-- `intelligence_sources` — RSS/API source management
-- `agent_run_history` — Audit trail for cron jobs
-
-**New Columns (in existing tables):**
-- None (reuse existing `agent_memory`, `agent_knowledge`)
-
----
-
-## 📊 Verification Plan
-
-### Before Fixes:
-```sql
-SELECT COUNT(*) FROM agent_memory WHERE memory_type = 'intelligence' AND created_at > NOW() - '24 hours'::interval;
--- Result: 0 or very few (data lost)
+**Files to fix:**
+```
+app/api/cron/tour-reminder/route.ts
+app/api/cron/kb-gap/route.ts
+app/api/cron/abandoned-bookings/route.ts
+app/api/cron/smart-notify/route.ts
+app/api/cron/trip-reminders/route.ts
+app/api/cron/followups/route.ts
+app/api/cron/sos-events-bridge/route.ts
+app/api/cron/memory-bridge/route.ts
+app/api/cron/channel-sync/route.ts
+app/api/cron/support-escalate/route.ts
 ```
 
-### After Phase 1-2:
-```sql
-SELECT COUNT(*) FROM agent_memory WHERE memory_type = 'intelligence' AND created_at > NOW() - '24 hours'::interval;
--- Result: 50+ (data is flowing)
+**Fix:** Replace `secret !== cronSecret` with `!timingSafeCompare(secret, cronSecret)`  
+**Time:** 30 min  
+
+---
+
+### Task 2: 🟠 HIGH — Fix Silent Catches in agent-memory.ts
+
+**File:** `/lib/agents/memory/agent-memory.ts`  
+**Problem:** ~10 catch blocks return empty silently (no logging)
+
+**Lines to fix:**
+```
+Line 155: catch { return []; }          — recall()
+Line 174: catch { return []; }          — recallByTags()
+Line 188: catch { return 0; }           — cleanup()
+Line 203: catch { return 0; }           — count()
+Line 228: catch { return []; }          — search()
+Line 263: catch { return []; }          — getByAgent()
+Line 280: catch { return null; }        — getByKey()
+Line 328: catch { }                     — forget()
+Line 349: catch { }                     — update()
 ```
 
-### After Phase 4:
+**Fix:** Add `console.error('[agent-memory] methodName failed:', err);` before return  
+**Time:** 20 min  
+
+---
+
+### Task 3: 🟡 MEDIUM — Move RSS URLs from Code to DB
+
+**Problem:** RSS sources hardcoded in `INTELLIGENCE_DOMAINS` (lines 57-107)  
+**Current:** 11 RSS URLs + 3 search queries in code  
+**Desired:** Sources stored in `intelligence_sources` table, editable from admin
+
+**Steps:**
+1. Create migration: `intelligence_sources` table
+2. Seed: current 11 RSS URLs + metadata
+3. Update `intelligence-monitor.service.ts`: read from DB instead of hardcoded
+4. Create API: `/api/admin/memory/sources` (GET/POST/PATCH/DELETE)
+5. Create UI: `/hub/admin/memory/sources` page
+
+**Migration:**
 ```sql
-SELECT agent_id, status, COUNT(*) FROM agent_run_history GROUP BY agent_id, status;
--- Result: Shows which runs succeeded/failed + error trends
+CREATE TABLE intelligence_sources (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  url TEXT NOT NULL UNIQUE,
+  category VARCHAR(50),           -- 'rss', 'api_tavily', 'api_brave'
+  domain VARCHAR(50),             -- 'ai_tech', 'travel_industry', 'competitors'
+  label TEXT,
+  active BOOLEAN DEFAULT true,
+  last_fetched_at TIMESTAMPTZ,
+  fetch_error_count INT DEFAULT 0,
+  last_error TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_intelligence_sources_active ON intelligence_sources(active, domain);
 ```
 
----
-
-## 📁 Critical Files to Modify
-
-**New (CREATE):**
-- `/app/api/cron/scout/route.ts` — Missing Scout endpoint
-- `/app/api/admin/test/[name]/route.ts` — Testing endpoints
-- `/app/api/admin/memory/inject/route.ts` — Manual injection
-- `/app/hub/admin/memory/intelligence/page.tsx` — Dashboard
-- `/app/hub/admin/memory/sources/page.tsx` — Source management
-- `/app/hub/admin/memory/history/page.tsx` — Execution history
-- `/migrations/XXX_intelligence_sources.sql` — New table
-- `/migrations/XXX_agent_run_history.sql` — New table
-
-**Modify (FIX):**
-- `/lib/agents/memory/agent-memory.ts` — Add error logging
-- `/lib/services/intelligence-monitor.service.ts` — Add logging + retry + error handling
-- `/lib/agents/scout-digest.ts` — Add error handling
-- `/app/api/cron/scout-digest/route.ts` — Fix timing attack + add logging
-- `/app/api/cron/watchdog/route.ts` — Fix timing attack
-- `/app/api/cron/editor/route.ts` — Fix timing attack
-- (+ 15 other cron endpoints) — Fix timing attacks
-- `/lib/services/intelligence-monitor.service.ts` (line ~60) — Switch to DB sources
+**Time:** 3 hours  
 
 ---
 
-## ⏱ Timeline
+### Task 4: 🟢 OBSERVABILITY — Admin Dashboard + History
 
-| Phase | Tasks | Time | Status |
-|-------|-------|------|--------|
-| **1** | Fix critical bugs (missing endpoint, silent errors, security) | 2 hours | 🔴 DO FIRST |
-| **2** | Improve reliability (logging, retry, error handling) | 3 hours | 🔴 DO FIRST |
-| **3** | Fix configuration (RSS DB, TTL strategy) | 2 hours | 🟠 HIGH |
-| **4** | Add observability (dashboard, testing) | 4 hours | 🟡 MEDIUM |
+**Problem:** No visibility into what agents do, no execution history, no manual testing
 
-**Total:** ~3-4 дней
+**Steps:**
+
+#### 4.1 Execution History Table
+```sql
+CREATE TABLE agent_run_history (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  agent_id VARCHAR(50),
+  run_started_at TIMESTAMPTZ,
+  run_ended_at TIMESTAMPTZ,
+  status VARCHAR(20),             -- 'success', 'partial', 'failed'
+  items_processed INT,
+  items_created INT,
+  errors_count INT,
+  error_msg TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_agent_run_history ON agent_run_history(agent_id, run_started_at DESC);
+```
+
+#### 4.2 Admin Pages (3 pages)
+- `/hub/admin/memory/sources` — CRUD RSS sources (add/edit/toggle/delete/test)
+- `/hub/admin/memory/intelligence` — Dashboard (stats, last runs, error trends)
+- `/hub/admin/memory/history` — Execution history (last 30 runs per agent)
+
+#### 4.3 Admin APIs
+- `GET /api/admin/memory/sources` — list sources
+- `POST /api/admin/memory/sources` — add source
+- `PATCH /api/admin/memory/sources/[id]` — edit source
+- `DELETE /api/admin/memory/sources/[id]` — deactivate
+- `GET /api/admin/memory/stats` — memory statistics
+- `POST /api/admin/memory/inject` — manual signal injection
+- `GET /api/admin/memory/list` — browse all memories with filters
+
+#### 4.4 Manual Test Endpoints
+- `POST /api/admin/test/rss` — test single RSS URL
+- `POST /api/admin/test/intelligence` — run Intelligence Monitor NOW
+- `POST /api/admin/test/scout-digest` — run Scout Digest NOW
+
+**Time:** 4 hours  
 
 ---
 
-## ✅ Expected Result
+## ⏱ ОБНОВЛЁННЫЙ TIMELINE
 
-- ✅ Scout Digest actually runs (endpoint exists)
-- ✅ All errors are logged (we see what breaks)
-- ✅ Retry logic stops losing data on network hiccups
-- ✅ RSS sources managed from DB (not hardcoded)
-- ✅ Intelligence memories don't expire (30-day TTL)
-- ✅ TTL security fixed (no timing attacks)
-- ✅ Admin can test RSS sources and debug failures
-- ✅ Execution history shows why things broke
-- ✅ System reliable, observable, manageable
+| Task | Priority | Time | Status |
+|------|----------|------|--------|
+| Fix timing attacks (10 endpoints) | 🔴 CRITICAL | 30 min | TODO |
+| Fix silent catches (agent-memory.ts) | 🟠 HIGH | 20 min | TODO |
+| Move RSS to DB + admin | 🟡 MEDIUM | 3 hours | TODO |
+| Observability (history + dashboard) | 🟢 NICE | 4 hours | TODO |
 
-**From:** "Memory parsing doesn't work, data is lost"  
-**To:** "Memory parsing works, we see everything, we can fix it"
+**Total remaining:** ~8 hours (~1.5 дня)
 
 ---
 
-**This is the REAL plan, not symptoms.**
+## ✅ EXPECTED RESULT
+
+After all tasks:
+- ✅ ALL cron endpoints secure (timingSafeCompare)
+- ✅ ALL errors logged (no silent failures)
+- ✅ RSS sources in DB (admin can add/remove)
+- ✅ Execution history tracked
+- ✅ Admin dashboard shows what's happening
+- ✅ Manual testing possible from admin
+
+**From:** "50% fixed but still blind"  
+**To:** "100% fixed, observable, manageable"
