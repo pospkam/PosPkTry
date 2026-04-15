@@ -332,9 +332,7 @@ function ChatsSection() {
   const [loading,  setLoading]  = useState(false);
   const [open,     setOpen]     = useState(false);
 
-  const load = useCallback(async () => {
-    if (loaded) { setOpen(o => !o); return; }
-    setOpen(true);
+  const fetch_ = useCallback(async () => {
     setLoading(true);
     try {
       const res  = await fetch('/api/admin/ai-analytics/chats');
@@ -342,30 +340,46 @@ function ChatsSection() {
       setTgChats(json.tgChats ?? []);
       setWebChats(json.webChats ?? []);
       setLoaded(true);
+      setOpen(true);
     } finally {
       setLoading(false);
     }
-  }, [loaded]);
+  }, []);
+
+  const toggle = useCallback(() => {
+    if (!loaded) { void fetch_(); return; }
+    setOpen(o => !o);
+  }, [loaded, fetch_]);
 
   const total = tgChats.length + webChats.length;
 
   return (
     <div className="ds-card overflow-hidden">
-      <button
-        onClick={load}
-        className="w-full flex items-center justify-between px-5 py-4 hover:bg-[var(--bg-hover)] transition-colors"
-      >
-        <h2 className="ds-h2 flex items-center gap-2">
-          <MessageSquare size={16} className="text-[var(--ocean)]" />
-          Переписки
-          {loaded && <span className="text-xs font-normal text-[var(--text-muted)]">({total} чатов)</span>}
-        </h2>
-        <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
-          {!loaded && !loading && 'Нажмите чтобы загрузить'}
-          {loading && 'Загрузка...'}
-          {open ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-        </div>
-      </button>
+      <div className="flex items-center justify-between px-5 py-4">
+        <button
+          onClick={toggle}
+          className="flex items-center gap-2 flex-1 text-left"
+        >
+          <h2 className="ds-h2 flex items-center gap-2">
+            <MessageSquare size={16} className="text-[var(--ocean)]" />
+            Переписки
+            {loaded && <span className="text-xs font-normal text-[var(--text-muted)]">({total} чатов)</span>}
+          </h2>
+          <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
+            {!loaded && !loading && 'Нажмите чтобы загрузить'}
+            {open ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+          </div>
+        </button>
+        {loaded && (
+          <button
+            onClick={() => void fetch_()}
+            disabled={loading}
+            className="text-xs text-[var(--text-muted)] flex items-center gap-1 hover:text-[var(--text-primary)] transition-colors ml-3"
+          >
+            <RefreshCw size={12} className={loading ? 'animate-spin' : ''} />
+          </button>
+        )}
+      </div>
 
       {open && !loading && (
         <div className="px-5 pb-5 space-y-2 border-t border-[var(--border)]">

@@ -170,7 +170,7 @@ export async function saveBotMemory(
              edit_count = agent_memory.edit_count + 1`,
       [botMemKey(chatId, platform), JSON.stringify(next)],
     );
-  } catch { /* не блокируем */ }
+  } catch (err) { console.error('[saveMsg]', err instanceof Error ? err.message : err); }
 }
 
 export function buildBotMemoryContext(mem: BotMemory): string {
