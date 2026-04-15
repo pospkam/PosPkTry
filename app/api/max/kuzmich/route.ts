@@ -177,9 +177,15 @@ async function handleUpdate(update: MaxUpdate): Promise<void> {
       return;
     }
 
-    // /partner EMAIL — регистрация оператора
-    if (text.toLowerCase().startsWith('/partner ')) {
-      const email = text.slice('/partner '.length).trim();
+    // Регистрация оператора: /partner EMAIL или партнер EMAIL
+    const lc = text.toLowerCase();
+    const partnerPrefix = lc.startsWith('/partner ') ? '/partner '
+      : lc.startsWith('партнер ') ? 'партнер '
+      : lc.startsWith('партнёр ') ? 'партнёр '
+      : lc.startsWith('оператор ') ? 'оператор '
+      : null;
+    if (partnerPrefix) {
+      const email = text.slice(partnerPrefix.length).trim();
       if (email.includes('@')) {
         const name = await registerOperatorChatId(chatId, email);
         if (name) {
@@ -188,7 +194,7 @@ async function handleUpdate(update: MaxUpdate): Promise<void> {
           await maxReply(chatId, 'Email не найден в системе. Проверь адрес или напиши на tourhab.ru.');
         }
       } else {
-        await maxReply(chatId, 'Формат: /partner email@example.com');
+        await maxReply(chatId, 'Напиши: партнер email@example.com');
       }
       return;
     }

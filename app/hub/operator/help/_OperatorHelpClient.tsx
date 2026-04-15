@@ -268,14 +268,17 @@ export default function OperatorHelpClient() {
               <p className="text-sm text-[var(--text-secondary)] mb-2">
                 Отправьте боту команду с вашим email от аккаунта на TourHab:
               </p>
-              <div className="bg-[var(--bg-hover)] rounded-md px-3 py-2 font-mono text-sm text-[var(--text-primary)] flex items-center justify-between">
-                <span>/partner ваш@email.com</span>
-                <CopyButton text="/partner ваш@email.com" />
+              <div className="space-y-2">
+                <div className="bg-[var(--bg-hover)] rounded-md px-3 py-2 font-mono text-sm text-[var(--text-primary)] flex items-center justify-between">
+                  <span>/partner ваш@email.com</span>
+                  <CopyButton text="/partner ваш@email.com" />
+                </div>
+                <p className="text-xs text-[var(--text-muted)]">В MAX мессенджере команды на / не работают — используйте слово без слеша:</p>
+                <div className="bg-[var(--bg-hover)] rounded-md px-3 py-2 font-mono text-sm text-[var(--text-primary)] flex items-center justify-between">
+                  <span>партнер ваш@email.com</span>
+                  <CopyButton text="партнер ваш@email.com" />
+                </div>
               </div>
-              <p className="text-xs text-[var(--text-muted)] mt-1.5">
-                Например: <code className="bg-[var(--bg-hover)] px-1 rounded">/partner ivan@fishingkam.ru</code>
-                <CopyButton text="/partner ivan@fishingkam.ru" />
-              </p>
             </div>
           </div>
 
