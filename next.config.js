@@ -35,6 +35,11 @@ const nextConfig = {
     ],
   },
 
+  // Include migrations in standalone output (needed for apply-migration endpoint)
+  outputFileTracingIncludes: {
+    '/api/admin/apply-migration': ['./migrations/**/*'],
+  },
+
   // Исключить dev/ML пакеты из standalone — критично для лимита 50MB Timeweb
   outputFileTracingExcludes: {
     '*': [
