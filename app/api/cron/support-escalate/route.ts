@@ -14,12 +14,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getOverdueTickets, escalateTicket } from '@/lib/support/ticket.service';
 import { notifyAdminEscalated } from '@/lib/telegram/admin-notify';
+import { timingSafeCompare } from '@/lib/security/timing-safe';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   const secret = request.nextUrl.searchParams.get('secret');
-  if (secret !== process.env.CRON_SECRET) {
+  if (!timingSafeCompare(secret, process.env.CRON_SECRET ?? '')) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

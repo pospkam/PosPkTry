@@ -5,11 +5,12 @@
  */
 
 import { syncAllChannels } from '@/lib/channels/channel-manager';
+import { timingSafeCompare } from '@/lib/security/timing-safe';
 
 export async function GET(req: Request) {
   const secret = new URL(req.url).searchParams.get('secret');
   if (!process.env.CRON_SECRET) return Response.json({ error: 'CRON_SECRET not configured' }, { status: 500 });
-  if (secret !== process.env.CRON_SECRET) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!timingSafeCompare(secret, process.env.CRON_SECRET)) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
   const started = Date.now();
 

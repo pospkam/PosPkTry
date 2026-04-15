@@ -13,6 +13,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { syncUserDemandToAgentMemory } from '@/lib/agents/memory/memory-bridge';
+import { timingSafeCompare } from '@/lib/security/timing-safe';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
   const secret = request.headers.get('x-cron-secret')
     ?? request.nextUrl.searchParams.get('secret');
 
-  if (secret !== process.env.CRON_SECRET) {
+  if (!timingSafeCompare(secret, process.env.CRON_SECRET ?? '')) {
     return NextResponse.json({ error: 'Неавторизованный доступ' }, { status: 401 });
   }
 

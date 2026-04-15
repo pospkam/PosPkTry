@@ -152,7 +152,8 @@ export class AgentMemory {
         [memoryType ?? null, limit]
       );
       return rows;
-    } catch {
+    } catch (err) {
+      console.error('[agent-memory] recallShared() failed:', err instanceof Error ? err.message : err);
       return [];
     }
   }
@@ -171,7 +172,8 @@ export class AgentMemory {
         [agentId, memoryType, key]
       );
       return rows[0] ?? null;
-    } catch {
+    } catch (err) {
+      console.error('[agent-memory] get() failed:', err instanceof Error ? err.message : err);
       return null;
     }
   }
@@ -185,7 +187,8 @@ export class AgentMemory {
         `DELETE FROM agent_memory WHERE expires_at IS NOT NULL AND expires_at < NOW()`
       );
       return result.rowCount ?? 0;
-    } catch {
+    } catch (err) {
+      console.error('[agent-memory] cleanup() failed:', err instanceof Error ? err.message : err);
       return 0;
     }
   }
@@ -200,7 +203,8 @@ export class AgentMemory {
          WHERE expires_at IS NULL OR expires_at > NOW()`
       );
       return parseInt(rows[0]?.cnt ?? '0', 10);
-    } catch {
+    } catch (err) {
+      console.error('[agent-memory] count() failed:', err instanceof Error ? err.message : err);
       return 0;
     }
   }
@@ -225,7 +229,8 @@ export class AgentMemory {
         [agentId, limit]
       );
       return rows;
-    } catch {
+    } catch (err) {
+      console.error('[agent-memory] recallCore() failed:', err instanceof Error ? err.message : err);
       return [];
     }
   }
@@ -260,7 +265,8 @@ export class AgentMemory {
         params
       );
       return rows;
-    } catch {
+    } catch (err) {
+      console.error('[agent-memory] recallByTags() failed:', err instanceof Error ? err.message : err);
       return [];
     }
   }
@@ -277,7 +283,8 @@ export class AgentMemory {
         [agentId, memoryType, key]
       );
       return (result.rowCount ?? 0) > 0;
-    } catch {
+    } catch (err) {
+      console.error('[agent-memory] promoteToCore() failed:', err instanceof Error ? err.message : err);
       return false;
     }
   }
@@ -325,7 +332,8 @@ export class AgentMemory {
         reason: string | null;
         created_at: string;
       }>;
-    } catch {
+    } catch (err) {
+      console.error('[agent-memory] getEditHistory() failed:', err instanceof Error ? err.message : err);
       return [];
     }
   }
@@ -346,7 +354,8 @@ export class AgentMemory {
         total_edits: parseInt(rows[0]?.total_edits ?? '0', 10),
         unique_keys: parseInt(rows[0]?.unique_keys ?? '0', 10),
       };
-    } catch {
+    } catch (err) {
+      console.error('[agent-memory] getEditStats() failed:', err instanceof Error ? err.message : err);
       return { total_edits: 0, unique_keys: 0 };
     }
   }
