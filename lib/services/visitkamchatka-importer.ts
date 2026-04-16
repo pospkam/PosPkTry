@@ -127,7 +127,7 @@ function parseRoutes(text: string, isMarkdown: boolean): ScrapedRoute[] {
     routes.push({
       title: rawTitle,
       filename,
-      pdfUrl: isMarkdown ? fullPathOrUrl : fullPathOrUrl,
+      pdfUrl: fullPathOrUrl,
       season,
       htmlSlug,
       description: null,
