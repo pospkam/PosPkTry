@@ -70,6 +70,50 @@ export async function registerOperatorChatId(
   }
 }
 
+/**
+ * Привязать MAX chat_id к оператору по email.
+ * Используется при команде "партнер EMAIL" в MAX боте.
+ */
+export async function registerOperatorMaxChatId(
+  chatId: number,
+  email: string,
+): Promise<string | null> {
+  try {
+    const { rows } = await pool.query<{ id: number; name: string; max_chat_id: string | null }>(
+      `SELECT id, COALESCE(company_name, name) AS name, max_chat_id
+       FROM partners
+       WHERE LOWER(contact->>'email') = LOWER($1) AND status != 'blocked'
+       LIMIT 1`,
+      [email.trim()],
+    );
+    if (!rows[0]) return null;
+    if (rows[0].max_chat_id === String(chatId)) return rows[0].name;
+    await pool.query(
+      `UPDATE partners SET max_chat_id = $1, updated_at = NOW() WHERE id = $2`,
+      [chatId, rows[0].id],
+    );
+    return rows[0].name;
+  } catch (err) {
+    console.error('[operator-chat] registerOperatorMaxChatId failed:', err instanceof Error ? err.message : err);
+    return null;
+  }
+}
+
+/** Найти оператора по MAX chat_id. */
+export async function findOperatorByMaxChatId(chatId: number): Promise<OperatorContext | null> {
+  try {
+    const { rows } = await pool.query<{ id: number; name: string }>(
+      `SELECT id, COALESCE(company_name, name) AS name
+       FROM partners
+       WHERE max_chat_id = $1 AND status != 'blocked'
+       LIMIT 1`,
+      [chatId],
+    );
+    if (!rows[0]) return null;
+    return { partnerId: rows[0].id, partnerName: rows[0].name };
+  } catch { return null; }
+}
+
 /** Загрузить бизнес-контекст оператора для системного промпта. */
 async function buildOperatorContext(partnerId: number, partnerName: string): Promise<string> {
   const now = new Date();

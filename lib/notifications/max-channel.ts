@@ -93,6 +93,25 @@ export async function maxPostPhotoToChannel(
 }
 
 /**
+ * Отправить личное сообщение пользователю MAX по chat_id.
+ * Используется для уведомлений операторам.
+ */
+export async function maxSendDm(chatId: number | string, text: string): Promise<{ ok: boolean; error?: string }> {
+  const api = getApi();
+  if (!api) return { ok: false, error: 'MAX_BOT_TOKEN not set' };
+
+  const id = typeof chatId === 'string' ? parseInt(chatId, 10) : chatId;
+  if (isNaN(id)) return { ok: false, error: 'invalid chat_id' };
+
+  try {
+    await api.sendMessageToChat(id, text, { format: 'html' });
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'MAX API error' };
+  }
+}
+
+/**
  * Утилита: найти все чаты бота (для определения channel_id).
  * Вызывать вручную из /api/max/setup для поиска канала.
  */

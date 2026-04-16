@@ -1,7 +1,10 @@
 /**
- * Telegram notifications for operator booking events
- * Sends to: TELEGRAM_CHAT_ID (admin), operator's own chat if configured
+ * Notifications for operator booking events.
+ * Sends to: Telegram (admin + operator) AND MAX (operator, если подключён).
+ * MAX — работает без VPN в РФ, приоритет для операторов.
  */
+
+import { maxSendDm } from '@/lib/notifications/max-channel';
 
 async function tgSend(chatId: string, text: string): Promise<void> {
   const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -32,6 +35,7 @@ export interface BookingNotifyPayload {
   final_price?: number;
   operator_name: string;
   operator_telegram_chat_id?: string;
+  operator_max_chat_id?: string | number | null;
   via?: string; // 'website' | 'direct_contact' | 'api'
 }
 
@@ -61,15 +65,18 @@ export async function notifyNewBooking(payload: BookingNotifyPayload): Promise<v
     .filter(Boolean)
     .join('\n');
 
-  // Always notify admin
+  // Всегда уведомляем админа в Telegram
   const adminChatId = process.env.TELEGRAM_CHAT_ID;
-  if (adminChatId) {
-    await tgSend(adminChatId, text);
-  }
+  if (adminChatId) await tgSend(adminChatId, text);
 
-  // Notify operator if they have a chat_id configured
+  // Оператор: Telegram (если настроен)
   if (payload.operator_telegram_chat_id) {
     await tgSend(payload.operator_telegram_chat_id, text);
+  }
+
+  // Оператор: MAX (работает без VPN — приоритетный канал)
+  if (payload.operator_max_chat_id) {
+    await maxSendDm(payload.operator_max_chat_id, text).catch(() => {});
   }
 }
 

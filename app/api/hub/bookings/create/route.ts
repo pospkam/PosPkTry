@@ -125,23 +125,24 @@ export async function POST(req: NextRequest) {
     // Уведомление оператору — fire-and-forget, не блокирует ответ
     void (async () => {
       try {
-        const opRow = await pool.query<{ name: string; telegram_chat_id: string | null }>(
-          `SELECT name, telegram_chat_id FROM partners WHERE id = $1 LIMIT 1`,
+        const opRow = await pool.query<{ name: string; telegram_chat_id: string | null; max_chat_id: number | null }>(
+          `SELECT name, telegram_chat_id, max_chat_id FROM partners WHERE id = $1 LIMIT 1`,
           [result.tour.operator_id],
         );
         const op = opRow.rows[0];
         await notifyNewBooking({
-          booking_id:                   String(result.bookingId),
-          tour_title:                   result.tour.title,
-          tourist_name:                 data.tourist_name,
-          tourist_phone:                data.tourist_phone,
-          tourist_email:                data.tourist_email,
-          booking_date:                 data.booking_date,
-          participants:                 data.participants_count,
-          final_price:                  result.total_price,
-          operator_name:                op?.name ?? 'Оператор',
-          operator_telegram_chat_id:    op?.telegram_chat_id ?? undefined,
-          via:                          'website',
+          booking_id:                String(result.bookingId),
+          tour_title:                result.tour.title,
+          tourist_name:              data.tourist_name,
+          tourist_phone:             data.tourist_phone,
+          tourist_email:             data.tourist_email,
+          booking_date:              data.booking_date,
+          participants:              data.participants_count,
+          final_price:               result.total_price,
+          operator_name:             op?.name ?? 'Оператор',
+          operator_telegram_chat_id: op?.telegram_chat_id ?? undefined,
+          operator_max_chat_id:      op?.max_chat_id ?? undefined,
+          via:                       'website',
         });
       } catch {
         // Non-fatal

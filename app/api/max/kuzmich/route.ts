@@ -12,7 +12,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Bot, type Api } from '@maxhub/max-bot-api';
 import { type PendingBooking, cleanupPending, processMessage } from '@/lib/kuzmich/core';
-import { registerOperatorChatId } from '@/lib/kuzmich/operator-chat';
+import { registerOperatorMaxChatId, findOperatorByMaxChatId } from '@/lib/kuzmich/operator-chat';
 import { pool } from '@/lib/db-pool';
 
 type ButtonIntent = 'default' | 'positive' | 'negative';
@@ -321,9 +321,9 @@ async function handleUpdate(update: MaxUpdate): Promise<void> {
     if (partnerPrefix) {
       const email = text.slice(partnerPrefix.length).trim();
       if (email.includes('@')) {
-        const name = await registerOperatorChatId(chatId, email);
+        const name = await registerOperatorMaxChatId(chatId, email);
         if (name) {
-          await maxReply(chatId, `Привет, ${name}! Ты подключён как оператор.\n\nТеперь могу отвечать на вопросы о бронированиях, турах и статистике. Пиши.`);
+          await maxReply(chatId, `Привет, ${name}! Ты подключён как оператор в MAX.\n\nБуду присылать уведомления о новых бронированиях сюда. Также могу отвечать на вопросы о турах и статистике. Пиши.`);
         } else {
           await maxReply(chatId, 'Email не найден в системе. Проверь адрес или напиши на tourhab.ru.');
         }
