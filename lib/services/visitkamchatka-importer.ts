@@ -14,6 +14,7 @@
 
 import { pool } from '@/lib/db-pool';
 import { createHash } from 'crypto';
+import { firecrawlScrape, firecrawlAvailable } from '@/lib/services/firecrawl';
 
 const BASE_URL = 'https://visitkamchatka.ru';
 const SOURCE_NAME = 'visitkamchatka.ru';
@@ -91,25 +92,26 @@ const HTML_ROUTES: Record<string, string> = {
   'vodopad-snezhnyy-bars-na-ruche-spokoynyy': 'Водопад на ручье Спокойный',
 };
 
-// ── Скрапинг списка маршрутов с route-passports ───────────────────────────────
+// ── Скрапинг списка маршрутов: Firecrawl → markdown, иначе raw HTML ──────────
 
-async function scrapeRouteList(): Promise<ScrapedRoute[]> {
-  const resp = await fetch(`${BASE_URL}/route-passports/`, {
-    headers: { 'User-Agent': 'Mozilla/5.0 TourhubBot/1.0' },
-    signal: AbortSignal.timeout(15000),
-  });
-  if (!resp.ok) throw new Error(`HTTP ${resp.status} from visitkamchatka.ru`);
-  const html = await resp.text();
-
-  // Извлекаем <a href="/upload/route_passports/...">НАЗВАНИЕ PDF (...)</a>
-  const re = /href="(\/upload\/route_passports\/([^"]+))"[^>]*>([\s\S]*?)<\/a>/g;
+function parseRoutes(text: string, isMarkdown: boolean): ScrapedRoute[] {
   const seen = new Set<string>();
   const routes: ScrapedRoute[] = [];
 
+  // Markdown pattern: [НАЗВАНИЕ (PDF)](https://visitkamchatka.ru/upload/route_passports/FILE.pdf)
+  // HTML pattern:     href="/upload/route_passports/FILE.pdf" ...>НАЗВАНИЕ<
+  const re = isMarkdown
+    ? /\[([^\]]+?)\]\((https:\/\/visitkamchatka\.ru\/upload\/route_passports\/([^)]+))\)/g
+    : /href="(\/upload\/route_passports\/([^"]+))"[^>]*>([\s\S]*?)<\/a>/g;
+
   let m: RegExpExecArray | null;
-  while ((m = re.exec(html)) !== null) {
-    const [, fullPath, filename] = m;
-    const rawTitle = m[3].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').replace(/PDF.*/i, '').trim();
+  while ((m = re.exec(text)) !== null) {
+    const filename = isMarkdown ? m[3] : m[2];
+    const rawTitle = isMarkdown
+      ? m[1].replace(/\s*\(PDF[^)]*\)/i, '').replace(/\s+/g, ' ').trim()
+      : m[3].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').replace(/PDF.*/i, '').trim();
+    const fullPathOrUrl = isMarkdown ? m[2] : `${BASE_URL}${m[1]}`;
+
     if (!rawTitle || seen.has(filename)) continue;
     seen.add(filename);
 
@@ -118,7 +120,6 @@ async function scrapeRouteList(): Promise<ScrapedRoute[]> {
       fnLow.includes('winter') ? 'winter' :
       fnLow.includes('summer') ? 'summer' : 'all';
 
-    // Найдём совпадение с HTML-страницей по названию
     const htmlSlug = Object.entries(HTML_ROUTES).find(([, t]) =>
       t.toLowerCase() === rawTitle.toLowerCase()
     )?.[0] ?? null;
@@ -126,7 +127,7 @@ async function scrapeRouteList(): Promise<ScrapedRoute[]> {
     routes.push({
       title: rawTitle,
       filename,
-      pdfUrl: `${BASE_URL}${fullPath}`,
+      pdfUrl: isMarkdown ? fullPathOrUrl : fullPathOrUrl,
       season,
       htmlSlug,
       description: null,
@@ -134,6 +135,26 @@ async function scrapeRouteList(): Promise<ScrapedRoute[]> {
   }
 
   return routes;
+}
+
+async function scrapeRouteList(): Promise<ScrapedRoute[]> {
+  // Попытка 1: Firecrawl (если ключ есть) — стабильнее к изменениям вёрстки
+  if (firecrawlAvailable()) {
+    const page = await firecrawlScrape(`${BASE_URL}/route-passports/`);
+    if (page && page.markdown) {
+      const routes = parseRoutes(page.markdown, true);
+      if (routes.length > 10) return routes; // достаточно данных — возвращаем
+    }
+  }
+
+  // Попытка 2: raw HTML + regex (fallback)
+  const resp = await fetch(`${BASE_URL}/route-passports/`, {
+    headers: { 'User-Agent': 'Mozilla/5.0 TourhubBot/1.0' },
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!resp.ok) throw new Error(`HTTP ${resp.status} from visitkamchatka.ru`);
+  const html = await resp.text();
+  return parseRoutes(html, false);
 }
 
 // ── Скрапинг HTML-описания ────────────────────────────────────────────────────

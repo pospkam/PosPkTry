@@ -21,6 +21,7 @@ import { agentMemory } from '@/lib/agents/memory/agent-memory';
 import { knowledgeBase } from '@/lib/agents/memory/agent-knowledge';
 import { pool } from '@/lib/db-pool';
 import { postAINewsToChannel, postTravelNewsToChannel } from '@/lib/notifications/telegram-channel';
+import { firecrawlScrape, firecrawlAvailable } from '@/lib/services/firecrawl';
 import type { ChatMessage } from '@/lib/ai/prompts';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -301,6 +302,43 @@ async function searchBrave(query: string): Promise<RawSignal[]> {
   }
 }
 
+// ── Competitor page scraping via Firecrawl ───────────────────────────────────
+
+const COMPETITOR_URLS = [
+  'https://explore-kamchatka.ru',
+  'https://kam.tours',
+  'https://kamchatkaland.ru',
+];
+
+async function scrapeCompetitorPages(): Promise<RawSignal[]> {
+  if (!firecrawlAvailable()) return [];
+
+  const results = await Promise.allSettled(
+    COMPETITOR_URLS.map(async (url) => {
+      const page = await firecrawlScrape(url);
+      if (!page?.markdown) return [] as RawSignal[];
+
+      const host = new URL(url).hostname;
+      const excerpt = page.markdown
+        .replace(/#+\s*/g, '')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim()
+        .slice(0, 800);
+
+      return [{
+        title: page.metadata.title ?? host,
+        url,
+        snippet: excerpt,
+        source: `firecrawl:${host}`,
+      }] as RawSignal[];
+    }),
+  );
+
+  return results
+    .filter((r): r is PromiseFulfilledResult<RawSignal[]> => r.status === 'fulfilled')
+    .flatMap(r => r.value);
+}
+
 // ── Core Intelligence Gathering ──────────────────────────────────────────────
 
 async function gatherDomain(domainKey: string, config: DomainSource): Promise<RawSignal[]> {
@@ -315,7 +353,13 @@ async function gatherDomain(domainKey: string, config: DomainSource): Promise<Ra
     signals.push(...brave);
   }
 
-  // 2. Always fetch RSS (free, complementary data)
+  // 2. Firecrawl competitor pages (только для домена competitors)
+  if (domainKey === 'competitors') {
+    const competitorSignals = await scrapeCompetitorPages();
+    signals.push(...competitorSignals);
+  }
+
+  // 3. Always fetch RSS (free, complementary data)
   const rssPromises = config.rss.map(url =>
     fetchFeed(url).then(items => {
       updateSourceStatus(url, null);
