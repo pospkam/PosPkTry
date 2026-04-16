@@ -39,6 +39,17 @@ export interface PendingBooking {
 // ── Системный промпт ──────────────────────────────────────────────────────────
 
 /** Strip emoji + markdown leftovers from AI response */
+// Список известных строк AI-ошибок — не сохранять в историю
+const AI_ERROR_STRINGS = [
+  'Извините, сервис временно недоступен',
+  'Сервис временно недоступен',
+  'Что-то с сигналом',
+];
+
+function isAIErrorResponse(text: string): boolean {
+  return AI_ERROR_STRINGS.some(s => text.startsWith(s));
+}
+
 function cleanAIResponse(raw: string): string {
   let t = raw;
   // Strip emoji codepoints
@@ -48,6 +59,9 @@ function cleanAIResponse(raw: string): string {
   t = t.replace(/__(.+?)__/g, '$1');
   // *italic* → italic
   t = t.replace(/(?<!\n)\*(?!\s)(.+?)(?<!\s)\*/g, '$1');
+  // <b>bold</b> → bold (strip HTML bold from AI — booking flow uses it intentionally)
+  t = t.replace(/<b>([\s\S]*?)<\/b>/gi, '$1');
+  t = t.replace(/<i>([\s\S]*?)<\/i>/gi, '$1');
   // # headers → plain
   t = t.replace(/^#{1,6}\s+/gm, '');
   // * bullet lists → dash
@@ -1511,7 +1525,10 @@ export async function aiChat(opts: {
     }
   }
 
-  await saveMsg(chatId, mode, 'assistant', answer, userId, userName);
+  // Не сохраняем системные ошибки в историю — иначе они отравляют контекст следующих сообщений
+  if (!isAIErrorResponse(answer)) {
+    await saveMsg(chatId, mode, 'assistant', answer, userId, userName);
+  }
   await reply(chatId, answer);
 
   if (afterReply) await afterReply(chatId, answer);
