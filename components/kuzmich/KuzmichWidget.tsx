@@ -2,18 +2,126 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
-import { Sparkles, Send, Loader2, X, MessageCircle, Camera, ExternalLink, Fish, Mountain, Droplets, Waves } from 'lucide-react';
+import { Sparkles, Send, Loader2, X, MessageCircle, Camera, ExternalLink, Fish, Mountain, Droplets, Waves, CheckCircle, Minus, Plus } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
 // Страницы где виджет не нужен
 const HIDDEN_PATHS = ['/', '/kuzmich', '/hub/admin', '/hub/operator'];
 
+interface BookingFormData {
+  tourId: number;
+  tourTitle: string;
+  tourPrice: number;
+  tourImage: string | null;
+  operatorName: string;
+}
+
 interface Message {
   role: 'user' | 'assistant';
   content: string;
   imagePreview?: string;
   tours?: { id: number; title: string; base_price: number; tour_image: string | null; operator_name: string }[];
+  bookingForm?: BookingFormData;
+  bookingConfirmed?: { id: number };
+}
+
+// ── Компактная форма бронирования для виджета ──────────────────────────────────
+function BookingWidget({ data, onDone }: { data: BookingFormData; onDone: (id: number) => void }) {
+  const [name,  setName]  = useState('');
+  const [phone, setPhone] = useState('');
+  const [date,  setDate]  = useState('');
+  const [qty,   setQty]   = useState(1);
+  const [busy,  setBusy]  = useState(false);
+  const [err,   setErr]   = useState('');
+  const [done,  setDone]  = useState(false);
+  const [bookingId, setBookingId] = useState<number | null>(null);
+
+  const minDate = new Date();
+  minDate.setDate(minDate.getDate() + 1);
+  const minDateStr = minDate.toISOString().split('T')[0];
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!name.trim() || !phone.trim() || !date) { setErr('Заполните все поля'); return; }
+    setBusy(true); setErr('');
+    try {
+      const res = await fetch('/api/hub/bookings/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tour_id: data.tourId,
+          tourist_name: name.trim(),
+          tourist_phone: phone.trim(),
+          participants_count: qty,
+          booking_date: date,
+        }),
+      });
+      const json = await res.json() as { id?: number; error?: string };
+      if (!res.ok) throw new Error(json.error ?? 'Ошибка сервера');
+      const id = json.id!;
+      setDone(true);
+      setBookingId(id);
+      onDone(id);
+    } catch (ex) {
+      setErr(ex instanceof Error ? ex.message : 'Попробуйте позже');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (done && bookingId) {
+    return (
+      <div className="rounded-xl border border-[var(--success)]/30 bg-[var(--success)]/5 p-3 flex flex-col gap-2">
+        <div className="flex items-center gap-2 text-[var(--success)] text-xs font-medium">
+          <CheckCircle size={14} />
+          Бронирование #{bookingId} создано
+        </div>
+        <a href={`/booking-success/${bookingId}`} target="_blank" rel="noopener noreferrer"
+          className="text-xs text-center py-2 rounded-lg bg-[var(--accent)] text-white hover:opacity-90 transition-opacity">
+          Перейти к оплате
+        </a>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={e => { void submit(e); }}
+      className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-3 flex flex-col gap-2">
+      <div className="flex flex-col gap-0.5">
+        <p className="text-xs font-semibold text-[var(--text-primary)] leading-tight">{data.tourTitle}</p>
+        <p className="text-xs text-[var(--accent)]">от {data.tourPrice.toLocaleString('ru-RU')} ₽/чел</p>
+      </div>
+      <input required value={name} onChange={e => setName(e.target.value)}
+        placeholder="Ваше имя"
+        className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none focus:border-[var(--accent)] transition-colors" />
+      <input required value={phone} onChange={e => setPhone(e.target.value)}
+        placeholder="+7 900 000-00-00" type="tel"
+        className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none focus:border-[var(--accent)] transition-colors" />
+      <input required value={date} onChange={e => setDate(e.target.value)}
+        type="date" min={minDateStr}
+        className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] text-[var(--text-primary)] outline-none focus:border-[var(--accent)] transition-colors" />
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-[var(--text-secondary)]">Человек:</span>
+        <div className="flex items-center gap-2">
+          <button type="button" onClick={() => setQty(q => Math.max(1, q - 1))}
+            className="w-6 h-6 rounded-full border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] hover:border-[var(--accent)] transition-colors">
+            <Minus size={10} />
+          </button>
+          <span className="text-xs font-medium w-4 text-center text-[var(--text-primary)]">{qty}</span>
+          <button type="button" onClick={() => setQty(q => Math.min(20, q + 1))}
+            className="w-6 h-6 rounded-full border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] hover:border-[var(--accent)] transition-colors">
+            <Plus size={10} />
+          </button>
+        </div>
+      </div>
+      {err && <p className="text-xs text-[var(--danger)]">{err}</p>}
+      <button type="submit" disabled={busy}
+        className="w-full py-2 rounded-lg bg-[var(--accent)] text-white text-xs font-medium disabled:opacity-50 hover:opacity-90 transition-opacity flex items-center justify-center gap-1.5">
+        {busy ? <><Loader2 size={11} className="animate-spin" /> Отправляем...</> : 'Забронировать'}
+      </button>
+    </form>
+  );
 }
 
 export default function KuzmichWidget() {
@@ -138,7 +246,14 @@ export default function KuzmichWidget() {
           ...utmRef.current,
         }),
       });
-      const data = await res.json() as { data?: { answer?: string; tours?: Message['tours']; limitReached?: boolean } };
+      const data = await res.json() as {
+        data?: {
+          answer?: string;
+          tours?: Message['tours'];
+          limitReached?: boolean;
+          bookingForm?: BookingFormData;
+        }
+      };
 
       if (data.data?.limitReached) {
         setMessages(prev => [...prev, {
@@ -152,6 +267,7 @@ export default function KuzmichWidget() {
         role: 'assistant',
         content: data.data?.answer ?? 'Попробуйте ещё раз.',
         ...(data.data?.tours?.length ? { tours: data.data.tours } : {}),
+        ...(data.data?.bookingForm ? { bookingForm: data.data.bookingForm } : {}),
       }]);
     } catch {
       setMessages(prev => [...prev, { role: 'assistant', content: 'Нет связи. Попробуйте позже.' }]);
@@ -259,6 +375,23 @@ export default function KuzmichWidget() {
                         : 'bg-[var(--bg-hover)] text-[var(--text-primary)] rounded-bl-sm'
                     }`}>
                       {msg.content}
+                    </div>
+                  )}
+                  {/* Форма бронирования */}
+                  {msg.bookingForm && !msg.bookingConfirmed && (
+                    <BookingWidget
+                      data={msg.bookingForm}
+                      onDone={(id) => {
+                        setMessages(prev => prev.map((m, idx) =>
+                          idx === i ? { ...m, bookingForm: undefined, bookingConfirmed: { id } } : m
+                        ));
+                      }}
+                    />
+                  )}
+                  {msg.bookingConfirmed && (
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--success)]/10 text-[var(--success)] text-xs">
+                      <CheckCircle size={13} />
+                      Бронирование #{msg.bookingConfirmed.id} создано
                     </div>
                   )}
                   {/* Мини-карточки туров */}

@@ -584,6 +584,82 @@ ${signalCtx}
   return result;
 }
 
+/**
+ * Publishes a travel industry intelligence finding to TourHub channel with image.
+ * Only called for travel_industry domain, notable/critical urgency.
+ */
+export async function postTravelNewsToChannel(finding: IntelligenceFinding): Promise<{ ok: boolean; error?: string }> {
+  const channelId = process.env.TELEGRAM_CHANNEL_ID;
+  if (!channelId) return { ok: false, error: 'TELEGRAM_CHANNEL_ID not set' };
+
+  // 1. Build context from signals (top 3)
+  const signalCtx = finding.signals
+    .slice(0, 3)
+    .map((s, i) => `[${i + 1}] ${s.title}\n${s.snippet.slice(0, 150)}`)
+    .join('\n\n');
+
+  // 2. AI generates post for tourists/platform users
+  const postPrompt = `Ты — маркетолог туристической платформы Камчатки. Напиши пост для публичного Telegram-канала про новости в туристической индустрии.
+
+ИСХОДНЫЕ ДАННЫЕ:
+Анализ: ${finding.summary}
+Ключевые действия: ${finding.action_items.join('; ')}
+
+ИСТОЧНИКИ:
+${signalCtx}
+
+ТРЕБОВАНИЯ:
+- 80-120 слов, увлекательный стиль, актуально для туристов
+- Заголовок жирным про туризм/путешествия
+- 2-3 факта из источников (регуляции, цены, новые маршруты, тренды)
+- Практический вывод: как это влияет на туры Камчатки
+- В конце ссылка: <a href="https://tourhab.ru/routes">Наши маршруты →</a>
+- Хэштеги: #Путешествия #Туризм #Камчатка
+- HTML-теги для Telegram: <b> <i> <a>
+- Без markdown (* ** #), без эмодзи
+- Пиши на русском`;
+
+  let postText: string;
+  try {
+    postText = await callAIWithModelDirect(
+      [{ role: 'user', content: postPrompt }],
+      'google/gemini-2.0-flash-001',
+    );
+  } catch {
+    // Fallback: use raw summary
+    postText = `<b>Новости туризма</b>\n\n${esc(finding.summary)}`;
+    if (finding.action_items.length > 0) {
+      postText += '\n\n' + finding.action_items.map(a => `• ${esc(a)}`).join('\n');
+    }
+    postText += '\n\n<a href="https://tourhab.ru/routes">Наши маршруты →</a>';
+  }
+
+  // 3. Generate image (Kamchatka nature focus)
+  const imagePromptText = `wild Kamchatka landscape photography, dramatic volcanic mountains, bears fishing, snow-capped peaks, pristine wilderness, turquoise geysers, cinematic, 8K, no people, no text, no watermarks`;
+  const seed = Math.floor(Math.random() * 9_999_999);
+  const imageUrl = buildPollinationsUrl(imagePromptText, seed, 1280, 720);
+
+  // 4. Publish to TourHub channel (with MAX parallel post)
+  const result = await postToAllChannels(channelId, postText, imageUrl);
+
+  // 5. Log action
+  if (result.ok) {
+    try {
+      await query(
+        `INSERT INTO ai_actions_log (action_type, metadata) VALUES ($1, $2)`,
+        ['travel_news_post', JSON.stringify({
+          domain: finding.domain,
+          urgency: finding.urgency,
+          summary: finding.summary.slice(0, 200),
+          signals_count: finding.signals.length,
+        })],
+      );
+    } catch { /* not critical */ }
+  }
+
+  return result;
+}
+
 // ── Safety/News post ─────────────────────────────────────────────────────────
 
 /** Parse RSS headlines (lightweight) */

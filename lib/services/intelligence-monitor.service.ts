@@ -20,7 +20,7 @@ import { callAIWithModelDirect } from '@/lib/ai/providers';
 import { agentMemory } from '@/lib/agents/memory/agent-memory';
 import { knowledgeBase } from '@/lib/agents/memory/agent-knowledge';
 import { pool } from '@/lib/db-pool';
-import { postAINewsToChannel } from '@/lib/notifications/telegram-channel';
+import { postAINewsToChannel, postTravelNewsToChannel } from '@/lib/notifications/telegram-channel';
 import type { ChatMessage } from '@/lib/ai/prompts';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -524,6 +524,14 @@ export async function runIntelligenceCycle(): Promise<IntelligenceReport> {
   for (const f of aiFindings) {
     await postAINewsToChannel(f).catch(err => {
       console.error('[intelligence] AI news publish failed:', err instanceof Error ? err.message : err);
+    });
+  }
+
+  // Publish travel industry news to TourHub channel
+  const travelFindings = findings.filter(f => f.domain === 'travel_industry' && (f.urgency === 'critical' || f.urgency === 'notable'));
+  for (const f of travelFindings) {
+    await postTravelNewsToChannel(f).catch(err => {
+      console.error('[intelligence] Travel news publish failed:', err instanceof Error ? err.message : err);
     });
   }
 
