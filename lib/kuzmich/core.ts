@@ -96,6 +96,20 @@ export const KUZMICH_SYSTEM = `Ты Кузьмич — AI-помощник пл�
 -> Коротко дай резюме: тур, цена-ориентир, что уточняется перед оплатой.
 -> Если человек сам спросит про бронирование — объясни как оставить заявку.
 
+КООРДИНАТЫ: если есть в блоке "МЕСТА ПО ЗАПРОСУ" — называй точные. Если нет — не придумывай. Скажи что точные координаты лучше проверить в Google Maps или 2GIS.
+
+РАССТОЯНИЯ: от Петропавловска-Камчатского: Паратунка 60 км, Малкинские источники 200 км, Налычево 70 км, Мутновский вулкан 80 км, Авачинский вулкан 30 км от города, Толбачик 450 км, Курильское озеро 400 км. Не придумывай расстояния для мест которых нет в этом списке.
+
+СЕЗОННЫЙ КАЛЕНДАРЬ КАМЧАТКИ:
+- Январь–апрель: горные лыжи, снегоходы, сноуборд, зимняя рыбалка подо льдом
+- Май–июнь: начало сезона, сход снега, первые медведи, рыбалка на форель
+- Июль–август: пик сезона. Все маршруты открыты. Горбуша/кета. Медведи на реках. Температура +15..+22°C
+- Сентябрь: лучший месяц для фотографии — осенние цвета + нерест нерки. Температура +8..+15°C
+- Октябрь: конец сезона. Закрываются перевалы. Первый снег
+- Рыбалка: горбуша июль–август, нерка июль–сентябрь, чавыча июнь–июль, кижуч август–октябрь, форель круглый год
+- Вертолётные туры: июнь–сентябрь. Долина гейзеров закрыта зимой (снег)
+- Медведи на реках: пик июль–сентябрь (нерест). Весной медведи голодные — осторожно на тропах
+
 СТИЛЬ: спокойный, конкретный, коротко. Как опытный камчадал разговаривает с гостем — без суеты и без продаж. Без markdown-разметки (* ** # _).
 ЯЗЫК: отвечай на языке собеседника. RU / EN / ZH / JA / KO / DE / FR / ES.`;
 
@@ -353,6 +367,57 @@ export async function buildTourContext(): Promise<string> {
   } catch {
     return '';
   }
+}
+
+// ── Динамический поиск мест по запросу пользователя ─────────────────────────
+
+interface PlaceRow {
+  title: string;
+  description: string | null;
+  lat: string | null;
+  lng: string | null;
+  source_name: string | null;
+}
+
+export async function searchPlaceKnowledge(query: string): Promise<string> {
+  if (!query || query.length < 3) return '';
+  try {
+    // Берём ключевые слова (слова длиннее 3 символов, не стоп-слова)
+    const STOP = new Set(['что', 'где', 'как', 'это', 'там', 'туда', 'мне', 'есть', 'нет', 'они', 'про', 'для', 'его', 'её', 'мне', 'или', 'уже']);
+    const words = query.toLowerCase()
+      .replace(/[^\wа-яёА-ЯЁ ]/g, ' ')
+      .split(/\s+/)
+      .filter(w => w.length > 3 && !STOP.has(w));
+
+    if (!words.length) return '';
+
+    // Ищем по каждому слову отдельно — ILIKE медленный, но надёжный
+    const conditions = words.slice(0, 4).map((_, i) => `(title ILIKE $${i + 1} OR search_text ILIKE $${i + 1})`).join(' OR ');
+    const params = words.slice(0, 4).map(w => `%${w}%`);
+
+    const { rows } = await pool.query<PlaceRow>(
+      `SELECT DISTINCT ON (title) title, description, lat::text, lng::text, source_name
+       FROM agent_route_knowledge
+       WHERE (${conditions})
+         AND is_visible = TRUE
+         AND lat IS NOT NULL AND lat != 0
+       ORDER BY title, updated_at DESC
+       LIMIT 6`,
+      params,
+    );
+
+    if (!rows.length) return '';
+
+    const lines = rows.map(r => {
+      const coords = r.lat && r.lng && parseFloat(r.lat) !== 0
+        ? ` | Координаты: ${parseFloat(r.lat).toFixed(6)}, ${parseFloat(r.lng).toFixed(6)}`
+        : '';
+      const desc = r.description ? ` — ${r.description.slice(0, 200)}` : '';
+      return `- ${r.title}${coords}${desc}`;
+    });
+
+    return `МЕСТА ПО ЗАПРОСУ (точные данные из базы):\n${lines.join('\n')}`;
+  } catch { return ''; }
 }
 
 // ── Live Context: weather, news, MChS ────────────────────────────────────────
@@ -1331,17 +1396,21 @@ export async function aiChat(opts: {
     : text;
   await saveMsg(chatId, mode, 'user', userContent, userId, userName);
 
-  const [history, tourContext, botMemory] = await Promise.all([
+  const [history, tourContext, botMemory, placeCtx] = await Promise.all([
     getHistory(chatId, mode),
     buildTourContext(),
     platform ? loadBotMemory(chatId, platform) : Promise.resolve(null),
+    searchPlaceKnowledge(text),
   ]);
 
-  // Строим системный промпт: туры + память о пользователе
+  // Строим системный промпт: туры + места по запросу + память о пользователе
   const memCtx = botMemory ? buildBotMemoryContext(botMemory) : '';
-  const systemContent = tourContext
-    ? `${KUZMICH_SYSTEM}\n\n${tourContext}${memCtx}`
-    : `${KUZMICH_SYSTEM}${memCtx}`;
+  const systemContent = [
+    KUZMICH_SYSTEM,
+    tourContext || '',
+    placeCtx || '',
+    memCtx || '',
+  ].filter(Boolean).join('\n\n');
 
   // Если есть описание фото — прокидываем его первым сообщением
   const extraUserMsg: ChatMessage[] = visionDescription
