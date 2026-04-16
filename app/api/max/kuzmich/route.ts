@@ -226,6 +226,8 @@ async function handleUpdate(update: MaxUpdate): Promise<void> {
     const msg = update.message;
     const chatId = msg.recipient.chat_id;
     if (!chatId) return;
+    // Ignore group chats and channels (negative chat_ids) — only process DMs
+    if (chatId < 0) return;
 
     const text = msg.body.text?.trim() ?? '';
     const attachments = msg.body.attachments ?? [];
@@ -335,6 +337,14 @@ async function handleUpdate(update: MaxUpdate): Promise<void> {
 
     // Текст
     if (text) {
+      // Operator mode: if sender is a registered operator — route to operator assistant
+      const operator = await findOperatorByMaxChatId(chatId);
+      if (operator) {
+        const { processOperatorMessage } = await import('@/lib/kuzmich/operator-chat');
+        await processOperatorMessage({ chatId, text, fromName: userName, operator, reply: maxReply });
+        return;
+      }
+
       let capturedReply = '';
       const capturingReply = async (id: number, msg: string) => {
         capturedReply = msg;
@@ -366,7 +376,9 @@ async function handleUpdate(update: MaxUpdate): Promise<void> {
       notification: '',
     }).catch(() => {});
 
-    if (!callbackChatId) return;
+    // callbackChatId may be null if callback update has no message — fall back to user_id (DM = user_id in MAX)
+    const resolvedChatId = callbackChatId ?? update.callback.user.user_id;
+    if (!resolvedChatId) return;
 
     const userName = update.callback.user.name;
     const userId = update.callback.user.user_id;
@@ -380,12 +392,12 @@ async function handleUpdate(update: MaxUpdate): Promise<void> {
         await maxReply(id, msg);
       };
       await processMessage({
-        chatId: callbackChatId, text: topicText, userName, userId,
+        chatId: resolvedChatId, text: topicText, userName, userId,
         mode: 'max', createdVia: 'max', pending, reply: capturingReply,
         platform: 'max',
       });
       if (capturedReply && hasTourRecommendation(capturedReply)) {
-        await maxReplyWithButtons(callbackChatId, 'Хотите оформить заявку?', BOOKING_BUTTONS);
+        await maxReplyWithButtons(resolvedChatId, 'Хотите оформить заявку?', BOOKING_BUTTONS);
       }
       return;
     }
@@ -393,7 +405,7 @@ async function handleUpdate(update: MaxUpdate): Promise<void> {
     // Кнопка "Оформить заявку"
     if (payload === 'book_now') {
       await maxReplyWithButtons(
-        callbackChatId,
+        resolvedChatId,
         'Поделитесь номером телефона — оператор свяжется в течение <b>1-2 часов</b>.',
         CONTACT_REQUEST_BUTTONS,
       );
@@ -403,7 +415,7 @@ async function handleUpdate(update: MaxUpdate): Promise<void> {
     // Пропустить → заявка через чат
     if (payload === 'skip_contact') {
       await processMessage({
-        chatId: callbackChatId,
+        chatId: resolvedChatId,
         text: 'Хочу оформить заявку на тур',
         userName, userId,
         mode: 'max', createdVia: 'max', pending, reply: maxReply,
@@ -414,7 +426,7 @@ async function handleUpdate(update: MaxUpdate): Promise<void> {
 
     // Кнопка "Другой вариант"
     if (payload === 'other_tour') {
-      await maxReplyWithButtons(callbackChatId, 'Хорошо! Выберите тему, и я подберу что-то ещё:', START_MENU);
+      await maxReplyWithButtons(resolvedChatId, 'Хорошо! Выберите тему, и я подберу что-то ещё:', START_MENU);
       return;
     }
   }
