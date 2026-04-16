@@ -77,10 +77,10 @@ export async function generateAndCacheDescription(
       return originalDesc || 'Туристический маршрут на Камчатке';
     }
 
-    // Сохраняем в кеш
+    // Сохраняем в кеш (route_id — integer, routeId — строковое число)
     await pool.query(
       `INSERT INTO route_description_cache (route_id, description, model)
-       VALUES ($1, $2, 'ai-waterfall')
+       VALUES ($1::integer, $2, 'ai-waterfall')
        ON CONFLICT (route_id) DO UPDATE
        SET description = EXCLUDED.description,
            generated_at = NOW()`,
@@ -121,23 +121,22 @@ ${snippet ? `Исходное описание: ${snippet}` : ''}
 Описание:`;
 }
 
-/** Batch-обновить описания для маршрутов без кеша */
+/** Batch-обновить описания для operator_tours без кеша */
 export async function refreshRoutesWithoutCache(limit = 50): Promise<number> {
   try {
-    // Найти маршруты без кеша или с кешем старше 90 дней
     const { rows } = await pool.query<{
-      id: string;
+      id: number;
       title: string;
-      category: string;
+      category: string | null;
       location_type: string | null;
       description: string | null;
     }>(
-      `SELECT ark.id, ark.title, ark.category, ark.location_type, ark.description
-       FROM agent_route_knowledge ark
-       LEFT JOIN route_description_cache rdc ON rdc.route_id = ark.id
-       WHERE ark.is_visible = TRUE
-       AND (rdc.id IS NULL OR rdc.generated_at < NOW() - INTERVAL '90 days')
-       ORDER BY ark.created_at DESC
+      `SELECT t.id, t.title, t.activity_type AS category, t.location_type, t.description
+       FROM operator_tours t
+       LEFT JOIN route_description_cache rdc ON rdc.route_id = t.id
+       WHERE t.is_published = TRUE
+         AND (rdc.route_id IS NULL OR rdc.generated_at < NOW() - INTERVAL '90 days')
+       ORDER BY t.created_at DESC
        LIMIT $1`,
       [limit],
     );
@@ -146,21 +145,20 @@ export async function refreshRoutesWithoutCache(limit = 50): Promise<number> {
     for (const route of rows) {
       try {
         await generateAndCacheDescription(
-          route.id,
+          String(route.id),
           route.title,
-          route.category,
+          route.category ?? 'tour',
           route.location_type,
           route.description,
         );
         count++;
       } catch {
-        // Graceful fallback — skip this route and continue
+        // skip and continue
       }
     }
 
     return count;
   } catch {
-    // If query fails, return 0
     return 0;
   }
 }
