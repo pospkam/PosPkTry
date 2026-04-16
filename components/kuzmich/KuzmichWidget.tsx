@@ -30,6 +30,7 @@ interface Message {
 function BookingWidget({ data, onDone }: { data: BookingFormData; onDone: (id: number) => void }) {
   const [name,  setName]  = useState('');
   const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [date,  setDate]  = useState('');
   const [qty,   setQty]   = useState(1);
   const [busy,  setBusy]  = useState(false);
@@ -53,6 +54,7 @@ function BookingWidget({ data, onDone }: { data: BookingFormData; onDone: (id: n
           tour_id: data.tourId,
           tourist_name: name.trim(),
           tourist_phone: phone.trim(),
+          tourist_email: email.trim() || undefined,
           participants_count: qty,
           booking_date: date,
         }),
@@ -97,6 +99,9 @@ function BookingWidget({ data, onDone }: { data: BookingFormData; onDone: (id: n
         className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none focus:border-[var(--accent)] transition-colors" />
       <input required value={phone} onChange={e => setPhone(e.target.value)}
         placeholder="+7 900 000-00-00" type="tel"
+        className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none focus:border-[var(--accent)] transition-colors" />
+      <input value={email} onChange={e => setEmail(e.target.value)}
+        placeholder="Email (необязательно)" type="email"
         className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none focus:border-[var(--accent)] transition-colors" />
       <input required value={date} onChange={e => setDate(e.target.value)}
         type="date" min={minDateStr}

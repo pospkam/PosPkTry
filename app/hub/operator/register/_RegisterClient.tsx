@@ -3,17 +3,20 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function OperatorRegister() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPass, setShowPass] = useState(false);
   const [formData, setFormData] = useState({
     company_name: '',
     contact_name: '',
     email: '',
     phone: '',
-    telegram: ''
+    password: '',
+    telegram: '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -30,16 +33,21 @@ export default function OperatorRegister() {
       const res = await fetch('/api/hub/operator/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData),
       });
 
+      const data = await res.json() as { token?: string; operator_id?: string; error?: string };
+
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Регистрация не удалась');
+        throw new Error(data.error ?? 'Регистрация не удалась');
       }
 
-      const data = await res.json();
-      router.push(`/hub/operator?onboarding=true&id=${data.operator_id}`);
+      // Сохраняем токен — оператор сразу залогинен
+      if (data.token) {
+        try { localStorage.setItem('auth_token', data.token); } catch { /* SSR safe */ }
+      }
+
+      router.push(`/hub/operator?onboarding=true&id=${data.operator_id ?? ''}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка');
     } finally {
@@ -50,14 +58,14 @@ export default function OperatorRegister() {
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center p-4">
       <div className="ds-card max-w-md w-full p-8">
-        <h1 className="ds-h1 mb-2 text-center">Присоединись к KamchatourHub</h1>
+        <h1 className="ds-h1 mb-2 text-center">Присоединись к TourHab</h1>
         <p className="text-center text-[var(--text-secondary)] mb-6 text-sm">
-          Первый месяц - 0% комиссии. Просто тестируешь. Без обмана.
+          Первый месяц — 0% комиссии. Просто тестируешь. Без обмана.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="ds-label">Название компании/тура</label>
+            <label className="ds-label">Название компании / тура</label>
             <input
               type="text"
               name="company_name"
@@ -109,7 +117,30 @@ export default function OperatorRegister() {
           </div>
 
           <div>
-            <label className="ds-label">Telegram (опционально)</label>
+            <label className="ds-label">Пароль</label>
+            <div className="relative">
+              <input
+                type={showPass ? 'text' : 'password'}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                className="ds-input w-full pr-10"
+                placeholder="Минимум 8 символов"
+                minLength={8}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPass(p => !p)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
+              >
+                {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="ds-label">Telegram — для уведомлений о бронях (опционально)</label>
             <input
               type="text"
               name="telegram"
@@ -121,7 +152,7 @@ export default function OperatorRegister() {
           </div>
 
           {error && (
-            <div className="bg-[var(--danger)] bg-opacity-10 border border-[var(--danger)] text-[var(--danger)] p-3 rounded text-sm">
+            <div className="bg-[var(--danger)]/10 border border-[var(--danger)] text-[var(--danger)] p-3 rounded text-sm">
               {error}
             </div>
           )}
@@ -131,14 +162,18 @@ export default function OperatorRegister() {
             disabled={loading}
             className="ds-btn ds-btn-primary w-full"
           >
-            {loading ? 'Загрузка...' : 'Начать бесплатно'}
+            {loading ? 'Создаём аккаунт...' : 'Начать бесплатно'}
           </button>
         </form>
 
         <p className="text-center text-xs text-[var(--text-muted)] mt-6">
-          Зарегистрировавшись, ты согласен с{' '}
+          Уже есть аккаунт?{' '}
+          <Link href="/signin" className="text-[var(--ocean)] hover:underline">
+            Войти
+          </Link>
+          {' · '}
           <Link href="/legal/terms" className="text-[var(--ocean)] hover:underline">
-            условиями
+            Условия
           </Link>
         </p>
       </div>
