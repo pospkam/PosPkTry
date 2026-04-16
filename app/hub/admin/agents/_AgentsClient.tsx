@@ -319,6 +319,9 @@ export default function AgentsClient() {
       {/* Channel posts */}
       <ChannelPostsSection />
 
+      {/* Route import */}
+      <ImportRoutesSection />
+
     </div>
   );
 }
@@ -391,6 +394,53 @@ function ChannelPostsSection() {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+function ImportRoutesSection() {
+  const [state, setState] = useState<{ loading: boolean; result: string | null; error: string | null }>({
+    loading: false, result: null, error: null,
+  });
+
+  async function run() {
+    setState({ loading: true, result: null, error: null });
+    try {
+      const res = await fetch('/api/admin/import/visitkamchatka', { method: 'POST' });
+      const data = await res.json() as { ok: boolean; inserted?: number; updated?: number; total?: number; error?: string };
+      if (data.ok) {
+        setState({ loading: false, result: `Импортировано: ${data.inserted} новых, ${data.updated} обновлено (всего ${data.total})`, error: null });
+      } else {
+        setState({ loading: false, result: null, error: data.error ?? 'Ошибка' });
+      }
+    } catch (e) {
+      setState({ loading: false, result: null, error: e instanceof Error ? e.message : 'Ошибка сети' });
+    }
+  }
+
+  return (
+    <div className="ds-card p-5 mt-4">
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <div className="font-semibold text-[var(--text-primary)]">Импорт маршрутов — visitkamchatka.ru</div>
+          <div className="text-sm text-[var(--text-secondary)] mt-0.5">
+            134 официальных паспорта маршрутов Камчатки → kamchatka_routes + Кузьмич
+          </div>
+        </div>
+        <button
+          onClick={run}
+          disabled={state.loading}
+          className="ds-btn ds-btn-primary text-sm px-4 py-2 disabled:opacity-50"
+        >
+          {state.loading ? 'Импортирую...' : 'Запустить импорт'}
+        </button>
+      </div>
+      {state.result && (
+        <div className="text-sm text-[var(--success)] bg-[var(--success)]/10 rounded px-3 py-2">{state.result}</div>
+      )}
+      {state.error && (
+        <div className="text-sm text-[var(--danger)] bg-[var(--danger)]/10 rounded px-3 py-2">{state.error}</div>
+      )}
     </div>
   );
 }
