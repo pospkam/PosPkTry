@@ -1,0 +1,17 @@
+name: Cron Kuzmich Sezon
+
+on:
+  schedule:
+    - cron: '0 19 * * *'  # 19:00 UTC daily = 07:00 KMT (Kamchatka)
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Kuzmich seasonal post
+        run: |
+          curl -X GET "https://tourhab.ru/api/cron/kuzmich?secret=${{ secrets.CRON_SECRET }}&type=sezon" \
+            -H "Content-Type: application/json" \
+            -H "User-Agent: GitHub-Actions" \
+            --max-time 120 \
+            --fail

@@ -1,0 +1,17 @@
+name: Cron Kuzmich Route
+
+on:
+  schedule:
+    - cron: '0 9 * * *'  # 09:00 UTC daily = 21:00 KMT (Kamchatka)
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Kuzmich route post
+        run: |
+          curl -X GET "https://tourhab.ru/api/cron/kuzmich?secret=${{ secrets.CRON_SECRET }}&type=route" \
+            -H "Content-Type: application/json" \
+            -H "User-Agent: GitHub-Actions" \
+            --max-time 120 \
+            --fail

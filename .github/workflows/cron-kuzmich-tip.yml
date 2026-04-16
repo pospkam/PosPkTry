@@ -1,0 +1,17 @@
+name: Cron Kuzmich Tip
+
+on:
+  schedule:
+    - cron: '0 14 * * *'  # 14:00 UTC daily = 02:00 KMT (Kamchatka)
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Kuzmich tip post
+        run: |
+          curl -X GET "https://tourhab.ru/api/cron/kuzmich?secret=${{ secrets.CRON_SECRET }}&type=tip" \
+            -H "Content-Type: application/json" \
+            -H "User-Agent: GitHub-Actions" \
+            --max-time 120 \
+            --fail
