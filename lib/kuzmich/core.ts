@@ -382,39 +382,77 @@ interface PlaceRow {
 export async function searchPlaceKnowledge(query: string): Promise<string> {
   if (!query || query.length < 3) return '';
   try {
-    // Берём ключевые слова (слова длиннее 3 символов, не стоп-слова)
-    const STOP = new Set(['что', 'где', 'как', 'это', 'там', 'туда', 'мне', 'есть', 'нет', 'они', 'про', 'для', 'его', 'её', 'мне', 'или', 'уже']);
-    const words = query.toLowerCase()
+    const ftsQuery = query
       .replace(/[^\wа-яёА-ЯЁ ]/g, ' ')
-      .split(/\s+/)
-      .filter(w => w.length > 3 && !STOP.has(w));
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 100);
 
-    if (!words.length) return '';
+    if (!ftsQuery) return '';
 
-    // Ищем по каждому слову отдельно — ILIKE медленный, но надёжный
-    const conditions = words.slice(0, 4).map((_, i) => `(title ILIKE $${i + 1} OR search_text ILIKE $${i + 1})`).join(' OR ');
-    const params = words.slice(0, 4).map(w => `%${w}%`);
-
+    // FTS через GIN-индексы — без фильтра is_visible (1127/1258 записей is_visible=false, но имеют координаты)
+    // UNION: agent_route_knowledge (с координатами) + kamchatka_routes (описания с visitkamchatka.ru)
     const { rows } = await pool.query<PlaceRow>(
-      `SELECT DISTINCT ON (title) title, description, lat::text, lng::text, source_name
-       FROM agent_route_knowledge
-       WHERE (${conditions})
-         AND is_visible = TRUE
-         AND lat IS NOT NULL AND lat != 0
-       ORDER BY title, updated_at DESC
-       LIMIT 6`,
-      params,
+      `SELECT title, description, lat, lng, source_name
+       FROM (
+         (
+           SELECT title, description, lat::text AS lat, lng::text AS lng, source_name,
+                  ts_rank(to_tsvector('russian', search_text), plainto_tsquery('russian', $1)) AS rank
+           FROM agent_route_knowledge
+           WHERE to_tsvector('russian', search_text) @@ plainto_tsquery('russian', $1)
+             AND lat IS NOT NULL AND lat != 0
+           ORDER BY rank DESC
+           LIMIT 6
+         )
+         UNION ALL
+         (
+           SELECT title, description, NULL::text AS lat, NULL::text AS lng, source_name,
+                  ts_rank(to_tsvector('russian', title), plainto_tsquery('russian', $1)) AS rank
+           FROM kamchatka_routes
+           WHERE to_tsvector('russian', title) @@ plainto_tsquery('russian', $1)
+             AND description IS NOT NULL
+           ORDER BY rank DESC
+           LIMIT 3
+         )
+       ) combined
+       ORDER BY rank DESC
+       LIMIT 8`,
+      [ftsQuery],
     );
 
-    if (!rows.length) return '';
+    // Fallback ILIKE для коротких/транслитерированных запросов без FTS-хитов
+    let results = rows;
+    if (!results.length) {
+      const words = ftsQuery.split(/\s+/).filter(w => w.length > 3);
+      if (words.length) {
+        const conds = words.slice(0, 3).map((_, i) => `title ILIKE $${i + 1}`).join(' OR ');
+        const params = words.slice(0, 3).map(w => `%${w}%`);
+        const { rows: fb } = await pool.query<PlaceRow>(
+          `SELECT title, description, lat::text AS lat, lng::text AS lng, source_name
+           FROM agent_route_knowledge
+           WHERE (${conds}) AND lat IS NOT NULL AND lat != 0
+           ORDER BY updated_at DESC LIMIT 5`,
+          params,
+        );
+        results = fb;
+      }
+    }
 
-    const lines = rows.map(r => {
+    if (!results.length) return '';
+
+    // Дедупликация по заголовку (UNION может давать дубли)
+    const seen = new Set<string>();
+    const lines: string[] = [];
+    for (const r of results) {
+      if (seen.has(r.title)) continue;
+      seen.add(r.title);
       const coords = r.lat && r.lng && parseFloat(r.lat) !== 0
         ? ` | Координаты: ${parseFloat(r.lat).toFixed(6)}, ${parseFloat(r.lng).toFixed(6)}`
         : '';
       const desc = r.description ? ` — ${r.description.slice(0, 200)}` : '';
-      return `- ${r.title}${coords}${desc}`;
-    });
+      lines.push(`- ${r.title}${coords}${desc}`);
+      if (lines.length >= 6) break;
+    }
 
     return `МЕСТА ПО ЗАПРОСУ (точные данные из базы):\n${lines.join('\n')}`;
   } catch { return ''; }
