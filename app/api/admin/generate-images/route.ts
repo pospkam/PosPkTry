@@ -16,7 +16,7 @@ export const maxDuration = 300; // 5 min for batch job
 
 export async function GET(req: NextRequest) {
   const authError = await requireAdmin(req);
-  if (authError) return authError;
+  if (authError instanceof NextResponse) return authError;
 
   const missing = await getRoutesWithoutImages();
   return NextResponse.json({
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const authError = await requireAdmin(req);
-  if (authError) return authError;
+  if (authError instanceof NextResponse) return authError;
 
   const body = await req.json().catch(() => ({})) as {
     routeId?: string;

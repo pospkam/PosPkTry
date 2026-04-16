@@ -23,7 +23,7 @@ interface RunRow {
 
 export async function GET(request: NextRequest) {
   const authError = await requireAdmin(request);
-  if (authError) return authError;
+  if (authError instanceof NextResponse) return authError;
 
   const limit = Math.min(parseInt(request.nextUrl.searchParams.get('limit') ?? '50'), 100);
   const agentId = request.nextUrl.searchParams.get('agent_id') ?? null;

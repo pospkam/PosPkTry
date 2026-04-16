@@ -17,7 +17,7 @@ const Schema = z.object({
 
 export async function POST(request: NextRequest) {
   const authError = await requireAdmin(request);
-  if (authError) return authError;
+  if (authError instanceof NextResponse) return authError;
 
   const body = await request.json().catch(() => ({}));
   const parsed = Schema.safeParse(body);

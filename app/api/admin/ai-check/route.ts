@@ -33,7 +33,7 @@ async function probe(fn: () => Promise<string | null>): Promise<{ ok: boolean; a
 
 export async function GET(request: NextRequest) {
   const authError = await requireAdmin(request);
-  if (authError) return authError;
+  if (authError instanceof NextResponse) return authError;
 
   const [openrouter, minimax, xai, anthropic] = await Promise.all([
     probe(() => callOpenrouter(PING)),
