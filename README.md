@@ -19,6 +19,14 @@ Most travel sites show you a list. Kuzmich asks what you want, reads your photos
 - **Fish encyclopedia** -- 15 Kamchatka fish species with fishing tour links
 - **Affiliate blocks** -- flights (Aviasales), hotels (Hotellook), insurance (Cherehapa), transfers (Kiwitaxi) embedded in route pages
 
+**Kuzmich in action:**
+
+> *"Хочу увидеть медведей, но боюсь одна"*
+>
+> Kuzmich подбирает групповой тур на Курильское озеро, объясняет маршрут, предлагает страховку под активность, создаёт бронирование и оповещает оператора — без единой формы.
+
+---
+
 ## Architecture
 
 ```
@@ -29,6 +37,18 @@ AI waterfall (OpenRouter -> DeepSeek -> Gemini -> MiniMax -> Anthropic)
 Telegram Bot API (Kuzmich tourists + TOURHAB_BOT operators)
 VK MAX integration (operator notifications)
 Timeweb Cloud deploy (auto-deploy on push)
+```
+
+### Data flow
+
+```mermaid
+flowchart LR
+  Tourist -->|text / photo / voice| Kuzmich
+  Kuzmich --> AgentLoop[Tool-use loop]
+  AgentLoop -->|search routes, weather, places| DB[(PostgreSQL)]
+  AgentLoop -->|booking intent detected| Booking
+  Booking --> DB
+  Booking -->|Telegram + VK MAX| Operator
 ```
 
 ### Scale
@@ -42,6 +62,8 @@ Timeweb Cloud deploy (auto-deploy on push)
 | Lines of code | 195k+ |
 | Tour routes in DB | 260+ |
 
+Raw SQL without ORM is an intentional choice: the schema is complex (260 routes, 8 hubs, multiple roles), queries stay explicit and auditable, and there's no hidden N+1 or migration magic to debug in production.
+
 ### Key modules
 
 ```
@@ -54,9 +76,6 @@ app/
   hub/operator/         -- Operator dashboard (bookings, tours, earnings)
   hub/tourist/          -- Tourist profile (bookings, favorites)
   hub/safety/           -- Safety center
-  api/telegram/kuzmich/ -- Telegram webhook
-  api/ai/               -- AI endpoints (chat, stream, vision)
-  api/payments/         -- Payment processing (Tochka Bank QR)
   api/cron/             -- Background agents (watchdog, editor, scout, intelligence)
 
 lib/
@@ -64,24 +83,7 @@ lib/
   ai/providers.ts       -- AI provider waterfall (6 providers, auto-failover)
   agents/               -- Background agents (watchdog, editor, scout-digest)
   services/             -- Domain services (insurance, flights, hotels, transfers)
-  services/intelligence-monitor.service.ts -- Competitor & industry monitoring
-
-components/
-  homepage/             -- Landing (Hero, BentoGrid, LiveFeed, Marquee)
-  kuzmich/              -- Chat widget + inline booking
-  marketplace/          -- Catalog, filters, cards
-  routes/               -- Affiliate blocks (flights, hotels, insurance, transfers)
 ```
-
-## Design system
-
-Warm, earthy, premium. No glassmorphism, no cyberpunk.
-
-- **Fonts**: Playfair Display (headings) + Outfit (body)
-- **Palette**: CSS custom properties with full dark mode support
-- **Accent**: `#D44A0C` (volcanic orange)
-- **Components**: `ds-card`, `ds-btn`, `ds-input`, `ds-badge`, `ds-skeleton`
-- **Icons**: lucide-react only
 
 ## AI stack
 
@@ -131,8 +133,18 @@ CRON_SECRET           -- Background agents auth
 npm run dev           # Dev server
 npm run build         # Production build
 npx tsc --noEmit      # Type check
-npm test              # Tests
+npm test              # Tests (214 passing)
 ```
+
+## Design system
+
+Warm, earthy, premium. No glassmorphism, no cyberpunk.
+
+- **Fonts**: Playfair Display (headings) + Outfit (body)
+- **Palette**: CSS custom properties with full dark mode support
+- **Accent**: `#D44A0C` (volcanic orange)
+- **Components**: `ds-card`, `ds-btn`, `ds-input`, `ds-badge`, `ds-skeleton`
+- **Icons**: lucide-react only
 
 ## Tech stack
 
@@ -148,6 +160,24 @@ npm test              # Tests
 | Bots | Telegram Bot API, VK MAX |
 | Deploy | Timeweb Cloud |
 | CI/CD | GitHub auto-deploy |
+
+## Roadmap
+
+**Done**
+- Kuzmich AI — Telegram, web widget, full-page chat
+- Inline booking flow with operator notifications
+- Operator dashboards (bookings, earnings, tours, calendar)
+- Affiliate blocks — flights, hotels, insurance, transfers
+- 4 background AI agents (Watchdog, Editor, Scout, Intelligence)
+- Fish encyclopedia (15 Kamchatka species)
+
+**In progress**
+- Phase 3: extras — activities, car rentals
+
+**Planned**
+- Phase 4: real-time API pricing (live Aviasales / Hotellook rates)
+- Full Tochka Bank payment flow
+- Mobile app (PWA)
 
 ## Status
 
