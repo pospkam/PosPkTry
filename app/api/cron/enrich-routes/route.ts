@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
         'Content-Type': 'application/json',
         'x-admin-key': cronSecret,
       },
-      body: JSON.stringify({ limit: 10, dryRun: false }),
+      body: JSON.stringify({ mode: 'description', batch: 20, dryRun: false }),
     });
 
     const data = await res.json();
