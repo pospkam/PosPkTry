@@ -1460,7 +1460,7 @@ export async function aiChat(opts: {
   platform?: 'tg' | 'max';
   afterReply?: (chatId: number, answer?: string) => Promise<void>;
 }): Promise<void> {
-  const { chatId, text, mode, reply, userId, userName, visionDescription, pending, platform, afterReply } = opts;
+  const { chatId, text, mode, reply, userId, userName, visionDescription, platform, afterReply } = opts;
 
   // Сохраняем сообщение пользователя
   const userContent = visionDescription
@@ -1488,12 +1488,6 @@ export async function aiChat(opts: {
   const extraUserMsg: ChatMessage[] = visionDescription
     ? [{ role: 'user', content: `Пользователь прислал фото. Вот что на нём: ${visionDescription}` }]
     : [];
-
-  const messages: ChatMessage[] = [
-    { role: 'system', content: systemContent },
-    ...history,
-    ...extraUserMsg,
-  ];
 
   // ── Level 2: Agent loop with tools (primary path) ────────────────────────
   let answer = await aiChatAgentLoop(userContent, systemContent, history, extraUserMsg)
