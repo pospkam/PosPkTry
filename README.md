@@ -1,8 +1,10 @@
 # TourHab -- AI-powered tourism platform for Kamchatka
 
-**[tourhab.ru](https://tourhab.ru)** | Solo-dev full-stack project
+*Where volcanoes meet the ocean — and AI plans your trip there.*
 
-Tourism platform connecting travelers with verified local operators across Kamchatka peninsula. AI-first approach: from trip planning to booking to safety alerts.
+**[tourhab.ru](https://tourhab.ru)** · 260 routes · 455 API endpoints · live in production
+
+Most travel sites show you a list. Kuzmich asks what you want, reads your photos, books the tour, and notifies the operator — all in one conversation.
 
 ---
 
@@ -36,7 +38,7 @@ Timeweb Cloud deploy (auto-deploy on push)
 | TypeScript files | 1,150+ |
 | API routes | 455 |
 | UI components | 143 |
-| SQL migrations | 123 |
+| SQL migrations | 122 |
 | Lines of code | 195k+ |
 | Tour routes in DB | 260+ |
 
@@ -149,9 +151,9 @@ npm test              # Tests
 
 ## Status
 
-Production. Solo project, actively developed.
+Live in production and shipping weekly.
 
-**Live**: [tourhab.ru](https://tourhab.ru)
+**[tourhab.ru](https://tourhab.ru)**
 
 ---
 
