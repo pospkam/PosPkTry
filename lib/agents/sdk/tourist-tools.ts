@@ -14,6 +14,7 @@
 
 import type { SDKTool } from './sdk-runner';
 import { pool } from '@/lib/db-pool';
+import { composeTrip } from '@/lib/kuzmich/trip-composer';
 
 // ── Search Tours ──────────────────────────────────────────────────
 
@@ -409,10 +410,106 @@ const getGearRecommendations: SDKTool = {
   },
 };
 
+// ── Compose Multi-Tour Trip ───────────────────────────────────────
+
+const composeTripTool: SDKTool = {
+  name: 'compose_trip',
+  description:
+    'Составить комплексный маршрут из нескольких туров под параметры туриста: ' +
+    'количество дней поездки, общий бюджет, интересы, месяц, размер группы. ' +
+    'Возвращает готовый итинерарий день за днём с ценами и ссылками на туры. ' +
+    'Используй, когда турист говорит о поездке на несколько дней или хочет объединить несколько активностей.',
+  parameters: {
+    type: 'object',
+    properties: {
+      total_days: {
+        type: 'string',
+        description: 'Общее количество дней поездки (например "10")',
+      },
+      budget_total: {
+        type: 'string',
+        description: 'Общий бюджет на всю группу в рублях (например "300000")',
+      },
+      interests: {
+        type: 'string',
+        description:
+          'Интересующие активности через запятую: fishing, trekking, volcano, thermal, bears, helicopter, boat_trip, rafting, snowmobile',
+      },
+      month: {
+        type: 'string',
+        description: 'Месяц поездки (1-12)',
+      },
+      group_size: {
+        type: 'string',
+        description: 'Количество человек в группе (по умолчанию 2)',
+      },
+      difficulty: {
+        type: 'string',
+        description: 'Сложность: easy, medium, hard (необязательно)',
+      },
+    },
+    required: ['total_days', 'budget_total', 'interests', 'month'],
+  },
+  execute: async (args) => {
+    const totalDays  = Math.min(Math.max(Number(args.total_days)  || 7, 2), 30);
+    const budget     = Math.max(Number(args.budget_total) || 100_000, 10_000);
+    const groupSize  = Math.min(Math.max(Number(args.group_size)  || 2, 1), 20);
+    const month      = Math.min(Math.max(Number(args.month)       || new Date().getMonth() + 1, 1), 12);
+    const interests  = String(args.interests || 'trekking,thermal')
+      .split(',').map(s => s.trim()).filter(Boolean);
+    const difficulty = ['easy', 'medium', 'hard'].includes(String(args.difficulty))
+      ? (args.difficulty as 'easy' | 'medium' | 'hard')
+      : undefined;
+
+    try {
+      const trip = await composeTrip({ total_days: totalDays, budget_total: budget, interests, month, group_size: groupSize, difficulty });
+
+      if (!trip) {
+        return JSON.stringify({
+          success: false,
+          message:
+            'Не удалось подобрать маршрут по заданным критериям. ' +
+            'Попробуй увеличить бюджет, количество дней или изменить интересы.',
+        });
+      }
+
+      return JSON.stringify({
+        success: true,
+        summary: trip.summary,
+        total_days: trip.total_days,
+        tour_days: trip.tour_days,
+        free_days: trip.free_days,
+        total_price: trip.total_price,
+        price_per_person: trip.price_per_person,
+        group_size: trip.group_size,
+        tours: trip.tours.map(t => ({
+          id: t.id,
+          title: t.title,
+          activity: t.activity_type,
+          duration: `${t.duration_days} дн.`,
+          price_per_person: `${t.base_price.toLocaleString('ru-RU')} руб.`,
+          operator: t.operator_name,
+          location: t.location,
+          booking_url: `tourhab.ru${t.booking_url}`,
+        })),
+        itinerary: trip.itinerary.map(d => ({
+          day: d.day,
+          type: d.type,
+          note: d.note,
+          ...(d.tour ? { tour_id: d.tour.id, tour_title: d.tour.title } : {}),
+        })),
+      });
+    } catch {
+      return JSON.stringify({ success: false, message: 'Ошибка составления маршрута' });
+    }
+  },
+};
+
 // ── Export full toolkit ───────────────────────────────────────────
 
 export function getTouristTools(userId: number | null): SDKTool[] {
   return [
+    composeTripTool,
     searchTours,
     getTourDetails,
     checkAvailability,

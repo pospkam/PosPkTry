@@ -25,8 +25,10 @@ import {
   buildAgentInsightsForTourist,
   loadTripHistory,
   synthesizeUserNotes,
+  addViewedTour,
 } from '@/lib/ai/user-memory';
 import { detectTourIntent, findRelevantTours, type TourSuggestion } from '@/lib/ai/booking-intent';
+import { recordEngagementSignal } from '@/lib/kuzmich/engagement';
 import { buildRAGContext } from '@/lib/ai/rag-context';
 import { recordTouristDemand } from '@/lib/ai/tourist-demand-aggregator';
 import { runSDKAgent } from '@/lib/agents/sdk/sdk-runner';
@@ -267,8 +269,14 @@ export async function POST(request: NextRequest) {
           const sdkResult = await runSDKAgent({
             agentId: 'kuzmich',
             intent: 'conversational_booking',
-            systemPrompt: systemPrompt + `\n\nТы можешь использовать инструменты для поиска туров, проверки дат и мест. ` +
+            systemPrompt: systemPrompt +
+              `\n\nТы можешь использовать инструменты для поиска туров, проверки дат и мест. ` +
               `Когда турист спрашивает о турах — ОБЯЗАТЕЛЬНО используй search_tours. ` +
+              `Когда турист говорит о поездке на несколько дней (7, 10, 14 дней), упоминает бюджет ` +
+              `и несколько активностей — используй compose_trip для составления итинерария. ` +
+              `Триггеры compose_trip: "сколько дней", "планирую поездку", "хочу объединить", ` +
+              `"маршрут на ... дней", "что посмотреть за ... дней", "составь программу". ` +
+              `После compose_trip — опиши итинерарий кратко (тур, даты, цена) и предложи забронировать. ` +
               `Отвечай конкретно: название, цена, даты. Не придумывай данные.`,
             userMessage: message.trim(),
             tools,
@@ -307,6 +315,11 @@ export async function POST(request: NextRequest) {
     const extracted = extractMemoryFromMessage(message.trim());
     if (userId) {
       void upsertUserMemory(userId, extracted, true, isNewSession);
+      // Трекинг просмотренного тура (для re-engagement + smart memory)
+      if (bookingFormTour) {
+        void addViewedTour(userId, bookingFormTour.id);
+        void recordEngagementSignal(userId, bookingFormTour.id, sessionId ?? null, 'viewed');
+      }
     }
 
     // Синтез заметок о пользователе (fire-and-forget, каждые 5 сообщений)

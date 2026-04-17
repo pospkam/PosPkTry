@@ -1,0 +1,267 @@
+/**
+ * lib/kuzmich/trip-composer.ts
+ *
+ * Trip Composer — подбирает комплексный маршрут из нескольких туров под параметры туриста:
+ * количество дней, бюджет, интересы, месяц, размер группы.
+ *
+ * Логика:
+ * 1. Ищет туры по интересам и фильтрам
+ * 2. Жадно компонует непересекающиеся туры (pack by day-count)
+ * 3. Добавляет свободные дни между турами для переездов
+ * 4. Возвращает готовый итинерарий с ценами и ссылками
+ */
+
+import { pool } from '@/lib/db-pool';
+
+export interface TripTour {
+  id: number;
+  title: string;
+  activity_type: string | null;
+  duration_days: number;
+  base_price: number;
+  operator_name: string;
+  location: string | null;
+  difficulty_level: string | null;
+  tour_image: string | null;
+  booking_url: string;
+}
+
+export interface TripDay {
+  day: number;
+  type: 'tour' | 'travel' | 'free';
+  tour?: TripTour;
+  note: string;
+}
+
+export interface ComposedTrip {
+  total_days: number;
+  tour_days: number;
+  free_days: number;
+  total_price: number;
+  price_per_person: number;
+  group_size: number;
+  tours: TripTour[];
+  itinerary: TripDay[];
+  summary: string;
+}
+
+interface TourRow {
+  id: number;
+  title: string;
+  activity_type: string | null;
+  duration_days: number;
+  base_price: number;
+  operator_name: string;
+  location: string | null;
+  difficulty_level: string | null;
+  tour_image: string | null;
+}
+
+// Сезонная доступность активностей
+const SEASONAL_ACTIVITIES: Record<string, number[]> = {
+  helicopter: [6, 7, 8, 9],
+  skiing:     [1, 2, 3, 4],
+  snowmobile: [1, 2, 3, 4, 12],
+  bears:      [7, 8, 9],
+  fishing:    [5, 6, 7, 8, 9, 10],
+  trekking:   [5, 6, 7, 8, 9, 10],
+  volcano:    [5, 6, 7, 8, 9, 10],
+  thermal:    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+  boat_trip:  [6, 7, 8, 9],
+  rafting:    [6, 7, 8, 9],
+};
+
+function isInSeason(activityType: string | null, month: number): boolean {
+  if (!activityType) return true;
+  const months = SEASONAL_ACTIVITIES[activityType];
+  if (!months) return true;
+  return months.includes(month);
+}
+
+// Переводы активностей для итинерария
+const ACTIVITY_LABELS: Record<string, string> = {
+  fishing:    'Рыбалка',
+  trekking:   'Треккинг',
+  volcano:    'Вулканы',
+  thermal:    'Горячие источники',
+  bears:      'Медведи',
+  helicopter: 'Вертолётный тур',
+  boat_trip:  'Морской тур',
+  rafting:    'Рафтинг',
+  snowmobile: 'Снегоходы',
+  skiing:     'Лыжи',
+  photo:      'Фototур',
+  cultural:   'Культурный тур',
+};
+
+export interface ComposeTripParams {
+  total_days: number;
+  budget_total: number;
+  interests: string[];   // activity_type values
+  month: number;         // 1-12
+  group_size: number;
+  difficulty?: 'easy' | 'medium' | 'hard';
+}
+
+export async function composeTrip(params: ComposeTripParams): Promise<ComposedTrip | null> {
+  const { total_days, budget_total, interests, month, group_size, difficulty } = params;
+
+  // Строим фильтр по интересам (с сезоном)
+  const seasonalInterests = interests.filter(i => isInSeason(i, month));
+  if (seasonalInterests.length === 0) {
+    // Fallback — бери что есть в сезоне
+    seasonalInterests.push('trekking', 'thermal');
+  }
+
+  const placeholders = seasonalInterests.map((_, i) => `$${i + 1}`).join(',');
+  const extraParams: unknown[] = [...seasonalInterests];
+
+  let difficultyClause = '';
+  if (difficulty) {
+    extraParams.push(difficulty);
+    difficultyClause = `AND t.difficulty_level = $${extraParams.length}`;
+  }
+
+  // Бюджет на человека
+  const budgetPerPerson = Math.floor(budget_total / group_size);
+  extraParams.push(budgetPerPerson);
+  const budgetIdx = extraParams.length;
+
+  extraParams.push(total_days);
+  const maxDaysIdx = extraParams.length;
+
+  const sql = `
+    SELECT t.id, t.title, t.activity_type,
+           COALESCE(t.duration_days, t.multi_day_count, 1) as duration_days,
+           t.base_price,
+           COALESCE(u.company_name, u.name) as operator_name,
+           t.location, t.difficulty_level, t.tour_image
+    FROM operator_tours t
+    JOIN users u ON u.id = t.operator_id
+    WHERE t.is_published = true
+      AND t.activity_type IN (${placeholders})
+      AND t.base_price <= $${budgetIdx}
+      AND COALESCE(t.duration_days, t.multi_day_count, 1) <= $${maxDaysIdx}
+      ${difficultyClause}
+    ORDER BY t.activity_type, t.base_price ASC
+    LIMIT 20
+  `;
+
+  let rows: TourRow[];
+  try {
+    const result = await pool.query<TourRow>(sql, extraParams);
+    rows = result.rows;
+  } catch {
+    return null;
+  }
+
+  if (rows.length === 0) return null;
+
+  // Жадная компоновка: выбираем по одному туру каждого типа активности,
+  // не превышая total_days и budget_total
+  const usedActivities = new Set<string>();
+  const selected: TripTour[] = [];
+  let usedDays = 0;
+  let usedBudget = 0;
+
+  // Оставляем 1 день между турами для переезда (если туров > 1)
+  const travelDaysBetween = (count: number) => Math.max(0, count - 1);
+
+  for (const row of rows) {
+    const activity = row.activity_type ?? 'other';
+    if (usedActivities.has(activity)) continue;
+
+    const tourDays = row.duration_days;
+    const travelDays = travelDaysBetween(selected.length + 1);
+    const totalNeeded = usedDays + tourDays + (selected.length > 0 ? 1 : 0); // +1 день переезда
+    const totalBudgetNeeded = usedBudget + row.base_price * group_size;
+
+    if (totalNeeded > total_days) continue;
+    if (totalBudgetNeeded > budget_total * 1.1) continue; // 10% запас
+
+    selected.push({
+      id: row.id,
+      title: row.title,
+      activity_type: activity,
+      duration_days: tourDays,
+      base_price: row.base_price,
+      operator_name: row.operator_name,
+      location: row.location,
+      difficulty_level: row.difficulty_level,
+      tour_image: row.tour_image,
+      booking_url: `/routes/${row.id}`,
+    });
+    usedActivities.add(activity);
+    usedDays += tourDays + (selected.length > 1 ? 1 : 0);
+    usedBudget += row.base_price * group_size;
+  }
+
+  if (selected.length === 0) return null;
+
+  // Строим итинерарий день за днём
+  const itinerary: TripDay[] = [];
+  let currentDay = 1;
+
+  for (let i = 0; i < selected.length; i++) {
+    const tour = selected[i];
+
+    // День переезда между турами
+    if (i > 0) {
+      itinerary.push({
+        day: currentDay,
+        type: 'travel',
+        note: `Переезд и подготовка к следующему туру (${ACTIVITY_LABELS[tour.activity_type ?? ''] ?? tour.activity_type}).`,
+      });
+      currentDay++;
+    }
+
+    // Дни тура
+    for (let d = 0; d < tour.duration_days; d++) {
+      itinerary.push({
+        day: currentDay,
+        type: 'tour',
+        tour,
+        note: d === 0
+          ? `Начало тура: ${tour.title}. Место: ${tour.location ?? 'Камчатка'}. Оператор: ${tour.operator_name}.`
+          : d === tour.duration_days - 1
+            ? `Завершение тура "${tour.title}". Возвращение.`
+            : `Тур "${tour.title}" — день ${d + 1}.`,
+      });
+      currentDay++;
+    }
+  }
+
+  // Свободные дни в конце
+  const freeDays = total_days - (currentDay - 1);
+  for (let d = 0; d < freeDays; d++) {
+    itinerary.push({
+      day: currentDay + d,
+      type: 'free',
+      note: 'Свободное время: горячие источники, рынок, рестораны Петропавловска-Камчатского.',
+    });
+  }
+
+  const tourDaysTotal = selected.reduce((s, t) => s + t.duration_days, 0);
+  const travelDaysTotal = selected.length > 1 ? selected.length - 1 : 0;
+  const freeDaysTotal = total_days - tourDaysTotal - travelDaysTotal;
+  const totalPrice = selected.reduce((s, t) => s + t.base_price * group_size, 0);
+
+  const activityLabels = selected.map(t => ACTIVITY_LABELS[t.activity_type ?? ''] ?? t.activity_type).join(', ');
+  const summary =
+    `Маршрут на ${total_days} дней для группы ${group_size} чел. ` +
+    `Включает: ${activityLabels}. ` +
+    `Итого: ${totalPrice.toLocaleString('ru-RU')} руб. (${Math.round(totalPrice / group_size).toLocaleString('ru-RU')} руб/чел). ` +
+    `Свободных дней: ${freeDaysTotal}.`;
+
+  return {
+    total_days,
+    tour_days: tourDaysTotal,
+    free_days: freeDaysTotal,
+    total_price: totalPrice,
+    price_per_person: Math.round(totalPrice / group_size),
+    group_size,
+    tours: selected,
+    itinerary,
+    summary,
+  };
+}
