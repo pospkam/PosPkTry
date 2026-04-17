@@ -1,0 +1,23 @@
+name: Import Route Passports
+
+on:
+  schedule:
+    # Every day at 03:00 UTC
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      batch:
+        description: 'Routes per run (default 20)'
+        default: '20'
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Import visitkamchatka.ru route passports
+        run: |
+          BATCH="${{ github.event.inputs.batch || '20' }}"
+          curl -sf \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "https://tourhab.ru/api/cron/import-routes?batch=${BATCH}" \
+            | jq .
