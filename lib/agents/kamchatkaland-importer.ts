@@ -11,6 +11,7 @@
  * Kuzmich использует как RAG-контекст при вопросах о природе Камчатки.
  */
 
+import { createHash } from 'crypto';
 import { pool } from '@/lib/db-pool';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -134,24 +135,26 @@ async function upsertArticle(
   const title = ARTICLE_TITLES[slug] ?? slug.replace(/-/g, ' ');
   const url = `${BASE}/note/${slug}`;
   const searchText = `${title} ${description}`.slice(0, 3000);
+  const sourceHash = createHash('md5').update(description).digest('hex');
 
   const { rowCount } = await pool.query(
     `INSERT INTO agent_route_knowledge
        (id, route_dedupe_key, title, description, category, activity_type, location_type,
-        source_url, source_name, search_text, kind,
+        source_url, source_name, search_text, source_hash, kind,
         is_visible, source_updated_at, last_synced_at, created_at, updated_at)
      VALUES (
        gen_random_uuid(), $1, $2, $3, $4, $5, $6,
-       $7, $8, $9, 'article',
+       $7, $8, $9, $10, 'place',
        true, NOW(), NOW(), NOW(), NOW()
      )
      ON CONFLICT (route_dedupe_key) DO UPDATE SET
        description    = EXCLUDED.description,
        search_text    = EXCLUDED.search_text,
+       source_hash    = EXCLUDED.source_hash,
        last_synced_at = NOW(),
        updated_at     = NOW()`,
     [dedupeKey, title, description, meta.category, meta.activity_type, meta.location_type,
-     url, SOURCE_NAME, searchText],
+     url, SOURCE_NAME, searchText, sourceHash],
   );
 
   return (rowCount ?? 0) > 0 ? 'inserted' : 'skipped';
@@ -176,6 +179,7 @@ export async function runKamchatkalandImporter(batchSize = 10): Promise<Kamchatk
   for (const article of toProcess) {
     const description = await fetchArticle(article.slug);
     if (!description) {
+      console.error(`  fetch returned null for ${article.slug}`);
       errors++;
       continue;
     }
@@ -184,7 +188,8 @@ export async function runKamchatkalandImporter(batchSize = 10): Promise<Kamchatk
       if (result === 'inserted') inserted++;
       else if (result === 'updated') updated++;
       else skipped++;
-    } catch {
+    } catch (e) {
+      console.error(`  upsert error for ${article.slug}:`, e instanceof Error ? e.message : e);
       errors++;
     }
     await new Promise(r => setTimeout(r, 400));

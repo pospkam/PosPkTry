@@ -15,6 +15,7 @@
 // jsdom has no @types package — use dynamic require with explicit cast
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const JSDOM = (require('jsdom') as any).JSDOM as new (html: string) => { window: { document: Document } };
+import { createHash } from 'crypto';
 import { pool } from '@/lib/db-pool';
 
 const BASE = 'https://visitkamchatka.ru';
@@ -222,15 +223,16 @@ async function upsertRoute(p: RoutePassport): Promise<'inserted' | 'updated' | '
   });
   const searchText = [p.title, p.description, p.difficulty, p.season, p.activity_type]
     .filter(Boolean).join(' ').slice(0, 3000);
+  const sourceHash = createHash('md5').update(p.description).digest('hex');
 
   const { rowCount } = await pool.query(
     `INSERT INTO agent_route_knowledge
        (id, route_dedupe_key, title, description, category, activity_type,
-        lat, lng, source_url, source_name, search_text, payload,
+        lat, lng, source_url, source_name, search_text, payload, source_hash,
         is_visible, source_updated_at, last_synced_at, created_at, updated_at)
      VALUES (
        gen_random_uuid(), $1, $2, $3, $4, $5,
-       $6, $7, $8, $9, $10, $11::jsonb,
+       $6, $7, $8, $9, $10, $11::jsonb, $12,
        true, NOW(), NOW(), NOW(), NOW()
      )
      ON CONFLICT (route_dedupe_key) DO UPDATE SET
@@ -241,10 +243,11 @@ async function upsertRoute(p: RoutePassport): Promise<'inserted' | 'updated' | '
        lng               = COALESCE(EXCLUDED.lng, agent_route_knowledge.lng),
        search_text       = EXCLUDED.search_text,
        payload           = EXCLUDED.payload::jsonb,
+       source_hash       = EXCLUDED.source_hash,
        last_synced_at    = NOW(),
        updated_at        = NOW()`,
     [dedupeKey, p.title, p.description, p.category, p.activity_type,
-     p.lat, p.lng, p.url, SOURCE_NAME, searchText, payload],
+     p.lat, p.lng, p.url, SOURCE_NAME, searchText, payload, sourceHash],
   );
 
   return (rowCount ?? 0) > 0 ? 'inserted' : 'skipped';
