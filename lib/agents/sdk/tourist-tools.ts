@@ -2,19 +2,18 @@
  * lib/agents/sdk/tourist-tools.ts
  *
  * SDK-инструменты для conversational booking.
- * Кузьмич (AI-ассистент) может вызывать эти функции через tool calling:
- * - Поиск туров по критериям
- * - Просмотр доступных дат
- * - Проверка свободных мест
- * - Получение деталей тура
- * - Сравнение туров
- * - Проверка погоды
- * - Получение рекомендаций по снаряжению
+ * Все SQL-запросы соответствуют реальной схеме БД:
+ *   operator_tours: difficulty, location_name, max_participants, min_participants, multi_day_count
+ *   operator_bookings: operator_tour_id, participants, final_price, tourist_email (нет user_id)
+ *   tour_departures: несовместима с operator_tours (UUID vs BIGINT) — не используем
  */
 
 import type { SDKTool } from './sdk-runner';
 import { pool } from '@/lib/db-pool';
 import { composeTrip } from '@/lib/kuzmich/trip-composer';
+
+// Вычисляем длительность в днях из реальных колонок
+const DURATION_EXPR = `COALESCE(t.multi_day_count, CEIL(t.duration_hours / 24.0)::int, 1)`;
 
 // ── Search Tours ──────────────────────────────────────────────────
 
@@ -55,7 +54,7 @@ const searchTours: SDKTool = {
     },
   },
   execute: async (args) => {
-    const conditions: string[] = ['t.is_published = true'];
+    const conditions: string[] = ['t.is_published = true', 't.is_active = true'];
     const params: unknown[] = [];
     let idx = 1;
 
@@ -70,13 +69,22 @@ const searchTours: SDKTool = {
       idx++;
     }
     if (args.min_duration) {
-      conditions.push(`t.duration_days >= $${idx}`);
+      conditions.push(`${DURATION_EXPR} >= $${idx}`);
       params.push(Number(args.min_duration));
       idx++;
     }
     if (args.max_duration) {
-      conditions.push(`t.duration_days <= $${idx}`);
+      conditions.push(`${DURATION_EXPR} <= $${idx}`);
       params.push(Number(args.max_duration));
+      idx++;
+    }
+    if (args.month) {
+      const m = Number(args.month);
+      conditions.push(`(t.season_start IS NULL OR EXTRACT(MONTH FROM t.season_start) <= $${idx})`);
+      params.push(m);
+      idx++;
+      conditions.push(`(t.season_end IS NULL OR EXTRACT(MONTH FROM t.season_end) >= $${idx})`);
+      params.push(m);
       idx++;
     }
     if (args.query) {
@@ -90,11 +98,13 @@ const searchTours: SDKTool = {
 
     const sql = `
       SELECT t.id, t.title, t.base_price, t.activity_type,
-             t.duration_days, t.difficulty_level, t.location,
-             t.min_group_size, t.max_group_size,
-             COALESCE(u.company_name, u.name) as operator_name,
-             (SELECT AVG(r.rating) FROM reviews r WHERE r.tour_id = t.id)::numeric(2,1) as avg_rating,
-             (SELECT COUNT(*) FROM reviews r WHERE r.tour_id = t.id) as review_count
+             ${DURATION_EXPR} AS duration_days,
+             t.difficulty, t.location_name,
+             t.min_participants, t.max_participants,
+             t.available_slots, t.next_available_date,
+             COALESCE(u.company_name, u.name) AS operator_name,
+             (SELECT AVG(r.rating)::numeric(2,1) FROM reviews r WHERE r.tour_id = t.id) AS avg_rating,
+             (SELECT COUNT(*) FROM reviews r WHERE r.tour_id = t.id) AS review_count
       FROM operator_tours t
       JOIN users u ON u.id = t.operator_id
       WHERE ${conditions.join(' AND ')}
@@ -115,15 +125,17 @@ const searchTours: SDKTool = {
           price: `${r.base_price} руб.`,
           activity: r.activity_type,
           duration: `${r.duration_days} дн.`,
-          difficulty: r.difficulty_level,
-          location: r.location,
-          group: `${r.min_group_size}-${r.max_group_size} чел.`,
+          difficulty: r.difficulty,
+          location: r.location_name,
+          group: `${r.min_participants}-${r.max_participants} чел.`,
+          slots: r.available_slots ? `${r.available_slots} мест` : 'уточняйте',
+          next_date: r.next_available_date ?? 'уточняйте',
           operator: r.operator_name,
           rating: r.avg_rating ? `${r.avg_rating}/5 (${r.review_count} отзывов)` : 'нет отзывов',
         })),
       });
-    } catch {
-      return JSON.stringify({ error: 'Ошибка поиска туров' });
+    } catch (err) {
+      return JSON.stringify({ error: 'Ошибка поиска туров', detail: String(err) });
     }
   },
 };
@@ -144,12 +156,15 @@ const getTourDetails: SDKTool = {
     try {
       const result = await pool.query(`
         SELECT t.id, t.title, t.description, t.base_price, t.activity_type,
-               t.duration_days, t.difficulty_level, t.location,
-               t.included, t.not_included, t.requirements,
-               t.min_group_size, t.max_group_size, t.min_age,
-               t.meeting_point, t.tour_image,
-               COALESCE(u.company_name, u.name) as operator_name,
-               u.phone as operator_phone
+               ${DURATION_EXPR} AS duration_days,
+               t.difficulty, t.location_name,
+               t.included, t.not_included, t.what_to_bring,
+               t.min_participants, t.max_participants,
+               t.available_slots, t.next_available_date,
+               t.season_start, t.season_end,
+               t.tour_image,
+               COALESCE(u.company_name, u.name) AS operator_name,
+               u.phone AS operator_phone
         FROM operator_tours t
         JOIN users u ON u.id = t.operator_id
         WHERE t.id = $1 AND t.is_published = true
@@ -165,15 +180,17 @@ const getTourDetails: SDKTool = {
         description: t.description,
         price: `${t.base_price} руб.`,
         duration: `${t.duration_days} дн.`,
-        difficulty: t.difficulty_level,
-        location: t.location,
+        difficulty: t.difficulty,
+        location: t.location_name,
         included: t.included,
         not_included: t.not_included,
-        requirements: t.requirements,
-        group: `${t.min_group_size}-${t.max_group_size} чел.`,
-        min_age: t.min_age,
-        meeting_point: t.meeting_point,
+        what_to_bring: t.what_to_bring,
+        group: `${t.min_participants}-${t.max_participants} чел.`,
+        slots: t.available_slots ? `${t.available_slots} свободных мест` : 'уточните у оператора',
+        next_date: t.next_available_date ?? 'уточните у оператора',
+        season: t.season_start ? `${t.season_start} — ${t.season_end}` : 'круглый год',
         operator: t.operator_name,
+        operator_phone: t.operator_phone,
         image: t.tour_image,
         booking_url: `/routes/${t.id}`,
       });
@@ -183,55 +200,59 @@ const getTourDetails: SDKTool = {
   },
 };
 
-// ── Check Available Dates ─────────────────────────────────────────
+// ── Check Availability ────────────────────────────────────────────
+// Использует operator_tours напрямую — tour_departures несовместима (UUID vs BIGINT).
 
 const checkAvailability: SDKTool = {
   name: 'check_availability',
-  description: 'Проверить доступные даты и свободные места для тура. Показывает ближайшие отправления.',
+  description: 'Проверить доступность тура: свободные места, ближайшая дата, сезон.',
   parameters: {
     type: 'object',
     properties: {
       tour_id: { type: 'string', description: 'ID тура' },
-      month: { type: 'string', description: 'Месяц (1-12), по умолчанию текущий и следующий' },
     },
     required: ['tour_id'],
   },
   execute: async (args) => {
     try {
-      const monthFilter = args.month
-        ? `AND EXTRACT(MONTH FROM d.departure_date) = $2`
-        : `AND d.departure_date >= CURRENT_DATE`;
-      const params: unknown[] = [Number(args.tour_id)];
-      if (args.month) params.push(Number(args.month));
-
       const result = await pool.query(`
-        SELECT d.id, d.departure_date, d.available_slots, d.price_override,
-               t.base_price, t.max_group_size,
-               (SELECT COUNT(*) FROM operator_bookings b
-                WHERE b.departure_id = d.id AND b.booking_status NOT IN ('cancelled', 'rejected')) as booked
-        FROM tour_departures d
-        JOIN operator_tours t ON t.id = d.tour_id
-        WHERE d.tour_id = $1 ${monthFilter}
-          AND d.is_active = true
-          AND d.departure_date >= CURRENT_DATE
-        ORDER BY d.departure_date
-        LIMIT 10
-      `, params);
+        SELECT t.id, t.title, t.available_slots, t.next_available_date,
+               t.max_participants, t.season_start, t.season_end,
+               t.base_price,
+               (SELECT COUNT(*) FROM operator_bookings ob
+                WHERE ob.operator_tour_id = t.id
+                  AND ob.booking_status NOT IN ('cancelled','rejected','cancelled_by_tourist')
+                  AND ob.booking_date >= CURRENT_DATE) AS active_bookings
+        FROM operator_tours t
+        WHERE t.id = $1 AND t.is_published = true
+      `, [Number(args.tour_id)]);
 
       if (result.rows.length === 0) {
-        return JSON.stringify({ available: false, message: 'Нет доступных дат для этого тура. Оператор ещё не добавил отправления.' });
+        return JSON.stringify({ available: false, message: 'Тур не найден.' });
       }
 
+      const t = result.rows[0] as Record<string, unknown>;
+      const slots     = Number(t.available_slots ?? t.max_participants ?? 0);
+      const booked    = Number(t.active_bookings ?? 0);
+      const freeSlots = Math.max(0, slots - booked);
+
+      const today = new Date();
+      const seasonEnd = t.season_end ? new Date(t.season_end as string) : null;
+      const inSeason  = !seasonEnd || seasonEnd >= today;
+
       return JSON.stringify({
-        available: true,
-        departures: result.rows.map((d: Record<string, unknown>) => ({
-          departure_id: d.id,
-          date: d.departure_date,
-          price: d.price_override || d.base_price,
-          slots_total: d.available_slots || d.max_group_size,
-          slots_booked: d.booked,
-          slots_free: (Number(d.available_slots || d.max_group_size) - Number(d.booked)),
-        })),
+        available: freeSlots > 0 && inSeason,
+        tour_id: t.id,
+        title: t.title,
+        price: `${t.base_price} руб.`,
+        slots_total: slots,
+        slots_free: freeSlots,
+        next_date: t.next_available_date ?? 'по запросу',
+        season: t.season_start ? `${t.season_start} — ${t.season_end}` : 'круглый год',
+        in_season: inSeason,
+        message: freeSlots > 0
+          ? `Свободно ${freeSlots} из ${slots} мест. Ближайшая дата: ${t.next_available_date ?? 'уточните у оператора'}.`
+          : 'Мест нет или тур не в сезоне. Уточните у оператора.',
       });
     } catch {
       return JSON.stringify({ error: 'Ошибка проверки доступности' });
@@ -258,11 +279,13 @@ const compareTours: SDKTool = {
     try {
       const placeholders = ids.map((_, i) => `$${i + 1}`).join(',');
       const result = await pool.query(`
-        SELECT t.id, t.title, t.base_price, t.duration_days, t.difficulty_level,
-               t.activity_type, t.location, t.included,
-               COALESCE(u.company_name, u.name) as operator_name,
-               (SELECT AVG(r.rating) FROM reviews r WHERE r.tour_id = t.id)::numeric(2,1) as avg_rating,
-               (SELECT COUNT(*) FROM reviews r WHERE r.tour_id = t.id) as review_count
+        SELECT t.id, t.title, t.base_price,
+               ${DURATION_EXPR} AS duration_days,
+               t.difficulty, t.activity_type, t.location_name,
+               t.included, t.available_slots,
+               COALESCE(u.company_name, u.name) AS operator_name,
+               (SELECT AVG(r.rating)::numeric(2,1) FROM reviews r WHERE r.tour_id = t.id) AS avg_rating,
+               (SELECT COUNT(*) FROM reviews r WHERE r.tour_id = t.id) AS review_count
         FROM operator_tours t
         JOIN users u ON u.id = t.operator_id
         WHERE t.id IN (${placeholders}) AND t.is_published = true
@@ -274,10 +297,11 @@ const compareTours: SDKTool = {
           title: t.title,
           price: `${t.base_price} руб.`,
           duration: `${t.duration_days} дн.`,
-          difficulty: t.difficulty_level,
+          difficulty: t.difficulty,
           activity: t.activity_type,
-          location: t.location,
+          location: t.location_name,
           operator: t.operator_name,
+          slots: t.available_slots ?? 'уточните',
           rating: t.avg_rating ? `${t.avg_rating}/5 (${t.review_count})` : 'нет отзывов',
           included: t.included,
         })),
@@ -301,7 +325,6 @@ const getWeather: SDKTool = {
   },
   execute: async () => {
     try {
-      // Use cached weather from DB if available
       const result = await pool.query(`
         SELECT data, updated_at FROM weather_cache
         WHERE location = 'petropavlovsk'
@@ -324,35 +347,30 @@ function makeGetUserTrips(userId: number | null): SDKTool {
   return {
     name: 'get_user_trips',
     description: 'Получить историю поездок пользователя для персональных рекомендаций.',
-    parameters: {
-      type: 'object',
-      properties: {},
-    },
+    parameters: { type: 'object', properties: {} },
     execute: async () => {
       if (!userId) return JSON.stringify({ trips: [], message: 'Пользователь не авторизован' });
       try {
+        // operator_bookings не имеет user_id — джойним через users.id
         const result = await pool.query(`
-          SELECT b.id, t.title, t.activity_type, t.location,
-                 d.departure_date, b.guests_count, b.total_price,
-                 b.booking_status,
-                 (SELECT r.rating FROM reviews r WHERE r.booking_id = b.id LIMIT 1) as user_rating
-          FROM operator_bookings b
-          JOIN operator_tours t ON t.id = b.tour_id
-          LEFT JOIN tour_departures d ON d.id = b.departure_id
-          WHERE b.user_id = $1
-          ORDER BY d.departure_date DESC NULLS LAST
+          SELECT ob.id, ot.title, ot.activity_type, ot.location_name,
+                 ob.booking_date, ob.participants, ob.final_price,
+                 ob.booking_status
+          FROM operator_bookings ob
+          JOIN operator_tours ot ON ot.id = ob.operator_tour_id
+          JOIN users u ON u.id = $1 AND u.email = ob.tourist_email
+          ORDER BY ob.booking_date DESC NULLS LAST
           LIMIT 10
         `, [userId]);
         return JSON.stringify({
           trips: result.rows.map((r: Record<string, unknown>) => ({
             tour: r.title,
             activity: r.activity_type,
-            location: r.location,
-            date: r.departure_date,
-            guests: r.guests_count,
-            price: r.total_price,
+            location: r.location_name,
+            date: r.booking_date,
+            guests: r.participants,
+            price: r.final_price,
             status: r.booking_status,
-            rating: r.user_rating,
           })),
         });
       } catch {
@@ -380,24 +398,24 @@ const getGearRecommendations: SDKTool = {
     const month = Number(args.month) || new Date().getMonth() + 1;
 
     const gear: Record<string, string[]> = {
-      trekking: ['Треккинговые ботинки', 'Рюкзак 40-60л', 'Дождевик', 'Термобельё', 'Солнцезащитный крем', 'Палки треккинговые'],
-      fishing: ['Забродники/вейдерсы', 'Удочка спиннинг', 'Непромокаемая куртка', 'Поляризационные очки', 'Термос'],
-      volcano: ['Треккинговые ботинки с жёсткой подошвой', 'Каска', 'Ветровка', 'Бафф/маска от газов', 'Перчатки', 'Рюкзак 30л'],
-      thermal: ['Купальник', 'Полотенце', 'Сланцы', 'Тёплая одежда для дороги'],
-      bears: ['Бинокль', 'Фотоаппарат с телеобъективом', 'Непромокаемая обувь', 'Дождевик'],
+      trekking:   ['Треккинговые ботинки', 'Рюкзак 40-60л', 'Дождевик', 'Термобельё', 'Солнцезащитный крем', 'Палки треккинговые'],
+      fishing:    ['Забродники/вейдерсы', 'Удочка спиннинг', 'Непромокаемая куртка', 'Поляризационные очки', 'Термос'],
+      volcano:    ['Треккинговые ботинки с жёсткой подошвой', 'Каска', 'Ветровка', 'Бафф/маска от газов', 'Перчатки', 'Рюкзак 30л'],
+      thermal:    ['Купальник', 'Полотенце', 'Сланцы', 'Тёплая одежда для дороги'],
+      bears:      ['Бинокль', 'Фотоаппарат с телеобъективом', 'Непромокаемая обувь', 'Дождевик'],
       helicopter: ['Тёплая куртка', 'Солнечные очки', 'Беруши', 'Батончики/перекус'],
-      boat_trip: ['Непромокаемая куртка', 'Перчатки', 'Шапка', 'Средство от укачивания', 'Фотоаппарат в гермопакете'],
-      rafting: ['Гидрокостюм (предоставляется)', 'Сменная одежда', 'Герметичный телефонный чехол'],
+      boat_trip:  ['Непромокаемая куртка', 'Перчатки', 'Шапка', 'Средство от укачивания', 'Фотоаппарат в гермопакете'],
+      rafting:    ['Гидрокостюм (предоставляется)', 'Сменная одежда', 'Герметичный телефонный чехол'],
       snowmobile: ['Тёплый комбинезон', 'Шлем (предоставляется)', 'Балаклава', 'Тёплые перчатки', 'Защитные очки'],
     };
 
     const seasonNote = month >= 6 && month <= 8
-      ? 'Лето: температура 10-20C, возможны дожди, белые ночи.'
+      ? 'Лето: 10-20°C, возможны дожди.'
       : month >= 9 && month <= 11
-        ? 'Осень: 0-10C, ранний снег в горах, ветер. Нужна утеплённая экипировка.'
+        ? 'Осень: 0-10°C, ранний снег в горах. Нужна утеплённая экипировка.'
         : month >= 3 && month <= 5
-          ? 'Весна: 0-8C, ещё снег в горах, ветер. Зимняя экипировка для гор.'
-          : 'Зима: -10...-25C, снег, короткий день. Максимальное утепление.';
+          ? 'Весна: 0-8°C, снег в горах. Зимняя экипировка для гор.'
+          : 'Зима: -10...-25°C. Максимальное утепление.';
 
     const items = gear[activity] ?? ['Удобная обувь', 'Дождевик', 'Тёплая одежда', 'Солнцезащитный крем'];
 
@@ -432,8 +450,7 @@ const composeTripTool: SDKTool = {
       },
       interests: {
         type: 'string',
-        description:
-          'Интересующие активности через запятую: fishing, trekking, volcano, thermal, bears, helicopter, boat_trip, rafting, snowmobile',
+        description: 'Интересующие активности через запятую: fishing, trekking, volcano, thermal, bears, helicopter, boat_trip, rafting, snowmobile',
       },
       month: {
         type: 'string',
@@ -467,9 +484,7 @@ const composeTripTool: SDKTool = {
       if (!trip) {
         return JSON.stringify({
           success: false,
-          message:
-            'Не удалось подобрать маршрут по заданным критериям. ' +
-            'Попробуй увеличить бюджет, количество дней или изменить интересы.',
+          message: 'Не удалось подобрать маршрут по заданным критериям. Попробуй увеличить бюджет, количество дней или изменить интересы.',
         });
       }
 

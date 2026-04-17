@@ -37,7 +37,7 @@ import { getOperatorTools } from '@/lib/agents/sdk/operator-tools';
 
 export const dynamic = 'force-dynamic';
 
-const FREE_MESSAGE_LIMIT = 3;
+const FREE_MESSAGE_LIMIT = 10;
 
 const chatRateLimiter = createRateLimiter({ windowMs: 60_000, max: 20 });
 

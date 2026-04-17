@@ -53,7 +53,7 @@ interface TourRow {
   base_price: number;
   operator_name: string;
   location: string | null;
-  difficulty_level: string | null;
+  difficulty: string | null;
   tour_image: string | null;
 }
 
@@ -119,7 +119,7 @@ export async function composeTrip(params: ComposeTripParams): Promise<ComposedTr
   let difficultyClause = '';
   if (difficulty) {
     extraParams.push(difficulty);
-    difficultyClause = `AND t.difficulty_level = $${extraParams.length}`;
+    difficultyClause = `AND t.difficulty = $${extraParams.length}`;
   }
 
   // Бюджет на человека
@@ -130,18 +130,21 @@ export async function composeTrip(params: ComposeTripParams): Promise<ComposedTr
   extraParams.push(total_days);
   const maxDaysIdx = extraParams.length;
 
+  const durationExpr = `COALESCE(t.multi_day_count, CEIL(t.duration_hours / 24.0)::int, 1)`;
+
   const sql = `
     SELECT t.id, t.title, t.activity_type,
-           COALESCE(t.duration_days, t.multi_day_count, 1) as duration_days,
+           ${durationExpr} AS duration_days,
            t.base_price,
-           COALESCE(u.company_name, u.name) as operator_name,
-           t.location, t.difficulty_level, t.tour_image
+           COALESCE(u.company_name, u.name) AS operator_name,
+           t.location_name AS location, t.difficulty, t.tour_image
     FROM operator_tours t
     JOIN users u ON u.id = t.operator_id
     WHERE t.is_published = true
+      AND t.is_active = true
       AND t.activity_type IN (${placeholders})
       AND t.base_price <= $${budgetIdx}
-      AND COALESCE(t.duration_days, t.multi_day_count, 1) <= $${maxDaysIdx}
+      AND ${durationExpr} <= $${maxDaysIdx}
       ${difficultyClause}
     ORDER BY t.activity_type, t.base_price ASC
     LIMIT 20
@@ -187,7 +190,7 @@ export async function composeTrip(params: ComposeTripParams): Promise<ComposedTr
       base_price: row.base_price,
       operator_name: row.operator_name,
       location: row.location,
-      difficulty_level: row.difficulty_level,
+      difficulty_level: row.difficulty,
       tour_image: row.tour_image,
       booking_url: `/routes/${row.id}`,
     });
