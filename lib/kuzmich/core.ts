@@ -834,10 +834,10 @@ export async function createBooking(
       : null;
     const { rows } = await pool.query<{ id: number }>(
       `INSERT INTO operator_bookings
-         (operator_tour_id, tour_id, tourist_name, tourist_phone,
+         (operator_tour_id, tourist_name, tourist_phone,
           participants, booking_date, booking_status,
           base_total_price, final_price, created_via, metadata)
-       VALUES ($1,$1,$2,$3,$4,$5,'pending_payment',$6,$6,$7,$8::jsonb)
+       VALUES ($1,$2,$3,$4,$5,'pending_payment',$6,$6,$7,$8::jsonb)
        RETURNING id`,
       [b.tour.id, b.name, b.phone, b.participants, b.date, total, createdVia, meta],
     );
@@ -1079,11 +1079,12 @@ export async function handleBookingStep(
   }
 
   if (b.step === 'name') {
-    // Имя: 2-40 символов, только буквы/пробелы/дефис, без цифр и спецсимволов
-    // Вопросы, команды и длинные фразы — это не имя
-    if (t.length < 2 || t.length > 40 || /[?!0-9]/.test(t) || !/^[\p{L}\s\-'.]+$/u.test(t)) {
-      // Если это выглядит как вопрос или обычное сообщение — выходим в AI
-      if (t.includes('?') || t.length > 40 || /\s{2,}/.test(t) || t.split(/\s+/).length > 5) {
+    // Имя: 2-40 символов, только буквы/пробелы/дефис, 1-3 слова (имя [отчество] фамилия)
+    const wordCount = t.trim().split(/\s+/).length;
+    const looksLikeName = /^[\p{L}\s\-'.]+$/u.test(t) && !t.includes('?') && !t.includes('!') && !/\d/.test(t);
+    if (!looksLikeName || t.length < 2 || t.length > 50 || wordCount > 3) {
+      // Слишком длинная фраза или не похоже на имя — выходим в AI
+      if (t.includes('?') || t.length > 50 || wordCount > 3) {
         await deleteBookingFlow(chatId, mode, pending);
         return false; // → processMessage отдаст в aiChat
       }
@@ -1129,8 +1130,10 @@ export async function handleBookingStep(
   }
 
   if (b.step === 'phone') {
-    const phone = t.replace(/\s/g, '');
-    if (phone.length < 10) {
+    const phone = t.replace(/[\s\-()]/g, '');
+    const digitCount = (phone.match(/\d/g) ?? []).length;
+    // Must be phone-like: mostly digits, starts with + or digit, 10-15 chars
+    if (digitCount < 10 || !/^[+\d]/.test(phone) || phone.length > 20) {
       await reply(chatId, 'Укажите полный номер телефона, например: <b>+7 900 000-00-00</b>');
       return true;
     }

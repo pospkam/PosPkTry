@@ -101,10 +101,10 @@ export async function POST(req: NextRequest) {
 
       const bookingResult = await client.query<{ id: number }>(
         `INSERT INTO operator_bookings (
-           operator_tour_id, tour_id, tourist_name, tourist_email, tourist_phone,
+           operator_tour_id, tourist_name, tourist_email, tourist_phone,
            participants, booking_date, special_requests, booking_status,
            base_total_price, final_price, created_via
-         ) VALUES ($1, $1, $2, $3, $4, $5, $6, $7, 'new', $8, $8, 'website')
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'new', $8, $8, 'website')
          RETURNING id`,
         [
           data.tour_id,
