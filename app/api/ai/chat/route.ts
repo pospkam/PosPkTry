@@ -185,7 +185,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Долгосрочная память (только для авторизованных)
-    const userId = user?.userId ? parseInt(user.userId, 10) : null;
+    // userId — UUID строка (users.id uuid), НЕ parseInt
+    const userId = user?.userId ?? null;
     const [userMemory, tripHistory] = await Promise.all([
       userId ? loadUserMemory(userId) : Promise.resolve(null),
       userId ? loadTripHistory(userId) : Promise.resolve([]),

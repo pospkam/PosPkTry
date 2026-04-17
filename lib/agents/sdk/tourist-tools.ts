@@ -343,7 +343,7 @@ const getWeather: SDKTool = {
 
 // ── Get User Past Trips ───────────────────────────────────────────
 
-function makeGetUserTrips(userId: number | null): SDKTool {
+function makeGetUserTrips(userId: string | null): SDKTool {
   return {
     name: 'get_user_trips',
     description: 'Получить историю поездок пользователя для персональных рекомендаций.',
@@ -522,7 +522,7 @@ const composeTripTool: SDKTool = {
 
 // ── Export full toolkit ───────────────────────────────────────────
 
-export function getTouristTools(userId: number | null): SDKTool[] {
+export function getTouristTools(userId: string | null): SDKTool[] {
   return [
     composeTripTool,
     searchTours,

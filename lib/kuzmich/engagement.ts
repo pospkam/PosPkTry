@@ -17,7 +17,7 @@ import { telegramService } from '@/lib/notifications/telegram';
 // ── Записать сигнал интереса ──────────────────────────────────────
 
 export async function recordEngagementSignal(
-  userId: number,
+  userId: string,
   tourId: number,
   sessionId: string | null,
   signalType: 'viewed' | 'booking_started' | 'booking_abandoned' = 'viewed',

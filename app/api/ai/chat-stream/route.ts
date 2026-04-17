@@ -186,7 +186,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const userId = user?.userId ? parseInt(user.userId, 10) : null;
+    const userId = user?.userId ?? null; // UUID строка, не parseInt
     const [userMemory, tripHistory] = await Promise.all([
       userId ? loadUserMemory(userId) : Promise.resolve(null),
       userId ? loadTripHistory(userId) : Promise.resolve([]),

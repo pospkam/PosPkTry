@@ -15,7 +15,7 @@ ALTER TABLE user_ai_memory
 -- ── 148: сигналы реэнгейджмента ──────────────────────────────────
 CREATE TABLE IF NOT EXISTS kuzmich_engagement_signals (
   id           BIGSERIAL    PRIMARY KEY,
-  user_id      INT          NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_id      UUID         NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   tour_id      BIGINT       NOT NULL REFERENCES operator_tours(id) ON DELETE CASCADE,
   session_id   TEXT,
   signal_type  TEXT         NOT NULL DEFAULT 'viewed',

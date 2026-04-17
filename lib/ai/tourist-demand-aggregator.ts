@@ -12,7 +12,7 @@ import { agentMemory } from '@/lib/agents/memory/agent-memory';
 import { emitEvent, AGENT_EVENTS } from '@/lib/events/emit';
 
 export interface DemandSignal {
-  userId: number | null;
+  userId: string | null;
   activities: string[];
   locations: string[];
   travelStyle: string | null;

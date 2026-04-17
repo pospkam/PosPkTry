@@ -10,7 +10,7 @@ import { pool } from '@/lib/db-pool';
 import { agentMemory } from '@/lib/agents/memory/agent-memory';
 
 export interface UserMemory {
-  user_id:              number;
+  user_id:              string;
   preferred_activities: string[];
   preferred_locations:  string[];
   travel_style:         string | null;
@@ -28,7 +28,7 @@ export interface UserMemory {
 }
 
 // ── Загрузка памяти ───────────────────────────────────────────────
-export async function loadUserMemory(userId: number): Promise<UserMemory | null> {
+export async function loadUserMemory(userId: string): Promise<UserMemory | null> {
   try {
     const r = await pool.query<UserMemory>(
       `SELECT user_id, preferred_activities, preferred_locations,
@@ -55,7 +55,7 @@ export async function loadUserMemory(userId: number): Promise<UserMemory | null>
 
 // ── Создать/обновить базовые поля памяти ─────────────────────────
 export async function upsertUserMemory(
-  userId:    number,
+  userId:    string,
   patch: Partial<Pick<UserMemory,
     'preferred_activities' | 'preferred_locations' |
     'travel_style' | 'group_size' | 'budget_level' | 'ai_notes' |
@@ -320,7 +320,7 @@ export function buildMemoryContext(mem: UserMemory, trips?: TripRecord[]): strin
 }
 
 // ── Трекинг просмотренных туров ───────────────────────────────────
-export async function addViewedTour(userId: number, tourId: number): Promise<void> {
+export async function addViewedTour(userId: string, tourId: number): Promise<void> {
   try {
     await pool.query(
       `UPDATE user_ai_memory
@@ -345,7 +345,7 @@ export interface TripRecord {
   rating:       number | null;
 }
 
-export async function loadTripHistory(userId: number): Promise<TripRecord[]> {
+export async function loadTripHistory(userId: string): Promise<TripRecord[]> {
   try {
     // Legacy bookings + operator bookings merged // allow:
     const legacySQL = `SELECT t.title, b.date::text AS booking_date, b.status, b.participants, NULL::int AS rating FROM bookings b JOIN tours t ON t.id = b.tour_id WHERE b.user_id = $1 ORDER BY b.date DESC LIMIT 10`; // allow:
@@ -381,7 +381,7 @@ export async function loadTripHistory(userId: number): Promise<TripRecord[]> {
  * Это то что теряется при смене чата и нигде больше не хранится.
  */
 export async function synthesizeUserNotes(
-  userId: number,
+  userId: string,
   recentMessages: Array<{ role: string; content: string }>,
   existingNotes: string | null,
 ): Promise<void> {
