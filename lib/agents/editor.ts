@@ -1,18 +1,13 @@
 /**
  * lib/agents/editor.ts
  *
- * Editor — AI-редактор описаний туров.
+ * Editor — AI-редактор описаний маршрутов.
  * Запускается раз в сутки через /api/cron/editor.
  *
- * Находит туры с короткими или устаревшими описаниями и переписывает их AI.
- * Результат сохраняется в route_description_cache.
- *
- * Критерии для перезаписи:
- *   - description < 300 символов
- *   - нет записи в route_description_cache (или старше 90 дней)
- *   - маршрут активен (is_published = true или published = true)
- *
- * Лимит: 10 маршрутов за запуск (не перегружать AI-бюджет).
+ * Источник: agent_route_knowledge (1386 маршрутов Камчатки).
+ * Критерий: description IS NULL или LENGTH(description) < 300.
+ * Действие: генерирует описание через AI → UPDATE agent_route_knowledge.
+ * Лимит: 15 маршрутов за запуск.
  */
 
 import { pool } from '@/lib/db-pool';
@@ -26,11 +21,11 @@ export interface EditorResult {
   duration_ms: number;
 }
 
-const BATCH_SIZE = 10;
+const BATCH_SIZE = 15;
 const MIN_DESCRIPTION_LENGTH = 300;
 
 async function tgSend(text: string): Promise<void> {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const token  = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
   if (!token || !chatId) return;
   try {
@@ -39,58 +34,63 @@ async function tgSend(text: string): Promise<void> {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML', disable_web_page_preview: true }),
     });
-  } catch {
-    // Silent fail
-  }
+  } catch { /* silent */ }
 }
 
-interface TourRow {
+interface RouteRow {
   id: string;
   title: string;
   description: string | null;
   category: string | null;
-  duration_days: number | null;
-  region: string | null;
 }
 
-async function findToursNeedingImprovement(): Promise<TourRow[]> {
-  const { rows } = await pool.query<TourRow>(`
-    SELECT
-      t.id,
-      t.title,
-      t.description,
-      t.category,
-      t.duration_days,
-      t.region
-    FROM operator_tours t
-    LEFT JOIN route_description_cache c ON c.route_id = t.id
-      AND c.generated_at > NOW() - INTERVAL '90 days'
-    WHERE t.is_published = true
-      AND c.route_id IS NULL
-      AND (t.description IS NULL OR LENGTH(t.description) < $1)
-    ORDER BY t.created_at DESC
+async function findRoutesNeedingDescription(): Promise<RouteRow[]> {
+  const { rows } = await pool.query<RouteRow>(`
+    SELECT id, title, description, category
+    FROM agent_route_knowledge
+    WHERE description IS NULL
+       OR LENGTH(description) < $1
+    ORDER BY RANDOM()
     LIMIT $2
   `, [MIN_DESCRIPTION_LENGTH, BATCH_SIZE]);
   return rows;
 }
 
-async function generateDescription(tour: TourRow): Promise<string | null> {
+const CATEGORY_LABELS: Record<string, string> = {
+  vulkani:              'вулкан',
+  termalnye_istochniki: 'термальные источники',
+  geyzery:              'гейзеры',
+  eco:                  'экотуризм',
+  trekking:             'треккинг',
+  lakes:                'озёра',
+  rivers:               'реки',
+  mountains:            'горы',
+  rybalka:              'рыбалка',
+  morskie_progulki:     'морские прогулки',
+  vertoletnye_tury:     'вертолётные туры',
+  medvedi:              'наблюдение за медведями',
+  ekskursii:            'экскурсии',
+  dzhip:                'джип-туры',
+  ozera:                'озёра',
+};
+
+async function generateRouteDescription(route: RouteRow): Promise<string | null> {
+  const categoryLabel = route.category ? (CATEGORY_LABELS[route.category] ?? route.category) : '';
   const messages: ChatMessage[] = [
     {
       role: 'system',
-      content: `Ты профессиональный редактор туристических описаний для платформы TourHab (Камчатка).
-Пиши на русском языке. Стиль: живой, убедительный, фактически точный.
-Длина: 350-500 слов. Без emoji. Без markdown заголовков. Один сплошной абзац или 2-3 коротких абзаца.
-Упоминай конкретные природные объекты Камчатки (вулканы, гейзеры, реки, океан) когда это уместно.`,
+      content: `Ты эксперт по туризму на Камчатке. Пишешь краткие, точные описания природных объектов и маршрутов для туристической платформы TourHab.
+Стиль: фактически точный, живой, без рекламных штампов. Без emoji. Без markdown.
+Длина: 2-3 абзаца, 200-350 слов. Упоминай конкретные детали (координаты, высоту, особенности) если знаешь.`,
     },
     {
       role: 'user',
-      content: `Напиши описание тура:
-Название: ${tour.title}
-${tour.category ? `Категория: ${tour.category}` : ''}
-${tour.duration_days ? `Продолжительность: ${tour.duration_days} дн.` : ''}
-${tour.region ? `Район: ${tour.region}` : ''}
-${tour.description ? `Текущее описание (улучши его): ${tour.description}` : 'Описания нет — создай с нуля.'}`,
+      content: `Напиши описание для туристического объекта:
+Название: ${route.title}
+${categoryLabel ? `Тип: ${categoryLabel}` : ''}
+${route.description ? `Имеющееся описание (расширь и улучши): ${route.description}` : 'Описания нет — создай с нуля на основе названия.'}
+
+Описание должно помочь туристу понять: что это за место, чем оно уникально, когда лучше посещать, что стоит знать перед поездкой.`,
     },
   ];
 
@@ -102,39 +102,34 @@ ${tour.description ? `Текущее описание (улучши его): ${t
   }
 }
 
-async function saveToCache(routeId: string, description: string): Promise<void> {
-  await pool.query(`
-    INSERT INTO route_description_cache (route_id, description, generated_at, model)
-    VALUES ($1, $2, NOW(), 'editor-agent')
-    ON CONFLICT (route_id) DO UPDATE
-      SET description   = EXCLUDED.description,
-          generated_at  = NOW(),
-          model         = 'editor-agent'
-  `, [routeId, description]);
-}
-
 export async function runEditor(): Promise<EditorResult> {
   const start = Date.now();
   let processed = 0;
-  let improved = 0;
-  let errors = 0;
+  let improved  = 0;
+  let errors    = 0;
 
-  let tours: TourRow[];
+  let routes: RouteRow[];
   try {
-    tours = await findToursNeedingImprovement();
+    routes = await findRoutesNeedingDescription();
   } catch {
     return { processed: 0, improved: 0, errors: 1, duration_ms: Date.now() - start };
   }
 
-  for (const tour of tours) {
+  for (const route of routes) {
     processed++;
-    const newDescription = await generateDescription(tour);
-    if (!newDescription) {
+    const newDescription = await generateRouteDescription(route);
+    if (!newDescription || newDescription.length < 100) {
       errors++;
       continue;
     }
     try {
-      await saveToCache(tour.id, newDescription);
+      await pool.query(
+        `UPDATE agent_route_knowledge
+         SET description = $1,
+             search_text = COALESCE(search_text, '') || ' ' || $1
+         WHERE id = $2`,
+        [newDescription, route.id],
+      );
       improved++;
     } catch {
       errors++;
@@ -143,8 +138,8 @@ export async function runEditor(): Promise<EditorResult> {
 
   if (improved > 0) {
     await tgSend(
-      `<b>Editor</b> — обновил ${improved} описаний туров\n` +
-      `(обработано: ${processed}, ошибок: ${errors})`
+      `<b>Editor</b> — улучшил ${improved} описаний маршрутов\n` +
+      `(обработано: ${processed}, ошибок: ${errors}, осталось кратких: ~${588 - improved})`,
     );
   }
 
