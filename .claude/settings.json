@@ -13,7 +13,9 @@
       "WebFetch(domain:habr.com)",
       "WebFetch(domain:vc.ru)",
       "WebFetch(domain:developers.tochka.com)",
-      "WebFetch(domain:enter.tochka.com)"
+      "WebFetch(domain:enter.tochka.com)",
+      "WebFetch(domain:kamchatkaland.ru)",
+      "WebFetch(domain:spkam.com)"
     ]
   },
   "hooks": {
@@ -23,17 +25,17 @@
         "hooks": [
           {
             "type": "command",
-            "if": "Bash(git commit*)",
             "command": "result=$(cd /workspaces/PosPkTry && npx tsc --noEmit 2>&1); if echo \"$result\" | grep -q 'error TS'; then errcount=$(echo \"$result\" | grep -c 'error TS'); printf '{\"continue\": false, \"stopReason\": \"TypeScript: %s ошиб(ок). Исправь — npx tsc --noEmit\"}' \"$errcount\"; exit 2; fi",
-            "statusMessage": "TypeScript проверка перед коммитом...",
-            "timeout": 60
+            "if": "Bash(git commit*)",
+            "timeout": 60,
+            "statusMessage": "TypeScript проверка перед коммитом..."
           },
           {
             "type": "command",
-            "if": "Bash(git commit*)",
             "command": "bash /workspaces/PosPkTry/.claude/hooks/db-schema-check.sh",
-            "statusMessage": "DB schema проверка...",
-            "timeout": 10
+            "if": "Bash(git commit*)",
+            "timeout": 10,
+            "statusMessage": "DB schema проверка..."
           }
         ]
       }
@@ -45,8 +47,8 @@
           {
             "type": "command",
             "command": "f=$(jq -r '.tool_input.file_path // empty' 2>/dev/null); if [[ \"$f\" == *.ts ]] || [[ \"$f\" == *.tsx ]]; then root=$(git -C \"$(dirname \"$f\")\" rev-parse --show-toplevel 2>/dev/null); if [ -n \"$root\" ]; then result=$(cd \"$root\" && npx tsc --noEmit 2>&1); if echo \"$result\" | grep -q 'error TS'; then n=$(echo \"$result\" | grep -c 'error TS'); printf '{\"systemMessage\": \"TS: %s ошиб(ок) — запусти npx tsc --noEmit\"}' \"$n\"; fi; fi; fi 2>/dev/null || true",
-            "statusMessage": "TypeScript...",
             "timeout": 30,
+            "statusMessage": "TypeScript...",
             "async": true
           }
         ]

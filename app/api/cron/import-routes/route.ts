@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { timingSafeCompare } from '@/lib/security/timing-safe';
 import { runVisitKamchatkaImporter } from '@/lib/agents/visitkamchatka-importer';
 import { runKamchatkalandImporter } from '@/lib/agents/kamchatkaland-importer';
+import { runPlacesEnricher } from '@/lib/agents/places-enricher';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
@@ -38,6 +39,9 @@ export async function GET(request: NextRequest) {
     }
     if (source === 'kamchatkaland' || source === 'all') {
       results.kamchatkaland = await runKamchatkalandImporter(Math.ceil(batch / 2));
+    }
+    if (source === 'places' || source === 'all') {
+      results.places = await runPlacesEnricher(batch);
     }
 
     return NextResponse.json({ success: true, ...results });
