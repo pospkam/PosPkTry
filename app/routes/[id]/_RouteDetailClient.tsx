@@ -20,12 +20,6 @@ import { useSourceTracker } from '@/hooks/useSourceTracker';
 import { AssistantButton } from '@/components/shared/AssistantButton';
 import { MarkerType } from '@/components/shared/LeafletMap';
 import DescriptionWithFishLinks from '@/components/shared/DescriptionWithFishLinks';
-import RouteAffiliateBlock from '@/components/routes/RouteAffiliateBlock';
-import InsuranceBlock from '@/components/routes/InsuranceBlock';
-import FlightsBlock from '@/components/routes/FlightsBlock';
-import HotelsBlock from '@/components/routes/HotelsBlock';
-import TransfersBlock from '@/components/routes/TransfersBlock';
-import YandexTravelBlock from '@/components/routes/YandexTravelBlock';
 import SafetyWarnings from '@/components/safety/SafetyWarnings';
 import { RouteGradientPlaceholder } from '@/components/routes/RouteGradientPlaceholder';
 
@@ -972,31 +966,8 @@ export default function RouteDetailClient({ id }: { id: string }) {
           </div>
         </div>
 
-        {/* ── Партнёрские сервисы (TravelPayouts) ───────────────────────────── */}
-        <RouteAffiliateBlock activityType={route.activityType} routeId={route.id} />
-
         {/* ── Безопасность маршрута (предупреждения) ────────────────────────── */}
         <SafetyWarnings routeId={route.id} />
-
-        {/* ── Яндекс Путешествия (билеты + отели + туры) ───────────────────────── */}
-        <YandexTravelBlock routeId={route.id} />
-
-        {/* ── Авиабилеты до Камчатки (Aviasales) ────────────────────────────── */}
-        <FlightsBlock />
-
-        {/* ── Отели в Петропавловске (Hotellook) ──────────────────────────────── */}
-        <HotelsBlock nights={3} />
-
-        {/* ── Трансферы и логистика (Kiwitaxi) ───────────────────────────────── */}
-        <TransfersBlock activity_type={route.activityType ?? undefined} />
-
-        {/* ── Рекомендация страховки ────────────────────────────────────────── */}
-        {route.activityType && (
-          <InsuranceBlock
-            activityTypes={route.activityType ? [route.activityType] : []}
-            routeTitle={route.title}
-          />
-        )}
 
         {/* ── Похожие ───────────────────────────────────────────────────────── */}
         {relatedRoutes.length > 0 && (
