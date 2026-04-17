@@ -21,7 +21,7 @@ export interface EditorResult {
   duration_ms: number;
 }
 
-const BATCH_SIZE = 15;
+const BATCH_SIZE = 30;
 const MIN_DESCRIPTION_LENGTH = 300;
 
 async function tgSend(text: string): Promise<void> {
