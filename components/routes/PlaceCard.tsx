@@ -5,7 +5,7 @@ import Link from 'next/link';
 import {
   Heart, MapPin, Flame, Wind, Thermometer, Droplets,
   Mountain, Waves, Anchor, TreePine, Landmark, Eye,
-  Home, Globe, ExternalLink,
+  Home,
 } from 'lucide-react';
 import type { RouteItem } from './RouteCard';
 
@@ -133,13 +133,7 @@ export default function PlaceCard({ route }: { route: RouteItem }) {
         <p className="text-xs text-[var(--text-secondary)] line-clamp-2 leading-relaxed">
           {route.description}
         </p>
-        {route.sourceUrl && (
-          <span className="inline-flex items-center gap-1 text-xs text-[var(--ocean)] hover:underline">
-            <Globe className="w-3 h-3" />
-            {route.sourceName ?? 'Источник'}
-            <ExternalLink className="w-2.5 h-2.5 opacity-60" />
-          </span>
-        )}
+
         {route.lat != null && (
           <span className="inline-flex items-center gap-1 text-xs text-[var(--text-muted)]">
             <MapPin className="w-3 h-3" />
