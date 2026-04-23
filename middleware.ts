@@ -219,6 +219,13 @@ const ratelimit = redis
   : null;
 
 export async function middleware(request: NextRequest) {
+  // ── Redirect legacy /routes?kind=tour → /marketplace ──
+  const kind = request.nextUrl.searchParams.get('kind');
+  if (request.nextUrl.pathname === '/routes' && kind === 'tour') {
+    const url = new URL('/marketplace', request.url);
+    return NextResponse.redirect(url, 301);
+  }
+
   // Skip rate limiting if Redis is not configured (development mode)
   if (ratelimit) {
     // x-real-ip — устанавливается nginx (нельзя подделать снаружи)
@@ -339,7 +346,8 @@ export const config = {
     '/api/:path*',
     '/hub/:path*',
     '/profile/:path*',
-    '/widget/:path*'
+    '/widget/:path*',
+    '/routes',
   ],
 };
 // Build ID: 1774529925

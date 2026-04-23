@@ -91,11 +91,10 @@ interface MapRoute {
 type SortValue = 'title' | 'recent' | 'price_asc' | 'price_desc' | 'recommended';
 type DifficultyValue = '' | 'easy' | 'medium' | 'hard';
 
-type KindValue = 'place' | 'tour' | 'route';
+type KindValue = 'place' | 'route';
 
 const KIND_TABS: { value: KindValue; label: string; desc: string }[] = [
   { value: 'place', label: 'Места',    desc: 'природных мест и достопримечательностей' },
-  { value: 'tour',  label: 'Туры',     desc: 'туров с ценами и датами' },
   { value: 'route', label: 'Маршруты', desc: 'пеших и автомобильных маршрутов' },
 ];
 
@@ -104,7 +103,10 @@ export default function RoutesPageClient() {
   const searchParams = useSearchParams();
 
   const [view, setView] = useState<'grid' | 'map'>('grid');
-  const [kind, setKind] = useState<KindValue>((searchParams.get('kind') as KindValue) || 'place');
+  const [kind, setKind] = useState<KindValue>(() => {
+    const k = searchParams.get('kind');
+    return (k === 'place' || k === 'route') ? k : 'place';
+  });
   const [query, setQuery] = useState(searchParams.get('q') ?? '');
   const [activityType, setActivityType] = useState(searchParams.get('activity_type') ?? '');
   const [sort, setSort] = useState<SortValue>('recommended');

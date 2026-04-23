@@ -118,7 +118,7 @@ export function MissionConsole() {
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
-              href="/routes?kind=tour"
+              href="/marketplace"
               className="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
             >
               Каталог туров
