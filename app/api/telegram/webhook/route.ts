@@ -53,6 +53,7 @@ import { createTicket, getUserOpenTickets, addTicketMessage } from '@/lib/suppor
 import { categorizeSupport, CATEGORY_LABELS, RESIDENT_INTRO } from '@/lib/support/categorize';
 import { leadProcessor } from '@/lib/services/lead-processor.service';
 import { groupMonitor } from '@/lib/telegram/group-monitor';
+import { createLead } from '@/lib/leads/create';
 
 export const dynamic = 'force-dynamic';
 
@@ -428,26 +429,21 @@ async function createLeadFromBot(
       ? `Интересы: ${interestList.join(', ')}${interests.dateFrom ? ` · Даты: ${interests.dateFrom} - ${interests.dateTo}` : ''}`
       : 'Заявка с Telegram бота';
 
-    const res = await pool.query(
-      `INSERT INTO leads (name, phone, comment, source_url, source_data, telegram_chat_id)
-       VALUES ($1, $2, $3, $4, $5::jsonb, $6) RETURNING id`,
-      [
-        'Турист',
-        phone,
-        comment,
-        'https://t.me/KuzmichKam_bot',
-        JSON.stringify({
-          source: 'telegram_bot',
-          interests: interestList,
-          date_from: interests.dateFrom,
-          date_to: interests.dateTo,
-          chat_id: chatId,
-          timestamp: new Date().toISOString(),
-        }),
-        chatId,
-      ]
-    );
-    const leadId = res.rows[0]?.id as string;
+    const leadId = await createLead({
+      name: 'Турист',
+      phone,
+      comment,
+      source_url: 'https://t.me/KuzmichKam_bot',
+      source_data: {
+        source: 'telegram_bot',
+        interests: interestList,
+        date_from: interests.dateFrom,
+        date_to: interests.dateTo,
+        chat_id: chatId,
+        timestamp: new Date().toISOString(),
+      },
+      telegram_chat_id: chatId,
+    });
 
     // ── 1. Автоответ туристу ───────────────────────────────────────────────
     const routes = interestList.length > 0
@@ -511,20 +507,7 @@ async function createLeadFromBot(
       }
     }
 
-    // ── 3. Уведомление admin ───────────────────────────────────────────────
-    await telegramService.sendMessage({
-      chatId: process.env.TELEGRAM_CHAT_ID ?? '',
-      text: [
-        '🤖 <b>Новый лид из бота</b>',
-        '',
-        `<b>Телефон:</b> <a href="tel:${phone}">${phone}</a>`,
-        `<b>Интересы:</b> ${interestList.join(', ') || 'неизвестно'}`,
-        interests.dateFrom ? `<b>Даты:</b> ${interests.dateFrom} — ${interests.dateTo}` : '',
-        '',
-        `<code>${leadId}</code>`,
-      ].filter(s => s !== '').join('\n'),
-      parseMode: 'HTML',
-    }).catch(() => {});
+    // Уведомление админу отправлено автоматически через createLead()
 
   } catch (err) {
   }
@@ -539,24 +522,19 @@ async function createLeadFromTelegramFlow(
   message: string,
 ): Promise<void> {
   try {
-    const res = await pool.query<{ id: string }>(
-      `INSERT INTO leads (name, phone, comment, source_url, source_data, telegram_chat_id)
-       VALUES ($1, $2, $3, $4, $5::jsonb, $6) RETURNING id`,
-      [
-        firstName,
-        telegramUsername ? `@${telegramUsername}` : `tg:${telegramUserId}`,
-        message,
-        'https://t.me/KuzmichKam_bot',
-        JSON.stringify({
-          source: 'telegram_lead_flow',
-          telegram_user_id: telegramUserId,
-          telegram_username: telegramUsername,
-          chat_id: chatId,
-        }),
-        chatId,
-      ]
-    );
-    const leadId = res.rows[0]?.id as string;
+    const leadId = await createLead({
+      name: firstName,
+      phone: telegramUsername ? `@${telegramUsername}` : `tg:${telegramUserId}`,
+      comment: message,
+      source_url: 'https://t.me/KuzmichKam_bot',
+      source_data: {
+        source: 'telegram_lead_flow',
+        telegram_user_id: telegramUserId,
+        telegram_username: telegramUsername,
+        chat_id: chatId,
+      },
+      telegram_chat_id: chatId,
+    });
     if (!leadId) return;
 
     // AI обработка — после завершения отвечаем туристу в ТГ

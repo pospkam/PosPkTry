@@ -793,6 +793,9 @@ export async function notifyAdminNewLead(lead: {
   routeTitle?: string | null;
   sourceUrl?: string | null;
   sourceData?: Record<string, unknown> | null;
+  score?: number;
+  emoji?: string;
+  labelRu?: string;
 }): Promise<void> {
   const chatId = process.env.TELEGRAM_CHAT_ID;
   if (!chatId) return;
@@ -806,13 +809,21 @@ export async function notifyAdminNewLead(lead: {
   const dateTo    = sd?.date_to   ?? sd?.departure;
   const source    = sd?.source ? (LEAD_SOURCE_LABELS[sd.source] ?? sd.source) : null;
 
-  const title = source ? `<b>Лид — ${esc(source)}</b>` : '<b>Лид с сайта</b>';
+  // Заголовок с эмодзи по скорингу
+  const emoji = lead.emoji ?? '';
+  const scoreText = lead.score != null ? ` \u00b7 ${lead.score}/100` : '';
+  const label = lead.labelRu ? ` (${lead.labelRu})` : '';
+  const title = source
+    ? `${emoji} <b>Лид — ${esc(source)}${label}${scoreText}</b>`
+    : `${emoji} <b>Новый лид${label}${scoreText}</b>`;
+
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tourhab.ru';
 
   const lines = [
     title,
     '',
     `<b>Имя:</b> ${esc(lead.name)}`,
-    `<b>Тел:</b> <a href="tel:${esc(lead.phone)}">${esc(lead.phone)}</a>`,
+    `<b>Тел:</b> <code>${esc(lead.phone)}</code> <a href="tel:${esc(lead.phone)}">(позвонить)</a>`,
   ];
 
   if (interests.length > 0) {
@@ -823,10 +834,15 @@ export async function notifyAdminNewLead(lead: {
     lines.push(`<b>Даты:</b> ${esc(dateFrom)} — ${dateTo ? esc(dateTo) : '?'}`);
   }
   if (sd?.trip_days) lines.push(`<b>Длина:</b> ${sd.trip_days} дн.`);
-  if (lead.comment) lines.push(`<b>Комментарий:</b> ${esc(lead.comment)}`);
+  if (lead.comment) {
+    const preview = lead.comment.length > 300 ? lead.comment.slice(0, 300) + '\u2026' : lead.comment;
+    lines.push(`<b>Сообщение:</b> ${esc(preview)}`);
+  }
   if (lead.routeTitle) lines.push(`<b>Маршрут:</b> ${esc(lead.routeTitle)}`);
   if (lead.sourceUrl) lines.push(`<b>Страница:</b> ${esc(lead.sourceUrl)}`);
-  lines.push('', `<code>${lead.id}</code>`);
+
+  // Ссылка на CRM
+  lines.push('', `<a href="${baseUrl}/hub/admin/leads/${lead.id}">Открыть в CRM →</a>`, `<code>${lead.id}</code>`);
 
   const replyMarkup = {
     inline_keyboard: [

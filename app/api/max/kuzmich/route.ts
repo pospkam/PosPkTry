@@ -14,6 +14,7 @@ import { Bot, type Api } from '@maxhub/max-bot-api';
 import { type PendingBooking, cleanupPending, processMessage } from '@/lib/kuzmich/core';
 import { registerOperatorMaxChatId, findOperatorByMaxChatId } from '@/lib/kuzmich/operator-chat';
 import { pool } from '@/lib/db-pool';
+import { createLead } from '@/lib/leads/create';
 
 type ButtonIntent = 'default' | 'positive' | 'negative';
 type MaxButton =
@@ -129,17 +130,14 @@ async function createLeadFromContact(
   comment: string,
 ): Promise<void> {
   try {
-    await pool.query(
-      `INSERT INTO leads (name, phone, comment, source_url, source_data, status)
-       VALUES ($1, $2, $3, $4, $5::jsonb, 'new')`,
-      [
-        name || 'Турист',
-        phone,
-        comment,
-        'https://max.ru',
-        JSON.stringify({ source: 'max_bot', max_chat_id: chatId, timestamp: new Date().toISOString() }),
-      ],
-    );
+    await createLead({
+      name: name || 'Турист',
+      phone,
+      comment,
+      source_url: 'https://max.ru',
+      source_data: { source: 'max_bot', max_chat_id: chatId, timestamp: new Date().toISOString() },
+      status: 'new',
+    });
   } catch { /* не блокируем */ }
 }
 

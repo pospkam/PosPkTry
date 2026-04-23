@@ -2,55 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { pool } from '@/lib/db-pool';
 import { telegramService } from '@/lib/notifications/telegram';
-import { notifyAdminNewLead } from '@/lib/notifications/telegram-channel';
 import { requireRole } from '@/lib/auth/middleware';
 import type { JWTPayload } from '@/lib/auth/jwt';
 import { notifyOperatorNewLead } from '@/lib/notifications/lead-notify';
 import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
 import { leadProcessor } from '@/lib/services/lead-processor.service';
+import { createLead } from '@/lib/leads/create';
 
 const leadLimiter = createRateLimiter({ windowMs: 60_000, max: 5 }); // 5 заявок/мин с одного IP
-
-// ── Быстрая оценка качества лида (0-100) без AI ─────────────────────────────
-function computeQuickScore(
-  name: string,
-  phone: string,
-  comment: string | undefined,
-  source_data: Record<string, unknown> | undefined,
-): number {
-  let score = 0;
-
-  // Имя (25 баллов)
-  if (/^Турист_\d+$/i.test(name)) return 5;           // Автогенерированное — сразу низко
-  if (name.trim().length < 3) return 5;
-  if (/\s/.test(name.trim())) score += 25;             // Есть фамилия
-  else score += 15;
-
-  // Телефон (20 баллов)
-  const digits = phone.replace(/\D/g, '');
-  if (digits.length >= 10) score += 20;
-  else score += 5;
-
-  // Комментарий (40 баллов)
-  if (comment) {
-    const len = comment.trim().length;
-    if (len > 80) score += 20;
-    else if (len > 30) score += 12;
-    else if (len > 10) score += 5;
-
-    // Конкретика: цифры (бюджет/группа/даты)
-    if (/\d{3,}/.test(comment)) score += 10;
-    // Ключевые слова намерения
-    if (/бюджет|руб|₽|чел|человек|дн[её]|ночь|недел/i.test(comment)) score += 10;
-  }
-
-  // Источник (15 баллов)
-  if (source_data?.source === 'trip_planner') score += 15;
-  else if (source_data?.source === 'homepage_cta') score += 10;
-  else if (source_data?.source === 'route_page') score += 12;
-
-  return Math.min(100, score);
-}
 
 const LeadSchema = z.object({
   name:         z.string().min(2, 'Укажите имя').max(120),
@@ -168,46 +127,16 @@ export async function POST(req: NextRequest) {
     operatorId = pRes.rows[0]?.id ?? null;
   }
 
-  // Дубль: тот же телефон + тот же комментарий за последние 24ч
-  const dupCheck = await pool.query<{ id: string }>(
-    `SELECT id FROM leads
-     WHERE phone = $1 AND comment = $2
-       AND created_at > NOW() - INTERVAL '24 hours'
-     LIMIT 1`,
-    [phone, comment ?? '']
-  );
-  if (dupCheck.rows.length > 0) {
-    return NextResponse.json({ success: true, id: dupCheck.rows[0].id }, { status: 200 });
-  }
+  // Единый путь: скоринг → INSERT → уведомление админу
+  const leadId = await createLead({
+    name, phone, comment, route_id, route_title, source_url, source_data, operator_id: operatorId,
+  });
 
-  const quickScore = computeQuickScore(name, phone, comment, source_data);
-  const isLowQuality = quickScore < 30;
-
-  let leadId: string;
-  try {
-    const res = await pool.query<{ id: string }>(
-      `INSERT INTO leads (name, phone, comment, route_id, route_title, source_url, source_data, ai_score, processed_at, operator_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-       RETURNING id`,
-      [
-        name, phone, comment ?? null, route_id ?? null, route_title ?? null,
-        source_url ?? null, source_data ? JSON.stringify(source_data) : null,
-        quickScore,
-        isLowQuality ? new Date() : null,   // низкое качество — сразу закрываем для cron
-        operatorId,
-      ]
-    );
-    leadId = res.rows[0].id;
-  } catch {
+  if (!leadId) {
     return NextResponse.json({ success: false, error: 'Ошибка сервера. Попробуйте позже.' }, { status: 500 });
   }
 
-  // Низкое качество — не тратим AI и не шлём уведомления
-  if (isLowQuality) {
-    return NextResponse.json({ success: true, id: leadId }, { status: 201 });
-  }
-
-  // Telegram — LEADS_CHAT_ID (старый канал)
+  // Telegram — LEADS_CHAT_ID (старый канал, параллельно с admin-чатом)
   const chatId = process.env.TELEGRAM_LEADS_CHAT_ID;
   if (chatId) {
     const lines = [
@@ -229,17 +158,6 @@ export async function POST(req: NextRequest) {
     telegramService.sendMessage({ chatId, text: lines.join('\n'), parseMode: 'HTML' })
       .catch(() => null);
   }
-
-  // Admin-чат с кнопками статусов
-  notifyAdminNewLead({
-    id:         leadId,
-    name,
-    phone,
-    comment:    comment ?? null,
-    routeTitle: route_title ?? null,
-    sourceUrl:  source_url ?? null,
-    sourceData: source_data ?? null,
-  }).catch(() => null);
 
   // Уведомление оператора с ссылкой на AI-обработку
   notifyOperatorNewLead({

@@ -7,6 +7,7 @@ import { getModelForAgent } from '@/lib/ai/agent-models';
 import type { ChatMessage } from '@/lib/ai/prompts';
 import { query } from '@/lib/database';
 import { emitEvent, AGENT_EVENTS } from '@/lib/events/emit';
+import { createLead } from '@/lib/leads/create';
 // Утилита для обогащения контекста AI описаниями туров из внешних источников
 export { fetchAsMarkdown } from '@/lib/ai/fetchAsMarkdown';
 
@@ -72,27 +73,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Persist lead in database (fire-and-forget)
-    void (async () => {
-      try {
-        await query(
-          `INSERT INTO leads (name, phone, comment, source_url, source_data, status)
-           VALUES ($1, $2, $3, $4, $5, 'new')`,
-          [
-            'Booking Intake Bot',
-            '',
-            message.slice(0, 500),
-            '/api/ai/booking-intake',
-            JSON.stringify({
-              source: 'booking_intake_bot',
-              history_length: history.length,
-              provider,
-            }),
-          ]
-        );
-      } catch {
-        // Non-critical
-      }
-    })();
+    void createLead({
+      name: 'Booking Intake Bot',
+      phone: '',
+      comment: message.slice(0, 500),
+      source_url: '/api/ai/booking-intake',
+      source_data: {
+        source: 'booking_intake_bot',
+        history_length: history.length,
+        provider,
+      },
+      status: 'new',
+    });
 
     // Emit booking intent event (fire-and-forget)
     emitEvent(AGENT_EVENTS.BOOKING_SURGE, 'booking_intake', 'info', {

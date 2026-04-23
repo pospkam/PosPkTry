@@ -12,6 +12,7 @@ import { getModelForAgent } from '@/lib/ai/agent-models';
 import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
 import { safeMsg } from '@/lib/errors/sanitize';
 import { buildRAGContext } from '@/lib/ai/rag-context';
+import { createLead } from '@/lib/leads/create';
 
 export const dynamic = 'force-dynamic';
 
@@ -163,16 +164,13 @@ export async function POST(request: NextRequest) {
 
     // Create lead on first message (fire-and-forget)
     if (history.length === 0) {
-      void query(
-        `INSERT INTO leads (name, comment, source_url, source_data, status)
-         VALUES ($1, $2, $3, $4::jsonb, 'new')`,
-        [
-          `Widget: ${partnerId}`,
-          message.slice(0, 500),
-          origin || partnerId,
-          JSON.stringify({ type: 'widget', partner_id: partnerId, partner_name: partner.name, domain: origin }),
-        ]
-      );
+      void createLead({
+        name: `Widget: ${partnerId}`,
+        comment: message.slice(0, 500),
+        source_url: origin || partnerId,
+        source_data: { type: 'widget', partner_id: partnerId, partner_name: partner.name, domain: origin },
+        status: 'new',
+      });
     }
 
     return NextResponse.json(
