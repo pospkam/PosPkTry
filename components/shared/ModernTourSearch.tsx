@@ -70,7 +70,7 @@ const TourCard = React.memo(({ result }: { result: TourResult | (TourResult & Tr
     >
       <div className="tour-result-image relative aspect-[4/3] overflow-hidden">
         {result.imageUrl ? (
-          <Image src={result.imageUrl} alt={result.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 100vw, 50vw" />
+          <Image src={result.imageUrl} alt={result.title} fill className="object-contain group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 100vw, 50vw" />
         ) : (
           <div className="w-full h-full bg-[var(--bg-card)] flex items-center justify-center" aria-label="Нет изображения">
             <Mountain size={48} className="text-[var(--text-muted)]" />

@@ -405,7 +405,7 @@ export default function KuzmichWidget() {
                       className="flex items-center gap-2 p-2 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] hover:border-[var(--accent)] transition-all group">
                       {t.tour_image
                         ? <div className="relative w-10 h-8 rounded overflow-hidden shrink-0">
-                            <Image src={t.tour_image} alt={t.title} fill className="object-cover" />
+                            <Image src={t.tour_image} alt={t.title} fill className="object-contain" />
                           </div>
                         : <div className="w-10 h-8 rounded bg-[var(--accent)]/10 shrink-0" />
                       }

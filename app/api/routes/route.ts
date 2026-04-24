@@ -39,6 +39,55 @@ function pickPrimaryImage(payload: Record<string, unknown>): string | null {
   return null;
 }
 
+/**
+ * Красивые фото-плейсхолдеры по категориям.
+ * Используются когда у оператора нет фото или оно бытового качества.
+ * Фото лежат в public/images/partners/kamchatintour/
+ */
+const CATEGORY_FALLBACK_IMAGES: Record<string, string> = {
+  vulkani:              '/images/partners/kamchatintour/volcanoes.webp',
+  termalnye_istochniki: '/images/partners/kamchatintour/thermal.jpg',
+  geyzery:              '/images/partners/kamchatintour/seo2.jpg',
+  morskie_progulki:     '/images/partners/kamchatintour/sea-russkaya.jpg',
+  rybalka:              '/images/partners/kamchatintour/rafting.jpg',
+  snegohod:             '/images/partners/kamchatintour/snowmobile.jpg',
+  vertoletnye_tury:     '/images/partners/kamchatintour/helicopter.jpg',
+  dzhip:                '/images/partners/kamchatintour/intro.jpg',
+  medvedi:              '/images/partners/kamchatintour/cape.jpg',
+  splav:                '/images/partners/kamchatintour/rafting.jpg',
+  eco:                  '/images/partners/kamchatintour/seo1.jpg',
+  trekking:             '/images/partners/kamchatintour/gorely.jpg',
+  lakes:                '/images/partners/kamchatintour/seo4.jpg',
+  rivers:               '/images/partners/kamchatintour/rafting.jpg',
+  mountains:            '/images/partners/kamchatintour/volcanoes.webp',
+};
+
+/**
+ * Получить фоллбэк-фото по категории.
+ * Если категории нет в маппинге — пробуем подобрать по ключевым словам.
+ */
+function getCategoryFallbackImage(category: string | null): string | null {
+  if (!category) return null;
+  if (CATEGORY_FALLBACK_IMAGES[category]) return CATEGORY_FALLBACK_IMAGES[category];
+
+  // Подбор по ключевым словам в категории/активности/типе локации (не строгий)
+  const lower = category.toLowerCase();
+  if (lower.includes('вулкан') || lower.includes('volcan')) return CATEGORY_FALLBACK_IMAGES.vulkani;
+  if (lower.includes('терм') || lower.includes('thermal') || lower.includes('источник')) return CATEGORY_FALLBACK_IMAGES.termalnye_istochniki;
+  if (lower.includes('мор') || lower.includes('sea') || lower.includes('boat')) return CATEGORY_FALLBACK_IMAGES.morskie_progulki;
+  if (lower.includes('рыбалк') || lower.includes('fish')) return CATEGORY_FALLBACK_IMAGES.rybalka;
+  if (lower.includes('снег') || lower.includes('snow')) return CATEGORY_FALLBACK_IMAGES.snegohod;
+  if (lower.includes('вертолёт') || lower.includes('вертол') || lower.includes('helicopter') || lower.includes('heli')) return CATEGORY_FALLBACK_IMAGES.vertoletnye_tury;
+  if (lower.includes('медвед') || lower.includes('bear')) return CATEGORY_FALLBACK_IMAGES.medvedi;
+  if (lower.includes('сплав') || lower.includes('raft')) return CATEGORY_FALLBACK_IMAGES.splav;
+  if (lower.includes('гейзер') || lower.includes('geyser')) return CATEGORY_FALLBACK_IMAGES.geyzery;
+  if (lower.includes('озер') || lower.includes('lake')) return CATEGORY_FALLBACK_IMAGES.lakes;
+  if (lower.includes('река') || lower.includes('river')) return CATEGORY_FALLBACK_IMAGES.rivers;
+  if (lower.includes('гор') || lower.includes('mountain')) return CATEGORY_FALLBACK_IMAGES.mountains;
+
+  return null;
+}
+
 const QuerySchema = z.object({
   q:             z.string().max(200).optional(),
   kind:          z.enum(['place', 'route', 'tour']).optional(),
@@ -172,7 +221,7 @@ export async function GET(request: NextRequest) {
       success: true,
       data: dataResult.rows.map(r => {
         const payload = (r.payload as Record<string, unknown>) ?? {};
-        const imageUrl = pickPrimaryImage(payload);
+        const imageUrl = pickPrimaryImage(payload) || getCategoryFallbackImage(r.category as string);
 
         return {
           ...(imageUrl ? { imageUrl } : {}),

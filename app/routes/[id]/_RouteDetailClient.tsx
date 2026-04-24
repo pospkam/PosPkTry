@@ -177,7 +177,7 @@ function OfferCard({ offer, activityType, onBook }: {
             src={cardImage}
             alt={offer.tourName}
             fill
-            className="object-cover group-hover:scale-110 transition-transform duration-300"
+            className="object-contain group-hover:scale-110 transition-transform duration-300"
             sizes="(max-width: 768px) 100vw, 160px"
           />
         ) : (
@@ -474,7 +474,7 @@ export default function RouteDetailClient({ id }: { id: string }) {
               showLabel={false}
             />
           ) : (
-            <Image src={heroImage!} alt={route.title} fill className="object-cover" priority sizes="100vw" />
+            <Image src={heroImage!} alt={route.title} fill className="object-contain" priority sizes="100vw" />
           )}
           {isAiHero && (
             <div className="absolute bottom-3 right-3 bg-black/50 text-white text-xs px-2 py-0.5 rounded flex items-center gap-1">

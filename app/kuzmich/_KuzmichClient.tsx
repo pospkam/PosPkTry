@@ -142,7 +142,7 @@ function BookingFormCard({
       {/* Фото тура */}
       {data.tourImage && (
         <div className="relative h-36 w-full bg-[var(--bg-hover)]">
-          <Image src={data.tourImage} alt={data.tourTitle} fill className="object-cover" />
+          <Image src={data.tourImage} alt={data.tourTitle} fill className="object-contain" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
           <div className="absolute bottom-2 left-3 right-3">
             <p className="text-white text-sm font-semibold leading-tight line-clamp-2">{data.tourTitle}</p>
@@ -280,7 +280,7 @@ function TourMiniCard({ tour }: { tour: TourCard }) {
       className="flex gap-3 p-3 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] hover:border-[var(--accent)] transition-all group">
       {tour.tour_image ? (
         <div className="relative w-16 h-14 rounded-lg overflow-hidden shrink-0">
-          <Image src={tour.tour_image} alt={tour.title} fill className="object-cover" />
+          <Image src={tour.tour_image} alt={tour.title} fill className="object-contain" />
         </div>
       ) : (
         <div className="w-16 h-14 rounded-lg bg-[var(--accent)]/10 flex items-center justify-center shrink-0">
