@@ -459,11 +459,54 @@ export default function MarketplaceClient() {
   return (
     <div className="ds-page pb-20">
       {/* Header */}
-      <div className="mb-6">
+      <div className="mb-8">
         <h1 className="ds-h1 mb-1">Туры Камчатки</h1>
-        <p className="text-sm text-[var(--text-secondary)] mb-4">
-          Реальные предложения операторов. Сначала выберите подходящий формат, потом отправляйте заявку.
+        <p className="text-sm text-[var(--text-secondary)] mb-6">
+          Реальные предложения операторов. Выберите направление — и увидите, куда поедете.
         </p>
+
+        {/* ─── Visual Category Grid ─── */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+          {[
+            { key: 'trekking',   label: 'Вулканы',   img: '/images/activities/volcanoes.jpg', icon: '🌋' },
+            { key: 'thermal',    label: 'Термальные', img: '/images/activities/hotsprings.jpg', icon: '♨️' },
+            { key: 'fishing',    label: 'Рыбалка',   img: '/images/activities/fishing.jpg',   icon: '🐟' },
+            { key: 'bears',      label: 'Медведи',   img: '/images/categories/medvedi.jpg',    icon: '🐻' },
+            { key: 'helicopter', label: 'Вертолёт',  img: '/images/activities/helicopter.jpg',  icon: '🚁' },
+            { key: 'boat_trip',  label: 'Море',      img: '/images/activities/sea.jpg',       icon: '🌊' },
+            { key: 'rafting',    label: 'Сплав',     img: '/images/activities/rafting.jpg',    icon: '🛶' },
+            { key: 'snowmobile', label: 'Снегоход',  img: '/images/activities/snowmobile.jpg',  icon: '❄️' },
+          ].map(cat => (
+            <button
+              key={cat.key}
+              onClick={() => setActivityFilter(activityFilter === cat.key ? '' : cat.key)}
+              className={`group relative h-28 sm:h-32 rounded-xl overflow-hidden transition-all duration-300 ${
+                activityFilter === cat.key
+                  ? 'ring-2 ring-[var(--accent)] scale-[1.03]'
+                  : 'hover:scale-[1.02]'
+              }`}
+            >
+              <Image
+                src={cat.img}
+                alt={cat.label}
+                fill
+                className="object-cover transition-transform duration-500 group-hover:scale-110"
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+              <div className="absolute inset-0 flex flex-col items-center justify-end pb-3">
+                <span className="text-xl mb-0.5">{cat.icon}</span>
+                <span className="text-white text-sm font-semibold drop-shadow-lg">{cat.label}</span>
+              </div>
+              {activityFilter === cat.key && (
+                <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-[var(--accent)] flex items-center justify-center">
+                  <Check className="w-3 h-3 text-white" />
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+
         {/* AI banner */}
         <Link
           href="/planner"
