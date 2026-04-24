@@ -20,7 +20,7 @@ import { useSourceTracker } from '@/hooks/useSourceTracker';
 import { AssistantButton } from '@/components/shared/AssistantButton';
 import { MarkerType } from '@/components/shared/LeafletMap';
 import DescriptionWithFishLinks from '@/components/shared/DescriptionWithFishLinks';
-import RouteAffiliateBlock from '@/components/routes/RouteAffiliateBlock';
+
 import InsuranceBlock from '@/components/routes/InsuranceBlock';
 import FlightsBlock from '@/components/routes/FlightsBlock';
 import HotelsBlock from '@/components/routes/HotelsBlock';
@@ -973,7 +973,7 @@ export default function RouteDetailClient({ id }: { id: string }) {
         </div>
 
         {/* ── Партнёрские сервисы (TravelPayouts) ───────────────────────────── */}
-        <RouteAffiliateBlock activityType={route.activityType} routeId={route.id} />
+        {/* Affiliate links moved to booking success page */}
 
         {/* ── Безопасность маршрута (предупреждения) ────────────────────────── */}
         <SafetyWarnings routeId={route.id} />

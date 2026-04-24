@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { X, Calendar, Users, MessageSquare, CheckCircle, Loader2, LogIn, AlertCircle, Phone, Shield, ExternalLink } from 'lucide-react';
+import { X, Calendar, Users, MessageSquare, CheckCircle, Loader2, LogIn, AlertCircle, Phone, Shield, ExternalLink, Plane, Hotel, Car, Map, Navigation } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface Departure {
@@ -415,6 +415,48 @@ export default function BookingModal({
                   >
                     <ExternalLink className="w-3 h-3" />
                     Ингосстрах
+                  </a>
+                </div>
+              </div>
+
+              {/* Useful links — flights, hotels, transfers, excursions */}
+              <div className="border border-[var(--border)] rounded-lg p-4 space-y-3 bg-[var(--bg-hover)]">
+                <div className="flex items-center gap-2">
+                  <Navigation className="w-4 h-4 text-[var(--accent)] shrink-0" />
+                  <p className="text-sm font-semibold text-[var(--text-primary)]">Полезно для поездки</p>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <a
+                    href="https://www.aviasales.ru/search/MOW0000PKC1?marker=402896"
+                    target="_blank"
+                    rel="noopener noreferrer sponsored"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[var(--border)] text-xs font-medium text-[var(--text-secondary)] hover:border-[var(--ocean)] hover:text-[var(--ocean)] transition-all"
+                  >
+                    <Plane className="w-3 h-3" /> Авиабилеты
+                  </a>
+                  <a
+                    href="https://yandex.travel/hotels/petropavlovsk-kamchatsky/?clid=4910087&affiliate_vid=402896&utm_campaign=tourhab.ru&utm_medium=cpa&utm_source=travelpayouts"
+                    target="_blank"
+                    rel="noopener noreferrer sponsored"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[var(--border)] text-xs font-medium text-[var(--text-secondary)] hover:border-[var(--ocean)] hover:text-[var(--ocean)] transition-all"
+                  >
+                    <Hotel className="w-3 h-3" /> Отели
+                  </a>
+                  <a
+                    href="https://kiwitaxi.ru/?aff_id=402896"
+                    target="_blank"
+                    rel="noopener noreferrer sponsored"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[var(--border)] text-xs font-medium text-[var(--text-secondary)] hover:border-[var(--ocean)] hover:text-[var(--ocean)] transition-all"
+                  >
+                    <Car className="w-3 h-3" /> Трансфер
+                  </a>
+                  <a
+                    href="https://experience.tripster.ru/kamchatka/?erid=2VtzqvHHd1p&partner=402896&utm_campaign=affiliates&utm_medium=link&utm_source=travelpayouts"
+                    target="_blank"
+                    rel="noopener noreferrer sponsored"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[var(--border)] text-xs font-medium text-[var(--text-secondary)] hover:border-[var(--ocean)] hover:text-[var(--ocean)] transition-all"
+                  >
+                    <Map className="w-3 h-3" /> Экскурсии
                   </a>
                 </div>
               </div>
