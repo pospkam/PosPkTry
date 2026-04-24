@@ -6,7 +6,8 @@ import Link from 'next/link';
 import {
   MapPin, Users, ChevronRight, Heart, ShoppingCart, Check,
   AlertCircle, Clock, Sparkles, Search, SlidersHorizontal,
-  X, ChevronDown, CheckCircle2,
+  X, ChevronDown, CheckCircle2, Flame, ThermometerSun, Fish,
+  PawPrint, Helicopter, Waves, Snowflake,
 } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 
@@ -468,14 +469,14 @@ export default function MarketplaceClient() {
         {/* ─── Visual Category Grid ─── */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
           {[
-            { key: 'trekking',   label: 'Вулканы',   img: '/images/activities/volcanoes.jpg', icon: '🌋' },
-            { key: 'thermal',    label: 'Термальные', img: '/images/activities/hotsprings.jpg', icon: '♨️' },
-            { key: 'fishing',    label: 'Рыбалка',   img: '/images/activities/fishing.jpg',   icon: '🐟' },
-            { key: 'bears',      label: 'Медведи',   img: '/images/categories/medvedi.jpg',    icon: '🐻' },
-            { key: 'helicopter', label: 'Вертолёт',  img: '/images/activities/helicopter.jpg',  icon: '🚁' },
-            { key: 'boat_trip',  label: 'Море',      img: '/images/activities/sea.jpg',       icon: '🌊' },
-            { key: 'rafting',    label: 'Сплав',     img: '/images/activities/rafting.jpg',    icon: '🛶' },
-            { key: 'snowmobile', label: 'Снегоход',  img: '/images/activities/snowmobile.jpg',  icon: '❄️' },
+            { key: 'trekking',   label: 'Вулканы',   img: '/images/activities/volcanoes.jpg',  icon: Flame },
+            { key: 'thermal',    label: 'Термальные', img: '/images/activities/hotsprings.jpg', icon: ThermometerSun },
+            { key: 'fishing',    label: 'Рыбалка',   img: '/images/activities/fishing.jpg',    icon: Fish },
+            { key: 'bears',      label: 'Медведи',   img: '/images/categories/medvedi.jpg',    icon: PawPrint },
+            { key: 'helicopter', label: 'Вертолёт',  img: '/images/activities/helicopter.jpg', icon: Helicopter },
+            { key: 'boat_trip',  label: 'Море',      img: '/images/activities/sea.jpg',        icon: Waves },
+            { key: 'rafting',    label: 'Сплав',     img: '/images/activities/rafting.jpg',    icon: Waves },
+            { key: 'snowmobile', label: 'Снегоход',  img: '/images/activities/snowmobile.jpg', icon: Snowflake },
           ].map(cat => (
             <button
               key={cat.key}
@@ -495,7 +496,7 @@ export default function MarketplaceClient() {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
               <div className="absolute inset-0 flex flex-col items-center justify-end pb-3">
-                <span className="text-xl mb-0.5">{cat.icon}</span>
+                <cat.icon className="w-6 h-6 mb-0.5 text-white drop-shadow-lg" />
                 <span className="text-white text-sm font-semibold drop-shadow-lg">{cat.label}</span>
               </div>
               {activityFilter === cat.key && (
