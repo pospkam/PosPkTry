@@ -96,7 +96,7 @@ async function tgNotify(scan: unknown, evo: unknown, rescue: unknown): Promise<v
   const critical = s.issues.filter(i => i.severity === 'critical' || i.severity === 'high').length;
   const rescueAlerts = r.alerts.filter(a => a.severity === 'critical' || a.severity === 'warning').length;
   const text = `<b>Evo Scan</b> — ${s.issues.length} проблем (${critical} критичных)\n` +
-    `Эволюция: обработано ${e.processed}, PR создано: ${e.prs_created}\n` +
+    `Эволюция: обработано ${e.processed}, автофиксов: ${e.auto_fixes}\n` +
     (rescueAlerts > 0 ? `<b>Спасатель: ${rescueAlerts} алертов</b>\n` : '') +
     `Время: ${Math.round(s.duration_ms / 1000)}с`;
 
