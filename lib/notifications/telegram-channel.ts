@@ -773,9 +773,15 @@ interface LeadSourceData {
 }
 
 const LEAD_SOURCE_LABELS: Record<string, string> = {
-  telegram_bot: 'Телеграм-бот',
-  trip_planner: 'TripPlanner',
-  website:      'Сайт',
+  telegram_bot:        'Телеграм-бот',
+  telegram_lead_flow:  'ТГ-бот (форма)',
+  trip_planner:        'TripPlanner',
+  website:             'Сайт',
+  homepage_cta:        'Главная (CTA)',
+  route_page:          'Страница маршрута',
+  max_bot:             'MAX-бот',
+  widget:              'Виджет партнёра',
+  booking_intake_bot:  'AI-бронирование',
 };
 
 const LEAD_INTEREST_LABELS: Record<string, string> = {
@@ -858,7 +864,7 @@ export async function notifyAdminNewLead(lead: {
   };
 
   try {
-    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -868,7 +874,47 @@ export async function notifyAdminNewLead(lead: {
         reply_markup: replyMarkup,
       }),
     });
-  } catch { /* некритично */ }
+
+    const tgData = await res.json() as { ok: boolean; error_code?: number; description?: string };
+
+    // Логируем попытку в ai_actions_log
+    void query(
+      `INSERT INTO ai_actions_log (action_type, metadata) VALUES ($1, $2)`,
+      [
+        'telegram_lead_notification',
+        JSON.stringify({
+          lead_id: lead.id,
+          chat_id: chatId,
+          success: tgData.ok,
+          error_code: tgData.error_code ?? null,
+          error_description: (tgData.description ?? '').slice(0, 200),
+          score: lead.score ?? null,
+          source: source ?? 'unknown',
+        }),
+      ],
+    ).catch(() => {});
+
+    if (!tgData.ok) {
+      console.error(`[notifyAdminNewLead] Telegram error ${tgData.error_code}: ${tgData.description}`);
+    }
+  } catch (e) {
+    const errMsg = e instanceof Error ? e.message : String(e);
+    console.error('[notifyAdminNewLead] fetch error:', errMsg);
+
+    // Логируем ошибку
+    void query(
+      `INSERT INTO ai_actions_log (action_type, metadata) VALUES ($1, $2)`,
+      [
+        'telegram_lead_notification',
+        JSON.stringify({
+          lead_id: lead.id,
+          chat_id: chatId,
+          success: false,
+          error: errMsg.slice(0, 200),
+        }),
+      ],
+    ).catch(() => {});
+  }
 }
 
 /**

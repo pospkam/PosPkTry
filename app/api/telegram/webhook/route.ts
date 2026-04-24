@@ -1119,7 +1119,7 @@ export async function POST(request: NextRequest) {
         void createLeadFromTelegramFlow(
           chatId, pendingLead.firstName, fromId,
           update.message?.from?.username ?? null, text
-        );
+        ).catch((err) => console.error('[tg webhook] createLeadFromTelegramFlow failed:', err));
         return NextResponse.json({ ok: true });
       }
 

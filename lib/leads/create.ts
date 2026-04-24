@@ -120,7 +120,7 @@ export async function createLead(params: CreateLeadParams): Promise<string | nul
       score: quickScore,
       emoji: quality.emoji,
       labelRu: quality.labelRu,
-    });
+    }).catch((e) => console.error('[createLead] notifyAdminNewLead failed:', e));
   }
 
   return leadId;

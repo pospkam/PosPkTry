@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
         provider,
       },
       status: 'new',
-    });
+    }).catch((err) => console.error('[booking-intake] createLead failed:', err));
 
     // Emit booking intent event (fire-and-forget)
     emitEvent(AGENT_EVENTS.BOOKING_SURGE, 'booking_intake', 'info', {

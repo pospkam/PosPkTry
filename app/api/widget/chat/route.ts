@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
         source_url: origin || partnerId,
         source_data: { type: 'widget', partner_id: partnerId, partner_name: partner.name, domain: origin },
         status: 'new',
-      });
+      }).catch((err) => console.error('[widget] createLead failed:', err));
     }
 
     return NextResponse.json(
