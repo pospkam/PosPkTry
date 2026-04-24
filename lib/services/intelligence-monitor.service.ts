@@ -37,6 +37,24 @@ interface RawSignal {
   source:  string;
 }
 
+/** Hacker News Algolia search result */
+interface HNHit {
+  objectID: string;
+  title: string;
+  url: string;
+  points: number;
+  num_comments: number;
+  author: string;
+  _highlightResult?: {
+    story_text?: { value: string };
+  };
+}
+
+/** HN Algolia API search response */
+interface HNResponse {
+  hits: HNHit[];
+}
+
 export interface IntelligenceFinding {
   domain:     'ai_tech' | 'travel_industry' | 'competitors' | 'travel_ai';
   summary:    string;
@@ -59,6 +77,50 @@ interface DomainSource {
   rss:     string[];
   search_query: string;
   ai_filter: string;
+}
+
+// ── Hardcoded fallback (used when intelligence_sources table doesn't exist yet) ─
+
+// ── Travel-AI specific RSS/search sources ────────────────────────────────────
+
+/** Skift RSS feed (verified working) */
+const SKIFT_RSS = 'https://skift.com/feed/';
+
+/** Product Hunt main feed (Atom, verified working) */
+const PRODUCTHUNT_FEED = 'https://www.producthunt.com/feed';
+
+/** Mindtrip blog — blocked by Cloudflare, use Firecrawl */
+const MINDTRIP_BLOG = 'https://mindtrip.ai/blog';
+
+/** Amadeus blog — no RSS, use Firecrawl */
+const AMADEUS_BLOG = 'https://amadeus.com/en/blog';
+
+/** PhocusWire — blocked by Cloudflare, use Firecrawl */
+const PHOCUSWIRE = 'https://www.phocuswire.com/Latest-News';
+
+/** TAAFT newsletter — blocked by Cloudflare, use Firecrawl */
+const TAAFT_NEWSLETTER = 'https://newsletter.taaft.com/';
+
+/** HN Algolia API base */
+const HN_ALGOLIA_API = 'https://hn.algolia.com/api/v1/search';
+
+async function searchHackerNews(query: string): Promise<RawSignal[]> {
+  try {
+    const url = `${HN_ALGOLIA_API}?query=${encodeURIComponent(query)}&tags=story&hitsPerPage=10`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
+    if (!res.ok) return [];
+    const data = await res.json() as HNResponse;
+    return (data.hits ?? []).map((h) => ({
+      title: h.title,
+      url: h.url || `https://news.ycombinator.com/item?id=${h.objectID}`,
+      snippet: h._highlightResult?.story_text?.value
+        ? h._highlightResult.story_text.value.replace(/<[^>]+>/g, ' ').substring(0, 400)
+        : `${h.points} pts · ${h.num_comments} comments · by ${h.author}`,
+      source: 'hackernews',
+    }));
+  } catch {
+    return [];
+  }
 }
 
 // ── Hardcoded fallback (used when intelligence_sources table doesn't exist yet) ─
@@ -110,6 +172,30 @@ AI-агенты для бизнеса, автоматизация клиентс
 - Федеральные: Tripster/Sputnik8/Avito Travel — Камчатка раздел
 Ищи: новые маршруты, ценовые изменения, технологические фичи, маркетинговые кампании.
 Игнорируй: общие новости Камчатского края не связанные с туризмом.`,
+  },
+  travel_ai: {
+    label: 'Travel-AI (Western sources)',
+    rss: [
+      SKIFT_RSS,      // ✅ verified
+      PRODUCTHUNT_FEED, // ✅ verified (main feed, AI filter will pick travel)
+    ],
+    search_query: 'travel AI agent itinerary planning booking automation 2026',
+    ai_filter: `Ты анализируешь travel-tech новости для владельца AI-travel платформы.
+Задача: найти новые фичи/паттерны которые можно реализовать у себя.
+
+Для каждой релевантной новости:
+1. Что конкретно внедрили? (1-2 предложения)
+2. Какую пользовательскую боль это решает?
+3. Можно ли это реализовать в Next.js + Claude API + Postgres?
+4. Приоритет для нас: высокий / средний / низкий
+5. Ссылка на источник
+
+Игнорируй:
+- Слияния/поглощения компаний (кроме стратегических сигналов)
+- Кадровые новости
+- Общие рыночные отчёты без конкретики
+- AI-продукты для других отраслей
+- Общие статьи про AI без привязки к travel`,
   },
 };
 
@@ -523,7 +609,15 @@ export async function runIntelligenceCycle(): Promise<IntelligenceReport> {
   const domainEntries = Object.entries(intelligenceDomains);
   const gatherResults = await Promise.allSettled(
     domainEntries.map(async ([key, config]) => {
-      const signals = await gatherDomain(key, config);
+      let signals = await gatherDomain(key, config);
+
+      // ── travel_ai enrichment: add HN + Firecrawl sources ──
+      if (key === 'travel_ai') {
+        const extraSignals = await gatherTravelAIExtra();
+        signals.push(...extraSignals);
+        rawCount += extraSignals.length;
+      }
+
       rawCount += signals.length;
       const finding = await analyzeSignals(key, config, signals);
       return finding;
@@ -703,6 +797,57 @@ export async function injectManualIntel(
   });
 
   return { ok: true, domain, summary, urgency, action_items: actionItems, key };
+}
+
+/**
+ * Extra gathering for travel_ai domain: HackerNews Algolia + Firecrawl.
+ * Called after standard RSS gathering.
+ */
+async function gatherTravelAIExtra(): Promise<RawSignal[]> {
+  const results: RawSignal[] = [];
+
+  // 1. HN searches (Algolia API — no auth needed)
+  const [hnTravel, hnAgent] = await Promise.allSettled([
+    searchHackerNews('travel AI'),
+    searchHackerNews('AI agent travel planning'),
+  ]);
+
+  if (hnTravel.status === 'fulfilled') results.push(...hnTravel.value);
+  if (hnAgent.status === 'fulfilled') results.push(...hnAgent.value);
+
+  // 2. Firecrawl for Cloudflare-blocked sites
+  if (firecrawlAvailable()) {
+    const fcUrls = [
+      { url: MINDTRIP_BLOG, source: 'mindtrip' },
+      { url: PHOCUSWIRE, source: 'phocuswire' },
+      { url: AMADEUS_BLOG, source: 'amadeus' },
+      { url: TAAFT_NEWSLETTER, source: 'taaft' },
+    ];
+
+    const fcResults = await Promise.allSettled(
+      fcUrls.map(async ({ url, source }) => {
+        const page = await firecrawlScrape(url, { formats: ['markdown'], onlyMainContent: true });
+        if (!page?.markdown) return [] as RawSignal[];
+
+        // Extract top headlines/links from the page
+        const lines = page.markdown.split('\n').filter(l => l.trim());
+        const topLines = lines.slice(0, 50).join('\n').substring(0, 2000);
+
+        return [{
+          title: page.metadata.title ?? source,
+          url,
+          snippet: topLines,
+          source: `firecrawl:${source}`,
+        }] as RawSignal[];
+      }),
+    );
+
+    for (const r of fcResults) {
+      if (r.status === 'fulfilled') results.push(...r.value);
+    }
+  }
+
+  return results;
 }
 
 /**
