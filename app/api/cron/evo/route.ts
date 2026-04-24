@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { timingSafeCompare } from '@/lib/security/timing-safe';
 import { runGrowthScan } from '@/lib/agents/evo/growth-agent';
 import { runEvolutionLoop } from '@/lib/agents/evo/evolution-loop';
+import { runRescueScan } from '@/lib/agents/evo/rescue-agent';
 import { logAgentRun } from '@/lib/agents/run-logger';
 
 export const dynamic = 'force-dynamic';
@@ -39,6 +40,9 @@ export async function GET(request: NextRequest) {
     // 2. Evolution Loop — применяем фиксы
     const evoResult = await runEvolutionLoop();
 
+    // 3. Rescue Scan — проактивная безопасность
+    const rescueResult = await runRescueScan();
+
     // Log
     void logAgentRun({
       agent_id: 'evo',
@@ -48,6 +52,7 @@ export async function GET(request: NextRequest) {
       metadata: {
         scan: scanResult,
         evolution: evoResult,
+        rescue: rescueResult,
       } as unknown as Record<string, unknown>,
     });
 
@@ -60,6 +65,7 @@ export async function GET(request: NextRequest) {
       success: true,
       scan: scanResult,
       evolution: evoResult,
+      rescue: rescueResult,
     });
   } catch (err) {
     void logAgentRun({
@@ -85,10 +91,13 @@ async function tgNotify(scan: unknown, evo: unknown): Promise<void> {
 
   const s = scan as { issues: Array<{ severity: string; title: string }>; duration_ms: number };
   const e = evo as { processed: number; prs_created: number };
+  const r = rescue as { alerts: Array<{ severity: string; title: string }> };
 
   const critical = s.issues.filter(i => i.severity === 'critical' || i.severity === 'high').length;
+  const rescueAlerts = r.alerts.filter(a => a.severity === 'critical' || a.severity === 'warning').length;
   const text = `<b>Evo Scan</b> — ${s.issues.length} проблем (${critical} критичных)\n` +
     `Эволюция: обработано ${e.processed}, PR создано: ${e.prs_created}\n` +
+    (rescueAlerts > 0 ? `<b>Спасатель: ${rescueAlerts} алертов</b>\n` : '') +
     `Время: ${Math.round(s.duration_ms / 1000)}с`;
 
   try {

@@ -1,0 +1,35 @@
+name: Cron — Rescue Agent (every 30 min)
+
+# Runs every 30 minutes: checks SOS, weather threats, unconfirmed bookings
+on:
+  schedule:
+    - cron: '*/30 * * * *'  # каждые 30 минут
+  workflow_dispatch:        # manual trigger
+
+jobs:
+  rescue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Rescue Scan
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "CRON_SECRET not set — skipping"
+            exit 0
+          fi
+
+          HTTP=$(curl -s -o /tmp/rescue_resp.json -w "%{http_code}" \
+            --max-time 60 \
+            "https://tourhab.ru/api/cron/rescue?secret=$CRON_SECRET")
+
+          echo "Rescue HTTP: $HTTP"
+          cat /tmp/rescue_resp.json 2>/dev/null || true
+
+          if [ "$HTTP" = "200" ]; then
+            echo "Rescue Scan OK"
+          else
+            echo "Rescue Scan failed: HTTP $HTTP"
+            exit 1
+          fi

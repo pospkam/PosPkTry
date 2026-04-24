@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { pool } from '@/lib/db-pool';
 import { submitFeedback, getEvoStats } from '@/lib/agents/evo/feedback-loop';
+import { runRescueScan } from '@/lib/agents/evo/rescue-agent';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,6 +16,14 @@ export async function GET(req: NextRequest) {
   if (auth instanceof NextResponse) return auth;
 
   const stats = await getEvoStats();
+
+  // Также вернём текущий статус спасателя (quick check)
+  const action = req.nextUrl.searchParams.get('action');
+  if (action === 'rescue-scan') {
+    const rescue = await runRescueScan();
+    return NextResponse.json({ success: true, data: { ...stats, rescue } });
+  }
+
   return NextResponse.json({ success: true, data: stats });
 }
 
