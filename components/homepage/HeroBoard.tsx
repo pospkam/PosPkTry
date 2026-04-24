@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { ArrowRight, Bot, Shield, Mountain, Waves, Compass } from 'lucide-react';
 import { useHomeMetrics } from '@/hooks/use-home-metrics';
+import { HomeMapPreview } from './HomeMapPreview';
 
 export function HeroBoard() {
   const { metrics } = useHomeMetrics();
@@ -81,28 +82,8 @@ export function HeroBoard() {
             </div>
           </div>
 
-          {/* Right: trust and experience */}
-          <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-5">
-            <div className="mb-4 flex items-center justify-between">
-              <p className="text-sm font-semibold text-[var(--text-primary)]">Почему с нами спокойнее</p>
-              <span className="text-[11px] text-[var(--text-muted)]">TourHab</span>
-            </div>
-
-            <div className="space-y-3">
-              {[
-                'Сначала помогаем разобраться с маршрутом и рисками, а не навязываем продажу.',
-                'Если рекомендуем тур, то только реальный и у проверенного оператора с прозрачными условиями.',
-                'Поддержка доступна до вылета, на маршруте и после возвращения.',
-              ].map((item) => (
-                <div
-                  key={item}
-                  className="rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-secondary)]"
-                >
-                  {item}
-                </div>
-              ))}
-            </div>
-          </div>
+          {/* Right: interactive map preview */}
+          <HomeMapPreview />
         </div>
       </div>
     </section>
