@@ -41,6 +41,18 @@ const AGENTS: AgentDef[] = [
     description: 'Читает Brain → платформу → 2-3 конкретных предложения → Telegram.',
     schedule: 'раз в сутки (06:00 UTC)',
   },
+  {
+    id: 'evo',
+    name: 'Evo System',
+    description: 'Growth Scan + Evolution Loop + Rescue. Сканирует код → находит проблемы → применяет фиксы.',
+    schedule: 'каждые 6 часов',
+  },
+  {
+    id: 'rescue',
+    name: 'Rescue',
+    description: 'SOS без ответа, погодные угрозы, бронирования без подтверждения, операторы без ответа.',
+    schedule: 'каждые 30 мин',
+  },
 ];
 
 interface RunSummary {

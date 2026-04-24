@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
 
 const Schema = z.object({
-  agent_id: z.enum(['watchdog', 'editor', 'scout-digest', 'scout', 'intelligence']),
+  agent_id: z.enum(['watchdog', 'editor', 'scout-digest', 'scout', 'intelligence', 'evo', 'rescue']),
 });
 
 export async function POST(request: NextRequest) {
@@ -42,6 +42,19 @@ export async function POST(request: NextRequest) {
     } else if (agent_id === 'scout') {
       const { runScoutInnovator } = await import('@/lib/agents/scout-innovator');
       result = (await runScoutInnovator()) as unknown as Record<string, unknown>;
+    } else if (agent_id === 'evo') {
+      const { runGrowthScan } = await import('@/lib/agents/evo/growth-agent');
+      const { runEvolutionLoop } = await import('@/lib/agents/evo/evolution-loop');
+      const { runRescueScan } = await import('@/lib/agents/evo/rescue-agent');
+      const [scan, evo, rescue] = await Promise.all([
+        runGrowthScan('full'),
+        runEvolutionLoop(),
+        runRescueScan(),
+      ]);
+      result = { scan_issues: scan.issues.length, evo_processed: evo.processed, evo_auto_fixes: evo.auto_fixes, rescue_alerts: rescue.alerts.length } as unknown as Record<string, unknown>;
+    } else if (agent_id === 'rescue') {
+      const { runRescueScan } = await import('@/lib/agents/evo/rescue-agent');
+      result = (await runRescueScan()) as unknown as Record<string, unknown>;
     } else {
       const { runIntelligenceCycle } = await import('@/lib/services/intelligence-monitor.service');
       result = (await runIntelligenceCycle()) as unknown as Record<string, unknown>;
