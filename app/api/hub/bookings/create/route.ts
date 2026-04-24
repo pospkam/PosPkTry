@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
       }>(
         `SELECT ot.operator_id, ot.title, ot.base_price, ot.max_participants, ot.available_slots
          FROM operator_tours ot
-         WHERE ot.id = $1 AND ot.is_active = true AND ot.deleted_at IS NULL FOR UPDATE`,
+         WHERE ot.id = $1 AND ot.is_active = true AND ot.is_published = true AND ot.deleted_at IS NULL FOR UPDATE`,
         [data.tour_id],
       );
 

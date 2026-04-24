@@ -193,6 +193,11 @@ export async function createBooking(
       validatedDepartureId = input.departureId;
     } else {
       // Проверяем доступность мест на дату (legacy — без заезда)
+      // Блокируем строку тура чтобы избежать гонки между параллельными бронями на одну дату без departure
+      await client.query(
+        `SELECT id FROM tours WHERE id = $1 AND is_active = true FOR UPDATE`,
+        [input.tourId]
+      );
       const availResult = await client.query(
         `SELECT COALESCE(SUM(participants), 0) AS booked
          FROM bookings
