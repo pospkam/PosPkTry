@@ -13,7 +13,17 @@
 
 import { pool } from '@/lib/db-pool';
 import { callAIFast } from '@/lib/ai/providers';
+import { fetchWeatherForecast } from '@/lib/services/planner-intelligence';
 import type { ChatMessage } from '@/lib/ai/prompts';
+
+// Активности, которые НЕ зависят от погоды — хорошие План Б
+const INDOOR_ACTIVITIES = new Set(['thermal', 'cultural', 'museum']);
+
+// Активности, которые ломаются в плохую погоду — нужен План Б  
+const WEATHER_SENSITIVE = new Set(['helicopter', 'boat_trip', 'bears', 'volcano', 'trekking', 'rafting']);
+
+// WMO коды плохой погоды (дождь, шторм, гроза, снег)
+const BAD_WEATHER_CODES = new Set([51, 53, 55, 61, 63, 65, 71, 73, 75, 77, 80, 81, 82, 85, 86, 95, 96, 99]);
 
 export interface TripTour {
   id: number;
@@ -34,6 +44,8 @@ export interface TripDay {
   type: 'tour' | 'travel' | 'free';
   tour?: TripTour;
   note: string;
+  planB?: TripTour; // альтернатива на случай плохой погоды (внутренняя активность)
+  planBReason?: string; // почему предлагаётся альтернатива (дождь, ветер и т.д.)
 }
 
 export interface ComposedTrip {
@@ -252,6 +264,9 @@ export async function composeTrip(params: ComposeTripParams): Promise<ComposedTr
   const freeDaysTotal = total_days - tourDaysTotal - travelDaysTotal;
   const totalPrice = selected.reduce((s, t) => s + t.base_price * group_size, 0);
 
+  // План Б: проверка погоды и предложение альтернатив на случай плохой погоды (fire-and-forget)
+  void addWeatherPlanB(itinerary, selected, total_days, group_size, budget_total);
+
   const activityLabels = selected.map(t => ACTIVITY_LABELS[t.activity_type ?? ''] ?? t.activity_type).join(', ');
   const summary =
     `Маршрут на ${total_days} дней для группы ${group_size} чел. ` +
@@ -334,4 +349,91 @@ ${tours.map((t, i) => `${i + 1}. "${t.title}" — ${t.activity_type}, ${t.durati
     // AI недоступен — туры без reasoning, это не критично
   }
 }
+
+/**
+ * Fire-and-forget: добавляет План Б (альтернативу на случай плохой погоды)
+ * для каждого дня маршрута с погодозависимой активностью.
+ */
+async function addWeatherPlanB(
+  itinerary: TripDay[],
+  selected: TripTour[],
+  totalDays: number,
+  groupSize: number,
+  budgetTotal: number,
+): Promise<void> {
+  // Петрозаводск-Камчатский координаты для прогноза (ближе к базе большинства туров)
+  const lat = 53.0;
+  const lng = 158.6;
+
+  let forecast: Awaited<ReturnType<typeof fetchWeatherForecast>>;
+  try {
+    forecast = await fetchWeatherForecast(lat, lng, Math.min(totalDays, 16));
+  } catch {
+    return; // погода недоступна — без План Б, не критично
+  }
+  if (forecast.length === 0) return;
+
+  // Для каждого дня с погодозависимой активностью — ищем альтернативу если плохая погода  
+  for (const day of itinerary) {
+    if (day.type !== 'tour' || !day.tour) continue;
+
+    const activity = day.tour.activity_type ?? '';
+    if (!WEATHER_SENSITIVE.has(activity)) continue;
+
+    const dayIndex = day.day - 1;
+    if (dayIndex < 0 || dayIndex >= forecast.length) continue;
+
+    const weather = forecast[dayIndex];
+    if (!BAD_WEATHER_CODES.has(weather.weatherCode)) continue;
+
+    // Плохая погода — ищем План Б (внутренняя/погодонезависимая активность)
+    try {
+      const fallbacks = await pool.query<TourRow>(`
+        SELECT t.id, t.title, t.activity_type,
+               COALESCE(t.multi_day_count, CEIL(t.duration_hours / 24.0)::int, 1) AS duration_days,
+               t.base_price,
+               COALESCE(u.company_name, u.name) AS operator_name,
+               t.location_name AS location, t.difficulty, t.tour_image
+        FROM operator_tours t
+        JOIN users u ON u.id = t.operator_id
+        WHERE t.is_published = true AND t.is_active = true
+          AND t.activity_type IN ('thermal', 'cultural')
+          AND t.base_price <= $1
+          AND t.id != $2
+        ORDER BY t.base_price ASC
+        LIMIT 1
+      `, [Math.floor(budgetTotal / groupSize), day.tour.id]);
+
+      if (fallbacks.rows.length > 0) {
+        const row = fallbacks.rows[0];
+        const dur = row.duration_days;
+        day.planB = {
+          id: row.id,
+          title: row.title,
+          activity_type: row.activity_type,
+          duration_days: dur,
+          base_price: row.base_price,
+          operator_name: row.operator_name,
+          location: row.location,
+          difficulty_level: row.difficulty,
+          tour_image: row.tour_image,
+          booking_url: `/routes/${row.id}`,
+        };
+        const weatherDesc = WMO_DESCRIPTIONS[weather.weatherCode] ?? 'плохая погода';
+        day.planBReason = `План Б: ${weatherDesc} — вместо ${activity} предлагаем ${row.activity_type}.`;
+      }
+    } catch {
+      // не критично — день без План Б
+    }
+  }
 }
+
+const WMO_DESCRIPTIONS: Record<number, string> = {
+  0: 'Ясно', 1: 'Малооблачно', 2: 'Переменная облачность', 3: 'Пасмурно',
+  45: 'Туман', 48: 'Изморозь', 51: 'Морось', 53: 'Морось', 55: 'Сильная морось',
+  61: 'Дождь', 63: 'Умеренный дождь', 65: 'Сильный дождь',
+  71: 'Снег', 73: 'Умеренный снег', 75: 'Сильный снег', 77: 'Снежная крупа',
+  80: 'Ливень', 81: 'Сильный ливень', 82: 'Шквал',
+  85: 'Снегопад', 86: 'Сильный снегопад',
+  95: 'Гроза', 96: 'Гроза с градом', 99: 'Сильная гроза с градом',
+};
