@@ -116,7 +116,8 @@ async function updateEvolutionStrategy(learning: string, input: FeedbackInput): 
     `SELECT value FROM evo_agent_state WHERE key = 'learning_summary'`,
   );
 
-  const current = rows[0] ? JSON.parse(rows[0].value) : '';
+  // JSONB already deserialized by pg driver — use directly
+  const current = rows[0] ? String(rows[0].value) : '';
   const newSummary = `${current}\n• ${input.outcome}: ${learning}`.slice(-2000);
 
   await pool.query(

@@ -79,7 +79,8 @@ export async function runEvolutionLoop(): Promise<EvolutionResult> {
   const { rows: stateRows } = await pool.query<{ value: string }>(
     `SELECT value FROM evo_agent_state WHERE key = 'learning_summary'`,
   );
-  const learningSummary = stateRows[0] ? JSON.parse(stateRows[0].value) : '';
+  // JSONB already deserialized by pg driver — use directly
+  const learningSummary = stateRows[0] ? String(stateRows[0].value) : '';
 
   for (const issue of rows) {
     processed++;
