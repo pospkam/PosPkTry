@@ -89,6 +89,7 @@ export interface DayPlan {
   }>;
   qualityScore?: number;
   reasoning?: string; // почему именно этот день/активность рекомендуется данному туристу
+}
 
 export interface TripWarning {
   type: 'permit' | 'season' | 'safety' | 'children' | 'fitness' | 'duration' | 'weather' | 'license' | 'seasickness' | 'crowd' | 'mchs';
