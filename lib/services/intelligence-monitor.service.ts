@@ -1,10 +1,14 @@
 /**
  * lib/services/intelligence-monitor.service.ts
  *
- * Automated intelligence monitoring — 3 domains:
- *   1. AI & Tech — new models, tools, frameworks, agents
- *   2. Travel Industry — trends, regulations, market shifts
- *   3. Competitors — Kamchatka tourism platforms, pricing, features
+ * Automated intelligence monitoring — Вариант Б: идеи для фич.
+ * Отслеживаем что делают лидеры travel-AI индустрии и какие паттерны
+ * можно внедрить в TourHab.
+ *
+ * Мониторинг:
+ *   1. Travel-AI продукты и фичи (PhocusWire, Skift, HN, PH)
+ *   2. AI & Tech — новые модели/паттерны (OpenAI, Anthropic, a16z)
+ *   3. Конкуренты — Камчатка, TravelPayouts (Kamgov, RATA, Tourdom)
  *
  * Runs via /api/cron/intelligence every 6 hours.
  * Stores findings in agent_memory (evo agent) and ai_actions_log.
@@ -34,7 +38,7 @@ interface RawSignal {
 }
 
 export interface IntelligenceFinding {
-  domain:     'ai_tech' | 'travel_industry' | 'competitors';
+  domain:     'ai_tech' | 'travel_industry' | 'competitors' | 'travel_ai';
   summary:    string;
   signals:    RawSignal[];
   urgency:    'critical' | 'notable' | 'informational';
@@ -397,27 +401,34 @@ async function analyzeSignals(
   const messages: ChatMessage[] = [
     {
       role: 'system',
-      content: `Ты аналитик разведки туристической AI-платформы TourHab (Камчатка, Россия).
-Платформа: Next.js 15, 10 AI-агентов, 260+ маршрутов, TravelPayouts affiliate.
-Работает в условиях РФ-санкций (~35 из 69 сервисов TravelPayouts заблокированы).
+      content: `Ты аналитик travel-tech индустрии. Работаешь на владельца AI-платформы TourHab (Камчатка, Россия).
+Платформа: Next.js 15, 13 AI-агентов, 260+ маршрутов, Kuzmich AI-бот, маркетплейс операторов.
+Стек: Next.js + PostgreSQL + Claude/GPT/Gemini API. Деплой на Timeweb.
 
-Твоя задача: из сырых сигналов выделить ACTIONABLE intelligence.
+Твоя задача: найти новые фичи/паттерны которые можно реализовать у себя.
+
+Для каждой релевантной новости выдели:
+1. Что конкретно внедрили? (1-2 предложения)
+2. Какую пользовательскую боль это решает?
+3. Можно ли реализовать в Next.js + Claude API + Postgres?
+4. Приоритет для нас: высокий / средний / низкий
 
 Критерии фильтрации:
 ${config.ai_filter}
 
 Формат ответа (строго JSON):
 {
-  "summary": "2-3 предложения: главное из этого домена",
+  "summary": "Что внедрили + какую боль решает (1-2 предложения)",
   "urgency": "critical | notable | informational",
-  "action_items": ["конкретное действие 1", "конкретное действие 2"]
+  "action_items": ["[высокий|средний|низкий] — конкретное действие для TourHab"]
 }
 
 Правила:
-- "critical" = нужно реагировать в течение 24ч (новая регуляция, падение конкурента, прорывная технология)
-- "notable" = важно знать, но не срочно (тренд, новый инструмент, ценовой сдвиг)
-- "informational" = для контекста, действий не требует
-- action_items = максимум 3, каждый начинается с глагола
+- "critical" = лидер внедрил фичу, мы теряем конкурентное преимущество
+- "notable" = полезный паттерн, стоит рассмотреть в следующем спринте
+- "informational" = контекст, без прямого действия
+- action_items = максимум 3, начинаются с приоритета в квадратных скобках
+- Игнорируй: слияния/поглощения (кроме стратегических), кадровые новости, общие отчёты без конкретики, AI-продукты для других отраслей
 - Если ничего релевантного — верни {"summary": "null", "urgency": "informational", "action_items": []}
 - Отвечай ТОЛЬКО JSON, без markdown-обёртки`,
     },
@@ -471,6 +482,7 @@ async function sendTelegramAlert(findings: IntelligenceFinding[]): Promise<void>
     ai_tech: 'AI & Tech',
     travel_industry: 'Travel',
     competitors: 'Competitors',
+    travel_ai: 'Travel-AI Фичи',
   };
 
   const lines: string[] = ['<b>Intelligence Report</b>', ''];
@@ -609,32 +621,38 @@ export interface ManualIntelResult {
 export async function injectManualIntel(
   content: string,
   topic: string,
-  domain: 'ai_tech' | 'travel_industry' | 'competitors' = 'ai_tech',
+  domain: 'ai_tech' | 'travel_industry' | 'competitors' | 'travel_ai' = 'ai_tech',
 ): Promise<ManualIntelResult> {
   const domainConfig = FALLBACK_DOMAINS[domain];
 
   const messages: ChatMessage[] = [
     {
       role: 'system',
-      content: `Ты аналитик разведки туристической AI-платформы TourHab (Камчатка, Россия).
-Платформа: Next.js 15, 13 AI-агентов (совет директоров), 260+ маршрутов, Scout-Innovator эволюция.
-Стек AI: DeepSeek, Gemini, Claude, GPT, MCP-интеграции, OpenRouter.
+      content: `Ты аналитик travel-tech индустрии. Работаешь на владельца AI-платформы TourHab (Камчатка, Россия).
+Платформа: Next.js 15, 13 AI-агентов, 260+ маршрутов, Kuzmich AI-бот, маркетплейс операторов.
+Стек: Next.js + PostgreSQL + Claude/GPT/Gemini API. Деплой на Timeweb.
 
-Из входящего текста выдели ACTIONABLE intelligence для нашей платформы.
-Фокус: что конкретно можно применить / скопировать / адаптировать прямо сейчас.
+Из входящего текста найди фичи/паттерны которые можно реализовать у себя.
+
+Для каждой релевантной идеи:
+1. Что конкретно внедрили? (1-2 предложения)
+2. Какую пользовательскую боль это решает?
+3. Можно ли реализовать в Next.js + Claude API + Postgres?
+4. Приоритет: высокий / средний / низкий
 
 Формат ответа (строго JSON):
 {
-  "summary": "2-3 предложения: главное что применимо к TourHab",
+  "summary": "Что внедрили + какую боль решает (1-2 предложения)",
   "urgency": "critical | notable | informational",
-  "action_items": ["глагол + конкретное действие 1", "глагол + конкретное действие 2"]
+  "action_items": ["[высокий|средний|низкий] — конкретное действие для TourHab"]
 }
 
 Правила:
-- "critical" = нужно реагировать / мигрировать / адаптировать срочно (deprecation, прорыв)
-- "notable" = важный тренд или возможность, стоит включить в следующий Board Meeting
-- "informational" = контекст для совета директоров
-- action_items максимум 3, применимы именно к нашей платформе
+- "critical" = лидер внедрил фичу, мы теряем конкурентное преимущество
+- "notable" = полезный паттерн для следующего спринта
+- "informational" = контекст
+- Игнорируй: слияния, кадровые новости, общие отчёты без конкретики, AI для других отраслей
+- action_items максимум 3, начинаются с приоритета в квадратных скобках
 - Отвечай ТОЛЬКО JSON, без markdown-обёртки`,
     },
     {
