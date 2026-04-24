@@ -31,5 +31,8 @@ jobs:
       - name: TypeScript type check
         run: npx tsc --noEmit
 
+      - name: Build (Next.js)
+        run: npm run build
+
       - name: Run tests
         run: npx vitest run
