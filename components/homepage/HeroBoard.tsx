@@ -72,7 +72,7 @@ export function HeroBoard() {
                 <ArrowRight className="h-4 w-4" />
               </a>
               <Link
-                href="/routes"
+                href="/marketplace"
                 className="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] px-6 py-3.5 text-sm font-semibold text-[var(--text-primary)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
               >
                 <Compass className="h-4 w-4" />
