@@ -9,7 +9,7 @@ import { join } from 'path';
 
 export async function GET(req: NextRequest) {
   const secret = req.nextUrl.searchParams.get('secret');
-  if (secret !== 'run-outreach-115') {
+  if (!secret || secret !== process.env.CRON_SECRET) {
     return NextResponse.json({ error: 'forbidden' }, { status: 403 });
   }
 

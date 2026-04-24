@@ -7,7 +7,7 @@ import { pool } from '@/lib/db-pool';
 
 export async function GET(req: NextRequest) {
   const secret = req.nextUrl.searchParams.get('secret');
-  if (secret !== 'fix-photos-089') {
+  if (!secret || secret !== process.env.CRON_SECRET) {
     return NextResponse.json({ error: 'forbidden' }, { status: 403 });
   }
 

@@ -137,9 +137,18 @@ export async function runEditor(): Promise<EditorResult> {
   }
 
   if (improved > 0) {
+    let remaining = 0;
+    try {
+      const { rows } = await pool.query<{ cnt: string }>(
+        'SELECT COUNT(*)::text AS cnt FROM agent_route_knowledge WHERE description IS NULL OR LENGTH(description) < $1',
+        [MIN_DESCRIPTION_LENGTH]
+      );
+      remaining = Number(rows[0]?.cnt ?? 0);
+    } catch { /* fallback */ remaining = -1; }
+
     await tgSend(
       `<b>Editor</b> — улучшил ${improved} описаний маршрутов\n` +
-      `(обработано: ${processed}, ошибок: ${errors}, осталось кратких: ~${588 - improved})`,
+      `(обработано: ${processed}, ошибок: ${errors}, осталось кратких: ${remaining >= 0 ? remaining : '?'})`,
     );
   }
 
