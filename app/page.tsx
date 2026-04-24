@@ -3,7 +3,6 @@ import dynamic from 'next/dynamic'
 import { Header } from '@/components/layout/Header'
 import { HeroBoard } from '@/components/homepage/HeroBoard'
 import { MessengerAgentsSection } from '@/components/homepage/MessengerAgentsSection'
-import { DirectionsList } from '@/components/homepage/DirectionsList'
 import { Footer } from '@/components/layout/Footer'
 
 // Lazy-loaded client sections (below fold)
@@ -97,7 +96,6 @@ export default async function Page() {
       <main>
         <HeroBoard />
         <MessengerAgentsSection />
-        <DirectionsList />
         <InlineChat />
         <TrustSection />
       </main>
