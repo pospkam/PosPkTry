@@ -127,7 +127,7 @@ export async function runEvolutionLoop(): Promise<EvolutionResult> {
     [`${(await getCycleCount()) + 1}`],
   );
 
-  return { processed, auto_fixes, suggestions, errors, duration_ms: Date.now() - start };
+  return { processed, auto_fixes: autoFixes, suggestions, errors, duration_ms: Date.now() - start };
 }
 
 function isProtectedPath(filePath: string | null): boolean {
