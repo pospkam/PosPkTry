@@ -1,0 +1,35 @@
+name: Cron — Evo System (Growth + Evolution)
+
+# Runs every 6 hours: scans project health, proposes fixes
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # 00:00, 06:00, 12:00, 18:00 UTC
+  workflow_dispatch:        # manual trigger
+
+jobs:
+  evo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Evo Growth Scan + Evolution Loop
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "CRON_SECRET not set — skipping"
+            exit 0
+          fi
+
+          HTTP=$(curl -s -o /tmp/evo_resp.json -w "%{http_code}" \
+            --max-time 180 \
+            "https://tourhab.ru/api/cron/evo?secret=$CRON_SECRET&type=full")
+
+          echo "Evo HTTP: $HTTP"
+          cat /tmp/evo_resp.json 2>/dev/null || true
+
+          if [ "$HTTP" = "200" ]; then
+            echo "Evo Scan OK"
+          else
+            echo "Evo Scan failed: HTTP $HTTP"
+            exit 1
+          fi
