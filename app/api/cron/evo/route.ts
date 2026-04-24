@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
 
     // Telegram notification if issues found
     if (scanResult.issues.length > 0) {
-      void tgNotify(scanResult, evoResult);
+      void tgNotify(scanResult, evoResult, rescueResult);
     }
 
     return NextResponse.json({
@@ -84,13 +84,13 @@ export async function GET(request: NextRequest) {
   }
 }
 
-async function tgNotify(scan: unknown, evo: unknown): Promise<void> {
+async function tgNotify(scan: unknown, evo: unknown, rescue: unknown): Promise<void> {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
   if (!token || !chatId) return;
 
   const s = scan as { issues: Array<{ severity: string; title: string }>; duration_ms: number };
-  const e = evo as { processed: number; prs_created: number };
+  const e = evo as { processed: number; auto_fixes: number };
   const r = rescue as { alerts: Array<{ severity: string; title: string }> };
 
   const critical = s.issues.filter(i => i.severity === 'critical' || i.severity === 'high').length;
