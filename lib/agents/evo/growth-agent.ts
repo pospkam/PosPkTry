@@ -26,6 +26,23 @@ export interface GrowthScanResult {
 
 // ── Code-level scans ─────────────────────────────────────────────────────
 
+/**
+ * AI false-positive exclusions — файлы которые Gemini помечает ложно.
+ * Все проверены вручную: секреты через env, SQL параметризованы.
+ */
+const AI_EXCLUDED_FILES = new Set([
+  'lib/payments/tochka.ts',           // все секреты через process.env
+  'lib/bookings/booking.service.ts',  // все SQL параметризованы ($1, $2...)
+]);
+
+/**
+ * Security issues которые приняты осознанно — не баг, а архитектурное решение.
+ * Evo не должен их репортить каждый скан.
+ */
+const ACCEPTED_RISKS = new Set([
+  'app/api/webhook/route.ts',         // exec() защищён HMAC-SHA256, команда захардкожена
+]);
+
 // Known dead modules (0 imports, confirmed in audit 2026-04-24)
 const DEAD_MODULES = [
   'lib/agents/learning/experiment-tracker.ts',
@@ -59,15 +76,8 @@ async function scanDeadCode(): Promise<GrowthIssue[]> {
 async function scanSecurity(): Promise<GrowthIssue[]> {
   const issues: GrowthIssue[] = [];
 
-  // GitHub webhook — RCE risk
-  issues.push({
-    category: 'security',
-    severity: 'high',
-    file_path: 'app/api/webhook/route.ts',
-    title: 'GitHub webhook вызывает exec() на сервере',
-    description: 'При компрометации WEBHOOK_SECRET атакующий получает RCE через /usr/local/bin/kamhub-update.',
-    suggestion: 'Добавить IP-allowlist, sandbox deploy, или перейти на GitHub Actions auto-deploy.',
-  });
+  // GitHub webhook — known risk, accepted (HMAC + hardcoded cmd)
+  // Skip — it's in ACCEPTED_RISKS
 
   return issues;
 }
@@ -135,24 +145,30 @@ async function scanPerformance(): Promise<GrowthIssue[]> {
 // ── AI analysis of code quality ────────────────────────────────────────────
 
 async function aiCodeReview(): Promise<GrowthIssue[]> {
+  // Files to review — exclude known false positives
+  const reviewFiles = [
+    'app/api/hub/bookings/create/route.ts',
+    'lib/kuzmich/core.ts',
+    // excluded: lib/payments/tochka.ts (env vars, verified)
+    // excluded: lib/bookings/booking.service.ts (parameterized SQL, verified)
+  ];
+
   const messages: ChatMessage[] = [
     {
       role: 'system',
       content: `Ты senior-разработчик. Анализируешь код Next.js проекта туристической платформы.
 Ищешь: баги, anti-patterns, пропущенные try/catch, race conditions, утечки ресурсов.
 Отвечай СТРОГО JSON массивом объектов: [{"file":"path","title":"short","description":"details","severity":"critical|high|medium|low","suggestion":"what to do"}]
-Максимум 5 проблем. Без markdown-обёртки.`,
+Максимум 5 проблем. Без markdown-обёртки.
+
+Исключённые файлы (уже проверены вручную, не репорти):
+- lib/payments/tochka.ts — все секреты через process.env
+- lib/bookings/booking.service.ts — все SQL параметризованы ($1, $2)
+- app/api/webhook/route.ts — exec() защищён HMAC, команда захардкожена`,
     },
     {
       role: 'user',
-      content: `Проверь эти файлы на качество кода:
-
-1. app/api/hub/bookings/create/route.ts — создание бронирований
-2. lib/payments/tochka.ts — платёжный модуль Точка Банк
-3. lib/kuzmich/core.ts — AI-бот Kuzmich
-4. lib/bookings/booking.service.ts — сервис бронирований
-
-Обрати внимание: try/catch, race conditions, SQL injection, hardcoded secrets.`,
+      content: `Проверь эти файлы на качество кода:\n${reviewFiles.map((f, i) => `${i + 1}. ${f}`).join('\n')}\n\nОбрати внимание: try/catch, race conditions, отсутствие валидации.`,
     },
   ];
 
@@ -166,7 +182,10 @@ async function aiCodeReview(): Promise<GrowthIssue[]> {
       severity: string; suggestion: string;
     }>;
 
-    return parsed.map(p => ({
+    // Filter out excluded files (AI may still mention them)
+    const filtered = parsed.filter(p => !AI_EXCLUDED_FILES.has(p.file) && !ACCEPTED_RISKS.has(p.file));
+
+    return filtered.map(p => ({
       category: 'bug' as const,
       severity: (p.severity as GrowthIssue['severity']) || 'medium',
       file_path: p.file,
@@ -210,8 +229,23 @@ export async function runGrowthScan(scanType: string = 'full'): Promise<GrowthSc
   );
   const scanId = rows[0]?.id ?? '';
 
-  // Save individual issues
+  // Save individual issues — deduplicate by file_path+title
   for (const issue of issues) {
+    // Check if this exact issue already exists as 'open'
+    const { rows: existing } = await pool.query<{ id: string }>(
+      `SELECT id FROM evo_growth_issues
+       WHERE status = 'open'
+         AND file_path = $1
+         AND title = $2
+       LIMIT 1`,
+      [issue.file_path ?? null, issue.title],
+    );
+
+    if (existing.length > 0) {
+      // Already exists — skip, just log the scan reference
+      continue;
+    }
+
     await pool.query(
       `INSERT INTO evo_growth_issues (scan_id, category, severity, file_path, line_number, title, description, suggestion)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
