@@ -17,6 +17,7 @@ import type { ChatMessage } from '@/lib/ai/prompts';
 export interface EditorResult {
   processed: number;
   improved: number;
+  improved_titles: string[];
   errors: number;
   duration_ms: number;
 }
@@ -108,11 +109,13 @@ export async function runEditor(): Promise<EditorResult> {
   let improved  = 0;
   let errors    = 0;
 
+  const improvedTitles: string[] = [];
+
   let routes: RouteRow[];
   try {
     routes = await findRoutesNeedingDescription();
   } catch {
-    return { processed: 0, improved: 0, errors: 1, duration_ms: Date.now() - start };
+    return { processed: 0, improved: 0, improved_titles: [], errors: 1, duration_ms: Date.now() - start };
   }
 
   for (const route of routes) {
@@ -131,6 +134,7 @@ export async function runEditor(): Promise<EditorResult> {
         [newDescription, route.id],
       );
       improved++;
+      improvedTitles.push(route.title);
     } catch {
       errors++;
     }
@@ -146,11 +150,13 @@ export async function runEditor(): Promise<EditorResult> {
       remaining = Number(rows[0]?.cnt ?? 0);
     } catch { /* fallback */ remaining = -1; }
 
+    const titlesList = improvedTitles.map((t, i) => `${i + 1}. ${t}`).join('\n');
     await tgSend(
-      `<b>Editor</b> — улучшил ${improved} описаний маршрутов\n` +
-      `(обработано: ${processed}, ошибок: ${errors}, осталось кратких: ${remaining >= 0 ? remaining : '?'})`,
+      `<b>Editor</b> — улучшил ${improved} описаний\n` +
+      `(обработано: ${processed}, ошибок: ${errors}, осталось кратких: ${remaining >= 0 ? remaining : '?'})\n\n` +
+      `<b>Улучшенные маршруты и локации:</b>\n${titlesList}`,
     );
   }
 
-  return { processed, improved, errors, duration_ms: Date.now() - start };
+  return { processed, improved, improved_titles: improvedTitles, errors, duration_ms: Date.now() - start };
 }
