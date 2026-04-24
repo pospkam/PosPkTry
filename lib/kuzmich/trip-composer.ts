@@ -12,6 +12,8 @@
  */
 
 import { pool } from '@/lib/db-pool';
+import { callAIFast } from '@/lib/ai/providers';
+import type { ChatMessage } from '@/lib/ai/prompts';
 
 export interface TripTour {
   id: number;
@@ -24,6 +26,7 @@ export interface TripTour {
   difficulty_level: string | null;
   tour_image: string | null;
   booking_url: string;
+  reasoning?: string; // почему именно этот тур рекомендуется данному туристу
 }
 
 export interface TripDay {
@@ -256,6 +259,9 @@ export async function composeTrip(params: ComposeTripParams): Promise<ComposedTr
     `Итого: ${totalPrice.toLocaleString('ru-RU')} руб. (${Math.round(totalPrice / group_size).toLocaleString('ru-RU')} руб/чел). ` +
     `Свободных дней: ${freeDaysTotal}.`;
 
+  // AI-объяснение для каждого тура: почему именно этот тур подходит туристу
+  void generateTourReasoning(selected, { interests, month, group_size, budget_total, difficulty });
+
   return {
     total_days,
     tour_days: tourDaysTotal,
@@ -267,4 +273,65 @@ export async function composeTrip(params: ComposeTripParams): Promise<ComposedTr
     itinerary,
     summary,
   };
+}
+
+const MONTH_NAMES = ['','январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
+
+/**
+ * Fire-and-forget AI reasoning для каждого тура в маршруте.
+ * Объясняет туристу почему именно этот тур ему подходит.
+ */
+async function generateTourReasoning(
+  tours: TripTour[],
+  params: { interests: string[]; month: number; group_size: number; budget_total: number; difficulty?: string },
+): Promise<void> {
+  if (tours.length === 0) return;
+
+  const context = [
+    `Турист едет на ${params.month ? MONTH_NAMES[params.month] ?? 'месяц' : 'Камчатку'}.`,
+    `Интересы: ${params.interests.join(', ') || 'разнообразный отдых'}.`,
+    `Группа: ${params.group_size} чел.`,
+    `Бюджет на всё: ${params.budget_total.toLocaleString('ru-RU')} руб.`,
+    params.difficulty ? `Уровень сложности: ${params.difficulty}.` : '',
+  ].filter(Boolean).join(' ');
+
+  const messages: ChatMessage[] = [
+    {
+      role: 'system',
+      content: `Ты — эксперт по туризму на Камчатке. Для каждого предложенного тура напиши 1-2 предложения на русском: ПОЧЕМУ именно этот тур подходит данному туристу, учитывая его интересы, бюджет, сезон и группу. Будь конкретным: упомяни уникальную деталь тура, совпадение с интересами, выгоду по цене или сезону. Не используй markdown и emoji.`,
+    },
+    {
+      role: 'user',
+      content: `Контекст туриста: ${context}
+
+Туры:
+${tours.map((t, i) => `${i + 1}. "${t.title}" — ${t.activity_type}, ${t.duration_days} дн., ${t.base_price.toLocaleString('ru-RU')} руб/чел., ${t.location ?? 'Камчатка'}, сложность: ${t.difficulty_level ?? '?'}, оператор: ${t.operator_name}`).join('\n')}
+
+Для каждого тура напиши короткое объяснение (1-2 предложения) почему он подходит. Формат ответа:
+1: <объяснение>
+2: <объяснение>
+...`,
+    },
+  ];
+
+  try {
+    const result = await callAIFast(messages);
+    if (!result) return;
+
+    // Парсим ответ вида "1: объяснение\n2: объяснение"
+    const lines = result.split('\n').filter(l => l.trim());
+    for (const line of lines) {
+      const match = line.match(/^(\d+)\s*[:.)]\s*(.+)$/);
+      if (match) {
+        const idx = parseInt(match[1]) - 1;
+        const reasoning = match[2].trim();
+        if (idx >= 0 && idx < tours.length && reasoning.length > 10) {
+          tours[idx].reasoning = reasoning;
+        }
+      }
+    }
+  } catch {
+    // AI недоступен — туры без reasoning, это не критично
+  }
+}
 }

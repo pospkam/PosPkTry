@@ -88,7 +88,7 @@ export interface DayPlan {
     discountPercent: number;
   }>;
   qualityScore?: number;
-}
+  reasoning?: string; // почему именно этот день/активность рекомендуется данному туристу
 
 export interface TripWarning {
   type: 'permit' | 'season' | 'safety' | 'children' | 'fitness' | 'duration' | 'weather' | 'license' | 'seasickness' | 'crowd' | 'mchs';
@@ -1364,4 +1364,46 @@ export async function recommendTrip(profile: TripProfile): Promise<TripRecommend
   }
 
   return { zones, days, warnings, priceBreakdown, itinerary };
+}
+
+
+/**
+ * Fire-and-forget AI reasoning для каждого дня маршрута.
+ * Объясняет туристу почему именно эта активность рекомендуется.
+ */
+async function generateDayReasoning(days: DayPlan[], profile: TripProfile): Promise<void> {
+  if (days.length === 0) return;
+
+  const interestStr = profile.interests.join(', ') || 'разнообразный отдых';
+  const childAges = profile.children.length > 0 ? `дети: ${profile.children.join(', ')} лет` : 'без детей';
+
+  const messages: ChatMessage[] = [
+    {
+      role: 'system',
+      content: `Ты эксперт по туризму на Камчатке. Для каждого дня маршрута напиши 1 короткое предложение (макс 15 слов) на русском: ПОЧЕМУ именно эта активность подходит данному туристу. Учитывай интересы, уровень физической подготовки, детей, бюджет. Будь конкретным. Без emoji, без markdown.`,
+    },
+    {
+      role: 'user',
+      content: `Турист: интересы — ${interestStr}, уровень — ${profile.fitnessLevel}, бюджет — ${profile.budgetTier}, ${childAges}.\n\nМаршрут:\n${days.map((d, i) => `${i + 1}. День ${d.day}: ${d.title} (${d.type}, ${d.difficulty}, ${d.priceFrom}-${d.priceTo} руб)`).join('\n')}\n\nФормат: 1: <объяснение>\n2: <объяснение>...`,
+    },
+  ];
+
+  try {
+    const result = await callAIWithModelDirect(messages, getModelForAgent('planner'));
+    if (!result) return;
+
+    const lines = result.split('\n').filter(l => l.trim());
+    for (const line of lines) {
+      const match = line.match(/^(\d+)\s*[:.)]\s*(.+)$/);
+      if (match) {
+        const idx = parseInt(match[1]) - 1;
+        const reasoning = match[2].trim();
+        if (idx >= 0 && idx < days.length && reasoning.length > 5) {
+          days[idx].reasoning = reasoning;
+        }
+      }
+    }
+  } catch {
+    // AI недоступен — не критично
+  }
 }
