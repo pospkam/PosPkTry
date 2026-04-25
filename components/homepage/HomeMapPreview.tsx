@@ -159,7 +159,7 @@ export function HomeMapPreview() {
   })), [filteredRoutes]);
 
   return (
-    <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] overflow-hidden">
+    <div className="border-y border-[var(--border)] bg-[var(--bg-card)] overflow-hidden">
       {/* Kind tabs */}
       <div className="flex border-b border-[var(--border)]">
         {KIND_TABS.map(t => (
@@ -178,7 +178,7 @@ export function HomeMapPreview() {
       </div>
 
       {/* Single row of filter pills — no group labels */}
-      <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--border)] overflow-x-auto">
+      <div className="flex items-center gap-2 px-4 py-2 border-b border-[var(--border)] overflow-x-auto">
         <Filter className="w-3.5 h-3.5 text-[var(--text-muted)] flex-shrink-0" />
         {currentOptions.map(f => (
           <button
@@ -207,12 +207,12 @@ export function HomeMapPreview() {
       </div>
 
       {/* Map */}
-      <div className="relative" style={{ height: '380px' }}>
+      <div className="relative" style={{ height: '65vh', minHeight: '400px' }}>
         <LeafletMap
           center={[53.0444, 158.6483]}
           zoom={7}
           markers={markers}
-          height="380px"
+          height="65vh"
           attribution={false}
         />
         {loading && (
@@ -225,10 +225,10 @@ export function HomeMapPreview() {
       {/* Route cards below map */}
       {filteredRoutes.length > 0 && (
         <div className="border-t border-[var(--border)]">
-          <div className="px-3 py-2 text-[10px] text-[var(--text-muted)] font-medium uppercase tracking-wide">
+          <div className="px-4 py-2 text-[10px] text-[var(--text-muted)] font-medium uppercase tracking-wide">
             {filteredRoutes.length} {filteredRoutes.length === 1 ? 'объект' : filteredRoutes.length < 5 ? 'объекта' : 'объектов'}
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 px-3 pb-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-2 px-4 pb-3">
             {filteredRoutes.slice(0, 8).map(r => (
               <a
                 key={r.id}

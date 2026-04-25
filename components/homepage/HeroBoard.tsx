@@ -33,7 +33,7 @@ export function HeroBoard() {
         </div>
       </div>
       {/* Full-width map */}
-      <div className="mx-auto max-w-7xl px-5 pb-6 md:px-10 md:pb-8">
+      <div className="mx-auto px-0 pb-6">
         <HomeMapPreview />
       </div>
     </section>
