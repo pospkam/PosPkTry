@@ -6,9 +6,6 @@ import { HomeMapPreview } from '@/components/homepage/HomeMapPreview'
 import { MessengerAgentsSection } from '@/components/homepage/MessengerAgentsSection'
 import { Footer } from '@/components/layout/Footer'
 
-const InlineChat = dynamic(() => import('@/components/homepage/InlineChat'), {
-  loading: () => <ChatSkeleton />,
-});
 const TrustSection = dynamic(
   () => import('@/components/homepage/TrustSection').then(m => ({ default: m.TrustSection })),
   { loading: () => <SectionSkeleton /> }
@@ -34,9 +31,6 @@ export const metadata: Metadata = {
 
 function SectionSkeleton() {
   return <div className="py-20 px-5"><div className="max-w-6xl mx-auto h-64 bg-[var(--bg-hover)] rounded-lg ds-skeleton" /></div>;
-}
-function ChatSkeleton() {
-  return <div className="h-full min-h-[200px] bg-[var(--bg-hover)] rounded-lg ds-skeleton m-4" />;
 }
 
 export default async function Page() {
