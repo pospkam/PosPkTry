@@ -34,19 +34,13 @@ export default async function Page() {
     <div className="bg-[var(--bg-primary)] text-[var(--text-primary)] min-h-[100dvh] flex flex-col">
       <Header />
       <main className="flex-1">
-        {/* Two vertical columns: left split horizontal, right = map */}
+        {/* Two columns: left=Hero(top)+AI(bottom), right=Map(full height) */}
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row">
-          {/* Left column: split horizontal (hero top, AI bottom) */}
           <div className="w-full lg:w-1/2 flex flex-col">
-            <div className="flex-1 min-h-[200px]">
-              <HeroBoard />
-            </div>
-            <div className="flex-1 min-h-[200px]">
-              <MessengerAgentsSection />
-            </div>
+            <HeroBoard />
+            <MessengerAgentsSection />
           </div>
-          {/* Right column: full-height map */}
-          <div className="w-full lg:w-1/2">
+          <div className="w-full lg:w-1/2 self-stretch">
             <HomeMapPreview />
           </div>
         </div>
