@@ -15,8 +15,8 @@ export function HeroBoard() {
       </p>
 
       <div className="flex flex-wrap gap-3">
-        <a
-          href="#chat"
+        <Link
+          href="/planner"
           className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
         >
           <Bot className="h-4 w-4" />

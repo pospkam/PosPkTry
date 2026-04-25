@@ -103,6 +103,13 @@ export default function LeafletMap({
         zoom,
         zoomControl: true,
         attributionControl: attribution !== false,
+        minZoom: 5,
+        maxZoom: 12,
+        maxBounds: L.latLngBounds(
+          L.latLng(48.0, 153.0),
+          L.latLng(64.0, 178.0)
+        ),
+        maxBoundsViscosity: 1.0,
       });
 
       // OpenTopoMap тайлы — topo relief

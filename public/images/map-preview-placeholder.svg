@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1e3a5f"/>
+      <stop offset="100%" stop-color="#2d5f8a"/>
+    </linearGradient>
+    <linearGradient id="land" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4a7c59"/>
+      <stop offset="100%" stop-color="#6b9e3a"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#bg)"/>
+  <!-- Simplified Kamchatka peninsula outline -->
+  <path d="M350,80 L370,100 L380,140 L375,180 L390,220 L400,260 L395,300 L410,340 L420,380 
+           L430,420 L440,460 L445,500 L440,530 L430,550 L415,560 L400,555 L390,540 L385,520 
+           L375,490 L365,460 L355,430 L340,400 L330,370 L320,340 L315,310 L310,280 L305,250 
+           L300,220 L295,190 L300,160 L310,130 L320,110 L330,95 Z" 
+        fill="url(#land)" stroke="#3d6b4a" stroke-width="2" opacity="0.8"/>
+  <!-- Volcano markers -->
+  <circle cx="390" cy="260" r="4" fill="#e74c3c" opacity="0.9"/>
+  <circle cx="400" cy="300" r="4" fill="#e74c3c" opacity="0.9"/>
+  <circle cx="380" cy="340" r="4" fill="#e74c3c" opacity="0.9"/>
+  <circle cx="370" cy="400" r="4" fill="#e74c3c" opacity="0.9"/>
+  <circle cx="410" cy="380" r="4" fill="#e74c3c" opacity="0.9"/>
+  <circle cx="430" cy="460" r="4" fill="#e74c3c" opacity="0.9"/>
+  <circle cx="360" cy="460" r="4" fill="#e74c3c" opacity="0.9"/>
+  <!-- Hot springs -->
+  <circle cx="395" cy="310" r="3" fill="#f39c12" opacity="0.8"/>
+  <circle cx="415" cy="350" r="3" fill="#f39c12" opacity="0.8"/>
+  <circle cx="440" cy="500" r="3" fill="#f39c12" opacity="0.8"/>
+  <!-- Text -->
+  <text x="400" y="30" text-anchor="middle" fill="rgba(255,255,255,0.6)" 
+        font-family="system-ui,sans-serif" font-size="14" font-weight="600">
+    Карта Камчатки
+  </text>
+</svg>

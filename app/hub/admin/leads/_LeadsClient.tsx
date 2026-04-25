@@ -417,8 +417,7 @@ export function LeadsClient() {
   const [counts, setCounts]         = useState<Record<string, number>>({});
   const [search, setSearch]         = useState('');
   const [loadError, setLoadError]   = useState<string | null>(null);
-  const [applyingMigration, setApplyingMigration] = useState(false);
-  const [migrationDone, setMigrationDone] = useState(false);
+  // Migration button removed — use `npm run migrate` on the server instead
   const [scoringLeads, setScoringLeads] = useState(false);
 
   const load = useCallback(async (status: LeadStatus | 'all') => {
@@ -473,26 +472,7 @@ export function LeadsClient() {
     }
   }, []);
 
-  const applyMigration = useCallback(async () => {
-    setApplyingMigration(true);
-    try {
-      const res = await fetch('/api/admin/apply-migration', { method: 'POST' });
-      const data = await res.json() as { success: boolean; error?: string };
-      if (data.success) {
-        setMigrationDone(true);
-        setLoadError(null);
-        // Reload after migration
-        await load(tab);
-        await loadCounts();
-      } else {
-        setLoadError(`Миграция не применена: ${data.error ?? 'неизвестная ошибка'}`);
-      }
-    } catch {
-      setLoadError('Ошибка при применении миграции');
-    } finally {
-      setApplyingMigration(false);
-    }
-  }, [load, loadCounts, tab]);
+  // Migration endpoint removed — see AGENTS.md for the new process
 
   const scoreLeads = useCallback(async () => {
     setScoringLeads(true);
@@ -555,7 +535,7 @@ export function LeadsClient() {
         </div>
       </div>
 
-      {/* Error / Migration banner */}
+      {/* Error banner */}
       {loadError && (
         <div
           className="flex flex-wrap items-start gap-3 mb-4 p-4 rounded-lg border"
@@ -567,29 +547,13 @@ export function LeadsClient() {
           <AlertTriangle size={18} className="shrink-0 mt-0.5" style={{ color: 'var(--danger)' }} />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-[var(--text-primary)]">{loadError}</p>
-            {loadError.includes('column') || loadError.includes('500') ? (
-              <p className="text-xs text-[var(--text-muted)] mt-0.5">
-                Вероятно, не применена миграция 083 к базе данных.
+            {(loadError.includes('column') || loadError.includes('500')) && (
+              <p className="text-xs text-[var(--text-muted)] mt-1">
+                Если видишь ошибку 500 / missing column — миграция не применена.
+                Запусти <code className="px-1 py-0.5 rounded bg-black/5 font-mono text-xs">npm run migrate</code> на сервере через SSH.
               </p>
-            ) : null}
+            )}
           </div>
-          {!migrationDone && (
-            <button
-              onClick={applyMigration}
-              disabled={applyingMigration}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg text-white font-medium disabled:opacity-50"
-              style={{ background: 'var(--accent)' }}
-            >
-              <Zap size={12} />
-              {applyingMigration ? 'Применяю...' : 'Применить миграцию 083'}
-            </button>
-          )}
-        </div>
-      )}
-
-      {migrationDone && (
-        <div className="flex items-center gap-2 mb-4 p-3 rounded-lg border border-[var(--success)]/30 bg-[var(--success)]/8 text-sm text-[var(--success)]">
-          Миграция 083 применена успешно. AI-функции лидов активированы.
         </div>
       )}
 

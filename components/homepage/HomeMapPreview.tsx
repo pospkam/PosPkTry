@@ -80,7 +80,7 @@ export function HomeMapPreview() {
   useEffect(() => {
     setActiveFilter(null);
     setLoading(true);
-    fetch(`/api/routes?hasCoords=true&limit=300&sort=title&kind=${kind}`)
+    fetch(`/api/routes?hasCoords=true&limit=100&sort=title&kind=${kind}`)
       .then(r => r.ok ? r.json() : { data: [] })
       .then(d => {
         const points = (d.data ?? [])
@@ -208,32 +208,7 @@ export function HomeMapPreview() {
         </span>
       </div>
 
-      {/* Route cards */}
-      {filteredRoutes.length > 0 && (
-        <div className="bg-[var(--bg-primary)] border-t border-[var(--border)]">
-          <div className="px-4 py-2 text-[10px] text-[var(--text-muted)] font-medium uppercase tracking-wide">
-            {filteredRoutes.length} {filteredRoutes.length === 1 ? 'объект' : filteredRoutes.length < 5 ? 'объекта' : 'объектов'}
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 px-4 pb-3">
-            {filteredRoutes.slice(0, 10).map(r => (
-              <a
-                key={r.id}
-                href={`/routes/${r.id}`}
-                className="group block rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] p-2.5 hover:border-[var(--accent)] transition-colors"
-              >
-                <p className="text-[13px] font-semibold text-[var(--text-primary)] leading-tight group-hover:text-[var(--accent)] line-clamp-2">
-                  {r.title}
-                </p>
-                {r.description && (
-                  <p className="text-[10px] text-[var(--text-muted)] mt-0.5 line-clamp-2 leading-relaxed">
-                    {r.description}
-                  </p>
-                )}
-              </a>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Route cards — hidden */}
     </div>
   );
 }
