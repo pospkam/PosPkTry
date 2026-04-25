@@ -159,7 +159,7 @@ export function HomeMapPreview() {
   })), [filteredRoutes]);
 
   return (
-    <div className="bg-[var(--bg-card)] border-b border-[var(--border)]">
+    <div className="flex flex-col h-full bg-[var(--bg-card)] lg:border-l lg:border-b-0 border-b border-[var(--border)]">
       {/* Kind tabs */}
       <div className="flex border-b border-[var(--border)]">
         {KIND_TABS.map(t => (
@@ -207,12 +207,12 @@ export function HomeMapPreview() {
       </div>
 
       {/* Map */}
-      <div className="relative" style={{ height: '65vh', minHeight: '400px' }}>
+      <div className="relative flex-1 min-h-[350px]">
         <LeafletMap
           center={[53.0444, 158.6483]}
           zoom={7}
           markers={markers}
-          height="65vh"
+          height="100%"
           attribution={false}
         />
         {loading && (

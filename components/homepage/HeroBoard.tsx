@@ -3,7 +3,7 @@ import { ArrowRight, Bot } from 'lucide-react';
 
 export function HeroBoard() {
   return (
-    <section className="relative bg-[var(--bg-primary)] px-5 py-8 md:px-8 md:py-10">
+    <section className="relative bg-[var(--bg-primary)] px-5 py-6 md:px-8 md:py-8 border-b border-[var(--border)]">
       <h1 className="mb-3 font-playfair text-3xl font-bold leading-[1.1] text-[var(--text-primary)] md:text-4xl">
         Камчатка, которую вы{' '}
         <span style={{ color: 'var(--accent)' }}>почувствуете</span> по-настоящему
