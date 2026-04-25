@@ -8,15 +8,38 @@ import { MarkerType } from '@/components/shared/LeafletMap';
 
 const LeafletMap = dynamic(() => import('@/components/shared/LeafletMap'), { ssr: false });
 
-const FILTERS = [
-  { id: 'all', label: 'Все' },
-  { id: 'volcano', label: 'Вулканы' },
-  { id: 'hot_spring', label: 'Источники' },
-  { id: 'bay', label: 'Океан' },
-  { id: 'lake', label: 'Озёра' },
-  { id: 'waterfall', label: 'Водопады' },
-  { id: 'viewpoint', label: 'Смотровые' },
+type KindValue = 'place' | 'route' | 'tour';
+
+const KIND_TABS: { value: KindValue; label: string }[] = [
+  { value: 'place', label: 'Места' },
+  { value: 'route', label: 'Маршруты' },
+  { value: 'tour', label: 'Туры' },
 ];
+
+const FILTERS: Record<KindValue, { id: string; label: string }[]> = {
+  place: [
+    { id: 'all', label: 'Все' },
+    { id: 'volcano', label: 'Вулканы' },
+    { id: 'hot_spring', label: 'Источники' },
+    { id: 'bay', label: 'Океан' },
+    { id: 'lake', label: 'Озёра' },
+    { id: 'waterfall', label: 'Водопады' },
+    { id: 'viewpoint', label: 'Смотровые' },
+  ],
+  route: [
+    { id: 'all', label: 'Все' },
+    { id: 'trekking', label: 'Пешие' },
+    { id: 'dzhip', label: 'Джип' },
+    { id: 'boat_trip', label: 'Водные' },
+  ],
+  tour: [
+    { id: 'all', label: 'Все' },
+    { id: 'vulkani', label: 'Вулканы' },
+    { id: 'rybalka', label: 'Рыбалка' },
+    { id: 'medvedi', label: 'Медведи' },
+    { id: 'vertoletnye_tury', label: 'Вертолёты' },
+  ],
+};
 
 const COLOR_MAP: Record<string, string> = {
   volcano: 'orange',
@@ -38,26 +61,37 @@ const COLOR_MAP: Record<string, string> = {
 interface RoutePoint {
   id: string;
   title: string;
+  kind: string;
   locationType: string | null;
+  activityType: string | null;
+  category: string | null;
   lat: number;
   lng: number;
 }
 
 export function HomeMapPreview() {
+  const [kind, setKind] = useState<KindValue>('place');
   const [activeFilter, setActiveFilter] = useState('all');
   const [allRoutes, setAllRoutes] = useState<RoutePoint[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Reset filter when kind changes
+  useEffect(() => { setActiveFilter('all'); }, [kind]);
+
   useEffect(() => {
-    fetch('/api/routes?hasCoords=true&limit=500&sort=title&kind=place')
+    setLoading(true);
+    fetch(`/api/routes?hasCoords=true&limit=500&sort=title&kind=${kind}`)
       .then(r => r.ok ? r.json() : { data: [] })
       .then(d => {
         const points = (d.data ?? [])
           .filter((r: { lat: number | null; lng: number | null }) => r.lat != null && r.lng != null)
-          .map((r: { id: string; title: string; locationType: string | null; lat: number; lng: number }) => ({
+          .map((r: { id: string; title: string; kind: string; locationType: string | null; activityType: string | null; category: string | null; lat: number; lng: number }) => ({
             id: r.id,
             title: r.title,
+            kind: r.kind,
             locationType: r.locationType ?? 'other',
+            activityType: r.activityType ?? null,
+            category: r.category ?? null,
             lat: r.lat,
             lng: r.lng,
           }));
@@ -65,13 +99,23 @@ export function HomeMapPreview() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [kind]);
 
-  const filtered = useMemo(() =>
-    activeFilter === 'all'
-      ? allRoutes
-      : allRoutes.filter(r => r.locationType === activeFilter),
-  [allRoutes, activeFilter]);
+  const currentFilters = FILTERS[kind] ?? FILTERS.place;
+
+  const filtered = useMemo(() => {
+    if (activeFilter === 'all') return allRoutes;
+    switch (kind) {
+      case 'place':
+        return allRoutes.filter(r => r.locationType === activeFilter);
+      case 'route':
+        return allRoutes.filter(r => r.activityType === activeFilter);
+      case 'tour':
+        return allRoutes.filter(r => r.category === activeFilter);
+      default:
+        return allRoutes;
+    }
+  }, [allRoutes, activeFilter, kind]);
 
   const markers = useMemo(() => filtered.map(r => ({
     id: r.id,
@@ -86,10 +130,27 @@ export function HomeMapPreview() {
 
   return (
     <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] overflow-hidden">
+      {/* Kind tabs: Места / Маршруты / Туры */}
+      <div className="flex border-b border-[var(--border)]">
+        {KIND_TABS.map(t => (
+          <button
+            key={t.value}
+            onClick={() => setKind(t.value)}
+            className={`flex-1 py-2 text-xs font-semibold transition-colors ${
+              kind === t.value
+                ? 'bg-[var(--accent)] text-white'
+                : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]'
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
       {/* Filter pills */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--border)]">
+      <div className="flex items-center justify-between px-3 py-1.5 border-b border-[var(--border)]">
         <div className="flex gap-1.5 overflow-x-auto">
-          {FILTERS.map(f => (
+          {currentFilters.map(f => (
             <button
               key={f.id}
               onClick={() => setActiveFilter(f.id)}
@@ -109,12 +170,12 @@ export function HomeMapPreview() {
       </div>
 
       {/* Map */}
-      <div className="relative" style={{ height: '260px' }}>
+      <div className="relative" style={{ height: '240px' }}>
         <LeafletMap
           center={[53.0444, 158.6483]}
           zoom={7}
           markers={markers}
-          height="260px"
+          height="240px"
           attribution={false}
         />
         {loading && (
