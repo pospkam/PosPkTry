@@ -4,6 +4,7 @@ import { Header } from '@/components/layout/Header'
 import { HeroBoard } from '@/components/homepage/HeroBoard'
 import { HomeMapPreview } from '@/components/homepage/HomeMapPreview'
 import { MessengerAgentsSection } from '@/components/homepage/MessengerAgentsSection'
+import { TrustSection } from '@/components/homepage/TrustSection'
 import { Footer } from '@/components/layout/Footer'
 
 const HomeBottomNav = dynamic(
@@ -42,6 +43,33 @@ export default async function Page() {
           </div>
           <div className="h-full min-h-[500px]">
             <HomeMapPreview />
+          </div>
+        </div>
+
+        {/* Почему TourHab — 4 преимущества */}
+        <div className="max-w-7xl mx-auto px-4 mt-12 mb-8">
+          <h2 className="text-center font-playfair text-xl font-bold mb-6">Почему TourHab</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border)] text-center">
+              <div className="text-2xl mb-2">🤖</div>
+              <p className="text-sm font-semibold">AI-планировщик</p>
+              <p className="text-xs text-[var(--text-muted)] mt-1">Подберёт маршрут по вашим интересам за минуты</p>
+            </div>
+            <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border)] text-center">
+              <div className="text-2xl mb-2">🗺️</div>
+              <p className="text-sm font-semibold">Живая карта</p>
+              <p className="text-xs text-[var(--text-muted)] mt-1">260 маршрутов с реальными координатами</p>
+            </div>
+            <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border)] text-center">
+              <div className="text-2xl mb-2">✅</div>
+              <p className="text-sm font-semibold">Проверенные</p>
+              <p className="text-xs text-[var(--text-muted)] mt-1">Только операторы с реальными отзывами</p>
+            </div>
+            <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border)] text-center">
+              <div className="text-2xl mb-2">🛡️</div>
+              <p className="text-sm font-semibold">Безопасность</p>
+              <p className="text-xs text-[var(--text-muted)] mt-1">SOS, погода, актуальные предупреждения</p>
+            </div>
           </div>
         </div>
 
