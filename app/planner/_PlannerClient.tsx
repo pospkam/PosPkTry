@@ -177,19 +177,20 @@ function SelectGroup({ title, items, selected, onToggle }: {
   title: string; items: SelectItem[]; selected: string[]; onToggle: (id: string) => void;
 }) {
   return (
-    <div className="space-y-2">
+    <div className="space-y-1.5">
       <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">{title}</p>
       <div className="flex flex-wrap gap-2">
         {items.map(({ id, label, Icon }) => {
           const active = selected.includes(id);
           return (
-            <button key={id} type="button" onClick={() => onToggle(id)} title={label}
-              className={`flex items-center justify-center w-10 h-10 rounded-lg transition-all border ${
+            <button key={id} type="button" onClick={() => onToggle(id)}
+              className={`flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all border text-xs font-medium select-none min-h-[44px] ${
                 active
-                  ? 'bg-[var(--accent)] border-[var(--accent)] text-white'
-                  : 'border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)]'
+                  ? 'bg-[var(--accent)] border-[var(--accent)] text-white shadow-sm'
+                  : 'border-[var(--border)] text-[var(--text-secondary)] bg-[var(--bg-card)] active:bg-[var(--bg-hover)]'
               }`}>
-              <Icon className="w-4 h-4" />
+              <Icon className="w-4 h-4 shrink-0" />
+              <span className="truncate">{label}</span>
             </button>
           );
         })}
@@ -1383,19 +1384,19 @@ ${recommendation?.warnings && recommendation.warnings.length > 0 ? `<div class="
   // ── Plan panel content ─────────────────────────────────────────────────────
 
   const planPanel = (
-    <div className="p-5 space-y-6">
+    <div className="p-4 space-y-4">
       {/* Header */}
       <div>
-        <h1 className="font-playfair text-2xl font-bold text-[var(--text-primary)]">
+        <h1 className="font-playfair text-xl font-bold text-[var(--text-primary)]">
           Маршрут по Камчатке
         </h1>
-        <p className="text-sm text-[var(--text-secondary)] mt-0.5">
-          Выберите интересы — AI подберёт программу по дням
+        <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+          Выберите интересы — AI подберёт программу
         </p>
       </div>
 
       {/* Interests */}
-      <div className="space-y-1.5">
+      <div className="space-y-1">
         <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">Опишите поездку</p>
         <div className="flex gap-2">
           <input
