@@ -15,7 +15,6 @@ const KIND_TABS: { value: KindValue; label: string }[] = [
   { value: 'tour', label: 'Туры' },
 ];
 
-// Filter options — only essentials, no duplicates
 const FILTER_OPTIONS: Record<KindValue, { id: string; label: string; queryField: string }[]> = {
   place: [
     { id: 'volcano', label: 'Вулканы', queryField: 'location_type' },
@@ -78,7 +77,6 @@ export function HomeMapPreview() {
   const [allRoutes, setAllRoutes] = useState<RoutePoint[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Загружаем все точки при смене таба
   useEffect(() => {
     setActiveFilter(null);
     setLoading(true);
@@ -112,7 +110,6 @@ export function HomeMapPreview() {
 
   const currentOptions = FILTER_OPTIONS[kind] ?? FILTER_OPTIONS.place;
 
-  // Фильтрация
   const applyFilter = useCallback((filterId: string) => {
     if (!filterId) { setFilteredRoutes(allRoutes); return; }
     const opt = currentOptions.find(o => o.id === filterId);
@@ -149,25 +146,41 @@ export function HomeMapPreview() {
 
   return (
     <div className="flex flex-col h-full bg-[var(--bg-card)] lg:border-l lg:border-b-0 border-b border-[var(--border)]">
-      {/* Kind tabs */}
-      <div className="flex border-b border-[var(--border)]">
-        {KIND_TABS.map(t => (
-          <button
-            key={t.value}
-            onClick={() => setKind(t.value)}
-            className={`flex-1 py-2 text-xs font-semibold transition-colors ${
-              kind === t.value
-                ? 'bg-[var(--accent)] text-white'
-                : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]'
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
+      {/* Map container — full height, overflow hidden */}
+      <div className="relative flex-1 min-h-[400px] overflow-hidden">
+        {/* Kind tabs — absolute top-left, inside map */}
+        <div className="absolute top-2 left-2 z-[400] flex rounded-lg overflow-hidden shadow-lg backdrop-blur-sm bg-[var(--bg-card)]/90 border border-[var(--border)]">
+          {KIND_TABS.map(t => (
+            <button
+              key={t.value}
+              onClick={() => setKind(t.value)}
+              className={`px-3 py-1.5 text-xs font-semibold transition-colors ${
+                kind === t.value
+                  ? 'bg-[var(--accent)] text-white'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        <LeafletMap
+          center={[51.5, 161]}
+          zoom={6}
+          markers={markers}
+          height="100%"
+          attribution={false}
+        />
+        {loading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-[var(--bg-card)] z-[400]">
+            <div className="text-xs text-[var(--text-muted)]">Загрузка карты…</div>
+          </div>
+        )}
       </div>
 
-      {/* Single row of filter pills — no group labels */}
-      <div className="flex items-center gap-2 px-4 py-2 border-b border-[var(--border)] overflow-x-auto bg-[var(--bg-card)]">
+      {/* Filter chips — BELOW map */}
+      <div className="flex items-center gap-2 px-4 py-2 border-t border-[var(--border)] overflow-x-auto bg-[var(--bg-card)]">
         <Filter className="w-3.5 h-3.5 text-[var(--text-muted)] flex-shrink-0" />
         {currentOptions.map(f => (
           <button
@@ -195,36 +208,20 @@ export function HomeMapPreview() {
         </span>
       </div>
 
-      {/* Map */}
-      <div className="relative" style={{ height: '500px' }}>
-        <LeafletMap
-          center={[53.0444, 158.6483]}
-          zoom={7}
-          markers={markers}
-          height="500px"
-          attribution={false}
-        />
-        {loading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-[var(--bg-card)] z-[400]">
-            <div className="text-xs text-[var(--text-muted)]">Загрузка карты…</div>
-          </div>
-        )}
-      </div>
-
-      {/* Route cards below map */}
+      {/* Route cards */}
       {filteredRoutes.length > 0 && (
-        <div className="bg-[var(--bg-primary)]">
+        <div className="bg-[var(--bg-primary)] border-t border-[var(--border)]">
           <div className="px-4 py-2 text-[10px] text-[var(--text-muted)] font-medium uppercase tracking-wide">
             {filteredRoutes.length} {filteredRoutes.length === 1 ? 'объект' : filteredRoutes.length < 5 ? 'объекта' : 'объектов'}
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-2 px-4 pb-3">
-            {filteredRoutes.slice(0, 8).map(r => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 px-4 pb-3">
+            {filteredRoutes.slice(0, 10).map(r => (
               <a
                 key={r.id}
                 href={`/routes/${r.id}`}
                 className="group block rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] p-2.5 hover:border-[var(--accent)] transition-colors"
               >
-                <p className="text-xs font-semibold text-[var(--text-primary)] leading-tight group-hover:text-[var(--accent)] truncate">
+                <p className="text-[13px] font-semibold text-[var(--text-primary)] leading-tight group-hover:text-[var(--accent)] line-clamp-2">
                   {r.title}
                 </p>
                 {r.description && (

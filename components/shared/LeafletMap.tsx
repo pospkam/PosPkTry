@@ -105,10 +105,10 @@ export default function LeafletMap({
         attributionControl: attribution !== false,
       });
 
-      // OpenStreetMap тайлы — бесплатно, без ключей
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: attribution !== false ? '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' : '',
+      // OpenTopoMap тайлы — topo relief
+      L.tileLayer('https://tile.opentopomap.org/{z}/{x}/{y}.png', {
+        maxZoom: 17,
+        attribution: attribution !== false ? '© OpenStreetMap, SRTM | © OpenTopoMap (CC-BY-SA)' : '',
       }).addTo(map);
 
       const allCoords: [number, number][] = [];

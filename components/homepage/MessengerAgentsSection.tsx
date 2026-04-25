@@ -26,7 +26,7 @@ const CHANNELS = [
 
 export function MessengerAgentsSection() {
   return (
-    <section className="bg-[var(--bg-card)] border-t border-[var(--border)] px-4 py-3 md:px-6 md:py-4">
+    <section className="bg-white shadow-md rounded-lg border border-[var(--border)] mx-4 my-3 md:mx-6 md:my-4 px-4 py-3 md:px-6 md:py-4">
       <p className="mb-2 text-[9px] uppercase tracking-[0.2em] text-[var(--text-muted)] font-medium">
         AI-консьерж Кузьмич
       </p>
@@ -39,7 +39,7 @@ export function MessengerAgentsSection() {
               <ArrowUpRight className="h-3.5 w-3.5 text-[var(--text-muted)] ml-auto" />
             </>
           );
-          const className = 'flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] px-3 py-2 hover:bg-[var(--bg-hover)] transition-colors flex-1 justify-between';
+          const className = 'flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] px-3 py-2 hover:bg-[var(--bg-hover)] transition-colors flex-1 justify-between';
 
           if (href.startsWith('http')) {
             return (
