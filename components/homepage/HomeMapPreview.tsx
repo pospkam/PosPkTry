@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { Filter } from 'lucide-react';
-import { MarkerType } from '@/components/shared/LeafletMap';
+import { Filter, X } from 'lucide-react';
+import { MarkerType, type MapMarker } from '@/components/shared/LeafletMap';
 
 const LeafletMap = dynamic(() => import('@/components/shared/LeafletMap'), { ssr: false });
 
@@ -15,52 +15,40 @@ const KIND_TABS: { value: KindValue; label: string }[] = [
   { value: 'tour', label: 'Туры' },
 ];
 
-// Сложные фильтры: группа → опции
-const FILTER_GROUPS: Record<KindValue, { group: string; options: { id: string; label: string; queryParam?: string }[] }[]> = {
+// All filter options — flat list, no group labels
+const FILTER_OPTIONS: Record<KindValue, { id: string; label: string; queryField?: string }[]> = {
   place: [
-    { group: 'Тип', options: [
-      { id: 'volcano', label: 'Вулканы' },
-      { id: 'hot_spring', label: 'Источники' },
-      { id: 'bay', label: 'Океан' },
-      { id: 'lake', label: 'Озёра' },
-      { id: 'waterfall', label: 'Водопады' },
-      { id: 'viewpoint', label: 'Смотровые' },
-      { id: 'geyser', label: 'Гейзеры' },
-    ]},
-    { group: 'Район', options: [
-      { id: 'avacha', label: 'Авачинская' },
-      { id: 'mutnovsky', label: 'Мутновская' },
-      { id: 'nalychevo', label: 'Налычево' },
-      { id: 'bystrinsky', label: 'Быстринский' },
-    ]},
+    { id: 'volcano', label: 'Вулканы', queryField: 'location_type' },
+    { id: 'hot_spring', label: 'Источники', queryField: 'location_type' },
+    { id: 'bay', label: 'Океан', queryField: 'location_type' },
+    { id: 'lake', label: 'Озёра', queryField: 'location_type' },
+    { id: 'waterfall', label: 'Водопады', queryField: 'location_type' },
+    { id: 'viewpoint', label: 'Смотровые', queryField: 'location_type' },
+    { id: 'geyser', label: 'Гейзеры', queryField: 'location_type' },
+    { id: 'avacha', label: 'Авачинская', queryField: 'activity_type' },
+    { id: 'mutnovsky', label: 'Мутновская', queryField: 'activity_type' },
+    { id: 'nalychevo', label: 'Налычево', queryField: 'activity_type' },
+    { id: 'bystrinsky', label: 'Быстринский', queryField: 'activity_type' },
   ],
   route: [
-    { group: 'Тип', options: [
-      { id: 'trekking', label: 'Пешие' },
-      { id: 'dzhip', label: 'Джип' },
-      { id: 'boat_trip', label: 'Водные' },
-      { id: 'helicopter', label: 'Вертолёт' },
-      { id: 'snowmobile', label: 'Снегоход' },
-    ]},
-    { group: 'Сложность', options: [
-      { id: 'easy', label: 'Лёгкий' },
-      { id: 'medium', label: 'Средний' },
-      { id: 'hard', label: 'Сложный' },
-    ]},
+    { id: 'trekking', label: 'Пешие', queryField: 'activity_type' },
+    { id: 'dzhip', label: 'Джип', queryField: 'activity_type' },
+    { id: 'boat_trip', label: 'Водные', queryField: 'activity_type' },
+    { id: 'helicopter', label: 'Вертолёт', queryField: 'activity_type' },
+    { id: 'snowmobile', label: 'Снегоход', queryField: 'activity_type' },
+    { id: 'easy', label: 'Лёгкий', queryField: 'difficulty' },
+    { id: 'medium', label: 'Средний', queryField: 'difficulty' },
+    { id: 'hard', label: 'Сложный', queryField: 'difficulty' },
   ],
   tour: [
-    { group: 'Категория', options: [
-      { id: 'vulkani', label: 'Вулканы' },
-      { id: 'rybalka', label: 'Рыбалка' },
-      { id: 'medvedi', label: 'Медведи' },
-      { id: 'vertoletnye_tury', label: 'Вертолёты' },
-      { id: 'termalnye_istochniki', label: 'Источники' },
-    ]},
-    { group: 'Сезон', options: [
-      { id: 'summer', label: 'Лето' },
-      { id: 'winter', label: 'Зима' },
-      { id: 'year_round', label: 'Круглый год' },
-    ]},
+    { id: 'vulkani', label: 'Вулканы', queryField: 'category' },
+    { id: 'rybalka', label: 'Рыбалка', queryField: 'category' },
+    { id: 'medvedi', label: 'Медведи', queryField: 'category' },
+    { id: 'vertoletnye_tury', label: 'Вертолёты', queryField: 'category' },
+    { id: 'termalnye_istochniki', label: 'Источники', queryField: 'category' },
+    { id: 'summer', label: 'Лето', queryField: 'activity_type' },
+    { id: 'winter', label: 'Зима', queryField: 'activity_type' },
+    { id: 'year_round', label: 'Круглый год', queryField: 'activity_type' },
   ],
 };
 
@@ -88,60 +76,91 @@ interface RoutePoint {
   locationType: string | null;
   activityType: string | null;
   category: string | null;
+  difficulty: string | null;
   lat: number;
   lng: number;
+  description: string;
 }
 
 export function HomeMapPreview() {
   const [kind, setKind] = useState<KindValue>('place');
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [filteredRoutes, setFilteredRoutes] = useState<RoutePoint[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [allRoutes, setAllRoutes] = useState<RoutePoint[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Сброс фильтра при смене таба
-  useEffect(() => { setActiveFilter(null); setFilteredRoutes([]); }, [kind]);
-
-  // Загружаем точки только при выборе фильтра
+  // Загружаем все точки при смене таба
   useEffect(() => {
-    if (!activeFilter) { setFilteredRoutes([]); return; }
+    setActiveFilter(null);
     setLoading(true);
-    fetch(`/api/routes?hasCoords=true&limit=200&sort=title&kind=${kind}&activity_type=${activeFilter}`)
+    fetch(`/api/routes?hasCoords=true&limit=300&sort=title&kind=${kind}`)
       .then(r => r.ok ? r.json() : { data: [] })
       .then(d => {
         const points = (d.data ?? [])
           .filter((r: { lat: number | null; lng: number | null }) => r.lat != null && r.lng != null)
-          .map((r: { id: string; title: string; kind: string; locationType: string | null; activityType: string | null; category: string | null; lat: number; lng: number }) => ({
+          .map((r: {
+            id: string; title: string; kind: string; locationType: string | null;
+            activityType: string | null; category: string | null; difficulty: string | null;
+            description: string; lat: number; lng: number;
+          }) => ({
             id: r.id,
             title: r.title,
             kind: r.kind,
             locationType: r.locationType ?? 'other',
             activityType: r.activityType ?? null,
             category: r.category ?? null,
+            difficulty: r.difficulty ?? null,
+            description: (r.description ?? '').replace(/<[^>]+>/g, '').slice(0, 120),
             lat: r.lat,
             lng: r.lng,
           }));
+        setAllRoutes(points);
         setFilteredRoutes(points);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [activeFilter, kind]);
+  }, [kind]);
 
-  const currentGroups = FILTER_GROUPS[kind] ?? FILTER_GROUPS.place;
+  const currentOptions = FILTER_OPTIONS[kind] ?? FILTER_OPTIONS.place;
 
-  const markers = useMemo(() => filteredRoutes.map(r => ({
+  // Фильтрация
+  const applyFilter = useCallback((filterId: string) => {
+    if (!filterId) { setFilteredRoutes(allRoutes); return; }
+    const opt = currentOptions.find(o => o.id === filterId);
+    if (!opt) { setFilteredRoutes(allRoutes); return; }
+    const field = opt.queryField ?? 'location_type';
+    const filtered = allRoutes.filter(r => {
+      const val = field === 'location_type' ? r.locationType
+        : field === 'activity_type' ? r.activityType
+        : field === 'category' ? r.category
+        : field === 'difficulty' ? r.difficulty
+        : r.locationType;
+      return val === filterId;
+    });
+    setFilteredRoutes(filtered);
+  }, [allRoutes, currentOptions]);
+
+  const handleFilterClick = useCallback((id: string) => {
+    setActiveFilter(prev => {
+      const next = prev === id ? null : id;
+      applyFilter(next ?? '');
+      return next;
+    });
+  }, [applyFilter]);
+
+  const markers: MapMarker[] = useMemo(() => filteredRoutes.map(r => ({
     id: r.id,
     coords: [r.lat, r.lng] as [number, number],
     title: r.title,
-    description: '',
+    description: r.description,
     color: COLOR_MAP[r.locationType ?? 'other'] ?? 'gray',
     href: `/routes/${r.id}`,
     type: MarkerType.POI,
-    suppressBalloon: true,
   })), [filteredRoutes]);
 
   return (
     <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] overflow-hidden">
-      {/* Kind tabs: Места / Маршруты / Туры */}
+      {/* Kind tabs */}
       <div className="flex border-b border-[var(--border)]">
         {KIND_TABS.map(t => (
           <button
@@ -158,38 +177,33 @@ export function HomeMapPreview() {
         ))}
       </div>
 
-      {/* Filter groups */}
-      <div className="px-3 py-1.5 border-b border-[var(--border)] space-y-1.5">
-        {currentGroups.map(group => (
-          <div key={group.group} className="flex items-center gap-2">
-            <span className="text-[10px] text-[var(--text-muted)] font-medium whitespace-nowrap">{group.group}:</span>
-            <div className="flex gap-1.5 overflow-x-auto flex-1 pb-0.5">
-              {group.options.map(f => (
-                <button
-                  key={f.id}
-                  onClick={() => setActiveFilter(activeFilter === f.id ? null : f.id)}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all whitespace-nowrap flex-shrink-0 ${
-                    activeFilter === f.id
-                      ? 'bg-[var(--accent)] text-white'
-                      : 'bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-                  }`}
-                >
-                  {f.label}
-                </button>
-              ))}
-            </div>
-          </div>
+      {/* Single row of filter pills — no group labels */}
+      <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--border)] overflow-x-auto">
+        <Filter className="w-3.5 h-3.5 text-[var(--text-muted)] flex-shrink-0" />
+        {currentOptions.map(f => (
+          <button
+            key={f.id}
+            onClick={() => handleFilterClick(f.id)}
+            className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all whitespace-nowrap flex-shrink-0 ${
+              activeFilter === f.id
+                ? 'bg-[var(--accent)] text-white'
+                : 'bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+            }`}
+          >
+            {f.label}
+          </button>
         ))}
-        <div className="flex items-center justify-between pt-1">
-          <span className="text-[10px] text-[var(--text-muted)]">
-            {activeFilter ? (loading ? 'Загрузка…' : `Найдено: ${filteredRoutes.length}`) : 'Выберите фильтр'}
-          </span>
-          {activeFilter && (
-            <button onClick={() => setActiveFilter(null)} className="text-[10px] text-[var(--accent)] hover:opacity-75">
-              Сбросить
-            </button>
-          )}
-        </div>
+        {activeFilter && (
+          <button
+            onClick={() => { setActiveFilter(null); setFilteredRoutes(allRoutes); }}
+            className="flex-shrink-0 p-1 rounded hover:bg-[var(--bg-hover)] text-[var(--text-muted)]"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
+        <span className="text-[10px] text-[var(--text-muted)] ml-auto flex-shrink-0">
+          {loading ? '…' : filteredRoutes.length}
+        </span>
       </div>
 
       {/* Map */}
@@ -201,22 +215,39 @@ export function HomeMapPreview() {
           height="380px"
           attribution={false}
         />
-        {!activeFilter && (
-          <div className="absolute inset-0 flex items-center justify-center bg-[var(--bg-card)] z-[400]">
-            <div className="text-center">
-              <Filter className="w-6 h-6 text-[var(--text-muted)] mx-auto mb-2" />
-              <p className="text-xs text-[var(--text-muted)]">Выберите фильтр чтобы увидеть точки</p>
-            </div>
-          </div>
-        )}
         {loading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-[var(--bg-primary)]/60 z-[400]">
-            <div className="text-xs text-[var(--text-muted)]">Загрузка…</div>
+          <div className="absolute inset-0 flex items-center justify-center bg-[var(--bg-card)] z-[400]">
+            <div className="text-xs text-[var(--text-muted)]">Загрузка карты…</div>
           </div>
         )}
       </div>
 
-
+      {/* Route cards below map */}
+      {filteredRoutes.length > 0 && (
+        <div className="border-t border-[var(--border)]">
+          <div className="px-3 py-2 text-[10px] text-[var(--text-muted)] font-medium uppercase tracking-wide">
+            {filteredRoutes.length} {filteredRoutes.length === 1 ? 'объект' : filteredRoutes.length < 5 ? 'объекта' : 'объектов'}
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 px-3 pb-3">
+            {filteredRoutes.slice(0, 8).map(r => (
+              <a
+                key={r.id}
+                href={`/routes/${r.id}`}
+                className="group block rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] p-2.5 hover:border-[var(--accent)] transition-colors"
+              >
+                <p className="text-xs font-semibold text-[var(--text-primary)] leading-tight group-hover:text-[var(--accent)] truncate">
+                  {r.title}
+                </p>
+                {r.description && (
+                  <p className="text-[10px] text-[var(--text-muted)] mt-0.5 line-clamp-2 leading-relaxed">
+                    {r.description}
+                  </p>
+                )}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
