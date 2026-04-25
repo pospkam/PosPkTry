@@ -15,20 +15,15 @@ const KIND_TABS: { value: KindValue; label: string }[] = [
   { value: 'tour', label: 'Туры' },
 ];
 
-// All filter options — flat list, no group labels
-const FILTER_OPTIONS: Record<KindValue, { id: string; label: string; queryField?: string }[]> = {
+// Filter options — only essentials, no duplicates
+const FILTER_OPTIONS: Record<KindValue, { id: string; label: string; queryField: string }[]> = {
   place: [
     { id: 'volcano', label: 'Вулканы', queryField: 'location_type' },
     { id: 'hot_spring', label: 'Источники', queryField: 'location_type' },
     { id: 'bay', label: 'Океан', queryField: 'location_type' },
     { id: 'lake', label: 'Озёра', queryField: 'location_type' },
     { id: 'waterfall', label: 'Водопады', queryField: 'location_type' },
-    { id: 'viewpoint', label: 'Смотровые', queryField: 'location_type' },
     { id: 'geyser', label: 'Гейзеры', queryField: 'location_type' },
-    { id: 'avacha', label: 'Авачинская', queryField: 'activity_type' },
-    { id: 'mutnovsky', label: 'Мутновская', queryField: 'activity_type' },
-    { id: 'nalychevo', label: 'Налычево', queryField: 'activity_type' },
-    { id: 'bystrinsky', label: 'Быстринский', queryField: 'activity_type' },
   ],
   route: [
     { id: 'trekking', label: 'Пешие', queryField: 'activity_type' },
@@ -36,9 +31,6 @@ const FILTER_OPTIONS: Record<KindValue, { id: string; label: string; queryField?
     { id: 'boat_trip', label: 'Водные', queryField: 'activity_type' },
     { id: 'helicopter', label: 'Вертолёт', queryField: 'activity_type' },
     { id: 'snowmobile', label: 'Снегоход', queryField: 'activity_type' },
-    { id: 'easy', label: 'Лёгкий', queryField: 'difficulty' },
-    { id: 'medium', label: 'Средний', queryField: 'difficulty' },
-    { id: 'hard', label: 'Сложный', queryField: 'difficulty' },
   ],
   tour: [
     { id: 'vulkani', label: 'Вулканы', queryField: 'category' },
@@ -46,9 +38,6 @@ const FILTER_OPTIONS: Record<KindValue, { id: string; label: string; queryField?
     { id: 'medvedi', label: 'Медведи', queryField: 'category' },
     { id: 'vertoletnye_tury', label: 'Вертолёты', queryField: 'category' },
     { id: 'termalnye_istochniki', label: 'Источники', queryField: 'category' },
-    { id: 'summer', label: 'Лето', queryField: 'activity_type' },
-    { id: 'winter', label: 'Зима', queryField: 'activity_type' },
-    { id: 'year_round', label: 'Круглый год', queryField: 'activity_type' },
   ],
 };
 

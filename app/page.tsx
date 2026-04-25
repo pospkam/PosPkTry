@@ -6,10 +6,6 @@ import { HomeMapPreview } from '@/components/homepage/HomeMapPreview'
 import { MessengerAgentsSection } from '@/components/homepage/MessengerAgentsSection'
 import { Footer } from '@/components/layout/Footer'
 
-const TrustSection = dynamic(
-  () => import('@/components/homepage/TrustSection').then(m => ({ default: m.TrustSection })),
-  { loading: () => <SectionSkeleton /> }
-);
 const HomeBottomNav = dynamic(
   () => import('@/components/homepage/HomeBottomNav').then(m => ({ default: m.HomeBottomNav }))
 );
@@ -54,8 +50,7 @@ export default async function Page() {
             <HomeMapPreview />
           </div>
         </div>
-        {/* Below: reviews */}
-        <TrustSection />
+
       </main>
       <Footer />
       <HomeBottomNav />
