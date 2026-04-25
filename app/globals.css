@@ -45,8 +45,8 @@
 }
 
 :root[data-theme="light"] {
-  /* Light = тёплая Камчатка (рассвет) */
-  --bg-primary: #F5F0EB;
+  /* Light = clean stone */
+  --bg-primary: #FAFAF9; /* stone-50 */
   --bg-secondary: #EDE9E3;
   --bg-card: #FFFFFF;
   --bg-hover: #F0ECE7;
@@ -75,9 +75,9 @@
   --radius-xl: 28px;
 }
 
-/* Fallback: light theme (Kamchatka) */
+/* Fallback: light theme */
 :root:not([data-theme]) {
-  --bg-primary: #F5F0EB;
+  --bg-primary: #FAFAF9; /* stone-50 */
   --bg-secondary: #EDE9E3;
   --bg-card: #FFFFFF;
   --bg-hover: #F0ECE7;

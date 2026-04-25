@@ -214,7 +214,7 @@ export function HomeMapPreview() {
           <div className="px-4 py-2 text-[10px] text-[var(--text-muted)] font-medium uppercase tracking-wide">
             {filteredRoutes.length} {filteredRoutes.length === 1 ? 'объект' : filteredRoutes.length < 5 ? 'объекта' : 'объектов'}
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 px-4 pb-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 px-4 pb-3">
             {filteredRoutes.slice(0, 10).map(r => (
               <a
                 key={r.id}
