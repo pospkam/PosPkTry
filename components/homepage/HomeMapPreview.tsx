@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { MapPin, Filter } from 'lucide-react';
+import { Filter } from 'lucide-react';
 import { MarkerType } from '@/components/shared/LeafletMap';
 
 const LeafletMap = dynamic(() => import('@/components/shared/LeafletMap'), { ssr: false });
@@ -194,12 +193,12 @@ export function HomeMapPreview() {
       </div>
 
       {/* Map */}
-      <div className="relative" style={{ height: '240px' }}>
+      <div className="relative" style={{ height: '380px' }}>
         <LeafletMap
           center={[53.0444, 158.6483]}
           zoom={7}
           markers={markers}
-          height="240px"
+          height="380px"
           attribution={false}
         />
         {!activeFilter && (
@@ -217,14 +216,7 @@ export function HomeMapPreview() {
         )}
       </div>
 
-      {/* Footer: link to full map */}
-      <Link
-        href="/map"
-        className="flex items-center justify-center gap-1.5 py-2 text-[11px] font-medium text-[var(--accent)] hover:bg-[var(--bg-hover)] transition-colors border-t border-[var(--border)]"
-      >
-        <MapPin className="w-3 h-3" />
-        Открыть полную карту
-      </Link>
+
     </div>
   );
 }
