@@ -35,12 +35,12 @@ export default async function Page() {
       <Header />
       <main className="flex-1">
         {/* Two columns: left=Hero(top)+AI(bottom), right=Map(full height) */}
-        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row">
-          <div className="w-full lg:w-1/2 flex flex-col">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2">
+          <div className="flex flex-col">
             <HeroBoard />
             <MessengerAgentsSection />
           </div>
-          <div className="w-full lg:w-1/2 self-stretch">
+          <div>
             <HomeMapPreview />
           </div>
         </div>
