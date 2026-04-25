@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { MapPin } from 'lucide-react';
+import { MapPin, Filter } from 'lucide-react';
 import { MarkerType } from '@/components/shared/LeafletMap';
 
 const LeafletMap = dynamic(() => import('@/components/shared/LeafletMap'), { ssr: false });
@@ -16,28 +16,52 @@ const KIND_TABS: { value: KindValue; label: string }[] = [
   { value: 'tour', label: 'Туры' },
 ];
 
-const FILTERS: Record<KindValue, { id: string; label: string }[]> = {
+// Сложные фильтры: группа → опции
+const FILTER_GROUPS: Record<KindValue, { group: string; options: { id: string; label: string; queryParam?: string }[] }[]> = {
   place: [
-    { id: 'all', label: 'Все' },
-    { id: 'volcano', label: 'Вулканы' },
-    { id: 'hot_spring', label: 'Источники' },
-    { id: 'bay', label: 'Океан' },
-    { id: 'lake', label: 'Озёра' },
-    { id: 'waterfall', label: 'Водопады' },
-    { id: 'viewpoint', label: 'Смотровые' },
+    { group: 'Тип', options: [
+      { id: 'volcano', label: 'Вулканы' },
+      { id: 'hot_spring', label: 'Источники' },
+      { id: 'bay', label: 'Океан' },
+      { id: 'lake', label: 'Озёра' },
+      { id: 'waterfall', label: 'Водопады' },
+      { id: 'viewpoint', label: 'Смотровые' },
+      { id: 'geyser', label: 'Гейзеры' },
+    ]},
+    { group: 'Район', options: [
+      { id: 'avacha', label: 'Авачинская' },
+      { id: 'mutnovsky', label: 'Мутновская' },
+      { id: 'nalychevo', label: 'Налычево' },
+      { id: 'bystrinsky', label: 'Быстринский' },
+    ]},
   ],
   route: [
-    { id: 'all', label: 'Все' },
-    { id: 'trekking', label: 'Пешие' },
-    { id: 'dzhip', label: 'Джип' },
-    { id: 'boat_trip', label: 'Водные' },
+    { group: 'Тип', options: [
+      { id: 'trekking', label: 'Пешие' },
+      { id: 'dzhip', label: 'Джип' },
+      { id: 'boat_trip', label: 'Водные' },
+      { id: 'helicopter', label: 'Вертолёт' },
+      { id: 'snowmobile', label: 'Снегоход' },
+    ]},
+    { group: 'Сложность', options: [
+      { id: 'easy', label: 'Лёгкий' },
+      { id: 'medium', label: 'Средний' },
+      { id: 'hard', label: 'Сложный' },
+    ]},
   ],
   tour: [
-    { id: 'all', label: 'Все' },
-    { id: 'vulkani', label: 'Вулканы' },
-    { id: 'rybalka', label: 'Рыбалка' },
-    { id: 'medvedi', label: 'Медведи' },
-    { id: 'vertoletnye_tury', label: 'Вертолёты' },
+    { group: 'Категория', options: [
+      { id: 'vulkani', label: 'Вулканы' },
+      { id: 'rybalka', label: 'Рыбалка' },
+      { id: 'medvedi', label: 'Медведи' },
+      { id: 'vertoletnye_tury', label: 'Вертолёты' },
+      { id: 'termalnye_istochniki', label: 'Источники' },
+    ]},
+    { group: 'Сезон', options: [
+      { id: 'summer', label: 'Лето' },
+      { id: 'winter', label: 'Зима' },
+      { id: 'year_round', label: 'Круглый год' },
+    ]},
   ],
 };
 
@@ -71,16 +95,18 @@ interface RoutePoint {
 
 export function HomeMapPreview() {
   const [kind, setKind] = useState<KindValue>('place');
-  const [activeFilter, setActiveFilter] = useState('all');
-  const [allRoutes, setAllRoutes] = useState<RoutePoint[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [filteredRoutes, setFilteredRoutes] = useState<RoutePoint[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  // Reset filter when kind changes
-  useEffect(() => { setActiveFilter('all'); }, [kind]);
+  // Сброс фильтра при смене таба
+  useEffect(() => { setActiveFilter(null); setFilteredRoutes([]); }, [kind]);
 
+  // Загружаем точки только при выборе фильтра
   useEffect(() => {
+    if (!activeFilter) { setFilteredRoutes([]); return; }
     setLoading(true);
-    fetch(`/api/routes?hasCoords=true&limit=500&sort=title&kind=${kind}`)
+    fetch(`/api/routes?hasCoords=true&limit=200&sort=title&kind=${kind}&activity_type=${activeFilter}`)
       .then(r => r.ok ? r.json() : { data: [] })
       .then(d => {
         const points = (d.data ?? [])
@@ -95,29 +121,15 @@ export function HomeMapPreview() {
             lat: r.lat,
             lng: r.lng,
           }));
-        setAllRoutes(points);
+        setFilteredRoutes(points);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [kind]);
+  }, [activeFilter, kind]);
 
-  const currentFilters = FILTERS[kind] ?? FILTERS.place;
+  const currentGroups = FILTER_GROUPS[kind] ?? FILTER_GROUPS.place;
 
-  const filtered = useMemo(() => {
-    if (activeFilter === 'all') return allRoutes;
-    switch (kind) {
-      case 'place':
-        return allRoutes.filter(r => r.locationType === activeFilter);
-      case 'route':
-        return allRoutes.filter(r => r.activityType === activeFilter);
-      case 'tour':
-        return allRoutes.filter(r => r.category === activeFilter);
-      default:
-        return allRoutes;
-    }
-  }, [allRoutes, activeFilter, kind]);
-
-  const markers = useMemo(() => filtered.map(r => ({
+  const markers = useMemo(() => filteredRoutes.map(r => ({
     id: r.id,
     coords: [r.lat, r.lng] as [number, number],
     title: r.title,
@@ -126,7 +138,7 @@ export function HomeMapPreview() {
     href: `/routes/${r.id}`,
     type: MarkerType.POI,
     suppressBalloon: true,
-  })), [filtered]);
+  })), [filteredRoutes]);
 
   return (
     <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] overflow-hidden">
@@ -147,26 +159,38 @@ export function HomeMapPreview() {
         ))}
       </div>
 
-      {/* Filter pills */}
-      <div className="flex items-center justify-between px-3 py-1.5 border-b border-[var(--border)]">
-        <div className="flex gap-1.5 overflow-x-auto">
-          {currentFilters.map(f => (
-            <button
-              key={f.id}
-              onClick={() => setActiveFilter(f.id)}
-              className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all whitespace-nowrap ${
-                activeFilter === f.id
-                  ? 'bg-[var(--accent)] text-white'
-                  : 'bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-              }`}
-            >
-              {f.label}
+      {/* Filter groups */}
+      <div className="px-3 py-1.5 border-b border-[var(--border)] space-y-1.5">
+        {currentGroups.map(group => (
+          <div key={group.group} className="flex items-center gap-2">
+            <span className="text-[10px] text-[var(--text-muted)] font-medium whitespace-nowrap">{group.group}:</span>
+            <div className="flex gap-1.5 overflow-x-auto flex-1 pb-0.5">
+              {group.options.map(f => (
+                <button
+                  key={f.id}
+                  onClick={() => setActiveFilter(activeFilter === f.id ? null : f.id)}
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all whitespace-nowrap flex-shrink-0 ${
+                    activeFilter === f.id
+                      ? 'bg-[var(--accent)] text-white'
+                      : 'bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+        <div className="flex items-center justify-between pt-1">
+          <span className="text-[10px] text-[var(--text-muted)]">
+            {activeFilter ? (loading ? 'Загрузка…' : `Найдено: ${filteredRoutes.length}`) : 'Выберите фильтр'}
+          </span>
+          {activeFilter && (
+            <button onClick={() => setActiveFilter(null)} className="text-[10px] text-[var(--accent)] hover:opacity-75">
+              Сбросить
             </button>
-          ))}
+          )}
         </div>
-        <span className="text-[10px] text-[var(--text-muted)] ml-2 flex-shrink-0">
-          {loading ? '…' : filtered.length}
-        </span>
       </div>
 
       {/* Map */}
@@ -178,9 +202,17 @@ export function HomeMapPreview() {
           height="240px"
           attribution={false}
         />
+        {!activeFilter && (
+          <div className="absolute inset-0 flex items-center justify-center bg-[var(--bg-card)] z-[400]">
+            <div className="text-center">
+              <Filter className="w-6 h-6 text-[var(--text-muted)] mx-auto mb-2" />
+              <p className="text-xs text-[var(--text-muted)]">Выберите фильтр чтобы увидеть точки</p>
+            </div>
+          </div>
+        )}
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center bg-[var(--bg-primary)]/60 z-[400]">
-            <div className="text-xs text-[var(--text-muted)]">Загрузка карты…</div>
+            <div className="text-xs text-[var(--text-muted)]">Загрузка…</div>
           </div>
         )}
       </div>
