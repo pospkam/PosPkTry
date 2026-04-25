@@ -72,13 +72,21 @@ export default async function Page() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <Header />
       <main>
-        {/* 1. Compact banner */}
-        <HeroBoard />
-        {/* 2. AI concierge */}
-        <InlineChat />
-        {/* 3. Full-width interactive map */}
-        <HomeMapPreview />
-        {/* 4. Trust / reviews */}
+        {/* Two-column hero: left=Hero+AI, right=Map */}
+        <div className="mx-auto max-w-7xl">
+          <div className="flex flex-col lg:flex-row">
+            {/* Left: Hero + AI concierge */}
+            <div className="w-full lg:w-[55%]">
+              <HeroBoard />
+              <InlineChat />
+            </div>
+            {/* Right: Map */}
+            <div className="w-full lg:w-[45%]">
+              <HomeMapPreview />
+            </div>
+          </div>
+        </div>
+        {/* Below: Trust / reviews */}
         <TrustSection />
       </main>
       <Footer />
