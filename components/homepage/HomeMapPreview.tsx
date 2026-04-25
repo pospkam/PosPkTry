@@ -196,12 +196,12 @@ export function HomeMapPreview() {
       </div>
 
       {/* Map */}
-      <div className="relative" style={{ height: '320px' }}>
+      <div className="relative" style={{ height: '500px' }}>
         <LeafletMap
           center={[53.0444, 158.6483]}
           zoom={7}
           markers={markers}
-          height="320px"
+          height="500px"
           attribution={false}
         />
         {loading && (
