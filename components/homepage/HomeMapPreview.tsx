@@ -145,7 +145,7 @@ export function HomeMapPreview() {
   })), [filteredRoutes]);
 
   return (
-    <div className="flex flex-col h-full bg-[var(--bg-card)] lg:border-l lg:border-b-0 border-b border-[var(--border)]">
+    <div className="flex flex-col h-full bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden">
       {/* Map container — full height, overflow hidden */}
       <div className="relative flex-1 min-h-[400px] overflow-hidden">
         {/* Kind tabs — absolute top-left, inside map */}

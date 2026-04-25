@@ -26,7 +26,7 @@ const CHANNELS = [
 
 export function MessengerAgentsSection() {
   return (
-    <section id="chat" className="bg-white shadow-md rounded-lg border border-[var(--border)] mx-4 my-3 md:mx-6 md:my-4 px-4 py-3 md:px-6 md:py-4">
+    <section id="chat" className="bg-[var(--bg-card)] rounded-lg border border-[var(--border)] px-4 py-3 md:px-6 md:py-4">
       <p className="mb-2 text-[9px] uppercase tracking-[0.2em] text-[var(--text-muted)] font-medium">
         AI-консьерж Кузьмич
       </p>
