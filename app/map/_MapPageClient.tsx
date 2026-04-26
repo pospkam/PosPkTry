@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
-import { Sun, Moon, User, X, ArrowRight, MapPin } from 'lucide-react';
+import { Sun, Moon, User, X, ArrowRight, MapPin, WifiOff } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import dynamic from 'next/dynamic';
 import Logo from '@/components/shared/Logo';
 import BottomNav from '@/components/shared/BottomNav';
 import { AssistantButton } from '@/components/shared/AssistantButton';
 import { MarkerType, type MapMarkerGeometry } from '@/components/shared/LeafletMap';
+import { getAllOfflineRoutes } from '@/lib/offline/db';
 
 const LeafletMap = dynamic(() => import('@/components/shared/LeafletMap'), { ssr: false });
 
@@ -81,12 +82,43 @@ export default function MapPageClient() {
   const [activeFilter, setActiveFilter] = useState('all');
   const [allRoutes, setAllRoutes] = useState<RoutePoint[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isOffline, setIsOffline] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selectedRoute = selectedId ? allRoutes.find(r => r.id === selectedId) ?? null : null;
   const handleMarkerClick = useCallback((id: string) => setSelectedId(id), []);
 
   useEffect(() => {
     const load = async () => {
+      const offline = typeof navigator !== 'undefined' && !navigator.onLine;
+      setIsOffline(offline);
+
+      if (offline) {
+        // Офлайн-режим: загружаем маршруты из IndexedDB
+        try {
+          const cached = await getAllOfflineRoutes();
+          const points: RoutePoint[] = cached
+            .filter((r) => r.lat != null && r.lng != null)
+            .map((r): RoutePoint => ({
+              id:           r.id,
+              title:        r.title,
+              locationType: r.locationType ?? 'other',
+              activityType: r.activityType ?? null,
+              lat:          r.lat,
+              lng:          r.lng,
+              description:  r.description ?? '',
+              volcanoStatus: null,
+              geometry:     r.geometry as MapMarkerGeometry | null ?? null,
+            }));
+          setAllRoutes(points);
+        } catch {
+          // IndexedDB недоступен
+        } finally {
+          setLoading(false);
+        }
+        return;
+      }
+
+      // Онлайн-режим: обычный API
       try {
         const res = await fetch('/api/routes?hasCoords=true&limit=1500&sort=title&kind=place');
         if (!res.ok) return;
@@ -112,7 +144,19 @@ export default function MapPageClient() {
         setLoading(false);
       }
     };
+
     load();
+
+    // Слушаем смену статуса сети
+    const handleOnline = () => { setIsOffline(false); load(); };
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const filtered = useMemo(() =>
@@ -172,6 +216,22 @@ export default function MapPageClient() {
           </div>
         </div>
       </header>
+
+      {/* Офлайн баннер */}
+      {isOffline && (
+        <div className="mx-4 mt-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-xs">
+          <WifiOff className="w-3.5 h-3.5 shrink-0" />
+          <span>
+            Офлайн-режим.{' '}
+            {allRoutes.length > 0
+              ? `Показаны ${allRoutes.length} скачанных маршрутов.`
+              : 'Нет скачанных регионов — скачайте карту заранее.'}
+          </span>
+          <Link href="/offline/manage" className="ml-auto shrink-0 font-medium underline underline-offset-2">
+            Скачать
+          </Link>
+        </div>
+      )}
 
       {/* Фильтры по типу локации (ГДЕ) */}
       <div className="px-4 py-3 overflow-x-auto">
