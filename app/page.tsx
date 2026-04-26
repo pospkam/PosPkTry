@@ -6,6 +6,7 @@ import { HomeMapPreview } from '@/components/homepage/HomeMapPreview'
 import { MessengerAgentsSection } from '@/components/homepage/MessengerAgentsSection'
 import { TrustSection } from '@/components/homepage/TrustSection'
 import { Footer } from '@/components/layout/Footer'
+import { OnSiteBanner } from '@/components/geo/OnSiteBanner'
 
 const HomeBottomNav = dynamic(
   () => import('@/components/homepage/HomeBottomNav').then(m => ({ default: m.HomeBottomNav }))
@@ -34,6 +35,7 @@ export default async function Page() {
   return (
     <div className="bg-[var(--bg-primary)] text-[var(--text-primary)] min-h-[100dvh] flex flex-col">
       <Header />
+      <OnSiteBanner />
       <main className="flex-1">
         {/* Two columns: left=Hero(top)+AI(bottom), right=Map(full height) */}
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch pt-10 px-4">

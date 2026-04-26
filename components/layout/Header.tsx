@@ -6,6 +6,7 @@ import { Sun, Moon, UserCircle, ShoppingCart } from 'lucide-react';
 import { useScrollY } from '@/hooks/useScrollY';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useCart } from '@/contexts/CartContext';
+import { GeoToggle } from '@/components/geo/GeoToggle';
 import Logo from '@/components/shared/Logo';
 
 const FO = "var(--font-outfit,'Outfit',system-ui,sans-serif)";
@@ -101,8 +102,11 @@ export function Header() {
         ))}
       </nav>
 
-      {/* Right side — 3 compact icon buttons */}
+      {/* Right side — icon buttons */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+        {/* Я на Камчатке */}
+        <GeoToggle />
+
         {/* Theme toggle */}
         <button
           onClick={toggleTheme}
