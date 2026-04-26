@@ -11,7 +11,6 @@ import { OnSiteBanner } from '@/components/geo/OnSiteBanner'
 const HomeBottomNav = dynamic(
   () => import('@/components/homepage/HomeBottomNav').then(m => ({ default: m.HomeBottomNav }))
 );
-const SOSButton = dynamic(() => import('@/components/shared/SOSButton'));
 
 export const metadata: Metadata = {
   title: 'TourHab — помощник и планировщик путешествия по Камчатке',
@@ -80,7 +79,7 @@ export default async function Page() {
       <div className="md:hidden">
         <HomeBottomNav />
       </div>
-      <SOSButton />
+      {/* SOS убран с главной — дублируется в Header */}
     </div>
   );
 }
