@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from 'react';
 import 'leaflet/dist/leaflet.css';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 
 export enum MarkerType {
   TOUR = 'tour',
@@ -85,17 +87,24 @@ export default function LeafletMap({
   const containerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const clusterRef = useRef<any>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
 
-    import('leaflet').then((L) => {
+    // Dynamic import — leaflet + markercluster
+    Promise.all([
+      import('leaflet'),
+      import('leaflet.markercluster'),
+    ]).then(([L]) => {
       if (!containerRef.current) return;
 
       // Уничтожаем предыдущую карту
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
+        clusterRef.current = null;
       }
 
       const map = L.map(containerRef.current, {
@@ -118,6 +127,54 @@ export default function LeafletMap({
         attribution: attribution !== false ? '© OpenStreetMap, SRTM | © OpenTopoMap (CC-BY-SA)' : '',
       }).addTo(map);
 
+      // Группа кластеров
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const clusterGroup = (L as any).markerClusterGroup({
+        chunkedLoading: true,
+        chunkInterval: 200,
+        chunkDelay: 50,
+        maxClusterRadius: 60,
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false,
+        zoomToBoundsOnClick: true,
+        disableClusteringAtZoom: 11,
+        iconCreateFunction: (cluster: any) => {
+          const count = cluster.getChildCount();
+          let size: 'small' | 'medium' | 'large' = 'small';
+          let bgColor = '#0f172a'; // slate-900
+
+          if (count >= 100) {
+            size = 'large';
+            bgColor = '#ea580c'; // orange-600
+          } else if (count >= 10) {
+            size = 'medium';
+            bgColor = '#475569'; // slate-600
+          }
+
+          const dim = size === 'large' ? 44 : size === 'medium' ? 36 : 30;
+          const fontSize = size === 'large' ? 15 : size === 'medium' ? 13 : 12;
+
+          return L.divIcon({
+            html: `<div style="
+              background:${bgColor};
+              color:#fff;
+              width:${dim}px;
+              height:${dim}px;
+              border-radius:50%;
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              font-weight:700;
+              font-size:${fontSize}px;
+              border:2px solid #fff;
+              box-shadow:0 2px 8px rgba(0,0,0,0.25);
+            ">${count}</div>`,
+            className: 'kh-cluster',
+            iconSize: [dim, dim],
+          });
+        },
+      });
+
       const allCoords: [number, number][] = [];
 
       markers.forEach((marker, idx) => {
@@ -125,7 +182,7 @@ export default function LeafletMap({
         const markerId = marker.id ?? `mk_${idx}`;
         allCoords.push(marker.coords);
 
-        // Геометрия маршрута (линии/полигоны)
+        // Геометрия маршрута (линии/полигоны) — добавляем НА карту, не в кластер
         if (marker.geometry && marker.geometry.coordinates.length >= 2) {
           const geomHex = COLOR_MAP[marker.geometry.color ?? marker.color ?? 'teal'] ?? '#0D9488';
           const coords = marker.geometry.coordinates as [number, number][];
@@ -163,10 +220,15 @@ export default function LeafletMap({
           m.on('click', () => onMarkerClick(markerId));
         }
 
-        m.addTo(map);
+        // Вместо m.addTo(map) — добавляем в кластер
+        clusterGroup.addLayer(m);
       });
 
-      // Подгоняем вид под все маркеры
+      // Добавляем кластер на карту
+      map.addLayer(clusterGroup);
+      clusterRef.current = clusterGroup;
+
+      // Подгоняем вид под все маркеры (через кластер)
       if (allCoords.length > 1) {
         map.fitBounds(allCoords as unknown as import('leaflet').LatLngBoundsExpression, {
           padding: [50, 50],
@@ -180,6 +242,7 @@ export default function LeafletMap({
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
+        clusterRef.current = null;
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
