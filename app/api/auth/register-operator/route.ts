@@ -32,9 +32,11 @@ const Schema = z.object({
   pd_consent:   z.literal(true, { errorMap: () => ({ message: 'Необходимо согласие на обработку ПД' }) }),
 });
 
-const jwtSecret = process.env.JWT_SECRET;
-if (!jwtSecret) throw new Error('JWT_SECRET is required');
-const JWT_SECRET = new TextEncoder().encode(jwtSecret);
+function getJWTSecret(): Uint8Array {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error('JWT_SECRET is required');
+  return new TextEncoder().encode(secret);
+}
 
 const limiter = createRateLimiter({ windowMs: 60_000, max: 3 });
 
@@ -111,7 +113,7 @@ export async function POST(request: NextRequest) {
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
       .setExpirationTime('7d')
-      .sign(JWT_SECRET);
+      .sign(getJWTSecret());
 
     // Уведомления админу (fire-and-forget)
     notifyAdminTelegram(companyName, contactName, phone, email, partner.id).catch(() => {});

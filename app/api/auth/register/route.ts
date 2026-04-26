@@ -17,13 +17,11 @@ const RegisterSchema = z.object({
   referralCode: z.string().max(20).optional(),
 });
 
-const jwtSecret = process.env.JWT_SECRET;
-
-if (!jwtSecret) {
-  throw new Error('JWT_SECRET is required');
+function getJWTSecret(): Uint8Array {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error('JWT_SECRET is required');
+  return new TextEncoder().encode(secret);
 }
-
-const JWT_SECRET = new TextEncoder().encode(jwtSecret);
 
 const registerLimiter = createRateLimiter({ windowMs: 60_000, max: 3 });
 
@@ -133,7 +131,7 @@ export async function POST(request: NextRequest) {
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
       .setExpirationTime('7d')
-      .sign(JWT_SECRET);
+      .sign(getJWTSecret());
     
     // Возвращаем ответ с токеном
     const response = NextResponse.json(
