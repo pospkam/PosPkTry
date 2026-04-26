@@ -229,7 +229,7 @@ export function AssistantButton({ pageContext }: { pageContext?: PageContext }) 
         <div
           style={{
             position: 'fixed',
-            bottom: '136px',
+            bottom: '156px',
             right: '16px',
             width: 'min(390px, calc(100vw - 32px))',
             maxHeight: '520px',
@@ -500,7 +500,7 @@ export function AssistantButton({ pageContext }: { pageContext?: PageContext }) 
         aria-label={isOpen ? 'Закрыть помощника' : 'Открыть помощника'}
         style={{
           position: 'fixed',
-          bottom: '76px',
+          bottom: '100px',
           right: '16px',
           zIndex: 90,
           width: '48px',

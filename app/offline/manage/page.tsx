@@ -131,7 +131,7 @@ export default function OfflineManagePage() {
           <ul className="text-[var(--text-secondary)] space-y-0.5 text-xs leading-relaxed list-disc list-inside">
             <li>Тайлы карты (zoom 7–12) кэшируются в Service Worker</li>
             <li>Маршруты и точки сохраняются в IndexedDB на устройстве</li>
-            <li>Один регион занимает ~30–100 MB в зависимости от площади</li>
+            <li>Один регион занимает ~3–45 MB в зависимости от площади</li>
             <li>После скачивания карта работает без интернета</li>
           </ul>
         </section>

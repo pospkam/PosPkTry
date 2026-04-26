@@ -29,9 +29,9 @@ export interface Region {
   bbox: RegionBbox;
   center: { lat: number; lng: number };
   defaultZoom: number;
-  /** Приблизительный объём тайлов zoom 7-12, MB */
-  estimatedTilesMb: number;
-  /** Приблизительное число маршрутов в bbox */
+  /** Приблизительный размер региона при скачивании (тайлы + данные), для отображения ДО скачивания */
+  estimatedSizeRange: string;
+  /** Приблизительное число маршрутов в регионе, для отображения ДО скачивания */
   estimatedRoutes: number;
 }
 
@@ -43,8 +43,8 @@ export const REGIONS: Record<RegionId, Region> = {
     bbox: { south: 52.8, west: 158.4, north: 53.6, east: 159.4 },
     center: { lat: 53.26, lng: 158.83 },
     defaultZoom: 10,
-    estimatedTilesMb: 42,
-    estimatedRoutes: 120,
+    estimatedSizeRange: '5-15 MB',
+    estimatedRoutes: 41,
   },
 
   'mutnovsky-gorely': {
@@ -54,7 +54,7 @@ export const REGIONS: Record<RegionId, Region> = {
     bbox: { south: 52.2, west: 157.8, north: 53.1, east: 158.8 },
     center: { lat: 52.45, lng: 158.19 },
     defaultZoom: 10,
-    estimatedTilesMb: 38,
+    estimatedSizeRange: '5-15 MB',
     estimatedRoutes: 85,
   },
 
@@ -65,7 +65,7 @@ export const REGIONS: Record<RegionId, Region> = {
     bbox: { south: 53.1, west: 158.7, north: 53.9, east: 159.9 },
     center: { lat: 53.52, lng: 159.2 },
     defaultZoom: 10,
-    estimatedTilesMb: 45,
+    estimatedSizeRange: '5-15 MB',
     estimatedRoutes: 95,
   },
 
@@ -76,7 +76,7 @@ export const REGIONS: Record<RegionId, Region> = {
     bbox: { south: 55.5, west: 159.8, north: 56.8, east: 161.5 },
     center: { lat: 56.07, lng: 160.64 },
     defaultZoom: 9,
-    estimatedTilesMb: 68,
+    estimatedSizeRange: '10-25 MB',
     estimatedRoutes: 70,
   },
 
@@ -87,7 +87,7 @@ export const REGIONS: Record<RegionId, Region> = {
     bbox: { south: 51.0, west: 156.8, north: 52.4, east: 158.5 },
     center: { lat: 51.5, lng: 157.4 },
     defaultZoom: 9,
-    estimatedTilesMb: 75,
+    estimatedSizeRange: '10-30 MB',
     estimatedRoutes: 55,
   },
 
@@ -98,7 +98,7 @@ export const REGIONS: Record<RegionId, Region> = {
     bbox: { south: 52.6, west: 157.8, north: 53.2, east: 158.6 },
     center: { lat: 52.9, lng: 158.17 },
     defaultZoom: 10,
-    estimatedTilesMb: 28,
+    estimatedSizeRange: '3-10 MB',
     estimatedRoutes: 40,
   },
 
@@ -109,7 +109,7 @@ export const REGIONS: Record<RegionId, Region> = {
     bbox: { south: 55.4, west: 157.5, north: 56.8, east: 159.5 },
     center: { lat: 55.93, lng: 158.7 },
     defaultZoom: 9,
-    estimatedTilesMb: 90,
+    estimatedSizeRange: '15-40 MB',
     estimatedRoutes: 60,
   },
 
@@ -120,7 +120,7 @@ export const REGIONS: Record<RegionId, Region> = {
     bbox: { south: 53.8, west: 159.9, north: 55.0, east: 162.0 },
     center: { lat: 54.45, lng: 160.6 },
     defaultZoom: 9,
-    estimatedTilesMb: 100,
+    estimatedSizeRange: '15-45 MB',
     estimatedRoutes: 45,
   },
 
@@ -131,7 +131,7 @@ export const REGIONS: Record<RegionId, Region> = {
     bbox: { south: 54.5, west: 165.5, north: 56.0, east: 167.5 },
     center: { lat: 55.2, lng: 166.3 },
     defaultZoom: 9,
-    estimatedTilesMb: 55,
+    estimatedSizeRange: '10-25 MB',
     estimatedRoutes: 20,
   },
 
@@ -142,7 +142,7 @@ export const REGIONS: Record<RegionId, Region> = {
     bbox: { south: 53.9, west: 159.0, north: 55.0, east: 160.8 },
     center: { lat: 54.05, lng: 159.44 },
     defaultZoom: 9,
-    estimatedTilesMb: 72,
+    estimatedSizeRange: '10-30 MB',
     estimatedRoutes: 35,
   },
 };

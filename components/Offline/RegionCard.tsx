@@ -1,6 +1,7 @@
 'use client';
 
 import { type Region } from '@/lib/geo/regions';
+import { estimateTilesMb } from '@/lib/offline/tiles';
 import { useOfflineRegion } from '@/lib/offline/useOfflineRegion';
 
 interface RegionCardProps {
@@ -59,24 +60,40 @@ export default function RegionCard({ region }: RegionCardProps) {
 
       {/* Info row */}
       <div className="flex items-center gap-3 text-xs text-[var(--text-muted)] flex-wrap">
-        <span className="flex items-center gap-1">
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-          ~{region.estimatedRoutes} маршрутов
-        </span>
-        <span className="flex items-center gap-1">
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582 4 8-4s8 1.79 8 4" />
-          </svg>
-          ~{region.estimatedTilesMb} MB
-        </span>
-        {isCached && regionMeta && (
+        {isCached && regionMeta ? (
           <>
+            {/* ПОСЛЕ скачивания: реальные цифры */}
+            <span className="flex items-center gap-1">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              {regionMeta.routesCount} маршрутов скачано
+            </span>
+            <span className="flex items-center gap-1">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582 4 8-4s8 1.79 8 4" />
+              </svg>
+              {regionMeta.tilesCount} тайлов, ~{estimateTilesMb(region.bbox)} MB
+            </span>
             <span>Скачан {formatDate(regionMeta.downloadedAt)}</span>
-            <span>{regionMeta.routesCount} маршр.</span>
-            {regionMeta.sizeBytes > 0 && <span>{formatBytes(regionMeta.sizeBytes)}</span>}
+          </>
+        ) : (
+          <>
+            {/* ДО скачивания: приблизительные оценки */}
+            <span className="flex items-center gap-1">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              ~{region.estimatedRoutes} маршрутов
+            </span>
+            <span className="flex items-center gap-1">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582 4 8-4s8 1.79 8 4" />
+              </svg>
+              {region.estimatedSizeRange}
+            </span>
           </>
         )}
       </div>

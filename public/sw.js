@@ -2,7 +2,7 @@
 // Кэш: статика + каталог туров + последние 10 просмотренных страниц туров
 // + тайлы OpenTopoMap для офлайн-карты (управляются через postMessage)
 
-const CACHE_NAME = 'kamchatour-v2';
+const CACHE_NAME = 'kamchatour-v3';
 const MAX_TOUR_PAGES = 10;
 
 // ─── Tile cache constants ──────────────────────────────────────────────────
@@ -33,8 +33,9 @@ function makeTransparentPngResponse() {
 // Страницы для предварительного кэширования при установке
 const PRECACHE_URLS = [
   '/',
-  '/tours',
+  '/map',
   '/offline',
+  '/offline/manage',
 ];
 
 // Установка: кэшируем базовые страницы
@@ -180,6 +181,15 @@ async function cacheTilesForRegion(tileUrls, regionId, client) {
   }
 }
 
+// ─── Whitelist: страницы которые умеют работать офлайн (IndexedDB / клиентское состояние) ───
+const OFFLINE_CAPABLE_ROUTES = ['/', '/map', '/offline', '/offline/manage'];
+
+function isOfflineCapable(pathname) {
+  return OFFLINE_CAPABLE_ROUTES.some(route =>
+    pathname === route || pathname.startsWith(route + '/')
+  );
+}
+
 // ─── Fetch: cache-first для статики и туров, network-first для остального ──
 
 self.addEventListener('fetch', (event) => {
@@ -235,6 +245,29 @@ self.addEventListener('fetch', (event) => {
       })
     );
     return;
+  }
+
+  // Навигация: whitelist страниц которые работают офлайн через IndexedDB
+  if (request.mode === 'navigate' || request.destination === 'document') {
+    if (isOfflineCapable(url.pathname)) {
+      event.respondWith(
+        fetch(request)
+          .then((response) => {
+            if (response.ok) {
+              const clone = response.clone();
+              caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+            }
+            return response;
+          })
+          .catch(() =>
+            caches.match(request).then((cached) =>
+              cached || caches.match('/offline')
+            )
+          )
+      );
+      return;
+    }
+    // Не whitelisted — профиль, каталог и т.д. → /offline
   }
 
   // Остальные страницы: network-first с fallback на кэш

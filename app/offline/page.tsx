@@ -28,7 +28,7 @@ export default function OfflinePage() {
 
         <Link
           href="/"
-          className="inline-block px-6 py-3 bg-[var(--accent)] text-white rounded-full font-medium text-sm hover:opacity-90 transition-opacity"
+          className="inline-block px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-full font-medium text-sm transition-colors"
         >
           На главную
         </Link>
