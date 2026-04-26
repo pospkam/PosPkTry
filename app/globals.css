@@ -970,3 +970,31 @@ body {
   text-decoration: line-through;
   cursor: not-allowed;
 }
+
+/* =============================================
+   LEAFLET MARKER CLUSTER — Kamchatka theme
+   Убираем двойную рамку от divIcon + cluster
+   ============================================= */
+.kh-cluster {
+  background: transparent !important;
+  border: none !important;
+}
+
+.leaflet-marker-icon.leaflet-div-icon.kh-cluster {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Override default marker cluster styles */
+.marker-cluster-small,
+.marker-cluster-medium,
+.marker-cluster-large {
+  background: transparent !important;
+}
+
+.marker-cluster-small div,
+.marker-cluster-medium div,
+.marker-cluster-large div {
+  background: transparent !important;
+  color: transparent !important;
+}
