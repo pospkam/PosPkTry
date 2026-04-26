@@ -1,7 +1,7 @@
 // Kamchatour Hub Service Worker -- cache-first для офлайн-доступа к турам
 // Кэш: статика + каталог туров + последние 10 просмотренных страниц туров
 
-const CACHE_NAME = 'kamchatour-v1';
+const CACHE_NAME = 'kamchatour-v2';
 const MAX_TOUR_PAGES = 10;
 
 // Страницы для предварительного кэширования при установке

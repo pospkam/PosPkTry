@@ -1,0 +1,39 @@
+{
+  "name": "KamchatourHub — Камчатка в кармане",
+  "short_name": "KamchatourHub",
+  "description": "Туристическая платформа Камчатки. Маршруты, безопасность, проводник Кузьмич.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fafaf9",
+  "theme_color": "#0f172a",
+  "lang": "ru",
+  "dir": "ltr",
+  "categories": ["travel", "navigation", "lifestyle"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Карта Камчатки",
+      "short_name": "Карта",
+      "url": "/map",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Кузьмич",
+      "short_name": "Кузьмич",
+      "url": "/ai-assistant",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "SOS",
+      "short_name": "SOS",
+      "url": "/hub/safety",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

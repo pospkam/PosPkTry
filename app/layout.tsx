@@ -99,6 +99,14 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
+  manifest: '/manifest.json',
+  themeColor: '#0f172a',
+  applicationName: 'KamchatourHub',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'KamchatourHub',
+  },
   verification: {
     google: process.env.GOOGLE_SITE_VERIFICATION,
     yandex: process.env.YANDEX_VERIFICATION,
@@ -119,6 +127,7 @@ import TravelPayoutsDrive from '@/components/shared/TravelPayoutsDrive'
 import MicrosoftClarity from '@/components/shared/MicrosoftClarity'
 import StickyLeadButton from '@/components/shared/StickyLeadButton'
 import KuzmichWidget from '@/components/kuzmich/KuzmichWidget'
+import { InstallPrompt } from '@/components/PWA/InstallPrompt'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -131,6 +140,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://mc.yandex.ru" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://www.clarity.ms" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://tile.opentopomap.org" crossOrigin="anonymous" />
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+        <meta name="theme-color" content="#0f172a" />
       </head>
       <body className={`min-h-screen transition-colors duration-300 ${inter.className} ${playfairDisplay.variable} ${inter.variable}`}>
         <Providers>
@@ -252,6 +263,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <TravelPayoutsDrive />
         <StickyLeadButton />
         <KuzmichWidget />
+        <InstallPrompt />
       </body>
     </html>
   )
