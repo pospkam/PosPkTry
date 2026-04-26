@@ -89,6 +89,7 @@
     "eslint": "^8.57.0",
     "eslint-config-next": "^15.5.10",
     "framer-motion": "^12.34.3",
+    "idb": "^8.0.3",
     "jose": "^5.2.0",
     "leaflet": "^1.9.4",
     "leaflet.markercluster": "^1.5.3",
