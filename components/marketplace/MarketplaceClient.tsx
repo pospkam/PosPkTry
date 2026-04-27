@@ -126,14 +126,14 @@ const DIFFICULTY_BADGE: Record<string, { label: string; cls: string }> = {
 };
 
 const CATEGORY_DATA = [
-  { key: 'trekking',   label: 'Вулканы',   img: '/images/activities/volcanoes.jpg',  icon: Flame,          count: '' },
-  { key: 'thermal',    label: 'Термальные', img: '/images/activities/hotsprings.jpg', icon: ThermometerSun, count: '' },
-  { key: 'fishing',    label: 'Рыбалка',   img: '/images/activities/fishing.jpg',    icon: Fish,           count: '' },
-  { key: 'bears',      label: 'Медведи',   img: '/images/categories/medvedi.jpg',    icon: PawPrint,       count: '' },
-  { key: 'helicopter', label: 'Вертолёт',  img: '/images/activities/helicopter.jpg', icon: Helicopter,     count: '' },
-  { key: 'boat_trip',  label: 'Море',      img: '/images/activities/sea.jpg',        icon: Waves,          count: '' },
-  { key: 'rafting',    label: 'Сплав',     img: '/images/activities/rafting.jpg',    icon: Waves,          count: '' },
-  { key: 'snowmobile', label: 'Снегоход',  img: '/images/activities/snowmobile.jpg', icon: Snowflake,      count: '' },
+  { key: 'trekking',   label: 'Вулканы',   icon: Flame,          color: 'from-orange-500/20 to-red-500/10',    iconColor: 'text-orange-400',  ring: 'ring-orange-400' },
+  { key: 'thermal',    label: 'Термальные', icon: ThermometerSun, color: 'from-rose-500/20 to-pink-500/10',     iconColor: 'text-rose-400',    ring: 'ring-rose-400' },
+  { key: 'fishing',    label: 'Рыбалка',   icon: Fish,           color: 'from-sky-500/20 to-blue-500/10',      iconColor: 'text-sky-400',     ring: 'ring-sky-400' },
+  { key: 'bears',      label: 'Медведи',   icon: PawPrint,       color: 'from-amber-500/20 to-yellow-500/10',  iconColor: 'text-amber-400',   ring: 'ring-amber-400' },
+  { key: 'helicopter', label: 'Вертолёт',  icon: Helicopter,     color: 'from-violet-500/20 to-purple-500/10', iconColor: 'text-violet-400',  ring: 'ring-violet-400' },
+  { key: 'boat_trip',  label: 'Море',      icon: Waves,          color: 'from-cyan-500/20 to-teal-500/10',     iconColor: 'text-cyan-400',    ring: 'ring-cyan-400' },
+  { key: 'rafting',    label: 'Сплав',     icon: Waves,          color: 'from-emerald-500/20 to-green-500/10', iconColor: 'text-emerald-400', ring: 'ring-emerald-400' },
+  { key: 'snowmobile', label: 'Снегоход',  icon: Snowflake,      color: 'from-slate-400/20 to-blue-400/10',    iconColor: 'text-slate-300',   ring: 'ring-slate-400' },
 ];
 
 /* ─── Helpers ─── */
@@ -594,32 +594,34 @@ export default function MarketplaceClient() {
             </button>
           )}
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5">
+        <div className="grid grid-cols-4 sm:grid-cols-4 lg:grid-cols-8 gap-2.5">
           {CATEGORY_DATA.map(cat => (
             <button
               key={cat.key}
               onClick={() => setActivityFilter(activityFilter === cat.key ? '' : cat.key)}
-              className={`group relative h-28 sm:h-32 rounded-2xl overflow-hidden transition-all duration-300 ${
+              className={`group flex flex-col items-center gap-2 py-4 px-2 rounded-2xl border transition-all duration-300 ${
                 activityFilter === cat.key
-                  ? 'ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-[var(--bg-page)] scale-[1.02]'
-                  : 'hover:scale-[1.03] hover:shadow-lg'
+                  ? `bg-gradient-to-b ${cat.color} border-transparent ring-2 ${cat.ring} ring-offset-2 ring-offset-[var(--bg-page)] scale-[1.02]`
+                  : 'border-[var(--border)] bg-[var(--bg-card)] hover:border-[var(--border-strong)] hover:scale-[1.03] hover:shadow-md'
               }`}
             >
-              <Image
-                src={cat.img}
-                alt={cat.label}
-                fill
-                className="object-cover transition-transform duration-500 group-hover:scale-110"
-                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 12.5vw"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
-              <div className="absolute inset-0 flex flex-col items-center justify-end pb-3">
-                <cat.icon className="w-5 h-5 mb-1 text-white/90 drop-shadow-lg" />
-                <span className="text-white text-xs sm:text-sm font-bold drop-shadow-lg">{cat.label}</span>
+              <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                activityFilter === cat.key
+                  ? `bg-gradient-to-b ${cat.color} ${cat.iconColor}`
+                  : `bg-[var(--bg-hover)] text-[var(--text-muted)] group-hover:${cat.iconColor}`
+              }`}>
+                <cat.icon className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
               </div>
+              <span className={`text-[11px] sm:text-xs font-semibold text-center leading-tight transition-colors ${
+                activityFilter === cat.key
+                  ? 'text-[var(--text-primary)]'
+                  : 'text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]'
+              }`}>
+                {cat.label}
+              </span>
               {activityFilter === cat.key && (
-                <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-[var(--accent)] flex items-center justify-center shadow-lg">
-                  <Check className="w-3 h-3 text-white" />
+                <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-[var(--accent)] flex items-center justify-center">
+                  <Check className="w-2.5 h-2.5 text-white" />
                 </div>
               )}
             </button>
