@@ -139,6 +139,13 @@ export default function LeafletMap({
         attribution: attribution !== false ? '© OpenStreetMap, SRTM | © OpenTopoMap (CC-BY-SA)' : '',
       }).addTo(map);
 
+      // Создаём свою pane для маркеров — всегда поверх тайлов и геометрии (z-index 1000)
+      const markerPaneName = 'kh-marker-pane';
+      if (!map.getPane(markerPaneName)) {
+        map.createPane(markerPaneName);
+        (map.getPane(markerPaneName) as HTMLElement).style.zIndex = '1000';
+      }
+
       // Группа кластеров
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const clusterGroup = (L as any).markerClusterGroup({
@@ -252,7 +259,7 @@ export default function LeafletMap({
           popupAnchor: [0, -26],
         });
 
-        const m = L.marker(marker.coords, { icon });
+        const m = L.marker(marker.coords, { icon, pane: markerPaneName });
 
         if (!marker.suppressBalloon) {
           m.bindPopup(buildPopupHtml(marker), { maxWidth: 260 });
@@ -262,7 +269,8 @@ export default function LeafletMap({
           m.on('click', () => onMarkerClick(markerId));
         }
 
-        // Вместо m.addTo(map) — добавляем в кластер
+        // Вместо m.addTo(map) — добавляем в кластер (на ту же pane)
+        clusterGroup.options.pane = markerPaneName;
         clusterGroup.addLayer(m);
       });
 
