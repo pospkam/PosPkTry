@@ -80,7 +80,7 @@ export function HomeMapPreview() {
   useEffect(() => {
     setActiveFilter(null);
     setLoading(true);
-    fetch(`/api/routes?hasCoords=true&limit=100&sort=title&kind=${kind}`)
+    fetch(`/api/routes?hasCoords=true&limit=500&sort=title&kind=${kind}`)
       .then(r => r.ok ? r.json() : { data: [] })
       .then(d => {
         const points = (d.data ?? [])
@@ -93,7 +93,7 @@ export function HomeMapPreview() {
             id: r.id,
             title: r.title,
             kind: r.kind,
-            locationType: r.locationType ?? 'other',
+            locationType: r.locationType ?? null,
             activityType: r.activityType ?? null,
             category: r.category ?? null,
             difficulty: r.difficulty ?? null,
@@ -119,9 +119,13 @@ export function HomeMapPreview() {
       const val = field === 'location_type' ? r.locationType
         : field === 'activity_type' ? r.activityType
         : field === 'category' ? r.category
-        : field === 'difficulty' ? r.difficulty
         : r.locationType;
-      return val === filterId;
+      // Fallback: если locationType null, пробуем activityType/category
+      if (val === filterId) return true;
+      if (field === 'location_type' && !r.locationType) {
+        return r.activityType === filterId || r.category === filterId;
+      }
+      return false;
     });
     setFilteredRoutes(filtered);
   }, [allRoutes, currentOptions]);
@@ -134,84 +138,91 @@ export function HomeMapPreview() {
     });
   }, [applyFilter]);
 
-  const markers: MapMarker[] = useMemo(() => filteredRoutes.map(r => ({
-    id: r.id,
-    coords: [r.lat, r.lng] as [number, number],
-    title: r.title,
-    description: r.description,
-    color: COLOR_MAP[r.locationType ?? 'other'] ?? 'gray',
-    href: `/routes/${r.id}`,
-    type: MarkerType.POI,
-  })), [filteredRoutes]);
+  const markers: MapMarker[] = useMemo(() => filteredRoutes.map(r => {
+    // Если locationType null, используем activityType или category как fallback
+    const locType = r.locationType
+      || (kind === 'route' ? r.activityType : null)
+      || (kind === 'tour' ? r.category : null)
+      || 'other';
+    return {
+      id: r.id,
+      coords: [r.lat, r.lng] as [number, number],
+      title: r.title,
+      description: r.description,
+      color: COLOR_MAP[locType] ?? 'gray',
+      category: locType,
+      href: `/routes/${r.id}`,
+      type: MarkerType.POI,
+    };
+  }), [filteredRoutes, kind]);
 
   return (
-    <div className="flex flex-col h-full bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden">
-      {/* Map container — full height, overflow hidden */}
-      <div className="relative flex-1 min-h-[400px] overflow-hidden">
-        <LeafletMap
-          center={[51.5, 161]}
-          zoom={6}
-          markers={markers}
-          height="100%"
-          attribution={false}
-        />
-        {loading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-[var(--bg-card)] z-[400]">
-            <div className="text-xs text-[var(--text-muted)]">Загрузка карты…</div>
-          </div>
-        )}
-      </div>
+    <div className="relative h-full min-h-[400px]">
+      {/* LeafletMap — на заднем плане */}
+      <LeafletMap
+        center={[53.0, 158.7]}
+        zoom={7}
+        markers={markers}
+        height="100%"
+        attribution={false}
+      />
 
-      {/* Kind tabs + Filter chips — BELOW map */}
-      <div className="border-t border-[var(--border)] bg-[var(--bg-card)]">
-        {/* Kind tabs */}
-        <div className="flex items-center gap-1 px-4 pt-3 pb-1">
-          {KIND_TABS.map(t => (
-            <button
-              key={t.value}
-              onClick={() => setKind(t.value)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                kind === t.value
-                  ? 'bg-[var(--accent)] text-white shadow-sm'
-                  : 'bg-[var(--bg-primary)] text-[var(--text-muted)] hover:text-[var(--text-primary)] border border-[var(--border)]'
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Filter chips */}
-        <div className="flex items-center gap-2 px-4 py-2 overflow-x-auto">
-          <Filter className="w-3.5 h-3.5 text-[var(--text-muted)] flex-shrink-0" />
-        {currentOptions.map(f => (
+      {/* Kind tabs — overlay top-left */}
+      <div className="absolute top-3 left-3 z-[400] flex gap-1.5">
+        {KIND_TABS.map(t => (
           <button
-            key={f.id}
-            onClick={() => handleFilterClick(f.id)}
-            className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all whitespace-nowrap flex-shrink-0 ${
-              activeFilter === f.id
-                ? 'bg-[var(--accent)] text-white'
-                : 'bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+            key={t.value}
+            onClick={() => setKind(t.value)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all backdrop-blur-md ${
+              kind === t.value
+                ? 'bg-[var(--accent)] text-white shadow-lg'
+                : 'bg-[var(--bg-card)]/80 text-[var(--text-muted)] hover:text-[var(--text-primary)] border border-[var(--border)]/50'
             }`}
           >
-            {f.label}
+            {t.label}
           </button>
         ))}
-        {activeFilter && (
-          <button
-            onClick={() => { setActiveFilter(null); setFilteredRoutes(allRoutes); }}
-            className="flex-shrink-0 p-1 rounded hover:bg-[var(--bg-hover)] text-[var(--text-muted)]"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
-        )}
-          <span className="text-[10px] text-[var(--text-muted)] ml-auto flex-shrink-0">
-            {loading ? '…' : filteredRoutes.length}
-          </span>
-        </div>
       </div>
 
-      {/* Route cards — hidden */}
+      {/* Loading overlay */}
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-[var(--bg-primary)]/80 z-[400]">
+          <div className="text-sm text-[var(--text-muted)] animate-pulse">Загрузка карты…</div>
+        </div>
+      )}
+
+      {/* Filter chips — overlay bottom */}
+      <div className="absolute bottom-3 left-3 right-3 z-[400]">
+        <div className="rounded-xl bg-[var(--bg-card)]/90 backdrop-blur-md border border-[var(--border)]/50 shadow-xl px-3 py-2">
+          <div className="flex items-center gap-2 overflow-x-auto">
+            <Filter className="w-3.5 h-3.5 text-[var(--text-muted)] flex-shrink-0" />
+            {currentOptions.map(f => (
+              <button
+                key={f.id}
+                onClick={() => handleFilterClick(f.id)}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all whitespace-nowrap flex-shrink-0 ${
+                  activeFilter === f.id
+                    ? 'bg-[var(--accent)] text-white shadow-sm'
+                    : 'bg-[var(--bg-primary)]/80 text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border)]/30'
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+            {activeFilter && (
+              <button
+                onClick={() => { setActiveFilter(null); setFilteredRoutes(allRoutes); }}
+                className="flex-shrink-0 p-1 rounded hover:bg-[var(--bg-hover)] text-[var(--text-muted)]"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+            <span className="text-[10px] text-[var(--text-muted)] ml-auto flex-shrink-0">
+              {loading ? '…' : filteredRoutes.length}
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
