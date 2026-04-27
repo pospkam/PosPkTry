@@ -148,7 +148,15 @@ export function useOfflineRegion(regionId: RegionId): UseOfflineRegionReturn {
               total: data.total,
               percent: 100,
             });
-            resolve();
+            // Если тайлы не скачались — ошибка, а не "скачано"
+            if (data.failed > 0 && data.done === 0) {
+              reject(new Error(`Тайлы не скачаны: ${data.failed} ошибок из ${data.total}`));
+            } else if (data.failed > 0) {
+              // Частичный успех — сохраняем но предупреждаем
+              resolve();
+            } else {
+              resolve();
+            }
           }
         };
 

@@ -139,10 +139,10 @@ export function HomeMapPreview() {
   }, [applyFilter]);
 
   const markers: MapMarker[] = useMemo(() => filteredRoutes.map(r => {
-    // Если locationType null, используем activityType или category как fallback
+    // Если locationType null, используем activityType/category как fallback для любого kind
     const locType = r.locationType
-      || (kind === 'route' ? r.activityType : null)
-      || (kind === 'tour' ? r.category : null)
+      || r.activityType
+      || r.category
       || 'other';
     return {
       id: r.id,

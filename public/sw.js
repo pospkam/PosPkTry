@@ -130,8 +130,8 @@ async function handleTileRequest(request) {
   if (cached) return cached;
 
   // Онлайн — загружаем и сохраняем в кэш для офлайн-доступа.
-  // Это критично: человек открывает карту с интернетом → тайлы кэшируются →
-  // потом едет в горы без связи → карта работает.
+  // Если fetch упал (CORS, сеть) — пробрасываем ошибку, чтобы
+  // cacheTilesForRegion мог посчитать failed и показать ошибку юзеру.
   try {
     const response = await fetch(request);
     if (response.ok) {
@@ -141,7 +141,7 @@ async function handleTileRequest(request) {
     }
     return response;
   } catch {
-    // Офлайн и тайла нет в кэше — прозрачный PNG вместо пустого квадрата.
+    // Офлайн и тайла нет в кэше — прозрачный PNG fallback.
     // При зум 7+ базовые тайлы Камчатки уже должны быть в кэше.
     return makeTransparentPngResponse();
   }
@@ -190,14 +190,25 @@ async function cacheTilesForRegion(tileUrls, regionId, client) {
   let failed = 0;
 
   for (const url of tileUrls) {
-    // Не скачиваем тайл повторно если уже есть в кэше
+    // Не скачиваем тайл повторно если уже есть в кэше.
+    // Проверяем что кэшированный ответ — настоящий тайл, а не transparent PNG fallback.
     const existing = await cache.match(url);
     if (existing) {
-      done++;
+      // Transparent PNG fallback = ~68 байт. Настоящий тайл = 5-20KB.
+      const buf = await existing.arrayBuffer();
+      if (buf.byteLength > 500) {
+        done++;
+      } else {
+        // Кэширован transparent PNG — считаем как failed и пробуем скачать
+        failed++;
+      }
     } else {
       try {
         const response = await fetch(url);
-        if (response.ok) {
+        // Проверяем что это действительно изображение (PNG), а не error page / CORS block.
+        // OpenTopoMap иногда возвращает HTML error вместо картинки.
+        const ct = response.headers.get('content-type') || '';
+        if (response.ok && (ct.includes('image/png') || ct.includes('image/jpeg'))) {
           await cache.put(url, response);
           done++;
         } else {
