@@ -205,10 +205,20 @@ export default function LeafletMap({
               fillOpacity: 0.15,
             }).addTo(map);
           } else {
+            // Маршрут-линия (трек): толстая полупрозрачная подложка + тонкая яркая линия сверху — как в OsmAnd/Gaia GPS
             L.polyline(coords, {
               color: geomHex,
-              weight: marker.geometry.weight ?? 2,
-              opacity: 0.85,
+              weight: (marker.geometry.weight ?? 3) + 3,
+              opacity: 0.25,
+              lineCap: 'round',
+              lineJoin: 'round',
+            }).addTo(map);
+            L.polyline(coords, {
+              color: geomHex,
+              weight: marker.geometry.weight ?? 3,
+              opacity: 0.9,
+              lineCap: 'round',
+              lineJoin: 'round',
             }).addTo(map);
           }
         }
