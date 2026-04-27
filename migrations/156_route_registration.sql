@@ -26,6 +26,12 @@ CREATE TABLE IF NOT EXISTS route_registrations (
   emergency_contact_name TEXT NOT NULL,
   emergency_contact_phone TEXT NOT NULL,
   emergency_contact_relation TEXT,
+  emergency_contact_telegram_chat_id BIGINT,
+  emergency_contact_email TEXT,
+
+  -- Согласие контакта на уведомления
+  emergency_contact_consent BOOLEAN DEFAULT false,
+  emergency_contact_consent_at TIMESTAMPTZ,
 
   -- Статус
   mchs_status VARCHAR(20) DEFAULT 'not_submitted'
@@ -33,7 +39,6 @@ CREATE TABLE IF NOT EXISTS route_registrations (
   mchs_reference TEXT,
   submitted_at TIMESTAMPTZ,
   completed_at TIMESTAMPTZ,
-  reminder_sent BOOLEAN DEFAULT false,
 
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
@@ -47,6 +52,22 @@ CREATE INDEX IF NOT EXISTS idx_route_registrations_end_date
   ON route_registrations(end_date);
 CREATE INDEX IF NOT EXISTS idx_route_registrations_mchs_status
   ON route_registrations(mchs_status);
-CREATE INDEX IF NOT EXISTS idx_route_registrations_reminder
-  ON route_registrations(reminder_sent, end_date)
-  WHERE reminder_sent = false;
+CREATE INDEX IF NOT EXISTS idx_route_registrations_escalation
+  ON route_registrations(completed_at, end_date)
+  WHERE completed_at IS NULL;
+
+-- Лог отправленных уведомлений
+CREATE TABLE IF NOT EXISTS route_registration_notifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  registration_id UUID REFERENCES route_registrations(id) ON DELETE CASCADE,
+  step INTEGER NOT NULL CHECK (step BETWEEN 1 AND 4),
+  channel VARCHAR(20) NOT NULL CHECK (channel IN ('telegram', 'email', 'max')),
+  recipient TEXT NOT NULL,
+  status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'sent', 'failed', 'skipped')),
+  error_message TEXT,
+  sent_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_route_notifications_reg_id
+  ON route_registration_notifications(registration_id);

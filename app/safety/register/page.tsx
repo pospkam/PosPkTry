@@ -38,6 +38,9 @@ export default function RegisterRoutePage() {
   const [emergencyName, setEmergencyName] = useState('');
   const [emergencyPhone, setEmergencyPhone] = useState('');
   const [emergencyRelation, setEmergencyRelation] = useState('');
+  const [emergencyTelegram, setEmergencyTelegram] = useState('');
+  const [emergencyEmail, setEmergencyEmail] = useState('');
+  const [contactConsent, setContactConsent] = useState(false);
 
   // Шаг 4: Disclaimer
   const [accepted, setAccepted] = useState(false);
@@ -45,7 +48,7 @@ export default function RegisterRoutePage() {
   const canNext1 = routeName.trim() && startDate && endDate && new Date(endDate) >= new Date(startDate);
   const canNext2 = groupSize >= 1 && groupSize <= 30;
   const canNext3 = leaderName.trim() && leaderPhone.trim() && emergencyName.trim() && emergencyPhone.trim();
-  const canSubmit = canNext1 && canNext2 && canNext3 && accepted;
+  const canSubmit = canNext1 && canNext2 && canNext3 && accepted && contactConsent;
 
   const addMember = () => {
     if (members.length < groupSize) {
@@ -87,6 +90,9 @@ export default function RegisterRoutePage() {
         emergency_contact_name: emergencyName.trim(),
         emergency_contact_phone: emergencyPhone.trim(),
         emergency_contact_relation: emergencyRelation.trim() || undefined,
+        emergency_contact_telegram_chat_id: emergencyTelegram.trim() || undefined,
+        emergency_contact_email: emergencyEmail.trim() || undefined,
+        emergency_contact_consent: contactConsent,
         accepted_disclaimer: true as const,
       };
 
@@ -411,7 +417,7 @@ export default function RegisterRoutePage() {
 
             <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
               <p className="text-xs text-red-400 font-semibold uppercase tracking-wider">
-                Экстренный контакт <span className="text-white/30">(кто получит уведомление)</span>
+                Экстренный контакт <span className="text-white/30">(получит уведомление если не вернулись)</span>
               </p>
               <input
                 type="text"
@@ -439,6 +445,35 @@ export default function RegisterRoutePage() {
                     focus:border-[var(--accent)] focus:outline-none"
                 />
               </div>
+              <input
+                type="text"
+                value={emergencyTelegram}
+                onChange={e => setEmergencyTelegram(e.target.value)}
+                placeholder="Telegram chat_id (необязательно)"
+                className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white text-sm
+                  focus:border-[var(--accent)] focus:outline-none"
+              />
+              <p className="text-[10px] text-white/30">Для Telegram-уведомлений. Можно узнать через @userinfobot</p>
+              <input
+                type="email"
+                value={emergencyEmail}
+                onChange={e => setEmergencyEmail(e.target.value)}
+                placeholder="Email (необязательно)"
+                className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white text-sm
+                  focus:border-[var(--accent)] focus:outline-none"
+              />
+              <label className="flex items-start gap-3 cursor-pointer mt-2">
+                <input
+                  type="checkbox"
+                  checked={contactConsent}
+                  onChange={e => setContactConsent(e.target.checked)}
+                  className="mt-1 w-4 h-4 rounded accent-[var(--accent)]"
+                />
+                <span className="text-xs text-white/60">
+                  Контакт <strong>{emergencyName || '___'}</strong> согласен получать уведомления
+                  от TourHab о статусе маршрута (Telegram / Email).
+                </span>
+              </label>
             </div>
 
             <div className="flex gap-3">

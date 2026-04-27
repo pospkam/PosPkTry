@@ -24,6 +24,9 @@ const RegistrationSchema = z.object({
   emergency_contact_name: z.string().min(1).max(120),
   emergency_contact_phone: z.string().min(5).max(30),
   emergency_contact_relation: z.string().max(60).optional(),
+  emergency_contact_telegram_chat_id: z.string().optional().or(z.literal('')),
+  emergency_contact_email: z.string().email().optional().or(z.literal('')),
+  emergency_contact_consent: z.boolean().default(false),
   accepted_disclaimer: z.literal(true, {
     errorMap: () => ({ message: 'Необходимо принять условия' }),
   }),
@@ -152,8 +155,10 @@ export async function POST(request: NextRequest) {
     `INSERT INTO route_registrations
        (user_id, route_name, route_description, start_date, end_date, region,
         group_size, group_members, leader_name, leader_phone, leader_email,
-        emergency_contact_name, emergency_contact_phone, emergency_contact_relation)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+        emergency_contact_name, emergency_contact_phone, emergency_contact_relation,
+        emergency_contact_telegram_chat_id, emergency_contact_email,
+        emergency_contact_consent)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
      RETURNING id`,
     [
       userId,
@@ -170,6 +175,9 @@ export async function POST(request: NextRequest) {
       data.emergency_contact_name,
       data.emergency_contact_phone,
       data.emergency_contact_relation ?? null,
+      data.emergency_contact_telegram_chat_id ? BigInt(data.emergency_contact_telegram_chat_id) : null,
+      data.emergency_contact_email || null,
+      data.emergency_contact_consent,
     ]
   );
 

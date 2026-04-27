@@ -683,6 +683,16 @@ export default function MapPageClient() {
         </div>
       )}
 
+      {/* Кнопка «Я вернулся» — для активных маршрутов */}
+      <Link
+        href="/safety/return"
+        className="fixed top-20 left-3 z-[300] flex items-center gap-2 px-3 py-2 rounded-lg
+          bg-green-600/90 backdrop-blur-sm text-white text-xs font-semibold shadow-lg
+          hover:bg-green-700 transition-colors"
+      >
+        ✅ Я вернулся
+      </Link>
+
       <BottomNav activePath="/map" />
       <AssistantButton pageContext={{ type: 'map' }} />
     </div>
