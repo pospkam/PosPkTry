@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
-import { Sun, Moon, User, X, ArrowRight, MapPin, WifiOff, Navigation, Target, AlertTriangle, Phone } from 'lucide-react';
+import { Sun, Moon, User, X, ArrowRight, MapPin, WifiOff, Navigation, Target, AlertTriangle, Phone, Loader2, CheckCircle } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import dynamic from 'next/dynamic';
 import Logo from '@/components/shared/Logo';
@@ -114,6 +114,7 @@ export default function MapPageClient() {
   const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
   const [showMyLocation, setShowMyLocation] = useState(false);
   const [showSos, setShowSos] = useState(false);
+  const [sosSending, setSosSending] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
 
   // SOS-контакты захардкожены — работают ВСЕГДА, даже без IndexedDB.
   // tel: ссылки работают через мобильную сеть, интернет НЕ нужен.
@@ -393,6 +394,14 @@ export default function MapPageClient() {
                   <X className="w-4 h-4" />
                 </button>
               </div>
+              {/* Координаты */}
+              {userPos && (
+                <div className="mb-3 px-3 py-2 rounded-lg bg-white/5 border border-white/10">
+                  <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">📍 Ваши координаты</p>
+                  <p className="text-sm text-white font-mono">{userPos.lat.toFixed(4)}, {userPos.lng.toFixed(4)}</p>
+                </div>
+              )}
+
               <div className="flex flex-col gap-2">
                 {SOS_CONTACTS.map((c) => (
                   <a
@@ -411,6 +420,52 @@ export default function MapPageClient() {
                   </a>
                 ))}
               </div>
+
+              {/* Кнопка: отправить координаты в Telegram */}
+              <button
+                onClick={async () => {
+                  if (sosSending !== 'idle') return;
+                  setSosSending('sending');
+                  try {
+                    const res = await fetch('/api/safety/sos', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        lat: userPos?.lat,
+                        lng: userPos?.lng,
+                      }),
+                    });
+                    if (res.ok) setSosSending('sent');
+                    else setSosSending('error');
+                  } catch {
+                    setSosSending('error');
+                  }
+                }}
+                className={`w-full mt-3 flex items-center justify-center gap-2 py-3 rounded-lg font-semibold text-sm transition-all ${
+                  sosSending === 'sent'
+                    ? 'bg-green-600 text-white'
+                    : sosSending === 'error'
+                    ? 'bg-yellow-600 text-white'
+                    : 'bg-red-600 text-white hover:bg-red-700 active:bg-red-800'
+                }`}
+              >
+                {sosSending === 'sending' && <Loader2 className="w-4 h-4 animate-spin" />}
+                {sosSending === 'sent' && <CheckCircle className="w-4 h-4" />}
+                {sosSending === 'idle' && '📍 Отправить координаты'}
+                {sosSending === 'sending' && 'Отправляю...'}
+                {sosSending === 'sent' && '✅ Координаты отправлены'}
+                {sosSending === 'error' && '⚠️ Ошибка — позвоните 112'}
+              </button>
+
+              {/* SMS с координатами (работает без интернета) */}
+              {userPos && (
+                <a
+                  href={`sms:+79000000000?body=SOS! Помогите. Мои координаты: ${userPos.lat.toFixed(5)}, ${userPos.lng.toFixed(5)} — TourHab.ru`}
+                  className="w-full mt-2 flex items-center justify-center gap-2 py-3 rounded-lg bg-white/10 border border-white/20 text-white font-semibold text-sm hover:bg-white/15 active:bg-white/20 transition-all"
+                >
+                  💬 SMS с координатами (без интернета)
+                </a>
+              )}
               <p className="text-[10px] text-white/30 mt-3 text-center">
                 Звонки работают без интернета · GPS определяет ваши координаты
               </p>

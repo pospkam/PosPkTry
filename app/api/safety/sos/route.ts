@@ -101,29 +101,39 @@ export async function POST(request: NextRequest) {
     setRateLimit(rateLimitKey);
   }
 
-  // Telegram-уведомление админу (fire-and-forget)
-  const botToken = process.env.TELEGRAM_ADMIN_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_ADMIN_CHAT_ID;
+  // Telegram-уведомление (fire-and-forget) — приоритет: ADMIN, фоллбэк на основной бот-чатид админа.
+  // Если админ-токен не задан, шлём через основной бот.
+  const botToken = process.env.TELEGRAM_ADMIN_BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_ADMIN_CHAT_ID || process.env.TELEGRAM_CHAT_ID;
   if (botToken && chatId) {
     const loc = finalLat && finalLng
       ? `${finalLat.toFixed(5)}, ${finalLng.toFixed(5)}`
       : 'нет координат';
+    const mapsLink = finalLat && finalLng
+      ? `https://www.google.com/maps?q=${finalLat},${finalLng}`
+      : '';
     const text = [
-      '<b>SOS! ЭКСТРЕННЫЙ СИГНАЛ</b>',
+      '<b>🆘 SOS! ЭКСТРЕННЫЙ СИГНАЛ</b>',
       '',
-      tourist_name  ? `Имя: ${tourist_name}`   : 'Имя: не указано',
-      tourist_phone ? `Тел: ${tourist_phone}`   : 'Тел: не указан',
+      tourist_name  ? `👤 Имя: ${tourist_name}`   : '👤 Имя: не указано',
+      tourist_phone ? `📞 Тел: ${tourist_phone}`   : '📞 Тел: не указан',
       '',
-      `Координаты: ${loc}`,
-      `Тип: ${emergency_type ?? 'не указан'}`,
-      message       ? `Сообщение: ${message}`   : '',
-      `IP: ${ip}`,
+      `📍 Координаты: ${loc}`,
+      mapsLink ? `🗺 <a href="${mapsLink}">Открыть на карте</a>` : '',
+      `⚠️ Тип: ${emergency_type ?? 'не указан'}`,
+      message       ? `💬 Сообщение: ${message}`   : '',
+      `🌐 IP: ${ip}`,
     ].filter(Boolean).join('\n');
 
     fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' }),
+      body: JSON.stringify({
+        chat_id: chatId,
+        text,
+        parse_mode: 'HTML',
+        disable_web_page_preview: false,
+      }),
     }).catch(() => { /* fire-and-forget */ });
   }
 
