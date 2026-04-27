@@ -7,7 +7,8 @@ import {
   MapPin, Users, ChevronRight, Heart, ShoppingCart, Check,
   AlertCircle, Clock, Sparkles, Search, SlidersHorizontal,
   X, ChevronDown, CheckCircle2, Flame, ThermometerSun, Fish,
-  PawPrint, Helicopter, Waves, Snowflake,
+  PawPrint, Helicopter, Waves, Snowflake, Star, TrendingUp,
+  Calendar, Mountain, ArrowRight,
 } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 
@@ -119,10 +120,21 @@ const DURATION_OPTIONS = [
 ];
 
 const DIFFICULTY_BADGE: Record<string, { label: string; cls: string }> = {
-  easy:   { label: 'Лёгкий',  cls: 'bg-[var(--success)]/20 text-[var(--success)]' },
-  medium: { label: 'Средний', cls: 'bg-[var(--warning)]/20 text-[var(--warning)]' },
-  hard:   { label: 'Сложный', cls: 'bg-[var(--danger)]/20 text-[var(--danger)]' },
+  easy:   { label: 'Лёгкий',  cls: 'bg-emerald-500/15 text-emerald-400' },
+  medium: { label: 'Средний', cls: 'bg-amber-500/15 text-amber-400' },
+  hard:   { label: 'Сложный', cls: 'bg-rose-500/15 text-rose-400' },
 };
+
+const CATEGORY_DATA = [
+  { key: 'trekking',   label: 'Вулканы',   img: '/images/activities/volcanoes.jpg',  icon: Flame,          count: '' },
+  { key: 'thermal',    label: 'Термальные', img: '/images/activities/hotsprings.jpg', icon: ThermometerSun, count: '' },
+  { key: 'fishing',    label: 'Рыбалка',   img: '/images/activities/fishing.jpg',    icon: Fish,           count: '' },
+  { key: 'bears',      label: 'Медведи',   img: '/images/categories/medvedi.jpg',    icon: PawPrint,       count: '' },
+  { key: 'helicopter', label: 'Вертолёт',  img: '/images/activities/helicopter.jpg', icon: Helicopter,     count: '' },
+  { key: 'boat_trip',  label: 'Море',      img: '/images/activities/sea.jpg',        icon: Waves,          count: '' },
+  { key: 'rafting',    label: 'Сплав',     img: '/images/activities/rafting.jpg',    icon: Waves,          count: '' },
+  { key: 'snowmobile', label: 'Снегоход',  img: '/images/activities/snowmobile.jpg', icon: Snowflake,      count: '' },
+];
 
 /* ─── Helpers ─── */
 
@@ -148,12 +160,20 @@ function isInSeason(tour: Tour): boolean {
   return now >= new Date(tour.season_start) && now <= new Date(tour.season_end);
 }
 
+function getSeasonLabel(): string {
+  const month = new Date().getMonth();
+  if (month >= 5 && month <= 8) return 'Лето';
+  if (month >= 2 && month <= 4) return 'Весна';
+  if (month >= 9 && month <= 10) return 'Осень';
+  return 'Зима';
+}
+
 /* ─── Skeleton ─── */
 
 function TourCardSkeleton() {
   return (
-    <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden">
-      <div className="ds-skeleton h-52 w-full" />
+    <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl overflow-hidden">
+      <div className="ds-skeleton h-56 w-full" />
       <div className="p-5 space-y-3">
         <div className="ds-skeleton h-3 w-1/3 rounded" />
         <div className="ds-skeleton h-5 w-4/5 rounded" />
@@ -165,7 +185,96 @@ function TourCardSkeleton() {
   );
 }
 
-/* ─── Tour Card (Premium) ─── */
+/* ─── Hero Section ─── */
+
+function HeroSection() {
+  return (
+    <div className="relative -mx-4 sm:-mx-6 lg:-mx-8 mb-10 overflow-hidden rounded-none sm:rounded-2xl">
+      <div className="relative h-[320px] sm:h-[380px] lg:h-[420px]">
+        <Image
+          src="/images/marketplace/hero-marketplace.jpg"
+          alt="Камчатка — земля вулканов"
+          fill
+          priority
+          className="object-cover"
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+
+        <div className="relative h-full flex flex-col justify-end p-6 sm:p-10 lg:p-12 max-w-2xl">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--accent)]/90 text-white text-xs font-semibold backdrop-blur-sm">
+              <TrendingUp className="w-3 h-3" />
+              {getSeasonLabel()} 2026
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 text-white text-xs font-medium backdrop-blur-sm">
+              <Mountain className="w-3 h-3" />
+              13 туров
+            </span>
+          </div>
+
+          <h1
+            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight mb-3"
+            style={{ fontFamily: 'var(--font-playfair)' }}
+          >
+            Туры Камчатки
+          </h1>
+          <p className="text-sm sm:text-base text-white/80 leading-relaxed mb-5 max-w-lg">
+            Реальные предложения от проверенных операторов. Вулканы, медведи, океан, термальные источники — выберите своё приключение.
+          </p>
+
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/planner"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-sm font-semibold transition-all duration-200 shadow-lg shadow-[var(--accent)]/30"
+            >
+              <Sparkles className="w-4 h-4" />
+              Подобрать с Кузьмичом
+            </Link>
+            <a
+              href="#tours"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-sm font-medium transition-all duration-200 backdrop-blur-sm border border-white/20"
+            >
+              Смотреть все туры
+              <ArrowRight className="w-4 h-4" />
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Stats Bar ─── */
+
+function StatsBar() {
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+      {[
+        { icon: Mountain, label: 'Направлений', value: '8', color: 'text-[var(--accent)]' },
+        { icon: Calendar, label: 'Сезон', value: getSeasonLabel(), color: 'text-emerald-400' },
+        { icon: Users, label: 'Операторов', value: '2+', color: 'text-sky-400' },
+        { icon: Star, label: 'Проверенные', value: '100%', color: 'text-amber-400' },
+      ].map((stat, i) => (
+        <div
+          key={i}
+          className="flex items-center gap-3 p-3.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border)] hover:border-[var(--border-strong)] transition-colors"
+        >
+          <div className={`w-9 h-9 rounded-lg bg-[var(--bg-hover)] flex items-center justify-center ${stat.color}`}>
+            <stat.icon className="w-4.5 h-4.5" />
+          </div>
+          <div>
+            <p className="text-base font-bold text-[var(--text-primary)] leading-none">{stat.value}</p>
+            <p className="text-[11px] text-[var(--text-muted)] mt-0.5">{stat.label}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ─── Tour Card (Premium Redesign) ─── */
 
 function TourCard({
   tour,
@@ -205,57 +314,65 @@ function TourCard({
   };
 
   return (
-    <div className="group bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden flex flex-col hover:border-[var(--accent)]/50 hover:shadow-xl hover:shadow-[var(--accent)]/10 transition-all duration-300 relative">
+    <div className="group bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl overflow-hidden flex flex-col hover:border-[var(--accent)]/40 hover:shadow-2xl hover:shadow-[var(--accent)]/8 transition-all duration-300 relative">
       {/* Image */}
       <Link href={`/marketplace/tours/${tour.id}`} className="block flex-shrink-0">
-        <div className="relative aspect-[4/3] bg-[var(--bg-hover)] overflow-hidden">
+        <div className="relative aspect-[16/10] bg-[var(--bg-hover)] overflow-hidden">
           <Image
             src={imageSrc}
             alt={tour.title}
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="object-cover group-hover:scale-105 transition-transform duration-500"
+            className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
 
           {/* Badges top-left */}
           <div className="absolute top-3 left-3 flex items-center gap-1.5">
-            <span className="text-[10px] font-semibold uppercase tracking-wider bg-[var(--bg-card)]/90 text-[var(--text-primary)] px-2 py-0.5 rounded-full">
+            <span className="text-[10px] font-bold uppercase tracking-wider bg-black/50 backdrop-blur-md text-white px-2.5 py-1 rounded-lg">
               {activityLabel}
             </span>
             {diffBadge && (
-              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${diffBadge.cls}`}>
+              <span className={`text-[10px] font-bold px-2.5 py-1 rounded-lg backdrop-blur-md ${diffBadge.cls}`}>
                 {diffBadge.label}
               </span>
             )}
           </div>
 
-          {/* Season indicator */}
+          {/* Season badge */}
           {inSeason && (
-            <span
-              className="absolute top-3.5 right-14 w-2.5 h-2.5 rounded-full bg-[var(--success)] border-2 border-black/30"
-              title="Сейчас сезон"
-            />
+            <span className="absolute top-3 right-14 flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/80 backdrop-blur-sm text-white text-[9px] font-bold uppercase tracking-wider">
+              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+              Сезон
+            </span>
           )}
 
           {/* Price overlay */}
-          <div className="absolute bottom-3 left-3 flex items-baseline gap-2">
-            {priceOld && priceOld > basePrice && (
-              <span className="text-xs text-[#fff]/50 line-through">
-                {priceOld.toLocaleString('ru-RU')} ₽
-              </span>
-            )}
-            <span>
-              <span className="text-xs text-[#fff]/70">от </span>
-              <span className="font-bold text-[#fff] text-base">
-                {basePrice.toLocaleString('ru-RU')} ₽
-              </span>
-              {tour.price_unit && (
-                <span className="text-[10px] text-[#fff]/50 ml-1">
-                  {PRICE_UNIT_SHORT[tour.price_unit] ?? ''}
+          <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between">
+            <div className="flex items-baseline gap-2">
+              {priceOld && priceOld > basePrice && (
+                <span className="text-xs text-white/40 line-through">
+                  {priceOld.toLocaleString('ru-RU')} ₽
                 </span>
               )}
-            </span>
+              <span>
+                <span className="text-[11px] text-white/60">от </span>
+                <span className="font-bold text-white text-lg tracking-tight">
+                  {basePrice.toLocaleString('ru-RU')} ₽
+                </span>
+                {tour.price_unit && (
+                  <span className="text-[10px] text-white/40 ml-1">
+                    {PRICE_UNIT_SHORT[tour.price_unit] ?? ''}
+                  </span>
+                )}
+              </span>
+            </div>
+            {duration && (
+              <span className="flex items-center gap-1 text-[11px] text-white/70 bg-black/30 backdrop-blur-sm px-2 py-0.5 rounded-md">
+                <Clock className="w-3 h-3" />
+                {duration}
+              </span>
+            )}
           </div>
         </div>
       </Link>
@@ -263,53 +380,49 @@ function TourCard({
       {/* Favorite */}
       <button
         onClick={() => onToggleLike(tour.id)}
-        className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-[var(--bg-card)]/80 flex items-center justify-center transition-colors hover:bg-[var(--bg-card)]"
+        className="absolute top-3 right-3 z-10 w-9 h-9 rounded-xl bg-black/40 backdrop-blur-md flex items-center justify-center transition-all hover:bg-black/60 hover:scale-110"
         aria-label={isLiked ? 'Убрать из избранного' : 'В избранное'}
       >
         <Heart
-          className={`w-4 h-4 transition-colors ${isLiked ? 'fill-[var(--accent)] text-[var(--accent)]' : 'text-[var(--text-muted)]'}`}
+          className={`w-4 h-4 transition-colors ${isLiked ? 'fill-rose-500 text-rose-500' : 'text-white/80'}`}
         />
       </button>
 
       {/* Content */}
       <Link href={`/marketplace/tours/${tour.id}`} className="p-5 pb-3 flex flex-col flex-1">
-        <p className="text-[11px] text-[var(--text-muted)] mb-1">{tour.operator_name}</p>
+        <div className="flex items-center gap-2 mb-2">
+          <p className="text-[11px] text-[var(--text-muted)] font-medium">{tour.operator_name}</p>
+          {tour.bookings_count > 0 && (
+            <span className="flex items-center gap-0.5 text-[10px] text-[var(--text-muted)]">
+              <Users className="w-3 h-3" />
+              {tour.bookings_count}
+            </span>
+          )}
+        </div>
         <h3
-          className="font-semibold text-[var(--text-primary)] leading-snug line-clamp-2 mb-1 group-hover:text-[var(--accent)] transition-colors"
-          style={{ fontFamily: 'var(--font-playfair)', fontSize: '1rem' }}
+          className="font-semibold text-[var(--text-primary)] leading-snug line-clamp-2 mb-1.5 group-hover:text-[var(--accent)] transition-colors"
+          style={{ fontFamily: 'var(--font-playfair)', fontSize: '1.05rem' }}
         >
           {tour.title}
         </h3>
-        <p className="text-xs text-[var(--text-secondary)] line-clamp-2 mb-3 flex-1">
+        <p className="text-xs text-[var(--text-secondary)] line-clamp-2 mb-3 flex-1 leading-relaxed">
           {tour.short_description ?? tour.description}
         </p>
 
         {/* Meta row */}
-        <div className="flex items-center gap-3 text-xs text-[var(--text-muted)] flex-wrap">
+        <div className="flex items-center gap-3 text-xs text-[var(--text-muted)]">
           <span className="flex items-center gap-1">
             <MapPin className="w-3.5 h-3.5" />
             {tour.location_name ?? locationLabel}
           </span>
-          {duration && (
-            <span className="flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5" />
-              {duration}
-            </span>
-          )}
-          {tour.bookings_count > 0 && (
-            <span className="flex items-center gap-1">
-              <Users className="w-3.5 h-3.5" />
-              {tour.bookings_count}
-            </span>
-          )}
         </div>
       </Link>
 
       {/* Included preview */}
       {tour.included && tour.included.length > 0 && (
-        <div className="mx-5 mb-3 p-2.5 bg-[var(--bg-hover)] rounded-lg">
+        <div className="mx-5 mb-3 p-2.5 bg-[var(--bg-hover)] rounded-xl">
           <div className="flex items-start gap-1.5">
-            <CheckCircle2 className="w-3 h-3 text-[var(--success)] mt-0.5 flex-shrink-0" />
+            <CheckCircle2 className="w-3 h-3 text-emerald-400 mt-0.5 flex-shrink-0" />
             <p className="text-xs text-[var(--text-secondary)] line-clamp-1">
               {tour.included.slice(0, 2).join(' \u00B7 ')}
               {tour.included.length > 2 && (
@@ -321,15 +434,15 @@ function TourCard({
       )}
 
       {/* Action bar */}
-      <div className="px-5 pb-5 flex items-center justify-between border-t border-[var(--border)] pt-3">
+      <div className="px-5 pb-5 flex items-center justify-between border-t border-[var(--border)] pt-3 mt-auto">
         <div className="flex items-center gap-2">
           <button
             onClick={toggleCart}
             title={inCart ? 'Убрать из корзины' : 'В корзину'}
-            className={`w-7 h-7 rounded-lg flex items-center justify-center border transition-all duration-150 ${
+            className={`w-8 h-8 rounded-xl flex items-center justify-center border transition-all duration-200 ${
               inCart
-                ? 'bg-[var(--success)] border-[var(--success)] text-[#F0F6FC]'
-                : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]'
+                ? 'bg-emerald-500 border-emerald-500 text-white'
+                : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--accent)]/5'
             }`}
           >
             {inCart ? <Check className="w-3.5 h-3.5" /> : <ShoppingCart className="w-3.5 h-3.5" />}
@@ -337,7 +450,7 @@ function TourCard({
         </div>
         <Link
           href={`/marketplace/tours/${tour.id}#booking`}
-          className="ds-btn ds-btn-primary text-xs px-4 py-1.5"
+          className="ds-btn ds-btn-primary text-xs px-5 py-2 rounded-xl font-semibold"
         >
           Забронировать
         </Link>
@@ -459,32 +572,37 @@ export default function MarketplaceClient() {
 
   return (
     <div className="ds-page pb-20">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="ds-h1 mb-1">Туры Камчатки</h1>
-        <p className="text-sm text-[var(--text-secondary)] mb-6">
-          Реальные предложения операторов. Выберите направление — и увидите, куда поедете.
-        </p>
+      {/* ─── Hero ─── */}
+      <HeroSection />
 
-        {/* ─── Visual Category Grid ─── */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
-          {[
-            { key: 'trekking',   label: 'Вулканы',   img: '/images/activities/volcanoes.jpg',  icon: Flame },
-            { key: 'thermal',    label: 'Термальные', img: '/images/activities/hotsprings.jpg', icon: ThermometerSun },
-            { key: 'fishing',    label: 'Рыбалка',   img: '/images/activities/fishing.jpg',    icon: Fish },
-            { key: 'bears',      label: 'Медведи',   img: '/images/categories/medvedi.jpg',    icon: PawPrint },
-            { key: 'helicopter', label: 'Вертолёт',  img: '/images/activities/helicopter.jpg', icon: Helicopter },
-            { key: 'boat_trip',  label: 'Море',      img: '/images/activities/sea.jpg',        icon: Waves },
-            { key: 'rafting',    label: 'Сплав',     img: '/images/activities/rafting.jpg',    icon: Waves },
-            { key: 'snowmobile', label: 'Снегоход',  img: '/images/activities/snowmobile.jpg', icon: Snowflake },
-          ].map(cat => (
+      {/* ─── Stats ─── */}
+      <StatsBar />
+
+      {/* ─── Visual Category Grid ─── */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-playfair)' }}>
+            Выберите направление
+          </h2>
+          {activityFilter && (
+            <button
+              onClick={() => setActivityFilter('')}
+              className="text-xs text-[var(--accent)] hover:underline flex items-center gap-1"
+            >
+              Сбросить
+              <X className="w-3 h-3" />
+            </button>
+          )}
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5">
+          {CATEGORY_DATA.map(cat => (
             <button
               key={cat.key}
               onClick={() => setActivityFilter(activityFilter === cat.key ? '' : cat.key)}
-              className={`group relative h-28 sm:h-32 rounded-xl overflow-hidden transition-all duration-300 ${
+              className={`group relative h-28 sm:h-32 rounded-2xl overflow-hidden transition-all duration-300 ${
                 activityFilter === cat.key
-                  ? 'ring-2 ring-[var(--accent)] scale-[1.03]'
-                  : 'hover:scale-[1.02]'
+                  ? 'ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-[var(--bg-page)] scale-[1.02]'
+                  : 'hover:scale-[1.03] hover:shadow-lg'
               }`}
             >
               <Image
@@ -492,227 +610,228 @@ export default function MarketplaceClient() {
                 alt={cat.label}
                 fill
                 className="object-cover transition-transform duration-500 group-hover:scale-110"
-                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 12.5vw"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
               <div className="absolute inset-0 flex flex-col items-center justify-end pb-3">
-                <cat.icon className="w-6 h-6 mb-0.5 text-white drop-shadow-lg" />
-                <span className="text-white text-sm font-semibold drop-shadow-lg">{cat.label}</span>
+                <cat.icon className="w-5 h-5 mb-1 text-white/90 drop-shadow-lg" />
+                <span className="text-white text-xs sm:text-sm font-bold drop-shadow-lg">{cat.label}</span>
               </div>
               {activityFilter === cat.key && (
-                <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-[var(--accent)] flex items-center justify-center">
+                <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-[var(--accent)] flex items-center justify-center shadow-lg">
                   <Check className="w-3 h-3 text-white" />
                 </div>
               )}
             </button>
           ))}
         </div>
-
-        {/* AI banner */}
-        <Link
-          href="/planner"
-          className="flex items-center gap-3 p-4 rounded-lg border border-[var(--accent)]/30 bg-[var(--accent)]/5 hover:bg-[var(--accent)]/10 transition-colors"
-        >
-          <div className="w-9 h-9 rounded-full bg-[var(--accent)]/15 flex items-center justify-center shrink-0">
-            <Sparkles className="w-4 h-4 text-[var(--accent)]" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-[var(--text-primary)]">Не знаете что выбрать?</p>
-            <p className="text-xs text-[var(--text-muted)]">Кузьмич поможет понять, что вам реально подходит по датам, бюджету и нагрузке</p>
-          </div>
-          <ChevronRight className="w-4 h-4 text-[var(--accent)] shrink-0" />
-        </Link>
       </div>
 
-      {/* ─── Tier 1: Search + Sort + Filters Toggle ─── */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-4">
-        {/* Search */}
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
-          <input
-            type="text"
-            placeholder="Поиск по названию..."
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            className="ds-input w-full pl-9 pr-9"
-          />
-          {searchTerm && (
-            <button
-              onClick={() => setSearchTerm('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-primary)]"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
+      {/* ─── AI Planner Banner ─── */}
+      <Link
+        href="/planner"
+        className="group flex items-center gap-4 p-5 rounded-2xl border border-[var(--accent)]/20 bg-gradient-to-r from-[var(--accent)]/8 to-[var(--accent)]/3 hover:from-[var(--accent)]/12 hover:to-[var(--accent)]/6 transition-all duration-300 mb-8"
+      >
+        <div className="w-11 h-11 rounded-xl bg-[var(--accent)]/15 flex items-center justify-center shrink-0 group-hover:bg-[var(--accent)]/25 transition-colors">
+          <Sparkles className="w-5 h-5 text-[var(--accent)]" />
         </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-bold text-[var(--text-primary)] mb-0.5">Не знаете что выбрать?</p>
+          <p className="text-xs text-[var(--text-muted)] leading-relaxed">Кузьмич подберёт тур по вашим датам, бюджету и физической подготовке</p>
+        </div>
+        <ChevronRight className="w-5 h-5 text-[var(--accent)] shrink-0 group-hover:translate-x-1 transition-transform" />
+      </Link>
 
-        {/* Sort */}
-        <select
-          value={sort}
-          onChange={e => setSort(e.target.value)}
-          className="ds-input w-auto pr-8 text-sm"
-        >
-          {SORT_OPTIONS.map(opt => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
-        </select>
+      {/* ─── Tours Section ─── */}
+      <div id="tours">
+        {/* Search + Sort + Filters */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
+            <input
+              type="text"
+              placeholder="Поиск по названию..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="ds-input w-full pl-10 pr-10 rounded-xl"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
 
-        {/* Filters toggle */}
-        <button
-          onClick={() => setShowFilters(v => !v)}
-          className={`relative ds-btn ds-btn-secondary flex items-center gap-2 text-sm ${
-            showFilters ? 'border-[var(--accent)] text-[var(--accent)]' : ''
-          }`}
-        >
-          <SlidersHorizontal className="w-4 h-4" />
-          <span className="hidden sm:inline">Фильтры</span>
-          {activeFiltersCount > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[var(--accent)] text-[#0D1117] text-[10px] flex items-center justify-center font-bold">
-              {activeFiltersCount}
-            </span>
-          )}
-          <ChevronDown className={`w-3 h-3 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
-        </button>
-      </div>
+          <select
+            value={sort}
+            onChange={e => setSort(e.target.value)}
+            className="ds-input w-auto pr-8 text-sm rounded-xl"
+          >
+            {SORT_OPTIONS.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
 
-      {/* ─── Tier 2: Activity Chips ─── */}
-      <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-none">
-        {ACTIVITY_OPTIONS.map(opt => (
           <button
-            key={opt.value}
-            onClick={() => setActivityFilter(opt.value)}
-            className={`flex-shrink-0 px-3 py-1.5 rounded-full text-sm font-medium border transition-all duration-150 ${
-              activityFilter === opt.value
-                ? 'bg-[var(--accent)] border-[var(--accent)] text-white'
-                : 'border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/40 hover:text-[var(--text-primary)] bg-[var(--bg-card)]'
+            onClick={() => setShowFilters(v => !v)}
+            className={`relative ds-btn ds-btn-secondary flex items-center gap-2 text-sm rounded-xl ${
+              showFilters ? 'border-[var(--accent)] text-[var(--accent)]' : ''
             }`}
           >
-            {opt.label}
+            <SlidersHorizontal className="w-4 h-4" />
+            <span className="hidden sm:inline">Фильтры</span>
+            {activeFiltersCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-[var(--accent)] text-white text-[10px] flex items-center justify-center font-bold">
+                {activeFiltersCount}
+              </span>
+            )}
+            <ChevronDown className={`w-3 h-3 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
           </button>
-        ))}
-      </div>
+        </div>
 
-      {/* ─── Tier 3: Expandable Filter Panel ─── */}
-      {showFilters && (
-        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4 mb-4">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {/* Price */}
-            <div>
-              <p className="ds-label mb-2">Цена</p>
-              <div className="flex flex-wrap gap-2">
-                {PRICE_RANGES.map(opt => (
-                  <button
-                    key={opt.value}
-                    onClick={() => setPriceRange(priceRange === opt.value ? '' : opt.value)}
-                    className={`px-3 py-1 rounded-full text-xs font-medium border transition-all duration-150 ${
-                      priceRange === opt.value
-                        ? 'bg-[var(--accent)] border-[var(--accent)] text-white'
-                        : 'border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/40 bg-[var(--bg-card)]'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Difficulty */}
-            <div>
-              <p className="ds-label mb-2">Сложность</p>
-              <div className="flex flex-wrap gap-2">
-                {DIFFICULTY_OPTIONS.map(opt => (
-                  <button
-                    key={opt.value}
-                    onClick={() => setDifficulty(difficulty === opt.value ? '' : opt.value)}
-                    className={`px-3 py-1 rounded-full text-xs font-medium border transition-all duration-150 ${
-                      difficulty === opt.value
-                        ? 'bg-[var(--accent)] border-[var(--accent)] text-white'
-                        : 'border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/40 bg-[var(--bg-card)]'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Duration */}
-            <div>
-              <p className="ds-label mb-2">Длительность</p>
-              <div className="flex flex-wrap gap-2">
-                {DURATION_OPTIONS.map(opt => (
-                  <button
-                    key={opt.value}
-                    onClick={() => setDurationType(durationType === opt.value ? '' : opt.value)}
-                    className={`px-3 py-1 rounded-full text-xs font-medium border transition-all duration-150 ${
-                      durationType === opt.value
-                        ? 'bg-[var(--accent)] border-[var(--accent)] text-white'
-                        : 'border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/40 bg-[var(--bg-card)]'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Reset */}
-          {activeFiltersCount > 0 && (
+        {/* Activity Chips */}
+        <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-none">
+          {ACTIVITY_OPTIONS.map(opt => (
             <button
-              onClick={resetFilters}
-              className="mt-3 ds-btn ds-btn-secondary text-xs"
+              key={opt.value}
+              onClick={() => setActivityFilter(opt.value)}
+              className={`flex-shrink-0 px-3.5 py-1.5 rounded-xl text-sm font-medium border transition-all duration-200 ${
+                activityFilter === opt.value
+                  ? 'bg-[var(--accent)] border-[var(--accent)] text-white shadow-md shadow-[var(--accent)]/20'
+                  : 'border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/40 hover:text-[var(--text-primary)] bg-[var(--bg-card)]'
+              }`}
             >
-              Сбросить фильтры
+              {opt.label}
             </button>
-          )}
-        </div>
-      )}
-
-      {/* Results count */}
-      {!loading && !error && (
-        <p className="text-sm text-[var(--text-muted)] mb-6">
-          {total > 0
-            ? `${total} ${total === 1 ? 'тур' : total < 5 ? 'тура' : 'туров'}`
-            : null}
-        </p>
-      )}
-
-      {/* Grid */}
-      {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {Array.from({ length: 6 }).map((_, i) => <TourCardSkeleton key={i} />)}
-        </div>
-      ) : error ? (
-        <div className="flex items-center gap-3 text-[var(--danger)] bg-[var(--danger)]/10 border border-[var(--danger)]/30 rounded-lg p-4">
-          <AlertCircle className="w-5 h-5 flex-shrink-0" />
-          <p className="text-sm">{error}</p>
-        </div>
-      ) : tours.length === 0 ? (
-        <div className="text-center py-16">
-          <p className="ds-h2 mb-2">Туры не найдены</p>
-          <p className="text-sm text-[var(--text-muted)] mb-4">Попробуйте изменить фильтры или сначала пройти подбор через Кузьмича</p>
-          {(activeFiltersCount > 0 || activityFilter || searchTerm) && (
-            <button
-              onClick={() => { resetFilters(); setActivityFilter(''); setSearchTerm(''); }}
-              className="ds-btn ds-btn-secondary text-sm"
-            >
-              Сбросить все фильтры
-            </button>
-          )}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {tours.map(tour => (
-            <TourCard
-              key={tour.id}
-              tour={tour}
-              isLiked={likedMap.has(tour.id)}
-              onToggleLike={handleToggleLike}
-            />
           ))}
         </div>
-      )}
+
+        {/* Expandable Filter Panel */}
+        {showFilters && (
+          <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-5 mb-5 shadow-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+              <div>
+                <p className="ds-label mb-2.5 text-xs font-semibold uppercase tracking-wider">Цена</p>
+                <div className="flex flex-wrap gap-2">
+                  {PRICE_RANGES.map(opt => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setPriceRange(priceRange === opt.value ? '' : opt.value)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition-all duration-150 ${
+                        priceRange === opt.value
+                          ? 'bg-[var(--accent)] border-[var(--accent)] text-white'
+                          : 'border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/40 bg-[var(--bg-card)]'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="ds-label mb-2.5 text-xs font-semibold uppercase tracking-wider">Сложность</p>
+                <div className="flex flex-wrap gap-2">
+                  {DIFFICULTY_OPTIONS.map(opt => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setDifficulty(difficulty === opt.value ? '' : opt.value)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition-all duration-150 ${
+                        difficulty === opt.value
+                          ? 'bg-[var(--accent)] border-[var(--accent)] text-white'
+                          : 'border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/40 bg-[var(--bg-card)]'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="ds-label mb-2.5 text-xs font-semibold uppercase tracking-wider">Длительность</p>
+                <div className="flex flex-wrap gap-2">
+                  {DURATION_OPTIONS.map(opt => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setDurationType(durationType === opt.value ? '' : opt.value)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition-all duration-150 ${
+                        durationType === opt.value
+                          ? 'bg-[var(--accent)] border-[var(--accent)] text-white'
+                          : 'border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/40 bg-[var(--bg-card)]'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {activeFiltersCount > 0 && (
+              <button
+                onClick={resetFilters}
+                className="mt-4 ds-btn ds-btn-secondary text-xs rounded-xl"
+              >
+                Сбросить фильтры
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Results count */}
+        {!loading && !error && (
+          <div className="flex items-center justify-between mb-6">
+            <p className="text-sm text-[var(--text-muted)]">
+              {total > 0
+                ? `${total} ${total === 1 ? 'тур' : total < 5 ? 'тура' : 'туров'}`
+                : null}
+            </p>
+          </div>
+        )}
+
+        {/* Grid */}
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => <TourCardSkeleton key={i} />)}
+          </div>
+        ) : error ? (
+          <div className="flex items-center gap-3 text-[var(--danger)] bg-[var(--danger)]/10 border border-[var(--danger)]/30 rounded-2xl p-5">
+            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+            <p className="text-sm">{error}</p>
+          </div>
+        ) : tours.length === 0 ? (
+          <div className="text-center py-20">
+            <div className="w-16 h-16 rounded-2xl bg-[var(--bg-hover)] flex items-center justify-center mx-auto mb-4">
+              <Search className="w-7 h-7 text-[var(--text-muted)]" />
+            </div>
+            <p className="ds-h2 mb-2">Туры не найдены</p>
+            <p className="text-sm text-[var(--text-muted)] mb-5 max-w-md mx-auto">Попробуйте изменить фильтры или пройти подбор через Кузьмича</p>
+            {(activeFiltersCount > 0 || activityFilter || searchTerm) && (
+              <button
+                onClick={() => { resetFilters(); setActivityFilter(''); setSearchTerm(''); }}
+                className="ds-btn ds-btn-secondary text-sm rounded-xl"
+              >
+                Сбросить все фильтры
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {tours.map(tour => (
+              <TourCard
+                key={tour.id}
+                tour={tour}
+                isLiked={likedMap.has(tour.id)}
+                onToggleLike={handleToggleLike}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
