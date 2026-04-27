@@ -320,7 +320,7 @@ export default function SosPage() {
 
         {/* Регистрация маршрута */}
         <a
-          href="/safety/register"
+          href="/register"
           style={{
             display: 'flex',
             alignItems: 'center',
