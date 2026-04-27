@@ -9,7 +9,7 @@ import Logo from '@/components/shared/Logo';
 import BottomNav from '@/components/shared/BottomNav';
 import { AssistantButton } from '@/components/shared/AssistantButton';
 import { MarkerType, type MapMarkerGeometry } from '@/components/shared/LeafletMap';
-import { getAllOfflineRoutes, getAllSosContacts, GLOBAL_SOS_CONTACTS } from '@/lib/offline/db';
+import { getAllOfflineRoutes } from '@/lib/offline/db';
 
 const LeafletMap = dynamic(() => import('@/components/shared/LeafletMap'), { ssr: false });
 
@@ -113,8 +113,17 @@ export default function MapPageClient() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
   const [showMyLocation, setShowMyLocation] = useState(false);
-  const [sosContacts, setSosContacts] = useState<{ name: string; phone: string; type: string }[]>([]);
   const [showSos, setShowSos] = useState(false);
+
+  // SOS-контакты захардкожены — работают ВСЕГДА, даже без IndexedDB.
+  // tel: ссылки работают через мобильную сеть, интернет НЕ нужен.
+  const SOS_CONTACTS = [
+    { name: 'Единый номер экстренных служб', phone: '112', type: 'МЧС' },
+    { name: 'Скорая медицинская помощь', phone: '103', type: 'Медицина' },
+    { name: 'Полиция', phone: '102', type: 'Правоохранительные' },
+    { name: 'МЧС Камчатский край', phone: '+74152235362', type: 'МЧС' },
+    { name: 'ПСО «Камчатка» (ПКГО)', phone: '+74152412730', type: 'Спасатели' },
+  ] as const;
 
   const selectedRoute = selectedId ? allRoutes.find(r => r.id === selectedId) ?? null : null;
   const handleMarkerClick = useCallback((id: string) => setSelectedId(id), []);
@@ -134,23 +143,8 @@ export default function MapPageClient() {
     return () => navigator.geolocation.clearWatch(watchId);
   }, [showMyLocation]);
 
-  // Загрузка SOS-контактов (для офлайн-режима)
-  useEffect(() => {
-    (async () => {
-      try {
-        const cached = await getAllSosContacts();
-        if (cached.length > 0) {
-          setSosContacts(cached.map(c => ({ name: c.name, phone: c.phone, type: c.type })));
-        } else {
-          // Фоллбэк на глобальные контакты если IndexedDB пустой
-          setSosContacts(GLOBAL_SOS_CONTACTS.map(c => ({ name: c.name, phone: c.phone, type: c.type })));
-        }
-      } catch {
-        // Фоллбэк на глобальные контакты при ошибке
-        setSosContacts(GLOBAL_SOS_CONTACTS.map(c => ({ name: c.name, phone: c.phone, type: c.type })));
-      }
-    })();
-  }, []);
+  // SOS-контакты захардкожены — НЕ зависят от IndexedDB, работают ВСЕГДА.
+  // tel: ссылки работают через сотовую сеть, интернет НЕ нужен.
 
   // Фоновая подгрузка зум 10 при первом посещении /map онлайн
   // ~1600 тайлов (~25 МБ) — загрузится один раз, потом карта детальная офлайн
@@ -400,7 +394,7 @@ export default function MapPageClient() {
                 </button>
               </div>
               <div className="flex flex-col gap-2">
-                {sosContacts.map((c) => (
+                {SOS_CONTACTS.map((c) => (
                   <a
                     key={c.phone}
                     href={`tel:${c.phone.replace(/\s/g, '')}`}

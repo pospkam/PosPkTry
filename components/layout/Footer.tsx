@@ -117,9 +117,14 @@ export function Footer() {
           <p className="text-xs text-[var(--text-muted)]">
             © {new Date().getFullYear()} ООО «ПОС-СЕРВИС» (ИНН 4101147649). Все права защищены.
           </p>
-          <p className="text-xs text-[var(--text-muted)]">
-            683024, Камчатский край, г. Петропавловск-Камчатский
-          </p>
+          <div className="flex items-center gap-4">
+            <Link href="/sos" className="text-xs text-red-500 hover:text-red-400 font-semibold transition-colors flex items-center gap-1">
+              <span>🆘</span> SOS
+            </Link>
+            <p className="text-xs text-[var(--text-muted)]">
+              683024, Камчатский край, г. Петропавловск-Камчатский
+            </p>
+          </div>
         </div>
       </div>
     </footer>
