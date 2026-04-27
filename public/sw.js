@@ -61,15 +61,21 @@ const PRECACHE_URLS = [
   '/offline/manage',
 ];
 
-// Установка: кэшируем базовые страницы + тайлы зум 7 для всей Камчатки
+// Установка: кэшируем базовые страницы (обязательно) + тайлы зум 7-9 (фоновая загрузка)
 self.addEventListener('install', (event) => {
+  // 1. Базовые страницы — обязательно, блокируют установку:
   event.waitUntil(
-    Promise.all([
-      caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS)),
-      caches.open(`${TILE_CACHE_PREFIX}${TILE_CACHE_VERSION}`).then((tileCache) =>
-        tileCache.addAll(BASE_TILE_URLS)
-      ),
-    ]).then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS))
+      .then(() => self.skipWaiting())
+  );
+  // 2. Тайлы зум 7-9 — загружаются фоном, НЕ блокируют установку.
+  // Если сеть плохая — тайлы подгрузятся позже при просмотре карты онлайн.
+  event.waitUntil(
+    caches.open(`${TILE_CACHE_PREFIX}${TILE_CACHE_VERSION}`).then((tileCache) =>
+      tileCache.addAll(BASE_TILE_URLS)
+    ).catch(() => {
+      // Тихо игнорируем ошибки — тайлы закэшируются при просмотре онлайн
+    })
   );
 });
 
