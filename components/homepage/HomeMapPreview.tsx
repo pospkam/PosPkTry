@@ -148,23 +148,6 @@ export function HomeMapPreview() {
     <div className="flex flex-col h-full bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden">
       {/* Map container — full height, overflow hidden */}
       <div className="relative flex-1 min-h-[400px] overflow-hidden">
-        {/* Kind tabs — absolute top-left, inside map */}
-        <div className="absolute top-2 left-2 z-[400] flex rounded-lg overflow-hidden shadow-lg backdrop-blur-sm bg-[var(--bg-card)]/90 border border-[var(--border)]">
-          {KIND_TABS.map(t => (
-            <button
-              key={t.value}
-              onClick={() => setKind(t.value)}
-              className={`px-3 py-1.5 text-xs font-semibold transition-colors ${
-                kind === t.value
-                  ? 'bg-[var(--accent)] text-white'
-                  : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-
         <LeafletMap
           center={[51.5, 161]}
           zoom={6}
@@ -179,9 +162,28 @@ export function HomeMapPreview() {
         )}
       </div>
 
-      {/* Filter chips — BELOW map, with right padding to avoid zoom controls */}
-      <div className="flex items-center gap-2 px-4 py-2.5 border-t border-[var(--border)] overflow-x-auto bg-[var(--bg-card)]">
-        <Filter className="w-3.5 h-3.5 text-[var(--text-muted)] flex-shrink-0" />
+      {/* Kind tabs + Filter chips — BELOW map */}
+      <div className="border-t border-[var(--border)] bg-[var(--bg-card)]">
+        {/* Kind tabs */}
+        <div className="flex items-center gap-1 px-4 pt-3 pb-1">
+          {KIND_TABS.map(t => (
+            <button
+              key={t.value}
+              onClick={() => setKind(t.value)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                kind === t.value
+                  ? 'bg-[var(--accent)] text-white shadow-sm'
+                  : 'bg-[var(--bg-primary)] text-[var(--text-muted)] hover:text-[var(--text-primary)] border border-[var(--border)]'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Filter chips */}
+        <div className="flex items-center gap-2 px-4 py-2 overflow-x-auto">
+          <Filter className="w-3.5 h-3.5 text-[var(--text-muted)] flex-shrink-0" />
         {currentOptions.map(f => (
           <button
             key={f.id}
@@ -203,9 +205,10 @@ export function HomeMapPreview() {
             <X className="w-3.5 h-3.5" />
           </button>
         )}
-        <span className="text-[10px] text-[var(--text-muted)] ml-auto flex-shrink-0">
-          {loading ? '…' : filteredRoutes.length}
-        </span>
+          <span className="text-[10px] text-[var(--text-muted)] ml-auto flex-shrink-0">
+            {loading ? '…' : filteredRoutes.length}
+          </span>
+        </div>
       </div>
 
       {/* Route cards — hidden */}
