@@ -22,6 +22,36 @@ export async function GET(req: NextRequest) {
 
     // ── Конкретный чат: история сообщений ────────────────────────────────────
     if (chatId) {
+      // Веб-чат: сообщения хранятся в JSON массиве в chat_sessions
+      if (!platform || platform === 'web') {
+        const { rows } = await pool.query<{
+          messages: unknown;
+          updated_at: string;
+        }>(`
+          SELECT messages, updated_at::text
+          FROM chat_sessions
+          WHERE session_id = $1
+          LIMIT 1
+        `, [chatId]);
+
+        if (rows.length === 0) {
+          return NextResponse.json({ messages: [] });
+        }
+
+        // messages — JSON массив [{role, content, created_at}, ...]
+        const raw = rows[0].messages;
+        let msgs: Array<{ role: string; content: string; created_at: string }> = [];
+        if (Array.isArray(raw)) {
+          msgs = raw.map((m: any) => ({
+            role: m.role ?? 'user',
+            content: m.content ?? '',
+            created_at: m.created_at ?? rows[0].updated_at,
+          }));
+        }
+        return NextResponse.json({ messages: msgs });
+      }
+
+      // Telegram / Max: сообщения в tg_conversations
       const { rows } = await pool.query<{
         role: string;
         content: string;
@@ -30,10 +60,10 @@ export async function GET(req: NextRequest) {
         SELECT role, content, created_at::text
         FROM tg_conversations
         WHERE chat_id = $1
-          AND ($2::text IS NULL OR platform = $2)
+          AND platform = $2
         ORDER BY created_at ASC
         LIMIT 200
-      `, [chatId, platform ?? null]);
+      `, [chatId, platform]);
 
       return NextResponse.json({ messages: rows });
     }
