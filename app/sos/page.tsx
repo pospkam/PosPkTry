@@ -318,6 +318,27 @@ export default function SosPage() {
           ))}
         </div>
 
+        {/* Регистрация маршрута */}
+        <a
+          href="/safety/register"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            padding: '12px 16px',
+            borderRadius: '12px',
+            background: 'rgba(59,130,246,0.1)',
+            border: '1px solid rgba(59,130,246,0.3)',
+            color: '#fff',
+            textDecoration: 'none',
+            fontWeight: 600,
+            fontSize: '13px',
+          }}
+        >
+          📋 Зарегистрировать маршрут перед выходом
+        </a>
+
         {/* Памятка */}
         <div style={{
           padding: '12px 16px',
