@@ -3,7 +3,7 @@
 // + тайлы OpenTopoMap для офлайн-карты (управляются через postMessage)
 // + базовые тайлы зум 7 для всей Камчатки (кэшируются автоматически)
 
-const CACHE_NAME = 'kamchatour-v4'; // bumped: зум 7-9 (~525 тайлов) кэшируются при установке
+const CACHE_NAME = 'kamchatour-v5'; // bumped: авто-кэширование тайлов при просмотре + фоновая подгрузка зум 10
 const MAX_TOUR_PAGES = 10;
 
 // ─── Tile cache constants ──────────────────────────────────────────────────
@@ -147,8 +147,18 @@ self.addEventListener('message', (event) => {
 
   if (event.data.type === 'CACHE_TILES') {
     const { tiles, regionId } = event.data;
-    // Запускаем кэширование без блокировки (fire-and-forget с прогрессом)
     cacheTilesForRegion(tiles, regionId, event.source);
+    return;
+  }
+
+  // Подгрузка зум 10 при первом посещении /map онлайн
+  // ~1600 тайлов (~25 МБ) — детальная карта для пеших маршрутов
+  if (event.data.type === 'CACHE_ZOOM10') {
+    const zoom10Urls: string[] = [];
+    for (let x = 560; x <= 599; x++)
+      for (let y = 192; y <= 231; y++)
+        zoom10Urls.push(`https://${TILE_HOST}/10/${x}/${y}.png`);
+    cacheTilesForRegion(zoom10Urls, 'zoom10-kamchatka', event.source);
     return;
   }
 

@@ -152,6 +152,19 @@ export default function MapPageClient() {
     })();
   }, []);
 
+  // Фоновая подгрузка зум 10 при первом посещении /map онлайн
+  // ~1600 тайлов (~25 МБ) — загрузится один раз, потом карта детальная офлайн
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !navigator.onLine) return;
+    if (typeof window === 'undefined') return;
+    const key = 'kh-zoom10-cached';
+    if (localStorage.getItem(key)) return;
+    localStorage.setItem(key, '1');
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({ type: 'CACHE_ZOOM10' });
+    }
+  }, []);
+
   useEffect(() => {
     const load = async () => {
       const offline = typeof navigator !== 'undefined' && !navigator.onLine;
