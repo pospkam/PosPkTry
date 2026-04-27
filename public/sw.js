@@ -32,6 +32,7 @@ function makeTransparentPngResponse() {
 
 // Страницы для предварительного кэширования при установке
 const PRECACHE_URLS = [
+  '/icons/kamchatka-silhouette.jpg',
   '/',
   '/map',
   '/offline',
