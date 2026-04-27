@@ -42,6 +42,10 @@ interface LeafletMapProps {
   className?: string;
   attribution?: boolean;
   onMarkerClick?: (id: string) => void;
+  /** Показать позицию пользователя (синяя точка) — работает через GPS без интернета */
+  showUserLocation?: boolean;
+  /** Высота приоритета: «battery» (экономит батарею) или «highAccuracy» (максимум точности) */
+  locationPriority?: 'battery' | 'highAccuracy';
 }
 
 const COLOR_MAP: Record<string, string> = {
@@ -83,6 +87,8 @@ export default function LeafletMap({
   className = '',
   attribution = false,
   onMarkerClick,
+  showUserLocation = false,
+  locationPriority = 'highAccuracy',
 }: LeafletMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -92,6 +98,9 @@ export default function LeafletMap({
 
   useEffect(() => {
     if (!containerRef.current) return;
+
+    // Watch ID для GPS — вынесен наверх, чтобы доступный в cleanup()
+    let userLocationWatchId: number | null = null;
 
     // Dynamic import — leaflet + markercluster
     Promise.all([
@@ -258,10 +267,77 @@ export default function LeafletMap({
         });
       }
 
+      // GPS-позиция пользователя (синяя точка) — работает без интернета!
+      if (showUserLocation && typeof navigator !== 'undefined' && navigator.geolocation) {
+        // Маркер «Я здесь»
+        const userIcon = L.divIcon({
+          html: `
+            <div style="position:relative;width:20px;height:20px;">
+              <div style="
+                position:absolute;inset:-8px;
+                border-radius:50%;
+                background:rgba(66,133,244,0.2);
+                animation:kh-pulse 2s ease-out infinite;
+              "></div>
+              <div style="
+                width:20px;height:20px;
+                border-radius:50%;
+                background:#4285f4;
+                border:3px solid #fff;
+                box-shadow:0 0 8px rgba(66,133,244,0.6);
+              "></div>
+            </div>
+          `,
+          className: 'kh-user-location',
+          iconSize: [20, 20],
+          iconAnchor: [10, 10],
+        });
+        const userMarker = L.marker([center[0], center[1]], {
+          icon: userIcon,
+          zIndexOffset: 1000,
+        }).addTo(map);
+
+        // Точный круг точности (как в Google Maps / OsmAnd)
+        const accuracyCircle = L.circle([center[0], center[1]], {
+          radius: 1000, // стартовое значение, обновим при первом фиксе
+          color: '#4285f4',
+          fillColor: '#4285f4',
+          fillOpacity: 0.1,
+          weight: 1,
+          interactive: false,
+        }).addTo(map);
+
+        // Отслеживание позиции в реальном времени
+        userLocationWatchId = navigator.geolocation.watchPosition(
+          (pos) => {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            const acc = pos.coords.accuracy; // метры точности (обычно 5-50м)
+            userMarker.setLatLng([lat, lng]);
+            accuracyCircle.setLatLng([lat, lng]);
+            accuracyCircle.setRadius(acc);
+            // Центрируем карту на пользователе при первом фиксе или если зум > 12
+            if (map.getZoom() >= 12) {
+              map.panTo([lat, lng], { animate: true, duration: 0.5 });
+            }
+          },
+          () => { /* ошибка геолокации — молча */ },
+          {
+            enableHighAccuracy: locationPriority === 'highAccuracy',
+            maximumAge: 10000, // используем кэшированную позицию до 10 сек
+            timeout: 15000,
+          }
+        );
+      }
+
       mapRef.current = map;
     });
 
     return () => {
+      // Останавливаем GPS-трекинг при размонтировании (экономит батарею)
+      if (userLocationWatchId !== null && typeof navigator !== 'undefined') {
+        navigator.geolocation.clearWatch(userLocationWatchId);
+      }
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
@@ -269,13 +345,13 @@ export default function LeafletMap({
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [markers, center, zoom, onMarkerClick, attribution]);
+  }, [markers, center, zoom, onMarkerClick, attribution, showUserLocation, locationPriority]);
 
   return (
     <div
       ref={containerRef}
       style={{ height }}
-      className={`rounded-lg overflow-hidden border border-[var(--border)] ${className}`}
+      className={`overflow-hidden ${className}`}
     />
   );
 }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
-import { Sun, Moon, User, X, ArrowRight, MapPin, WifiOff } from 'lucide-react';
+import { Sun, Moon, User, X, ArrowRight, MapPin, WifiOff, Navigation, Target, AlertTriangle } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import dynamic from 'next/dynamic';
 import Logo from '@/components/shared/Logo';
@@ -57,6 +57,18 @@ const LOCATION_FILTERS = [
   { id: 'historical',           label: 'История' },
 ];
 
+// Фильтры для офлайн-режима (только критичные для безопасности)
+const OFFLINE_FILTERS = [
+  { id: 'all',        label: 'Все',          icon: Target },
+  { id: 'settlement', label: 'Посёлки',      icon: MapPin },
+  { id: 'hot_spring', label: 'Источники',    icon: MapPin },
+  { id: 'volcano',    label: 'Вулканы',      icon: MapPin },
+  { id: 'river',      label: 'Реки',         icon: MapPin },
+  { id: 'lake',       label: 'Озёра',        icon: MapPin },
+  { id: 'mountain',   label: 'Горы',         icon: MapPin },
+  { id: 'forest',     label: 'Лес',          icon: MapPin },
+];
+
 interface RoutePoint {
   id: string;
   title: string;
@@ -77,6 +89,21 @@ const VOLCANO_STATUS_COLOR: Record<string, string> = {
   unknown:           'gray',
 };
 
+/** Расстояние в метрах между двумя точками (формула Haversine) */
+function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371000; // радиус Земли в метрах
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+/** Форматирование расстояния */
+function formatDistance(meters: number): string {
+  if (meters < 1000) return `${Math.round(meters)} м`;
+  return `${(meters / 1000).toFixed(1)} км`;
+}
+
 export default function MapPageClient() {
   const { isDark, toggleTheme } = useTheme();
   const [activeFilter, setActiveFilter] = useState('all');
@@ -84,8 +111,26 @@ export default function MapPageClient() {
   const [loading, setLoading] = useState(true);
   const [isOffline, setIsOffline] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
+  const [showMyLocation, setShowMyLocation] = useState(false);
+
   const selectedRoute = selectedId ? allRoutes.find(r => r.id === selectedId) ?? null : null;
   const handleMarkerClick = useCallback((id: string) => setSelectedId(id), []);
+
+  // GPS-трекинг — работает БЕЗ интернета!
+  useEffect(() => {
+    if (!showMyLocation || typeof navigator === 'undefined' || !navigator.geolocation) return;
+
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        setUserPos({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      },
+      () => { /* ошибка — молча */ },
+      { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
+    );
+
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, [showMyLocation]);
 
   useEffect(() => {
     const load = async () => {
@@ -159,6 +204,8 @@ export default function MapPageClient() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const filters = isOffline ? OFFLINE_FILTERS : LOCATION_FILTERS;
+
   const filtered = useMemo(() =>
     activeFilter === 'all'
       ? allRoutes
@@ -173,6 +220,7 @@ export default function MapPageClient() {
     return allRoutes.filter(r => r.locationType === id).length;
   }, [allRoutes]);
 
+  // Маркеры с расстояниями (в офлайн-режиме)
   const mapMarkers = useMemo(() => filtered.map(r => {
     const cfg = LOCATION_TYPE_CONFIG[r.locationType ?? 'other'] ?? LOCATION_TYPE_CONFIG.other;
     const baseColor = r.locationType === 'volcano' && r.volcanoStatus
@@ -181,19 +229,175 @@ export default function MapPageClient() {
     const color = (activeFilter === 'activity:esoteric' && r.activityType === 'esoteric')
       ? 'purple'
       : baseColor;
+
+    // Расстояние от пользователя (если известно)
+    const dist = userPos ? haversineDistance(userPos.lat, userPos.lng, r.lat, r.lng) : null;
+    const desc = dist !== null
+      ? `${formatDistance(dist)} · ${r.description.split('\n')[0].slice(0, 80)}`
+      : r.description.split('\n')[0].slice(0, 120);
+
     return {
       id:          r.id,
       coords:      [r.lat, r.lng] as [number, number],
       title:       r.title,
-      description: r.description.split('\n')[0].slice(0, 120),
+      description: desc,
       color,
       href:        `/routes/${r.id}`,
       type:        MarkerType.TOUR,
       category:    r.locationType ?? 'other',
       geometry:    r.geometry ?? undefined,
     };
-  }), [filtered, activeFilter]);
+  }), [filtered, activeFilter, userPos]);
 
+  // ── ОФЛАЙН-РЕЖИМ ──────────────────────────────────────────────────
+  if (isOffline) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black">
+        {/* Офлайн-баннер сверху */}
+        <div className="absolute top-0 left-0 right-0 z-[200] px-3 pt-3">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-black/60 backdrop-blur-md border border-amber-500/40 text-amber-300 text-sm">
+            <WifiOff className="w-4 h-4 shrink-0" />
+            <span className="font-medium">Офлайн</span>
+            <span className="text-amber-300/60">·</span>
+            <span>{allRoutes.length} точек</span>
+            {/* Кнопка GPS-позиции */}
+            <button
+              onClick={() => setShowMyLocation(!showMyLocation)}
+              className={`ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                showMyLocation
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-white/10 text-white/70 hover:bg-white/20'
+              }`}
+            >
+              <Navigation className="w-3.5 h-3.5" />
+              {showMyLocation ? 'GPS ON' : 'GPS'}
+            </button>
+          </div>
+        </div>
+
+        {/* Кнопка «Скачать регионы» — доступ к офлайн-управлению */}
+        <div className="absolute top-16 right-3 z-[200]">
+          <Link
+            href="/offline/manage"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-black/60 backdrop-blur-md border border-white/20 text-white text-xs font-medium hover:bg-black/80 transition-all"
+          >
+            <AlertTriangle className="w-3.5 h-3.5" />
+            Скачать
+          </Link>
+        </div>
+
+        {/* Карта на весь экран */}
+        <LeafletMap
+          center={[53.0444, 158.6483]}
+          zoom={8}
+          markers={mapMarkers}
+          height="100dvh"
+          attribution={false}
+          onMarkerClick={handleMarkerClick}
+          showUserLocation={showMyLocation}
+          locationPriority="highAccuracy"
+          className="bg-black"
+        />
+
+        {/* Фильтры — снизу, поверх карты, крупные для перчаток */}
+        <div className="absolute bottom-0 left-0 right-0 z-[200]">
+          <div className="bg-black/60 backdrop-blur-md border-t border-white/10 px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {OFFLINE_FILTERS.map(f => {
+                const cnt = countFor(f.id);
+                if (f.id !== 'all' && cnt === 0) return null;
+                const Icon = f.icon;
+                return (
+                  <button
+                    key={f.id}
+                    onClick={() => setActiveFilter(f.id)}
+                    className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all min-h-[44px] ${
+                      activeFilter === f.id
+                        ? 'bg-[var(--accent)] text-white shadow-lg shadow-[var(--accent)]/30'
+                        : 'bg-white/10 text-white/80 hover:bg-white/20 border border-white/10'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {f.label}
+                    <span className={`text-xs ${activeFilter === f.id ? 'opacity-70' : 'text-white/40'}`}>
+                      {loading ? '…' : cnt}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* GPS-координаты пользователя */}
+        {userPos && showMyLocation && (
+          <div className="absolute bottom-20 left-3 z-[200] bg-black/60 backdrop-blur-md border border-white/20 rounded-lg px-3 py-1.5">
+            <p className="text-[10px] text-white/50 uppercase tracking-wider font-mono">Вы здесь</p>
+            <p className="text-xs text-white font-mono">{userPos.lat.toFixed(4)}, {userPos.lng.toFixed(4)}</p>
+          </div>
+        )}
+
+        {/* Панель выбранного маршрута */}
+        {selectedRoute && (
+          <div
+            className="absolute bottom-24 left-3 right-3 z-[200] rounded-xl bg-black/80 backdrop-blur-xl border border-white/20 shadow-2xl"
+            style={{ animation: 'slideUp 0.2s ease-out' }}
+          >
+            <div className="p-4">
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <MapPin className="w-3.5 h-3.5 flex-shrink-0 text-[var(--accent)]" />
+                    <span className="text-[10px] text-white/50 uppercase tracking-wide">
+                      {LOCATION_TYPE_CONFIG[selectedRoute.locationType ?? 'other']?.label ?? 'Маршрут'}
+                    </span>
+                  </div>
+                  <h3 className="font-semibold text-white leading-snug"
+                      style={{ fontFamily: 'var(--font-playfair)' }}>
+                    {selectedRoute.title}
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setSelectedId(null)}
+                  className="flex-shrink-0 p-1 rounded-lg hover:bg-white/10 text-white/50 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Расстояние от пользователя */}
+              {userPos && (
+                <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-lg bg-white/5">
+                  <Navigation className="w-4 h-4 text-blue-400" />
+                  <span className="text-sm text-white font-bold">
+                    {formatDistance(haversineDistance(userPos.lat, userPos.lng, selectedRoute.lat, selectedRoute.lng))}
+                  </span>
+                  <span className="text-xs text-white/40">от вас</span>
+                </div>
+              )}
+
+              {selectedRoute.description && (
+                <p className="text-sm text-white/60 leading-relaxed line-clamp-3 mb-4">
+                  {selectedRoute.description.split('\n')[0]}
+                </p>
+              )}
+
+              <Link
+                href={`/routes/${selectedRoute.id}`}
+                className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-lg
+                  bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
+              >
+                Открыть маршрут
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ── ОНЛАЙН-РЕЖИМ ──────────────────────────────────────────────────
   return (
     <div className="min-h-screen pb-24 md:pb-0">
       {/* Header */}
@@ -216,22 +420,6 @@ export default function MapPageClient() {
           </div>
         </div>
       </header>
-
-      {/* Офлайн баннер */}
-      {isOffline && (
-        <div className="mx-4 mt-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-xs">
-          <WifiOff className="w-3.5 h-3.5 shrink-0" />
-          <span>
-            Офлайн-режим.{' '}
-            {allRoutes.length > 0
-              ? `Показаны ${allRoutes.length} скачанных маршрутов.`
-              : 'Нет скачанных регионов — скачайте карту заранее.'}
-          </span>
-          <Link href="/offline/manage" className="ml-auto shrink-0 font-medium underline underline-offset-2">
-            Скачать
-          </Link>
-        </div>
-      )}
 
       {/* Фильтры по типу локации (ГДЕ) */}
       <div className="px-4 py-3 overflow-x-auto">
@@ -269,7 +457,22 @@ export default function MapPageClient() {
             height="calc(100vh - 180px)"
             attribution={false}
             onMarkerClick={handleMarkerClick}
+            showUserLocation={showMyLocation}
+            locationPriority="highAccuracy"
           />
+
+          {/* Кнопка GPS */}
+          <button
+            onClick={() => setShowMyLocation(!showMyLocation)}
+            className={`absolute top-3 right-3 z-[400] p-2.5 rounded-lg shadow-lg transition-all ${
+              showMyLocation
+                ? 'bg-blue-500 text-white'
+                : 'bg-[var(--bg-card)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] border border-[var(--border)]'
+            }`}
+            aria-label="Показать моё местоположение"
+          >
+            <Navigation size={18} />
+          </button>
 
           {/* Счётчик */}
           <div className="absolute bottom-3 left-3 z-40 bg-[var(--bg-card)] rounded-lg px-3 py-1.5 border border-[var(--border)] shadow-sm">
@@ -312,6 +515,17 @@ export default function MapPageClient() {
                 <X className="w-4 h-4" />
               </button>
             </div>
+
+            {/* Расстояние */}
+            {userPos && (
+              <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-lg bg-[var(--bg-primary)] border border-[var(--border)]">
+                <Navigation className="w-4 h-4 text-blue-500" />
+                <span className="text-sm font-bold text-[var(--text-primary)]">
+                  {formatDistance(haversineDistance(userPos.lat, userPos.lng, selectedRoute.lat, selectedRoute.lng))}
+                </span>
+                <span className="text-xs text-[var(--text-muted)]">от вас</span>
+              </div>
+            )}
 
             {/* Описание */}
             {selectedRoute.description && (
