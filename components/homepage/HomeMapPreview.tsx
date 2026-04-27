@@ -179,8 +179,8 @@ export function HomeMapPreview() {
         )}
       </div>
 
-      {/* Filter chips — BELOW map */}
-      <div className="flex items-center gap-2 px-4 py-2 border-t border-[var(--border)] overflow-x-auto bg-[var(--bg-card)]">
+      {/* Filter chips — BELOW map, with right padding to avoid zoom controls */}
+      <div className="flex items-center gap-2 px-4 py-2.5 border-t border-[var(--border)] overflow-x-auto bg-[var(--bg-card)]">
         <Filter className="w-3.5 h-3.5 text-[var(--text-muted)] flex-shrink-0" />
         {currentOptions.map(f => (
           <button

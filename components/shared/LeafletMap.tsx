@@ -110,7 +110,7 @@ export default function LeafletMap({
       const map = L.map(containerRef.current, {
         center: L.latLng(center[0], center[1]),
         zoom,
-        zoomControl: true,
+        zoomControl: false,
         attributionControl: attribution !== false,
         minZoom: 5,
         maxZoom: 12,
@@ -120,6 +120,9 @@ export default function LeafletMap({
         ),
         maxBoundsViscosity: 1.0,
       });
+
+      // Zoom-контролы — справа вверху, чтобы не перекрывать фильтры снизу
+      L.control.zoom({ position: 'topright' }).addTo(map);
 
       // OpenTopoMap тайлы — topo relief
       L.tileLayer('https://tile.opentopomap.org/{z}/{x}/{y}.png', {
