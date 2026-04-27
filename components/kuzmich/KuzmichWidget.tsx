@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { Sparkles, Send, Loader2, X, MessageCircle, Camera, ExternalLink, Fish, Mountain, Droplets, Waves, CheckCircle, Minus, Plus } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useGeo } from '@/contexts/GeoContext';
 
 // Страницы где виджет не нужен
 const HIDDEN_PATHS = ['/', '/kuzmich', '/hub/admin', '/hub/operator'];
@@ -214,6 +215,9 @@ export default function KuzmichWidget() {
     if (fileRef.current) fileRef.current.value = '';
   }
 
+  // Geo: read location from GeoContext (never request permission here)
+  const { location, permissionState, mode } = useGeo();
+
   const send = useCallback(async (text: string) => {
     if ((!text.trim() && !imageFile) || loading) return;
 
@@ -238,6 +242,11 @@ export default function KuzmichWidget() {
     clearImage();
     setLoading(true);
 
+    // Only send location if permission granted AND user is on-site (on Kamchatka)
+    const geoPayload = (permissionState === 'granted' && location && mode === 'on-site')
+      ? { userLocation: { lat: location.lat, lng: location.lng, accuracy: location.accuracy } }
+      : {};
+
     try {
       const res = await fetch('/api/ai/chat', {
         method: 'POST',
@@ -248,6 +257,7 @@ export default function KuzmichWidget() {
           role: 'tourist',
           history: messages.slice(-8).map(m => ({ role: m.role, content: m.content })),
           ...(imageBase64 ? { imageBase64, imageMimeType } : {}),
+          ...geoPayload,
           ...utmRef.current,
         }),
       });

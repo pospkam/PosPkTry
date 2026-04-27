@@ -23,7 +23,7 @@ import { z } from 'zod';
 import { safeMsg } from '@/lib/errors/sanitize';
 import { query } from '@/lib/database';
 import { getSystemPrompt, buildMessageHistory, type ChatMessage, type ChatRole } from '@/lib/ai/prompts';
-import { buildRAGContext } from '@/lib/ai/rag-context';
+import { buildRAGContext, buildGeoContext } from '@/lib/ai/rag-context';
 import { getOpenRouterKey } from '@/lib/ai/provider-config';
 import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
 import { getUserFromRequest } from '@/lib/auth/jwt';
@@ -57,6 +57,13 @@ const Schema = z.object({
   sessionId: z.string().optional(),
   role: z.string().default('tourist'),
   history: z.array(ChatMessageSchema).max(20).optional(),
+  // Geo: user coordinates (from browser geolocation)
+  userLocation: z.object({
+    lat: z.number(),
+    lng: z.number(),
+    accuracy: z.number().optional(),
+    timestamp: z.number().optional(),
+  }).optional(),
 });
 
 interface SessionRow {
@@ -156,7 +163,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Некорректные данные' }, { status: 400 });
     }
 
-    const { message, sessionId, role = 'tourist', history: clientHistory } = parsed.data;
+    const { message, sessionId, role = 'tourist', history: clientHistory, userLocation } = parsed.data;
     const validRoles: ChatRole[] = ['tourist', 'operator', 'guide', 'admin', 'agent', 'transfer'];
     const safeRole: ChatRole = validRoles.includes(role as ChatRole) ? (role as ChatRole) : 'tourist';
     const user = await getUserFromRequest(request);
@@ -197,11 +204,20 @@ export async function POST(request: NextRequest) {
 
     const basePrompt = getSystemPrompt(safeRole);
     const memContext = userMemory ? buildMemoryContext(userMemory, tripHistory) : '';
+
+    // Geo-context: inject user location into system prompt + RAG boost
+    // Normalize userLocation to full UserLocation type
+    const geo = userLocation
+      ? { lat: userLocation.lat, lng: userLocation.lng, accuracy: userLocation.accuracy ?? 0, timestamp: userLocation.timestamp ?? Date.now() }
+      : undefined;
+
+    const geoContext = geo ? await buildGeoContext(geo).catch(() => '') : '';
+
     const [ragContext, agentInsights] = await Promise.all([
-      buildRAGContext(message.trim(), safeRole),
+      buildRAGContext(message.trim(), safeRole, geo),
       safeRole === 'tourist' ? buildAgentInsightsForTourist() : Promise.resolve(''),
     ]);
-    const systemPrompt = basePrompt + ragContext + memContext + agentInsights;
+    const systemPrompt = basePrompt + geoContext + ragContext + memContext + agentInsights;
     const messagesForAI = buildMessageHistory(systemPrompt, history, 10);
 
     const orStreamResponse = await streamViaOpenRouter(messagesForAI);

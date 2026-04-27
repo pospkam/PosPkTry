@@ -29,7 +29,7 @@ import {
 } from '@/lib/ai/user-memory';
 import { detectTourIntent, findRelevantTours, type TourSuggestion } from '@/lib/ai/booking-intent';
 import { recordEngagementSignal } from '@/lib/kuzmich/engagement';
-import { buildRAGContext } from '@/lib/ai/rag-context';
+import { buildRAGContext, buildGeoContext } from '@/lib/ai/rag-context';
 import { recordTouristDemand } from '@/lib/ai/tourist-demand-aggregator';
 import { runSDKAgent } from '@/lib/agents/sdk/sdk-runner';
 import { getTouristTools } from '@/lib/agents/sdk/tourist-tools';
@@ -121,6 +121,13 @@ const AiChatSchema = z.object({
   // Vision: base64-encoded image from user
   imageBase64: z.string().max(8_000_000).optional(),
   imageMimeType: z.string().optional(),
+  // Geo: user coordinates (from browser geolocation)
+  userLocation: z.object({
+    lat: z.number(),
+    lng: z.number(),
+    accuracy: z.number().optional(),
+    timestamp: z.number().optional(),
+  }).optional(),
   // UTM & referrer (saved only on first message)
   referrerSource: z.string().max(255).optional(),
   utmSource:      z.string().max(100).optional(),
@@ -148,6 +155,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { message, sessionId, role = 'tourist', history: clientHistory, imageBase64, imageMimeType,
+            userLocation,
             referrerSource, utmSource, utmMedium, utmCampaign } = parsed.data;
 
     if (!message?.trim()) {
@@ -215,11 +223,20 @@ export async function POST(request: NextRequest) {
 
     const basePrompt   = getSystemPrompt(safeRole);
     const memContext   = userMemory ? buildMemoryContext(userMemory, tripHistory) : '';
+
+    // Geo-context: inject user location into system prompt + RAG boost
+    // Normalize userLocation to full UserLocation type
+    const geo = userLocation
+      ? { lat: userLocation.lat, lng: userLocation.lng, accuracy: userLocation.accuracy ?? 0, timestamp: userLocation.timestamp ?? Date.now() }
+      : undefined;
+
+    const geoContext = geo ? await buildGeoContext(geo).catch(() => '') : '';
+
     const [ragContext, agentInsights] = await Promise.all([
-      buildRAGContext(message.trim(), safeRole),
+      buildRAGContext(message.trim(), safeRole, geo),
       safeRole === 'tourist' ? buildAgentInsightsForTourist() : Promise.resolve(''),
     ]);
-    const systemPrompt = basePrompt + ragContext + memContext + agentInsights;
+    const systemPrompt = basePrompt + geoContext + ragContext + memContext + agentInsights;
     const messagesForAI = buildMessageHistory(systemPrompt, history, 10);
 
     // PlatformAgent intercept: admin/operator с распознанным интентом
