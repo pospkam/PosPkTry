@@ -2,14 +2,14 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
-import { Sun, Moon, User, X, ArrowRight, MapPin, WifiOff, Navigation, Target, AlertTriangle } from 'lucide-react';
+import { Sun, Moon, User, X, ArrowRight, MapPin, WifiOff, Navigation, Target, AlertTriangle, Phone } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import dynamic from 'next/dynamic';
 import Logo from '@/components/shared/Logo';
 import BottomNav from '@/components/shared/BottomNav';
 import { AssistantButton } from '@/components/shared/AssistantButton';
 import { MarkerType, type MapMarkerGeometry } from '@/components/shared/LeafletMap';
-import { getAllOfflineRoutes } from '@/lib/offline/db';
+import { getAllOfflineRoutes, getAllSosContacts, GLOBAL_SOS_CONTACTS } from '@/lib/offline/db';
 
 const LeafletMap = dynamic(() => import('@/components/shared/LeafletMap'), { ssr: false });
 
@@ -113,6 +113,8 @@ export default function MapPageClient() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
   const [showMyLocation, setShowMyLocation] = useState(false);
+  const [sosContacts, setSosContacts] = useState<{ name: string; phone: string; type: string }[]>([]);
+  const [showSos, setShowSos] = useState(false);
 
   const selectedRoute = selectedId ? allRoutes.find(r => r.id === selectedId) ?? null : null;
   const handleMarkerClick = useCallback((id: string) => setSelectedId(id), []);
@@ -131,6 +133,24 @@ export default function MapPageClient() {
 
     return () => navigator.geolocation.clearWatch(watchId);
   }, [showMyLocation]);
+
+  // Загрузка SOS-контактов (для офлайн-режима)
+  useEffect(() => {
+    (async () => {
+      try {
+        const cached = await getAllSosContacts();
+        if (cached.length > 0) {
+          setSosContacts(cached.map(c => ({ name: c.name, phone: c.phone, type: c.type })));
+        } else {
+          // Фоллбэк на глобальные контакты если IndexedDB пустой
+          setSosContacts(GLOBAL_SOS_CONTACTS.map(c => ({ name: c.name, phone: c.phone, type: c.type })));
+        }
+      } catch {
+        // Фоллбэк на глобальные контакты при ошибке
+        setSosContacts(GLOBAL_SOS_CONTACTS.map(c => ({ name: c.name, phone: c.phone, type: c.type })));
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -246,6 +266,8 @@ export default function MapPageClient() {
       type:        MarkerType.TOUR,
       category:    r.locationType ?? 'other',
       geometry:    r.geometry ?? undefined,
+      // В офлайне: показываем балун (без suppressBalloon) — человек должен видеть описание точки без клика на маршрут-страницу (нет интернета)
+      suppressBalloon: false,
     };
   }), [filtered, activeFilter, userPos]);
 
@@ -276,7 +298,7 @@ export default function MapPageClient() {
         </div>
 
         {/* Кнопка «Скачать регионы» — доступ к офлайн-управлению */}
-        <div className="absolute top-16 right-3 z-[200]">
+        <div className="absolute top-16 right-3 z-[200] flex flex-col gap-2">
           <Link
             href="/offline/manage"
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-black/60 backdrop-blur-md border border-white/20 text-white text-xs font-medium hover:bg-black/80 transition-all"
@@ -284,6 +306,18 @@ export default function MapPageClient() {
             <AlertTriangle className="w-3.5 h-3.5" />
             Скачать
           </Link>
+          {/* 🔴 SOS — показать экстренные номера */}
+          <button
+            onClick={() => setShowSos(!showSos)}
+            className={`flex items-center justify-center gap-1 px-3 py-2 rounded-xl text-xs font-bold transition-all shadow-lg ${
+              showSos
+                ? 'bg-white text-red-600'
+                : 'bg-red-600 text-white hover:bg-red-700'
+            }`}
+            style={!showSos ? { animation: 'kh-sos-pulse 2s ease-out infinite' } : {}}
+          >
+            SOS
+          </button>
         </div>
 
         {/* Карта на весь экран */}
@@ -334,6 +368,46 @@ export default function MapPageClient() {
           <div className="absolute bottom-20 left-3 z-[200] bg-black/60 backdrop-blur-md border border-white/20 rounded-lg px-3 py-1.5">
             <p className="text-[10px] text-white/50 uppercase tracking-wider font-mono">Вы здесь</p>
             <p className="text-xs text-white font-mono">{userPos.lat.toFixed(4)}, {userPos.lng.toFixed(4)}</p>
+          </div>
+        )}
+
+        {/* 🔴 SOS-панель — экстренные номера (tel: ссылки работают без интернета!) */}
+        {showSos && (
+          <div className="absolute bottom-24 left-3 right-3 z-[200] rounded-xl bg-black/85 backdrop-blur-xl border border-red-500/40 shadow-2xl shadow-red-900/20">
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-white font-bold text-sm flex items-center gap-2">
+                  <span className="text-red-500">🆘</span> Экстренные номера
+                </h3>
+                <button
+                  onClick={() => setShowSos(false)}
+                  className="p-1 rounded-lg hover:bg-white/10 text-white/50 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="flex flex-col gap-2">
+                {sosContacts.map((c) => (
+                  <a
+                    key={c.phone}
+                    href={`tel:${c.phone.replace(/\s/g, '')}`}
+                    className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all active:bg-white/15"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center flex-shrink-0">
+                      <Phone className="w-4 h-4 text-red-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white text-sm font-medium truncate">{c.name}</p>
+                      <p className="text-white/40 text-xs">{c.type}</p>
+                    </div>
+                    <span className="text-white font-bold text-sm font-mono flex-shrink-0">{c.phone}</span>
+                  </a>
+                ))}
+              </div>
+              <p className="text-[10px] text-white/30 mt-3 text-center">
+                Звонки работают без интернета · GPS определяет ваши координаты
+              </p>
+            </div>
           </div>
         )}
 
