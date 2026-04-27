@@ -130,25 +130,23 @@ export default function LeafletMap({
         maxBoundsViscosity: 1.0,
       });
 
+      // Глобальный фикс: маркеры ВСЕГДА поверх тайлов (z-index > tilePane=400)
+      if (!document.getElementById('kh-marker-zfix')) {
+        const s = document.createElement('style');
+        s.id = 'kh-marker-zfix';
+        s.textContent = `
+          .leaflet-marker-pane, .leaflet-popup-pane, .leaflet-tooltip-pane { z-index: 1000 !important; }
+          .leaflet-overlay-pane { z-index: 400 !important; }
+        `;
+        document.head.appendChild(s);
+      }
+
       // Zoom-контролы — справа вверху, чтобы не перекрывать фильтры снизу
       L.control.zoom({ position: 'topright' }).addTo(map);
 
-      // Создаём свою pane для маркеров — всегда поверх тайлов и геометрии (z-index 1000)
-      const markerPaneName = 'kh-marker-pane';
-      if (!map.getPane(markerPaneName)) {
-        map.createPane(markerPaneName);
-        const paneEl = map.getPane(markerPaneName) as HTMLElement;
-        paneEl.style.zIndex = '1000';
-        // Force: also set via inline style tag to override Leaflet's internal ordering
-        const style = document.createElement('style');
-        style.textContent = `.leaflet-${markerPaneName} { z-index: 1000 !important; }`;
-        document.head.appendChild(style);
-      }
-
-      // OpenTopoMap тайлы — topo relief
+      // OpenTopoMap тайлы — topo relief (z-index 400)
       L.tileLayer('https://tile.opentopomap.org/{z}/{x}/{y}.png', {
         maxZoom: 17,
-        pane: 'tilePane',
         attribution: attribution !== false ? '© OpenStreetMap, SRTM | © OpenTopoMap (CC-BY-SA)' : '',
       }).addTo(map);
 
@@ -266,15 +264,7 @@ export default function LeafletMap({
           popupAnchor: [0, -26],
         });
 
-        const m = L.marker(marker.coords, { icon, pane: markerPaneName });
-        // DEBUG: visible red circle to check if markers render at all
-        L.circleMarker(marker.coords, {
-          radius: 8,
-          color: 'red',
-          fillColor: 'red',
-          fillOpacity: 1,
-          pane: markerPaneName,
-        }).addTo(map);
+        const m = L.marker(marker.coords, { icon });
 
         if (!marker.suppressBalloon) {
           m.bindPopup(buildPopupHtml(marker), { maxWidth: 260 });
@@ -284,8 +274,7 @@ export default function LeafletMap({
           m.on('click', () => onMarkerClick(markerId));
         }
 
-        // Вместо m.addTo(map) — добавляем в кластер (на ту же pane)
-        clusterGroup.options.pane = markerPaneName;
+        // Вместо m.addTo(map) — добавляем в кластер
         clusterGroup.addLayer(m);
       });
 
