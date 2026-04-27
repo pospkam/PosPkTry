@@ -11,7 +11,7 @@ export default function SOSButton() {
       aria-label="SOS — экстренная помощь"
       style={{
         position: 'fixed',
-        bottom: 'calc(80px + env(safe-area-inset-bottom))',
+        bottom: 'calc(24px + env(safe-area-inset-bottom))',
         left: '16px',
         zIndex: 88,
         width: '42px',
