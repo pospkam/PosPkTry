@@ -1,14 +1,36 @@
 // Kamchatour Hub Service Worker -- cache-first для офлайн-доступа к турам
 // Кэш: статика + каталог туров + последние 10 просмотренных страниц туров
 // + тайлы OpenTopoMap для офлайн-карты (управляются через postMessage)
+// + базовые тайлы зум 7 для всей Камчатки (кэшируются автоматически)
 
-const CACHE_NAME = 'kamchatour-v3';
+const CACHE_NAME = 'kamchatour-v4'; // bumped: зум 7-9 (~525 тайлов) кэшируются при установке
 const MAX_TOUR_PAGES = 10;
 
 // ─── Tile cache constants ──────────────────────────────────────────────────
 const TILE_CACHE_PREFIX = 'kh-tiles-';
-const TILE_CACHE_VERSION = 1;
+const TILE_CACHE_VERSION = 4; // bumped: зум 7-9 (~525 тайлов) при установке, + авто-кэширование при просмотре
 const TILE_HOST = 'tile.opentopomap.org';
+
+// Базовые тайлы для всей Камчатки — кэшируются при установке SW.
+// Зум 7 (обзор) + 8 (средний) + 9 (детальный) = ~525 тайлов, ~8-10 МБ.
+// Этого достаточно для пешего туризма: видны тропы, рельеф, водоёмы.
+// + тайлы кэшируются автоматически при просмотре онлайн (дополнительные зумы).
+const BASE_TILE_URLS = (() => {
+  const urls = [];
+  // Зум 7 — обзор всей Камчатки (5×5 = 25 тайлов)
+  for (let x = 70; x <= 74; x++)
+    for (let y = 24; y <= 28; y++)
+      urls.push(`https://${TILE_HOST}/7/${x}/${y}.png`);
+  // Зум 8 — средняя детализация (10×10 = 100 тайлов)
+  for (let x = 140; x <= 149; x++)
+    for (let y = 48; y <= 57; y++)
+      urls.push(`https://${TILE_HOST}/8/${x}/${y}.png`);
+  // Зум 9 — детальная карта (20×20 = 400 тайлов)
+  for (let x = 280; x <= 299; x++)
+    for (let y = 96; y <= 115; y++)
+      urls.push(`https://${TILE_HOST}/9/${x}/${y}.png`);
+  return urls; // ~525 тайлов, ~8-10 МБ — приемлемо для установки (~15 сек на 3G)
+})();
 
 // Прозрачный 1×1 PNG как fallback при отсутствии тайла офлайн
 const TRANSPARENT_PNG_B64 =
@@ -39,12 +61,15 @@ const PRECACHE_URLS = [
   '/offline/manage',
 ];
 
-// Установка: кэшируем базовые страницы
+// Установка: кэшируем базовые страницы + тайлы зум 7 для всей Камчатки
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(PRECACHE_URLS);
-    }).then(() => self.skipWaiting())
+    Promise.all([
+      caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS)),
+      caches.open(`${TILE_CACHE_PREFIX}${TILE_CACHE_VERSION}`).then((tileCache) =>
+        tileCache.addAll(BASE_TILE_URLS)
+      ),
+    ]).then(() => self.skipWaiting())
   );
 });
 
@@ -97,13 +122,20 @@ async function handleTileRequest(request) {
   const cached = await cache.match(request);
   if (cached) return cached;
 
-  // Сеть. Тайлы НЕ кэшируются автоматически при обычном fetch —
-  // только по явной команде CACHE_TILES через postMessage.
+  // Онлайн — загружаем и сохраняем в кэш для офлайн-доступа.
+  // Это критично: человек открывает карту с интернетом → тайлы кэшируются →
+  // потом едет в горы без связи → карта работает.
   try {
     const response = await fetch(request);
+    if (response.ok) {
+      const clone = response.clone();
+      // Сохраняем в кэш (неблокирующая запись)
+      cache.put(request, clone);
+    }
     return response;
   } catch {
-    // Офлайн и тайла нет в кэше — прозрачный PNG
+    // Офлайн и тайла нет в кэше — прозрачный PNG вместо пустого квадрата.
+    // При зум 7+ базовые тайлы Камчатки уже должны быть в кэше.
     return makeTransparentPngResponse();
   }
 }
