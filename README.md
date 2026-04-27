@@ -1,190 +1,172 @@
-# TourHab -- AI-powered tourism platform for Kamchatka
+# TourHab — Volcano OS
 
-*Where volcanoes meet the ocean — and AI plans your trip there.*
+**Камчатка без связи. С контролем.**
 
-**[tourhab.ru](https://tourhab.ru)** · 260 routes · 455 API endpoints · live in production
+**[tourhab.ru](https://tourhab.ru)** · PWA · offline map · Kuzmich AI · 1423 маршрута
 
-Most travel sites show you a list. Kuzmich asks what you want, reads your photos, books the tour, and notifies the operator — all in one conversation.
-
----
-
-## What it does
-
-- **Kuzmich AI** -- multi-channel assistant (Telegram, web widget, full-page chat). Understands photos (vision), voice messages (transcription), recommends tours, handles bookings inline
-- **260+ routes** -- hiking, volcanoes, fishing, bear watching, helicopter tours, rafting, thermal springs, diving, snowmobiles
-- **Inline booking** -- tourist describes what they want in natural language, AI matches the tour, collects details, creates booking, notifies operator
-- **Operator dashboards** -- booking management, earnings, tour editor, calendar
-- **Safety system** -- SOS button, route danger warnings, MChS integration
-- **AI agents** -- Watchdog (stale bookings alerts), Editor (AI description enrichment), Scout Digest (industry news), Intelligence Monitor (competitor & tech tracking)
-- **Fish encyclopedia** -- 15 Kamchatka fish species with fishing tour links
-- **Affiliate blocks** -- flights (Aviasales), hotels (Hotellook), insurance (Cherehapa), transfers (Kiwitaxi) embedded in route pages
-
-**Kuzmich in action:**
-
-> *"Хочу увидеть медведей, но боюсь одна"*
->
-> Kuzmich подбирает групповой тур на Курильское озеро, объясняет маршрут, предлагает страховку под активность, создаёт бронирование и оповещает оператора — без единой формы.
+Мобильная операционная система для туриста на Камчатке. Работает в авиарежиме. Показывает где ты, что вокруг, как дойти, и что делать если что-то пошло не так.
 
 ---
 
-## Architecture
+## Что это
+
+| | |
+|---|---|
+| 🗺️ **Офлайн-карта** | Тайлы кэшируются при первом посещении. GPS без интернета. Маркеры, треки, кластеры |
+| 📍 **Геоконтекст** | «Я тут, что вокруг?» — Кузьмич знает координаты и отвечает по-местному |
+| 🆘 **SOS** | Экстренные номера с tel: ссылками. Работают через сотовую сеть, без интернета |
+| 🤖 **Kuzmich AI** | Multi-modal ассистент: текст, фото, голос. Ищет маршруты, погоду, отвечает на вопросы |
+| 🌋 **1423 маршрута** | Вулканы, гейзеры, источники, озёра, мысы, пляжи — всё на карте |
+| 📱 **PWA** | Homescreen, service worker, 100% offline-first |
+
+**Слоган:** *«Камчатка без связи. С контролем.»*
+
+**Codename:** Volcano OS
+
+---
+
+## Архитектура
 
 ```
 Next.js 15 App Router + TypeScript strict
-PostgreSQL (raw SQL, no ORM)
+PostgreSQL (raw SQL, no ORM, 132 миграции)
 JWT auth + role-based middleware
-AI waterfall (OpenRouter -> DeepSeek -> Gemini -> MiniMax -> Anthropic)
-Telegram Bot API (Kuzmich tourists + TOURHAB_BOT operators)
-VK MAX integration (operator notifications)
-Timeweb Cloud deploy (auto-deploy on push)
+AI waterfall: OpenRouter → DeepSeek → Gemini → MiniMax → Anthropic
+Telegram Bot API (Kuzmich + операторы)
+Timeweb Cloud — auto-deploy on push to main
 ```
 
-### Data flow
+### Данные
 
-```mermaid
-flowchart LR
-  Tourist -->|text / photo / voice| Kuzmich
-  Kuzmich --> AgentLoop[Tool-use loop]
-  AgentLoop -->|search routes, weather, places| DB[(PostgreSQL)]
-  AgentLoop -->|booking intent detected| Booking
-  Booking --> DB
-  Booking -->|Telegram + VK MAX| Operator
-```
+| Метрика | Значение |
+|---|---|
+| TypeScript файлов | 1,186 |
+| API маршрутов | 461 |
+| UI компонентов | 143 |
+| SQL миграций | 132 |
+| Маршрутов в БД | 1,423 |
+| Строк кода | 195k+ |
 
-### Scale
-
-| Metric | Count |
-|--------|-------|
-| TypeScript files | 1,150+ |
-| API routes | 455 |
-| UI components | 143 |
-| SQL migrations | 122 |
-| Lines of code | 195k+ |
-| Tour routes in DB | 260+ |
-
-Raw SQL without ORM is an intentional choice: the schema is complex (260 routes, 8 hubs, multiple roles), queries stay explicit and auditable, and there's no hidden N+1 or migration magic to debug in production.
-
-### Key modules
+### Ключевые модули
 
 ```
 app/
-  kuzmich/              -- AI chat (full-page)
-  marketplace/          -- Tour catalog
-  routes/[id]/          -- Tour detail + affiliate blocks
-  fish/                 -- Fish encyclopedia (15 species)
-  hub/admin/            -- Platform admin (analytics, operators, AI analytics)
-  hub/operator/         -- Operator dashboard (bookings, tours, earnings)
-  hub/tourist/          -- Tourist profile (bookings, favorites)
+  map/                  -- Офлайн-карта (Leaflet, markercluster, GPS)
+  kuzmich/              -- AI-чат (full-page + web widget + Telegram)
+  routes/[id]/          -- Страница маршрута
+  sos/                  -- Экстренные номера
+  hub/operator/         -- Дашборд оператора
+  hub/tourist/          -- Профиль туриста
   hub/safety/           -- Safety center
-  api/cron/             -- Background agents (watchdog, editor, scout, intelligence)
+  api/routes/           -- REST API маршрутов
+  api/cron/             -- Background agents
 
 lib/
-  kuzmich/core.ts       -- Kuzmich brain (agent loop, tools, booking flow)
-  ai/providers.ts       -- AI provider waterfall (6 providers, auto-failover)
-  agents/               -- Background agents (watchdog, editor, scout-digest)
-  services/             -- Domain services (insurance, flights, hotels, transfers)
+  kuzmich/core.ts       -- Agent loop, tools, booking
+  ai/rag-context.ts     -- RAG контекст + search_count
+  ai/providers.ts       -- AI provider waterfall
+  offline/              -- IndexedDB для офлайн-режима
+  agents/               -- Watchdog, Editor, Scout Digest
+  services/             -- Flights, hotels, insurance, transfers
 ```
+
+---
+
+## Offline-first
+
+Приложение спроектировано для работы без связи:
+
+1. **Тайлы** — кэшируются через Service Worker (zoom 7–10 при установке, zoom 10+ при посещении /map)
+2. **Маршруты** — IndexedDB, заполняются при онлайн-сессии
+3. **SOS-контакты** — захардкожены, работают через сотовую сеть
+4. **GPS** — watchPosition с high accuracy, работает без интернета
+5. **Кузьмич** — базовые ответы с геоконтекстом (координаты + ближайшие точки из кэша)
+
+---
 
 ## AI stack
 
-Kuzmich uses a multi-level architecture:
+### Kuzmich
 
-1. **Tool-use agent loop** -- 4 tools (search tours, get place info, get weather, search Kamchatka knowledge base). Up to 4 tool calls per turn
-2. **Waterfall fallback** -- if agent loop fails, falls back to simple completion with tour context
-3. **Vision** -- photo recognition via Gemini (through OpenRouter)
-4. **Voice** -- transcription via Gemini, then standard processing
-5. **Memory** -- per-user notes synthesized every 5 messages, stored in DB
-6. **Booking detection** -- NLU triggers inline booking flow with context-aware tour matching
+1. **Agent loop** — 4 tool call'а за ход: поиск маршрутов, погода, места знаний, информация
+2. **Геоконтекст** — координаты пользователя + ближайшие точки из БД
+3. **Vision** — распознавание фото через Gemini (OpenRouter)
+4. **Voice** — транскрипция голосовых сообщений
+5. **Memory** — per-user notes, синтез каждые 5 сообщений
+6. **search_count** — неинкрементальный подсчёт запросов для data-driven top-100
 
 ### Background agents
 
-| Agent | Schedule | Role |
-|-------|----------|------|
-| Watchdog | every 30 min | Stale bookings (>24h), slow operators (>48h), cold leads (>2h) → Telegram alerts |
-| Editor | 02:00 UTC | Tours with thin descriptions → AI rewrites → `route_description_cache` |
-| Scout Digest | 07:00 UTC | RSS (Habr, RATA, Tourprom, Kamgov) → AI synthesis → Telegram digest |
-| Intelligence Monitor | every 6h | AI/tech + travel industry + competitors → agent_memory + Telegram |
+| Агент | Расписание | Роль |
+|---|---|---|
+| Watchdog | каждые 30 мин | Зависшие бронирования, медленные операторы |
+| Editor | 02:00 UTC | AI-enrichment описаний маршрутов |
+| Scout Digest | 07:00 UTC | RSS → AI synthesis → Telegram |
+| Intelligence Monitor | каждые 6ч | Конкуренты, индустрия, технологии |
 
-## Local development
+---
+
+## Дизайн-система
+
+Тёплая, земляная, премиальная. Без glassmorphism, без cyberpunk.
+
+- **Шрифты**: Playfair Display (заголовки) + Outfit (текст)
+- **Палитра**: CSS custom properties, полный dark mode
+- **Акцент**: `#D44A0C` (вулканический оранжевый)
+- **Иконки**: lucide-react
+
+---
+
+## Разработка
 
 ```bash
 git clone https://github.com/pospkam/PosPkTry.git
 cd PosPkTry
 npm install
-cp .env.example .env.local  # fill in DATABASE_URL, OR_API_KEY, etc.
+cp .env.example .env.local
 npm run dev
 ```
 
-### Required env vars
-
-```
-DATABASE_URL          -- PostgreSQL connection string
-OR_API_KEY            -- OpenRouter API key (primary AI provider)
-DEEPSEEK_API_KEY      -- DeepSeek fallback
-JWT_SECRET            -- Auth signing key
-TELEGRAM_BOT_TOKEN    -- Kuzmich bot token (tourists)
-TOURHAB_BOT_TOKEN     -- Operator notifications bot
-CRON_SECRET           -- Background agents auth
-```
-
-### Commands
+### Команды
 
 ```bash
 npm run dev           # Dev server
 npm run build         # Production build
+npm run migrate       # Применить миграции (локально)
 npx tsc --noEmit      # Type check
-npm test              # Tests (214 passing)
 ```
 
-## Design system
+---
 
-Warm, earthy, premium. No glassmorphism, no cyberpunk.
+## Дорожная карта
 
-- **Fonts**: Playfair Display (headings) + Outfit (body)
-- **Palette**: CSS custom properties with full dark mode support
-- **Accent**: `#D44A0C` (volcanic orange)
-- **Components**: `ds-card`, `ds-btn`, `ds-input`, `ds-badge`, `ds-skeleton`
-- **Icons**: lucide-react only
+### ✅ Завершено
+- PWA на homescreen
+- Офлайн-карта (тайлы + IndexedDB + GPS)
+- Kuzmich с геоконтекстом для веб-чата
+- search_count для data-driven top-100
+- SOS панель с экстренными номерами
+- 1423 маршрута в БД
+- 4 background AI агента
 
-## Tech stack
+### 🔧 В работе
+- Фаза 2: Контент топ-100 (enrichment)
+- Live-данные: КВЕРТ вулканы, Яндекс.Погода
+- SOS с отправкой координат в Telegram
 
-| Layer | Technology |
-|-------|-----------|
-| Framework | Next.js 15 (App Router) |
-| Language | TypeScript (strict mode) |
-| Styling | Tailwind CSS + design tokens |
-| Database | PostgreSQL (parameterized SQL) |
-| Auth | JWT + role middleware |
-| AI | OpenRouter, DeepSeek, Gemini, MiniMax, Anthropic |
-| Payments | Tochka Bank QR |
-| Bots | Telegram Bot API, VK MAX |
-| Deploy | Timeweb Cloud |
-| CI/CD | GitHub auto-deploy |
+### 📋 План
+- Фаза 3: UGC — фото с GPS, заметки, GPX, отчёты
+- Фаза 4: Lock-in — чек-ины, push-уведомления
+- Фаза 5: Возврат привычки (зима 2026/27 → лето 2027)
 
-## Roadmap
+---
 
-**Done**
-- Kuzmich AI — Telegram, web widget, full-page chat
-- Inline booking flow with operator notifications
-- Operator dashboards (bookings, earnings, tours, calendar)
-- Affiliate blocks — flights, hotels, insurance, transfers
-- 4 background AI agents (Watchdog, Editor, Scout, Intelligence)
-- Fish encyclopedia (15 Kamchatka species)
+## Статус
 
-**In progress**
-- Phase 3: extras — activities, car rentals
-
-**Planned**
-- Phase 4: real-time API pricing (live Aviasales / Hotellook rates)
-- Full Tochka Bank payment flow
-- Mobile app (PWA)
-
-## Status
-
-Live in production and shipping weekly.
+**Live.** Деплоится автоматически на Timeweb при push в main.
 
 **[tourhab.ru](https://tourhab.ru)**
 
 ---
 
-Built for Kamchatka. Where volcanoes meet the ocean.
+*Построено для Камчатки. Где вулканы встречаются с океаном.*

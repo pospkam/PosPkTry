@@ -133,18 +133,24 @@ export default function LeafletMap({
       // Zoom-контролы — справа вверху, чтобы не перекрывать фильтры снизу
       L.control.zoom({ position: 'topright' }).addTo(map);
 
-      // OpenTopoMap тайлы — topo relief
-      L.tileLayer('https://tile.opentopomap.org/{z}/{x}/{y}.png', {
-        maxZoom: 17,
-        attribution: attribution !== false ? '© OpenStreetMap, SRTM | © OpenTopoMap (CC-BY-SA)' : '',
-      }).addTo(map);
-
       // Создаём свою pane для маркеров — всегда поверх тайлов и геометрии (z-index 1000)
       const markerPaneName = 'kh-marker-pane';
       if (!map.getPane(markerPaneName)) {
         map.createPane(markerPaneName);
-        (map.getPane(markerPaneName) as HTMLElement).style.zIndex = '1000';
+        const paneEl = map.getPane(markerPaneName) as HTMLElement;
+        paneEl.style.zIndex = '1000';
+        // Force: also set via inline style tag to override Leaflet's internal ordering
+        const style = document.createElement('style');
+        style.textContent = `.leaflet-${markerPaneName} { z-index: 1000 !important; }`;
+        document.head.appendChild(style);
       }
+
+      // OpenTopoMap тайлы — topo relief
+      L.tileLayer('https://tile.opentopomap.org/{z}/{x}/{y}.png', {
+        maxZoom: 17,
+        pane: 'tilePane',
+        attribution: attribution !== false ? '© OpenStreetMap, SRTM | © OpenTopoMap (CC-BY-SA)' : '',
+      }).addTo(map);
 
       // Группа кластеров
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -195,6 +201,7 @@ export default function LeafletMap({
       });
 
       const allCoords: [number, number][] = [];
+      console.log('[LeafletMap] markers count:', markers.length, 'first:', markers[0]);
 
       markers.forEach((marker, idx) => {
         const hex = COLOR_MAP[marker.color ?? 'blue'] ?? '#2568B0';
@@ -260,6 +267,14 @@ export default function LeafletMap({
         });
 
         const m = L.marker(marker.coords, { icon, pane: markerPaneName });
+        // DEBUG: visible red circle to check if markers render at all
+        L.circleMarker(marker.coords, {
+          radius: 8,
+          color: 'red',
+          fillColor: 'red',
+          fillOpacity: 1,
+          pane: markerPaneName,
+        }).addTo(map);
 
         if (!marker.suppressBalloon) {
           m.bindPopup(buildPopupHtml(marker), { maxWidth: 260 });
