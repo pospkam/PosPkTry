@@ -293,9 +293,29 @@ export async function buildRAGContext(
 
   ctx += '\n--- КОНЕЦ КОНТЕКСТА ---';
 
+  // Increment search_count for matched routes (fire-and-forget)
+  if (routes.length > 0) {
+    void incrementSearchCounts(routes.map((r) => r.title));
+  }
+
   // Store in cache
   RAG_CACHE.set(cacheKey, { data: ctx, ts: Date.now() });
   evictStale();
 
   return ctx;
+}
+
+// ── Increment search_count in DB (non-blocking) ─────────────
+async function incrementSearchCounts(titles: string[]): Promise<void> {
+  if (titles.length === 0) return;
+  try {
+    await pool.query(
+      `UPDATE agent_route_knowledge
+       SET search_count = search_count + 1
+       WHERE title = ANY($1)`,
+      [titles],
+    );
+  } catch {
+    // Non-critical — don't block RAG response
+  }
 }
