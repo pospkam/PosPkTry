@@ -284,7 +284,7 @@ export default function MapPageClient() {
     return (
       <div className="fixed inset-0 z-50 bg-black">
         {/* Офлайн-баннер сверху */}
-        <div className="absolute top-0 left-0 right-0 z-[200] px-3 pt-3">
+        <div className="absolute top-0 left-0 right-0 z-[500] px-3 pt-3">
           <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-black/60 backdrop-blur-md border border-amber-500/40 text-amber-300 text-sm">
             <WifiOff className="w-4 h-4 shrink-0" />
             <span className="font-medium">Офлайн</span>
@@ -306,7 +306,7 @@ export default function MapPageClient() {
         </div>
 
         {/* Кнопка «Скачать регионы» — доступ к офлайн-управлению */}
-        <div className="absolute top-16 right-3 z-[200] flex flex-col gap-2">
+        <div className="absolute top-16 right-3 z-[500] flex flex-col gap-2">
           <Link
             href="/offline/manage"
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-black/60 backdrop-blur-md border border-white/20 text-white text-xs font-medium hover:bg-black/80 transition-all"
@@ -342,7 +342,7 @@ export default function MapPageClient() {
         />
 
         {/* Фильтры — снизу, поверх карты, крупные для перчаток */}
-        <div className="absolute bottom-0 left-0 right-0 z-[200]">
+        <div className="absolute bottom-0 left-0 right-0 z-[500]">
           <div className="bg-black/60 backdrop-blur-md border-t border-white/10 px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
             <div className="flex gap-2 overflow-x-auto pb-1">
               {OFFLINE_FILTERS.map(f => {
@@ -373,7 +373,7 @@ export default function MapPageClient() {
 
         {/* GPS-координаты пользователя */}
         {userPos && showMyLocation && (
-          <div className="absolute bottom-20 left-3 z-[200] bg-black/60 backdrop-blur-md border border-white/20 rounded-lg px-3 py-1.5">
+          <div className="absolute bottom-20 left-3 z-[500] bg-black/60 backdrop-blur-md border border-white/20 rounded-lg px-3 py-1.5">
             <p className="text-[10px] text-white/50 uppercase tracking-wider font-mono">Вы здесь</p>
             <p className="text-xs text-white font-mono">{userPos.lat.toFixed(4)}, {userPos.lng.toFixed(4)}</p>
           </div>
@@ -381,7 +381,7 @@ export default function MapPageClient() {
 
         {/* 🔴 SOS-панель — экстренные номера (tel: ссылки работают без интернета!) */}
         {showSos && (
-          <div className="absolute bottom-24 left-3 right-3 z-[200] rounded-xl bg-black/85 backdrop-blur-xl border border-red-500/40 shadow-2xl shadow-red-900/20">
+          <div className="absolute bottom-24 left-3 right-3 z-[500] rounded-xl bg-black/85 backdrop-blur-xl border border-red-500/40 shadow-2xl shadow-red-900/20">
             <div className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-white font-bold text-sm flex items-center gap-2">
@@ -476,7 +476,7 @@ export default function MapPageClient() {
         {/* Панель выбранного маршрута */}
         {selectedRoute && (
           <div
-            className="absolute bottom-24 left-3 right-3 z-[200] rounded-xl bg-black/80 backdrop-blur-xl border border-white/20 shadow-2xl"
+            className="absolute bottom-24 left-3 right-3 z-[500] rounded-xl bg-black/80 backdrop-blur-xl border border-white/20 shadow-2xl"
             style={{ animation: 'slideUp 0.2s ease-out' }}
           >
             <div className="p-4">
@@ -600,7 +600,7 @@ export default function MapPageClient() {
           {/* Кнопка GPS */}
           <button
             onClick={() => setShowMyLocation(!showMyLocation)}
-            className={`absolute top-3 right-3 z-[400] p-2.5 rounded-lg shadow-lg transition-all ${
+            className={`absolute top-3 right-3 z-[500] p-2.5 rounded-lg shadow-lg transition-all ${
               showMyLocation
                 ? 'bg-blue-500 text-white'
                 : 'bg-[var(--bg-card)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] border border-[var(--border)]'
@@ -611,7 +611,7 @@ export default function MapPageClient() {
           </button>
 
           {/* Счётчик */}
-          <div className="absolute bottom-3 left-3 z-40 bg-[var(--bg-card)] rounded-lg px-3 py-1.5 border border-[var(--border)] shadow-sm">
+          <div className="absolute bottom-3 left-3 z-[500] bg-[var(--bg-card)] rounded-lg px-3 py-1.5 border border-[var(--border)] shadow-sm">
             <p className="text-sm text-[var(--text-secondary)]">
               {loading
                 ? 'Загрузка...'
@@ -625,7 +625,7 @@ export default function MapPageClient() {
       {/* ── Панель маршрута ─────────────────────────────────────────────── */}
       {selectedRoute && (
         <div
-          className="fixed bottom-[5.5rem] left-2 right-2 rounded-xl md:bottom-4 md:right-4 md:left-auto md:w-96 z-[110]
+          className="fixed bottom-[5.5rem] left-2 right-2 rounded-xl md:bottom-4 md:right-4 md:left-auto md:w-96 z-[500]
             bg-[var(--bg-card)] border border-[var(--border)] shadow-2xl"
           style={{ animation: 'slideUp 0.2s ease-out' }}
         >
@@ -686,7 +686,7 @@ export default function MapPageClient() {
       {/* Кнопка «Я вернулся» — для активных маршрутов */}
       <Link
         href="/return"
-        className="fixed top-20 left-3 z-[300] flex items-center gap-2 px-3 py-2 rounded-lg
+        className="fixed top-20 left-3 z-[500] flex items-center gap-2 px-3 py-2 rounded-lg
           bg-green-600/90 backdrop-blur-sm text-white text-xs font-semibold shadow-lg
           hover:bg-green-700 transition-colors"
       >
