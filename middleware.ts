@@ -74,6 +74,7 @@ const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/channels/avito/feed':  ['GET'], // Avito Autoload XML feed — публичный
   '/api/widget': ['POST', 'GET', 'OPTIONS'],    // Partner widget API — CORS-enabled
   '/api/health': ['GET'],              // health checks — monitoring/infra
+  '/api/test-deploy': ['GET'],         // deploy verification
   '/api/setup-fishingkam-widget': ['GET'], // one-time widget setup for fishingkam
 };
 
