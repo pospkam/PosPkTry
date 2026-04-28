@@ -10,7 +10,7 @@ const nextConfig = {
       bodySizeLimit: '60mb',
     },
   },
-  // outputFileTracingRoot removed — was preventing standalone output
+  outputFileTracingRoot: process.cwd(),
 
   // ESLint: skip during build (saves ~500MB RAM) — checks run locally via CI
   // TypeScript: keep strict — fast and catches real errors

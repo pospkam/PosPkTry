@@ -21,10 +21,18 @@ ENV NODE_OPTIONS="--max-old-space-size=6144"
 
 RUN rm -rf .next
 
-# Build and check output in one step
-RUN npx next build && \
-    echo "=== .next contents ===" && ls -la .next/ && \
-    echo "=== standalone ===" && ls -la .next/standalone/ 2>/dev/null || echo "NO STANDALONE"
+# Build — capture output to file
+RUN npx next build > /tmp/build.log 2>&1; echo "EXIT_CODE=$?"
+
+# Show build output
+RUN cat /tmp/build.log
+
+# Check if standalone was produced
+RUN ls -la .next/ 2>&1 || echo "no .next"
+RUN ls -la .next/standalone/ 2>&1 || echo "no standalone"
+
+# Fail if no standalone
+RUN test -f .next/standalone/server.js
 
 # ── 3. Runner ─────────────────────────────────────────────────────
 FROM base AS runner
