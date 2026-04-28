@@ -55,8 +55,10 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static     ./.next/static
 COPY --from=builder /app/migrations       ./migrations
 
-# Fix permissions for prerender cache (runtime dynamic page generation)
-RUN chmod -R 777 /app/.next/standalone/.next/server/app/ 2>/dev/null || true
+# Fix permissions — nextjs user needs write access to prerender cache dir
+# Make entire app dir world-writable so Next.js can create subdirs on demand
+RUN mkdir -p /app/.next/standalone/.next/server/app && \
+    chmod -R 777 /app/.next/standalone/.next/server/app
 
 USER nextjs
 EXPOSE 3000
