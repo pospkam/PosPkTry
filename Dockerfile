@@ -28,11 +28,12 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
-# Clear stale webpack cache (broken outputFileTracingExcludes was cached)
-# but keep other cache for faster build
-RUN --mount=type=cache,target=/app/.next/cache \
-    rm -rf /app/.next/cache/webpack-server* && \
-    npm run build
+# NEW cache mount path (cache-v2) — completely fresh, no stale data
+RUN --mount=type=cache,target=/app/.next/cache-v2 \
+    mkdir -p .next/cache && \
+    cp -a /app/.next/cache-v2/. .next/cache/ 2>/dev/null || true && \
+    npm run build && \
+    cp -a .next/cache/. /app/.next/cache-v2/ 2>/dev/null || true
 
 # ── 3. Продакшн-образ ──────────────────────────────────────────
 FROM base AS runner
