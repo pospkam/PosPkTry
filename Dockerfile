@@ -28,8 +28,11 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
-# Full rebuild — rm -rf .next before build to clear any stale state
-RUN rm -rf .next && npm run build
+# Invalidate stale cache (broken outputFileTracingExcludes was cached)
+# Delete stale webpack cache inside mount, keep rest for faster build
+RUN --mount=type=cache,target=/app/.next/cache \
+    rm -rf /app/.next/cache/webpack && \
+    npm run build
 
 # ── 3. Продакшн-образ ──────────────────────────────────────────
 FROM base AS runner
