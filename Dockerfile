@@ -26,7 +26,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV NODE_OPTIONS="--max-old-space-size=4096"
+ENV NODE_OPTIONS="--max-old-space-size=6144"
 
 # Fresh cache mount — cache2 avoids stale .next/cache from broken outputFileTracingExcludes
 RUN --mount=type=cache,target=/app/.next/cache2 \
