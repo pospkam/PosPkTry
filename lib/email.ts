@@ -58,6 +58,7 @@ export async function sendEmail(opts: EmailOptions): Promise<{ success: boolean;
   try {
     const { Socket } = await import('net');
     const socket = new Socket();
+    const state: Record<string, boolean> = {};
 
     return new Promise((resolve) => {
       const timeout = setTimeout(() => {
@@ -79,33 +80,31 @@ export async function sendEmail(opts: EmailOptions): Promise<{ success: boolean;
         const lastLine = lines[lines.length - 1] || '';
         const code = parseInt(lastLine.slice(0, 3));
 
-        if (code === 220 && !this['_ehlo_sent']) {
-          this['_ehlo_sent'] = true;
+        if (code === 220 && !state['_ehlo_sent']) {
+          state['_ehlo_sent'] = true;
           socket.write('EHLO tourhab.ru\r\n');
-        } else if (code === 250 && !this['_auth_sent']) {
-          this['_auth_sent'] = true;
-          // AUTH LOGIN
-          const authStr = `AUTH LOGIN\r\n`;
-          socket.write(authStr);
-        } else if (code === 334 && !this['_user_sent']) {
-          this['_user_sent'] = true;
+        } else if (code === 250 && !state['_auth_sent']) {
+          state['_auth_sent'] = true;
+          socket.write('AUTH LOGIN\r\n');
+        } else if (code === 334 && !state['_user_sent']) {
+          state['_user_sent'] = true;
           socket.write(Buffer.from(user).toString('base64') + '\r\n');
-        } else if (code === 334 && !this['_pass_sent']) {
-          this['_pass_sent'] = true;
+        } else if (code === 334 && !state['_pass_sent']) {
+          state['_pass_sent'] = true;
           socket.write(Buffer.from(pass).toString('base64') + '\r\n');
-        } else if (code === 235 && !this['_mail_sent']) {
-          this['_mail_sent'] = true;
+        } else if (code === 235 && !state['_mail_sent']) {
+          state['_mail_sent'] = true;
           socket.write(`MAIL FROM:<${from}>\r\n`);
-        } else if (code === 250 && !this['_rcpt_sent']) {
-          this['_rcpt_sent'] = true;
+        } else if (code === 250 && !state['_rcpt_sent']) {
+          state['_rcpt_sent'] = true;
           socket.write(`RCPT TO:<${opts.to}>\r\n`);
-        } else if (code === 250 && !this['_data_sent']) {
-          this['_data_sent'] = true;
+        } else if (code === 250 && !state['_data_sent']) {
+          state['_data_sent'] = true;
           socket.write('DATA\r\n');
-        } else if (code === 354 && !this['_body_sent']) {
-          this['_body_sent'] = true;
+        } else if (code === 354 && !state['_body_sent']) {
+          state['_body_sent'] = true;
           socket.write(message + '\r\n.\r\n');
-        } else if (code === 250 && this['_body_sent']) {
+        } else if (code === 250 && state['_body_sent']) {
           clearTimeout(timeout);
           socket.write('QUIT\r\n');
           socket.destroy();
