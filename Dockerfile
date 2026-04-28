@@ -28,9 +28,10 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
-# Clear ONLY stale webpack cache and trace files (not entire cache to avoid OOM)
+# Clear trace file (file trace results) + webpack cache to force re-trace
 RUN --mount=type=cache,target=/app/.next/cache \
-    rm -rf /app/.next/cache/webpack* /app/.next/trace /app/.next/cache/config.json 2>/dev/null; \
+    rm -rf /app/.next/trace /app/.next/cache/webpack* /app/.next/cache/config.json 2>/dev/null; \
+    rm -rf .next/standalone .next/server .next/types 2>/dev/null; \
     npm run build
 
 # ── 3. Продакшн-образ ──────────────────────────────────────────
