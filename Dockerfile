@@ -35,12 +35,12 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # Увеличиваем heap Node.js — при 256 маршрутах дефолтных 512MB не хватает
 ENV NODE_OPTIONS="--max-old-space-size=3072"
 
-# Invalidate stale cache by adding ARG (changes value each build with broken config)
+# Invalidate stale cache (broken outputFileTracingExcludes was cached)
 ARG BUILD_CACHE_INVALIDATOR=fix-output-tracing-20260428
 # --mount=type=cache: .next/cache переживает между сборками.
-# Webpack/Turbopack переиспользует кеш → инкрементальный билд вместо full rebuild.
+# Clear stale cache, then do incremental build (faster than full rebuild)
 RUN --mount=type=cache,target=/app/.next/cache \
-    rm -rf .next && npm run build
+    rm -rf .next/cache/webpack && rm -rf .next/standalone && npm run build
 
 # ── 3. Продакшн-образ ──────────────────────────────────────────
 FROM base AS runner
