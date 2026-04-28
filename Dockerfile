@@ -35,9 +35,9 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # Увеличиваем heap Node.js — при 256 маршрутах дефолтных 512MB не хватает
 ENV NODE_OPTIONS="--max-old-space-size=3072"
 
-# Force full rebuild — invalidate stale Docker cache that had broken outputFileTracingExcludes
-ARG CACHE_BUST
-RUN rm -rf .next && \
+# --mount=type=cache: .next/cache переживает между сборками.
+# Webpack/Turbopack переиспользует кеш → инкрементальный билд вместо full rebuild.
+RUN --mount=type=cache,target=/app/.next/cache \
     npm run build
 
 # ── 3. Продакшн-образ ──────────────────────────────────────────
