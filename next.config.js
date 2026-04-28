@@ -9,13 +9,17 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '60mb',
     },
-    // Уменьшает tree-shaking overhead для тяжёлых пакетов → ускоряет билд
-    optimizePackageImports: ['lucide-react', 'framer-motion', 'date-fns'],
+    // DISABLED: was causing build instability
+    // optimizePackageImports: ['lucide-react', 'framer-motion', 'date-fns'],
+    outputFileTracingRoot: process.cwd(),
   },
 
   // ONNX Runtime (used by @huggingface/transformers) has native Node.js addons
   // that cannot be bundled by webpack — must be resolved at runtime.
   serverExternalPackages: ['onnxruntime-node', '@huggingface/transformers'],
+
+  // Limit webpack workers to reduce memory usage during build
+  webpackBuildWorkers: 2,
 
   // ESLint: skip during build (saves ~500MB RAM) — checks run locally via CI
   // TypeScript: keep strict — fast and catches real errors
