@@ -28,8 +28,8 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_OPTIONS="--max-old-space-size=8192"
 
-# Full rebuild without cache mount — 8192MB should be enough
-RUN rm -rf .next && npm run build
+# Full rebuild with verbose error output
+RUN rm -rf .next && (npm run build 2>&1 | tee /tmp/build.log; exit ${PIPESTATUS[0]}) || { echo "=== BUILD FAILED ==="; cat /tmp/build.log; exit 1; }
 
 # ── 3. Продакшн-образ ──────────────────────────────────────────
 FROM base AS runner
