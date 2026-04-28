@@ -19,20 +19,7 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_OPTIONS="--max-old-space-size=6144"
 
-RUN rm -rf .next
-
-# Build — capture output to file
-RUN npx next build > /tmp/build.log 2>&1; echo "EXIT_CODE=$?"
-
-# Show build output
-RUN cat /tmp/build.log
-
-# Check if standalone was produced
-RUN ls -la .next/ 2>&1 || echo "no .next"
-RUN ls -la .next/standalone/ 2>&1 || echo "no standalone"
-
-# Fail if no standalone
-RUN test -f .next/standalone/server.js
+RUN rm -rf .next && npx next build
 
 # ── 3. Runner ─────────────────────────────────────────────────────
 FROM base AS runner
