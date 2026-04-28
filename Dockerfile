@@ -22,8 +22,9 @@ ENV NODE_OPTIONS="--max-old-space-size=6144"
 # Clean
 RUN rm -rf .next
 
-# Build — separate RUN so Timeweb shows stdout/stderr
-RUN npx next build 2>&1
+# Build: capture all output to file, then echo it regardless of success/fail
+# This ensures Timeweb logs show the actual build error
+RUN npx next build > /tmp/build-stdout.log 2>&1; BUILD_EXIT=$?; cat /tmp/build-stdout.log; exit $BUILD_EXIT
 
 # ── 3. Runner ─────────────────────────────────────────────────────
 FROM base AS runner
