@@ -10,7 +10,7 @@ const nextConfig = {
       bodySizeLimit: '60mb',
     },
   },
-  outputFileTracingRoot: process.cwd(),
+  // outputFileTracingRoot removed — may cause issues with Next.js 15.5
 
   // ESLint: skip during build (saves ~500MB RAM) — checks run locally via CI
   // TypeScript: keep strict — fast and catches real errors
