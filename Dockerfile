@@ -28,11 +28,13 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
-# Fresh cache mount (cache-v2 avoids stale data from broken outputFileTracingExcludes)
+# FRESH cache mount — cache-v2 instead of stale .next/cache
+# Copy fresh cache into .next/cache before build
 RUN --mount=type=cache,target=/app/.next/cache-v2 \
-    mkdir -p /app/.next/cache && \
-    cp -rn /app/.next/cache-v2/. /app/.next/cache/ 2>/dev/null; \
-    npm run build
+    mkdir -p .next/cache && \
+    cp -a /app/.next/cache-v2/. .next/cache/ 2>/dev/null || true && \
+    npm run build && \
+    cp -a .next/cache/. /app/.next/cache-v2/ 2>/dev/null || true
 
 # ── 3. Продакшн-образ ──────────────────────────────────────────
 FROM base AS runner
