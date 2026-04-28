@@ -28,12 +28,9 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_OPTIONS="--max-old-space-size=6144"
 
-# Fresh cache mount — cache2 avoids stale .next/cache from broken outputFileTracingExcludes
-RUN --mount=type=cache,target=/app/.next/cache2 \
-    mkdir -p .next/cache && \
-    cp -a /app/.next/cache2/. .next/cache/ 2>/dev/null || true && \
-    npm run build && \
-    cp -a .next/cache/. /app/.next/cache2/ 2>/dev/null || true
+# Normal cache mount — with 6144MB should be enough for incremental build
+RUN --mount=type=cache,target=/app/.next/cache \
+    npm run build
 
 # ── 3. Продакшн-образ ──────────────────────────────────────────
 FROM base AS runner
