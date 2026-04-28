@@ -35,12 +35,10 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # Увеличиваем heap Node.js — при 256 маршрутах дефолтных 512MB не хватает
 ENV NODE_OPTIONS="--max-old-space-size=3072"
 
-# New cache mount path to avoid stale cache from broken outputFileTracingExcludes
-# --mount=type=cache: .next/cache-v2 is a fresh cache (no stale data)
-RUN --mount=type=cache,target=/app/.next/cache-v2 \
+# Clear ALL stale cache (broken outputFileTracingExcludes), then full rebuild
+RUN --mount=type=cache,target=/app/.next/cache \
+    rm -rf /app/.next/cache/* && \
     rm -rf .next && \
-    mkdir -p .next/cache && \
-    ln -sf /app/.next/cache-v2 /app/.next/cache/webpack && \
     npm run build
 
 # ── 3. Продакшн-образ ──────────────────────────────────────────
