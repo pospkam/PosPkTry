@@ -28,10 +28,8 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_OPTIONS="--max-old-space-size=6144"
 
-# Clear stale cache from broken outputFileTracingExcludes, then rebuild
-RUN --mount=type=cache,target=/app/.next/cache \
-    rm -rf /app/.next/cache && mkdir -p /app/.next/cache && \
-    npm run build
+# Full rebuild without cache mount to clear stale outputFileTracingExcludes cache
+RUN rm -rf .next && npm run build
 
 # ── 3. Продакшн-образ ──────────────────────────────────────────
 FROM base AS runner
