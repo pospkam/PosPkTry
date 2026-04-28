@@ -537,7 +537,7 @@ export default function MapPageClient() {
   return (
     <div className="min-h-screen pb-24 md:pb-0">
       {/* Header */}
-      <header className="bg-[var(--bg-card)] border-b border-[var(--border)] sticky top-0 z-50">
+      <header className="relative z-[700] bg-[var(--bg-card)] border-b border-[var(--border)] sticky top-0">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
             <Logo size={28} />
@@ -557,8 +557,8 @@ export default function MapPageClient() {
         </div>
       </header>
 
-      {/* Фильтры по типу локации (ГДЕ) */}
-      <div className="px-4 py-3 overflow-x-auto">
+      {/* Фильтры по типу локации (ГДЕ) — z-[600] чтобы быть поверх Leaflet карты */}
+      <div className="relative z-[600] px-4 py-3 overflow-x-auto bg-[var(--bg-primary)]">
         <div className="flex flex-wrap gap-2">
           {LOCATION_FILTERS.map(f => {
             const cnt = countFor(f.id);
