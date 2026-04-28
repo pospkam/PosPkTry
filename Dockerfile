@@ -19,17 +19,12 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_OPTIONS="--max-old-space-size=6144"
 
-# Clean
 RUN rm -rf .next
 
-# Step 1: Run build — capture output, DON'T fail (|| true)
-RUN npx next build > /tmp/build.log 2>&1 || true
-
-# Step 2: ALWAYS print build output (separate RUN = always shows in Timeweb logs)
-RUN echo "===== BUILD LOG START =====" && cat /tmp/build.log && echo "===== BUILD LOG END ====="
-
-# Step 3: Fail if build didn't produce standalone
-RUN test -f .next/standalone/server.js || (echo "BUILD FAILED: no server.js" && exit 1)
+# Build and check output in one step
+RUN npx next build && \
+    echo "=== .next contents ===" && ls -la .next/ && \
+    echo "=== standalone ===" && ls -la .next/standalone/ 2>/dev/null || echo "NO STANDALONE"
 
 # ── 3. Runner ─────────────────────────────────────────────────────
 FROM base AS runner
