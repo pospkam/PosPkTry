@@ -55,12 +55,9 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static     ./.next/static
 COPY --from=builder /app/migrations       ./migrations
 
-# Fix permissions — nextjs user needs write access to prerender cache dir
-# Make entire app dir world-writable so Next.js can create subdirs on demand
-RUN mkdir -p /app/.next/standalone/.next/server/app && \
-    chmod -R 777 /app/.next/standalone/.next/server/app
-
-USER nextjs
+# Run as root to avoid EACCES on prerender cache writes
+# (nextjs user can't write to .next/standalone/.next/server/app/)
+# USER nextjs
 EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
