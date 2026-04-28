@@ -26,10 +26,12 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV NODE_OPTIONS="--max-old-space-size=6144"
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 
-# Full rebuild without cache mount to clear stale outputFileTracingExcludes cache
-RUN rm -rf .next && npm run build
+# Clear ONLY stale webpack cache and trace files (not entire cache to avoid OOM)
+RUN --mount=type=cache,target=/app/.next/cache \
+    rm -rf /app/.next/cache/webpack* /app/.next/trace /app/.next/cache/config.json 2>/dev/null; \
+    npm run build
 
 # ── 3. Продакшн-образ ──────────────────────────────────────────
 FROM base AS runner
