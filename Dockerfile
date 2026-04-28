@@ -55,6 +55,9 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static     ./.next/static
 COPY --from=builder /app/migrations       ./migrations
 
+# Fix permissions for prerender cache (runtime dynamic page generation)
+RUN chmod -R 777 /app/.next/standalone/.next/server/app/ 2>/dev/null || true
+
 USER nextjs
 EXPOSE 3000
 ENV PORT=3000
