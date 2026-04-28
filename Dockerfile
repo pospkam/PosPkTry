@@ -22,17 +22,14 @@ ENV NODE_OPTIONS="--max-old-space-size=6144"
 # Clean
 RUN rm -rf .next
 
-# Step 1: Run build, capture all output, don't fail yet
-RUN npx next build > /tmp/build-out.txt 2>&1; echo "Build exited with code $?"
+# Step 1: Run build, capture output, DON'T fail here (use || true)
+RUN npx next build > /tmp/build.txt 2>&1 || true
 
-# Step 2: Show the output (this will appear in Timeweb logs)
-RUN cat /tmp/build-out.txt
+# Step 2: Show the output (will appear in Timeweb logs regardless)
+RUN echo "=== BUILD LOG START ===" && cat /tmp/build.txt && echo "=== BUILD LOG END ==="
 
-# Step 3: Check for .next/standalone existence
-RUN ls -la .next/standalone/ 2>&1 || echo "standalone dir missing"
-
-# Step 4: Fail if build didn't produce standalone
-RUN test -f .next/standalone/server.js || (echo "BUILD FAILED: no server.js" && exit 1)
+# Step 3: Check if standalone was produced
+RUN test -f .next/standalone/server.js && echo "BUILD SUCCESS" || (echo "BUILD FAILED: no server.js" && exit 1)
 
 # ── 3. Runner ─────────────────────────────────────────────────────
 FROM base AS runner
