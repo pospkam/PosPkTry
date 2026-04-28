@@ -19,8 +19,11 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_OPTIONS="--max-old-space-size=6144"
 
+# Clean
 RUN rm -rf .next
-RUN npx next build
+
+# Build — separate RUN so Timeweb shows stdout/stderr
+RUN npx next build 2>&1
 
 # ── 3. Runner ─────────────────────────────────────────────────────
 FROM base AS runner
