@@ -18,9 +18,6 @@ const nextConfig = {
   // that cannot be bundled by webpack — must be resolved at runtime.
   serverExternalPackages: ['onnxruntime-node', '@huggingface/transformers'],
 
-  // Limit webpack workers to reduce memory usage during build
-  webpackBuildWorkers: 2,
-
   // ESLint: skip during build (saves ~500MB RAM) — checks run locally via CI
   // TypeScript: keep strict — fast and catches real errors
   eslint: {
