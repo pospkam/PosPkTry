@@ -122,4 +122,4 @@ const nextConfig = {
   },
 }
 
-module.exports = nextConfig// force rebuild Tue Apr 28 00:34:34 UTC 2026
+module.exports = nextConfig
