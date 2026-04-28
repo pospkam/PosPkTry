@@ -23,7 +23,7 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,  // TEMP: see build errors
   },
 
   // unoptimized: убирает sharp/@img (~33MB) из standalone — критично для Timeweb лимита 50MB

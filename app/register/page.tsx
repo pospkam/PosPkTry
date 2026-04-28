@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { MapPin, Calendar, Users, Phone, Mail, Shield, AlertTriangle, Download, ArrowLeft, Plus, Trash2, CheckCircle, Loader2 } from 'lucide-react';
