@@ -28,8 +28,9 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_OPTIONS="--max-old-space-size=6144"
 
-# Normal cache mount — with 6144MB should be enough for incremental build
+# Clear stale cache from broken outputFileTracingExcludes, then rebuild
 RUN --mount=type=cache,target=/app/.next/cache \
+    rm -rf /app/.next/cache && mkdir -p /app/.next/cache && \
     npm run build
 
 # ── 3. Продакшн-образ ──────────────────────────────────────────
