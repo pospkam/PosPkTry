@@ -17,7 +17,10 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV NODE_OPTIONS="--max-old-space-size=6144"
+# Timeweb PaaS limit — 4GB container, leave headroom for Node overhead
+ENV NODE_OPTIONS="--max-old-space-size=3072"
+# Disable webpack parallelism to reduce memory pressure during build
+ENV WEBPACK_PARALLELISM=1
 
 RUN rm -rf .next && npx next build
 
