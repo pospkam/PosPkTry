@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
+import { createPortal } from 'react-dom';
 import { Filter, X } from 'lucide-react';
 import { MarkerType, type MapMarker } from '@/components/shared/LeafletMap';
 
@@ -167,8 +168,8 @@ export function HomeMapPreview() {
         attribution={false}
       />
 
-      {/* Kind tabs — overlay top-left — inline z-index чтобы перебить Leaflet pane */}
-      <div className="absolute top-3 left-3 flex gap-1.5" style={{ zIndex: 999 }}>
+      {/* Kind tabs — overlay top-left — inline zIndex чтобы перебить Leaflet tile pane (z-400 !important) */}
+      <div className="absolute top-3 left-3 flex gap-1.5" style={{ zIndex: 9999 }}>
         {KIND_TABS.map(t => (
           <button
             key={t.value}
@@ -186,13 +187,13 @@ export function HomeMapPreview() {
 
       {/* Loading overlay */}
       {loading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-[var(--bg-primary)]/80" style={{ zIndex: 999 }}>
+        <div className="absolute inset-0 flex items-center justify-center bg-[var(--bg-primary)]/80" style={{ zIndex: 9999 }}>
           <div className="text-sm text-[var(--text-muted)] animate-pulse">Загрузка карты…</div>
         </div>
       )}
 
-      {/* Filter chips — overlay bottom — inline z-index чтобы перебить Leaflet pane */}
-      <div className="absolute bottom-3 left-3 right-3" style={{ zIndex: 999 }}>
+      {/* Filter chips — overlay bottom — inline zIndex чтобы перебить Leaflet tile pane (z-400 !important) */}
+      <div className="absolute bottom-3 left-3 right-3" style={{ zIndex: 9999 }}>
         <div className="rounded-xl bg-[var(--bg-card)]/90 backdrop-blur-md border border-[var(--border)]/50 shadow-xl px-3 py-2">
           <div className="flex items-center gap-2 overflow-x-auto">
             <Filter className="w-3.5 h-3.5 text-[var(--text-muted)] flex-shrink-0" />
