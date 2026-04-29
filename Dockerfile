@@ -33,9 +33,9 @@ COPY --from=builder /app/public           ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static     ./.next/static
 COPY --from=builder /app/migrations       ./migrations
-COPY --from=builder /app/start.js         ./start.js
 
 EXPOSE 3000
 ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
-CMD ["node", "start.js"]
+CMD ["node", "server.js"]
