@@ -11,10 +11,13 @@
 export async function register(): Promise<void> {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
     // ── 1. Warm up AI embeddings model ────────────────────────────────
-    const { warmModel } = await import('@/lib/ai/embeddings');
-    warmModel().catch(() => {
-      // Best-effort; first request will trigger lazy load
-    });
+    // NOTE: disabled eager warm-up — @huggingface/transformers pulls sharp
+    // which crashes container on startup in Timeweb Alpine image.
+    // First search request will lazy-load the model instead.
+    // try {
+    //   const { warmModel } = await import('@/lib/ai/embeddings');
+    //   warmModel().catch(() => {});
+    // } catch { /* best-effort */ }
 
     // ── 2. Register MAX bot webhook ───────────────────────────────────
     const maxToken = process.env.MAX_BOT_TOKEN;

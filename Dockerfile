@@ -26,6 +26,9 @@ RUN rm -rf .next && npx next build
 FROM base AS runner
 WORKDIR /app
 
+# libc6-compat needed for sharp / native modules at runtime
+RUN apk add --no-cache libc6-compat
+
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
