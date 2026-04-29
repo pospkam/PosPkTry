@@ -17,9 +17,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
-# Timeweb PaaS limit — 4GB container, leave headroom for Node overhead
 ENV NODE_OPTIONS="--max-old-space-size=3072"
-# Disable webpack parallelism to reduce memory pressure during build
 ENV WEBPACK_PARALLELISM=1
 
 RUN rm -rf .next && npx next build
@@ -35,10 +33,9 @@ COPY --from=builder /app/public           ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static     ./.next/static
 COPY --from=builder /app/migrations       ./migrations
-COPY --from=builder /app/scripts/early-health-server.js  ./scripts/
+COPY --from=builder /app/start.js         ./start.js
 
 EXPOSE 3000
 ENV PORT=3000
 
-# Use early health server — responds to /api/ready instantly, then proxies to Next.js
-CMD ["node", "scripts/early-health-server.js"]
+CMD ["node", "start.js"]
