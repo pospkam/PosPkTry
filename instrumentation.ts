@@ -10,6 +10,17 @@
 
 export async function register(): Promise<void> {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
+    // ── 0. Global safety net ───────────────────────────────────
+    // Native modules in transformers/onnxruntime/sharp can throw during
+    // lazy import on Alpine/musl. Do not let them kill the process and
+    // fail Timeweb healthcheck — log and continue serving /api/health.
+    process.on('unhandledRejection', (reason) => {
+      console.error('[unhandledRejection]', reason);
+    });
+    process.on('uncaughtException', (err) => {
+      console.error('[uncaughtException]', err);
+    });
+
     // ── 1. Warm up AI embeddings model ────────────────────────────────
     // NOTE: disabled eager warm-up — @huggingface/transformers pulls sharp
     // which crashes container on startup in Timeweb Alpine image.
