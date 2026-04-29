@@ -36,9 +36,13 @@ COPY --from=builder /app/public           ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static     ./.next/static
 COPY --from=builder /app/migrations       ./migrations
+COPY --from=builder /app/start.js         ./start.js
 
 EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["node", "server.js"]
+# start.js: lightweight health proxy on :3000 that instantly answers
+# /api/health while Next.js boots on :3001. Critical for Timeweb
+# healthcheck which times out after 3 minutes.
+CMD ["node", "start.js"]
