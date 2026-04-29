@@ -35,9 +35,10 @@ COPY --from=builder /app/public           ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static     ./.next/static
 COPY --from=builder /app/migrations       ./migrations
+COPY --from=builder /app/scripts/early-health-server.js  ./scripts/
 
 EXPOSE 3000
 ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
 
-CMD ["node", "server.js"]
+# Use early health server — responds to /api/ready instantly, then proxies to Next.js
+CMD ["node", "scripts/early-health-server.js"]
