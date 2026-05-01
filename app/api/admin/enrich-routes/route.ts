@@ -107,14 +107,15 @@ export async function GET(req: NextRequest) {
 // ── POST: enrich ──────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
-  const authError = await requireAdmin(req);
-  if (authError instanceof NextResponse) return authError;
-
-  // Also accept x-admin-key for cron compatibility
+  // Accept x-admin-key for cron compatibility FIRST (before user auth),
+  // so internal cron callers aren't rejected by requireAdmin.
   const headerKey = req.headers.get('x-admin-key');
   const adminKey = process.env.ADMIN_API_KEY ?? process.env.CRON_SECRET;
-  if (authError && headerKey !== adminKey) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const hasValidCronKey = !!(adminKey && headerKey && headerKey === adminKey);
+
+  if (!hasValidCronKey) {
+    const authError = await requireAdmin(req);
+    if (authError instanceof NextResponse) return authError;
   }
 
   const body = await req.json().catch(() => ({})) as {

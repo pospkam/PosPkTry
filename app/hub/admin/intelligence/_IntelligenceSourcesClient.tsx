@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import {
   Rss, Plus, Trash2, RefreshCw, AlertTriangle, Check, X,
   Play, Clock, Activity, Zap, CheckCircle, XCircle, Send,
+  ChevronDown, ChevronRight, Archive, Bot, Flame,
 } from 'lucide-react';
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -266,8 +267,246 @@ function DashboardTab() {
         )}
       </div>
 
+      {/* Intelligence feed */}
+      <IntelligenceFeed onChange={loadStats} />
+
       {/* RSS test */}
       <RssTestCard />
+    </div>
+  );
+}
+
+// ── Intelligence Feed ──────────────────────────────────────────────
+
+interface FeedActionItem {
+  idx: number;
+  text: string;
+  priority: string;
+  done: boolean;
+  sent_to_kiloclaw: boolean;
+  completed_at?: string;
+}
+
+interface FeedEntry {
+  id: string;
+  key: string;
+  source: string | null;
+  created_at: string;
+  updated_at: string;
+  tier: number;
+  archived: boolean;
+  processed: boolean;
+  domain: string | null;
+  summary: string | null;
+  urgency: string;
+  signal_count: number | null;
+  action_items: FeedActionItem[];
+}
+
+function IntelligenceFeed({ onChange }: { onChange: () => void }) {
+  const [items, setItems] = useState<FeedEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showArchived, setShowArchived] = useState(false);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [busy, setBusy] = useState<string | null>(null);
+  const [flash, setFlash] = useState<string>('');
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/admin/intelligence-feed?limit=50&tier=${showArchived ? 'all' : 'active'}`);
+      const data = await res.json();
+      if (data.success) setItems(data.items);
+    } catch { /* ignore */ }
+    setLoading(false);
+  }, [showArchived]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const toggleExpand = (id: string) => {
+    setExpanded(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const runAction = async (entryId: string, body: Record<string, unknown>, successMsg: string) => {
+    const busyKey = `${entryId}:${JSON.stringify(body)}`;
+    setBusy(busyKey);
+    setFlash('');
+    try {
+      const res = await fetch(`/api/admin/intelligence-feed/${entryId}/action`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setFlash(successMsg);
+        await load();
+        onChange();
+      } else {
+        setFlash(`Ошибка: ${data.error}`);
+      }
+    } catch {
+      setFlash('Сетевая ошибка');
+    }
+    setBusy(null);
+    setTimeout(() => setFlash(''), 4000);
+  };
+
+  const urgencyStyle = (u: string) => {
+    if (u === 'critical') return 'bg-red-50 text-red-700 ring-1 ring-red-200';
+    if (u === 'high' || u === 'notable') return 'bg-orange-50 text-orange-700 ring-1 ring-orange-200';
+    if (u === 'medium') return 'bg-yellow-50 text-yellow-700 ring-1 ring-yellow-200';
+    return 'bg-slate-50 text-slate-600 ring-1 ring-slate-200';
+  };
+
+  const urgencyIcon = (u: string) => {
+    if (u === 'critical') return <Flame className="w-3.5 h-3.5" />;
+    if (u === 'high' || u === 'notable') return <AlertTriangle className="w-3.5 h-3.5" />;
+    return <Activity className="w-3.5 h-3.5" />;
+  };
+
+  return (
+    <div className="ds-card p-4">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="font-semibold">Лента разведки</h3>
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-[var(--text-muted)] flex items-center gap-1 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showArchived}
+              onChange={e => setShowArchived(e.target.checked)}
+            />
+            Показать архив
+          </label>
+          <button onClick={load} className="ds-btn-secondary text-xs">
+            <RefreshCw className="w-3 h-3" />
+          </button>
+        </div>
+      </div>
+
+      {flash && (
+        <div className={`mb-3 text-xs px-3 py-2 rounded ${flash.startsWith('Ошибка') ? 'bg-red-50 text-[var(--danger)]' : 'bg-green-50 text-green-700'}`}>
+          {flash}
+        </div>
+      )}
+
+      {loading ? (
+        <p className="text-sm text-[var(--text-muted)]">Загрузка...</p>
+      ) : items.length === 0 ? (
+        <p className="text-sm text-[var(--text-muted)]">Пусто. Нажми «Запустить» выше, чтобы собрать свежие сигналы.</p>
+      ) : (
+        <div className="space-y-2">
+          {items.map(entry => {
+            const isOpen = expanded.has(entry.id);
+            const total = entry.action_items.length;
+            const done = entry.action_items.filter(a => a.done).length;
+            return (
+              <div key={entry.id} className={`border border-[var(--border)] rounded-lg ${entry.archived ? 'opacity-60' : ''}`}>
+                <div
+                  className="flex items-start gap-2 p-3 cursor-pointer hover:bg-[var(--surface-hover,transparent)]"
+                  onClick={() => toggleExpand(entry.id)}
+                >
+                  <button className="mt-0.5 text-[var(--text-muted)]">
+                    {isOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                  </button>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                      <span className={`ds-badge ${urgencyStyle(entry.urgency)} inline-flex items-center gap-1`}>
+                        {urgencyIcon(entry.urgency)}
+                        {entry.urgency}
+                      </span>
+                      {entry.domain && (
+                        <span className={DOMAIN_COLORS[entry.domain] ?? 'ds-badge bg-slate-50 text-slate-700'}>
+                          {DOMAIN_LABELS[entry.domain] ?? entry.domain}
+                        </span>
+                      )}
+                      <span className="text-xs text-[var(--text-muted)]">
+                        {new Date(entry.created_at).toLocaleString('ru-RU')}
+                      </span>
+                      {total > 0 && (
+                        <span className="text-xs text-[var(--text-muted)]">
+                          {done}/{total} готово
+                        </span>
+                      )}
+                      {entry.archived && (
+                        <span className="ds-badge bg-slate-100 text-slate-600">архив</span>
+                      )}
+                    </div>
+                    <div className="text-sm text-[var(--text-primary)] line-clamp-2">
+                      {entry.summary ?? entry.key}
+                    </div>
+                  </div>
+                </div>
+
+                {isOpen && (
+                  <div className="px-3 pb-3 pt-0 space-y-3 border-t border-[var(--border)]">
+                    {entry.summary && (
+                      <p className="text-sm text-[var(--text-secondary)] mt-3">{entry.summary}</p>
+                    )}
+
+                    {entry.action_items.length > 0 && (
+                      <div className="space-y-1.5">
+                        <div className="text-xs font-medium text-[var(--text-muted)]">Action items</div>
+                        {entry.action_items.map(item => (
+                          <div key={item.idx} className="flex items-start gap-2 text-sm p-2 rounded bg-[var(--surface-muted,transparent)] border border-[var(--border)]">
+                            <button
+                              onClick={() => runAction(entry.id, { action: 'toggle_done', itemIdx: item.idx }, item.done ? 'Снято' : 'Отмечено как выполненное')}
+                              disabled={busy !== null}
+                              className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center ${item.done ? 'bg-green-500 border-green-500 text-white' : 'border-[var(--border)]'}`}
+                              title={item.done ? 'Снять галочку' : 'Отметить выполненным'}
+                            >
+                              {item.done && <Check className="w-3 h-3" />}
+                            </button>
+                            <div className="flex-1 min-w-0">
+                              <div className={`${item.done ? 'line-through text-[var(--text-muted)]' : ''}`}>
+                                {item.text}
+                              </div>
+                              <div className="flex items-center gap-2 mt-1 text-xs text-[var(--text-muted)]">
+                                <span>приоритет: {item.priority}</span>
+                                {item.sent_to_kiloclaw && <span className="text-blue-600">✓ отправлено KiloClaw</span>}
+                              </div>
+                            </div>
+                            {!item.done && (
+                              <button
+                                onClick={() => runAction(entry.id, { action: 'send_to_kiloclaw', itemIdx: item.idx }, 'Отправлено KiloClaw')}
+                                disabled={busy !== null}
+                                className="ds-btn-secondary text-xs whitespace-nowrap"
+                                title="Отправить как задачу в Telegram KiloClaw"
+                              >
+                                <Bot className="w-3 h-3" />
+                                Реализовать
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-2 pt-2 border-t border-[var(--border)]">
+                      <span className="text-xs text-[var(--text-muted)]">
+                        {entry.source ?? '—'} · {entry.key}
+                      </span>
+                      <div className="flex-1" />
+                      <button
+                        onClick={() => runAction(entry.id, { action: entry.archived ? 'unarchive' : 'archive' }, entry.archived ? 'Восстановлено' : 'Архивировано')}
+                        disabled={busy !== null}
+                        className="ds-btn-secondary text-xs"
+                      >
+                        <Archive className="w-3 h-3" />
+                        {entry.archived ? 'Вернуть' : 'Архив'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
