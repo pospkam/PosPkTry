@@ -11,7 +11,7 @@
  */
 
 import { pool } from '@/lib/db-pool';
-import { callAIFast } from '@/lib/ai/providers';
+import { callDeepSeek } from '@/lib/ai/providers';
 import type { ChatMessage } from '@/lib/ai/prompts';
 
 export interface EditorResult {
@@ -96,7 +96,7 @@ ${route.description ? `Имеющееся описание (расширь и у
   ];
 
   try {
-    const result = await callAIFast(messages);
+    const result = await callDeepSeek(messages);
     return result?.trim() ?? null;
   } catch {
     return null;

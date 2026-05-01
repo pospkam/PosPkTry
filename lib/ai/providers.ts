@@ -530,7 +530,7 @@ export async function callDeepSeek(messages: ChatMessage[]): Promise<string | nu
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'deepseek-chat',
+        model: 'deepseek-v4-flash',
         temperature: 0.4,
         max_tokens: 800,
         messages: payload,

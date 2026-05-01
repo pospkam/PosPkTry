@@ -14,7 +14,7 @@
  */
 
 import { pool } from '@/lib/db-pool';
-import { callAIFast } from '@/lib/ai/providers';
+import { callDeepSeek } from '@/lib/ai/providers';
 import type { ChatMessage } from '@/lib/ai/prompts';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -163,7 +163,7 @@ async function rewriteDescription(title: string, rawDesc: string): Promise<strin
     },
   ];
   try {
-    const result = await callAIFast(messages);
+    const result = await callDeepSeek(messages);
     return result?.trim() ?? null;
   } catch (e) {
     process.stdout.write(`  rewrite error: ${e instanceof Error ? e.message : String(e)}\n`);
