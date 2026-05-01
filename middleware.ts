@@ -71,6 +71,7 @@ const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/link-fishingkam-tours': ['GET'], // линкует operator_tours kamchatskaya-rybalka → agent_route_knowledge
   '/api/setup-rafting-tour': ['POST'], // create rafting tour (temporary)
   '/api/hub/marketplace/tours': ['GET'], // публичный каталог туров маршрутплейса
+  '/api/hub/bookings': ['GET'],           // booking-success страница (без персональных данных, ФЗ-152 ок)
   '/api/channels/avito/feed':  ['GET'], // Avito Autoload XML feed — публичный
   '/api/widget': ['POST', 'GET', 'OPTIONS'],    // Partner widget API — CORS-enabled
   '/api/health': ['GET'],              // health checks — monitoring/infra
