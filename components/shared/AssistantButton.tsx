@@ -83,7 +83,7 @@ const PAGE_GREETINGS: Record<string, string> = {
 };
 
 export interface PageContext {
-  type: 'route' | 'category' | 'home' | 'map';
+  type: 'route' | 'category' | 'home' | 'map' | 'place';
   title?: string;
   category?: string;
 }
