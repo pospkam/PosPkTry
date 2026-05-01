@@ -141,36 +141,76 @@ lib/notifications/lead-notify.ts       — Telegram-нотификации о л
 
 ## 4.1 СТРУКТУРА ДАННЫХ (ГЕОГРАФИЯ И ТУРЫ)
 
-Главная цель платформы — **безопасность туристов**. Ниже — единственный источник правды о таблицах с локациями.
+Главная цель платформы — **безопасность туристов**.
 
-### Иерархия сущностей
+### Три сущности — три таблицы (master)
 
-| Сущность | Таблица | Записей | Назначение |
-|----------|---------|---------|------------|
-| **Места** (master) | `agent_route_knowledge` | ~1400 | Единый реестр всех локаций Камчатки. Видимость (`is_visible`), координаты, описания, зоны, типы. **Это главная таблица.** |
-| Профиль безопасности | `location_safety_profile` | ~1241 | Привязана к `agent_route_knowledge.id`. Capacity, hazards, difficulty, расстояние до медпомощи, связь. |
-| Реалтайм-статус | `location_real_time_status` | ~1241 | Привязана к `agent_route_knowledge.id`. Открыто/закрыто, crowds, погода, алерты. |
-| Маршруты (legacy) | `kamchatka_routes` | ~290 | Парсинг из источников. 162 привязаны к `agent_route_knowledge` через `route_id`. |
-| Места (legacy) | `places` | ~88 | Старая таблица. Только 20 с координатами. **Не использовать для новых фичей.** |
-| Туры операторов | `operator_tours` | ~20 | Продукты с ценой, слотами, бронированием. Привязаны к `partners.id`. |
-| Доступность туров | `tour_availability` | ~42 | Слоты/даты для `operator_tours`. |
-| AI-фото маршрутов | `ai_route_images` | ~225 | Сгенерированные/найденные фото для мест. |
+Точка, маршрут и тур — разные вещи. Точка постоянна. Маршрут может меняться. Тур — коммерческое предложение.
 
-### Правила работы с данными
+| Сущность | Master-таблица | Записей | Назначение | NOT NULL |
+|----------|---------------|---------|------------|----------|
+| **Точка/Локация** | `places` | ~779 | Географический факт: вулкан, озеро, источник. Постоянная. | `name`, `lat`, `lng` |
+| **Маршрут** | `kamchatka_routes` | ~294 | Путь между точками. Может меняться (сезон, погода). | `title` |
+| **Тур** | `operator_tours` | ~20 | Коммерческий продукт оператора. Цена, слоты, бронирование. | `title`, `base_price`, `operator_id` |
 
-- **Читать места** → `agent_route_knowledge` (с `is_visible = true` для публичного отображения)
-- **Безопасность локации** → JOIN `location_safety_profile` ON `agent_route_id`
-- **Реалтайм** → JOIN `location_real_time_status` ON `agent_route_id`
-- **Туры для бронирования** → `operator_tours` + `tour_availability`
-- **НЕ ИСПОЛЬЗОВАТЬ** `places` и `kamchatka_routes` напрямую для новых фичей — это legacy-источники, данные из которых уже перенесены в `agent_route_knowledge`
-- **SELECT * FROM kamchatka_routes** — запрещён (см. секцию 4). Для публичного API → `v_kamchatka_routes_api`
+### Связи между сущностями
 
-### Статистика (актуально апрель-май 2026)
+```
+places (779)                       ← ГДЕ. Координаты, описание, тип
+  ↑ FK: location_safety_profile (763)   ← безопасность точки
+  ↑ FK: location_real_time_status (763) ← реалтайм (crowds, alerts)
+  ↑ ai_route_images (354)               ← фото точки
+  ↑
+route_waypoints                    ← СВЯЗЬ. Маршрут проходит через точки
+  ↓                                   FK route_id → kamchatka_routes.id
+kamchatka_routes (294)             ← КУДА. Путь, geometry, difficulty
+  ↑
+operator_tours.route_id (20)       ← ЧТО КУПИТЬ. Цена, оператор, бронь
+  ↑                                   FK route_id → kamchatka_routes.id
+partners (125)                     ← КТО. 13 операторов + 112 гидов
+guide_certifications (112)         ← аттестации гидов
+```
 
-- 1043 видимых мест, 380 скрытых (дубли/без описания/без координат)
-- Все видимые — с координатами и описаниями ≥300 символов
-- 1241 место с профилем безопасности и реалтайм-статусом
-- 20 туров от операторов (бронируемые)
+### Обратная совместимость
+
+`agent_route_knowledge` — теперь **VIEW** (UNION ALL `places` + `kamchatka_routes`). Старый код продолжает работать. `_agent_route_knowledge_legacy` — старая таблица, не использовать.
+
+### Правила для нового кода
+
+- **Читать/писать точки** → `places` (NOT NULL lat, lng, name)
+- **Читать/писать маршруты** → `kamchatka_routes`
+- **Туры и бронирование** → `operator_tours` + `tour_availability` + `operator_bookings`
+- **Безопасность точки** → `location_safety_profile` JOIN ON `agent_route_id = places.ark_id`
+- **Реалтайм точки** → `location_real_time_status` JOIN ON `agent_route_id = places.ark_id`
+- **Фото точки** → `ai_route_images` JOIN ON `route_id = places.ark_id`
+- **Связь маршрут→точки** → `route_waypoints` (route_id, place_id, position)
+
+### Запрещено
+
+- `FROM agent_route_knowledge` в новом коде — использовать `places` / `kamchatka_routes`
+- `FROM _agent_route_knowledge_legacy` — deprecated, не трогать
+- Прямой INSERT в `agent_route_knowledge` — это VIEW, писать в master-таблицы
+
+### Ключевые колонки
+
+| Таблица | Колонка | Зачем |
+|---------|---------|-------|
+| `places` | `ark_id` (UUID) | Связь с `location_safety_profile`, `location_real_time_status`, `ai_route_images` |
+| `places` | `location_type` | volcano, lake, hot_spring, mountain, geyser, etc. |
+| `kamchatka_routes` | `geometry` (JSONB) | GeoJSON LineString трека маршрута |
+| `kamchatka_routes` | `ark_id` (UUID) | Связь с legacy данными |
+| `operator_tours` | `route_id` (UUID) | FK на `kamchatka_routes.id` |
+| `route_waypoints` | `position` (INT) | Порядок точек на маршруте (0 = старт) |
+
+### Статистика (актуально май 2026)
+
+- 779 точек: все с координатами, все с описаниями ≥300 символов
+- 763 точки с профилем безопасности и реалтайм-статусом
+- 354 точки с фото
+- 294 маршрута (1 с GPS-треком geometry)
+- 20 туров от операторов
+- 112 аттестованных гидов
+- 0 связей маршрут→точки (route_waypoints — заполняется)
 
 ---
 
