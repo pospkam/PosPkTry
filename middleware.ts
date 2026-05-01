@@ -72,6 +72,7 @@ const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/setup-rafting-tour': ['POST'], // create rafting tour (temporary)
   '/api/hub/marketplace/tours': ['GET'], // публичный каталог туров маршрутплейса
   '/api/hub/bookings': ['GET'],           // booking-success страница (без персональных данных, ФЗ-152 ок)
+  '/api/places': ['GET'],                 // карточка точки/локации (публичная)
   '/api/channels/avito/feed':  ['GET'], // Avito Autoload XML feed — публичный
   '/api/widget': ['POST', 'GET', 'OPTIONS'],    // Partner widget API — CORS-enabled
   '/api/health': ['GET'],              // health checks — monitoring/infra
