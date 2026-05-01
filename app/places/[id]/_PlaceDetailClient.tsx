@@ -6,15 +6,14 @@ import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import {
   ArrowLeft, MapPin, Mountain, AlertTriangle, Shield,
-  Phone, Star, MessageSquare, ChevronLeft, ChevronRight,
-  Download, Navigation, Thermometer, Droplets, Wind,
-  Eye, Users, Calendar, ExternalLink, Compass,
+  Phone, Star, MessageSquare,
+  Download, Navigation, Users, Calendar, ExternalLink, Compass,
 } from 'lucide-react';
-import { Header } from '@/components/layout/Header';
-import { AssistantButton } from '@/components/shared/AssistantButton';
-import { MarkerType } from '@/components/shared/LeafletMap';
 
+const Header = dynamic(() => import('@/components/layout/Header').then(m => ({ default: m.Header })), { ssr: false });
 const LeafletMap = dynamic(() => import('@/components/shared/LeafletMap'), { ssr: false });
+
+const MarkerType = { TOUR: 'tour' as const };
 
 const LOCATION_TYPE_LABELS: Record<string, string> = {
   volcano: 'Вулкан', geyser: 'Гейзерное поле', hot_spring: 'Термальный источник',
@@ -129,35 +128,37 @@ export default function PlaceDetailClient({ id }: { id: string }) {
   const [descExpanded, setDescExpanded] = useState(false);
 
   useEffect(() => {
-    fetch(`/api/places/${id}`)
-      .then(r => r.json())
-      .then(j => { if (j.success) setPlace(j.data); })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/places/${id}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const j = await res.json();
+        if (!cancelled && j?.success && j.data) {
+          setPlace(j.data);
+          setLoading(false);
+          return;
+        }
+      } catch { /* ignore */ }
+      if (!cancelled) setLoading(false);
+    })();
+    return () => { cancelled = true; };
   }, [id]);
 
   if (loading) {
     return (
-      <>
-        <Header />
-        <div className="ds-page pt-20 pb-10 space-y-3">
-          <div className="ds-skeleton rounded h-56 w-full" />
-          <div className="ds-skeleton rounded h-6 w-2/3" />
-          <div className="ds-skeleton rounded h-4 w-1/2" />
-        </div>
-      </>
+      <div className="p-8 text-center">
+        <p>Загрузка...</p>
+      </div>
     );
   }
 
   if (!place) {
     return (
-      <>
-        <Header />
-        <div className="ds-page pt-32 text-center space-y-4">
-          <p className="text-[var(--text-secondary)]">Место не найдено</p>
-          <Link href="/map" className="ds-btn ds-btn-secondary">Назад к карте</Link>
-        </div>
-      </>
+      <div className="p-8 text-center">
+        <p>Место не найдено</p>
+        <a href="/map">Назад к карте</a>
+      </div>
     );
   }
 
