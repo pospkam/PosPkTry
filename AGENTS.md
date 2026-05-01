@@ -214,3 +214,50 @@ AGENTS.md должен быть длиннее порога, иначе кэш �
 Сессия на 30 минут по KamchatourHub при обычной работе ест ~$6 на
 Sonnet без кэша. При hit-rate 92% — ~$1.15. Разница 5x. На горизонте
 месяца активной разработки — десятки тысяч рублей.
+
+## Cursor Cloud specific instructions
+
+### Quick reference
+
+| Action | Command |
+|--------|---------|
+| Dev server | `npm run dev` (port 3000) |
+| Lint | `npm run lint` |
+| Tests | `npx vitest run` (156 tests, ~3s) |
+| Type-check | `npx tsc --noEmit` |
+| Migrations | `DATABASE_URL=... npm run migrate` |
+
+### PostgreSQL setup (local dev)
+
+The VM uses PostgreSQL 16 (Ubuntu 24.04 default) with PostGIS 3. The production codebase expects PostgreSQL 15, but 16 is fully compatible. Start the service with:
+
+```
+pg_ctlcluster 16 main start
+```
+
+Default local credentials: user=`kamuser`, password=`kampass2024_local`, database=`kamhub`, host=`localhost:5432`.
+
+### Database bootstrapping gotcha
+
+The migration files in `migrations/` assume that base tables (`users`, `partners`, `bookings`, `tours`, etc.) already exist. These base tables are defined in `lib/database/schema.sql` but are NOT part of the numbered migration files. On a fresh database you must:
+
+1. Apply `lib/database/schema.sql` first (creates ~30 base tables)
+2. Seed at least one user + partner row (migration 040 verifies non-empty `users` and `partners`)
+3. Then run `npm run migrate`
+
+Some early migrations (017-019) reference old table names (`bookings`, `partners`) as FK targets. The base schema creates these as real tables; migration 132 later replaces `bookings`/`tours` with compatibility views over `operator_bookings`/`operator_tours`.
+
+Additional prerequisite tables not in the base schema but referenced by early migrations: `tourist_wishlist`, `eco_points_log`, `kamchatka_routes`, `tg_conversations`, `leads`. Create these before running migrations or apply migrations with error tolerance.
+
+### Environment variables
+
+Only three env vars are strictly required for the dev server to start:
+- `DATABASE_URL` — PostgreSQL connection string
+- `JWT_SECRET` — 32+ char random string for auth tokens
+- `NEXT_PUBLIC_APP_URL` — `http://localhost:3000`
+
+All AI provider keys, Redis, S3, Telegram, payment integrations are optional and degrade gracefully.
+
+### Services not needed for local dev
+
+Redis, CrewAI (Python), Prometheus/Grafana, pgAdmin — all optional. The app runs fine without them. Rate limiting auto-disables when `UPSTASH_REDIS_REST_URL` is unset.
