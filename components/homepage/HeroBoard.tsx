@@ -2,13 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Bot, Map as MapIcon, Shield } from 'lucide-react';
-
-const STEPS = [
-  { icon: Bot, label: 'AI подберёт', desc: 'маршрут за 2 минуты' },
-  { icon: MapIcon, label: 'Покажет на карте', desc: 'все точки поездки' },
-  { icon: Shield, label: 'Сведёт с', desc: 'проверенным оператором' },
-];
+import { ArrowRight, Bot } from 'lucide-react';
 
 export function HeroBoard() {
   const [visible, setVisible] = useState(false);
@@ -51,7 +45,7 @@ export function HeroBoard() {
           AI, интерактивная карта и только проверенные операторы.
         </p>
 
-        <div className={`flex flex-wrap gap-3 mb-5 transition-all duration-700 delay-300 ${
+        <div className={`flex flex-wrap gap-3 transition-all duration-700 delay-300 ${
           visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
         }`}>
           <Link
@@ -70,22 +64,6 @@ export function HeroBoard() {
           </Link>
         </div>
 
-        {/* 3 шага */}
-        <div className={`grid grid-cols-3 gap-2 transition-all duration-700 delay-500 ${
-          visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-        }`}>
-          {STEPS.map(({ icon: Icon, label, desc }, i) => (
-            <div key={i} className="flex items-start gap-2 p-2.5 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-orange-500/20">
-                <Icon className="w-4 h-4 text-orange-400" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[11px] font-semibold text-white leading-tight">{label}</p>
-                <p className="text-[10px] text-white/60 leading-tight">{desc}</p>
-              </div>
-            </div>
-          ))}
-        </div>
       </div>
     </section>
   );
