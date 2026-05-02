@@ -1,0 +1,77 @@
+'use client';
+
+import Image from 'next/image';
+import Link from 'next/link';
+import { ArrowLeft, Mountain } from 'lucide-react';
+import { LOCATION_TYPE_LABELS } from './types';
+
+interface Props {
+  placeId: string;
+  name: string;
+  locationType: string | null;
+  lat: number;
+  lng: number;
+  photoUrl: string | null;
+  photoCount: number;
+}
+
+export default function PlaceHero({ placeId, name, locationType, lat, lng, photoUrl, photoCount }: Props) {
+  const label = LOCATION_TYPE_LABELS[locationType ?? 'other'] ?? 'Место';
+  const imgSrc = photoUrl ?? (photoCount > 0 ? `/api/images/route/${placeId}` : null);
+  const coordStr = `${lat.toFixed(5)}°N, ${lng.toFixed(5)}°E`;
+
+  return (
+    <div
+      className="relative w-full overflow-hidden bg-[var(--bg-hover)]"
+      style={{ height: 'clamp(280px, 60vh, 680px)' }}
+    >
+      {/* Back button */}
+      <div className="absolute top-20 left-4 z-20">
+        <Link
+          href="/routes?kind=place"
+          className="inline-flex items-center gap-1.5 text-sm text-white bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-white/20 hover:bg-black/60 transition-colors"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" /> Места
+        </Link>
+      </div>
+
+      {/* Photo */}
+      {imgSrc ? (
+        <Image
+          src={imgSrc}
+          alt={name}
+          fill
+          className="object-cover"
+          priority
+          sizes="100vw"
+        />
+      ) : (
+        <div className="w-full h-full flex flex-col items-center justify-center gap-3">
+          <Mountain className="w-24 h-24 text-[var(--text-muted)] opacity-20" />
+          <p className="text-xs text-[var(--text-muted)]">Фото появится позже</p>
+        </div>
+      )}
+
+      {/* Gradient overlay */}
+      {imgSrc && (
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+      )}
+
+      {/* Bottom-left: type badge */}
+      <div className="absolute bottom-5 left-4 z-10">
+        <span className="inline-block text-xs font-bold uppercase tracking-widest text-white bg-[var(--accent)] px-3 py-1.5 rounded-full">
+          {label}
+        </span>
+      </div>
+
+      {/* Bottom-right: coordinates */}
+      <button
+        className="absolute bottom-5 right-4 z-10 text-xs text-white/90 bg-black/40 px-2.5 py-1.5 rounded-lg font-mono hover:bg-black/60 transition-colors"
+        onClick={() => navigator.clipboard?.writeText(coordStr)}
+        title="Скопировать координаты"
+      >
+        {coordStr}
+      </button>
+    </div>
+  );
+}
