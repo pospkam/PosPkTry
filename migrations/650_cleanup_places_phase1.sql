@@ -1,70 +1,53 @@
 -- migrations/650_cleanup_places_phase1.sql
 --
--- Phase 1: clean up agent_route_knowledge rows where kind='place'.
+-- Phase 1: clean up places table (was written for agent_route_knowledge view — fixed).
 -- Idempotent: safe to run multiple times.
 --
 -- Rules enforced:
 --   • place.activity_type IS NULL        (places have no activity)
 --   • place.location_type IS NOT NULL    (every place must be typed)
---   • place.lat/lng IS NOT NULL          (every place must be mappable)
---     rows missing coords → is_visible=FALSE until geocoded
+--   • place.lat/lng ARE NOT NULL in schema, so coord check is informational only
 
 BEGIN;
 
--- 1. Strip activity_type from all places (1072 rows expected)
-UPDATE agent_route_knowledge
+-- 1. Strip activity_type from all places
+UPDATE places
    SET activity_type = NULL,
        updated_at = NOW()
- WHERE kind = 'place' AND activity_type IS NOT NULL;
+ WHERE activity_type IS NOT NULL;
 
--- 2. Infer location_type for places where it's missing, from title keywords
-UPDATE agent_route_knowledge
+-- 2. Infer location_type for places where it's missing, from name keywords
+UPDATE places
    SET location_type = CASE
-     WHEN title ILIKE '%vodopad%' OR title ILIKE '%водопад%' THEN 'waterfall'
-     WHEN title ILIKE '%vulkan%'  OR title ILIKE '%вулкан%'  THEN 'volcano'
-     WHEN title ILIKE '%bukhta%'  OR title ILIKE '%бухт%'    THEN 'bay'
-     WHEN title ILIKE '%ozero%'   OR title ILIKE '%озер%'    THEN 'lake'
-     WHEN title ILIKE '%reka%'    OR title ILIKE '%река%'    THEN 'river'
-     WHEN title ILIKE '%gora%'    OR title ILIKE '%gornyy%'  OR title ILIKE '%гор%' THEN 'mountain'
-     WHEN title ILIKE '%mys%'     OR title ILIKE '%мыс%'     THEN 'cape'
-     WHEN title ILIKE '%istochnik%' OR title ILIKE '%источник%' THEN 'hot_spring'
-     WHEN title ILIKE '%geyser%'  OR title ILIKE '%гейзер%'  THEN 'geyser'
-     WHEN title ILIKE '%mayak%'   OR title ILIKE '%маяк%'    THEN 'historical'
-     WHEN title ILIKE '%muzey%'   OR title ILIKE '%музей%'   THEN 'museum'
-     WHEN title ILIKE '%skala%'   OR title ILIKE '%скал%'    THEN 'rock'
-     WHEN title ILIKE '%ostrov%'  OR title ILIKE '%остров%'  THEN 'island'
-     WHEN title ILIKE '%lednik%'  OR title ILIKE '%ледник%'  THEN 'glacier'
-     WHEN title ILIKE '%plyazh%'  OR title ILIKE '%пляж%'    THEN 'beach'
-     WHEN title ILIKE '%les%'     OR title ILIKE '%лес%'     THEN 'forest'
+     WHEN name ILIKE '%vodopad%'    OR name ILIKE '%водопад%'    THEN 'waterfall'
+     WHEN name ILIKE '%vulkan%'     OR name ILIKE '%вулкан%'     THEN 'volcano'
+     WHEN name ILIKE '%bukhta%'     OR name ILIKE '%бухт%'       THEN 'bay'
+     WHEN name ILIKE '%ozero%'      OR name ILIKE '%озер%'       THEN 'lake'
+     WHEN name ILIKE '%reka%'       OR name ILIKE '%река%'       THEN 'river'
+     WHEN name ILIKE '%gora%'       OR name ILIKE '%gornyy%'
+                                    OR name ILIKE '%гор%'        THEN 'mountain'
+     WHEN name ILIKE '%mys%'        OR name ILIKE '%мыс%'        THEN 'cape'
+     WHEN name ILIKE '%istochnik%'  OR name ILIKE '%источник%'   THEN 'hot_spring'
+     WHEN name ILIKE '%geyser%'     OR name ILIKE '%гейзер%'     THEN 'geyser'
+     WHEN name ILIKE '%mayak%'      OR name ILIKE '%маяк%'       THEN 'historical'
+     WHEN name ILIKE '%muzey%'      OR name ILIKE '%музей%'      THEN 'museum'
+     WHEN name ILIKE '%skala%'      OR name ILIKE '%скал%'       THEN 'rock'
+     WHEN name ILIKE '%ostrov%'     OR name ILIKE '%остров%'     THEN 'island'
+     WHEN name ILIKE '%lednik%'     OR name ILIKE '%ледник%'     THEN 'glacier'
+     WHEN name ILIKE '%plyazh%'     OR name ILIKE '%пляж%'       THEN 'beach'
+     WHEN name ILIKE '%les%'        OR name ILIKE '%лес%'        THEN 'forest'
      ELSE 'other'
    END,
    updated_at = NOW()
- WHERE kind = 'place' AND location_type IS NULL;
+ WHERE location_type IS NULL;
 
--- 3. Hide places without coordinates from public listings
-UPDATE agent_route_knowledge
-   SET is_visible = FALSE,
-       updated_at = NOW()
- WHERE kind = 'place'
-   AND (lat IS NULL OR lng IS NULL)
-   AND is_visible IS DISTINCT FROM FALSE;
+-- 3. Soft CHECK constraint on places (not on the VIEW)
+ALTER TABLE places
+  DROP CONSTRAINT IF EXISTS places_shape_check;
 
--- 4. Soft CHECK constraint: enforce rules for NEW rows only (NOT VALID)
-ALTER TABLE agent_route_knowledge
-  DROP CONSTRAINT IF EXISTS ark_place_shape;
-
-ALTER TABLE agent_route_knowledge
-  ADD CONSTRAINT ark_place_shape
-  CHECK (
-    kind <> 'place'
-    OR (activity_type IS NULL AND location_type IS NOT NULL)
-  ) NOT VALID;
+ALTER TABLE places
+  ADD CONSTRAINT places_shape_check
+  CHECK (activity_type IS NULL AND location_type IS NOT NULL)
+  NOT VALID;
 
 COMMIT;
-
--- Verification query (run manually to confirm):
---   SELECT
---     COUNT(*) FILTER (WHERE kind='place' AND activity_type IS NOT NULL) AS bad_activity,
---     COUNT(*) FILTER (WHERE kind='place' AND location_type IS NULL)     AS bad_loctype,
---     COUNT(*) FILTER (WHERE kind='place' AND (lat IS NULL OR lng IS NULL) AND is_visible=TRUE) AS hidden_missing_coords
---   FROM agent_route_knowledge;
