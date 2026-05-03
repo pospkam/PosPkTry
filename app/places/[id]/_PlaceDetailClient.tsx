@@ -4,26 +4,29 @@ import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import type { PlaceData } from '@/components/places/types';
 
-const PlaceHero            = dynamic(() => import('@/components/places/PlaceHero'),            { ssr: false });
-const PlaceRealtimeStatus  = dynamic(() => import('@/components/places/PlaceRealtimeStatus'),  { ssr: false });
-const PlaceDescription     = dynamic(() => import('@/components/places/PlaceDescription'),     { ssr: false });
-const PlaceSafety          = dynamic(() => import('@/components/places/PlaceSafety'),          { ssr: false });
-const PlaceAccess          = dynamic(() => import('@/components/places/PlaceAccess'),          { ssr: false });
-const PlaceSeason          = dynamic(() => import('@/components/places/PlaceSeason'),          { ssr: false });
-const PlaceRoutes          = dynamic(() => import('@/components/places/PlaceRoutes'),          { ssr: false });
-const PlaceNearby          = dynamic(() => import('@/components/places/PlaceNearby'),          { ssr: false });
-const PlaceFooter          = dynamic(() => import('@/components/places/PlaceFooter'),          { ssr: false });
-const Header               = dynamic(() => import('@/components/layout/Header').then(m => ({ default: m.Header })), { ssr: false });
+const PlaceHero             = dynamic(() => import('@/components/places/PlaceHero'),             { ssr: false });
+const PlaceRealtimeStatus   = dynamic(() => import('@/components/places/PlaceRealtimeStatus'),   { ssr: false });
+const PlaceDescription      = dynamic(() => import('@/components/places/PlaceDescription'),      { ssr: false });
+const PlaceCharacteristics  = dynamic(() => import('@/components/places/PlaceCharacteristics'),  { ssr: false });
+const PlaceSafety           = dynamic(() => import('@/components/places/PlaceSafety'),           { ssr: false });
+const PlaceAccess           = dynamic(() => import('@/components/places/PlaceAccess'),           { ssr: false });
+const PlaceSeason           = dynamic(() => import('@/components/places/PlaceSeason'),           { ssr: false });
+const PlaceRoutes           = dynamic(() => import('@/components/places/PlaceRoutes'),           { ssr: false });
+const PlaceKuzmich          = dynamic(() => import('@/components/places/PlaceKuzmich'),          { ssr: false });
+const PlaceReviews          = dynamic(() => import('@/components/places/PlaceReviews'),          { ssr: false });
+const PlaceNearby           = dynamic(() => import('@/components/places/PlaceNearby'),           { ssr: false });
+const PlaceFooter           = dynamic(() => import('@/components/places/PlaceFooter'),           { ssr: false });
+const Header                = dynamic(() => import('@/components/layout/Header').then(m => ({ default: m.Header })), { ssr: false });
 
 function Skeleton() {
   return (
     <div className="animate-pulse">
       <div className="w-full bg-[var(--bg-hover)]" style={{ height: 'clamp(280px, 60vh, 680px)' }} />
       <div className="max-w-3xl mx-auto px-4 pt-8 space-y-4">
-        <div className="h-8 bg-[var(--bg-hover)] rounded w-2/3" />
+        <div className="h-6 bg-[var(--bg-hover)] rounded w-24" />
+        <div className="h-10 bg-[var(--bg-hover)] rounded w-2/3" />
         <div className="h-4 bg-[var(--bg-hover)] rounded w-full" />
         <div className="h-4 bg-[var(--bg-hover)] rounded w-5/6" />
-        <div className="h-4 bg-[var(--bg-hover)] rounded w-4/6" />
       </div>
     </div>
   );
@@ -70,11 +73,13 @@ export default function PlaceDetailClient({ id }: { id: string }) {
     );
   }
 
+  const hasSeason = place.safety.openFromDate || place.safety.openToDate || place.bestSeason || place.seasonalNotes;
+
   return (
     <>
       <Header />
 
-      {/* Блок 1: Hero */}
+      {/* 1. Hero: фото + тип + координаты */}
       <PlaceHero
         placeId={place.id}
         name={place.name}
@@ -85,10 +90,10 @@ export default function PlaceDetailClient({ id }: { id: string }) {
         photoCount={place.photoCount}
       />
 
-      {/* Блок 2: Realtime status */}
+      {/* 2. Realtime: статус открытия / алерты */}
       {place.realtime && <PlaceRealtimeStatus realtime={place.realtime} />}
 
-      {/* Блоки 3–4: Заголовок + описание */}
+      {/* 3. Название + описание */}
       <PlaceDescription
         name={place.name}
         essence={place.essence}
@@ -96,13 +101,41 @@ export default function PlaceDetailClient({ id }: { id: string }) {
         placeId={place.id}
       />
 
-      {/* Блок 5: Безопасность */}
-      <div className="mt-8">
+      {/* 4. Факты места: тип, сложность, район, опасности */}
+      <div className="mt-6">
+        <PlaceCharacteristics
+          locationType={place.locationType}
+          zone={place.zone}
+          safety={place.safety}
+        />
+      </div>
+
+      {/* 5. Безопасность: развёрнутые данные */}
+      <div className="mt-6">
         <PlaceSafety safety={place.safety} placeId={place.id} />
       </div>
 
-      {/* Блок 6: Как добраться */}
-      <div className="mt-8">
+      {/* 6. Сезонность */}
+      {hasSeason && (
+        <div className="mt-6">
+          <PlaceSeason
+            openFromDate={place.safety.openFromDate}
+            openToDate={place.safety.openToDate}
+            bestSeason={place.bestSeason}
+            seasonalNotes={place.seasonalNotes}
+          />
+        </div>
+      )}
+
+      {/* 7. Маршруты через это место */}
+      {place.routes.length > 0 && (
+        <div className="mt-6">
+          <PlaceRoutes routes={place.routes} placeId={place.id} />
+        </div>
+      )}
+
+      {/* 8. Карта + как добраться */}
+      <div className="mt-6">
         <PlaceAccess
           placeId={place.id}
           name={place.name}
@@ -113,29 +146,28 @@ export default function PlaceDetailClient({ id }: { id: string }) {
         />
       </div>
 
-      {/* Блок 7: Сезон */}
-      {(place.safety.openFromDate || place.safety.openToDate || place.bestSeason || place.seasonalNotes) && (
-        <div className="mt-8">
-          <PlaceSeason
-            openFromDate={place.safety.openFromDate}
-            openToDate={place.safety.openToDate}
-            bestSeason={place.bestSeason}
-            seasonalNotes={place.seasonalNotes}
-          />
+      {/* 9. Кузьмич */}
+      <div className="mt-6">
+        <PlaceKuzmich
+          placeId={place.id}
+          placeName={place.name}
+          kuzmichReview={place.kuzmichReview}
+        />
+      </div>
+
+      {/* 10. Отзывы о месте */}
+      <div className="mt-6">
+        <PlaceReviews placeId={place.id} reviews={place.reviews} />
+      </div>
+
+      {/* 11. Места рядом */}
+      {place.nearby.length > 0 && (
+        <div className="mt-6">
+          <PlaceNearby nearby={place.nearby} placeId={place.id} />
         </div>
       )}
 
-      {/* Блок 8: Маршруты */}
-      <div className="mt-8">
-        <PlaceRoutes routes={place.routes} placeId={place.id} />
-      </div>
-
-      {/* Блок 9: Места рядом */}
-      <div className="mt-8">
-        <PlaceNearby nearby={place.nearby} placeId={place.id} />
-      </div>
-
-      {/* Блок 10: Подвал */}
+      {/* 12. Подвал */}
       <div className="mt-10">
         <PlaceFooter
           sourceUrl={place.sourceUrl}

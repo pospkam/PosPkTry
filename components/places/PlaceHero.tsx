@@ -29,7 +29,7 @@ export default function PlaceHero({ placeId, name, locationType, lat, lng, photo
       <div className="absolute top-20 left-4 z-20">
         <Link
           href="/routes?kind=place"
-          className="inline-flex items-center gap-1.5 text-sm text-white bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-white/20 hover:bg-black/60 transition-colors"
+          className="inline-flex items-center gap-1.5 text-sm text-white bg-black/50 px-3 py-1.5 rounded-lg border border-[var(--border)] hover:bg-black/70 transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" /> Места
         </Link>
@@ -66,7 +66,7 @@ export default function PlaceHero({ placeId, name, locationType, lat, lng, photo
 
       {/* Bottom-right: coordinates */}
       <button
-        className="absolute bottom-5 right-4 z-10 text-xs text-white/90 bg-black/40 px-2.5 py-1.5 rounded-lg font-mono hover:bg-black/60 transition-colors"
+        className="absolute bottom-5 right-4 z-10 text-xs text-white bg-black/50 px-2.5 py-1.5 rounded-lg font-mono hover:bg-black/70 transition-colors"
         onClick={() => navigator.clipboard?.writeText(coordStr)}
         title="Скопировать координаты"
       >

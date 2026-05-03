@@ -54,6 +54,14 @@ export interface NearbyPlace {
   thumbUrl: string | null;
 }
 
+export interface PlaceReview {
+  id: string;
+  rating: number;
+  comment: string | null;
+  authorName: string;
+  createdAt: string;
+}
+
 export interface PlaceData {
   id: string;
   name: string;
@@ -74,9 +82,11 @@ export interface PlaceData {
   sourceUrl: string | null;
   sourceName: string | null;
   updatedAt: string | null;
+  kuzmichReview: string | null;
   safety: PlaceSafety;
   realtime: PlaceRealtime | null;
   routes: PlaceRoute[];
+  reviews: PlaceReview[];
   nearby: NearbyPlace[];
 }
 
@@ -103,19 +113,19 @@ export const LOCATION_TYPE_LABELS: Record<string, string> = {
   other: 'Место',
 };
 
-export const HAZARD_LABELS: Record<string, { label: string; icon: string }> = {
-  bears: { label: 'Медведи', icon: '🐻' },
-  wildlife: { label: 'Дикие животные', icon: '🦊' },
-  avalanche: { label: 'Лавины', icon: '🏔' },
-  rockfall: { label: 'Камнепад', icon: '🪨' },
-  thermal: { label: 'Термальные зоны', icon: '♨️' },
-  volcanic_gas: { label: 'Вулканические газы', icon: '💨' },
-  altitude: { label: 'Высота', icon: '⛰' },
-  river_crossing: { label: 'Переправы', icon: '🌊' },
-  fog: { label: 'Туман', icon: '🌫' },
-  ice: { label: 'Лёд', icon: '🧊' },
-  no_signal: { label: 'Нет связи', icon: '📵' },
-  weather: { label: 'Резкая погода', icon: '⛈' },
+export const HAZARD_LABELS: Record<string, { label: string }> = {
+  bears: { label: 'Медведи' },
+  wildlife: { label: 'Дикие животные' },
+  avalanche: { label: 'Лавины' },
+  rockfall: { label: 'Камнепад' },
+  thermal: { label: 'Термальные зоны' },
+  volcanic_gas: { label: 'Вулканические газы' },
+  altitude: { label: 'Высота' },
+  river_crossing: { label: 'Переправы' },
+  fog: { label: 'Туман' },
+  ice: { label: 'Лёд' },
+  no_signal: { label: 'Нет связи' },
+  weather: { label: 'Резкая погода' },
 };
 
 export const DIFFICULTY_LABELS = ['', 'Лёгкий', 'Ниже среднего', 'Средний', 'Сложный', 'Экстремальный'];

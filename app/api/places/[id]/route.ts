@@ -40,6 +40,7 @@ export async function GET(
          p.source_url,
          p.source_name,
          p.updated_at,
+         p.kuzmich_review,
          sp.difficulty_level,
          sp.altitude_m,
          sp.altitude_diff_m,
@@ -113,6 +114,18 @@ export async function GET(
       [r.lat, r.lng, r.ark_id]
     );
 
+    // Reviews for this place
+    const reviewsResult = await query(
+      `SELECT rv.id, rv.rating, rv.comment, rv.created_at,
+         COALESCE(u.name, 'Турист') AS author_name
+       FROM reviews rv
+       LEFT JOIN users u ON u.id = rv.user_id
+       WHERE rv.place_id = $1
+       ORDER BY rv.created_at DESC
+       LIMIT 10`,
+      [r.ark_id]
+    );
+
     // Routes through this place (via route_waypoints — may be empty for now)
     const routesResult = await query(
       `SELECT kr.id, kr.title, kr.activity_type, kr.difficulty, kr.distance_km, kr.duration_hours
@@ -149,6 +162,7 @@ export async function GET(
         sourceUrl: r.source_url as string | null,
         sourceName: r.source_name as string | null,
         updatedAt: r.updated_at as string | null,
+        kuzmichReview: (r.kuzmich_review as string | null) ?? null,
 
         safety: {
           difficultyLevel: r.difficulty_level != null ? Number(r.difficulty_level) : null,
@@ -194,6 +208,14 @@ export async function GET(
           difficulty: rt.difficulty as string | null,
           distanceKm: rt.distance_km != null ? Number(rt.distance_km) : null,
           durationHours: rt.duration_hours != null ? Number(rt.duration_hours) : null,
+        })),
+
+        reviews: reviewsResult.rows.map(rv => ({
+          id: rv.id as string,
+          rating: Number(rv.rating),
+          comment: rv.comment as string | null,
+          authorName: rv.author_name as string,
+          createdAt: rv.created_at as string,
         })),
 
         nearby: nearbyResult.rows.map(n => ({

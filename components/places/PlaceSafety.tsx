@@ -15,10 +15,10 @@ function SafetyHazards({ hazardTypes }: { hazardTypes: string[] }) {
       <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-2 uppercase tracking-wide">Опасности</h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {hazardTypes.map(h => {
-          const info = HAZARD_LABELS[h] ?? { label: h, icon: '⚠️' };
+          const info = HAZARD_LABELS[h] ?? { label: h };
           return (
             <div key={h} className="flex items-center gap-2 text-sm">
-              <span className="text-base w-6 flex-shrink-0">{info.icon}</span>
+              <AlertTriangle className="w-4 h-4 text-[var(--warning)] flex-shrink-0" />
               <span className="text-[var(--text-secondary)]">{info.label}</span>
             </div>
           );
