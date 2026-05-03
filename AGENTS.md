@@ -7,15 +7,16 @@
 
 ## РАБОЧИЕ АГЕНТЫ
 
-### 3 Cron-агента (автономные)
+### 4 Cron-агента (автономные)
 
 | Агент | Файл | Cron | Что делает |
 |-------|------|------|------------|
 | **Watchdog** | `lib/agents/watchdog.ts` | каждые 30 мин | Бронирования без подтверждения >24ч, операторы без ответа >48ч, лиды >2ч, SOS >30 мин. Алерты в Telegram. |
 | **Editor** | `lib/agents/editor.ts` | 02:00 UTC ежедневно | Находит туры с описанием <300 символов, переписывает AI, сохраняет в `route_description_cache`. |
 | **Scout Digest** | `lib/agents/scout-digest.ts` | 07:00 UTC ежедневно | Собирает RSS (Habr AI/ML, RATA, Tourprom, Kamgov), AI-синтез, дайджест в Telegram. |
+| **Kuzmich Place Enricher** | `lib/agents/kuzmich-place-enricher.ts` | 04:00 UTC ежедневно | Генерирует `kuzmich_review` для мест без него. 20 мест за запуск. Опционально скрейпит 2GIS через Bright Data. |
 
-GitHub Actions: `.github/workflows/cron-watchdog.yml`, `cron-editor.yml`, `cron-scout-digest.yml`
+GitHub Actions: `.github/workflows/cron-watchdog.yml`, `cron-editor.yml`, `cron-scout-digest.yml`, `cron-kuzmich-places.yml`
 
 ### Kuzmich (AI-ассистент туристов)
 

@@ -19,6 +19,8 @@
 | 🌋 **1423 маршрута** | Вулканы, гейзеры, источники, озёра, мысы, пляжи — всё на карте |
 | 📱 **PWA** | Homescreen, service worker, 100% offline-first |
 
+**Стек скрейпинга:** Bright Data Web Unlocker (обход антибот-защиты, 2GIS/Yandex Maps)
+
 **Слоган:** *«Камчатка без связи. С контролем.»*
 
 **Codename:** Volcano OS
@@ -103,6 +105,7 @@ lib/
 | Editor | 02:00 UTC | AI-enrichment описаний маршрутов |
 | Scout Digest | 07:00 UTC | RSS → AI synthesis → Telegram |
 | Intelligence Monitor | каждые 6ч | Конкуренты, индустрия, технологии |
+| Kuzmich Place Enricher | 04:00 UTC | Генерирует заметки Кузьмича о местах (kuzmich_review) |
 
 ---
 
@@ -146,18 +149,21 @@ npx tsc --noEmit      # Type check
 - Kuzmich с геоконтекстом для веб-чата
 - search_count для data-driven top-100
 - SOS панель с экстренными номерами
-- 1423 маршрута в БД
-- 4 background AI агента
+- 779 мест (вулканы, озёра, источники, гейзеры) + 294 маршрута
+- Карточки мест с безопасностью, отзывами, GPX-экспортом
+- Анонимные отзывы о местах (без регистрации)
+- 5 background AI агентов (Watchdog, Editor, Scout, Intelligence, Kuzmich Enricher)
+- Bright Data Web Unlocker для скрейпинга
 
 ### 🔧 В работе
-- Фаза 2: Контент топ-100 (enrichment)
-- Live-данные: КВЕРТ вулканы, Яндекс.Погода
-- SOS с отправкой координат в Telegram
+- Kuzmich Place Enricher — заполнение kuzmich_review (20 мест/день)
+- route_waypoints — связи маршрут→точки
+- SOS sticky bar на карточках мест и маршрутов
 
 ### 📋 План
-- Фаза 3: UGC — фото с GPS, заметки, GPX, отчёты
-- Фаза 4: Lock-in — чек-ины, push-уведомления
-- Фаза 5: Возврат привычки (зима 2026/27 → лето 2027)
+- UGC — фото с GPS, заметки, GPX, отчёты
+- Lock-in — чек-ины, push-уведомления
+- Офлайн PWA v2 — полный кэш мест без интернета
 
 ---
 
