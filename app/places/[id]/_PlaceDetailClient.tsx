@@ -12,6 +12,7 @@ const PlaceSafety           = dynamic(() => import('@/components/places/PlaceSaf
 const PlaceAccess           = dynamic(() => import('@/components/places/PlaceAccess'),           { ssr: false });
 const PlaceSeason           = dynamic(() => import('@/components/places/PlaceSeason'),           { ssr: false });
 const PlaceRoutes           = dynamic(() => import('@/components/places/PlaceRoutes'),           { ssr: false });
+const PlaceTours            = dynamic(() => import('@/components/places/PlaceTours'),            { ssr: false });
 const PlaceKuzmich          = dynamic(() => import('@/components/places/PlaceKuzmich'),          { ssr: false });
 const PlaceReviews          = dynamic(() => import('@/components/places/PlaceReviews'),          { ssr: false });
 const PlaceNearby           = dynamic(() => import('@/components/places/PlaceNearby'),           { ssr: false });
@@ -107,6 +108,7 @@ export default function PlaceDetailClient({ id }: { id: string }) {
           locationType={place.locationType}
           zone={place.zone}
           safety={place.safety}
+          terrainType={place.safety.terrainType}
         />
       </div>
 
@@ -134,7 +136,14 @@ export default function PlaceDetailClient({ id }: { id: string }) {
         </div>
       )}
 
-      {/* 8. Карта + как добраться */}
+      {/* 8. Туры к этому месту */}
+      {place.tours.length > 0 && (
+        <div className="mt-6">
+          <PlaceTours tours={place.tours} />
+        </div>
+      )}
+
+      {/* 10. Карта + как добраться */}
       <div className="mt-6">
         <PlaceAccess
           placeId={place.id}
@@ -146,7 +155,7 @@ export default function PlaceDetailClient({ id }: { id: string }) {
         />
       </div>
 
-      {/* 9. Кузьмич */}
+      {/* 11. Кузьмич */}
       <div className="mt-6">
         <PlaceKuzmich
           placeId={place.id}
@@ -155,12 +164,12 @@ export default function PlaceDetailClient({ id }: { id: string }) {
         />
       </div>
 
-      {/* 10. Отзывы о месте */}
+      {/* 12. Отзывы о месте */}
       <div className="mt-6">
         <PlaceReviews placeId={place.id} reviews={place.reviews} />
       </div>
 
-      {/* 11. Места рядом */}
+      {/* 13. Места рядом */}
       {place.nearby.length > 0 && (
         <div className="mt-6">
           <PlaceNearby nearby={place.nearby} placeId={place.id} />

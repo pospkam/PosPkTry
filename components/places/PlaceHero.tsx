@@ -2,8 +2,9 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowLeft, Mountain } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { LOCATION_TYPE_LABELS } from './types';
+import { RouteGradientPlaceholder } from '@/components/routes/RouteGradientPlaceholder';
 
 interface Props {
   placeId: string;
@@ -46,10 +47,12 @@ export default function PlaceHero({ placeId, name, locationType, lat, lng, photo
           sizes="100vw"
         />
       ) : (
-        <div className="w-full h-full flex flex-col items-center justify-center gap-3">
-          <Mountain className="w-24 h-24 text-[var(--text-muted)] opacity-20" />
-          <p className="text-xs text-[var(--text-muted)]">Фото появится позже</p>
-        </div>
+        <RouteGradientPlaceholder
+          title={name}
+          locationType={locationType}
+          className="w-full h-full"
+          showLabel={true}
+        />
       )}
 
       {/* Gradient overlay */}

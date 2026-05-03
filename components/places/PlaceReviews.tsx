@@ -1,6 +1,6 @@
 'use client';
 
-import { Star, MessageSquarePlus } from 'lucide-react';
+import { Star, MessageSquarePlus, ChevronRight } from 'lucide-react';
 import type { PlaceReview } from './types';
 
 interface Props {
@@ -49,6 +49,15 @@ export default function PlaceReviews({ placeId, reviews }: Props) {
           Оставить отзыв
         </a>
       </div>
+
+      {reviews.length >= 10 && (
+        <a
+          href={`/places/${placeId}/reviews`}
+          className="inline-flex items-center gap-1 text-sm text-[var(--ocean)] hover:text-[var(--accent)] font-medium transition-colors"
+        >
+          Все отзывы <ChevronRight className="w-4 h-4" />
+        </a>
+      )}
 
       {reviews.length === 0 ? (
         <div className="ds-card p-6 text-center space-y-2">

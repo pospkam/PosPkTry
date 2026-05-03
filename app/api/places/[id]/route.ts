@@ -137,6 +137,22 @@ export async function GET(
       [r.ark_id]
     );
 
+    // Tours to this place (via route_waypoints → kamchatka_routes → operator_tours)
+    const toursResult = await query(
+      `SELECT DISTINCT ON (ot.id)
+         ot.id, ot.title, ot.base_price, ot.duration_days,
+         p.name AS operator_name, p.slug AS operator_slug
+       FROM route_waypoints rw
+       JOIN kamchatka_routes kr ON kr.id = rw.route_id
+       JOIN operator_tours ot ON ot.route_id = kr.id
+       JOIN partners p ON p.id = ot.operator_id
+       WHERE rw.place_id = $1
+         AND ot.is_visible = true
+       ORDER BY ot.id, ot.base_price ASC
+       LIMIT 5`,
+      [r.ark_id]
+    );
+
     const hazardTypes = Array.isArray(r.hazard_types) ? (r.hazard_types as string[]) : [];
     const requiredGear = Array.isArray(r.required_gear) ? (r.required_gear as string[]) : [];
 
@@ -208,6 +224,15 @@ export async function GET(
           difficulty: rt.difficulty as string | null,
           distanceKm: rt.distance_km != null ? Number(rt.distance_km) : null,
           durationHours: rt.duration_hours != null ? Number(rt.duration_hours) : null,
+        })),
+
+        tours: toursResult.rows.map(t => ({
+          id: t.id as string,
+          title: t.title as string,
+          basePrice: Number(t.base_price),
+          durationDays: t.duration_days != null ? Number(t.duration_days) : null,
+          operatorName: t.operator_name as string,
+          operatorSlug: t.operator_slug as string | null,
         })),
 
         reviews: reviewsResult.rows.map(rv => ({

@@ -62,6 +62,15 @@ export interface PlaceReview {
   createdAt: string;
 }
 
+export interface PlaceTour {
+  id: string;
+  title: string;
+  basePrice: number;
+  durationDays: number | null;
+  operatorName: string;
+  operatorSlug: string | null;
+}
+
 export interface PlaceData {
   id: string;
   name: string;
@@ -86,6 +95,7 @@ export interface PlaceData {
   safety: PlaceSafety;
   realtime: PlaceRealtime | null;
   routes: PlaceRoute[];
+  tours: PlaceTour[];
   reviews: PlaceReview[];
   nearby: NearbyPlace[];
 }

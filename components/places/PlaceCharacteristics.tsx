@@ -1,6 +1,6 @@
 'use client';
 
-import { MapPin, Layers, TrendingUp, Users, AlertTriangle } from 'lucide-react';
+import { MapPin, Layers, TrendingUp, Users, AlertTriangle, Footprints } from 'lucide-react';
 import { LOCATION_TYPE_LABELS, DIFFICULTY_LABELS, HAZARD_LABELS } from './types';
 import type { PlaceSafety } from './types';
 
@@ -8,6 +8,7 @@ interface Props {
   locationType: string | null;
   zone: string | null;
   safety: PlaceSafety;
+  terrainType?: string | null;
 }
 
 const ZONE_LABELS: Record<string, string> = {
@@ -31,7 +32,7 @@ const DIFFICULTY_COLORS: Record<number, string> = {
   5: 'text-[var(--danger)]',
 };
 
-export default function PlaceCharacteristics({ locationType, zone, safety }: Props) {
+export default function PlaceCharacteristics({ locationType, zone, safety, terrainType }: Props) {
   const typeLabel  = LOCATION_TYPE_LABELS[locationType ?? 'other'] ?? 'Место';
   const diff       = safety.difficultyLevel;
   const diffLabel  = diff != null ? DIFFICULTY_LABELS[diff] ?? null : null;
@@ -76,6 +77,14 @@ export default function PlaceCharacteristics({ locationType, zone, safety }: Pro
       icon: <Users className="w-4 h-4 text-[var(--ocean)]" />,
       label: 'Вместимость',
       value: <span className="font-semibold text-[var(--text-primary)]">{safety.capacityPerDay} чел/день</span>,
+    });
+  }
+
+  if (terrainType) {
+    items.push({
+      icon: <Footprints className="w-4 h-4 text-[var(--ocean)]" />,
+      label: 'Рельеф',
+      value: <span className="font-semibold text-[var(--text-primary)]">{terrainType}</span>,
     });
   }
 
