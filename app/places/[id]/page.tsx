@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { query } from '@/lib/database';
 import PlaceDetailClient from './_PlaceDetailClient';
+import PlaceSOS from '@/components/places/PlaceSOS';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -39,5 +40,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PlaceDetailPage({ params }: Props) {
   const { id } = await params;
-  return <PlaceDetailClient id={id} />;
+  return (
+    <>
+      <PlaceDetailClient id={id} />
+      <PlaceSOS />
+    </>
+  );
 }
