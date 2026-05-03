@@ -4,8 +4,7 @@ import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import {
   Heart, MapPin, Flame, Wind, Thermometer, Droplets,
-  Mountain, Waves, Anchor, TreePine, Landmark, Eye,
-  Home,
+  Mountain, Waves, Anchor, TreePine, Landmark, Eye, Home,
 } from 'lucide-react';
 import type { RouteItem } from './RouteCard';
 
@@ -47,33 +46,32 @@ const LOCATION_ICONS: Record<string, React.ElementType> = {
   other:      MapPin,
 };
 
-const LOCATION_COLORS: Record<string, string> = {
-  volcano:    'var(--accent)',
-  geyser:     'var(--warning)',
-  hot_spring: 'var(--ocean)',
-  thermal:    'var(--ocean)',
-  lake:       'var(--ocean)',
-  mountain:   'var(--text-secondary)',
-  river:      'var(--ocean)',
-  bay:        'var(--ocean)',
-  beach:      'var(--success)',
-  forest:     'var(--success)',
-  museum:     'var(--text-secondary)',
-  historical: 'var(--text-secondary)',
-  rock:       'var(--text-muted)',
-  viewpoint:  'var(--ocean)',
-  settlement: 'var(--text-muted)',
-  other:      'var(--text-muted)',
+const PLACEHOLDER_BG: Record<string, string> = {
+  volcano:    'linear-gradient(135deg, #7c2d12 0%, #991b1b 100%)',
+  geyser:     'linear-gradient(135deg, #78350f 0%, #44403c 100%)',
+  hot_spring: 'linear-gradient(135deg, #0e7490 0%, #0c4a6e 100%)',
+  thermal:    'linear-gradient(135deg, #0e7490 0%, #0c4a6e 100%)',
+  lake:       'linear-gradient(135deg, #1e3a5f 0%, #0c4a6e 100%)',
+  mountain:   'linear-gradient(135deg, #374151 0%, #1f2937 100%)',
+  river:      'linear-gradient(135deg, #1d4ed8 0%, #0c4a6e 100%)',
+  bay:        'linear-gradient(135deg, #075985 0%, #0c4a6e 100%)',
+  beach:      'linear-gradient(135deg, #92400e 0%, #78350f 100%)',
+  forest:     'linear-gradient(135deg, #14532d 0%, #166534 100%)',
+  museum:     'linear-gradient(135deg, #374151 0%, #1f2937 100%)',
+  historical: 'linear-gradient(135deg, #44403c 0%, #292524 100%)',
+  other:      'linear-gradient(135deg, #292524 0%, #1c1917 100%)',
 };
 
 export default function PlaceCard({ route }: { route: RouteItem }) {
   const locType = route.locationType ?? 'other';
   const Icon    = LOCATION_ICONS[locType] ?? MapPin;
-  const color   = LOCATION_COLORS[locType] ?? 'var(--text-muted)';
   const label   = LOCATION_LABELS[locType] ?? 'Место';
 
-  const currentMonth = new Date().getMonth() + 1;
-  const isInSeason   = route.bestMonths?.includes(currentMonth) ?? false;
+  const photoSrc = route.hasAiImage
+    ? `/api/images/route/${route.id}`
+    : (route.imageUrl ?? null);
+
+  const placeholderBg = PLACEHOLDER_BG[locType] ?? PLACEHOLDER_BG.other;
 
   const [liked,  setLiked]  = useState(false);
   const [liking, setLiking] = useState(false);
@@ -98,49 +96,62 @@ export default function PlaceCard({ route }: { route: RouteItem }) {
   }, [liking, liked, route.id, route.title]);
 
   return (
-    <article className="group rounded-lg border border-[var(--border)] bg-[var(--bg-card)] p-3">
-      <div className="mb-2 flex items-center justify-between">
-        <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-[var(--bg-hover)] text-[var(--text-primary)]">
-          <Icon className="w-3 h-3" style={{ color }} />
+    <article className="group rounded-lg border border-[var(--border)] bg-[var(--bg-card)] overflow-hidden hover:border-[var(--accent)]/30 transition-colors duration-200">
+
+      {/* ── Photo ─────────────────────────────────────────── */}
+      <Link href={`/places/${route.id}`} className="block relative overflow-hidden" style={{ aspectRatio: '4/3' }}>
+        {photoSrc ? (
+          <img
+            src={photoSrc}
+            alt={route.title}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            loading="lazy"
+          />
+        ) : (
+          <div
+            className="w-full h-full flex items-center justify-center"
+            style={{ background: placeholderBg }}
+          >
+            <Icon className="w-12 h-12 text-white opacity-20" />
+          </div>
+        )}
+        {/* Type badge */}
+        <span className="absolute top-2 left-2 inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full text-white" style={{ background: 'rgba(0,0,0,0.55)' }}>
+          <Icon className="w-3 h-3" />
           {label}
         </span>
-        <div className="flex items-center gap-2">
-          {isInSeason && (
-            <span className="w-2 h-2 rounded-full bg-[var(--success)]" title="Сейчас сезон" />
-          )}
-          <button
-            type="button"
-            onClick={handleFavorite}
-            aria-label={liked ? 'В избранном' : 'В избранное'}
-            className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200"
-            style={{ background: liked ? 'var(--accent)' : 'var(--bg-hover)', opacity: liking ? 0.5 : 1 }}
-          >
-            <Heart
-              className="w-3.5 h-3.5 transition-all"
-              style={{ color: liked ? 'var(--bg-card)' : 'var(--text-secondary)', fill: liked ? 'var(--bg-card)' : 'none' }}
-            />
-          </button>
-        </div>
-      </div>
-
-      <Link href={`/routes/${route.id}`} className="block space-y-1.5">
-        <h3
-          className="font-semibold text-[var(--text-primary)] leading-snug line-clamp-2 group-hover:text-[var(--accent)] transition-colors"
-          style={{ fontFamily: 'var(--font-playfair)', fontSize: '1rem' }}
-        >
-          {route.title}
-        </h3>
-        <p className="text-xs text-[var(--text-secondary)] line-clamp-2 leading-relaxed">
-          {route.description}
-        </p>
-
-        {route.lat != null && (
-          <span className="inline-flex items-center gap-1 text-xs text-[var(--text-muted)]">
-            <MapPin className="w-3 h-3" />
-            На карте
-          </span>
-        )}
       </Link>
+
+      {/* ── Content ───────────────────────────────────────── */}
+      <div className="p-3 flex items-start gap-2">
+        <Link href={`/places/${route.id}`} className="flex-1 min-w-0">
+          <h3
+            className="font-semibold text-[var(--text-primary)] leading-snug line-clamp-2 group-hover:text-[var(--accent)] transition-colors text-sm"
+            style={{ fontFamily: 'var(--font-playfair)' }}
+          >
+            {route.title}
+          </h3>
+          {route.lat != null && (
+            <span className="mt-1 inline-flex items-center gap-1 text-xs text-[var(--text-muted)]">
+              <MapPin className="w-3 h-3" />
+              На карте
+            </span>
+          )}
+        </Link>
+
+        <button
+          type="button"
+          onClick={handleFavorite}
+          aria-label={liked ? 'В избранном' : 'В избранное'}
+          className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 mt-0.5"
+          style={{ background: liked ? 'var(--accent)' : 'var(--bg-hover)', opacity: liking ? 0.5 : 1 }}
+        >
+          <Heart
+            className="w-3 h-3 transition-all"
+            style={{ color: liked ? 'var(--bg-card)' : 'var(--text-secondary)', fill: liked ? 'var(--bg-card)' : 'none' }}
+          />
+        </button>
+      </div>
     </article>
   );
 }

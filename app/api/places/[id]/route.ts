@@ -95,7 +95,7 @@ export async function GET(
          p.lat,
          p.lng,
          p.photo_url,
-         (SELECT ai.image_url FROM ai_route_images ai WHERE ai.route_id = p.ark_id LIMIT 1) AS thumb_url,
+         (SELECT CASE WHEN EXISTS(SELECT 1 FROM ai_route_images ai2 WHERE ai2.route_id = p.ark_id) THEN '/api/images/route/' || p.ark_id ELSE NULL END) AS thumb_url,
          round(
            6371 * acos(
              LEAST(1.0, cos(radians($1::float)) * cos(radians(p.lat::float)) *
@@ -140,7 +140,7 @@ export async function GET(
         lng: parseFloat(r.lng as string),
         zone: r.zone as string | null,
         district: r.district as string | null,
-        photoUrl: r.photo_url as string | null,
+        photoUrl: (r.photo_url as string | null) ?? (Number(r.photo_count) > 0 ? `/api/images/route/${r.ark_id}` : null),
         images: (r.images as unknown[] | null) ?? [],
         photoCount: Number(r.photo_count),
         bestSeason: r.best_season as string | null,
