@@ -177,13 +177,14 @@ export default function PlaceDetailClient({ id }: { id: string }) {
       )}
 
       {/* 12. Подвал */}
-      <div className="mt-10">
+      <div className="mt-10 mb-16">
         <PlaceFooter
           sourceUrl={place.sourceUrl}
           sourceName={place.sourceName}
           updatedAt={place.updatedAt}
         />
       </div>
+
     </>
   );
 }
