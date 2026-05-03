@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { Download, Navigation, MapPin } from 'lucide-react';
+import { Download, Navigation, MapPin, FileDown } from 'lucide-react';
 
 const LeafletMap = dynamic(() => import('@/components/shared/LeafletMap'), { ssr: false });
 
@@ -62,7 +62,7 @@ export default function PlaceAccess({ placeId, name, lat, lng, accessInfo, nearb
       </div>
 
       {/* Navigation buttons */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-2 mb-2">
         <a
           href={gpxUrl}
           download
@@ -88,6 +88,21 @@ export default function PlaceAccess({ placeId, name, lat, lng, accessInfo, nearb
           Яндекс.Карты
         </a>
       </div>
+
+      {/* Offline PDF */}
+      <a
+        href={`/api/places/${placeId}/pdf`}
+        download
+        className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-xs font-semibold transition-colors"
+        style={{
+          background: 'var(--bg-hover)',
+          border: '1px solid var(--border)',
+          color: 'var(--text-primary)',
+        }}
+      >
+        <FileDown className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+        Скачать карточку для офлайн (PDF)
+      </a>
     </section>
   );
 }
