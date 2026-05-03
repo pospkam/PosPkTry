@@ -14,6 +14,7 @@ jobs:
       JWT_SECRET: test-jwt-secret-for-ci-only-not-used-in-production
       DATABASE_URL: postgresql://user:password@localhost/test
       NEXT_PUBLIC_API_BASE_URL: http://localhost:3000
+      NODE_OPTIONS: '--max-old-space-size=4096'
 
     steps:
       - name: Checkout code
