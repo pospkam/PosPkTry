@@ -16,7 +16,7 @@ import fs from 'fs';
 import path from 'path';
 
 const ApplyMigrationsSchema = z.object({
-  migrations: z.array(z.enum(['054', '064', '066', '083', '084'])).min(1),
+  migrations: z.array(z.string().regex(/^\d{3}$/)).min(1),
   dry_run: z.boolean().default(false),
 });
 
