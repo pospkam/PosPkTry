@@ -58,13 +58,13 @@ export function buildImagePrompt(
   description: string,
 ): string {
   const typePrompt = TYPE_PROMPTS[locationType ?? 'other'] ?? TYPE_PROMPTS.other;
-  // Extract first meaningful sentence from description for specificity
   const descSnippet = description
     .replace(/<[^>]+>/g, '')
     .split(/[.!?]/)[0]
     .trim()
     .slice(0, 120);
-  return `${typePrompt}, ${descSnippet ? descSnippet + ', ' : ''}${BASE_STYLE}`;
+  const namePart = title.trim().slice(0, 80);
+  return `${typePrompt}, ${namePart}, ${descSnippet ? descSnippet + ', ' : ''}${BASE_STYLE}`;
 }
 
 // ──────────────────────────────────────────────────────────────

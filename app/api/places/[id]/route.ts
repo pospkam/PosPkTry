@@ -169,7 +169,17 @@ export async function GET(
         lng: parseFloat(r.lng as string),
         zone: r.zone as string | null,
         district: r.district as string | null,
-        photoUrl: (r.photo_url as string | null) ?? (Number(r.photo_count) > 0 ? `/api/images/route/${r.ark_id}` : null),
+        photoUrl: (() => {
+          if (r.photo_url) return r.photo_url as string;
+          // Use first real URL from places.images if available
+          const imgs = r.images as unknown[] | null;
+          if (Array.isArray(imgs) && imgs.length > 0) {
+            const first = imgs[0];
+            if (typeof first === 'string' && (first.startsWith('http') || first.startsWith('/'))) return first;
+          }
+          if (Number(r.photo_count) > 0) return `/api/images/route/${r.ark_id}`;
+          return null;
+        })(),
         images: (r.images as unknown[] | null) ?? [],
         photoCount: Number(r.photo_count),
         bestSeason: r.best_season as string | null,
