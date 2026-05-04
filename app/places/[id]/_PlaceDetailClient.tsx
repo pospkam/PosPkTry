@@ -17,6 +17,7 @@ const PlaceTours            = dynamic(() => import('@/components/places/PlaceTou
 const PlaceKuzmich          = dynamic(() => import('@/components/places/PlaceKuzmich'),          { ssr: false });
 const PlaceReviews          = dynamic(() => import('@/components/places/PlaceReviews'),          { ssr: false });
 const PlaceNearby           = dynamic(() => import('@/components/places/PlaceNearby'),           { ssr: false });
+const PlaceEco              = dynamic(() => import('@/components/places/PlaceEco'),              { ssr: false });
 const PlaceFooter           = dynamic(() => import('@/components/places/PlaceFooter'),           { ssr: false });
 const Header                = dynamic(() => import('@/components/layout/Header').then(m => ({ default: m.Header })), { ssr: false });
 
@@ -120,6 +121,13 @@ export default function PlaceDetailClient({ id }: { id: string }) {
       <div className="mt-6">
         <PlaceSafety safety={place.safety} placeId={place.id} />
       </div>
+
+      {/* 5b. Экология и охрана природы */}
+      {place.eco && (
+        <div className="mt-6">
+          <PlaceEco eco={place.eco} placeName={place.name} />
+        </div>
+      )}
 
       {/* 6. Сезонность */}
       {hasSeason && (

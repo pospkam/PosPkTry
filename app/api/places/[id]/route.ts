@@ -42,6 +42,10 @@ export async function GET(
          p.source_name,
          p.updated_at,
          p.kuzmich_review,
+         p.eco_zone,
+         p.eco_permit_required,
+         p.eco_rules,
+         p.eco_permit_url,
          sp.difficulty_level,
          sp.altitude_m,
          sp.altitude_diff_m,
@@ -190,6 +194,13 @@ export async function GET(
         sourceName: r.source_name as string | null,
         updatedAt: r.updated_at as string | null,
         kuzmichReview: (r.kuzmich_review as string | null) ?? null,
+
+        eco: r.eco_zone ? {
+          zone: r.eco_zone as string,
+          permitRequired: Boolean(r.eco_permit_required),
+          rules: (r.eco_rules as string | null) ?? null,
+          permitUrl: (r.eco_permit_url as string | null) ?? null,
+        } : null,
 
         safety: {
           difficultyLevel: r.difficulty_level != null ? Number(r.difficulty_level) : null,

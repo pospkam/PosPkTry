@@ -71,6 +71,13 @@ export interface PlaceTour {
   operatorSlug: string | null;
 }
 
+export interface PlaceEco {
+  zone: 'UNESCO' | 'federal_reserve' | 'regional_reserve' | 'natural_park' | 'zakaznik' | 'none' | null;
+  permitRequired: boolean;
+  rules: string | null;
+  permitUrl: string | null;
+}
+
 export interface PlaceData {
   id: string;
   name: string;
@@ -92,6 +99,7 @@ export interface PlaceData {
   sourceName: string | null;
   updatedAt: string | null;
   kuzmichReview: string | null;
+  eco: PlaceEco | null;
   safety: PlaceSafety;
   realtime: PlaceRealtime | null;
   routes: PlaceRoute[];
