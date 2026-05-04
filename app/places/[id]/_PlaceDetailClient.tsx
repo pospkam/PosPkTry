@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import type { PlaceData } from '@/components/places/types';
 
 const PlaceHero             = dynamic(() => import('@/components/places/PlaceHero'),             { ssr: false });
+const OfflineGPSBanner      = dynamic(() => import('@/components/shared/OfflineGPSBanner'),      { ssr: false });
 const PlaceRealtimeStatus   = dynamic(() => import('@/components/places/PlaceRealtimeStatus'),   { ssr: false });
 const PlaceDescription      = dynamic(() => import('@/components/places/PlaceDescription'),      { ssr: false });
 const PlaceCharacteristics  = dynamic(() => import('@/components/places/PlaceCharacteristics'),  { ssr: false });
@@ -79,6 +80,9 @@ export default function PlaceDetailClient({ id }: { id: string }) {
   return (
     <>
       <Header />
+
+      {/* Офлайн-баннер: показывается только без сети, содержит последние GPS-координаты */}
+      <OfflineGPSBanner />
 
       {/* 1. Hero: фото + тип + координаты */}
       <PlaceHero
