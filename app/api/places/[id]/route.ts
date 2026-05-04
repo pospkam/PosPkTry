@@ -22,6 +22,7 @@ export async function GET(
     // Main query: place + safety + realtime in one round-trip
     const result = await query(
       `SELECT
+         p.id AS place_pk,
          p.ark_id,
          p.name,
          p.description,
@@ -134,7 +135,7 @@ export async function GET(
        WHERE rw.place_id = $1
        ORDER BY rw.position
        LIMIT 10`,
-      [r.ark_id]
+      [r.place_pk]
     );
 
     // Tours to this place (via route_waypoints → kamchatka_routes → operator_tours)
@@ -150,7 +151,7 @@ export async function GET(
          AND ot.is_visible = true
        ORDER BY ot.id, ot.base_price ASC
        LIMIT 5`,
-      [r.ark_id]
+      [r.place_pk]
     );
 
     const hazardTypes = Array.isArray(r.hazard_types) ? (r.hazard_types as string[]) : [];

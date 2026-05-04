@@ -119,9 +119,9 @@ export async function GET(request: NextRequest) {
   let idx = 1;
 
   if (q) {
-    conditions.push(`search_text ILIKE $${idx}`);
-    params.push(`%${q}%`);
-    idx++;
+    conditions.push(`(ark.title ILIKE $${idx} OR ark.description ILIKE $${idx + 1})`);
+    params.push(`%${q}%`, `%${q}%`);
+    idx += 2;
   }
   if (kind) {
     conditions.push(`kind = $${idx}`);
@@ -210,7 +210,7 @@ export async function GET(request: NextRequest) {
         [...params, limit, offset]
       ),
       query(
-        `SELECT COUNT(*)::int AS total FROM agent_route_knowledge ${where}`,
+        `SELECT COUNT(*)::int AS total FROM agent_route_knowledge ark ${where}`,
         params
       ),
     ]);
