@@ -22,10 +22,22 @@ export async function GET(
   }
 
   try {
+    // Prefer kamchatka_routes (has geometry column); fall back to agent_route_knowledge view
     const result = await query(
-      `SELECT id, title, description, lat, lng, location_type, activity_type, category, payload
-       FROM agent_route_knowledge
-       WHERE id = $1 AND is_visible = TRUE`,
+      `SELECT
+         COALESCE(kr.id::text, ark.id::text) AS id,
+         COALESCE(kr.title, ark.title) AS title,
+         COALESCE(kr.description, ark.description) AS description,
+         COALESCE(kr.lat::text, ark.lat::text) AS lat,
+         COALESCE(kr.lng::text, ark.lng::text) AS lng,
+         ark.location_type,
+         ark.activity_type,
+         ark.category,
+         ark.payload,
+         kr.geometry
+       FROM agent_route_knowledge ark
+       LEFT JOIN kamchatka_routes kr ON kr.id = ark.id
+       WHERE ark.id = $1 AND ark.is_visible = TRUE`,
       [id]
     );
 
@@ -39,21 +51,27 @@ export async function GET(
     // Попытка получить trackpoints (геометрию трека)
     let trackpoints: { lat: number; lng: number; elevation?: number }[] = [];
 
-    // Проверяем есть ли geometry в payload (GeoJSON LineString)
-    const geom = payload.geometry as { type?: string; coordinates?: number[][] } | null;
-    if (geom?.type === 'LineString' && Array.isArray(geom.coordinates)) {
-      trackpoints = geom.coordinates
+    // 1. Direct geometry column on kamchatka_routes (highest priority)
+    const directGeom = r.geometry as { type?: string; coordinates?: number[][] } | null;
+    if (directGeom?.type === 'LineString' && Array.isArray(directGeom.coordinates)) {
+      trackpoints = directGeom.coordinates
         .filter(c => Array.isArray(c) && c.length >= 2)
-        .map(c => ({
-          lng: c[0],
-          lat: c[1],
-          elevation: c[2] as number | undefined,
-        }));
+        .map(c => ({ lng: c[0], lat: c[1], elevation: c[2] as number | undefined }));
     }
 
-    // Проверяем есть ли track в payload
+    // 2. Legacy: geometry in payload JSONB
+    if (trackpoints.length === 0) {
+      const geom = payload.geometry as { type?: string; coordinates?: number[][] } | null;
+      if (geom?.type === 'LineString' && Array.isArray(geom.coordinates)) {
+        trackpoints = geom.coordinates
+          .filter(c => Array.isArray(c) && c.length >= 2)
+          .map(c => ({ lng: c[0], lat: c[1], elevation: c[2] as number | undefined }));
+      }
+    }
+
+    // 3. Legacy: track array in payload
     const track = payload.track as { lat: number; lng: number; elevation?: number }[] | null;
-    if (track && track.length > 0) {
+    if (trackpoints.length === 0 && track && track.length > 0) {
       trackpoints = track;
     }
 
