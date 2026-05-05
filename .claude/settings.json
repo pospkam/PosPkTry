@@ -10,12 +10,22 @@
       "Bash(python3:*)",
       "Bash(mkdir:*)",
       "Bash(env)",
+      "Bash(npx eslint *)",
+      "Bash(curl -s *)",
+      "Bash(curl -s --max-time *)",
+      "Bash(npm run dev*)",
+      "Bash(npm run migrate*)",
+      "Bash(DATABASE_URL=* npm run migrate*)",
       "WebFetch(domain:habr.com)",
       "WebFetch(domain:vc.ru)",
       "WebFetch(domain:developers.tochka.com)",
       "WebFetch(domain:enter.tochka.com)",
       "WebFetch(domain:kamchatkaland.ru)",
-      "WebFetch(domain:spkam.com)"
+      "WebFetch(domain:spkam.com)",
+      "WebFetch(domain:openstreetmap.org)",
+      "WebFetch(domain:nominatim.openstreetmap.org)",
+      "WebFetch(domain:idilesom.com)",
+      "WebFetch(domain:visitkamchatka.ru)"
     ]
   },
   "hooks": {
