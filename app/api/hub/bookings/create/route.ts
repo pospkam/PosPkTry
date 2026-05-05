@@ -88,11 +88,25 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      if (tour.available_slots != null && tour.available_slots < data.participants_count) {
+      // Count actual confirmed bookings for this date within the same transaction.
+      // FOR UPDATE on the tour row above serialises concurrent requests, so this
+      // read is consistent: no other booking for this tour can commit until we do.
+      const slotCheckResult = await client.query<{ already_booked: string }>(
+        `SELECT COALESCE(SUM(participants), 0) AS already_booked
+         FROM operator_bookings
+         WHERE operator_tour_id = $1
+           AND booking_date = $2
+           AND booking_status NOT IN ('cancelled', 'rejected')`,
+        [data.tour_id, data.booking_date],
+      );
+      const alreadyBooked = parseInt(slotCheckResult.rows[0]!.already_booked, 10);
+
+      if (tour.max_participants != null && alreadyBooked + data.participants_count > tour.max_participants) {
+        const remaining = tour.max_participants - alreadyBooked;
         throw Object.assign(
-          new Error(tour.available_slots === 0
+          new Error(remaining <= 0
             ? BOOKING_ERROR_MESSAGES.NO_SLOTS
-            : `Недостаточно мест. Доступно: ${tour.available_slots}, запрашивается: ${data.participants_count}`),
+            : `Недостаточно мест на эту дату. Доступно: ${remaining}, запрашивается: ${data.participants_count}`),
           { code: 'NO_SLOTS' },
         );
       }
